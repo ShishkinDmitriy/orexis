@@ -37,6 +37,13 @@ ag:Capability a owl:Class ; rdfs:label "Capability" ;
 #  row partitions METHODS of one module and crosses the kernel/package line in both
 #  directions — and because a term can be checked, where a directory can only remind.
 
+#  WHAT THE KERNEL OFFERS is not declared here, and that is deliberate. A service is a Python
+#  object and its CLASS says what it is — `Beliefs`, `Keeper`, `Metrics` — so a package imports
+#  the thing it wants and asks for it, with no parallel naming system to keep in step. Seven
+#  `ag:*Store` terms were declared here for one commit and removed the same day: a term is the
+#  right key for an EXTENSION POINT, which is a declared thing in the graph, and the wrong one
+#  for an object you can import (an-injected-service-is-reached-by-term).
+
 ag:Row a owl:Class ; rdfs:label "Row" ;
     rdfs:comment "One of the three cognitive layers, as a term. Latency and interruptibility are the axis: reactive is atomic and must never block, progression spans time and suspends, deliberation searches." .
 

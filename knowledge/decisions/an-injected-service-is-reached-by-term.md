@@ -6,8 +6,9 @@ description: >-
   to offer another package anything but a capability. The design is Anvil-style aggregation with
   one substitution — the binding key is a URI rather than a type, because capability packages may
   not import each other and because the graph addresses everything by term. Declared eagerly,
-  resolved lazily, one term one provider. NOT BUILT: nothing needs it yet, and the trigger is
-  written down.
+  resolved lazily, one term one provider. BUILT — the sovereign's ruling that a seam this
+  foundational should not wait for its first customer, because packages are shaped by its
+  absence.
 status: accepted
 timestamp: 2026-08-27T18:00:00Z
 ---
@@ -37,11 +38,23 @@ built; fan-in is missing.**
 declares one; the agent hands it back on request; nothing imports the provider to find out it
 exists.
 
-**The key is a URI, not a Python type**, which every Kotlin and Java container would use. Two
-reasons, one forced and one preferred. Forced: `lint-imports` holds an `independence` contract
-over the capability packages, so market often *cannot import* sensing's type to key on it.
-Preferred: a URI key is graph-addressable, and `agent.service(HISTORY)` is a fact a sovereign
-could ask about where `agent.service(HistoryRing)` is not.
+**The key is the CONTRACT TYPE wherever one can be imported, and a term where none can.**
+
+This record first said a term, full stop, on the reasoning that `lint-imports` forbids capability
+packages importing each other — so market could not import sensing's type to key on. **That is
+true of an implementation and false of a contract**, and importing a contract is the one
+cross-package import this project has always allowed: `packages/codec/json/` imports sensing's
+`Codec`. The sovereign made the correction — terms were proposed for extension POINTS, where a
+point is a declared thing in the graph, and were never an argument against types elsewhere.
+
+So a type is the default and the better key: you import the thing you want and ask for it, the
+type checker follows, and there is no parallel naming system to keep in step. `packages -> agent`
+is allowed outright, so all seven of the kernel's services are keyed by their classes with no
+carve-out at all. A term remains available for a service whose contract is not an importable
+class.
+
+Seven `ag:*Store` terms were declared for this and removed the same day, which is the shortest
+life any term in this project has had.
 
 **One term, one provider**, which is `loader._members()`'s rule generalised — it already refuses a
 term implemented twice, because the alternative is settled by whichever package the filesystem
@@ -92,26 +105,36 @@ choir already does.
 What is left to write is small: `_members()` is the single-binding registry already, at about
 twenty-five lines.
 
-# NOT BUILT, and the trigger
+# Why it was built without a customer
 
-**Nothing here exists.** There is no `@provides`, no `agent.service()`, no `@requires`, and no
-service in the tree.
+This record first said: do not build it, there is no consumer, wait for #311. The sovereign
+overruled that, and the audit done before building says why they were right.
 
-It is recorded rather than built because **there is no consumer**. Measured while writing this:
-`self.keeper = Keeper(self)` is unconditional, nothing anywhere sets it to `None`, and the same
-holds for the deliberator and the metrics — so every service the kernel offers is always present,
-and the two `if keeper is None` guards (`agent/execution.py`, `market/bidding.py`) defend against a
-state that cannot occur. Declaring requirements today would check something that cannot fail.
+**Reaching outside a package was four mechanisms and a folk memory.** Measured across
+`packages/`: `agent.provider(family)` in 28 places, `ask`/`tell` in 13, direct kernel imports —
+and **twelve undeclared attributes on the agent**, led by `self.agent.beliefs` at 41 uses,
+`.desires` at 11, `.keeper` at 5, `.metrics` at 2. Nothing declared them, nothing listed them,
+and nothing said which a package might touch. A package author learned them by reading other
+packages.
 
-**Build it when a package needs to bring a store or a service.** #311 is the first — its history
-ring wants a room in the volume and a door for `orexis-ask <world> <agent> history`. Whoever picks
-it up should build the mechanism with it, so the ring is what proves the machinery rather than the
-machinery arriving first and waiting.
+So the consumer was never the missing store. It was every package already reaching for things it
+could not declare — and a seam this foundational shapes what packages can be, which is an
+argument for building it before the first customer rather than after.
+
+What the earlier measurement got right stands: the kernel's services are always present, and the
+two `if keeper is None` guards defend a state that cannot occur. That is why the kernel's seven
+are REGISTERED rather than made optional — declaring one cannot fail, and the value is that the
+declaration exists at all.
 
 # Seams left open
 
-- **Stores stay attributes** until something brings one. Registering `agent.beliefs` as a service
-  before that is ceremony over 41 working call sites.
+- **The 41 `self.agent.beliefs` call sites are not migrated.** `review` is the worked example —
+  `@requires(DESIRE_STORE, METRICS)` — and the rest follow when they are next touched. The
+  attributes remain the kernel's own wiring; what changed is that a package can now DECLARE
+  instead of reaching, and the runbook tells it to.
+- **Nothing yet refuses `self.agent.<service>` in a package.** The guard is writable — the
+  attribute names are the seven terms — and it should wait until the call sites are migrated,
+  or it is a gate that fails on arrival.
 - **`@requires` would check names, not shapes.** That a required term is provided says nothing
   about the object satisfying the contract the requirer imported.
 - **Nothing decides service lifetime**, because there is exactly one: the agent process. If a

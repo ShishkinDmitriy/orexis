@@ -65,6 +65,7 @@ from pathlib import Path
 
 from . import terms
 from .contribute import answer
+from .inject import offers_of
 
 #  Assembly computes this itself rather than importing the kernel's: nothing here may import
 #  `agent`, which is what lets the kernel be one of the things assembled.
@@ -626,6 +627,30 @@ def prefixes() -> dict[str, str]:
                 )
             out.setdefault(label, iri)
             origin.setdefault(label, path)
+    return out
+
+
+@lru_cache(maxsize=1)
+def offers() -> dict:
+    """service term -> the function that builds it, across every package. One term, one offer.
+
+    The same rule `_members` holds for a family's members, for the same reason: a term offered
+    twice would be settled by whichever package the filesystem yielded first, which is a coin
+    flip dressed as a choice. Nothing is CALLED here — the functions are collected, and one runs
+    only when an agent asks for that service.
+    """
+    out: dict[str, tuple] = {}
+    for package in packages():
+        manifest = package.manifest()
+        if manifest is None:
+            continue
+        for term, name in offers_of(manifest).items():
+            if term in out:
+                raise RuntimeError(
+                    f"{term} is offered twice: by {out[term][0].import_name} and by "
+                    f"{package.import_name}. One term, one provider."
+                )
+            out[term] = (package, getattr(manifest, name))
     return out
 
 

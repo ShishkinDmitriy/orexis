@@ -169,6 +169,51 @@ another package contribute without importing yours.
   is declared with no rule granting it and no module providing it: the room is kept on purpose,
   and adding it later is a class and one line of `PROVIDES`.
 
+# Reaching anything outside your package
+
+Four doors, and which one you want is decided by what you are asking for. This is the part a
+package author previously had to learn by reading other packages.
+
+| you want | the door |
+|---|---|
+| everyone's opinion, merged your way | `agent.ask(POINT)` — the [choir](/domain/choir.md) |
+| whoever implements an ability | `agent.provider(family)` — answers `None` if nobody does |
+| **a particular thing another package offers** | **`@requires(SomeType)`, arriving as an attribute** |
+| another package's *contract* (a base class) | an ordinary import of its `contract` module — never its implementation |
+
+```python
+from agent.beliefs import Beliefs
+from agent.metrics import Metrics
+from assembly import requires
+
+@requires(Beliefs, Metrics)
+class MyModule(Module):
+    def start(self):
+        self.metrics.event("started", "")     # named for the key, resolved on first touch
+```
+
+**The key is the type you would import anyway.** `packages -> agent` is allowed, so the kernel's
+services are keyed by their classes; another package's service is keyed by the contract in its
+`contract` module, which is the one cross-package import the layering has always permitted. A
+term works too, for a service with no importable contract — but a type is the default, because
+it needs no second name kept in step with the first.
+
+**Declare it rather than reaching for `self.agent.<something>`.** Twelve attributes were in use
+that way before services existed, none of them written down anywhere. Declaring means the gate
+can see what you need; reaching means the first person to find out is you, at runtime.
+
+To offer one, put it in your manifest — the function runs when an agent first asks, so the
+import is paid only by an agent that wants it:
+
+```python
+@provides(HistoryRing)             # the contract
+def history(agent):
+    from .ring import Ring         # the implementation, lazily
+    return Ring(agent)
+```
+
+One key, one provider: offering something another package already offers is refused at load.
+
 # When it is a capability
 
 Three extra things, in this order:

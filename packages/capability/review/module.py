@@ -65,6 +65,9 @@ from datetime import datetime, timedelta, timezone
 from assembly import loader
 from agent.module import Module, contributes
 from agent.ontology import BELIEF_REVISED
+from agent.desire import Desires
+from agent.metrics import Metrics
+from assembly import requires
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
 from agent.ontology import beliefs_graph
@@ -128,6 +131,7 @@ def world_ranges(query) -> dict[str, Range]:
     return {t: Range(t, min(vs), max(vs)) for t, vs in seen.items() if vs}
 
 
+@requires(Desires, Metrics)
 class ReviewModule(Module):
     """The agent's second thoughts — `review:Reckoning`, derived from having been given room.
 
@@ -356,13 +360,13 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         #  Rebuild BEFORE validating: the modality re-derives from the record just written,
         #  so the shapes judge the new pick against the wants as they now stand — validating
         #  against the previous build would hold the new aim beside the old one.
-        self.agent.desires.rebuild()
+        self.desires.rebuild()
         try:
             validate_agent(self.agent.beliefs, self.agent.id, self.agent.me.uri,
-                           self.agent.me.capabilities, desires=self.agent.desires)
+                           self.agent.me.capabilities, desires=self.desires.get())
         except BeliefsInvalid as exc:
             self._write(graph, room.term, was)
-            self.agent.desires.rebuild()   # the record reverted, and the modality follows it
+            self.desires.rebuild()   # the record reverted, and the modality follows it
             self.refused += 1
             self._remember(room.term, was, value, "refused", "the shapes refused it")
             log.warning("%s: <%s> -> %s refused by the shapes, reverted to %s\n%s",
@@ -421,7 +425,7 @@ INSERT DATA {{ GRAPH <{revisions_graph(self.agent.id)}> {{
         # count above is the right voice for something that happens on schedule.
         if outcome != "declined":
             local = belief_term.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
-            self.agent.metrics.event(f"belief-{outcome}",
+            self.metrics.event(f"belief-{outcome}",
                                      f"{local}: {was} -> {now} — {why}", term=local)
 
     def _due(self) -> set[str]:

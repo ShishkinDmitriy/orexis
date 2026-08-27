@@ -36,6 +36,7 @@ from agent import config, genesis
 
 from assembly import loader
 from .beliefs import Beliefs
+from assembly.inject import attribute_for
 from .ontology import DESIRES, DESIRE_URGENCY
 from .deliberator import Deliberator
 from .desire import Desire, Desires
@@ -109,6 +110,10 @@ class Agent:
         #  the mind's own, never on the one that noticed (#392).
         self.revision = Revision(self)
 
+        #  What this agent offers, by term — the kernel's own, filled below, and a package's
+        #  resolved on first ask (an-injected-service-is-reached-by-term).
+        self._services: dict = {}
+
 
         # exactly the modules this agent composed — no more, no less, and since #216 the
         # IMPORTS follow the grants too: a capability names its owning package by namespace,
@@ -132,6 +137,7 @@ class Agent:
         # bloats whatever else it can do, so this holds a clock no capability owns — an agent
         # given no room to review itself must still compact. Nothing here starts a thread.
         self.upkeep = BeliefBaseUpkeep(self)
+
 
         # And noticing I am cut off (#53) — kernel for the same reason, on a clock of its own
         # because paho's network thread is one of the things it watches. Nothing starts here.
@@ -165,8 +171,41 @@ class Agent:
         self.owing = Owing(self)
 
         self.modules += [self.deliberator, self.keeper, self.owing]
+        #  WHAT THE KERNEL OFFERS, keyed by the CLASS of each — the thing a package imports
+        #  anyway to type its own code, so there is no parallel naming system to keep in step.
+        #  `packages -> agent` is an allowed import, so every one of these is reachable by name
+        #  from any package (an-injected-service-is-reached-by-term).
+        for value in (self.beliefs, self.desires, self.intentions,
+                      self.keeper, self.deliberator, self.owing, self.metrics):
+            self.offering(type(value), value)
+
 
     # --- how one capability reaches another, without knowing its name ---
+
+    def service(self, key):
+        """Whatever offers this service — the kernel's own, or a package's. One or none.
+
+        The fan-in door, beside `ask` (everyone's opinion) and `provider` (whoever implements an
+        ability). Resolved on first ask and remembered: a package's offer is a function in its
+        manifest, and it runs once, here, rather than when the manifest was read
+        (an-injected-service-is-reached-by-term).
+        """
+        if key in self._services:
+            return self._services[key]
+        offer = loader.offers().get(key)
+        if offer is None:
+            raise KeyError(
+                f"nothing offers {attribute_for(key)} — no package this agent composed "
+                "provides it, and the kernel does not. A service nobody offers is a "
+                "dependency nobody declared."
+            )
+        _, build = offer
+        self._services[key] = build(self)
+        return self._services[key]
+
+    def offering(self, key, value) -> None:
+        """The kernel putting one of its own on the table, under its class."""
+        self._services[key] = value
 
     def provider(self, family: str):
         """Whichever of MY modules provides a capability of this family, or None.
