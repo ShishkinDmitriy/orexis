@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from assembly import loader
-from assembly.contribute import extensions_of
+from assembly.contribute import contributions_of
 from agent.module import Module
 from agent.ontology import AG, DESIRES, HANDLE, REPORTS, SEND
 from conftest import build_agent, wired_sensors
@@ -29,13 +29,13 @@ def test_every_hook_a_module_answers_is_one_an_ontology_declares():
     classes = _provided_classes()
     assert classes, "no module classes found — the loader found nothing"
     unknown = sorted((cls.__name__, term) for cls in classes
-                     for term in extensions_of(cls) if term not in declared)
+                     for term in contributions_of(cls) if term not in declared)
     assert not unknown, f"modules fill points no ontology declares: {unknown}"
 
 
 def test_the_kernels_defaults_carry_the_kernels_terms():
-    assert extensions_of(Module)[DESIRES] == "desires"
-    assert extensions_of(Module)[REPORTS] == "reports"
+    assert contributions_of(Module)[DESIRES] == "desires"
+    assert contributions_of(Module)[REPORTS] == "reports"
 
 
 def test_an_override_by_name_inherits_the_term(monkeypatch):
@@ -178,7 +178,7 @@ def test_what_fills_a_point_matches_the_signature_it_publishes():
 
     wrong, checked = [], 0
     for cls in _provided_classes() + [Module]:
-        for term, name in extensions_of(cls).items():
+        for term, name in contributions_of(cls).items():
             if term not in signatures:
                 continue
             actual = [p for p in inspect.signature(getattr(cls, name)).parameters

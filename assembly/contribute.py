@@ -33,8 +33,12 @@ def contributes(term: str):
     return mark
 
 
-def extensions_of(subject) -> dict[str, str]:
-    """term -> the name of the function filling it, on a class, an instance or a module.
+def contributions_of(subject) -> dict[str, str]:
+    """term -> the name of the function contributing to it, on a class, an instance or a module.
+
+    Named for what it returns, which is CONTRIBUTIONS. `loader.extensions()` is the other half
+    and keeps its own word: that one returns the declared POINTS, and a point is not a
+    contribution to itself.
 
     Read once and cached on the subject where one can be cached. A class is walked in reverse
     MRO so a subclass wins; a module is a flat namespace and needs no walking.
@@ -44,18 +48,18 @@ def extensions_of(subject) -> dict[str, str]:
                 if (term := getattr(fn, "__contributes__", None))}
 
     cls = subject if isinstance(subject, type) else type(subject)
-    found = cls.__dict__.get("_extensions_of")
+    found = cls.__dict__.get("_contributions_of")
     if found is None:
         found = {}
         for klass in reversed(cls.__mro__):
             for name, fn in vars(klass).items():
                 if term := getattr(fn, "__contributes__", None):
                     found[term] = name
-        cls._extensions_of = found
+        cls._contributions_of = found
     return found
 
 
 def answer(subject, term: str):
     """Whatever fills one point on this subject, ready to call — or None if nothing does."""
-    name = extensions_of(subject).get(term)
+    name = contributions_of(subject).get(term)
     return getattr(subject, name) if name else None
