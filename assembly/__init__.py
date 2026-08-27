@@ -10,6 +10,6 @@ The direction, held by `lint-imports`: **assembly <- agent <- onboarding**. Noth
 the kernel, which is what lets the kernel be one of the things assembled.
 """
 
-from .extend import answer, extends, extensions_of
+from .contribute import answer, contributes, contributions_of
 
-__all__ = ["answer", "extends", "extensions_of"]
+__all__ = ["answer", "contributes", "contributions_of"]

@@ -4,10 +4,10 @@ title: Choir
 description: >-
   How capabilities contribute judgments to one another without knowing each other exists — the
   kernel puts a question to every loaded module, whoever holds an opinion answers, and the
-  asker never learns who sang. Eight hooks on Module, each with its own way of resolving many
-  answers into one; silence is a first-class answer, distinct from judging fine. Eighteen hooks,
-  thirteen the kernel's and five a package's, with the roster below generated from what the code
-  declares rather than from memory.
+  asker never learns who sang. Each extension point has its own way of resolving many answers
+  into one, and silence is a first-class answer, distinct from judging fine. Eighteen run-time
+  points, thirteen the kernel's and five a package's, with the roster below generated from what
+  the code declares rather than from memory.
 ---
 
 # What it is
@@ -15,8 +15,7 @@ description: >-
 The **choir** is the kernel's second way for capabilities to reach each other, beside
 `agent.provider(family)`. The provider hands back ONE module — whoever implements an ability.
 The choir collects from ALL of them — whoever holds an opinion. The asker addresses nobody: it
-puts a question to every loaded module through a hook on `agent/module.py`'s `Module`, modules
-with a stake answer, and the answers are resolved into one result without the asker ever
+puts a question to every loaded module through an extension point, modules with a stake answer, and the answers are resolved into one result without the asker ever
 learning who contributed.
 
 Why it exists is a fact about stakes. Sensing knows how to look; it does not know what counts
@@ -25,23 +24,25 @@ band — so sensing asks, and whoever can, answers. The same shape repeats where
 capability holds a judgment another merely needs, and it is half of what makes
 [capability](/domain/capability.md)'s no-imports rule livable: the other half is the provider.
 
-# The hooks
+# The points
 
-The kernel owns the MECHANISM — `Agent.ask(hook, …)` collects every module's answer to a
-question and `Agent.tell(hook, …)` delivers an event, an error in one voice logged and never
-silencing the rest — and every hook is a TERM, an `ag:Hook` declared by whoever owns the
-question and refused if nobody does ([a-hook-is-a-term](/decisions/a-hook-is-a-term.md)). A
-module answers one by `@hook(term)` on a method; an override by name inherits the term. Each hook
-also declares **which row** answering it belongs to — `ag:row`, one of `ag:Reactive`,
+`Agent.ask(point, …)` collects every module's answer to a question and `Agent.tell(point, …)`
+delivers an event, an error in one voice logged and never silencing the rest. Every point is a
+TERM — an `assembly:Extension`, declared by whoever owns the question and refused if nobody does
+([a-hook-is-a-term](/decisions/a-hook-is-a-term.md)) — and the MECHANISM is
+[assembly](/decisions/the-assembly-is-not-the-mind.md)'s rather than the kernel's, because how
+anything reaches anything is not belief, desire or intention. A module fills a point with
+`@contributes(term)` on a method; an override by name inherits the term. Each RUN-TIME point also
+declares **which row** answering it belongs to — `ag:row`, one of `ag:Reactive`,
 `ag:Progression`, `ag:Deliberative` — because a row partitions the methods of one module, and no
-directory can ([layered-by-timescale-and-interruptibility](/decisions/layered-by-timescale-and-interruptibility.md)). The hooks about a READING
+directory can ([layered-by-timescale-and-interruptibility](/decisions/layered-by-timescale-and-interruptibility.md)). The points about a READING
 are sensing's contract (`packages/capability/sensing/choir.py`): a module joins by defining the
 method, and sensing says what it is asked with and how the answers merge
 ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
 
 ## Declared by the kernel — 13
 
-| hook | row | signature | asked by | answered by |
+| point | row | signature | asked by | filled by |
 |---|---|---|---|---|
 | `beliefRevised` | Progression | `on_belief_revised(belief_term, value) -> None` | review | sensing |
 | `desireUrgency` | Deliberative | `desire_urgency(desire, query, state, value=…) -> float \| None` | kernel | market, sensing |
@@ -59,7 +60,7 @@ method, and sensing says what it is asked with and how the answers merge
 
 ## Declared by `packages/capability/sensing/` — 4
 
-| hook | row | signature | asked by | answered by |
+| point | row | signature | asked by | filled by |
 |---|---|---|---|---|
 | `annotate` | Reactive | `annotate(subject_uri, observed_property, value) -> dict` | sensing | sensing |
 | `bounds` | Reactive | `bounds(subject_uri, observed_property) -> tuple[float, float] \| None` | sensing | sensing |
@@ -68,34 +69,34 @@ method, and sensing says what it is asked with and how the answers merge
 
 ## Declared by `packages/capability/reporting/` — 1
 
-| hook | row | signature | asked by | answered by |
+| point | row | signature | asked by | filled by |
 |---|---|---|---|---|
 | `record` | Reactive | `record(value, at=…) -> None` | sensing | reporting |
 
 **Read the table this way.** *Asked by* is the package that puts the question — it decides how
 the answers merge, and it is the contract's real owner. *Answered by* is every package that
 currently has an opinion, which changes as packages are added and removed and is exactly what no
-asker is allowed to know. Two rows say `kernel *(direct)*`: `size` and `take` are declared hooks
+asker is allowed to know. Two rows say `kernel *(direct)*`: `size` and `take` are declared points
 but are NOT broadcast — the caller has already resolved WHICH module by `ag:takenBy` and
 `agent.providers(family)`, and calls the method on that one.
 
 **Two ways to answer one.** Override the base method on `Module` — `reports()`, `desires()`,
 `take()` — and `Module.answer` finds it through the MRO without a decorator, which is how five
-packages answer `reports`. Or decorate any method with `@hook(TERM)`, which is what a PACKAGE's
-hook needs, since there is no base method to override: sensing's `readingRecorded` is answered by
+packages answer `reports`. Or decorate any method with `@contributes(TERM)`, which is what a PACKAGE's
+point needs, since there is no base method to override: sensing's `readingRecorded` is answered by
 four packages, each on a method called `on_reading_recorded`.
 
-**The signature is the hook's, not the mechanism's.** `Agent.ask(hook, *args)` calls
+**The signature is the point's, not the mechanism's.** `Agent.ask(point, *args)` calls
 `fn(*args)` straight through, so an answerer whose parameters do not match raises `TypeError`,
 which `ask` logs as *could not answer* and steps over. A mismatched signature is therefore a
 module quietly not participating — the contract lives in the base method's docstring for a
-kernel hook, and in the asking package's `choir.py` for a package's.
+kernel point, and in the asking package's `choir.py` for a package's.
 
 **`notices` is declared and asked by nobody.** The term, the base method and sensing's override
 all exist; nothing calls `ask(NOTICES, …)`. The deliberator stopped asking when freshness became
 a WANT rather than a noticed gap — see
 [a-desire-is-a-forest-of-derived-roots](/decisions/a-desire-is-a-forest-of-derived-roots.md) —
-and the hook was left behind. Whether it is rewired or retired is
+and the point was left behind. Whether it is rewired or retired is
 [#413](https://github.com/ShishkinDmitriy/orexis/issues/413).
 
 Prose around the project often names the choir by an older five — `annotate`, `urgency`,
@@ -104,22 +105,22 @@ roster.
 
 # Silence is an answer, and it is not zero
 
-Every hook tells *no stake* apart from *judging fine*: `urgency` answers `None` for no opinion
+Every point tells *no stake* apart from *judging fine*: `urgency` answers `None` for no opinion
 and `0.0` for fine, `bounds` answers `None` rather than the only scale its module owns. That is
-why the judgment hooks are asked about a (subject, property) pair rather than a subject — a
+why the judgment points are asked about a (subject, property) pair rather than a subject — a
 module handed a property it holds nothing in must be able to stay silent instead of
 misjudging it.
 
-Absence composes the same way. A module that is not loaded contributes nothing to any hook, so
+Absence composes the same way. A module that is not loaded contributes nothing to any point, so
 the missing lines are themselves a reading: this agent was never granted that ability, which is
 a different fact from having had nothing to say.
 
-# Adding a singer is nothing; adding a hook is an ontology edit
+# Adding a singer is nothing; adding a point is an ontology edit
 
-A package whose module implements a hook joins the choir by being loaded — no registration, no
-list to append to. A new hook is different: it needs a TERM in the ontology of whoever owns the
+A package whose module implements a point joins the choir by being loaded — no registration, no
+list to append to. A new point is different: it needs a TERM in the ontology of whoever owns the
 question — the kernel's for a BDI-shaped one, a package's for one in its own words — and an
-asker, and it must obey the discipline the first collision taught — two hooks may not share a
+asker, and it must obey the discipline the first collision taught — two points may not share a
 name with different contracts. `notices()` is named for the act rather than the object because
 desire already had a `gaps()` with a different contract, and the collision broke the keeper's
 tick before a test caught it.

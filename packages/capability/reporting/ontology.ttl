@@ -4,6 +4,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix assembly: <http://example.org/orexis/assembly#> .
 
 <http://example.org/orexis/reporting> a owl:Ontology ;
     rdfs:label "Orexis self-reporting" ;
@@ -26,7 +27,8 @@
     rdfs:label "Reporting capability" ;
     rdfs:comment "The family. Rules true of reporting however it is done target this class, so nothing is restated per member, and a caller may ask for 'whoever reports' without knowing where it puts the figures." .
 
-:record a ag:Hook ; ag:row ag:Reactive ; rdfs:label "record" ; rdfs:comment "Told: a reading for the record — value, instant, tags. Answered by whoever holds the series sink, which is this package's Storing member." .
+:record a assembly:Extension ;
+    assembly:signature "(value, at=…, **tags) -> None" ; ag:row ag:Reactive ; rdfs:label "record" ; rdfs:comment "Told: a reading for the record — value, instant, tags. Answered by whoever holds the series sink, which is this package's Storing member." .
 
 :Storing a :ReportingCapability ; rdfs:label "Storing" ;
     rdfs:comment "Writes the account into this agent's own series bucket, on its own clock. The implemented member and the one every world derives. Its credential opens exactly one bucket, so what an agent can report about is what it can report on — see series-and-bus-isolation." .

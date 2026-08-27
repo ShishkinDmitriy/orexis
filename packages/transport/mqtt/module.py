@@ -27,7 +27,7 @@ import time
 import paho.mqtt.client as mqtt
 
 from agent import config
-from agent.module import Module, hook
+from agent.module import Module, contributes
 from agent.ontology import HANDLE, SEND, SUBSCRIPTIONS
 from agent.store import bindings
 
@@ -150,7 +150,7 @@ class MqttModule(Module):
 
     # --- the choir: what the rest of the agent asks of me ---------------------------------
 
-    @hook(SEND)
+    @contributes(SEND)
     def send(self, channel: str, payload: dict, retain: bool = False, not_after=None) -> bool:
         """What `Module.publish` asks: carry this to the society, and say whether it left.
 

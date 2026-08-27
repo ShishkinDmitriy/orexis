@@ -6,7 +6,7 @@ description: >-
   a runtime choir of `ag:Hook` terms. The first meant a new kind of contribution was a kernel
   edit; the second was already open to any package but published no contract, so an answerer
   with the wrong parameters was logged and skipped. Decided that both become ONE mechanism —
-  a named extension point, filled with `@extends` — that it lives in `assembly/` beside
+  a named extension point, filled with `@contributes` — that it lives in `assembly/` beside
   `agent/` rather than inside a BDI engine, and that a point publishes the signature that fills
   it.
 status: accepted
@@ -41,7 +41,9 @@ plan. How a build is assembled from packages is not one of those.
 # What is decided
 
 **One mechanism.** An **extension point** is a term — `assembly:Extension` — declared by whoever
-owns the question, and filled by `@extends(TERM)` on a function. Load-time and run-time are the
+owns the question, and filled by `@contributes(TERM)` on a function. The verb is the one this
+project was already using for the act — *the fifth thing a package contributes* — and not
+`extends`, which means inheritance in every language a reader arrives from. Load-time and run-time are the
 same idea at two moments: the loader asks package modules (**push**, at assembly), the agent asks
 `Module` instances (**pull**, at runtime). Same decorator, same term-space, different audience —
 and the audience is decided by *where the decorated function lives*, so nothing declares it.
