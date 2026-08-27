@@ -21,7 +21,7 @@ which rule 1 forbids code to name and `?m a market:Market` to find.
 
 Nobody authors a venue in the shipped worlds. Two facts that exist for their own reasons are
 together the whole premise of a shop — a source `market:offeredBy` an owner, and that owner
-stating `market:matchesBy` — and the derivation in `packages/capability/market/rules.ru` mints
+stating `market:matchesBy` — and the derivation in `packages/orexis-capability-market/rules.ru` mints
 the venue from exactly those. Consent alone opens it: a venue lacking its redeem window is
 still derived and then refused loudly by its shape, rather than quietly missing from a world
 that thought it had a market. The argument, and what hand-authoring one is still for — a world

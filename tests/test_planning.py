@@ -24,7 +24,7 @@ from agent.ontology import DELIBERATION_GRAPH, STATE_GRAPH
 from agent import planner as search, trace
 from agent.planner import Planner
 
-from packages.capability.sensing.regions import ObservedDesire
+from orexis_capability_sensing.regions import ObservedDesire
 from conftest import stake_of, build_agent, genesis_store, open_round_for, write_reading
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"

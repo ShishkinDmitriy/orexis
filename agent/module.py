@@ -68,7 +68,7 @@ class Module:
     #  `subscriptions()` and `handle(topic, payload)` WERE HERE — the kernel's half of a
     #  mailbox. Which channels a module needs and what it does with a message are the
     #  transport's questions, asked through `Agent.ask` by the module that holds the
-    #  connection (`packages/transport/mqtt/module.py`); a module that listens defines them.
+    #  connection (`packages/orexis-transport-mqtt/module.py`); a module that listens defines them.
 
     #  THE READING CHOIR — `on_reading_recorded`, `annotate`, `bounds`, `urgency`, `measures`
     #  — was defined here by name and is not any more: every one of those hooks is a sentence

@@ -30,7 +30,7 @@ could differ. Where nothing could differ, you have a function.
 # What isolates one is `PROVIDES`, never a directory
 
 A [package](/domain/package.md) is a directory; a capability is not, and one package may provide
-several — `packages/capability/market/` provides bidding, hosting and the matching family, and it
+several — `packages/orexis-capability-market/` provides bidding, hosting and the matching family, and it
 is one package.
 
 What keeps a capability separable is the **term** and the registration, not the folder:

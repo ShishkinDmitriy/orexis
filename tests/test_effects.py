@@ -40,7 +40,10 @@ def test_a_package_that_ships_an_action_file_is_found_without_being_named():
     adding a capability is adding a directory."""
     from assembly import loader
 
-    shipped = {p.parent.name for p in loader.action_files()}
+    #  The parent directory is `orexis-capability-market` now, so the package's own `name` is
+    #  what to compare — asked of the loader, which is the one thing that knows how to read it.
+    by_path = {p.path: p.name for p in loader.packages()}
+    shipped = {by_path[f.parent] for f in loader.action_files() if f.parent in by_path}
     assert {"sensing", "actuation", "market"} <= shipped
     assert all(p.name == "actions.ttl" for p in loader.action_files())
 
@@ -187,7 +190,7 @@ def test_the_deadline_and_the_command_cannot_be_two_different_durations(monkeypa
     Across a RANGE, including past the device's cap: the cap is where two implementations of
     "how long is this dose" most easily part company, since one of them may forget it.
     """
-    from packages.capability.market.clearing import Claim
+    from orexis_capability_market.clearing import Claim
 
     agent = build_agent("gardener", _loner({("zz", MOISTURE): 0.10}), monkeypatch)
     actuation = next(m for m in agent.modules if m.name == "actuation")
@@ -256,7 +259,7 @@ def test_a_served_claim_is_timed_by_the_rule_and_not_by_the_wire(monkeypatch, ca
     import logging
     import time
 
-    from packages.capability.market.clearing import Claim
+    from orexis_capability_market.clearing import Claim
 
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
     st = genesis_store({}, world="simulation")

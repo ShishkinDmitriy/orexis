@@ -34,7 +34,7 @@ mandates that only an agent with room to move holds. This is the other half of t
 three worlds, compose and firmware regenerate unchanged**, and the six comment lines that do
 move are the compose generator naming the sense modes in its own output.
 
-`packages/plant/water` is the one that matters beyond tidiness. AGENTS.md opens by saying the v1
+`packages/orexis-plant-water` is the one that matters beyond tidiness. AGENTS.md opens by saying the v1
 domain is plant watering and that the domain is a plug-in — *"plant/water language is the
 example, not the architecture"* — and its terms were `ag:SoilMoisture`, `ag:bandLow`,
 `ag:hasTarget`, indistinguishable by inspection from what every agent has. Swapping the domain
@@ -128,7 +128,7 @@ and **eleven are not true of every agent**:
 - **The simulated device model — seven terms** *(eleven since the scenario grew: the physics
   went time-based and the weather arrived)*. (AMENDED, and this paragraph's own closing line is what
   happened: **the simulation package exists.** Every term here is `sim:` now, in
-  `packages/sim/standin/`, and shed the `model` prefix it wore to fake a namespace inside `ag:` —
+  `packages/orexis-sim-standin/`, and shed the `model` prefix it wore to fake a namespace inside `ag:` —
   see [the-substrate-is-not-the-minds](/decisions/the-substrate-is-not-the-minds.md) for why it
   left the kernel and [a-stand-in-is-not-a-device](/decisions/a-stand-in-is-not-a-device.md) for
   why it is not filed with the hardware.)
@@ -149,7 +149,7 @@ and **eleven are not true of every agent**:
   declared `rdfs:subClassOf ag:Capability`, had a shape, and appeared in no world. The reasoning
   above assumed *a capability is what only some agents have*, which conflates two questions:
   rule 2 asks whether the HOW could differ, not who holds it. It is a package now,
-  `packages/capability/reporting/`, granted to every agent by a rule and insisted on by a shape. See
+  `packages/orexis-capability-reporting/`, granted to every agent by a rule and insisted on by a shape. See
   [telemetry-is-a-mandatory-capability](telemetry-is-a-mandatory-capability.md).
 
 Moving the remaining ten was out of scope: the seven need a package to exist, and the deployment

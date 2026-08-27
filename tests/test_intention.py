@@ -19,8 +19,8 @@ import pytest
 
 from agent.world import load_self
 from agent.graphs import intentions_graph
-from packages.capability.market.terms import ACQUIRING
-from packages.capability.sensing.terms import OBSERVING
+from orexis_capability_market.terms import ACQUIRING
+from orexis_capability_sensing.terms import OBSERVING
 
 from conftest import sensing_of, stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of
 
@@ -100,7 +100,7 @@ def test_a_wait_the_auction_outlives_keeps_the_look_and_lets_the_round_go(make):
     execution for its look, the commitment is to the freshness want — a reading is still owed
     after the round closes, whoever first wanted it — so the look STANDS, the round's row goes,
     and the reading that lands is what resolves it (sensing satisfies its own means now)."""
-    from packages.capability.market import rounds
+    from orexis_capability_market import rounds
 
     fern = make("fern")
     fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})

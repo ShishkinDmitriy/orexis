@@ -1,6 +1,6 @@
 """Each part's own Wokwi board, held to what the vocabulary says that part is.
 
-A drawing lives with the package that owns the part — `packages/part/rgb_led/wokwi/` — so it is
+A drawing lives with the package that owns the part — `packages/orexis-part-rgb-led/wokwi/` — so it is
 found by looking and deleted with it, rather than sitting in a tree of its own that nothing
 would prune.
 
@@ -19,16 +19,18 @@ import json
 
 import pytest
 
+from assembly import loader
+
 from agent import ratified
 from agent.config import REPO_ROOT
 from agent.ontology import ONTOLOGY_GRAPH
 from onboarding.namespaces import MC
 # Found by looking, like everything else: a part that has a Wokwi drawing keeps it beside its
-# ontology, so `packages/part/rgb_led/wokwi/` travels with the package and is deleted with it.
+# ontology, so `packages/orexis-part-rgb-led/wokwi/` travels with the package and is deleted with it.
 # Keyed by the PART, which is the thing the vocabulary names — the vendor's "KY-016" appears
 # only inside the files.
-BOARDS = {d.parent.name: d for d in sorted((REPO_ROOT / "packages" / "part").glob("*/wokwi"))
-          if (d / "board.json").exists()}
+BOARDS = {p.name: p.path / "wokwi" for p in loader.of_kind("part")
+          if (p.path / "wokwi" / "board.json").exists()}
 WOKWI = "http://example.org/orexis/wokwi#"
 
 _MAPPING_Q = f"""

@@ -4,7 +4,7 @@ An import at the top of a module is checked by the first test that imports the m
 every test. An import inside a FUNCTION is checked only when that function runs, and a function
 that runs solely in a container runs in no test at all.
 
-`packages/capability/reporting/module.py` held `from agent.influx_writer import InfluxWriter`,
+`packages/orexis-capability-reporting/module.py` held `from agent.influx_writer import InfluxWriter`,
 deferred with the note *"nothing built for a test agent"*. `metrics-are-an-aspect` moved that
 module into the reporting package as `series.py`; the deferred line was not repointed, and the
 class was already imported at the top of the same file. So the line was dead wrong, unreachable

@@ -67,7 +67,7 @@ would be the same failure it exists to catch.
 
 `conftest.py` beside `tests/`, not inside it, because a package may carry its own tests and a guard
 in `tests/conftest.py` would cover half of them. Verified from both roots: a vacuous test under
-`packages/capability/market/` fails the run exactly as one under `tests/` does.
+`packages/orexis-capability-market/` fails the run exactly as one under `tests/` does.
 
 Nothing else belongs in that file. Fixtures that build a world stay with the integration suite — a
 package test needing one is a test in the wrong place.

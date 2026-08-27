@@ -78,7 +78,7 @@ built to study scarcity.
 
 # The uncontested round is still priced as if contested
 
-`market:PayAsBid` — the member this society runs, in `packages/capability/market/matching.py` — is greedy and
+`market:PayAsBid` — the member this society runs, in `packages/orexis-capability-market/matching.py` — is greedy and
 discriminatory: eligible bids sorted by price, filled highest first, each paying its own bid.
 When total demand comes in under the lot there is no rival for anything, and every bidder still
 pays what it offered — so an agent is charged for its own urgency in a round where nothing was

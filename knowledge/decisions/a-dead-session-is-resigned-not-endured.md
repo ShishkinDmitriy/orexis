@@ -28,7 +28,7 @@ socket, a fresh TLS session, a fresh subscribe. What was missing was not a remed
 
 # Decision
 
-**The agent notices, and resigns.** `packages/transport/mqtt/watchdog.py` (it was `agent/watchdog.py`, in the kernel, until the kernel lost its mailbox) runs on a `Timer` of its
+**The agent notices, and resigns.** `packages/orexis-transport-mqtt/watchdog.py` (it was `agent/watchdog.py`, in the kernel, until the kernel lost its mailbox) runs on a `Timer` of its
 own — not a capability, by [upkeep's](self-review-is-a-capability.md) argument: every agent has
 one connection whatever else it can do, and noticing you are dead is not an ability whose *how*
 could differ. Not on paho's thread, because that thread is one of the things being watched.

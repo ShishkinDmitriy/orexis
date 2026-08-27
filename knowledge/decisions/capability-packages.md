@@ -46,9 +46,9 @@ A **package** is a directory, and the tree it sits in says what kind it is:
 | | |
 |---|---|
 | ~~`packages/core/<name>/`~~ | **GONE.** The base vocabulary was a family of exactly one, forever, that every other package layers on and nothing can remove. That is not a package; it is the base, and it lives in `agent/` beside the code that reads it |
-| `packages/capability/<name>/` | what an agent can **do**. The extendable axis |
-| `packages/transport/<name>/` | how a device is **reached**. Deliberately not a capability |
-| `packages/part/`, `plant/`, `bus/`, `tool/` | the things a world names, and the vocabularies they layer on |
+| `packages/orexis-capability-<name>/` | what an agent can **do**. The extendable axis |
+| `packages/orexis-transport-<name>/` | how a device is **reached**. Deliberately not a capability |
+| `packages/orexis-part-*/` and the plant, bus and tool families | the things a world names, and the vocabularies they layer on |
 
 A package may also declare a **namespace of its own**, in its `ontology.ttl`, and
 `agent.loader.prefixes()` reads it from there so a query can name its terms. That was added after
@@ -75,10 +75,10 @@ Inside a package the same names mean the same things every time:
 | `beliefs.py` | its `Block`s — the private parameters it reads, and their dataclasses |
 | `__init__.py` | the manifest: `PROVIDES = (…)` |
 
-**Every one of them is optional, and an omission is a statement.** `packages/plant/water/` has no
-code, because a domain contributes vocabulary. `packages/transport/mqtt/` has no `rules.ru`, because
+**Every one of them is optional, and an omission is a statement.** `packages/orexis-plant-water/` has no
+code, because a domain contributes vocabulary. `packages/orexis-transport-mqtt/` has no `rules.ru`, because
 a transport grants no capability — which is the whole point of it not being one.
-`packages/capability/actuation/` has no `beliefs.py`, because it decides nothing: it reads the
+`packages/orexis-capability-actuation/` has no `beliefs.py`, because it decides nothing: it reads the
 device's own calibration from the world and obeys.
 
 `orexis.loader` finds all of this by looking. There is no list of capabilities anywhere in the
@@ -95,7 +95,7 @@ a third capability into that same package to show the seam holds without it.
 
 **Adding a capability is adding a directory.** No registry line, no term constant, no belief
 accessor, no edit to any existing file. This is checkable, and it was checked: dropping a
-throwaway `packages/capability/forecast/` into the tree made an agent load its vocabulary, run its
+throwaway `packages/orexis-capability-forecast/` into the tree made an agent load its vocabulary, run its
 derivation, and boot with `forecasting` in its module list — with nothing else
 in the repo touched. Deleting the directory removed it just as completely.
 
@@ -146,7 +146,7 @@ loading the module that issued it.
 **The market mechanism stayed in the kernel.** `market.py`, `auction.py` and `clearing.py` are
 pure and domain-neutral, and clearing is a separate authority on its way to being a separate
 service (see [standalone-clearing](/decisions/standalone-clearing.md)). What lives in
-`packages/capability/market/` is the *choreography* — announce, collect, match, issue — which is the
+`packages/orexis-capability-market/` is the *choreography* — announce, collect, match, issue — which is the
 part that reads the vocabulary and holds a capability.
 
 # Cost, stated plainly

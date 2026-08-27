@@ -17,8 +17,8 @@ import pytest
 from agent.ontology import term
 
 from agent.beliefs import BeliefError, Picks
-from packages.capability.reporting.beliefs import REPORTING_PICKS, ReportingBeliefs
-from packages.capability.reporting.terms import term as reporting_term
+from orexis_capability_reporting.beliefs import REPORTING_PICKS, ReportingBeliefs
+from orexis_capability_reporting.terms import term as reporting_term
 from agent.metrics import Metrics, tree_bytes
 from conftest import sensing_of
 

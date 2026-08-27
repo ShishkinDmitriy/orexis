@@ -43,7 +43,7 @@ exists.
 This record first said a term, full stop, on the reasoning that `lint-imports` forbids capability
 packages importing each other — so market could not import sensing's type to key on. **That is
 true of an implementation and false of a contract**, and importing a contract is the one
-cross-package import this project has always allowed: `packages/codec/json/` imports sensing's
+cross-package import this project has always allowed: `packages/orexis-codec-json/` imports sensing's
 `Codec`. The sovereign made the correction — terms were proposed for extension POINTS, where a
 point is a declared thing in the graph, and were never an argument against types elsewhere.
 
@@ -95,8 +95,8 @@ the agent and looks things up later in `start()` — and it would undo #216, bec
 import providers before knowing what was granted.
 
 **A dependency is imported as a CONTRACT, never as an implementation.** This is the project's
-existing rule, written for a different reason and exactly right here: `packages/codec/json/` imports
-`packages.capability.sensing.codec` for `Codec`, and the mqtt driver imports sensing's `Driver`.
+existing rule, written for a different reason and exactly right here: `packages/orexis-codec-json/` imports
+`orexis_capability_sensing.codec` for `Codec`, and the mqtt driver imports sensing's `Driver`.
 A `contract.py` may import stdlib and `assembly` and nothing else — which is what makes mutual
 dependencies safe, because contracts do not import back and so nothing loops at import time.
 Cycles at *resolution* time are fine: resolution is lazy.

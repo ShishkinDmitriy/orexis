@@ -64,7 +64,7 @@ through translation, and keeping them distinct is cheap now and painful to undo 
 
 # What is already true of the code
 
-- **Transport**: `packages/transport/mqtt/` — the client, the credential, the session, the
+- **Transport**: `packages/orexis-transport-mqtt/` — the client, the credential, the session, the
   watchdog. Nothing above it names a broker.
 - **Translation**: sensing's `codec`, `scaling` and `pointer` turn a payload into a number, and
   `sensed_writer` stamps it with its instant and its instrument and upserts one node per

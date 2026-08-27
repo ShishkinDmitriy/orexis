@@ -45,7 +45,7 @@ revision that would make the agent unable to start is refused by the machinery t
 refused the start.
 
 Which terms may move is **one triple in the owning package's ontology** (`review:revisableToward`),
-not a list here. A review rule is `packages/capability/<name>/review.rq` — SPARQL, never Python —
+not a list here. A review rule is `packages/orexis-capability-<name>/review.rq` — SPARQL, never Python —
 so a package that wants its settings revisable ships a query and nothing else.
 
 # It reads evidence it kept, and writes only its own beliefs

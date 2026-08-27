@@ -1,0 +1,396 @@
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix schema: <https://schema.org/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+# QUDT 1.1, which the W3C's own SSN examples were written against and which is a different
+# namespace rather than an older spelling of this one. Declared here alone: nothing in this
+# project EMITS it, and only this shape has to recognise it.
+@prefix qudt11-unit: <http://qudt.org/1.1/vocab/unit#> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix ag:   <http://example.org/orexis#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Rules that hold for sensing however it is done. They target the capability FAMILY, so a
+# new transport inherits them by declaring its capabilities as sensing:SensingCapability rather
+# than by restating any of this.
+
+sensing:PerceivingAgentShape a sh:NodeShape ;
+    rdfs:comment "Anything that perceives must be wired to something to perceive with, and must say how stale a reading may be before it stops trusting it. That judgment is about belief, not control, so it is required of every perceiver — including one that cannot drive its device at all." ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://example.org/orexis#hasCapability> ?cap .
+                ?cap a <http://example.org/orexis/sensing#SensingCapability> .
+            }
+        """ ] ;
+    sh:property [ sh:path sensing:polls ; sh:minCount 1 ; sh:class sosa:Sensor ;
+                  sh:message "an agent that perceives must be wired to at least one sensor" ] ;
+    sh:property [ sh:path sensing:readingGraceS ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:integer ; sh:minExclusive 0 ;
+                  sh:message "a perceiving agent must say how stale a reading may be before it stops trusting it" ] .
+
+sensing:SensorShape a sh:NodeShape ;
+    rdfs:comment "A sensor reads exactly one subject, says which property it observes, and states the short name everything outside RDF calls it by — its dashboard row, its bucket, its line in the ACL. That last used to arrive from device:DeviceShape, which reached it because a sensor was required to be a physical device; a sensor is not (a-stand-in-is-not-a-device), so the requirement moved to the role that actually needs it. How it is DRIVEN is no longer its fact to state (#96): the clock is the device's, demanded of every speaking device by the transport's shapes, and a sensor reaches its mode through the stream it shares with its board." ;
+    sh:targetClass sosa:Sensor ;
+    sh:property [ sh:path ag:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path sensing:monitors ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path sosa:observes ; sh:minCount 1 ; sh:nodeKind sh:IRI ] .
+
+sensing:DoubleCoveredPropertyShape a sh:NodeShape ;
+    rdfs:comment "Two sensors reading the SAME property of the SAME FEATURE — the same patch, or the same subject with no patches stated. A Warning and not a Violation, because it is a legitimate rig, one thing measured twice, with defined behaviour: they share one observation node and the last writer wins. Since #98 the cure it hints at is one statement away — sensing:samples, a patch each — and two probes that state two patches are two honest records and SILENT here, which is what made the warning true again in the case it was written for. Different properties of one subject stay ordinary and silent too." ;
+    sh:targetClass sosa:Sensor ;
+    sh:severity sh:Warning ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "another sensor already reads this property of this feature — they will share one observation and the last writer wins. If they are really in different soil, say so: a sosa:Sample each (sensing:samples), and each keeps its own record." ;
+        sh:select """
+            SELECT $this WHERE {
+                $this <http://example.org/orexis/sensing#monitors> ?subject ;
+                      <http://www.w3.org/ns/sosa/observes> ?property .
+                ?other a <http://www.w3.org/ns/sosa/Sensor> ;
+                       <http://example.org/orexis/sensing#monitors> ?subject ;
+                       <http://www.w3.org/ns/sosa/observes> ?property .
+                FILTER (?other != $this)
+                OPTIONAL { $this <http://example.org/orexis/sensing#samples> ?mine }
+                OPTIONAL { ?other <http://example.org/orexis/sensing#samples> ?theirs }
+                BIND(COALESCE(?mine, ?subject) AS ?myFeature)
+                BIND(COALESCE(?theirs, ?subject) AS ?theirFeature)
+                FILTER (?myFeature = ?theirFeature)
+            }
+        """ ] .
+
+sensing:SampledPatchShape a sh:NodeShape ;
+    rdfs:comment "A stated patch must be a sosa:Sample OF the subject its sensor monitors. A probe claiming a patch of some other pot would key its observations under a feature nobody walks back to the right plant — readings recorded faithfully and found by no one, the silent-emptiness failure again." ;
+    sh:targetClass sosa:Sensor ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "the patch this sensor claims is not a sample of the subject it monitors — its readings would answer for the wrong pot, or for none" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this <http://example.org/orexis/sensing#samples> ?patch ;
+                      <http://example.org/orexis/sensing#monitors> ?subject .
+                FILTER NOT EXISTS {
+                    ?patch a <http://www.w3.org/ns/sosa/Sample> ;
+                           <http://www.w3.org/ns/sosa/isSampleOf> ?subject .
+                }
+            }
+        """ ] .
+
+sensing:ObservationShape a sh:NodeShape ;
+    rdfs:comment "Every observation is a complete, authored, versioned MEASUREMENT, carrying the time it was taken — which is what the freshness rule checks, and the procedure it was taken by, which says whether a reading that failed to arrive means a late board or a quiet one. No band: the verdict is each agent's own and is never recorded." ;
+    sh:targetClass sosa:Observation ;
+    sh:property [ sh:path sosa:hasFeatureOfInterest ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path sosa:observedProperty ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
+    # ONE of the two result forms, never neither and never both (#101): the scalar shortcut for
+    # the ordinary reading, or a structured sosa:Result for the reading that is genuinely
+    # multi-component — an accelerometer's axes, wind as speed and direction. Both optional
+    # would be the silent-emptiness failure; the xone is what "may carry a structured result"
+    # must mean here.
+    sh:xone ( [ sh:property [ sh:path sosa:hasSimpleResult ; sh:minCount 1 ; sh:maxCount 1 ;
+                              sh:datatype xsd:decimal ] ;
+                sh:property [ sh:path sosa:hasResult ; sh:maxCount 0 ] ]
+              [ sh:property [ sh:path sosa:hasResult ; sh:minCount 1 ; sh:maxCount 1 ;
+                              sh:nodeKind sh:BlankNodeOrIRI ] ;
+                sh:property [ sh:path sosa:hasSimpleResult ; sh:maxCount 0 ] ] ) ;
+    sh:property [ sh:path sosa:resultTime ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTime ] ;
+    # The instant the result APPLIES TO, where a device supplies its own — a board that
+    # timestamps its readings, or batches ten and sends one message (#101). resultTime keeps
+    # meaning arrival; the two coincide today because no device here speaks for itself yet,
+    # and the first one that does has somewhere honest to land.
+    sh:property [ sh:path sosa:phenomenonTime ; sh:maxCount 1 ; sh:datatype xsd:dateTime ] ;
+    sh:property [ sh:path sosa:madeBySensor ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path sosa:usedProcedure ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:class sensing:SenseMode ;
+                  sh:message "an observation says how it was made — one of the three sense modes, which is what its sensor already states" ] ;
+    sh:property [ sh:path ag:underWorldVersion ; sh:minCount 1 ; sh:datatype xsd:integer ] ;
+    sh:property [ sh:path prov:wasGeneratedBy ; sh:minCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "every reading carries an author" ] .
+
+
+sensing:SubscribingAgentShape a sh:NodeShape ;
+    rdfs:comment "Stating an interval is what makes these figures meaningful, so only this capability demands them. It must watch more closely when in trouble than when comfortable, and neither figure may leave the constitutional bounds — which are stated in this package's ontology.ttl, clamped again by the agent, and clamped a third time by the firmware. A polling agent would need the same two, since they are its own timer rather than the device's; a listening one can hold neither." ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE { ?this <http://example.org/orexis#hasCapability>
+                                       <http://example.org/orexis/sensing#Subscribing> }
+        """ ] ;
+    sh:property [ sh:path sensing:fastSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:integer ; sh:minInclusive 10 ; sh:maxInclusive 900 ;
+                  sh:lessThanOrEquals sensing:slowSleepS ;
+                  sh:message "the fast interval must be within the constitutional bounds and no slower than the slow one" ] ;
+    sh:property [ sh:path sensing:slowSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:integer ; sh:minInclusive 10 ; sh:maxInclusive 900 ;
+                  sh:message "no agent may sleep past the constitutional ceiling — autonomy over attention, never the freedom to sleep through a drought" ] ;
+    sh:property [ sh:path sensing:alarmDeltaFraction ; sh:maxCount 1 ;
+                  sh:datatype xsd:decimal ; sh:minInclusive 0.05 ; sh:maxInclusive 0.5 ;
+                  sh:message "a jolt threshold is a pick within the constitutional bounds — below 0.05 sensor noise reads as news, above 0.5 the band edge always fires first. Optional: an agent that states none commands band-only alarms" ] .
+
+sensing:ListeningAgentShape a sh:NodeShape ;
+    rdfs:comment "An agent that ONLY listens must not hold an interval: requiring a policy it cannot enforce would be theatre, and stating one would misdescribe the hardware. The exclusion matters — an agent may hold a scheduled sensor and a push one, and then it needs both blocks. Written as 'listens and does not subscribe' rather than 'listens', because the earlier form made the two shapes contradict each other on such an agent: one demanded an interval and the other forbade it, so a perfectly ordinary rig — a plant with a scheduled moisture probe and a push thermometer — could not be validated at all." ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://example.org/orexis#hasCapability>
+                      <http://example.org/orexis/sensing#Listening> .
+                FILTER NOT EXISTS { ?this <http://example.org/orexis#hasCapability>
+                                          <http://example.org/orexis/sensing#Subscribing> }
+            }
+        """ ] ;
+    sh:property [ sh:path sensing:fastSleepS ; sh:maxCount 0 ;
+                  sh:message "a listening agent states no interval — its device does not take one" ] ;
+    sh:property [ sh:path sensing:slowSleepS ; sh:maxCount 0 ] ;
+    sh:property [ sh:path sensing:alarmDeltaFraction ; sh:maxCount 0 ;
+                  sh:message "a listening agent holds no jolt threshold — its device takes no orders, so its delta is baked at flash time from the family's figure and no belief could ever reach it" ] .
+
+sensing:StatedFrequencyShape a sh:NodeShape ;
+    rdfs:comment """A stated Frequency must say a number AND which unit it is in.
+
+`sensing:seconds` said the unit in its name and its range said `xsd:integer`, and neither was
+checked: `rdfs:range` is not in the closure. Saying it as `schema:value` + `schema:unitCode` is
+the idiom the W3C's own DHT22 example uses, and it makes the unit a fact rather than a spelling —
+which is worth having, because the derivation reads that number as SECONDS. A Frequency stated in
+milliseconds would otherwise raise an agent's floor by a factor of a thousand, silently, and be a
+perfectly well-formed graph.
+
+TWO IRIs for seconds, because the W3C's own SSN examples were written against QUDT 1.1 and that
+is a different namespace rather than an older spelling of the current one. Both denote the same
+unit, so `sh:in` says which spellings this project can READ; `packages/orexis-part-dht11/` shows the one it
+writes. Accepting theirs costs nothing — a figure is still refused unless it says seconds — and
+refusing it would have made a datasheet from the vocabulary's own authors unreadable over a
+namespace version.""" ;
+    sh:targetClass ssn-system:Frequency ;
+    sh:property [ sh:path schema:value ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ;
+                  sh:message "a stated frequency must carry one whole number" ] ;
+    sh:property [ sh:path schema:unitCode ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:in ( unit:SEC qudt11-unit:Second ) ;
+                  sh:message "a stated frequency must be in seconds — the derivation reads it as seconds" ] .
+
+sensing:DetectsOnlyStimuliShape a sh:NodeShape ;
+    rdfs:comment "SSN's own restriction — ssn:detects ONLY ssn:Stimulus — restated as a shape because we borrow IRIs and never import the ontology that constrains them (#100). A sensor detecting something that is not a stimulus is a category slip: what it responds to physically and what the society wants known are different ends of the conversion, and the calibration lives between them." ;
+    sh:targetObjectsOf <http://www.w3.org/ns/ssn/detects> ;
+    sh:class <http://www.w3.org/ns/ssn/Stimulus> ;
+    sh:message "what a sensor detects is a stimulus — the physical thing it responds to, which stands in for the property via ssn:isProxyFor" .
+
+sensing:DeployedWithinItsInstrumentsRangeShape a sh:NodeShape ;
+    rdfs:comment """A deployment is held to its instruments' stated ranges (#111). A part's
+datasheet already says what it can witness — the DHT11's MeasurementRange has stated 0..50 °C
+and 20..90 %RH since its package was written, entailed onto every unit by the closure — and a
+deployment now states what its SITE will do: an ambient envelope, in the same Condition idiom
+the plants and the parts speak. This shape asks the one question that joins them: does every
+deployed sensor's range CONTAIN the envelope for the property it observes? Asked the day the
+terrace was proposed, the graph answered "not the DHT11" from figures nobody had to look up —
+this makes that answer a refusal at orexis-validate time instead of a comment at first frost.
+
+Joined by UNIT as well as property, deliberately: a range stated in PERCENT and an envelope in
+a fraction are not comparable, and comparing them anyway would refuse worlds on arithmetic
+that means nothing. A mismatched unit is therefore SKIPPED, not refused — the honest seam,
+stated here so nobody mistakes silence for coverage. A sensor with no stated range is likewise
+not held: the moisture probe describes itself the old way and makes no claim to hold it to.
+
+Sovereign-scoped by construction: deployments live in hardware.ttl, which an agent is never
+given, so validate_agent never targets this — the same scoping as the wiring shapes.""" ;
+    sh:targetClass <http://www.w3.org/ns/ssn/Deployment> ;
+    sh:sparql [
+        sh:message "this deployment's site envelope leaves the stated range of a deployed sensor — the instrument cannot witness the place it is installed" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this <http://www.w3.org/ns/ssn/deployedSystem> ?deployed .
+                ?deployed (<http://www.w3.org/ns/ssn/hasSubSystem>)* ?sensor .
+                ?sensor <http://www.w3.org/ns/sosa/observes> ?p .
+                $this <http://www.w3.org/ns/ssn/systems/inCondition> ?k .
+                ?k <http://www.w3.org/ns/ssn/forProperty> ?p ;
+                   <https://schema.org/minValue> ?kmin ;
+                   <https://schema.org/maxValue> ?kmax ;
+                   <https://schema.org/unitCode> ?u .
+                ?sensor <http://www.w3.org/ns/ssn/systems/hasSystemCapability> ?c .
+                ?c <http://www.w3.org/ns/ssn/systems/hasSystemProperty> ?r .
+                ?r a <http://www.w3.org/ns/ssn/systems/MeasurementRange> ;
+                   <https://schema.org/minValue> ?rmin ;
+                   <https://schema.org/maxValue> ?rmax ;
+                   <https://schema.org/unitCode> ?u .
+                FILTER(?kmin < ?rmin || ?kmax > ?rmax)
+            }""" ] .
+
+
+#################  The stake  #################
+#
+#  Were `ag:DesirerShape` and `ag:BeyondSurvivalShape` in the kernel's shapes, targeted on
+#  "acts for a subject that states what it needs" — `ssn-system:hasOperatingRange`, this
+#  package's premise for the region want it derives in `desires.ru`. A shape whose target is
+#  a sensing sentence is a sensing shape (the-stake-is-sensings-want). The kernel keeps
+#  `ag:KeeperShape`, which asks the same agents for a patience, targeted on the want itself.
+
+sensing:DesirerShape a sh:NodeShape ;
+    rdfs:comment """An agent that acts for a subject stating what it needs must end up with at least one region. The two are derived from very nearly the same premise and can still come apart: the grant asks only that the subject state a range, and the deduction additionally asks that every range applying to a property AGREE. A plant whose pot says 0.45-0.65 in a world whose instrument says 0.10-0.30 produces an empty intersection, no region, and — without this shape — an agent that starts, holds the capability, and quietly has no opinion about anything.
+
+That failure is the one this whole design is most exposed to, because its symptom is silence: no band on any announcement, the slow cadence forever, and a market that never hears that anyone is in trouble. Refusing to start is loud, and the report names the agent.""" ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://example.org/orexis#actsFor> ?subject .
+                ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange>/<http://www.w3.org/ns/ssn/systems/inCondition> ?condition .
+                ?condition <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                           <https://schema.org/minValue> ?min ;
+                           <https://schema.org/maxValue> ?max .
+            }
+        """ ] ;
+    sh:property [ sh:path ag:holds ; sh:minCount 1 ;
+                  sh:message "this agent acts for a subject that states what it needs, but no region survived intersecting those ranges — check that every range stated for a property actually overlaps" ] .
+
+sensing:UnwatchedRegionShape a sh:NodeShape ;
+    rdfs:comment """A region in a property this agent watches nothing for. Not a refusal: the agent starts, holds an opinion about the property, and can never be shown to be wrong about it — so the report says which property, and a human decides whether the sensor is missing or the region is.
+
+WAS `sensing:BeyondSurvivalShape`, and before that the kernel's. It was named for a hand-written "the last reading lies outside what the subject survives" check that is gone: the deduction emits that shape now, targeting the subject and saying the same sentence in the language the checker already speaks (|gap| = 1 in `gap.rq` is the same fact as a number). Removing the check was right and the NAME was left behind, so a warning about a blind region arrived under a heading about survival. Whoever wrote `domain/desire.md` reached for `desire:UnwatchedDesireShape`, a term that never existed anywhere — the clearest evidence available that the old name described nothing this shape does (#275).""" ;
+    sh:severity sh:Warning ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://example.org/orexis#actsFor> ?subject .
+                ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange>/<http://www.w3.org/ns/ssn/systems/inCondition> ?condition .
+                ?condition <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                           <https://schema.org/minValue> ?min ;
+                           <https://schema.org/maxValue> ?max .
+            }
+        """ ] ;
+    sh:sparql [
+        sh:severity sh:Warning ;
+        sh:message "a desire in a property this agent polls no sensor for — the region is real, and the agent will never see a reading to hold it to" ;
+        sh:select """
+            SELECT $this ?property WHERE {
+                $this <http://example.org/orexis#actsFor> ?subject ;
+                      <http://example.org/orexis#holds> ?region .
+                ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
+                FILTER NOT EXISTS {
+                    $this <http://example.org/orexis/sensing#polls> ?sensor .
+                    ?sensor <http://example.org/orexis/sensing#monitors> ?subject ;
+                            <http://www.w3.org/ns/sosa/observes> ?property .
+                }
+            }""" ] .
+
+# The aim answers to the region, and both halves of that sentence are checked here — sensing's, since the
+# region is (the-stake-is-sensings-want) — rather than in any domain: which properties may be aimed at and where the aim may sit are this package's
+# arithmetic, true of a thermometer exactly as of a pot. What a DOMAIN checks is different in
+# kind — that a bidder holds an aim in the property its bids are priced in — and stays in the
+# domain's shapes, because only the domain knows a bid exists.
+#
+# Targeted through what POINTS at an aim, not by class: an aim is written inline as
+# `sensing:aims [ ... ]` and nobody types `a sensing:Aim` on a node they are already describing —
+# the same lesson review's mandate shape records.
+sensing:AimShape a sh:NodeShape ;
+    rdfs:comment """An aim is one property and one value, and the value sits inside the shape the agent is held to for that property. The checks span a PUBLIC shape and a PRIVATE aim, which meet only inside the agent at boot — nothing outside it ever sees the number.\n\nThis is the containment check a-desire-is-a-shape names as a seam: SHACL has no operator for "this shape is inside that one", so the bound is read out of the deduced shape as the ordinary RDF it is. SHACL, validated by a query over SHACL — mind-bending to read, and the price of having one language for what a graph should look like instead of two.""" ;
+    sh:targetSubjectsOf sensing:aims ;
+    sh:property [ sh:path ( sensing:aims <http://www.w3.org/ns/ssn/forProperty> ) ;
+                  sh:minCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "an aim must say which property it is a pick FOR" ] ;
+    sh:property [ sh:path ( sensing:aims <https://schema.org/value> ) ;
+                  sh:minCount 1 ; sh:datatype xsd:decimal ;
+                  sh:message "an aim must carry one decimal value" ] ;
+    sh:sparql [
+        sh:message "an aim names a property this agent holds no region in — a pick with nothing to pick inside is a number with nothing behind it" ;
+        sh:select """
+            SELECT $this ?property WHERE {
+                $this <http://example.org/orexis/sensing#aims> ?aim .
+                ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
+                FILTER NOT EXISTS {
+                    $this <http://example.org/orexis#holds> ?shape .
+                    ?shape <http://www.w3.org/ns/ssn/forProperty> ?property .
+                }
+            }""" ] ;
+    sh:sparql [
+        sh:message "the aim sits outside the region this agent deduced for that property — a desire is a pick within a range, not a number of its own" ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this <http://example.org/orexis/sensing#aims> ?aim .
+                ?aim <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                     <https://schema.org/value> ?value .
+                $this <http://example.org/orexis#holds> ?desire .
+                ?desire <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                        <http://example.org/orexis#metWhen> ?shape .
+                ?shape <http://www.w3.org/ns/shacl#property> ?below , ?above .
+                ?below <http://www.w3.org/ns/shacl#severity>
+                       <http://example.org/orexis#ShouldBecome> ;
+                       <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
+                       <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?low .
+                ?above <http://www.w3.org/ns/shacl#severity>
+                       <http://example.org/orexis#ShouldBecome> ;
+                       <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
+                       <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?high .
+                FILTER(?value < ?low || ?value > ?high)
+            }""" ] ;
+    sh:sparql [
+        sh:message "two aims for one property — an agent steering one property toward two points is not steering" ;
+        sh:select """
+            SELECT $this ?property WHERE {
+                $this <http://example.org/orexis/sensing#aims> ?one , ?other .
+                ?one   <http://www.w3.org/ns/ssn/forProperty> ?property .
+                ?other <http://www.w3.org/ns/ssn/forProperty> ?property .
+                FILTER(?one != ?other)
+            }""" ] .
+
+
+sensing:DeducedRegionShape a sh:NodeShape ;
+    rdfs:comment "What a deduced region or envelope must be to be readable by the code that will divide by its width — the property-shaped half of what was `ag:DesireShape`, whose kernel half still checks whose state a met-test is about and with what force. Every figure here was computed, so this is arithmetic rather than authorship; a check over derived data is worth exactly as much as one over authored data when the reader is code." ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                { ?agent <http://example.org/orexis#holds> ?held .
+                  ?held <http://example.org/orexis#metWhen> ?this }
+                UNION
+                { ?agent <http://example.org/orexis#holds> ?this .
+                  ?this a <http://www.w3.org/ns/shacl#NodeShape> . }
+            }
+        """ ] ;
+    sh:property [ sh:path <http://www.w3.org/ns/ssn/forProperty> ;
+                  sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "a deduced shape must say which property it is about" ] ;
+    # The envelope has to be OUTSIDE the region, on both sides, or the arithmetic that scales
+    # urgency by it produces a negative denominator and an agent that is most relaxed exactly
+    # where it is closest to dying. Nothing authored can cause this directly — both figures are
+    # intersections — but a world whose survival range is narrower than its operating range can,
+    # and `water:RangesAgreeShape` only checks that pairing per plant. This checks it after
+    # everything that applies has been folded together, which is where a rig assembled from two
+    # correct halves can still be wrong.
+    #
+    # Every optional bound is guarded with BOUND rather than compared directly, and it is not
+    # defensive typing. `?low < ?floor` on an unbound `?floor` is an ERROR, and SPARQL's `||`
+    # propagates an error unless some other operand is true — so a region with no envelope made
+    # the whole filter error, the row vanish, and the `?low > ?high` case it was also supposed to
+    # catch go unreported. The shape would have been green on exactly the world it was written
+    # for.
+    #
+    # Both edges are read off the SIDE shapes since #242: the floor is what the Below shape
+    # refuses to see a reading under, the ceiling what the Above shape refuses to see one over.
+    # `sh:maxExclusive ?low` still means the region is inclusive of ?low — a reading strictly
+    # below it is the violation — so the arithmetic below is untouched by the split.
+    sh:sparql [
+        sh:message "a region lies outside the envelope it is supposed to sit inside — the survival range stated for this property is narrower than the operating range, once every source is intersected" ;
+        sh:select """
+            SELECT $this ?low ?high WHERE {
+                $this <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                      <http://www.w3.org/ns/shacl#property> ?below , ?above .
+                ?below <http://www.w3.org/ns/shacl#severity>
+                       <http://example.org/orexis#ShouldBecome> ;
+                       <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
+                       <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?low .
+                ?above <http://www.w3.org/ns/shacl#severity>
+                       <http://example.org/orexis#ShouldBecome> ;
+                       <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
+                       <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?high .
+                OPTIONAL {
+                    ?agent <http://example.org/orexis#holds> ?desire , ?envelope .
+                    ?desire <http://example.org/orexis#metWhen> $this .
+                    ?envelope <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                              <http://www.w3.org/ns/shacl#property> ?underFloor , ?overCeiling .
+                    ?underFloor <http://www.w3.org/ns/shacl#severity>
+                                <http://www.w3.org/ns/shacl#Warning> ;
+                                <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
+                                <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?floor .
+                    ?overCeiling <http://www.w3.org/ns/shacl#severity>
+                                 <http://www.w3.org/ns/shacl#Warning> ;
+                                 <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
+                                 <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?ceiling }
+                FILTER(   ?low > ?high
+                       || (BOUND(?floor)   && ?low  < ?floor)
+                       || (BOUND(?ceiling) && ?high > ?ceiling))
+            }""" ] .

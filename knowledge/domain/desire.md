@@ -39,7 +39,7 @@ looking for a distinction that was never there.
 
 Nothing writes a desire, and the kernel derives none. The build collects `desires.ru` from every
 loaded package exactly as genesis collects `rules.ru`, and what belongs in one is a want whose
-PREMISE belongs to that package: `packages/capability/sensing/desires.ru` computes the region
+PREMISE belongs to that package: `packages/orexis-capability-sensing/desires.ru` computes the region
 want from what the subject and its instruments state — the result is a
 [region](/domain/region.md); that page has the intersection, the two kinds of bearer, and why a
 graph found by TYPE rather than by name is what makes a second source of desire possible — and

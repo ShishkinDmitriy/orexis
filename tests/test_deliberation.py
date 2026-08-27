@@ -20,11 +20,11 @@ import pytest
 
 from agent.world import load_self
 from agent.menu import menu_of
-from packages.capability.market.terms import ACQUIRING
-from packages.capability.sensing.terms import OBSERVING
+from orexis_capability_market.terms import ACQUIRING
+from orexis_capability_sensing.terms import OBSERVING
 
 from agent.ontology import beliefs_graph
-from packages.capability.sensing.regions import ObservedDesire
+from orexis_capability_sensing.regions import ObservedDesire
 from conftest import stake_of, MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for, wired_markets, wired_sensors, write_reading
 
 
@@ -111,7 +111,7 @@ def _read(agent, value, age_s=0):
     """
     from datetime import datetime, timedelta, timezone
 
-    from packages.capability.sensing.sensed_writer import SensedWriter
+    from orexis_capability_sensing.sensed_writer import SensedWriter
 
     sensor = wired_sensors(agent)[0]
     SensedWriter(agent.beliefs).write(
@@ -422,7 +422,7 @@ def test_the_search_finds_the_dealers_two_step_from_two_nodes_that_never_meet(ma
     those two rows, because Acquiring's effect raises the stock that Offering's premise reads.
     `plan.rq` used to narrate this by hand; a narrative beside a search that produces the same
     thing was the kernel's last reason to spell the market's `Offer`."""
-    from packages.capability.market import calls
+    from orexis_capability_market import calls
 
     supplier = make("supplier", genesis_store({("barrel1", STORED): 0.0}))
     open_round_for(supplier, "supplier")                 # the city convenes

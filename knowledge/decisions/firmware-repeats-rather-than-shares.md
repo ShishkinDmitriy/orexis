@@ -48,7 +48,7 @@ blinks at all. The colours mean different things on the two boards. Extracting t
 would leave the interesting half — which colour means what, and why — behind in both files
 anyway, and would invite a future editor to add a verdict to a board that cannot have one.
 
-**Packages carry knowledge, not firmware behaviour.** `packages/part/rgb_led/` is
+**Packages carry knowledge, not firmware behaviour.** `packages/orexis-part-rgb-led/` is
 `ontology.ttl` + `shapes.ttl` + `wokwi/`, and there is no C or C++ anywhere under `packages/`.
 `agent.loader` reads Python; it would never see a header. So putting driver code there does not
 extend the existing mechanic — it invents a second one, and couples `platformio.ini` to the

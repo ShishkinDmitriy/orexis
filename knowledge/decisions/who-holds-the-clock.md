@@ -30,7 +30,7 @@ explicitly recounting the earlier rename.
 
 **The `briefly` column never shipped past a review.** `Sampling` collides with `sosa:Sampling`,
 an act that produces a `sosa:Sample` — a specimen taken away and examined, which is not what a
-probe sitting in soil does. `Reporting` collides with `packages/capability/reporting/`, which this
+probe sitting in soil does. `Reporting` collides with `packages/orexis-capability-reporting/`, which this
 project created eight commits earlier for telemetry an agent emits about itself.
 
 **`Sensing` shipped and was superseded for a different kind of reason.** It collided with
@@ -165,7 +165,7 @@ Measured on `world/sensing`, removing one `mqtt:commandTopic` at a time:
 | `ag:air_temp_fern` | no | yes |
 | `ag:air_humidity_fern` | no | yes |
 
-The guard lives in `packages/transport/mqtt/shapes.ttl` and is conditioned on a sensor being **on a
+The guard lives in `packages/orexis-transport-mqtt/shapes.ttl` and is conditioned on a sensor being **on a
 bus**. The two DHT channels are `sosa:Sensor` and deliberately not devices — they ride the board's
 topic and have no `mqtt:onBus` of their own — so the shape never targets them. Each is
 `sensing:ScheduledProcedure`, each derives `sensing:Subscribing`, and each can lose the

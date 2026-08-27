@@ -12,10 +12,10 @@ from __future__ import annotations
 import pytest
 
 from agent import genesis
-from packages.capability.review.graphs import summaries_graph
+from orexis_capability_review.graphs import summaries_graph
 from agent.ontology import STATE_GRAPH, term
 from agent.store import Store
-from packages.capability.review.summary import RING, Summaries
+from orexis_capability_review.summary import RING, Summaries
 
 from conftest import MOISTURE, WORLDS_ROOT, build_agent
 

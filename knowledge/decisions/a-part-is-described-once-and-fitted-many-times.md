@@ -12,7 +12,7 @@ timestamp: 2026-08-12T00:00:00Z
 
 # Context
 
-`packages/part/dht11/` was asked to become the reference for describing a part — the directory
+`packages/orexis-part-dht11/` was asked to become the reference for describing a part — the directory
 someone copies when adding a peripheral — starting from the DHT22 description in W3C's SSN
 documentation, which we already hold byte-identical as a fixture
 (`tests/fixtures/w3c-ssn/dht22.ttl`; see
@@ -216,7 +216,7 @@ more than before.
   act — and then the procedure should be the read, which the agent cannot name — or it is the
   agent's act of recording, and `madeBySensor` is provenance of the value rather than of the act.
   W3C's example takes the first reading. Ours has never said which it takes.
-- **The plant side now has a counterpart.** `packages/plant/zamioculcas/` describes a species the
+- **The plant side now has a counterpart.** `packages/orexis-plant-zamioculcas/` describes a species the
   same way for the same reason — see
   [a-species-is-described-once-and-planted-many-times](/decisions/a-species-is-described-once-and-planted-many-times.md).
 - **No other part has been converted.** The moisture probe and the RGB LED still describe
@@ -226,7 +226,7 @@ more than before.
   deployment was proposed, the DHT11's own ontology answered why it could not go: a
   `MeasurementRange` of 0–50 °C and 20–90 %RH is a part that cannot report a frost or a fog,
   stated at the class since the package was written. Fitness for a place is therefore already
-  graph-visible — `packages/part/bme280/` was added as the outdoor-worthy counterpart, on this
+  graph-visible — `packages/orexis-part-bme280/` was added as the outdoor-worthy counterpart, on this
   record's template — and the check is WRITTEN now
   ([#111](https://github.com/ShishkinDmitriy/orexis/issues/111), closed): a deployment states
   its site's ambient envelope in the same Condition idiom the parts speak, and

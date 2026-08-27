@@ -79,7 +79,7 @@ So:
 `mc:carries rdfs:subPropertyOf sosa:hosts` was the same move from the other direction, and this is
 the second instance — enough to call it the shape rather than the exception.
 
-It is restated in `packages/capability/sensing/ontology.ttl`, not in the kernel's `agent/ontology.ttl`, though the
+It is restated in `packages/orexis-capability-sensing/ontology.ttl`, not in the kernel's `agent/ontology.ttl`, though the
 subject is a class this package does not own. The axiom is load-bearing only because sensors have
 capabilities, and sensing is where a sensor is; the kernel would be asserting it on behalf of a
 package that may not be installed.

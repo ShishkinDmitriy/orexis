@@ -10,12 +10,12 @@ deciding, committing and acting runs with no economy at all.
 import pytest
 
 from agent.menu import menu_of
-from packages.capability.market.terms import ACQUIRING
-from packages.capability.actuation.terms import DOSING
-from packages.capability.sensing.terms import OBSERVING
+from orexis_capability_market.terms import ACQUIRING
+from orexis_capability_actuation.terms import DOSING
+from orexis_capability_sensing.terms import OBSERVING
 
 from agent.ontology import beliefs_graph
-from packages.capability.sensing.regions import ObservedDesire
+from orexis_capability_sensing.regions import ObservedDesire
 from conftest import sensing_of, stake_of, build_agent, genesis_store, desires_build, open_round_for, write_reading
 
 MOIST = "http://example.org/orexis/water#SoilMoisture"

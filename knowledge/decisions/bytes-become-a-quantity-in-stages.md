@@ -32,7 +32,7 @@ unrecorded one.** That is the trigger this record acted on.
 
 # Decision — two families, one function, and a package tree each
 
-`packages/codec/json/` and `packages/scaling/identity/`, beside `packages/transport/`. Each declares
+`packages/orexis-codec-json/` and `packages/orexis-scaling-identity/`, beside `packages/orexis-transport-*/`. Each declares
 its family and three members, of which one is implemented:
 
 | | family | implemented | declared |
@@ -91,8 +91,8 @@ something an *agent* has. What differs is the bearer, and the predicate follows 
 
 | tree | borne by | conclusion |
 |---|---|---|
-| `packages/capability/` | an agent | `ag:hasCapability` on the agent |
-| `packages/transport/`, `packages/codec/`, `packages/scaling/` | a binding | a predicate on the **sensor** |
+| `packages/orexis-capability-*/` | an agent | `ag:hasCapability` on the agent |
+| `packages/orexis-transport-*/`, `packages/orexis-codec-*/`, `packages/orexis-scaling-*/` | a binding | a predicate on the **sensor** |
 
 The reason is not convention. An agent's capability is about what it **is**, which is a fact the
 world should hold and validate. A binding's is about what a device **speaks**, which only the
@@ -150,7 +150,7 @@ The half that is not arithmetic, and the one that bites first.
 A raw value is a bare number; a **quantity** is a number with a unit. Since
 [#51](https://github.com/ShishkinDmitriy/orexis/issues/51) one store holds soil moisture `0.183`,
 air humidity `0.46` and air temperature `21.4` — three numbers in two dimensions, two of which look
-identical. The convention lived in prose, in `packages/plant/water`: *"the whole private valuation is
+identical. The convention lived in prose, in `packages/orexis-plant-water`: *"the whole private valuation is
 denominated in soil moisture."*
 
 `scaling:quantityUnit` states it instead, with **QUDT** IRIs as objects — `unit:UNITLESS` for
@@ -256,7 +256,7 @@ premise-then-conclusion discipline, and the pointer staying a function.
 - **Nothing compares units before comparing numbers.** `water:bandLow` is a bare decimal and no code
   asks what unit the reading it is compared against is in. Stating units makes that check
   *possible*; it does not perform it.
-- **The unit reaches nothing downstream.** the series writer (`packages/capability/reporting/series.py`, once `agent/influx_writer.py`) tags a reading with its
+- **The unit reaches nothing downstream.** the series writer (`packages/orexis-capability-reporting/series.py`, once `agent/influx_writer.py`) tags a reading with its
   property and not its unit, so the series store still cannot say what `21.4` is. Deliberate: #51
   changed the shape of that data once already, and doing it twice in consecutive changes would be
   two migrations where one would do.

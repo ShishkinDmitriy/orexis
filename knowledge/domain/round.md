@@ -17,7 +17,7 @@ provisional picture out, and the chance to bid again. It is not the auction and 
 | [auction](/domain/auction.md) | the process that allocates one lot: it condenses, allocates, dissolves |
 | **round** | one pass of bidding inside that process |
 
-**Exactly one round is built.** `run_auction` in `packages/capability/market/auction.py` takes an offer and a set of bids
+**Exactly one round is built.** `run_auction` in `packages/orexis-capability-market/auction.py` takes an offer and a set of bids
 and returns a proposed trade — there is no loop, so an auction opens, collects once, matches, and
 settles. Today an auction therefore has a single round and the two coincide exactly. Everything
 below step 3 is the designed shape and not the running one.

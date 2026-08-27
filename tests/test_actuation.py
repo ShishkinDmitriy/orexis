@@ -13,12 +13,11 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from agent import signing
 
-from assembly import loader  # noqa: F401  (loader puts the package trees on sys.path)
-from packages.capability.market.clearing import Claim
+from orexis_capability_market.clearing import Claim
 from agent.signing import verify_command
-from packages.capability.actuation.module import ActuationModule
+from orexis_capability_actuation.module import ActuationModule
 from agent.world import Self
-from packages.capability.actuation.wiring import Actuator
+from orexis_capability_actuation.wiring import Actuator
 
 
 class FakeAgent:

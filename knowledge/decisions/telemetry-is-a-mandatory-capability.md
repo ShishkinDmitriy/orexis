@@ -51,7 +51,7 @@ intact.
 
 # Decision — a package, granted unconditionally, insisted on by a shape
 
-`packages/capability/reporting/`, with its own namespace, ontology, shapes, rule, beliefs and
+`packages/orexis-capability-reporting/`, with its own namespace, ontology, shapes, rule, beliefs and
 module. `reporting:Storing` is implemented; `reporting:Announcing` is declared with nothing behind
 it, exactly as `review:Consulting` and `sensing:Polling` are.
 

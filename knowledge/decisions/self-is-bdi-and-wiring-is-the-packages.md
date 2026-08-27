@@ -29,7 +29,7 @@ package read its own wiring off the kernel's record of it.
 the one identifier a process is handed, and what the graph says of it.
 
 **What it is wired to is each package's.** `Sensor` and `sensors_of` in
-`packages/capability/sensing/wiring.py`; `Actuator`, `actuators_of` and `actuator_for` in
+`packages/orexis-capability-sensing/wiring.py`; `Actuator`, `actuators_of` and `actuator_for` in
 actuation's; `Market`, `bidding_markets_of`, `hosted_markets_of`, `participants` and
 `allocation_ceilings` in the market's. The dataclasses and the queries are the ones the kernel
 had; each module loads its own at construction (`self.sensors`, `self.actuators`,

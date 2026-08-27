@@ -62,7 +62,7 @@ kernel for longer than it belonged there.
 `Observations` counts into them before any module exists — so the account itself is the kernel's,
 on the same argument that put [observation](/decisions/capability-packages.md) there.
 
-**Where the account goes could differ**, so that is `packages/capability/reporting/`: a credential, a
+**Where the account goes could differ**, so that is `packages/orexis-capability-reporting/`: a credential, a
 writer, a clock and one write per tick. `reporting:Storing` puts it in this agent's own series
 bucket; `reporting:Announcing` — declared, unimplemented — would put it on the bus, and the two
 fail independently, which for telemetry is the point rather than a nicety.

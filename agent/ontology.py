@@ -18,7 +18,7 @@ uses and which want a simulation package that does not exist; and `ag:ComputeHos
 and `ag:lanHost`, which only `world/sensing` states. See
 knowledge/decisions/every-term-in-its-own-house.md.
 
-`ag:SelfReporting` was one more and has left, to `packages/capability/reporting/`. It was declared a
+`ag:SelfReporting` was one more and has left, to `packages/orexis-capability-reporting/`. It was declared a
 capability and granted by nothing; it is granted by a rule now, insisted on by a shape, and named
 in its own namespace. See knowledge/decisions/telemetry-is-a-mandatory-capability.md.
 

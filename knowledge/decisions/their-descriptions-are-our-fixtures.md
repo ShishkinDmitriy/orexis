@@ -70,7 +70,7 @@ and nothing here emits the legacy form. `agent/inference.py` rule 4 carries it, 
 written for exactly this and whose own comment recorded that it had nothing left to exercise.
 
 **QUDT 1.1.** Their unit is `qudt-1-1:Second`, a different namespace rather than an older
-spelling. `sh:in` now says which spellings can be *read*, where `packages/part/dht11/` shows the one
+spelling. `sh:in` now says which spellings can be *read*, where `packages/orexis-part-dht11/` shows the one
 we write. A figure is still refused unless it says seconds.
 
 ## What still refuses, and why that is the point
@@ -93,7 +93,7 @@ example bundles one for illustration, and that one part of their file was never 
   drives it, what it watches and where it publishes. Neither restates the other, and our fixtures
   now demonstrate exactly that split rather than asserting it.
 - **The frequency figure is corroborated.** Their datasheet says 2 seconds, which is what
-  `packages/part/dht11/` declares for the KY-015 — a number nobody here measured, confirmed by the
+  `packages/orexis-part-dht11/` declares for the KY-015 — a number nobody here measured, confirmed by the
   vocabulary's own authors.
 - **A third-party file is now a gate.** If a future change makes a vendor description fail for a
   new reason, a test says so and names it.

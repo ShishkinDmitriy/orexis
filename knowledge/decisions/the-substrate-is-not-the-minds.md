@@ -35,7 +35,7 @@ own ontologies.
 
 **And the kernel does not own it.** That is the part those audits got wrong by leaving it where
 it was: a mind is not made of anything, so what a thing is made of cannot be the kernel's word.
-`packages/part/device/` — knowledge-only, no Python and nothing to grant — holds `device:Device`
+`packages/orexis-part-device/` — knowledge-only, no Python and nothing to grant — holds `device:Device`
 and the shape that makes one reachable, and it sits in the `part` family because that is where
 hardware description already lives.
 
@@ -44,7 +44,7 @@ held was not one vocabulary but two: a word for substrate, and a word for its AB
 alike and they are opposites, which is why the first draft of this change put them in one package
 and had to be corrected — see
 [a-stand-in-is-not-a-device](/decisions/a-stand-in-is-not-a-device.md), which owns why
-`packages/sim/standin/` exists and why nothing that observes or acts asks either package for
+`packages/orexis-sim-standin/` exists and why nothing that observes or acts asks either package for
 anything.
 
 **The kernel keeps what is about the installation rather than the hardware**: `ag:ComputeHost`,

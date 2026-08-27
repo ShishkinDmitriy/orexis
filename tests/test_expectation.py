@@ -15,8 +15,8 @@ from dataclasses import replace
 
 import pytest
 
-from packages.capability.market.terms import ACQUIRING
-from packages.capability.actuation.terms import DOSING as _ACTUATE
+from orexis_capability_market.terms import ACQUIRING
+from orexis_capability_actuation.terms import DOSING as _ACTUATE
 
 from agent.store import bindings
 from agent.ontology import AG
@@ -177,7 +177,7 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
     acknowledged at the fast cadence is proof the board heard the tightening, and THAT is when
     the claim goes out, the Apply resolves, and the expectation opens with a baseline the hold
     did not age."""
-    from packages.capability.market.terms import PRESENTING
+    from orexis_capability_market.terms import PRESENTING
 
     market = market_of(thirsty)
     keeper = keeper_of(thirsty)

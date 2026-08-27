@@ -18,11 +18,11 @@ import pytest
 from agent import genesis
 
 from assembly import loader
-from packages.capability.sensing.scaling import scaling_for
-from packages.scaling.identity.terms import IDENTITY, LINEAR
-from packages.capability.sensing.codec import Codec, CodecError, codec_for
-from packages.codec.json.codec import JsonCodec
-from packages.codec.json.terms import CBOR, JSON
+from orexis_capability_sensing.scaling import scaling_for
+from orexis_scaling_identity.terms import IDENTITY, LINEAR
+from orexis_capability_sensing.codec import Codec, CodecError, codec_for
+from orexis_codec_json.codec import JsonCodec
+from orexis_codec_json.terms import CBOR, JSON
 from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from agent.store import PREFIXES, bindings
 
@@ -234,7 +234,7 @@ def test_bytes_that_are_not_a_document_raise_one_error(payload):
 def test_the_sensing_world_states_a_unit_for_every_sensor():
     """Two of these three are fractions and look identical; the third is degrees.
 
-    Before this the distinction lived in prose — `packages/plant/water` saying the valuation is
+    Before this the distinction lived in prose — `packages/orexis-plant-water` saying the valuation is
     "denominated in soil moisture" — while the store held all three as bare decimals. A unit is
     the only thing that says 0.46 humidity and 21.4 degrees are not the same kind of number.
     """

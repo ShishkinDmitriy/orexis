@@ -30,7 +30,7 @@ class WorldError(RuntimeError):
 #  `MessageBus` and `load_bus` WERE HERE — the kernel asking the world for `mqtt:MessageBus`
 #  and its ports, the last package word it spoke. Where a society meets is the transport's to
 #  find, in its own vocabulary: the transport's module — a capability the fact of the bus grants — finds it, and
-#  `packages/transport/mqtt/module.py` answers (the-kernel-has-no-mailbox).
+#  `packages/orexis-transport-mqtt/module.py` answers (the-kernel-has-no-mailbox).
 
 #  `Sensor`, `Actuator` and `Market` WERE HERE, and `load_self` loaded all three by their
 #  packages' words — the kernel knowing what a probe, a valve and a venue are, in SPARQL the

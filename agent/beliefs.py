@@ -69,7 +69,7 @@ class Picks:
 
 #  `Reading`, `_parse_reading` and `current_reading` WERE HERE — the kernel knowing that a
 #  belief about a property is a sosa observation. What a reading looks like is sensing's
-#  (`packages/capability/sensing/readings.py`, the-stake-is-sensings-want), reached through the
+#  (`packages/orexis-capability-sensing/readings.py`, the-stake-is-sensings-want), reached through the
 #  sensing provider; this file keeps the picks, which are beliefs of the agent's own.
 
 

@@ -87,7 +87,7 @@ include = ["assembly*", "agent*", "onboarding*"]
 # `pip install -e . $(ls -d packages/*/*/)` is the same install and is what the Containerfile
 # does. Nothing here requires uv to run an agent.
 [tool.uv.workspace]
-members = ["packages/*/*"]
+members = ["packages/*"]
 
 [tool.uv.sources]
 orexis = { workspace = true }
@@ -117,7 +117,7 @@ orexis-transport-mqtt = { workspace = true }
 # BOTH roots. `tests/` is the integration suite — most of what this project asserts is about the
 # merged graph, and a shape or a rules.ru cannot be exercised without every package's T-Box. A
 # package may also carry its OWN tests, as plain `test_*.py` files beside the code they cover,
-# for the rare thing that means something alone: `packages/capability/market/test_auction.py`
+# for the rare thing that means something alone: `packages/orexis-capability-market/test_auction.py`
 # is pay-as-bid and uniform-price arithmetic, and needs no world at all.
 #
 # `packages` must be named here or those files are invisible. Measured: with `testpaths =
@@ -125,7 +125,19 @@ orexis-transport-mqtt = { workspace = true }
 # it runs only when named by path, so the suite would have gone green while skipping it.
 testpaths = ["tests", "packages"]
 
-addopts = "-n auto"
+# A PACKAGE DIRECTORY IS ITS DISTRIBUTION NAME, and a distribution name has hyphens in it.
+# pytest's default `prepend` import mode derives a module name from the path — it walks up from
+# a test file while it keeps finding `__init__.py`, and every package has one — so a test inside
+# `packages/orexis-capability-market/` was imported as `orexis-capability-market.test_auction`,
+# which is not an identifier. All twenty-one of the market's own tests failed to collect, and
+# COLLECTION errors are the dangerous kind: a test that cannot be imported is a test that is not
+# run, and a suite can be green while a file of it never executed.
+#
+# `importlib` is the mode pytest recommends and the one that does not derive names from paths.
+# It also stops inserting directories into sys.path, which is why `pythonpath` is here: the
+# layering test reads the AST helpers out of `test_projects`, and nothing else would find it.
+addopts = "-n auto --import-mode=importlib"
+pythonpath = ["tests"]
 
 # Parallel by default, which is only defensible because #271 made the vacuity guard survive a
 # worker. Read that before removing the flag or trusting a green run.
@@ -167,55 +179,30 @@ addopts = "-n auto"
 #
 #   .venv/bin/lint-imports
 [tool.importlinter]
-root_packages = ["assembly", "agent", "packages", "onboarding"]
+# THREE root packages, not four. `packages` used to be one, and it stopped being a module the
+# day a package became a top-level distribution of its own: there is no shared import root left
+# to name, and `orexis_*` is NOT a valid module expression — grimp rejects a wildcard that
+# matches part of a segment, measured before this was rewritten rather than after.
+#
+# So the three contracts that mentioned packages moved to `tests/test_layering.py`, which finds
+# them by looking exactly as the loader does. That is stricter than what it replaced, not looser:
+# listing twenty-one modules here would have been a registry, and a registry goes stale the
+# first time somebody adds a package and forgets this file. The two contracts left are between
+# the three trees of the root distribution, which are fixed and few.
+root_packages = ["assembly", "agent", "onboarding"]
 
 [[tool.importlinter.contracts]]
 # ASSEMBLY IS UNDER EVERYTHING. It finds packages and owns the extension mechanism; the kernel
-# is one of the things it assembles, so it must not know the kernel exists. It names `agent/`
-# by PATH — a directory it merges first — and never by import
-# (the-assembly-is-not-the-mind).
+# is one of the things it assembles, so it must not know the kernel exists. It names `agent/` by
+# PATH — a directory it merges first — and never by import (the-assembly-is-not-the-mind).
+# That it imports no PACKAGE either is asserted in tests/test_layering.py.
 name = "What assembles a build does not import what it assembles"
 type = "forbidden"
 source_modules = ["assembly"]
-forbidden_modules = ["agent", "onboarding", "packages"]
+forbidden_modules = ["agent", "onboarding"]
 
 [[tool.importlinter.contracts]]
 name = "The agent never reaches for the operator's tools"
 type = "forbidden"
 source_modules = ["agent"]
 forbidden_modules = ["onboarding"]
-
-[[tool.importlinter.contracts]]
-# THE ONE THIS SERIES EARNED. The kernel is what LOADS packages; it must never reach into one.
-# This could not be stated before, and the violations were not theoretical: `agent/desire.py`
-# and `agent/genesis.py` imported `packages.capability.desire.graphs` — a module that did
-# nothing but re-export `agent.ontology.obligations_graph`, so the kernel was importing a
-# package to get its own function back. `agent/intentions.py` imported the intention package
-# to name the ledger graph. Nothing forbade any of it, and nothing noticed.
-#
-# With the mind in the kernel there is nothing left to reach for, so the rule can be a contract
-# instead of a habit. What it protects is the claim the whole arrangement rests on: every
-# package is optional, which is only true if the kernel never needs one.
-name = "The kernel loads packages and never reaches into one"
-type = "forbidden"
-source_modules = ["agent"]
-forbidden_modules = ["packages"]
-
-[[tool.importlinter.contracts]]
-# A capability that imported onboarding would put credential-minting code on the far side of a
-# boundary the image is built to keep it out of.
-name = "No package reaches for them either"
-type = "forbidden"
-source_modules = ["packages"]
-forbidden_modules = ["onboarding"]
-
-[[tool.importlinter.contracts]]
-# No capability imports another's Python: they meet through the T-Box, via agent.provider().
-name = "Capability packages do not import each other"
-type = "independence"
-modules = [
-    "packages.capability.actuation",
-    "packages.capability.market",
-    "packages.capability.sensing",
-    "packages.capability.review",
-]

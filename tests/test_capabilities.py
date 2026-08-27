@@ -13,11 +13,11 @@ from agent import genesis
 from assembly import loader
 from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from agent.world import WorldError, load_world
-from packages.capability.actuation import ACTUATION
-from packages.capability.market import BIDDING, HOSTING, PAY_AS_BID
-from packages.capability.sensing import LISTENING, SUBSCRIBING
-from packages.capability.reporting import STORING
-from packages.capability.review import RECKONING
+from orexis_capability_actuation import ACTUATION
+from orexis_capability_market import BIDDING, HOSTING, PAY_AS_BID
+from orexis_capability_sensing import LISTENING, SUBSCRIBING
+from orexis_capability_reporting import STORING
+from orexis_capability_review import RECKONING
 
 #  Granted to every agent by the fact of a bus in the world (the-kernel-has-no-mailbox).
 LINKING = "http://example.org/orexis/mqtt#Linking"
@@ -75,7 +75,7 @@ def test_supplier_gets_hosting_actuation_and_matching(me):
     prices, is a separate ability, because there is more than one defensible answer and which
     one is in force changes what a rational bidder should offer.
     """
-    from packages.capability.sensing.terms import LISTENING
+    from orexis_capability_sensing.terms import LISTENING
 
     #  Plus what the barrel arcs earned: LISTENING (arc 1 — it sees its stock) and, since it
     #  acts for a barrel that states its needs (arc 2); and since the city exists
@@ -114,7 +114,7 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing():
     lever. Those were always the facts underneath the two grants.
     """
     from agent.menu import menu_of
-    from packages.capability.sensing.regions import regions_of
+    from orexis_capability_sensing.regions import regions_of
 
     from agent.ontology import beliefs_graph
     from conftest import desires_build
@@ -300,7 +300,7 @@ def test_a_boards_mode_is_entailed_from_its_firmware_class():
     firmware/moisture-sensor/ontology.ttl through the closure's hasValue rule — a datasheet
     fact whose sheet is src/main.cpp. The derivation, the runtime and the shapes all read the
     conclusion."""
-    from packages.capability.sensing.terms import SCHEDULED, SUBSCRIBING
+    from orexis_capability_sensing.terms import SCHEDULED, SUBSCRIBING
 
     me = load_wired(query_fn(genesis_store(world="sensing")), "fern")
     assert SUBSCRIBING in me.capabilities, "the grant must flow through the entailed mode"

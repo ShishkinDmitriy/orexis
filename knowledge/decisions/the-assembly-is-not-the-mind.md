@@ -80,7 +80,7 @@ heavy import moves behind a call; `__init__.py` imports stdlib and the term modu
 # What this costs, and it is a real cost
 
 **Fourteen packages gain Python they do not have.** `part/`, `plant/`, `bus/`, `sim/` and `tool/`
-are pure data today, and that was a stated property — *"`packages/part/esp32/` is an ontology and
+are pure data today, and that was a stated property — *"`packages/orexis-part-esp32/` is an ontology and
 nothing else, because a board has no behaviour a runtime could load."* Each gains a short
 `__init__.py` that fills the vocabulary point.
 

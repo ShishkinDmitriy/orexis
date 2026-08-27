@@ -88,7 +88,7 @@ announced is necessarily what will run — a host cannot advertise one and apply
 
 # Where the code went
 
-- `propose_match` → `packages/capability/market/matching.py`, as `market:PayAsBid`'s implementation. It is
+- `propose_match` → `packages/orexis-capability-market/matching.py`, as `market:PayAsBid`'s implementation. It is
   `@staticmethod`, because a lot and a set of bids fully determine the answer; a member that later
   needs the host's beliefs can stop being static then.
 - `run_round` **stayed** in `agent/auction.py`. Propose, validate, issue is the auction's shape

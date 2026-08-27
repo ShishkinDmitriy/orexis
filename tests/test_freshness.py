@@ -49,9 +49,9 @@ def test_the_horizon_the_shape_reads_is_the_one_the_module_computes(monkeypatch)
     moment urgency re-commands the cadence. This asserts the third way stayed true: what is in
     the graph is what the method returns.
     """
-    from packages.capability.sensing.terms import INSTRUMENTS_GRAPH
+    from orexis_capability_sensing.terms import INSTRUMENTS_GRAPH
     from agent.store import bindings
-    from packages.capability.sensing.terms import STALE_AFTER_S
+    from orexis_capability_sensing.terms import STALE_AFTER_S
 
     agent, st = _fern(monkeypatch)
     sensing = next(m for m in agent.modules if m.name == "subscribing")
@@ -109,7 +109,7 @@ def test_the_want_fires_as_a_shape_and_does_not_refuse_the_boot(monkeypatch):
     both ways — so the want first reported as `sh:Violation` and stopped a dry agent from
     starting, which is precisely the failure the severity split exists to prevent.
     """
-    from packages.capability.sensing.terms import INSTRUMENTS_GRAPH
+    from orexis_capability_sensing.terms import INSTRUMENTS_GRAPH
     from agent.ontology import STATE_GRAPH, beliefs_graph
     from agent.validate import _shapes_and_vocabulary, conforms, graph_from
 
@@ -164,10 +164,10 @@ def test_a_horizon_nobody_published_leaves_the_want_unmet_not_met(monkeypatch):
     fresh reading exists, or it does not. This asserts the case that used to lie — a reading
     that is current by any reasonable reading of the clock, with no horizon stated at all.
     """
-    from packages.capability.sensing.terms import INSTRUMENTS_GRAPH
+    from orexis_capability_sensing.terms import INSTRUMENTS_GRAPH
     from agent.ontology import STATE_GRAPH
     from agent.validate import graph_from
-    from packages.capability.sensing.terms import STALE_AFTER_S
+    from orexis_capability_sensing.terms import STALE_AFTER_S
     from agent import effects
 
     agent, st = _fern(monkeypatch, value=0.55)          # horizons published by `start()`

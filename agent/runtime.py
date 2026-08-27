@@ -336,7 +336,7 @@ class Agent:
     #  `publish`, `_on_connect`, `_on_disconnect` and `_on_message` WERE HERE — the kernel's
     #  mailbox: a client, a dispatch loop handing every message to every module, a session to
     #  watch. None of it is BDI. How an agent reaches its society is a capability the fact of
-    #  a bus grants (`packages/transport/mqtt/module.py`), reached through the choir:
+    #  a bus grants (`packages/orexis-transport-mqtt/module.py`), reached through the choir:
     #  `Module.publish` tells `send`, the transport asks `subscriptions` and `handle`
     #  (the-kernel-has-no-mailbox).
 

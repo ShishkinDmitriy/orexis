@@ -767,7 +767,7 @@ def test_a_package_manifest_imports_nothing_expensive():
     stdlib = sys.stdlib_module_names
     root = pathlib.Path(__file__).resolve().parent.parent
     offenders = []
-    for path in sorted((root / "packages").glob("*/*/__init__.py")):
+    for path in sorted((root / "packages").glob("*/__init__.py")):
         tree = ast.parse(path.read_text(), str(path))
         for node in tree.body:                      # TOP LEVEL only — inside a function is the point
             names = []

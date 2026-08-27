@@ -51,7 +51,7 @@ record is the second input.
 # Decision — the mandate is the grant
 
 An agent that its world gives room to move gets the ability to use the room. One premise, one
-rule, in `packages/capability/review/rules.ru`:
+rule, in `packages/orexis-capability-review/rules.ru`:
 
 ```sparql
 INSERT { GRAPH $derived { ?agent ag:hasCapability review:Reckoning } }
@@ -135,7 +135,7 @@ else — is declared and reserved, with no member behind it.
 
 An unimplemented member is deliberate, and it is the whole reason for splitting: it fixes the
 family's name and the shape of the seam *before* the second implementation exists, so building
-the model-backed one is adding `packages/capability/review/` a sibling and a `PROVIDES` line
+the model-backed one is adding `packages/orexis-capability-review/` a sibling and a `PROVIDES` line
 rather than re-deciding what a review is. The vocabulary that a model implementation would need —
 summaries, evidence, ranges, revisions — is in the family's `ontology.ttl` and shared by both.
 
@@ -164,7 +164,7 @@ latitude, rather than having had no second thoughts.
   nothing. There is no third state where a mandate and a switch disagree.
 - The kernel ontology is back to what every agent has. ~20 terms moved to the family.
 - A review rule still belongs to the package owning the term it re-picks — `review.rq` for the
-  sensing cadence stays in `packages/capability/sensing/`. The review capability owns *reviewing*; it
+  sensing cadence stays in `packages/orexis-capability-sensing/`. The review capability owns *reviewing*; it
   does not own what may be reviewed.
 - The old kernel `ag:CommitmentShape` used `sh:targetClass review:Commitment` (the class since renamed `review:Mandate`) and matched nothing for
   as long as it existed: a mandate is written inline as `review:commits [ ... ]`, and nobody types a

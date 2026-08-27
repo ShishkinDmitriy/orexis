@@ -15,7 +15,7 @@ conversation:
 (offer, bids) -> trade
 ```
 
-That is the whole contract. `packages/capability/market/auction.py` names it `Match`, and every member of the family
+That is the whole contract. `packages/orexis-capability-market/auction.py` names it `Match`, and every member of the family
 satisfies it.
 
 **Its two halves have standard names.** Mechanism design decomposes any mechanism into an
@@ -56,7 +56,7 @@ two independent things:
 
 **We model only the second.** `market:BidMatchingCapability` is the allocation-and-payment half alone.
 The first axis is fixed here: [round](/domain/round.md) describes an iterative-ascending round,
-and that is a property of the protocol in `packages/capability/market`, not a slot anything plugs into.
+and that is a property of the protocol in `packages/orexis-capability-market`, not a slot anything plugs into.
 
 **Dutch makes it concrete.** A Dutch auction is descending open outcry — the auctioneer starts
 high and lowers the price until someone accepts. It is a complete mechanism, fixing both axes.
@@ -151,13 +151,13 @@ the world switching: [#50](https://github.com/ShishkinDmitriy/orexis/issues/50) 
 
 # Where it lives
 
-`packages/capability/market/`, in `market:`. `matching.py` holds both implementations; the family,
+`packages/orexis-capability-market/`, in `market:`. `matching.py` holds both implementations; the family,
 its members and `market:matchesBy` are declared in the package's `ontology.ttl`, the two shapes (a
 host must say how it matches; only a host may) in its `shapes.ttl`, and the derivation is the third
-update in its `rules.ru`. `packages/capability/market/auction.py` holds the path around it: propose, validate, issue.
+update in its `rules.ru`. `packages/orexis-capability-market/auction.py` holds the path around it: propose, validate, issue.
 
 **It shares a package with the protocol and is still its own family.** A directory is a package,
-not a capability — `packages/capability/market/` provides three. What keeps the two independent is
+not a capability — `packages/orexis-capability-market/` provides three. What keeps the two independent is
 `PROVIDES` and the term, never the directory: `hosting.py` asks `agent.provider(BID_MATCHING)` and
 never learns which member answered. See
 [a-package-owns-its-namespace](/decisions/a-package-owns-its-namespace.md).
