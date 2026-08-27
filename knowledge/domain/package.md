@@ -16,12 +16,31 @@ one is deleting it.
 
 ```
 packages/<family>/<name>/
+    __init__.py    THE MANIFEST — what this package contributes, and what it provides
     ontology.ttl   the vocabulary — what its terms mean
     shapes.ttl     the rules — what must be true of something that has it
     rules.ru       the derivation — what premise GRANTS it
+    desires.ru     what holding it makes an agent want
+    actions.ttl    the ways of acting it brings
     review.rq      the second thought — how an agent re-picks one of its beliefs
-    __init__.py    the manifest — PROVIDES = (…), the classes it contributes
 ```
+
+**The manifest is the only file the loader knows by name**, and it says what the rest are:
+
+```python
+@contributes(VOCABULARY)
+def vocabulary(package: Path) -> list[Path]:
+    return [package / "ontology.ttl"]
+
+def provides() -> tuple:                    # LAZY — the heavy import lives here
+    from .module import SubscribingModule
+    return (SubscribingModule,)
+```
+
+So the filenames above are convention, not requirement: a package may split its shapes across
+three files or call its vocabulary anything, and it says so. What it may NOT do is make
+`__init__.py` expensive — every one of them is imported at assembly, for every agent, which is
+why `provides()` is a function rather than a constant (the-assembly-is-not-the-mind).
 
 **Every one is optional, and an omission is a statement.** `packages/part/esp32/` is an ontology
 and nothing else, because a board has no behaviour a runtime could load.

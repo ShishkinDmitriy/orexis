@@ -21,40 +21,44 @@ a tree and its loader are not two trees (the-assembly-is-not-the-mind).""" .
 
 #################  The assembly-time points  #################
 #
-#  What a package brings to a build. Each is handed what EXISTS at the moment it is asked, and
-#  that argument is the whole of the phase discipline: `vocabulary` is given no store because
-#  none is open yet — `refresh_public` runs before the belief base does — so a package cannot
-#  generate vocabulary from beliefs, and does not need telling.
+#  What a package brings to a build. Each is handed the package's OWN directory and nothing
+#  else, and that argument is the whole of the phase discipline. It is not handed a world: the
+#  T-Box is merged before any world is chosen, so there is none to give. It is not handed a
+#  store: `refresh_public` runs before the belief base is open. A contribution cannot reach for
+#  what does not exist yet, because the argument is not there — which is why no point declares
+#  a phase and none needs to.
 #
 #  None of these carries `ag:row`. A row says whether ANSWERING may block or search, which is a
 #  fact about the cognitive layering and means nothing at assembly time: there is no planner to
 #  stay out of and no latency to keep.
 #
-#  A filler returns `Path | str`: a path is read and named by its path, a string is used as it
-#  stands and named by its package. A file, something fetched, something generated — one
-#  signature. Not a graph, because every package's `__init__` is imported at assembly and rdflib
-#  in fourteen knowledge-only packages is a cost with nothing to show for it.
+#  A contribution returns PATHS. Content — a string of Turtle, fetched or generated — is the
+#  wider signature this wanted, and it is not implemented: some fifty consumers read these as
+#  files (`.read_text()`, `.parent.name`, `file_iri()`), no package needs it, and the way in when
+#  one does is to materialise content to a path at assembly rather than to widen fifty call
+#  sites. Not a graph either: every `__init__` is imported at assembly, and rdflib in fourteen
+#  knowledge-only packages is a cost with nothing to show for it.
 
 :vocabulary a :Extension ;
-    :signature "(world) -> list[Path | str]" ;
+    :signature "(package) -> list[Path]" ;
     rdfs:comment "What terms do you bring? Merged into the T-Box before anything reads a belief." .
 
 :shapes a :Extension ;
-    :signature "(world) -> list[Path | str]" ;
+    :signature "(package) -> list[Path]" ;
     rdfs:comment "What must be true of a thing that has what you bring? Handed to the validator." .
 
 :derivation a :Extension ;
-    :signature "(world) -> list[Path | str]" ;
+    :signature "(package) -> list[Path]" ;
     rdfs:comment "What premise grants your capability? SPARQL updates, run once in package order — and a premise may not rest on another package's conclusions." .
 
 :wants a :Extension ;
-    :signature "(world) -> list[Path | str]" ;
+    :signature "(package) -> list[Path]" ;
     rdfs:comment "What does an agent holding your capability therefore want? Run on every rebuild of the desire modality, never at genesis." .
 
 :actions a :Extension ;
-    :signature "(world) -> list[Path | str]" ;
+    :signature "(package) -> list[Path]" ;
     rdfs:comment "What ways of acting do you bring? One `ag:Action` node each: precondition, effect, and the capability that takes it." .
 
 :review a :Extension ;
-    :signature "(world) -> list[Path | str]" ;
+    :signature "(package) -> list[Path]" ;
     rdfs:comment "What would you like an agent to reconsider about itself? A SELECT binding ?term and ?value, never an update and never Python." .

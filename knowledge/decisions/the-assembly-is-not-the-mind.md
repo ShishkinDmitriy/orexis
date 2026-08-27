@@ -59,16 +59,19 @@ becomes a gate failure instead of a logged absence. This is what makes a foreign
 usable: a package answering `metrics:register` reads the contract from the term, without
 importing whoever declared it.
 
-**A filler returns content, not a path** — `Path | str`. A `Path` is read and named by its path;
-a string is used as-is and named by its package. That covers a file, something fetched, and
-something generated, and keeps `__init__.py` free of rdflib, which matters because every one of
-them is imported at assembly.
+**A contribution is handed its own directory and returns paths** — `(package) -> list[Path]`.
+That argument is the whole of the phase discipline. It is not handed a world, because the T-Box
+is merged before any world is chosen; it is not handed a store, because `refresh_public` runs
+before the belief base is open. **A contribution cannot reach for what does not exist, because
+the argument is not there** — which is why no point declares a phase and none needs to, and why
+`ag:row` stays exactly what it was: whether ANSWERING may block or search, a fact about the
+cognitive layering that means nothing at assembly.
 
-**The signature carries the phase.** `vocabulary(world)` is handed no store because none exists
-yet; a later point is handed one. A filler cannot reach for what does not exist, because the
-argument is not there — so nothing needs a declared phase, and the `ag:row` a cognitive
-extension carries stays exactly what it was: whether ANSWERING may block or search. A load-time
-point is on no cognitive row and declares none.
+**Content is the wider signature this record first promised, and it is NOT built.** A string of
+Turtle — fetched or generated — would let a package bring vocabulary from anywhere. Roughly
+fifty consumers read these as files: `.read_text()`, `.parent.name`, `file_iri(p)`. No package
+needs it. The way in when one does is to materialise content to a path at assembly, not to
+widen fifty call sites for a capability with no customer.
 
 **`PROVIDES` becomes `provides()`.** Assembly imports every package's `__init__`, so a top-level
 `from .module import …` would drag every optional extra into every agent and undo #216. The
@@ -85,6 +88,25 @@ The alternative considered was a `package.ttl` manifest, which keeps those packa
 It was refused for two reasons: a manifest can disagree with the disk, so a renamed file goes
 silently unread — the failure class this project keeps finding — and it would have been a second
 extension mechanism beside the choir rather than the same one.
+
+# What is guarded
+
+- **`test_a_package_manifest_imports_nothing_expensive`** — a manifest may import stdlib, its
+  own `.terms`, and `assembly`. Nothing else, at the top level. Proved by adding `import rdflib`
+  to a manifest and watching it fail.
+- **`test_every_point_publishes_the_signature_that_fills_it`** and
+  **`test_what_fills_a_point_matches_the_signature_it_publishes`** — the contract travels with
+  the term, strictly, on parameter names.
+- **`test_every_run_time_point_declares_which_row_answering_it_belongs_to`** — and its mirror:
+  no assembly-time point carries one.
+
+# What the six filenames became
+
+Three, and they belong to the two ROOTS rather than to any package. `assembly/` and `agent/` are
+not packages — they are what packages are assembled onto — and neither may be imported to be
+asked, since `assembly` importing `agent` is the one direction `lint-imports` forbids outright.
+So the loader knows their layout by name, which is honest, because their layout is the loader's
+own. Every other package says what it brings.
 
 # Seams left open
 

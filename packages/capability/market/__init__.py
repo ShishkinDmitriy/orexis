@@ -15,13 +15,39 @@ that: removing matching is now an edit rather than a deletion. See
 knowledge/decisions/a-package-owns-its-namespace.md.
 """
 
-from .bidding import BiddingModule, value_bid
-from .hosting import HostingModule
-from .matching import PayAsBidModule, UniformPriceModule
+from pathlib import Path
+
+from assembly import contributes, ACTIONS, DERIVATION, SHAPES, VOCABULARY
 from .terms import BID_MATCHING, BIDDING, HOSTING, MATCHES_BY, PAY_AS_BID, UNIFORM_PRICE
 
-PROVIDES = (BiddingModule, HostingModule, PayAsBidModule, UniformPriceModule)
+@contributes(VOCABULARY)
+def vocabulary(package: Path) -> list[Path]:
+    """the vocabulary — what its terms mean."""
+    return [package / "ontology.ttl"]
 
-__all__ = ["PROVIDES", "BiddingModule", "HostingModule", "PayAsBidModule", "UniformPriceModule",
-           "value_bid", "BIDDING", "HOSTING",
-           "BID_MATCHING", "PAY_AS_BID", "UNIFORM_PRICE", "MATCHES_BY"]
+@contributes(SHAPES)
+def shapes(package: Path) -> list[Path]:
+    """what must be true of a thing that has it."""
+    return [package / "shapes.ttl"]
+
+@contributes(DERIVATION)
+def derivation(package: Path) -> list[Path]:
+    """the premise that grants it."""
+    return [package / "rules.ru"]
+
+@contributes(ACTIONS)
+def actions(package: Path) -> list[Path]:
+    """the ways of acting it brings."""
+    return [package / "actions.ttl"]
+
+def provides() -> tuple:
+    """The classes this package contributes. Imported HERE and not at the top, so an
+    agent granted none of them never pays for the import (#216) — and a missing optional
+    extra costs only the agents that were granted the capability needing it."""
+    from .bidding import BiddingModule
+    from .hosting import HostingModule
+    from .matching import PayAsBidModule, UniformPriceModule
+
+    return (BiddingModule, HostingModule, PayAsBidModule, UniformPriceModule)
+
+__all__ = ["value_bid", "BIDDING", "HOSTING", "BID_MATCHING", "PAY_AS_BID", "UNIFORM_PRICE", "MATCHES_BY"]

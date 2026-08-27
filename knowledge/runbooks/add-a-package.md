@@ -9,8 +9,24 @@ description: >-
 
 # The shortest package that works
 
+Two files: a manifest saying what you bring, and the thing you bring.
+
 ```bash
 mkdir -p packages/part/thermistor
+```
+
+```python
+# packages/part/thermistor/__init__.py
+"""What a thermistor brings to a build. Knowledge only — no behaviour a runtime could load."""
+
+from pathlib import Path
+
+from assembly import contributes, VOCABULARY
+
+
+@contributes(VOCABULARY)
+def vocabulary(package: Path) -> list[Path]:
+    return [package / "ontology.ttl"]
 ```
 
 ```turtle
@@ -27,10 +43,10 @@ mkdir -p packages/part/thermistor
 :Thermistor a owl:Class ; rdfs:label "Thermistor" .
 ```
 
-That is a complete package — run before this page was written, and removed again. **Nothing
-else is edited** — no registry, no list, no import. The
-loader walks two levels under `packages/`, finds it, merges its vocabulary, and `thermistor:`
-reaches any query. Delete the directory and it is gone as completely.
+That is a complete package. **Nothing else is edited** — no registry, no list, no import. The
+loader walks two levels under `packages/`, finds it, asks what it contributes, merges its
+vocabulary, and `thermistor:` reaches any query. Delete the directory and it is gone as
+completely.
 
 Check it landed:
 
@@ -63,15 +79,19 @@ added without touching the loader.
 Every file is optional, **and leaving one out is a statement**. `packages/part/esp32/` is an
 ontology and nothing else, because a board has no behaviour a runtime could load.
 
+**The manifest is the only file the loader knows by name.** Everything else is named by the
+manifest, so a package may split its shapes across three files or call its vocabulary anything —
+the names below are what every package happens to use.
+
 | file | what it does | omitted means |
 |---|---|---|
+| `__init__.py` | **the manifest** — what it contributes, and `provides()` | it contributes nothing and is invisible |
 | `ontology.ttl` | the vocabulary — what its terms mean | it brings no words (rare; then why a package?) |
 | `shapes.ttl` | what must be true of a thing that has it | nothing to check |
 | `rules.ru` | the premise that GRANTS its capability | it grants none — knowledge only |
 | `desires.ru` | what an agent holding it therefore wants | it implies no wants |
 | `actions.ttl` | ways of acting: precondition, effect, `ag:takenBy` | nothing to plan with |
 | `review.rq` | what an agent may reconsider about itself | nothing revisable |
-| `__init__.py` | `PROVIDES = (…)` — the classes it contributes | **it ships no code at all** |
 | `terms.py` | its terms as constants, and the families it asks others for | — |
 | `beliefs.py` | its `Picks` — the private parameters it reads | it decides nothing |
 | `module.py` | the code, reading only its own vocabulary | — |
@@ -122,6 +142,13 @@ source text.
 
 **A new word gets a `knowledge/domain/` page in the SAME change.** A word used before it is
 defined is a word everyone defines differently.
+
+**`__init__.py` stays cheap**, and a test says so. Every one is imported at assembly, for every agent — so it may
+import stdlib, its own `.terms`, and `assembly`, and nothing else
+(`test_a_package_manifest_imports_nothing_expensive`). The heavy import lives inside `provides()`,
+which is a function for exactly that reason: an agent granted none of your classes never pays
+for them, and a missing optional extra costs only the agents that were granted the capability
+needing it.
 
 **If it declares an extension point, the point publishes its signature.** `assembly:signature`
 on the term, checked strictly against every filler's parameter names — that is what lets
