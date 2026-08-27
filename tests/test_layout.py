@@ -823,3 +823,35 @@ def test_what_the_kernel_offers_is_reachable_by_its_class(monkeypatch):
         assert isinstance(got, contract), (
             f"{contract.__name__} is offered as {type(got).__name__} — a package asking for the "
             "class it imported would be handed something else")
+
+
+def test_every_hard_requirement_is_offered_by_something():
+    """`@requires` is a promise the build can keep, and it is checked without booting an agent.
+
+    Build-wide, not per agent — which is a correction to what the record first said. A service
+    is offered by a PACKAGE, and every package is in every build; what differs between agents is
+    which MODULES get constructed, and a module class's requirements are static. So the question
+    is *does anything offer this*, and it needs no world to ask.
+
+    An OPTIONAL annotation — `X | None` — is deliberately not checked: the module has said it
+    can work without, so a missing one is a fact about which packages were installed rather than
+    a broken build. It resolves to `None` and the module checks.
+    """
+    from assembly import loader
+    from assembly.inject import injections_of
+    from agent.runtime import KERNEL_SERVICES
+
+    offered = set(loader.offers()) | set(KERNEL_SERVICES)
+    assert offered, "nothing is offered at all — the scan stopped matching"
+
+    classes = [cls for p in loader.packages() for cls in p.provides()]
+    assert classes, "no provided classes found — the loader found nothing"
+
+    unmet = sorted(
+        f"{cls.__module__}.{cls.__name__} requires {name}, which nothing offers"
+        for cls in classes
+        for name, (key, optional) in injections_of(cls).items()
+        if not optional and key not in offered)
+    assert not unmet, (
+        "a module declares a hard requirement no package provides. It would raise at first "
+        "touch, deep inside a running agent, far from the declaration:\n  " + "\n  ".join(unmet))

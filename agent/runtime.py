@@ -77,6 +77,12 @@ SELECT ?capability WHERE {{
 }}"""
 
 
+#  WHAT EVERY AGENT HAS, as classes, so `orexis-validate` can check a package's `@requires`
+#  without constructing anything. Registered from the live objects below; this is the same
+#  seven, said statically.
+KERNEL_SERVICES = (Beliefs, Desires, Intentions, Keeper, Deliberator, Owing, Metrics)
+
+
 class Agent:
     """A single agent: its identity, its beliefs, its modules, and one connection."""
 
@@ -173,8 +179,8 @@ class Agent:
         self.modules += [self.deliberator, self.keeper, self.owing]
         #  WHAT THE KERNEL OFFERS, keyed by the CLASS of each — the thing a package imports
         #  anyway to type its own code, so there is no parallel naming system to keep in step.
-        #  `packages -> agent` is an allowed import, so every one of these is reachable by name
-        #  from any package (an-injected-service-is-reached-by-term).
+        #  Named in `KERNEL_SERVICES` rather than listed inline, so a gate can know what the
+        #  kernel offers WITHOUT building an agent (an-injected-service-is-reached-by-term).
         for value in (self.beliefs, self.desires, self.intentions,
                       self.keeper, self.deliberator, self.owing, self.metrics):
             self.offering(type(value), value)
@@ -202,6 +208,11 @@ class Agent:
         _, build = offer
         self._services[key] = build(self)
         return self._services[key]
+
+    def offers(self, key) -> bool:
+        """Is this service on the table at all? Asked without building it — which is what lets
+        an optional dependency be resolved to None rather than to a handle that would raise."""
+        return key in self._services or key in loader.offers()
 
     def offering(self, key, value) -> None:
         """The kernel putting one of its own on the table, under its class."""

@@ -67,7 +67,6 @@ from agent.module import Module, contributes
 from agent.ontology import BELIEF_REVISED
 from agent.desire import Desires
 from agent.metrics import Metrics
-from assembly import requires
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
 from agent.ontology import beliefs_graph
@@ -131,7 +130,6 @@ def world_ranges(query) -> dict[str, Range]:
     return {t: Range(t, min(vs), max(vs)) for t, vs in seen.items() if vs}
 
 
-@requires(Desires, Metrics)
 class ReviewModule(Module):
     """The agent's second thoughts — `review:Reckoning`, derived from having been given room.
 
@@ -142,6 +140,12 @@ class ReviewModule(Module):
 
     CAPABILITY = RECKONING
     name = "review"
+
+    #  What this module needs, written the way a dataclass field is: an annotation with no
+    #  value beside it. `CAPABILITY` and `name` above have values and are ordinary attributes;
+    #  these two are services, handed over on first touch.
+    desire_store: Desires
+    metrics: Metrics
 
     def __init__(self, agent):
         super().__init__(agent)
@@ -360,13 +364,13 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         #  Rebuild BEFORE validating: the modality re-derives from the record just written,
         #  so the shapes judge the new pick against the wants as they now stand — validating
         #  against the previous build would hold the new aim beside the old one.
-        self.desires.rebuild()
+        self.desire_store.rebuild()
         try:
             validate_agent(self.agent.beliefs, self.agent.id, self.agent.me.uri,
-                           self.agent.me.capabilities, desires=self.desires.get())
+                           self.agent.me.capabilities, desires=self.desire_store.get())
         except BeliefsInvalid as exc:
             self._write(graph, room.term, was)
-            self.desires.rebuild()   # the record reverted, and the modality follows it
+            self.desire_store.rebuild()   # the record reverted, and the modality follows it
             self.refused += 1
             self._remember(room.term, was, value, "refused", "the shapes refused it")
             log.warning("%s: <%s> -> %s refused by the shapes, reverted to %s\n%s",

@@ -28,7 +28,7 @@ import logging
 import threading
 
 from assembly.contribute import answer as assembly_answer, contributes
-from assembly.inject import Handle, attribute_for, needs_of
+from assembly.inject import Handle, injections_of
 
 
 #  THE MECHANISM IS ASSEMBLY'S. `@contributes` marks a function with the point it fills and the
@@ -52,12 +52,16 @@ class Module:
         self.me = agent.me  # my wiring, from the world
         self.log = logging.getLogger(f"{agent.id}.{self.name}")
 
-        #  WHAT THIS MODULE DECLARED IT NEEDS, as attributes named for their terms. Handles, not
-        #  objects: the service is built on first touch, so a module needing another module's
-        #  service is never built before it exists, and nothing is imported until an agent
-        #  actually reaches for it (an-injected-service-is-reached-by-term).
-        for term in needs_of(type(self)):
-            setattr(self, attribute_for(term), Handle(term, agent.service))
+        #  WHAT THIS MODULE DECLARED IT NEEDS — a value-less class annotation, the same
+        #  convention dataclasses use. Handles, not objects: the service is built on first
+        #  touch, so a module needing another module's service is never built before it exists,
+        #  and nothing is imported until an agent reaches for it. `X | None` means the module
+        #  can work without one (an-injected-service-is-reached-by-term).
+        for name, (key, optional) in injections_of(type(self)).items():
+            if optional and not agent.offers(key):
+                setattr(self, name, None)     # `X | None` and nothing offers X
+            else:
+                setattr(self, name, Handle(key, agent.service))
 
     # --- lifecycle ---
 
