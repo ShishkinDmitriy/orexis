@@ -91,6 +91,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 # Structure — how the project is put together
 
+* [service](/domain/service.md) - Something a package offers for others to use, reached by term. Unlike a capability, no premise grants it. Not built.
 * [modality](/domain/modality.md) - What a fact asserts, as opposed to what it is about. The mind's axis: one class per modality, each owning its store.
 
 * [capability](/domain/capability.md) - A named ability with interchangeable implementations. Granted by its own premise, deduced at genesis, and never hand-declared.
