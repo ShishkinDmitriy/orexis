@@ -114,6 +114,28 @@ member of a family simply cannot do that thing. A module that declared `@require
 cannot work without one, so silence would be wrong twice: at the point of use, far from the
 declaration, and indistinguishable from a service that returned nothing.
 
+# Closing one
+
+A provider may **yield** instead of returning, and whatever follows the yield runs when the
+agent shuts down:
+
+```python
+@provides
+def history(agent) -> HistoryRing:
+    ring = Ring(agent)
+    yield ring
+    ring.flush()
+```
+
+Services close **newest first**, so one that leans on another is closed before the thing it
+leans on — the order `contextlib.ExitStack` unwinds in, and for the same reason. A failure in
+one is logged and the rest still close: a shutdown that stops half way is worse than a noisy one.
+
+A module has `stop()` for this; a service is not a module and had nothing, which is a hole
+[svcs](https://svcs.hynek.me/) made visible — its factories may be context managers, and asking
+what it offered that we lacked turned up something we should have had rather than something to
+depend on it for.
+
 # What the kernel offers
 
 Seven, and every agent has all of them, each under its own class: `Beliefs`, `Desires`,

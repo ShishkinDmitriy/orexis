@@ -855,3 +855,46 @@ def test_every_hard_requirement_is_offered_by_something():
     assert not unmet, (
         "a module declares a hard requirement no package provides. It would raise at first "
         "touch, deep inside a running agent, far from the declaration:\n  " + "\n  ".join(unmet))
+
+
+def test_a_service_that_yields_is_closed_when_the_agent_stops(monkeypatch):
+    """A provider may yield, and what follows the yield runs at shutdown, newest first.
+
+    A module has `stop()`; a service is not a module and had nothing, so #311's history ring
+    would have had nowhere to flush. Reverse order because a service that leans on another must
+    be closed before the thing it leans on, and the same reason `contextlib.ExitStack` unwinds
+    that way.
+    """
+    from assembly.inject import opened
+
+    order = []
+
+    def first(agent):
+        order.append("open-first")
+        yield "first"
+        order.append("close-first")
+
+    def second(agent):
+        order.append("open-second")
+        yield "second"
+        order.append("close-second")
+
+    closing = []
+    for build in (first, second):
+        _, close = opened(build, None)
+        closing.append(close)
+    for close in reversed(closing):
+        close()
+
+    assert order == ["open-first", "open-second", "close-second", "close-first"], (
+        f"services must close newest first, got {order}")
+
+
+def test_an_ordinary_provider_leaves_nothing_to_close():
+    """The common case costs nothing: a provider that returns is not a generator, and the agent
+    has no teardown to remember for it."""
+    from assembly.inject import opened
+
+    service, close = opened(lambda agent: object(), None)
+    assert service is not None
+    assert close is None, "a plain provider should leave no teardown behind"
