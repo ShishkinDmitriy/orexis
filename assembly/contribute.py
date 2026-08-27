@@ -1,4 +1,4 @@
-"""An extension point is a TERM, and `@extends` fills one.
+"""An extension point is a TERM, and `@contributes` fills one.
 
 The whole mechanism, and it is four lines of state: a decorator that marks a function with the
 term it fills, and a resolver that finds the marked function on a class, an instance or a MODULE.
@@ -7,7 +7,7 @@ That last is the reason this is not simply the choir. A `Module` instance fills 
 points — *how urgent is this?*, *carry this out* — and a package's `__init__.py` fills the
 assembly-time ones — *what vocabulary do you bring?*. Same decorator, same term-space, and the
 audience decided by WHERE the decorated function lives rather than by anything declared: a
-package module has no `@extends(URGENCY)` and an instance has no `@extends(VOCABULARY)`.
+package module has no `@contributes(URGENCY)` and an instance has no `@contributes(VOCABULARY)`.
 
 A point publishes the signature that fills it (`assembly:signature`, beside the term), so a
 package can fill a point another package declared without importing whoever declared it — which
@@ -19,7 +19,7 @@ from __future__ import annotations
 from types import ModuleType
 
 
-def extends(term: str):
+def contributes(term: str):
     """Mark a function as filling one extension point, by TERM.
 
     Was `@hook`. The term is an `assembly:Extension` some ontology declares — the kernel's for
@@ -28,7 +28,7 @@ def extends(term: str):
     filling `reports` need not repeat it (a-hook-is-a-term).
     """
     def mark(fn):
-        fn.__extends__ = term
+        fn.__contributes__ = term
         return fn
     return mark
 
@@ -41,7 +41,7 @@ def extensions_of(subject) -> dict[str, str]:
     """
     if isinstance(subject, ModuleType):
         return {term: name for name, fn in vars(subject).items()
-                if (term := getattr(fn, "__extends__", None))}
+                if (term := getattr(fn, "__contributes__", None))}
 
     cls = subject if isinstance(subject, type) else type(subject)
     found = cls.__dict__.get("_extensions_of")
@@ -49,7 +49,7 @@ def extensions_of(subject) -> dict[str, str]:
         found = {}
         for klass in reversed(cls.__mro__):
             for name, fn in vars(klass).items():
-                if term := getattr(fn, "__extends__", None):
+                if term := getattr(fn, "__contributes__", None):
                     found[term] = name
         cls._extensions_of = found
     return found

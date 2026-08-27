@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from assembly import loader
-from assembly.extend import extensions_of
+from assembly.contribute import extensions_of
 from agent.module import Module
 from agent.ontology import AG, DESIRES, HANDLE, REPORTS, SEND
 from conftest import build_agent, wired_sensors

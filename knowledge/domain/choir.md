@@ -32,7 +32,7 @@ TERM — an `assembly:Extension`, declared by whoever owns the question and refu
 ([a-hook-is-a-term](/decisions/a-hook-is-a-term.md)) — and the MECHANISM is
 [assembly](/decisions/the-assembly-is-not-the-mind.md)'s rather than the kernel's, because how
 anything reaches anything is not belief, desire or intention. A module fills a point with
-`@extends(term)` on a method; an override by name inherits the term. Each RUN-TIME point also
+`@contributes(term)` on a method; an override by name inherits the term. Each RUN-TIME point also
 declares **which row** answering it belongs to — `ag:row`, one of `ag:Reactive`,
 `ag:Progression`, `ag:Deliberative` — because a row partitions the methods of one module, and no
 directory can ([layered-by-timescale-and-interruptibility](/decisions/layered-by-timescale-and-interruptibility.md)). The points about a READING
@@ -82,7 +82,7 @@ but are NOT broadcast — the caller has already resolved WHICH module by `ag:ta
 
 **Two ways to answer one.** Override the base method on `Module` — `reports()`, `desires()`,
 `take()` — and `Module.answer` finds it through the MRO without a decorator, which is how five
-packages answer `reports`. Or decorate any method with `@extends(TERM)`, which is what a PACKAGE's
+packages answer `reports`. Or decorate any method with `@contributes(TERM)`, which is what a PACKAGE's
 point needs, since there is no base method to override: sensing's `readingRecorded` is answered by
 four packages, each on a method called `on_reading_recorded`.
 

@@ -45,7 +45,7 @@ from pathlib import Path
 
 from agent.desire import Desire
 from .driver import driver_for
-from agent.module import Module, extends
+from agent.module import Module, contributes
 from agent.ontology import HANDLE, SUBSCRIPTIONS
 from agent.ontology import STATE_GRAPH, beliefs_graph
 from agent.store import bindings
@@ -360,7 +360,7 @@ class SensingModule(Module):
                 INSERT DATA {{ GRAPH <{INSTRUMENTS_GRAPH}> {{
                     <{aimed.uri}> <{STALE_AFTER_S}> {horizon} }} }}""")
 
-    @extends(SUBSCRIPTIONS)
+    @contributes(SUBSCRIPTIONS)
     def subscriptions(self) -> list[str]:
         # exactly my own sensors, and only where their binding listens at all — never a
         # wildcard, so the access grant stays visible in the subscription itself
@@ -376,7 +376,7 @@ class SensingModule(Module):
     def stop(self) -> None:
         self.observations.close()
 
-    @extends(HANDLE)
+    @contributes(HANDLE)
     def handle(self, topic: str, payload: bytes) -> bool:
         """Offer the message to EVERY sensor that owns this channel, not just the first.
 
@@ -527,7 +527,7 @@ class SensingModule(Module):
                            f"{limit}s I allow")
         return out
 
-    @extends(READING_RECORDED)
+    @contributes(READING_RECORDED)
     def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
         """Every reading is a look that happened, and a number for every want about it.
 
@@ -650,7 +650,7 @@ class SensingModule(Module):
         and 21.0 read as a moisture fraction would score as perfectly comfortable."""
         return subject_uri == self.me.acts_for and observed_property in self.regions
 
-    @extends(ANNOTATE)
+    @contributes(ANNOTATE)
     def annotate(self, subject_uri: str, observed_property: str, value: float) -> dict:
         """The verdict on the agent's own subject, for its public announcement — a band and
         never a number: a listener learns that it is in trouble, not how wet it is."""
@@ -658,7 +658,7 @@ class SensingModule(Module):
             return {}
         return {"band": self.regions[observed_property].band(value)}
 
-    @extends(BOUNDS)
+    @contributes(BOUNDS)
     def bounds(self, subject_uri: str, observed_property: str) -> tuple[float, float] | None:
         """The region's edges — what a crossing-watching board is told to announce on leaving
         (#151). The REGION and not the survival envelope, deliberately: waking at the edge of
@@ -668,7 +668,7 @@ class SensingModule(Module):
         region = self.regions.get(observed_property)
         return (region.low, region.high) if region else None
 
-    @extends(URGENCY)
+    @contributes(URGENCY)
     def urgency(self, subject_uri: str, observed_property: str,
                 value: float | None) -> float | None:
         """How close this reading puts the agent to trouble, from the declared measure — the

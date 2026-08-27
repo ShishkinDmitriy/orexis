@@ -13,7 +13,7 @@ class declared here. This is not a package — it is what finds packages — and
 a tree and its loader are not two trees (the-assembly-is-not-the-mind).""" .
 
 :Extension a owl:Class ; rdfs:label "Extension point" ;
-    rdfs:comment "A named place another package may contribute to, filled by `@extends(TERM)` on a function. Was `ag:Hook`, and in the kernel. Declared by whoever owns the QUESTION — the kernel's for the BDI-shaped ones, a package's for its own — and refused if nobody declares it, because a term nobody declared would be answered by silence (a-hook-is-a-term). Two moments, one mechanism: a package module fills the assembly-time points and a Module instance fills the run-time ones, and which is which is decided by where the decorated function lives rather than by anything stated." .
+    rdfs:comment "A named place another package may contribute to, filled by `@contributes(TERM)` on a function. Was `ag:Hook`, and in the kernel. Declared by whoever owns the QUESTION — the kernel's for the BDI-shaped ones, a package's for its own — and refused if nobody declares it, because a term nobody declared would be answered by silence (a-hook-is-a-term). Two moments, one mechanism: a package module fills the assembly-time points and a Module instance fills the run-time ones, and which is which is decided by where the decorated function lives rather than by anything stated." .
 
 :signature a owl:DatatypeProperty ; rdfs:domain :Extension ; rdfs:range xsd:string ;
     rdfs:label "signature" ;

@@ -14,7 +14,7 @@ timestamp: 2026-08-26T12:00:00Z
 
 
 > **AMENDED — the word, not the claim.** A hook is an **extension point** now, its class is
-> `assembly:Extension` rather than `ag:Hook`, and a method fills one with `@extends(term)`. The
+> `assembly:Extension` rather than `ag:Hook`, and a method fills one with `@contributes(term)`. The
 > mechanism left the kernel for `assembly/` with it: how anything reaches anything is not belief,
 > desire or intention. Everything this record argues is untouched — a point is a term, a term
 > nobody declared is refused rather than answered by silence — and one thing was added, which

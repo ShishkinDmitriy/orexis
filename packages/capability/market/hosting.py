@@ -35,7 +35,7 @@ from agent import signing
 from .auction import run_auction
 from .trade import EPS, Bid, Limits, MarketState, Offer
 from agent.desire import Desire
-from agent.module import Module, Timer, extends
+from agent.module import Module, Timer, contributes
 from agent.ontology import HANDLE, SUBSCRIPTIONS
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
@@ -154,7 +154,7 @@ SELECT ?p WHERE {{
         """Whoever keeps my commitments, or None — and None keeps the old behaviour whole."""
         return self.agent.keeper
 
-    @extends(SUBSCRIPTIONS)
+    @contributes(SUBSCRIPTIONS)
     def subscriptions(self) -> list[str]:
         topics = list(self.event_topics)
         for market in self.markets:
@@ -169,7 +169,7 @@ SELECT ?p WHERE {{
 
     # --- what opens an auction ---
 
-    @extends(HANDLE)
+    @contributes(HANDLE)
     def handle(self, topic: str, payload: bytes) -> bool:
         market = self.event_topics.get(topic)
         if market is not None:
@@ -245,7 +245,7 @@ SELECT ?r WHERE {{
 }} LIMIT 1"""))
         return 0.0 if rows else 1.0
 
-    @extends(READING_RECORDED)
+    @contributes(READING_RECORDED)
     def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
         """My witness reported the vessel: every held claim and every call is tried again.
 
