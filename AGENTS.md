@@ -118,7 +118,14 @@ record is worse than none, because it is still cited.
 
    **There is ONE package tree and one mechanic.** `packages/<family>/<name>/` holds whichever
    of `ontology.ttl`, `shapes.ttl`, `rules.ru`, `actions.ttl`, `review.rq` and Python it wants — every one
-   optional, and an omission is a statement. `packages/part/esp32/` is an ontology and nothing
+   optional, and an omission is a statement. Two files are NOT optional: a `pyproject.toml`,
+   because **every package is its own distribution with its own dependencies**
+   (`orexis-<family>-<name>`), and the `__init__.py` manifest. A dependency is declared by
+   whoever imports it and `tests/test_projects.py` holds each list to the imports in both
+   directions — a missing one and an unused one both fail. `packages/` and `packages/<family>/`
+   are PEP 420 namespace portions belonging to no distribution, which is what lets a package
+   from another repository join the same import root. See
+   [every-package-is-a-project](knowledge/decisions/every-package-is-a-project.md). `packages/part/esp32/` is an ontology and nothing
    else because a board has no behaviour a runtime could load; `packages/capability/market/` has
    all of it. Neither is more of a package than the other, and that is the point: a plant, a
    part and a capability are the same kind of thing to the loader.
@@ -295,6 +302,7 @@ stops being theoretical.
 
 ```bash
 source .venv/bin/activate
+pip install -e . $(ls -d packages/*/*/)   # 22 distributions; or `uv sync --all-packages`
 
 orexis-validate <world> # build the world from its files and hold it to every package's shapes
 orexis-onboard <world>       # ONBOARDING: validate, then grant everything below. One command.

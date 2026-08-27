@@ -16,6 +16,7 @@ one is deleting it.
 
 ```
 packages/<family>/<name>/
+    pyproject.toml THE PROJECT — what this package needs, and the one name it installs under
     __init__.py    THE MANIFEST — what this package contributes, and what it provides
     ontology.ttl   the vocabulary — what its terms mean
     shapes.ttl     the rules — what must be true of something that has it
@@ -42,18 +43,28 @@ three files or call its vocabulary anything, and it says so. What it may NOT do 
 `__init__.py` expensive — every one of them is imported at assembly, for every agent, which is
 why `provides()` is a function rather than a constant (the-assembly-is-not-the-mind).
 
-**Every one is optional, and an omission is a statement.** `packages/part/esp32/` is an ontology
+**Two of those are not optional.** A package is a **project** — its own distribution,
+`orexis-<family>-<name>`, with its own dependencies — and a project needs a `pyproject.toml`; the
+manifest is how the loader learns what the rest of the files are. Everything below them is
+chosen. Why a package is a project at all, and the four dependency defects one shared list was
+hiding, is [every-package-is-a-project](/decisions/every-package-is-a-project.md)'s.
+
+**Every other one is optional, and an omission is a statement.** `packages/part/esp32/` is an ontology
 and nothing else, because a board has no behaviour a runtime could load.
 `packages/capability/market/` has all of them. Neither is more of a package than the other, and
 that is the point: **a plant, a part and a capability are the same kind of thing to the loader.**
 
-A package with no `__init__.py` is **knowledge-only** — legitimate, and the majority. Twelve of
-the twenty-three packages shipped today carry no Python at all.
+A package whose Python is its manifest and nothing else is **knowledge-only** — legitimate, and
+the majority: thirteen of the twenty-one shipped today load no module at run time. The tell is
+`PROVIDES`, not the presence of a file. It used to be the absence of `__init__.py`, and that
+stopped being true when every package gained a manifest.
 
 # The family is the directory above, and it is declared nowhere
 
-`agent.loader` walks two levels down from `packages/` and reads the family off the path. Nothing
-enumerates the families; `KINDS` in `assembly/loader.py` fixes only the **order they merge in**, for
+`agent.loader` walks two levels down from `packages/` and reads the family off the path — and
+those two levels belong to **no distribution**: `packages/` and `packages/<family>/` are PEP 420
+namespace portions, which is what lets twenty-two distributions share one import root and a
+twenty-second package arrive from another repository. Nothing enumerates the families; `KINDS` in `assembly/loader.py` fixes only the **order they merge in**, for
 determinism in logs and diffs. A family invented tomorrow is found without editing anything — it
 merely sorts after the named ones.
 

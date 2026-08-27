@@ -1,0 +1,28 @@
+# orexis-part-bme280
+#
+# A package is a PROJECT: it declares what it needs, and nothing declares it on its behalf.
+# The import name is `packages.part.bme280` and the distribution is `orexis-part-bme280` — one namespace,
+# many distributions, which is what lets this directory be developed and installed on its own.
+[project]
+name = "orexis-part-bme280"
+version = "0.1.0"
+description = "The BME280 temperature, humidity and pressure sensor"
+requires-python = ">=3.10"
+dependencies = [
+    "orexis",  # assembly (the manifest) and, where there is behaviour, the kernel
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# `packages/` and `packages/part/` are NAMESPACE portions (PEP 420) and are claimed by nobody,
+# which is what lets twenty-one distributions share them. This project owns one leaf and says so.
+packages = ["packages.part.bme280"]
+package-dir = {"packages.part.bme280" = "."}
+
+[tool.setuptools.package-data]
+# The knowledge a package ships is not an afterthought to its Python — for most of them it IS
+# the package. A wheel without these files installs a directory that contributes nothing.
+"packages.part.bme280" = ["*.ttl", "*.ru", "*.rq"]

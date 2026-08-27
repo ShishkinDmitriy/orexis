@@ -154,6 +154,7 @@ A directory is a package. What that buys, and what the tree is not allowed to im
 * [capability-packages](/decisions/capability-packages.md) - A package is one directory holding its own ontology, shapes, rules, code and namespace — found by looking, never listed.
 * [one-tree-and-one-mechanic](/decisions/one-tree-and-one-mechanic.md) - One tree, `packages/<family>/<name>/`, with the family read off the path and declared nowhere.
 * [a-package-owns-its-namespace](/decisions/a-package-owns-its-namespace.md) - Prefixes are read off the ontologies that declare them. A directory is a package, not a capability.
+* [every-package-is-a-project](/decisions/every-package-is-a-project.md) - Each package is its own distribution with its own dependencies, held to what it imports in both directions.
 * [repository-layout](/decisions/repository-layout.md) - One convention across the Python trees, one distribution, and a packaging boundary replaced by a test and an import contract.
 * [a-package-may-test-itself](/decisions/a-package-may-test-itself.md) - A package carries its own tests beside its code, and `testpaths` names both roots so neither is invisible.
 * [telemetry-is-a-mandatory-capability](/decisions/telemetry-is-a-mandatory-capability.md) - Rule 2 asks only whether the how could differ, so a capability every agent holds is still one — and is not optional.
