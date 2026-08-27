@@ -148,6 +148,7 @@ What the store holds, which engine reads it, and how a fact says who put it ther
 
 A directory is a package. What that buys, and what the tree is not allowed to imply.
 
+* [an-injected-service-is-reached-by-term](/decisions/an-injected-service-is-reached-by-term.md) - The design for a package offering another a store or a service, keyed by URI. Recorded, not built; #311 is the trigger.
 * [the-assembly-is-not-the-mind](/decisions/the-assembly-is-not-the-mind.md) - Loading and the choir are one mechanism, in `assembly/` beside the kernel; an extension point is a term that publishes its signature.
 * [capability-packages](/decisions/capability-packages.md) - A package is one directory holding its own ontology, shapes, rules, code and namespace — found by looking, never listed.
 * [one-tree-and-one-mechanic](/decisions/one-tree-and-one-mechanic.md) - One tree, `packages/<family>/<name>/`, with the family read off the path and declared nowhere.
