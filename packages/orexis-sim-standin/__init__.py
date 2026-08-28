@@ -1,7 +1,7 @@
 """What `sim/standin` brings to a build.
 
 Knowledge only: it contributes vocabulary and no behaviour, which is why there is no
-`provides()` below. A board has no code a runtime could load.
+`provides()` below. What stands in for absent hardware is described here and computed elsewhere.
 """
 
 from pathlib import Path

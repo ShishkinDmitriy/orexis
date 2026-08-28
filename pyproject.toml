@@ -84,34 +84,28 @@ include = ["assembly*", "agent*", "onboarding*"]
 # directory rather than to an index that has never heard of it.
 #
 # uv is the ergonomics, not the mechanism: every member is an ordinary PEP 621 project, so
-# `pip install -e . $(ls -d packages/*/*/)` is the same install and is what the Containerfile
-# does. Nothing here requires uv to run an agent.
+# `pip install -e . $(ls -d packages/*/)` is the same install and is what the Containerfile
+# does — ONE level, since a package's directory is its distribution name and has no family
+# directory above it. Nothing here requires uv to run an agent.
 [tool.uv.workspace]
 members = ["packages/*"]
 
+# An entry here answers ONE question: when a member declares a dependency on this NAME, does it
+# come from the workspace or from an index? So a name that nothing depends on needs no entry —
+# `[tool.uv.workspace]` above is what makes all twenty-one members, and it is a glob.
+#
+# There were twenty-two entries and twenty of them answered a question nobody asked. Measured
+# before removing them: locking the workspace with two entries and with twenty-two produces a
+# BYTE-IDENTICAL `uv.lock`, and every package still resolves to `editable = "packages/<name>"`.
+#
+# They are gone because inert or not, twenty-one sibling names in a list is a REGISTRY — the
+# next person adds a twenty-second by imitation, forgets on the one after that, and nothing
+# fails, because the entry never did anything. That is the same failure the contracts above
+# were moved out of this file to avoid. ADD A NAME HERE ONLY when a member actually depends on
+# it; otherwise adding a package stays what the README claims it is — adding a directory.
 [tool.uv.sources]
-orexis = { workspace = true }
-orexis-bus-i2c = { workspace = true }
-orexis-bus-onewire = { workspace = true }
-orexis-capability-actuation = { workspace = true }
-orexis-capability-market = { workspace = true }
-orexis-capability-reporting = { workspace = true }
-orexis-capability-review = { workspace = true }
-orexis-capability-sensing = { workspace = true }
-orexis-codec-json = { workspace = true }
-orexis-part-bme280 = { workspace = true }
-orexis-part-device = { workspace = true }
-orexis-part-dht11 = { workspace = true }
-orexis-part-esp32 = { workspace = true }
-orexis-part-microcontroller = { workspace = true }
-orexis-part-moisture-probe = { workspace = true }
-orexis-part-rgb-led = { workspace = true }
-orexis-plant-water = { workspace = true }
-orexis-plant-zamioculcas = { workspace = true }
-orexis-scaling-identity = { workspace = true }
-orexis-sim-standin = { workspace = true }
-orexis-tool-wokwi = { workspace = true }
-orexis-transport-mqtt = { workspace = true }
+orexis = { workspace = true }                    # every package: `from assembly import contributes`
+orexis-capability-sensing = { workspace = true } # codec-json, scaling-identity, transport-mqtt
 
 [tool.pytest.ini_options]
 # BOTH roots. `tests/` is the integration suite — most of what this project asserts is about the

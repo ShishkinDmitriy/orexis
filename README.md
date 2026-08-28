@@ -77,9 +77,10 @@ Every one of them is optional, and an omission is a statement: `packages/orexis-
 `packages/orexis-transport-mqtt/` has no `rules.ru` because a transport grants no capability, and
 `packages/orexis-capability-actuation/` has no `beliefs.py` because it decides nothing.
 
-Nothing lists these — `agent.loader` finds them by looking, two levels down, and the
-FAMILY is the parent directory rather than anything declared. So **adding a capability is
-adding a directory**: drop in `packages/orexis-capability-forecast/`, and agents load its vocabulary, run its
+Nothing lists these — `assembly.loader` finds them by looking, one level down, and the
+FAMILY is the second segment of the package's own NAME rather than a directory above it or
+anything declared. So **adding a capability is adding a directory**: drop in
+`packages/orexis-capability-forecast/`, and agents load its vocabulary, run its
 derivation, and boot with it if the wiring qualifies them. No registry line, no
 term constant, no edit to any existing file — and deleting the directory removes it just as
 completely, because capabilities reach each other through T-Box terms and never through

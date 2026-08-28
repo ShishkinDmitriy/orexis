@@ -1,14 +1,16 @@
 """Discovery. There is no list of packages anywhere — there are directories, and one kernel.
 
-A **package** is one self-contained thing the society is made of, and it is a directory under
-`packages/<family>/<name>/`:
+A **package** is one self-contained thing the society is made of, and it is a directory ONE
+level under `packages/`, named `orexis-<family>-<name>/` — which is also its distribution name
+and, with underscores, its module. The family is read off that name; there is no directory
+above it to read it from:
 
-    packages/capability/<n>/   what an agent can DO. The extendable axis.
-    packages/transport/<n>/    how a device is REACHED.
-    packages/codec/<n>/        how its bytes become a DOCUMENT.
-    packages/scaling/<n>/      how a raw value becomes a QUANTITY, with a unit.
-    packages/part/, plant/,
-             bus/, tool/       the things a world names, and the vocabularies they layer on
+    orexis-capability-<n>/   what an agent can DO. The extendable axis.
+    orexis-transport-<n>/    how a device is REACHED.
+    orexis-codec-<n>/        how its bytes become a DOCUMENT.
+    orexis-scaling-<n>/      how a raw value becomes a QUANTITY, with a unit.
+    orexis-part-, -plant-,
+           -bus-, -tool-     the things a world names, and the vocabularies they layer on
 
 **The kernel is not one of them, because it is what finds them.** `agent/` carries its own
 `ontology.ttl`, `shapes.ttl` and `rules.ru` beside the Python that reads them, and it is
@@ -31,11 +33,11 @@ first, a predicate on the SENSOR for the rest. Both are derived at genesis from 
 world states, because both are known before anything runs — a board's protocol and its wire
 format are hardware, not discoveries.
 
-`transports/` is the exception and is known to be one: `MqttDriver.claims()` still re-decides at
-every boot what genesis could have written down. See the seams in
+The transport family is the exception and is known to be one: `MqttDriver.claims()` still
+re-decides at every boot what genesis could have written down. See the seams in
 knowledge/decisions/bytes-become-a-quantity-in-stages.md.
 
-Inside a package, the same four names mean the same four things every time:
+Inside a package, the same names mean the same things every time:
 
     ontology.ttl   the vocabulary — what its terms mean
     shapes.ttl     the rules — what an agent must believe to hold it
@@ -231,8 +233,8 @@ class Package:
 
 # The kernel, as a record. It carries the same four filenames a package carries, so every
 # reader below — `files()`, `prefixes()`, genesis's rule substitution, onboarding's validation —
-# reaches it without knowing it is special. What it is NOT is a family: `packages/kernel/` is not
-# a directory anyone can add a sibling to, which is exactly the difference from `core`.
+# reaches it without knowing it is special. What it is NOT is a family: there is no
+# `orexis-kernel-<n>/` anyone can add a sibling to, which is exactly the difference from `core`.
 KERNEL_KIND = "kernel"
 #  The kernel is named, not discovered — it is what the packages layer on, and a thing outside
 #  the tree cannot be sorted wrong. Assembly names it by PATH and never imports it.
