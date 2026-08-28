@@ -1,7 +1,7 @@
 """What `bus/i2c` brings to a build.
 
 Knowledge only: it contributes vocabulary and no behaviour, which is why there is no
-`provides()` below. A board has no code a runtime could load.
+`provides()` below. A protocol is a wiring fact, not code.
 """
 
 from pathlib import Path

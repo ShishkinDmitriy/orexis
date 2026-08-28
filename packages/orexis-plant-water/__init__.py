@@ -1,7 +1,7 @@
 """What `plant/water` brings to a build.
 
 Knowledge only: it contributes vocabulary and no behaviour, which is why there is no
-`provides()` below. A board has no code a runtime could load.
+`provides()` below. A domain says what is sensed and allocated; it runs nothing.
 """
 
 from pathlib import Path
