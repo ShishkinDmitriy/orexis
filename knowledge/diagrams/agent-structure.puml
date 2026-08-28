@@ -1,0 +1,100 @@
+@startuml agent-structure
+title What an Orexis agent has — agent/runtime.py::Agent, in construction order
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam ArrowColor #555555
+skinparam package {
+  BorderColor #888888
+  BackgroundColor #FBFBFB
+}
+
+package "Identity — from the one id a process is given" as ID {
+  component "id" as AID
+  component "World\n(the world graph, loaded)" as WORLD
+  component "Self\n(me: uri, acts_for, capabilities)" as SELF
+}
+
+package "The mind — a store is a modality" as MIND {
+  component "Beliefs\nwhat IS\nvolume · records + receives" as BEL
+  component "Desires\nwhat I PURSUE\nmemory · rebuilt from premises\nno runtime writer" as DES
+  component "Intentions\nwhat I am DOING\nvolume · keeper is sole writer" as INT
+  component "menu (menu_of)\nwhat I COULD do\nmemory · derived every ask" as MENU
+  component "Imaginarium\nhypothesised\nmemory · dropped with the pass" as IMAG
+  component "history\nwhat I DID\nDECLARED, NO INSTANCE" as HIST #FEEEEE
+}
+
+package "Kernel — unconditional, granted by nothing" as KERNEL {
+  component "Deliberator\nthe search" as DELIB
+  component "Keeper\nledger · patience\nverification arc · tick" as KEEP
+  component "Owing\nledger of debts" as OWE
+  component "Revision\nthe belief-revision seam\nmark, then drain on\nthe mind's own thread" as REV
+  component "Metrics" as MET
+  component "BeliefBaseUpkeep\ncompaction — not a choice" as UP
+  component "execution\nplan → commit → take\n(functions, not a module)" as EXEC
+}
+
+package "Capability modules — loaded from PROVIDES,\nonly for capabilities this world granted" as CAPS {
+  component "sensing" as SENS
+  component "market\nbidding · hosting · matching" as MKT
+  component "actuation" as ACT
+  component "reporting" as REP
+  component "review\n(only with a review:commits mandate)" as RVW
+  component "transport (mqtt)\nholds the one connection" as TR
+}
+
+' --- identity feeds everything
+SELF --> CAPS : capabilities decide\nwhich are imported
+BEL <-- WORLD
+
+' --- modality wiring
+BEL --> DES : deduced from
+DES --> MENU : wants ranged over
+BEL --> MENU : affordance premises
+KEEP --> INT : the only writer
+DELIB --> IMAG : one per pass
+MENU --> DELIB
+DES --> DELIB
+INT ..> DELIB : what already stands
+HIST .[#red].> INT : &#35;311 — resolved rows\nsquat in the live ledger
+
+' --- the one road
+DELIB --> EXEC : 1. plan
+EXEC --> KEEP : 2. commit the head act
+EXEC --> CAPS : 3. take\n(ag:takenBy names the family)
+
+' --- feedback
+SENS --> REV : a reading arrived
+MKT --> REV
+REV --> EXEC : drained, one want at a time
+SENS --> KEEP : judge(want, value)\nTHE ONLY JUDGE — a float
+KEEP --> KEEP : verdict → endMet\n→ suspect after N
+KEEP .[#red].> DELIB : NOTHING reads a verdict
+
+' --- the three doors between modules
+note right of CAPS
+  Packages never import each other.
+  Three doors:
+   • agent.ask(hook, …)      — the choir, everyone's opinion
+   • agent.provider(family)  — whoever implements an ability
+   • agent.service(cls)      — fan-in, one or none
+end note
+
+note bottom of MIND
+  Six modalities (the-mind-is-six-graphs),
+  four built. Each chooses its own
+  persistence, because modality
+  determines lifecycle.
+end note
+
+legend right
+  |= row |= latency |= may block |= may search |
+  | reactive     | ms      | never | no  |
+  | progression  | s–min   | suspends | no |
+  | deliberative | s       | should be interruptible | yes |
+  Declared on all 18 hooks as ag:row.
+  Read by nothing — #430.
+endlegend
+
+@enduml

@@ -35,6 +35,20 @@ The LLM is a *stateless pure function* called inside a plan body; memory lives i
 and beliefs. This is what lets many agents share one model yet hold separate, stable
 positions.
 
+# The parts, drawn
+
+[`diagrams/agent-structure.puml`](/diagrams/agent-structure.puml) draws what
+`agent/runtime.py::Agent` composes, in the order `__init__` builds it: the identity it is told,
+the mind's modalities, the kernel members every agent gets, and the capability modules only its
+grants reach. Render it with `plantuml -tpng knowledge/diagrams/agent-structure.puml`; no image
+is committed, because a rendered one would rot while the source is checkable against the file it
+describes.
+
+It is drawn from the constructor rather than from this bundle, so it shows two things no page
+states — a modality that is declared and has no instance, and a verdict nothing reads — and
+marks each with the issue that tracks it. Treat those marks as claims to re-check, not as
+settled description.
+
 # What an agent owns (judgment, private data, sensing)
 
 Interpretation and initiative belong to the agent, not infra (see
