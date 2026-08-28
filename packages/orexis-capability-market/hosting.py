@@ -301,6 +301,15 @@ SELECT ?r WHERE {{
                               "until the refill lands", trigger)
                 return False
             quantity_l = min(quantity_l, stock)
+        if self.open_auction is not None:
+            #  ONE OPEN ROUND, and `self.open_auction` being singular has always said so. What
+            #  it did not do is refuse: an overlapping announce overwrote the round AND the
+            #  timer, leaving the old timer pending on a round nobody could close, whose `fn`
+            #  closes whichever round is open when it lands. Refusing here is the fix; the
+            #  one-shot deadline below is what stops a leaked one from becoming permanent.
+            self.log.warning("%s is LOW but auction %s is still open — no second round",
+                             trigger, self.open_auction["auction_id"])
+            return False
         auction_id = uuid.uuid4().hex[:8]
         self.open_auction = {"auction_id": auction_id, "market": market, "bids": {},
                              "quantity_l": quantity_l}
@@ -330,7 +339,10 @@ SELECT ?r WHERE {{
             # belief, so what is announced is necessarily what will run.
             "matches_by": matcher.CAPABILITY if matcher else None,
         })
-        self._timer = Timer(self.beliefs.bid_window_s, self.close)
+        #  A DEADLINE, not a cadence: it closes this round and is spent. See Timer.
+        if self._timer:
+            self._timer.stop()
+        self._timer = Timer(self.beliefs.bid_window_s, self.close, repeat=False)
         self._timer.start()
         return True
 

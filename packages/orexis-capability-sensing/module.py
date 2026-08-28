@@ -507,7 +507,7 @@ class SensingModule(Module):
         """
         return True
 
-    def quiet(self) -> list[str]:
+    def quiet(self) -> list[tuple[str, str]]:
         """Every sensor of mine that has delivered once and then gone silent past my rule.
 
         Answered by the base class for BOTH clocks: subscribing's limit is relative to the
@@ -523,8 +523,12 @@ class SensingModule(Module):
                 continue
             limit = self.stale_after_s(sensor.subject, sensor.observes)
             if age > limit:
-                out.append(f"{sensor.local_id}: nothing for {age:.0f}s, past the "
-                           f"{limit}s I allow")
+                #  The SENSOR is the key — one silence per sensor, however long it lasts.
+                #  The line renders the age and therefore changes on every look; keying on it
+                #  is what made one fault look like a fault-and-recovery per tick.
+                out.append((sensor.local_id,
+                            f"{sensor.local_id}: nothing for {age:.0f}s, past the "
+                            f"{limit}s I allow"))
         return out
 
     @contributes(READING_RECORDED)

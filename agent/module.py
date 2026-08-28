@@ -215,14 +215,23 @@ class Module:
         return 0
 
     @contributes(QUIET)
-    def quiet(self) -> list[str]:
-        """What this module has stopped hearing that it expected to hear — one line each.
+    def quiet(self) -> list[tuple[str, str]]:
+        """What this module has stopped hearing that it expected to hear — `(key, line)` each.
 
         The self-liveness half of #53: the freshness rule already refuses a stale reading
         whenever something ASKS, but a fault that stops the asking is invisible to it. The
         watchdog asks this on its own clock, so the agent says "nothing from X for Ys, past
         what I allow" instead of waiting to be queried. Most modules expect nothing on a
-        schedule and answer nothing; the strings are prose for a log, never parsed.
+        schedule and answer nothing; the lines are prose for a log, never parsed.
+
+        THE KEY IS WHY THIS IS A PAIR, and it was learned the expensive way. The watchdog
+        tells a new silence from a continuing one by set difference, and it used to difference
+        the LINES — which carry the elapsed seconds, so every look rendered a different string
+        for the same unbroken fault. One sensor down read as a fresh fault plus a recovery
+        every sixty seconds, forever: `nothing for 337s` beside `heard again — was: nothing for
+        277s`, while nothing had been heard for seven minutes. The contributor names the thing
+        that went quiet, because only it knows; the watchdog compares keys and prints lines,
+        and "never parsed" stays true.
         """
         return []
 
@@ -274,11 +283,32 @@ class Module:
 
 
 class Timer:
-    """A cancellable repeating timer — used by modules that act on their own schedule."""
+    """A cancellable timer — a CADENCE that repeats, or a DEADLINE that fires once.
 
-    def __init__(self, interval_s: float, fn):
+    The two are not the same thing and this class used to offer only the first, which every
+    deadline in the market then had to pretend was what it wanted. It is not: a deadline that
+    rearms is a deadline that fires again for a round that has already closed.
+
+    What that cost, measured on the bench before this parameter existed. `hosting.announce`
+    assigns a fresh timer per round and never stopped the outgoing one, so an overlapping
+    announce orphaned it — still pending, still repeating, and its `fn` is `close`, which
+    closes whatever round is open when it lands rather than the one it was started for. The
+    orphan then rearmed itself in `_fire`, because `close` stops `self._timer`, which by then
+    is a DIFFERENT object. One overlap therefore bought a permanent heartbeat closing rounds
+    early, and overlaps accumulate: in six hours the simulation world opened 654 auctions and
+    cleared 3, with a window announced as 3s closing at a median of 1.05s — once at -0.00s,
+    an auction closed by an orphan at the instant it opened. Every bid arrived after the
+    close, so the market looked like it had no bidders when it had two bidding well.
+
+    `repeat=True` stays the default because five of the eight callers really are cadences
+    (the keeper's tick, upkeep, reporting's interval, the watchdog's look, actuation's sweep)
+    and a deadline is the exception that must say so.
+    """
+
+    def __init__(self, interval_s: float, fn, repeat: bool = True):
         self.interval_s = interval_s
         self.fn = fn
+        self.repeat = repeat
         self._timer: threading.Timer | None = None
         self._stopped = False
 
@@ -293,7 +323,11 @@ class Timer:
         try:
             self.fn()
         finally:
-            self.start()
+            #  A deadline is spent once it lands. Rearming here is what let an orphan outlive
+            #  the round it belonged to — and `stop()` from inside `fn` cannot save it, because
+            #  the attribute it stops may already point at a newer timer.
+            if self.repeat and not self._stopped:
+                self.start()
 
     def stop(self) -> None:
         self._stopped = True

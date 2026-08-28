@@ -463,7 +463,12 @@ class BiddingModule(Module):
         #  it when it takes the act, from the round row it reads there. What stays here is the
         #  give-up: the close the offer itself states.
         window = float(offer.get("closes_in_s") or 0) or 1.0
-        self._deadline = Timer(window, self.give_up)
+        #  A DEADLINE, spent once it lands (see Timer). It used to repeat, and `give_up` stops
+        #  `self._deadline` — which by the next round is a different object, so a deadline left
+        #  over from an earlier round went on giving up on rounds it was never started for.
+        if self._deadline:
+            self._deadline.stop()
+        self._deadline = Timer(window, self.give_up, repeat=False)
         self._deadline.start()
 
     @contributes(READING_RECORDED)
@@ -704,7 +709,11 @@ class BiddingModule(Module):
         # could not be confirmed is not going to be — old firmware that never acks, a listening
         # rig, a board mid-sleep on a long cadence. Redeem blind and say so, because a dose
         # delayed forever is worse than a dose unobserved.
-        self._present_deadline = Timer(float(bound), self._present_blind)
+        #  Also a DEADLINE. `_present_blind` never stopped it, so a repeating one re-presented
+        #  a claim every `bound` seconds for as long as the process lived.
+        if self._present_deadline:
+            self._present_deadline.stop()
+        self._present_deadline = Timer(float(bound), self._present_blind, repeat=False)
         self._present_deadline.start()
         self._maybe_present()
 

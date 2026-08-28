@@ -85,13 +85,20 @@ def test_a_live_thread_is_not_a_corpse(fern):
     assert said == []
 
 
+def _quiet_module(lines):
+    """A module answering the `quiet` extension point with whatever `lines` currently holds."""
+    return SimpleNamespace(
+        quiet=lambda: list(lines),
+        answer=lambda term: (lambda: list(lines)) if term.endswith("#quiet") else None)
+
+
 def test_what_went_quiet_is_said_once_and_recovery_is_said_too(fern, caplog):
     """A lamp that repeats itself is one you stop reading: entry once, recovery once,
     and the ticks in between are silent."""
     fern.module("mqtt")._on_connect()
-    lines = ["moisture_sensor_fern: nothing for 700s, past the 645s I allow"]
-    fern.modules.append(SimpleNamespace(quiet=lambda: list(lines),
-                                        answer=lambda term: (lambda: list(lines)) if term.endswith("#quiet") else None))
+    lines = [("moisture_sensor_fern",
+              "moisture_sensor_fern: nothing for 700s, past the 645s I allow")]
+    fern.modules.append(_quiet_module(lines))
 
     with caplog.at_level(logging.INFO, logger="watchdog"):
         fern.module("mqtt").watchdog.check()
@@ -103,6 +110,54 @@ def test_what_went_quiet_is_said_once_and_recovery_is_said_too(fern, caplog):
         fern.module("mqtt").watchdog.check()
     recovered = [r for r in caplog.records if "heard again" in r.message]
     assert len(recovered) == 1
+
+
+def test_a_silence_that_goes_on_is_still_ONE_silence(fern, caplog):
+    """The line carries the elapsed seconds and so changes on every look. The fault does not.
+
+    THE TEST ABOVE HELD THE LINE CONSTANT and therefore passed for as long as the bug lived:
+    the watchdog differenced the LINES, so a growing age read as a fresh fault plus a recovery
+    on every single tick. On the bench that was `nothing for 337s` beside `heard again — was:
+    nothing for 277s`, once a minute, while nothing had been heard for seven minutes. Anyone
+    alerting on the recovery line was told the sensor came back sixty times over.
+    """
+    fern.module("mqtt")._on_connect()
+    lines = [("moisture_sensor_fern", "moisture_sensor_fern: nothing for 100s, past the 55s I allow")]
+    fern.modules.append(_quiet_module(lines))
+
+    with caplog.at_level(logging.INFO, logger="watchdog"):
+        for age in (100, 160, 220, 280):
+            lines[:] = [("moisture_sensor_fern",
+                         f"moisture_sensor_fern: nothing for {age}s, past the 55s I allow")]
+            fern.module("mqtt").watchdog.check()
+
+        assert [r for r in caplog.records if "heard again" in r.message] == [], (
+            "an unbroken silence claimed to have recovered")
+        assert sum("nothing for" in r.message for r in caplog.records) == 1, (
+            "one fault, said once, however the line renders")
+
+        #  And it must still notice the real recovery when it comes.
+        lines.clear()
+        fern.module("mqtt").watchdog.check()
+    assert len([r for r in caplog.records if "heard again" in r.message]) == 1
+
+
+def test_two_sensors_going_quiet_are_two_lines(fern, caplog):
+    """Keyed, not counted: the second silence is its own entry and its own recovery."""
+    fern.module("mqtt")._on_connect()
+    lines = [("a", "a: nothing for 100s, past the 55s I allow")]
+    fern.modules.append(_quiet_module(lines))
+
+    with caplog.at_level(logging.INFO, logger="watchdog"):
+        fern.module("mqtt").watchdog.check()
+        lines.append(("b", "b: nothing for 90s, past the 55s I allow"))
+        fern.module("mqtt").watchdog.check()
+        assert sum("nothing for" in r.message for r in caplog.records) == 2
+
+        lines[:] = [("b", "b: nothing for 150s, past the 55s I allow")]   # a came back, b did not
+        fern.module("mqtt").watchdog.check()
+    recovered = [r for r in caplog.records if "heard again" in r.message]
+    assert len(recovered) == 1 and "a:" in recovered[0].message
 
 
 def test_a_quiet_sensor_is_reported_by_sensing(fern):

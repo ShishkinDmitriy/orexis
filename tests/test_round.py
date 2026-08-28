@@ -136,6 +136,33 @@ def test_no_second_round_while_one_is_open(host):
     assert len(host.sent.to(market_of(host).offer_topic)) == 1
 
 
+def test_announce_REFUSES_over_an_open_round_rather_than_replacing_it(host):
+    """The invariant above, asked of `announce` directly — which is where it was missing.
+
+    The test above passes without any guard at all, because two LOW events in one tick are
+    held apart by the call path before they reach here. `announce` itself replaced the open
+    round and its timer, and on the bench that path was the NORMAL one: 645 announces in six
+    hours landed on a round that was already open, and the first round of the run never closed
+    at all. Each overlap orphaned a timer whose `fn` is `close`, so a round was closed by a
+    predecessor's deadline — a 3s window closing at a median of 1.05s, and 647 of 654 auctions
+    closing with no bids while two bidders bid in every one of them.
+
+    Refusing here is the fix. The round that is open keeps its own deadline, and the call that
+    could not be answered stays standing for the next one.
+    """
+    market = market_of(host)
+    host.deliver("readings/fern", low_event())
+    hosting = host.module("hosting")
+    assert hosting.open_auction is not None
+    first = hosting.open_auction["auction_id"]
+    first_timer = hosting._timer
+
+    assert hosting.announce(market, "tomato") is False, "a second round opened over an open one"
+    assert hosting.open_auction["auction_id"] == first, "the open round was replaced"
+    assert hosting._timer is first_timer, "the open round's deadline was orphaned"
+    assert len(host.sent.to(market.offer_topic)) == 1
+
+
 # --- answering -------------------------------------------------------------
 
 def _with_reading(value, age_s=0):

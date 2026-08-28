@@ -64,7 +64,7 @@ class BusWatchdog:
         self.link = link
         self.agent = link.agent
         self._timer: Timer | None = None
-        self._quiet: set[str] = set()  # what has already been said, so it is said once
+        self._quiet: dict[str, str] = {}  # key -> the line last said, so it is said once
         rows = bindings(self.agent.beliefs.query(_RESIGN_Q))
         if not rows:
             raise RuntimeError("the ontology states no ag:resignAfterS — re-run orexis-seed")
@@ -101,12 +101,17 @@ class BusWatchdog:
         return self.link.alive() is False
 
     def _sweep_quiet(self) -> None:
-        """Say what has gone silent, once on entry and once on recovery — never per tick."""
-        heard_nothing = {line for lines in self.agent.ask(QUIET) for line in lines}
-        for line in sorted(heard_nothing - self._quiet):
-            log.warning("%s: %s", self.agent.id, line)
-        for line in sorted(self._quiet - heard_nothing):
-            log.info("%s: heard again — was: %s", self.agent.id, line)
+        """Say what has gone silent, once on entry and once on recovery — never per tick.
+
+        Differenced by KEY, never by line. The line carries the elapsed seconds and so differs
+        on every look; differencing it made one unbroken silence read as a new fault plus a
+        recovery, every tick, forever — this docstring's promise inverted exactly.
+        """
+        heard_nothing = {key: line for pairs in self.agent.ask(QUIET) for key, line in pairs}
+        for key in sorted(heard_nothing.keys() - self._quiet.keys()):
+            log.warning("%s: %s", self.agent.id, heard_nothing[key])
+        for key in sorted(self._quiet.keys() - heard_nothing.keys()):
+            log.info("%s: heard again — was: %s", self.agent.id, self._quiet[key])
         self._quiet = heard_nothing
 
     def _resign(self, why: str) -> None:
