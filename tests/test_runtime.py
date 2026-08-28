@@ -212,3 +212,64 @@ def test_the_agent_holds_a_clean_session():
     real = paho.Client(paho.CallbackAPIVersion.VERSION2)
     assert getattr(real, "_clean_session", None) is True, \
         "paho's default session is no longer clean — the runtime must now say so explicitly"
+
+
+# --- the clock a module acts on --------------------------------------------------------------
+#
+# A CADENCE repeats and a DEADLINE does not, and the class used to offer only the first. Three
+# callers wanted the second — the host's bid window and the bidder's two — and every one of
+# them got a timer that rearmed itself after it fired. What that bought is in `Timer`'s own
+# docstring; these are the properties that were never asserted.
+
+def test_a_deadline_fires_once():
+    """`repeat=False` is spent when it lands. It rearming is what let a leaked timer become a
+    permanent heartbeat closing rounds it was never started for."""
+    import time as _t
+    from agent.module import Timer
+
+    fired = []
+    t = Timer(0.02, lambda: fired.append(1), repeat=False)
+    t.start()
+    deadline = _t.monotonic() + 2.0
+    while _t.monotonic() < deadline and len(fired) < 2:
+        _t.sleep(0.01)
+    t.stop()
+    assert fired == [1], f"a deadline fired {len(fired)} times"
+
+
+def test_a_cadence_keeps_firing():
+    """The default, and what the keeper, upkeep, reporting, the watchdog and the sweep want."""
+    import time as _t
+    from agent.module import Timer
+
+    fired = []
+    t = Timer(0.02, lambda: fired.append(1))
+    t.start()
+    deadline = _t.monotonic() + 2.0
+    while _t.monotonic() < deadline and len(fired) < 3:
+        _t.sleep(0.01)
+    t.stop()
+    assert len(fired) >= 3, f"a cadence fired only {len(fired)} times"
+
+
+def test_a_deadline_that_replaces_another_does_not_leave_it_running():
+    """The orphan, in miniature.
+
+    `hosting.announce` assigns a fresh timer per round. When the round it replaced was still
+    pending, the old one stayed armed with `close` as its `fn` — and `close` stops the
+    ATTRIBUTE, which by then points at the newer timer. On the bench 645 announces landed on
+    an already-open round in six hours, and the orphans closed whatever was open when they
+    fired: a window announced as 3s closed at a median of 1.05s, once at -0.00s.
+    """
+    import time as _t
+    from agent.module import Timer
+
+    fired = []
+    old = Timer(0.05, lambda: fired.append("old"), repeat=False)
+    old.start()
+    old.stop()                                    # what announce must do before replacing it
+    new = Timer(0.05, lambda: fired.append("new"), repeat=False)
+    new.start()
+    _t.sleep(0.3)
+    new.stop()
+    assert fired == ["new"], f"the replaced deadline still fired: {fired}"
