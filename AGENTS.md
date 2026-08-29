@@ -465,6 +465,12 @@ fails if pyshacl ever entails something the closure does not. See
   name; `…/graph/world` is not, any more than a world's `:fern_agent` is. Ask `store.public_graphs()`.
   Two things are still named and both are writes or the bootstrap root, never a reader
   enumerating what to read — adding a public graph is a vocabulary edit that touches no Python.
+  **A PER-AGENT graph is asked for the same way**: `store.recorded_graphs()` answers with every
+  graph this agent owns — its picks, its debts, whatever a package records — by reading the
+  classification the agent wrote about itself at boot, since a graph that does not exist until
+  its agent does cannot be declared in a T-Box. Naming one is still legitimate to SUBTRACT it
+  (`validate_agent` takes the pick record out where the desires modality already carries it),
+  which is saying which road a fact came by rather than enumerating what to read.
 - **SPARQL prefixes.** Only what `store.PREFIXES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in
   production. `tests/test_store.py` checks this by scanning the source text — and asserts each

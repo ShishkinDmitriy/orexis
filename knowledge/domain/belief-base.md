@@ -188,6 +188,25 @@ share a node and the last writer wins, which the shapes flag as a warning rather
 same ratified copy — because a world agents disagreed about would defeat the point of stating
 the wiring once.
 
+# Which of them a reader gets, and how it asks
+
+`store.recorded_graphs()` answers with every graph this agent owns, from two places because a
+graph is classified wherever it can be: a package declares its own in its ontology — sensing's
+instruments graph, whose name the kernel does not know — and a per-agent graph is typed by the
+agent itself at boot, into the classification graph, because it does not exist until its agent
+does.
+
+Three things are left out, and each was a real answer the query gave before it was narrowed:
+
+- **public graphs**, because the world declares every agent's belief graph BY NAME — one agent's
+  store can see that another's exists. A name is not content, but carrying it would be carrying
+  somebody else's;
+- **the deliberation trace**, because a record of a pass is not a fact about the world, and a
+  hypothesis has no place in a hypothesis;
+- **nothing on grounds of not existing yet.** `sensed` has no graph until the first reading, and
+  a validation that stopped naming it lost the state its shapes are written against. A graph
+  that is not there contributes nothing, so the tolerant list is the correct one.
+
 # Its own housekeeping
 
 A repository carries the support functions its storage needs, and this one needs compaction.
