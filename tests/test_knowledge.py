@@ -812,3 +812,43 @@ def test_a_committed_diagram_is_not_stale():
             wrong.append(f"{svg.name}: stale — {src.name} changed since it was rendered")
     assert not wrong, ("committed diagrams are out of step with their sources. Run "
                        "`./tools/render-diagrams.sh`:\n  " + "\n  ".join(wrong))
+
+
+def test_every_declared_hook_has_an_asker():
+    """A hook nobody asks is a contract every module must honour and nothing consumes.
+
+    `ag:notices` was exactly that for two releases — declared, given a base method and a real
+    override in sensing, and asked by NOBODY once the deliberator stopped: freshness had become
+    a want, and the hook was left computing the same judgment on request that nobody made
+    (#413). Deleting it is only half the fix; this is the half that keeps it deleted.
+
+    An asker is `agent.ask(CONST, …)` or `agent.tell(CONST, …)` for the kernel's own points, or
+    a direct call on whoever provides it — `size` and `take` are reached through
+    `agent.provider(family)` rather than the choir, which is a different door to the same
+    contract and counts.
+    """
+    import re
+
+    sources = [REPO_ROOT / "agent" / "ontology.ttl"]
+    sources += sorted((REPO_ROOT / "packages").glob("*/ontology.ttl"))
+    declared = []
+    for f in sources:
+        declared += [(f, n) for n in
+                     re.findall(r"^\w*:(\w+) a assembly:Extension", f.read_text(), re.M)]
+    #  BOTH prefix forms, and the count is pinned: the kernel writes `ag:handle` and a package
+    #  writes `:record` against its own base. A pattern that caught only one silently checked a
+    #  third of the hooks and passed — which is the empty-glob failure wearing a regex.
+    assert len(declared) >= 16, (
+        f"only {len(declared)} hook declarations found across {len(sources)} ontologies — "
+        "the pattern stopped matching one of the two prefix forms")
+
+    code = "\n".join(p.read_text() for tree in ("agent", "packages")
+                     for p in (REPO_ROOT / tree).rglob("*.py"))
+    orphans = []
+    for f, local in declared:
+        const = re.sub(r"(?<!^)(?=[A-Z])", "_", local).upper()
+        if re.search(rf"\.(ask|tell)\(\s*{const}\b", code) or re.search(rf"\.{local}\(", code):
+            continue
+        orphans.append(f"{f.relative_to(REPO_ROOT)}: {local} is declared and asked by nobody")
+    assert not orphans, ("a hook every module must honour and nothing consumes — wire it or "
+                         "retire it (#413):\n  " + "\n  ".join(orphans))

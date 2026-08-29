@@ -122,7 +122,10 @@ own. Every other package says what it brings.
 - **The signature guard checks names, not types.** Two fillers agreeing on `(subject_uri,
   observed_property, value)` while disagreeing on what `value` may be is not caught, and a
   declared signature is a string rather than a structure.
-- **Nothing yet refuses an extension point nobody fills.** `ag:notices` is declared, has a base
-  method and a sensing filler, and is asked by nobody
-  ([#413](https://github.com/ShishkinDmitriy/orexis/issues/413)) — the guard that would have said
-  so cannot land until that is settled.
+- ~~**Nothing yet refuses an extension point nobody fills.**~~ Closed: `ag:notices` was the one
+  thing failing it, and it is retired
+  ([#413](https://github.com/ShishkinDmitriy/orexis/issues/413)).
+  `test_every_declared_hook_has_an_asker` now names any point declared and asked by nobody. It
+  counts an asker two ways — `ask`/`tell` for a kernel point, a direct call for one reached
+  through `agent.provider(family)` — because `size` and `take` go through a different door to
+  the same contract.

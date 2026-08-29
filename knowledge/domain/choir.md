@@ -48,7 +48,6 @@ method, and sensing says what it is asked with and how the answers merge
 | `desireUrgency` | Deliberative | `desire_urgency(desire, query, state, value=…) -> float \| None` | kernel | market, sensing |
 | `desires` | Deliberative | `desires(now=…) -> list['Desire']` | kernel | market, sensing |
 | `handle` | Reactive | `handle(topic, payload) -> bool` | mqtt | actuation, market, reporting, sensing |
-| `notices` | Deliberative | `notices() -> list[tuple[str, str]]` | **nobody** | sensing |
 | `quiet` | Reactive | `quiet() -> list[str]` | mqtt | sensing |
 | `reports` | Reactive | `reports() -> dict` | reporting | actuation, mqtt, reporting, review, sensing |
 | `send` | Reactive | `send(channel, payload, retain=…, not_after=…) -> bool` | kernel, reporting, sensing | mqtt |
@@ -92,16 +91,16 @@ which `ask` logs as *could not answer* and steps over. A mismatched signature is
 module quietly not participating — the contract lives in the base method's docstring for a
 kernel point, and in the asking package's `choir.py` for a package's.
 
-**`notices` is declared and asked by nobody.** The term, the base method and sensing's override
-all exist; nothing calls `ask(NOTICES, …)`. The deliberator stopped asking when freshness became
-a WANT rather than a noticed gap — see
-[a-desire-is-a-forest-of-derived-roots](/decisions/a-desire-is-a-forest-of-derived-roots.md) —
-and the point was left behind. Whether it is rewired or retired is
-[#413](https://github.com/ShishkinDmitriy/orexis/issues/413).
+**Every point on this table has an asker, and a test says so.** `notices` did not: the term, the
+base method and sensing's override all existed while nothing called `ask(NOTICES, …)`, because
+the deliberator stopped asking when freshness became a WANT rather than a noticed gap. It is
+retired ([#413](https://github.com/ShishkinDmitriy/orexis/issues/413)), and
+`test_every_declared_hook_has_an_asker` is what keeps the next one from lingering — a hook
+nobody asks is a contract every module must honour and nothing consumes.
 
 Prose around the project often names the choir by an older five — `annotate`, `urgency`,
-`notices`, `series`, `quiet` — a shorthand from before the rest joined. This table is the
-roster.
+`notices`, `series`, `quiet` — a shorthand from before the rest joined, and one of the five is
+gone. This table is the roster.
 
 # Silence is an answer, and it is not zero
 
@@ -121,15 +120,14 @@ A package whose module implements a point joins the choir by being loaded — no
 list to append to. A new point is different: it needs a TERM in the ontology of whoever owns the
 question — the kernel's for a BDI-shaped one, a package's for one in its own words — and an
 asker, and it must obey the discipline the first collision taught — two points may not share a
-name with different contracts. `notices()` is named for the act rather than the object because
-desire already had a `gaps()` with a different contract, and the collision broke the keeper's
-tick before a test caught it.
+name with different contracts. The retired `notices()` was named for the act rather than the
+object for exactly that reason — desire already had a `gaps()` with a different contract, and
+the collision broke the keeper's tick before a test caught it.
 
 # Who asks what
 
 [sensing](/domain/sensing.md) asks `urgency` so attention follows need, and the watchdog asks
 `quiet` on its own clock; announcements carry whatever `annotate` gathered, which is what makes
-them the agent's rather than sensing's; [gap](/domain/gap.md) explains why noticing is
-collective while deciding stays singular — though nothing asks `notices` today; a
-crossing-watching board is told the `bounds` intersection; and the reporting tick flushes
+them the agent's rather than sensing's; [gap](/domain/gap.md) explains why noticing needs no
+hook at all; a crossing-watching board is told the `bounds` intersection; and the reporting tick flushes
 `series` and `reports` in one write.
