@@ -16,7 +16,7 @@ See knowledge/decisions/capability-packages.md.
 
 from __future__ import annotations
 
-from .ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, NOTICES, QUIET, REPORTS,
+from .ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, QUIET, REPORTS,
                        SEND, SERIES, SIZE, SWEEP, TAKE)
 
 from datetime import datetime
@@ -176,26 +176,6 @@ class Module:
         either without the other — a plant wants for itself and owes nobody, a pure seller owes
         and wants nothing for itself. Ranking them against each other is `agent.pursuing()`, which
         is where a currency common to both belongs.
-        """
-        return []
-
-    @contributes(NOTICES)
-    def notices(self) -> list[tuple[str, str]]:
-        """(subject, property) pairs this module notices are unknown or too stale to act on.
-
-        The choir again (#208), for NOTICING: whoever is positioned to see that something
-        warrants a decision reports it, and only reports — the deliberator turns gaps into
-        moves and the keeper commits them, because deciding and remembering stay singular or
-        every module becomes its own little welded chain. Sensing's are the archetype: a
-        property with no observation, or a freshest reading past what the agent trusts —
-        judgments it already computes for freshness and quiet(). Default: nothing to notice.
-
-        Named for the act and not the object, the hard way: the first name was `gaps()`, and
-        desire already HAD a `gaps()` — the rich desired/sensed diff, a dict — so the choir
-        collected property IRIs as if they were pairs and the keeper's tick died unpacking a
-        string, per tick, on every agent with a stake. Two hooks may not share a name with
-        different contracts; the collision test seeds an observation first, which is the
-        condition the original test missed.
         """
         return []
 

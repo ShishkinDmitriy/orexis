@@ -76,8 +76,6 @@ ag:reports a assembly:Extension ;
     assembly:signature "() -> dict" ; ag:row ag:Reactive ; rdfs:label "reports" ; rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." .
 ag:series a assembly:Extension ;
     assembly:signature "() -> list[tuple[str, dict, dict]]" ; ag:row ag:Reactive ; rdfs:label "series" ; rdfs:comment "Which tagged rows go into this agent's own bucket? Concatenated by the sink." .
-ag:notices a assembly:Extension ;
-    assembly:signature "() -> list[tuple[str, str]]" ; ag:row ag:Deliberative ; rdfs:label "notices" ; rdfs:comment "Which (subject, property) pairs are unknown or too stale to act on? Concatenated for the deliberator." .
 ag:sweep a assembly:Extension ;
     assembly:signature "() -> int" ; ag:row ag:Progression ; rdfs:label "sweep" ;
     rdfs:comment "The clock has moved: retract whatever you hold that has stopped being true by it. Asked of every module on the agent's own housekeeping tick, because a fact that expires by the clock must not wait for an event some agent may stop receiving. Only the OWNER of a fact knows which treatment it deserves — retract it, keep and mark it, or keep it and let a want go cold (absence-is-not-retraction) — so the kernel asks and never sweeps." .

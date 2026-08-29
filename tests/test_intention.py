@@ -231,15 +231,6 @@ TEMP = "http://example.org/orexis/water#AirTemperature"
 MOIST = "http://example.org/orexis/water#SoilMoisture"
 
 
-def test_sensing_notices_what_it_has_never_seen(make):
-    """The archetype gap contribution: a freshly born fern has two sensors and no
-    observations, so sensing reports both channels as gaps — noticing only, adopting
-    nothing, which is the deciding/keeping boundary said as a hook."""
-    fern = make("fern")
-    sensing = next(m for m in fern.modules if m.name == "subscribing")
-    assert {p for _, p in sensing.notices()} == {MOIST, TEMP}
-
-
 def test_the_tick_puts_marketless_watching_in_the_ledger(make):
     """The hole the sovereign's question exposed, closed: deliberation used to run only when
     the market knocked, so fern's thermometer — a stake, a sensor, and no market that could

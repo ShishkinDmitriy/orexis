@@ -61,10 +61,19 @@ vacuously and why judging *desire achieved* is the planner's job rather than the
 
 # Who notices one
 
-Noticing is the [choir](/domain/choir.md). `Module.notices()` sits beside its other hooks, and each
-module reports the (subject, property) pairs it can see are unknown or too stale to act on —
-sensing's are the archetype. What happens next is the keeper's, and
-[intention](/domain/intention.md) has it.
+**Nobody, and that is the answer.** A gap is not reported by whoever spots it; it is a
+[desire](/domain/desire.md) that is not met, and being unmet is a fact about the world rather
+than an opinion any module holds. Sensing's `sensing:Freshness` want is derived per instrument —
+one per sensor, `ag:violationIs ag:Stale` — so a channel nobody has read and one that has gone
+cold are both simply wants the [keeper](/domain/keeper.md)'s tick hands to the
+[executor](/domain/executor.md), like everything else this agent pursues.
+
+There WAS a hook. `Module.notices()` asked every module which (subject, property) pairs it could
+see were unknown or too stale, and the deliberator collected them — until freshness became a
+want and nothing asked again
+([#413](https://github.com/ShishkinDmitriy/orexis/issues/413)). It computed the same judgment
+the want now carries, one layer earlier and answerable to nothing. Noticing is what a freshness
+want does.
 
 Before that, deliberation ran only when the market knocked — an offer arrived, or birth — so an
 agent's watching of a property no market relieves lived in cadence machinery and never reached the
