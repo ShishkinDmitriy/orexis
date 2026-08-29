@@ -94,6 +94,27 @@ not add more for design knowledge.
 `knowledge/` for claims the change made false and fix them in the same commit. A stale decision
 record is worse than none, because it is still cited.
 
+## Principles, one line each
+
+Collected from work that went wrong first. A principle earns a line here when it would have
+changed a decision, and it stays one sentence — the argument belongs in whatever record or commit
+produced it.
+
+- **An RDF URI beats a homemade id for referring to an agent** — a name built from a convention is
+  the guess rule 1 forbids, which is why `keygen.roster` carries the node's real IRI beside the id.
+- **A term nobody reads is annotation**, however many instances state it.
+- **A repository holds data and a service holds logic**, and a thing that decides nothing is a
+  repository's support function rather than a service.
+- **Deciding nothing is the finding** — writing no graph is only the hint, since three services
+  write none and stay services.
+- **Verify a claim in the bundle against the code before repeating it**; nothing gates prose
+  against the thing it describes.
+- **A rename is done when the suite says so**, not when the thing you grepped for is gone.
+- **Search every tree that loads the vocabulary before calling a term dead** — `assembly/` reads
+  ontologies that `agent/` never mentions.
+- **A record earns its place by refusing something**; "we could have not done it" is not an
+  alternative.
+
 ## The rules the code lives by
 
 1. **Code may reference T-Box terms; never an instance.** `term("Subscribing")` is fine;
