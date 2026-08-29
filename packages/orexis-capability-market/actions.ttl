@@ -164,7 +164,6 @@ market:Acquiring
     #  report says the SUPPLIER acted; only a reading says the water reached this pot. That gap
     #  is exactly `an-unconfirmed-dose-is-not-a-delivered-one` seen from the buyer's side, and
     #  the buyer is the one who paid.
-    ag:confirmedBy ag:ByObservation ;
 
     #  The reading it replaces, identical to the dose's and for the identical reason: the sensed
     #  graph holds one node per (subject, property), so a predicted reading left beside the old
@@ -261,7 +260,7 @@ market:Offering
     #  read back; the round exists because the host announced it.
     ag:landsAfter """
         SELECT (0 AS ?seconds) WHERE { }""" ;
-    ag:confirmedBy ag:ByConstruction .
+    .
 
 
 #################  Presenting a held claim  #################
@@ -363,7 +362,6 @@ market:Serving
     #  this rule PREDICTS is the vessel's level, and only the next reading of it says the
     #  water left. The buyer's side confirms itself on the buyer's own arc, exactly as
     #  AcquireEffect argues from the other end of the same pipe.
-    ag:confirmedBy ag:ByObservation ;
 
     #  The vessel reading it replaces — and ONLY when the premise held, by the same guard:
     #  a dry vessel must not lose its standing reading to a serve that never happened.

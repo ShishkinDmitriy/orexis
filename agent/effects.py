@@ -38,13 +38,13 @@ log = logging.getLogger("effects")
 #  means nobody loaded is one nothing will ever ask for. An action with no construct states no
 #  effect and is not returned — the gate refuses a world whose menu offers one.
 _RULE_Q = """
-SELECT ?rule ?construct ?retracts ?lands ?confirmed WHERE { GRAPH <%s> {
+SELECT ?rule ?construct ?retracts ?lands WHERE { GRAPH <%s> {
   BIND(<%s> AS ?rule)
   ?rule a <http://example.org/orexis#Action> ;
         <http://www.w3.org/ns/shacl#construct> ?construct .
   OPTIONAL { ?rule <http://example.org/orexis#retracts> ?retracts }
   OPTIONAL { ?rule <http://example.org/orexis#landsAfter> ?lands }
-  OPTIONAL { ?rule <http://example.org/orexis#confirmedBy> ?confirmed } } } LIMIT 1"""
+  } } LIMIT 1"""
 
 
 def rule_for(store, action: str) -> dict | None:

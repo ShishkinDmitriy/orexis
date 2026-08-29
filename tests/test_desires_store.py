@@ -78,7 +78,7 @@ def test_recomputation_is_the_only_write_path(monkeypatch):
     agent = build_agent("gardener", st, monkeypatch)
     stale = agent.desires.query_union   # the surface as it stands before the premise moves
 
-    marker = f"<{AG}test_premise> a <{AG}Modality> ."
+    marker = f"<{AG}test_premise> a <{AG}Desire> ."
     st.update(f"INSERT DATA {{ GRAPH <{beliefs_graph('gardener')}> {{ {marker} }} }}")
 
     ask = f"ASK {{ <{AG}test_premise> ?p ?o }}"

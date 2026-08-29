@@ -119,7 +119,6 @@ actuation:Dosing
     #  reports that it opened, which is a different question answered on a different channel:
     #  a report says the dose happened, a reading says it helped. The rule states what makes
     #  its own predicted triple knowable, and only a later reading can do that.
-    ag:confirmedBy ag:ByObservation ;
 
     #  The reading it replaces. Not optional: `sensed_writer` upserts one node per (subject,
     #  property), so a predicted reading that left the old one standing would put two results on

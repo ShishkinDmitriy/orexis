@@ -15,7 +15,7 @@ One node per way of acting, and everything a search needs to reason about it:
 | part | property |
 |---|---|
 | precondition | `ag:available` — a SELECT binding the lever, the want and the direction |
-| effect | `sh:construct`, `ag:retracts`, `ag:landsAfter`, `ag:confirmedBy` |
+| effect | `sh:construct`, `ag:retracts`, `ag:landsAfter` |
 | taker | `ag:takenBy` — the capability family that carries it out |
 
 Each package ships its own in `actions.ttl`, so adding a way of acting is a node in a new

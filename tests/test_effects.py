@@ -232,21 +232,6 @@ def test_looking_lands_at_once_because_looking_changes_nothing():
                                subject=f"<{fern}>") == 0.0
 
 
-def test_every_shipped_effect_says_how_it_would_be_confirmed():
-    """A rule that omitted this would be claiming immediacy by silence — and worse, would leave
-    a planner waiting for a confirmation nobody will ever send. Asked of whatever the packages
-    ship rather than of a list, so a new effect file is held to it without this test moving."""
-    st = genesis_store({})
-    genesis.birth(st, genesis.world_dir("simulation"), "fern")
-    rows = bindings(st.query(f"""
-SELECT ?rule ?confirmed WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
-  ?rule a <{_AG}Action> ; <http://www.w3.org/ns/shacl#construct> ?c .
-  OPTIONAL {{ ?rule <{_AG}confirmedBy> ?confirmed }} }} }}"""))
-    assert rows, "the packages ship actions, or this test is asking nothing"
-    for row in rows:
-        assert row.get("confirmed"), f"{row['rule']} states no confirmation route"
-
-
 def test_a_served_claim_is_timed_by_the_rule_and_not_by_the_wire(monkeypatch, caplog):
     """#351. The self-dose path bound `$subject` to the agent's own `acts_for`, a URI; the
     served-claim path bound it to `_subject_of(claim.sub)`, a LOCAL ID — `<fern>` is not an

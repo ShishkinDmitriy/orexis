@@ -112,7 +112,7 @@ with the value read back arbitrarily.
 
 The second was found by fixing the first, and is why nobody had seen the two readings in a
 running society. **A sensing action ends a plan, and the search enforced that with a rule of its
-own** — it read `ag:confirmedBy ag:ByObservation`, which every effect here answers, a dose and a
+own** — it read the confirmation route, which every effect answered the same way, a dose and a
 bid included, because only a later reading says either arrived. So the guard matched every
 lever, the frontier was empty at every depth, and the search ran at depth 1 whatever `MAX_DEPTH`
 said.
