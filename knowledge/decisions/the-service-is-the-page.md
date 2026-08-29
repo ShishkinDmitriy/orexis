@@ -46,7 +46,6 @@ would need a code rename first, and each has a defensible name waiting:
 
 | today | service | process | why |
 |---|---|---|---|
-| `menu_of` | Afforder | affording | it yields [affordance](/domain/affordance.md) rows, which is the bundle's own word |
 | `_Derivation` | Deducer | deducing | a want is *deduced*, which is the word the desire records already use |
 | `execution` | **Enactor** | enacting | `Executor` is taken by [actuation](/domain/actuation.md), the trusted actuator — a real collision |
 | `Owing` | Ower | owing | the weakest of the six; the gerund reads better than the agent noun |
@@ -156,7 +155,7 @@ finds immediately.
   reach each other, and [clearing](/domain/clearing.md), [actuation](/domain/actuation.md) and
   [gateway](/domain/gateway.md) are separate processes outside the agent's repositories. A
   diagram of repos they do not have would assert something false.
-- **Four services keep a name the convention would change**, because the rename belongs in the
+- **Three services keep a name the convention would change**, because the rename belongs in the
   code first. One is not merely cosmetic: `Reviser` sits one letter from `review`, a capability
   that means something else.
 - **Nothing renders the mermaid at build time.** GitHub and any OKF viewer draw it; a broken

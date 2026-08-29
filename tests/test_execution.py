@@ -11,7 +11,7 @@ from __future__ import annotations
 import rdflib
 
 from agent.act import Act
-from agent import execution, menu
+from agent import execution, afforder
 from assembly import loader
 from agent.planner import Planner
 
@@ -137,7 +137,7 @@ def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monk
         monkeypatch.setenv("OREXIS_WORLD", world)
         agent = build_agent(agent_id, genesis_store(world=world), monkeypatch)
         open_round_for(agent, agent_id)
-        for row in menu.menu_of(agent.beliefs.query, agent.me.uri, agent.desires.query_union,
+        for row in afforder.affordances_of(agent.beliefs.query, agent.me.uri, agent.desires.query_union,
                                 beliefs_graph(agent.id)):
             rows_seen += 1
             assert row.action in takers, f"{world}/{agent_id}: {row.action} has no ag:takenBy"
@@ -157,18 +157,18 @@ def test_execution_dispatches_by_the_triple_and_never_by_name(monkeypatch):
         if m.CAPABILITY:
             monkeypatch.setattr(m, "take", lambda row, desire, i, m=m: handed.append(m.name) or False)
     stake = stake_of(fern)
-    row = menu.Affordance(action=OBSERVING, want=stake.uri, about=MOISTURE, via="urn:probe")
+    row = afforder.Affordance(action=OBSERVING, want=stake.uri, about=MOISTURE, via="urn:probe")
     assert execution.carry_out(fern, Act.from_row(row), stake, "urn:intent") is False
     assert handed == ["subscribing"], "Observe went to sensing and to nothing else"
     handed.clear()
-    row = menu.Affordance(action=ACQUIRING, want=stake.uri, about=MOISTURE, via="urn:venue")
+    row = afforder.Affordance(action=ACQUIRING, want=stake.uri, about=MOISTURE, via="urn:venue")
     execution.carry_out(fern, Act.from_row(row), stake, "urn:intent")
     assert handed == ["bidding"]
 
 
 def test_a_means_nobody_takes_is_logged_and_takes_nothing(monkeypatch, caplog):
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
-    row = menu.Affordance(action="http://example.org/nowhere#Untaken",
+    row = afforder.Affordance(action="http://example.org/nowhere#Untaken",
                           want=stake_of(fern).uri, about=MOISTURE, via="urn:x")
     with caplog.at_level("ERROR", logger="execution"):
         assert execution.carry_out(fern, Act.from_row(row), stake_of(fern), "urn:i") is False

@@ -113,7 +113,7 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing():
     states no ranges; the fern's menu holds no honoured row because nobody may demand its
     lever. Those were always the facts underneath the two grants.
     """
-    from agent.menu import menu_of
+    from agent.afforder import affordances_of
     from orexis_capability_sensing.regions import regions_of
 
     from agent.ontology import beliefs_graph
@@ -123,7 +123,7 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing():
     uri = lambda who: load_wired(st.query, who).uri
 
     def honoured(who):
-        return [r for r in menu_of(st.query, uri(who), desires_build(st, who).query_union, beliefs_graph(who))
+        return [r for r in affordances_of(st.query, uri(who), desires_build(st, who).query_union, beliefs_graph(who))
                 if not r.is_own]
 
     assert not regions_of(desires_build(st, "city").query_union, uri("city")), \

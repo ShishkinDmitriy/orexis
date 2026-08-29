@@ -39,7 +39,7 @@ from rdflib import RDF, URIRef
 from . import effects, signature, trace
 from .act import Act, Step
 from .desire import Desire
-from .menu import wants_of
+from .afforder import wants_of
 from .imaginarium import Imaginarium
 from .ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph,
@@ -451,14 +451,14 @@ class Planner:
         and simulation is the authority either way. Trying a lever that turns out not to help
         costs one validation; trusting a declaration that turns out to be wrong costs a plant.
         """
-        from .menu import menu_of
+        from .afforder import affordances_of
 
         #  ASKED OF THE IMAGINARIUM, at the node's own graph (#359): a premise may be a fact
         #  an earlier step made true — Offering needs stock, Acquiring's effect raises it, and
         #  "acquire, then offer" is a plan only if the menu of the world after the first step
         #  shows the second. The root node's graph is the agent's own readings, so at depth 0
         #  this is the ordinary menu, exactly as before.
-        for row in menu_of(self.imaginarium.query, self.me.uri, self.agent.desires.query_union,
+        for row in affordances_of(self.imaginarium.query, self.me.uri, self.agent.desires.query_union,
                            beliefs_graph(self.agent.id), node.graph):
             if desire.is_duty:
                 #  A duty may be served by its counterparty's honoured row, or approached

@@ -12,7 +12,7 @@ description: >-
 # What it runs
 
 **Planning.** Given one [desire](/domain/desire.md), walk the [affordance](/domain/affordance.md)
-rows the [menu](/domain/menu.md) yields, simulate each by applying its
+rows the [afforder](/domain/afforder.md) yields, simulate each by applying its
 [effect](/domain/effect.md) to the world reached so far, and rank the results by urgency. Bounded
 depth, breadth-first, so siblings are alive at once — which is why a world is a value rather
 than a mutable state.

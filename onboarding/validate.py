@@ -115,7 +115,7 @@ def deliberable(st, desires: dict) -> bool:
     """
     from agent import effects
     from assembly import loader
-    from agent.menu import menu_of
+    from agent.afforder import affordances_of
     from orexis_capability_sensing.regions import regions_of
     from agent.world import load_self
 
@@ -137,7 +137,7 @@ def deliberable(st, desires: dict) -> bool:
                   "from the rest of the menu", action["action"].rsplit("#", 1)[-1])
     for agent_id, wants in desires.items():
         me = load_self(st.query, agent_id)
-        for row in menu_of(st.query, me.uri, wants.query_union, beliefs_graph(agent_id)):
+        for row in affordances_of(st.query, me.uri, wants.query_union, beliefs_graph(agent_id)):
             if effects.rule_for(st, row.action) is None:
                 faults += 1
                 log.error("%s could take %s through %s, and no loaded package says what that "
