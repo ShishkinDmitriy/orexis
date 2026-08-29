@@ -159,6 +159,7 @@ A directory is a package. What that buys, and what the tree is not allowed to im
 * [a-package-states-what-it-needs-of-the-world](/decisions/a-package-states-what-it-needs-of-the-world.md) - A package projects the world it needs; the belief base is the union over a kernel bootstrap root.
 * [a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md) - Three layers in the code and two types in the bundle: a repository holds data, a service holds logic.
 * [a-term-nobody-reads-is-annotation](/decisions/a-term-nobody-reads-is-annotation.md) - The confirmation route is retired; the cognitive rows survive the same audit, because assembly reads them.
+* [an-id-is-unique-or-it-is-not-an-id](/decisions/an-id-is-unique-or-it-is-not-an-id.md) - Two agents sharing a localId made a false self; refused at genesis and at boot, and the URI option is refused with it.
 * [the-service-is-the-page](/decisions/the-service-is-the-page.md) - A service page carries its process, repositories and graph types; the shared dictionary does not fold into it.
 * [noticing-is-what-a-freshness-want-does](/decisions/noticing-is-what-a-freshness-want-does.md) - A hook nobody asked, retired; the want covers it, and a guard now refuses the next one.
 * [repository-layout](/decisions/repository-layout.md) - One convention across the Python trees, one distribution, and a packaging boundary replaced by a test and an import contract.
