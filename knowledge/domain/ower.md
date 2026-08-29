@@ -23,6 +23,12 @@ ever presents it.
 
 # What it is not
 
-**Not the market's.** The venue decides who owes what; this records that it happened. An agent
-with no stake of its own still keeps this ledger, which is why it is the kernel's and not a
-grant.
+**Not the market's**, though everything that *causes* a debt is: `hosting` is the only caller of
+`owe`, `demanded` and `discharge`. What makes it the kernel's is the other side — an
+[obligation](/domain/obligation.md) is a desire someone else sourced, so the
+[deducer](/domain/deducer.md) builds a want from this ledger and the [planner](/domain/planner.md)
+ranks that want beside everything else the agent pursues. Move it into the market package and
+`agent/planner.py` would import one, which rule 2 forbids and `lint-imports` refuses.
+
+An agent with no stake of its own still keeps this ledger, which is why it is the kernel's and
+not a grant.
