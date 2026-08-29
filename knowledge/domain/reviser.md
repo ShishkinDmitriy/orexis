@@ -1,6 +1,6 @@
 ---
 type: Service
-title: Revision
+title: Reviser
 description: >-
   The seam between a change and a reconsideration — where a fact landing in the belief base
   becomes, or fails to become, a reason to deliberate. It holds MARKS: a want noted as worth
@@ -11,14 +11,14 @@ description: >-
 
 # What it reads and writes
 
-![revision — what it reads and writes](../diagrams/service-revision.svg)
+![reviser — what it reads and writes](../diagrams/service-reviser.svg)
 
 **No repository, no graph, and the absence is the design.** A mark is not a belief — it is the
 question of whether a change is worth a pass, and an answer nobody should be able to read back.
 
 # What it is
 
-`agent/revision.py`. Everything that notices a change — a reading recorded, an offer heard, a
+`agent/reviser.py`. Everything that notices a change — a reading recorded, an offer heard, a
 claim presented — leaves a **mark** here and returns. A mark names one
 [desire](/domain/desire.md) and says only *this may be worth reconsidering*; it carries no
 verdict, because the verdict is [deliberation](/domain/deliberator.md)'s and takes as long as

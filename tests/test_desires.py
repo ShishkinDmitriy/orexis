@@ -106,7 +106,7 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them(mo
     fern = build_agent("fern", st, monkeypatch)
 
     def duty_at(offset_s):
-        return next(g for g in fern.owing.desires(now=owed + timedelta(seconds=offset_s))
+        return next(g for g in fern.ower.desires(now=owed + timedelta(seconds=offset_s))
                     if g.is_duty)
 
     assert duty_at(0).urgency == 0.0

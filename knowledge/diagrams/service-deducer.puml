@@ -1,5 +1,5 @@
-@startuml service-desire-build
-title Desire build — what it reads and writes
+@startuml service-deducer
+title Deducer — what it reads and writes
 
 skinparam componentStyle rectangle
 skinparam shadowing false
@@ -32,7 +32,7 @@ database "Desires · repository" as DES {
   folder "derived · no graph class" as DD
 }
 
-component "Desire build\nruns desire derivation" as DB
+component "Deducer\nruns desire derivation" as DB
 
 
 P ..> DB : reads

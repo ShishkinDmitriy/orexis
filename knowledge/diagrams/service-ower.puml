@@ -1,5 +1,5 @@
-@startuml service-owing
-title Owing — what it reads and writes
+@startuml service-ower
+title Ower — what it reads and writes
 
 skinparam componentStyle rectangle
 skinparam shadowing false
@@ -26,7 +26,7 @@ database "Beliefs · repository" as BEL {
   folder "ag:WorldGraph\nwho the counterparty is" as W
 }
 
-component "Owing\nruns debt keeping" as OW
+component "Ower\nruns debt keeping" as OW
 
 
 O ..> OW : reads

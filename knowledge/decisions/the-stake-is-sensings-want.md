@@ -51,7 +51,7 @@ subject's ranges go to sensing's shapes. The reader of `ssn-system:*` leaves the
 **The kernel derives no want** (#377, landed). `agent/desires.ru` went, and so did the
 kernel's `desires.rq` and `regions.py`. Every want an agent pursues is contributed through
 `Module.desires()` — sensing the stakes and the freshness wants, owing the debts (its own
-query over its own graph, `agent/owing.py`), hosting the calls — and `Agent.pursuing` is the
+query over its own graph, `agent/ower.py`), hosting the calls — and `Agent.pursuing` is the
 whole assembly: it merges the modules' lists and folds a want seen twice into one by its
 node, because two sensing modules read the same regions. There is no kernel `desires_of` left
 to be an assembly function; `Desire`'s `value` is filled by whoever contributed it. The AIM

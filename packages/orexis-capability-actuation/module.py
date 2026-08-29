@@ -181,13 +181,13 @@ class ActuationModule(Module):
         #  is handed the row. A standing Actuate is not re-taken here — a dose is an act
         #  whose sizing moves with every reading, so it is re-planned, and an impulse within
         #  patience is absorbed before anything is written.
-        from agent import revision
+        from agent import reviser
 
         #  Which want the reading is about is sensing's to say; the door takes the node.
         sensing = self.agent.provider(SENSING)
         want = sensing.want_about(observed_property) if sensing is not None else None
         if want is not None:
-            revision.wake(self.agent, want.uri)
+            reviser.wake(self.agent, want.uri)
 
     def size(self, query, graph: str, row) -> float | None:
         """The planner's question, answered by the one who would pour: `dose_for`, from where

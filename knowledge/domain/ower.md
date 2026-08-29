@@ -1,6 +1,6 @@
 ---
 type: Service
-title: Owing
+title: Ower
 description: >-
   The service that keeps what this agent owes — one row per claim the society issued against it,
   with the counterparty, the amount and the window. It is the only writer of the obligations
@@ -15,7 +15,7 @@ not source — so a debt is pursued through the same road as anything else it wa
 
 # What it reads and writes
 
-![owing — what it reads and writes](../diagrams/service-owing.svg)
+![ower — what it reads and writes](../diagrams/service-ower.svg)
 
 **Durable on purpose.** A host's in-memory record of what it issued dies with the process; the
 ledger is what survives a restart, which is why a claim raises a row whether or not the holder

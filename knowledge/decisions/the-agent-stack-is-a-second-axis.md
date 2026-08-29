@@ -94,7 +94,7 @@ infrastructure rather than with the code.
 - **The speech-act path has no vocabulary.** A message's performative and sender are implicit —
   the topic it arrived on, the signature it carries — and nothing refuses an observation minted
   from a peer's message. Filed as [#394](https://github.com/ShishkinDmitriy/orexis/issues/394).
-- ~~**The BRF is implicit.**~~ `agent/revision.py` is the row: every reactive path marks a
+- ~~**The BRF is implicit.**~~ `agent/reviser.py` is the row: every reactive path marks a
   want there and the pass runs on the mind's own thread (#392). What it DECIDES is still thin —
   dedupe by want, and nothing else — but where it decides is one place now.
 - **`sensor_unreachable(...)` is not modelled.** The freshness want covers not-knowing, which is

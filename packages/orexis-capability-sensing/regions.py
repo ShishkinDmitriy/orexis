@@ -8,7 +8,7 @@ one of those is a sentence in `sosa`, which is this package's vocabulary and not
 the kernel knows that a want exists, ranks it, plans for it and commits to it, and never learns
 what a reading is (the-stake-is-sensings-want). The AIM — the pick inside a region — is here too,
 since a point in a property checked against a range is the same kind of sentence; what stayed
-behind is the duty (`agent/owing.py`), which is not about sensing.
+behind is the duty (`agent/ower.py`), which is not about sensing.
 
 `Region.urgency` is a reference definition and not the live one: how a want's badness is
 measured is declared in `measures.ttl` and asked through the choir (`Module.desire_urgency`).
@@ -321,7 +321,7 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Desire]:
     """Sensing's wants, hottest first: every stake, and every freshness want.
 
     Was the kernel's `desires_of`, and it read the DUTIES too — the ledger reads its own now
-    (`agent/owing.py`), and what is left here is exactly the two kinds of want whose premise is
+    (`agent/ower.py`), and what is left here is exactly the two kinds of want whose premise is
     an observation: a region a reading should sit inside, and an instrument that should have
     spoken recently. Two handles since the dataset split (#298): `desires` answers what is
     WANTED (`desires.rq`, this package's), `beliefs` what IS (the sensed graph), and the join

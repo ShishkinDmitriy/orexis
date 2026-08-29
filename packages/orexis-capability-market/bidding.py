@@ -450,14 +450,14 @@ class BiddingModule(Module):
         #  not to look — and a look already standing is on its way (execution says which by
         #  returning the standing intention). This module names no Observe: the look is
         #  sensing's word and sensing's act; waiting for it is `pending`, the bidder's own.
-        from agent import execution, revision
+        from agent import execution, reviser
 
         #  MARKED, not asked (#392): what the search decides is not this handler's to wait
         #  for. If it proposes nothing, the give-up below says so — at the round's close
         #  rather than at once, which is also the more honest moment: a reading arriving
         #  mid-round can change the answer.
         if (want := self._want()) is not None:
-            revision.wake(self.agent, want.uri)
+            reviser.wake(self.agent, want.uri)
 
         #  THE WINDOW IS THE ACT'S — a bid not after the round closes — and the ACTOR writes
         #  it when it takes the act, from the round row it reads there. What stays here is the
@@ -530,7 +530,7 @@ class BiddingModule(Module):
         plan once and commit. `value_bid` still cedes at or above the aim inside `_bid`, so
         the sizing agrees with the deciding without either being the other's authority.
         """
-        from agent import execution, revision
+        from agent import execution, reviser
 
         if self.pending is None:
             return
@@ -550,7 +550,7 @@ class BiddingModule(Module):
             #  had passed while the pass that would bid was still to run, and took the
             #  give-up with it. What ends the round for this bidder is a bid leaving (`_bid`)
             #  or the give-up firing, and nothing else.
-            revision.wake_for(self.agent, stake)
+            reviser.wake_for(self.agent, stake)
 
     @contributes(SENSING_URGENCY)
     def urgency(self, subject_uri: str, observed_property: str,

@@ -1,4 +1,8 @@
-"""The belief-revision seam: what a change to the belief base is worth waking the mind for.
+"""The REVISER: the belief-revision seam — what a change to the belief base is worth waking the
+mind for.
+
+Named apart from `review:Revision`, which is a different thing entirely: a record of a belief
+re-picked, kept by the review capability. This is the seam a change passes through.
 
 **The one row of the agent stack that had no home.** Below it is bytes and translation, above it
 the mind; the seam decides which of a change's consequences is worth a deliberation pass at all
@@ -29,10 +33,10 @@ import threading
 
 from . import execution
 
-log = logging.getLogger("revision")
+log = logging.getLogger("reviser")
 
 
-class Revision:
+class Reviser:
     """The seam, with a queue behind it: a change is NOTED here and a pass runs elsewhere.
 
     **Deliberation may not run on the thread that noticed the change** (#392). A reading
@@ -47,7 +51,7 @@ class Revision:
     the projections after it (layered-by-timescale-and-interruptibility).
 
     The words — a MARK, DRAINED on the agent's own clock — are the dictionary's:
-    knowledge/domain/revision.md, and knowledge/domain/row.md for the rows they keep apart.
+    knowledge/domain/reviser.md, and knowledge/domain/row.md for the rows they keep apart.
     """
 
     def __init__(self, agent):
@@ -137,11 +141,11 @@ def wake(agent, want: str) -> None:
     not its to wait for. A caller that needs the consequence reads it where it lands — the
     ledger, the act it takes — not from here.
     """
-    agent.revision.note(want)
+    agent.reviser.note(want)
 
 
 def wake_for(agent, desire) -> None:
     """The same door, for a caller holding the want itself rather than its node — a host with a
     call to convene for. The desire travels with the mark, because the caller derived it and
     the drain would have no way to find it again."""
-    agent.revision.note(desire.uri, desire)
+    agent.reviser.note(desire.uri, desire)

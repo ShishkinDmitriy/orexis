@@ -40,10 +40,10 @@ from assembly.inject import attribute_for, opened
 from .ontology import DESIRES, DESIRE_URGENCY
 from .deliberator import Deliberator
 from .desire import Desire, Desires
-from .revision import Revision
+from .reviser import Reviser
 from .intentions import Intentions
 from .keeper import Keeper
-from .owing import Owing
+from .ower import Ower
 from .metrics import Metrics
 from .upkeep import BeliefBaseUpkeep
 from .store import bindings
@@ -80,7 +80,7 @@ SELECT ?capability WHERE {{
 #  WHAT EVERY AGENT HAS, as classes, so `orexis-validate` can check a package's `@requires`
 #  without constructing anything. Registered from the live objects below; this is the same
 #  seven, said statically.
-KERNEL_SERVICES = (Beliefs, Desires, Intentions, Keeper, Deliberator, Owing, Metrics)
+KERNEL_SERVICES = (Beliefs, Desires, Intentions, Keeper, Deliberator, Ower, Metrics)
 
 
 class Agent:
@@ -114,7 +114,7 @@ class Agent:
         self.metrics = Metrics(self)
         #  The belief-revision seam: a change is marked here and the pass runs on a thread of
         #  the mind's own, never on the one that noticed (#392).
-        self.revision = Revision(self)
+        self.reviser = Reviser(self)
 
         #  What this agent offers, by term — the kernel's own, filled below, and a package's
         #  resolved on first ask (an-injected-service-is-reached-by-term).
@@ -177,15 +177,15 @@ class Agent:
         # one granted by a stake, one by a lever others may demand — and both read a store the
         # kernel had already built for every agent. What an agent WANTS is the last of the six
         # modalities to stop being optional.
-        self.owing = Owing(self)
+        self.ower = Ower(self)
 
-        self.modules += [self.deliberator, self.keeper, self.owing]
+        self.modules += [self.deliberator, self.keeper, self.ower]
         #  WHAT THE KERNEL OFFERS, keyed by the CLASS of each — the thing a package imports
         #  anyway to type its own code, so there is no parallel naming system to keep in step.
         #  Named in `KERNEL_SERVICES` rather than listed inline, so a gate can know what the
         #  kernel offers WITHOUT building an agent (an-injected-service-is-reached-by-term).
         for value in (self.beliefs, self.desires, self.intentions,
-                      self.keeper, self.deliberator, self.owing, self.metrics):
+                      self.keeper, self.deliberator, self.ower, self.metrics):
             self.offering(type(value), value)
 
 
@@ -357,7 +357,7 @@ class Agent:
         # construction so that building an agent starts no threads and a test can hold one
         # without it acting. Reporting used to start here too and is a module now — mandatory,
         # granted to every agent, and started below with the rest.
-        self.revision.start()
+        self.reviser.start()
         self.upkeep.start()
         # The watchdog last, after the connect above has had its chance: its disconnection
         # clock started at construction, so an agent that never gets its CONNACK is already
@@ -378,7 +378,7 @@ class Agent:
             for module in self.modules:
                 module.stop()
             self.upkeep.stop()
-            self.revision.stop()
+            self.reviser.stop()
             #  Services last and in reverse, so one that leans on another is closed before the
             #  thing it leans on. A failure in one is logged and does not strand the others: a
             #  shutdown that stops half way is worse than a noisy one.

@@ -8,11 +8,11 @@ beside it, and the pages embed the SVG.
 * [service-deliberator](./service-deliberator.puml) - The whether, and the trace it clears before each pass.
 * [service-executor](./service-executor.puml) - Plan, commit, take — a service that writes no graph because it only orchestrates.
 * [service-keeper](./service-keeper.puml) - The ledger's only writer, and the three jobs that share it.
-* [service-owing](./service-owing.puml) - The debts this agent carries, durable across a restart.
+* [service-ower](./service-ower.puml) - The debts this agent carries, durable across a restart.
 * [service-afforder](./service-afforder.puml) - What could be done, derived per ask and stored nowhere.
-* [service-desire-build](./service-desire-build.puml) - What is pursued, and the one service living inside the repository it writes.
+* [service-deducer](./service-deducer.puml) - What is pursued, and the one service living inside the repository it writes.
 * [service-inference](./service-inference.puml) - The closure, and the only case where a graph's type does not distinguish it from its source.
-* [service-revision](./service-revision.puml) - The seam: a service with no repository at all, because a mark is not a belief.
+* [service-reviser](./service-reviser.puml) - The seam: a service with no repository at all, because a mark is not a belief.
 
 # Rendering
 
