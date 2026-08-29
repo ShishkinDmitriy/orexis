@@ -290,6 +290,16 @@ it should be. Three checks, in order of how quickly they settle it:
 | what changes when it is resolved? | the **code** | what someone **believes** about the code |
 | how does the title read? | an imperative — *"key observations by subject and property"* | a claim — *"an observation is keyed by its subject alone, and that was wrong"* |
 
+**A record earns its place by refusing something.** The test is not *did we decide* — every
+commit decides. It is whether a real alternative was available and turned down: two mechanisms
+and one chosen, a rule accepted here and refused there, a thing retired where rewiring was live.
+**"We could have not done it" is not an alternative**, and a record whose only argument is that
+the change was a good idea is a commit message with frontmatter — written twice, kept true
+twice, and read where nobody was looking for it. The commit messages here are long and precise
+on purpose; that is where *what we did and why* belongs. Measured 2026-08-29: 137 records, 15
+with a section weighing an alternative, and `knowledge/` running 1.75 lines to every line of
+code.
+
 They compose in both directions, which is the part worth internalising. Fixing an issue usually
 *produces* a decision worth recording. Writing a decision usually *emits* issues — the seams it
 leaves that someone could close. `decisions/one-agent-many-sensors.md` did exactly that: the record
