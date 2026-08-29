@@ -94,7 +94,7 @@ which searched — all inside `handle`, on the callback thread. That was deliber
 reactive row: it blocked every other message for the length of a pass, and a slow deliberator
 (a model, later) would have stalled the bus.
 
-**Fixed (#392).** `revision.wake` leaves a [mark](/domain/revision.md) and returns, and the
+**Fixed (#392).** `revision.wake` leaves a [mark](/domain/reviser.md) and returns, and the
 marks are drained on a thread of the mind's own, started with the agent and stopped with it. Three consequences worth
 knowing, because each is the rule showing its teeth:
 
@@ -122,7 +122,7 @@ this change anything a plan could branch on* — and that belongs in the same fi
   yet.
 - **Deliberation is not interruptible.** The table says it should be; a pass runs to completion.
   Bounded depth is what keeps that affordable, and a model in the loop is what would end it.
-- ~~**The revision function is implicit.**~~ Named: `agent/revision.py` is the seam, and
+- ~~**The revision function is implicit.**~~ Named: `agent/reviser.py` is the seam, and
   `wake`/`wake_for` are the one door from a change to a pass. It is thin on purpose — the rule
   it runs is still *something moved, so reconsider the want it moved* — and what it buys is
   that #392, a band filter over churning self-telemetry, and any infrastructure projection are

@@ -232,7 +232,7 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     #  `tests/test_hooks.py` holds the reactive row to.
     def deliver(topic, payload):
         link._on_message(topic, Msg(topic, payload).payload)
-        agent.revision.settle()
+        agent.reviser.settle()
 
     agent.deliver = deliver
     agent.hosting = lambda: agent.module("hosting")

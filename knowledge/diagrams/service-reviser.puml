@@ -1,5 +1,5 @@
-@startuml service-revision
-title Revision — what it reads and writes
+@startuml service-reviser
+title Reviser — what it reads and writes
 
 skinparam componentStyle rectangle
 skinparam shadowing false
@@ -21,7 +21,7 @@ skinparam component {
 }
 
 
-component "Revision\nruns belief revision" as R
+component "Reviser\nruns belief revision" as R
 
 component "a want, marked\nin memory only" as W
 

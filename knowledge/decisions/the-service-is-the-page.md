@@ -44,12 +44,7 @@ page whose class keeps the old word would produce exactly the `belief` / `belief
 record exists to close — one vocabulary in the bundle and another in the source. Six services
 would need a code rename first, and each has a defensible name waiting:
 
-| today | service | process | why |
-|---|---|---|---|
-| `_Derivation` | Deducer | deducing | a want is *deduced*, which is the word the desire records already use |
-| `execution` | **Enactor** | enacting | `Executor` is taken by [actuation](/domain/actuation.md), the trusted actuator — a real collision |
-| `Owing` | Ower | owing | the weakest of the six; the gerund reads better than the agent noun |
-| `Revision` | Reviser | revising | close enough to *review* to be confusable, and they are different things |
+**All six have landed.** `Executor` took the name a retired component held; `Afforder`, `Deducer`, `Ower` and `Reviser` renamed with their code, because a doc-only rename produces the split this convention exists to close. `Ower` is consistency rather than clarity and the honest note is that the gerund still reads better than the agent noun; `Reviser` turned out to REMOVE a collision, since `review:Revision` is a different thing — a record of a belief re-picked.
 
 **`Executor` went to the service that carries out a plan**, and the page that held the name gave
 it up. `executor.md` described the trusted actuator — and opened with a banner disambiguating
@@ -69,7 +64,7 @@ and reclaims bytes belonging to one repository. It is a function of
 
 The test that separates them is what a thing PRODUCES. Three services write no graph either —
 the menu build returns rows, [executor](/domain/executor.md) only orchestrates,
-[revision](/domain/revision.md) only marks — and all three stay services, because each decides
+[reviser](/domain/reviser.md) only marks — and all three stay services, because each decides
 something. Writing no graph is the hint; deciding nothing is the finding.
 
 **The four words are the vocabulary.** A page is about a Service or a Repository
@@ -155,8 +150,5 @@ finds immediately.
   reach each other, and [clearing](/domain/clearing.md), [actuation](/domain/actuation.md) and
   [gateway](/domain/gateway.md) are separate processes outside the agent's repositories. A
   diagram of repos they do not have would assert something false.
-- **Three services keep a name the convention would change**, because the rename belongs in the
-  code first. One is not merely cosmetic: `Reviser` sits one letter from `review`, a capability
-  that means something else.
-- **Nothing renders the mermaid at build time.** GitHub and any OKF viewer draw it; a broken
+- - **Nothing renders the mermaid at build time.** GitHub and any OKF viewer draw it; a broken
   block fails silently in a plain `cat`. The blocks are small enough that this has not bitten.

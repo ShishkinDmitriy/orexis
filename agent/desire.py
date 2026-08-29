@@ -126,7 +126,7 @@ from .store import Store
 #  rather than a want — but gap, menu and validation all read the two together, and the record
 #  files both under the desires store because what MAY be and what is PURSUED are the two
 #  halves of one question no belief answers.
-class _Derivation(Store):
+class Deducer(Store):
     """One rebuild's worth of store: the wants DERIVED, the records PROJECTED, and nothing
     else left standing. Memory, no path — the imaginarium's construction, one lifecycle over.
 
@@ -197,7 +197,7 @@ class Desires:
         rebound, so every holder of `agent.desires` sees the new state and nobody holds a
         stale handle.
         """
-        built = _Derivation(self._beliefs)
+        built = Deducer(self._beliefs)
         self.query = built.query
         self.query_union = built.query_union
         self.construct = built.construct

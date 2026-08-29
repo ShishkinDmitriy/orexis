@@ -1,4 +1,8 @@
-"""desire:Owing — the ledger of what this agent owes, and why that is not desire:Deducing.
+"""The OWER: the ledger of what this agent owes, and why keeping it is its own ability.
+
+Named for what it does, like every service — `Ower` runs owing, as `Keeper` runs keeping. The
+capability words below (`desire:Owing`, `desire:Deducing`) are retired and kept here because the
+argument they carry is why this is a separate ledger at all.
 
 A debt is a want this agent did not source, so it belongs to the desire family's vocabulary —
 and keeping one is a DIFFERENT ability from working out a region, granted by a different fact.
@@ -53,9 +57,12 @@ def _duty_urgency(row: dict, now: datetime) -> float:
     return max(0.0, min(1.0, (now - owed_at).total_seconds() / window))
 
 
-class Owing(Module):
+class Ower(Module):
     """What I owe, kept where a restart cannot lose it. Speaks to no topic."""
 
+    #  THE LOG CHANNEL IS THE PROCESS, not the class: `Deliberator` logs to `deliberation` and
+    #  `Keeper` to `intention`, so `Ower` logs to `owing`. Renaming this would rename a channel
+    #  an operator greps, for no gain.
     name = "owing"
 
     def _uri_of(self, agent_id: str) -> str | None:

@@ -1,6 +1,6 @@
 ---
 type: Service
-title: Desire build
+title: Deducer
 description: >-
   The service that derives what an agent pursues, by running every package's `desires.ru` against
   the world and the records. It is the desires repository's only writer, and it lives INSIDE that
@@ -16,7 +16,7 @@ whose premise has ceased is no longer implied rather than retracted by anyone.
 
 # What it reads and writes
 
-![desire-build — what it reads and writes](../diagrams/service-desire-build.svg)
+![deducer — what it reads and writes](../diagrams/service-deducer.svg)
 
 # The one unclean seam
 

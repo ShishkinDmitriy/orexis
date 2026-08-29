@@ -321,7 +321,7 @@ def test_the_ranking_reaches_the_dashboards_with_the_split_that_matters(monkeypa
     #  ledger at all — `desire:Owing` was a grant — and the claim underneath is unchanged: what
     #  a fern owes is nothing. Asserted against the debts now rather than against the module,
     #  because every agent keeps a ledger and only some of them ever write one.
-    assert not fern.owing.duties(), \
+    assert not fern.ower.duties(), \
         "a plant holds no lever anyone may demand, so it owes nothing"
 
 

@@ -208,11 +208,11 @@ SELECT ?p WHERE {{
 
     def _pursue_calls(self, market=None) -> None:
         """Every call I hold — on one venue, or all — through execution."""
-        from agent import execution, revision
+        from agent import execution, reviser
 
         for desire in self.desires():
             if market is None or desire.uri == calls.uri_for(market.uri):
-                revision.wake_for(self.agent, desire)
+                reviser.wake_for(self.agent, desire)
 
     def desires(self, now=None) -> list[Desire]:
         """My contribution to what this agent pursues: the calls on the venues I host.
@@ -256,7 +256,7 @@ SELECT ?r WHERE {{
         for market in self.markets:
             if subject_uri != market.resource or observed_property != self.stock_property.get(market.uri):
                 continue
-            if (ledger := self.agent.owing) is not None:
+            if (ledger := self.agent.ower) is not None:
                 for desire in ledger.duties():
                     if desire.pursuable and desire.claim in self.held:
                         self._pursue(desire.claim,
@@ -452,7 +452,7 @@ SELECT ?r WHERE {{
         #  The LEDGER OF DEBTS and not the regions (#233). A host with no stake of its
         #  own — the city, acting for a mains that states no ranges — used to reach this line,
         #  find no desire module, and record nothing at all while issuing claims all day.
-        if (ledger := self.agent.owing) is not None:
+        if (ledger := self.agent.ower) is not None:
             for claim in result.claims:
                 ledger.owe(claim.sub, claim.jti, expires_at=claim.exp, amount_l=claim.amount_l)
 
@@ -506,7 +506,7 @@ SELECT ?r WHERE {{
             return
         # Asked for: the obligation steps from owed to demanded. What happens next is a
         # DECISION and not a handler any more — the whole of step 9. See below.
-        ledger = self.agent.owing
+        ledger = self.agent.ower
         if ledger is not None:
             ledger.demanded(jti)
         self._pursue(jti, f"{presenter} presented it")
@@ -534,7 +534,7 @@ SELECT ?r WHERE {{
         claim = self.held.get(jti)
         if claim is None:
             return
-        ledger = self.agent.owing
+        ledger = self.agent.ower
         if ledger is None:
             self._serve(jti, why)
             return
@@ -546,13 +546,13 @@ SELECT ?r WHERE {{
         #  handed to bidding, which stands until the upstream round — and the claim stays held
         #  for the sweep that re-runs this when stock arrives. A serve is the plan's head only
         #  when the vessel can honour it, and `take` below is handed exactly that row.
-        from agent import execution, revision
+        from agent import execution, reviser
 
         #  MARKED, not asked (#392): a claim presented is a message, and what the search makes
         #  of it is not this handler's to wait for. The claim stays in `held` until it is
         #  served — which is what happened anyway when nothing was committed — so the moment
         #  the answer changes, the sweep serves it.
-        revision.wake_for(self.agent, desire)
+        reviser.wake_for(self.agent, desire)
 
     def take(self, act, desire, intention: str) -> bool:
         """Carry out a committed serve: pour the claim this duty names.
@@ -601,7 +601,7 @@ SELECT ?r WHERE {{
         claim = self.held.pop(jti)
         self.log.info("serving claim %s (%.3f L) — %s", jti, claim.amount_l, why)
         self.redeem([claim])
-        if (ledger := self.agent.owing) is not None:
+        if (ledger := self.agent.ower) is not None:
             ledger.discharge(jti)
 
     def _issue(self, market, auction_id: str, claim) -> None:

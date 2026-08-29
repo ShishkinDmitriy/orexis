@@ -75,7 +75,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [actuation](/domain/actuation.md) - The power to touch the physical world, held by whoever owns the hardware. Bounded by a claim and by the device's own cap.
 
 * [review](/domain/review.md) - An agent re-picking its own settings inside the room its world left it. Granted by latitude; a mandate whose ends meet grants nothing.
-* [revision](/domain/revision.md) - The seam where a change becomes a reason to deliberate: marks a want, drains them on the agent's own clock, and answers the marker nothing.
+* [reviser](/domain/reviser.md) - The seam where a change becomes a reason to deliberate: marks a want, drains them on the agent's own clock, and answers the marker nothing.
 * [row](/domain/row.md) - One of three cognitive layers — reactive, progression, deliberative — declared on the hook a module answers, because one module answers in several.
 
 # Sensing
@@ -120,6 +120,6 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [menu](/domain/menu.md) - The modality that holds what could be done: templates, never rows.
 * [afforder](/domain/afforder.md) - Runs affording per ask; the world it walks is a parameter, which is why nothing is stored.
 * [keeper](/domain/keeper.md) - Runs keeping, the patience and the verification arc; the intention graph's only writer.
-* [owing](/domain/owing.md) - Runs debt keeping: one row per claim issued against this agent, durable across a restart.
+* [ower](/domain/ower.md) - Runs owing: one row per claim issued against this agent, durable across a restart.
 * [inference](/domain/inference.md) - Materialises what the vocabulary entails, so both engines read one graph.
-* [desire-build](/domain/desire-build.md) - Derives what an agent pursues; the desires repository's only writer, and inside it.
+* [deducer](/domain/deducer.md) - Runs deducing: derives what an agent pursues; the desires repository's only writer, and inside it.
