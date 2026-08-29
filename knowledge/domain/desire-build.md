@@ -16,24 +16,7 @@ whose premise has ceased is no longer implied rather than retracted by anyone.
 
 # What it reads and writes
 
-```mermaid
-flowchart LR
-  subgraph BEL["Beliefs · repository"]
-    P["ag:PickRecordGraph"]
-    O["ag:ObligationsGraph"]
-    W["ag:WorldGraph"]
-  end
-  subgraph DES["Desires · repository"]
-    DA["asserted · no graph class"]
-    DD["derived · no graph class"]
-  end
-  DB["Desire build<br/>runs desire derivation"]
-  P -. reads .-> DB
-  O -. reads .-> DB
-  W -. reads .-> DB
-  DA -. reads .-> DB
-  DB -- writes --> DD
-```
+![desire-build — what it reads and writes](../diagrams/service-desire-build.svg)
 
 # The one unclean seam
 

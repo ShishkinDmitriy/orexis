@@ -19,33 +19,7 @@ than a mutable state.
 
 # What it reads and writes
 
-```mermaid
-flowchart LR
-  subgraph BEL["Beliefs · repository"]
-    A["ag:ActionGraph"]
-    W["ag:WorldGraph"]
-    S["ag:StateGraph"]
-    P["ag:PickRecordGraph"]
-    O["ag:ObligationsGraph"]
-    D["ag:DeliberationGraph"]
-  end
-  subgraph DES["Desires · repository"]
-    X["no graph class"]
-  end
-  subgraph IMG["Imaginarium · repository"]
-    V["ag:PossibleGraph"]
-  end
-  PL["Planner<br/>runs Planning"]
-  A -. reads .-> PL
-  W -. reads .-> PL
-  S -. reads .-> PL
-  P -. reads .-> PL
-  O -. reads .-> PL
-  X -. reads .-> PL
-  V -. reads .-> PL
-  PL -- writes --> V
-  PL -- writes --> D
-```
+![planner — what it reads and writes](../diagrams/service-planner.svg)
 
 **One service, one output modality.** `ag:DeliberationGraph` is a subclass of
 `ag:PossibleGraph`, so both writes are possible-modality: the worlds that die with the pass, and

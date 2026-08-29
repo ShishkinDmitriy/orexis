@@ -1,0 +1,44 @@
+@startuml service-keeper
+title Keeper — what it reads and writes
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam ArrowFontSize 10
+skinparam database {
+  BackgroundColor #E8F1F8
+  BorderColor #5B8DB8
+}
+skinparam folder {
+  BackgroundColor #FFFFFF
+  BorderColor #8FB4D0
+  FontSize 11
+}
+skinparam component {
+  BackgroundColor #EAF5EA
+  BorderColor #5E9E5E
+}
+
+
+database "Intentions · repository" as INT {
+  folder "ag:IntentionGraph" as I
+}
+
+database "Beliefs · repository" as BEL {
+  folder "ag:OntologyGraph\nsuspectAfter, metFraction" as ON
+}
+
+database "Desires · repository" as DES {
+  folder "no graph class" as X
+}
+
+component "Keeper\nruns keeping, patience,\nthe verification arc" as KE
+
+
+I ..> KE : reads
+ON ..> KE : reads
+X ..> KE : reads
+KE --> I : writes
+
+@enduml

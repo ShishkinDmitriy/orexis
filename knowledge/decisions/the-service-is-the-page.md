@@ -77,10 +77,27 @@ something. Writing no graph is the hint; deciding nothing is the finding.
 ([a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md)); what it runs is
 a Process; what it touches is a Named Graph, referred to by its class.
 
-**A diagram per service, inside its own page, and the service is the hero.** A ```mermaid block
-in the article rather than a file beside it: it renders where the page is read, it stays text
-like the prose around it, and there is one source instead of two to keep in step. The service is
-the middle node, repositories are subgraphs, arrows run in for reads and out for writes.
+**A diagram per service, embedded in its page, and the service is the hero.** PlantUML source in
+`knowledge/diagrams/service-<name>.puml`, a rendered SVG beside it, and the page shows the SVG.
+The service is the middle node, repositories are containers, arrows run in for reads and out for
+writes.
+
+**A committed image is safe here because a gate keeps it fresh**, which is the objection
+[a-repository-is-passive-and-a-service-holds-the-logic](/decisions/a-repository-is-passive-and-a-service-holds-the-logic.md)
+raised against committing one at all — *a rendered image rots while the source stays checkable*.
+True, and answerable: `tools/render-diagrams.sh` stamps each SVG with the sha256 of its source,
+and `test_a_committed_diagram_is_not_stale` compares the two. Edit a source, forget to re-render,
+and the suite names the file.
+
+**The check needs no renderer, and that is the part that makes it acceptable.** A gate that ran
+only where PlantUML is installed could not run on a fresh clone — the failure
+[a-guard-that-asks-the-filesystem-asks-about-somebodys-machine](/decisions/a-guard-that-asks-the-filesystem-asks-about-somebodys-machine.md)
+names. Rendering needs the tool; comparing two hashes does not.
+
+**Mermaid was tried first and dropped.** It rendered without a build step, which is a real
+advantage, but PlantUML draws repositories as containers rather than boxes-in-boxes and the
+project already had it. The nine sources were generated FROM the mermaid they replace, so the
+picture and the prose began identical.
 
 **A graph is named by its TYPE, never its instance** — `ag:StateGraph`, not `graph/sensed`. This
 is not a drawing convention borrowed from nowhere: it is rule 1 and the store's own discipline,

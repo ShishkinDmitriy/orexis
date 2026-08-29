@@ -37,20 +37,7 @@ nothing by property ([the-stake-is-sensings-want](/decisions/the-stake-is-sensin
 
 # What it reads and writes
 
-```mermaid
-flowchart LR
-  subgraph BEL["Beliefs · repository"]
-    A["ag:ActionGraph<br/>ag:takenBy"]
-  end
-  subgraph DES["Desires · repository"]
-    X["no graph class"]
-  end
-  EX["Execution<br/>runs plan, commit, take"]
-  A -. reads .-> EX
-  X -. reads .-> EX
-  EX -- calls --> KE["Keeper<br/>adopt"]
-  EX -- calls --> AC["whichever actor<br/>ag:takenBy names"]
-```
+![executor — what it reads and writes](../diagrams/service-executor.svg)
 
 **It writes no graph of its own**, which is the shape of a service that only orchestrates: the
 keeper writes the ledger, the actor does the thing, and the link from a row to its code is one

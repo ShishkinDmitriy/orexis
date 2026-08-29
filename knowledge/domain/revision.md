@@ -11,13 +11,7 @@ description: >-
 
 # What it reads and writes
 
-```mermaid
-flowchart LR
-  R["Revision<br/>runs belief revision"]
-  W(["a want, marked<br/>in memory only"])
-  W -. drained on the<br/>mind's own thread .-> R
-  R -- calls --> EX["Execution"]
-```
+![revision — what it reads and writes](../diagrams/service-revision.svg)
 
 **No repository, no graph, and the absence is the design.** A mark is not a belief — it is the
 question of whether a change is worth a pass, and an answer nobody should be able to read back.

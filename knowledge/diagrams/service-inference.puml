@@ -1,0 +1,39 @@
+@startuml service-inference
+title Inference — what it reads and writes
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam ArrowFontSize 10
+skinparam database {
+  BackgroundColor #E8F1F8
+  BorderColor #5B8DB8
+}
+skinparam folder {
+  BackgroundColor #FFFFFF
+  BorderColor #8FB4D0
+  FontSize 11
+}
+skinparam component {
+  BackgroundColor #EAF5EA
+  BorderColor #5E9E5E
+}
+
+
+database "Beliefs · repository" as BEL {
+  folder "ag:OntologyGraph · Asserted" as OA
+  folder "ag:WorldGraph · Asserted" as WA
+  folder "ag:OntologyGraph · Entailed" as OE
+  folder "ag:WorldGraph · Entailed" as WE
+}
+
+component "Inference\nruns entailment\nmaterialisation" as INF
+
+
+OA ..> INF : reads
+WA ..> INF : reads
+INF --> OE : writes
+INF --> WE : writes
+
+@enduml

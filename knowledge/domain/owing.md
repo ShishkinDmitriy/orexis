@@ -15,17 +15,7 @@ not source — so a debt is pursued through the same road as anything else it wa
 
 # What it reads and writes
 
-```mermaid
-flowchart LR
-  subgraph BEL["Beliefs · repository"]
-    O["ag:ObligationsGraph"]
-    W["ag:WorldGraph<br/>who the counterparty is"]
-  end
-  OW["Owing<br/>runs debt keeping"]
-  O -. reads .-> OW
-  W -. reads .-> OW
-  OW -- writes --> O
-```
+![owing — what it reads and writes](../diagrams/service-owing.svg)
 
 **Durable on purpose.** A host's in-memory record of what it issued dies with the process; the
 ledger is what survives a restart, which is why a claim raises a row whether or not the holder

@@ -22,23 +22,7 @@ Three jobs that share one graph, and a clock.
 
 # What it reads and writes
 
-```mermaid
-flowchart LR
-  subgraph INT["Intentions · repository"]
-    I["ag:IntentionGraph"]
-  end
-  subgraph BEL["Beliefs · repository"]
-    ON["ag:OntologyGraph<br/>suspectAfter, metFraction"]
-  end
-  subgraph DES["Desires · repository"]
-    X["no graph class"]
-  end
-  KE["Keeper<br/>runs keeping, patience,<br/>the verification arc"]
-  I -. reads .-> KE
-  ON -. reads .-> KE
-  X -. reads .-> KE
-  KE -- writes --> I
-```
+![keeper — what it reads and writes](../diagrams/service-keeper.svg)
 
 **The sole writer, and that is structural.** No other service touches the intention graph; a
 one-writer scan in `tests/test_intention.py` holds it.

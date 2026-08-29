@@ -16,25 +16,7 @@ description: >-
 
 # What it reads and writes
 
-```mermaid
-flowchart LR
-  subgraph BEL["Beliefs · repository"]
-    A["ag:ActionGraph<br/>the templates"]
-    W["ag:WorldGraph"]
-    S["ag:StateGraph"]
-    P["ag:PickRecordGraph"]
-  end
-  subgraph DES["Desires · repository"]
-    X["no graph class"]
-  end
-  MB["Menu<br/>runs menu derivation"]
-  A -. reads .-> MB
-  W -. reads .-> MB
-  S -. reads .-> MB
-  P -. reads .-> MB
-  X -. reads .-> MB
-  MB -- returns rows --> R(["list of affordances<br/>never stored"])
-```
+![menu — what it reads and writes](../diagrams/service-menu.svg)
 
 **`$state` is a parameter, and that is the whole reason nothing is stored.** The planner binds it
 to a node of the [imaginarium](/domain/imaginarium.md), so stock after a refill appears in that

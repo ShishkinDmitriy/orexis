@@ -46,23 +46,7 @@ which is what had to be true of the menu first.
 
 # What it reads and writes
 
-```mermaid
-flowchart LR
-  subgraph BEL["Beliefs · repository"]
-    S["ag:StateGraph"]
-    P["ag:PickRecordGraph"]
-    D["ag:DeliberationGraph"]
-  end
-  subgraph DES["Desires · repository"]
-    X["no graph class"]
-  end
-  DEL["Deliberator<br/>runs deliberation"]
-  S -. reads .-> DEL
-  P -. reads .-> DEL
-  X -. reads .-> DEL
-  DEL -- clears per pass --> D
-  DEL -- calls --> PL["Planner<br/>the search"]
-```
+![deliberator — what it reads and writes](../diagrams/service-deliberator.svg)
 
 The trace is CLEARED here and written by the [planner](/domain/planner.md), which is the service
 that produced the candidates.

@@ -16,20 +16,7 @@ same over the instances a world states.
 
 # What it reads and writes
 
-```mermaid
-flowchart LR
-  subgraph BEL["Beliefs · repository"]
-    OA["ag:OntologyGraph · Asserted"]
-    WA["ag:WorldGraph · Asserted"]
-    OE["ag:OntologyGraph · Entailed"]
-    WE["ag:WorldGraph · Entailed"]
-  end
-  INF["Inference<br/>runs entailment<br/>materialisation"]
-  OA -. reads .-> INF
-  WA -. reads .-> INF
-  INF -- writes --> OE
-  INF -- writes --> WE
-```
+![inference — what it reads and writes](../diagrams/service-inference.svg)
 
 **A type does not distinguish these, and the arrival does.** `graph/ontology` and
 `graph/ontology/entailed` are both `ag:OntologyGraph`; what separates them is `ag:arrivedBy`. So
