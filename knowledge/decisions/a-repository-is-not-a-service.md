@@ -20,7 +20,7 @@ what they DO gives two groups and no third:
 | | pages |
 |---|---|
 | holds data, passively, scoped to one agent | [belief-base](/domain/belief-base.md), [imaginarium](/domain/imaginarium.md) |
-| holds logic | [actor](/domain/actor.md), [choir](/domain/choir.md), [clearing](/domain/clearing.md), [deliberation](/domain/deliberation.md), [executor](/domain/executor.md), [gateway](/domain/gateway.md), [revision](/domain/revision.md) |
+| holds logic | [actor](/domain/actor.md), [choir](/domain/choir.md), [clearing](/domain/clearing.md), [deliberation](/domain/deliberator.md), [actuation](/domain/actuation.md), [gateway](/domain/gateway.md), [revision](/domain/revision.md) |
 
 **The type's own definition gave it away.** It read *"a part of the implementation — the belief
 base, the imaginarium"*, and both examples are in the first row. The word was being explained by

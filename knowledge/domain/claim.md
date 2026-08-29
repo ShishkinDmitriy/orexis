@@ -30,7 +30,7 @@ check reads it, and the buyer's Acquiring act is windowed the same way at the ro
 The claim is against the **supplier** (the resource owner), not a command to a specific
 actuator. The holder redeems it with the supplier; the supplier maps *how much* (the claim)
 + *which valve* (its `{plant_id → valve}` map, keyed by `sub`) and drives it. The buyer never
-names a valve. See [supplier](/domain/supplier.md) and [executor](/domain/executor.md).
+names a valve. See [supplier](/domain/supplier.md) and [actuation](/domain/actuation.md).
 
 # Redemption — spot vs futures
 

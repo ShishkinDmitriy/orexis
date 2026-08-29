@@ -129,7 +129,7 @@ rdflib.
 # Related
 
 - [belief-base](/domain/belief-base.md) — the store this one is copied from and never writes to.
-- [deliberation](/domain/deliberation.md) — the search that builds one per plan, and what a means'
+- [deliberation](/domain/deliberator.md) — the search that builds one per plan, and what a means'
   effect rule is.
 - [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) — why a possible
   world is a diff over beliefs rather than a state of its own.

@@ -34,7 +34,7 @@ is no deficit at all, which is exactly what makes a content agent cede rather th
 
 So **a plant above its region has a gap and no deficit.** That is not a curiosity: it is the
 drowning case, where every naive sizing produces a negative pour and both the actor and the
-planner have to refuse it — [deliberation](/domain/deliberation.md) has why.
+planner have to refuse it — [deliberation](/domain/deliberator.md) has why.
 
 The two words are not interchangeable and neither is redundant. Use *gap* unless you mean the
 shortfall specifically.
@@ -71,7 +71,7 @@ agent's watching of a property no market relieves lived in cadence machinery and
 [intention](/domain/intention.md) ledger. **The sovereign inspecting intentions saw market conduct
 only.** Deciding and remembering stay singular, and a source-scan test pins it.
 
-Every move is carried out from the tick through [execution](/domain/execution.md). An Acquire
+Every move is carried out from the tick through [executor](/domain/executor.md). An Acquire
 still needs a round nobody may convene from this side — the lot-is-the-host's-standing-offer
 seam — and since a round is a fact its row exists only while one is open, so the tick commits
 nothing to buy between rounds and the want simply stays hot.
@@ -85,6 +85,6 @@ society with none is not idle — it is fed.
 
 - [desire](/domain/desire.md) states the region a gap is measured against, and is deduced rather
   than authored.
-- [deliberation](/domain/deliberation.md) is handed a gap and names the next move.
+- [deliberation](/domain/deliberator.md) is handed a gap and names the next move.
 - [intention](/domain/intention.md) is the commitment to close one by a named
   [action](/domain/action.md).

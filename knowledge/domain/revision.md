@@ -8,16 +8,24 @@ description: >-
   that nothing which merely notices a change ever waits for a search.
 ---
 
+
+# What it reads and writes
+
+![revision — what it reads and writes](../diagrams/service-revision.svg)
+
+**No repository, no graph, and the absence is the design.** A mark is not a belief — it is the
+question of whether a change is worth a pass, and an answer nobody should be able to read back.
+
 # What it is
 
 `agent/revision.py`. Everything that notices a change — a reading recorded, an offer heard, a
 claim presented — leaves a **mark** here and returns. A mark names one
 [desire](/domain/desire.md) and says only *this may be worth reconsidering*; it carries no
-verdict, because the verdict is [deliberation](/domain/deliberation.md)'s and takes as long as
+verdict, because the verdict is [deliberation](/domain/deliberator.md)'s and takes as long as
 it takes.
 
 The marks are **drained** on the agent's own clock: a thread of the mind's, started with the
-agent, which puts each marked want through [execution](/domain/execution.md) exactly as the
+agent, which puts each marked want through [executor](/domain/executor.md) exactly as the
 patience tick does. What comes out the other side is what always came out — an
 [intention](/domain/intention.md) written, an [act](/domain/act.md) handed to an
 [actor](/domain/actor.md) — only not inside the handler that noticed.

@@ -781,3 +781,34 @@ def test_no_index_section_is_a_dumping_ground():
         f"an index section over {MAX_INDEX_SECTION_ENTRIES} entries — split it into headings "
         "that each name something, or the section becomes where records go to be lost:\n  "
         + "\n  ".join(oversized))
+
+
+def test_a_committed_diagram_is_not_stale():
+    """A rendered image is safe to commit only if something notices when it stops matching.
+
+    `tools/render-diagrams.sh` stamps each SVG with the sha256 of the `.puml` it came from, so
+    this compares two strings and needs NO renderer — which is the point: a gate that only runs
+    where plantuml is installed could not run on a fresh clone (a-guard-that-asks-the-filesystem
+    -asks-about-somebodys-machine). Rendering needs the tool; checking never does.
+    """
+    import hashlib
+
+    sources = sorted((REPO_ROOT / "knowledge" / "diagrams").glob("*.puml"))
+    assert sources, "no diagram sources found — the glob stopped matching"
+    wrong = []
+    for src in sources:
+        svg = src.with_suffix(".svg")
+        if not svg.exists():
+            wrong.append(f"{src.name}: no rendered .svg beside it")
+            continue
+        want = hashlib.sha256(src.read_bytes()).hexdigest()
+        text = svg.read_text()
+        marker = "<!-- source-sha256: "
+        if marker not in text:
+            wrong.append(f"{svg.name}: no source stamp — re-run tools/render-diagrams.sh")
+            continue
+        got = text.rsplit(marker, 1)[1].split(" ")[0].strip()
+        if got != want:
+            wrong.append(f"{svg.name}: stale — {src.name} changed since it was rendered")
+    assert not wrong, ("committed diagrams are out of step with their sources. Run "
+                       "`./tools/render-diagrams.sh`:\n  " + "\n  ".join(wrong))

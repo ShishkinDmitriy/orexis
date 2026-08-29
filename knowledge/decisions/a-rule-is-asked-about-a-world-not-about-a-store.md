@@ -32,7 +32,7 @@ deterministic observation node, and the reader takes whichever it finds. The sec
 computed correctly and thrown away by cycle detection as somewhere already seen.
 
 **Depth beyond 1 is therefore nominal for any goal about a measured value**, which is most of
-them. `domain/deliberation.md` says so, and `a-plan-is-a-path-of-graph-diffs` recorded it as one
+them. `domain/deliberator.md` says so, and `a-plan-is-a-path-of-graph-diffs` recorded it as one
 of the two limits found by building.
 
 # What the rules actually read, which is what decides it

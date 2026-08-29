@@ -77,7 +77,7 @@ and every shipped world states `market:hosts` on the supplier (see
    (conservation, solvency, identity, [constitution](/domain/constitution.md),
    order-consistency) and **co-signs** the [claim](/domain/claim.md); then wallets are debited
    (water and metabolic cost) and the [supplier](/domain/supplier.md)'s
-   [executor](/domain/executor.md) arm actuates the fully-signed claim, sequencing the pump.
+   [actuation](/domain/actuation.md) arm actuates the fully-signed claim, sequencing the pump.
    See [clearing-as-validator](/decisions/clearing-as-validator.md).
 
 Steps 5 and 6 belong to the auction rather than to any one round: the match is made once, over the

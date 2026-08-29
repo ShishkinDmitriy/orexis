@@ -48,7 +48,7 @@ which they take turns.
    gets a proposed trade. See [bid matching](/domain/bid-matching.md).
 5. **It is validated and settled.** [Clearing](/domain/clearing.md) checks the proposed trade and
    co-signs [claims](/domain/claim.md); each winner presents its claim when its watch is
-live (#132), and the [executor](/domain/executor.md) redeems the presented ones
+live (#132), and the [actuation](/domain/actuation.md) redeems the presented ones
    against the hardware.
 6. **It dissolves.** The host's open-auction state is dropped, the cluster that crystallized
    around it disperses, and the market is exactly as it was.

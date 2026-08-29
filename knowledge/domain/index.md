@@ -28,7 +28,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [clearing](/domain/clearing.md) - A thin stake-free notary: checks a proposed trade and co-signs the claim. The host computes the match.
 * [commitment](/domain/commitment.md) - REA's promised flow, as the kernel's shape: what a valve fulfils, what a claim embodies. Not BDI's, which is an intention.
 * [claim](/domain/claim.md) - What you win — co-signed, single-use, held until the winner's watch is live, then presented on the redeem channel.
-* [executor](/domain/executor.md) - The supplier's actuation arm: verifies the claim and drives its own valve, bounded by clearing and the device fail-safe.
+* [actuation](/domain/actuation.md) - The supplier's actuation arm: verifies the claim and drives its own valve, bounded by clearing and the device fail-safe.
 
 # Ends
 
@@ -49,7 +49,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [intention](/domain/intention.md) - A commitment to reduce a named gap by a named action, kept in a private ledger. Granted by a stake AND a lever.
 
-* [deliberation](/domain/deliberation.md) - The whether: name the next move by building the world each lever would make and keeping the one worth reaching. One road.
+* [deliberation](/domain/deliberator.md) - The whether: name the next move by building the world each lever would make and keeping the one worth reaching. One road.
 
 * [action](/domain/action.md) - One way of acting as one node — and the kind of act itself: precondition, effect, taker. A package adds one node and one `take()`.
 * [act](/domain/act.md) - An action filled in — lever, want, quantity, whom for, and a window. Execution's word: committed, taken, promised.
@@ -66,7 +66,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [imaginarium](/domain/imaginarium.md) - The store a plan thinks in: in memory for one plan, a graph per search node, required to be lost.
 
-* [execution](/domain/execution.md) - Plan, commit the head as an intention, hand it to its actor. One road for every trigger; a standing step is taken, not re-decided.
+* [executor](/domain/executor.md) - Plan, commit the head as an intention, hand it to its actor. One road for every trigger; a standing step is taken, not re-decided.
 
 * [actor](/domain/actor.md) - The module an affordance is linked to, through `ag:takenBy` stated by the package that ships the row. Takes a step; never decides one.
 
@@ -116,3 +116,9 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [wallet](/domain/wallet.md) - The single budget for water and thinking. Solvency is checked against a balance the bidder self-reports; the ledger, the allowance and metering are designed, not built.
 * [belief-base](/domain/belief-base.md) - One belief base per agent, not one shared store: named-graph layout, SOSA shape, provenance, structural isolation.
 * [gateway](/domain/gateway.md) - Decommissioned in v1: the measurement-witness role, folded into the self-asserting plant edge.
+* [planner](/domain/planner.md) - Runs planning: a bounded search over simulated worlds, writing one possible world per node.
+* [menu](/domain/menu.md) - Runs menu derivation per ask; the state it walks is a parameter, which is why nothing is stored.
+* [keeper](/domain/keeper.md) - Runs keeping, the patience and the verification arc; the intention graph's only writer.
+* [owing](/domain/owing.md) - Runs debt keeping: one row per claim issued against this agent, durable across a restart.
+* [inference](/domain/inference.md) - Materialises what the vocabulary entails, so both engines read one graph.
+* [desire-build](/domain/desire-build.md) - Derives what an agent pursues; the desires repository's only writer, and inside it.

@@ -188,6 +188,27 @@ share a node and the last writer wins, which the shapes flag as a warning rather
 same ratified copy — because a world agents disagreed about would defeat the point of stating
 the wiring once.
 
+# Its own housekeeping
+
+A repository carries the support functions its storage needs, and this one needs compaction.
+The store grows on disk for ever while its triple count never moves: the sensed graph upserts
+one observation per subject and property, so every reading appends a version plus a tombstone,
+and a few hundred triples never reach a size-triggered threshold. Measured on
+`simulation-fern`: about 170 KB an hour, 4 MB a day, for a dataset whose size never changed.
+
+`agent/upkeep.py` holds the clock and calls `optimize()` when the ratio it is held to says so.
+
+**It is not a service, and the test is what it produces.** Every service here runs a process and
+writes a named graph, because what a service concludes is a fact somebody authored. Compaction
+decides nothing and asserts nothing — it reclaims bytes belonging to one repository. So it is
+this repository's function rather than a thing beside it, and no other repository is obliged to
+have the same ones.
+
+**Not a capability either.** Every agent has a belief base whatever else it can do, so a rule
+granting a *please maintain yourself* ability would fire for everybody. What is a capability is
+reconsidering something an agent CHOSE — [reviewing](/domain/review.md) can be done by rule or
+by asking a model, and compacting cannot be done two ways.
+
 # Access languages (deliberate asymmetry)
 
 - Cite a fact → LLM-**composed SPARQL** on `:world` / `:sensed` (read-only, small, safe — looser leash).

@@ -51,7 +51,7 @@ A won [claim](/domain/claim.md) is a claim **on the host**, redeemed by presenti
 that answers sits on the host's menu as an [affordance](/domain/affordance.md) row owed to the presenter,
 exercised on a valid presentation and never proposed. Why a duty is nonetheless deliberated about
 at all — and why that does not let a host wriggle out of one — is
-[deliberation](/domain/deliberation.md)'s.
+[deliberation](/domain/deliberator.md)'s.
 
 What matters to the role is the direction of the obligation: the claim is against the host, so
 the host is the one who cannot treat delivery as optional.

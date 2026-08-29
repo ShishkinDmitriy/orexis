@@ -1,115 +1,69 @@
 ---
 type: Service
 title: Executor
-description: The trusted actuator — validates the capability grant and drives the pump/valve; the only thing that touches hardware.
+description: >-
+  What happens to a decision — plan, commit the head as an intention, hand it to its actor.
+  ONE road for every trigger, in `agent/execution.py`: the keeper's tick, a fresh reading, a
+  round knocking and a claim presented all arrive here and none of them decides. A step already
+  standing is taken without a second search, which is where the amortisation an intention
+  promises actually happens; a step nothing takes is logged, and the intention stands.
 ---
 
-# What it is
+# What it runs
 
-> **Not the thing that carries out a plan.** That is [execution](/domain/execution.md), a kernel
-> process handing a committed step to an [actor](/domain/actor.md); this page is the trusted end
-> of a claim, one hop from the valve.
+**Execution** — plan, commit the head, hand it to its actor. One road, whatever the trigger.
 
-> **Reframed ([thin-trusted-infra](/decisions/thin-trusted-infra.md)):** actuation is *not*
-> separate stake-free infra — the **resource owner (the [supplier](/domain/supplier.md))**
-> drives its own valves. The "executor" is the supplier's **actuation arm**, not a distinct
-> component. It *executes* a claim (how much) + topology (which valve); it does not decide.
-> Safe not because the actuator is neutral, but because the amount is bounded *above* by
-> clearing (a valid, cleared claim it can't forge) and *below* by the device fail-safe cap.
-> The description below still holds as the **resource server** role — it's just hosted by the
-> supplier now, not a standalone trusted party.
+# Phases
 
-Consumes a validated **claim** and performs the water leg of the trade — the one act that is
-physically irreversible (you can't un-flood a root-rotted plant). It **decides nothing**:
-reactive, no desires, no LLM. See [authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
+1. **Plan.** `deliberator.decide(desire)` — the search, unchanged, returning its
+   [plan](/domain/deliberator.md) as rows. No steps means nothing to execute, and that None is
+   the deliberator's decision, not this process's.
+2. **Commit.** The head [step](/domain/step.md)'s [act](/domain/act.md) goes to the keeper:
+   `adopt(action, want, because, via=lever)`.
+   The [intention](/domain/intention.md) written carries the lever the plan chose. If one
+   already stands within patience, `adopt` returns None and the process ends here — the same
+   impulse, absorbed, and no row written. That is the whole of the patience, because every
+   means stands until the world answers
+   ([an-intention-stands-until-the-world-answers](/decisions/an-intention-stands-until-the-world-answers.md)).
+3. **Take.** The means' `ag:takenBy` family is asked of the T-Box, `agent.providers(family)` of
+   the runtime, and each [actor](/domain/actor.md) is handed the act. At least one True is the
+   step taken; all False is logged and the intention stands for the next trigger.
 
-# The actuation edge
+Two doors, and both are the same three phases: `pursue(agent, desire)` for a want in hand, and
+`pursue_for(agent, want)` for an actor holding a fresh reading — which want a reading is about
+is [sensing](/domain/sensing.md)'s to say (`want_about`: an unmet epistemic want first, then the
+stake), so the actor hands the kernel a NODE and goes through the desire door. The kernel keys
+nothing by property ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
 
-Like sensing, actuation splits across hardware, over the same MQTT bus — but *inverted*: the
-executor **publishes** a command; the pump-ESP32 **subscribes** and acts (the sensor edge is
-the other way round).
+# What it reads and writes
 
-```
-clearing ─grant─► executor (RPi) ─publish cmd─► MQTT ─► pump-ESP32 (subscribe) ─► valve
-                        ▲                                        │
-                        └────────────── status/ack ─────────────┘
-```
+![executor — what it reads and writes](../diagrams/service-executor.svg)
 
-- **Executor (RPi)** = decides *nothing*; validates the grant, then commands.
-- **Pump-ESP32** = drives a relay/valve on GPIO. It takes commands **only** from the
-  executor — **never** from an agent directly. Same trust boundary as the sensor edge: the
-  device is dumb and stake-free; authority lives one hop up.
+**It writes no graph of its own**, which is the shape of a service that only orchestrates: the
+keeper writes the ledger, the actor does the thing, and the link from a row to its code is one
+triple nobody here names.
 
-# Actuation is not sensing — the guarded subscriber
+# What starts it
 
-Sensing is read-only and low-stakes; actuation *writes to the physical world, irreversibly*.
-So the pump is a **guarded** MQTT subscriber, with four properties the sensor edge never needed:
+| trigger | who | what it used to do instead |
+|---|---|---|
+| the patience tick | keeper | plan every want, carry out Observe alone |
+| a reading recorded | actuation | ask the deliberator, adopt, dose — its own copy of all three |
+| an offer, reading in hand | bidding | ask the deliberator inside `submit`, adopt, bid |
+| a claim presented, or stock arriving with one held | hosting | ask the deliberator, serve if it said Apply |
 
-1. **Authenticated commands** — the pump opens only on the **claim** (won this auction),
-   co-signed by **host (`match_sig`) + clearing (`val_sig`)**, and verifies both — plus, for a
-   networked pump, the agent's **access grant** (it's *this* agent's valve). *Access grant =
-   your valve; claim = you won this dispense; neither alone opens it.* Implemented (Ed25519):
-   the executor co-signs the claim; the pump rejects anything unsigned or tampered — a forged
-   `actuators/fern/valve` message does nothing. The principle is **crypto proportional to
-   irreversibility**: the reversible sensor path is trusted in
-   [trusted-agent-mode](/decisions/trusted-agent-mode.md), but the irreversible valve is
-   cryptographically gated. Keys issued once per world (`orexis-keygen <world>`), because two worlds are two societies and must not sign for each other; v1 signs both in-process. The
-   token is required *because the pump is networked* — a relay on the Pi's own GPIO would need
-   none (physical possession). See *Connection determines authorization* in
-   [authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
-2. **Idempotency** — dedup on `jti` (+ MQTT QoS 1), so a redelivered command never
-   double-waters. QoS 0 could lose a command; QoS 1 + jti dedup is the right combo.
-3. **Fail-safe dosing** — commands are *bounded* ("open ~N seconds ≈ N ml, then auto-close").
-   The device runs a **watchdog**: it closes the valve on command expiry *and* on lost
-   connection, and enforces a hard local max dose regardless of what it's told — a physical
-   constitution at the edge, so a crashed executor or dropped network can't flood.
-4. **Confirmation** — the pump *publishes* an ack/telemetry (`actuators/<plant>/valve/status`)
-   so the executor knows water actually flowed and the receipt is truthful. Subscriber *and*
-   publisher.
+**A standing step is executed, not re-decided.** The bidder's case is the one that mattered: a
+round is decided once — by the offer or by the tick while it is open, whichever comes first —
+and the other finds the `Acquire` standing and searches nothing. A round used to cost three
+passes over one world; it costs one. Between rounds nothing stands to buy, because the row does
+not exist ([a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a-fact-and-offering-is-an-action.md)).
 
-   **This is read now.** It was granted in PR #34 and had no listener until
-   [an-unconfirmed-dose-is-not-a-delivered-one](/decisions/an-unconfirmed-dose-is-not-a-delivered-one.md),
-   so a dose that never happened looked exactly like one that did. Actuation matches the report
-   to the command by `jti`, and a dose nobody confirms before its deadline — that dose's own
-   open-seconds plus `actuation:doseGraceS` — is logged and counted as `doses_unconfirmed`.
-   **Silence is the device's refusal**, not an oversight: the valve publishes here after
-   dispensing and says nothing when it rejects a command.
+# What it is not
 
-   An unconfirmed dose **stays spent**. The device refuses replays itself, so re-sending buys
-   nothing, and a lost report followed by a re-send would risk watering twice — where an
-   unopened valve costs one round the plant bids again for.
-
-# Responsibilities (per grant)
-
-1. **Validate the grant** — issued by clearing, scope matches the valve, passed the
-   [constitution](/domain/constitution.md) check. In v1 the grant is a plaintext typed
-   object (in-process); the JWS-signed form is a v2 transport change, not a logic change.
-2. **Enforce single-use** — track `jti` (bounded, per auction) and check `auction_id`, or the same
-   win settles twice (double-spend / double-actuation). This matters even without an
-   adversary — a retried message shouldn't double-water.
-3. **Actuate** — select the valve by the claim's **plant ID** (the supplier's genesis-
-   configured `{plant_id → valve}` map — see [supplier](/domain/supplier.md)); open it for the
-   claim's litres, then stop. Sequence multiple claims safely (one source, many plants).
-4. **Confirm** — report completion so the auction can close and the receipt is truthful.
-
-# What it must never do
-
-- Take a command from an agent. Agents receive a *receipt* (proof of allocation), never a
-  valve-trigger they redeem. The actuation grant flows clearing → executor **internally**.
-- Re-decide the allocation. It applies a committed grant; it does not judge bids.
-- Mint or attest. Those powers stay in [clearing](/domain/clearing.md) and the
-  [gateway](/domain/gateway.md) respectively. See [trust-boundary](/decisions/trust-boundary.md).
-
-# Invariant
-
-Deterministic and injection-proof: the grant is data with a checkable shape, agent messages
-are never instructions. Fully unit-testable in isolation — scripted grants in, asserted
-valve action out, no model and no hardware in the loop (mock the pump-ESP32). The single
-source of physical action.
-
-# Device identity (v1 vs v2)
-
-v1: trusted LAN + device id. v2: the pump-ESP32 gets a device cert and the executor's
-command is a signed, sender-constrained instruction — same cert model as the sensor edge and
-the agents. See [gateway](/domain/gateway.md) and
-[authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
+- **Not a planner.** It holds no imaginarium, scores nothing, and never sees a candidate the
+  search rejected.
+- **Not a second keeper.** It calls `adopt` and never writes the ledger; the one-writer scan in
+  `tests/test_intention.py` still holds.
+- **Not the tail.** Only the head is committed, because the plan is re-derived every pass and the
+  world moves between them — the argument is
+  [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md)'s.

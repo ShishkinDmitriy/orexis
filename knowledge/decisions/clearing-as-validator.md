@@ -57,7 +57,7 @@ host        match_sig : "I, the scarce side, propose this match"     — supplie
 clearing    val_sig   : "conserves, fits every signed order, ids ok, constitution holds"
 ```
 
-The settlement token is that bundle. The [executor](/domain/executor.md) actuates **only**
+The settlement token is that bundle. The [actuation](/domain/actuation.md) actuates **only**
 a fully-signed token — counterparties consented (orders), host proposed (match), clearing
 notarized (validity). This also kills fabrication and shill bids: the host can neither sign
 as another agent nor out-mint its wallet.

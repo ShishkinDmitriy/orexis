@@ -1,0 +1,42 @@
+@startuml service-deliberator
+title Deliberator — what it reads and writes
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam ArrowFontSize 10
+skinparam database {
+  BackgroundColor #E8F1F8
+  BorderColor #5B8DB8
+}
+skinparam folder {
+  BackgroundColor #FFFFFF
+  BorderColor #8FB4D0
+  FontSize 11
+}
+skinparam component {
+  BackgroundColor #EAF5EA
+  BorderColor #5E9E5E
+}
+
+
+database "Beliefs · repository" as BEL {
+  folder "ag:StateGraph" as S
+  folder "ag:PickRecordGraph" as P
+  folder "ag:DeliberationGraph" as D
+}
+
+database "Desires · repository" as DES {
+  folder "no graph class" as X
+}
+
+component "Deliberator\nruns deliberation" as DEL
+
+
+S ..> DEL : reads
+P ..> DEL : reads
+X ..> DEL : reads
+DEL --> D : clears per pass
+
+@enduml

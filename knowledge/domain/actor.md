@@ -31,7 +31,7 @@ market:Presenting   ag:takenBy market:Bidding .
 Each is stated on the [action](/domain/action.md) node itself, beside the precondition and the
 effect it carries out — the row and the code that takes it are one directory, deletable
 together. The object is a
-capability term, so [execution](/domain/execution.md) resolves it exactly as any module reaches
+capability term, so [executor](/domain/executor.md) resolves it exactly as any module reaches
 another: `agent.providers(family)`, through the T-Box, and every member of the family is offered
 the step. That plural is deliberate — the gardener holds two sensing modules and only one can
 nudge a probe — and it is the same reason `providers` exists at all.
@@ -68,7 +68,7 @@ amortised deliberation for every means and not only for the ones that happened t
 
 - **Not a decider.** An actor never asks the deliberator. The bidder's `submit` used to hold the
   last opinion about whether to pursue; it holds none now.
-- **Not the [executor](/domain/executor.md).** That word is the supplier's actuation arm — the
+- **Not the [actuation](/domain/actuation.md).** That word is the supplier's actuation arm — the
   trusted end of a claim, one hop from the valve. An actor is a module in the agent's own
   process, and the actuation module is at once an actor (it takes `Actuate`) and the thing the
   executor page describes when it redeems a claim for someone else.
