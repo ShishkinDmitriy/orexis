@@ -51,7 +51,6 @@ would need a code rename first, and each has a defensible name waiting:
 | `execution` | **Enactor** | enacting | `Executor` is taken by [actuation](/domain/actuation.md), the trusted actuator — a real collision |
 | `Owing` | Ower | owing | the weakest of the six; the gerund reads better than the agent noun |
 | `Revision` | Reviser | revising | close enough to *review* to be confusable, and they are different things |
-| `BeliefBaseUpkeep` | Compactor | compacting | the cleanest of the six |
 
 **`Executor` went to the service that carries out a plan**, and the page that held the name gave
 it up. `executor.md` described the trusted actuator — and opened with a banner disambiguating
@@ -62,6 +61,17 @@ supplier's actuation ARM, not a distinct component."* A page for a component tha
 reframed away, holding a name a live service needed. Its body moved into
 [actuation](/domain/actuation.md), which is where that decision put the thing, and eleven links
 followed.
+
+**A repository carries its own support functions, and they are not services.** Compaction was
+written as one and is not: every service runs a process and writes a named graph, because what a
+service concludes is a fact somebody authored, while compaction decides nothing, asserts nothing
+and reclaims bytes belonging to one repository. It is a function of
+[belief-base](/domain/belief-base.md), and no other repository is obliged to have the same ones.
+
+The test that separates them is what a thing PRODUCES. Three services write no graph either —
+the menu build returns rows, [executor](/domain/executor.md) only orchestrates,
+[revision](/domain/revision.md) only marks — and all three stay services, because each decides
+something. Writing no graph is the hint; deciding nothing is the finding.
 
 **The four words are the vocabulary.** A page is about a Service or a Repository
 ([a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md)); what it runs is
@@ -129,7 +139,7 @@ finds immediately.
   reach each other, and [clearing](/domain/clearing.md), [actuation](/domain/actuation.md) and
   [gateway](/domain/gateway.md) are separate processes outside the agent's repositories. A
   diagram of repos they do not have would assert something false.
-- **Five services keep a name the convention would change**, because the rename belongs in the
+- **Four services keep a name the convention would change**, because the rename belongs in the
   code first. One is not merely cosmetic: `Reviser` sits one letter from `review`, a capability
   that means something else.
 - **Nothing renders the mermaid at build time.** GitHub and any OKF viewer draw it; a broken

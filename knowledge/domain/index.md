@@ -121,5 +121,4 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [keeper](/domain/keeper.md) - Runs keeping, the patience and the verification arc; the intention graph's only writer.
 * [owing](/domain/owing.md) - Runs debt keeping: one row per claim issued against this agent, durable across a restart.
 * [inference](/domain/inference.md) - Materialises what the vocabulary entails, so both engines read one graph.
-* [upkeep](/domain/upkeep.md) - Runs compaction; the only service with no named graph, because it asserts nothing.
 * [desire-build](/domain/desire-build.md) - Derives what an agent pursues; the desires repository's only writer, and inside it.
