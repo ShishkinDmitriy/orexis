@@ -1,5 +1,5 @@
 ---
-type: Component
+type: Service
 title: Choir
 description: >-
   How capabilities contribute judgments to one another without knowing each other exists — the

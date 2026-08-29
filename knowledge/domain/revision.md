@@ -1,5 +1,5 @@
 ---
-type: Component
+type: Service
 title: Revision
 description: >-
   The seam between a change and a reconsideration — where a fact landing in the belief base

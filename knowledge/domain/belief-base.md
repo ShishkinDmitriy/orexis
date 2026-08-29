@@ -1,5 +1,5 @@
 ---
-type: Component
+type: Repository
 title: Belief base
 term: http://example.org/orexis#BeliefBase
 description: One belief base per agent, not one shared store — named-graph layout, SOSA observations, provenance, and the split between the series and the graph.

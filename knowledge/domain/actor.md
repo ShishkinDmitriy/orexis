@@ -1,5 +1,5 @@
 ---
-type: Component
+type: Service
 title: Actor
 term: http://example.org/orexis#takenBy
 description: >-

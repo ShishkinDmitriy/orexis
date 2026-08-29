@@ -51,10 +51,13 @@ BUNDLE = REPO_ROOT / "knowledge"
 # `Capability` is rule 2's unit and not a subtype of convenience: those pages carry a family term,
 # its interchangeable members, and the premise that grants it, which no other kind of page has.
 #
-# Distribution when the split landed: Concept 10, Process 5, Component 5, Capability 4, Role 4 —
+# Distribution when Component folded: Concept 10, Service 7, Process 5, Capability 4, Role 4,
+# Repository 2 — Component's own two examples, the belief base and the imaginarium, WERE the
+# repositories, so the word had nothing left to mean once they were named.
 # no type with one member, which is the evidence it is a real division rather than a tidy one. A
 # type that drops to one page is a type to fold back, not to defend.
-TYPES = {"Decision", "Domain Concept", "Process", "Capability", "Role", "Component", "Runbook"}
+TYPES = {"Decision", "Domain Concept", "Process", "Capability", "Role", "Service", "Repository",
+         "Runbook"}
 STATUSES = {"accepted", "superseded", "superseded-in-part"}
 
 # An index entry is the CLAIM. The abstract is the record's own `description`, and the record is

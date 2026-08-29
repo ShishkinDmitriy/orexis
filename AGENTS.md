@@ -16,7 +16,7 @@ If it is unavailable, the rules are short enough to follow by hand:
 - every concept `.md` has YAML frontmatter with a non-empty `type`, plus `title` and
   `description` — and a `domain/` page whose word the T-Box carries binds it with `term:`,
   which `tests/test_knowledge.py` holds to what the ontologies (ours vendored under
-  `tests/fixtures/vocabularies/` for the external ones) actually declare. **Seven types, and the one to reach for is the one that answers what KIND of
+  `tests/fixtures/vocabularies/` for the external ones) actually declare. **Eight types, and the one to reach for is the one that answers what KIND of
   thing the page is:**
 
   | | |
@@ -26,7 +26,8 @@ If it is unavailable, the rules are short enough to follow by hand:
   | `Process` | something that **happens**, with phases and an end — an auction, a round, onboarding |
   | `Capability` | a named ability with **interchangeable implementations**, granted by its own premise and provided by a package — rule 2's unit |
   | `Role` | a kind of **principal** that holds a stake — an agent, a supplier, a dealer |
-  | `Component` | a part of the **implementation** — the belief base, the imaginarium |
+  | `Service` | a part of the implementation that **holds logic** — the deliberator, the revision seam |
+  | `Repository` | a part that **passively holds data**, scoped to one agent — the belief base, the imaginarium |
   | `Runbook` | how to **operate** it |
 
   The split was asked for by the pages: `auction` opened "an auction is a PROCESS", `bid-matching`
@@ -35,7 +36,7 @@ If it is unavailable, the rules are short enough to follow by hand:
   to fold back**, not to defend; the split landed at 10 / 5 / 5 / 4 / 4;
 - a **decision** additionally carries `status` (`accepted`, `superseded`, `superseded-in-part`)
   and `timestamp`, and a superseded one carries `superseded-by`. **No other type carries any of
-  those**: a concept, a process, a capability, a role and a component have no state to be in,
+  those**: a concept, a process, a capability, a role, a service and a repository have no state to be in,
   being either current or wrong. `stage` and `tags` are
   gone — `stage` said `v1` in every record, and `tags` had 147 values of which 86 were used
   once and nothing read any of them;

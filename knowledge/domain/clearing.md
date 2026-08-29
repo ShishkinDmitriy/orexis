@@ -1,5 +1,5 @@
 ---
-type: Component
+type: Service
 title: Clearing
 description: Thin stake-free validator that checks a proposed trade and co-signs it before settlement — a notary, not an allocator.
 ---
