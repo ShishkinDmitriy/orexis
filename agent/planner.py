@@ -495,8 +495,14 @@ class Planner:
         exactly what it always did, and every deeper node forks from it.
         """
         self.imaginarium = Imaginarium(
-            self.agent.beliefs, beliefs_graph(self.agent.id), STATE_GRAPH,
-            #  THE INSTRUMENTS, because a want may be about the reading rather than about
+            self.agent.beliefs,
+            #  EVERY GRAPH THIS AGENT OWNS, asked rather than named (#444): its picks, its
+            #  debts, and whatever a package records — sensing's instruments among them, and
+            #  the kernel does not know that name. It used to spell three of them here and
+            #  ask for the rest in the same call.
+            #
+            #  THE INSTRUMENTS matter and are the reason the asking has to be complete: a want
+            #  may be about the reading rather than about
             #  the number in it, and the horizon that decides whether a reading is still
             #  evidence is written here and nowhere else. Without it the freshness measure
             #  found no horizon in any candidate world and answered maximal for all of
@@ -504,8 +510,7 @@ class Planner:
             #  empty-result failure this file's own docstring warns about, arriving through
             #  a graph nobody had copied. Read-only like everything else copied in: no
             #  effect touches it, and a plan cannot re-command a cadence.
-            *self.agent.beliefs.recorded_graphs(),   # sensing's instruments graph, asked
-            obligations_graph(self.agent.id))
+            *self.agent.beliefs.recorded_graphs())
         #  What this agent PURSUES, snapshotted for the pass: the desire modality's triples as
         #  one rdflib graph, because pySHACL wants rdflib and a cbd walks blank nodes. Small —
         #  a few hundred triples — and per pass for the same reason the imaginarium is.
@@ -536,8 +541,7 @@ class Planner:
         self._about_of = wants_of(self.agent.desires.query_union, self.me.uri)
         self._keys = signature.keys_of(store.query)
         self._base_facts = signature.facts((
-            quad for iri in [*store.public_graphs(), beliefs_graph(self.agent.id),
-                             STATE_GRAPH, *store.recorded_graphs()]
+            quad for iri in [*store.public_graphs(), *store.recorded_graphs()]
             for quad in store.quads(iri)), self._keys)
         return _Node(world=base, graph=STATE_GRAPH,
                      urgency=self._urgency_in(base, STATE_GRAPH, desire))
@@ -651,18 +655,14 @@ class Planner:
         return float(litres) if litres and litres > 0 else 0.0
 
     def _beliefs(self):
+        #  Everything this agent owns, asked (#444). The instruments are why completeness
+        #  matters: a freshness want's met-test reads the horizon this agent published, and a
+        #  shape whose pattern reaches a graph nobody copied does not fail — it finds nothing,
+        #  reports nothing, and the want reads as met for ever. The debts are why it must
+        #  include the received ones (#255): a duty's met-test is a pattern over the record,
+        #  and the world Apply's effect discharges an obligation in must hold it to discharge.
         return graph_from(self.agent.beliefs, *self.agent.beliefs.public_graphs(),
-                          beliefs_graph(self.agent.id), STATE_GRAPH,
-                          #  The instruments, for the same reason `validate_agent` flattens
-                          #  them: the freshness want's met-test reads the horizon this agent
-                          #  published, and a shape whose pattern reaches a graph nobody
-                          #  copied does not fail — it finds nothing, reports nothing, and
-                          #  the want reads as met for ever.
-            *self.agent.beliefs.recorded_graphs(),   # sensing's instruments graph, asked
-                          #  The debts too (#255): a duty's met-test is a pattern over the
-                          #  record, and the world Apply's effect discharges an obligation in
-                          #  must hold the obligation to discharge.
-                          obligations_graph(self.agent.id))
+                          *self.agent.beliefs.recorded_graphs())
 
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")

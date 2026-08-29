@@ -28,7 +28,7 @@ from typing import Callable
 import pyoxigraph as ox
 
 from assembly import loader
-from .ontology import AG, ONTOLOGY_GRAPH, PUBLIC_GRAPH
+from .ontology import AG, CLASSIFICATION_GRAPH, ONTOLOGY_GRAPH, PUBLIC_GRAPH
 
 # A SPARQL SELECT -> the SPARQL-JSON results dict. The seam every reader is written against,
 # unchanged from when this was an HTTP client, so nothing above here knows the difference.
@@ -48,16 +48,38 @@ SELECT ?g WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
   ?g a ?class . ?class rdfs:subClassOf* <{PUBLIC_GRAPH}> .
 }} }}"""
 
-#  The private belief graphs an agent writes down as it goes. Named the same way `_DISCOVER`
-#  is — the ontology graph is the bootstrap root, the one instance a reader may name — and by
-#  CLASS plus arrival, never by IRI: sensing's instruments graph is one and the kernel does not
-#  know its name (the-stake-is-sensings-want).
-_RECORDED = f"""
-SELECT DISTINCT ?g WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
-  ?g a ?class ; <{AG}arrivedBy> <{AG}Recorded> .
-  ?class rdfs:subClassOf* <{AG}BeliefGraph> .
-  FILTER NOT EXISTS {{ ?g a ?public . ?public rdfs:subClassOf* <{PUBLIC_GRAPH}> }}
-}} }}"""
+#  THE AGENT'S OWN GRAPHS — what a plan must carry into its imaginarium and a validation must
+#  read beside the state. Two sources, because a graph is classified wherever it can be: a
+#  package declares its own in its ontology (sensing's instruments graph, and the kernel does
+#  not know its name), while a PER-AGENT graph cannot be declared in a T-Box at all — it does
+#  not exist until its agent does — so the agent types its own at boot into the classification
+#  graph (genesis.classify_own_graphs).
+#
+#  BOTH of those are named here, and both are the bootstrap root rather than a reader
+#  enumerating: they are where a graph says what it IS, and there is nowhere else to ask.
+#
+#  What is EXCLUDED and why, because each was a real answer this query gave before:
+#    public       — the world declares every agent's belief graph by name, so city's store can
+#                   see that `beliefs/fern` exists. A name is not content, but carrying it
+#                   would be carrying somebody else's;
+#    possible     — the deliberation trace is a record of a pass, not a fact about the world,
+#                   and a hypothesis has no place in a hypothesis;
+#    another store's — the intention ledger is classified here and held elsewhere, so the
+#                   result is intersected with what this store actually has.
+_OWN = f"""
+SELECT DISTINCT ?g WHERE {{
+  {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }} }}
+  UNION
+  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?g a ?class ; <{AG}arrivedBy> ?arrival }} }}
+  ?class rdfs:subClassOf* <{AG}Graph> .
+  #  ASKED OF THE GRAPH AND NOT OF THE CLASS THAT MATCHED: `graph/classification` is typed
+  #  both public and belief, so a filter on one binding lets it through on the other. Both
+  #  run in the DEFAULT graph, which `query` unions from the public ones — inside a GRAPH
+  #  block pyoxigraph evaluates the NOT EXISTS before the UNION binds `?g`, and every row
+  #  is dropped.
+  FILTER NOT EXISTS {{ ?g a ?any . ?any rdfs:subClassOf* <{PUBLIC_GRAPH}> }}
+  FILTER NOT EXISTS {{ ?g a ?hyp . ?hyp rdfs:subClassOf* <{AG}PossibleGraph> }}
+}}"""
 
 # Sent with every query. This is the ONLY set a query may use — some engines silently pre-bind
 # common prefixes and others do not, so relying on that works in one and fails in another.
@@ -142,12 +164,20 @@ class Store:
     # --- what counts as public, according to the store itself ---
 
     def recorded_graphs(self) -> list[str]:
-        """Every belief graph the agent writes down as it goes — `ag:BeliefGraph` arriving
-        `ag:Recorded` — which a plan must carry into its imaginarium and a validation must read
-        beside the state. Asked, never listed: sensing's instruments graph is one, declared in
-        sensing's ontology, and the kernel does not know its name."""
-        rows = self._store.query(PREFIXES + _RECORDED)
-        return sorted(str(row["g"].value) for row in rows)
+        """The agent's own graphs — what a plan carries into its imaginarium and a validation
+        reads beside the state. Asked, never listed.
+
+        NAMED WHETHER OR NOT THE GRAPH EXISTS YET, which is deliberate and was learned by
+        intersecting with `graph_names()` and watching every world fail to boot: `sensed` has
+        no graph until the first reading, and a validation that stopped naming it lost the
+        state its shapes are written against. A graph that is not there contributes nothing —
+        which is exactly how sensing's instruments graph behaved before it had ever been
+        written — so the tolerant list is also the correct one.
+
+        The intention ledger is named here and held in a store of its own; asking this store
+        for it yields nothing, for the same reason.
+        """
+        return sorted(row["g"] for row in bindings(self.query(_OWN)))
 
     def public_graphs(self) -> list[str]:
         """Every graph the vocabulary types as an `ag:PublicGraph`.

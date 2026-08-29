@@ -226,9 +226,14 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities,
     #  flatten serialises and re-parses, which relabels blank nodes, so a record arriving by
     #  both roads splits every aim into two nodes — and AimShape rightly calls two aims for
     #  one property not steering.
-    recorded = st.recorded_graphs()   # sensing's instruments graph, asked rather than named
-    private = [STATE_GRAPH, *recorded] if desires is not None else \
-        [beliefs_graph(agent_id), STATE_GRAPH, *recorded]
+    #  ASKED, never enumerated (#444): every graph this agent owns, the pick record among
+    #  them. Which is why the record is SUBTRACTED where the modality carries it — naming it
+    #  to take it out is not the enumeration the rule forbids, it is saying which road it
+    #  came by.
+    recorded = st.recorded_graphs()
+    if desires is not None:
+        recorded = [g for g in recorded if g != beliefs_graph(agent_id)]
+    private = [STATE_GRAPH, *recorded]
     data = graph_from(st, *st.public_graphs(), *private)
     if desires is not None:
         from agent import effects
