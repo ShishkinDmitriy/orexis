@@ -94,6 +94,30 @@ not add more for design knowledge.
 `knowledge/` for claims the change made false and fix them in the same commit. A stale decision
 record is worse than none, because it is still cited.
 
+## Principles, one line each
+
+**This is the default place for what a change taught, and a decision record is the exception.**
+Most work ends with a line here plus a commit message; a record is for the rarer case where a
+real alternative was weighed and refused, and the argument has to survive. A principle earns a
+line when it would have changed a decision, and it stays one sentence — if it needs a paragraph
+it is a record wearing a bullet.
+
+- **An RDF URI beats a homemade id for referring to an agent**, and the exception proves it: the
+  one name that stays a short string is the one that must also be a broker principal, a bucket, a
+  container and a directory.
+- **A term nobody reads is annotation**, however many instances state it.
+- **A repository holds data and a service holds logic**, and a thing that decides nothing is a
+  repository's support function rather than a service.
+- **Deciding nothing is the finding** — writing no graph is only the hint, since three services
+  write none and stay services.
+- **Verify a claim in the bundle against the code before repeating it**; nothing gates prose
+  against the thing it describes.
+- **A rename is done when the suite says so**, not when the thing you grepped for is gone.
+- **Search every tree that loads the vocabulary before calling a term dead** — `assembly/` reads
+  ontologies that `agent/` never mentions.
+- **A record earns its place by refusing something**; "we could have not done it" is not an
+  alternative.
+
 ## The rules the code lives by
 
 1. **Code may reference T-Box terms; never an instance.** `term("Subscribing")` is fine;
@@ -290,8 +314,9 @@ it should be. Three checks, in order of how quickly they settle it:
 | what changes when it is resolved? | the **code** | what someone **believes** about the code |
 | how does the title read? | an imperative — *"key observations by subject and property"* | a claim — *"an observation is keyed by its subject alone, and that was wrong"* |
 
-**A record earns its place by refusing something.** The test is not *did we decide* — every
-commit decides. It is whether a real alternative was available and turned down: two mechanisms
+**A record earns its place by refusing something, and most changes do not need one** — a line in
+*Principles* above and a good commit message is the ordinary ending. The test is not *did we
+decide* — every commit decides. It is whether a real alternative was available and turned down: two mechanisms
 and one chosen, a rule accepted here and refused there, a thing retired where rewiring was live.
 **"We could have not done it" is not an alternative**, and a record whose only argument is that
 the change was a good idea is a commit message with frontmatter — written twice, kept true

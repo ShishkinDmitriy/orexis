@@ -17,7 +17,7 @@ from agent import genesis
 from agent.beliefs import Beliefs
 from agent.desire import Desires
 from agent.ontology import ACTIONS_GRAPH, ONTOLOGY_GRAPH
-from onboarding.validate import deliberable
+from onboarding.validate import deliberable, ids_are_unique
 
 from conftest import genesis_store
 
@@ -114,3 +114,48 @@ def test_the_gate_asks_the_packages_and_never_builds_an_agent(monkeypatch):
     monkeypatch.delenv("INFLUX_TOKEN", raising=False)
     st = build("simulation", monkeypatch)
     assert deliberable(st, desires_of(st))
+
+
+# --- an id is unique or it is not an id (#432) -------------------------------------------
+
+def _clone_agent_under_the_same_id(st, agent_id: str) -> str:
+    """Give the world a second `ag:Agent` answering to an id another one already holds."""
+    from agent.ontology import AG, WORLD_GRAPH
+
+    twin = f"http://example.org/orexis/world/test#{agent_id}_twin"
+    st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
+      <{twin}> a <{AG}Agent> ; <{AG}localId> "{agent_id}" ;
+               <{AG}hasCapability> <http://example.org/orexis/reporting#Storing> . }} }}""")
+    return twin
+
+
+def test_two_agents_may_not_answer_to_one_id(monkeypatch, caplog):
+    """SHACL cannot ask this — `sh:maxCount 1` is cardinality per agent, and there is no
+    cross-node uniqueness constraint — so the sovereign asks it where the world is entire.
+
+    What rides on it is a shared broker principal, a shared bucket and a shared volume, since
+    the id is the wire name for all three."""
+    st = genesis_store(world="simulation")
+    assert ids_are_unique(st), "the shipped world is the control, and it must pass"
+
+    _clone_agent_under_the_same_id(st, "fern")
+    with caplog.at_level("ERROR"):
+        assert not ids_are_unique(st), "two agents share an id and the gate let it through"
+    assert "fern" in caplog.text
+
+
+def test_load_self_refuses_rather_than_picking_one(monkeypatch):
+    """The same refusal at the other end, for a volume built before the gate existed.
+
+    Rows arrive one per (agent x capability), so the failure this replaces was silent: the
+    first node's uri and subject, holding BOTH agents' capabilities.
+    """
+    from agent.world import WorldError, load_self
+
+    st = genesis_store(world="simulation")
+    me = load_self(st.query, "fern")
+    assert me.agent_id == "fern"
+
+    _clone_agent_under_the_same_id(st, "fern")
+    with pytest.raises(WorldError, match="answer to localId"):
+        load_self(st.query, "fern")

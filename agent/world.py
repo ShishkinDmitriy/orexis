@@ -102,6 +102,19 @@ def load_self(query: QueryFn, agent_id: str) -> Self:
             "check OREXIS_AGENT_ID against the world it was given"
         )
 
+    #  MORE THAN ONE MATCH IS NOT A CHOICE TO MAKE. Rows come one per (agent x capability), so
+    #  two agents sharing an id would be silently unioned here — the first one's node and
+    #  subject, holding both agents' capabilities, reporting nothing wrong. `orexis-validate`
+    #  refuses such a world (`ids_are_unique`); this is the same refusal at the other end, for
+    #  a volume built before that check existed or a world amended past it.
+    nodes = {r["agent"] for r in rows}
+    if len(nodes) > 1:
+        raise WorldError(
+            f"{len(nodes)} agents answer to localId {agent_id!r} — {', '.join(sorted(nodes))}. "
+            "An id names a broker principal, a bucket and this agent's own graphs, so there is "
+            "no safe way to pick one; fix the world and re-run orexis-validate."
+        )
+
     first = rows[0]
     return Self(
         uri=first["agent"],

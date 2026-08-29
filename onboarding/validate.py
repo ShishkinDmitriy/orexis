@@ -27,10 +27,38 @@ import sys
 
 from agent import genesis
 from agent.ontology import PROVENANCE_GRAPH
-from agent.store import Store
+from agent.store import Store, bindings
 from agent.validate import conforms, graph_from
 
 log = logging.getLogger("validate")
+
+
+_DUPLICATE_IDS_Q = """
+SELECT ?id (COUNT(?a) AS ?n) (GROUP_CONCAT(STR(?a); separator=", ") AS ?nodes) WHERE {
+  ?a a ag:Agent ; ag:localId ?id
+} GROUP BY ?id HAVING (COUNT(?a) > 1)"""
+
+
+def ids_are_unique(st) -> bool:
+    """No two agents answer to the same `ag:localId`.
+
+    SHACL cannot ask this: `ag:AgentShape`'s `sh:maxCount 1` is cardinality PER agent — each
+    has exactly one id — and there is no cross-node uniqueness constraint in the language. So
+    it is asked here, where the sovereign checks the world entire, which is the only vantage
+    from which the question exists at all.
+
+    What rides on it is not tidiness. The id is the wire name in forty-seven places: the broker
+    principal and its ACL lines, the Influx bucket and its token, the container, the secrets
+    directory, and the IRIs of an agent's own private graphs. Two agents sharing one would share
+    a broker credential — rule 3's per-principal isolation defeated by a name collision — and
+    `load_self` would hand whichever matched first a self assembled from both.
+    """
+    rows = bindings(st.query(_DUPLICATE_IDS_Q))
+    for row in rows:
+        log.error("two agents answer to localId %r — %s. An id is the wire name for a broker "
+                  "principal, a bucket, a volume and a private graph, so a collision is a "
+                  "shared credential rather than a cosmetic clash.", row["id"], row["nodes"])
+    return not rows
 
 
 def validate_world(world: str) -> bool:
@@ -54,6 +82,11 @@ def validate_world(world: str) -> bool:
     path = genesis.world_dir(world)
     st = Store()  # in memory: built, read, thrown away
     genesis.refresh_public(st, path)
+
+    #  Before anything is built per agent: a duplicate id makes every later check ambiguous
+    #  about which agent it just judged.
+    if not ids_are_unique(st):
+        return False
 
     everyone = [genesis.agent_id_of(p) for p in sorted(path.glob(genesis.BELIEFS_GLOB))]
     for agent_id in everyone:
