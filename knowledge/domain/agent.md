@@ -35,6 +35,18 @@ The LLM is a *stateless pure function* called inside a plan body; memory lives i
 and beliefs. This is what lets many agents share one model yet hold separate, stable
 positions.
 
+# The parts, drawn
+
+[`diagrams/agent-structure.puml`](/diagrams/agent-structure.puml) draws the mind as
+[a-repository-is-passive-and-a-service-holds-the-logic](/decisions/a-repository-is-passive-and-a-service-holds-the-logic.md)
+settles it: six modalities, one repository each, the services beside them. Render it with
+`plantuml -tpng knowledge/diagrams/agent-structure.puml`; no image is committed, because a
+rendered one would rot while the source stays checkable.
+
+**It draws the TARGET, not what runs**, and marks the delta — two repositories that do not exist
+yet, and the graphs that would move into them. Treat the marks as claims to re-check rather than
+as description of a running agent.
+
 # What an agent owns (judgment, private data, sensing)
 
 Interpretation and initiative belong to the agent, not infra (see

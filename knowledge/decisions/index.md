@@ -157,6 +157,7 @@ A directory is a package. What that buys, and what the tree is not allowed to im
 * [every-package-is-a-project](/decisions/every-package-is-a-project.md) - Each package is its own distribution with its own dependencies, held to what it imports in both directions.
 * [a-package-is-its-name](/decisions/a-package-is-its-name.md) - The tree goes flat: a package's directory, distribution and module are one string, and the family is its second segment.
 * [a-package-states-what-it-needs-of-the-world](/decisions/a-package-states-what-it-needs-of-the-world.md) - A package projects the world it needs; the belief base is the union over a kernel bootstrap root.
+* [a-repository-is-passive-and-a-service-holds-the-logic](/decisions/a-repository-is-passive-and-a-service-holds-the-logic.md) - Three layers: a store is access, a repository scopes it, a service holds the logic. The diagram draws the target.
 * [repository-layout](/decisions/repository-layout.md) - One convention across the Python trees, one distribution, and a packaging boundary replaced by a test and an import contract.
 * [a-package-may-test-itself](/decisions/a-package-may-test-itself.md) - A package carries its own tests beside its code, and `testpaths` names both roots so neither is invisible.
 * [telemetry-is-a-mandatory-capability](/decisions/telemetry-is-a-mandatory-capability.md) - Rule 2 asks only whether the how could differ, so a capability every agent holds is still one — and is not optional.
