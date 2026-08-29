@@ -40,7 +40,7 @@ from __future__ import annotations
 from . import planner, trace
 from .act import Act, Step
 from .desire import Desire
-from .menu import menu_of
+from .afforder import affordances_of
 from .module import Module
 from .ontology import AG, DELIBERATION_GRAPH, STATE_GRAPH, beliefs_graph
 from .planner import Planner
@@ -249,7 +249,7 @@ class Deliberator(Module):
         #  honoured row for this counterparty, and the actuation boundary judges the vessel
         #  when it pours. Handed back as a one-row plan labelled DUTY, which is not a
         #  search outcome and is not written to the trace: it is the row the duty names.
-        for row in menu_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union,
+        for row in affordances_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union,
                            beliefs_graph(self.agent.id)):
             if row.for_agent == desire.owed_to:
                 #  A duty's row, unsized: the host sizes the serve from the claim it holds.

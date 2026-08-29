@@ -1,29 +1,36 @@
 ---
-type: Service
+type: Repository
 title: Menu
 description: >-
-  The service that derives what an agent could do, and the answer to why there is no menu store —
-  it runs each action template's precondition per ask and returns rows nobody writes down. The
-  state it walks is a PARAMETER, which is what lets the planner ask for the menu of a world that
-  has not happened.
+  The modality that holds what could be done — one `ag:Action` node per way of acting, each
+  carrying its precondition, its effect and its taker. It keeps TEMPLATES and never rows: a row
+  exists exactly while its premise holds, so storing one would keep a conclusion its own plumbing
+  can outlive.
 ---
 
-# What it runs
+# What it holds
 
-**Menu derivation.** For every `ag:Action` in the action graph, run its `ag:available` query with
-`$me`, `$wants`, `$beliefs` and `$state` filled in, and collect the
-[affordance](/domain/affordance.md) rows it binds. Sorted, returned, and written nowhere.
+One node per way of acting, and everything a search needs to reason about it:
 
-# What it reads and writes
+| part | property |
+|---|---|
+| precondition | `ag:available` — a SELECT binding the lever, the want and the direction |
+| effect | `sh:construct`, `ag:retracts`, `ag:landsAfter`, `ag:confirmedBy` |
+| taker | `ag:takenBy` — the capability family that carries it out |
 
-![menu — what it reads and writes](../diagrams/service-menu.svg)
+Each package ships its own in `actions.ttl`, so adding a way of acting is a node in a new
+directory rather than an edit here.
 
-**`$state` is a parameter, and that is the whole reason nothing is stored.** The planner binds it
-to a node of the [imaginarium](/domain/imaginarium.md), so stock after a refill appears in that
-world's menu and not in this one's. A stored menu has one state; a search needs one per node.
+# Templates, never rows
 
-# Why the modality has no repository
+The rows are the [afforder](/domain/afforder.md)'s, derived per ask and stored nowhere. What
+this holds is what those rows are derived FROM — which is why the modality can be a repository
+at all while its conclusions cannot be.
 
-The menu is one of the six modalities, and `ag:MenuGraph` is a real class — but its only instance
-is the action graph, which holds templates rather than rows. A row exists exactly while its
-premise holds, so storing one would mean keeping a conclusion that its own plumbing can outlive.
+# Where it lives today
+
+`ag:MenuGraph` is a real class and `ag:ActionGraph` is a subclass of it, so the modality's only
+instance is the action graph — which sits in the [belief base](/domain/belief-base.md) rather
+than a store of its own. One of the two graphs whose modality is not their store's, and the
+target [a-store-is-a-modality](/decisions/a-store-is-a-modality.md) states is the other way
+round.

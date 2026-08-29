@@ -1,4 +1,8 @@
-"""The menu: what an agent COULD do, about what, through which lever.
+"""The AFFORDER: the service that answers what an agent could do, about what, through which lever.
+
+It reads the MENU — the modality holding the action templates — and runs each template's
+precondition against the world it is asked about. The menu is the repository; affording is what
+this does with it.
 
 *Could do* is one of the six modalities the mind is made of, and this is where it is
 materialised — derived on every ask and never stored, so a row can never outlive the plumbing
@@ -75,7 +79,7 @@ def wants_of(desires, agent_uri: str) -> dict[str, str]:
     return {r["want"]: r["about"] for r in bindings(desires(_WANTS_Q % agent_uri))}
 
 
-def menu_of(query, agent_uri: str, desires, beliefs: str, state: str = STATE_GRAPH) -> list[Affordance]:
+def affordances_of(query, agent_uri: str, desires, beliefs: str, state: str = STATE_GRAPH) -> list[Affordance]:
     """What one agent could do, about what, through which lever — derived, never written.
 
     The Consulting member's prompt substrate and the reflex's worldview as data: a move with no
