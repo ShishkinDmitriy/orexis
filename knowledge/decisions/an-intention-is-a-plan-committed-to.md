@@ -38,7 +38,7 @@ head, and that is not a shortcut: the plan is re-derived every pass because the 
 a committed tail would be a promise about a future nobody has seen. The tail is in the trace for
 a reader; the head is in the ledger for the agent.
 
-**Carrying it out is one process, [execution](/domain/execution.md), and it is the kernel's**:
+**Carrying it out is one process, [executor](/domain/executor.md), and it is the kernel's**:
 plan, commit, take. `agent/execution.py` is the whole of it, and every trigger goes through it —
 the keeper's tick for every want, a fresh reading for the actuator, a round knocking for the
 bidder, a presentation for the host. Nothing decides on the way: a trigger says *now*, the

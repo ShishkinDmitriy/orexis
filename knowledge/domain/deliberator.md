@@ -326,7 +326,7 @@ when the search began finding the same two rows itself.
 - **The how.** A bid's quantity and price, a cadence, a dose — the actors', whoever said to act.
 - **The keeping, and the carrying out.** A deliberator may read what stands and never writes
   the ledger, and it never calls an actor: `decide(desire)` hands back the plan as rows, and
-  [execution](/domain/execution.md) commits the head and takes it. Deciding, remembering and
+  [executor](/domain/executor.md) commits the head and takes it. Deciding, remembering and
   doing are three abilities.
 - **The host's trigger.** A host has no gap — its "whether to sell" is a stake in the *market*,
   the [strategic-supplier](/decisions/strategic-supplier.md) seam, and putting it here would

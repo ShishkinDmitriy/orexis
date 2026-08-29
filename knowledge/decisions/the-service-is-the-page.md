@@ -48,10 +48,20 @@ would need a code rename first, and each has a defensible name waiting:
 |---|---|---|---|
 | `menu_of` | Afforder | affording | it yields [affordance](/domain/affordance.md) rows, which is the bundle's own word |
 | `_Derivation` | Deducer | deducing | a want is *deduced*, which is the word the desire records already use |
-| `execution` | **Enactor** | enacting | `Executor` is taken by [executor](/domain/executor.md), the trusted actuator — a real collision |
+| `execution` | **Enactor** | enacting | `Executor` is taken by [actuation](/domain/actuation.md), the trusted actuator — a real collision |
 | `Owing` | Ower | owing | the weakest of the six; the gerund reads better than the agent noun |
 | `Revision` | Reviser | revising | close enough to *review* to be confusable, and they are different things |
 | `BeliefBaseUpkeep` | Compactor | compacting | the cleanest of the six |
+
+**`Executor` went to the service that carries out a plan**, and the page that held the name gave
+it up. `executor.md` described the trusted actuator — and opened with a banner disambiguating
+itself from execution, which is the tell that one word was standing between two things.
+[thin-trusted-infra](/decisions/thin-trusted-infra.md) had already reframed it: *"actuation is
+not separate stake-free infra — the resource owner drives its own valves. The 'executor' is the
+supplier's actuation ARM, not a distinct component."* A page for a component that had been
+reframed away, holding a name a live service needed. Its body moved into
+[actuation](/domain/actuation.md), which is where that decision put the thing, and eleven links
+followed.
 
 **The four words are the vocabulary.** A page is about a Service or a Repository
 ([a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md)); what it runs is
@@ -116,11 +126,11 @@ finds immediately.
   rather than encouraged. It is not written.
 - **Five services have a page and no wiring diagram**, on purpose: [actor](/domain/actor.md) is a
   contract rather than a service that holds a store, [choir](/domain/choir.md) is how services
-  reach each other, and [clearing](/domain/clearing.md), [executor](/domain/executor.md) and
+  reach each other, and [clearing](/domain/clearing.md), [actuation](/domain/actuation.md) and
   [gateway](/domain/gateway.md) are separate processes outside the agent's repositories. A
   diagram of repos they do not have would assert something false.
-- **Six services keep a name the convention would change**, because the rename belongs in the
-  code first. Two are not merely cosmetic: `Enactor` exists only because `Executor` is already a
-  page, and `Reviser` sits one letter from a capability that means something else.
+- **Five services keep a name the convention would change**, because the rename belongs in the
+  code first. One is not merely cosmetic: `Reviser` sits one letter from `review`, a capability
+  that means something else.
 - **Nothing renders the mermaid at build time.** GitHub and any OKF viewer draw it; a broken
   block fails silently in a plain `cat`. The blocks are small enough that this has not bitten.

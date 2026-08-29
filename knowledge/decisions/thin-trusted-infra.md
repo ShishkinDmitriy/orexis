@@ -21,7 +21,7 @@ what genuinely can't move.
   a claim (how much) + topology (which valve), it does not *decide*. Safe because the amount
   is bounded by two independent checks it doesn't control: **clearing** (a valid, cleared
   amount) upstream, and the **device fail-safe cap** downstream. The standalone executor
-  dissolves into the supplier's actuation arm. See [executor](/domain/executor.md),
+  dissolves into the supplier's actuation arm. See [actuation](/domain/actuation.md),
   [supplier](/domain/supplier.md).
 - **Validity (clearing) → a public function.** Validity is *math*:
   `validate(trade, signed-orders)` is a pure function anyone recomputes to the same answer, so

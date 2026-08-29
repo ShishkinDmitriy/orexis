@@ -30,7 +30,7 @@ a `becauseOf` in both directions, because a commitment abandoned without a reaso
 indistinguishable from one forgotten.
 
 **The keeper also ticks (#208)**: on its own patience clock it hands every want to
-[execution](/domain/execution.md), which plans, commits the head and hands it to its actor —
+[executor](/domain/executor.md), which plans, commits the head and hands it to its actor —
 for every means, not only the look. Deliberation stopped being something only the
 market can start: a marketless property's watching reaches this ledger too, Observe adopted
 when stale and satisfied by the reading, whoever caused the look. A healthy society's gap
@@ -128,7 +128,7 @@ records.
 
 # What it is not
 
-- **Not a decider.** Nothing here chooses what to commit to; [execution](/domain/execution.md)
+- **Not a decider.** Nothing here chooses what to commit to; [executor](/domain/executor.md)
   calls `adopt` with the head of a plan, and the *whether* lives in
   [deliberation](/domain/deliberator.md). A row written here names, `ag:by`, the [act](/domain/act.md) the
   plan's head is — the action it fills, `ag:through` the lever, the quantity the taker sized,

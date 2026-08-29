@@ -44,7 +44,7 @@ other is there too.
 5. **Actuate** — as the resource owner, drive its own valves to fulfil each claim: *how
    much* from the claim, *which valve* from its **actuator map**. It executes, it does not
    decide; bounded by the cleared claim and the device fail-safe. This is the "executor"
-   role, hosted by the supplier. See [executor](/domain/executor.md).
+   role, hosted by the supplier. See [actuation](/domain/actuation.md).
 
 The supplier owns **one valve per plant it serves** — a genesis-configured `{plant_id →
 valve}` map (its own infrastructure, part of the attested topology). It knows the winning

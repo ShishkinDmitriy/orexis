@@ -71,7 +71,7 @@ agent's watching of a property no market relieves lived in cadence machinery and
 [intention](/domain/intention.md) ledger. **The sovereign inspecting intentions saw market conduct
 only.** Deciding and remembering stay singular, and a source-scan test pins it.
 
-Every move is carried out from the tick through [execution](/domain/execution.md). An Acquire
+Every move is carried out from the tick through [executor](/domain/executor.md). An Acquire
 still needs a round nobody may convene from this side — the lot-is-the-host's-standing-offer
 seam — and since a round is a fact its row exists only while one is open, so the tick commits
 nothing to buy between rounds and the want simply stays hot.

@@ -54,5 +54,5 @@ the trace that survives because the health series read it.
 # What it is not
 
 **Not the decider.** [Deliberation](/domain/deliberator.md) chooses whether to pursue at all and
-calls this; [execution](/domain/execution.md) commits the head. The plan itself is returned and
+calls this; [executor](/domain/executor.md) commits the head. The plan itself is returned and
 never stored — it is [required to be lost](/decisions/there-is-no-bdi-ontology.md).

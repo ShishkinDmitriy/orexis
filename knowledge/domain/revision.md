@@ -31,7 +31,7 @@ verdict, because the verdict is [deliberation](/domain/deliberator.md)'s and tak
 it takes.
 
 The marks are **drained** on the agent's own clock: a thread of the mind's, started with the
-agent, which puts each marked want through [execution](/domain/execution.md) exactly as the
+agent, which puts each marked want through [executor](/domain/executor.md) exactly as the
 patience tick does. What comes out the other side is what always came out — an
 [intention](/domain/intention.md) written, an [act](/domain/act.md) handed to an
 [actor](/domain/actor.md) — only not inside the handler that noticed.
