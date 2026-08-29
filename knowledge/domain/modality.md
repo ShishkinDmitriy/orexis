@@ -42,6 +42,32 @@ is no default world" said of a mind — and a module asks for the modality it me
 the first paragraph: a question that did not say which assertion it meant would be answered
 with a value where it wanted a bound.
 
+# The logics these belong to, which are older than this project
+
+The six are not six strengths of one thing. They are different **modal logics**, and the
+classification is standard — usually credited to G. H. von Wright's *Deontic Logic* (Mind, 1951),
+which coined the middle term and grouped the modes:
+
+| here | logic | Greek | force |
+|---|---|---|---|
+| [desire](/domain/desire.md) | **bouletic** | *boulē*, will | what is wanted; unmet is a gap |
+| [obligation](/domain/obligation.md) | **deontic** | *deon*, what binds | what is owed; unmet is a breach |
+| the constitution | **deontic**, its prohibitive half | | what may not be, enforced rather than urged |
+| [affordance](/domain/affordance.md) | **alethic** | *alētheia*, truth | what is possible now |
+| a freshness want | **epistemic** | *epistēmē*, knowledge | what is known, and how stale |
+
+**The distinction earns its keep at one place**: an obligation is not a stronger desire. They are
+different logics, so an unmet want and an unpaid debt fail differently — one is a gap and the
+other is a breach — even though [both rank on one unit-free urgency](/domain/desire.md) so that a
+drying pot and a litre owed can be compared. Rank them together; do not merge what they assert.
+
+**RFC 2119 cannot express this**, and the attempt is instructive: it defines SHALL as a synonym of
+MUST and SHALL NOT of MUST NOT, so it offers three strengths for conformance requirements on an
+implementer rather than a vocabulary for what a mind holds.
+
+**And `epistemic` is already in the code** — `Desire.is_epistemic`, seven sites — which is von
+Wright's word from exactly this table. The family was half-adopted before it was named.
+
 # Not its neighbours
 
 - **Not [arrival](/decisions/who-put-the-fact-there.md).** Asserted, derived, entailed,

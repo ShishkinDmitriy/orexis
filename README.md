@@ -1,5 +1,16 @@
 # Orexis
 
+**ὄρεξις** — Aristotle's word for the desire that moves a creature to act. In *De Anima* III it
+is the mover itself: reason alone moves nothing, and orexis is what turns a judgement into
+motion. Its species there are *epithymia* (appetite), *thymos* (spirit) and **boulēsis**
+(reasoned wish) — the last of which gives modal logic its word for desire, *bouletic*, which is
+[what a want asserts here](knowledge/domain/modality.md).
+
+The name points at the kernel rather than the shop floor: the market is one capability among
+several and the architecture's own showpiece of a replaceable implementation, while the desiring
+mind is the part nothing swaps out. The project was called Agora and the rename says why —
+[the-society-is-named-for-its-appetite](knowledge/decisions/the-society-is-named-for-its-appetite.md).
+
 A society of self-interested agents that bid for a scarce resource, each one a BDI mind —
 belief, desire, intention — deciding for itself under a hard trust boundary, grounded in real
 sensors on a Raspberry Pi. **The domain is a plug-in**: plant watering is the example, not the

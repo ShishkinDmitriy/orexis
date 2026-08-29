@@ -106,6 +106,9 @@ it is a record wearing a bullet.
   one name that stays a short string is the one that must also be a broker principal, a bucket, a
   container and a directory.
 - **A term nobody reads is annotation**, however many instances state it.
+- **Desire is bouletic, obligation deontic, affordance alethic, freshness epistemic** — different
+  logics rather than strengths of one, which is why an unmet want is a gap and an unpaid debt is
+  a breach.
 - **A repository holds data and a service holds logic**, and a thing that decides nothing is a
   repository's support function rather than a service.
 - **Deciding nothing is the finding** — writing no graph is only the hint, since three services
