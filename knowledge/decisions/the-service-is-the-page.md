@@ -82,7 +82,7 @@ The service is the middle node, repositories are containers, arrows run in for r
 writes.
 
 **A committed image is safe here because a gate keeps it fresh**, which is the objection
-[a-repository-is-passive-and-a-service-holds-the-logic](/decisions/a-repository-is-passive-and-a-service-holds-the-logic.md)
+[a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md)
 raised against committing one at all — *a rendered image rots while the source stays checkable*.
 True, and answerable: `tools/render-diagrams.sh` stamps each SVG with the sha256 of its source,
 and `test_a_committed_diagram_is_not_stale` compares the two. Edit a source, forget to re-render,

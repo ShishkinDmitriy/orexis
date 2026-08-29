@@ -38,7 +38,7 @@ positions.
 # The parts, drawn
 
 [`diagrams/agent-structure.puml`](/diagrams/agent-structure.puml) draws the mind as
-[a-repository-is-passive-and-a-service-holds-the-logic](/decisions/a-repository-is-passive-and-a-service-holds-the-logic.md)
+[a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md)
 settles it: six modalities, one repository each, the services beside them. Render it with
 `plantuml -tpng knowledge/diagrams/agent-structure.puml`; no image is committed, because a
 rendered one would rot while the source stays checkable.
