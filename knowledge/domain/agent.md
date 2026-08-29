@@ -18,7 +18,14 @@ agents in this sense — they have positions to advance and can be lied through.
 
 An agent's identity is a bundle of durable, external parts, never chat history:
 
-- **Its own id** — the only thing an agent process is *told*. One process, one agent.
+- **Its own id** — the only thing an agent process is *told*. One process, one agent, and the
+  id is what makes that true: it is the wire name for the broker principal, the Influx bucket,
+  the container, the secrets directory, the volume and the IRIs of this agent's own graphs. So
+  two agents answering to one id would share a credential, and `load_self` would hand whichever
+  matched first a self holding BOTH their capabilities. Nothing caught that until #432 —
+  `sh:maxCount 1` is cardinality per agent, and SHACL cannot ask for uniqueness across nodes —
+  so it is refused twice now: by `orexis-validate`, where the world is entire and the question
+  can be asked at all, and by `load_self`, which raises rather than choosing.
 - **Charter** — two halves, deliberately different in kind: its **wiring** from the public
   [world](/decisions/world-graph.md) (what it acts for, what it may poll, which market, and
   the capabilities all of that *derives*) and its **own beliefs** (desire, endowment, limits,
