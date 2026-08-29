@@ -12,7 +12,7 @@ description: >-
 # Phases
 
 1. **Plan.** `deliberator.decide(desire)` — the search, unchanged, returning its
-   [plan](/domain/deliberation.md) as rows. No steps means nothing to execute, and that None is
+   [plan](/domain/deliberator.md) as rows. No steps means nothing to execute, and that None is
    the deliberator's decision, not this process's.
 2. **Commit.** The head [step](/domain/step.md)'s [act](/domain/act.md) goes to the keeper:
    `adopt(action, want, because, via=lever)`.

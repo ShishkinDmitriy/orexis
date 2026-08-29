@@ -49,7 +49,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [intention](/domain/intention.md) - A commitment to reduce a named gap by a named action, kept in a private ledger. Granted by a stake AND a lever.
 
-* [deliberation](/domain/deliberation.md) - The whether: name the next move by building the world each lever would make and keeping the one worth reaching. One road.
+* [deliberation](/domain/deliberator.md) - The whether: name the next move by building the world each lever would make and keeping the one worth reaching. One road.
 
 * [action](/domain/action.md) - One way of acting as one node — and the kind of act itself: precondition, effect, taker. A package adds one node and one `take()`.
 * [act](/domain/act.md) - An action filled in — lever, want, quantity, whom for, and a window. Execution's word: committed, taken, promised.

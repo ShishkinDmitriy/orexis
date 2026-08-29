@@ -46,6 +46,6 @@ one-writer scan in `tests/test_intention.py` holds it.
 # What it is not
 
 Nothing here chooses. [Execution](/domain/execution.md) hands it a plan's head; the *whether*
-belongs to [deliberation](/domain/deliberation.md). And what a commitment IS — the lifecycle, the
+belongs to [deliberation](/domain/deliberator.md). And what a commitment IS — the lifecycle, the
 expectation, why absorption is a cost model — is [intention](/domain/intention.md)'s to say. This
 page is the service: its three jobs, its clock, and the one graph it may write.

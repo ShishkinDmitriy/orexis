@@ -130,7 +130,7 @@ records.
 
 - **Not a decider.** Nothing here chooses what to commit to; [execution](/domain/execution.md)
   calls `adopt` with the head of a plan, and the *whether* lives in
-  [deliberation](/domain/deliberation.md). A row written here names, `ag:by`, the [act](/domain/act.md) the
+  [deliberation](/domain/deliberator.md). A row written here names, `ag:by`, the [act](/domain/act.md) the
   plan's head is — the action it fills, `ag:through` the lever, the quantity the taker sized,
   the window — so the [actor](/domain/actor.md) handed it later takes the same act. Keeping and deciding share a granting premise and stay two capabilities
   because their replaceable parts differ.
@@ -145,5 +145,5 @@ records.
   every transition is projected with its `becauseOf` prose into the agent's own bucket and
   drawn as a Grafana annotation over the health series, see
   [agent-metrics](/domain/agent-metrics.md) — and, the one it was built for, a
-  [deliberator](/domain/deliberation.md) asking what already stands before deciding.
+  [deliberator](/domain/deliberator.md) asking what already stands before deciding.
   Reflex does not ask yet; the member that will is the one that pays per decision.

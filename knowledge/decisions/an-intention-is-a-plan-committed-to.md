@@ -32,7 +32,7 @@ happened to be holding the trigger. The planner's rows already said *through whi
 # What is decided
 
 **An intention is the head of a plan, committed to.** `Deliberator.decide(desire)` returns the
-[plan](/domain/deliberation.md) itself — rows, not a means — and what the keeper writes is the
+[plan](/domain/deliberator.md) itself — rows, not a means — and what the keeper writes is the
 first row whole: `ag:by` the means, `ag:through` the lever, `ag:pursues` the desire. Only the
 head, and that is not a shortcut: the plan is re-derived every pass because the world moves, so
 a committed tail would be a promise about a future nobody has seen. The tail is in the trace for
@@ -65,7 +65,7 @@ metrics tick) are one, and `submit` no longer holds an opinion about whether to 
 # What did not change, and why
 
 - **The search.** Not a line. The imaginarium, the effects, the scoring and the trace are as
-  [deliberation](/domain/deliberation.md) describes them. This record is about who carries an
+  [deliberation](/domain/deliberator.md) describes them. This record is about who carries an
   answer out.
 - **"Look, then bid" is still two intentions, not one plan.** The freshness want and the region
   want are different desires; an unmet epistemic want answers first by sensing's `want_about` rule;

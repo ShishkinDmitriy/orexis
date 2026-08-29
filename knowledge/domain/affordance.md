@@ -99,7 +99,7 @@ too coarse*, which is a distinction a planner that reported them alike would des
 # Related
 
 - [action](/domain/action.md) is the node a row is one instance of — its availability query, run now.
-- [deliberation](/domain/deliberation.md) ranges over the agent's own rows, scores them by simulation,
+- [deliberation](/domain/deliberator.md) ranges over the agent's own rows, scores them by simulation,
   and holds what a lever DOES — a row says only that one is available.
 - [desire](/domain/desire.md) is the other half of a decision: a row answers *what could I do*, a
   gap answers *about what*.

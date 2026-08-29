@@ -29,9 +29,29 @@ outputs are the natural unit to describe it by.
 
 **The wiring belongs on the service page.** Which repositories a service reads, which named
 graphs it writes, and what its one process is — these have no other home today, and
-[deliberation](/domain/deliberation.md) has already grown them by itself: it carries *the menu*,
+[deliberation](/domain/deliberator.md) has already grown them by itself: it carries *the menu*,
 *what the search does with an effect* and *what deliberation does with a duty*, three sections
 that are wiring rather than concept. The proposal names something the bundle was already doing.
+
+**A service is an `-er` and its process is the `-ing`.** `Planner` runs planning, `Keeper` runs
+keeping, `Deliberator` runs deliberating — and those three already carry the name in code, which
+is the test that makes the convention worth having. `deliberation.md` was named for the process
+and is now [deliberator](/domain/deliberator.md); the page names the thing that acts, and the
+process is a heading inside it.
+
+**The convention is applied only where the code agrees, and that is deliberate.** Renaming a
+page whose class keeps the old word would produce exactly the `belief` / `beliefs` split this
+record exists to close — one vocabulary in the bundle and another in the source. Six services
+would need a code rename first, and each has a defensible name waiting:
+
+| today | service | process | why |
+|---|---|---|---|
+| `menu_of` | Afforder | affording | it yields [affordance](/domain/affordance.md) rows, which is the bundle's own word |
+| `_Derivation` | Deducer | deducing | a want is *deduced*, which is the word the desire records already use |
+| `execution` | **Enactor** | enacting | `Executor` is taken by [executor](/domain/executor.md), the trusted actuator — a real collision |
+| `Owing` | Ower | owing | the weakest of the six; the gerund reads better than the agent noun |
+| `Revision` | Reviser | revising | close enough to *review* to be confusable, and they are different things |
+| `BeliefBaseUpkeep` | Compactor | compacting | the cleanest of the six |
 
 **The four words are the vocabulary.** A page is about a Service or a Repository
 ([a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md)); what it runs is
@@ -99,5 +119,8 @@ finds immediately.
   reach each other, and [clearing](/domain/clearing.md), [executor](/domain/executor.md) and
   [gateway](/domain/gateway.md) are separate processes outside the agent's repositories. A
   diagram of repos they do not have would assert something false.
+- **Six services keep a name the convention would change**, because the rename belongs in the
+  code first. Two are not merely cosmetic: `Enactor` exists only because `Executor` is already a
+  page, and `Reviser` sits one letter from a capability that means something else.
 - **Nothing renders the mermaid at build time.** GitHub and any OKF viewer draw it; a broken
   block fails silently in a plain `cat`. The blocks are small enough that this has not bitten.

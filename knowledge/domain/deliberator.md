@@ -1,6 +1,6 @@
 ---
 type: Service
-title: Deliberation
+title: Deliberator
 description: >-
   The whether — given the gap and the standing commitments, name the next move; the acting
   modules carry it out. The KERNEL's and granted by nothing, because a mind is not

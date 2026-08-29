@@ -27,7 +27,7 @@ question of whether a change is worth a pass, and an answer nobody should be abl
 `agent/revision.py`. Everything that notices a change — a reading recorded, an offer heard, a
 claim presented — leaves a **mark** here and returns. A mark names one
 [desire](/domain/desire.md) and says only *this may be worth reconsidering*; it carries no
-verdict, because the verdict is [deliberation](/domain/deliberation.md)'s and takes as long as
+verdict, because the verdict is [deliberation](/domain/deliberator.md)'s and takes as long as
 it takes.
 
 The marks are **drained** on the agent's own clock: a thread of the mind's, started with the
