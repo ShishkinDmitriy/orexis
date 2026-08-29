@@ -114,7 +114,6 @@ sensing:Observing
 
     #  The reading arriving IS the confirmation, which makes this the one act whose landing and
     #  whose confirmation are the same event.
-    ag:confirmedBy ag:ByObservation ;
 
     ag:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {

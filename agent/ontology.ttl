@@ -225,8 +225,6 @@ ag:Graph a owl:Class ; rdfs:label "Named graph" .
 
 #  --- modality: what the content asserts ---
 
-ag:Modality a owl:Class ; rdfs:label "Modality" ;
-    rdfs:comment "What a graph's content asserts about the subjects in it. The same subject, property and unit appear in every modality — fern's moisture is observed, bounded, aimed at, moved by a lever, committed to and recorded — so the modality is what a reader must know to interpret a triple, and the one thing the graph vocabulary could not previously say." .
 
 ag:BeliefGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Belief graph" ;
     rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, and what instruments report. NOT the graph historically called `beliefs`, which holds picks and no beliefs at all — that misnaming is what naming the axis exposed." .
@@ -524,26 +522,10 @@ ZERO is a real answer and the honest one for a look. Observing changes nothing a
 
 WHAT IT DOES NOT INCLUDE, said here because the name could be read as promising it: SETTLING. This is delivery — when the valve stops — and not when the world has reached a steady state a reading would report. Three terms separate an act from its evidence: delivery (here, from the device's own calibration), absorption (the pot's, and stated in NO world today), and the next reading (the cadence the agent commanded plus its grace). Only the first and third are facts anyone has written down, and the sensor's cadence has been covering for the second by coincidence — a plant in trouble reads every thirty seconds, which is longer than a small pot takes to absorb a dose. A planner that wants to know when its work would become visible is wrong by exactly the missing term, and the honest first step is that somebody must say what these pots do, not that the code should pick a number.""" .
 
-ag:ConfirmationRoute a owl:Class ; rdfs:label "Confirmation route" ;
-    rdfs:comment "How an effect becomes knowable. A property of the MEANS — whether a given agent can actually take the route is a fact about its wiring (a valve with no status channel, a property no sensor watches), which the runtime already answers and this deliberately does not." .
 
-ag:ByConstruction a ag:ConfirmationRoute ; rdfs:label "by construction" ;
-    rdfs:comment """CONSTITUTIVE: saying makes it so, and there is nothing to wait for and nothing to verify. A claim is issued the moment the host issues it; a debt steps to demanded because the holder presented. The graph IS the world for these facts.
 
-Named because conflating it with a causal effect produces code that verifies an agent really did write down what it just wrote down — and, worse, leaves a planner waiting for a confirmation that no one will ever send. Opening a valve is the contrast: it does not make a plant watered, and the world may decline to answer.""" .
 
-ag:ByReport a ag:ConfirmationRoute ; rdfs:label "by report" ;
-    rdfs:comment "A device says what it did, on a channel the world states. The dose's own report — `actuation:doseGraceS` past its landing is when nobody is going to send one." .
 
-ag:ByObservation a ag:ConfirmationRoute ; rdfs:label "by observation" ;
-    rdfs:comment "A later reading shows it. The slowest route and the only one that answers whether the act HELPED rather than whether it happened — which is why a dose has both: the valve reports that it opened, and the sensor reports whether the pot moved." .
-
-ag:Unconfirmed a ag:ConfirmationRoute ; rdfs:label "unconfirmed" ;
-    rdfs:comment "Nothing will ever say. A valve wired with no status channel and a property no sensor watches is a REAL deployment, not an oversight, and the honest response is to say so — an agent that cannot verify should stop acting on the property and restore its observation first, rather than dosing blind, which is exactly how a society floods a plant while every module behaves as written." .
-
-ag:confirmedBy a owl:ObjectProperty ; rdfs:domain ag:Action ; rdfs:range ag:ConfirmationRoute ;
-    rdfs:label "confirmed by" ;
-    rdfs:comment "By which route this effect becomes knowable. On the rule, so a planner reading the tool list learns what waiting for this act would even mean before it commits to one." .
 
 #  `ag:effectOf` WAS HERE. An effect is a part of an ACTION now, and the action names its means
 #  with `ag:means`; see the block beside ag:Means.

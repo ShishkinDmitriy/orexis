@@ -6,7 +6,7 @@ description: >-
   — a construct for what it adds, and `ag:retracts` for what it
   removes, which is ours because the standard has no deletion. It is what turns an affordance
   row from "this is available" into something a planner can reason about, and it carries the
-  timing (`ag:landsAfter`) and the route by which it becomes knowable (`ag:confirmedBy`) so that
+  timing (`ag:landsAfter`) so that
   the number a planner predicts and the number a keeper later verifies cannot be two numbers.
   Most means have no effect, and that is an ordinary answer.
 ---
@@ -72,24 +72,19 @@ Two more terms hang off the rule, for the same single-source reason one axis ove
 query and not a number, because the duration is a function of the act — a two-litre dose holds a
 valve open longer than a half-litre one. **Zero is a real answer** and the honest one for a look.
 
-`ag:confirmedBy` names the route by which it becomes knowable, and there are four:
+**There was a second term here, and it is gone.** `ag:confirmedBy` named the route by which an
+effect becomes knowable — by construction, by report, by observation, or not at all — and every
+shipped effect answered *by observation*, so it discriminated nothing. The planner once read it to
+decide which acts end a plan, which meant every lever ended one and the search never reached its
+second step; that reading was removed, and nothing replaced it. A term stated on every action and
+consulted by no one is annotation
+([a-term-nobody-reads-is-annotation](/decisions/a-term-nobody-reads-is-annotation.md)).
 
-| route | means | example |
-|---|---|---|
-| `ag:ByConstruction` | saying makes it so | a claim issued, a debt demanded |
-| `ag:ByReport` | a device says what it did | a valve's status channel |
-| `ag:ByObservation` | a later reading shows it | the pot moved |
-| `ag:Unconfirmed` | nothing will ever say | a valve with no status channel and no witness |
-
-**Constitutive effects are the ones worth naming.** Conflating them with causal ones produces code
-that verifies an agent really did write down what it just wrote down — and, worse, leaves a
-planner waiting for a confirmation nobody will send.
-
-The route says how you would find out and **nothing about whether there is anything to find out**.
-The planner once used it for the second question, deciding which acts end a plan by asking the
-route; every shipped effect answers `ag:ByObservation`, so every lever ended a plan and the search
-never reached its second step. A discriminator whose every answer is the same one is not
-discriminating.
+The distinction it drew is real and the prose keeps it: a **constitutive** effect is true by
+saying so — a claim issued, a round opened — and a **causal** one waits on the world. Conflating
+them produces code that verifies an agent really did write down what it just wrote down, and
+leaves a planner waiting for a confirmation nobody will send. What follows from that today is
+where a watch is opened at all, which is each actor's own decision rather than a lookup.
 
 # Most means have no effect, and that is fine — unless somebody's menu offers it
 

@@ -75,10 +75,7 @@ ag:EffectRuleAccountsForItsTimingShape a sh:NodeShape ;
     sh:targetClass sh:SPARQLRule ;
     sh:property [ sh:path ag:landsAfter ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:string ;
-                  sh:message "an effect must say when it lands — a SELECT yielding ?seconds, and zero is a real answer for an act that changes nothing about the world" ] ;
-    sh:property [ sh:path ag:confirmedBy ; sh:minCount 1 ; sh:maxCount 1 ;
-                  sh:class ag:ConfirmationRoute ;
-                  sh:message "an effect must say how it would be confirmed — by construction, by report, by observation, or not at all; silence would leave a planner waiting for a message nobody will send" ] .
+                  sh:message "an effect must say when it lands — a SELECT yielding ?seconds, and zero is a real answer for an act that changes nothing about the world" ] .
 
 
 #################  Keeping commitments  #################

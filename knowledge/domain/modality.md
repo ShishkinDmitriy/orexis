@@ -1,7 +1,6 @@
 ---
 type: Domain Concept
 title: Modality
-term: http://example.org/orexis#Modality
 description: >-
   What a triple's content asserts about its subject — is, may be, would like, could do,
   doing, did, would-be-if — where the subject, the property and the unit stay the same.

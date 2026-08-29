@@ -28,7 +28,6 @@ market:Acquiring a ag:Action ;
     sh:construct  """CONSTRUCT { … } WHERE { … }""" ;
     ag:retracts   """CONSTRUCT { … } WHERE { … }""" ;
     ag:landsAfter """SELECT ?seconds WHERE { … }""" ;
-    ag:confirmedBy ag:ByObservation ;
     ag:takenBy    market:Bidding .
 ```
 
