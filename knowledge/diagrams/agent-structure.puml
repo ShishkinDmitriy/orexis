@@ -1,100 +1,148 @@
 @startuml agent-structure
-title What an Orexis agent has — agent/runtime.py::Agent, in construction order
+title What an agent SHOULD have\nsix modalities · one repository each · services beside them\nblue = repository (passive) · green = service (logic) · pink = the delta from today
 
+left to right direction
 skinparam componentStyle rectangle
 skinparam shadowing false
-skinparam defaultTextAlignment center
-skinparam ArrowColor #555555
-skinparam package {
-  BorderColor #888888
-  BackgroundColor #FBFBFB
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam ArrowFontSize 10
+skinparam ArrowColor #6B7A88
+skinparam database {
+  BackgroundColor #E8F1F8
+  BorderColor #5B8DB8
+}
+skinparam folder {
+  BackgroundColor #FFFFFF
+  BorderColor #8FB4D0
+  FontSize 11
+}
+skinparam component {
+  BackgroundColor #EAF5EA
+  BorderColor #5E9E5E
 }
 
-package "Identity — from the one id a process is given" as ID {
-  component "id" as AID
-  component "World\n(the world graph, loaded)" as WORLD
-  component "Self\n(me: uri, acts_for, capabilities)" as SELF
+database "**Beliefs** · what IS\nvolume · reset by rebirth only" as BEL {
+  folder "graph/ontology + /entailed" as g1
+  folder "graph/world + /derived + /entailed" as g2
+  folder "graph/sensed" as g4
+  folder "graph/provenance\nwhich FILES each public graph came from" as g6
+  folder "graph/classification\nwhat this agent's own graphs ARE" as g7
+  folder "graph/beliefs/{agent} · the picks" as g8
+  folder "graph/obligations/{agent} · LIVE debts" as g9
+  folder "graph/instruments · sensing's" as p1 #FFFCF2
+  folder "graph/evidence/{agent} · review's\na derived view, so it stays" as p2 #FFFCF2
+  folder "graph/summaries/{agent} · review's\nrunning totals = current state" as p4 #FFFCF2
 }
 
-package "The mind — a store is a modality" as MIND {
-  component "Beliefs\nwhat IS\nvolume · records + receives" as BEL
-  component "Desires\nwhat I PURSUE\nmemory · rebuilt from premises\nno runtime writer" as DES
-  component "Intentions\nwhat I am DOING\nvolume · keeper is sole writer" as INT
-  component "menu (menu_of)\nwhat I COULD do\nmemory · derived every ask" as MENU
-  component "Imaginarium\nhypothesised\nmemory · dropped with the pass" as IMAG
-  component "history\nwhat I DID\nDECLARED, NO INSTANCE" as HIST #FEEEEE
+database "**Menu** · what I COULD do\nmemory · rebuilt from premises" as MEN #FFF4F4 {
+  folder "graph/actions — the TEMPLATES\nprecondition · effect · taker\nMOVES OUT OF beliefs" as g3 #FDE8E8
 }
 
-package "Kernel — unconditional, granted by nothing" as KERNEL {
-  component "Deliberator\nthe search" as DELIB
-  component "Keeper\nledger · patience\nverification arc · tick" as KEEP
-  component "Owing\nledger of debts" as OWE
-  component "Revision\nthe belief-revision seam\nmark, then drain on\nthe mind's own thread" as REV
-  component "Metrics" as MET
-  component "BeliefBaseUpkeep\ncompaction — not a choice" as UP
-  component "execution\nplan → commit → take\n(functions, not a module)" as EXEC
+database "**Desires** · what I PURSUE\nmemory · read-only to the runtime" as DES {
+  folder "graph/desire/asserted" as d1
+  folder "graph/desire/derived" as d2
 }
 
-package "Capability modules — loaded from PROVIDES,\nonly for capabilities this world granted" as CAPS {
-  component "sensing" as SENS
-  component "market\nbidding · hosting · matching" as MKT
-  component "actuation" as ACT
-  component "reporting" as REP
-  component "review\n(only with a review:commits mandate)" as RVW
-  component "transport (mqtt)\nholds the one connection" as TR
+database "**Intentions** · what I am DOING\nvolume · STANDING rows only" as INT {
+  folder "graph/intentions/{agent}" as i1
 }
 
-' --- identity feeds everything
-SELF --> CAPS : capabilities decide\nwhich are imported
-BEL <-- WORLD
+database "**History** · what I DID\nvolume RING · append-only · #311" as HIS #FFF4F4 {
+  folder "resolved intentions\nMOVE OUT OF intentions" as h1 #FDE8E8
+  folder "discharged obligations\nMOVE OUT OF beliefs" as h2 #FDE8E8
+  folder "graph/revisions/{agent}\nMOVES OUT OF beliefs" as h3 #FDE8E8
+}
 
-' --- modality wiring
-BEL --> DES : deduced from
-DES --> MENU : wants ranged over
-BEL --> MENU : affordance premises
-KEEP --> INT : the only writer
-DELIB --> IMAG : one per pass
-MENU --> DELIB
-DES --> DELIB
-INT ..> DELIB : what already stands
-HIST .[#red].> INT : &#35;311 — resolved rows\nsquat in the live ledger
+database "**Imaginarium** · hypothesised\nmemory, per pass · the planner holds it\nreached(parent, path, added, retracted)" as IMG {
+  folder "one graph per SEARCH NODE\nnever mutated — a world is a value" as m1
+}
 
-' --- the one road
-DELIB --> EXEC : 1. plan
-EXEC --> KEEP : 2. commit the head act
-EXEC --> CAPS : 3. take\n(ag:takenBy names the family)
+component "menu build\nmenu_of() · rows NEVER stored" as MB #FDE8E8
+component "planner" as PL
+component "deliberator" as DEL
+component "execution\nplan · commit · take" as EX
+component "keeper" as KE
+component "owing" as OW
+component "revision\nthe seam" as RV
+component "desires build\n_Derivation — lives INSIDE the repo" as DB #FDE8E8
+component "inference" as INF
+component "upkeep\ncompaction — talks to Store" as UP
+component "sensing" as SEN #FBF3DC
+component "review" as RVW #FBF3DC
 
-' --- feedback
-SENS --> REV : a reading arrived
-MKT --> REV
-REV --> EXEC : drained, one want at a time
-SENS --> KEEP : judge(want, value)\nTHE ONLY JUDGE — a float
-KEEP --> KEEP : verdict → endMet\n→ suspect after N
-KEEP .[#red].> DELIB : NOTHING reads a verdict
+INF --> g1
+INF --> g2
+SEN --> g4
+SEN --> p1
+RVW --> p2
+RVW --> p4
+RVW --> h3
+RVW --> g8
+DB  --> d2
+OW  --> g9
+OW  --> h2
+KE  --> i1
+KE  --> h1
+PL  --> IMG
+DEL --> EX
 
-' --- the three doors between modules
-note right of CAPS
-  Packages never import each other.
-  Three doors:
-   • agent.ask(hook, …)      — the choir, everyone's opinion
-   • agent.provider(family)  — whoever implements an ability
-   • agent.service(cls)      — fan-in, one or none
+g3  ..> MB
+g2  ..> MB
+g4  ..> MB
+g8  ..> MB
+d2  ..> MB
+MB  ..> DEL
+MB  ..> PL
+m1  ..> PL
+PL  ..> DEL
+g3  ..> EX
+EX  ..> KE
+i1  ..> KE
+d2  ..> KE
+g8  ..> DB
+d1  ..> DB
+h1  ..> RVW
+RV  ..> DEL
+
+note as N1
+  **Three layers.** `Store` is raw graph access (query, update,
+  put_graph). A **repository** wraps one, scopes it to this agent
+  and exposes `read()`. A **service** holds the logic. ONE place
+  breaks it today, marked pink:
+  ----
+  **`Desires.rebuild()` is a service inside a repository.**
+  `_Derivation(Store)` runs every package's `desires.ru`. The
+  intent is right — *the runtime is read-only* — but it is kept
+  true by hiding the writer inside, not by layering.
+  ----
+  **A repository is built two ways here, and both are fine.**
+  `Beliefs`, `Desires` and `Intentions` WRAP a Store and delegate;
+  `Imaginarium` and `_Derivation` EXTEND one. The imaginarium is
+  a full repository — its own domain method is `reached()`, which
+  mints the graph for a search node.
+  ----
+  **The menu repo holds TEMPLATES, never rows.** `menu_of()`
+  runs each template's `ag:available` per ask and returns
+  `list[Affordance]`. A row exists exactly while its premise
+  holds (&#35;263), and `$state` is a parameter so the planner can
+  ask for the menu of an IMAGINED world. Storing rows would
+  break the search; storing templates is what the table meant.
+  ----
+  **History does not exist yet** (&#35;311). A resolved commitment,
+  a discharged debt and a revision are all *what I DID*, and
+  today they stay in the live ledgers — so a paid debt and a
+  forgotten one look alike. Nothing points INTO history: what
+  must outlive the ring is copied at commit time, as an
+  expectation already copies its baseline (&#35;165).
+  ----
+  **Unresolved: where `graph/deliberation` goes.** Possible-
+  modality by its class, so the imaginarium — but it must
+  SURVIVE the pass, because metrics read it. History is the
+  likely home; &#35;311 does not name it.
+  ----
+  **genesis is not drawn**: it writes ontology, world, sensed,
+  provenance, classification, actions and desire/asserted at
+  birth — an arrow into nearly everything, which said nothing.
 end note
-
-note bottom of MIND
-  Six modalities (the-mind-is-six-graphs),
-  four built. Each chooses its own
-  persistence, because modality
-  determines lifecycle.
-end note
-
-legend right
-  |= row |= latency |= may block |= may search |
-  | reactive     | ms      | never | no  |
-  | progression  | s–min   | suspends | no |
-  | deliberative | s       | should be interruptible | yes |
-  Declared on all 18 hooks as ag:row.
-  Read by nothing — #430.
-endlegend
-
 @enduml
