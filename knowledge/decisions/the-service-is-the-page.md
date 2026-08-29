@@ -37,14 +37,20 @@ that are wiring rather than concept. The proposal names something the bundle was
 ([a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md)); what it runs is
 a Process; what it touches is a Named Graph, referred to by its class.
 
-**A diagram per service, and the service is the hero.** `knowledge/diagrams/service-<name>.puml`
-— the service in the middle, repositories around it, arrows in for reads and out for writes.
-[service-planner](/diagrams/service-planner.puml) is the worked example.
+**A diagram per service, inside its own page, and the service is the hero.** A ```mermaid block
+in the article rather than a file beside it: it renders where the page is read, it stays text
+like the prose around it, and there is one source instead of two to keep in step. The service is
+the middle node, repositories are subgraphs, arrows run in for reads and out for writes.
 
 **A graph is named by its TYPE, never its instance** — `ag:StateGraph`, not `graph/sensed`. This
 is not a drawing convention borrowed from nowhere: it is rule 1 and the store's own discipline,
 which is why a reader asks `?g a ag:StateGraph` and never names a graph. A diagram that named
 instances would teach the opposite of what the code enforces.
+
+**And the type is not always enough.** `graph/ontology` and `graph/ontology/entailed` are both
+`ag:OntologyGraph`; only `ag:arrivedBy` separates them. So a service writing back into the type
+it read carries the arrival beside it — [inference](/domain/inference.md) is the case, and the
+only one.
 
 # What is refused, and why it is the interesting half
 
@@ -88,7 +94,10 @@ finds immediately.
 - **Nothing yet enforces a service page's shape.** A gate could require that a page typed
   `Service` names at least one repository and one process, which would make the convention real
   rather than encouraged. It is not written.
-- **The remaining service diagrams do not exist.** Seven pages carry `Service` and several
-  services have no page at all — the keeper and the planner among them
-  ([#431](https://github.com/ShishkinDmitriy/orexis/issues/431)). Each needs its reads and writes
-  traced against the code before it is drawn, which is the work, not the drawing.
+- **Five services have a page and no wiring diagram**, on purpose: [actor](/domain/actor.md) is a
+  contract rather than a service that holds a store, [choir](/domain/choir.md) is how services
+  reach each other, and [clearing](/domain/clearing.md), [executor](/domain/executor.md) and
+  [gateway](/domain/gateway.md) are separate processes outside the agent's repositories. A
+  diagram of repos they do not have would assert something false.
+- **Nothing renders the mermaid at build time.** GitHub and any OKF viewer draw it; a broken
+  block fails silently in a plain `cat`. The blocks are small enough that this has not bitten.

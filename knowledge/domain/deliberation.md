@@ -44,6 +44,29 @@ the machinery means the machinery did not absorb it. See
 [a-lever-an-agent-cannot-pull-is-not-a-lever](/decisions/a-lever-an-agent-cannot-pull-is-not-a-lever.md),
 which is what had to be true of the menu first.
 
+# What it reads and writes
+
+```mermaid
+flowchart LR
+  subgraph BEL["Beliefs · repository"]
+    S["ag:StateGraph"]
+    P["ag:PickRecordGraph"]
+    D["ag:DeliberationGraph"]
+  end
+  subgraph DES["Desires · repository"]
+    X["no graph class"]
+  end
+  DEL["Deliberator<br/>runs deliberation"]
+  S -. reads .-> DEL
+  P -. reads .-> DEL
+  X -. reads .-> DEL
+  DEL -- clears per pass --> D
+  DEL -- calls --> PL["Planner<br/>the search"]
+```
+
+The trace is CLEARED here and written by the [planner](/domain/planner.md), which is the service
+that produced the candidates.
+
 # Deciding by simulating it
 
 Where a lever's package has said what that lever DOES, the deliberator builds the world taking

@@ -1,5 +1,5 @@
 ---
-type: Process
+type: Service
 title: Execution
 description: >-
   What happens to a decision — plan, commit the head as an intention, hand it to its actor.
@@ -30,6 +30,27 @@ Two doors, and both are the same three phases: `pursue(agent, desire)` for a wan
 is [sensing](/domain/sensing.md)'s to say (`want_about`: an unmet epistemic want first, then the
 stake), so the actor hands the kernel a NODE and goes through the desire door. The kernel keys
 nothing by property ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
+
+# What it reads and writes
+
+```mermaid
+flowchart LR
+  subgraph BEL["Beliefs · repository"]
+    A["ag:ActionGraph<br/>ag:takenBy"]
+  end
+  subgraph DES["Desires · repository"]
+    X["no graph class"]
+  end
+  EX["Execution<br/>runs plan, commit, take"]
+  A -. reads .-> EX
+  X -. reads .-> EX
+  EX -- calls --> KE["Keeper<br/>adopt"]
+  EX -- calls --> AC["whichever actor<br/>ag:takenBy names"]
+```
+
+**It writes no graph of its own**, which is the shape of a service that only orchestrates: the
+keeper writes the ledger, the actor does the thing, and the link from a row to its code is one
+triple nobody here names.
 
 # What starts it
 

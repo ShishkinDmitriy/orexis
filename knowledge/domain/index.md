@@ -116,3 +116,10 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [wallet](/domain/wallet.md) - The single budget for water and thinking. Solvency is checked against a balance the bidder self-reports; the ledger, the allowance and metering are designed, not built.
 * [belief-base](/domain/belief-base.md) - One belief base per agent, not one shared store: named-graph layout, SOSA shape, provenance, structural isolation.
 * [gateway](/domain/gateway.md) - Decommissioned in v1: the measurement-witness role, folded into the self-asserting plant edge.
+* [planner](/domain/planner.md) - Runs planning: a bounded search over simulated worlds, writing one possible world per node.
+* [menu](/domain/menu.md) - Runs menu derivation per ask; the state it walks is a parameter, which is why nothing is stored.
+* [keeper](/domain/keeper.md) - Runs keeping, the patience and the verification arc; the intention graph's only writer.
+* [owing](/domain/owing.md) - Runs debt keeping: one row per claim issued against this agent, durable across a restart.
+* [inference](/domain/inference.md) - Materialises what the vocabulary entails, so both engines read one graph.
+* [upkeep](/domain/upkeep.md) - Runs compaction; the only service with no named graph, because it asserts nothing.
+* [desire-build](/domain/desire-build.md) - Derives what an agent pursues; the desires repository's only writer, and inside it.

@@ -8,6 +8,20 @@ description: >-
   that nothing which merely notices a change ever waits for a search.
 ---
 
+
+# What it reads and writes
+
+```mermaid
+flowchart LR
+  R["Revision<br/>runs belief revision"]
+  W(["a want, marked<br/>in memory only"])
+  W -. drained on the<br/>mind's own thread .-> R
+  R -- calls --> EX["Execution"]
+```
+
+**No repository, no graph, and the absence is the design.** A mark is not a belief — it is the
+question of whether a change is worth a pass, and an answer nobody should be able to read back.
+
 # What it is
 
 `agent/revision.py`. Everything that notices a change — a reading recorded, an offer heard, a
