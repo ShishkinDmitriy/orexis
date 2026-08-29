@@ -28,7 +28,7 @@ from .module import Module
 from .ontology import AG, obligations_graph
 from .store import bindings
 
-#  What I owe, as rows — the duty branch of what used to be one shipped `desires.rq` for every
+#  What I owe, as rows — the obligation branch of what used to be one shipped `desires.rq` for every
 #  kind of want. The stakes and the freshness wants went to sensing with the region
 #  (the-stake-is-sensings-want), and the ledger reads its own graph, which it always named.
 _DUTIES_Q = """
@@ -166,14 +166,14 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
   {extra}
   FILTER NOT EXISTS {{ ?o <{AG}dischargedAt> ?done }} }} }} ORDER BY DESC(?at)"""))
 
-    def duties(self, now: datetime | None = None) -> list[Desire]:
+    def obligations(self, now: datetime | None = None) -> list[Desire]:
         """What this agent owes, as desires — hottest first, and hot means CLOSE TO EXPIRY.
 
-        A stake's urgency is distance scaled by the survival envelope; a duty has no envelope,
+        A stake's urgency is distance scaled by the survival envelope; an obligation has no envelope,
         so its room is time: the fraction of the redeem window that has run. At issue nothing
         has gone wrong and the debt is cool; at the deadline it is maximal. The sovereign chose
-        this over the two alternatives the obligation record names as the whole risk — a duty
-        pinned at 1.0 is the honoured mode returning under another name, and a duty with no heat
+        this over the two alternatives the obligation record names as the whole risk — an obligation
+        pinned at 1.0 is the honoured mode returning under another name, and an obligation with no heat
         is an agent that defects while its ledger looks tidy.
 
         A debt whose claim named no deadline stays at zero for ever, and that is not a bug: the
@@ -209,9 +209,9 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
         """What I owe, as figures. A host straining under debts it cannot serve used to look
         exactly like a calm one on every panel — and a host with no stake of its own reported
         nothing at all, because the module that would have said so was never composed."""
-        duties = self.desires()
+        obligations = self.desires()
         return [("agent_debts", {}, {
-            "owed": float(len(duties)),
-            "demanded": float(sum(1 for g in duties if g.pursuable)),
-            "hottest": max((g.urgency for g in duties), default=0.0),
+            "owed": float(len(obligations)),
+            "demanded": float(sum(1 for g in obligations if g.pursuable)),
+            "hottest": max((g.urgency for g in obligations), default=0.0),
         })]

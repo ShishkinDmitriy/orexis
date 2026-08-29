@@ -59,7 +59,7 @@ KIND, at a measure the kernel never authors.
 
 - **`ag:metWhen`** — the SHACL node shape that is the met-test. Its CONTENT is unchanged from
   when the desire was it; what changed is that it hangs off the desire node rather than being
-  it. It governs the outcome LABEL and a duty's discharge, never how hard to try.
+  it. It governs the outcome LABEL and an obligation's discharge, never how hard to try.
 - **`rdfs:label` and `rdfs:comment`** — authored by the derivation ("SoilMoisture inside
   0.45-0.65, aiming 0.55"), for dashboards and the sovereign's ask channel, refreshed on every
   rebuild, which every recorded re-pick triggers.
@@ -115,7 +115,7 @@ it for open expectations):
 - **The fallback is defined, not implied, and unchanged in behaviour**: a want no module
   answers for scores 1.0, logged — not knowing how bad is maximal, consistent with
   `urgency(None)`. The planner-side rule was *a search that cannot rank must not conclude*, so
-  a measure-less non-duty deferred to the reflex; phase B replaced the deferral with a refusal
+  a measure-less non-obligation deferred to the reflex; phase B replaced the deferral with a refusal
   at genesis, since a stake nothing measures is a fact about a world's files rather than about
   a moment. Tests pin the fallback and that no shipped world hits it, every shipped desiring
   agent holding sensing and every shipped stake being a `sosa:ObservableProperty`.
@@ -132,7 +132,7 @@ arithmetic over an unbound value, and an unmeasured want must never read as no u
 
 The root-level short-circuit is gone: a met desire whose measure is not zero still searches.
 Shape-met governs the outcome LABEL (a met desire that weighed its levers and found none worth
-pulling reports SATISFIED, never NOT_BETTER) and duty discharge; urgency governs whether a
+pulling reports SATISFIED, never NOT_BETTER) and obligation discharge; urgency governs whether a
 step is worth taking. Steering toward the pick then comes out of satisficing with a natural
 deadband nobody chose as a tolerance: near the pick the dose sizes to ~0 (`dose_for` computes
 from aim − value), the actor's `litres <= EPS` refusal makes the effect predict no change, and
@@ -157,14 +157,14 @@ unchanged — measurement names never split series.
   zero-distance case with an `IF` before any division, and the operation is pinned in
   `tests/test_desires.py` beside the duration limit it rhymes with, so the day the engine is
   fixed the guard says so.
-- **A duty's measure could not be declared, and the reason was already pinned.** The design
+- **A obligation's measure could not be declared, and the reason was already pinned.** The design
   wanted the fraction-of-redeem-window as a declared measure too, and the engine binds nothing
   for `duration / duration` — measured long before this change, with a test whose message
   already names the trigger: *"if this now binds, delete `_duty_urgency` and let desires.rq do
-  the arithmetic"*. Duty urgency therefore stays Python's, one clock, exactly as
+  the arithmetic"*. Obligation urgency therefore stays Python's, one clock, exactly as
   [an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md)
   left it. Baking epochs was considered and refused: the derivation is SPARQL and cannot
-  convert a dateTime to a number either, so every road to a declared duty measure runs through
+  convert a dateTime to a number either, so every road to a declared obligation measure runs through
   the same missing operation. Its future home is settled by the split above even so: the
   MARKET package's `measures.ttl`, by this same mechanic, the day the engine divides durations
   — so the kernel's measure story stays uniform, never knowing any measure's content, only how
@@ -184,7 +184,7 @@ unchanged — measurement names never split series.
 - **The measure words are one package's until a second speaks them.** `sensing:measureOf`
   is sensing's namespace deliberately: the repo's promotion test for an `ag:` word is a word
   SEVERAL packages must speak, and today one does. The trigger is the second measure-shipping
-  package — the market's duty measure, when the engine allows it — and promotion happens
+  package — the market's obligation measure, when the engine allows it — and promotion happens
   then, not before.
 - **Phase B: retire the reflex.** ~~Decided and deliberately deferred~~ — **DONE**, once this
   change had been reviewed and the search had been the control's equal at every value anyone

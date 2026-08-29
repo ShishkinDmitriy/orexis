@@ -19,11 +19,11 @@ written into it:
 | | |
 |---|---|
 | `action` | the [action](/domain/action.md) — the kind of act: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `market:Offering` |
-| `want` | the [desire](/domain/desire.md) it serves — the node, which is the kernel's only key. Empty on a row that serves any want (a host's Offering) or a duty's |
+| `want` | the [desire](/domain/desire.md) it serves — the node, which is the kernel's only key. Empty on a row that serves any want (a host's Offering) or an obligation's |
 | `about` | what that want is about — `ag:about`, said by whoever derived the want and opaque to the kernel: a property for a stake, an instrument for a freshness want. Carried to the effect as `$about` |
 | `via` | the lever it goes through: this probe, this valve, this venue |
 | `direction` | which way it moves the property, or **empty** for a look |
-| `for_agent` | whom the row serves, where it is a duty. Absent on the agent's own rows |
+| `for_agent` | whom the row serves, where it is an obligation. Absent on the agent's own rows |
 
 The **menu** is every such row for one agent, and `menu_of` is the whole of it. For the
 simulation's fern: *look at moisture through the probe; look at temperature through the
@@ -79,12 +79,12 @@ menu. Everything else is an unqualified pattern, because regions and wiring are 
 # Whom a row serves
 
 A row of the agent's **own** is an option a deliberator ranges over. A row that names
-`for_agent` is a **duty's**: a lever the agent must exercise on a valid presentation and must
+`for_agent` is a **obligation's**: a lever the agent must exercise on a valid presentation and must
 never *propose* for a gap of its own. A host holding a claim owes the dose; nothing about that
 is a decision, and a deliberator that ranged over it would be choosing whether to keep its word.
 
 That one column is the whole of the distinction — there is no mode term
-([an-action-is-one-node](/decisions/an-action-is-one-node.md)). It is also what lets a duty find
+([an-action-is-one-node](/decisions/an-action-is-one-node.md)). It is also what lets an obligation find
 its means: an obligation names who it is owed to, and the row that answers is the one bound to
 exactly that agent.
 

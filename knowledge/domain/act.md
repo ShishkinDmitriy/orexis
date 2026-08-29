@@ -4,7 +4,7 @@ title: Act
 term: http://example.org/orexis#Act
 description: >-
   An action filled in — the lever it goes through, the want it serves, how much, for
-  whom where it is a duty, and WHEN: a window, not before and not after. Execution's word,
+  whom where it is an obligation, and WHEN: a window, not before and not after. Execution's word,
   where an action is a template: what an intention commits to, what an actor takes, what a
   commitment promises. Every act is an instance and no code names one; an action is the term
   it is an instance of.
@@ -21,7 +21,7 @@ An [action](/domain/action.md) is a template — a precondition, an effect, a ta
 | lever | the [lever](/domain/lever.md) it goes through — this venue, this valve, this probe |
 | want | the [desire](/domain/desire.md) it serves, and — `about` — what that want is about, opaque to the kernel |
 | quantity | how much, sized by the taker (`size`) when the search fills the row — nothing, for a look |
-| for | whom it serves, where it is a duty's |
+| for | whom it serves, where it is an obligation's |
 | window | **not before** and **not after** — when taking it counts |
 
 The window is what makes it execution's word rather than planning's. A bid is an act *not

@@ -7,7 +7,7 @@ other: `desire` produces desires, `deliberation` consumes them, and the only thi
 allowed to share is a kernel word.
 
 **Two sources, one currency.** A desire is either a stake — a property of the subject this agent
-acts for, wanted inside a region — or a duty, a claim someone else holds against it. They are
+acts for, wanted inside a region — or an obligation, a claim someone else holds against it. They are
 deliberately the same type: an agent's whole conduct is wants it pursues through affordances,
 and a deliberator that had to ask which kind it was holding would be the second decision path
 this design exists to avoid. What differs is only where the urgency came from, and that is
@@ -25,7 +25,7 @@ class Desire:
     """One thing wanted, and how badly.
 
     `urgency` is unit-free in both cases and that is the whole point of the type: a stake's
-    comes from the survival envelope (how much room is left before the subject ends), a duty's
+    comes from the survival envelope (how much room is left before the subject ends), an obligation's
     from the redeem window (how much time is left before the claim expires), and the two become
     comparable without either knowing how the other was computed. "My plant is dying" and "I owe
     fern a litre" finally rank against each other.
@@ -41,15 +41,15 @@ class Desire:
     # (the-stake-is-sensings-want; sensing's `ObservedDesire` carries `observed_property`).
     value: float | None = None
 
-    # A duty's two: the claim it came from and whom it is owed to. A stake has neither, which
-    # is what `is_duty` reads — no kind field, because a flag that can disagree with the data
+    # A obligation's two: the claim it came from and whom it is owed to. A stake has neither, which
+    # is what `is_obligation` reads — no kind field, because a flag that can disagree with the data
     # beside it is a flag that eventually does.
     claim: str | None = None
     owed_to: str | None = None
 
     # An EPISTEMIC want's one: the instrument whose reading is wanted current. Present exactly
     # where the want is about knowing rather than about a number, which is what `is_epistemic`
-    # reads — the same discipline as `is_duty` above, and for the same reason: it is not a flag
+    # reads — the same discipline as `is_obligation` above, and for the same reason: it is not a flag
     # saying what kind this is, it is the premise, and a want derived from an instrument is a
     # want about that instrument by construction.
     #
@@ -60,7 +60,7 @@ class Desire:
     # that derived the want is the one that knows what to do with it.
     instrument: str | None = None
 
-    # Whether anything is being asked of this agent YET. A duty nobody has presented stands and
+    # Whether anything is being asked of this agent YET. A obligation nobody has presented stands and
     # may be hot, and still must not be acted on: the holder is waiting for its own watch to be
     # live, and a host that doses early spends the water where nothing is looking. Always true
     # for a stake — a plant does not ask.
@@ -70,7 +70,7 @@ class Desire:
     #  for a stake, `met`, `stale` or `unmeasured` for an epistemic want — where it is read off
     #  the MEASURE, so a want scored maximal can never report as met, which it did while the
     #  label came from a staleness test that declines to judge at all without a published
-    #  horizon — and `standing` or `demanded` for a duty. Carried rather than inferred from
+    #  horizon — and `standing` or `demanded` for an obligation. Carried rather than inferred from
     #  urgency, and that distinction is not academic — urgency is 0 only exactly at the point
     #  being steered for, so "urgency > 0" counts a barrel sitting comfortably inside 1-5 as
     #  unmet. It read that way on the bench for about ten minutes and made a calm society look
@@ -82,19 +82,19 @@ class Desire:
     #  its badness is scored, because that is a capability's answer and not the mind's
     #  structure (a-desire-states-its-own-measure). Whoever needs the number asks the choir —
     #  `Agent.desire_urgency(desire, query, sensed)` — of whichever world is being judged,
-    #  and sensing answers for observation-backed wants from its own declaration. A duty's
+    #  and sensing answers for observation-backed wants from its own declaration. A obligation's
     #  fraction-of-window stays kernel Python behind a pinned engine limit (this store binds
     #  nothing for duration division — tests/test_desires.py), with the market's own
     #  declaration as its recorded future home.
 
     @property
     def is_met(self) -> bool:
-        """Nothing is wanted here right now. False for a duty, which is never *met* — it is
+        """Nothing is wanted here right now. False for an obligation, which is never *met* — it is
         discharged, and a discharged debt is history rather than a desire."""
         return self.state == "met"
 
     @property
-    def is_duty(self) -> bool:
+    def is_obligation(self) -> bool:
         return self.claim is not None
 
     @property
@@ -181,7 +181,7 @@ class Desires:
     holds no desire-modality graphs, and this build is the one place the regions, envelopes,
     freshness wants and asserted root desires come to exist — from the world, the records,
     and the packages' `desires.ru`. The pick record and the obligations record are projected in
-    beside them, because the picks ARE wants by the sovereign's ruling and a duty is this
+    beside them, because the picks ARE wants by the sovereign's ruling and an obligation is this
     agent's debts record, served as the wants they raise.
     """
 

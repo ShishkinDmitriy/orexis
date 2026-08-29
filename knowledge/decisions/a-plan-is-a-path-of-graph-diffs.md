@@ -428,16 +428,16 @@ an exposition of a business cycle for a reader, with no runtime caller, and it s
 note beside it saying why the planner will never produce it.
 
 **The genuine multi-step dependency this record describes — refill, then deliver — is
-`Acquire → Apply`, and it is a DUTY.** For a while `propose_for` routed a duty to the honoured
+`Acquire → Apply`, and it is a DUTY.** For a while `propose_for` routed an obligation to the honoured
 row serving its counterparty and never to the planner — the one chain in the shipped worlds with
 a true dependency was the one the planner was not allowed to see. Closed by
-[#255](https://github.com/ShishkinDmitriy/orexis/issues/255): a duty simulates first, its met-test
+[#255](https://github.com/ShishkinDmitriy/orexis/issues/255): an obligation simulates first, its met-test
 is the discharged-pattern over the record, and `market:ApplyEffect` states what serving makes
 true with the vessel's level as its premise — a premise that cannot bind predicts nothing, so a
 dry serve is discarded as somewhere already reached and the step that IS reachable is the
 Acquire whose effect raises the very level the premise reads. Refill-then-serve emerges from two
 rules that never mention each other, which is what this record promised chaining would be. The
-search speaks for a duty only when it FOUNDS a plan; a vessel nobody has read binds no premise
+search speaks for an obligation only when it FOUNDS a plan; a vessel nobody has read binds no premise
 and proves nothing, so anything short of a plan falls back to the honoured row and the actuation
 boundary, unchanged.
 
@@ -570,7 +570,7 @@ Two things this deletion did NOT take, recorded because a reader will look for t
   below their own lot. Deriving it as a want is the way back, and it is the shape everything
   else here already has.
 
-### And a duty becomes a shape
+### And an obligation becomes a shape
 
 The obligation record left a seam — *what a claim-sourced desire says exactly* — with the honest
 note that "valve X open for three seconds" is an ACT, and desires here are states. Graph goals

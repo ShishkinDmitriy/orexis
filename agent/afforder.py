@@ -30,13 +30,13 @@ class Affordance:
     moves anything — which way it moves it, and whether it is mine to CHOOSE or to HONOUR.
 
     Whom it serves is the #218 half: a row of my own is an option a deliberator ranges over;
-    one owed to somebody is a duty exercised on a valid presentation and never proposed.
+    one owed to somebody is an obligation exercised on a valid presentation and never proposed.
 
     `want` is the desire's node, and `about` is what that want is ABOUT — `ag:about`, stated
     by whoever derived the want, and opaque here: sensing says a region want is about a
     property, and its own action queries join a lever to it. The kernel carries it from the
     want to the rule (`$about`) and never reads it. Both None on a row that serves any want —
-    a host's Offering — or a duty's, which names whom it is owed to instead.
+    a host's Offering — or an obligation's, which names whom it is owed to instead.
     """
 
     action: str
@@ -45,7 +45,7 @@ class Affordance:
     about: str | None = None
     direction: str | None = None
     #  Whom an honoured row serves — the counterparty entitled to demand this lever. Absent on
-    #  a chosen row, which serves nobody but the agent itself. It is what lets a DUTY find its
+    #  a chosen row, which serves nobody but the agent itself. It is what lets a OBLIGATION find its
     #  means: an obligation names who it is owed to, and the row that answers is the one
     #  honoured for exactly that agent.
     for_agent: str | None = None
@@ -53,14 +53,14 @@ class Affordance:
     @property
     def is_own(self) -> bool:
         """Mine to range over — serves nobody but me. A row that names whom it is owed to is
-        a duty's, exercised for that counterparty and never proposed for my own gap. The one
+        an obligation's, exercised for that counterparty and never proposed for my own gap. The one
         column says it; there is no mode term any more (an-action-is-one-node)."""
         return self.for_agent is None
 
 
 #  What this agent wants and what each want is ABOUT — the kernel's words only. A want with no
 #  `ag:about` is one no action query could join a lever to, and it is simply absent from the
-#  VALUES block; the duties are not here at all, because a duty's row names whom it is owed
+#  VALUES block; the obligations are not here at all, because an obligation's row names whom it is owed
 #  to and joins on that. (This used to read the property off the met-shape, and the kernel
 #  no longer knows a want has one — the-stake-is-sensings-want.)
 _WANTS_Q = """SELECT ?want ?about WHERE {
@@ -92,7 +92,7 @@ def affordances_of(query, agent_uri: str, desires, beliefs: str, state: str = ST
     agent holds and what its deriver says it is about — and `$beliefs` naming the agent's own
     graph.
     The action itself is the row's kind; a bound
-    `?for_agent` makes the row a duty's. Sensing brings Observe, the market Acquire and the
+    `?for_agent` makes the row an obligation's. Sensing brings Observe, the market Acquire and the
     host's Apply, actuation Actuate — and a new way of acting is a node in a new directory,
     never an edit here. Sorted because per-action order is no order.
     """

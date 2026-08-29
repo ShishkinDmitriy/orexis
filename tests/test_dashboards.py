@@ -44,7 +44,7 @@ def test_urgency_is_drawn_per_want_and_per_agent():
     `agent_goals.hottest` carries the maximum an agent holds and cannot say whether that
     maximum is a plant's moisture or its temperature. This draws one line per (agent, WANT) —
     by the want and not by the property it is about, because a property cannot name a
-    freshness want (per instrument) or a duty (per counterparty), and a panel keyed on
+    freshness want (per instrument) or an obligation (per counterparty), and a panel keyed on
     property could only ever draw stakes.
 
     The axis is pinned 0–1 because urgency IS normalised — 0 at the region's point, 1 at the
@@ -65,7 +65,7 @@ def test_urgency_is_drawn_per_want_and_per_agent():
         assert WANT_MEASUREMENT in target["query"]
         assert '_field == "urgency"' in target["query"]
         assert "r.want" in target["query"], \
-            "lines are split by the WANT, so freshness and duties can share the axis"
+            "lines are split by the WANT, so freshness and obligations can share the axis"
 
     assert panel["type"] == "status-history", \
         "a row per want, coloured by heat — five agents' curves over one another answer " \

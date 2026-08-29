@@ -131,7 +131,7 @@ change, re-running yields a different set, and a want that no longer appears was
 anyone — it is no longer implied. Nothing decides; the world says.
 
 Two wants already disappear this way, which is the precedent to build on rather than a new idea:
-a duty lapses when its claim's window closes, and a freshness want exists only where an instrument
+an obligation lapses when its claim's window closes, and a freshness want exists only where an instrument
 does. A seasonal or diurnal want is the same shape with a clock in the premise instead of a claim
 or a sensor. What is missing is only that the region derivation runs once and never again — see
 [#263](https://github.com/ShishkinDmitriy/orexis/issues/263).

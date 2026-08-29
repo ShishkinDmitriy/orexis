@@ -257,7 +257,7 @@ SELECT ?r WHERE {{
             if subject_uri != market.resource or observed_property != self.stock_property.get(market.uri):
                 continue
             if (ledger := self.agent.ower) is not None:
-                for desire in ledger.duties():
+                for desire in ledger.obligations():
                     if desire.pursuable and desire.claim in self.held:
                         self._pursue(desire.claim,
                                      f"my vessel reports {value:.3f} — trying again")
@@ -538,7 +538,7 @@ SELECT ?r WHERE {{
         if ledger is None:
             self._serve(jti, why)
             return
-        desire = next((g for g in ledger.duties() if g.claim == jti), None)
+        desire = next((g for g in ledger.obligations() if g.claim == jti), None)
         if desire is None:
             return
         #  THROUGH EXECUTION: the search sees the honoured row AND this agent's own levers,
@@ -555,11 +555,11 @@ SELECT ?r WHERE {{
         reviser.wake_for(self.agent, desire)
 
     def take(self, act, desire, intention: str) -> bool:
-        """Carry out a committed serve: pour the claim this duty names.
+        """Carry out a committed serve: pour the claim this obligation names.
 
-        The actor for `market:Apply` on the duty's row (knowledge/domain/actor.md). A plan
+        The actor for `market:Apply` on the obligation's row (knowledge/domain/actor.md). A plan
         whose head is the refill hands that row to bidding, not here; this answers only a
-        serve, and only for a claim still held — a duty whose claim was never presented is
+        serve, and only for a claim still held — an obligation whose claim was never presented is
         not this module's to invent.
         """
         if act.action == OFFERING:
@@ -580,7 +580,7 @@ SELECT ?r WHERE {{
             return False
         #  A VESSEL I KNOW IS TOO LOW IS NOT POURED FROM. The search used to keep this claim
         #  held by planning the refill first; since a round is a fact (#358) there may be no
-        #  upstream round to plan into, the search finds no path, and the duty's own row is
+        #  upstream round to plan into, the search finds no path, and the obligation's own row is
         #  what reaches here. The actor is the boundary then: what I know of my stock says the
         #  claim cannot be honoured, so it stays held for the reading that changes that. A
         #  vessel I have never read keeps the old arrangement and is judged by the pour.
@@ -592,7 +592,7 @@ SELECT ?r WHERE {{
             self.log.info("claim %s waits — my vessel holds %.3f L and it asks %.3f L",
                           desire.claim, stock, claim.amount_l)
             return False
-        self._serve(desire.claim, "the plan's head — a duty's row")
+        self._serve(desire.claim, "the plan's head — an obligation's row")
         if (keeper := self._keeper()) is not None:
             keeper.satisfy(SERVING, desire.uri, "served")
         return True

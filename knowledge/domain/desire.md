@@ -66,7 +66,7 @@ a grant.
 # Two sources, one currency
 
 A desire is either a **stake** — a property of the subject this agent acts for, wanted inside a
-[region](/domain/region.md) — or a **duty**, an [obligation](/domain/obligation.md) someone else
+[region](/domain/region.md) — or a **obligation**, an [obligation](/domain/obligation.md) someone else
 holds against it.
 
 They are deliberately the same type. An agent's whole conduct is things it wants, pursued through
@@ -74,13 +74,13 @@ They are deliberately the same type. An agent's whole conduct is things it wants
 would be the second decision path this design exists to avoid.
 
 **Urgency is unit-free in both cases, and that is the whole point of the type.** A stake's comes
-from the survival envelope — how much room is left before the subject ends; a duty's from the
+from the survival envelope — how much room is left before the subject ends; an obligation's from the
 redeem window — how much time is left before the claim expires. The two become comparable without
 either knowing how the other was computed.
 
 # The kind is read, never flagged
 
-A stake carries what is wanted and what it currently reads. A duty carries the claim it came from
+A stake carries what is wanted and what it currently reads. A obligation carries the claim it came from
 and whom it is owed to. An **epistemic** want carries the instrument it was derived from.
 **Each kind is known by the premise it has and the others do not, which is what `is_duty` and
 `is_epistemic` read** — there is no kind field, because a flag that can disagree with the data
@@ -95,7 +95,7 @@ different questions with a number that means the same thing in both.
 # State is carried, not inferred
 
 A desire states its own condition in its kind's vocabulary: `met`, `unmet` or `unmeasured` for a
-stake; `met`, `stale` or `unmeasured` for an epistemic want; `standing` or `demanded` for a duty.
+stake; `met`, `stale` or `unmeasured` for an epistemic want; `standing` or `demanded` for an obligation.
 
 An epistemic want's state is read off its MEASURE, so the label and the number cannot part
 company: anything the measure does not call current is not current, and which KIND of
@@ -110,11 +110,11 @@ society look stuck. The split is structural now: the desire's met-shape governs 
 declared measure governs the urgency, and met-and-urgent — inside the region, off the pick — is a
 true situation rather than a contradiction.
 
-A duty is never *met*. It is discharged — and a discharged debt is history rather than something still wanted.
+A obligation is never *met*. It is discharged — and a discharged debt is history rather than something still wanted.
 
 # Wanted is not the same as actionable
 
-`pursuable` is separate from urgency, and a duty nobody has presented is the case that needs it: it
+`pursuable` is separate from urgency, and an obligation nobody has presented is the case that needs it: it
 stands, it may be hot, and it still must not be acted on. The holder is waiting for its own watch
 to be live, and **a host that doses early spends the water where nothing is looking.**
 
@@ -169,10 +169,10 @@ the queries, the hooks and the classes say desire (`desires.ru`, `desires.rq`,
 
 `desires_of` answers the question a sovereign and a model actually ask — every want this agent
 holds, hottest first, whoever sourced it — by joining `desires.rq` (the desire modality's half)
-with `readings.rq` (the belief modality's), the judging done where the clock is. A stake and a duty appear in one list
+with `readings.rq` (the belief modality's), the judging done where the clock is. A stake and an obligation appear in one list
 because urgency is the common currency — a litre owed and a pot drying rank against each other
 instead of running down two paths that never meet — and each row says what state its desire is in:
-a stake is `met`, `unmet`, `stale` or `unmeasured`, a duty `standing`, `demanded` or
+a stake is `met`, `unmet`, `stale` or `unmeasured`, an obligation `standing`, `demanded` or
 `settled`.
 
 Three deliberate differences from the diff above:
@@ -227,7 +227,7 @@ a second copy of that fallback chain in SPARQL, free to drift, or a baked consta
 moment urgency re-commands the cadence. The agent writes the ANSWER instead, per sensor, into its
 instruments graph; everything reads what was written, and nothing can disagree with it.
 
-Two things the query cannot do, and both are recorded where they bite. A duty's urgency is the
+Two things the query cannot do, and both are recorded where they bite. A obligation's urgency is the
 fraction of its redeem window that has run, and this store binds **nothing** for
 `duration / duration` — so the row carries `owedAt` and `expiresAt` and the division happens in
 Python, pinned by a test that fails the day the engine grows the operation. And `lapsed` is the

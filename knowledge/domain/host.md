@@ -8,7 +8,7 @@ description: >-
   a dealer hosts, and the same agent bids elsewhere in the same tick. Which side hosts is
   STRUCTURALLY short, decided by the wiring and not by measured scarcity, because a convener
   chosen by today's deficit would make the rules a move in the game. It computes the match and
-  does not validate it — clearing co-signs — and what it owes afterwards is a duty on its menu
+  does not validate it — clearing co-signs — and what it owes afterwards is an obligation on its menu
   rather than a decision it gets to take again.
 ---
 
@@ -45,11 +45,11 @@ stake-free and validates the trade it had no part in computing.
 That split is the whole reason a host may be self-interested. It is a party to the trade — it
 wants a good price — so it must not be the last word on whether the trade is legitimate.
 
-# What it owes afterwards is a duty, not a decision
+# What it owes afterwards is an obligation, not a decision
 
 A won [claim](/domain/claim.md) is a claim **on the host**, redeemed by presenting it. The lever
 that answers sits on the host's menu as an [affordance](/domain/affordance.md) row owed to the presenter,
-exercised on a valid presentation and never proposed. Why a duty is nonetheless deliberated about
+exercised on a valid presentation and never proposed. Why an obligation is nonetheless deliberated about
 at all — and why that does not let a host wriggle out of one — is
 [deliberation](/domain/deliberator.md)'s.
 

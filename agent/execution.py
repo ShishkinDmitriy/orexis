@@ -126,7 +126,7 @@ def carry_out(agent, act: Act, desire, intention: str) -> bool:
 
 def _because(plan, desire) -> str:
     """The ledger's prose: what the plan found and how far it expected to get."""
-    what = (f"a duty to {desire.owed_to.rsplit('#', 1)[-1]}" if desire.is_duty
+    what = (f"an obligation to {desire.owed_to.rsplit('#', 1)[-1]}" if desire.is_obligation
             else desire.uri.rsplit("#", 1)[-1])
     if plan.urgency_now is None or plan.urgency_after is None:
         return f"{plan.outcome} for {what}"

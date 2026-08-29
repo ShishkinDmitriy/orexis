@@ -8,7 +8,7 @@ one of those is a sentence in `sosa`, which is this package's vocabulary and not
 the kernel knows that a want exists, ranks it, plans for it and commits to it, and never learns
 what a reading is (the-stake-is-sensings-want). The AIM — the pick inside a region — is here too,
 since a point in a property checked against a range is the same kind of sentence; what stayed
-behind is the duty (`agent/ower.py`), which is not about sensing.
+behind is the obligation (`agent/ower.py`), which is not about sensing.
 
 `Region.urgency` is a reference definition and not the live one: how a want's badness is
 measured is declared in `measures.ttl` and asked through the choir (`Module.desire_urgency`).
@@ -32,7 +32,7 @@ log = logging.getLogger("sensing")
 class ObservedDesire(Desire):
     """A desire ABOUT AN OBSERVED PROPERTY — the kernel's `Desire`, plus the one thing this
     package knows about it that the kernel does not. A stake and a freshness want are both
-    of this kind; a duty and a call are not. The kernel ranks, plans for and commits to the
+    of this kind; an obligation and a call are not. The kernel ranks, plans for and commits to the
     base type by its node; whoever needs the property asks this package, which is where the
     property was ever meaningful (the-stake-is-sensings-want).
 
@@ -300,7 +300,7 @@ def _measured_urgency(measure, row: dict, value: float | None) -> float:
     A want nothing measures scores 1.0, logged — the defined fallback: not knowing how bad is
     maximal, exactly as not knowing at all is. Logged only where a measure was actually ASKED:
     a caller that hands none in is not asking about these wants at all (the debts reader wants
-    the duty rows and computes the rest to throw away), and warning there says a package is
+    the obligation rows and computes the rest to throw away), and warning there says a package is
     missing when nothing is.
     """
     #  The INSTRUMENT rides along, because it is what tells the answerer which kind of want

@@ -34,7 +34,7 @@ def alarm_payload_source() -> str:
     src = (SENTINEL / "main.cpp").read_text()
     assert '\\"wake\\":\\"alarm\\"' in src, (
         "no alarm payload found in the sentinel's main.cpp — this test is looking in the "
-        "wrong place, which is the failure mode that quietly takes a guard off duty")
+        "wrong place, which is the failure mode that quietly takes a guard off obligation")
     return src
 
 

@@ -45,7 +45,7 @@ and two edges, denominated in one property and unable to want anything else.
 
 The result lives in a graph typed `ag:ConstraintGraph`, **found by that type rather than by name**,
 because desire may have more than one source and a reader must not have to know how many. The
-sovereign's ratified mandate, the regions deduced from a subject's ranges, and the duties received
+sovereign's ratified mandate, the regions deduced from a subject's ranges, and the obligations received
 on a peer's claim are three sources and one question.
 
 It is **public and recomputed on every start**, because it is a function of the ratified files: a

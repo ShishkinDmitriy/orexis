@@ -2,7 +2,7 @@
 
 An `ag:Action` is a template (a precondition, an effect, a taker). What gets committed, taken
 and promised is a FILLED one — the lever it goes through, the want it serves and what that
-want is about, how much, for whom where it is a duty's, and WHEN — and until this file it had
+want is about, how much, for whom where it is an obligation's, and WHEN — and until this file it had
 no name: an affordance row carried some of it, an intention some, a commitment some, and the
 timing lived in actors' timers. An act is execution's word for that thing; a step is
 planning's word for an act at a position in a plan with what the search predicted. The two
@@ -27,7 +27,7 @@ class Act:
     about: str | None = None          # what that want is about (`ag:about`), opaque here
     quantity: float | None = None     # how much, sized by the taker — nothing, for a look
     direction: str | None = None      # which way it moves what it is about, where it moves
-    for_agent: str | None = None      # whom it serves, where it is a duty's
+    for_agent: str | None = None      # whom it serves, where it is an obligation's
     #  The window: when taking it counts. Not-after is what every hand-kept timer was saying
     #  (a bid not after the round closes, a serve not after the claim's expiry); not-before is
     #  the half nothing writes yet — where a held claim spent later would arrive.

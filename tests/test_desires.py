@@ -2,7 +2,7 @@
 
 `desires.rq` asks the desire modality, `readings.rq` asks the belief modality, and `desires_of`
 is the join — a stake's magnitude is whichever capability answers the choir (sensing's
-declared measure), a duty's fraction is `_duty_urgency`, Python because the store's engine
+declared measure), an obligation's fraction is `_duty_urgency`, Python because the store's engine
 will not divide durations. These pin the states, the ranking, both fallbacks and the engine
 limits.
 """
@@ -43,7 +43,7 @@ def test_the_query_and_the_module_agree_with_the_diff(query_with_readings, monke
     #  and a dict keyed on the property alone quietly kept whichever came last. The diff is
     #  about numbers, so the wants it must agree with are the ones about numbers.
     stakes = {g.observed_property: g for g in desires
-              if not g.is_duty and not g.is_epistemic}
+              if not g.is_obligation and not g.is_epistemic}
     assert set(stakes) == set(diffs), "the same wants, whichever text is run"
     for prop, gap in diffs.items():
         assert abs(stakes[prop].urgency - abs(gap.gap)) < 1e-9
@@ -83,7 +83,7 @@ def test_the_states_a_stake_can_be_in(monkeypatch):
 def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them(monkeypatch):
     """The engine limit, made visible rather than worked around.
 
-    A duty's urgency is the fraction of its redeem window that has run, and this store binds
+    A obligation's urgency is the fraction of its redeem window that has run, and this store binds
     NOTHING for `duration / duration` — so the query carries `owedAt` and `expiresAt` and the
     division happens in Python. Asked at three points across one window, because the ends are
     what the choice was made about: cool at issue, maximal at the deadline.
@@ -107,7 +107,7 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them(mo
 
     def duty_at(offset_s):
         return next(g for g in fern.ower.desires(now=owed + timedelta(seconds=offset_s))
-                    if g.is_duty)
+                    if g.is_obligation)
 
     assert duty_at(0).urgency == 0.0
     assert abs(duty_at(450).urgency - 0.5) < 0.02

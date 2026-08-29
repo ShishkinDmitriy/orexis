@@ -249,7 +249,7 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
     assert moved > DRY, "the dose moved the world it was simulated into"
 
     #  The ROW is passed because sizing dispatches on its taker (#268) — an actuator sizes a
-    #  dose, a bidder sizes a bid — and because a duty borrows the row's property when it has
+    #  dose, a bidder sizes a bid — and because an obligation borrows the row's property when it has
     #  none of its own (#255). A bare `_bind` sizes nothing on purpose. The value is not in the
     #  binding any more: the rule reads it from `$state`, which names the node's own graph.
     assert planner._bind(desire, step, row)["state"] != planner._bind(

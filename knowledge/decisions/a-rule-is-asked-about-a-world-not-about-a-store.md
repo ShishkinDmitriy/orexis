@@ -341,7 +341,7 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
   The desire store is the case that shows the shape working. `ag:ConstraintGraph` is deliberately
   a CLASS rather than one graph, and its comment says why — *"desire may have more than one
   source and a reader must not have to know how many"* — so one store would hold the sovereign's
-  ratified mandate, the regions deduced from the world's ranges, and the duties received on other
+  ratified mandate, the regions deduced from the world's ranges, and the obligations received on other
   agents' claims, as three graphs distinguished by `ag:arrivedBy`. Every reader still matches an
   unqualified pattern and sees all three, exactly as it does now.
 

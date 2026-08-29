@@ -65,7 +65,7 @@ things follow without a line of policy:
 - the gate reasons from ACTIONS, not rows: a menu at genesis has no round in it, so
   `orexis-validate` refuses an action that offers rows and states no effect by reading the
   node, not the menu of the moment;
-- an actor is the last boundary: a host handed a duty's row whose vessel it knows is too low
+- an actor is the last boundary: a host handed an obligation's row whose vessel it knows is too low
   keeps the claim held, where the search used to keep it by planning a refill it may now have no
   round to plan into;
 - the convening ceiling becomes visible in the trace rather than in a standing row: a plant

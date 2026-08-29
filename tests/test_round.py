@@ -863,7 +863,7 @@ def test_a_claim_carries_the_window_its_venue_states(host):
 
 
 def test_a_debts_heat_is_the_room_its_claim_has_left(host):
-    """Urgency, for a duty, is the fraction of the redeem window that has run. Asked at three
+    """Urgency, for an obligation, is the fraction of the redeem window that has run. Asked at three
     points across one window rather than at one, because a curve that is right at a single
     instant is not a curve — and the two failures this shape exists to avoid are both about
     its ENDS: cool at issue (nothing has gone wrong yet) and maximal at the deadline (late is
@@ -873,10 +873,10 @@ def test_a_debts_heat_is_the_room_its_claim_has_left(host):
     _win_a_claim(host)
     owed_at = datetime.fromisoformat(ledger_of(host).owed()[0]["at"])
 
-    at_issue = ledger_of(host).duties(now=owed_at)[0]
-    halfway = ledger_of(host).duties(now=owed_at + timedelta(seconds=450))[0]
-    at_deadline = ledger_of(host).duties(now=owed_at + timedelta(seconds=900))[0]
-    past_it = ledger_of(host).duties(now=owed_at + timedelta(seconds=5000))[0]
+    at_issue = ledger_of(host).obligations(now=owed_at)[0]
+    halfway = ledger_of(host).obligations(now=owed_at + timedelta(seconds=450))[0]
+    at_deadline = ledger_of(host).obligations(now=owed_at + timedelta(seconds=900))[0]
+    past_it = ledger_of(host).obligations(now=owed_at + timedelta(seconds=5000))[0]
 
     assert at_issue.urgency == 0.0
     assert abs(halfway.urgency - 0.5) < 0.02
@@ -908,8 +908,8 @@ def test_a_duty_and_a_thirst_rank_in_one_currency(host):
 
     desires = host.pursuing(now=asked_at)
     assert desires, "an agent with a stake and a debt wants something"
-    assert desires[0].is_duty, "a debt near its deadline outranks a barrel that is merely low"
-    assert any(not g.is_duty for g in desires), "and the stake is still on the list, not replaced"
+    assert desires[0].is_obligation, "a debt near its deadline outranks a barrel that is merely low"
+    assert any(not g.is_obligation for g in desires), "and the stake is still on the list, not replaced"
     assert desires == sorted(desires, key=lambda g: -g.urgency)
 
 
@@ -949,7 +949,7 @@ def test_a_duty_no_move_answers_stays_hot_until_the_answer_changes(host, caplog)
     jti = _win_a_claim(host)
     deliberator = host.deliberator
     #  The PLAN door, which is what execution asks: silencing it is the deliberator proposing
-    #  no move for this duty.
+    #  no move for this obligation.
     real, deliberator.decide = deliberator.decide, lambda desire: None
 
     with caplog.at_level(logging.WARNING):
@@ -994,7 +994,7 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     assert len(owed) == 1 and owed[0]["to"].endswith("#supplier")
 
     assert city.pursuing(), "and its debts are desires like anyone else's"
-    assert all(g.is_duty for g in city.pursuing()), "all of them owed, none of them its own"
+    assert all(g.is_obligation for g in city.pursuing()), "all of them owed, none of them its own"
 
     ledger.discharge("j-city-1")
     assert ledger.owed() == [], "paid"
@@ -1003,7 +1003,7 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
 
 def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):
     """#255's done-when, in the world that motivated it: refill-then-deliver is the one chain
-    with a real dependency, and it is a DUTY. The barrel holds less than the claim asks; the
+    with a real dependency, and it is a OBLIGATION. The barrel holds less than the claim asks; the
     Apply effect's premise cannot bind, so serving predicts nothing and is discarded as
     somewhere already reached — and the step that IS reachable is Acquire, whose effect raises
     the very level Apply reads. Two rules that never mention each other, one two-step plan.
@@ -1018,15 +1018,15 @@ def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):
         "a pour from a vessel known too low discharges nothing — the claim is held, not spent"
 
     open_round_for(host, "supplier")   # the city has a round open — the refill is buyable
-    duty = next(g for g in host.pursuing() if g.is_duty)
-    move = host.deliberator.propose_for(duty)
+    obligation = next(g for g in host.pursuing() if g.is_obligation)
+    move = host.deliberator.propose_for(obligation)
     assert move == "http://example.org/orexis/market#Acquiring", \
         "the plan's first step is the refill — the search found the chain the reflex never could"
 
 
 def test_a_host_holding_enough_serves_the_presented_claim_by_the_same_search(host):
     """The wet twin: with the vessel above the owed amount, Apply's premise binds, the
-    one-step plan discharges the duty in its possible world, and the search proposes the
+    one-step plan discharges the obligation in its possible world, and the search proposes the
     serve itself — the same machinery, no special case."""
     valve = _win_for_fern(host)
     stock_reading(host, 3.0)
@@ -1036,5 +1036,5 @@ def test_a_host_holding_enough_serves_the_presented_claim_by_the_same_search(hos
 
     assert host.sent.to(valve.command_topic), "holding enough, the presentation pours"
 
-    duty = [g for g in host.pursuing() if g.is_duty and g.claim == claim["jti"]]
-    assert duty == [], "and the discharged debt is history, not a desire"
+    obligation = [g for g in host.pursuing() if g.is_obligation and g.claim == claim["jti"]]
+    assert obligation == [], "and the discharged debt is history, not a desire"

@@ -152,14 +152,14 @@ class Planner:
         with, so a planner scoring by count would refuse every dose too small to finish the job
         — and refuse the second one for the same reason, having never taken the first.
 
-        `world` (the flat copy) stays a parameter for the wants that state no measure: a duty
+        `world` (the flat copy) stays a parameter for the wants that state no measure: an obligation
         is met-or-not over the record, and anything else unmeasured scores 1.0, the not-knowing
         answer.
         """
         answer = self.agent.desire_urgency(desire, self.imaginarium.query, graph)
         if answer is not None:
             return answer
-        if desire.is_duty:                        # met-or-not over the record
+        if desire.is_obligation:                        # met-or-not over the record
             return 0.0 if self._met_in(world, desire) else 1.0
         #  A want whose kind nothing loaded answers for, scoring the defined fallback:
         #  maximal, because not knowing how bad IS how bad. It used to serve the freshness
@@ -190,10 +190,10 @@ class Planner:
         """
         shape = self._shape_of(desire, world)
         if shape is None:
-            #  A duty's goal state is a PATTERN over the record, not a distance (#255): this
+            #  A obligation's goal state is a PATTERN over the record, not a distance (#255): this
             #  claim discharged, in whatever world is being judged — which is what lets a
             #  possible world where Apply ran count as satisfying, and the world in hand not.
-            if desire.is_duty:
+            if desire.is_obligation:
                 return (URIRef(desire.uri), _AG.dischargedAt, None) in world
             #  A want with no shape and no property — a CALL (#359) — is met exactly where
             #  whoever measures it says it is: zero urgency in the world being judged. Asked
@@ -460,10 +460,10 @@ class Planner:
         #  this is the ordinary menu, exactly as before.
         for row in affordances_of(self.imaginarium.query, self.me.uri, self.agent.desires.query_union,
                            beliefs_graph(self.agent.id), node.graph):
-            if desire.is_duty:
-                #  A duty may be served by its counterparty's honoured row, or approached
+            if desire.is_obligation:
+                #  A obligation may be served by its counterparty's honoured row, or approached
                 #  through this agent's own levers — refilling the vessel is an Acquire on its
-                #  own stake, and that is the whole of why a duty is in the search (#255).
+                #  own stake, and that is the whole of why an obligation is in the search (#255).
                 if not (row.is_own or row.for_agent == desire.owed_to):
                     continue
             else:
@@ -659,7 +659,7 @@ class Planner:
         #  matters: a freshness want's met-test reads the horizon this agent published, and a
         #  shape whose pattern reaches a graph nobody copied does not fail — it finds nothing,
         #  reports nothing, and the want reads as met for ever. The debts are why it must
-        #  include the received ones (#255): a duty's met-test is a pattern over the record,
+        #  include the received ones (#255): an obligation's met-test is a pattern over the record,
         #  and the world Apply's effect discharges an obligation in must hold it to discharge.
         return graph_from(self.agent.beliefs, *self.agent.beliefs.public_graphs(),
                           *self.agent.beliefs.recorded_graphs())

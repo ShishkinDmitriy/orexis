@@ -3,12 +3,12 @@ type: Decision
 title: An action is one node — precondition, effect and taker — and whom a row serves is a column, not a mode
 description: >-
   Adding a way of acting meant writing to three files and a fourth surface: `affordances.rq`
-  for availability, `honoured.rq` for the duty-shaped rows, `effects.ttl` for what it makes
+  for availability, `honoured.rq` for the obligation-shaped rows, `effects.ttl` for what it makes
   true, and `ag:takenBy` in the ontology for who carries it out. They were four statements
   about one thing, and the STRIPS operator this architecture rests on IS one thing. Now a
   package ships `actions.ttl` — one `ag:Action` node per way of acting — and `ag:Mode`,
   `ag:Chosen`, `ag:Honoured` and `ag:effectOf` are retired: whether a row is the agent's own or
-  a duty is whether its availability query bound `?for_agent`.
+  an obligation is whether its availability query bound `?for_agent`.
 status: accepted
 timestamp: 2026-08-25T00:00:00Z
 ---
@@ -18,7 +18,7 @@ timestamp: 2026-08-25T00:00:00Z
 [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) found that this
 architecture was already classical planning: a menu row's WHERE clause is an action schema's
 precondition, an effect rule its add/delete list, an intention a committed step. What it did not
-do was make the schema one object. The precondition lived in `affordances.rq` (and, for a duty,
+do was make the schema one object. The precondition lived in `affordances.rq` (and, for an obligation,
 `honoured.rq`), the effect in `effects.ttl` keyed back to the means by `ag:effectOf`, and — since
 [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md) — the
 taker in `ontology.ttl` as `ag:takenBy` on the means. The loader found three file kinds, the menu
@@ -38,7 +38,7 @@ chosen row did not. Two terms for a fact one column states is a second owner of 
 | part | property | what it is |
 |---|---|---|
 | kind | ~~`ag:means`~~ | the node itself, since [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) |
-| precondition | `ag:available` | a SELECT binding `?property ?via ?direction`, and `?for_agent` for a duty |
+| precondition | `ag:available` | a SELECT binding `?property ?via ?direction`, and `?for_agent` for an obligation |
 | effect | `sh:construct`, `ag:retracts`, `ag:landsAfter`, `ag:confirmedBy` | unchanged from the effect rule |
 | taker | `ag:takenBy` | the capability whose module carries it out |
 
@@ -48,9 +48,9 @@ graph** (`ag:ActionGraph`, was the effect graph); `menu_of` runs every action's 
 new way of acting is a node in a new directory plus a `take()`.
 
 **Whom a row serves is a column.** An [affordance](/domain/affordance.md) with `for_agent` bound
-is a duty's — exercised for that counterparty on a valid presentation and never proposed for the
+is an obligation's — exercised for that counterparty on a valid presentation and never proposed for the
 agent's own gap; one without is the agent's own option. `Affordance.is_own` reads the column;
-the planner's filter and the deliberator's duty fallback read the same column; `ag:Mode`,
+the planner's filter and the deliberator's obligation fallback read the same column; `ag:Mode`,
 `ag:Chosen`, `ag:Honoured` and `ag:mode` are gone from the vocabulary, and `honoured.rq` is a
 second `ag:Action` (the host's `market:Serving`) in the same file as `market:Acquiring`.
 
