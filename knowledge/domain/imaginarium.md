@@ -1,5 +1,5 @@
 ---
-type: Component
+type: Repository
 title: Imaginarium
 description: >-
   The store a plan thinks in — a second pyoxigraph store, in memory for the life of one plan,

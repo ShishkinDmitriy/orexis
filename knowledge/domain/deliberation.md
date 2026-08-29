@@ -1,5 +1,5 @@
 ---
-type: Component
+type: Service
 title: Deliberation
 description: >-
   The whether — given the gap and the standing commitments, name the next move; the acting

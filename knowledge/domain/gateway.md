@@ -1,5 +1,5 @@
 ---
-type: Component
+type: Service
 title: Gateway
 description: Thin stake-free attestor on the RPi; turns the ESP32's raw readings into citable, provenance-stamped current-state.
 ---

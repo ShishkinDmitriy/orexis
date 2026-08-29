@@ -1,5 +1,5 @@
 ---
-type: Component
+type: Service
 title: Executor
 description: The trusted actuator — validates the capability grant and drives the pump/valve; the only thing that touches hardware.
 ---
