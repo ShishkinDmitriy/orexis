@@ -173,3 +173,15 @@ def test_a_part_the_generator_has_no_template_for_is_reported():
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?p a <http://example.org/orexis/bme280#Bme280> }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?p a <http://example.org/orexis/bme280#Bme280> }} }}""")
     assert _untemplated(ds, "esp32_terrace") == ["air_sensor_terrace"]
+
+
+def test_the_firebeetles_own_led_comes_from_its_class(terrace, board):
+    """A FireBeetle 2 ESP32-E carries a WS2812 on GPIO 5 by construction, stated once as a
+    restriction on the board class and reached through the closure — so the terrace renders it
+    with nothing in its hardware.ttl saying so, and the sensing world's DevKitC, which has no
+    such lamp, renders nothing and compiles the code away."""
+    assert int(terrace["ws2812"]) == 5
+    assert "ws2812" not in board or not board.get("ws2812")
+    out = _optional_pins({"ws2812": 5})
+    assert "#define STATUS_LED_WS2812_PIN 5" in out
+    assert "LED_RED_PIN" not in out

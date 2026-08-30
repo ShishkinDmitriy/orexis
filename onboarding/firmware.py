@@ -39,7 +39,7 @@ from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
 from orexis_agent_progression.ontology import AG, ONTOLOGY_GRAPH, WORLD_GRAPH
-from .namespaces import BME280, DHT11, I2C, MC, MQTT, ONEWIRE, PROBE, RGBLED, SENSING, SOSA
+from .namespaces import BME280, DHT11, ESP32, I2C, MC, MQTT, ONEWIRE, PROBE, RGBLED, SENSING, SOSA
 
 
 
@@ -54,7 +54,7 @@ WIFI_ENV = REPO_ROOT / "infra" / "secrets" / "wifi.env"
 _BOARDS_Q = f"""
 SELECT ?boardId ?firmware ?lan ?host ?port ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
        ?alarm
-       ?ledRed ?ledGreen ?ledBlue ?airPin ?bmeSda ?bmeScl ?bmeAddr
+       ?ledRed ?ledGreen ?ledBlue ?airPin ?bmeSda ?bmeScl ?bmeAddr ?ws2812
 WHERE {{
   ?board a <{MC}Microcontroller> ; <{AG}localId> ?boardId ; <{SOSA}hosts> ?sensor .
   # The firmware name: stated on the board directly, or — since #175 — entailed onto the
@@ -112,6 +112,11 @@ WHERE {{
              ?sdaLeg <{MC}pinRole> <{I2C}DataPinRole>  . ?sdaW <{MC}joins> ?sdaLeg, ?sdaPin . ?sdaPin <{MC}gpio> ?bmeSda .
              ?sclLeg <{MC}pinRole> <{I2C}ClockPinRole> . ?sclW <{MC}joins> ?sclLeg, ?sclPin . ?sclPin <{MC}gpio> ?bmeScl .
              OPTIONAL {{ ?bme <{I2C}address> ?bmeAddr }} }}
+  # A BUILT-IN status LED, from the board's CLASS rather than from any wire: a FireBeetle 2
+  # ESP32-E carries a WS2812 on GPIO 5 by construction, stated once as a restriction in
+  # packages/orexis-part-esp32 and carried to this unit by the closure. Nothing in a world's
+  # hardware.ttl says it, and nothing could unsay it.
+  OPTIONAL {{ ?board <{ESP32}ws2812Gpio> ?ws2812 }}
  }}"""
 
 # Every part a board hosts that has legs, with its classes — so a part this generator has no
@@ -281,6 +286,14 @@ def _optional_pins(row: dict) -> str:
             f"#define BME280_SDA_PIN {int(row['bmeSda'])}",
             f"#define BME280_SCL_PIN {int(row['bmeScl'])}",
             f"#define BME280_ADDR 0x{addr:02X}",
+        ]
+    if row.get("ws2812"):
+        out += [
+            "",
+            "// The board's OWN status LED — an addressable WS2812 on this line, from the board",
+            "// class rather than the wiring. Same outcome vocabulary as a wired KY-016; the",
+            "// firmware drives it through the core's RMT driver and needs no library.",
+            f"#define STATUS_LED_WS2812_PIN {int(row['ws2812'])}",
         ]
     return "\n".join(out) + "\n" if out else ""
 

@@ -184,6 +184,51 @@ static void ledVerdict() { if (haveBand) ledBlink(bandR, bandG, bandB, 1); }
 // reached the wifi, and those must not be confusable from across the room.
 static void ledFault(bool r, bool g, bool b) { ledBlink(r, g, b, 3); }
 
+#elif defined(STATUS_LED_WS2812_PIN)
+// The board's OWN lamp — a FireBeetle 2 ESP32-E carries a WS2812 on GPIO 5 by construction,
+// so the world wires nothing and the generator reads the pin off the board's class. The same
+// outcome vocabulary as the KY-016 above, word for word: doubled green is a wake that got in,
+// one magenta per refused broker attempt, three of a colour is a fault, one is a verdict.
+// Driven through the ESP32 core's RMT driver (rgbLedWrite) rather than a library — one
+// dependency fewer on the most constrained thing in the system.
+//
+// The point of it is BATTERY BRING-UP: a node meant to stay dark for a year is hard to trust
+// until it has been seen to wake. When it has, the board's low-power solder pad is cut
+// (DFRobot: ~500 µA static; the LED then lights only on USB) — a knife, no reflash, and
+// this code keeps writing to a lamp that draws nothing.
+#ifndef LED_BRIGHTNESS
+#define LED_BRIGHTNESS 20   // of 255, as for the discrete LED; a WS2812 at full is a torch
+#endif
+
+static void led(bool r, bool g, bool b) {
+  rgbLedWrite(STATUS_LED_WS2812_PIN, r ? LED_BRIGHTNESS : 0, g ? LED_BRIGHTNESS : 0,
+              b ? LED_BRIGHTNESS : 0);
+}
+
+static void ledOff() { led(0, 0, 0); }
+static void ledBegin() { ledOff(); }
+
+static void ledBlink(bool r, bool g, bool b, int times) {
+  for (int i = 0; i < times; i++) {
+    led(r, g, b); delay(140);
+    ledOff();     delay(140);
+  }
+}
+
+static bool haveBand = false;
+static bool bandR = 0, bandG = 0, bandB = 0;
+
+static void ledBand(const char *band) {
+  if      (!strcmp(band, "LOW"))  { haveBand = 1; bandR = 1; bandG = 0; bandB = 0; }
+  else if (!strcmp(band, "HIGH")) { haveBand = 1; bandR = 0; bandG = 0; bandB = 1; }
+  else                              haveBand = 0;
+}
+
+static void ledAttemptFailed() { ledBlink(1, 0, 1, 1); }
+static void ledAttemptOk()     { ledBlink(0, 1, 0, 2); }
+static void ledVerdict() { if (haveBand) ledBlink(bandR, bandG, bandB, 1); }
+static void ledFault(bool r, bool g, bool b) { ledBlink(r, g, b, 3); }
+
 #else
 // A board the world gives no LED compiles all of this away. Every one of these must exist,
 // including the ones only called from the connect path — that is the half I forgot, and it
@@ -586,6 +631,10 @@ void setup() {
   Serial.printf("sleeping %us\n", sleep_s);
   mqtt.disconnect();
   delay(50);
+  // Dark before the sleep, again and last. A WS2812 HOLDS its colour with no further clocking,
+  // so a lamp left lit here would stay lit through every sleep, at the LED's own current —
+  // the discrete LED goes dark when its pins do, and did not need this.
+  ledOff();
   armUlpWatch();
   esp_sleep_enable_timer_wakeup((uint64_t)sleep_s * 1000000ULL);
   esp_deep_sleep_start();
