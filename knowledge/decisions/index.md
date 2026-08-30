@@ -10,7 +10,7 @@ holds its reasoning; its mechanism has moved, and the record says where.
 
 ## Start here
 
-There are 127 of these and no one reads them in order. A path through, for someone new:
+There are 138 of these and no one reads them in order. A path through, for someone new:
 [the-society-is-named-for-its-appetite](/decisions/the-society-is-named-for-its-appetite.md) for
 what the project is, [self-is-bdi-and-wiring-is-the-packages](/decisions/self-is-bdi-and-wiring-is-the-packages.md)
 for how it is cut in two, then
@@ -28,7 +28,7 @@ whole — the seams are what you are checking for.
 The handful of sentences the rest of the bundle keeps appealing to. If you read nothing else, read these.
 
 * [the-society-is-named-for-its-appetite](/decisions/the-society-is-named-for-its-appetite.md) - The project is named Orexis — Aristotle's desire-that-moves-to-action — because the BDI mind is the kernel and the auction is a replaceable part.
-* [the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md) - Wanting, committing and deciding are the kernel's: their stores were built for every agent while the code reading them was a grant.
+* [the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md) - SUPERSEDED IN PART — wanting, committing and deciding are the kernel's; the monolith seam is overturned by a-layer-is-a-distribution.
 * [self-is-bdi-and-wiring-is-the-packages](/decisions/self-is-bdi-and-wiring-is-the-packages.md) - `Self` keeps id, capabilities and whom it acts for; sensors, actuators and venues are loaded by their packages' own `wiring.py`.
 * [control-the-derivative-not-the-value](/decisions/control-the-derivative-not-the-value.md) - Nothing here controls a step: a cadence not a reading, a mandate not a belief, an affordance not an action.
 * [model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md) - The test for what an agent believes about the layers and itself; store what comes from outside, compute what the interpreter knows.
@@ -158,6 +158,7 @@ A directory is a package. What that buys, and what the tree is not allowed to im
 * [a-package-is-its-name](/decisions/a-package-is-its-name.md) - The tree goes flat: a package's directory, distribution and module are one string, and the family is its second segment.
 * [a-package-states-what-it-needs-of-the-world](/decisions/a-package-states-what-it-needs-of-the-world.md) - A package projects the world it needs; the belief base is the union over a kernel bootstrap root.
 * [a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md) - Three layers in the code and two types in the bundle: a repository holds data, a service holds logic.
+* [a-layer-is-a-distribution](/decisions/a-layer-is-a-distribution.md) - A kernel layer is a root distribution importing only the contract below, the arrows tested as dependencies; the monolith's acceptance is overturned.
 * [a-term-nobody-reads-is-annotation](/decisions/a-term-nobody-reads-is-annotation.md) - The confirmation route is retired; the cognitive rows survive the same audit, because assembly reads them.
 * [the-service-is-the-page](/decisions/the-service-is-the-page.md) - A service page carries its process, repositories and graph types; the shared dictionary does not fold into it.
 * [noticing-is-what-a-freshness-want-does](/decisions/noticing-is-what-a-freshness-want-does.md) - A hook nobody asked, retired; the want covers it, and a guard now refuses the next one.
