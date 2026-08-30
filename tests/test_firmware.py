@@ -124,3 +124,114 @@ def test_the_persistence_figure_reaches_both_temperaments():
     assert _crossing({}, n) == "", (
         "a board whose world makes no alarm promise carries neither define — absence stays "
         "a statement in the firmware exactly as in the graph")
+
+
+#  The terrace (world/terrace): the same query, a different temperament and a different air
+#  part. Its board runs the OUTDOOR SENTINEL — moisture-sentinel copied onto a FireBeetle 2
+#  ESP32-E with a BME280 (#461) — so it is rendered through `render_sentinel`, which had never
+#  run for a real world before (#323 stays open until a world deploys moisture-sentinel itself).
+#  A BME280 hangs off two I2C lines rather than one one-wire leg, and the header needs both
+#  numbers and the unit's address — so the OPTIONAL that finds it is a second place the query
+#  can silently lose a board, guarded the same way as the first.
+
+@pytest.fixture(scope="module")
+def terrace():
+    rows = ratified.rows(ratified.dataset("terrace"), _BOARDS_Q)
+    assert len(rows) == 1, "the terrace states exactly one board"
+    return rows[0]
+
+
+def test_the_terrace_board_runs_the_outdoor_sentinel(terrace):
+    """Entailed from the device's class, never stated on the board: the third firmware's
+    ontology names its directory, and the generator dispatches on that name."""
+    assert terrace["firmware"] == "outdoor-sentinel"
+    assert not terrace.get("cmdTopic"), "a sentinel takes no orders — no command topic"
+
+
+def test_the_bme280_comes_through_with_its_address(terrace):
+    assert terrace["boardId"] == "esp32_terrace"
+    assert int(terrace["gpio"]) == 34
+    assert (int(terrace["bmeSda"]), int(terrace["bmeScl"])) == (21, 22)
+    assert int(terrace["bmeAddr"]) == 0x76
+    # And NOT the DHT path: the terrace wires no one-wire leg.
+    assert not terrace.get("airPin")
+
+
+def test_the_bme280_emits_its_defines_in_hex():
+    out = _optional_pins({"bmeSda": 21, "bmeScl": 22, "bmeAddr": 119})
+    assert "#define BME280_SDA_PIN 21" in out
+    assert "#define BME280_SCL_PIN 22" in out
+    assert "#define BME280_ADDR 0x77" in out
+    assert "AIR_SENSOR_PIN" not in out
+
+
+def test_a_bme280_with_no_stated_address_defaults_to_the_common_strap():
+    assert "#define BME280_ADDR 0x76" in _optional_pins({"bmeSda": 21, "bmeScl": 22})
+
+
+def test_a_part_the_generator_has_no_template_for_is_reported():
+    """The generator reports what it cannot describe rather than guessing — asserted by making
+    the terrace's air part something the header knows nothing about, and checking it is named.
+    Both halves: with the type in place nothing is reported, which is what makes the second
+    half a finding rather than a constant."""
+    from onboarding.firmware import _untemplated
+
+    ds = ratified.dataset("terrace")
+    assert _untemplated(ds, "esp32_terrace") == []
+    ds.update(f"""
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?p a <http://example.org/orexis/bme280#Bme280> }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?p a <http://example.org/orexis/bme280#Bme280> }} }}""")
+    assert _untemplated(ds, "esp32_terrace") == ["air_sensor_terrace"]
+
+
+def test_the_firebeetles_own_led_comes_from_its_class(terrace, board):
+    """A FireBeetle 2 ESP32-E carries a WS2812 on GPIO 5 by construction, stated once as a
+    restriction on the board class and reached through the closure — so the terrace renders it
+    with nothing in its hardware.ttl saying so, and the sensing world's DevKitC, which has no
+    such lamp, renders nothing and compiles the code away."""
+    assert int(terrace["ws2812"]) == 5
+    assert not board.get("ws2812")
+    out = _optional_pins({"ws2812": 5})
+    assert "#define STATUS_LED_WS2812_PIN 5" in out
+    assert "LED_RED_PIN" not in out
+
+
+def test_the_sentinel_template_renders_the_terrace(terrace, monkeypatch):
+    """The sentinel template's first real run. The credential and the wifi are stubbed — they
+    are the two things this test must not need — and everything else is read from the world:
+    the band from the bed's operating range, the delta as the family's fraction of its width,
+    the heartbeat under the polling agent's OWN freshness belief, and the parts.
+
+    The heartbeat is the finding. The template asked the ratified dataset for
+    `sensing:maxReadingAgeS`, which is a belief and lives in no public graph, so it bound
+    nothing and every sentinel would have compiled the 750 s default: 600 s, above the 300 s
+    the terrace agent actually believes, so a healthy board would have been read as dead.
+    Asserting 240 is asserting that the belief was read."""
+    from onboarding import firmware
+
+    monkeypatch.setattr(firmware, "_env", lambda path, key: {"MQTT_USERNAME": "u",
+                                                             "MQTT_PASSWORD": "p"}.get(key))
+    monkeypatch.setattr(firmware, "_wifi", lambda: ("ssid", "pass"))
+    out = firmware.render_sentinel("terrace", terrace, ratified.dataset("terrace"))
+    assert "#define HEARTBEAT_S 240" in out            # max(60, 0.8 * 300)
+    assert "#define WAKE_DELTA 0.087" in out           # 0.25 * (0.60 - 0.25), rounded
+    assert "#define WAKE_PERSIST_LOOKS 2" in out
+    assert "#define MOISTURE_PIN 34" in out
+    assert "#define BME280_SDA_PIN 21" in out
+    assert "#define BME280_ADDR 0x76" in out
+    assert "#define STATUS_LED_WS2812_PIN 5" in out
+    assert "CMD_TOPIC" not in out and "MIN_SLEEP_S" not in out
+
+
+def test_the_governed_template_is_unchanged_for_the_sensing_world(board, monkeypatch):
+    """The sensing world's DevKitC still renders as it did: no BME280, no WS2812, and the
+    governed node's cadence bounds and command topic."""
+    from onboarding import firmware
+
+    monkeypatch.setattr(firmware, "_env", lambda path, key: {"MQTT_USERNAME": "u",
+                                                             "MQTT_PASSWORD": "p"}.get(key))
+    monkeypatch.setattr(firmware, "_wifi", lambda: ("ssid", "pass"))
+    out = firmware.render("sensing", board, (10, 900))
+    assert "BME280" not in out and "WS2812" not in out
+    assert "#define AIR_SENSOR_PIN 32" in out
+    assert "#define CMD_TOPIC" in out and "#define MIN_SLEEP_S 10" in out

@@ -1,0 +1,32 @@
+@prefix outdoor: <http://example.org/orexis/firmware/outdoor-sentinel#> .
+@prefix : <http://example.org/orexis/firmware/outdoor-sentinel#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix mc:   <http://example.org/orexis/microcontroller#> .
+@prefix ag:   <http://example.org/orexis#> .
+@prefix ssn:  <http://www.w3.org/ns/ssn/> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix device: <http://example.org/orexis/device#> .
+
+<http://example.org/orexis/firmware/outdoor-sentinel> a owl:Ontology ;
+    rdfs:label "The outdoor sentinel — what a board running this firmware IS" ;
+    rdfs:comment """The third firmware's self-description (#175). A COPY of the sentinel's
+(firmware/moisture-sentinel/ontology.ttl), restated under a namespace of its own because a
+world's device is typed with ONE firmware class and the generator finds the directory by the
+name that class states. Every promise below is the sentinel's, unchanged: what this image adds
+— a BME280 in the payload, the board's own lamp — promises nothing a class could state, since
+the air channels are never watched and a lamp is not a procedure. One class that both could
+specialise does not exist yet; that is part of what the copy costs (#461).""" .
+
+:Node a owl:Class ; rdfs:label "outdoor sentinel" ;
+    rdfs:subClassOf device:Device ,
+        [ a owl:Restriction ; owl:onProperty sensing:senseMode ;
+          owl:hasValue sensing:PushProcedure ] ,
+        [ a owl:Restriction ; owl:onProperty mc:firmware ;
+          owl:hasValue "outdoor-sentinel" ] ,
+        #  The alarm promise is UNCONDITIONAL, as the sentinel's is: the ULP's vigil is the
+        #  whole reason this image exists. It reaches the connecting device alone — the analog
+        #  channel — and never the BME280's, which hang off a bus the coprocessor cannot speak.
+        [ a owl:Restriction ; owl:onProperty ssn:implements ;
+          owl:hasValue sensing:AlarmProcedure ] ;
+    rdfs:comment "The sentinel, outdoors: a board that answers to nobody, watches the soil for movement with its ULP while everything sleeps, speaks on a crossing or a heartbeat — and, in the same message, says what the air is doing. Its agent derives Listening. See firmware/moisture-sentinel/ontology.ttl for the temperament this restates." .

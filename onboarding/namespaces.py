@@ -29,6 +29,7 @@ DHT11 = "http://example.org/orexis/dht11#"
 RGBLED = "http://example.org/orexis/rgb-led#"
 PROBE = "http://example.org/orexis/moisture-probe#"
 ESP32 = "http://example.org/orexis/esp32#"
+BME280 = "http://example.org/orexis/bme280#"
 
 # And the capability packages the generators read across.
 MARKET = "http://example.org/orexis/market#"

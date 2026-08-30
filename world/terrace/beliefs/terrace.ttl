@@ -1,0 +1,27 @@
+@prefix : <http://example.org/orexis/world/terrace#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix reporting: <http://example.org/orexis/reporting#> .
+@prefix ag: <http://example.org/orexis#> .
+
+#  This agent's PRIVATE beliefs — one block, because it composed one capability.
+#
+#  No stake, so no opinion about what a reading MEANS: no aim, no band, no price. No review
+#  interval, because world.ttl grants no mandate. And no interval to ask a board for: this
+#  agent LISTENS to a sentinel that keeps its own clock, so sensing:fastSleepS, slowSleepS and
+#  alarmDeltaFraction would be theatre, and the listening shape forbids them.
+
+##  sensing:Listening — how stale a heartbeat may be before it stops trusting it
+#
+#  An ABSOLUTE, and the one figure that sets the board's battery life: render_sentinel fits
+#  the heartbeat under it as max(60, 0.8 * this), so 300 s here compiles a 240 s heartbeat —
+#  around 360 wakes a day, roughly the sentinel README's governed-node row rather than its
+#  four-month one. Chosen SHORT for bring-up, deliberately: a node whose working has not been
+#  seen wants to be heard often. Raise it to 1800 or 3600 once the lamp has said so, and
+#  regenerate: the heartbeat follows this belief and nothing else.
+:terrace_agent
+    sensing:maxReadingAgeS 300 ;
+    sensing:readingGraceS 120 .        # every perceiver states one; the slack past a
+                                       # heartbeat before a reading counts as old
+
+##  How often it says how it is — belief base size, reading freshness, silent write failures.
+:terrace_agent reporting:metricsIntervalS 60 .

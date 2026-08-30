@@ -39,7 +39,7 @@ from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
 from orexis_agent_progression.ontology import AG, ONTOLOGY_GRAPH, WORLD_GRAPH
-from .namespaces import DHT11, MC, MQTT, ONEWIRE, PROBE, RGBLED, SENSING, SOSA
+from .namespaces import BME280, DHT11, ESP32, I2C, MC, MQTT, ONEWIRE, PROBE, RGBLED, SENSING, SOSA
 
 
 
@@ -48,13 +48,14 @@ log = logging.getLogger("firmware")
 FIRMWARE_ROOT = REPO_ROOT / "firmware"
 WIFI_ENV = REPO_ROOT / "infra" / "secrets" / "wifi.env"
 
-# Every board that states which firmware it runs, with the one peripheral this generator knows
-# how to describe. A board carrying something it has no template for is reported, not guessed at.
+# Every board that states which firmware it runs, with the probe every such board carries and
+# the OPTIONAL parts this generator has a template for — an LED, a DHT11, a BME280. A board
+# carrying something it has no template for is reported (_untemplated), not guessed at.
 _BOARDS_Q = f"""
 SELECT ?boardId ?firmware ?lan ?host ?port ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
        ?alarm
-       ?ledRed ?ledGreen ?ledBlue ?airPin
-WHERE {{ 
+       ?ledRed ?ledGreen ?ledBlue ?airPin ?bmeSda ?bmeScl ?bmeAddr ?ws2812
+WHERE {{
   ?board a <{MC}Microcontroller> ; <{AG}localId> ?boardId ; <{SOSA}hosts> ?sensor .
   # The firmware name: stated on the board directly, or — since #175 — entailed onto the
   # board's connecting DEVICE from its firmware class, and reached through the hosting the
@@ -101,7 +102,37 @@ WHERE {{
              ?air <{MC}hasPin> ?airLeg .
              ?airLeg <{MC}pinRole> <{ONEWIRE}DataPinRole> .
              ?aw <{MC}joins> ?airLeg, ?airPinNode . ?airPinNode <{MC}gpio> ?airPin }}
+  # The BME280, matched on its CLASS and not only on the I2C roles — the roles say which two
+  # lines to open a bus on, and the class says what to say down it. An I2C part this firmware
+  # has no driver for must be reported (see _untemplated), not driven as a BME280 because it
+  # happens to have an SDA leg. The address is the unit's, by its SDO strap, and defaults in
+  # the firmware to 0x76 when the world states none.
+  OPTIONAL {{ ?board <{SOSA}hosts> ?bme . ?bme a <{BME280}Bme280> ;
+                <{MC}hasPin> ?sdaLeg, ?sclLeg .
+             ?sdaLeg <{MC}pinRole> <{I2C}DataPinRole>  . ?sdaW <{MC}joins> ?sdaLeg, ?sdaPin . ?sdaPin <{MC}gpio> ?bmeSda .
+             ?sclLeg <{MC}pinRole> <{I2C}ClockPinRole> . ?sclW <{MC}joins> ?sclLeg, ?sclPin . ?sclPin <{MC}gpio> ?bmeScl .
+             OPTIONAL {{ ?bme <{I2C}address> ?bmeAddr }} }}
+  # A BUILT-IN status LED, from the board's CLASS rather than from any wire: a FireBeetle 2
+  # ESP32-E carries a WS2812 on GPIO 5 by construction, stated once as a restriction in
+  # packages/orexis-part-esp32 and carried to this unit by the closure. Nothing in a world's
+  # hardware.ttl says it, and nothing could unsay it.
+  OPTIONAL {{ ?board <{ESP32}ws2812Gpio> ?ws2812 }}
  }}"""
+
+# Every part a board hosts that has legs, with its classes — so a part this generator has no
+# template for is REPORTED rather than silently left out of the header it would have needed
+# a line in. The templates are the OPTIONAL blocks above; this is their complement.
+_HOSTED_Q = f"""
+SELECT ?boardId ?partId ?class WHERE {{
+  ?board a <{MC}Microcontroller> ; <{AG}localId> ?boardId ; <{SOSA}hosts> ?part .
+  ?part <{MC}hasPin> ?leg ; a ?class .
+  OPTIONAL {{ ?part <{AG}localId> ?partId }}
+ }}"""
+
+# The classes the header above knows how to describe. A part whose classes meet none of these
+# gets a warning naming it, which is the whole of what this generator can honestly do for it.
+_TEMPLATED = (f"{PROBE}CapacitiveMoistureProbe", f"{RGBLED}RgbLed", f"{DHT11}Dht11",
+              f"{BME280}Bme280")
 
 _BOUNDS_Q = f"""
 SELECT ?min ?max WHERE {{ 
@@ -245,27 +276,80 @@ def _optional_pins(row: dict) -> str:
             "// and each is picked out by the mqtt:readingPointer its sensor states in the world.",
             f"#define AIR_SENSOR_PIN {int(row['airPin'])}",
         ]
+    if row.get("bmeSda"):
+        addr = int(row["bmeAddr"]) if row.get("bmeAddr") else 0x76
+        out += [
+            "",
+            "// The BME280, over I2C on these two lines. Temperature, humidity and pressure travel",
+            "// in the SAME message as the moisture, each picked out by the mqtt:readingPointer its",
+            "// sensor states in the world. The address is the unit's SDO strap, from the wiring.",
+            f"#define BME280_SDA_PIN {int(row['bmeSda'])}",
+            f"#define BME280_SCL_PIN {int(row['bmeScl'])}",
+            f"#define BME280_ADDR 0x{addr:02X}",
+        ]
+    if row.get("ws2812"):
+        out += [
+            "",
+            "// The board's OWN status LED — an addressable WS2812 on this line, from the board",
+            "// class rather than the wiring. Same outcome vocabulary as a wired KY-016; the",
+            "// firmware drives it through the core's RMT driver and needs no library.",
+            f"#define STATUS_LED_WS2812_PIN {int(row['ws2812'])}",
+        ]
     return "\n".join(out) + "\n" if out else ""
+
+
+def _untemplated(ds, board: str) -> list[str]:
+    """The parts on this board the header says nothing about, by id."""
+    classes: dict[str, set[str]] = {}
+    for r in ratified.rows(ds, _HOSTED_Q):
+        if r["boardId"] == board:
+            classes.setdefault(r.get("partId") or "(unnamed)", set()).add(r["class"])
+    return sorted(p for p, c in classes.items() if not c & set(_TEMPLATED))
 
 
 
 _SENTINEL_Q = """
-SELECT ?lo ?hi ?maxAge WHERE {{
+SELECT ?lo ?hi ?agentId WHERE {{
   ?s <{AG}localId> "{sensor_id}" ; <{SENSING}monitors> ?subject ;
      <http://www.w3.org/ns/sosa/observes> ?prop .
   ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?r .
   ?r <http://www.w3.org/ns/ssn/systems/inCondition> ?c .
   ?c <http://www.w3.org/ns/ssn/forProperty> ?prop ;
      <https://schema.org/minValue> ?lo ; <https://schema.org/maxValue> ?hi .
-  OPTIONAL {{ ?agent <{SENSING}polls> ?s ; <{SENSING}maxReadingAgeS> ?maxAge }}
+  OPTIONAL {{ ?agent <{SENSING}polls> ?s ; <{AG}localId> ?agentId }}
  }}"""
+
+
+def _max_reading_age(world: str, agent_id: str | None) -> int | None:
+    """The polling agent's `sensing:maxReadingAgeS`, read from ITS beliefs file.
+
+    Found on the sentinel template's first real run (world/terrace): the ratified dataset holds
+    the PUBLIC graphs, and a freshness rule is a belief — private, in `beliefs/<agent>.ttl`,
+    never in the world. So an OPTIONAL that asked the dataset for it bound nothing, silently,
+    and every sentinel would have been compiled to the 750 s default whatever its agent
+    believed — exactly the mismatch #323 warned would bite. The sovereign holds the beliefs
+    files (it authored them), so the generator reads the one that matters here.
+    """
+    if not agent_id:
+        return None
+    path = world_dir(world) / "beliefs" / f"{agent_id}.ttl"
+    if not path.exists():
+        return None
+    import rdflib
+    g = rdflib.Graph().parse(path, format="turtle")
+    for value in g.objects(None, rdflib.URIRef(f"{SENSING}maxReadingAgeS")):
+        return int(value.toPython())
+    return None
 
 
 def render_sentinel(world: str, row: dict, ds) -> str:
     """config.h for the SECOND firmware (#151): a sentinel takes no orders, so its config
     carries what a command would have — the band, compiled from the WORLD's operating range
     for the pot it watches, and a heartbeat generated to fit under the polling agent's own
-    Listening freshness rule so a healthy sentinel is never called stale."""
+    Listening freshness rule so a healthy sentinel is never called stale.
+
+    The rest of what the board carries — an LED, a DHT11, a BME280, a built-in WS2812 — is the
+    same wiring question for either temperament, so `_optional_pins` answers it for both."""
     creds = world_dir(world) / "secrets" / f"mqtt-{row['sensorId']}.env"
     user, password = _env(creds, "MQTT_USERNAME"), _env(creds, "MQTT_PASSWORD")
     if not password:
@@ -281,7 +365,8 @@ def render_sentinel(world: str, row: dict, ds) -> str:
     lo, hi = float(found[0]["lo"]), float(found[0]["hi"])
     # Under the agent's absolute freshness rule with a fifth to spare, or its default when the
     # world grants no Listening yet: a heartbeat the agent would call stale is a lie on a timer.
-    max_age = int(float(found[0]["maxAge"])) if found[0].get("maxAge") else 750
+    stated = _max_reading_age(world, found[0].get("agentId"))
+    max_age = stated if stated is not None else 750
     heartbeat = max(60, int(max_age * 0.8))
     # The FAMILY's figure, deliberately, where a governed board is told its agent's own pick:
     # a sentinel takes no orders, so no revision could ever reach it, and baking anything but
@@ -312,7 +397,7 @@ SELECT ?f WHERE {{ <{SENSING}SensingCapability> <{SENSING}alarmDeltaFraction> ?f
 #define MOISTURE_PIN {int(row['gpio'])}
 #define ADC_DRY {int(row['rawDry'])}
 #define ADC_WET {int(row['rawWet'])}
-
+{_optional_pins(row)}
 // NOT the band. A sentinel's ULP watches MOVEMENT — the last published value plus or minus
 // WAKE_DELTA — and does not compare against the operating range at all; watching it made a pot
 // outside its range wake the radio every patrol, forever. The range is still read here, because
@@ -352,13 +437,18 @@ def generate(world: str, board: str | None = None) -> None:
         # Two firmwares, two temperaments, one dispatch: the governed node takes commands and
         # cadence bounds; the sentinel (#151) takes neither, and its config carries the band
         # and the heartbeat a command would otherwise have brought.
-        if row["firmware"] == "moisture-sentinel":
+        # The outdoor sentinel is the sentinel copied onto another board with an air part
+        # (#461); its config is the sentinel's template plus what `_optional_pins` adds.
+        if row["firmware"] in ("moisture-sentinel", "outdoor-sentinel"):
             out.write_text(render_sentinel(world, row, ds))
         else:
             out.write_text(render(world, row, bounds, _persist_looks(ds)))
         out.chmod(0o600)  # it carries this board's password
         log.info("  wrote %s  (%s -> %s:%s, pin %s)", out.relative_to(REPO_ROOT),
                  row["boardId"], row.get("lan") or row["host"], row["port"], row["gpio"])
+        for part in _untemplated(ds, row["boardId"]):
+            log.warning("  ! %s carries %s, which this generator has no template for — the "
+                        "header says nothing about it", row["boardId"], part)
 
 
 def main() -> None:

@@ -1,0 +1,169 @@
+@prefix : <http://example.org/orexis/world/terrace#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix water: <http://example.org/orexis/water#> .
+@prefix mqtt: <http://example.org/orexis/mqtt#> .
+@prefix schema: <https://schema.org/> .
+@prefix ag:   <http://example.org/orexis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix outdoor: <http://example.org/orexis/firmware/outdoor-sentinel#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix scaling: <http://example.org/orexis/scaling#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix device: <http://example.org/orexis/device#> .
+
+#  A ratified world, v1 — the terrace. "1 esp32, 1 moisture sensor, 1 bme. For now just
+#  monitoring. All outside." And then: "it should be the same firmware as moisture-sentinel,
+#  with same listening, same timings, same wi-fi. We just change temp sensor to outdoor bme
+#  and use built-in led."
+#
+#  One bus, one subject, one board, one agent — the shape of world/sensing, taken outdoors.
+#  No market, no supplier, no valve, no mandate: nothing here is allocated, so nobody bids,
+#  nobody hosts, and nobody is given room to re-pick a setting. That is what "for now just
+#  monitoring" means in this vocabulary — not a flag, but the absence of anything a further
+#  capability could be derived from.
+#
+#  The board is a SENTINEL — firmware/outdoor-sentinel, the moisture-sentinel copied onto this
+#  board with the BME280 and its own lamp (#461) — and this is the first world to deploy the
+#  sentinel temperament, and the first real run of its config template (#323): it takes no orders — no command channel — its ULP watches the soil for
+#  movement while everything sleeps, and a slow heartbeat keeps silence distinguishable from
+#  death. So the agent derives sensing:Listening, not Subscribing: it can only receive, and its
+#  one belief about the board is how stale a heartbeat may be before it stops trusting it.
+#
+#  What differs from world/sensing in HARDWARE is the SITE, and it is the hardware file's
+#  business: a terrace is outdoors, so the air part is a BME280 rather than a DHT11 — the
+#  DHT11's own datasheet range (0..50 °C, 20..90 %RH) cannot witness a frost or a fog, and the
+#  deployment envelope in hardware.ttl would refuse it at orexis-validate time.
+#
+#  See knowledge/domain/world.md, knowledge/decisions/world-graph.md.
+
+##########  The bus everyone speaks over  ##########
+
+:local_bus a mqtt:MessageBus ;
+    ag:localId "local_bus" ;
+    mqtt:brokerHost "localhost" ;
+    #  A broker per world, on ports of its own: 1884 is sensing, 1885 simulation, 1887 loner.
+    mqtt:brokerPort 1888 ;
+    mqtt:brokerTlsPort 8888 .
+
+##########  World version  ##########
+
+:world a ag:World ; ag:currentVersion :version_1 ;
+    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole ag:Sovereign ] .
+:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
+
+##########  The subject — a thing that is watched, and nothing more  ##########
+#  A planter bed on the terrace. NOT a water:Plant, for the same reason world/sensing's fern is
+#  not one: a plant is a participant in a water economy, and this world has no economy for it
+#  to join. It is also not a species — what grows in the bed is not stated because it is not
+#  known, and a species package (world/loner's Zamioculcas) would entail care ranges nobody
+#  has judged. Nobody acts for it, so no region and no patience is deduced: the sensing stake
+#  shapes target `ag:actsFor` a subject that states what it needs. When a plant is chosen,
+#  typing this node is the whole edit.
+#
+#  It DOES state one range, and honestly for one reason: a sentinel's config is compiled from
+#  the subject's operating range for what it watches — render_sentinel refuses without one —
+#  because the range SIZES the deviation limit (WAKE_DELTA is alarmDeltaFraction of its width;
+#  see decisions/the-sentinel-alarms-on-movement.md). It is not a want: no agent acts for the
+#  bed, so nothing wants it kept there. The band is a bed's, not a species': 0.25..0.60 of
+#  saturation is where an outdoor planter of mixed soil sits between "needs water" and "just
+#  watered", a width of 0.35, so at the family's 0.25 fraction the ULP wakes the radio on a
+#  move of about 0.09 — rain or a watering can, never a warm afternoon's drift.
+
+:terrace_bed a sosa:FeatureOfInterest ;
+    ag:localId "terrace_bed" ;
+    ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:SoilMoisture ;
+            schema:minValue 0.25 ; schema:maxValue 0.60 ; schema:unitCode unit:UNITLESS ] ] ;
+    rdfs:comment "The planter bed on the terrace, outdoors. Watched, not yet cared for." .
+
+##########  The board  ##########
+#  ONE board, THREE sensors, ONE message. The FireBeetle carries a capacitive probe and a
+#  BME280, and it is one MQTT client with one credential — so it publishes one message on one
+#  topic, and each sensor says which value in it is its own with mqtt:readingPointer. All three
+#  ride the board's own clock — a sentinel's heartbeat, or its alarm — and none has a command
+#  topic, because nothing commands this board. Each states the UNIT of what it reports: soil
+#  moisture and air humidity are both dimensionless fractions and look identical on the wire;
+#  only the property and the unit say which is which.
+#
+#  Hosting is stated here in the one vocabulary an agent may hold for it (sosa:hosts); the
+#  wiring says the same thing through the deployment in hardware.ttl, and tests/test_layout.py
+#  holds the two to agreeing.
+
+:esp32_terrace a sosa:Platform ;
+    ag:localId "esp32_terrace" ;
+    sosa:hosts :moisture_sensor_terrace , :air_sensor_terrace ;
+    rdfs:comment "The board. One MQTT client, one credential, one wake — which is why its three channels share a topic and a clock, and why those are facts about IT rather than about any one of them." .
+
+#  The BME280 as the society sees it: a System with the two channels the water domain has
+#  words for as sub-systems. The part reports a THIRD value, pressure, and it is deliberately
+#  not a sensor here — no domain property names it (packages/orexis-part-bme280 says so), and
+#  a sensor observing nothing the society can name is a channel nobody polls. The firmware
+#  still puts it in the payload, because the part produces it whether or not anyone listens,
+#  and the day a domain wants weather the pointer is one triple away.
+:air_sensor_terrace a ssn:System ;
+    ag:localId "air_sensor_terrace" ;
+    ssn:hasSubSystem :air_temp_terrace , :air_humidity_terrace ;
+    rdfs:comment "One part reporting two properties the society names, and one it does not. A System rather than a Sensor because it observes nothing itself; a single forced-mode conversion yields all its values together, which is why they share an instant." .
+
+:moisture_sensor_terrace a sosa:Sensor , device:Device , outdoor:Node ;
+    ag:localId "moisture_sensor_terrace" ;
+    mqtt:onBus :local_bus ;
+    #  No senseMode, no firmware name, no alarm promise stated: the device is typed
+    #  outdoor:Node, and the mode (Push -> its agent gains sensing:Listening), the firmware
+    #  directory ("outdoor-sentinel") and ssn:implements sensing:AlarmProcedure all arrive
+    #  from firmware/outdoor-sentinel/ontology.ttl by the closure. The promise reaches this
+    #  channel alone — the analog one the board's ULP can watch — and never the BME280's,
+    #  which hang off a bus the sleep-watcher cannot speak. No mqtt:commandTopic, because a
+    #  sentinel takes no orders, and the transport's shape would refuse one.
+    mqtt:readingPointer "/moisture" ;
+    sensing:monitors :terrace_bed ;
+    sosa:observes water:SoilMoisture ;
+    scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
+    mqtt:readingTopic "sensors/moisture_sensor_terrace/reading" .
+
+#  The BME280's two channels. Sensors and devices, with no mqtt:onBus of their own and no
+#  credential: the thing that connects is the board, which already has one. What each CAN
+#  honour is projected from the part's class — bme280:Bme280 states a forced-mode sampling
+#  floor of one second on the part, and an agent is never given hardware.ttl, so the society
+#  restates it here per channel; tests/test_layout.py holds the copy to the part.
+
+:air_temp_terrace a sosa:Sensor , device:Device ;
+    ag:localId "air_temp_terrace" ;
+    sensing:monitors :terrace_bed ;
+    sosa:observes water:AirTemperature ;
+    scaling:quantityUnit unit:DEG_C ;
+    mqtt:readingTopic "sensors/moisture_sensor_terrace/reading" ;
+    mqtt:readingPointer "/temperature" ;
+    ssn-system:hasSystemCapability [
+        a ssn-system:SystemCapability ;
+        ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "forced mode, full oversampling" ] ;
+        ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 1 ; schema:unitCode unit:SEC ] ] .
+
+:air_humidity_terrace a sosa:Sensor , device:Device ;
+    ag:localId "air_humidity_terrace" ;
+    sensing:monitors :terrace_bed ;
+    sosa:observes water:AirHumidity ;
+    scaling:quantityUnit unit:UNITLESS ;   # relative humidity as a fraction, 0-1
+    mqtt:readingTopic "sensors/moisture_sensor_terrace/reading" ;
+    mqtt:readingPointer "/humidity" ;
+    ssn-system:hasSystemCapability [
+        a ssn-system:SystemCapability ;
+        ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "forced mode, full oversampling" ] ;
+        ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 1 ; schema:unitCode unit:SEC ] ] .
+
+##########  The agent  ##########
+#  No ag:actsFor: with nothing to advance for it, this agent holds no stake — it records.
+#  No market:bidsIn, no market:hosts, no actuation:hasActuator: no other capability can be
+#  derived. And NO review:commits — "for now just monitoring" grants no room to re-pick
+#  anything; there is no cadence to re-pick anyway, since the board keeps its own.
+#
+#  Note what is NOT written here: no ag:hasCapability. See AGENTS.md.
+
+:terrace_agent a ag:Agent ;
+    ag:localId "terrace" ;
+    sensing:polls :moisture_sensor_terrace , :air_temp_terrace , :air_humidity_terrace ;
+    mqtt:eventTopic "readings/terrace" .

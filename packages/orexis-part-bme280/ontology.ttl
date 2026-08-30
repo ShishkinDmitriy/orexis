@@ -20,7 +20,7 @@ Structured exactly as the DHT11 package — the worked example this repository s
 :Bme280 a owl:Class ;
     mc:modelName "Bosch BME280 (GY-BME280 breakout)" ; rdfs:subClassOf mc:Peripheral ;
     rdfs:label "BME280" ;
-    rdfs:comment "Four legs on the common breakout: I2C data and clock, power and ground. The BARE part is 1.71-3.6V and not 5V-tolerant — the inverse of the DHT11's trap, which survives 5V and then presents it to a pin that cannot take it; most purple GY-BME280 breakouts carry a regulator and level shifting that forgive the mistake, and 'most' is not a datasheet word, so wire it for 3.3V and owe nobody an apology. I2C address 0x76 or 0x77 by the SDO strap, which matters the day two share a bus. No wokwi:part mapping yet, deliberately: the drawing generator will refuse to draw a world carrying one, which is the loud version of not having checked what wokwi calls it." .
+    rdfs:comment "Four legs on the common breakout: I2C data and clock, power and ground. The BARE part is 1.71-3.6V and not 5V-tolerant — the inverse of the DHT11's trap, which survives 5V and then presents it to a pin that cannot take it; most purple GY-BME280 breakouts carry a regulator and level shifting that forgive the mistake, and 'most' is not a datasheet word, so wire it for 3.3V and owe nobody an apology. I2C address 0x76 or 0x77 by the SDO strap, which matters the day two share a bus. No wokwi:part mapping yet, deliberately: the drawing generator names a part that says nothing about how it draws and leaves it out (world/terrace's diagram has the board and the probe and no BME280), which is the loud version of not having checked what wokwi calls it." .
 
 #################  What it is made of  #################
 #
