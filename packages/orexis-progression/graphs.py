@@ -1,7 +1,8 @@
 """The private graphs a mind keeps, named from the one identifier a process is given.
 
-This lived in the intention package and said it was here "rather than in `agent/ontology.py`"
-because a graph an agent without a stake and a lever never has is not kernel furniture. Every
+This lived in the intention package and said it was here "rather than in the kernel
+vocabulary" — `agent/ontology.py` then, `ontology.py` beside this file since #451 — because a
+graph an agent without a stake and a lever never has is not kernel furniture. Every
 agent keeps a ledger now — commitment is not plug-in-able — so the reason has expired and the
 file has moved. It stays apart from `ontology.py` for that file's own stated reason: what is in
 there is a TERM, and a graph IRI is an instance built from an agent's own id.
@@ -19,7 +20,7 @@ question an operator brings to it: what did this agent think it was doing, and w
 
 from __future__ import annotations
 
-from agent.ontology import GRAPH_PREFIX
+from .ontology import GRAPH_PREFIX
 
 _INTENTIONS = GRAPH_PREFIX + "intentions/"
 

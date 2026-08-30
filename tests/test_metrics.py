@@ -14,12 +14,13 @@ that cannot be told from a dead one.
 from __future__ import annotations
 
 import pytest
-from agent.ontology import term
+from orexis_progression.ontology import term
 
-from agent.beliefs import BeliefError, Picks
+from orexis_deliberation.beliefs import BeliefError, Picks
 from orexis_capability_reporting.beliefs import REPORTING_PICKS, ReportingBeliefs
 from orexis_capability_reporting.terms import term as reporting_term
-from agent.metrics import Metrics, tree_bytes
+from agent.metrics import Metrics
+from orexis_progression.upkeep import tree_bytes
 from conftest import sensing_of
 
 from conftest import build_agent, wired_sensors

@@ -43,12 +43,12 @@ from __future__ import annotations
 from datetime import timedelta, datetime, timezone
 from pathlib import Path
 
-from agent.desire import Desire
+from orexis_deliberation.desire import Desire
 from .driver import driver_for
 from agent.module import Module, contributes
-from agent.ontology import HANDLE, SUBSCRIPTIONS
-from agent.ontology import STATE_GRAPH, beliefs_graph
-from agent.store import bindings
+from orexis_progression.ontology import HANDLE, SUBSCRIPTIONS
+from orexis_progression.ontology import STATE_GRAPH, beliefs_graph
+from orexis_progression.store import bindings
 
 
 from . import pointer

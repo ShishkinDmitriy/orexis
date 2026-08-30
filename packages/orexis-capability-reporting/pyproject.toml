@@ -11,6 +11,8 @@ description = "Telemetry: what an agent observed, written to the shared series s
 requires-python = ">=3.10"
 dependencies = [
     "orexis",  # assembly (the manifest) and, where there is behaviour, the kernel
+    "orexis-deliberation",  # the belief and desire modalities — deliberation's contract
+    "orexis-progression",  # Timer, and tree_bytes off upkeep — progression's contract
     "influxdb-client>=1.40",  # series.py writes points
 ]
 

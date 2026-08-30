@@ -38,8 +38,10 @@ What keeps a capability separable is the **term** and the registration, not the 
 why uniform price landed without touching a line of it. `PROVIDES` in a package's `__init__.py` is
 how an implementation registers, and its absence is what makes a package knowledge-only.
 
-**Packages never import each other's Python.** Reach another by asking `agent.provider(family)`,
-or contribute through the [choir](/domain/choir.md) hooks.
+**Packages never import each other's Python across a layer.** Reach another by asking
+`agent.provider(family)`, or contribute through the [choir](/domain/choir.md) hooks. What a
+package MAY import is the contract of the layer beneath it — a plug-in its family's, and every
+layer the mind's stores' ([a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md)).
 
 # Each is granted by its own premise
 

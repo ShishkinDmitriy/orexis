@@ -347,6 +347,26 @@ def test_no_document_names_a_path_that_is_not_there():
         # and the two empty directories it deleted, named as what went.
         "agent/codecs",
         "agent/scalings",
+        # a-layer-is-a-package-and-need-loads-it (#451): the mind's stores left the kernel's
+        # directory for `packages/orexis-modality-graph/`. The two layering records name the
+        # files where they were when the decision was taken, and half a dozen older records
+        # narrate the kernel vocabulary, the store, the belief reader and the two mental-state
+        # modules at their old addresses — "was", "until #451", "at the time", every one.
+        "agent/store.py",
+        "agent/beliefs.py",
+        "agent/graphs.py",
+        "agent/desire.py",
+        "agent/intentions.py",
+        "agent/ontology.py",
+        # a-layer-is-a-package-and-need-loads-it (#452): the kernel's own modules left `agent/`
+        # for the three layer packages. The layering records, the mind's record and the act,
+        # plan and intention records name the files where they were when each was written.
+        "agent/act.py",
+        "agent/planner.py",
+        "agent/deliberator.py",
+        "agent/keeper.py",
+        "agent/execution.py",
+        "agent/reviser.py",
         # two-worlds-were-one removed `world/society`, a near-duplicate of `world/simulation`.
         # Three records narrate it and each is explicit: a struck-through seam marked "Moot",
         # the pair of worlds that WAS device-for-device identical, and the two that once shared
@@ -572,7 +592,7 @@ def test_a_dictionary_term_is_a_declared_one():
     import rdflib
 
     from assembly import loader
-    from agent.store import NAMESPACES
+    from orexis_progression.store import NAMESPACES
 
     #  Asked of the loader, not globbed. This was `packages/**/ontology.ttl` plus a firmware
     #  glob — the same list the loader already assembles, maintained twice — and when the kernel

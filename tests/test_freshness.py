@@ -29,7 +29,7 @@ def _fern(monkeypatch, value=0.55):
 
 
 def _age_the_reading(st, hours=3):
-    from agent.ontology import STATE_GRAPH
+    from orexis_progression.ontology import STATE_GRAPH
 
     old = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
     st.update(f"""
@@ -50,7 +50,7 @@ def test_the_horizon_the_shape_reads_is_the_one_the_module_computes(monkeypatch)
     the graph is what the method returns.
     """
     from orexis_capability_sensing.terms import INSTRUMENTS_GRAPH
-    from agent.store import bindings
+    from orexis_progression.store import bindings
     from orexis_capability_sensing.terms import STALE_AFTER_S
 
     agent, st = _fern(monkeypatch)
@@ -110,14 +110,14 @@ def test_the_want_fires_as_a_shape_and_does_not_refuse_the_boot(monkeypatch):
     starting, which is precisely the failure the severity split exists to prevent.
     """
     from orexis_capability_sensing.terms import INSTRUMENTS_GRAPH
-    from agent.ontology import STATE_GRAPH, beliefs_graph
+    from orexis_progression.ontology import STATE_GRAPH, beliefs_graph
     from agent.validate import _shapes_and_vocabulary, conforms, graph_from
 
     agent, st = _fern(monkeypatch, value=0.55)
     _age_the_reading(st)
     data = graph_from(st, *st.public_graphs(), STATE_GRAPH,
                       INSTRUMENTS_GRAPH)
-    from agent import effects
+    from orexis_deliberation import effects
     for triple in desires_build(st, "fern").construct(
             "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):
         data.add(effects._triple(triple))
@@ -165,10 +165,10 @@ def test_a_horizon_nobody_published_leaves_the_want_unmet_not_met(monkeypatch):
     that is current by any reasonable reading of the clock, with no horizon stated at all.
     """
     from orexis_capability_sensing.terms import INSTRUMENTS_GRAPH
-    from agent.ontology import STATE_GRAPH
+    from orexis_progression.ontology import STATE_GRAPH
     from agent.validate import graph_from
     from orexis_capability_sensing.terms import STALE_AFTER_S
-    from agent import effects
+    from orexis_deliberation import effects
 
     agent, st = _fern(monkeypatch, value=0.55)          # horizons published by `start()`
     st.update(f"DELETE WHERE {{ GRAPH <{INSTRUMENTS_GRAPH}> "
@@ -199,7 +199,7 @@ def test_a_property_with_no_sensor_holds_no_freshness_want(monkeypatch):
     `world/loner`'s zz plant is exactly that: it states ranges for light and humidity nothing
     reads. Its gardener must hold freshness wants for what it polls and for nothing else.
     """
-    from agent.store import bindings
+    from orexis_progression.store import bindings
 
     st = genesis_store(world="loner")
     wants = desires_build(st, "gardener")
@@ -239,7 +239,7 @@ def test_an_instrument_pointed_at_something_i_do_not_act_for_is_still_wanted_cur
                 if d.is_epistemic and d.observed_property.endswith("StoredLitres"))
     assert butt.urgency == 1.0, "the butt is polled, so its level is wanted current"
 
-    keeper.deliberate_on_gaps()
+    keeper.agent.deliberator.deliberate_on_gaps()
 
     about = {w.uri: w.observed_property for w in sensing_of(gardener).desires()}
     watched = {about[s.want].rsplit("#", 1)[-1] for s in keeper.standing()
@@ -276,8 +276,8 @@ def test_a_listener_reports_the_want_it_cannot_repair_as_unequipped(monkeypatch)
     the lever is weighed, the world it reaches is no better, and the pass says so. Neither
     reads as a look that happened, which is what the row used to buy.
     """
-    from agent import planner as search
-    from agent import trace
+    from orexis_deliberation import planner as search
+    from orexis_deliberation import trace
 
     supplier = build_agent("supplier", genesis_store(), monkeypatch)
     open_round_for(supplier, "supplier")   # the upstream lever exists only while a round is open

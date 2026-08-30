@@ -3,7 +3,7 @@ type: Domain Concept
 title: Commitment
 description: >-
   REA's promised economic flow — who it is for, what it permits, how much, from which round,
-  once, until when — as the kernel's `agent/commitment.py`. What a valve FULFILS: the market's
+  once, until when — as progression's `packages/orexis-progression/commitment.py`. What a valve FULFILS: the market's
   claim is its embodiment (the flow plus the credit leg and, on the wire, the signatures), and a
   self-dose is one with nobody to pay. In the kernel because two packages that may not import
   each other both hold it. Not BDI's commitment, which is an intention.
@@ -14,7 +14,7 @@ description: >-
 The **promised flow**. [settlement-speaks-rea](/decisions/settlement-speaks-rea.md) aligned the
 market to ValueFlows and found the correction that names this page: what you win in an auction
 is a `vf:Commitment` — *a planned economic flow* — and the valve opening is the
-`vf:EconomicEvent` that fulfils it. `agent/commitment.py` is that shape and nothing more: `sub`,
+`vf:EconomicEvent` that fulfils it. `commitment.py` there is that shape and nothing more: `sub`,
 `scope`, `amount_l`, `auction_id`, `jti`, `exp` — and `act`: which
 [act](/domain/act.md) the flow is a promise of (that page lists what a claim's and a self-dose's
 are). `exp` is that act's `not_after` in the wire's unit; a commitment that arrived over the

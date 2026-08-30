@@ -3,14 +3,19 @@ type: Service
 title: Keeper
 description: >-
   The service that keeps the ledger — the only writer of the intention graph, the owner of the
-  patience that absorbs a repeated impulse, and the judge of whether the world answered. It also
-  holds a clock: on its own patience it hands every want to execution, which is the non-market
-  entry into deliberation.
+  patience that absorbs a repeated impulse, and the judge of whether the world answered. In the
+  progression layer, `packages/orexis-progression/keeper.py`; the clock it used to hold
+  is the deliberator's now, because a clock that asks the search is the search's clock.
 ---
 
 # What it runs
 
-Three jobs that share one graph, and a clock.
+Three jobs that share one graph. **The clock it held is gone from here** — the patience tick
+that handed every want to execution moved to the [deliberator](/domain/deliberator.md) when the
+kernel split along its layers (#452): progression may not import the search above it, and a
+tick whose whole job is to ask the search belongs to the layer that searches. The PATIENCE
+stays: it is still `ag:patienceS`, handed in by the container at construction — progression
+reads no belief — and the deliberator ticks at it.
 
 - **Keeping.** `adopt` / `satisfy` / `drop`, each row carrying when it was adopted, how it
   resolved, and why in both directions.
@@ -32,4 +37,4 @@ one-writer scan in `tests/test_intention.py` holds it.
 Nothing here chooses. [Execution](/domain/executor.md) hands it a plan's head; the *whether*
 belongs to [deliberation](/domain/deliberator.md). And what a commitment IS — the lifecycle, the
 expectation, why absorption is a cost model — is [intention](/domain/intention.md)'s to say. This
-page is the service: its three jobs, its clock, and the one graph it may write.
+page is the service: its three jobs and the one graph it may write.

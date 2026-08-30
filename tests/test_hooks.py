@@ -14,7 +14,7 @@ import pytest
 from assembly import loader
 from assembly.contribute import contributions_of
 from agent.module import Module
-from agent.ontology import AG, DESIRES, HANDLE, REPORTS, SEND
+from orexis_progression.ontology import AG, DESIRES, HANDLE, REPORTS, SEND
 from conftest import build_agent, wired_sensors
 
 
@@ -111,7 +111,7 @@ def test_a_reactive_hook_never_reaches_the_planner(monkeypatch):
     """
     import threading
 
-    from agent.planner import Planner
+    from orexis_deliberation.planner import Planner
     from conftest import genesis_store
 
     gardener = build_agent("gardener", genesis_store(world="loner"), monkeypatch)

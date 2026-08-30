@@ -12,10 +12,10 @@ so its Actuate has an effect rule and there is something to simulate. Every plan
 
 from __future__ import annotations
 
-from agent.ontology import DELIBERATION_GRAPH
-from agent.store import bindings
-from agent import planner as search, trace
-from agent.planner import Planner
+from orexis_progression.ontology import DELIBERATION_GRAPH
+from orexis_progression.store import bindings
+from orexis_deliberation import planner as search, trace
+from orexis_deliberation.planner import Planner
 
 from conftest import build_agent, genesis_store
 

@@ -154,7 +154,7 @@ Three consequences worth having in one place, because each surprised somebody:
   *past this edge*, so it trips both. The region want stays unmet and the freshness want beside
   it is what proposes the look. The two used to be one hardcode; they are two wants with two
   answers, and only one of them is about looking.
-- **The keeper's tick asks about every want.** Its filter for `unmeasured`/`stale` was the other
+- **The patience tick asks about every want.** Its filter for `unmeasured`/`stale` was the other
   half of the hardcode — it knew which wants would say OBSERVE because a branch decided it
   before any search ran. Nothing knows that now, so it asks about all of them and carries out
   the one answer it is entitled to. The cost is a plan per want per patience period, which is

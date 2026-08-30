@@ -8,7 +8,7 @@ reason for having the node is gone.
 import pytest
 
 from onboarding.namespaces import MQTT
-from agent.store import bindings
+from orexis_progression.store import bindings
 
 from conftest import genesis_store
 

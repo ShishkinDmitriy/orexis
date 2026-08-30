@@ -1,6 +1,6 @@
 """Every package is a project, and a project declares exactly what it imports.
 
-Twenty-two distributions, each owning a top-level module of its own. What makes that more than ceremony is
+Twenty-five distributions, each owning a top-level module of its own. What makes that more than ceremony is
 the DEPENDENCY GRAPH — `orexis-codec-json` needs `orexis-capability-sensing` because it
 implements sensing's `Codec`, and says so — and a dependency list is only worth reading if
 something holds it to the imports. Nothing did, and two errors were sitting in the root's list
@@ -36,6 +36,27 @@ PACKAGES_ROOT = REPO_ROOT / "packages"
 #  `orexis` and not on anything third-party.
 OWN_TREES = {"assembly", "agent", "onboarding"}
 ROOT_DIST = "orexis"
+
+#  THE LAYERS, IN ORDER, spelled ONCE. The kernel is three packages in the one tree — the
+#  reactive loop, then progression, then deliberation, and no floor beneath them — and `agent/`
+#  is the container that assembles them (a-layer-is-a-package-and-need-loads-it, #452). A
+#  layer imports only families strictly EARLIER in this tuple; the container may import all
+#  of them; a capability may import any layer's contract. `test_layering.py` holds every one
+#  of those arrows and reads the order from here. The carve-outs are by FAMILY, never by
+#  name: the layer is the second segment of a package's own name — and, for a layer, the only
+#  other one, since a layer is one package and not a family with members — so a capability can
+#  never slip in by being listed. Until #455 derives the load set from the grants, the root's own declared
+#  dependencies are what load the layers, which is why the root's list may name them and
+#  nothing else under `packages/`.
+LAYERS = ("reactive", "progression", "deliberation")
+
+
+def family_of(pkg: Path) -> str:
+    return pkg.name.split("-")[1]
+
+
+def is_layer(pkg: Path) -> bool:
+    return family_of(pkg) in LAYERS
 
 
 def normalise(name: str) -> str:
@@ -133,9 +154,11 @@ def test_every_package_is_a_project(pkg: Path):
     assert config["tool"]["setuptools"]["packages"] == [module], (
         f"{pkg.name} must claim exactly `{module}` — its own top-level module, and only its own.")
     parts = pkg.name.split("-")
-    assert len(parts) >= 3 and parts[0] == "orexis", (
+    assert parts[0] == "orexis" and (len(parts) >= 3 or is_layer(pkg)), (
         f"{pkg.name} must be named `orexis-<family>-<name>`: the family is the second segment, "
-        "and since the family directory went, that segment is the only place it is stated.")
+        "and since the family directory went, that segment is the only place it is stated. "
+        "Only a LAYER is two segments — `orexis-reactive` — because a layer is one package, "
+        "not a family with members (a-layer-is-a-package-and-need-loads-it).")
     assert config["project"]["description"].strip(), "a project says what it is"
 
 
@@ -171,8 +194,15 @@ ONBOARDING_REACHES_IN = {
 
 
 def test_the_root_trees_reach_into_exactly_the_packages_on_record():
-    """A ratchet, not a permission. See #426."""
-    modules = {p.name.replace("-", "_") for p in package_dirs()}
+    """A ratchet, not a permission. See #426.
+
+    The LAYERS are not on this record and not held by it: the container importing the mind's
+    stores, the loop, progression or the search is the layering working, not the root reaching
+    into a grant — and onboarding reaching into the search for `effects` and `affordances_of`
+    is the same reach it made when those lived in `agent/`. What keeps that carve-out narrow
+    is `test_layering.py`, which holds each layer to importing only the layers beneath it.
+    """
+    modules = {p.name.replace("-", "_") for p in package_dirs() if not is_layer(p)}
     found = {
         (str(path.relative_to(REPO_ROOT)), module)
         for tree in sorted(OWN_TREES)
@@ -197,7 +227,9 @@ def test_the_root_declares_exactly_what_its_own_trees_import():
     want.discard(ROOT_DIST)
     #  The packages onboarding reaches into are held by the ratchet above, not declared here —
     #  the cycle and the image layer are why. That test is what keeps this exclusion honest.
-    want -= {p.name for p in package_dirs()}
+    #  The LAYERS are the exception on both counts: the root declares them, knowingly a cycle,
+    #  and the Containerfile installs the five editables together so the image layer survives.
+    want -= {p.name for p in package_dirs() if not is_layer(p)}
     have = declared(REPO_ROOT / "pyproject.toml")
     assert have == want, (
         "pyproject.toml is out of step with what agent/, assembly/ and onboarding/ import.\n"
@@ -241,5 +273,15 @@ def test_packages_is_a_plain_directory_and_not_a_module(pkg: Path):
         "packages/__init__.py must not exist — `packages/` is a directory of projects, and "
         "each package's module is top-level and its own.")
     assert (pkg / "__init__.py").is_file(), "a package's own manifest is a regular module"
-    assert pkg.name.count("-") >= 2 and pkg.name.startswith("orexis-"), (
-        f"{pkg.name}: a package directory IS its distribution name, `orexis-<family>-<name>`.")
+    assert (pkg.name.count("-") >= 2 or is_layer(pkg)) and pkg.name.startswith("orexis-"), (
+        f"{pkg.name}: a package directory IS its distribution name, `orexis-<family>-<name>` — "
+        "or `orexis-<layer>` for the three layers, which are not families.")
+
+
+@pytest.mark.parametrize("family", LAYERS)
+def test_every_layer_is_there_to_carve_out(family: str):
+    """The guard on the carve-out: `is_layer` excuses a family from two ratchets above, and a
+    family with no member would excuse nothing while looking as if it did."""
+    assert [p for p in package_dirs() if family_of(p) == family], (
+        f"no package of the `{family}` family under packages/ — that layer moved or was "
+        "renamed, and the carve-outs in this file and test_layering.py now cover nothing.")

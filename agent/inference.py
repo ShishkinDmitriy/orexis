@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import logging
 
-from .ontology import (ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, WORLD_ENTAILED_GRAPH,
+from orexis_progression.ontology import (ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, WORLD_ENTAILED_GRAPH,
                        WORLD_GRAPH)
 
 log = logging.getLogger("inference")

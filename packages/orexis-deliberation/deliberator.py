@@ -37,14 +37,22 @@ See knowledge/decisions/an-intention-is-an-amortised-deliberation.md.
 
 from __future__ import annotations
 
-from . import planner, trace
-from .act import Act, Step
-from .desire import Desire
+import logging
+
+from assembly.contribute import answer as contribution, contributes
+from .beliefs import Picks
+from orexis_progression.keeper import (INTENTION_CLASS, PATIENCE_S, KeepingBeliefs,
+                                                 NoPatience)
+from orexis_progression.timer import Timer
+
+from . import planner, pursuit, trace
+from orexis_progression.act import Act, Step
+from orexis_deliberation.desire import Desire
 from .afforder import affordances_of
-from .module import Module
-from .ontology import AG, DELIBERATION_GRAPH, STATE_GRAPH, beliefs_graph
+from orexis_progression.ontology import (AG, DELIBERATION_GRAPH, PLAN_FAILED, PLAN_FINISHED,
+                                                  SERIES, STATE_GRAPH, STEP_DONE, beliefs_graph)
 from .planner import Planner
-from .store import bindings
+from orexis_progression.store import bindings
 
 # What this package asks OF others, by family — their namespaces, never their Python.
 
@@ -68,10 +76,43 @@ from .store import bindings
 #  a rule anybody had to keep.
 
 
-class Deliberator(Module):
-    """The decider. Speaks to no topic; its callers are its siblings, through the agent."""
+#  THE KEEPER'S PICK, read HERE and handed down (#452): a pick is a belief, and progression —
+#  where the keeper lives — reads none. `capability` only names whoever wanted the pick, for
+#  the error a missing one raises; there is no capability here, so it names the thing itself.
+KEEPING_PICKS = Picks(
+    capability=INTENTION_CLASS,
+    cls=KeepingBeliefs,
+    terms={"patience_s": PATIENCE_S},
+)
+
+
+class Deliberator:
+    """The decider. Speaks to no topic; its callers are its siblings, through the agent.
+
+    NOT a `Module`, and it was one — for the reason the keeper gives: `Module` is the
+    container's contract for a capability, and a layer may not import the container. The
+    four names the runtime asks of everything in its module list are stated here, and the
+    one contribution (`series`) is found by `assembly.contribute` on any object.
+    """
 
     name = "deliberation"
+    CAPABILITY = ""     # nothing a world grants — `provider()` can never return the deliberator
+
+    def answer(self, term: str):
+        """Whatever fills one point on me, as a bound method — or None. The same door a
+        `Module` has, so whoever walks `agent.modules` asking by term finds this too."""
+        return contribution(self, term)
+
+    def __init__(self, agent):
+        self.agent = agent
+        self.me = agent.me
+        self.log = logging.getLogger(f"{agent.id}.{self.name}")
+        self._tick: Timer | None = None
+        self._steps_done = 0        # what progression told me, for `series`
+        self._steps_declined = 0
+        self._plans_finished = 0
+        self._plans_failed = 0
+
     def pursued(self) -> list[tuple[Desire, str | None]]:
         """Every desire this agent holds, with the move I propose for it — or None.
 
@@ -90,7 +131,88 @@ class Deliberator(Module):
         lifecycle up. Cheap: the graph holds one pass per desire and most agents hold a handful.
         """
         self.agent.beliefs.clear_graph(DELIBERATION_GRAPH)
+        # THE MIND'S OWN CLOCK — the non-market entry into deliberation (#208). On the agent's
+        # patience, mark every want for reconsideration. The patience is the rate bound by
+        # construction: an impulse younger than it is absorbed by the keeper's `adopt` anyway,
+        # so ticking faster would only ask questions whose answers are already standing.
+        #
+        # This was the keeper's tick, and it searched synchronously on the timer's own thread.
+        # Since #452 a timer lands on the reactive loop — the one executing thread, which must
+        # never be held for a search — so what the tick does now is MARK (milliseconds) and the
+        # reviser's thread does the searching. Same passes, same commitments; the search moved
+        # off the clock's thread and onto the mind's, which is where the layering record put it.
+        #
+        #  No patience, no clock. An agent that states none has no stake (the shape guarantees
+        #  the converse), so there are no gaps for this tick to collect and nothing it could
+        #  commit — starting a timer to ask would be a clock per agent to answer "nothing".
+        try:
+            interval = float(self.agent.keeper.beliefs.patience_s)
+        except NoPatience:
+            self.log.debug("no patience stated and no stake to spend it on — the tick stays off")
+            return
+        self._tick = Timer(interval, self.tick)
+        self._tick.start()
 
+    def stop(self) -> None:
+        if self._tick:
+            self._tick.stop()
+
+    def tick(self) -> None:
+        """The clock landed, on the loop: mark every want and return. Never searches here."""
+        for desire in self.agent.pursuing():
+            if not desire.is_obligation:
+                self.agent.reviser.note(desire.uri, desire)
+
+    def deliberate_on_gaps(self) -> None:
+        """Every want, through pursuit, NOW. Noticing is plural; deciding is not; doing is one road.
+
+        The synchronous form of the tick — what a test calls to have the consequences before it
+        asserts, and what the reviser's drain amounts to once every mark is taken. Deliberation
+        used to run only when the market knocked, and then the tick carried out ONE of the
+        deliberator's answers — Observe — and dropped the rest on the floor, because an Acquire
+        needs a round nobody may convene from here. It still does; what changed is that the
+        commitment is made anyway. `pursuit.pursue` plans, writes the head row to the ledger and
+        hands it down to its actor, and an actor that cannot act now says so and the intention
+        STANDS — so the bidder answers the next offer from what it already committed to,
+        without a second search. See knowledge/domain/executor.md.
+
+        Obligations are skipped: a host serves on a presentation or when stock arrives with a
+        claim held, and hosting wakes the search on those events itself.
+        """
+        for desire in self.agent.pursuing():
+            if desire.is_obligation:
+                continue
+            pursuit.pursue(self.agent, desire)
+
+    # --- what progression tells me (#452): a lower layer speaks upward only as an event -----
+
+    @contributes(STEP_DONE)
+    def on_step_done(self, act, intention: str, took: bool) -> None:
+        """A committed act was handed to its actors, on the loop. Counted for `series`, and
+        nothing more: a take that happened needs no new search, and one that did not is an
+        intention standing for its trigger, which `adopt` absorbs until patience runs out."""
+        self._steps_done += 1 if took else 0
+        self._steps_declined += 0 if took else 1
+
+    @contributes(PLAN_FINISHED)
+    def on_plan_finished(self, intention: str, action: str, want: str) -> None:
+        """The world answered as promised. COUNTED, not re-planned: the plan concluded, and the
+        next trigger that could change the answer — an offer, a reading — wakes the search
+        through its actor already. Marking here as well put a bid into a round that was still
+        open the instant a dose answered, racing the next offer; the ledger already says the
+        want was served, and whether more is due is the next pass's question, not this event's."""
+        self._plans_finished += 1
+
+    @contributes(PLAN_FAILED)
+    def on_plan_failed(self, intention: str, action: str, want: str) -> None:
+        """The deadline passed and the world did not answer. Re-plan: the want is marked and
+        the worker searches again, with the unmet verdict in the ledger for the afforder to
+        read — the suspicion an affordance earns is progression's count, and what to do about
+        a suspect lever is the search's."""
+        self._plans_failed += 1
+        self.agent.reviser.note(want)
+
+    @contributes(SERIES)
     def series(self) -> list[tuple[str, dict, dict]]:
         """The ranking, as figures — and the split that stops it misleading.
 
@@ -170,7 +292,14 @@ class Deliberator(Module):
         #  reached (#258); both are closed. `blind` above zero is a package that never stated
         #  what its lever does. A number that shows a known defect is worth more than one that
         #  says things are fine.
-        rows.append(("agent_planning", {}, trace.effort(self.agent.beliefs.query_union)))
+        rows.append(("agent_planning", {}, {**trace.effort(self.agent.beliefs.query_union),
+                                            #  what progression told me since the process
+                                            #  started (#452): acts its actors took, and
+                                            #  acts declined as "not now"
+                                            "steps_taken": self._steps_done,
+                                            "steps_declined": self._steps_declined,
+                                            "plans_finished": self._plans_finished,
+                                            "plans_failed": self._plans_failed}))
         return rows
 
     #  `propose_about(property)` and `desire_about(property)` WERE HERE — the actors' door by

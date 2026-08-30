@@ -42,7 +42,7 @@ from pathlib import Path
 
 from assembly import loader
 from .config import REPO_ROOT
-from .ontology import (CLASSIFICATION_GRAPH, DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
+from orexis_progression.ontology import (CLASSIFICATION_GRAPH, DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
                        ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
                        WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
 
@@ -205,7 +205,7 @@ def attribution_of(st) -> tuple[str, str] | None:
     what capacity — a bare `prov:wasAttributedTo` is not enough, because the capacity is the part
     that distinguishes ratifying from operating. Silence is a better answer than a guess.
     """
-    from .store import bindings
+    from orexis_progression.store import bindings
 
     rows = bindings(st.query(_ATTRIBUTION_Q))
     return (rows[0]["user"], rows[0]["role"]) if rows else None

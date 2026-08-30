@@ -57,9 +57,14 @@ packages/      EVERY package there is, one mechanic: packages/<family>/<name>/
   capability/    what an agent can DO — sensing, market, actuation, review, reporting
   transport/     how a device is REACHED — mqtt. Deliberately not a capability
   codec/  scaling/   how bytes become a document, and a document a quantity
-agent/         the KERNEL that loads packages: store, genesis, runtime, inference, validate.
-               A BDI engine and nothing else — it holds no vocabulary for hardware, no
-               mailbox, and no word for any domain
+  reactive/  progression/  deliberation/
+                 the KERNEL, as three layers: a queue and the one thread that drains it;
+                 the store engine, the intention ledger, the scheduler and the timer; the
+                 belief base, the desires and the search. Each imports only the layers
+                 beneath it, and speaks upward only as an event
+agent/         the CONTAINER that assembles them: genesis, runtime, inference, validate, the
+               Module contract. A BDI engine and nothing else — it holds no vocabulary for
+               hardware, no mailbox, and no word for any domain
 onboarding/    the sovereign's tools: what turns a ratified world into a running society
 tests/         the two gates, plus the layering the image depends on
 world/         ratified worlds — one directory each: topology, beliefs, and its compose file

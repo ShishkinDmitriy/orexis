@@ -215,7 +215,14 @@ one observation per subject and property, so every reading appends a version plu
 and a few hundred triples never reach a size-triggered threshold. Measured on
 `simulation-fern`: about 170 KB an hour, 4 MB a day, for a dataset whose size never changed.
 
-`agent/upkeep.py` holds the clock and calls `optimize()` when the ratio it is held to says so.
+`packages/orexis-progression/upkeep.py` holds the clock and calls `optimize()` when the ratio it is held to says so
+— the clock is progression's, and so is the store ENGINE the `optimize()` runs on
+(`packages/orexis-progression/store.py`), while the belief base as a MODALITY — the
+reader, the picks, what a belief means — is deliberation's
+(`packages/orexis-deliberation/beliefs.py`): since
+[a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md)
+the engine sits in the lowest layer that persists anything and the search reaches DOWN to it,
+never the reverse; upkeep compacts the store it is handed and never reads a belief in it.
 
 **It is not a service, and the test is what it produces.** Every service here runs a process and
 writes a named graph, because what a service concludes is a fact somebody authored. Compaction

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from agent.store import bindings
+from orexis_progression.store import bindings
 
 QueryFn = object
 

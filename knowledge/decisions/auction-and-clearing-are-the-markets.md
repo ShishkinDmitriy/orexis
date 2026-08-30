@@ -38,7 +38,7 @@ package importing another's Python — the independence contract in `pyproject.t
 and should. The first draft gave actuation a `Dose` of its own, the claim's shape restated; the
 sovereign's correction is the better answer: a claim is the *embodiment* of REA's commitment
 (the promised flow — [settlement-speaks-rea](/decisions/settlement-speaks-rea.md) already said
-so), and commitment is structure, as an intention is. So `agent/commitment.py` holds the six
+so), and commitment is structure, as an intention is. So `commitment.py` (progression's, `packages/orexis-progression/`) holds the six
 fields a valve fulfils, `Claim` extends it with the credit leg, and a self-dose is a
 `Commitment` with nobody to pay. Actuation imports the kernel; the market imports the kernel;
 neither imports the other. See [commitment](/domain/commitment.md).

@@ -6,8 +6,10 @@ requires-python = ">=3.10"
 
 # `orexis` is ASSEMBLY, the KERNEL and the OPERATOR'S TOOLS — the three trees at the repo root.
 # Every package under `packages/` is its own project with its own dependencies, and this one
-# does not depend on any of them: the kernel loads packages and never needs one, which is a
-# claim `pip install -e .` alone now demonstrates. See knowledge/decisions/every-package-is-a-project.md.
+# depends on exactly ONE of them: the kernel loads packages and never needs a GRANTED one, but
+# the mind's stores are a package beneath the layers now, and until #455 derives the load set
+# from the grants, the kernel's own declared dependency is what carries them
+# (a-layer-is-a-package-and-need-loads-it). See knowledge/decisions/every-package-is-a-project.md.
 #
 # What did NOT come back is the boundary two pyprojects used to pretend to draw. `onboarding/`
 # still ships in this distribution beside `agent/`, because packaging never kept the operator's
@@ -18,11 +20,20 @@ requires-python = ">=3.10"
 # Every name below is imported by `agent/` or `onboarding/`. Nothing else is listed, and
 # tests/test_layout.py holds this list to exactly what those two trees import.
 dependencies = [
+    #  The kernel's three LAYERS, packages in the one tree (a-layer-is-a-package-and-need-loads-it,
+    #  #452): `agent/` assembles them and the operator's tools import them, so the arrows are
+    #  declared. A knowing metadata CYCLE — each layer depends back on `orexis` for `assembly`
+    #  — belonging to the shared root distribution, not to the layering (the imports are
+    #  acyclic: assembly < reactive < progression < deliberation < agent), dissolving when
+    #  assembly becomes a distribution of its own. It is why the Containerfile installs the
+    #  four editables in one pip call. Until #455 builds the pull, these lines are also what
+    #  LOAD the layers — the record's legitimate intermediate state.
+    "orexis-reactive",
+    "orexis-progression",
+    "orexis-deliberation",
     #  assembly/ and agent/ — rdflib is DIRECT (nine imports across the three trees) and used
     #  to arrive only as a transitive of pyshacl, which is free to drop or re-pin it.
     "rdflib>=7",
-    "pyoxigraph>=0.4",
-    "pyshacl>=0.26",
     "python-dotenv>=1.0",
     "cryptography>=42",
     #  onboarding/ — the operator's tools reach both services and read a drawing
@@ -105,6 +116,9 @@ members = ["packages/*"]
 # it; otherwise adding a package stays what the README claims it is — adding a directory.
 [tool.uv.sources]
 orexis = { workspace = true }                    # every package: `from assembly import contributes`
+orexis-reactive = { workspace = true }     # progression: the loop a timer lands on
+orexis-progression = { workspace = true }   # the root, deliberation and four packages
+orexis-deliberation = { workspace = true }    # the root, market and actuation
 orexis-capability-sensing = { workspace = true } # codec-json, scaling-identity, transport-mqtt
 
 [tool.pytest.ini_options]

@@ -250,7 +250,7 @@ class Store:
         agent answering its sovereign answers about its WHOLE self — beliefs, record,
         evidence, revisions — not only the public knowledge an ordinary query reads, and
         making the sovereign spell each private graph IRI would be rule 1's own trap
-        (a graph IRI is an instance). And the desires store's build (agent/desire.py), whose
+        (a graph IRI is an instance). And the desires store's build (desire.py, beside this file), whose
         question — what are this store's graphs — is about the whole store for the same
         reason. Still read-only by construction: this is the same
         query API, which structurally cannot execute an update.
@@ -280,7 +280,7 @@ class Store:
         not do: a serialise-and-reparse relabels blank nodes, so an observation node would come
         out the far side unequal to the one a retraction names. It is also the same trap
         `effects._triple` exists for, one layer up — a term crossing a boundary as text stops
-        being that term. The one caller is `agent.imaginarium`, which is filling a second store
+        being that term. The one caller is `orexis_deliberation.imaginarium`, which is filling a second store
         with what this one holds.
         """
         return self._store.quads_for_pattern(None, None, None, ox.NamedNode(graph_iri))

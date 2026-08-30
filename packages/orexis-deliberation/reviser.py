@@ -7,7 +7,7 @@ re-picked, kept by the review capability. This is the seam a change passes throu
 **The one row of the agent stack that had no home.** Below it is bytes and translation, above it
 the mind; the seam decides which of a change's consequences is worth a deliberation pass at all
 (the-agent-stack-is-a-second-axis, layered-by-timescale-and-interruptibility). Until this file
-the decision was spread across whoever happened to call `execution.pursue_for` — sensing's
+the decision was spread across whoever happened to call `pursuit.pursue_for` — sensing's
 actuator on a fresh reading, the bidder on an offer, the host on a claim — so there was no place
 to state the rule and no place to change it.
 
@@ -31,7 +31,7 @@ from __future__ import annotations
 import logging
 import threading
 
-from . import execution
+from . import pursuit
 
 log = logging.getLogger("reviser")
 
@@ -49,6 +49,21 @@ class Reviser:
     **Deduplicated by want, and that is the beginning of the filter.** Ten readings between two
     passes leave one mark, not ten; the record's *bands, not raw values* belongs here next, and
     the projections after it (layered-by-timescale-and-interruptibility).
+
+    THE DELIBERATION WORKER — the third of the three threads, one per timescale (#452,
+    layered-by-timescale-and-interruptibility). The reactive loop runs handlers and takes in
+    milliseconds; the scheduler keeps time and runs nothing; and this thread is the ONE thing
+    allowed to take long. A pass measures in seconds, and on the loop it would park every
+    handler and every deadline behind a search — the inversion the record forbids — so the
+    search runs here and only its RESULT crosses onto the loop, as one item: the plan's head,
+    committed and taken (`pursuit.pursue`). The deliberator's tick lands on the loop like
+    every timer and does nothing but mark, which is the hand-off.
+
+    The mailbox is per want, latest-wins: `_pending` keys on the want, so however many marks
+    arrive between two passes, one search answers all of them, and a mark carrying the desire
+    replaces one that did not. What it does NOT do is supersede a pass in flight — a newer mark
+    waits for the current search to finish, which is the seam the layering record names as
+    "deliberation is not interruptible".
 
     The words — a MARK, DRAINED on the agent's own clock — are the dictionary's:
     knowledge/domain/reviser.md, and knowledge/domain/row.md for the rows they keep apart.
@@ -122,9 +137,9 @@ class Reviser:
                     del self._pending[want]
                 try:
                     if desire is not None:
-                        execution.pursue(self.agent, desire)
+                        pursuit.pursue(self.agent, desire)
                     else:
-                        execution.pursue_for(self.agent, want)
+                        pursuit.pursue_for(self.agent, want)
                 except Exception as exc:
                     log.error("%s: could not reconsider %s: %s", self.agent.id,
                               want.rsplit("#", 1)[-1], exc)

@@ -308,12 +308,17 @@ def packages() -> tuple[Package, ...]:
     for path in visible:
         prefix, _, rest = path.name.partition("-")
         family, _, name = rest.partition("-")
-        if prefix != DIST_PREFIX or not family or not name:
+        if prefix != DIST_PREFIX or not family:
             raise ValueError(
                 f"{path} is not a package: a package directory is named "
-                f"`{DIST_PREFIX}-<family>-<name>`, which is also its distribution name. "
+                f"`{DIST_PREFIX}-<family>-<name>` — or `{DIST_PREFIX}-<layer>` for one of the "
+                f"kernel's layers — which is also its distribution name. "
                 "Rename it or move it out of packages/.")
-        found.append(Package(kind=family, name=name.replace("-", "_"), path=path))
+        #  TWO SEGMENTS IS A LAYER (#452): `orexis-reactive` is not a family with members but
+        #  the layer itself, so its name is its kind. The loader accepts the shape and learns
+        #  nothing about which families are layers; that a GRANTED package may not drop its
+        #  member is tests/test_projects.py's to hold, against the one spelling of the layers.
+        found.append(Package(kind=family, name=(name or family).replace("-", "_"), path=path))
     found.sort(key=lambda p: (order.get(p.kind, len(order)), p.kind, p.name != BASE, p.name))
     return (ASSEMBLY, KERNEL) + tuple(found)
 
@@ -598,7 +603,7 @@ def describe() -> str:
 #
 # So it is read rather than registered, off the `@prefix` lines of the ontology that declares
 # the terms. Nothing is listed and nothing is imported: this runs before any capability's Python
-# and must, because `agent.beliefs` needs the prefixes and half the capabilities import it.
+# and must, because `orexis_deliberation.beliefs` needs the prefixes and half the capabilities import it.
 _NAMESPACE_BASE = "http://example.org/orexis"
 _PREFIX_LINE = re.compile(
     rf"@prefix\s+([A-Za-z][\w.-]*):\s*<({re.escape(_NAMESPACE_BASE)}[^>]*)>")

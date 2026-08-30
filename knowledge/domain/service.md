@@ -69,7 +69,7 @@ uses, and the reason it is that rather than a decorator is that every tool a Pyt
 brings can see an annotation:
 
 ```python
-from agent.beliefs import Beliefs
+from orexis_deliberation.beliefs import Beliefs
 from agent.metrics import Metrics
 
 class Recorder(Module):

@@ -38,8 +38,9 @@ each a family whose members are interchangeable implementations, which is what
 superseded record sidestepped as "a different rationale." It passes now rather than being
 excused: deliberation by bounded search and deliberation by a model are two members of one
 family ([llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) already argues the
-second); execution against hardware and execution against a stand-in likewise. The mind's
-stores become a package the layers depend on. Review needs no move at all —
+second); execution against hardware and execution against a stand-in likewise. ~~The mind's
+stores become a package the layers depend on.~~ *Struck by the amendment below: there is no
+floor, and a store lives in the layer that owns it.* Review needs no move at all —
 `packages/orexis-capability-review/` was in the tree from the start, and the other layers now
 join it rather than standing apart from it.
 
@@ -83,6 +84,49 @@ unconditionally beside readers that arrive by grant — is answered better than 
 predecessor managed: a store now travels in a package that arrives *because something needs
 it*, so a modality nobody may write cannot be assembled at all.
 
+# Amended by #452, with the roster it left
+
+The first implementation (#457) built a FLOOR beneath the three — the mind's stores as a fourth
+package, `orexis-modality-graph`, which every layer imported — and the author refused it
+unmerged: "we have no floor level. Should be on one of 3. If needed lower levels can emit
+events, that can be listened by upper levels." So there are exactly THREE layer packages and
+no fourth, dependencies point down, and what a lower layer has to say upward is an EVENT.
+Each is named for its row alone — `orexis-reactive`, `orexis-progression`,
+`orexis-deliberation` — because a layer is one package, not a family with members (the
+"interchangeable implementations" framing in *What was decided* is dropped for layers and
+kept for capabilities; see the struck seam below):
+
+- **`packages/orexis-reactive/`** — the queue and the one loop that drains it. NEW,
+  not moved: nothing in `agent/` was this. The author's definition is sharper than the
+  "execution — the acts and the actor road" the superseded record sketched and wins: reactive
+  "should contain only queue and constantly executing it". It imports nothing of ours.
+- **`packages/orexis-progression/`** — the intention ledger and the keeper, the
+  act and the commitment, the scheduler thread and the timer, the doing half of execution,
+  upkeep, AND the store engine (`store.py`, `graphs.py`, `ontology.py`, `intentions.py`),
+  because progression is the lowest layer that persists anything and the search imports the
+  engine downward. It verifies a step's RESULT — the actor's answer, the reading against the
+  baseline the actor handed in — and never reads a belief. It EMITS `ag:stepDone`,
+  `ag:planFinished`, `ag:planFailed` through the choir.
+- **`packages/orexis-deliberation/`** — the belief base and the desires (`beliefs.py`,
+  `desire.py`), the conformance check, the deliberator, the planner, the imaginarium, the
+  afforder, the effects, the trace, the reviser (the deliberation worker thread) and the
+  deciding half of execution (`pursuit.py`). It SUBSCRIBES to progression's events and
+  verifies effects against beliefs there, re-planning as needed.
+
+The event mechanism is the assembly's choir — a lower layer `agent.tell`s a term some ontology
+declares as an `assembly:Extension`, and an upper layer fills the point with `@contributes` —
+because [the-assembly-is-not-the-mind](/decisions/the-assembly-is-not-the-mind.md) decided one
+mechanism and a second bus beside it would be the registry this tree refuses. It served: a
+tell is a method call on the caller's thread, which for progression's events is the loop, and
+the subscribers do milliseconds (mark a want, count a step).
+
+**One choice here is the implementer's and the author should read it as such: the ledger sits
+in progression.** A restart must not forget a commitment, which is what pulls the store engine
+down to progression. The alternative — every store in deliberation, progression stateless and
+re-deliberated on restart — was not taken, because an-intention-is-an-amortised-deliberation
+makes the commitment the thing that survives between two searches, and a layer whose whole
+job is to carry that across the gap cannot be the layer that forgets it.
+
 # Seams left open
 
 - **The loading pull is unbuilt** — #455 is the mechanism, and until it lands, a layer package
@@ -92,8 +136,26 @@ it*, so a modality nobody may write cannot be assembled at all.
 - **What remains at the root** is `assembly/` and whatever shell of `agent/` survives #452 —
   the container the author asked for at the start. Whether that shell is a package too, or the
   one thing that is nobody's package because it is what asks, is #452's to discover.
-- **Family names are the implementing change's** (#451, #452), under the tree's own convention
-  — the family is the second segment of the name, and the loader learns nothing.
+- ~~**Family names are the implementing change's** (#451, #452), under the tree's own convention
+  — the family is the second segment of the name, and the loader learns nothing.~~ Chosen:
+  `reactive`, `progression`, `deliberation` are the families, the layering record's own words
+  for the rows — and NOTHING ELSE: a layer is ONE package, `orexis-reactive`, not a family
+  with members. The first cut named members (`queue`, `patience`, `search`) on the
+  "families with interchangeable implementations" framing above, and the author struck the
+  third segment: there is one reactive layer in an agent, and an alternative implementation,
+  if one ever arrives, is a decision for then. That framing is dropped for layers; it stands
+  for capabilities. The loader accepts `orexis-<layer>` as a package whose name is its kind,
+  and `tests/test_projects.py` holds a GRANTED package to three segments against the one
+  spelling of the order, `LAYERS`.
+- **Progression still reads the T-Box through the belief store's query surface** — `ag:takenBy`
+  for who takes an action, `ag:suspectAfter` and `ag:metFraction` for the verdict's figures —
+  by attribute on the container, never by import. Those are vocabulary facts and not beliefs,
+  but the surface they arrive through is the belief base's, and a reader who wants "never
+  reads a belief" to be structural rather than a discipline would hand progression its own
+  public-graph query at construction. #451 chose
+  `modality` for the stores' family, the word [modality](/domain/modality.md) owns, and `graph`
+  for the member — the modalities held as named RDF graphs, which a member holding them another
+  way would not be; #452's are still its own.
 
 The trigger for revisiting is the same as its predecessor's, sharpened: a contract module that
 grows logic, or a hard dependency declared to smuggle a load the grants do not imply. The day

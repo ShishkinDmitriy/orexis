@@ -192,7 +192,7 @@ anywhere to say so. It is the registry smell [capability-packages](capability-pa
 refuses, wearing a shape.
 
 So the accepted cost stands: an agent with a stake and no lever states a patience it never spends.
-It is cheaper than it reads, because the runtime backstop already exists — `agent/keeper.py` reads
+It is cheaper than it reads, because the runtime backstop already exists — `packages/orexis-progression/keeper.py` reads
 `KEEPING_PICKS` lazily, so an agent with nothing to commit about never asks for the number, and one
 that somehow reaches a commitment without it raises and names the term. What the shape buys over
 that backstop is the moment: `orexis-validate` refuses the world, rather than an agent raising at

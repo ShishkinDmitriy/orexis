@@ -36,7 +36,7 @@ Three neighbours it is not:
 
 # The code's shape
 
-`Picks` (`agent/beliefs.py`): one capability's picks — the capability term, a dataclass, and
+`Picks` (`packages/orexis-deliberation/beliefs.py`): one capability's picks — the capability term, a dataclass, and
 the term IRIs that fill it — declared beside the module that runs on them. Modules read them
 from the desire modality, where a want belongs; the belief base keeps the RECORD of picking
 (birth's first entries, review's revisions), and the desire store is recomputed from it. A

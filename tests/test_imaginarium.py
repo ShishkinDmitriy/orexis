@@ -13,9 +13,9 @@ from __future__ import annotations
 
 import pyoxigraph as ox
 
-from agent import effects
-from agent.imaginarium import Imaginarium
-from agent.ontology import (ONTOLOGY_GRAPH, STATE_GRAPH, WORLD_GRAPH, beliefs_graph)
+from orexis_deliberation import effects
+from orexis_deliberation.imaginarium import Imaginarium
+from orexis_progression.ontology import (ONTOLOGY_GRAPH, STATE_GRAPH, WORLD_GRAPH, beliefs_graph)
 
 from conftest import MOISTURE, genesis_store
 

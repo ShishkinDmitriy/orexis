@@ -32,7 +32,14 @@ the fact there. In code a modality is a **class that owns its store** — `Belie
 `Desires`, the rest as [#299](https://github.com/ShishkinDmitriy/orexis/issues/299) lands —
 deciding for itself what kind of store, whether it persists, and whether anything may write
 it. The agent holds the modalities; nothing holds or addresses their collection, by the
-fourth ruling.
+fourth ruling. Since [a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md) each class lives in the LAYER that owns it, and there is no floor beneath the
+layers: the store engine, the graph naming and the kernel vocabulary's Python spelling sit in
+progression (`packages/orexis-progression/store.py`, `graphs.py`, `ontology.py`) with
+the intention modality, because progression is the lowest layer that persists anything;
+`Beliefs` and `Desires` sit in deliberation (`packages/orexis-deliberation/beliefs.py`,
+`desire.py`), because a belief and a want are read by the search and by nothing beneath it.
+A modality is not a family of packages: what a lower layer needs of an upper one it hears as
+an EVENT, never as an import.
 
 # The address a question needs
 

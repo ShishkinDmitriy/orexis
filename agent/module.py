@@ -16,16 +16,15 @@ See knowledge/decisions/capability-packages.md.
 
 from __future__ import annotations
 
-from .ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, QUIET, REPORTS,
+from orexis_progression.ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, QUIET, REPORTS,
                        SEND, SERIES, SIZE, SWEEP, TAKE)
 
 from datetime import datetime
 
-from .desire import Desire
+from orexis_deliberation.desire import Desire
 
 import json
 import logging
-import threading
 
 from assembly.contribute import answer as assembly_answer, contributes
 from assembly.inject import Handle, injections_of
@@ -262,54 +261,7 @@ class Module:
         return any(self.agent.ask(SEND, topic, payload, retain, not_after))
 
 
-class Timer:
-    """A cancellable timer — a CADENCE that repeats, or a DEADLINE that fires once.
-
-    The two are not the same thing and this class used to offer only the first, which every
-    deadline in the market then had to pretend was what it wanted. It is not: a deadline that
-    rearms is a deadline that fires again for a round that has already closed.
-
-    What that cost, measured on the bench before this parameter existed. `hosting.announce`
-    assigns a fresh timer per round and never stopped the outgoing one, so an overlapping
-    announce orphaned it — still pending, still repeating, and its `fn` is `close`, which
-    closes whatever round is open when it lands rather than the one it was started for. The
-    orphan then rearmed itself in `_fire`, because `close` stops `self._timer`, which by then
-    is a DIFFERENT object. One overlap therefore bought a permanent heartbeat closing rounds
-    early, and overlaps accumulate: in six hours the simulation world opened 654 auctions and
-    cleared 3, with a window announced as 3s closing at a median of 1.05s — once at -0.00s,
-    an auction closed by an orphan at the instant it opened. Every bid arrived after the
-    close, so the market looked like it had no bidders when it had two bidding well.
-
-    `repeat=True` stays the default because five of the eight callers really are cadences
-    (the keeper's tick, upkeep, reporting's interval, the watchdog's look, actuation's sweep)
-    and a deadline is the exception that must say so.
-    """
-
-    def __init__(self, interval_s: float, fn, repeat: bool = True):
-        self.interval_s = interval_s
-        self.fn = fn
-        self.repeat = repeat
-        self._timer: threading.Timer | None = None
-        self._stopped = False
-
-    def start(self) -> None:
-        if self._stopped:
-            return
-        self._timer = threading.Timer(self.interval_s, self._fire)
-        self._timer.daemon = True
-        self._timer.start()
-
-    def _fire(self) -> None:
-        try:
-            self.fn()
-        finally:
-            #  A deadline is spent once it lands. Rearming here is what let an orphan outlive
-            #  the round it belonged to — and `stop()` from inside `fn` cannot save it, because
-            #  the attribute it stops may already point at a newer timer.
-            if self.repeat and not self._stopped:
-                self.start()
-
-    def stop(self) -> None:
-        self._stopped = True
-        if self._timer:
-            self._timer.cancel()
+#  `Timer` WAS HERE, and is progression's now (`orexis_progression.timer`, #452):
+#  a clock is the layer that executes what is committed, and a timer landing no longer runs
+#  its function on a thread of its own — it enqueues it onto the reactive loop, the one
+#  executing thread. Same API; the eight callers changed their import and nothing else.

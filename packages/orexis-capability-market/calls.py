@@ -12,8 +12,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from agent.ontology import beliefs_graph
-from agent.store import bindings
+from orexis_progression.ontology import beliefs_graph
+from orexis_progression.store import bindings
 
 from .terms import CALL, CALLED_AT, CALLED_BY, CALLED_ON, NS
 

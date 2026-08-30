@@ -5,7 +5,7 @@ the agent BETTER OFF, which is a different question and the one worth asking —
 a plant while every module behaves as written, because "the direction matches" was never a claim
 that the outcome improves anything.
 
-The loop is short because the pieces existed before it. `agent.effects` runs a means' rule and
+The loop is short because the pieces existed before it. `effects` runs a means' rule and
 hands back what it would add and retract, so a possible world is `(beliefs − retracts) + adds`
 and nothing is written. The desire is a shape, so "would this work" is a validation. The menu is a
 query, so "would this lever even exist afterwards" is the same query run against the simulated
@@ -37,13 +37,13 @@ from pyshacl import validate as shacl_validate
 from rdflib import RDF, URIRef
 
 from . import effects, signature, trace
-from .act import Act, Step
-from .desire import Desire
+from orexis_progression.act import Act, Step
+from orexis_deliberation.desire import Desire
 from .afforder import wants_of
 from .imaginarium import Imaginarium
-from .ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
+from orexis_progression.ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
-from .validate import conforms, graph_from
+from orexis_deliberation.conformance import conforms, graph_from
 
 log = logging.getLogger("search")
 
@@ -634,7 +634,7 @@ class Planner:
         """
         if row is None or row.about is None:
             return 0.0
-        from .execution import taken_by
+        from orexis_progression.execution import taken_by
 
         family = taken_by(self.agent.beliefs.query, row.action)
         litres = None

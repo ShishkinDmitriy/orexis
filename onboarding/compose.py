@@ -36,7 +36,7 @@ from pathlib import Path
 
 from agent import ratified
 from agent.config import REPO_ROOT
-from agent.ontology import AG, WORLD_GRAPH
+from orexis_progression.ontology import AG, WORLD_GRAPH
 from .namespaces import ACTUATION, MARKET, MQTT, SENSING, SIM, SOSA
 from agent import genesis
 from agent.genesis import world_dir, worlds
@@ -234,7 +234,7 @@ _SIM_MODE = {
 # deleted the first — and the dead-name interval matched nothing silently: every generated
 # SIM_VALUES lost its "litres", every dose moved nothing, and the first live run of the
 # verification arc flagged the world for false knowledge. The interpolated-IRI failure mode
-# agent/ontology.py warns about, caught by exactly the detector built to catch it — and the
+# the kernel vocabulary (packages/orexis-progression/ontology.py) warns about, caught by exactly the detector built to catch it — and the
 # lesson is not "name the right term" but "name no term", which this now does.
 _SIMULATED_Q = f"""
 SELECT ?id ?readingTopic ?commandTopic ?senseMode ?tick ?doseTopic ?drainTopic ?port

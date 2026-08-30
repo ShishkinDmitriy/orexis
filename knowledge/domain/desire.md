@@ -120,10 +120,11 @@ to be live, and **a host that doses early spends the water where nothing is look
 
 Always true for a stake — a plant does not ask.
 
-# It lives in the kernel, and the capability does not
+# It lives in the mind's stores, and the capability does not
 
-`agent/desire.py` holds the TYPE, outside any package, because a desire is a mental state and
-those are the kernel's — the same reason obligations and intentions are. Two packages need it and
+`packages/orexis-deliberation/desire.py` holds the TYPE, in the deliberation layer and
+outside any capability, because a desire is a mental state and those are the mind's — the same
+reason obligations and intentions are. Two packages need it and
 neither may import the other: this capability produces desires,
 [deliberation](/domain/deliberator.md) consumes them, and the only thing they are allowed to
 share is a kernel word.

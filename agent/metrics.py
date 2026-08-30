@@ -38,30 +38,13 @@ import logging
 import time
 from collections import deque
 from datetime import datetime, timezone
-from pathlib import Path
 
 
 log = logging.getLogger("metrics")
 
-def tree_bytes(path: str | Path | None) -> int | None:
-    """Bytes on disk under the belief base, or None if it has none (an in-memory store).
-
-    Walked rather than asked, because the store is a directory of files and no API reports its
-    size. Cheap enough at a slow interval: a belief base measured in single megabytes.
-    """
-    if not path:
-        return None
-    root = Path(path)
-    if not root.exists():
-        return None
-    total = 0
-    for p in root.rglob("*"):
-        try:
-            if p.is_file():
-                total += p.stat().st_size
-        except OSError:
-            continue  # a compaction can delete a file between the walk and the stat
-    return total
+#  `tree_bytes` WAS HERE, and is upkeep's now (`orexis_progression.upkeep`): the one
+#  thing that measures the belief base on disk is the clock that compacts it, and a layer may
+#  not import the container for a helper. Reporting reads it from there.
 
 
 class Metrics:

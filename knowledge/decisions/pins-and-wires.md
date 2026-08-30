@@ -52,7 +52,7 @@ to carry its board's name to stay unambiguous — `ag:Esp32Gpio34` — and with 
 `esp32:Gpio34Pin`. The prefix is already saying which board.
 
 **It can afford this because no runtime code names these terms.** An agent never queries a pin.
-`agent/ontology.py`'s `term()` mints `AG + name` and every capability's `terms.py` depends on
+`packages/orexis-progression/ontology.py`'s `term()` mints `AG + name` and every capability's `terms.py` depends on
 that, so moving the *society* vocabulary would be a large and risky change for no benefit —
 but the hardware vocabulary is read only by `onboarding/firmware.py` and by the shapes, which
 spell IRIs in full anyway. Three files, none of them the runtime.

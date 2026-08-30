@@ -18,7 +18,7 @@ from dataclasses import replace
 import pytest
 
 from agent.world import load_self
-from agent.graphs import intentions_graph
+from orexis_progression.graphs import intentions_graph
 from orexis_capability_market.terms import ACQUIRING
 from orexis_capability_sensing.terms import OBSERVING
 
@@ -157,7 +157,7 @@ def test_past_its_patience_a_new_adoption_supersedes(make):
     standing = keeper.standing(action=ACQUIRING)
     assert [s.uri for s in standing] == [second]
 
-    from agent.store import bindings
+    from orexis_progression.store import bindings
     rows = bindings(fern.beliefs.query(
         "SELECT ?why WHERE { GRAPH <%s> { <%s> ag:outcome \"dropped\" ; "
         "ag:becauseOf ?why } }" % (intentions_graph("fern"), first)))
@@ -176,7 +176,7 @@ def test_intentions_are_nobody_elses_to_read(make):
     fern = make("fern", _reading(0.10))
     fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert intentions_graph("fern") not in fern.beliefs.public_graphs()
-    from agent.store import bindings
+    from orexis_progression.store import bindings
     assert bindings(fern.beliefs.query(
         "SELECT ?i WHERE { ?i a ag:Intention }")) == []
 
@@ -240,7 +240,7 @@ def test_the_tick_puts_marketless_watching_in_the_ledger(make):
     caused the look."""
     fern = make("fern")
     keeper = next(m for m in fern.modules if m.name == "intention")
-    keeper.deliberate_on_gaps()
+    keeper.agent.deliberator.deliberate_on_gaps()
     #  The ledger names the WANT; which property a want is about is sensing's to say.
     about = {w.uri: w.observed_property for w in sensing_of(fern).desires()}
     standing = {(s.action.rsplit("#", 1)[-1], about.get(s.want)) for s in keeper.standing()}
@@ -259,9 +259,9 @@ def test_a_second_tick_within_patience_is_absorbed(make):
     ledger holds one commitment per gap, however often anyone notices it."""
     fern = make("fern")
     keeper = next(m for m in fern.modules if m.name == "intention")
-    keeper.deliberate_on_gaps()
+    keeper.agent.deliberator.deliberate_on_gaps()
     first = len(keeper.standing())
-    keeper.deliberate_on_gaps()
+    keeper.agent.deliberator.deliberate_on_gaps()
     assert len(keeper.standing()) == first
 
 
@@ -272,7 +272,7 @@ def test_only_the_keeper_writes_the_intentions_graph():
     failing test instead of a review comment.
 
     IT SCANNED ONLY `packages/`, and the kernel had held a second pen the whole time:
-    `agent/intentions.py` names the graph to migrate a pre-split volume's ledger into the
+    `orexis_progression/intentions.py` names the graph to migrate a pre-split volume's ledger into the
     modality's own room, and `agent/genesis.py` names it to classify it. Both are legitimate
     and neither is a keeper — but the guard could not see them, because it looked only at the
     tree the pen was not in. Now it scans BOTH trees and the exemptions are named with reasons,
@@ -306,7 +306,7 @@ def test_the_tick_survives_an_agent_that_has_seen_things(make):
     fern = make("fern")
     fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.2, "temperature": 21.0})
     keeper = next(m for m in fern.modules if m.name == "intention")
-    keeper.deliberate_on_gaps()  # must not raise — that is the whole test
+    keeper.agent.deliberator.deliberate_on_gaps()  # must not raise — that is the whole test
 
 
 # --- a commitment names the desire it serves (step 3) -------------------------
@@ -358,8 +358,8 @@ def test_an_old_row_naming_an_action_is_rebuilt_as_an_act(make):
     act node fills the action, the lever moves onto it, and `ag:by` names the act — so a reader
     of the ledger sees one shape whatever the volume's age, and the migration finds nothing
     to do the second time."""
-    from agent import vocabulary
-    from agent.ontology import AG
+    from orexis_progression import ledger
+    from orexis_progression.ontology import AG
 
     fern = make("fern")
     keeper = keeper_of(fern)
@@ -369,10 +369,10 @@ def test_an_old_row_naming_an_action_is_rebuilt_as_an_act(make):
             <{AG}by> <{ACQUIRING}> ;
             <{AG}through> <urn:old-venue> ;
             <{AG}adoptedAt> "2026-08-01T00:00:00+00:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
-    assert vocabulary.migrate_ledger_acts(keeper.agent.intentions, keeper.graph) == 1
+    assert ledger.migrate_ledger_acts(keeper.agent.intentions, keeper.graph) == 1
     old = next(s for s in keeper.standing(action=ACQUIRING) if s.uri.endswith("old1"))
     assert old.act.action == ACQUIRING and old.act.via == "urn:old-venue"
-    assert vocabulary.migrate_ledger_acts(keeper.agent.intentions, keeper.graph) == 0, \
+    assert ledger.migrate_ledger_acts(keeper.agent.intentions, keeper.graph) == 0, \
         "idempotent — a row already naming an act is left alone"
 
 
@@ -381,7 +381,7 @@ def test_the_ledger_holds_the_act_sized_and_windowed(make):
     quantity the taker sized, and the window — read back as one `Act`, which is what an actor
     is handed when the trigger changes and the decision does not."""
     from datetime import datetime, timezone
-    from agent.act import Act
+    from orexis_progression.act import Act
 
     fern = make("fern")
     keeper = keeper_of(fern)

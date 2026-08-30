@@ -22,9 +22,9 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from agent.desire import Desire
-from agent.ontology import STATE_GRAPH, beliefs_graph
-from agent.store import bindings
+from orexis_deliberation.desire import Desire
+from orexis_progression.ontology import STATE_GRAPH, beliefs_graph
+from orexis_progression.store import bindings
 
 log = logging.getLogger("sensing")
 
