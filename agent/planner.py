@@ -42,8 +42,7 @@ from .desire import Desire
 from .afforder import wants_of
 from .imaginarium import Imaginarium
 from .ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
-                            STATE_GRAPH, beliefs_graph,
-                            obligations_graph)
+                            STATE_GRAPH, beliefs_graph)
 from .validate import conforms, graph_from
 
 log = logging.getLogger("search")
@@ -602,7 +601,6 @@ class Planner:
         return {
             "me": f"<{self.me.uri}>",
             "claim": f'"{desire.claim}"' if desire and desire.claim else '"urn:nobody"',
-            "owed": f"<{obligations_graph(self.agent.id)}>",
             "subject": f"<{self.me.acts_for}>" if self.me.acts_for else "<urn:nobody>",
             #  THE WANT AND WHAT IT IS ABOUT, carried from the row to the rule and never read
             #  here: `$about` is whatever the want's deriver said (`ag:about`) — a property,

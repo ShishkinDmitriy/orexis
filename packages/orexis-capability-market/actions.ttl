@@ -330,8 +330,8 @@ market:Serving
                  sosa:resultTime ?now ;
                  sosa:hasSimpleResult ?left .
         } WHERE {
-            GRAPH $owed { ?obl a ag:Obligation ; ag:forClaim $claim ; ag:amountL ?litres .
-                          FILTER NOT EXISTS { ?obl ag:dischargedAt ?done } }
+            ?obl a ag:Obligation ; ag:forClaim $claim ; ag:amountL ?litres .
+            FILTER NOT EXISTS { ?obl ag:dischargedAt ?done }
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:drawsFrom ?vessel .
             ?vessel ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?levelProp .
@@ -349,7 +349,7 @@ market:Serving
     #  computed anywhere else would be a second claim about when the world should answer.
     ag:landsAfter """
         SELECT ?seconds WHERE {
-            GRAPH $owed { ?obl a ag:Obligation ; ag:forClaim $claim ; ag:amountL ?litres }
+            ?obl a ag:Obligation ; ag:forClaim $claim ; ag:amountL ?litres .
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:maxDoseMl ?cap ;
                    actuation:mlPerSecond ?rate .
@@ -367,8 +367,8 @@ market:Serving
     #  a dry vessel must not lose its standing reading to a serve that never happened.
     ag:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
-            GRAPH $owed { ?obl a ag:Obligation ; ag:forClaim $claim ; ag:amountL ?litres .
-                          FILTER NOT EXISTS { ?obl ag:dischargedAt ?done } }
+            ?obl a ag:Obligation ; ag:forClaim $claim ; ag:amountL ?litres .
+            FILTER NOT EXISTS { ?obl ag:dischargedAt ?done }
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:drawsFrom ?vessel .
             ?vessel ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?levelProp .
