@@ -18,7 +18,7 @@ import pytest
 
 from agent import ratified
 from onboarding import influx as influx_admin, mqtt as mqtt_admin
-from orexis_modality_graph.ontology import AG, WORLD_GRAPH
+from orexis_progression_patience.ontology import AG, WORLD_GRAPH
 from onboarding.namespaces import MARKET, MQTT, SENSING
 from conftest import build_agent, genesis_store, shipped_worlds
 

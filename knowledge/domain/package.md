@@ -111,26 +111,36 @@ What belongs here is the consequence for the tree: nothing about a directory say
 it carries, so `PROVIDES` in `__init__.py` is the only registration, and a directory with none is
 knowledge and nothing else.
 
-# `agent/` is the kernel: it loads packages, and it is not one
+# `agent/` is the container: it loads packages and assembles the layers, and it is not one
 
-The kernel is the one thing **not discovered**, because it is what discovers — a record the
+The container is the one thing **not discovered**, because it is what discovers — a record the
 loader prepends rather than a directory it finds. It carries the same four filenames a package
 carries (`ontology.ttl`, `shapes.ttl`, `rules.ru`, and Python), so every reader reaches it
 without knowing it is special; what it is not is a FAMILY, since `packages/kernel/` is not a
 directory anyone can add a sibling to.
+
+**The kernel itself is three packages in the one tree** — the three rows of
+[layered-by-timescale-and-interruptibility](/decisions/layered-by-timescale-and-interruptibility.md),
+each a family whose members are interchangeable ways of having that row:
+`packages/orexis-reactive-queue/` (the queue and the one executing thread),
+`packages/orexis-progression-patience/` (the ledger, the patience, the scheduler and the store
+engine) and `packages/orexis-deliberation-search/` (the belief base, the desires and the
+search). Each imports only the layers beneath it; what a lower layer has to say to an upper
+one it says as an EVENT through the choir, and `agent/` — the `Agent` object, the choir, the
+`Module` contract, genesis, validation — is what assembles the three into a process. See
+[a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md).
 
 Capability Python used to live under `agent/`, so the tree itself showed which of it a runtime
 loads. **It does not show that now** — `packages/orexis-capability-market/` and `packages/orexis-part-dht11/`
 look identical. The contracts carry the boundary alone:
 
 - `lint-imports` holds `packages` away from `onboarding`, onboarding away from nothing, and —
-  since the mind came home — **`agent` away from every package but one**: the kernel loads them
-  and never reaches into a GRANTED one. That contract could not be stated while three capability
-  packages held the mind, and the violations were not theoretical. The one it imports is the
-  floor, `packages/orexis-modality-graph/` — the mind's stores, a package because a layer is one
-  ([a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md)), carried by the kernel's own declared dependency until #455 — and
-  `tests/test_layering.py` finds it by family rather than by name, and holds it to importing no
-  layer back;
+  since the mind came home — **`agent` away from every GRANTED package**: the container loads
+  them and never reaches into one. That contract could not be stated while three capability
+  packages held the mind, and the violations were not theoretical. What it does import is the
+  three LAYERS, carried by its own declared dependencies until #455, and
+  `tests/test_layering.py` finds them by family rather than by name and holds each to importing
+  only the layers beneath it;
 - but it binds **Python and nothing else**, and the kernel does still reach into a package's
   *vocabulary*, across its code, its shapes, its ontology's prefix block and the desire
   derivation. That is debt rather than a permitted exception — **the kernel names no package's

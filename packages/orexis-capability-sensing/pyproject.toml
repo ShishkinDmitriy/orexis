@@ -11,7 +11,8 @@ description = "Sensing: the reading pipeline (codec, pointer, scaling) and the t
 requires-python = ">=3.10"
 dependencies = [
     "orexis",  # assembly (the manifest) and, where there is behaviour, the kernel
-    "orexis-modality-graph",  # the mind's stores — Beliefs, Desires, the Store, the kernel vocabulary
+    "orexis-progression-patience",  # the store engine and the kernel vocabulary — progression's contract
+    "orexis-deliberation-search",  # the belief and desire modalities — deliberation's contract
     "pyoxigraph>=0.4",  # module.py reads the store directly
 ]
 

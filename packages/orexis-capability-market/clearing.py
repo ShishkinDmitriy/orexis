@@ -17,7 +17,7 @@ import time
 from dataclasses import dataclass, field
 from uuid import uuid4
 
-from agent.commitment import Commitment
+from orexis_progression_patience.commitment import Commitment
 
 from .trade import EPS, MarketState, Trade
 

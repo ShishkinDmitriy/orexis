@@ -18,15 +18,19 @@ question of whether a change is worth a pass, and an answer nobody should be abl
 
 # What it is
 
-`agent/reviser.py`. Everything that notices a change — a reading recorded, an offer heard, a
+`packages/orexis-deliberation-search/reviser.py` — in the deliberation layer, because the thread
+it runs is THE DELIBERATION WORKER: one of three threads, one per timescale (the reactive loop
+runs handlers and takes, the scheduler keeps time, this one searches), and the only one allowed
+to take long. Everything that notices a change — a reading recorded, an offer heard, a
 claim presented — leaves a **mark** here and returns. A mark names one
 [desire](/domain/desire.md) and says only *this may be worth reconsidering*; it carries no
 verdict, because the verdict is [deliberation](/domain/deliberator.md)'s and takes as long as
 it takes.
 
 The marks are **drained** on the agent's own clock: a thread of the mind's, started with the
-agent, which puts each marked want through [executor](/domain/executor.md) exactly as the
-patience tick does. What comes out the other side is what always came out — an
+agent, which puts each marked want through [executor](/domain/executor.md). The
+[deliberator](/domain/deliberator.md)'s patience tick is one more thing that marks — since
+#452 it searches nothing itself, because it lands on the reactive loop. What comes out the other side is what always came out — an
 [intention](/domain/intention.md) written, an [act](/domain/act.md) handed to an
 [actor](/domain/actor.md) — only not inside the handler that noticed.
 
@@ -57,6 +61,7 @@ presented [claim](/domain/claim.md) stay held, which is what an unpursued one di
 **Not a queue of work.** A mark is not a task and holds no instruction: two marks for one want
 are one mark, and a mark whose want has since been dropped simply finds nothing to pursue.
 
-**Not the only door to deliberation.** The keeper's patience tick searches directly, because it
-is the mind's own clock rather than something noticing a change — there would be nothing to
-hand off to.
+**The only door to deliberation, since #452.** The patience tick used to search directly,
+because it was the mind's own clock on a thread of its own and there was nothing to hand off
+to. A timer lands on the reactive loop now, which must never be held for a search, so the tick
+marks here like everything else and the worker below is the one place a search runs.

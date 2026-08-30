@@ -33,13 +33,36 @@ from __future__ import annotations
 
 import logging
 import time
+from pathlib import Path
 
-from .metrics import tree_bytes
-from .module import Timer
-from orexis_modality_graph.ontology import SWEEP
-from orexis_modality_graph.store import bindings
+from .timer import Timer
+from orexis_progression_patience.ontology import SWEEP
+from orexis_progression_patience.store import bindings
 
 log = logging.getLogger("upkeep")
+
+
+def tree_bytes(path: str | Path | None) -> int | None:
+    """Bytes on disk under the belief base, or None if it has none (an in-memory store).
+
+    Walked rather than asked, because the store is a directory of files and no API reports its
+    size. Cheap enough at a slow interval: a belief base measured in single megabytes.
+    """
+    if not path:
+        return None
+    root = Path(path)
+    if not root.exists():
+        return None
+    total = 0
+    for p in root.rglob("*"):
+        try:
+            if p.is_file():
+                total += p.stat().st_size
+        except OSError:
+            continue  # a compaction can delete a file between the walk and the stat
+    return total
+
+
 
 # How often the ratio is looked at. Slow on purpose: compaction is a blocking full rewrite, and
 # the growth it answers is measured in megabytes per DAY. Checking hourly would be checking

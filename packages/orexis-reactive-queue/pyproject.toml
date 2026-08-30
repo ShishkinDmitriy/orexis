@@ -1,0 +1,24 @@
+# orexis-reactive-queue
+#
+# The reactive layer of the kernel: a queue of executable work and the one loop that drains
+# it (a-layer-is-a-package-and-need-loads-it, #452). The bottom layer, beneath progression and
+# deliberation, and the one that is new rather than moved — the society had eight timer
+# threads and no executing thread before it. The family is `reactive` because the layering
+# record names the row; the member is `queue` because this way of having it is one FIFO and
+# one thread, and a member with workers or a priority would be its sibling.
+[project]
+name = "orexis-reactive-queue"
+version = "0.1.0"
+description = "The reactive layer — a queue of work and one loop that constantly drains it, importing nothing"
+requires-python = ">=3.10"
+# Nothing. The layer beneath every other holds no dependency on any of them, and no
+# third-party one either: a queue, a thread and a future are the standard library's.
+dependencies = []
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["orexis_reactive_queue"]
+package-dir = {"orexis_reactive_queue" = "."}

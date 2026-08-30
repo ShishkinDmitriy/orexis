@@ -65,7 +65,7 @@ vacuously and why judging *desire achieved* is the planner's job rather than the
 [desire](/domain/desire.md) that is not met, and being unmet is a fact about the world rather
 than an opinion any module holds. Sensing's `sensing:Freshness` want is derived per instrument —
 one per sensor, `ag:violationIs ag:Stale` — so a channel nobody has read and one that has gone
-cold are both simply wants the [keeper](/domain/keeper.md)'s tick hands to the
+cold are both simply wants the [deliberator](/domain/deliberator.md)'s tick hands to the
 [executor](/domain/executor.md), like everything else this agent pursues.
 
 There WAS a hook. `Module.notices()` asked every module which (subject, property) pairs it could

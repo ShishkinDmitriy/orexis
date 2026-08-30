@@ -23,10 +23,10 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from orexis_modality_graph.desire import Desire
+from orexis_deliberation_search.desire import Desire
 from agent.module import Module
-from orexis_modality_graph.ontology import AG, obligations_graph
-from orexis_modality_graph.store import bindings
+from orexis_progression_patience.ontology import AG, obligations_graph
+from orexis_progression_patience.store import bindings
 
 #  What I owe, as rows — the obligation branch of what used to be one shipped `desires.rq` for every
 #  kind of want. The stakes and the freshness wants went to sensing with the region

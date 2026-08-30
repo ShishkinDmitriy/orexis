@@ -29,8 +29,8 @@ They are rows in a graph now, each with `adoptedAt`, a resolution (`satisfied` |
 a `becauseOf` in both directions, because a commitment abandoned without a reason is
 indistinguishable from one forgotten.
 
-**The keeper also ticks (#208)**: on its own patience clock it hands every want to
-[executor](/domain/executor.md), which plans, commits the head and hands it to its actor —
+**The deliberator ticks (#208)**: on the keeper's patience it marks every want for the
+[reviser](/domain/reviser.md), whose worker hands each to [executor](/domain/executor.md), which plans, commits the head and hands it to its actor —
 for every means, not only the look. Deliberation stopped being something only the
 market can start: a marketless property's watching reaches this ledger too, Observe adopted
 when stale and satisfied by the reading, whoever caused the look. A healthy society's gap

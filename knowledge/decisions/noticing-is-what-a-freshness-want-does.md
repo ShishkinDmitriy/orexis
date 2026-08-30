@@ -20,7 +20,7 @@ walked every sensor and reported the pairs it had never read or had let go cold.
 
 Its consumer was the deliberator. It stopped asking when freshness became a **want** — a
 `sensing:Freshness` desire derived per instrument, `ag:violationIs ag:Stale`, which the
-[keeper](/domain/keeper.md)'s tick hands to the [executor](/domain/executor.md) like anything
+[deliberator](/domain/deliberator.md)'s tick hands to the [executor](/domain/executor.md) like anything
 else the agent pursues. The hook was left computing the same judgment, one layer earlier,
 answerable to nothing.
 

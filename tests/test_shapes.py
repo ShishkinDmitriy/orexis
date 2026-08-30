@@ -13,10 +13,10 @@ import rdflib
 from agent import genesis, inference
 
 from assembly import loader
-from orexis_modality_graph.ontology import (ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH, WORLD_GRAPH,
+from orexis_progression_patience.ontology import (ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH, WORLD_GRAPH,
                             beliefs_graph)
 from agent.validate import conforms as validate_conforms
-from orexis_modality_graph.store import Store
+from orexis_progression_patience.store import Store
 
 from agent.genesis import agent_id_of
 
@@ -42,9 +42,9 @@ def _flatten(st, world_dir=GENESIS_DIR) -> rdflib.Graph:
     # built the way its boot builds them (#312): the derived regions and the projected pick
     # record arrive through the desire modality, and only through it, because a record
     # flattened beside its projection splits every blank-node aim in two.
-    from agent import effects
-    from orexis_modality_graph.beliefs import Beliefs
-    from orexis_modality_graph.desire import Desires
+    from orexis_deliberation_search import effects
+    from orexis_deliberation_search.beliefs import Beliefs
+    from orexis_deliberation_search.desire import Desires
 
     for path in sorted(world_dir.glob(genesis.BELIEFS_GLOB)):
         wants = Desires(Beliefs(st, agent_id_of(path)))
@@ -915,7 +915,7 @@ def test_what_a_probe_detects_is_entailed_from_its_part():
     """#100: the datasheet fact reaches every device through the class — the hasValue closure —
     and the stimulus states what it stands in for."""
     st = genesis_store(world="sensing")
-    from orexis_modality_graph.store import bindings
+    from orexis_progression_patience.store import bindings
 
     rows = bindings(st.query("""
 SELECT ?stimulus ?property WHERE {
@@ -968,7 +968,7 @@ def test_the_shipped_wiring_keeps_its_alarm_promise():
         ?wire <http://example.org/orexis/microcontroller#joins> ?leg , ?pin .
         ?board <http://example.org/orexis/microcontroller#hasPin> ?pin ;
                <http://example.org/orexis/microcontroller#watcherReachesRole> ?role . }""")
-    from orexis_modality_graph.store import bindings
+    from orexis_progression_patience.store import bindings
     assert bindings(rows), (
         "the sensing world's watched channel must be visibly within its board's reach — if "
         "this is empty the wiring shape is passing vacuously")
@@ -1006,7 +1006,7 @@ def test_the_windowsill_sits_inside_every_stated_range():
         ?c <http://www.w3.org/ns/ssn/systems/hasSystemProperty> ?r .
         ?r a <http://www.w3.org/ns/ssn/systems/MeasurementRange> ;
            <https://schema.org/unitCode> ?u . }""")
-    from orexis_modality_graph.store import bindings
+    from orexis_progression_patience.store import bindings
     found = bindings(rows)
     assert len(found) >= 2, (
         "the windowsill envelope must reach the DHT11's two ranged channels — if this is "

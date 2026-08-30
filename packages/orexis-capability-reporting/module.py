@@ -23,10 +23,11 @@ from __future__ import annotations
 import json
 
 from agent import config
-from agent.metrics import tree_bytes
-from agent.module import Module, Timer, contributes
-from orexis_modality_graph.ontology import HANDLE, REPORTS, SEND, SERIES, SUBSCRIPTIONS
-from orexis_modality_graph.store import bindings
+from orexis_progression_patience.upkeep import tree_bytes
+from agent.module import Module, contributes
+from orexis_progression_patience.timer import Timer
+from orexis_progression_patience.ontology import HANDLE, REPORTS, SEND, SERIES, SUBSCRIPTIONS
+from orexis_progression_patience.store import bindings
 
 from . import sovereign
 from .beliefs import REPORTING_PICKS

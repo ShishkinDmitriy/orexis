@@ -58,7 +58,7 @@ SELECT ?class ?keyed ?carried WHERE {
 
 def keys_of(query) -> dict:
     """class IRI -> (frozenset of key predicate IRIs, frozenset of carried predicate IRIs)."""
-    from orexis_modality_graph.store import bindings
+    from orexis_progression_patience.store import bindings
 
     out: dict = {}
     for r in bindings(query(_KEYS_Q)):

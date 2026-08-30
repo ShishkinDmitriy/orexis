@@ -119,8 +119,8 @@ class Desire:
 #  concept.
 
 from assembly import loader
-from .ontology import DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH
-from .store import Store
+from orexis_progression_patience.ontology import DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH
+from orexis_progression_patience.store import Store
 
 #  The two modality classes whose instances are wants. ConstraintGraph is a want's boundary
 #  rather than a want — but gap, menu and validation all read the two together, and the record
@@ -143,7 +143,7 @@ class Deducer(Store):
     """
 
     def __init__(self, beliefs):
-        from .ontology import obligations_graph
+        from orexis_progression_patience.ontology import obligations_graph
 
         super().__init__()
         publics = list(beliefs.public_graphs())

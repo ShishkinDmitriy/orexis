@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import pytest
 
-from orexis_modality_graph.ontology import (AG, STATE_GRAPH, WORLD_GRAPH, beliefs_graph)
-from orexis_modality_graph.store import bindings
+from orexis_progression_patience.ontology import (AG, STATE_GRAPH, WORLD_GRAPH, beliefs_graph)
+from orexis_progression_patience.store import bindings
 
 from conftest import build_agent, genesis_store
 
@@ -108,7 +108,7 @@ def test_a_world_can_state_a_root_desire_and_an_amendment_can_retire_it(monkeypa
     import shutil
 
     from agent import genesis
-    from orexis_modality_graph.store import Store
+    from orexis_progression_patience.store import Store
 
     src = genesis.world_dir("loner")
     dst = tmp_path / "asserted"
@@ -154,10 +154,10 @@ def test_a_commitment_survives_a_restart_in_its_own_room(monkeypatch, tmp_path):
     import pyoxigraph as ox
 
     from agent import genesis
-    from orexis_modality_graph.beliefs import Beliefs
-    from orexis_modality_graph.intentions import Intentions
-    from orexis_modality_graph.store import Store
-    from orexis_modality_graph.graphs import intentions_graph
+    from orexis_deliberation_search.beliefs import Beliefs
+    from orexis_progression_patience.intentions import Intentions
+    from orexis_progression_patience.store import Store
+    from orexis_progression_patience.graphs import intentions_graph
 
     state = tmp_path / "state"
     world = genesis.world_dir("loner")

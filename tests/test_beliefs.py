@@ -9,8 +9,8 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from assembly import loader  # noqa: F401  (puts the package trees on sys.path)
-from orexis_modality_graph import ontology
-from orexis_modality_graph.beliefs import BeliefError, Beliefs
+from orexis_progression_patience import ontology
+from orexis_deliberation_search.beliefs import BeliefError, Beliefs
 from orexis_capability_sensing.readings import Reading, current_reading
 from orexis_capability_sensing.regions import aims_of, regions_of
 from orexis_capability_market.beliefs import BIDDING_PICKS, HOSTING_PICKS

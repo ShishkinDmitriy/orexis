@@ -29,8 +29,8 @@ import rdflib
 from pyshacl import validate as shacl_validate
 
 from agent import genesis
-from orexis_modality_graph.ontology import PROVENANCE_GRAPH, beliefs_graph
-from orexis_modality_graph.store import Store
+from orexis_progression_patience.ontology import PROVENANCE_GRAPH, beliefs_graph
+from orexis_progression_patience.store import Store
 from agent.validate import _shapes_and_vocabulary, conforms, graph_from
 
 from conftest import WORLDS_ROOT

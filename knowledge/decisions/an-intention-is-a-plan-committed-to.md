@@ -39,7 +39,7 @@ a committed tail would be a promise about a future nobody has seen. The tail is 
 a reader; the head is in the ledger for the agent.
 
 **Carrying it out is one process, [executor](/domain/executor.md), and it is the kernel's**:
-plan, commit, take. `agent/execution.py` is the whole of it, and every trigger goes through it —
+plan, commit, take. `agent/execution.py` was the whole of it — `pursuit.py` in deliberation and `execution.py` in progression since #452, and every trigger goes through it —
 the keeper's tick for every want, a fresh reading for the actuator, a round knocking for the
 bidder, a presentation for the host. Nothing decides on the way: a trigger says *now*, the
 search says *what*, the ledger says *committed*, and the actor says *done*.

@@ -35,17 +35,19 @@ import signal
 from agent import config, genesis
 
 from assembly import loader
-from orexis_modality_graph.beliefs import Beliefs
+from orexis_deliberation_search.beliefs import BeliefError, Beliefs
 from assembly.inject import attribute_for, opened
-from orexis_modality_graph.ontology import DESIRES, DESIRE_URGENCY
-from .deliberator import Deliberator
-from orexis_modality_graph.desire import Desire, Desires
-from .reviser import Reviser
-from orexis_modality_graph.intentions import Intentions
-from .keeper import Keeper
+from orexis_progression_patience.ontology import DESIRES, DESIRE_URGENCY
+from orexis_deliberation_search.deliberator import KEEPING_PICKS, Deliberator
+from orexis_deliberation_search.desire import Desire, Desires
+from orexis_deliberation_search.reviser import Reviser
+from orexis_progression_patience.intentions import Intentions
+from orexis_progression_patience.keeper import Keeper
 from .metrics import Metrics
-from .upkeep import BeliefBaseUpkeep
-from orexis_modality_graph.store import bindings
+from orexis_progression_patience.upkeep import BeliefBaseUpkeep
+from orexis_progression_patience.store import bindings
+from orexis_progression_patience.scheduler import scheduler
+from orexis_reactive_queue.loop import loop
 from .validate import validate_agent
 from .world import Self, World, load_self, load_world
 
@@ -171,6 +173,14 @@ class Agent:
         # STORE three dozen lines above was already built for every agent, while the thing that
         # writes it was a grant. A modality nobody may write is not a modality.
         self.keeper = Keeper(self)
+        #  ITS PATIENCE, handed down: the keeper is progression's and reads no belief, so the
+        #  container reads the pick through the desire modality and assigns it. An agent that
+        #  states none — `world/sensing`'s stakeless one, every minimal fixture — is handed
+        #  nothing, and the keeper raises `NoPatience` only if something asks it to commit.
+        try:
+            self.keeper.beliefs = self.desires.read(KEEPING_PICKS)
+        except BeliefError:
+            pass
 
         #  THE LEDGER OF DEBTS IS NOT HERE, and the reason is the one sensing already
         #  demonstrates: a package may write a graph the kernel declares. The kernel owns the
@@ -385,6 +395,11 @@ class Agent:
                     close()
                 except Exception as exc:
                     log.error("%s: a service would not close: %s", self.id, exc)
+            #  THE THREE THREADS, last (#452): the scheduler stops keeping time, then the loop
+            #  finishes the item in hand and exits. The reviser above was the third. An agent
+            #  is a process, so the process's clock and loop are this agent's to stop.
+            scheduler().stop()
+            loop().stop()
 
 
 def main() -> None:

@@ -287,7 +287,7 @@ def test_a_bidder_whose_domain_prices_no_property_refuses_to_start(make):
     remaining rule is "judge whichever reading arrived last", which is the defect, so the agent
     declines to run instead.
     """
-    from orexis_modality_graph.ontology import ONTOLOGY_GRAPH
+    from orexis_progression_patience.ontology import ONTOLOGY_GRAPH
 
     ds = genesis_store()
     ds.update(f"""DELETE WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
@@ -593,7 +593,7 @@ def test_a_host_that_states_uniform_price_runs_it_and_says_so(make, tmp_path, mo
     from agent import genesis
     from orexis_capability_market import UNIFORM_PRICE
     from agent.genesis import agent_id_of
-    from orexis_modality_graph.store import Store
+    from orexis_progression_patience.store import Store
 
     world = tmp_path / "world"
     shutil.copytree(genesis.world_dir("simulation"), world, dirs_exist_ok=True)
@@ -657,7 +657,7 @@ def _stamp_readings(agent, at):
     stops being evidence, so seeding one at real-time and then asking about a moment past that
     horizon hands the agent a blind spot the test did not mean to create.
     """
-    from orexis_modality_graph.ontology import STATE_GRAPH
+    from orexis_progression_patience.ontology import STATE_GRAPH
 
     agent.beliefs.update(f"""
         WITH <{STATE_GRAPH}>
@@ -814,8 +814,8 @@ def test_paying_the_debt_discharges_it_and_the_ledger_keeps_the_record(host):
 
     host.deliver(f"{market_of(host).redeem_topic}/fern", {"jti": jti, "sub": "fern"})
     assert ledger_of(host).owed() == [], "paid — nothing stands"
-    from orexis_modality_graph.ontology import obligations_graph
-    from orexis_modality_graph.store import bindings
+    from orexis_progression_patience.ontology import obligations_graph
+    from orexis_progression_patience.store import bindings
     kept = bindings(host.beliefs.query(
         "SELECT ?d WHERE { GRAPH <%s> { ?o <http://example.org/orexis#dischargedAt> ?d } }"
         % obligations_graph("supplier")))

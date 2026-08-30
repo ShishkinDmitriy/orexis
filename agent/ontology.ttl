@@ -82,6 +82,12 @@ ag:sweep a assembly:Extension ;
 
 ag:quiet a assembly:Extension ;
     assembly:signature "() -> list[str]" ; ag:row ag:Reactive ; rdfs:label "quiet" ; rdfs:comment "What did you expect to hear and have stopped hearing? Log lines, said once on entry and once on recovery." .
+ag:stepDone a assembly:Extension ;
+    assembly:signature "(act, intention, took) -> None" ; ag:row ag:Reactive ; rdfs:label "step done" ; rdfs:comment "Progression handed a committed act to its actors and this is the answer: took, or not now. Told on the executing thread, to whoever above cares — a lower layer says this upward as an event, never as an import (#452)." .
+ag:planFinished a assembly:Extension ;
+    assembly:signature "(intention, action, want) -> None" ; ag:row ag:Reactive ; rdfs:label "plan finished" ; rdfs:comment "The world answered as the act promised: the expectation on this intention was met. Told by the keeper; deliberation fills it to reconsider the want." .
+ag:planFailed a assembly:Extension ;
+    assembly:signature "(intention, action, want) -> None" ; ag:row ag:Reactive ; rdfs:label "plan failed" ; rdfs:comment "The deadline passed and the world did not answer as the act promised: the expectation on this intention is unmet. Told by the keeper; deliberation fills it to re-plan the want." .
 ag:beliefRevised a assembly:Extension ;
     assembly:signature "(belief_term, value) -> None" ; ag:row ag:Progression ; rdfs:label "belief revised" ; rdfs:comment "One of this agent's beliefs has been re-picked — take it up, if it is one of yours." .
 ag:subscriptions a assembly:Extension ;

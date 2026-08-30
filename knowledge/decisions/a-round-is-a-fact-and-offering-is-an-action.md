@@ -24,7 +24,7 @@ keeps `pending` the same way. Nothing in any store says *a round is open on V un
 `market:Acquiring`'s `ag:available` walks the plumbing — *winnings can physically reach my pot*
 — and stops there: it says *I could buy*, never *I can buy now*.
 [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md) made
-the consequence honest rather than removing it: the keeper's tick commits an `Acquire`, the
+the consequence honest rather than removing it: the patience tick commits an `Acquire`, the
 actor answers "not now", and the intention stands until an offer arrives. It is the one action
 whose precondition is known to be incomplete.
 
@@ -56,7 +56,7 @@ bidder cannot time its arrival; `closesAt` is what the offer already says.
 property every other row has — *a row whose premises cannot hold does not exist* — and three
 things follow without a line of policy:
 
-- the keeper's tick commits an Acquire only when one is executable, and `bidding.take` loses
+- the patience tick commits an Acquire only when one is executable, and `bidding.take` loses
   its "no round pending" branch;
 - an Acquire intention means *bid in this round*: adopted when the offer is heard (the offer
   handler runs execution, as it does today) or by the tick while one is open, satisfied by the

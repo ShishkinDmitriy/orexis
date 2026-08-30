@@ -148,7 +148,7 @@ time — a package ships its own `affordances.rq` beside its `rules.ru` and `rev
 the menu is the union of what the loaded packages contribute; a kind whose execution reduces
 to an existing actor then ships no Python at all. Implemented as proposed (#207), with the
 toy-package test proving a new KIND appears with no edit outside its directory — and #208
-beside it: gaps are the choir too (`Module.notices()`), the keeper ticks on its patience clock,
+beside it: gaps are the choir too (`Module.notices()`), the mind ticks on its patience clock (the keeper's then, the deliberator's since #452),
 and the marketless watching finally reaches the ledger the sovereign asks.
 
 **So the menu is a tool list in the LLM sense, with two upgrades**: nothing registers the
@@ -324,7 +324,7 @@ Three requirements follow, none of which a planner written for the reflex's worl
   `sosa:resultTime` are not part of where a plan stands — and any other blank node to its
   content ([#258](https://github.com/ShishkinDmitriy/orexis/issues/258), which is what lets a
   step that moves something other than the goal's number count as somewhere new; see
-  `agent/signature.py`).
+  `packages/orexis-deliberation-search/signature.py`).
 - **Depth exhaustion is an ANSWER, not a failure.** "No bounded plan reaches this goal" is a
   distinct outcome from "no lever repairs this violation", and the two must reach the report as
   different things or the sovereign is told to buy a fan when the problem is dose size.

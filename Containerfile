@@ -23,15 +23,20 @@ WORKDIR /app
 COPY pyproject.toml pyproject.toml
 COPY agent/__init__.py agent/__init__.py
 COPY assembly/__init__.py assembly/__init__.py
-# The mind's stores are a package the root depends on — the kernel's own declared dependency
-# is what loads them until #455 (a-layer-is-a-package-and-need-loads-it) — and that package
-# depends back on the root for `assembly`, a knowing cycle through the shared distribution. So
-# the two editables are installed in ONE pip call, which resolves each against the other
-# instead of asking an index for either. Stubs suffice here as they do for agent/: an editable
-# install maps the directory, and the code arrives with the full COPY below.
-COPY packages/orexis-modality-graph/pyproject.toml packages/orexis-modality-graph/pyproject.toml
-COPY packages/orexis-modality-graph/__init__.py   packages/orexis-modality-graph/__init__.py
-RUN pip install "setuptools>=68" && pip install -e . -e packages/orexis-modality-graph/
+# The kernel's three LAYERS are packages the root depends on — the container's own declared
+# dependencies are what load them until #455 (a-layer-is-a-package-and-need-loads-it) — and
+# each depends back on the root for `assembly`, a knowing cycle through the shared
+# distribution. So the four editables are installed in ONE pip call, which resolves each
+# against the others instead of asking an index for any. Stubs suffice here as they do for
+# agent/: an editable install maps the directory, and the code arrives with the full COPY below.
+COPY packages/orexis-reactive-queue/pyproject.toml         packages/orexis-reactive-queue/pyproject.toml
+COPY packages/orexis-reactive-queue/__init__.py            packages/orexis-reactive-queue/__init__.py
+COPY packages/orexis-progression-patience/pyproject.toml   packages/orexis-progression-patience/pyproject.toml
+COPY packages/orexis-progression-patience/__init__.py      packages/orexis-progression-patience/__init__.py
+COPY packages/orexis-deliberation-search/pyproject.toml    packages/orexis-deliberation-search/pyproject.toml
+COPY packages/orexis-deliberation-search/__init__.py       packages/orexis-deliberation-search/__init__.py
+RUN pip install "setuptools>=68" && pip install -e . \
+    -e packages/orexis-reactive-queue/ -e packages/orexis-progression-patience/ -e packages/orexis-deliberation-search/
 
 # Everything an agent runs, and nothing else.
 #

@@ -13,8 +13,8 @@ wired to hardware derives.
 
 import rdflib
 
-from orexis_modality_graph.ontology import WORLD_GRAPH
-from orexis_modality_graph.store import bindings
+from orexis_progression_patience.ontology import WORLD_GRAPH
+from orexis_progression_patience.store import bindings
 
 from conftest import WORLDS_ROOT, genesis_store, load_wired
 from test_shapes import _conforms, _flatten
@@ -233,7 +233,7 @@ def test_the_pot_is_the_only_statement_of_its_own_drying():
     import json
 
     from agent import ratified
-    from orexis_modality_graph.ontology import AG, WORLD_GRAPH
+    from orexis_progression_patience.ontology import AG, WORLD_GRAPH
     from onboarding.compose import _SIMULATED_Q, _values
 
     ds = ratified.dataset("simulation")
@@ -259,7 +259,7 @@ def test_a_model_stating_its_own_drying_overrides_the_pot():
     import json
 
     from agent import ratified
-    from orexis_modality_graph.ontology import AG, WORLD_GRAPH
+    from orexis_progression_patience.ontology import AG, WORLD_GRAPH
     from onboarding.compose import _SIMULATED_Q, _values
 
     ds = ratified.dataset("simulation")

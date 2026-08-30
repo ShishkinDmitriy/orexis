@@ -181,10 +181,17 @@ it is a record wearing a bullet.
    `packages/orexis-transport-*` import sensing's `Codec`, `Scaling` and `pointer`, because those
    are the contracts they exist to implement (see
    [sensing-owns-the-reading-pipeline](knowledge/decisions/sensing-owns-the-reading-pipeline.md))
-   — and every layer imports the mind's stores, `packages/orexis-modality-graph/`, the floor
-   beneath them all, which imports no layer and no capability (see
+   — and THE KERNEL IS THREE LAYER PACKAGES in the same tree, each importing only the layers
+   beneath it: the reactive loop (`packages/orexis-reactive-queue/`, importing nothing of
+   ours), progression (`packages/orexis-progression-patience/`, the ledger and the store
+   engine, the lowest layer that persists) and deliberation
+   (`packages/orexis-deliberation-search/`, the belief base, the desires and the search). There
+   is no floor beneath them: what a lower layer has to say upward it says as an EVENT through
+   the choir. `agent/` is the CONTAINER that assembles them and may import all three; nothing
+   imports it from below, and a capability may import any layer's contract (see
    [a-layer-is-a-package-and-need-loads-it](knowledge/decisions/a-layer-is-a-package-and-need-loads-it.md)).
-   `tests/test_layering.py` holds both directions, and finds the floor by its family.
+   The order is spelled once, `LAYERS` in `tests/test_projects.py`, and `tests/test_layering.py`
+   holds every arrow, finding each layer by its family.
    A transport is also a capability the fact of its bus grants — how the agent reaches its
    society, connection, delivery loop and watchdog in the transport's module, reached through
    the choir (`subscriptions`, `handle`, `send`) — and the kernel has no mailbox (see
@@ -232,8 +239,12 @@ it takes a different path through translation. See
 [the-agent-stack-is-a-second-axis](knowledge/decisions/the-agent-stack-is-a-second-axis.md).
 
 **Three layers, split by how long a thing may take and whether it may be interrupted** —
-reactive handlers (ms, atomic, no search: classify and write), intention progression (seconds to
-minutes, suspends rather than blocks, searches nothing), deliberation (the search). The rule:
+reactive handlers (ms, atomic, no search: classify and write — `packages/orexis-reactive-queue/`,
+a queue and the ONE executing thread that drains it), intention progression (seconds to
+minutes, suspends rather than blocks, searches nothing — `packages/orexis-progression-patience/`,
+the ledger, the patience, the scheduler thread that keeps time and runs nothing, and a timer
+whose landing is an enqueue), deliberation (the search — `packages/orexis-deliberation-search/`,
+on a worker thread of its own, only its result crossing onto the loop). The rule:
 **anything that blocks belongs in progression, anything that searches belongs in deliberation,
 anything that must never block belongs in a handler** — and the belief base is the INTERFACE
 between them, which is why staleness, a dead sensor and event thinning all settled there rather
@@ -352,7 +363,7 @@ stops being theoretical.
 
 ```bash
 source .venv/bin/activate
-pip install -e . $(ls -d packages/*/)   # 23 distributions; or `uv sync --all-packages`
+pip install -e . $(ls -d packages/*/)   # 25 distributions; or `uv sync --all-packages`
 
 orexis-validate <world> # build the world from its files and hold it to every package's shapes
 orexis-onboard <world>       # ONBOARDING: validate, then grant everything below. One command.

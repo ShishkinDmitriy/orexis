@@ -24,7 +24,7 @@ import logging
 from datetime import datetime, timezone
 from urllib.parse import quote
 
-from orexis_modality_graph.ontology import DELIBERATION_GRAPH
+from orexis_progression_patience.ontology import DELIBERATION_GRAPH
 
 log = logging.getLogger("trace")
 
@@ -143,7 +143,7 @@ def outcomes(query) -> dict[str, int]:
     the answer a sovereign gets are the same fact. This is a READER, which is the one thing
     this graph is for; it is not the planner consulting its own past thinking.
     """
-    from orexis_modality_graph.store import bindings
+    from orexis_progression_patience.store import bindings
 
     rows = bindings(query(f"""
 SELECT ?verdict (COUNT(?d) AS ?n) WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
@@ -179,7 +179,7 @@ def effort(query) -> dict[str, float]:
       claim it looked at everything. That is a package that never said what its lever does, and
       it is why a partial plan defers to the reflex rather than reporting that nothing helps.
     """
-    from orexis_modality_graph.store import bindings
+    from orexis_progression_patience.store import bindings
 
     #  `?c a ag:Candidate` is load-bearing, not tidiness: `ag:verdict` is deliberately declared
     #  with NO domain because a pass and a candidate both carry one, so a query that forgot to

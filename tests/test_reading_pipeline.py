@@ -23,8 +23,8 @@ from orexis_scaling_identity.terms import IDENTITY, LINEAR
 from orexis_capability_sensing.codec import Codec, CodecError, codec_for
 from orexis_codec_json.codec import JsonCodec
 from orexis_codec_json.terms import CBOR, JSON
-from orexis_modality_graph.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
-from orexis_modality_graph.store import PREFIXES, bindings
+from orexis_progression_patience.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
+from orexis_progression_patience.store import PREFIXES, bindings
 
 from conftest import genesis_store, query_fn, load_wired
 

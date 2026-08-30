@@ -100,6 +100,11 @@ SERIES = term("series")
 QUIET = term("quiet")
 SWEEP = term("sweep")
 BELIEF_REVISED = term("beliefRevised")
+#  What progression TELLS upward (#452): a lower layer never imports a higher one, so what it
+#  has to say — a step taken, an expectation met or unmet — is an event through the choir.
+STEP_DONE = term("stepDone")
+PLAN_FINISHED = term("planFinished")
+PLAN_FAILED = term("planFailed")
 SUBSCRIPTIONS = term("subscriptions")
 HANDLE = term("handle")
 SEND = term("send")

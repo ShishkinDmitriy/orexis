@@ -73,12 +73,36 @@ bid arithmetic and the dose are deterministic code and stay so
 grant through progression while readings keep arriving underneath it, and no handler ever waits
 on anything.
 
-# What is already true of the code
+# What is mechanical since #452
+
+The three rows are three PACKAGES in the one tree, and the arrows between them are tested
+dependencies ([a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md)):
+`packages/orexis-reactive-queue/`, `packages/orexis-progression-patience/`,
+`packages/orexis-deliberation-search/`, each importing only the layers beneath it, and
+`tests/test_layering.py` holding every arrow. **And each row is one thread**, which is the form
+the table above was always asking for:
+
+| row | thread | what runs on it |
+|---|---|---|
+| reactive | the loop (`orexis_reactive_queue.loop`) — one FIFO, one daemon | every handler, every take, every timer's function, every event told through the choir. An item is milliseconds and never waits |
+| progression | the scheduler (`orexis_progression_patience.scheduler`) — a heap of deadlines | nothing. It sleeps until the next deadline and ENQUEUES; a wait is an entry here that enqueues a check |
+| deliberation | the worker (`orexis_deliberation_search.reviser`) — the mind's own | the search, and only the search. Its RESULT crosses onto the loop as one item: the plan's head, committed and taken |
+
+What this closed: the sentence below saying the keeper's tick "still searches synchronously,
+deliberately" was true while the tick had a thread of its own. A timer lands on the loop now,
+so the tick MARKS and the worker searches — the mind's clock is the deliberator's, and the
+search is never on the executing thread. And what a lower row has to say to a higher one it
+says as an EVENT through the choir rather than an import: progression tells `ag:stepDone`,
+`ag:planFinished` and `ag:planFailed`, and deliberation fills those points — a failed plan
+is a want marked for re-planning, without the ledger ever importing the search.
+
+# What was already true of the code, before the mechanism
 
 - **Reactive**: every `handle`, and sensing's decode/scale/upsert path. None of them blocks.
 - **Progression**: the keeper's ledger and its patience tick, `execution.take_standing`, the
   bidder's give-up timer, the host's bid window, actuation's sweep — each on a `Timer` of its
-  own, so a wait is a suspension and never a spin.
+  own then; each a scheduler entry landing on the one loop since #452, so a wait is a
+  suspension and never a spin.
 - **Deliberation**: `Planner`, over a per-pass imaginarium that is dropped with the pass.
 - **The lifecycle, in the words the ledger already uses**: adopt; *stands* (BDI's suspended —
   the act is committed and its actor cannot act yet); satisfied; dropped, including *outwaited*,
@@ -107,9 +131,11 @@ knowing, because each is the rule showing its teeth:
 - **The window moved to where the act is taken.** `on_offer` used to write the bid's
   `ag:notAfter` onto the intention it had just adopted; the actor writes it in `take`, from the
   round row it reads there — which is where the act record said it belonged.
-- **The keeper's tick still searches synchronously**, deliberately: it is the mind's own clock
+- ~~**The keeper's tick still searches synchronously**, deliberately: it is the mind's own clock
   rather than a callback, so marking there would only queue work for the thread already
-  running it.
+  running it.~~ True until the tick lost its thread (#452): it lands on the reactive loop now,
+  which must never be held for a search, so it marks and the worker searches — the argument
+  above inverted by the mechanism, and the record's own rule applied to its own clock.
 
 **Marks are deduplicated by want**, which is the beginning of the filter this record asks for:
 ten readings between two passes leave one mark. What is still absent is the judgement — *did
@@ -122,7 +148,7 @@ this change anything a plan could branch on* — and that belongs in the same fi
   yet.
 - **Deliberation is not interruptible.** The table says it should be; a pass runs to completion.
   Bounded depth is what keeps that affordable, and a model in the loop is what would end it.
-- ~~**The revision function is implicit.**~~ Named: `agent/reviser.py` is the seam, and
+- ~~**The revision function is implicit.**~~ Named: `agent/reviser.py` — `packages/orexis-deliberation-search/reviser.py` since #452, the deliberation worker — is the seam, and
   `wake`/`wake_for` are the one door from a change to a pass. It is thin on purpose — the rule
   it runs is still *something moved, so reconsider the want it moved* — and what it buys is
   that #392, a band filter over churning self-telemetry, and any infrastructure projection are

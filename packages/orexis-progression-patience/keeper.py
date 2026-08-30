@@ -25,24 +25,24 @@ standing and younger than the agent's patience, and that refusal is the amortisa
 decision record is named for — within your patience, a second impulse to do the same thing is
 absorbed, not re-decided. With an LLM deliberator that absorption is the cost model.
 
-Vocabulary: packages/capability/intention/ontology.ttl. Rules: its shapes.ttl. Derivation: its
+Vocabulary: `agent/ontology.ttl` (the intention terms are the kernel's). Rules: its shapes.ttl. Derivation: its
 rules.ru. See knowledge/decisions/an-intention-is-an-amortised-deliberation.md.
 """
 
 from __future__ import annotations
 
+import logging
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from orexis_modality_graph.beliefs import BeliefError, Picks
-from . import vocabulary
+from assembly.contribute import answer as contribution, contributes
+from . import ledger
 from .act import Act
-from .module import Module, Timer
-from orexis_modality_graph.store import bindings
+from .store import bindings
 
-from orexis_modality_graph.graphs import intentions_graph
-from orexis_modality_graph.ontology import AG
+from .graphs import intentions_graph
+from .ontology import AG, PLAN_FAILED, PLAN_FINISHED, REPORTS
 
 #  What an intention is made of — the mind's own words, and they were the kernel's already
 #  (the-mind-is-six-graphs). What has joined them is the four figures the KEEPING member used to
@@ -69,7 +69,7 @@ BASELINE_AT = AG + "baselineAt"
 EXPECTS_DELTA = AG + "expectsDelta"
 #  `ag:deadlineAt` WAS HERE: the watch's deadline is the ACT's `ag:notAfter` now — one window,
 #  read by the keeper, the bidder's give-up and the host's redeem check alike
-#  (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan). `vocabulary` migrates it.
+#  (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan). `ledger` migrates it.
 END_MET = AG + "endMet"
 END_VERIFIED_AT = AG + "endVerifiedAt"
 SUSPECT_AFTER = AG + "suspectAfter"
@@ -112,14 +112,19 @@ class KeepingBeliefs:
     patience_s: int
 
 
-#  `capability` only names whoever wanted the pick, for the error a missing one raises. There
-#  is no capability here any more, so it names the thing itself: an agent that keeps commitments
-#  and states no patience is missing something `ag:Intention` needs, not something it was granted.
-KEEPING_PICKS = Picks(
-    capability=INTENTION_CLASS,
-    cls=KeepingBeliefs,
-    terms={"patience_s": PATIENCE_S},
-)
+#  `KEEPING_PICKS` — the belief reader that fills this dataclass — WAS HERE and is the
+#  deliberator's now (#452): a pick is a belief, a belief is read by the search and by nothing
+#  beneath it, and progression never reads one. The container reads the pick and HANDS the
+#  patience in; a keeper that was handed none says so the moment anything needs it.
+
+
+class NoPatience(LookupError):
+    """This agent states no `ag:patienceS`, and something asked for it.
+
+    An agent that keeps commitments and states no patience is missing something
+    `ag:Intention` needs, not something it was granted — `ag:KeeperShape` refuses to let an
+    agent with a stake boot without one, so reaching this is a stakeless agent being asked to
+    commit, which is a bug in the asker."""
 
 
 @dataclass(frozen=True)
@@ -159,46 +164,57 @@ class OpenExpectation:
     expected_delta: float | None = None  # how far the act should move it, when the actor knows
 
 
-class Keeper(Module):
-    """The keeper. Speaks to no topic; its callers are its siblings, through the agent."""
+class Keeper:
+    """The keeper. Speaks to no topic; its callers are its siblings, through the agent.
+
+    NOT a `Module`, and it was one. `Module` is the container's contract for what a capability
+    plugs in — the choir's points, `publish`, the injections — and a layer may not import the
+    container that assembles it. What the keeper needs of that contract is the four names the
+    runtime asks of everything in its module list (`name`, `CAPABILITY`, `start`, `stop`) and
+    one contribution (`reports`), which `assembly.contribute` answers for any object. So it
+    states those itself, and the choir finds it exactly as it finds a module.
+    """
 
     name = "intention"
+    CAPABILITY = ""     # nothing a world grants — `provider()` can never return the keeper
+
+    def answer(self, term: str):
+        """Whatever fills one point on me, as a bound method — or None. The same door a
+        `Module` has, so whoever walks `agent.modules` asking by term finds this too."""
+        return contribution(self, term)
 
     def __init__(self, agent):
-        super().__init__(agent)
+        self.agent = agent
+        self.me = agent.me
+        self.log = logging.getLogger(f"{agent.id}.{self.name}")
         self.graph = intentions_graph(agent.id)
-        self._tick: Timer | None = None
         self._picks = None
         #  A volume from before the ledger keyed on the want: rows carrying a property are
         #  given the want that property names for this agent, once, at construction.
         about_of = {r["want"]: r["about"] for r in bindings(agent.desires.query_union(
             f"SELECT ?want ?about WHERE {{ <{self.me.uri}> <{AG}holds> ?want . "
             f"?want <{AG}about> ?about }}"))}
-        if (n := vocabulary.migrate_ledger(agent.intentions, self.graph, about_of)):
+        if (n := ledger.migrate_ledger(agent.intentions, self.graph, about_of)):
             self.log.info("ledger migrated: %d row(s) keyed by a property now pursue a want", n)
-        if (n := vocabulary.migrate_ledger_acts(agent.intentions, self.graph)):
+        if (n := ledger.migrate_ledger_acts(agent.intentions, self.graph)):
             self.log.info("ledger migrated: %d row(s) naming an action now commit to an act", n)
 
     @property
     def beliefs(self) -> KeepingBeliefs:
-        """The commitment policy, read on FIRST USE and not at construction.
+        """The commitment policy, HANDED IN by the container and never read here.
 
-        This was read in `__init__`, which was right while keeping was a capability: an agent
-        that had been granted it had also been given a patience, and a missing one was a
-        genesis error worth refusing to boot over. Every agent has a keeper now, and reading
-        eagerly turned "this agent states no patience" into "this agent cannot start" — which
-        killed `world/sensing`'s stakeless agent and every minimal fixture in the suite.
-
-        Lazy is not a softening of the check, and this is the part worth being careful about.
-        `ag:KeeperShape` still REFUSES to let an agent with a stake boot without a patience
-        inside the constitutional bounds, so nothing that commits can reach this without one.
-        What lazy buys is that an agent with nothing to commit about never asks — the same rule
-        the deliberator's `series()` follows, one level down: the need follows the fact rather
-        than the grant. An agent with neither a stake nor a patience that somehow reaches a
-        commitment still raises here, naming the missing term, exactly as before.
+        It used to be read from the desire modality on first use — lazily, because reading it
+        eagerly turned "this agent states no patience" into "this agent cannot start" and
+        killed `world/sensing`'s stakeless agent. Since #452 progression reads no belief at
+        all: the container reads `KEEPING_PICKS` (the deliberator's) and assigns the result
+        through the setter below, or assigns nothing where the agent states none. The check
+        is not softened: `ag:KeeperShape` still REFUSES to let an agent with a stake boot
+        without a patience inside the constitutional bounds, and an agent that reaches a
+        commitment with none raises `NoPatience` here, naming the missing term.
         """
         if self._picks is None:
-            self._picks = self.agent.desires.read(KEEPING_PICKS)
+            raise NoPatience(f"{self.agent.id} states no patience (ag:patienceS) and was asked "
+                             "to keep a commitment")
         return self._picks
 
     @beliefs.setter
@@ -213,53 +229,13 @@ class Keeper(Module):
         self._picks = picks
 
     def start(self) -> None:
-        # The non-market entry into deliberation (#208): on my own patience clock, collect
-        # what the modules notice, ask the one deliberator, commit what it proposes. The
-        # patience is the rate bound by construction — an impulse younger than it is absorbed
-        # by adopt() anyway, so ticking faster would only ask questions whose answers are
-        # already standing.
-        #  No patience, no clock. An agent that states none has no stake (the shape guarantees
-        #  the converse), so there are no gaps for this tick to collect and nothing it could
-        #  commit — starting a timer to ask would be a thread per agent to answer "nothing".
-        try:
-            interval = float(self.beliefs.patience_s)
-        except BeliefError:
-            self.log.debug("no patience stated and no stake to spend it on — the tick stays off")
-            return
-        self._tick = Timer(interval, self.deliberate_on_gaps)
-        self._tick.start()
+        """Nothing to start. THE TICK WAS HERE — on my patience clock, hand every want to the
+        search — and it is the deliberator's now (#452): a clock that asks the search is the
+        search's clock, and progression may not import the layer above it. The patience is
+        still mine, and the deliberator reads its interval off `beliefs.patience_s`."""
 
     def stop(self) -> None:
-        if self._tick:
-            self._tick.stop()
-
-    # --- gap-driven deliberation (#208) --------------------------------------------------
-
-    def deliberate_on_gaps(self) -> None:
-        """Every want, through execution. Noticing is plural; deciding is not; doing is one road.
-
-        Deliberation used to run only when the market knocked, and then this tick carried out
-        ONE of the deliberator's answers — Observe — and dropped the rest on the floor, because
-        an Acquire needs a round nobody may convene from here. It still does; what changed is
-        that the commitment is made anyway. `execution.pursue` plans, writes the head row to
-        this ledger and hands it to its actor, and an actor that cannot act now says so and
-        the intention STANDS — so the bidder answers the next offer from what it already
-        committed to, without a second search. See knowledge/domain/execution.md.
-
-        Duties are skipped: a host serves on a presentation or when stock arrives with a
-        claim held, and hosting runs execution on those events itself.
-
-        The cost is a plan per want per patience period, which is the same work `series()`
-        already does on the metrics clock.
-        """
-        #  The tick is the mind's OWN clock, not a callback — so it searches here rather
-        #  than marking and waiting for a drain that would only run on this same thread.
-        from . import execution
-
-        for desire in self.agent.pursuing():
-            if desire.is_obligation:
-                continue
-            execution.pursue(self.agent, desire)
+        """Nothing to stop; the ledger is a graph and outlives the process on purpose."""
 
     # --- the ledger, written -------------------------------------------------------------
 
@@ -547,6 +523,13 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         (self.log.info if met else self.log.warning)(
             "end %s for %s: %s", "met" if met else "UNMET", _short(watch.want), because)
         self._tell("end-met" if met else "end-unmet", watch.action, watch.want, because)
+        #  SAID UPWARD (#452): the step's result is judged here, against the baseline the actor
+        #  handed in and never against a belief; what deliberation does about it — re-plan the
+        #  want, mostly — is its own, heard as an event because the ledger imports no search.
+        if met:
+            self.agent.tell(PLAN_FINISHED, watch.uri, watch.action, watch.want)
+        else:
+            self.agent.tell(PLAN_FAILED, watch.uri, watch.action, watch.want)
         #  A COMMITMENT THAT STOOD UNTIL THE WORLD ANSWERED is done now, either way. An
         #  Actuate stands from the command to this verdict (#353) — the intention is to the
         #  END, and while it stands `adopt` absorbs the next impulse by the ordinary rule,
@@ -643,6 +626,7 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
                     not_after=datetime.fromisoformat(r["notAfter"]) if r.get("notAfter") else None))
             for r in rows]
 
+    @contributes(REPORTS)
     def reports(self) -> dict:
         """How many commitments stand, and how old the oldest is.
 

@@ -14,9 +14,9 @@ from __future__ import annotations
 import pytest
 
 from agent import genesis
-from orexis_modality_graph.beliefs import Beliefs
-from orexis_modality_graph.desire import Desires
-from orexis_modality_graph.ontology import ACTIONS_GRAPH, ONTOLOGY_GRAPH
+from orexis_deliberation_search.beliefs import Beliefs
+from orexis_deliberation_search.desire import Desires
+from orexis_progression_patience.ontology import ACTIONS_GRAPH, ONTOLOGY_GRAPH
 from onboarding.validate import deliberable, ids_are_unique
 
 from conftest import genesis_store
@@ -120,7 +120,7 @@ def test_the_gate_asks_the_packages_and_never_builds_an_agent(monkeypatch):
 
 def _clone_agent_under_the_same_id(st, agent_id: str) -> str:
     """Give the world a second `ag:Agent` answering to an id another one already holds."""
-    from orexis_modality_graph.ontology import AG, WORLD_GRAPH
+    from orexis_progression_patience.ontology import AG, WORLD_GRAPH
 
     twin = f"http://example.org/orexis/world/test#{agent_id}_twin"
     st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{

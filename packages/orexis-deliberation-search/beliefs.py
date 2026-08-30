@@ -21,8 +21,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import get_type_hints
 
-from .ontology import beliefs_graph
-from .store import bindings
+from orexis_progression_patience.ontology import beliefs_graph
+from orexis_progression_patience.store import bindings
 
 
 class BeliefError(RuntimeError):

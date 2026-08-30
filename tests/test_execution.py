@@ -10,12 +10,13 @@ from __future__ import annotations
 
 import rdflib
 
-from agent.act import Act
-from agent import execution, afforder
+from orexis_progression_patience.act import Act
+from orexis_progression_patience import execution
+from orexis_deliberation_search import afforder, pursuit
 from assembly import loader
-from agent.planner import Planner
+from orexis_deliberation_search.planner import Planner
 
-from orexis_modality_graph.ontology import beliefs_graph
+from orexis_progression_patience.ontology import beliefs_graph
 
 from conftest import MOISTURE, build_agent, genesis_store, open_round_for, wired_markets
 
@@ -45,11 +46,11 @@ def test_no_round_open_means_no_acquire_committed_and_the_trace_says_why(monkeyp
     round to bid in commits NOTHING on the tick — the want stays hot, the trace shows the
     look weighed and no Acquire on the menu at all, and nothing stands waiting for the market
     to knock."""
-    from orexis_modality_graph.store import bindings
+    from orexis_progression_patience.store import bindings
 
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     keeper = keeper_of(fern)
-    keeper.deliberate_on_gaps()
+    keeper.agent.deliberator.deliberate_on_gaps()
     assert keeper.standing(action=ACQUIRING) == [], "nothing to bid in, nothing committed"
     assert fern.sent.to(f"{wired_markets(fern)[0].bid_topic}/fern") == []
     weighed = {r["m"] for r in bindings(fern.beliefs.query_union(
@@ -64,7 +65,7 @@ def test_the_tick_bids_when_a_round_is_open(monkeypatch):
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     open_round_for(fern, "fern")
     keeper = keeper_of(fern)
-    keeper.deliberate_on_gaps()
+    keeper.agent.deliberator.deliberate_on_gaps()
     acquires = keeper.standing(action=ACQUIRING, want=stake_of(fern).uri)
     assert len(acquires) == 1 and acquires[0].via == wired_markets(fern)[0].uri
     assert len(fern.sent.to(f"{wired_markets(fern)[0].bid_topic}/fern")) == 1
@@ -78,12 +79,12 @@ def test_a_round_is_decided_once_and_a_second_impulse_is_absorbed(monkeypatch):
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1
     assert keeper_of(fern).standing(action=ACQUIRING)
-    from agent.planner import NOT_BETTER, Plan
+    from orexis_deliberation_search.planner import NOT_BETTER, Plan
 
     passes = []
     monkeypatch.setattr(Planner, "plan",
                         lambda self, desire: passes.append(desire) or Plan(NOT_BETTER))
-    keeper_of(fern).deliberate_on_gaps()
+    fern.deliberator.deliberate_on_gaps()
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1, "no second bid"
     #  The freshness want is met and the stake stands, so the tick has nothing to search
     #  FOR; the one pass it may run is the stake's, which `adopt` then absorbs.
@@ -183,11 +184,11 @@ def test_an_impulse_within_patience_writes_no_row(monkeypatch):
     asked before anything is adopted."""
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     keeper = keeper_of(fern)
-    keeper.deliberate_on_gaps()
+    keeper.agent.deliberator.deliberate_on_gaps()
     n = len(keeper.standing())
-    keeper.deliberate_on_gaps()
+    keeper.agent.deliberator.deliberate_on_gaps()
     assert len(keeper.standing()) == n
-    from orexis_modality_graph.store import bindings
+    from orexis_progression_patience.store import bindings
     everything = bindings(keeper.agent.intentions.query(
         "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a <http://example.org/orexis#Intention> } }"))
     assert int(everything[0]["n"]) == n, "no dropped rows either"

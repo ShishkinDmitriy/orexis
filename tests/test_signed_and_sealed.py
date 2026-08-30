@@ -16,7 +16,7 @@ import json
 import pytest
 
 from agent import signing
-from orexis_modality_graph.ontology import WORLD_GRAPH
+from orexis_progression_patience.ontology import WORLD_GRAPH
 from onboarding.keygen import (create_agent_signing_keypair, create_keypair,
                                create_sealing_keypair)
 
@@ -172,7 +172,7 @@ def test_the_roster_attests_keys_against_each_agents_real_node(tmp_path, monkeyp
     # Built straight from the tmp world's own directory — conftest's helper resolves the
     # repo's world/ by its own constant, and the whole point here is the generated keys.ttl
     # sitting beside the COPY.
-    from orexis_modality_graph.store import Store, bindings
+    from orexis_progression_patience.store import Store, bindings
 
     st = Store()
     genesis.refresh_public(st, worlds / "sim2")
