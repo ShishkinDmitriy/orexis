@@ -39,7 +39,7 @@ from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
 from orexis_agent_progression.ontology import AG, ONTOLOGY_GRAPH, WORLD_GRAPH
-from .namespaces import DHT11, MC, MQTT, ONEWIRE, PROBE, RGBLED, SENSING, SOSA
+from .namespaces import BME280, DHT11, I2C, MC, MQTT, ONEWIRE, PROBE, RGBLED, SENSING, SOSA
 
 
 
@@ -48,13 +48,14 @@ log = logging.getLogger("firmware")
 FIRMWARE_ROOT = REPO_ROOT / "firmware"
 WIFI_ENV = REPO_ROOT / "infra" / "secrets" / "wifi.env"
 
-# Every board that states which firmware it runs, with the one peripheral this generator knows
-# how to describe. A board carrying something it has no template for is reported, not guessed at.
+# Every board that states which firmware it runs, with the probe every such board carries and
+# the OPTIONAL parts this generator has a template for — an LED, a DHT11, a BME280. A board
+# carrying something it has no template for is reported (_untemplated), not guessed at.
 _BOARDS_Q = f"""
 SELECT ?boardId ?firmware ?lan ?host ?port ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
        ?alarm
-       ?ledRed ?ledGreen ?ledBlue ?airPin
-WHERE {{ 
+       ?ledRed ?ledGreen ?ledBlue ?airPin ?bmeSda ?bmeScl ?bmeAddr
+WHERE {{
   ?board a <{MC}Microcontroller> ; <{AG}localId> ?boardId ; <{SOSA}hosts> ?sensor .
   # The firmware name: stated on the board directly, or — since #175 — entailed onto the
   # board's connecting DEVICE from its firmware class, and reached through the hosting the
@@ -101,7 +102,32 @@ WHERE {{
              ?air <{MC}hasPin> ?airLeg .
              ?airLeg <{MC}pinRole> <{ONEWIRE}DataPinRole> .
              ?aw <{MC}joins> ?airLeg, ?airPinNode . ?airPinNode <{MC}gpio> ?airPin }}
+  # The BME280, matched on its CLASS and not only on the I2C roles — the roles say which two
+  # lines to open a bus on, and the class says what to say down it. An I2C part this firmware
+  # has no driver for must be reported (see _untemplated), not driven as a BME280 because it
+  # happens to have an SDA leg. The address is the unit's, by its SDO strap, and defaults in
+  # the firmware to 0x76 when the world states none.
+  OPTIONAL {{ ?board <{SOSA}hosts> ?bme . ?bme a <{BME280}Bme280> ;
+                <{MC}hasPin> ?sdaLeg, ?sclLeg .
+             ?sdaLeg <{MC}pinRole> <{I2C}DataPinRole>  . ?sdaW <{MC}joins> ?sdaLeg, ?sdaPin . ?sdaPin <{MC}gpio> ?bmeSda .
+             ?sclLeg <{MC}pinRole> <{I2C}ClockPinRole> . ?sclW <{MC}joins> ?sclLeg, ?sclPin . ?sclPin <{MC}gpio> ?bmeScl .
+             OPTIONAL {{ ?bme <{I2C}address> ?bmeAddr }} }}
  }}"""
+
+# Every part a board hosts that has legs, with its classes — so a part this generator has no
+# template for is REPORTED rather than silently left out of the header it would have needed
+# a line in. The templates are the OPTIONAL blocks above; this is their complement.
+_HOSTED_Q = f"""
+SELECT ?boardId ?partId ?class WHERE {{
+  ?board a <{MC}Microcontroller> ; <{AG}localId> ?boardId ; <{SOSA}hosts> ?part .
+  ?part <{MC}hasPin> ?leg ; a ?class .
+  OPTIONAL {{ ?part <{AG}localId> ?partId }}
+ }}"""
+
+# The classes the header above knows how to describe. A part whose classes meet none of these
+# gets a warning naming it, which is the whole of what this generator can honestly do for it.
+_TEMPLATED = (f"{PROBE}CapacitiveMoistureProbe", f"{RGBLED}RgbLed", f"{DHT11}Dht11",
+              f"{BME280}Bme280")
 
 _BOUNDS_Q = f"""
 SELECT ?min ?max WHERE {{ 
@@ -245,7 +271,27 @@ def _optional_pins(row: dict) -> str:
             "// and each is picked out by the mqtt:readingPointer its sensor states in the world.",
             f"#define AIR_SENSOR_PIN {int(row['airPin'])}",
         ]
+    if row.get("bmeSda"):
+        addr = int(row["bmeAddr"]) if row.get("bmeAddr") else 0x76
+        out += [
+            "",
+            "// The BME280, over I2C on these two lines. Temperature, humidity and pressure travel",
+            "// in the SAME message as the moisture, each picked out by the mqtt:readingPointer its",
+            "// sensor states in the world. The address is the unit's SDO strap, from the wiring.",
+            f"#define BME280_SDA_PIN {int(row['bmeSda'])}",
+            f"#define BME280_SCL_PIN {int(row['bmeScl'])}",
+            f"#define BME280_ADDR 0x{addr:02X}",
+        ]
     return "\n".join(out) + "\n" if out else ""
+
+
+def _untemplated(ds, board: str) -> list[str]:
+    """The parts on this board the header says nothing about, by id."""
+    classes: dict[str, set[str]] = {}
+    for r in ratified.rows(ds, _HOSTED_Q):
+        if r["boardId"] == board:
+            classes.setdefault(r.get("partId") or "(unnamed)", set()).add(r["class"])
+    return sorted(p for p, c in classes.items() if not c & set(_TEMPLATED))
 
 
 
@@ -359,6 +405,9 @@ def generate(world: str, board: str | None = None) -> None:
         out.chmod(0o600)  # it carries this board's password
         log.info("  wrote %s  (%s -> %s:%s, pin %s)", out.relative_to(REPO_ROOT),
                  row["boardId"], row.get("lan") or row["host"], row["port"], row["gpio"])
+        for part in _untemplated(ds, row["boardId"]):
+            log.warning("  ! %s carries %s, which this generator has no template for — the "
+                        "header says nothing about it", row["boardId"], part)
 
 
 def main() -> None:

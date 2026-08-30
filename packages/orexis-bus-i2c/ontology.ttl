@@ -1,6 +1,7 @@
 @prefix ag:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix i2c: <http://example.org/orexis/i2c#> .
 @prefix : <http://example.org/orexis/i2c#> .
 @prefix mc: <http://example.org/orexis/microcontroller#> .
@@ -13,3 +14,11 @@
     rdfs:comment "Bidirectional, and therefore driven. It was declared a bare PinRole for the tidy-sounding reason that it is neither an input nor an output, which let SDA sit on an input-only pin and validate cleanly." .
 :ClockPinRole a mc:OutputRole ; rdfs:label "I2C SCL" ;
     rdfs:comment "Driven by whoever is master. Always an output here, because nothing in this project is an I2C peripheral." .
+
+#  Where on the bus a device answers. Per UNIT rather than per class, because most parts strap
+#  it: a BME280 sits at 0x76 or 0x77 by its SDO pin, and which one THIS breakout came with is a
+#  fact about the thing on the bench, not about BME280s. It is what a firmware needs to open a
+#  conversation, and the day two parts share a bus it is what keeps them apart. No rdfs:domain,
+#  as with every property stated on units here — a domain axiom is an inference rule.
+:address a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "I2C address" ;
+    rdfs:comment "The 7-bit address this unit answers at. An integer, so 0x76 is written 118 — Turtle has no hex literal, and a generator prints it back as hex." .

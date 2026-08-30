@@ -51,6 +51,14 @@ mosquitto_pub -h <pi> -r -t sensors/fern/cmd -m '{"sleep_s":120}'
 
 ## Wiring
 
+Two boards run this firmware, one PlatformIO environment each: `esp32dev` for the DevKitC on
+the windowsill (`world/sensing`) and `firebeetle2_esp32e` for the FireBeetle 2 ESP32-E on the
+terrace (`world/terrace`). Same chip, same pin rules, same code.
+
+- BME280 (the outdoor air sensor, `world/terrace`): `VCC → 3V3` (never 5V — the bare part is
+  not 5V-tolerant), `GND → GND`, `SDA → GPIO21`, `SCL → GPIO22`. Address 0x76 or 0x77 by its
+  SDO strap, stated on the unit as `i2c:address` in `hardware.ttl`.
+
 - Capacitive soil-moisture sensor: `VCC → 3V3`, `GND → GND`, `AOUT → GPIO34`.
 - Use an **ADC1** pin (GPIO 32–39); ADC2 pins don't work with WiFi on. GPIO 34–39 are
   input-only, which is fine here.
@@ -82,7 +90,8 @@ ss -lntp | grep 1883        # expect 0.0.0.0:1883, not 127.0.0.1:1883
 ## Build & flash
 
 ```bash
-pio run -t upload          # build + flash over USB
+pio run -e esp32dev -t upload            # DevKitC: build + flash over USB
+pio run -e firebeetle2_esp32e -t upload  # FireBeetle 2 ESP32-E (world/terrace)
 pio device monitor         # watch it wake, publish, sleep
 ```
 

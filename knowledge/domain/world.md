@@ -19,14 +19,16 @@ own; there is no base that variants extend.
 ```bash
 orexis-validate simulation  # plants, a market, a supplier, valves — devices stood in for
 orexis-validate sensing     # one subject, one real board, one agent
+orexis-validate terrace     # the same shape outdoors: a planter bed, a FireBeetle, a BME280
 ```
 
 | | holds | derivation produces |
 |---|---|---|
 | `simulation/` | 3 plants + agents, a supplier, a barrel market, 3 valves, a meddler who waters pots unasked — every device stood in for, on a 24× clock (`ag:timeScale`: one bench hour is one simulated day) | `Subscribing` + `Bidding` per plant agent; `Hosting` + `Actuation` for the supplier |
 | `sensing/` | one subject, one real board, one agent | `Subscribing`, and nothing else |
+| `terrace/` | one planter bed, one FireBeetle 2 ESP32-E outdoors carrying a probe and a BME280, one agent — no mandate, so nothing re-picks its cadence | `Subscribing`, and nothing else |
 
-There were three. `society/` held what `simulation/` holds and expected real devices for it, and
+There were three before `terrace/` made it four again. `society/` held what `simulation/` holds and expected real devices for it, and
 the two differed by 45 lines of ~230 with identical beliefs — so it went, and the world that can
 run without hardware is the one that stays. See
 [two-worlds-were-one](/decisions/two-worlds-were-one.md).

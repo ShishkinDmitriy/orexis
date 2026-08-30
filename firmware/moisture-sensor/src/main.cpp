@@ -15,11 +15,12 @@
 // falls back to a timeout when nobody answers. The wake ends when the conversation does, which
 // is usually tens of milliseconds after the publish rather than a fixed allowance later.
 //
-//   publish:   MOISTURE_TOPIC   {"value":0.183,"sensor":"<SENSOR_ID>","sleep_s":600,
-//                               "temperature":21.4,"humidity":0.463}
+//   publish:   MOISTURE_TOPIC   {"moisture":0.183,"sensor":"<SENSOR_ID>","sleep_s":600,
+//                               "temperature":21.4,"humidity":0.463[,"pressure":1009.8]}
 //              one message for the whole board — one client, one credential, one
 //              channel. Each sensor in the world picks its own value out with an
-//              ag:readingPointer; the air fields are absent if the part did not answer.
+//              mqtt:readingPointer; the air fields are absent if the part did not answer,
+//              and pressure appears only where the air part is a BME280.
 //   subscribe: CMD_TOPIC        {"sleep_s":N, "band":"LOW"}  and/or  {"sense":true}  (retained)
 //
 // Both topic names come from config.h and are the world's own, so they are not spelled out
@@ -245,6 +246,64 @@ static void logAir() {
   airRh = rh / 100.0f;
   Serial.printf("air sensor: %.1f C, %.0f%% RH (%.3f as a fraction)\n", c, rh, airRh);
 }
+#elif defined(BME280_SDA_PIN)
+// The other air sensor this node knows: a BME280 over I2C — the outdoor part, whose range
+// covers a terrace where the DHT11's does not (packages/orexis-part-bme280/ontology.ttl).
+// Same contract as the DHT path above: the values ride the moisture message, each pointed at
+// by its sensor in the world, absent rather than zero when the part does not answer.
+//
+// Pressure is read and published too. No world points at it yet — no domain property names
+// it — but the part produces all three in ONE forced conversion, and leaving a value the
+// board already holds off the wire would be a second place to remember to add it.
+#include <Wire.h>
+#include <Adafruit_BME280.h>
+
+static Adafruit_BME280 bme;
+static bool bmeFound = false;
+
+static bool airValid = false;
+static float airC = 0.0f, airRh = 0.0f;   // RH as a FRACTION, which is what goes on the wire
+static float airHpa = 0.0f;
+
+static void airBegin() {
+  Wire.begin(BME280_SDA_PIN, BME280_SCL_PIN);
+  bmeFound = bme.begin(BME280_ADDR, &Wire);
+  if (!bmeFound) {
+    Serial.printf("BME280 not found at 0x%02X (SDA %d, SCL %d) — check the wiring, and the "
+                  "SDO strap against i2c:address in the world\n",
+                  BME280_ADDR, BME280_SDA_PIN, BME280_SCL_PIN);
+    return;
+  }
+  // Forced mode, full oversampling — the part's ForcedModeCapability in the ontology. One
+  // conversion per wake with the die idle otherwise, so self-heating never reaches the
+  // temperature; the whole wake is a few seconds, and the board sleeps between them anyway.
+  bme.setSampling(Adafruit_BME280::MODE_FORCED,
+                  Adafruit_BME280::SAMPLING_X16,   // temperature
+                  Adafruit_BME280::SAMPLING_X16,   // pressure
+                  Adafruit_BME280::SAMPLING_X16,   // humidity
+                  Adafruit_BME280::FILTER_OFF);
+}
+
+static void logAir() {
+  airValid = false;
+  if (!bmeFound || !bme.takeForcedMeasurement()) {
+    Serial.println("BME280: no answer");
+    return;
+  }
+  float c = bme.readTemperature();
+  float rh = bme.readHumidity();
+  float hpa = bme.readPressure() / 100.0F;
+  if (isnan(c) || isnan(rh) || isnan(hpa)) {
+    Serial.println("BME280: read returned NaN");
+    return;
+  }
+  airValid = true;
+  airC = c;
+  airRh = rh / 100.0f;   // a fraction on the wire, as the DHT path sends it
+  airHpa = hpa;
+  Serial.printf("air sensor: %.2f C, %.1f%% RH (%.3f as a fraction), %.1f hPa\n",
+                c, rh, airRh, hpa);
+}
 #else
 // A board with no air sensor wired says nothing about air: the fields are absent, exactly as
 // they are when the part fails to answer. A world for such a board names no air sensors, so
@@ -312,6 +371,11 @@ static void publishReading() {
     n += snprintf(payload + n, sizeof(payload) - n, ",\"temperature\":%.1f,\"humidity\":%.3f",
                   airC, airRh);
   }
+#ifdef BME280_SDA_PIN
+  if (airValid && n > 0 && n < (int)sizeof(payload)) {
+    n += snprintf(payload + n, sizeof(payload) - n, ",\"pressure\":%.1f", airHpa);
+  }
+#endif
   if (n > 0 && n < (int)sizeof(payload)) {
     snprintf(payload + n, sizeof(payload) - n, "}");
   }

@@ -182,10 +182,12 @@ orexis-validate simulation  # build the world from its files and hold it to ever
 **There is no default world.** Every command takes one as a required argument and refuses rather
 than guessing, because a fallback puts a misconfigured agent on the same topics as the real one.
 
-[`world/`](world/) holds one directory per ratified world, each complete on its own. Three ship:
+[`world/`](world/) holds one directory per ratified world, each complete on its own. Four ship:
 `simulation` is the full society — plants, a supplier, a barrel market, valves and a meddler who
 waters pots unasked; `loner` is a gardener alone with a water butt and no market at all; `sensing`
-is the smallest one that produces a working agent, and the one that runs against a real board.
+is the smallest one that produces a working agent, and the one that runs against a real board;
+`terrace` is that same shape taken outdoors — a planter bed, a FireBeetle 2 ESP32-E with a
+moisture probe and a BME280, monitoring only.
 [`domain/world`](knowledge/domain/world.md) is the guide to authoring your own — what a world
 is made of, what you state versus what gets derived, and how to check it.
 

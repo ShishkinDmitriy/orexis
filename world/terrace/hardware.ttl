@@ -1,0 +1,138 @@
+@prefix : <http://example.org/orexis/world/terrace#> .
+@prefix mqtt: <http://example.org/orexis/mqtt#> .
+@prefix ag:   <http://example.org/orexis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix bme280: <http://example.org/orexis/bme280#> .
+@prefix i2c: <http://example.org/orexis/i2c#> .
+@prefix probe: <http://example.org/orexis/moisture-probe#> .
+@prefix mc: <http://example.org/orexis/microcontroller#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn:  <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix water: <http://example.org/orexis/water#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix esp32: <http://example.org/orexis/esp32#> .
+
+# The hardware the terrace runs on: what is physically there and how it is wired. Separate
+# from the society beside it because it changes for different reasons and is read by different
+# people, and because an agent is never given this file (agent/genesis.py, HARDWARE_FILES).
+# See world/sensing/hardware.ttl for the long form of every convention used here.
+
+##########  What runs the society  ##########
+
+:raspberry a ag:ComputeHost ;
+    ag:localId "raspberry" ;
+    mc:model "Raspberry Pi 5" ;
+    # A name, not an address — the sensing world's hardware file records what an address cost.
+    ag:lanHost "raspberry.local" ;
+    rdfs:comment "Runs the agent container, the broker for this world, and the shared store." .
+
+:terrace_agent ag:runsOn :raspberry .
+
+##########  The board at the edge  ##########
+
+# Both classes spelled out, as in world/sensing: the Microcontroller typing is what the
+# generators query for, and the FireBeetle class is what carries the sleep-watcher fact.
+:esp32_terrace a mc:Microcontroller , esp32:FireBeetle2Esp32E ;
+    ag:localId "esp32_terrace" ;
+    mc:model "DFRobot FireBeetle 2 ESP32-E" ;
+    mqtt:onBus :local_bus ;
+    #  No mc:firmware: the board's connecting DEVICE is typed governed:Node in world.ttl and
+    #  the firmware name is entailed onto it from that class, reached through the hosting this
+    #  deployment produces. The FireBeetle runs the same firmware/moisture-sensor image the
+    #  DevKitC does — its own PlatformIO environment, the same code.
+    ssn:inDeployment :terrace_deployment ;
+    rdfs:comment "Deep-sleeps between readings on a LiPo, which is why its agent is sensing:Subscribing: the board keeps the interval and cannot be reached in between." .
+
+#  The deployment: which systems, on which platform, from when, into what. The hosting is
+#  entailed from it (#99), and the society's own sosa:hosts in world.ttl is held to agreeing.
+#
+#  The ENVELOPE (#111) is what makes this file the terrace's rather than a copy of the
+#  windowsill's. Outdoors in Berlin, unheated and unshaded: a hard winter night reaches -20 °C
+#  and a summer afternoon on stone 40 °C; humidity runs from a dry frosty morning to
+#  saturation in fog and rain, and a sensor in a shield will still see 100 %RH. The shape
+#  holds every deployed sensor's stated MeasurementRange to CONTAIN this — which the BME280
+#  does (-40..85 °C, 0..100 %RH) and a DHT11 (0..50 °C, 20..90 %RH) does not. Type the air
+#  part dht11:Dht11 here and orexis-validate refuses this world, from the datasheet figures,
+#  before the first frost does.
+:terrace_deployment a ssn:Deployment ;
+    ssn:deployedOnPlatform :esp32_terrace ;
+    ssn:deployedSystem :moisture_sensor_terrace , :air_sensor_terrace ;
+    prov:startedAtTime "2026-08-30T12:00:00Z"^^xsd:dateTime ;
+    ssn-system:inCondition
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirTemperature ;
+          schema:minValue -20.0 ; schema:maxValue 40.0 ; schema:unitCode unit:DEG_C ] ,
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirHumidity ;
+          schema:minValue 10 ; schema:maxValue 100 ; schema:unitCode unit:PERCENT ] ;
+    rdfs:comment "The terrace: a planter bed, outdoors, unheated. Board and both parts outside; on battery." .
+
+##########  The board's own legs  ##########
+#
+# skos:notation is what DFRobot PRINTED beside the leg — A2, SDA, SCL, 3V3, GND. No wokwi:name:
+# Wokwi has no FireBeetle and the esp32 package deliberately draws it as nothing (see the class),
+# so a drawing name here would name a leg on a picture that is never drawn.
+
+:esp32_terrace mc:hasPin :pin_gpio21 , :pin_gpio22 , :pin_gpio34 , :pin_3v3 , :pin_gnd ;
+    mc:logicVolts 3.3 .
+
+:pin_gpio21 a mc:Pin ; mc:gpio 21 ; skos:notation "SDA" .
+:pin_gpio22 a mc:Pin ; mc:gpio 22 ; skos:notation "SCL" .
+# A2 on this silkscreen: ADC1, input-only, the one leg the ULP can watch while everything sleeps.
+:pin_gpio34 a mc:Pin ; mc:gpio 34 ; skos:notation "A2"  .
+:pin_3v3    a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 ;
+                         skos:notation "3V3" .
+:pin_gnd    a mc:Pin ; mc:pinRole mc:GroundPinRole ; skos:notation "GND" .
+
+##########  What is wired to it  ##########
+
+# The probe. GPIO 34 is deliberate: ADC1, the only ADC that works while WiFi is up.
+:moisture_sensor_terrace a probe:CapacitiveMoistureProbe ;
+    mc:model "Capacitive Soil Moisture Sensor v2.0" ;
+    mc:hasPin :probe_out , :probe_vcc , :probe_gnd ;
+    # STARTING calibration — the counts firmware/moisture-sensor shipped with, not yet measured
+    # on this probe in this bed. Per instance by the part's own ontology, so they live here:
+    # read the raw count off the serial line in air and in wet soil, replace these, regenerate.
+    probe:rawDry 3200 ;
+    probe:rawWet 1300 .
+
+:probe_out a mc:Pin ; mc:pinRole mc:AnalogInPinRole .
+:probe_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
+:probe_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
+
+# The BME280 breakout, over I2C. Four legs. VCC on the 3V3 rail and nowhere else: the bare
+# part is not 5 V-tolerant, and mc:PoweredPeripheralShape refuses the other rail anyway.
+# The address is the SDO strap's: 0x76 (118) as most breakouts ship it, 0x77 (119) with SDO
+# tied high — the bench unit answered to the sketch's probe of both; change this if it was 0x77.
+:air_sensor_terrace a bme280:Bme280 ;
+    ag:localId "air_sensor_terrace" ;
+    mc:model "GY-BME280" ;
+    mc:hasPin :bme_sda , :bme_scl , :bme_vcc , :bme_gnd ;
+    i2c:address 118 .
+
+:bme_sda a mc:Pin ; mc:pinRole i2c:DataPinRole .
+:bme_scl a mc:Pin ; mc:pinRole i2c:ClockPinRole .
+:bme_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
+:bme_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
+
+# WHICH channel each of the society's two air sensors is — the fact that lets the part's class
+# reach them: range, accuracy, resolution, and the sampling floor world.ttl restates.
+:air_temp_terrace     a bme280:TemperatureSensor .
+:air_humidity_terrace a bme280:HumiditySensor .
+
+##########  The wires  ##########
+# Named, so a fault can be pointed at. Colours are the jumpers on the bench.
+
+:w_probe_sig a mc:Wire ; mc:joins :probe_out , :pin_gpio34 ; mc:colour "green" .
+:w_probe_pwr a mc:Wire ; mc:joins :probe_vcc , :pin_3v3    ; mc:colour "red" .
+:w_probe_gnd a mc:Wire ; mc:joins :probe_gnd , :pin_gnd    ; mc:colour "black" .
+
+# SDA is bidirectional and SCL is driven, so neither may sit on 34-39 — 21 and 22 are the
+# ESP32's default I2C pair and both can drive. The wiring shape checks that, not this comment.
+:w_bme_sda a mc:Wire ; mc:joins :bme_sda , :pin_gpio21 ; mc:colour "blue" .
+:w_bme_scl a mc:Wire ; mc:joins :bme_scl , :pin_gpio22 ; mc:colour "yellow" .
+:w_bme_pwr a mc:Wire ; mc:joins :bme_vcc , :pin_3v3    ; mc:colour "red" .
+:w_bme_gnd a mc:Wire ; mc:joins :bme_gnd , :pin_gnd    ; mc:colour "black" .

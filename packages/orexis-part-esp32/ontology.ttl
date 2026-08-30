@@ -8,7 +8,7 @@
 
 <http://example.org/orexis/esp32> a owl:Ontology ;
     rdfs:label "ESP32" ;
-    rdfs:comment """One family of board. A stub: it names the DevKit and says how it draws, and does NOT yet describe its header — the pin positions, which of them can be driven, which sit on ADC1. Those are still literals inside the microcontroller shapes, which is the open seam this package exists to eventually close.
+    rdfs:comment """One family of board, two members. A stub: it names the DevKit and the FireBeetle 2 ESP32-E and says how each draws, and does NOT yet describe their headers — the pin positions, which of them can be driven, which sit on ADC1. Those are still literals inside the microcontroller shapes, which is the open seam this package exists to eventually close.
 
 Started here because a picture needs to know which board it is drawing, and that is a fact about the MODEL rather than about the particular board on the windowsill.""" .
 
@@ -27,3 +27,30 @@ Started here because a picture needs to know which board it is drawing, and that
     rdfs:label "ESP32 DevKitC" ;
     wokwi:part "board-esp32-devkit-c-v4" ;
     rdfs:comment "The 38-pin development board, the one with 3V3 on the same header as GPIO 34. Its legs carry their own silkscreen notation, which is what a drawing names them by." .
+
+#  The terrace's board. The SAME silicon as the DevKitC — an ESP32-E module is an ESP32-D0WD-V3
+#  with 4 MB flash — so GPIO numbering, the ADC1/ADC2 split, the input-only 34-39 and the flash
+#  lines 6-11 are all the plain ESP32's, and the microcontroller shapes' pin rules apply to it
+#  unchanged. What differs is the board around the chip, and only what a world can honestly
+#  lean on is stated:
+#
+#    - the sleep-watcher is the same ULP-FSM, so the same one reachable role, for the same
+#      reason as above — the BME280's I2C channels on this board promise nothing while it
+#      sleeps, and mc:WatchedChannelWiringShape would refuse a world that said otherwise;
+#    - the silkscreen is DFRobot's, not Espressif's: GPIO 34 is printed A2, and 21/22 carry
+#      SDA/SCL beside their numbers. A world states the notation per pin, as ever.
+#
+#  What is NOT stated, because nothing here reads it yet: the LiPo charger and the low-power
+#  design that make it the outdoor pick, the WS2812 on GPIO 5, the CH340 serial. A board is
+#  described by what a shape or a generator can check, and none of those checks anything yet.
+:FireBeetle2Esp32E a owl:Class ;
+    mc:modelName "DFRobot FireBeetle 2 ESP32-E" ; rdfs:subClassOf mc:Microcontroller ,
+        [ a owl:Restriction ; owl:onProperty mc:watcherReachesRole ;
+          owl:hasValue mc:AnalogInPinRole ] ;
+    rdfs:label "FireBeetle 2 ESP32-E" ;
+    #  No wokwi:part, and the tempting one was tried: Wokwi has no FireBeetle, and drawing it
+    #  as "board-esp32-devkit-c-v4" would simulate the firmware faithfully (same chip, same
+    #  GPIO numbers). The generator's IMPORT side refused it — a part id claimed by two classes
+    #  cannot be resolved back to one, and a draft that guessed would describe a board nobody
+    #  has. So a world on this board draws without it, and says so at generation time.
+    rdfs:comment "DFRobot's low-power ESP32-E board (DFR0654), the one with a LiPo charger on it — which is why it is the board that goes outside. PlatformIO knows it as dfrobot_firebeetle2_esp32e." .

@@ -275,7 +275,7 @@ cannot disagree with how it is actually running.
 
 **That world is `simulation`, and it is now the one to reach for.** Every device in it is stood
 in for by a container that reads its own model out of the world, so `podman compose up` in it
-needs no hardware at all. `sensing` is the world with a real board. See
+needs no hardware at all. `sensing` and `terrace` are the worlds with a real board. See
 [world](/domain/world.md) §Simulation and
 [two-worlds-were-one](/decisions/two-worlds-were-one.md).
 

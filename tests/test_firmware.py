@@ -124,3 +124,52 @@ def test_the_persistence_figure_reaches_both_temperaments():
     assert _crossing({}, n) == "", (
         "a board whose world makes no alarm promise carries neither define — absence stays "
         "a statement in the firmware exactly as in the graph")
+
+
+#  The terrace (world/terrace): the same query, a different air part. A BME280 hangs off two
+#  I2C lines rather than one one-wire leg, and the header needs both numbers and the unit's
+#  address — so the OPTIONAL that finds it is a second place the query can silently lose a
+#  board, guarded the same way as the first.
+
+@pytest.fixture(scope="module")
+def terrace():
+    rows = ratified.rows(ratified.dataset("terrace"), _BOARDS_Q)
+    assert len(rows) == 1, "the terrace states exactly one board"
+    return rows[0]
+
+
+def test_the_bme280_comes_through_with_its_address(terrace):
+    assert terrace["boardId"] == "esp32_terrace"
+    assert int(terrace["gpio"]) == 34
+    assert (int(terrace["bmeSda"]), int(terrace["bmeScl"])) == (21, 22)
+    assert int(terrace["bmeAddr"]) == 0x76
+    # And NOT the DHT path: the terrace wires no one-wire leg, so the DHT driver must not be
+    # compiled in beside the BME280's — the firmware picks one by which define exists.
+    assert not terrace.get("airPin")
+
+
+def test_the_bme280_emits_its_defines_in_hex():
+    out = _optional_pins({"bmeSda": 21, "bmeScl": 22, "bmeAddr": 119})
+    assert "#define BME280_SDA_PIN 21" in out
+    assert "#define BME280_SCL_PIN 22" in out
+    assert "#define BME280_ADDR 0x77" in out
+    assert "AIR_SENSOR_PIN" not in out
+
+
+def test_a_bme280_with_no_stated_address_defaults_to_the_common_strap():
+    assert "#define BME280_ADDR 0x76" in _optional_pins({"bmeSda": 21, "bmeScl": 22})
+
+
+def test_a_part_the_generator_has_no_template_for_is_reported():
+    """The generator reports what it cannot describe rather than guessing — asserted by making
+    the terrace's air part something the header knows nothing about, and checking it is named.
+    Both halves: with the type in place nothing is reported, which is what makes the second
+    half a finding rather than a constant."""
+    from onboarding.firmware import _untemplated
+
+    ds = ratified.dataset("terrace")
+    assert _untemplated(ds, "esp32_terrace") == []
+    ds.update(f"""
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?p a <http://example.org/orexis/bme280#Bme280> }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?p a <http://example.org/orexis/bme280#Bme280> }} }}""")
+    assert _untemplated(ds, "esp32_terrace") == ["air_sensor_terrace"]

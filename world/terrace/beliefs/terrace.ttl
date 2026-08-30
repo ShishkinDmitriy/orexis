@@ -1,0 +1,31 @@
+@prefix : <http://example.org/orexis/world/terrace#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix reporting: <http://example.org/orexis/reporting#> .
+@prefix ag: <http://example.org/orexis#> .
+
+#  This agent's PRIVATE beliefs — one block, because it composed one capability.
+#
+#  No stake, so no opinion about what a reading MEANS: no aim, no band, no price. No review
+#  interval either, because world.ttl grants no mandate, so no review capability is derived and
+#  nothing would read one. Compare world/sensing/beliefs/fern.ttl, which is the same shape with
+#  a mandate.
+
+##  sensing:Subscribing — the interval it asks its board to keep
+#
+#  A garden, not a bench: nothing outdoors changes in ten seconds, and a board on a LiPo pays
+#  for every wake with radio time. Both figures are well inside the constitutional bounds
+#  (sensing:minSleepS 10, maxSleepS 900). They differ even without a stake because the fast
+#  one is what a `sense` nudge or a stale reading falls back to; with nothing to worry about
+#  the slow one is the ordinary rate. Bring-up is easier at 10/10 — set both low, watch it
+#  wake, then restore these. Nothing re-picks them in between: this world grants no mandate.
+:terrace_agent
+    sensing:fastSleepS 60 ;
+    sensing:slowSleepS 300 ;
+    sensing:readingGraceS 120 ;        # past the interval it asked for: a wake, a wifi
+                                       # association outdoors at the edge of range, and a
+                                       # retry or two
+    sensing:alarmDeltaFraction 0.25 .  # the jolt threshold the board's ULP watches the soil
+                                       # channel for between wakes — rain on a dry bed
+
+##  How often it says how it is — belief base size, reading freshness, silent write failures.
+:terrace_agent reporting:metricsIntervalS 60 .
