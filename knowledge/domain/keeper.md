@@ -4,7 +4,7 @@ title: Keeper
 description: >-
   The service that keeps the ledger — the only writer of the intention graph, the owner of the
   patience that absorbs a repeated impulse, and the judge of whether the world answered. In the
-  progression layer, `packages/orexis-progression-patience/keeper.py`; the clock it used to hold
+  progression layer, `packages/orexis-progression/keeper.py`; the clock it used to hold
   is the deliberator's now, because a clock that asks the search is the search's clock.
 ---
 

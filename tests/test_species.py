@@ -18,9 +18,9 @@ import pytest
 import rdflib
 
 from agent import genesis, inference
-from orexis_progression_patience.ontology import beliefs_graph
-from orexis_progression_patience.store import Store, bindings
-from orexis_progression_patience.store import PREFIXES
+from orexis_progression.ontology import beliefs_graph
+from orexis_progression.store import Store, bindings
+from orexis_progression.store import PREFIXES
 from agent.validate import conforms
 
 ZZ = "http://example.org/orexis/zamioculcas#ZamioculcasZamiifolia"
@@ -116,7 +116,7 @@ def test_a_ferns_desire_will_not_do_for_a_zamioculcas(zz_world):
     # The wants and the pick record arrive through the desire modality (#312) — the aim this
     # test is about is a pick, and the region it violates is derived, so both come from the
     # one build the boot would make.
-    from orexis_deliberation_search import effects
+    from orexis_deliberation import effects
     from conftest import desires_build
     for triple in desires_build(st, "fern").construct(
             "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):

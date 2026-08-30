@@ -54,7 +54,7 @@ rather than as a roadmap item.
 # Order of work
 
 1. `ag:Act` and the kernel dataclass; an affordance row becomes an act when the search sizes
-   it; `Plan.steps` hold steps whose acts are those; `take(act, …)` (#369, landed — `agent/act.py`, `packages/orexis-progression-patience/act.py` since #452,
+   it; `Plan.steps` hold steps whose acts are those; `take(act, …)` (#369, landed — `agent/act.py`, `packages/orexis-progression/act.py` since #452,
    the row sized into an act in `Planner._step_from`, `execution.carry_out(agent, act, …)`).
 2. An intention commits to an act — `ag:by` names the act node, which `ag:fills` the action
    and carries lever, quantity and window; the ledger's `ag:through` became the act's; old

@@ -43,9 +43,9 @@ ROOT_DIST = "orexis"
 #  layer imports only families strictly EARLIER in this tuple; the container may import all
 #  of them; a capability may import any layer's contract. `test_layering.py` holds every one
 #  of those arrows and reads the order from here. The carve-outs are by FAMILY, never by
-#  name: the family is the second segment of a package's own name, so a second member of a
-#  layer is covered without anyone editing this file, and a capability can never slip in by
-#  being listed. Until #455 derives the load set from the grants, the root's own declared
+#  name: the layer is the second segment of a package's own name — and, for a layer, the only
+#  other one, since a layer is one package and not a family with members — so a capability can
+#  never slip in by being listed. Until #455 derives the load set from the grants, the root's own declared
 #  dependencies are what load the layers, which is why the root's list may name them and
 #  nothing else under `packages/`.
 LAYERS = ("reactive", "progression", "deliberation")
@@ -154,9 +154,11 @@ def test_every_package_is_a_project(pkg: Path):
     assert config["tool"]["setuptools"]["packages"] == [module], (
         f"{pkg.name} must claim exactly `{module}` — its own top-level module, and only its own.")
     parts = pkg.name.split("-")
-    assert len(parts) >= 3 and parts[0] == "orexis", (
+    assert parts[0] == "orexis" and (len(parts) >= 3 or is_layer(pkg)), (
         f"{pkg.name} must be named `orexis-<family>-<name>`: the family is the second segment, "
-        "and since the family directory went, that segment is the only place it is stated.")
+        "and since the family directory went, that segment is the only place it is stated. "
+        "Only a LAYER is two segments — `orexis-reactive` — because a layer is one package, "
+        "not a family with members (a-layer-is-a-package-and-need-loads-it).")
     assert config["project"]["description"].strip(), "a project says what it is"
 
 
@@ -271,12 +273,13 @@ def test_packages_is_a_plain_directory_and_not_a_module(pkg: Path):
         "packages/__init__.py must not exist — `packages/` is a directory of projects, and "
         "each package's module is top-level and its own.")
     assert (pkg / "__init__.py").is_file(), "a package's own manifest is a regular module"
-    assert pkg.name.count("-") >= 2 and pkg.name.startswith("orexis-"), (
-        f"{pkg.name}: a package directory IS its distribution name, `orexis-<family>-<name>`.")
+    assert (pkg.name.count("-") >= 2 or is_layer(pkg)) and pkg.name.startswith("orexis-"), (
+        f"{pkg.name}: a package directory IS its distribution name, `orexis-<family>-<name>` — "
+        "or `orexis-<layer>` for the three layers, which are not families.")
 
 
 @pytest.mark.parametrize("family", LAYERS)
-def test_every_layer_has_a_member_to_carve_out(family: str):
+def test_every_layer_is_there_to_carve_out(family: str):
     """The guard on the carve-out: `is_layer` excuses a family from two ratchets above, and a
     family with no member would excuse nothing while looking as if it did."""
     assert [p for p in package_dirs() if family_of(p) == family], (

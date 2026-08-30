@@ -207,7 +207,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     ("agent/vocabulary.py", "market#Acquire"): (1, "migration: a retired spelling on the left-hand side"),
     ("agent/vocabulary.py", "market#Apply"): (1, "migration: a retired spelling on the left-hand side"),
 
-    # KIND 3 IS PAID. `orexis_progression_patience/ontology.py`'s twelve namespace constants — consumed by onboarding's
+    # KIND 3 IS PAID. `orexis_progression/ontology.py`'s twelve namespace constants — consumed by onboarding's
     # generators and by nothing in the kernel — are `onboarding/namespaces.py`'s, beside `SOSA`,
     # which showed the road (#378). #334's fourth bullet: they moved to their consumer.
 
@@ -291,7 +291,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     ("agent/vocabulary.py", "market#Acquire"): (1, "migration: a retired spelling on the left-hand side"),
     ("agent/vocabulary.py", "market#Apply"): (1, "migration: a retired spelling on the left-hand side"),
 
-    # KIND 3 IS PAID. `orexis_progression_patience/ontology.py`'s twelve namespace constants — consumed by onboarding's
+    # KIND 3 IS PAID. `orexis_progression/ontology.py`'s twelve namespace constants — consumed by onboarding's
     # generators and by nothing in the kernel — are `onboarding/namespaces.py`'s, beside `SOSA`,
     # which showed the road (#378). #334's fourth bullet: they moved to their consumer.
 

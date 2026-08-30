@@ -10,13 +10,13 @@ from __future__ import annotations
 
 import rdflib
 
-from orexis_progression_patience.act import Act
-from orexis_progression_patience import execution
-from orexis_deliberation_search import afforder, pursuit
+from orexis_progression.act import Act
+from orexis_progression import execution
+from orexis_deliberation import afforder, pursuit
 from assembly import loader
-from orexis_deliberation_search.planner import Planner
+from orexis_deliberation.planner import Planner
 
-from orexis_progression_patience.ontology import beliefs_graph
+from orexis_progression.ontology import beliefs_graph
 
 from conftest import MOISTURE, build_agent, genesis_store, open_round_for, wired_markets
 
@@ -46,7 +46,7 @@ def test_no_round_open_means_no_acquire_committed_and_the_trace_says_why(monkeyp
     round to bid in commits NOTHING on the tick — the want stays hot, the trace shows the
     look weighed and no Acquire on the menu at all, and nothing stands waiting for the market
     to knock."""
-    from orexis_progression_patience.store import bindings
+    from orexis_progression.store import bindings
 
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     keeper = keeper_of(fern)
@@ -79,7 +79,7 @@ def test_a_round_is_decided_once_and_a_second_impulse_is_absorbed(monkeypatch):
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1
     assert keeper_of(fern).standing(action=ACQUIRING)
-    from orexis_deliberation_search.planner import NOT_BETTER, Plan
+    from orexis_deliberation.planner import NOT_BETTER, Plan
 
     passes = []
     monkeypatch.setattr(Planner, "plan",
@@ -188,7 +188,7 @@ def test_an_impulse_within_patience_writes_no_row(monkeypatch):
     n = len(keeper.standing())
     keeper.agent.deliberator.deliberate_on_gaps()
     assert len(keeper.standing()) == n
-    from orexis_progression_patience.store import bindings
+    from orexis_progression.store import bindings
     everything = bindings(keeper.agent.intentions.query(
         "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a <http://example.org/orexis#Intention> } }"))
     assert int(everything[0]["n"]) == n, "no dropped rows either"

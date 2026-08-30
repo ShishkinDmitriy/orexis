@@ -37,7 +37,7 @@ from agent.config import REPO_ROOT
 from pathlib import Path
 
 from agent.genesis import world_dir, worlds
-from orexis_progression_patience.ontology import AG, ONTOLOGY_GRAPH, WORLD_GRAPH
+from orexis_progression.ontology import AG, ONTOLOGY_GRAPH, WORLD_GRAPH
 from .namespaces import DHT11, ESP32, I2C, MC, ONEWIRE, PROBE, RGBLED
 
 

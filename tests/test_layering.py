@@ -41,8 +41,8 @@ PACKAGES = tuple(p for p in loader.packages() if not p.is_kernel and p.kind != "
 MODULES = {p.import_name for p in PACKAGES}
 
 #  THE LAYERS: found by FAMILY — the loader's `kind`, read off the package's own name — so
-#  nothing below names a package and a second member of a layer is covered the day its
-#  directory appears. `agent/` is the CONTAINER that assembles them and may import them all;
+#  nothing below names a package. A layer is ONE package named for its kind (`orexis-reactive`),
+#  not a family with members. `agent/` is the CONTAINER that assembles them and may import them all;
 #  it is not a layer and nothing imports it from below. What a lower layer has to say to a
 #  higher one it says as an EVENT through the choir, which is how the arrows stay one-way.
 LAYER_PACKAGES = tuple(p for p in PACKAGES if p.kind in LAYERS)
@@ -63,8 +63,8 @@ def test_there_are_packages_to_check():
 
 
 @pytest.mark.parametrize("family", LAYERS)
-def test_every_layer_has_a_member(family: str):
-    """The guard on the carve-outs: a family with no member excuses nothing and looks as if it
+def test_every_layer_is_there(family: str):
+    """The guard on the carve-outs: a layer with no package excuses nothing and looks as if it
     did — and the tests below, looping over it, would assert nothing."""
     assert [p for p in LAYER_PACKAGES if p.kind == family], (
         f"no package of the `{family}` family discovered — that layer moved or was renamed, "

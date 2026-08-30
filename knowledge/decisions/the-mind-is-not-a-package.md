@@ -36,8 +36,8 @@ dissolve:
 |---|---|---|
 | `desire:Deducing` | nothing left in the kernel: the region, the gap and the aim went on to sensing — [the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md) | nothing |
 | `desire:Owing` | `packages/orexis-capability-market/ower.py` | nothing |
-| `intention:Keeping` | `agent/keeper.py` then; `packages/orexis-progression-patience/keeper.py` since #452 | nothing |
-| `deliberation:Reflex`, `deliberation:Planning` | `agent/deliberator.py` then, `packages/orexis-deliberation-search/deliberator.py` since #452 — ONE class | nothing |
+| `intention:Keeping` | `agent/keeper.py` then; `packages/orexis-progression/keeper.py` since #452 | nothing |
+| `deliberation:Reflex`, `deliberation:Planning` | `agent/deliberator.py` then, `packages/orexis-deliberation/deliberator.py` since #452 — ONE class | nothing |
 
 And the base vocabulary comes home: `packages/core/orexis/` was a family with exactly one member,
 forever, that every other package layers on and nothing can remove. That is not a package, it is

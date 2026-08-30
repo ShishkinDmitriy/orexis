@@ -16,8 +16,8 @@ from __future__ import annotations
 import pytest
 
 from agent import genesis, vocabulary
-from orexis_progression_patience.ontology import AG, beliefs_graph
-from orexis_progression_patience.store import Store, bindings
+from orexis_progression.ontology import AG, beliefs_graph
+from orexis_progression.store import Store, bindings
 
 from conftest import WORLDS_ROOT, genesis_store
 

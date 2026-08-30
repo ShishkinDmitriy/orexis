@@ -38,8 +38,8 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 
-from orexis_progression_patience.ontology import STATE_GRAPH
-from orexis_progression_patience.store import Store
+from orexis_progression.ontology import STATE_GRAPH
+from orexis_progression.store import Store
 
 
 def _slug(uri: str) -> str:

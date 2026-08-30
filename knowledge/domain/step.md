@@ -12,7 +12,7 @@ description: >-
 
 A **step** is an [act](/domain/act.md) at a position in a plan: its order, and what the
 search predicted — the urgency the want would have in the world after it (`urgency_after`).
-`Plan.steps` holds them (`packages/orexis-progression-patience/act.py`'s `Step`); the [imaginarium](/domain/imaginarium.md)
+`Plan.steps` holds them (`packages/orexis-progression/act.py`'s `Step`); the [imaginarium](/domain/imaginarium.md)
 holds the world each one reached, for the life of one pass, and names that world by the path
 of steps that reached it.
 

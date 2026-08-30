@@ -11,11 +11,11 @@ import pytest
 
 from agent import genesis
 from orexis_capability_review.graphs import evidence_graph, revisions_graph
-from orexis_progression_patience.ontology import STATE_GRAPH, WORLD_GRAPH, beliefs_graph, term
+from orexis_progression.ontology import STATE_GRAPH, WORLD_GRAPH, beliefs_graph, term
 from onboarding.namespaces import SENSING
 from orexis_capability_review import RECKONING, REVIEW
 from orexis_capability_review.module import Range, world_ranges
-from orexis_progression_patience.store import bindings
+from orexis_progression.store import bindings
 from orexis_capability_review.summary import RING, Summaries
 
 from conftest import WORLDS_ROOT, build_agent, genesis_store
@@ -111,8 +111,8 @@ def test_a_world_that_widens_a_mandate_will_not_validate():
     reviewer's intersection was the only defence. A sovereign granting more room than the society
     allows is now refused before anything starts, which is where a governance error belongs.
     """
-    from orexis_progression_patience.ontology import PROVENANCE_GRAPH
-    from orexis_progression_patience.store import Store
+    from orexis_progression.ontology import PROVENANCE_GRAPH
+    from orexis_progression.store import Store
     from agent.validate import conforms, graph_from
 
     path = genesis.world_dir("simulation")
@@ -129,7 +129,7 @@ def test_a_world_that_widens_a_mandate_will_not_validate():
     def judged(st, everyone):
         """Exactly what orexis-validate judges since #312: the wants and the pick records
         arrive through each agent's desire modality, and only through it."""
-        from orexis_deliberation_search import effects
+        from orexis_deliberation import effects
         from conftest import desires_build
 
         data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH)
@@ -386,7 +386,7 @@ def _sensing_with(update: str = ""):
     capabilities and called it a pass.
     """
     from assembly import loader
-    from orexis_progression_patience.ontology import WORLD_DERIVED_GRAPH
+    from orexis_progression.ontology import WORLD_DERIVED_GRAPH
 
     st = genesis_store(world="sensing")
     if update:

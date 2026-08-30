@@ -22,11 +22,11 @@ and the intention stands for the next trigger; an act with a window carries its 
 an expectation is judged when a reading arrives. Nothing here holds the loop while it waits,
 which is the constraint the reactive layer exists to make checkable.
 
-The family is `progression`; the member is `patience`, because this way of having it is a
-commitment that stands within a stated patience and is superseded past it — the amortised
-deliberation of an-intention-is-an-amortised-deliberation. The open-minded commitment the
-keeper's own docstring sketches — one weighed against what changed since it was made — would
-be the sibling member, answering the same `adopt`.
+The name is `progression`, two segments, because a layer is ONE package and not a family
+with members. What this one does is keep a commitment standing within a stated patience and
+supersede it past it — the amortised deliberation of an-intention-is-an-amortised-deliberation;
+the open-minded commitment the keeper's own docstring sketches would be a change to this
+package, a decision for then, not a sibling waiting for a slot.
 
 Not a capability: nothing grants it and there is no `provides()` here. It imports the
 reactive layer and the floor, and `tests/test_layering.py` holds it to that.

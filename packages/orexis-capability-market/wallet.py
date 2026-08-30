@@ -15,8 +15,8 @@ knowledge/domain/wallet.md.
 
 from __future__ import annotations
 
-from orexis_progression_patience.ontology import beliefs_graph
-from orexis_progression_patience.store import bindings
+from orexis_progression.ontology import beliefs_graph
+from orexis_progression.store import bindings
 
 from .terms import BALANCE, HAS_ENDOWMENT
 

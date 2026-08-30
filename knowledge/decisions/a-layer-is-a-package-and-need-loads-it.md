@@ -90,20 +90,24 @@ The first implementation (#457) built a FLOOR beneath the three — the mind's s
 package, `orexis-modality-graph`, which every layer imported — and the author refused it
 unmerged: "we have no floor level. Should be on one of 3. If needed lower levels can emit
 events, that can be listened by upper levels." So there are exactly THREE layer packages and
-no fourth, dependencies point down, and what a lower layer has to say upward is an EVENT:
+no fourth, dependencies point down, and what a lower layer has to say upward is an EVENT.
+Each is named for its row alone — `orexis-reactive`, `orexis-progression`,
+`orexis-deliberation` — because a layer is one package, not a family with members (the
+"interchangeable implementations" framing in *What was decided* is dropped for layers and
+kept for capabilities; see the struck seam below):
 
-- **`packages/orexis-reactive-queue/`** — the queue and the one loop that drains it. NEW,
+- **`packages/orexis-reactive/`** — the queue and the one loop that drains it. NEW,
   not moved: nothing in `agent/` was this. The author's definition is sharper than the
   "execution — the acts and the actor road" the superseded record sketched and wins: reactive
   "should contain only queue and constantly executing it". It imports nothing of ours.
-- **`packages/orexis-progression-patience/`** — the intention ledger and the keeper, the
+- **`packages/orexis-progression/`** — the intention ledger and the keeper, the
   act and the commitment, the scheduler thread and the timer, the doing half of execution,
   upkeep, AND the store engine (`store.py`, `graphs.py`, `ontology.py`, `intentions.py`),
   because progression is the lowest layer that persists anything and the search imports the
   engine downward. It verifies a step's RESULT — the actor's answer, the reading against the
   baseline the actor handed in — and never reads a belief. It EMITS `ag:stepDone`,
   `ag:planFinished`, `ag:planFailed` through the choir.
-- **`packages/orexis-deliberation-search/`** — the belief base and the desires (`beliefs.py`,
+- **`packages/orexis-deliberation/`** — the belief base and the desires (`beliefs.py`,
   `desire.py`), the conformance check, the deliberator, the planner, the imaginarium, the
   afforder, the effects, the trace, the reviser (the deliberation worker thread) and the
   deciding half of execution (`pursuit.py`). It SUBSCRIBES to progression's events and
@@ -135,10 +139,14 @@ job is to carry that across the gap cannot be the layer that forgets it.
 - ~~**Family names are the implementing change's** (#451, #452), under the tree's own convention
   — the family is the second segment of the name, and the loader learns nothing.~~ Chosen:
   `reactive`, `progression`, `deliberation` are the families, the layering record's own words
-  for the rows; the members are `queue` (one FIFO, one thread — workers or a priority would be
-  a sibling), `patience` (a commitment stands within a stated patience — the open-minded
-  commitment would be a sibling) and `search` (bounded search over predicted worlds — a model
-  asked what next would be a sibling). The order is spelled once, `LAYERS` in `tests/test_projects.py`.
+  for the rows — and NOTHING ELSE: a layer is ONE package, `orexis-reactive`, not a family
+  with members. The first cut named members (`queue`, `patience`, `search`) on the
+  "families with interchangeable implementations" framing above, and the author struck the
+  third segment: there is one reactive layer in an agent, and an alternative implementation,
+  if one ever arrives, is a decision for then. That framing is dropped for layers; it stands
+  for capabilities. The loader accepts `orexis-<layer>` as a package whose name is its kind,
+  and `tests/test_projects.py` holds a GRANTED package to three segments against the one
+  spelling of the order, `LAYERS`.
 - **Progression still reads the T-Box through the belief store's query surface** — `ag:takenBy`
   for who takes an action, `ag:suspectAfter` and `ag:metFraction` for the verdict's figures —
   by attribute on the container, never by import. Those are vocabulary facts and not beliefs,

@@ -19,10 +19,10 @@ import time
 import pytest
 import rdflib
 
-from orexis_deliberation_search import effects
-from orexis_progression_patience.ontology import DELIBERATION_GRAPH, STATE_GRAPH
-from orexis_deliberation_search import planner as search, trace
-from orexis_deliberation_search.planner import Planner
+from orexis_deliberation import effects
+from orexis_progression.ontology import DELIBERATION_GRAPH, STATE_GRAPH
+from orexis_deliberation import planner as search, trace
+from orexis_deliberation.planner import Planner
 
 from orexis_capability_sensing.regions import ObservedDesire
 from conftest import stake_of, build_agent, genesis_store, open_round_for, write_reading
@@ -142,7 +142,7 @@ def test_a_search_that_could_not_see_every_lever_says_so_and_has_nowhere_to_defe
     cannot see the water lever should conclude and exactly why the world is refused before it
     can run.
     """
-    from orexis_progression_patience.ontology import ACTIONS_GRAPH
+    from orexis_progression.ontology import ACTIONS_GRAPH
 
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
     st = genesis_store({("fern", MOISTURE): 0.30})
@@ -174,7 +174,7 @@ def test_a_possible_world_is_computed_and_nothing_is_written(monkeypatch):
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): DRY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    from orexis_progression_patience.ontology import STATE_GRAPH, beliefs_graph
+    from orexis_progression.ontology import STATE_GRAPH, beliefs_graph
     from agent.validate import graph_from
 
     before = graph_from(st, *st.public_graphs(), beliefs_graph("gardener"), STATE_GRAPH)
@@ -308,7 +308,7 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     as the claim rather than the comparison, because the reflex it was compared against has
     since been deleted. What must be true is the cede itself, on both sides of the aim.
     """
-    from orexis_deliberation_search.desire import Desire
+    from orexis_deliberation.desire import Desire
 
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
     fern = build_agent("fern", genesis_store(), monkeypatch)
@@ -582,7 +582,7 @@ def test_a_path_that_returns_to_the_base_world_returns_to_the_empty_diff(monkeyp
     """
     import pyoxigraph as ox
 
-    from orexis_deliberation_search import signature
+    from orexis_deliberation import signature
 
     sosa = "http://www.w3.org/ns/sosa/"
     xsd = "http://www.w3.org/2001/XMLSchema#"
@@ -625,7 +625,7 @@ def test_two_mintings_of_the_same_claim_are_the_same_place():
     """A blank node is its content, not its identity — or every world would be novel."""
     import pyoxigraph as ox
 
-    from orexis_deliberation_search import signature
+    from orexis_deliberation import signature
 
     holds = ox.NamedNode("http://example.org/orexis/market#holdsClaim")
     litres = ox.NamedNode("http://example.org/orexis/market#litres")

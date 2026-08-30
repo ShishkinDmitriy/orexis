@@ -37,13 +37,13 @@ from pyshacl import validate as shacl_validate
 from rdflib import RDF, URIRef
 
 from . import effects, signature, trace
-from orexis_progression_patience.act import Act, Step
-from orexis_deliberation_search.desire import Desire
+from orexis_progression.act import Act, Step
+from orexis_deliberation.desire import Desire
 from .afforder import wants_of
 from .imaginarium import Imaginarium
-from orexis_progression_patience.ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
+from orexis_progression.ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
-from orexis_deliberation_search.conformance import conforms, graph_from
+from orexis_deliberation.conformance import conforms, graph_from
 
 log = logging.getLogger("search")
 
@@ -634,7 +634,7 @@ class Planner:
         """
         if row is None or row.about is None:
             return 0.0
-        from orexis_progression_patience.execution import taken_by
+        from orexis_progression.execution import taken_by
 
         family = taken_by(self.agent.beliefs.query, row.action)
         litres = None

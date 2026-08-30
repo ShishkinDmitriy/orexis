@@ -15,7 +15,7 @@ description: >-
 
 # What it is
 
-`packages/orexis-deliberation-search/imaginarium.py`. A subclass of the ordinary [belief base](/domain/belief-base.md) `Store`,
+`packages/orexis-deliberation/imaginarium.py`. A subclass of the ordinary [belief base](/domain/belief-base.md) `Store`,
 constructed with **no path** — so it is memory, and it is not the agent's. Into it go the graphs
 a rule may read but no step may change, and out of it comes one named graph per node of a
 planning search.

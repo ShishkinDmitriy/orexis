@@ -35,10 +35,10 @@ from agent import config, inference, provenance, vocabulary
 
 from assembly import loader
 from .config import REPO_ROOT
-from orexis_progression_patience.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, GRAPH_PREFIX, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
+from orexis_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, GRAPH_PREFIX, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
                        WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, beliefs_graph)
-from orexis_progression_patience.store import NAMESPACES, Store, bindings
+from orexis_progression.store import NAMESPACES, Store, bindings
 
 # Everything public that is computed rather than read from a file. Emptied before each recompute
 # so the answer is the files' and not last boot's — a fact that stops being entailed, or a rule
@@ -372,7 +372,7 @@ def drop_ghost_graphs(st: Store, agent_id: str) -> list[str]:
     nothing AND it is none of this agent's own. Anything owned or declared is left alone,
     because the safe direction to fail is to keep too much.
     """
-    from orexis_progression_patience.ontology import AG, PROVENANCE_GRAPH
+    from orexis_progression.ontology import AG, PROVENANCE_GRAPH
 
     declared = {r["g"] for r in bindings(st.query("SELECT ?g WHERE { ?g a ?class }"))
                 if r["g"].startswith(GRAPH_PREFIX)}
@@ -405,9 +405,9 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
     function of the vocabulary, so a graph whose modality is refined by an amendment says the
     new thing on the next boot without a migration.
     """
-    from orexis_progression_patience.ontology import AG, CLASSIFICATION_GRAPH, obligations_graph
+    from orexis_progression.ontology import AG, CLASSIFICATION_GRAPH, obligations_graph
 
-    from orexis_progression_patience.graphs import intentions_graph
+    from orexis_progression.graphs import intentions_graph
 
     # Both classes where they differ, because a reader must ASK what a graph is rather than
     # walk a subclass path (one-graph-both-engines-read), and the closure cannot help here:

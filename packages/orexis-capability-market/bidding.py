@@ -35,13 +35,13 @@ from datetime import datetime, timedelta, timezone
 from agent import signing
 from .trade import EPS, Bid
 from agent.module import Module, contributes
-from orexis_progression_patience.timer import Timer
-from orexis_progression_patience.ontology import HANDLE, SUBSCRIPTIONS, SWEEP
+from orexis_progression.timer import Timer
+from orexis_progression.ontology import HANDLE, SUBSCRIPTIONS, SWEEP
 
 SENSING_URGENCY = "http://example.org/orexis/sensing#urgency"       # sensing's hook, spelled as every cross-package reference is
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"
-from orexis_progression_patience.ontology import ONTOLOGY_GRAPH
-from orexis_progression_patience.store import bindings
+from orexis_progression.ontology import ONTOLOGY_GRAPH
+from orexis_progression.store import bindings
 
 from . import rounds, wallet
 from .wiring import bidding_markets_of
@@ -451,7 +451,7 @@ class BiddingModule(Module):
         #  not to look — and a look already standing is on its way (execution says which by
         #  returning the standing intention). This module names no Observe: the look is
         #  sensing's word and sensing's act; waiting for it is `pending`, the bidder's own.
-        from orexis_deliberation_search import reviser
+        from orexis_deliberation import reviser
 
         #  MARKED, not asked (#392): what the search decides is not this handler's to wait
         #  for. If it proposes nothing, the give-up below says so — at the round's close
@@ -531,8 +531,8 @@ class BiddingModule(Module):
         plan once and commit. `value_bid` still cedes at or above the aim inside `_bid`, so
         the sizing agrees with the deciding without either being the other's authority.
         """
-        from orexis_deliberation_search import reviser
-        from orexis_progression_patience import execution
+        from orexis_deliberation import reviser
+        from orexis_progression import execution
 
         if self.pending is None:
             return

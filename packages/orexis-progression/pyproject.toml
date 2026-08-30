@@ -1,14 +1,12 @@
-# orexis-progression-patience
+# orexis-progression
 #
 # The progression layer of the kernel: the ledger, the patience, the verification watch, the
 # timer and the doing half of execution (a-layer-is-a-package-and-need-loads-it, #452). It
 # stands on the reactive loop — every timer of the society lands there through this package —
-# and on the mind's stores, and it never imports the search above it. The family is
-# `progression` because the layering record names the row; the member is `patience` because
-# this way of having it is a commitment that stands within a stated patience, and the
-# open-minded commitment would be its sibling.
+# and on the mind's stores, and it never imports the search above it. Two segments,
+# `orexis-<layer>`, because a layer is one package and not a family with members.
 [project]
-name = "orexis-progression-patience"
+name = "orexis-progression"
 version = "0.1.0"
 description = "The progression layer — the store engine, the intention ledger, its patience, the scheduler and the road from a committed act to its actor"
 requires-python = ">=3.10"
@@ -19,7 +17,7 @@ dependencies = [
     # distribution rather than to the layering — the imports themselves are acyclic.
     "orexis",
     # The layer beneath: the loop a timer lands on and an act is taken on.
-    "orexis-reactive-queue",
+    "orexis-reactive",
     # The store engine is this layer's — the lowest that persists anything.
     "pyoxigraph>=0.4",
 ]
@@ -29,5 +27,5 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["orexis_progression_patience"]
-package-dir = {"orexis_progression_patience" = "."}
+packages = ["orexis_progression"]
+package-dir = {"orexis_progression" = "."}

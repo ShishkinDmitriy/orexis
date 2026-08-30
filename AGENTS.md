@@ -182,10 +182,10 @@ it is a record wearing a bullet.
    are the contracts they exist to implement (see
    [sensing-owns-the-reading-pipeline](knowledge/decisions/sensing-owns-the-reading-pipeline.md))
    — and THE KERNEL IS THREE LAYER PACKAGES in the same tree, each importing only the layers
-   beneath it: the reactive loop (`packages/orexis-reactive-queue/`, importing nothing of
-   ours), progression (`packages/orexis-progression-patience/`, the ledger and the store
+   beneath it: the reactive loop (`packages/orexis-reactive/`, importing nothing of
+   ours), progression (`packages/orexis-progression/`, the ledger and the store
    engine, the lowest layer that persists) and deliberation
-   (`packages/orexis-deliberation-search/`, the belief base, the desires and the search). There
+   (`packages/orexis-deliberation/`, the belief base, the desires and the search). There
    is no floor beneath them: what a lower layer has to say upward it says as an EVENT through
    the choir. `agent/` is the CONTAINER that assembles them and may import all three; nothing
    imports it from below, and a capability may import any layer's contract (see
@@ -239,11 +239,11 @@ it takes a different path through translation. See
 [the-agent-stack-is-a-second-axis](knowledge/decisions/the-agent-stack-is-a-second-axis.md).
 
 **Three layers, split by how long a thing may take and whether it may be interrupted** —
-reactive handlers (ms, atomic, no search: classify and write — `packages/orexis-reactive-queue/`,
+reactive handlers (ms, atomic, no search: classify and write — `packages/orexis-reactive/`,
 a queue and the ONE executing thread that drains it), intention progression (seconds to
-minutes, suspends rather than blocks, searches nothing — `packages/orexis-progression-patience/`,
+minutes, suspends rather than blocks, searches nothing — `packages/orexis-progression/`,
 the ledger, the patience, the scheduler thread that keeps time and runs nothing, and a timer
-whose landing is an enqueue), deliberation (the search — `packages/orexis-deliberation-search/`,
+whose landing is an enqueue), deliberation (the search — `packages/orexis-deliberation/`,
 on a worker thread of its own, only its result crossing onto the loop). The rule:
 **anything that blocks belongs in progression, anything that searches belongs in deliberation,
 anything that must never block belongs in a handler** — and the belief base is the INTERFACE

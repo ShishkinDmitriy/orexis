@@ -25,15 +25,15 @@ import logging
 
 from agent import genesis
 
-from orexis_progression_patience.ontology import STATE_GRAPH, beliefs_graph
-from orexis_progression_patience.store import Store
+from orexis_progression.ontology import STATE_GRAPH, beliefs_graph
+from orexis_progression.store import Store
 #  THE JUDGE IS THE FLOOR'S. `conforms` and its helpers were this file's, and went to
-#  `orexis_deliberation_search.conformance` when the kernel split along its layers (#452): the
+#  `orexis_deliberation.conformance` when the kernel split along its layers (#452): the
 #  search holds candidate worlds to the same verdict and may not import the container, and
 #  the boot check must not pull the search. Re-exported here because every caller that asks
 #  for the verdict by this module's name — onboarding, the review capability, the tests — is
 #  asking the agent's check, and that check IS this verdict.
-from orexis_deliberation_search.conformance import (  # noqa: F401 — re-exported on purpose
+from orexis_deliberation.conformance import (  # noqa: F401 — re-exported on purpose
     _shapes_and_vocabulary, _without_wants, conforms, graph_from)
 
 log = logging.getLogger("validate")
@@ -81,7 +81,7 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities,
     private = [STATE_GRAPH, *recorded]
     data = graph_from(st, *st.public_graphs(), *private)
     if desires is not None:
-        from orexis_deliberation_search import effects
+        from orexis_deliberation import effects
         for triple in desires.construct(
                 "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):
             data.add(effects._triple(triple))

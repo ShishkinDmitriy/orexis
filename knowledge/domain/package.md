@@ -121,10 +121,11 @@ directory anyone can add a sibling to.
 
 **The kernel itself is three packages in the one tree** — the three rows of
 [layered-by-timescale-and-interruptibility](/decisions/layered-by-timescale-and-interruptibility.md),
-each a family whose members are interchangeable ways of having that row:
-`packages/orexis-reactive-queue/` (the queue and the one executing thread),
-`packages/orexis-progression-patience/` (the ledger, the patience, the scheduler and the store
-engine) and `packages/orexis-deliberation-search/` (the belief base, the desires and the
+each ONE package named for its row — not a family with members, which is why the name has
+two segments where a granted package has three:
+`packages/orexis-reactive/` (the queue and the one executing thread),
+`packages/orexis-progression/` (the ledger, the patience, the scheduler and the store
+engine) and `packages/orexis-deliberation/` (the belief base, the desires and the
 search). Each imports only the layers beneath it; what a lower layer has to say to an upper
 one it says as an EVENT through the choir, and `agent/` — the `Agent` object, the choir, the
 `Module` contract, genesis, validation — is what assembles the three into a process. See

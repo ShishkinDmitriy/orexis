@@ -22,8 +22,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from orexis_progression_patience.ontology import beliefs_graph
-from orexis_progression_patience.store import bindings
+from orexis_progression.ontology import beliefs_graph
+from orexis_progression.store import bindings
 
 from .terms import (CLOSES_AT, HAS_ROUND, LOT_L, MAY_CONVENE_AT, NS, RESERVE_PER_L,
                     ROUND, ROUND_ID)

@@ -19,8 +19,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from orexis_progression_patience.ontology import WORLD_GRAPH
-from orexis_progression_patience.store import QueryFn, bindings
+from orexis_progression.ontology import WORLD_GRAPH
+from orexis_progression.store import QueryFn, bindings
 
 
 class WorldError(RuntimeError):

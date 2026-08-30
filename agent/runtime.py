@@ -35,19 +35,19 @@ import signal
 from agent import config, genesis
 
 from assembly import loader
-from orexis_deliberation_search.beliefs import BeliefError, Beliefs
+from orexis_deliberation.beliefs import BeliefError, Beliefs
 from assembly.inject import attribute_for, opened
-from orexis_progression_patience.ontology import DESIRES, DESIRE_URGENCY
-from orexis_deliberation_search.deliberator import KEEPING_PICKS, Deliberator
-from orexis_deliberation_search.desire import Desire, Desires
-from orexis_deliberation_search.reviser import Reviser
-from orexis_progression_patience.intentions import Intentions
-from orexis_progression_patience.keeper import Keeper
+from orexis_progression.ontology import DESIRES, DESIRE_URGENCY
+from orexis_deliberation.deliberator import KEEPING_PICKS, Deliberator
+from orexis_deliberation.desire import Desire, Desires
+from orexis_deliberation.reviser import Reviser
+from orexis_progression.intentions import Intentions
+from orexis_progression.keeper import Keeper
 from .metrics import Metrics
-from orexis_progression_patience.upkeep import BeliefBaseUpkeep
-from orexis_progression_patience.store import bindings
-from orexis_progression_patience.scheduler import scheduler
-from orexis_reactive_queue.loop import loop
+from orexis_progression.upkeep import BeliefBaseUpkeep
+from orexis_progression.store import bindings
+from orexis_progression.scheduler import scheduler
+from orexis_reactive.loop import loop
 from .validate import validate_agent
 from .world import Self, World, load_self, load_world
 

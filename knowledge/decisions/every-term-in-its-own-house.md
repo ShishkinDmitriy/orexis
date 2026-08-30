@@ -20,7 +20,7 @@ the kernel no longer had to be edited for a package to be nameable in SPARQL. Th
 only reason the rest were still `ag:`. Five packages stayed anyway — 102 terms across
 `review`, `sensing`, `water`, `mqtt` and `actuation`.
 
-`agent/ontology.py` — the kernel vocabulary, `packages/orexis-progression-patience/ontology.py` since
+`agent/ontology.py` — the kernel vocabulary, `packages/orexis-progression/ontology.py` since
 #452 — opens by saying everything in the kernel is true of *every* capability.
 That has been false the whole time, and
 [self-review-is-a-capability](self-review-is-a-capability.md) already found it: ~24 of the
@@ -158,7 +158,7 @@ three need someone to decide whether stating *where* an agent runs belongs in a 
 
 # Consequences
 
-- **The kernel vocabulary (`packages/orexis-progression-patience/ontology.py` since #452) still overstates itself**, by eleven terms rather than a hundred and
+- **The kernel vocabulary (`packages/orexis-progression/ontology.py` since #452) still overstates itself**, by eleven terms rather than a hundred and
   two. Its docstring now says which, so the claim is bounded rather than aspirational.
 - **A package's `terms.py` is the one place its namespace is written.** Two `beliefs.py`
   modules picked up a private copy during the conversion and now import it;

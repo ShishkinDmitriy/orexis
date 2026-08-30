@@ -41,18 +41,18 @@ import logging
 
 from assembly.contribute import answer as contribution, contributes
 from .beliefs import Picks
-from orexis_progression_patience.keeper import (INTENTION_CLASS, PATIENCE_S, KeepingBeliefs,
+from orexis_progression.keeper import (INTENTION_CLASS, PATIENCE_S, KeepingBeliefs,
                                                  NoPatience)
-from orexis_progression_patience.timer import Timer
+from orexis_progression.timer import Timer
 
 from . import planner, pursuit, trace
-from orexis_progression_patience.act import Act, Step
-from orexis_deliberation_search.desire import Desire
+from orexis_progression.act import Act, Step
+from orexis_deliberation.desire import Desire
 from .afforder import affordances_of
-from orexis_progression_patience.ontology import (AG, DELIBERATION_GRAPH, PLAN_FAILED, PLAN_FINISHED,
+from orexis_progression.ontology import (AG, DELIBERATION_GRAPH, PLAN_FAILED, PLAN_FINISHED,
                                                   SERIES, STATE_GRAPH, STEP_DONE, beliefs_graph)
 from .planner import Planner
-from orexis_progression_patience.store import bindings
+from orexis_progression.store import bindings
 
 # What this package asks OF others, by family — their namespaces, never their Python.
 

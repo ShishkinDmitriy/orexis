@@ -130,7 +130,7 @@ plan IS — the world's net diff against the base, in canonical facts — and a 
 nothing there: an observation canonicalises to its upsert key and its value, never its
 `sosa:resultTime` — sensing declares what an observation is keyed by and what it carries, and
 the signature reads that — and a valueless first look states no fact at all (see
-`packages/orexis-deliberation-search/signature.py`). A signature that counted a fresher timestamp
+`packages/orexis-deliberation/signature.py`). A signature that counted a fresher timestamp
 as somewhere new would make "look, then look" a new world every time. Chaining past a look
 becomes a real question again exactly there, and nowhere earlier.
 
@@ -367,7 +367,7 @@ and honour three pots' claims.
 Its own tick — on the agent's patience, landing on the reactive loop like every timer and
 doing nothing there but MARK each want with the [reviser](/domain/reviser.md), whose worker
 thread then searches. It was the keeper's tick and searched on the clock's own thread; since
-the kernel split along its layers (#452, `packages/orexis-deliberation-search/`) a search runs
+the kernel split along its layers (#452, `packages/orexis-deliberation/`) a search runs
 on the deliberation worker and nowhere else. Where the work comes from, and why noticing stopped being the market's job, is
 [gap](/domain/gap.md)'s.
 

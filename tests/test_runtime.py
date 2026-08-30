@@ -8,7 +8,7 @@ import logging
 
 import pytest
 
-from orexis_progression_patience.ontology import HANDLE
+from orexis_progression.ontology import HANDLE
 from conftest import build_agent, wired_actuators, wired_hosted_markets, wired_markets, wired_sensors
 
 
@@ -227,7 +227,7 @@ def test_a_deadline_fires_once():
     """`repeat=False` is spent when it lands. It rearming is what let a leaked timer become a
     permanent heartbeat closing rounds it was never started for."""
     import time as _t
-    from orexis_progression_patience.timer import Timer
+    from orexis_progression.timer import Timer
 
     fired = []
     t = Timer(0.02, lambda: fired.append(1), repeat=False)
@@ -242,7 +242,7 @@ def test_a_deadline_fires_once():
 def test_a_cadence_keeps_firing():
     """The default, and what the keeper, upkeep, reporting, the watchdog and the sweep want."""
     import time as _t
-    from orexis_progression_patience.timer import Timer
+    from orexis_progression.timer import Timer
 
     fired = []
     t = Timer(0.02, lambda: fired.append(1))
@@ -264,7 +264,7 @@ def test_a_deadline_that_replaces_another_does_not_leave_it_running():
     fired: a window announced as 3s closed at a median of 1.05s, once at -0.00s.
     """
     import time as _t
-    from orexis_progression_patience.timer import Timer
+    from orexis_progression.timer import Timer
 
     fired = []
     old = Timer(0.05, lambda: fired.append("old"), repeat=False)

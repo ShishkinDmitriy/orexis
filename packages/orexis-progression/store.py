@@ -280,7 +280,7 @@ class Store:
         not do: a serialise-and-reparse relabels blank nodes, so an observation node would come
         out the far side unequal to the one a retraction names. It is also the same trap
         `effects._triple` exists for, one layer up — a term crossing a boundary as text stops
-        being that term. The one caller is `orexis_deliberation_search.imaginarium`, which is filling a second store
+        being that term. The one caller is `orexis_deliberation.imaginarium`, which is filling a second store
         with what this one holds.
         """
         return self._store.quads_for_pattern(None, None, None, ox.NamedNode(graph_iri))

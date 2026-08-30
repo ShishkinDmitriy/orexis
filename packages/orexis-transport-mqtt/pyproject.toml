@@ -11,7 +11,7 @@ description = "MQTT — how a device is reached, and how an agent reaches its so
 requires-python = ">=3.10"
 dependencies = [
     "orexis",  # assembly (the manifest) and, where there is behaviour, the kernel
-    "orexis-progression-patience",  # Timer, and tree_bytes off upkeep — progression's contract
+    "orexis-progression",  # Timer, and tree_bytes off upkeep — progression's contract
     "paho-mqtt>=2.0",  # driver.py speaks the protocol
     "orexis-capability-sensing",  # Codec, Scaling, pointer — the contracts it implements
 ]

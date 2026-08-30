@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import logging
 
-from orexis_progression_patience.ontology import AG
-from orexis_progression_patience.store import bindings
+from orexis_progression.ontology import AG
+from orexis_progression.store import bindings
 
 log = logging.getLogger("intention")
 

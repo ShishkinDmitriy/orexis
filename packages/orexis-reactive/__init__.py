@@ -9,10 +9,11 @@ else: no store, no timer, no act, no BDI word. What a piece of work IS is the la
 business; what this layer promises is that whatever is enqueued runs, in order, on one
 thread, and that the enqueuer gets a handle it can wait on from somewhere else.
 
-The family is `reactive` because knowledge/decisions/layered-by-timescale-and-interruptibility.md
-names the row — milliseconds, atomic, no search — and the member is `queue` because THIS way
-of having it is a single queue drained by a single thread. A member that kept several
-workers, or a priority, would be its sibling and would answer the same `submit`.
+The name is `reactive` because knowledge/decisions/layered-by-timescale-and-interruptibility.md
+names the row — milliseconds, atomic, no search — and it is two segments because a layer is
+ONE package, not a family with members: there is one reactive layer in an agent, and a queue
+with workers or a priority, if one ever arrives, is a decision for then rather than a sibling
+waiting for a slot.
 
 Not a capability: nothing grants it and there is no `provides()` here. It imports nothing
 of this repository's — not even `assembly` — and `tests/test_layering.py` holds it to that.

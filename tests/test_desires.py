@@ -89,7 +89,7 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them(mo
     what the choice was made about: cool at issue, maximal at the deadline.
     """
     from agent import genesis
-    from orexis_progression_patience.ontology import obligations_graph
+    from orexis_progression.ontology import obligations_graph
 
     st = genesis_store({("fern", MOISTURE): 0.55})
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
@@ -136,7 +136,7 @@ def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_
     scaling stays asymmetric: the room below the aim is aim-to-floor, above it aim-to-ceiling,
     so the same 0.10 out reads differently per side. Fern: region 0.45-0.65, survives 0.2-0.85.
     """
-    from orexis_progression_patience.ontology import beliefs_graph
+    from orexis_progression.ontology import beliefs_graph
 
     st, fern = _fern({("fern", MOISTURE): 0.55}, monkeypatch)
 
@@ -178,8 +178,8 @@ def test_the_measure_answers_one_for_a_world_with_no_reading(monkeypatch):
     road: asked of a world holding no observation, sensing's answer is 1.0 and never unbound —
     an unmeasured want must not read as no urgency, and this store binds NOTHING for
     arithmetic over an unbound value rather than failing."""
-    from orexis_deliberation_search.desire import Desire
-    from orexis_progression_patience.ontology import STATE_GRAPH
+    from orexis_deliberation.desire import Desire
+    from orexis_progression.ontology import STATE_GRAPH
 
     st, fern = _fern(None, monkeypatch)       # no readings seeded at all
     probe = ObservedDesire(uri="urn:asked", urgency=1.0, observed_property=MOISTURE)
@@ -208,9 +208,9 @@ def test_every_shipped_stake_resolves_a_declared_measure(monkeypatch):
     shipped worlds holds a sensing module whose declaration measures its stakes, every stake
     property being a `sosa:ObservableProperty`. If this fails, a world has grown a want
     nothing loaded can weigh, and that is a genesis conversation rather than a silent 1.0."""
-    from orexis_deliberation_search.desire import Desire
-    from orexis_progression_patience.ontology import STATE_GRAPH
-    from orexis_progression_patience.store import bindings
+    from orexis_deliberation.desire import Desire
+    from orexis_progression.ontology import STATE_GRAPH
+    from orexis_progression.store import bindings
 
     checked = 0
     for world in ("simulation", "loner"):

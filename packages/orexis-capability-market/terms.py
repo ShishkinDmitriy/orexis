@@ -12,7 +12,7 @@ this directory changes nothing about how `hosting.py` reaches it.
 
 **This package owns a namespace**, and `term()` here builds into it. `ag:` is what every agent
 has — `ag:Agent`, `ag:Capability`, `ag:hasCapability`, `ag:localId` — and those are reached
-through `orexis_progression_patience.ontology` because they are the kernel's, not this package's to move. See
+through `orexis_progression.ontology` because they are the kernel's, not this package's to move. See
 knowledge/decisions/a-package-owns-its-namespace.md.
 """
 
@@ -27,7 +27,7 @@ NS = "http://example.org/orexis/market#"
 
 
 def term(name: str) -> str:
-    """One of this package's own terms. The kernel's are reached through `orexis_progression_patience.ontology`."""
+    """One of this package's own terms. The kernel's are reached through `orexis_progression.ontology`."""
     return NS + name
 
 

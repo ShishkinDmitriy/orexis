@@ -18,7 +18,7 @@ timestamp: 2026-08-26T22:30:00Z
 [a-hook-is-a-term](/decisions/a-hook-is-a-term.md)'s neighbour in the literature is Jason's pair.
 `brf` performs one update and reports what changed — that is the seam
 [layered-by-timescale-and-interruptibility](/decisions/layered-by-timescale-and-interruptibility.md)
-calls the interface, and `packages/orexis-deliberation-search/reviser.py` is ours. `buf` is the other one: handed the
+calls the interface, and `packages/orexis-deliberation/reviser.py` is ours. `buf` is the other one: handed the
 **complete current percept set** every cycle, it adds what is perceived and not believed and
 **deletes what is believed and not perceived**. Snapshot semantics — how *the block is no longer
 on the table* happens without anyone sending a retraction.

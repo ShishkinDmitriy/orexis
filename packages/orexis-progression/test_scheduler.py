@@ -7,9 +7,9 @@ from __future__ import annotations
 import threading
 import time
 
-from orexis_progression_patience.scheduler import Scheduler
-from orexis_progression_patience.timer import Timer
-from orexis_reactive_queue.loop import Loop
+from orexis_progression.scheduler import Scheduler
+from orexis_progression.timer import Timer
+from orexis_reactive.loop import Loop
 
 
 def _wait_for(pred, timeout: float = 3.0) -> None:

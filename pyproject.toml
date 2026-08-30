@@ -28,9 +28,9 @@ dependencies = [
     #  assembly becomes a distribution of its own. It is why the Containerfile installs the
     #  four editables in one pip call. Until #455 builds the pull, these lines are also what
     #  LOAD the layers — the record's legitimate intermediate state.
-    "orexis-reactive-queue",
-    "orexis-progression-patience",
-    "orexis-deliberation-search",
+    "orexis-reactive",
+    "orexis-progression",
+    "orexis-deliberation",
     #  assembly/ and agent/ — rdflib is DIRECT (nine imports across the three trees) and used
     #  to arrive only as a transitive of pyshacl, which is free to drop or re-pin it.
     "rdflib>=7",
@@ -116,9 +116,9 @@ members = ["packages/*"]
 # it; otherwise adding a package stays what the README claims it is — adding a directory.
 [tool.uv.sources]
 orexis = { workspace = true }                    # every package: `from assembly import contributes`
-orexis-reactive-queue = { workspace = true }     # progression: the loop a timer lands on
-orexis-progression-patience = { workspace = true }   # the root, deliberation and four packages
-orexis-deliberation-search = { workspace = true }    # the root, market and actuation
+orexis-reactive = { workspace = true }     # progression: the loop a timer lands on
+orexis-progression = { workspace = true }   # the root, deliberation and four packages
+orexis-deliberation = { workspace = true }    # the root, market and actuation
 orexis-capability-sensing = { workspace = true } # codec-json, scaling-identity, transport-mqtt
 
 [tool.pytest.ini_options]

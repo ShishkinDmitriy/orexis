@@ -13,8 +13,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from orexis_progression_patience.ontology import STATE_GRAPH
-from orexis_progression_patience.store import bindings
+from orexis_progression.ontology import STATE_GRAPH
+from orexis_progression.store import bindings
 
 
 @dataclass(frozen=True)

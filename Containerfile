@@ -29,14 +29,14 @@ COPY assembly/__init__.py assembly/__init__.py
 # distribution. So the four editables are installed in ONE pip call, which resolves each
 # against the others instead of asking an index for any. Stubs suffice here as they do for
 # agent/: an editable install maps the directory, and the code arrives with the full COPY below.
-COPY packages/orexis-reactive-queue/pyproject.toml         packages/orexis-reactive-queue/pyproject.toml
-COPY packages/orexis-reactive-queue/__init__.py            packages/orexis-reactive-queue/__init__.py
-COPY packages/orexis-progression-patience/pyproject.toml   packages/orexis-progression-patience/pyproject.toml
-COPY packages/orexis-progression-patience/__init__.py      packages/orexis-progression-patience/__init__.py
-COPY packages/orexis-deliberation-search/pyproject.toml    packages/orexis-deliberation-search/pyproject.toml
-COPY packages/orexis-deliberation-search/__init__.py       packages/orexis-deliberation-search/__init__.py
+COPY packages/orexis-reactive/pyproject.toml         packages/orexis-reactive/pyproject.toml
+COPY packages/orexis-reactive/__init__.py            packages/orexis-reactive/__init__.py
+COPY packages/orexis-progression/pyproject.toml   packages/orexis-progression/pyproject.toml
+COPY packages/orexis-progression/__init__.py      packages/orexis-progression/__init__.py
+COPY packages/orexis-deliberation/pyproject.toml    packages/orexis-deliberation/pyproject.toml
+COPY packages/orexis-deliberation/__init__.py       packages/orexis-deliberation/__init__.py
 RUN pip install "setuptools>=68" && pip install -e . \
-    -e packages/orexis-reactive-queue/ -e packages/orexis-progression-patience/ -e packages/orexis-deliberation-search/
+    -e packages/orexis-reactive/ -e packages/orexis-progression/ -e packages/orexis-deliberation/
 
 # Everything an agent runs, and nothing else.
 #

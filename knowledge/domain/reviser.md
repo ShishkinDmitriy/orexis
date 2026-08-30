@@ -18,7 +18,7 @@ question of whether a change is worth a pass, and an answer nobody should be abl
 
 # What it is
 
-`packages/orexis-deliberation-search/reviser.py` — in the deliberation layer, because the thread
+`packages/orexis-deliberation/reviser.py` — in the deliberation layer, because the thread
 it runs is THE DELIBERATION WORKER: one of three threads, one per timescale (the reactive loop
 runs handlers and takes, the scheduler keeps time, this one searches), and the only one allowed
 to take long. Everything that notices a change — a reading recorded, an offer heard, a

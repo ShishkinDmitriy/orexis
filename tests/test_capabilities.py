@@ -11,7 +11,7 @@ import rdflib
 from agent import genesis
 
 from assembly import loader
-from orexis_progression_patience.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
+from orexis_progression.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from agent.world import WorldError, load_world
 from orexis_capability_actuation import ACTUATION
 from orexis_capability_market import BIDDING, HOSTING, PAY_AS_BID
@@ -113,10 +113,10 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing():
     states no ranges; the fern's menu holds no honoured row because nobody may demand its
     lever. Those were always the facts underneath the two grants.
     """
-    from orexis_deliberation_search.afforder import affordances_of
+    from orexis_deliberation.afforder import affordances_of
     from orexis_capability_sensing.regions import regions_of
 
-    from orexis_progression_patience.ontology import beliefs_graph
+    from orexis_progression.ontology import beliefs_graph
     from conftest import desires_build
 
     st = genesis_store()

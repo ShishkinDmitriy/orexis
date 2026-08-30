@@ -77,16 +77,16 @@ on anything.
 
 The three rows are three PACKAGES in the one tree, and the arrows between them are tested
 dependencies ([a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md)):
-`packages/orexis-reactive-queue/`, `packages/orexis-progression-patience/`,
-`packages/orexis-deliberation-search/`, each importing only the layers beneath it, and
+`packages/orexis-reactive/`, `packages/orexis-progression/`,
+`packages/orexis-deliberation/`, each importing only the layers beneath it, and
 `tests/test_layering.py` holding every arrow. **And each row is one thread**, which is the form
 the table above was always asking for:
 
 | row | thread | what runs on it |
 |---|---|---|
-| reactive | the loop (`orexis_reactive_queue.loop`) — one FIFO, one daemon | every handler, every take, every timer's function, every event told through the choir. An item is milliseconds and never waits |
-| progression | the scheduler (`orexis_progression_patience.scheduler`) — a heap of deadlines | nothing. It sleeps until the next deadline and ENQUEUES; a wait is an entry here that enqueues a check |
-| deliberation | the worker (`orexis_deliberation_search.reviser`) — the mind's own | the search, and only the search. Its RESULT crosses onto the loop as one item: the plan's head, committed and taken |
+| reactive | the loop (`orexis_reactive.loop`) — one FIFO, one daemon | every handler, every take, every timer's function, every event told through the choir. An item is milliseconds and never waits |
+| progression | the scheduler (`orexis_progression.scheduler`) — a heap of deadlines | nothing. It sleeps until the next deadline and ENQUEUES; a wait is an entry here that enqueues a check |
+| deliberation | the worker (`orexis_deliberation.reviser`) — the mind's own | the search, and only the search. Its RESULT crosses onto the loop as one item: the plan's head, committed and taken |
 
 What this closed: the sentence below saying the keeper's tick "still searches synchronously,
 deliberately" was true while the tick had a thread of its own. A timer lands on the loop now,
@@ -148,7 +148,7 @@ this change anything a plan could branch on* — and that belongs in the same fi
   yet.
 - **Deliberation is not interruptible.** The table says it should be; a pass runs to completion.
   Bounded depth is what keeps that affordable, and a model in the loop is what would end it.
-- ~~**The revision function is implicit.**~~ Named: `agent/reviser.py` — `packages/orexis-deliberation-search/reviser.py` since #452, the deliberation worker — is the seam, and
+- ~~**The revision function is implicit.**~~ Named: `agent/reviser.py` — `packages/orexis-deliberation/reviser.py` since #452, the deliberation worker — is the seam, and
   `wake`/`wake_for` are the one door from a change to a pass. It is thin on purpose — the rule
   it runs is still *something moved, so reconsider the want it moved* — and what it buys is
   that #392, a band filter over churning self-telemetry, and any infrastructure projection are

@@ -34,9 +34,9 @@ deciding for itself what kind of store, whether it persists, and whether anythin
 it. The agent holds the modalities; nothing holds or addresses their collection, by the
 fourth ruling. Since [a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md) each class lives in the LAYER that owns it, and there is no floor beneath the
 layers: the store engine, the graph naming and the kernel vocabulary's Python spelling sit in
-progression (`packages/orexis-progression-patience/store.py`, `graphs.py`, `ontology.py`) with
+progression (`packages/orexis-progression/store.py`, `graphs.py`, `ontology.py`) with
 the intention modality, because progression is the lowest layer that persists anything;
-`Beliefs` and `Desires` sit in deliberation (`packages/orexis-deliberation-search/beliefs.py`,
+`Beliefs` and `Desires` sit in deliberation (`packages/orexis-deliberation/beliefs.py`,
 `desire.py`), because a belief and a want are read by the search and by nothing beneath it.
 A modality is not a family of packages: what a lower layer needs of an upper one it hears as
 an EVENT, never as an import.

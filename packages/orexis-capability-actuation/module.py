@@ -30,18 +30,18 @@ from dataclasses import asdict, dataclass
 import uuid
 
 from agent import signing
-from orexis_deliberation_search import effects
+from orexis_deliberation import effects
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
-from orexis_progression_patience.commitment import Commitment
+from orexis_progression.commitment import Commitment
 from agent.module import Module, contributes
-from orexis_progression_patience.timer import Timer
-from orexis_progression_patience.ontology import HANDLE, SUBSCRIPTIONS
+from orexis_progression.timer import Timer
+from orexis_progression.ontology import HANDLE, SUBSCRIPTIONS
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
-from orexis_progression_patience.ontology import STATE_GRAPH
-from orexis_progression_patience.store import bindings
+from orexis_progression.ontology import STATE_GRAPH
+from orexis_progression.store import bindings
 
 from .beliefs import ACTUATION_PICKS
 from .terms import ACTUATION, DOSING
@@ -183,7 +183,7 @@ class ActuationModule(Module):
         #  is handed the row. A standing Actuate is not re-taken here — a dose is an act
         #  whose sizing moves with every reading, so it is re-planned, and an impulse within
         #  patience is absorbed before anything is written.
-        from orexis_deliberation_search import reviser
+        from orexis_deliberation import reviser
 
         #  Which want the reading is about is sensing's to say; the door takes the node.
         sensing = self.agent.provider(SENSING)

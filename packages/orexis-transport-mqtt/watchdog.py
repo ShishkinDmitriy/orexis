@@ -41,9 +41,9 @@ import logging
 import os
 import signal
 
-from orexis_progression_patience.timer import Timer
-from orexis_progression_patience.ontology import QUIET
-from orexis_progression_patience.store import bindings
+from orexis_progression.timer import Timer
+from orexis_progression.ontology import QUIET
+from orexis_progression.store import bindings
 
 log = logging.getLogger("watchdog")
 
