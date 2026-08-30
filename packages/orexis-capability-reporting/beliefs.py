@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from orexis_deliberation.beliefs import Picks
+from orexis_agent_deliberation.beliefs import Picks
 
 from .terms import STORING, term
 

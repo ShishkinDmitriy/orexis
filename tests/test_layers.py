@@ -11,8 +11,8 @@ from dataclasses import replace
 import pytest
 
 from orexis_capability_market.terms import ACQUIRING
-from orexis_progression.ontology import PLAN_FAILED, PLAN_FINISHED, STEP_DONE
-from orexis_reactive.loop import loop
+from orexis_agent_progression.ontology import PLAN_FAILED, PLAN_FINISHED, STEP_DONE
+from orexis_agent_reactive.loop import loop
 
 from conftest import MOISTURE, build_agent, genesis_store, open_round_for, reading_of, stake_of
 
@@ -57,7 +57,7 @@ def test_a_met_expectation_is_counted_and_not_re_planned(thirsty):
 def test_a_plans_head_is_committed_and_taken_as_one_item_on_the_loop(thirsty, monkeypatch):
     """Only the RESULT of a search crosses onto the executing thread: the search ran here, on the
     test's thread, and the ledger write and the take ran on the loop, together."""
-    from orexis_deliberation import pursuit
+    from orexis_agent_deliberation import pursuit
 
     on: list[threading.Thread] = []
     keeper = thirsty.keeper

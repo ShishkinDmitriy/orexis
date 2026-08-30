@@ -3,7 +3,7 @@
 **This is what happens to a decision once it is made, and it is progression's.** It used to be
 one file with the deciding half — `pursue` planned, committed the head and took it, and every
 trigger arrived there. The split along the layers put the two halves where they belong: the
-plan and the commit are the search's (`orexis_deliberation.pursuit`, which calls down
+plan and the commit are the search's (`orexis_agent_deliberation.pursuit`, which calls down
 into here), and what is left is the road from a committed act to its actor, which searches
 nothing and may run for a committed act that nobody re-decided.
 
@@ -24,7 +24,7 @@ import logging
 
 from dataclasses import replace
 
-from orexis_reactive.loop import loop
+from orexis_agent_reactive.loop import loop
 
 from .ontology import AG, STEP_DONE
 from .store import bindings

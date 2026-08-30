@@ -1,12 +1,12 @@
-# orexis-reactive
+# orexis-agent-reactive
 #
 # The reactive layer of the kernel: a queue of executable work and the one loop that drains
 # it (a-layer-is-a-package-and-need-loads-it, #452). The bottom layer, beneath progression and
 # deliberation, and the one that is new rather than moved — the society had eight timer
-# threads and no executing thread before it. Two segments, `orexis-<layer>`, because a layer
+# threads and no executing thread before it. Named `orexis-agent-<layer>`: the family groups the three in a listing, and a layer
 # is one package and not a family with members.
 [project]
-name = "orexis-reactive"
+name = "orexis-agent-reactive"
 version = "0.1.0"
 description = "The reactive layer — a queue of work and one loop that constantly drains it, importing nothing"
 requires-python = ">=3.10"
@@ -19,5 +19,5 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["orexis_reactive"]
-package-dir = {"orexis_reactive" = "."}
+packages = ["orexis_agent_reactive"]
+package-dir = {"orexis_agent_reactive" = "."}

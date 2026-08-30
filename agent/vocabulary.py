@@ -45,8 +45,8 @@ from __future__ import annotations
 
 import logging
 
-from orexis_progression.ontology import AG, ONTOLOGY_GRAPH
-from orexis_progression.store import bindings
+from orexis_agent_progression.ontology import AG, ONTOLOGY_GRAPH
+from orexis_agent_progression.store import bindings
 
 log = logging.getLogger("vocabulary")
 

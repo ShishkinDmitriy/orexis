@@ -27,8 +27,8 @@ knowledge/decisions/an-intention-is-a-plan-committed-to.md.
 
 from __future__ import annotations
 
-from orexis_progression.execution import carry_out
-from orexis_reactive.loop import loop
+from orexis_agent_progression.execution import carry_out
+from orexis_agent_reactive.loop import loop
 
 
 def pursue(agent, desire) -> str | None:

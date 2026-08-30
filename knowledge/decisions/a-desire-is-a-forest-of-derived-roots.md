@@ -152,7 +152,7 @@ back* — applied to tree depth, and stated here so the next proposed level has 
 | **leaf** (per side) | repair-matching — a means declares which violations it repairs, and the side is what lets watering and a fan stop being one row; it is also what makes `market:direction` redundant, a retirement that rides with the matching rather than with this record |
 | **property** | the aim, the dose a bidder sizes against it, and the per-want series a dashboard follows |
 | **instance** | where the roster premise binds and an override hangs its provenance — and the hop the walk names ("fern, below its floor") |
-| **root** | the roll-up urgency — max of children, which is the semantics `hottest` already computes in the deliberator (`packages/orexis-deliberation/`) and sensing's `regions.py`, now given a home — and the sovereign's ask-channel entry: *I want my plants well (0.72 — fern below floor), my instruments fresh (0.10), my debts honoured (0.00)* — labelled roots, walkable to the hot leaf |
+| **root** | the roll-up urgency — max of children, which is the semantics `hottest` already computes in the deliberator (`packages/orexis-agent-deliberation/`) and sensing's `regions.py`, now given a home — and the sovereign's ask-channel entry: *I want my plants well (0.72 — fern below floor), my instruments fresh (0.10), my debts honoured (0.00)* — labelled roots, walkable to the hot leaf |
 
 The instance level is the thinnest of the four, held by the walk and the override audit; if
 both of those consumers ever move elsewhere, the test says fold it, and this table is where

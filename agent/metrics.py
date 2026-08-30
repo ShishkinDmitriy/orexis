@@ -42,7 +42,7 @@ from datetime import datetime, timezone
 
 log = logging.getLogger("metrics")
 
-#  `tree_bytes` WAS HERE, and is upkeep's now (`orexis_progression.upkeep`): the one
+#  `tree_bytes` WAS HERE, and is upkeep's now (`orexis_agent_progression.upkeep`): the one
 #  thing that measures the belief base on disk is the clock that compacts it, and a layer may
 #  not import the container for a helper. Reporting reads it from there.
 

@@ -33,7 +33,7 @@ import logging
 from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import worlds
-from orexis_progression.ontology import AG, WORLD_GRAPH
+from orexis_agent_progression.ontology import AG, WORLD_GRAPH
 from .namespaces import SENSING, SOSA
 
 SSN_SYSTEM = "http://www.w3.org/ns/ssn/systems/"

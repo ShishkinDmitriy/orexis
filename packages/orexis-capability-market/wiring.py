@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from orexis_progression.store import bindings
+from orexis_agent_progression.store import bindings
 
 
 @dataclass(frozen=True)

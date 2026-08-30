@@ -16,12 +16,12 @@ See knowledge/decisions/capability-packages.md.
 
 from __future__ import annotations
 
-from orexis_progression.ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, QUIET, REPORTS,
+from orexis_agent_progression.ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, QUIET, REPORTS,
                        SEND, SERIES, SIZE, SWEEP, TAKE)
 
 from datetime import datetime
 
-from orexis_deliberation.desire import Desire
+from orexis_agent_deliberation.desire import Desire
 
 import json
 import logging
@@ -261,7 +261,7 @@ class Module:
         return any(self.agent.ask(SEND, topic, payload, retain, not_after))
 
 
-#  `Timer` WAS HERE, and is progression's now (`orexis_progression.timer`, #452):
+#  `Timer` WAS HERE, and is progression's now (`orexis_agent_progression.timer`, #452):
 #  a clock is the layer that executes what is committed, and a timer landing no longer runs
 #  its function on a thread of its own — it enqueues it onto the reactive loop, the one
 #  executing thread. Same API; the eight callers changed their import and nothing else.

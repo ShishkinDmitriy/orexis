@@ -16,7 +16,7 @@ timestamp: 2026-08-29T00:00:00Z
 
 | layer | what it is | examples |
 |---|---|---|
-| store | raw graph access — `query`, `update`, `put_graph`, `optimize` | `packages/orexis-progression/store.py::Store` |
+| store | raw graph access — `query`, `update`, `put_graph`, `optimize` | `packages/orexis-agent-progression/store.py::Store` |
 | repository | wraps a store, scopes it to THIS agent, exposes `read()` | `Beliefs`, `Desires`, `Intentions`, `Imaginarium` |
 | service | holds the logic | the planner, the deliberator, the keeper, `owing`, `revision`, `inference` |
 

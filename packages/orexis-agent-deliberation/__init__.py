@@ -21,8 +21,9 @@ ticks on, the `carry_out` it hands to — the floor, and the reactive loop for e
 handing a plan's head across to be committed and taken as one item there. A search never runs
 on the loop; the layer between them is where a tick becomes a mark.
 
-The name is `deliberation`, two segments, because a layer is ONE package and not a family
-with members. This one deliberates by a bounded search over predicted worlds; asking a model
+The name is `orexis-agent-deliberation`: the family `agent` groups the three layers in a
+listing ("hard to locate packages in the list without it"), and a layer is ONE package, not a
+family with members. This one deliberates by a bounded search over predicted worlds; asking a model
 what next, which llm-heavy-deliberation argues for and `ag:deliberatesBy` would pick, is a
 decision for then — inside this package or beside it — rather than a sibling waiting for a slot.
 

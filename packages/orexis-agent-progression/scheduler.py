@@ -26,7 +26,7 @@ import logging
 import threading
 import time
 
-from orexis_reactive.loop import Loop, loop
+from orexis_agent_reactive.loop import Loop, loop
 
 log = logging.getLogger("scheduler")
 

@@ -324,7 +324,7 @@ Three requirements follow, none of which a planner written for the reflex's worl
   `sosa:resultTime` are not part of where a plan stands — and any other blank node to its
   content ([#258](https://github.com/ShishkinDmitriy/orexis/issues/258), which is what lets a
   step that moves something other than the goal's number count as somewhere new; see
-  `packages/orexis-deliberation/signature.py`).
+  `packages/orexis-agent-deliberation/signature.py`).
 - **Depth exhaustion is an ANSWER, not a failure.** "No bounded plan reaches this goal" is a
   distinct outcome from "no lever repairs this violation", and the two must reach the report as
   different things or the sovereign is told to buy a fan when the problem is dose size.

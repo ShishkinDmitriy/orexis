@@ -28,8 +28,8 @@ import logging
 import pyoxigraph as ox
 import rdflib
 
-from orexis_progression.ontology import ACTIONS_GRAPH
-from orexis_progression.store import bindings
+from orexis_agent_progression.ontology import ACTIONS_GRAPH
+from orexis_agent_progression.store import bindings
 
 log = logging.getLogger("effects")
 

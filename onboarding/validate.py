@@ -26,8 +26,8 @@ import logging
 import sys
 
 from agent import genesis
-from orexis_progression.ontology import PROVENANCE_GRAPH
-from orexis_progression.store import Store, bindings
+from orexis_agent_progression.ontology import PROVENANCE_GRAPH
+from orexis_agent_progression.store import Store, bindings
 from agent.validate import conforms, graph_from
 
 log = logging.getLogger("validate")
@@ -102,9 +102,9 @@ def validate_world(world: str) -> bool:
     # judges the world against it. The pick records travel the same road and only that road —
     # flattened beside their projections they would split every blank-node aim in two.
     data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH)
-    from orexis_deliberation import effects
-    from orexis_deliberation.beliefs import Beliefs
-    from orexis_deliberation.desire import Desires
+    from orexis_agent_deliberation import effects
+    from orexis_agent_deliberation.beliefs import Beliefs
+    from orexis_agent_deliberation.desire import Desires
 
     desires = {a: Desires(Beliefs(st, a)) for a in everyone}
     for a in everyone:
@@ -146,14 +146,14 @@ def deliberable(st, desires: dict) -> bool:
 
     See knowledge/decisions/a-plan-is-a-path-of-graph-diffs.md.
     """
-    from orexis_deliberation import effects
+    from orexis_agent_deliberation import effects
     from assembly import loader
-    from orexis_deliberation.afforder import affordances_of
+    from orexis_agent_deliberation.afforder import affordances_of
     from orexis_capability_sensing.regions import regions_of
     from agent.world import load_self
 
-    from orexis_progression.ontology import beliefs_graph
-    from orexis_progression.store import bindings
+    from orexis_agent_progression.ontology import beliefs_graph
+    from orexis_agent_progression.store import bindings
 
     faults = 0
     #  EVERY ACTION THAT CAN PUT A ROW ON A MENU, not every row a menu happens to hold now.

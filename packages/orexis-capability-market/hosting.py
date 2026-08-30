@@ -34,17 +34,17 @@ import json
 from agent import signing
 from .auction import run_auction
 from .trade import EPS, Bid, Limits, MarketState, Offer
-from orexis_deliberation.desire import Desire
+from orexis_agent_deliberation.desire import Desire
 
 from .ower import Ower
 from agent.module import Module, contributes
-from orexis_progression.timer import Timer
-from orexis_progression.ontology import HANDLE, SUBSCRIPTIONS
+from orexis_agent_progression.timer import Timer
+from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
-from orexis_progression.act import Act
-from orexis_progression.ontology import WORLD_GRAPH
-from orexis_progression.store import bindings
+from orexis_agent_progression.act import Act
+from orexis_agent_progression.ontology import WORLD_GRAPH
+from orexis_agent_progression.store import bindings
 
 from . import calls, rounds
 from .wiring import allocation_ceilings, hosted_markets_of, node_of, participants
@@ -216,7 +216,7 @@ SELECT ?p WHERE {{
 
     def _pursue_calls(self, market=None) -> None:
         """Every call I hold — on one venue, or all — through execution."""
-        from orexis_deliberation import reviser
+        from orexis_agent_deliberation import reviser
 
         for desire in self.desires():
             if market is None or desire.uri == calls.uri_for(market.uri):
@@ -249,7 +249,7 @@ SELECT ?p WHERE {{
         None for anything that is not a call."""
         if not desire.uri.startswith(f"{calls.NS}call_"):
             return None
-        from orexis_progression.ontology import beliefs_graph
+        from orexis_agent_progression.ontology import beliefs_graph
 
         rows = bindings(query(f"""
 SELECT ?r WHERE {{
@@ -561,7 +561,7 @@ SELECT ?r WHERE {{
         #  handed to bidding, which stands until the upstream round — and the claim stays held
         #  for the sweep that re-runs this when stock arrives. A serve is the plan's head only
         #  when the vessel can honour it, and `take` below is handed exactly that row.
-        from orexis_deliberation import reviser
+        from orexis_agent_deliberation import reviser
 
         #  MARKED, not asked (#392): a claim presented is a message, and what the search makes
         #  of it is not this handler's to wait for. The claim stays in `held` until it is

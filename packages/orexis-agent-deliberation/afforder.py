@@ -21,8 +21,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from orexis_progression.ontology import AG, STATE_GRAPH
-from orexis_progression.store import bindings
+from orexis_agent_progression.ontology import AG, STATE_GRAPH
+from orexis_agent_progression.store import bindings
 
 @dataclass(frozen=True)
 class Affordance:

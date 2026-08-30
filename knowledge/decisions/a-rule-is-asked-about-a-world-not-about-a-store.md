@@ -17,7 +17,7 @@ timestamp: 2026-08-21T12:00:00Z
 
 # The contradiction
 
-A plan is `(beliefs − retracts) + adds` applied step after step. `packages/orexis-deliberation/effects.py` computes
+A plan is `(beliefs − retracts) + adds` applied step after step. `packages/orexis-agent-deliberation/effects.py` computes
 each step honestly and then computes the next one from the wrong place:
 
 ```python
@@ -187,7 +187,7 @@ central mechanism is the failure mode it must prevent needs a reason to be chose
 is none here — it exists to avoid a copy that measurement shows is cheap (10–13 ms against a
 pass over a second, once the copy is the size it actually has to be).
 
-**Not a new contract for the effects layer.** The issue proposed that `packages/orexis-deliberation/effects.py` gain
+**Not a new contract for the effects layer.** The issue proposed that `packages/orexis-agent-deliberation/effects.py` gain
 the ability to execute a rule over an arbitrary graph, and asked what happens to a rule that
 legitimately needs the world graph or a belief. The table above answers it: they all do, and
 none of them needs a *changed* one. So the layer does not need a second mode. It needs to be
@@ -255,7 +255,7 @@ What that rests on is stated where it can be seen to break.
 [#258](https://github.com/ShishkinDmitriy/orexis/issues/258) made the signature the world's net
 diff in canonical facts, and in canonical form a look nets to nothing: an observation is its
 upsert key and its value, never its `sosa:resultTime`, and a valueless first look states no fact
-at all — see `packages/orexis-deliberation/signature.py`. A signature that counted a fresher timestamp as
+at all — see `packages/orexis-agent-deliberation/signature.py`. A signature that counted a fresher timestamp as
 somewhere new would make "look, then look" a new world every time. Chaining past a look
 becomes a live question exactly there and nowhere earlier — the trigger, written down.
 
@@ -357,7 +357,7 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
   The imaginarium works *because* it needs no federation: it is a whole store, self-contained,
   and every query about a possible world is asked of it alone.
 - **`$sensed` is bound by text and has to be.** pyoxigraph 0.5's `query()` takes a
-  `substitutions` argument, which looks like the native binding `packages/orexis-deliberation/effects.py` says it would
+  `substitutions` argument, which looks like the native binding `packages/orexis-agent-deliberation/effects.py` says it would
   prefer. It is not: it pre-binds variables in the SELECT projection and cannot substitute a
   GRAPH name. The text substitution stays, and the comment saying so stays true.
 - **A plan that moves something other than a reading.** The table is true of the three rules

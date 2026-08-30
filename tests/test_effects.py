@@ -10,9 +10,9 @@ from __future__ import annotations
 import pytest
 
 from agent import genesis
-from orexis_deliberation import effects
-from orexis_progression.ontology import ACTIONS_GRAPH, STATE_GRAPH, beliefs_graph
-from orexis_progression.store import bindings
+from orexis_agent_deliberation import effects
+from orexis_agent_progression.ontology import ACTIONS_GRAPH, STATE_GRAPH, beliefs_graph
+from orexis_agent_progression.store import bindings
 
 from conftest import stake_of, MOISTURE, build_agent, genesis_store
 

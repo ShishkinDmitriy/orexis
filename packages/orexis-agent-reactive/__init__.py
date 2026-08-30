@@ -10,8 +10,9 @@ business; what this layer promises is that whatever is enqueued runs, in order, 
 thread, and that the enqueuer gets a handle it can wait on from somewhere else.
 
 The name is `reactive` because knowledge/decisions/layered-by-timescale-and-interruptibility.md
-names the row — milliseconds, atomic, no search — and it is two segments because a layer is
-ONE package, not a family with members: there is one reactive layer in an agent, and a queue
+names the row — milliseconds, atomic, no search — and the family is `agent` because, in the
+author's words, the three layers are "hard to locate in the list without it": the family
+groups them, and a layer is still ONE package, not a family with members: there is one reactive layer in an agent, and a queue
 with workers or a priority, if one ever arrives, is a decision for then rather than a sibling
 waiting for a slot.
 
