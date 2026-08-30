@@ -26,13 +26,14 @@ def test_plant_agent_runs_sensing_and_bidding(agent):
     not a wire and not a market position. The supplier gained the same the day it started
     acting for its barrel — the distinction is the stake, not which side of the market.
     """
-    #  `intention`, `deliberation` and `owing` are the MIND, which every agent has: they are
-    #  the kernel's, granted by nothing. (`desire` was among them until the region and the aim
-    #  went to sensing — the-stake-is-sensings-want.) What is fern's own is `subscribing` (a
-    #  scheduled board), `bidding` (a market position), `review` (latitude) and `reporting`.
+    #  `intention` and `deliberation` are the MIND, which every agent has: they are the
+    #  kernel's, granted by nothing. (`desire` was among them until the region and the aim went
+    #  to sensing — the-stake-is-sensings-want; `owing` until the ledger became hosting's,
+    #  because only a host owes.) What is fern's own is `subscribing` (a scheduled board),
+    #  `bidding` (a market position), `review` (latitude) and `reporting`.
     assert {m.name for m in agent("fern").modules} == {
         "subscribing", "bidding", "review", "reporting", "mqtt",
-        "intention", "deliberation", "owing"}
+        "intention", "deliberation"}
 
 
 def test_supplier_runs_the_dealers_full_stack(agent):
@@ -48,14 +49,15 @@ def test_supplier_runs_the_dealers_full_stack(agent):
     """
     assert {m.name for m in agent("supplier").modules} == {
         "hosting", "actuation", "pay-as-bid", "reporting", "listening",
-        # `owing` beside `desire` and not inside it (#233): the ledger is granted by a lever
-        # others may demand, the region by a stake, and the supplier is the agent that has both.
+        # NO `owing`: the ledger of debts is `hosting`'s now, held rather than composed, because
+        # a debt arises from a claim this agent ISSUED and only a host issues one. The supplier
+        # still keeps one — it hosts — but through the module above rather than beside it.
         # `deliberation` is the KERNEL's and every agent has it, so it appears here for the
         # same reason it appears in every other agent's list. Arc 5's `planning` does not:
         # the planner was a member that subclassed the reflex and added one clause inert for
         # everyone else, so it is a clause and not a module. What it protects is pinned in
         # test_deliberation, against the fact rather than against who was handed which module.
-        "owing", "intention", "deliberation", "bidding", "mqtt"}
+        "intention", "deliberation", "bidding", "mqtt"}
 
 
 def test_the_supplier_listens_to_its_stock_and_schedules_nothing(agent):

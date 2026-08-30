@@ -35,6 +35,8 @@ from agent import signing
 from .auction import run_auction
 from .trade import EPS, Bid, Limits, MarketState, Offer
 from agent.desire import Desire
+
+from .ower import Ower
 from agent.module import Module, Timer, contributes
 from agent.ontology import HANDLE, SUBSCRIPTIONS
 
@@ -98,6 +100,11 @@ class HostingModule(Module):
     def __init__(self, agent):
         super().__init__(agent)
         self.beliefs = agent.desires.read(HOSTING_PICKS)
+        #  THE LEDGER OF DEBTS IS MINE, since #448's neighbour: only a host owes, because a
+        #  debt arises from a claim this agent ISSUED. It writes the graph the kernel declares
+        #  — the same arrangement sensing has with `graph/sensed` — so the obligation modality
+        #  stays the mind's while incurring one is the market's.
+        self.ledger = Ower(agent)
         self.markets = hosted_markets_of(agent.beliefs.query, self.me.uri)
         self.participants = {
             m.uri: participants(agent.beliefs.query, m) for m in self.markets
@@ -225,7 +232,14 @@ SELECT ?p WHERE {{
         question of whether it would RATHER sell is the strategic-supplier seam, not a number
         invented here.
         """
-        return [Desire(uri=c.uri, urgency=1.0) for c in calls.calls_of(self.agent)]
+        #  AND THE DEBTS, delegated: the ledger is no longer a module in its own right, so
+        #  what it contributed to the choir arrives through the module that holds it.
+        return ([Desire(uri=c.uri, urgency=1.0) for c in calls.calls_of(self.agent)]
+                + self.ledger.desires(now))
+
+    def series(self) -> list[tuple[str, dict, dict]]:
+        """What I owe, as figures — the ledger's, through the module that holds it."""
+        return self.ledger.series()
 
     def desire_urgency(self, desire, query, state: str, value=None) -> float | None:
         """How badly a CALL is unmet, in the world `query` answers about: 0 where a round
@@ -256,7 +270,7 @@ SELECT ?r WHERE {{
         for market in self.markets:
             if subject_uri != market.resource or observed_property != self.stock_property.get(market.uri):
                 continue
-            if (ledger := self.agent.ower) is not None:
+            if (ledger := self.ledger) is not None:
                 for desire in ledger.obligations():
                     if desire.pursuable and desire.claim in self.held:
                         self._pursue(desire.claim,
@@ -452,7 +466,7 @@ SELECT ?r WHERE {{
         #  The LEDGER OF DEBTS and not the regions (#233). A host with no stake of its
         #  own — the city, acting for a mains that states no ranges — used to reach this line,
         #  find no desire module, and record nothing at all while issuing claims all day.
-        if (ledger := self.agent.ower) is not None:
+        if (ledger := self.ledger) is not None:
             for claim in result.claims:
                 ledger.owe(claim.sub, claim.jti, expires_at=claim.exp, amount_l=claim.amount_l)
 
@@ -506,7 +520,7 @@ SELECT ?r WHERE {{
             return
         # Asked for: the obligation steps from owed to demanded. What happens next is a
         # DECISION and not a handler any more — the whole of step 9. See below.
-        ledger = self.agent.ower
+        ledger = self.ledger
         if ledger is not None:
             ledger.demanded(jti)
         self._pursue(jti, f"{presenter} presented it")
@@ -534,7 +548,7 @@ SELECT ?r WHERE {{
         claim = self.held.get(jti)
         if claim is None:
             return
-        ledger = self.agent.ower
+        ledger = self.ledger
         if ledger is None:
             self._serve(jti, why)
             return
@@ -601,7 +615,7 @@ SELECT ?r WHERE {{
         claim = self.held.pop(jti)
         self.log.info("serving claim %s (%.3f L) — %s", jti, claim.amount_l, why)
         self.redeem([claim])
-        if (ledger := self.agent.ower) is not None:
+        if (ledger := self.ledger) is not None:
             ledger.discharge(jti)
 
     def _issue(self, market, auction_id: str, claim) -> None:

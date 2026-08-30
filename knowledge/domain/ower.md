@@ -23,12 +23,18 @@ ever presents it.
 
 # What it is not
 
-**Not the market's**, though everything that *causes* a debt is: `hosting` is the only caller of
-`owe`, `demanded` and `discharge`. What makes it the kernel's is the other side — an
-[obligation](/domain/obligation.md) is a desire someone else sourced, so the
-[deducer](/domain/deducer.md) builds a want from this ledger and the [planner](/domain/planner.md)
-ranks that want beside everything else the agent pursues. Move it into the market package and
-`agent/planner.py` would import one, which rule 2 forbids and `lint-imports` refuses.
+**It is [hosting](/domain/market.md)'s, and the modality is the kernel's.** Only a host owes,
+because a debt arises from a claim this agent ISSUED — so the ledger lives in the market package
+and `HostingModule` holds it. What stays the mind's is the
+[obligation](/domain/obligation.md) itself: the class, the graph it is written into, and the
+branches that rank a debt beside a want.
 
-An agent with no stake of its own still keeps this ledger, which is why it is the kernel's and
-not a grant.
+**Which needed no new mechanism**, and that is the point worth keeping. A package writing a graph
+the kernel declares is what [sensing](/domain/sensing.md) already does with `graph/sensed` — so
+the ledger writes `ag:ObligationsGraph` exactly as sensing writes the state graph, and nothing in
+the kernel learns that market exists.
+
+**Not a capability of its own.** Keeping a record cannot be done two ways, and rule 2 reserves a
+capability for an ability whose *how* could differ. It is a thing hosting holds, and what it
+contributes to the choir — the debts among what this agent pursues, and the figures beneath
+them — arrives through the module that holds it.
