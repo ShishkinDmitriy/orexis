@@ -25,8 +25,8 @@ import json
 from agent import config
 from agent.metrics import tree_bytes
 from agent.module import Module, Timer, contributes
-from agent.ontology import HANDLE, REPORTS, SEND, SERIES, SUBSCRIPTIONS
-from agent.store import bindings
+from modality.ontology import HANDLE, REPORTS, SEND, SERIES, SUBSCRIPTIONS
+from modality.store import bindings
 
 from . import sovereign
 from .beliefs import REPORTING_PICKS

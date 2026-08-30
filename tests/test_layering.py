@@ -42,13 +42,15 @@ def test_there_are_packages_to_check():
         "changed, every test in this file silently stops checking anything.")
 
 
-@pytest.mark.parametrize("tree", ["agent", "assembly"])
+@pytest.mark.parametrize("tree", ["agent", "assembly", "modality"])
 def test_the_kernel_and_the_assembly_reach_into_no_package(tree: str):
     """What LOADS packages must never need one — the claim every package's optionality rests on.
 
-    The violations this replaced were not theoretical: `agent/desire.py` and `agent/genesis.py`
+    The violations this replaced were not theoretical: the desire modality and `agent/genesis.py`
     once imported a package module that did nothing but re-export a kernel function, so the
-    kernel was importing a package to get its own code back.
+    kernel was importing a package to get its own code back. `modality/` — the mind's stores,
+    a root tree since #451 — is held to the same claim: the floor beneath the layers must not
+    need anything the layers might be granted.
     """
     offenders = {
         path.relative_to(REPO_ROOT): sorted(imported([path]) & MODULES)

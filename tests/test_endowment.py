@@ -11,8 +11,8 @@ value, and `rebirth` remains the explicit act of discarding.
 from pathlib import Path
 
 from agent import genesis
-from agent.ontology import beliefs_graph
-from agent.store import Store, bindings
+from modality.ontology import beliefs_graph
+from modality.store import Store, bindings
 
 NS = "http://example.org/orexis/world/simulation#"
 MARKET = "http://example.org/orexis/market#"

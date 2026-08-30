@@ -11,6 +11,7 @@ description = "The second thought — an agent re-picking its own settings insid
 requires-python = ">=3.10"
 dependencies = [
     "orexis",  # assembly (the manifest) and, where there is behaviour, the kernel
+    "orexis-modality",  # the mind's stores — Beliefs, Desires, the Store, the kernel vocabulary
 ]
 
 [build-system]

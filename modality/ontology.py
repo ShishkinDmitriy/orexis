@@ -48,7 +48,7 @@ See knowledge/decisions/capability-packages.md.
 from __future__ import annotations
 
 AG = "http://example.org/orexis#"
-# **The kernel's namespace, and the kernel is `agent/`.** `ag:` is the base every package layers
+# **The kernel's namespace, spelled where the stores are.** `ag:` is the base every package layers
 # on: what an agent IS, what a graph is, and — since the mind came home — what a mind CONTAINS.
 # A package names its own terms through its own `terms.py`; `market:`, `sensing:` and the
 # hardware modules' `mc:`, `onewire:` and the rest have done so since pins-and-wires.
@@ -57,8 +57,10 @@ AG = "http://example.org/orexis#"
 # project's first name. The rename to Orexis took the IRI — this is `…/orexis#` — and kept the
 # label, on the argument that it "reads as well for agent as it ever did for agora". That was a
 # little generous at the time, since the vocabulary lived in `packages/core/orexis/` and `agent/`
-# was merely the loader. It is exact now: the kernel's directory is `agent/` and the kernel's
-# namespace is `ag:`, and they name the same thing. Nobody needs the history to read it.
+# was merely the loader. It became exact — the kernel's directory was `agent/` and the kernel's
+# namespace `ag:`, naming the same thing — and then the layering split the kernel (#451): the
+# T-Box file stays the kernel's (`agent/ontology.ttl`), while THIS file, the Python spelling of
+# it, lives with the stores that every layer meets at. Nobody needs the history to read it.
 # See knowledge/decisions/the-society-is-named-for-its-appetite.md.
 #
 # This used to say the hardware layer could afford separate namespaces *precisely because no
@@ -66,7 +68,7 @@ AG = "http://example.org/orexis#"
 # and the trap they exist to prevent unreachable. That was true of the arrangement and false as
 # a rule: the constraint was never that a namespace must go unqueried, it was that
 # `store.PREFIXES` was a kernel constant, so any package wanting one had to edit the kernel to
-# be nameable in SPARQL. `agent.loader` now reads every project namespace off the ontology that
+# be nameable in SPARQL. `assembly.loader` now reads every project namespace off the ontology that
 # declares it, so the prefix arrives with the package. See
 # knowledge/decisions/a-package-owns-its-namespace.md.
 #

@@ -35,7 +35,7 @@ import pytest
 
 from agent import ratified
 from onboarding import mqtt as mqtt_admin
-from agent.ontology import AG, WORLD_GRAPH
+from modality.ontology import AG, WORLD_GRAPH
 
 paho = pytest.importorskip("paho.mqtt.client")
 

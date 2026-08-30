@@ -280,7 +280,7 @@ def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
 def _agent_on(world_path, monkeypatch):
     """Built the way an agent builds itself, from a world that is not one of the ratified three."""
     from agent import genesis
-    from agent.store import Store
+    from modality.store import Store
 
     st = Store()
     genesis.refresh_public(st, world_path)
@@ -714,8 +714,8 @@ def test_two_probes_in_two_patches_keep_two_records(monkeypatch):
     across its patches, which is a choice of witness and deliberately not an aggregation."""
     from datetime import datetime, timedelta, timezone
 
-    from agent.ontology import STATE_GRAPH, WORLD_GRAPH
-    from agent.store import bindings
+    from modality.ontology import STATE_GRAPH, WORLD_GRAPH
+    from modality.store import bindings
 
     st = genesis_store()
     st.update(f"""
@@ -764,8 +764,8 @@ def test_a_device_that_speaks_for_itself_lands_in_phenomenon_time(fern):
     resultTime — when the result applies to the world, as distinct from when we heard."""
     from datetime import datetime, timedelta, timezone
 
-    from agent.ontology import STATE_GRAPH
-    from agent.store import bindings
+    from modality.ontology import STATE_GRAPH
+    from modality.store import bindings
 
     p, s = fern.subscribing(), moisture_sensor(fern)
     arrived = datetime.now(timezone.utc)
@@ -806,7 +806,7 @@ def test_a_repicked_jolt_threshold_rearms_the_watch(monkeypatch):
     """The whole reason the delta is a belief and not a compile-time figure: a review moves it,
     the module re-aims, and the corrected threshold reaches the board in the next retained
     command — being wrong about the estimate costs a message, never a reflash."""
-    from agent.ontology import beliefs_graph
+    from modality.ontology import beliefs_graph
     from orexis_capability_sensing.terms import term as sensing_term
 
     fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
@@ -834,7 +834,7 @@ def test_an_agent_with_no_pick_commands_band_only_alarms(monkeypatch):
     from orexis_capability_sensing.beliefs import ALARM_PICKS
     from orexis_capability_sensing.module import SubscribingModule
     from orexis_capability_sensing.terms import term as sensing_term
-    from agent.ontology import beliefs_graph
+    from modality.ontology import beliefs_graph
 
     fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
     fern.beliefs.update(f"""

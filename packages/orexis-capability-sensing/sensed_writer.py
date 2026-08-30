@@ -38,8 +38,8 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 
-from agent.ontology import STATE_GRAPH
-from agent.store import Store
+from modality.ontology import STATE_GRAPH
+from modality.store import Store
 
 
 def _slug(uri: str) -> str:

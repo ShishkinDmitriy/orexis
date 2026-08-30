@@ -13,8 +13,8 @@ wired to hardware derives.
 
 import rdflib
 
-from agent.ontology import WORLD_GRAPH
-from agent.store import bindings
+from modality.ontology import WORLD_GRAPH
+from modality.store import bindings
 
 from conftest import WORLDS_ROOT, genesis_store, load_wired
 from test_shapes import _conforms, _flatten
@@ -233,7 +233,7 @@ def test_the_pot_is_the_only_statement_of_its_own_drying():
     import json
 
     from agent import ratified
-    from agent.ontology import AG, WORLD_GRAPH
+    from modality.ontology import AG, WORLD_GRAPH
     from onboarding.compose import _SIMULATED_Q, _values
 
     ds = ratified.dataset("simulation")
@@ -259,7 +259,7 @@ def test_a_model_stating_its_own_drying_overrides_the_pot():
     import json
 
     from agent import ratified
-    from agent.ontology import AG, WORLD_GRAPH
+    from modality.ontology import AG, WORLD_GRAPH
     from onboarding.compose import _SIMULATED_Q, _values
 
     ds = ratified.dataset("simulation")

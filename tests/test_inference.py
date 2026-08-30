@@ -26,10 +26,10 @@ from agent import genesis, inference
 
 from assembly import loader
 SOSA = "http://www.w3.org/ns/sosa/"   # spelled here: the kernel no longer names it (#378)
-from agent.ontology import AG, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH
+from modality.ontology import AG, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH
 from onboarding.namespaces import MC, SENSING
 
-from agent.store import Store, bindings
+from modality.store import Store, bindings
 
 MC = "http://example.org/orexis/microcontroller#"
 ONEWIRE = "http://example.org/orexis/onewire#"
@@ -321,7 +321,7 @@ SELECT ?hosted WHERE { <http://example.org/orexis/world/sensing#esp32_fern>
     hosted = {r["hosted"].rsplit("#", 1)[-1] for r in rows}
     assert {"moisture_sensor_fern", "status_led_fern", "air_sensor_fern"} <= hosted
     # and the conclusion sits in the entailed graph, never the asserted wiring
-    from agent.ontology import WORLD_ENTAILED_GRAPH
+    from modality.ontology import WORLD_ENTAILED_GRAPH
     entailed = bindings(st.query(f"""
 SELECT ?hosted WHERE {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{
   <http://example.org/orexis/world/sensing#esp32_fern> <http://www.w3.org/ns/sosa/hosts> ?hosted }} }}"""))

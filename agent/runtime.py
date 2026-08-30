@@ -35,17 +35,17 @@ import signal
 from agent import config, genesis
 
 from assembly import loader
-from .beliefs import Beliefs
+from modality.beliefs import Beliefs
 from assembly.inject import attribute_for, opened
-from .ontology import DESIRES, DESIRE_URGENCY
+from modality.ontology import DESIRES, DESIRE_URGENCY
 from .deliberator import Deliberator
-from .desire import Desire, Desires
+from modality.desire import Desire, Desires
 from .reviser import Reviser
-from .intentions import Intentions
+from modality.intentions import Intentions
 from .keeper import Keeper
 from .metrics import Metrics
 from .upkeep import BeliefBaseUpkeep
-from .store import bindings
+from modality.store import bindings
 from .validate import validate_agent
 from .world import Self, World, load_self, load_world
 

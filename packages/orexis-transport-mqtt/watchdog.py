@@ -42,8 +42,8 @@ import os
 import signal
 
 from agent.module import Timer
-from agent.ontology import QUIET
-from agent.store import bindings
+from modality.ontology import QUIET
+from modality.store import bindings
 
 log = logging.getLogger("watchdog")
 

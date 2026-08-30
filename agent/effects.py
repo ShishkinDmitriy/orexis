@@ -28,8 +28,8 @@ import logging
 import pyoxigraph as ox
 import rdflib
 
-from .ontology import ACTIONS_GRAPH
-from .store import bindings
+from modality.ontology import ACTIONS_GRAPH
+from modality.store import bindings
 
 log = logging.getLogger("effects")
 

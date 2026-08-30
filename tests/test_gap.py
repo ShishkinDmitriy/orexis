@@ -155,7 +155,7 @@ def test_a_desire_nothing_watches_warns_at_the_gate(monkeypatch):
     """
     from agent import genesis
     from assembly import loader
-    from agent.ontology import WORLD_GRAPH, beliefs_graph
+    from modality.ontology import WORLD_GRAPH, beliefs_graph
     from agent.validate import conforms, graph_from
 
     st = genesis_store()
@@ -185,7 +185,7 @@ def test_a_reading_past_survival_warns_at_boot_and_does_not_refuse(monkeypatch):
     says why it had better hurry. A violation here would keep a thirsty agent from ever
     bidding for water, which is the one wrong direction.
     """
-    from agent.ontology import STATE_GRAPH, beliefs_graph
+    from modality.ontology import STATE_GRAPH, beliefs_graph
     from agent.validate import conforms, graph_from
 
     st = genesis_store({("fern", MOISTURE): 0.05})   # fern survives 0.20-0.85
@@ -246,7 +246,7 @@ def test_an_unmet_want_is_not_printed_as_a_finding(monkeypatch):
     wrote: a report claiming three results and showing one is how a filter goes wrong quietly.
     """
     from agent import genesis
-    from agent.ontology import STATE_GRAPH, beliefs_graph
+    from modality.ontology import STATE_GRAPH, beliefs_graph
     from agent.validate import conforms, graph_from
 
     dry = genesis_store({("fern", MOISTURE): 0.30})   # outside the region, inside the envelope

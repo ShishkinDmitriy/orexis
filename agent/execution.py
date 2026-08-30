@@ -32,8 +32,8 @@ import logging
 from dataclasses import replace
 
 from .act import Act
-from .ontology import AG
-from .store import bindings
+from modality.ontology import AG
+from modality.store import bindings
 
 log = logging.getLogger("execution")
 

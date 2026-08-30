@@ -11,8 +11,8 @@ import pytest
 from agent import genesis
 
 from assembly import loader
-from agent.ontology import AG, PROVENANCE_GRAPH, beliefs_graph
-from agent.store import bindings
+from modality.ontology import AG, PROVENANCE_GRAPH, beliefs_graph
+from modality.store import bindings
 
 from conftest import genesis_store
 

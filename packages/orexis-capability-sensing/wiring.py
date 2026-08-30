@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from agent.store import bindings
+from modality.store import bindings
 
 QueryFn = object
 

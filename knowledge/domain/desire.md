@@ -122,7 +122,7 @@ Always true for a stake — a plant does not ask.
 
 # It lives in the kernel, and the capability does not
 
-`agent/desire.py` holds the TYPE, outside any package, because a desire is a mental state and
+`modality/desire.py` holds the TYPE, beneath every layer and outside any package, because a desire is a mental state and
 those are the kernel's — the same reason obligations and intentions are. Two packages need it and
 neither may import the other: this capability produces desires,
 [deliberation](/domain/deliberator.md) consumes them, and the only thing they are allowed to

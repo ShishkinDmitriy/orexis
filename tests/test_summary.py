@@ -13,8 +13,8 @@ import pytest
 
 from agent import genesis
 from orexis_capability_review.graphs import summaries_graph
-from agent.ontology import STATE_GRAPH, term
-from agent.store import Store
+from modality.ontology import STATE_GRAPH, term
+from modality.store import Store
 from orexis_capability_review.summary import RING, Summaries
 
 from conftest import MOISTURE, WORLDS_ROOT, build_agent

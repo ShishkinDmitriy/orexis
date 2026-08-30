@@ -23,11 +23,19 @@ WORKDIR /app
 COPY pyproject.toml pyproject.toml
 COPY agent/__init__.py agent/__init__.py
 COPY assembly/__init__.py assembly/__init__.py
-RUN pip install "setuptools>=68" && pip install -e .
+# The mind's stores are their own distribution and the root depends on it — a knowing cycle
+# through `assembly` while the two share a checkout (a-layer-is-a-distribution) — so the two
+# editables are installed in ONE pip call, which resolves each against the other instead of
+# asking an index for either. Stubs suffice here as they do for agent/: an editable install
+# maps the directory, and the code arrives with the full COPY below.
+COPY modality/pyproject.toml modality/pyproject.toml
+COPY modality/__init__.py modality/__init__.py
+RUN pip install "setuptools>=68" && pip install -e . -e modality/
 
 # Everything an agent runs, and nothing else.
 #
-# Three trees: what ASSEMBLES a build, the KERNEL it assembles onto, and the packages. `packages/` holds both what an
+# Four trees: what ASSEMBLES a build, the KERNEL it assembles onto, the mind's stores the
+# kernel's layers meet at (a-layer-is-a-distribution), and the packages. `packages/` holds both what an
 # agent imports and what it merely reads — a capability's Python and a part's ontology sit in one
 # tree now — and it is copied whole because onboarding derives capabilities from the same terms
 # and neither side owns it.
@@ -41,11 +49,12 @@ RUN pip install "setuptools>=68" && pip install -e .
 # Note what is NOT here: world/. A world is MOUNTED, one per container, so the image is
 # world-agnostic — the same image is every agent of every world, and which one it is comes from
 # OREXIS_AGENT_ID and the world mounted beside it.
-COPY assembly/ assembly/
-COPY agent/    agent/
-COPY packages/ packages/
+COPY assembly/  assembly/
+COPY agent/     agent/
+COPY modality/  modality/
+COPY packages/  packages/
 
-# EVERY PACKAGE IS A PROJECT, so every package is installed as one. Twenty-two distributions
+# EVERY PACKAGE IS A PROJECT, so every package is installed as one. Twenty-one package distributions
 # sharing one `packages.` namespace: none of them claims `packages/` or `packages/<family>/`,
 # which is what leaves room for a twenty-second package installed from somewhere else.
 #

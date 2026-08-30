@@ -34,7 +34,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from agent.store import Store, bindings, decimal
+from modality.store import Store, bindings, decimal
 
 from .graphs import summaries_graph
 

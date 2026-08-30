@@ -11,6 +11,7 @@ description = "The market: bidding, hosting, and the matching family — pay-as-
 requires-python = ">=3.10"
 dependencies = [
     "orexis",  # assembly (the manifest) and, where there is behaviour, the kernel
+    "orexis-modality",  # the mind's stores — Beliefs, Desires, the Store, the kernel vocabulary
 ]
 
 [build-system]

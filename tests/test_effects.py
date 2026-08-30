@@ -10,8 +10,8 @@ from __future__ import annotations
 import pytest
 
 from agent import effects, genesis
-from agent.ontology import ACTIONS_GRAPH, STATE_GRAPH, beliefs_graph
-from agent.store import bindings
+from modality.ontology import ACTIONS_GRAPH, STATE_GRAPH, beliefs_graph
+from modality.store import bindings
 
 from conftest import stake_of, MOISTURE, build_agent, genesis_store
 

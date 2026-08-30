@@ -29,7 +29,7 @@ def _fern(monkeypatch, value=0.55):
 
 
 def _age_the_reading(st, hours=3):
-    from agent.ontology import STATE_GRAPH
+    from modality.ontology import STATE_GRAPH
 
     old = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
     st.update(f"""
@@ -50,7 +50,7 @@ def test_the_horizon_the_shape_reads_is_the_one_the_module_computes(monkeypatch)
     the graph is what the method returns.
     """
     from orexis_capability_sensing.terms import INSTRUMENTS_GRAPH
-    from agent.store import bindings
+    from modality.store import bindings
     from orexis_capability_sensing.terms import STALE_AFTER_S
 
     agent, st = _fern(monkeypatch)
@@ -110,7 +110,7 @@ def test_the_want_fires_as_a_shape_and_does_not_refuse_the_boot(monkeypatch):
     starting, which is precisely the failure the severity split exists to prevent.
     """
     from orexis_capability_sensing.terms import INSTRUMENTS_GRAPH
-    from agent.ontology import STATE_GRAPH, beliefs_graph
+    from modality.ontology import STATE_GRAPH, beliefs_graph
     from agent.validate import _shapes_and_vocabulary, conforms, graph_from
 
     agent, st = _fern(monkeypatch, value=0.55)
@@ -165,7 +165,7 @@ def test_a_horizon_nobody_published_leaves_the_want_unmet_not_met(monkeypatch):
     that is current by any reasonable reading of the clock, with no horizon stated at all.
     """
     from orexis_capability_sensing.terms import INSTRUMENTS_GRAPH
-    from agent.ontology import STATE_GRAPH
+    from modality.ontology import STATE_GRAPH
     from agent.validate import graph_from
     from orexis_capability_sensing.terms import STALE_AFTER_S
     from agent import effects
@@ -199,7 +199,7 @@ def test_a_property_with_no_sensor_holds_no_freshness_want(monkeypatch):
     `world/loner`'s zz plant is exactly that: it states ranges for light and humidity nothing
     reads. Its gardener must hold freshness wants for what it polls and for nothing else.
     """
-    from agent.store import bindings
+    from modality.store import bindings
 
     st = genesis_store(world="loner")
     wants = desires_build(st, "gardener")

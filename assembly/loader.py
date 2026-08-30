@@ -399,7 +399,8 @@ def action_files() -> tuple[Path, ...]:
 
 
 def sources(pattern: str = "*.py") -> tuple[Path, ...]:
-    """Every file of one kind across the trees a runtime loads — the KERNEL's and the packages'.
+    """Every file of one kind across the trees a runtime loads — the KERNEL's, the mind's
+    stores' and the packages'.
 
     The accessors above answer for files the loader gives MEANING to: an ontology, a shapes file,
     a rule. This one answers for files it merely contains, which is what a scan wants — the guards
@@ -412,9 +413,16 @@ def sources(pattern: str = "*.py") -> tuple[Path, ...]:
     they NARROWED, which nothing can see. A glob can be asserted non-empty and four of them were,
     passing the whole time.
 
-    So: ask here rather than glob a tree. A tree is a layout, and layouts move.
+    So: ask here rather than glob a tree. A tree is a layout, and layouts move — `modality/`
+    is the layouts-move case happening again (a-layer-is-a-distribution, #451): the stores left
+    the kernel's directory, and this list is the one place that had to learn it. A layer
+    extracted after it joins the union the same way. Named by PATH, never imported: assembly
+    stays beneath the stores exactly as it stays beneath the kernel.
     """
     found = [p for p in KERNEL.path.rglob(pattern) if "__pycache__" not in p.parts]
+    modality_root = REPO_ROOT / "modality"
+    if modality_root.is_dir():
+        found += [p for p in modality_root.rglob(pattern) if "__pycache__" not in p.parts]
     if PACKAGES_ROOT.is_dir():
         found += [p for p in PACKAGES_ROOT.rglob(pattern) if "__pycache__" not in p.parts]
     return tuple(sorted(found))
@@ -598,7 +606,7 @@ def describe() -> str:
 #
 # So it is read rather than registered, off the `@prefix` lines of the ontology that declares
 # the terms. Nothing is listed and nothing is imported: this runs before any capability's Python
-# and must, because `agent.beliefs` needs the prefixes and half the capabilities import it.
+# and must, because `modality.beliefs` needs the prefixes and half the capabilities import it.
 _NAMESPACE_BASE = "http://example.org/orexis"
 _PREFIX_LINE = re.compile(
     rf"@prefix\s+([A-Za-z][\w.-]*):\s*<({re.escape(_NAMESPACE_BASE)}[^>]*)>")

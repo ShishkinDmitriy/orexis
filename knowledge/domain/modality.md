@@ -32,7 +32,10 @@ the fact there. In code a modality is a **class that owns its store** — `Belie
 `Desires`, the rest as [#299](https://github.com/ShishkinDmitriy/orexis/issues/299) lands —
 deciding for itself what kind of store, whether it persists, and whether anything may write
 it. The agent holds the modalities; nothing holds or addresses their collection, by the
-fourth ruling.
+fourth ruling. Since [a-layer-is-a-distribution](/decisions/a-layer-is-a-distribution.md) the
+classes live in a root tree that bears this page's word — `modality/`, the distribution
+`orexis-modality`, the floor the kernel's layers meet at and import while it imports none of
+them.
 
 # The address a question needs
 

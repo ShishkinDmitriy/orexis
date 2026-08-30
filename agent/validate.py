@@ -29,8 +29,8 @@ from pyshacl import validate as shacl_validate
 from agent import genesis
 
 from assembly import loader
-from .ontology import STATE_GRAPH, beliefs_graph
-from .store import Store
+from modality.ontology import STATE_GRAPH, beliefs_graph
+from modality.store import Store
 
 log = logging.getLogger("validate")
 

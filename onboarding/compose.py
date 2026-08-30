@@ -36,7 +36,7 @@ from pathlib import Path
 
 from agent import ratified
 from agent.config import REPO_ROOT
-from agent.ontology import AG, WORLD_GRAPH
+from modality.ontology import AG, WORLD_GRAPH
 from .namespaces import ACTUATION, MARKET, MQTT, SENSING, SIM, SOSA
 from agent import genesis
 from agent.genesis import world_dir, worlds
@@ -174,11 +174,13 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
       - ./secrets/{agent_id}.key:/app/world/secrets/agent.key:ro
       - ./secrets/ca.crt:/app/world/secrets/ca.crt:ro{signing}
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME
-      # three the Containerfile copies, and keeping them in step is the lesson this block
+      # four the Containerfile copies, and keeping them in step is the lesson this block
       # keeps relearning. It relearned it again when `assembly/` arrived: this block said "the
       # same TWO" while the image copied three, and a restart would have failed on a missing
       # module. `tests/test_layout.py` compares the two lists now, so the next tree cannot
-      # arrive in one and not the other. capabilities/ and transports/ moved inside agent/ and their husks
+      # arrive in one and not the other — which is how `modality/` (the mind's stores, #451)
+      # landed here in the same change that put it in the image, the comparison failing first.
+      # capabilities/ and transports/ moved inside agent/ and their husks
       # were mounted silently; then vocabulary/ moved inside packages/ and its mount failed
       # LOUDLY — a bind whose source is gone refuses to start the container, but only at the
       # next restart, which arrived with a host logout weeks after the tree moved. A mount
@@ -186,6 +188,7 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
       # cannot.
       - ../../assembly:/app/assembly:ro
       - ../../agent:/app/agent:ro
+      - ../../modality:/app/modality:ro
       - ../../packages:/app/packages:ro
 """
 

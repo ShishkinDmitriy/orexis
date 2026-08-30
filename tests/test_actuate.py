@@ -14,7 +14,7 @@ from orexis_capability_market.terms import ACQUIRING
 from orexis_capability_actuation.terms import DOSING
 from orexis_capability_sensing.terms import OBSERVING
 
-from agent.ontology import beliefs_graph
+from modality.ontology import beliefs_graph
 from orexis_capability_sensing.regions import ObservedDesire
 from conftest import sensing_of, stake_of, build_agent, genesis_store, desires_build, open_round_for, write_reading
 
@@ -58,7 +58,7 @@ def test_opening_a_shop_on_your_own_bottle_costs_you_the_free_rung():
     a lot, even its owner's own pump answers to the venue."""
     from agent import genesis
     from assembly import loader
-    from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
+    from modality.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 
     st = genesis_store(world="loner")
     st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
@@ -76,7 +76,7 @@ def test_a_pot_local_pump_on_the_shared_barrel_still_yields_acquire_only():
     """The other side of the same rule, in the market world: give fern its own pump drawing
     from the SHARED barrel, and the menu must offer Acquire and only Acquire — a lever you
     own on a resource you do not is exactly what the market referees."""
-    from agent.ontology import WORLD_GRAPH
+    from modality.ontology import WORLD_GRAPH
 
     ns = "http://example.org/orexis/world/simulation#"
     st = genesis_store()
@@ -104,7 +104,7 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
     rung a plan takes is the one whose predicted world scores best, and above the aim every
     world a dose reaches is worse than standing still.
     """
-    from agent.desire import Desire
+    from modality.desire import Desire
 
     deliberator = gardener.deliberator
     #  The world holds the value; the want does not. Written OLD, so the freshness want the

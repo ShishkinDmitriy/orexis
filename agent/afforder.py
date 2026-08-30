@@ -21,8 +21,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .ontology import AG, STATE_GRAPH
-from .store import bindings
+from modality.ontology import AG, STATE_GRAPH
+from modality.store import bindings
 
 @dataclass(frozen=True)
 class Affordance:

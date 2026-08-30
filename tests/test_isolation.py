@@ -18,7 +18,7 @@ import pytest
 
 from agent import ratified
 from onboarding import influx as influx_admin, mqtt as mqtt_admin
-from agent.ontology import AG, WORLD_GRAPH
+from modality.ontology import AG, WORLD_GRAPH
 from onboarding.namespaces import MARKET, MQTT, SENSING
 from conftest import build_agent, genesis_store, shipped_worlds
 

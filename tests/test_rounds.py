@@ -30,7 +30,7 @@ def market_of(agent):
 
 
 def _row_terms(agent, uri):
-    from agent.store import bindings
+    from modality.store import bindings
     return {r["p"] for r in bindings(agent.beliefs.query(
         f"SELECT ?p WHERE {{ GRAPH ?g {{ <{uri}> ?p ?o }} }}"))}
 
@@ -143,7 +143,7 @@ def test_the_housekeeping_clock_retracts_what_the_round_clock_ended(make):
 def test_the_fact_is_in_the_belief_modality_where_the_sovereign_asks(make):
     """`orexis-ask <world> fern beliefs 'SELECT …'` reads the belief store; the round is
     there as an ordinary fact, keyed by the venue the T-Box already names."""
-    from agent.store import bindings
+    from modality.store import bindings
 
     fern = make("fern", genesis_store({"fern": 0.10}))
     market = market_of(fern)

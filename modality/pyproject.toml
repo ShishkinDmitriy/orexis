@@ -1,0 +1,34 @@
+# orexis-modality
+#
+# The mind's stores — the floor of the layered kernel, and the first layer to become a root
+# distribution of its own (a-layer-is-a-distribution, #451). The layers mostly do not call each
+# other; they meet at the belief base, which is why this tree sits beneath them all: it imports
+# `assembly` and nothing above itself, and the layers import it. NOT a member of `packages/` —
+# the granted tree is for what a world can grant, and a modality is unconditional: every agent
+# holds its stores because it exists, not because anything was judged at genesis.
+[project]
+name = "orexis-modality"
+version = "0.1.0"
+description = "The mind's stores — the modalities every layer meets at, importing no layer"
+requires-python = ">=3.10"
+dependencies = [
+    # `assembly` — the store reads every package's namespaces off the loader and the desire
+    # modality collects the packages' desires.ru; assembly is beneath this tree exactly as
+    # this tree is beneath the layers. `assembly` ships in the root distribution, and that is
+    # why the arrow below points at `orexis` — the metadata cycle this creates with the root
+    # (whose agent/ imports this tree) is the shared distribution's, not the layering's, and
+    # it dissolves the day assembly is a distribution of its own (#452's seam).
+    "orexis",
+    "pyoxigraph>=0.4",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# A TOP-LEVEL module claimed by this distribution alone, exactly as every package claims its
+# own — the directory is the module is the tree, one thing under three spellings minus the
+# `orexis-` prefix a root tree does not carry (assembly, agent and onboarding do not either).
+packages = ["modality"]
+package-dir = {"modality" = "."}

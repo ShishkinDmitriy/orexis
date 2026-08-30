@@ -347,7 +347,7 @@ stops being theoretical.
 
 ```bash
 source .venv/bin/activate
-pip install -e . $(ls -d packages/*/)   # 22 distributions; or `uv sync --all-packages`
+pip install -e . -e modality/ $(ls -d packages/*/)   # 23 distributions; or `uv sync --all-packages`
 
 orexis-validate <world> # build the world from its files and hold it to every package's shapes
 orexis-onboard <world>       # ONBOARDING: validate, then grant everything below. One command.

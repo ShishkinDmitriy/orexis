@@ -24,7 +24,7 @@ from __future__ import annotations
 import rdflib
 
 from . import genesis
-from .store import Store
+from modality.store import Store
 
 # Re-exported, because every tool that reads a ratified world reaches for these in the same
 # breath as `dataset()` and should not have to know that one lives in `genesis`.

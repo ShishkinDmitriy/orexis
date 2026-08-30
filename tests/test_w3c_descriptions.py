@@ -29,8 +29,8 @@ import rdflib
 from pyshacl import validate as shacl_validate
 
 from agent import genesis
-from agent.ontology import PROVENANCE_GRAPH, beliefs_graph
-from agent.store import Store
+from modality.ontology import PROVENANCE_GRAPH, beliefs_graph
+from modality.store import Store
 from agent.validate import _shapes_and_vocabulary, conforms, graph_from
 
 from conftest import WORLDS_ROOT

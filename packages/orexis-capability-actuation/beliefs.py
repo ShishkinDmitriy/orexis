@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from agent.beliefs import Picks
+from modality.beliefs import Picks
 
 from .terms import ACTUATION, term
 

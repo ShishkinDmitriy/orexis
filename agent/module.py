@@ -16,12 +16,12 @@ See knowledge/decisions/capability-packages.md.
 
 from __future__ import annotations
 
-from .ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, QUIET, REPORTS,
+from modality.ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, QUIET, REPORTS,
                        SEND, SERIES, SIZE, SWEEP, TAKE)
 
 from datetime import datetime
 
-from .desire import Desire
+from modality.desire import Desire
 
 import json
 import logging

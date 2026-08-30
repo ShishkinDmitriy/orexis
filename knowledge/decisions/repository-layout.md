@@ -62,10 +62,11 @@ So the split went, and the intent became two things that fail when violated:
 `import onboarding.mqtt` to `agent/runtime.py` turns the contract BROKEN, and adding
 `COPY onboarding/` fails two tests. A guard never seen to fail is a guard nobody has tested.
 
-The image is two directories and neither is onboarding. Measured on the built image at the time:
-`/app/onboarding` does not exist and `import onboarding` raises `ModuleNotFoundError`. They were
-`agent/` and `vocabulary/` then and are `agent/` and `packages/` now — the count is what the
-boundary test asserts, not the names.
+The image is a handful of directories and none is onboarding. Measured on the built image at
+the time: `/app/onboarding` does not exist and `import onboarding` raises `ModuleNotFoundError`.
+They were `agent/` and `vocabulary/` then, became `agent/` and `packages/`, and `assembly/`,
+`modality/` and `firmware/`'s ontologies have since joined — the membership is what the boundary
+test asserts, not the names or the count.
 
 # Why capabilities lived inside the agent and the vocabulary did not — AMENDED
 
@@ -81,7 +82,7 @@ it, and vocabulary, genuinely shared, stayed at the root where neither half owne
 What changed is not that fact but what expresses it. There is ONE tree now,
 `packages/<family>/<name>/`, so the layout no longer *shows* which Python a runtime loads — and
 the import contracts and the `Containerfile` carry the boundary alone. The pleasant consequence
-noted below survived: the image's copy list is still two directories, which is still what makes
+noted below survived: the image's copy list is still a few named trees, which is still what makes
 the boundary test trivial. See
 [one-tree-and-one-mechanic](/decisions/one-tree-and-one-mechanic.md).
 
@@ -111,10 +112,12 @@ of one.
 onboarding tools had already moved out and what remained was precisely what an agent runs.
 
 `agent` rather than `orexis` because the whole project is orexis; a component inside it called orexis
-is the same redundancy as `onboarding/src/onboarding`. The known cost is that onboarding imports
-`from agent.ontology import …`, which reads like a layering smell even though the direction is
-correct. The import contract states the rule explicitly, so the name surprises and the contract
-does not.
+is the same redundancy as `onboarding/src/onboarding`. The known cost was that onboarding imported
+`from agent.ontology import …`, which read like a layering smell even though the direction is
+correct; since [a-layer-is-a-distribution](a-layer-is-a-distribution.md) the kernel vocabulary is
+the store tree's and the spelling is `from modality.ontology import …`, which reads as the
+layering it is. The import contract states the rule explicitly, so the name surprises and the
+contract does not.
 
 `packages/core/orexis` and `packages/orexis-plant-water` rather than `kernel/` and `domain/water/`: at the
 time those two were the only trees with no Python at all, which is exactly what they had in
@@ -143,10 +146,17 @@ Python — `terms.py`'s equivalent — was always next door.
   85 MB of the 230 is the glibc base. Not taken, because `pyshacl` and `rdflib` recurse over graphs
   and musl gives threads a much smaller default stack, and that risk is untested for a saving that
   does not matter on a machine with 10 GB free.
-- **The model is not a third package.** `agent` holds both the runtime and the model onboarding
+- ~~**The model is not a third package.** `agent` holds both the runtime and the model onboarding
   reads. Extracting a shared core was proposed twice and declined twice: the dependency is already
   one-way and acyclic, the shared surface is seven modules, and a third distribution would buy a
-  boundary the import contract already states.
+  boundary the import contract already states.~~ Overturned by
+  [a-layer-is-a-distribution](a-layer-is-a-distribution.md), and for a reason this seam never
+  weighed: the extraction that landed (#451) is not a shared core for onboarding's sake but the
+  floor of the kernel's own layering — the mind's stores, `modality/`, a root distribution the
+  layers import and that imports no layer. What made a third distribution worth having was
+  [every-package-is-a-project](every-package-is-a-project.md): a distribution boundary is now
+  held to its imports in both directions, so it fails when violated instead of merely stating
+  what a contract already stated.
 
 # Capability-specific dependencies (settled when Consulting came into view)
 

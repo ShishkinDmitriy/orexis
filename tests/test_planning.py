@@ -20,7 +20,7 @@ import pytest
 import rdflib
 
 from agent import effects
-from agent.ontology import DELIBERATION_GRAPH, STATE_GRAPH
+from modality.ontology import DELIBERATION_GRAPH, STATE_GRAPH
 from agent import planner as search, trace
 from agent.planner import Planner
 
@@ -142,7 +142,7 @@ def test_a_search_that_could_not_see_every_lever_says_so_and_has_nowhere_to_defe
     cannot see the water lever should conclude and exactly why the world is refused before it
     can run.
     """
-    from agent.ontology import ACTIONS_GRAPH
+    from modality.ontology import ACTIONS_GRAPH
 
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
     st = genesis_store({("fern", MOISTURE): 0.30})
@@ -174,7 +174,7 @@ def test_a_possible_world_is_computed_and_nothing_is_written(monkeypatch):
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): DRY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    from agent.ontology import STATE_GRAPH, beliefs_graph
+    from modality.ontology import STATE_GRAPH, beliefs_graph
     from agent.validate import graph_from
 
     before = graph_from(st, *st.public_graphs(), beliefs_graph("gardener"), STATE_GRAPH)
@@ -308,7 +308,7 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     as the claim rather than the comparison, because the reflex it was compared against has
     since been deleted. What must be true is the cede itself, on both sides of the aim.
     """
-    from agent.desire import Desire
+    from modality.desire import Desire
 
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
     fern = build_agent("fern", genesis_store(), monkeypatch)

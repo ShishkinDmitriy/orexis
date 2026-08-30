@@ -35,12 +35,12 @@ from datetime import datetime, timedelta, timezone
 from agent import signing
 from .trade import EPS, Bid
 from agent.module import Module, Timer, contributes
-from agent.ontology import HANDLE, SUBSCRIPTIONS, SWEEP
+from modality.ontology import HANDLE, SUBSCRIPTIONS, SWEEP
 
 SENSING_URGENCY = "http://example.org/orexis/sensing#urgency"       # sensing's hook, spelled as every cross-package reference is
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"
-from agent.ontology import ONTOLOGY_GRAPH
-from agent.store import bindings
+from modality.ontology import ONTOLOGY_GRAPH
+from modality.store import bindings
 
 from . import rounds, wallet
 from .wiring import bidding_markets_of

@@ -206,7 +206,7 @@ package author previously had to learn by reading other packages.
 | another package's *contract* (a base class) | an ordinary import of its `contract` module — never its implementation |
 
 ```python
-from agent.beliefs import Beliefs
+from modality.beliefs import Beliefs
 from agent.metrics import Metrics
 
 class MyModule(Module):

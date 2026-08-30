@@ -1,6 +1,7 @@
 """Every package is a project, and a project declares exactly what it imports.
 
-Twenty-two distributions, each owning a top-level module of its own. What makes that more than ceremony is
+Twenty-three distributions — twenty-one packages, the root, and the mind's stores (#451) — each
+owning a top-level module of its own. What makes that more than ceremony is
 the DEPENDENCY GRAPH — `orexis-codec-json` needs `orexis-capability-sensing` because it
 implements sensing's `Codec`, and says so — and a dependency list is only worth reading if
 something holds it to the imports. Nothing did, and two errors were sitting in the root's list
@@ -205,6 +206,21 @@ def test_the_root_declares_exactly_what_its_own_trees_import():
         f"  unused:  {sorted(have - want) or 'none'}")
 
 
+def test_the_stores_declare_exactly_what_they_import():
+    """`orexis-modality` — the mind's stores, the first layer extracted to a root distribution
+    (a-layer-is-a-distribution, #451) — answers to the same gate as every package, in both
+    directions. The list it is held to is the layering: `assembly` (through the root
+    distribution, knowingly a cycle while `assembly` ships inside `orexis`) and the store
+    engine, and NOTHING above itself — a layer arriving in this list is the floor reaching up.
+    """
+    want = needed(REPO_ROOT / "modality", own_import_root="modality")
+    have = declared(REPO_ROOT / "modality" / "pyproject.toml")
+    assert have == want, (
+        "modality/pyproject.toml is out of step with its imports.\n"
+        f"  missing: {sorted(want - have) or 'none'}\n"
+        f"  unused:  {sorted(have - want) or 'none'}")
+
+
 def test_the_root_distribution_claims_no_package():
     """Each package installs itself; the root claiming `packages*` would shadow all of them."""
     config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
@@ -215,13 +231,18 @@ def test_the_root_distribution_claims_no_package():
 
 
 def test_the_workspace_holds_every_package():
-    """`uv sync --all-packages` must reach all of them, so the glob has to actually match."""
+    """`uv sync --all-packages` must reach all of them, so the glob has to actually match.
+
+    Plus exactly one member that is not a package: `modality/`, the mind's stores — a root
+    tree with a distribution of its own (#451), named in the member list rather than globbed
+    because the granted tree is for what a world can grant and a layer is unconditional.
+    """
     config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
     members = config["tool"]["uv"]["workspace"]["members"]
     matched = {p for pattern in members for p in REPO_ROOT.glob(pattern) if p.is_dir()}
-    assert matched == set(package_dirs()), (
-        f"the workspace glob {members} misses "
-        f"{sorted(p.name for p in set(package_dirs()) - matched)}")
+    assert matched == set(package_dirs()) | {REPO_ROOT / "modality"}, (
+        f"the workspace members {members} miss "
+        f"{sorted(p.name for p in (set(package_dirs()) | {REPO_ROOT / 'modality'}) - matched)}")
 
 
 @pytest.mark.parametrize("pkg", package_dirs(), ids=lambda p: p.name)

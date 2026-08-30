@@ -33,8 +33,8 @@ from urllib.parse import quote
 
 import pyoxigraph as ox
 
-from .ontology import GRAPH_PREFIX
-from .store import Store
+from modality.ontology import GRAPH_PREFIX
+from modality.store import Store
 
 #  Where a node's readings sit. Under the same root as every other graph, because a graph IRI is
 #  a graph IRI — but in a store nothing else can open, which is what keeps `ag:PossibleGraph`'s

@@ -18,8 +18,8 @@ import pytest
 from orexis_capability_market.terms import ACQUIRING
 from orexis_capability_actuation.terms import DOSING as _ACTUATE
 
-from agent.store import bindings
-from agent.ontology import AG
+from modality.store import bindings
+from modality.ontology import AG
 
 from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of
 

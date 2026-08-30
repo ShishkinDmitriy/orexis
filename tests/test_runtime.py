@@ -8,7 +8,7 @@ import logging
 
 import pytest
 
-from agent.ontology import HANDLE
+from modality.ontology import HANDLE
 from conftest import build_agent, wired_actuators, wired_hosted_markets, wired_markets, wired_sensors
 
 

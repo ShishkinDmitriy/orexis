@@ -24,7 +24,7 @@ import importlib.util
 import pathlib
 import subprocess
 
-SHIPPED = ("agent/", "packages/", "onboarding/")
+SHIPPED = ("agent/", "modality/", "packages/", "onboarding/")
 
 
 def _resolves(module: str, name: str) -> bool:

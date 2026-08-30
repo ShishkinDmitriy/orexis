@@ -16,8 +16,8 @@ from __future__ import annotations
 import pytest
 
 from agent import genesis, vocabulary
-from agent.ontology import AG, beliefs_graph
-from agent.store import Store, bindings
+from modality.ontology import AG, beliefs_graph
+from modality.store import Store, bindings
 
 from conftest import WORLDS_ROOT, genesis_store
 

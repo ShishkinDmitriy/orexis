@@ -36,7 +36,9 @@ CONTAINERFILE = REPO_ROOT / "Containerfile"
 #  .containerignore exception narrows the COPY to them; the test below holds both halves.
 #  `assembly` is what FINDS packages, so an agent that loads any needs it — the kernel is
 #  one of the things it assembles (the-assembly-is-not-the-mind).
-ALLOWED_TREES = {"assembly", "agent", "packages", "firmware"}
+#  `modality` is the mind's stores — the floor the kernel's layers meet at, a root
+#  distribution of its own since a-layer-is-a-distribution (#451), and every agent runs it.
+ALLOWED_TREES = {"assembly", "agent", "modality", "packages", "firmware"}
 
 # Never in an agent image. `orexis-influx` reads the admin token, which opens every bucket in the
 # store and which no agent may ever hold; the surest guarantee is that the code using it is
@@ -404,8 +406,8 @@ def test_the_society_repeats_every_limit_the_wiring_states():
     """
     from agent import genesis, inference
     from assembly import loader
-    from agent.ontology import ONTOLOGY_GRAPH, WORLD_GRAPH
-    from agent.store import Store, bindings
+    from modality.ontology import ONTOLOGY_GRAPH, WORLD_GRAPH
+    from modality.store import Store, bindings
 
     t_box = "\n".join(path.read_text() for path in loader.ontology_files())
 
@@ -813,8 +815,8 @@ def test_what_the_kernel_offers_is_reachable_by_its_class(monkeypatch):
     registered under something a package cannot name is the twelve undeclared attributes this
     design was written against, wearing a registry.
     """
-    from agent.beliefs import Beliefs
-    from agent.desire import Desires
+    from modality.beliefs import Beliefs
+    from modality.desire import Desires
     from agent.metrics import Metrics
     from conftest import build_agent
 

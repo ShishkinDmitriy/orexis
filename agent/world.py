@@ -19,8 +19,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .ontology import WORLD_GRAPH
-from .store import QueryFn, bindings
+from modality.ontology import WORLD_GRAPH
+from modality.store import QueryFn, bindings
 
 
 class WorldError(RuntimeError):

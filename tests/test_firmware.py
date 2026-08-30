@@ -17,7 +17,7 @@ import pytest
 import rdflib
 
 from agent import ratified
-from agent.ontology import WORLD_GRAPH
+from modality.ontology import WORLD_GRAPH
 from onboarding.namespaces import SENSING
 from onboarding.firmware import _BOARDS_Q, _optional_pins
 
@@ -59,7 +59,7 @@ def test_a_board_with_no_led_still_generates():
     # premise goes (the deployment stops deploying the LED) and, because the dataset has
     # already computed its closure, the conclusion is removed where it landed. A real rewiring
     # edits hardware.ttl and the next genesis entails the smaller hosting by itself.
-    from agent.ontology import WORLD_ENTAILED_GRAPH
+    from modality.ontology import WORLD_ENTAILED_GRAPH
     ds.update(f"""
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?d <http://www.w3.org/ns/ssn/deployedSystem> ?led }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?d <http://www.w3.org/ns/ssn/deployedSystem> ?led .

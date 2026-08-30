@@ -13,8 +13,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from agent.ontology import STATE_GRAPH
-from agent.store import bindings
+from modality.ontology import STATE_GRAPH
+from modality.store import bindings
 
 
 @dataclass(frozen=True)

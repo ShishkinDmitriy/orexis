@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Orexis — a market society of agents that bid for a scarce resource"
 requires-python = ">=3.10"
 
-# `orexis` is ASSEMBLY, the KERNEL and the OPERATOR'S TOOLS — the three trees at the repo root.
+# `orexis` is ASSEMBLY, the KERNEL and the OPERATOR'S TOOLS — three of the four trees at the
+# repo root. The fourth, `modality/`, is the mind's stores and a distribution of its own
+# (a-layer-is-a-distribution, #451).
 # Every package under `packages/` is its own project with its own dependencies, and this one
 # does not depend on any of them: the kernel loads packages and never needs one, which is a
 # claim `pip install -e .` alone now demonstrates. See knowledge/decisions/every-package-is-a-project.md.
@@ -18,6 +20,13 @@ requires-python = ">=3.10"
 # Every name below is imported by `agent/` or `onboarding/`. Nothing else is listed, and
 # tests/test_layout.py holds this list to exactly what those two trees import.
 dependencies = [
+    #  The mind's stores, a root distribution of their own since a-layer-is-a-distribution
+    #  (#451): `agent/` and `onboarding/` import `modality`, so the arrow is declared. This is
+    #  a knowing CYCLE with orexis-modality, which depends back on `orexis` for `assembly` —
+    #  the cycle belongs to the shared root distribution, not to the layering (the imports are
+    #  acyclic: assembly < modality < agent), and it dissolves when assembly becomes a
+    #  distribution of its own. It is why the Containerfile installs the two together.
+    "orexis-modality",
     #  assembly/ and agent/ — rdflib is DIRECT (nine imports across the three trees) and used
     #  to arrive only as a transitive of pyshacl, which is free to drop or re-pin it.
     "rdflib>=7",
@@ -70,11 +79,13 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-# Three roots at the repo top: what assembles a build, the kernel it assembles onto, and the
-# operator's tools. `packages*` is NOT among them — every package installs itself, claiming its
-# own leaf and leaving `packages/` and `packages/<family>/` unclaimed as PEP 420 namespace
-# portions. That is what lets a twenty-second package be installed from another repository and
-# land in the same namespace as these twenty-one.
+# Three of the four roots at the repo top: what assembles a build, the kernel it assembles
+# onto, and the operator's tools. `packages*` is NOT among them — every package installs
+# itself, claiming its own leaf and leaving `packages/` and `packages/<family>/` unclaimed as
+# PEP 420 namespace portions. That is what lets a twenty-second package be installed from
+# another repository and land in the same namespace as these twenty-one. `modality*` is not
+# among them either, for the adjacent reason: the mind's stores are their own distribution
+# (a-layer-is-a-distribution, #451), and the root claiming the tree would shadow it.
 where = ["."]
 include = ["assembly*", "agent*", "onboarding*"]
 
@@ -88,7 +99,10 @@ include = ["assembly*", "agent*", "onboarding*"]
 # does — ONE level, since a package's directory is its distribution name and has no family
 # directory above it. Nothing here requires uv to run an agent.
 [tool.uv.workspace]
-members = ["packages/*"]
+# `modality/` is named, not globbed: it is a root tree, not a package, and the one other
+# distribution this repository ships (a-layer-is-a-distribution). Layers extracted after it
+# join this list by name for the same reason.
+members = ["packages/*", "modality"]
 
 # An entry here answers ONE question: when a member declares a dependency on this NAME, does it
 # come from the workspace or from an index? So a name that nothing depends on needs no entry —
@@ -105,6 +119,7 @@ members = ["packages/*"]
 # it; otherwise adding a package stays what the README claims it is — adding a directory.
 [tool.uv.sources]
 orexis = { workspace = true }                    # every package: `from assembly import contributes`
+orexis-modality = { workspace = true }           # the root and six capabilities: the mind's stores
 orexis-capability-sensing = { workspace = true } # codec-json, scaling-identity, transport-mqtt
 
 [tool.pytest.ini_options]
@@ -173,7 +188,7 @@ pythonpath = ["tests"]
 #
 #   .venv/bin/lint-imports
 [tool.importlinter]
-# THREE root packages, not four. `packages` used to be one, and it stopped being a module the
+# FOUR root packages. `packages` used to be one, and it stopped being a module the
 # day a package became a top-level distribution of its own: there is no shared import root left
 # to name, and `orexis_*` is NOT a valid module expression — grimp rejects a wildcard that
 # matches part of a segment, measured before this was rewritten rather than after.
@@ -181,18 +196,29 @@ pythonpath = ["tests"]
 # So the three contracts that mentioned packages moved to `tests/test_layering.py`, which finds
 # them by looking exactly as the loader does. That is stricter than what it replaced, not looser:
 # listing twenty-one modules here would have been a registry, and a registry goes stale the
-# first time somebody adds a package and forgets this file. The two contracts left are between
-# the three trees of the root distribution, which are fixed and few.
-root_packages = ["assembly", "agent", "onboarding"]
+# first time somebody adds a package and forgets this file. The contracts left are between
+# the root trees, which are fixed and few — three of the root distribution's, plus `modality`,
+# the mind's stores, the first layer extracted to a distribution of its own (#451).
+root_packages = ["assembly", "agent", "modality", "onboarding"]
 
 [[tool.importlinter.contracts]]
-# ASSEMBLY IS UNDER EVERYTHING. It finds packages and owns the extension mechanism; the kernel
-# is one of the things it assembles, so it must not know the kernel exists. It names `agent/` by
-# PATH — a directory it merges first — and never by import (the-assembly-is-not-the-mind).
+# ASSEMBLY IS UNDER EVERYTHING — beneath the stores too. It finds packages and owns the
+# extension mechanism; the kernel is one of the things it assembles, so it must not know the
+# kernel exists. It names `agent/` by PATH — a directory it merges first — and never by import
+# (the-assembly-is-not-the-mind).
 # That it imports no PACKAGE either is asserted in tests/test_layering.py.
 name = "What assembles a build does not import what it assembles"
 type = "forbidden"
 source_modules = ["assembly"]
+forbidden_modules = ["agent", "modality", "onboarding"]
+
+[[tool.importlinter.contracts]]
+# THE STORES ARE THE FLOOR. The layers mostly do not call each other; they meet at the belief
+# base, so the tree that holds it imports `assembly` and nothing above itself
+# (a-layer-is-a-distribution). `agent/` — the layers, until #452 splits them — imports it.
+name = "The mind's stores import no layer"
+type = "forbidden"
+source_modules = ["modality"]
 forbidden_modules = ["agent", "onboarding"]
 
 [[tool.importlinter.contracts]]

@@ -58,7 +58,7 @@ from . import certs
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
 from orexis_capability_market.terms import NS as MARKET
-from agent.ontology import AG, WORLD_GRAPH
+from modality.ontology import AG, WORLD_GRAPH
 from .namespaces import ACTUATION, MQTT, SENSING, SIM
 log = logging.getLogger("mqtt")
 

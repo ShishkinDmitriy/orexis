@@ -43,12 +43,12 @@ from __future__ import annotations
 from datetime import timedelta, datetime, timezone
 from pathlib import Path
 
-from agent.desire import Desire
+from modality.desire import Desire
 from .driver import driver_for
 from agent.module import Module, contributes
-from agent.ontology import HANDLE, SUBSCRIPTIONS
-from agent.ontology import STATE_GRAPH, beliefs_graph
-from agent.store import bindings
+from modality.ontology import HANDLE, SUBSCRIPTIONS
+from modality.ontology import STATE_GRAPH, beliefs_graph
+from modality.store import bindings
 
 
 from . import pointer

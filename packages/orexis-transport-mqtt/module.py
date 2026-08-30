@@ -28,8 +28,8 @@ import paho.mqtt.client as mqtt
 
 from agent import config
 from agent.module import Module, contributes
-from agent.ontology import HANDLE, SEND, SUBSCRIPTIONS
-from agent.store import bindings
+from modality.ontology import HANDLE, SEND, SUBSCRIPTIONS
+from modality.store import bindings
 
 from .watchdog import BusWatchdog
 

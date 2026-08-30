@@ -36,8 +36,8 @@ import time
 
 from .metrics import tree_bytes
 from .module import Timer
-from .ontology import SWEEP
-from .store import bindings
+from modality.ontology import SWEEP
+from modality.store import bindings
 
 log = logging.getLogger("upkeep")
 
