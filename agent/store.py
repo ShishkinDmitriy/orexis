@@ -226,10 +226,17 @@ class Store:
         should: a possible world is computed and dropped, so the only honest return here is the
         triples themselves.
 
-        Reads the same public default graph an ordinary query does, so a rule sees the world
-        and the vocabulary and not another agent's beliefs.
+        Reads the public graphs AND this agent's own, so a rule sees the world it is asked
+        about — never another agent's, because there is no such graph in this store to see.
+
+        The agent's own were added when the obligations ledger stopped being the kernel's: a
+        rule that must name `GRAPH $owed` to reach a record is a rule whose graph somebody
+        outside the package has to know, and the planner was substituting it. Widening the
+        union lets a package's rule match `?o a ag:Obligation` and find its own record without
+        anyone naming a graph — which is rule 1 for graph IRIs, applied to the one road that
+        had been exempt.
         """
-        public = [ox.NamedNode(g) for g in self.public_graphs()]
+        public = [ox.NamedNode(g) for g in (*self.public_graphs(), *self.recorded_graphs())]
         return list(self._store.query(PREFIXES + sparql, default_graph=public))
 
     # Kept so callers written against the old two-door store still read: with one private store
