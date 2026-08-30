@@ -23,10 +23,10 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from .desire import Desire
-from .module import Module
-from .ontology import AG, obligations_graph
-from .store import bindings
+from agent.desire import Desire
+from agent.module import Module
+from agent.ontology import AG, obligations_graph
+from agent.store import bindings
 
 #  What I owe, as rows — the obligation branch of what used to be one shipped `desires.rq` for every
 #  kind of want. The stakes and the freshness wants went to sensing with the region

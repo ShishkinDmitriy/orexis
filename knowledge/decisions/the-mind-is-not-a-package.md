@@ -34,7 +34,7 @@ dissolve:
 | was | is | granted by |
 |---|---|---|
 | `desire:Deducing` | nothing left in the kernel: the region, the gap and the aim went on to sensing — [the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md) | nothing |
-| `desire:Owing` | `agent/ower.py` | nothing |
+| `desire:Owing` | `packages/orexis-capability-market/ower.py` | nothing |
 | `intention:Keeping` | `agent/keeper.py` | nothing |
 | `deliberation:Reflex`, `deliberation:Planning` | `agent/deliberator.py` — ONE class | nothing |
 

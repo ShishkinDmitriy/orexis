@@ -43,7 +43,6 @@ from .desire import Desire, Desires
 from .reviser import Reviser
 from .intentions import Intentions
 from .keeper import Keeper
-from .ower import Ower
 from .metrics import Metrics
 from .upkeep import BeliefBaseUpkeep
 from .store import bindings
@@ -80,7 +79,7 @@ SELECT ?capability WHERE {{
 #  WHAT EVERY AGENT HAS, as classes, so `orexis-validate` can check a package's `@requires`
 #  without constructing anything. Registered from the live objects below; this is the same
 #  seven, said statically.
-KERNEL_SERVICES = (Beliefs, Desires, Intentions, Keeper, Deliberator, Ower, Metrics)
+KERNEL_SERVICES = (Beliefs, Desires, Intentions, Keeper, Deliberator, Metrics)
 
 
 class Agent:
@@ -173,19 +172,18 @@ class Agent:
         # writes it was a grant. A modality nobody may write is not a modality.
         self.keeper = Keeper(self)
 
-        # The DEDUCER and the LEDGER OF DEBTS, completing the mind. Both were capabilities —
-        # one granted by a stake, one by a lever others may demand — and both read a store the
-        # kernel had already built for every agent. What an agent WANTS is the last of the six
-        # modalities to stop being optional.
-        self.ower = Ower(self)
-
-        self.modules += [self.deliberator, self.keeper, self.ower]
+        #  THE LEDGER OF DEBTS IS NOT HERE, and the reason is the one sensing already
+        #  demonstrates: a package may write a graph the kernel declares. The kernel owns the
+        #  obligation MODALITY — the class, the graph, its classification, and the branches
+        #  that rank a debt against a want — and market owns incurring one, which is the only
+        #  half that was ever a market's. See knowledge/domain/obligation.md.
+        self.modules += [self.deliberator, self.keeper]
         #  WHAT THE KERNEL OFFERS, keyed by the CLASS of each — the thing a package imports
         #  anyway to type its own code, so there is no parallel naming system to keep in step.
         #  Named in `KERNEL_SERVICES` rather than listed inline, so a gate can know what the
         #  kernel offers WITHOUT building an agent (an-injected-service-is-reached-by-term).
         for value in (self.beliefs, self.desires, self.intentions,
-                      self.keeper, self.deliberator, self.ower, self.metrics):
+                      self.keeper, self.deliberator, self.metrics):
             self.offering(type(value), value)
 
 

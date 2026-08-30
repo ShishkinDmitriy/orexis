@@ -763,9 +763,10 @@ def desire_of(agent):
 
 
 def ledger_of(agent):
-    """Whoever keeps this agent's debts — its own capability since #233, because owing is
-    granted by holding a lever others may demand and not by having a stake of one's own."""
-    return next(m for m in agent.modules if m.name == "owing")
+    """Whoever keeps this agent's debts — HOSTING's, because only a host owes: a debt arises
+    from a claim this agent issued. It is no longer a module of its own, so it is reached
+    through the one that holds it rather than found in the choir."""
+    return next(m for m in agent.modules if m.name == "hosting").ledger
 
 
 def test_a_claim_issued_is_a_debt_the_host_holds_as_a_want(host):

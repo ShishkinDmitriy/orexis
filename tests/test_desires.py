@@ -105,8 +105,16 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them(mo
 
     fern = build_agent("fern", st, monkeypatch)
 
+    #  THE LEDGER IS CONSTRUCTED, not reached through the agent: it is hosting's since the
+    #  ledger moved into the market package, and fern bids rather than hosts. What is under
+    #  test is the urgency curve of a debt, which is the ledger's arithmetic and needs no
+    #  host to exercise.
+    from orexis_capability_market.ower import Ower
+
+    ledger = Ower(fern)
+
     def duty_at(offset_s):
-        return next(g for g in fern.ower.desires(now=owed + timedelta(seconds=offset_s))
+        return next(g for g in ledger.desires(now=owed + timedelta(seconds=offset_s))
                     if g.is_obligation)
 
     assert duty_at(0).urgency == 0.0
