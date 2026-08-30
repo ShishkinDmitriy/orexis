@@ -34,16 +34,16 @@ import json
 from agent import signing
 from .auction import run_auction
 from .trade import EPS, Bid, Limits, MarketState, Offer
-from agent.desire import Desire
+from orexis_modality_graph.desire import Desire
 
 from .ower import Ower
 from agent.module import Module, Timer, contributes
-from agent.ontology import HANDLE, SUBSCRIPTIONS
+from orexis_modality_graph.ontology import HANDLE, SUBSCRIPTIONS
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
 from agent.act import Act
-from agent.ontology import WORLD_GRAPH
-from agent.store import bindings
+from orexis_modality_graph.ontology import WORLD_GRAPH
+from orexis_modality_graph.store import bindings
 
 from . import calls, rounds
 from .wiring import allocation_ceilings, hosted_markets_of, node_of, participants
@@ -248,7 +248,7 @@ SELECT ?p WHERE {{
         None for anything that is not a call."""
         if not desire.uri.startswith(f"{calls.NS}call_"):
             return None
-        from agent.ontology import beliefs_graph
+        from orexis_modality_graph.ontology import beliefs_graph
 
         rows = bindings(query(f"""
 SELECT ?r WHERE {{

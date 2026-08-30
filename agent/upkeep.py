@@ -36,8 +36,8 @@ import time
 
 from .metrics import tree_bytes
 from .module import Timer
-from .ontology import SWEEP
-from .store import bindings
+from orexis_modality_graph.ontology import SWEEP
+from orexis_modality_graph.store import bindings
 
 log = logging.getLogger("upkeep")
 

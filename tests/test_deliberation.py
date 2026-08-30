@@ -23,7 +23,7 @@ from agent.afforder import affordances_of
 from orexis_capability_market.terms import ACQUIRING
 from orexis_capability_sensing.terms import OBSERVING
 
-from agent.ontology import beliefs_graph
+from orexis_modality_graph.ontology import beliefs_graph
 from orexis_capability_sensing.regions import ObservedDesire
 from conftest import stake_of, MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for, wired_markets, wired_sensors, write_reading
 
@@ -133,7 +133,7 @@ def test_below_the_aim_means_pursue_and_above_means_nothing(make):
     safe — and they disagree exactly where the old answer was wrong, which
     `tests/test_planning.py` measures on a plant sitting above its region.
     """
-    from agent.desire import Desire
+    from orexis_modality_graph.desire import Desire
 
     fern = make("fern")
     open_round_for(fern, "fern")   # a buying row exists only while a round is open (#358)
@@ -164,7 +164,7 @@ def test_a_property_this_agent_cannot_move_is_not_pursued(make):
     desire it could rank; the reflex's aim clause had been unreachable for a measurable want
     since simulation landed. What answers now is the honest fact: no lever, no move.
     """
-    from agent.desire import Desire
+    from orexis_modality_graph.desire import Desire
 
     fern = make("fern")
     stake = ObservedDesire(uri=stake_of(fern, TEMPERATURE).uri, urgency=0.4,
@@ -260,8 +260,8 @@ def test_the_sign_is_the_packages_statement_and_not_this_codes(make):
     itself is untouched here, which is the point — it steers nothing now, and its retirement
     rides with repair-matching rather than with this test.
     """
-    from agent.desire import Desire
-    from agent.ontology import ACTIONS_GRAPH
+    from orexis_modality_graph.desire import Desire
+    from orexis_modality_graph.ontology import ACTIONS_GRAPH
 
     ds = genesis_store()
     ds.update(f"""
@@ -346,7 +346,7 @@ def test_a_market_no_valve_connects_to_your_pot_is_no_lever(make):
     Cut the pipe and the row vanishes: fern still bids in a market, the domain still prices
     moisture, but a delivery that cannot reach your pot is, for you, no lever at all — and
     the reflex must not be offered a move that moves nothing."""
-    from agent.ontology import WORLD_GRAPH
+    from orexis_modality_graph.ontology import WORLD_GRAPH
 
     st = genesis_store()
     st.update(f"""DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
@@ -374,7 +374,7 @@ def test_two_denominations_make_two_rows_and_never_four(make):
     imply; the goods and the valuation are the test's own, because no shipped domain sells
     drying yet — the day one does, this fixture retires into its ontology.
     """
-    from agent.ontology import WORLD_GRAPH
+    from orexis_modality_graph.ontology import WORLD_GRAPH
 
     ns = "http://example.org/orexis/world/simulation#"
     market = "http://example.org/orexis/market#"
@@ -474,7 +474,7 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     chosen rows for anything that is not an obligation — the same filter the chain applied, for the
     same reason, one road further along.
     """
-    from agent.desire import Desire
+    from orexis_modality_graph.desire import Desire
 
     supplier = make("supplier")
     rows = affordances_of(supplier.beliefs.query, supplier.me.uri, supplier.desires.query_union, beliefs_graph(supplier.id))
@@ -509,7 +509,7 @@ def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
     counterparty. A host with two buyers must not serve one's claim through the other's valve,
     which is why the match is on the agent and not on the mode alone.
     """
-    from agent.desire import Desire
+    from orexis_modality_graph.desire import Desire
 
     supplier = make("supplier")
     obligation = Desire(uri="urn:o", urgency=0.9, claim="j-1",
@@ -528,7 +528,7 @@ def test_an_unpresented_duty_is_hot_and_still_not_acted_on(make):
     strength of urgency alone would spend the water where nothing is looking — and a debt
     approaching its deadline that nobody has presented is exactly the case where the two
     answers differ."""
-    from agent.desire import Desire
+    from orexis_modality_graph.desire import Desire
 
     supplier = make("supplier")
     standing = Desire(uri="urn:o", urgency=0.99, claim="j-3", pursuable=False,
@@ -550,7 +550,7 @@ def test_a_search_that_answers_nothing_proposes_nothing(make, monkeypatch):
     cannot claim about itself.
     """
     from agent import planner as search
-    from agent.desire import Desire
+    from orexis_modality_graph.desire import Desire
     from agent.planner import Planner
 
     fern = make("fern")
@@ -575,8 +575,8 @@ def test_a_stake_nothing_measures_is_complained_about_rather_than_decided_quietl
     """
     import logging
 
-    from agent.desire import Desire
-    from agent.ontology import ONTOLOGY_GRAPH
+    from orexis_modality_graph.desire import Desire
+    from orexis_modality_graph.ontology import ONTOLOGY_GRAPH
 
     ds = genesis_store()
     ds.update(f"""DELETE {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?p a sosa:ObservableProperty }} }}

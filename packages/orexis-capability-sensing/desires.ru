@@ -10,7 +10,7 @@
 # kernel (#334's ratchet) and puts the horizon term back beside the code that publishes it.
 #
 # Run by the desire modality's build like every `desires.ru`, with `$me`, `$given` and
-# `$derived` substituted by `agent/desire.py`. The grant rules stay in `rules.ru`: what an
+# `$derived` substituted by `orexis_modality_graph/desire.py`. The grant rules stay in `rules.ru`: what an
 # agent CAN DO is genesis's, what it WANTS is the modality's, and this package now ships both.
 
 PREFIX sensing: <http://example.org/orexis/sensing#>

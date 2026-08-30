@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from agent.beliefs import Picks
+from orexis_modality_graph.beliefs import Picks
 
 from .terms import BIDDING, HOSTING, term
 

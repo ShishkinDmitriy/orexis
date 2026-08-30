@@ -11,11 +11,11 @@ import pytest
 
 from agent import genesis
 from orexis_capability_review.graphs import evidence_graph, revisions_graph
-from agent.ontology import STATE_GRAPH, WORLD_GRAPH, beliefs_graph, term
+from orexis_modality_graph.ontology import STATE_GRAPH, WORLD_GRAPH, beliefs_graph, term
 from onboarding.namespaces import SENSING
 from orexis_capability_review import RECKONING, REVIEW
 from orexis_capability_review.module import Range, world_ranges
-from agent.store import bindings
+from orexis_modality_graph.store import bindings
 from orexis_capability_review.summary import RING, Summaries
 
 from conftest import WORLDS_ROOT, build_agent, genesis_store
@@ -111,8 +111,8 @@ def test_a_world_that_widens_a_mandate_will_not_validate():
     reviewer's intersection was the only defence. A sovereign granting more room than the society
     allows is now refused before anything starts, which is where a governance error belongs.
     """
-    from agent.ontology import PROVENANCE_GRAPH
-    from agent.store import Store
+    from orexis_modality_graph.ontology import PROVENANCE_GRAPH
+    from orexis_modality_graph.store import Store
     from agent.validate import conforms, graph_from
 
     path = genesis.world_dir("simulation")
@@ -386,7 +386,7 @@ def _sensing_with(update: str = ""):
     capabilities and called it a pass.
     """
     from assembly import loader
-    from agent.ontology import WORLD_DERIVED_GRAPH
+    from orexis_modality_graph.ontology import WORLD_DERIVED_GRAPH
 
     st = genesis_store(world="sensing")
     if update:

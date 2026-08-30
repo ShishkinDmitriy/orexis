@@ -32,8 +32,8 @@ import logging
 from dataclasses import replace
 
 from .act import Act
-from .ontology import AG
-from .store import bindings
+from orexis_modality_graph.ontology import AG
+from orexis_modality_graph.store import bindings
 
 log = logging.getLogger("execution")
 

@@ -124,9 +124,13 @@ loads. **It does not show that now** — `packages/orexis-capability-market/` an
 look identical. The contracts carry the boundary alone:
 
 - `lint-imports` holds `packages` away from `onboarding`, onboarding away from nothing, and —
-  since the mind came home — **`agent` away from `packages`**: the kernel loads them and never
-  reaches into one. That contract could not be stated while three capability packages held the
-  mind, and the violations were not theoretical;
+  since the mind came home — **`agent` away from every package but one**: the kernel loads them
+  and never reaches into a GRANTED one. That contract could not be stated while three capability
+  packages held the mind, and the violations were not theoretical. The one it imports is the
+  floor, `packages/orexis-modality-graph/` — the mind's stores, a package because a layer is one
+  ([a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md)), carried by the kernel's own declared dependency until #455 — and
+  `tests/test_layering.py` finds it by family rather than by name, and holds it to importing no
+  layer back;
 - but it binds **Python and nothing else**, and the kernel does still reach into a package's
   *vocabulary*, across its code, its shapes, its ontology's prefix block and the desire
   derivation. That is debt rather than a permitted exception — **the kernel names no package's

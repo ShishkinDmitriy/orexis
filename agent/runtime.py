@@ -35,17 +35,17 @@ import signal
 from agent import config, genesis
 
 from assembly import loader
-from .beliefs import Beliefs
+from orexis_modality_graph.beliefs import Beliefs
 from assembly.inject import attribute_for, opened
-from .ontology import DESIRES, DESIRE_URGENCY
+from orexis_modality_graph.ontology import DESIRES, DESIRE_URGENCY
 from .deliberator import Deliberator
-from .desire import Desire, Desires
+from orexis_modality_graph.desire import Desire, Desires
 from .reviser import Reviser
-from .intentions import Intentions
+from orexis_modality_graph.intentions import Intentions
 from .keeper import Keeper
 from .metrics import Metrics
 from .upkeep import BeliefBaseUpkeep
-from .store import bindings
+from orexis_modality_graph.store import bindings
 from .validate import validate_agent
 from .world import Self, World, load_self, load_world
 

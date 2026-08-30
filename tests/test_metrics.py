@@ -14,9 +14,9 @@ that cannot be told from a dead one.
 from __future__ import annotations
 
 import pytest
-from agent.ontology import term
+from orexis_modality_graph.ontology import term
 
-from agent.beliefs import BeliefError, Picks
+from orexis_modality_graph.beliefs import BeliefError, Picks
 from orexis_capability_reporting.beliefs import REPORTING_PICKS, ReportingBeliefs
 from orexis_capability_reporting.terms import term as reporting_term
 from agent.metrics import Metrics, tree_bytes

@@ -173,13 +173,18 @@ it is a record wearing a bullet.
    is what makes a package knowledge-only. A package implements the terms IT declares —
    which is what lets imports follow grants: a runtime imports only the packages its own
    capabilities name (#216). Adding one is adding a directory. Packages never
-   import each other's Python: ask `agent.provider(family)` or contribute via
+   import each other's Python ACROSS a layer: ask `agent.provider(family)` or contribute via
    the choir's extension points (`desires`, `size`, `take`, `notices`, `series`, `quiet` — and, in sensing's
    words through `agent.ask`, `annotate`, `urgency`, `bounds`).
-   The one written exception: a family's plug-ins import the family's contract — `packages/orexis-codec-*`,
-   `packages/orexis-scaling-*` and `packages/orexis-transport-*` import sensing's `Codec`, `Scaling` and
-   `pointer`, because those are the contracts they exist to implement (see
-   [sensing-owns-the-reading-pipeline](knowledge/decisions/sensing-owns-the-reading-pipeline.md)).
+   The one ordinary import is DOWNWARD, of the contract of the layer beneath: a family's plug-ins
+   import the family's contract — `packages/orexis-codec-*`, `packages/orexis-scaling-*` and
+   `packages/orexis-transport-*` import sensing's `Codec`, `Scaling` and `pointer`, because those
+   are the contracts they exist to implement (see
+   [sensing-owns-the-reading-pipeline](knowledge/decisions/sensing-owns-the-reading-pipeline.md))
+   — and every layer imports the mind's stores, `packages/orexis-modality-graph/`, the floor
+   beneath them all, which imports no layer and no capability (see
+   [a-layer-is-a-package-and-need-loads-it](knowledge/decisions/a-layer-is-a-package-and-need-loads-it.md)).
+   `tests/test_layering.py` holds both directions, and finds the floor by its family.
    A transport is also a capability the fact of its bus grants — how the agent reaches its
    society, connection, delivery loop and watchdog in the transport's module, reached through
    the choir (`subscriptions`, `handle`, `send`) — and the kernel has no mailbox (see
@@ -347,7 +352,7 @@ stops being theoretical.
 
 ```bash
 source .venv/bin/activate
-pip install -e . $(ls -d packages/*/)   # 22 distributions; or `uv sync --all-packages`
+pip install -e . $(ls -d packages/*/)   # 23 distributions; or `uv sync --all-packages`
 
 orexis-validate <world> # build the world from its files and hold it to every package's shapes
 orexis-onboard <world>       # ONBOARDING: validate, then grant everything below. One command.

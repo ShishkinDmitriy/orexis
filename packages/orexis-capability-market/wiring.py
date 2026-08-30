@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from agent.store import bindings
+from orexis_modality_graph.store import bindings
 
 
 @dataclass(frozen=True)

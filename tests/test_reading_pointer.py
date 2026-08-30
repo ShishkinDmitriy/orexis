@@ -13,9 +13,9 @@ import json
 
 import pytest
 
-from agent.ontology import STATE_GRAPH
+from orexis_modality_graph.ontology import STATE_GRAPH
 from orexis_capability_sensing.pointer import DEFAULT_POINTER, PointerError, resolve
-from agent.store import bindings
+from orexis_modality_graph.store import bindings
 from orexis_capability_sensing.wiring import Sensor
 
 from conftest import build_agent, genesis_store, query_fn, wired_sensors, load_wired, reading_of

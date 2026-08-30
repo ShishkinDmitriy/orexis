@@ -64,13 +64,13 @@ from datetime import datetime, timedelta, timezone
 
 from assembly import loader
 from agent.module import Module, contributes
-from agent.ontology import BELIEF_REVISED
-from agent.desire import Desires
+from orexis_modality_graph.ontology import BELIEF_REVISED
+from orexis_modality_graph.desire import Desires
 from agent.metrics import Metrics
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
-from agent.ontology import beliefs_graph
-from agent.store import bindings, decimal
+from orexis_modality_graph.ontology import beliefs_graph
+from orexis_modality_graph.store import bindings, decimal
 from agent.validate import BeliefsInvalid, validate_agent
 
 from .beliefs import REVIEW_PICKS

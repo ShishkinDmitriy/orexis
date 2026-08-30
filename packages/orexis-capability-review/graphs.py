@@ -1,6 +1,6 @@
 """The three graphs this capability owns, named from the one identifier a process is given.
 
-Here rather than in `agent/ontology.py` for the reason that file states about itself: everything
+Here rather than in the kernel vocabulary (`packages/orexis-modality-graph/ontology.py`) for the reason that file states about itself: everything
 in it is true of *every* capability, and these are true of one. A graph an agent without a
 mandate never has is not kernel furniture.
 
@@ -11,7 +11,7 @@ lives in the IRI space is not this package's business; what it holds is.
 
 from __future__ import annotations
 
-from agent.ontology import GRAPH_PREFIX
+from orexis_modality_graph.ontology import GRAPH_PREFIX
 
 _REVISIONS = GRAPH_PREFIX + "revisions/"
 _EVIDENCE = GRAPH_PREFIX + "evidence/"

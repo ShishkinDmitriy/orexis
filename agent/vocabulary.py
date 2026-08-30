@@ -45,8 +45,8 @@ from __future__ import annotations
 
 import logging
 
-from .ontology import AG, ONTOLOGY_GRAPH
-from .store import bindings
+from orexis_modality_graph.ontology import AG, ONTOLOGY_GRAPH
+from orexis_modality_graph.store import bindings
 
 log = logging.getLogger("vocabulary")
 
@@ -352,8 +352,8 @@ def migrate_ledger(intentions, graph: str, about_of: dict[str, str]) -> int:
     no want is left as it is and said so, because inventing a want for it would be authorship.
     Returns how many rows gained a want.
     """
-    from .ontology import AG
-    from .store import bindings
+    from orexis_modality_graph.ontology import AG
+    from orexis_modality_graph.store import bindings
 
     want_of = {about: want for want, about in about_of.items()}
     rows = bindings(intentions.query(f"""
@@ -384,8 +384,8 @@ def migrate_ledger_acts(intentions, graph: str) -> int:
     `ag:through` moved onto it, and `ag:by` repointed. Told apart by structure — a `by` object
     that is not `a ag:Act` in the ledger — so the migration is idempotent. Returns how many.
     """
-    from .ontology import AG
-    from .store import bindings
+    from orexis_modality_graph.ontology import AG
+    from orexis_modality_graph.store import bindings
 
     rows = bindings(intentions.query(f"""
         SELECT ?i ?action ?through WHERE {{ GRAPH <{graph}> {{

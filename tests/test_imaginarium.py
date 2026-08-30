@@ -15,7 +15,7 @@ import pyoxigraph as ox
 
 from agent import effects
 from agent.imaginarium import Imaginarium
-from agent.ontology import (ONTOLOGY_GRAPH, STATE_GRAPH, WORLD_GRAPH, beliefs_graph)
+from orexis_modality_graph.ontology import (ONTOLOGY_GRAPH, STATE_GRAPH, WORLD_GRAPH, beliefs_graph)
 
 from conftest import MOISTURE, genesis_store
 

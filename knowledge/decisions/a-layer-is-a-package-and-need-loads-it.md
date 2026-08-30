@@ -93,7 +93,10 @@ it*, so a modality nobody may write cannot be assembled at all.
   the container the author asked for at the start. Whether that shell is a package too, or the
   one thing that is nobody's package because it is what asks, is #452's to discover.
 - **Family names are the implementing change's** (#451, #452), under the tree's own convention
-  — the family is the second segment of the name, and the loader learns nothing.
+  — the family is the second segment of the name, and the loader learns nothing. #451 chose
+  `modality` for the stores' family, the word [modality](/domain/modality.md) owns, and `graph`
+  for the member — the modalities held as named RDF graphs, which a member holding them another
+  way would not be; #452's are still its own.
 
 The trigger for revisiting is the same as its predecessor's, sharpened: a contract module that
 grows logic, or a hard dependency declared to smuggle a load the grants do not imply. The day

@@ -24,10 +24,10 @@ import pytest
 from agent import genesis, ratified
 
 from assembly import loader
-from agent.ontology import (AG, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
+from orexis_modality_graph.ontology import (AG, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
                             WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH,
                             WORLD_GRAPH)
-from agent.store import Store, bindings
+from orexis_modality_graph.store import Store, bindings
 from agent.validate import conforms, graph_from
 from conftest import shipped_worlds
 
@@ -119,7 +119,7 @@ def test_an_ordinary_pattern_spans_every_public_graph(world):
 def test_private_graphs_are_not_in_the_default_graph():
     """The default graph is PUBLIC knowledge, not everything. An agent's beliefs stay reachable
     only by naming their graph, which is what keeps a review's write boundary checkable."""
-    from agent.ontology import beliefs_graph
+    from orexis_modality_graph.ontology import beliefs_graph
 
     st = _public("simulation")
     genesis.birth(st, genesis.world_dir("simulation"), "fern")

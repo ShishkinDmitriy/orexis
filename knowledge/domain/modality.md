@@ -32,7 +32,10 @@ the fact there. In code a modality is a **class that owns its store** — `Belie
 `Desires`, the rest as [#299](https://github.com/ShishkinDmitriy/orexis/issues/299) lands —
 deciding for itself what kind of store, whether it persists, and whether anything may write
 it. The agent holds the modalities; nothing holds or addresses their collection, by the
-fourth ruling.
+fourth ruling. Since [a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md) the classes live in a package of the one tree whose FAMILY is this
+page's word — `packages/orexis-modality-graph/`, the modalities held as named graphs — the
+floor the kernel's layers import while it imports none of them, and a sibling that held them
+another way would be the family's second member.
 
 # The address a question needs
 

@@ -47,7 +47,7 @@ project's base and returns the label-to-IRI map. `store.PREFIXES` composes that 
 vocabularies it keeps. Nothing is listed, and adding a package with a namespace of its own is still
 adding a directory.
 
-**Read rather than imported, and that is forced.** Half the capabilities import `agent.store`, so a
+**Read rather than imported, and that is forced.** Half the capabilities import `orexis_modality_graph.store`, so a
 store that imported them back would close the loop. Reading Turtle text needs no import and runs
 before any capability's Python.
 
@@ -163,7 +163,8 @@ than assumed.
   their terms into SPARQL text heavily would be "the same size of change for less benefit". Both
   halves missed the point. The size was not in the SPARQL text at all — that form is the one a
   rename can see — it was in the six forms that name a term some other way and fail silently. And
-  the benefit was not legibility but a bounded kernel: `agent/ontology.py` claims everything in it
+  the benefit was not legibility but a bounded kernel: the kernel vocabulary (`agent/ontology.py`
+  then, `packages/orexis-modality-graph/ontology.py` since #451) claims everything in it
   is true of every agent, and 102 terms were making that false. See
   [every-term-in-its-own-house](every-term-in-its-own-house.md).
 - ~~**`vocabulary/` packages ship no Python**, so they have no `terms.py` to hold an `NS` and
@@ -175,6 +176,6 @@ than assumed.
   prefix and every gate would pass; only a reader would notice. A shape could check that each
   package's `ontology.ttl` defines only terms under its own base, and would need an exception for
   the several packages that legitimately do not have one.
-- **The kernel still decides that `ag:` is what a package gets by default.** `agent.ontology.term()`
+- **The kernel still decides that `ag:` is what a package gets by default.** `orexis_modality_graph.ontology.term()`
   builds into `AG`, so a package that declares no `NS` silently inherits the kernel's namespace
   rather than being asked to choose. That is the state four packages are in.

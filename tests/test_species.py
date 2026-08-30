@@ -18,9 +18,9 @@ import pytest
 import rdflib
 
 from agent import genesis, inference
-from agent.ontology import beliefs_graph
-from agent.store import Store, bindings
-from agent.store import PREFIXES
+from orexis_modality_graph.ontology import beliefs_graph
+from orexis_modality_graph.store import Store, bindings
+from orexis_modality_graph.store import PREFIXES
 from agent.validate import conforms
 
 ZZ = "http://example.org/orexis/zamioculcas#ZamioculcasZamiifolia"

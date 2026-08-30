@@ -20,7 +20,7 @@ whose premise has ceased is no longer implied rather than retracted by anyone.
 
 # The one unclean seam
 
-This service is a class inside `agent/desire.py`, extending the store the
+This service is a class inside `packages/orexis-modality-graph/desire.py`, extending the store the
 [desires repository](/decisions/a-store-is-a-modality.md) wraps. The rule it protects is real —
 nothing the runtime holds can write a want, so an agent cannot satisfy itself by attrition — but
 it is kept true by hiding the writer inside rather than by the layering everything else follows.

@@ -21,9 +21,9 @@ from agent import genesis
 
 from assembly import loader
 from agent.genesis import agent_id_of
-from agent.ontology import STATE_GRAPH
+from orexis_modality_graph.ontology import STATE_GRAPH
 from orexis_capability_sensing.sensed_writer import observation_uri
-from agent.store import Store
+from orexis_modality_graph.store import Store
 
 REPO_ROOT = loader.REPO_ROOT
 WORLDS_ROOT = REPO_ROOT / "world"
@@ -284,8 +284,8 @@ def desires_build(st: Store, agent_id: str):
     The belief base holds no wants any more; a test that reads regions, gaps or the whole
     pursuit list builds the modality the way the agent's boot does, and asks it.
     """
-    from agent.beliefs import Beliefs
-    from agent.desire import Desires
+    from orexis_modality_graph.beliefs import Beliefs
+    from orexis_modality_graph.desire import Desires
 
     return Desires(Beliefs(st, agent_id))
 
@@ -301,7 +301,7 @@ def open_round_for(st_or_agent, agent_id: str, seconds: float = 60.0) -> list[st
     from datetime import datetime, timedelta, timezone
     from types import SimpleNamespace
 
-    from agent.store import bindings
+    from orexis_modality_graph.store import bindings
     from orexis_capability_market import rounds
 
     st = getattr(st_or_agent, "beliefs", st_or_agent)

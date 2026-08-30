@@ -15,7 +15,7 @@ from agent import execution, afforder
 from assembly import loader
 from agent.planner import Planner
 
-from agent.ontology import beliefs_graph
+from orexis_modality_graph.ontology import beliefs_graph
 
 from conftest import MOISTURE, build_agent, genesis_store, open_round_for, wired_markets
 
@@ -45,7 +45,7 @@ def test_no_round_open_means_no_acquire_committed_and_the_trace_says_why(monkeyp
     round to bid in commits NOTHING on the tick — the want stays hot, the trace shows the
     look weighed and no Acquire on the menu at all, and nothing stands waiting for the market
     to knock."""
-    from agent.store import bindings
+    from orexis_modality_graph.store import bindings
 
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     keeper = keeper_of(fern)
@@ -187,7 +187,7 @@ def test_an_impulse_within_patience_writes_no_row(monkeypatch):
     n = len(keeper.standing())
     keeper.deliberate_on_gaps()
     assert len(keeper.standing()) == n
-    from agent.store import bindings
+    from orexis_modality_graph.store import bindings
     everything = bindings(keeper.agent.intentions.query(
         "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a <http://example.org/orexis#Intention> } }"))
     assert int(everything[0]["n"]) == n, "no dropped rows either"

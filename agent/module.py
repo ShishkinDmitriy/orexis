@@ -16,12 +16,12 @@ See knowledge/decisions/capability-packages.md.
 
 from __future__ import annotations
 
-from .ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, QUIET, REPORTS,
+from orexis_modality_graph.ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, QUIET, REPORTS,
                        SEND, SERIES, SIZE, SWEEP, TAKE)
 
 from datetime import datetime
 
-from .desire import Desire
+from orexis_modality_graph.desire import Desire
 
 import json
 import logging

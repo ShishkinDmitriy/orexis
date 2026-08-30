@@ -35,14 +35,14 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from .beliefs import BeliefError, Picks
+from orexis_modality_graph.beliefs import BeliefError, Picks
 from . import vocabulary
 from .act import Act
 from .module import Module, Timer
-from .store import bindings
+from orexis_modality_graph.store import bindings
 
-from .graphs import intentions_graph
-from .ontology import AG
+from orexis_modality_graph.graphs import intentions_graph
+from orexis_modality_graph.ontology import AG
 
 #  What an intention is made of — the mind's own words, and they were the kernel's already
 #  (the-mind-is-six-graphs). What has joined them is the four figures the KEEPING member used to

@@ -42,8 +42,8 @@ import os
 import signal
 
 from agent.module import Timer
-from agent.ontology import QUIET
-from agent.store import bindings
+from orexis_modality_graph.ontology import QUIET
+from orexis_modality_graph.store import bindings
 
 log = logging.getLogger("watchdog")
 

@@ -26,8 +26,8 @@ import logging
 import sys
 
 from agent import genesis
-from agent.ontology import PROVENANCE_GRAPH
-from agent.store import Store, bindings
+from orexis_modality_graph.ontology import PROVENANCE_GRAPH
+from orexis_modality_graph.store import Store, bindings
 from agent.validate import conforms, graph_from
 
 log = logging.getLogger("validate")
@@ -103,8 +103,8 @@ def validate_world(world: str) -> bool:
     # flattened beside their projections they would split every blank-node aim in two.
     data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH)
     from agent import effects
-    from agent.beliefs import Beliefs
-    from agent.desire import Desires
+    from orexis_modality_graph.beliefs import Beliefs
+    from orexis_modality_graph.desire import Desires
 
     desires = {a: Desires(Beliefs(st, a)) for a in everyone}
     for a in everyone:
@@ -152,8 +152,8 @@ def deliberable(st, desires: dict) -> bool:
     from orexis_capability_sensing.regions import regions_of
     from agent.world import load_self
 
-    from agent.ontology import beliefs_graph
-    from agent.store import bindings
+    from orexis_modality_graph.ontology import beliefs_graph
+    from orexis_modality_graph.store import bindings
 
     faults = 0
     #  EVERY ACTION THAT CAN PUT A ROW ON A MENU, not every row a menu happens to hold now.

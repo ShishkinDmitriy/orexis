@@ -215,7 +215,11 @@ one observation per subject and property, so every reading appends a version plu
 and a few hundred triples never reach a size-triggered threshold. Measured on
 `simulation-fern`: about 170 KB an hour, 4 MB a day, for a dataset whose size never changed.
 
-`agent/upkeep.py` holds the clock and calls `optimize()` when the ratio it is held to says so.
+`agent/upkeep.py` holds the clock and calls `optimize()` when the ratio it is held to says so
+— the clock is progression's, in a layer, while the `optimize()` it calls belongs to the store
+in `packages/orexis-modality-graph/store.py`: since [a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md) this repository and its sibling
+modalities travel in the `modality` family's package, beneath the layers, which reach DOWN to
+it and never the reverse.
 
 **It is not a service, and the test is what it produces.** Every service here runs a process and
 writes a named graph, because what a service concludes is a fact somebody authored. Compaction

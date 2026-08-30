@@ -38,10 +38,10 @@ from rdflib import RDF, URIRef
 
 from . import effects, signature, trace
 from .act import Act, Step
-from .desire import Desire
+from orexis_modality_graph.desire import Desire
 from .afforder import wants_of
 from .imaginarium import Imaginarium
-from .ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
+from orexis_modality_graph.ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
 from .validate import conforms, graph_from
 

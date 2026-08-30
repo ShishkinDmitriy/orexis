@@ -404,8 +404,8 @@ def test_the_society_repeats_every_limit_the_wiring_states():
     """
     from agent import genesis, inference
     from assembly import loader
-    from agent.ontology import ONTOLOGY_GRAPH, WORLD_GRAPH
-    from agent.store import Store, bindings
+    from orexis_modality_graph.ontology import ONTOLOGY_GRAPH, WORLD_GRAPH
+    from orexis_modality_graph.store import Store, bindings
 
     t_box = "\n".join(path.read_text() for path in loader.ontology_files())
 
@@ -813,8 +813,8 @@ def test_what_the_kernel_offers_is_reachable_by_its_class(monkeypatch):
     registered under something a package cannot name is the twelve undeclared attributes this
     design was written against, wearing a registry.
     """
-    from agent.beliefs import Beliefs
-    from agent.desire import Desires
+    from orexis_modality_graph.beliefs import Beliefs
+    from orexis_modality_graph.desire import Desires
     from agent.metrics import Metrics
     from conftest import build_agent
 

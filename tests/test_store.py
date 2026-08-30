@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from agent import store
+from orexis_modality_graph import store
 
 from assembly import loader
 
@@ -207,7 +207,7 @@ _KERNEL_IRI = re.compile(
 # imports that one — same call, different answer, which is precisely the confusion this sweep
 # was about.
 _BUILT = re.compile(r'(?<![.\w])term\("([A-Za-z][A-Za-z0-9]*)"\)')
-_KERNEL_BUILDER = re.compile(r"from agent\.ontology import [^\n]*\bterm\b")
+_KERNEL_BUILDER = re.compile(r"from orexis_modality_graph\.ontology import [^\n]*\bterm\b")
 
 _ALL_TREES = _SOURCES + sorted(loader.REPO_ROOT.glob("tests/*.py"))
 

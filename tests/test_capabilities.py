@@ -11,7 +11,7 @@ import rdflib
 from agent import genesis
 
 from assembly import loader
-from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
+from orexis_modality_graph.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from agent.world import WorldError, load_world
 from orexis_capability_actuation import ACTUATION
 from orexis_capability_market import BIDDING, HOSTING, PAY_AS_BID
@@ -116,7 +116,7 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing():
     from agent.afforder import affordances_of
     from orexis_capability_sensing.regions import regions_of
 
-    from agent.ontology import beliefs_graph
+    from orexis_modality_graph.ontology import beliefs_graph
     from conftest import desires_build
 
     st = genesis_store()

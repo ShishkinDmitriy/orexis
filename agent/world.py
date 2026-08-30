@@ -19,8 +19,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .ontology import WORLD_GRAPH
-from .store import QueryFn, bindings
+from orexis_modality_graph.ontology import WORLD_GRAPH
+from orexis_modality_graph.store import QueryFn, bindings
 
 
 class WorldError(RuntimeError):

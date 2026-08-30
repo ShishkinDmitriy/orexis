@@ -111,10 +111,12 @@ of one.
 onboarding tools had already moved out and what remained was precisely what an agent runs.
 
 `agent` rather than `orexis` because the whole project is orexis; a component inside it called orexis
-is the same redundancy as `onboarding/src/onboarding`. The known cost is that onboarding imports
-`from agent.ontology import …`, which reads like a layering smell even though the direction is
-correct. The import contract states the rule explicitly, so the name surprises and the contract
-does not.
+is the same redundancy as `onboarding/src/onboarding`. The known cost was that onboarding imported
+`from agent.ontology import …`, which read like a layering smell even though the direction was
+correct; since [a-layer-is-a-package-and-need-loads-it](a-layer-is-a-package-and-need-loads-it.md)
+the kernel vocabulary travels with the mind's stores and the spelling is
+`from orexis_modality_graph.ontology import …`, which reads as the layering it is. The import
+contract states the rule explicitly, so the name surprises and the contract does not.
 
 `packages/core/orexis` and `packages/orexis-plant-water` rather than `kernel/` and `domain/water/`: at the
 time those two were the only trees with no Python at all, which is exactly what they had in
@@ -143,10 +145,17 @@ Python — `terms.py`'s equivalent — was always next door.
   85 MB of the 230 is the glibc base. Not taken, because `pyshacl` and `rdflib` recurse over graphs
   and musl gives threads a much smaller default stack, and that risk is untested for a saving that
   does not matter on a machine with 10 GB free.
-- **The model is not a third package.** `agent` holds both the runtime and the model onboarding
+- ~~**The model is not a third package.** `agent` holds both the runtime and the model onboarding
   reads. Extracting a shared core was proposed twice and declined twice: the dependency is already
   one-way and acyclic, the shared surface is seven modules, and a third distribution would buy a
-  boundary the import contract already states.
+  boundary the import contract already states.~~ Overturned by
+  [a-layer-is-a-package-and-need-loads-it](a-layer-is-a-package-and-need-loads-it.md), and for a
+  reason this seam never weighed: what landed (#451) is not a shared core for onboarding's sake
+  but the floor of the kernel's own layering — the mind's stores, `packages/orexis-modality-graph/`,
+  a package in the one tree that the layers import and that imports no layer. What made a
+  distribution boundary worth having was
+  [every-package-is-a-project](every-package-is-a-project.md): it is held to its imports in both
+  directions, so it fails when violated instead of merely restating what a contract already said.
 
 # Capability-specific dependencies (settled when Consulting came into view)
 

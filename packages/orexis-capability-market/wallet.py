@@ -15,8 +15,8 @@ knowledge/domain/wallet.md.
 
 from __future__ import annotations
 
-from agent.ontology import beliefs_graph
-from agent.store import bindings
+from orexis_modality_graph.ontology import beliefs_graph
+from orexis_modality_graph.store import bindings
 
 from .terms import BALANCE, HAS_ENDOWMENT
 

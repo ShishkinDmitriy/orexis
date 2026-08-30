@@ -12,8 +12,8 @@ so its Actuate has an effect rule and there is something to simulate. Every plan
 
 from __future__ import annotations
 
-from agent.ontology import DELIBERATION_GRAPH
-from agent.store import bindings
+from orexis_modality_graph.ontology import DELIBERATION_GRAPH
+from orexis_modality_graph.store import bindings
 from agent import planner as search, trace
 from agent.planner import Planner
 

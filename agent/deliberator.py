@@ -39,12 +39,12 @@ from __future__ import annotations
 
 from . import planner, trace
 from .act import Act, Step
-from .desire import Desire
+from orexis_modality_graph.desire import Desire
 from .afforder import affordances_of
 from .module import Module
-from .ontology import AG, DELIBERATION_GRAPH, STATE_GRAPH, beliefs_graph
+from orexis_modality_graph.ontology import AG, DELIBERATION_GRAPH, STATE_GRAPH, beliefs_graph
 from .planner import Planner
-from .store import bindings
+from orexis_modality_graph.store import bindings
 
 # What this package asks OF others, by family — their namespaces, never their Python.
 

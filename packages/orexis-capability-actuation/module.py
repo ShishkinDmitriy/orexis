@@ -35,11 +35,11 @@ from datetime import datetime, timedelta, timezone
 
 from agent.commitment import Commitment
 from agent.module import Module, Timer, contributes
-from agent.ontology import HANDLE, SUBSCRIPTIONS
+from orexis_modality_graph.ontology import HANDLE, SUBSCRIPTIONS
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
-from agent.ontology import STATE_GRAPH
-from agent.store import bindings
+from orexis_modality_graph.ontology import STATE_GRAPH
+from orexis_modality_graph.store import bindings
 
 from .beliefs import ACTUATION_PICKS
 from .terms import ACTUATION, DOSING

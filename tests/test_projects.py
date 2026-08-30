@@ -1,6 +1,6 @@
 """Every package is a project, and a project declares exactly what it imports.
 
-Twenty-two distributions, each owning a top-level module of its own. What makes that more than ceremony is
+Twenty-three distributions, each owning a top-level module of its own. What makes that more than ceremony is
 the DEPENDENCY GRAPH — `orexis-codec-json` needs `orexis-capability-sensing` because it
 implements sensing's `Codec`, and says so — and a dependency list is only worth reading if
 something holds it to the imports. Nothing did, and two errors were sitting in the root's list
@@ -36,6 +36,20 @@ PACKAGES_ROOT = REPO_ROOT / "packages"
 #  `orexis` and not on anything third-party.
 OWN_TREES = {"assembly", "agent", "onboarding"}
 ROOT_DIST = "orexis"
+
+#  THE FLOOR. The mind's stores are a package in the one tree, and the layers above them — the
+#  kernel, until #452 splits it — import it: the one ordinary DOWNWARD import, a layer reaching
+#  the contract of the layer beneath (a-layer-is-a-package-and-need-loads-it). The carve-out is
+#  by FAMILY, never by name: the family is the second segment of a package's own name, so a
+#  second member of it is covered without anyone editing this file, and a capability can never
+#  slip in by being listed. Until #455 derives the load set from the grants, the root's own
+#  declared dependency is what loads it, which is why the root's list may name it and nothing
+#  else under `packages/`.
+FLOOR_FAMILY = "modality"
+
+
+def is_floor(pkg: Path) -> bool:
+    return pkg.name.split("-")[1] == FLOOR_FAMILY
 
 
 def normalise(name: str) -> str:
@@ -171,8 +185,13 @@ ONBOARDING_REACHES_IN = {
 
 
 def test_the_root_trees_reach_into_exactly_the_packages_on_record():
-    """A ratchet, not a permission. See #426."""
-    modules = {p.name.replace("-", "_") for p in package_dirs()}
+    """A ratchet, not a permission. See #426.
+
+    The FLOOR is not on this record and not held by it: the kernel importing the mind's stores
+    is the layering working, not the root reaching into a grant. What keeps that carve-out
+    narrow is `test_layering.py`, which holds the floor to importing no layer and no package.
+    """
+    modules = {p.name.replace("-", "_") for p in package_dirs() if not is_floor(p)}
     found = {
         (str(path.relative_to(REPO_ROOT)), module)
         for tree in sorted(OWN_TREES)
@@ -197,7 +216,9 @@ def test_the_root_declares_exactly_what_its_own_trees_import():
     want.discard(ROOT_DIST)
     #  The packages onboarding reaches into are held by the ratchet above, not declared here —
     #  the cycle and the image layer are why. That test is what keeps this exclusion honest.
-    want -= {p.name for p in package_dirs()}
+    #  The FLOOR is the exception on both counts: the root declares it, knowingly a cycle, and
+    #  the Containerfile installs the two editables together so the image layer survives.
+    want -= {p.name for p in package_dirs() if not is_floor(p)}
     have = declared(REPO_ROOT / "pyproject.toml")
     assert have == want, (
         "pyproject.toml is out of step with what agent/, assembly/ and onboarding/ import.\n"
@@ -243,3 +264,11 @@ def test_packages_is_a_plain_directory_and_not_a_module(pkg: Path):
     assert (pkg / "__init__.py").is_file(), "a package's own manifest is a regular module"
     assert pkg.name.count("-") >= 2 and pkg.name.startswith("orexis-"), (
         f"{pkg.name}: a package directory IS its distribution name, `orexis-<family>-<name>`.")
+
+
+def test_there_is_a_floor_to_carve_out():
+    """The guard on the carve-out: `is_floor` excuses a family from two ratchets above, and a
+    family with no member would excuse nothing while looking as if it did."""
+    assert [p for p in package_dirs() if is_floor(p)], (
+        f"no package of the `{FLOOR_FAMILY}` family under packages/ — the floor moved or was "
+        "renamed, and the carve-outs in this file and test_layering.py now cover nothing.")

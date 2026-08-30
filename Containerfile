@@ -23,7 +23,15 @@ WORKDIR /app
 COPY pyproject.toml pyproject.toml
 COPY agent/__init__.py agent/__init__.py
 COPY assembly/__init__.py assembly/__init__.py
-RUN pip install "setuptools>=68" && pip install -e .
+# The mind's stores are a package the root depends on — the kernel's own declared dependency
+# is what loads them until #455 (a-layer-is-a-package-and-need-loads-it) — and that package
+# depends back on the root for `assembly`, a knowing cycle through the shared distribution. So
+# the two editables are installed in ONE pip call, which resolves each against the other
+# instead of asking an index for either. Stubs suffice here as they do for agent/: an editable
+# install maps the directory, and the code arrives with the full COPY below.
+COPY packages/orexis-modality-graph/pyproject.toml packages/orexis-modality-graph/pyproject.toml
+COPY packages/orexis-modality-graph/__init__.py   packages/orexis-modality-graph/__init__.py
+RUN pip install "setuptools>=68" && pip install -e . -e packages/orexis-modality-graph/
 
 # Everything an agent runs, and nothing else.
 #
@@ -45,12 +53,12 @@ COPY assembly/ assembly/
 COPY agent/    agent/
 COPY packages/ packages/
 
-# EVERY PACKAGE IS A PROJECT, so every package is installed as one. Twenty-two distributions
-# sharing one `packages.` namespace: none of them claims `packages/` or `packages/<family>/`,
-# which is what leaves room for a twenty-second package installed from somewhere else.
+# EVERY PACKAGE IS A PROJECT, so every package is installed as one. Twenty-two package
+# distributions, each claiming its own top-level module and none claiming `packages/`, which is
+# what leaves room for a twenty-third installed from somewhere else.
 #
 # `--no-build-isolation` because the build backend is already here from the layer above, and
-# without it pip would fetch setuptools twenty-one times over. `--no-deps` because this layer
+# without it pip would fetch setuptools twenty-two times over. `--no-deps` because this layer
 # must not reach the network at all: everything these projects depend on is either the root
 # (installed above) or a sibling in this same directory, and a dependency that ISN'T is a
 # mistake `pytest` catches at the gate rather than a container discovering it at build time.
