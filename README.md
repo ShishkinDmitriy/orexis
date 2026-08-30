@@ -186,8 +186,9 @@ than guessing, because a fallback puts a misconfigured agent on the same topics 
 `simulation` is the full society — plants, a supplier, a barrel market, valves and a meddler who
 waters pots unasked; `loner` is a gardener alone with a water butt and no market at all; `sensing`
 is the smallest one that produces a working agent, and the one that runs against a real board;
-`terrace` is that same shape taken outdoors — a planter bed, a FireBeetle 2 ESP32-E with a
-moisture probe and a BME280, monitoring only.
+`terrace` is that same shape taken outdoors — a planter bed, a FireBeetle 2 ESP32-E running
+`firmware/outdoor-sentinel` (the sentinel, copied, with a moisture probe and a BME280),
+monitoring only, and the first world whose agent only listens to a real board.
 [`domain/world`](knowledge/domain/world.md) is the guide to authoring your own — what a world
 is made of, what you state versus what gets derived, and how to check it.
 

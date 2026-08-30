@@ -51,35 +51,9 @@ mosquitto_pub -h <pi> -r -t sensors/fern/cmd -m '{"sleep_s":120}'
 
 ## Wiring
 
-Two boards run this firmware, one PlatformIO environment each: `esp32dev` for the DevKitC on
-the windowsill (`world/sensing`) and `firebeetle2_esp32e` for the FireBeetle 2 ESP32-E on the
-terrace (`world/terrace`). Same chip, same pin rules, same code.
-
-- BME280 (the outdoor air sensor, `world/terrace`): `VCC → 3V3` (never 5V — the bare part is
-  not 5V-tolerant), `GND → GND`, `SDA → GPIO21`, `SCL → GPIO22`. Address 0x76 or 0x77 by its
-  SDO strap, stated on the unit as `i2c:address` in `hardware.ttl`.
-
 - Capacitive soil-moisture sensor: `VCC → 3V3`, `GND → GND`, `AOUT → GPIO34`.
 - Use an **ADC1** pin (GPIO 32–39); ADC2 pins don't work with WiFi on. GPIO 34–39 are
   input-only, which is fine here.
-
-## The status LED, and the FireBeetle's own
-
-Both boards blink the same vocabulary — two green for a wake that got in, one magenta per
-refused broker attempt, three of a colour for a fault, one red or blue for the agent's verdict,
-dark through every sleep. On the DevKitC that is an external KY-016 the world wires
-(`LED_RED_PIN` and friends). On the **FireBeetle 2 ESP32-E** it is the board's own WS2812 on
-GPIO 5 (`STATUS_LED_WS2812_PIN`, stated on the board class in `packages/orexis-part-esp32/`,
-so no world wires it), driven by the ESP32 core's RMT driver with no extra library.
-
-It exists for battery bring-up: a node meant to stay dark is hard to trust until it has been
-seen to wake and get in. Once you have seen that, **cut the board's low-power solder pad** —
-DFRobot: "Slightly cut off the thin wire with a knife to disconnect it. When disconnected,
-static power consumption can be reduced by 500 μA. Note: when the pad is disconnected, you can
-only drive RGB LED light via the USB Power supply"
-([wiki, DFR0654](https://wiki.dfrobot.com/FireBeetle_Board_ESP32_E_SKU_DFR0654)). The firmware
-keeps writing to a lamp that then draws nothing on battery, and lights again on USB — no
-reflash, no world edit.
 
 ## Configure & calibrate
 
@@ -108,8 +82,7 @@ ss -lntp | grep 1883        # expect 0.0.0.0:1883, not 127.0.0.1:1883
 ## Build & flash
 
 ```bash
-pio run -e esp32dev -t upload            # DevKitC: build + flash over USB
-pio run -e firebeetle2_esp32e -t upload  # FireBeetle 2 ESP32-E (world/terrace)
+pio run -t upload          # build + flash over USB
 pio device monitor         # watch it wake, publish, sleep
 ```
 

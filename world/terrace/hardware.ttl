@@ -41,12 +41,11 @@
     ag:localId "esp32_terrace" ;
     mc:model "DFRobot FireBeetle 2 ESP32-E" ;
     mqtt:onBus :local_bus ;
-    #  No mc:firmware: the board's connecting DEVICE is typed governed:Node in world.ttl and
-    #  the firmware name is entailed onto it from that class, reached through the hosting this
-    #  deployment produces. The FireBeetle runs the same firmware/moisture-sensor image the
-    #  DevKitC does — its own PlatformIO environment, the same code.
+    #  No mc:firmware: the board's connecting DEVICE is typed outdoor:Node in world.ttl and
+    #  the firmware name ("outdoor-sentinel") is entailed onto it from that class, reached
+    #  through the hosting this deployment produces.
     ssn:inDeployment :terrace_deployment ;
-    rdfs:comment "Deep-sleeps between readings on a LiPo, which is why its agent is sensing:Subscribing: the board keeps the interval and cannot be reached in between." .
+    rdfs:comment "A sentinel on a LiPo: deep-sleeps while its ULP watches the soil for movement, wakes to speak on a crossing or a heartbeat, takes no orders. Its agent is sensing:Listening." .
 
 #  The deployment: which systems, on which platform, from when, into what. The hosting is
 #  entailed from it (#99), and the society's own sosa:hosts in world.ttl is held to agreeing.

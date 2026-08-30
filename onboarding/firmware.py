@@ -309,22 +309,47 @@ def _untemplated(ds, board: str) -> list[str]:
 
 
 _SENTINEL_Q = """
-SELECT ?lo ?hi ?maxAge WHERE {{
+SELECT ?lo ?hi ?agentId WHERE {{
   ?s <{AG}localId> "{sensor_id}" ; <{SENSING}monitors> ?subject ;
      <http://www.w3.org/ns/sosa/observes> ?prop .
   ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?r .
   ?r <http://www.w3.org/ns/ssn/systems/inCondition> ?c .
   ?c <http://www.w3.org/ns/ssn/forProperty> ?prop ;
      <https://schema.org/minValue> ?lo ; <https://schema.org/maxValue> ?hi .
-  OPTIONAL {{ ?agent <{SENSING}polls> ?s ; <{SENSING}maxReadingAgeS> ?maxAge }}
+  OPTIONAL {{ ?agent <{SENSING}polls> ?s ; <{AG}localId> ?agentId }}
  }}"""
+
+
+def _max_reading_age(world: str, agent_id: str | None) -> int | None:
+    """The polling agent's `sensing:maxReadingAgeS`, read from ITS beliefs file.
+
+    Found on the sentinel template's first real run (world/terrace): the ratified dataset holds
+    the PUBLIC graphs, and a freshness rule is a belief — private, in `beliefs/<agent>.ttl`,
+    never in the world. So an OPTIONAL that asked the dataset for it bound nothing, silently,
+    and every sentinel would have been compiled to the 750 s default whatever its agent
+    believed — exactly the mismatch #323 warned would bite. The sovereign holds the beliefs
+    files (it authored them), so the generator reads the one that matters here.
+    """
+    if not agent_id:
+        return None
+    path = world_dir(world) / "beliefs" / f"{agent_id}.ttl"
+    if not path.exists():
+        return None
+    import rdflib
+    g = rdflib.Graph().parse(path, format="turtle")
+    for value in g.objects(None, rdflib.URIRef(f"{SENSING}maxReadingAgeS")):
+        return int(value.toPython())
+    return None
 
 
 def render_sentinel(world: str, row: dict, ds) -> str:
     """config.h for the SECOND firmware (#151): a sentinel takes no orders, so its config
     carries what a command would have — the band, compiled from the WORLD's operating range
     for the pot it watches, and a heartbeat generated to fit under the polling agent's own
-    Listening freshness rule so a healthy sentinel is never called stale."""
+    Listening freshness rule so a healthy sentinel is never called stale.
+
+    The rest of what the board carries — an LED, a DHT11, a BME280, a built-in WS2812 — is the
+    same wiring question for either temperament, so `_optional_pins` answers it for both."""
     creds = world_dir(world) / "secrets" / f"mqtt-{row['sensorId']}.env"
     user, password = _env(creds, "MQTT_USERNAME"), _env(creds, "MQTT_PASSWORD")
     if not password:
@@ -340,7 +365,8 @@ def render_sentinel(world: str, row: dict, ds) -> str:
     lo, hi = float(found[0]["lo"]), float(found[0]["hi"])
     # Under the agent's absolute freshness rule with a fifth to spare, or its default when the
     # world grants no Listening yet: a heartbeat the agent would call stale is a lie on a timer.
-    max_age = int(float(found[0]["maxAge"])) if found[0].get("maxAge") else 750
+    stated = _max_reading_age(world, found[0].get("agentId"))
+    max_age = stated if stated is not None else 750
     heartbeat = max(60, int(max_age * 0.8))
     # The FAMILY's figure, deliberately, where a governed board is told its agent's own pick:
     # a sentinel takes no orders, so no revision could ever reach it, and baking anything but
@@ -371,7 +397,7 @@ SELECT ?f WHERE {{ <{SENSING}SensingCapability> <{SENSING}alarmDeltaFraction> ?f
 #define MOISTURE_PIN {int(row['gpio'])}
 #define ADC_DRY {int(row['rawDry'])}
 #define ADC_WET {int(row['rawWet'])}
-
+{_optional_pins(row)}
 // NOT the band. A sentinel's ULP watches MOVEMENT — the last published value plus or minus
 // WAKE_DELTA — and does not compare against the operating range at all; watching it made a pot
 // outside its range wake the radio every patrol, forever. The range is still read here, because
@@ -411,7 +437,9 @@ def generate(world: str, board: str | None = None) -> None:
         # Two firmwares, two temperaments, one dispatch: the governed node takes commands and
         # cadence bounds; the sentinel (#151) takes neither, and its config carries the band
         # and the heartbeat a command would otherwise have brought.
-        if row["firmware"] == "moisture-sentinel":
+        # The outdoor sentinel is the sentinel copied onto another board with an air part
+        # (#461); its config is the sentinel's template plus what `_optional_pins` adds.
+        if row["firmware"] in ("moisture-sentinel", "outdoor-sentinel"):
             out.write_text(render_sentinel(world, row, ds))
         else:
             out.write_text(render(world, row, bounds, _persist_looks(ds)))

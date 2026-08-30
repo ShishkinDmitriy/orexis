@@ -15,12 +15,11 @@
 // falls back to a timeout when nobody answers. The wake ends when the conversation does, which
 // is usually tens of milliseconds after the publish rather than a fixed allowance later.
 //
-//   publish:   MOISTURE_TOPIC   {"moisture":0.183,"sensor":"<SENSOR_ID>","sleep_s":600,
-//                               "temperature":21.4,"humidity":0.463[,"pressure":1009.8]}
+//   publish:   MOISTURE_TOPIC   {"value":0.183,"sensor":"<SENSOR_ID>","sleep_s":600,
+//                               "temperature":21.4,"humidity":0.463}
 //              one message for the whole board — one client, one credential, one
 //              channel. Each sensor in the world picks its own value out with an
-//              mqtt:readingPointer; the air fields are absent if the part did not answer,
-//              and pressure appears only where the air part is a BME280.
+//              ag:readingPointer; the air fields are absent if the part did not answer.
 //   subscribe: CMD_TOPIC        {"sleep_s":N, "band":"LOW"}  and/or  {"sense":true}  (retained)
 //
 // Both topic names come from config.h and are the world's own, so they are not spelled out
@@ -184,51 +183,6 @@ static void ledVerdict() { if (haveBand) ledBlink(bandR, bandG, bandB, 1); }
 // reached the wifi, and those must not be confusable from across the room.
 static void ledFault(bool r, bool g, bool b) { ledBlink(r, g, b, 3); }
 
-#elif defined(STATUS_LED_WS2812_PIN)
-// The board's OWN lamp — a FireBeetle 2 ESP32-E carries a WS2812 on GPIO 5 by construction,
-// so the world wires nothing and the generator reads the pin off the board's class. The same
-// outcome vocabulary as the KY-016 above, word for word: doubled green is a wake that got in,
-// one magenta per refused broker attempt, three of a colour is a fault, one is a verdict.
-// Driven through the ESP32 core's RMT driver (rgbLedWrite) rather than a library — one
-// dependency fewer on the most constrained thing in the system.
-//
-// The point of it is BATTERY BRING-UP: a node meant to stay dark for a year is hard to trust
-// until it has been seen to wake. When it has, the board's low-power solder pad is cut
-// (DFRobot: ~500 µA static; the LED then lights only on USB) — a knife, no reflash, and
-// this code keeps writing to a lamp that draws nothing.
-#ifndef LED_BRIGHTNESS
-#define LED_BRIGHTNESS 20   // of 255, as for the discrete LED; a WS2812 at full is a torch
-#endif
-
-static void led(bool r, bool g, bool b) {
-  rgbLedWrite(STATUS_LED_WS2812_PIN, r ? LED_BRIGHTNESS : 0, g ? LED_BRIGHTNESS : 0,
-              b ? LED_BRIGHTNESS : 0);
-}
-
-static void ledOff() { led(0, 0, 0); }
-static void ledBegin() { ledOff(); }
-
-static void ledBlink(bool r, bool g, bool b, int times) {
-  for (int i = 0; i < times; i++) {
-    led(r, g, b); delay(140);
-    ledOff();     delay(140);
-  }
-}
-
-static bool haveBand = false;
-static bool bandR = 0, bandG = 0, bandB = 0;
-
-static void ledBand(const char *band) {
-  if      (!strcmp(band, "LOW"))  { haveBand = 1; bandR = 1; bandG = 0; bandB = 0; }
-  else if (!strcmp(band, "HIGH")) { haveBand = 1; bandR = 0; bandG = 0; bandB = 1; }
-  else                              haveBand = 0;
-}
-
-static void ledAttemptFailed() { ledBlink(1, 0, 1, 1); }
-static void ledAttemptOk()     { ledBlink(0, 1, 0, 2); }
-static void ledVerdict() { if (haveBand) ledBlink(bandR, bandG, bandB, 1); }
-static void ledFault(bool r, bool g, bool b) { ledBlink(r, g, b, 3); }
-
 #else
 // A board the world gives no LED compiles all of this away. Every one of these must exist,
 // including the ones only called from the connect path — that is the half I forgot, and it
@@ -290,64 +244,6 @@ static void logAir() {
   airC = c;
   airRh = rh / 100.0f;
   Serial.printf("air sensor: %.1f C, %.0f%% RH (%.3f as a fraction)\n", c, rh, airRh);
-}
-#elif defined(BME280_SDA_PIN)
-// The other air sensor this node knows: a BME280 over I2C — the outdoor part, whose range
-// covers a terrace where the DHT11's does not (packages/orexis-part-bme280/ontology.ttl).
-// Same contract as the DHT path above: the values ride the moisture message, each pointed at
-// by its sensor in the world, absent rather than zero when the part does not answer.
-//
-// Pressure is read and published too. No world points at it yet — no domain property names
-// it — but the part produces all three in ONE forced conversion, and leaving a value the
-// board already holds off the wire would be a second place to remember to add it.
-#include <Wire.h>
-#include <Adafruit_BME280.h>
-
-static Adafruit_BME280 bme;
-static bool bmeFound = false;
-
-static bool airValid = false;
-static float airC = 0.0f, airRh = 0.0f;   // RH as a FRACTION, which is what goes on the wire
-static float airHpa = 0.0f;
-
-static void airBegin() {
-  Wire.begin(BME280_SDA_PIN, BME280_SCL_PIN);
-  bmeFound = bme.begin(BME280_ADDR, &Wire);
-  if (!bmeFound) {
-    Serial.printf("BME280 not found at 0x%02X (SDA %d, SCL %d) — check the wiring, and the "
-                  "SDO strap against i2c:address in the world\n",
-                  BME280_ADDR, BME280_SDA_PIN, BME280_SCL_PIN);
-    return;
-  }
-  // Forced mode, full oversampling — the part's ForcedModeCapability in the ontology. One
-  // conversion per wake with the die idle otherwise, so self-heating never reaches the
-  // temperature; the whole wake is a few seconds, and the board sleeps between them anyway.
-  bme.setSampling(Adafruit_BME280::MODE_FORCED,
-                  Adafruit_BME280::SAMPLING_X16,   // temperature
-                  Adafruit_BME280::SAMPLING_X16,   // pressure
-                  Adafruit_BME280::SAMPLING_X16,   // humidity
-                  Adafruit_BME280::FILTER_OFF);
-}
-
-static void logAir() {
-  airValid = false;
-  if (!bmeFound || !bme.takeForcedMeasurement()) {
-    Serial.println("BME280: no answer");
-    return;
-  }
-  float c = bme.readTemperature();
-  float rh = bme.readHumidity();
-  float hpa = bme.readPressure() / 100.0F;
-  if (isnan(c) || isnan(rh) || isnan(hpa)) {
-    Serial.println("BME280: read returned NaN");
-    return;
-  }
-  airValid = true;
-  airC = c;
-  airRh = rh / 100.0f;   // a fraction on the wire, as the DHT path sends it
-  airHpa = hpa;
-  Serial.printf("air sensor: %.2f C, %.1f%% RH (%.3f as a fraction), %.1f hPa\n",
-                c, rh, airRh, hpa);
 }
 #else
 // A board with no air sensor wired says nothing about air: the fields are absent, exactly as
@@ -416,11 +312,6 @@ static void publishReading() {
     n += snprintf(payload + n, sizeof(payload) - n, ",\"temperature\":%.1f,\"humidity\":%.3f",
                   airC, airRh);
   }
-#ifdef BME280_SDA_PIN
-  if (airValid && n > 0 && n < (int)sizeof(payload)) {
-    n += snprintf(payload + n, sizeof(payload) - n, ",\"pressure\":%.1f", airHpa);
-  }
-#endif
   if (n > 0 && n < (int)sizeof(payload)) {
     snprintf(payload + n, sizeof(payload) - n, "}");
   }
@@ -631,10 +522,6 @@ void setup() {
   Serial.printf("sleeping %us\n", sleep_s);
   mqtt.disconnect();
   delay(50);
-  // Dark before the sleep, again and last. A WS2812 HOLDS its colour with no further clocking,
-  // so a lamp left lit here would stay lit through every sleep, at the LED's own current —
-  // the discrete LED goes dark when its pins do, and did not need this.
-  ledOff();
   armUlpWatch();
   esp_sleep_enable_timer_wakeup((uint64_t)sleep_s * 1000000ULL);
   esp_deep_sleep_start();
