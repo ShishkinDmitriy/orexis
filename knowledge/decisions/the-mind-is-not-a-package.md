@@ -9,7 +9,8 @@ description: >-
   and the kernel stops being discovered: it is what discovers. What this buys is a sentence that
   was said long before it was true — every package is optional — as a contract `lint-imports`
   keeps and a test proves against an empty tree.
-status: accepted
+status: superseded-in-part
+superseded-by: a-layer-is-a-distribution
 timestamp: 2026-08-23T00:00:00Z
 ---
 
@@ -220,7 +221,10 @@ member is argued rather than imagined.
 
 - **`agent/` is large**, and that was accepted rather than overlooked: cohesion was the point,
   and the boundaries that enforce anything (`lint-imports`, the `Containerfile` COPY list) got
-  sharper. The tree never distinguished a 200-line file from a 600-line one.
+  sharper. The tree never distinguished a 200-line file from a 600-line one. **Overturned** by
+  [a-layer-is-a-distribution](/decisions/a-layer-is-a-distribution.md), which is what the
+  `superseded-in-part` above refers to — the ruling of this record stands whole; the acceptance
+  of the monolith does not.
 - **The kernel's shapes name `mqtt:` and `actuation:`** — two prefixes declared in
   `agent/shapes.ttl` before any of this. The layering inversion this record refuses for the mind
   already exists in miniature there, and was left alone rather than widened.

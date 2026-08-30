@@ -122,6 +122,9 @@ it is a record wearing a bullet.
   ontologies that `agent/` never mentions.
 - **A record earns its place by refusing something**; "we could have not done it" is not an
   alternative.
+- **A record is engaged by its premises, not cited by its conclusion** — the mind's record
+  refuses a granted mind, and was nearly spent against unconditional layer trees it never
+  argued about.
 
 ## The rules the code lives by
 
