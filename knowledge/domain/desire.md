@@ -122,7 +122,7 @@ Always true for a stake — a plant does not ask.
 
 # It lives in the mind's stores, and the capability does not
 
-`packages/orexis-deliberation/desire.py` holds the TYPE, in the deliberation layer and
+`packages/orexis-agent-deliberation/desire.py` holds the TYPE, in the deliberation layer and
 outside any capability, because a desire is a mental state and those are the mind's — the same
 reason obligations and intentions are. Two packages need it and
 neither may import the other: this capability produces desires,

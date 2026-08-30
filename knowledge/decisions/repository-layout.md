@@ -115,7 +115,7 @@ is the same redundancy as `onboarding/src/onboarding`. The known cost was that o
 `from agent.ontology import …`, which read like a layering smell even though the direction was
 correct; since [a-layer-is-a-package-and-need-loads-it](a-layer-is-a-package-and-need-loads-it.md)
 the kernel vocabulary travels with the store engine in the progression layer and the spelling is
-`from orexis_progression.ontology import …`, which reads as the layering it is. The import
+`from orexis_agent_progression.ontology import …`, which reads as the layering it is. The import
 contract states the rule explicitly, so the name surprises and the contract does not.
 
 `packages/core/orexis` and `packages/orexis-plant-water` rather than `kernel/` and `domain/water/`: at the
@@ -151,8 +151,8 @@ Python — `terms.py`'s equivalent — was always next door.
   boundary the import contract already states.~~ Overturned by
   [a-layer-is-a-package-and-need-loads-it](a-layer-is-a-package-and-need-loads-it.md), and for a
   reason this seam never weighed: what landed (#452) is not a shared core for onboarding's sake
-  but the kernel's own layering — three packages in the one tree, `packages/orexis-reactive/`,
-  `packages/orexis-progression/` and `packages/orexis-deliberation/`, each
+  but the kernel's own layering — three packages in the one tree, `packages/orexis-agent-reactive/`,
+  `packages/orexis-agent-progression/` and `packages/orexis-agent-deliberation/`, each
   importing only the layers beneath it, with `agent/` left as the container that assembles
   them. A floor beneath the three was built first (#457, refused) and dissolved into them:
   the store engine went to progression, the lowest layer that persists, and the belief and

@@ -36,8 +36,8 @@ import time
 from pathlib import Path
 
 from .timer import Timer
-from orexis_progression.ontology import SWEEP
-from orexis_progression.store import bindings
+from orexis_agent_progression.ontology import SWEEP
+from orexis_agent_progression.store import bindings
 
 log = logging.getLogger("upkeep")
 

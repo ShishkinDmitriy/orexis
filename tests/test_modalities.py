@@ -11,8 +11,8 @@ import pytest
 from agent import genesis
 
 from assembly import loader
-from orexis_progression.ontology import AG, PROVENANCE_GRAPH, beliefs_graph
-from orexis_progression.store import bindings
+from orexis_agent_progression.ontology import AG, PROVENANCE_GRAPH, beliefs_graph
+from orexis_agent_progression.store import bindings
 
 from conftest import genesis_store
 

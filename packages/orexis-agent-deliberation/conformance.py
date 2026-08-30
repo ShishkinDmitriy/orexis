@@ -24,7 +24,7 @@ from pyshacl import validate as shacl_validate
 
 from assembly import loader
 
-from orexis_progression.store import Store
+from orexis_agent_progression.store import Store
 
 
 def _shapes_and_vocabulary() -> tuple[rdflib.Graph, rdflib.Graph]:

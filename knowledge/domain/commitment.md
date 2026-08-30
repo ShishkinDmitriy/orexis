@@ -3,7 +3,7 @@ type: Domain Concept
 title: Commitment
 description: >-
   REA's promised economic flow — who it is for, what it permits, how much, from which round,
-  once, until when — as progression's `packages/orexis-progression/commitment.py`. What a valve FULFILS: the market's
+  once, until when — as progression's `packages/orexis-agent-progression/commitment.py`. What a valve FULFILS: the market's
   claim is its embodiment (the flow plus the credit leg and, on the wire, the signatures), and a
   self-dose is one with nobody to pay. In the kernel because two packages that may not import
   each other both hold it. Not BDI's commitment, which is an intention.

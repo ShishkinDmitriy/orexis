@@ -7,7 +7,7 @@ import threading
 
 import pytest
 
-from orexis_reactive.loop import Loop
+from orexis_agent_reactive.loop import Loop
 
 
 def test_work_runs_in_order_on_one_thread_and_the_handle_resolves_elsewhere():

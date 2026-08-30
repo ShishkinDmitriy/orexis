@@ -1,13 +1,13 @@
-# orexis-deliberation
+# orexis-agent-deliberation
 #
 # The deliberation layer of the kernel: the search, the imaginarium it searches in, the
 # deliberator that asks it, the reviser that wakes it and the pursuit that commits what it
 # finds (a-layer-is-a-package-and-need-loads-it, #452). It stands on progression and on the
 # mind's stores, and nothing stands on it but the container that assembles an agent and the
-# capabilities that knock on its doors. Two segments, `orexis-<layer>`, because a layer is one
-# package and not a family with members.
+# capabilities that knock on its doors. Named `orexis-agent-<layer>`: the family groups the
+# three in a listing, and a layer is one package and not a family with members.
 [project]
-name = "orexis-deliberation"
+name = "orexis-agent-deliberation"
 version = "0.1.0"
 description = "The deliberation layer — the belief base, the desires, and BDI's whether by a bounded search over the worlds each lever would make"
 requires-python = ">=3.10"
@@ -17,9 +17,9 @@ dependencies = [
     "orexis",
     # The layer beneath: the ledger a plan's head is committed to, the act it fills, the timer
     # its clock keeps, and the road a committed act is handed down.
-    "orexis-progression",
+    "orexis-agent-progression",
     # The reactive loop, for one thing: a plan's head crosses onto it to be committed and taken.
-    "orexis-reactive",
+    "orexis-agent-reactive",
     # The imaginarium is a store of its own, and a signature hashes quads.
     "pyoxigraph>=0.4",
     # Effects are applied to an rdflib graph before they are written back, and the planner
@@ -33,5 +33,5 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["orexis_deliberation"]
-package-dir = {"orexis_deliberation" = "."}
+packages = ["orexis_agent_deliberation"]
+package-dir = {"orexis_agent_deliberation" = "."}

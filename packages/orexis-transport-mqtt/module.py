@@ -28,8 +28,8 @@ import paho.mqtt.client as mqtt
 
 from agent import config
 from agent.module import Module, contributes
-from orexis_progression.ontology import HANDLE, SEND, SUBSCRIPTIONS
-from orexis_progression.store import bindings
+from orexis_agent_progression.ontology import HANDLE, SEND, SUBSCRIPTIONS
+from orexis_agent_progression.store import bindings
 
 from .watchdog import BusWatchdog
 

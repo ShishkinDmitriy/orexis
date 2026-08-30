@@ -31,7 +31,7 @@ import pytest
 
 from assembly import loader
 
-from test_projects import LAYERS, imported, sources
+from test_projects import LAYER_FAMILY, LAYERS, imported, sources
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -41,18 +41,20 @@ PACKAGES = tuple(p for p in loader.packages() if not p.is_kernel and p.kind != "
 MODULES = {p.import_name for p in PACKAGES}
 
 #  THE LAYERS: found by FAMILY — the loader's `kind`, read off the package's own name — so
-#  nothing below names a package. A layer is ONE package named for its kind (`orexis-reactive`),
-#  not a family with members. `agent/` is the CONTAINER that assembles them and may import them all;
+#  nothing below names a package. A layer is ONE package, `orexis-agent-<layer>`: the family
+#  `agent` is what groups the three in a listing, and the member is the row. `agent/` is the CONTAINER that assembles them and may import them all;
 #  it is not a layer and nothing imports it from below. What a lower layer has to say to a
 #  higher one it says as an EVENT through the choir, which is how the arrows stay one-way.
-LAYER_PACKAGES = tuple(p for p in PACKAGES if p.kind in LAYERS)
+#  `orexis-agent-<layer>`: the family `agent` groups the three in a listing, and the member is
+#  the row. Not to be confused with the root tree `agent/` — that is an import name, this a kind.
+LAYER_PACKAGES = tuple(p for p in PACKAGES if p.kind == LAYER_FAMILY and p.name in LAYERS)
 LAYER_MODULES = {p.import_name for p in LAYER_PACKAGES}
 
 
 def below(family: str) -> set[str]:
     """The import names of every layer STRICTLY beneath this family, in `LAYERS` order."""
     rank = LAYERS.index(family)
-    return {p.import_name for p in LAYER_PACKAGES if LAYERS.index(p.kind) < rank}
+    return {p.import_name for p in LAYER_PACKAGES if LAYERS.index(p.name) < rank}
 
 
 def test_there_are_packages_to_check():
@@ -66,7 +68,7 @@ def test_there_are_packages_to_check():
 def test_every_layer_is_there(family: str):
     """The guard on the carve-outs: a layer with no package excuses nothing and looks as if it
     did — and the tests below, looping over it, would assert nothing."""
-    assert [p for p in LAYER_PACKAGES if p.kind == family], (
+    assert [p for p in LAYER_PACKAGES if p.name == family], (
         f"no package of the `{family}` family discovered — that layer moved or was renamed, "
         "and the carve-outs in this file and test_projects.py now excuse nothing.")
 
@@ -107,7 +109,7 @@ def test_a_layer_imports_only_the_layers_beneath_it(pkg):
     progression importing the search FAILED, the search importing the market FAILED, and the
     container importing the market FAILED.
     """
-    allowed = below(pkg.kind) | {pkg.import_name}
+    allowed = below(pkg.name) | {pkg.import_name}
     refused = ({"agent", "onboarding"} | MODULES) - allowed
     offenders = {
         path.relative_to(REPO_ROOT): sorted(imported([path]) & refused)
@@ -115,7 +117,7 @@ def test_a_layer_imports_only_the_layers_beneath_it(pkg):
         if imported([path]) & refused
     }
     assert not offenders, (
-        f"{pkg.name} ({pkg.kind}, may import only {sorted(below(pkg.kind)) or 'assembly'}) "
+        f"{pkg.name} (may import only {sorted(below(pkg.name)) or 'assembly'}) "
         f"reaches past its layer: {offenders}")
 
 

@@ -22,8 +22,9 @@ and the intention stands for the next trigger; an act with a window carries its 
 an expectation is judged when a reading arrives. Nothing here holds the loop while it waits,
 which is the constraint the reactive layer exists to make checkable.
 
-The name is `progression`, two segments, because a layer is ONE package and not a family
-with members. What this one does is keep a commitment standing within a stated patience and
+The name is `orexis-agent-progression`: the family `agent` groups the three layers in a
+listing ("hard to locate packages in the list without it"), and a layer is ONE package, not a
+family with members. What this one does is keep a commitment standing within a stated patience and
 supersede it past it — the amortised deliberation of an-intention-is-an-amortised-deliberation;
 the open-minded commitment the keeper's own docstring sketches would be a change to this
 package, a decision for then, not a sibling waiting for a slot.

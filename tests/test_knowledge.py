@@ -592,7 +592,7 @@ def test_a_dictionary_term_is_a_declared_one():
     import rdflib
 
     from assembly import loader
-    from orexis_progression.store import NAMESPACES
+    from orexis_agent_progression.store import NAMESPACES
 
     #  Asked of the loader, not globbed. This was `packages/**/ontology.ttl` plus a firmware
     #  glob — the same list the loader already assembles, maintained twice — and when the kernel
