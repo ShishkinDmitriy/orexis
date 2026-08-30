@@ -10,7 +10,7 @@ holds its reasoning; its mechanism has moved, and the record says where.
 
 ## Start here
 
-There are 138 of these and no one reads them in order. A path through, for someone new:
+There are 139 of these and no one reads them in order. A path through, for someone new:
 [the-society-is-named-for-its-appetite](/decisions/the-society-is-named-for-its-appetite.md) for
 what the project is, [self-is-bdi-and-wiring-is-the-packages](/decisions/self-is-bdi-and-wiring-is-the-packages.md)
 for how it is cut in two, then
@@ -158,7 +158,8 @@ A directory is a package. What that buys, and what the tree is not allowed to im
 * [a-package-is-its-name](/decisions/a-package-is-its-name.md) - The tree goes flat: a package's directory, distribution and module are one string, and the family is its second segment.
 * [a-package-states-what-it-needs-of-the-world](/decisions/a-package-states-what-it-needs-of-the-world.md) - A package projects the world it needs; the belief base is the union over a kernel bootstrap root.
 * [a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md) - Three layers in the code and two types in the bundle: a repository holds data, a service holds logic.
-* [a-layer-is-a-distribution](/decisions/a-layer-is-a-distribution.md) - A kernel layer is a root distribution importing only the contract below, the arrows tested as dependencies; the monolith's acceptance is overturned.
+* [a-layer-is-a-distribution](/decisions/a-layer-is-a-distribution.md) - SUPERSEDED IN PART — the layering and tested arrows stand; the root-tree placement and the universal roster fell before their first merge.
+* [a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md) - A layer is a family in the one tree, pulled by hard dependency from what is granted; a soft need injects and never loads.
 * [a-term-nobody-reads-is-annotation](/decisions/a-term-nobody-reads-is-annotation.md) - The confirmation route is retired; the cognitive rows survive the same audit, because assembly reads them.
 * [the-service-is-the-page](/decisions/the-service-is-the-page.md) - A service page carries its process, repositories and graph types; the shared dictionary does not fold into it.
 * [noticing-is-what-a-freshness-want-does](/decisions/noticing-is-what-a-freshness-want-does.md) - A hook nobody asked, retired; the want covers it, and a guard now refuses the next one.

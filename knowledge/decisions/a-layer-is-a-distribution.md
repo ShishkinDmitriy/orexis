@@ -11,7 +11,8 @@ description: >-
   the contract of the layer below, the arrows held by the same dependencies-to-imports gate
   every package already answers to. Refuses the monolith the mind's record accepted as a
   seam, and the one-distribution argument whose premise every-package-is-a-project removed.
-status: accepted
+status: superseded-in-part
+superseded-by: a-layer-is-a-package-and-need-loads-it
 timestamp: 2026-08-30T12:00:00Z
 ---
 
@@ -55,7 +56,10 @@ package's dependencies to its imports in both directions
 ([every-package-is-a-project](/decisions/every-package-is-a-project.md)) holds these: a layer
 reaching past a contract fails, and a boundary no longer used fails too.
 
-**They are root trees, not members of `packages/`.** The granted tree is for what a world can
+**They are root trees, not members of `packages/`.** *This clause and the unconditional
+loading it implied are what the `superseded-in-part` above refers to — see
+[a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md);
+the layering, the contract-only imports and the tested arrows stand.* The granted tree is for what a world can
 grant, and a layer is unconditional — a grant nobody can lack is not a grant, which is the
 mind's record applied consistently rather than argued with. This also keeps
 [package](/domain/package.md)'s claim intact: the kernel is not a family. `assembly/` stays
