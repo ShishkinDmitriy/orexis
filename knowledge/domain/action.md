@@ -32,7 +32,7 @@ market:Acquiring a ag:Action ;
 ```
 
 Six ship: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `market:Offering`,
-`market:Serving` — a duty's, whose availability binds `?for_agent` — and `market:Presenting`,
+`market:Serving` — an obligation's, whose availability binds `?for_agent` — and `market:Presenting`,
 the buyer's hold on a won claim, which has no availability and no effect because no plan
 chooses it: the claim arriving is the adoption, and it is a node so the hold can be a
 commitment and an urgency. A premise may

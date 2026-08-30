@@ -224,7 +224,7 @@ def test_the_region_and_the_aim_reach_the_agents_own_bucket(monkeypatch):
     assert m == "agent_desire"
     #  The region and the pick inside it, and no urgency: how badly a want is unmet is
     #  reported per WANT by the deliberator (`agent_want`), because a property cannot name a
-    #  freshness want or a duty, and two places computing the same figure is the drift this
+    #  freshness want or an obligation, and two places computing the same figure is the drift this
     #  project keeps removing.
     assert moisture == {"desired_low": 0.45, "desired_high": 0.65, "aim": 0.55}
     _, temperature = rows["AirTemperature"]
@@ -321,7 +321,7 @@ def test_the_ranking_reaches_the_dashboards_with_the_split_that_matters(monkeypa
     #  ledger at all — `desire:Owing` was a grant — and the claim underneath is unchanged: what
     #  a fern owes is nothing. Asserted against the debts now rather than against the module,
     #  because every agent keeps a ledger and only some of them ever write one.
-    assert not fern.ower.duties(), \
+    assert not fern.ower.obligations(), \
         "a plant holds no lever anyone may demand, so it owes nothing"
 
 

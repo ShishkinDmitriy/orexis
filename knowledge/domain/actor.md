@@ -49,7 +49,7 @@ def take(self, act, desire, intention: str) -> bool
 ```
 
 `act` is the [act](/domain/act.md) the plan's head proposes — the action, the want and what it
-is about, the [lever](/domain/lever.md), the quantity the search sized, and, for a duty, whom it
+is about, the [lever](/domain/lever.md), the quantity the search sized, and, for an obligation, whom it
 is owed to. `desire` is the want it
 serves, `intention` the ledger row already written for it. What an actor does with them is its
 own: sensing nudges every driver that can be asked; bidding reads the open round off the row's

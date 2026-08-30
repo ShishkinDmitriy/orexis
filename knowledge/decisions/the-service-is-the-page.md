@@ -30,7 +30,7 @@ outputs are the natural unit to describe it by.
 **The wiring belongs on the service page.** Which repositories a service reads, which named
 graphs it writes, and what its one process is — these have no other home today, and
 [deliberation](/domain/deliberator.md) has already grown them by itself: it carries *the menu*,
-*what the search does with an effect* and *what deliberation does with a duty*, three sections
+*what the search does with an effect* and *what deliberation does with an obligation*, three sections
 that are wiring rather than concept. The proposal names something the bundle was already doing.
 
 **A service is an `-er` and its process is the `-ing`.** `Planner` runs planning, `Keeper` runs

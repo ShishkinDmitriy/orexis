@@ -5,7 +5,7 @@ description: >-
   The common currency — one scalar from 0 to 1 that makes unlike wants comparable, so the hottest
   one wins without anything having to rank kinds of want against each other. It has several
   SOURCES and one meaning: the desire's own declared measure for a measured property — distance
-  from the aim, scaled by the survival room on that side — a deadline's approach for a duty, and
+  from the aim, scaled by the survival room on that side — a deadline's approach for an obligation, and
   1.0 flat for not knowing, which is the choice that makes an agent look before it acts. Every
   consumer reads the same number — the cadence tightens on it, the bidder prices with it, the
   planner scores worlds by it — so a change in how it is computed moves the whole society at
@@ -26,7 +26,7 @@ That is the whole job: **a common currency, so the hottest want wins.**
 | the desire | where its urgency comes from |
 |---|---|
 | a measured property | its own declared measure — distance from the [aim](/domain/aim.md), scaled by the survival room on that side, zero at the pick |
-| a duty owed to a peer | the room left before its deadline |
+| an obligation owed to a peer | the room left before its deadline |
 | a property never read | **1.0** — flat |
 | a commitment whose world has not answered yet | **1.0**, while the watch is open |
 
@@ -72,5 +72,5 @@ it answers when asked.
 
 - [gap](/domain/gap.md) — the source of it for a measured property, and where |gap| = urgency is
   stated.
-- [obligation](/domain/obligation.md) — the source of it for a duty.
+- [obligation](/domain/obligation.md) — the source of it for an obligation.
 - [sensing](/domain/sensing.md) — the consumer that turns it into a cadence.

@@ -78,7 +78,7 @@ MEASUREMENT = "soil_moisture"
 FIELD = "value"
 AGENT_MEASUREMENT = "agent_health"
 #  One row per WANT — tagged by the want itself, not by a property, because a
-#  property cannot name a freshness want (per instrument) or a duty (per
+#  property cannot name a freshness want (per instrument) or an obligation (per
 #  counterparty). Written by whoever sees every desire, which is the deliberator.
 WANT_MEASUREMENT = "agent_want"
 #  What a planning pass cost and what it did with each lever. Written by the
@@ -255,7 +255,7 @@ def _urgency_panel(buckets: dict, y: int, panel_id: int) -> dict:
 
     Grouped by the WANT rather than by the property it is about — the sovereign's correction,
     and it is what lets one graph hold every kind. A property cannot name a freshness want,
-    which is per instrument, or a duty, which is per counterparty, so a panel keyed on
+    which is per instrument, or an obligation, which is per counterparty, so a panel keyed on
     `property` could only ever draw stakes and the common currency would stay a claim. One
     target per agent, because a bucket is per agent and a token opens only its own.
 
@@ -301,7 +301,7 @@ def _urgency_panel(buckets: dict, y: int, panel_id: int) -> dict:
                        #  stored stays the name the graph knows it by.
                        #
                        #  The prefix is kept rather than dropped, because it is not always
-                       #  redundant: a duty is tagged `duty.<owed to>`, and in the supplier's
+                       #  redundant: an obligation is tagged `obligation.<owed to>`, and in the supplier's
                        #  bucket that reads "supplier owes fern" only if the holder is said.
                        f'  |> map(fn: (r) => ({{ r with _field: "{agent_id}/" + '
                        f'strings.replace(v: r.want, t: ".{agent_id}.", u: ".", i: 1) }}))')}

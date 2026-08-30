@@ -4,7 +4,7 @@ title: Ower
 description: >-
   The service that keeps what this agent owes — one row per claim the society issued against it,
   with the counterparty, the amount and the window. It is the only writer of the obligations
-  graph, and its rows become duties the search ranges over rather than facts anyone may retract.
+  graph, and its rows become obligations the search ranges over rather than facts anyone may retract.
 ---
 
 # What it runs

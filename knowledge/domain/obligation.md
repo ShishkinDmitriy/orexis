@@ -45,7 +45,7 @@ way: the [sovereign](/domain/sovereign.md) asks.
 
 # Its urgency is the room between two things
 
-A duty does not have a gap, so its urgency comes from elsewhere: **how much room is left** between
+A obligation does not have a gap, so its urgency comes from elsewhere: **how much room is left** between
 now and when it must be discharged. That is why an obligation carries both instants rather than
 one — an agent holding only the deadline could not say how urgent it is without knowing when the
 clock started.

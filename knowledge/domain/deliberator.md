@@ -24,7 +24,7 @@ the actors treat it exactly as they treat their own cooldowns.
 **The question is a WANT and never a property and a value.** A property and a value can only
 ever express a stake, and an agent also wants things that are not distances — "this claim
 redeemed" is a state, wanted, with a deadline. A desire carries either shape and one urgency,
-so a duty is ranked against a thirst rather than running down a second path that never meets
+so an obligation is ranked against a thirst rather than running down a second path that never meets
 the first. The second door — an actor holding a fresh reading asking what to do about that
 property — is not the deliberator's any more: which wants a property carries is
 [sensing](/domain/sensing.md)'s to say, and its `want_about` chooses by a rule rather than by a
@@ -340,10 +340,10 @@ says loudly what happened. Concluding from part of the menu is concluding wrongl
 nobody could simulate may be the one that works — measured on fern, which buys its water. Which
 is why a world holding such a lever is refused before it can run.
 
-# What deliberation does with a duty (#218)
+# What deliberation does with an obligation (#218)
 
 Asked about a stake, the search ranges over the agent's OWN rows alone and never proposes one
-owed to somebody — the split itself is [affordance](/domain/affordance.md)'s. What belongs here is why a duty
+owed to somebody — the split itself is [affordance](/domain/affordance.md)'s. What belongs here is why an obligation
 is deliberated about at all, since the obvious arrangement is that it is not.
 
 Honouring used to be *never proposed*: the whether was settled elsewhere and by others — the
@@ -352,7 +352,7 @@ free to deliberate over claims is a host that can defect politely, one "None is 
 time. The fear was answered rather than ignored, and the answer is that **enforcement was never
 the deliberation**. The dose still opens against a claim the pump's firmware verifies, clearing
 still validated the trade, the ACL still bounds who may speak. What deliberation controls is
-only whether the agent *tries* — so making the duty a desire converts an invisible non-event into
+only whether the agent *tries* — so making the obligation a desire converts an invisible non-event into
 a hot unpursued desire, which is evidence instead of silence. See
 [an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md).
 

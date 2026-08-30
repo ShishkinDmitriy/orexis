@@ -22,7 +22,7 @@ from another agent — my obligations. Also we can add urgency for desire graphs
 hottest one."*
 
 [#218](https://github.com/ShishkinDmitriy/orexis/issues/218) put the distinction on the LEVER —
-a menu row was `Chosen` or `Honoured`, and the deliberator filtered duties out. This puts it on
+a menu row was `Chosen` or `Honoured`, and the deliberator filtered obligations out. This puts it on
 the GOAL, which is deeper and simpler: there is one kind of row (what is possible) and one kind
 of motivation (a want, with a source), and an agent's whole conduct is desires it pursues
 through affordances. Nothing needs a second decision path.
@@ -62,7 +62,7 @@ defect politely, one "None is a decision" at a time. It dissolves here, because 
 was never the deliberation**. The dose opens against a claim the PUMP'S FIRMWARE verifies
 (trust-boundary, thin-trusted-infra); the ledger makes bought-at and sold-at subtractable; the
 ACL bounds who may speak at all. What deliberation controls is only whether the agent *tries*.
-So making the duty a desire does not weaken a guarantee — it converts an invisible non-event
+So making the obligation a desire does not weaken a guarantee — it converts an invisible non-event
 into a hot unpursued goal, which is the evidence-producing posture this project takes toward
 theft, false knowledge and every other misbehaviour it cannot prevent outright.
 
@@ -90,9 +90,9 @@ me". Whom I may owe stays topology, disclosed by the honoured row and never stor
 
 The mode survives the reframe as DISCLOSURE rather than exemption: an honoured row says which
 of my levers others may demand and by whom. Deliberation still passes over those rows when the
-question is a stake, and the reason narrowed usefully — not "a duty is nobody's to decide" but
-"a stake is a distance and a duty is a graph-shaped goal, and the two are not answered by
-ranging over the same rows". Asked about the duty itself, the honoured rows are exactly what it
+question is a stake, and the reason narrowed usefully — not "an obligation is nobody's to decide" but
+"a stake is a distance and an obligation is a graph-shaped goal, and the two are not answered by
+ranging over the same rows". Asked about the obligation itself, the honoured rows are exactly what it
 ranges over.
 
 ## What driving acts changed (step 9)
@@ -119,13 +119,13 @@ three things surfaced that the design had not.
   undischarged, with a deadline in the past. Paid, never-demanded, and ran-out are now three
   distinguishable things, where the first draft had two.
 - **The honoured row found a second job.** It was disclosure — what others may demand of me —
-  and it is now also how a duty finds its LEVER: an obligation names its counterparty, and the
+  and it is now also how an obligation finds its LEVER: an obligation names its counterparty, and the
   row honoured for exactly that agent is the means. The mode survived by being useful twice,
   which is the better argument for keeping a distinction than the one it was introduced with.
 
 What did NOT change is the guarantee. Redemption still opens against a claim the pump's firmware
 verifies, clearing still validated the trade, the ACL still bounds who may speak. What moved is
-whether the agent *tries* — so the defection worry is answered by evidence: a duty nothing can
+whether the agent *tries* — so the defection worry is answered by evidence: an obligation nothing can
 serve stays owed, stays hot, and says so in the log and the ledger, where before it was a claim
 silently dropped from a dict.
 
@@ -135,7 +135,7 @@ A debt was kept inside `desire:Deducing`, whose premise is a STAKE — `ag:actsF
 states what it needs. `world/simulation`'s city has no stake: it acts for a mains that states a
 capacity and no ranges. So it deduced no region, composed no desire module, and recorded not one
 of the claims it had been issuing and redeeming all day. Under the step-9 framing that is the
-worst possible place for the gap to be: an unserved duty is supposed to be evidence, and the one
+worst possible place for the gap to be: an unserved obligation is supposed to be evidence, and the one
 agent whose failure to deliver would leave none was the one best placed to fail.
 
 Two abilities had been sharing one premise that covered only one of them. **Deducing a region is
@@ -164,9 +164,9 @@ facts were sayable in authored and entailed terms (`market:matchesBy`, `market:o
   that has run — cool at issue, maximal at the deadline, clamped after. Both timestamps are kept
   on the obligation because the urgency is the room BETWEEN them; an agent holding only the
   expiry would have to assume when the window opened. The two failures this shape was chosen
-  against are recorded because they remain the risk if anyone re-tunes it: a duty pinned at 1.0
+  against are recorded because they remain the risk if anyone re-tunes it: an obligation pinned at 1.0
   is the honoured mode returning under another name, since it outranks a plant that is dying,
-  and a duty with no heat is an agent that defects while its ledger looks tidy.
+  and an obligation with no heat is an agent that defects while its ledger looks tidy.
 - **Where the override order lives.** A belief (the agent's character, revisable) or a world
   fact (the society's contract, ratified)? The mandate pattern says the sovereign should bound
   it and the agent pick inside — which would make "how social am I" a revisable belief inside a
@@ -177,7 +177,7 @@ facts were sayable in authored and entailed terms (`market:matchesBy`, `market:o
   asks of whatever world it judges — and the act stayed an affordance (`ag:Apply`, whose
   effect rule now states what serving makes true, sized from the record's own `ag:amountL`).
 - **What becomes of the honoured row.** ANSWERED: disclosure survived, the filter did not, and
-  the row gained a job nobody had planned for it — it is how a duty finds the lever that serves
+  the row gained a job nobody had planned for it — it is how an obligation finds the lever that serves
   its counterparty. A pass about a PROPERTY still passes over honoured rows, which is not a
-  filter but the shape of the question: a duty is not a distance, and a search ranging over
+  filter but the shape of the question: an obligation is not a distance, and a search ranging over
   distances would have nothing to say about one.

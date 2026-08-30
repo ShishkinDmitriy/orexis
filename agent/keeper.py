@@ -257,7 +257,7 @@ class Keeper(Module):
         from . import execution
 
         for desire in self.agent.pursuing():
-            if desire.is_duty:
+            if desire.is_obligation:
                 continue
             execution.pursue(self.agent, desire)
 

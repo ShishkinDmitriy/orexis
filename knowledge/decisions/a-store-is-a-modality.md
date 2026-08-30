@@ -123,7 +123,7 @@ and every crossing already has a native shape in the house:
   | market affordance walk | 0.8 ms | 0.6 ms | props from the desires store, `VALUES`-injected into the wiring walk |
   | `AcquireEffect` | 0.8 ms | 0.5 ms | conversion prefetched, `$conversion` a parameter |
 
-  Two bounds on what this says: the world was freshly born, so the duty branch ran over an
+  Two bounds on what this says: the world was freshly born, so the obligation branch ran over an
   empty obligations graph on both sides — its cost is bounded by open claims, which are few by
   construction; and the Python join reproduced the stake arithmetic (asserted equal, to three
   decimals) but not staleness, which is two comparisons. Neither can turn a 3x win into the
@@ -210,7 +210,7 @@ Two consequences, for [#298](https://github.com/ShishkinDmitriy/orexis/issues/29
 - **The trigger for revisiting did not fire.** The measurement (order of work, step 1) was
   reserved the right to send this record back; it came in faster on every crossing instead.
   The graph-partition of six-graphs remains the recorded fallback should a future crossing —
-  a duty-heavy society, a query the audit did not foresee — cost what a planning pass costs.
+  an obligation-heavy society, a query the audit did not foresee — cost what a planning pass costs.
 
 ## The order of work
 

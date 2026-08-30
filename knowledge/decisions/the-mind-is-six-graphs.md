@@ -120,7 +120,7 @@ Both misnamings came from different wrong axes, which is the argument for naming
 manufacturer), allocation ceilings (by the constitution), review latitude (by the sovereign)
 and claims (by a peer) are one kind of thing: someone else says what this agent may do. One
 class, `Constraint`, with `Obligation` the subclass that names a counterparty — because a
-rotting rhizome is not a duty owed to a plant, and the difference between a hard bound and a
+rotting rhizome is not an obligation owed to a plant, and the difference between a hard bound and a
 debt is exactly whether there is someone to be wronged.
 
 ## Birth authors picks, and nothing else
@@ -249,10 +249,10 @@ rename, so writes moved while reads stayed — caught by tests, not by a scan.
    [a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md), which supersedes that design and
    keeps its diagnosis.
 9. **Obligations drive acts** — DONE. Deliberation takes goals rather than a property and a
-   value: `propose_for(goal)` answers for a stake and a duty alike, and a host serves a
+   value: `propose_for(goal)` answers for a stake and an obligation alike, and a host serves a
    presented claim because its deliberator proposed the move, not because a handler fired. What
    it needed first was a DEADLINE — a claim had none, so an obligation had no honest source of
-   urgency — and the sovereign chose to add the fact rather than proxy it. A duty nothing can
+   urgency — and the sovereign chose to add the fact rather than proxy it. A obligation nothing can
    serve now stays owed, stays hot, and is tried again when the vessel reports.
 
 # Seams left open

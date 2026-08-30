@@ -10,7 +10,7 @@ stand on.
 **The chain itself is gone now**, absorbed by the search that used to run in front of it —
 see a-plan-is-a-path-of-graph-diffs.md. So the assertions here are about the BEHAVIOUR the
 reflex used to carry rather than about the reflex: a thirsty plant buys, a sated one does not,
-a duty is never proposed as a choice, and an agent whose search cannot answer proposes
+an obligation is never proposed as a choice, and an agent whose search cannot answer proposes
 nothing instead of finding a second road.
 """
 
@@ -333,7 +333,7 @@ def test_the_dealers_menu_gained_its_lever(make):
     #  venue it hosts are redeemed through its valves — one row per lever, never a proposal.
     honoured = [r for r in rows if not r.is_own]
     assert {r.action.rsplit("#", 1)[-1] for r in honoured} == {"Serving"}
-    assert len(honoured) == 3, "one duty per valve it holds for its buyers"
+    assert len(honoured) == 3, "one obligation per valve it holds for its buyers"
 
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
@@ -464,33 +464,33 @@ ag:Consulting a ag:Action ; ag:means ag:Consult ;
 # --- whom a row serves (#218) --------------------------------------------
 
 def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
-    """The sovereign asking what an agent DOES gets its duties beside its options — and asked
+    """The sovereign asking what an agent DOES gets its obligations beside its options — and asked
     about a PROPERTY it holds a stake in, deliberation proposes none of them.
 
     An obligation IS a want (ag:Obligation) and is meant to reach deliberation, through the
-    door that takes the want itself. What must not happen is a duty answering a question about
+    door that takes the want itself. What must not happen is an obligation answering a question about
     a stake: the honoured row exists because somebody else holds paper, and serving it is not
     a move this agent may choose for its own reasons. The search enforces it by filtering to
-    chosen rows for anything that is not a duty — the same filter the chain applied, for the
+    chosen rows for anything that is not an obligation — the same filter the chain applied, for the
     same reason, one road further along.
     """
     from agent.desire import Desire
 
     supplier = make("supplier")
     rows = affordances_of(supplier.beliefs.query, supplier.me.uri, supplier.desires.query_union, beliefs_graph(supplier.id))
-    duties = [r for r in rows if not r.is_own]
-    assert duties, "the conduct surface includes what it honours"
+    obligations = [r for r in rows if not r.is_own]
+    assert obligations, "the conduct surface includes what it honours"
 
     deliberator = supplier.deliberator
-    duty_means = {r.action for r in duties}
+    duty_means = {r.action for r in obligations}
     #  Across the range rather than at one value, because a filter that leaks at one sign is a
     #  filter that leaks.
-    for row in duties:
+    for row in obligations:
         for value in (0.0, 0.5, 5.0, 50.0):
             stake = ObservedDesire(uri="urn:w", urgency=0.5, observed_property=row.about,
                                  value=value)
             assert deliberator.propose_for(stake) not in duty_means, \
-                "a duty was proposed as if it were a choice"
+                "an obligation was proposed as if it were a choice"
 
 
 def test_a_buyer_honours_nothing(make):
@@ -502,7 +502,7 @@ def test_a_buyer_honours_nothing(make):
 # --- step 9: a desire, not a property and a value -----------------------------
 
 def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
-    """`propose_for` takes the WANT, so a duty reaches deliberation as what it is.
+    """`propose_for` takes the WANT, so an obligation reaches deliberation as what it is.
 
     Its means is not deduced here and could not be: it is the honoured row the market derives
     from the delivery chain, and the one that answers is the row honoured for exactly this
@@ -512,9 +512,9 @@ def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
     from agent.desire import Desire
 
     supplier = make("supplier")
-    duty = Desire(uri="urn:o", urgency=0.9, claim="j-1",
+    obligation = Desire(uri="urn:o", urgency=0.9, claim="j-1",
                 owed_to="http://example.org/orexis/world/simulation#fern_agent")
-    assert supplier.deliberator.propose_for(duty) == \
+    assert supplier.deliberator.propose_for(obligation) == \
         "http://example.org/orexis/market#Serving"
 
     stranger = Desire(uri="urn:o", urgency=0.9, claim="j-2", owed_to="urn:nobody")
@@ -596,11 +596,11 @@ def test_every_want_is_drawn_by_the_one_module_that_sees_them_all(make):
     """One row per want, tagged by the WANT — the sovereign's correction to a first draft that
     keyed the panel on the property.
 
-    A property cannot name every want: freshness is per instrument, a duty is per counterparty.
+    A property cannot name every want: freshness is per instrument, an obligation is per counterparty.
     So a graph grouped by property could only ever draw stakes, and "urgency is the common
     currency" would stay a claim rather than something you can look at.
 
-    A duty is tagged by whom it is owed to and NEVER by its claim: a jti is unique per round, so
+    A obligation is tagged by whom it is owed to and NEVER by its claim: a jti is unique per round, so
     tagging by it would mint a series every time the society traded and grow the store's
     cardinality with its history.
     """
@@ -615,7 +615,7 @@ def test_every_want_is_drawn_by_the_one_module_that_sees_them_all(make):
     tags = {t["want"] for t, _ in rows}
     assert len(tags) == len(rows), "one line per want, not several sharing a name"
     assert not any(len(t) > 60 for t in tags), \
-        "a tag carrying a jti would mint a new series per round — duties are tagged by whom"
+        "a tag carrying a jti would mint a new series per round — obligations are tagged by whom"
 
 
 def test_a_pass_reports_what_it_cost_and_what_it_could_not_see(make):

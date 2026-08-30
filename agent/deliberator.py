@@ -126,17 +126,17 @@ class Deliberator(Module):
         })]
         #  ONE ROW PER WANT, which is what makes a single graph able to show all of them.
         #  The tag is the want ITSELF and not the property it is about, because a property
-        #  cannot name every want: freshness is per instrument, a duty is per counterparty, and
+        #  cannot name every want: freshness is per instrument, an obligation is per counterparty, and
         #  a panel keyed on `property` could only ever draw stakes. Urgency is unit-free by
         #  construction, so a moisture, a look overdue and a litre owed belong on one axis —
         #  that is the whole claim of a common currency, and this is where it becomes visible.
         #
-        #  A DUTY is tagged by whom it is owed to and never by its claim. A jti is unique per
+        #  A OBLIGATION is tagged by whom it is owed to and never by its claim. A jti is unique per
         #  round, so tagging by it would mint a new series every time the society traded and
         #  make the store's cardinality grow with its history — the cost of a dashboard nobody
         #  could then load. Whom I owe is a handful of agents and says the thing worth seeing.
         for desire, _ in pursued:
-            about = (desire.owed_to.rsplit("#", 1)[-1] if desire.is_duty
+            about = (desire.owed_to.rsplit("#", 1)[-1] if desire.is_obligation
                      else desire.uri.rsplit("#", 1)[-1])
             #  `agent_want` and its tag KEEP THE RETIRED WORD, deliberately. The noun "want"
             #  gave way to "desire" everywhere else when the vocabulary was ruled on
@@ -144,7 +144,7 @@ class Deliberator(Module):
             #  than it buys: it is an external surface with history behind it, so renaming
             #  splits every series at the cutover and leaves a dashboard reading half of one.
             #  The word is wrong and the continuity is worth more.
-            rows.append(("agent_want", {"want": f"duty.{about}" if desire.is_duty else about},
+            rows.append(("agent_want", {"want": f"obligation.{about}" if desire.is_obligation else about},
                          {"urgency": float(desire.urgency)}))
 
         #  HOW IT DECIDED, not just what it wants (#256). `pursued()` above has just re-planned
@@ -195,12 +195,12 @@ class Deliberator(Module):
         goes through is half of what it says, and execution writes that half to the ledger
         as `ag:through`. None where there is nothing to do, and that None is a decision.
 
-        It takes the want itself, so a duty reaches deliberation as what it is: a thing wanted,
+        It takes the want itself, so an obligation reaches deliberation as what it is: a thing wanted,
         ranked in the same currency, pursued through an affordance like anything else. It is
         the widening the obligation record predicted — "the filter lifts when a member can
         pursue a desire that is a diff rather than a distance".
 
-        A duty's means is not deduced here and could not be: it is the row OWED to that
+        A obligation's means is not deduced here and could not be: it is the row OWED to that
         counterparty, which the market's own `honoured.rq` derives from the delivery chain.
         None where no lever answers — a debt to somebody my hardware cannot reach — and that
         None is the point. It used to be an exception thrown deep inside actuation; now it is
@@ -219,7 +219,7 @@ class Deliberator(Module):
         #  make. Same first move, reached by the one road. The plan record set exactly this as
         #  its own acceptance test: a widening that leaves the special case beside it has not
         #  widened anything.
-        if not desire.is_duty:
+        if not desire.is_obligation:
             #  THE SEARCH, and there is nowhere else to go. Asking whether a lever points the
             #  right way is not the same as asking whether taking it leaves this agent better
             #  off, and only the second question refuses to water a plant that is already too
@@ -239,21 +239,21 @@ class Deliberator(Module):
         #  AND this agent's own levers, so a host owing water it does not hold plans the
         #  refill — Acquire raises the level Apply's premise reads, and "refill, then serve"
         #  falls out of two rules that never mention each other. A search that answered and
-        #  found no move is the evidence the issue demands: the duty stays hot, stays owed,
+        #  found no move is the evidence the issue demands: the obligation stays hot, stays owed,
         #  and is not pursued into a world where serving discharges nothing.
         if plan := self._planned(desire):
             return plan
-        #  The search speaks for a duty only when it FOUND a path — a vessel nobody has read
+        #  The search speaks for an obligation only when it FOUND a path — a vessel nobody has read
         #  binds no premise, and a premise that cannot bind proves nothing about serving. So
         #  anything short of a plan falls through to the pre-#255 road, unchanged: the
         #  honoured row for this counterparty, and the actuation boundary judges the vessel
-        #  when it pours. Handed back as a one-row plan labelled DUTY, which is not a
-        #  search outcome and is not written to the trace: it is the row the duty names.
+        #  when it pours. Handed back as a one-row plan labelled OBLIGATION, which is not a
+        #  search outcome and is not written to the trace: it is the row the obligation names.
         for row in affordances_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union,
                            beliefs_graph(self.agent.id)):
             if row.for_agent == desire.owed_to:
-                #  A duty's row, unsized: the host sizes the serve from the claim it holds.
-                return planner.Plan(DUTY, (Step(Act.from_row(row)),))
+                #  A obligation's row, unsized: the host sizes the serve from the claim it holds.
+                return planner.Plan(OBLIGATION, (Step(Act.from_row(row)),))
         return None
 
     def _planned(self, desire: Desire) -> planner.Plan | None:
@@ -280,7 +280,7 @@ class Deliberator(Module):
         #  and legitimately unmeasured (it has no distance to scale); any other want about a
         #  property is a stake, and a stake nothing measures is what the gate refuses. Told
         #  apart by the kernel's own structure — the kernel holds no region to consult.
-        if (not desire.is_duty and not desire.is_epistemic
+        if (not desire.is_obligation and not desire.is_epistemic
                 and self.agent.desire_urgency(
                     desire, self.agent.beliefs.query, STATE_GRAPH) is None):
             self.log.error(
@@ -334,10 +334,10 @@ class Deliberator(Module):
 #  produces the same thing is a second statement that can disagree — and it was the kernel's
 #  last reason to spell the market's `Offer`.
 
-#  A duty's fallback plan — the row owed to its counterparty when the search found no path.
+#  A obligation's fallback plan — the row owed to its counterparty when the search found no path.
 #  Not one of the planner's outcomes and never in the trace; it labels a row handed to
 #  execution so the ledger's prose says where the step came from.
-DUTY = "duty"
+OBLIGATION = "obligation"
 
 
 def _short(iri: str) -> str:

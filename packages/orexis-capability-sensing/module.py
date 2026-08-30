@@ -227,12 +227,12 @@ class SensingModule(Module):
         kernel's constant: the loner's water butt has no region and neither does a property
         nothing measures, and those two are not the same situation.
 
-        None — no opinion — for a duty, for a kind my declaration does not cover, and for a
+        None — no opinion — for an obligation, for a kind my declaration does not cover, and for a
         measure that raises: a package's bug must not take an agent down, and every ranking
         caller reads silence as the maximal 1.0.
         """
         about = getattr(desire, "observed_property", None)
-        if desire.is_duty or about is None:
+        if desire.is_obligation or about is None:
             return None
         if (instrument := desire.instrument) is not None:
             return self._answer(query, _FRESHNESS_MEASURE
@@ -696,7 +696,7 @@ class SensingModule(Module):
 
     def desires(self, now: datetime | None = None) -> list[Desire]:
         """My contribution to what the agent is pursuing: its stakes and its freshness wants,
-        the two kinds whose premise is an observation. The duties are the ledger's."""
+        the two kinds whose premise is an observation. The obligations are the ledger's."""
         return desires_of(self.agent.desires.query_union, self.agent.beliefs.query,
                           self.me.uri, measure=self._measured)
 

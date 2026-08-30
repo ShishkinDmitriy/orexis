@@ -43,7 +43,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [obligation](/domain/obligation.md) - A desire the agent did not source. Whom it may owe is topology; what it owes now is private runtime state.
 
-* [desire](/domain/desire.md) - What an agent is trying to bring about, and the capability that deduces it. A stake and a duty are the same type on purpose.
+* [desire](/domain/desire.md) - What an agent is trying to bring about, and the capability that deduces it. A stake and an obligation are the same type on purpose.
 
 * [root desire](/domain/root-desire.md) - A want quantified over a class, one per premise; the forest above the per-instance, per-property, per-side wants an agent pursues.
 
