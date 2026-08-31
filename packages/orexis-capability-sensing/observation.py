@@ -84,7 +84,7 @@ class Observations:
         """Every sensor worth a line: the ones wired to this module, and the ones that have
         delivered. A wired sensor that never delivered reports zero — the "never heard from"
         signal — and a delivered one that is not in the wired set (a simulated sensor, wired
-        with `ag:models`, which SPARQL does not follow without inference) is not omitted."""
+        with `orexis:models`, which SPARQL does not follow without inference) is not omitted."""
         return {s.local_id for s in self.wired} | set(self.readings)
 
     def health_rows(self) -> list[tuple[str, dict, dict]]:

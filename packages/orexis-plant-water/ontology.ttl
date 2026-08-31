@@ -1,6 +1,6 @@
 @prefix water: <http://example.org/orexis/water#> .
 @prefix : <http://example.org/orexis/water#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
@@ -60,7 +60,7 @@ Denominated in lux, and stated as such with `unit:LUX`, because unlike a moistur
 :servedBy a owl:ObjectProperty ; rdfs:domain :Plant ; rdfs:range :WaterSource ;
     rdfs:label "served by" ;
     rdfs:comment "Plumbing/reachability: which source can water this plant." .
-:suppliedBy a owl:ObjectProperty ; rdfs:subPropertyOf market:offeredBy ; rdfs:domain :WaterSource ; rdfs:range ag:Agent ;
+:suppliedBy a owl:ObjectProperty ; rdfs:subPropertyOf market:offeredBy ; rdfs:domain :WaterSource ; rdfs:range orexis:Agent ;
     rdfs:label "supplied by" .
 :capacityL a owl:DatatypeProperty ; rdfs:domain :WaterSource ; rdfs:range xsd:decimal ;
     rdfs:subPropertyOf market:lotCapacity , sim:maxValue ;
@@ -107,7 +107,7 @@ Denominated in lux, and stated as such with `unit:LUX`, because unlike a moistur
 #  the term that is most literally "per fraction OF something". A bidder asks whoever provides
 #  the desire family for the aim in that property; it holds no point of its own.
 
-:maxValuePerL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+:maxValuePerL a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "max value per litre" ;
     rdfs:comment "Willingness to pay at peak urgency — the private value curve. The market sees the bid, never this." .
 

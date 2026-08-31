@@ -2,7 +2,7 @@
 @prefix review: <http://example.org/orexis/review#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix reporting: <http://example.org/orexis/reporting#> .
-@prefix ag: <http://example.org/orexis#> .
+@prefix orexis: <http://example.org/orexis#> .
 @prefix market: <http://example.org/orexis/market#> .
 
 #  This agent's PRIVATE beliefs — and there is only one block, because it composed only one

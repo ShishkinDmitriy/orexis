@@ -21,7 +21,7 @@ Three facts, each recorded elsewhere, meet here.
 **The round is an event.** `hosting.announce` publishes `{auction_id, quantity_l, reserve,
 closes_in_s}` on the venue's offer topic and keeps `open_auction` in module memory; the bidder
 keeps `pending` the same way. Nothing in any store says *a round is open on V until T*. So
-`market:Acquiring`'s `ag:available` walks the plumbing — *winnings can physically reach my pot*
+`market:Acquiring`'s `orexis:available` walks the plumbing — *winnings can physically reach my pot*
 — and stops there: it says *I could buy*, never *I can buy now*.
 [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md) made
 the consequence honest rather than removing it: the patience tick commits an `Acquire`, the
@@ -72,7 +72,7 @@ things follow without a line of policy:
   that wants water and has no round reads `no candidate`, which is the finding the standing
   Acquire was hiding.
 
-**3. Offering is an action.** `market:Offering a ag:Action ; ag:means market:Offer`, taken by
+**3. Offering is an action.** `market:Offering a orexis:Action ; orexis:means market:Offer`, taken by
 `market:Hosting`, in the market's `actions.ttl` beside Acquiring and Serving:
 
 - *available* where `$me market:hosts ?via`, no `market:Round` stands on `?via` — held or
@@ -130,7 +130,7 @@ Three changes, each a PR, in this order because each is the next one's premise:
   record's third step; `Observe` and `Actuate` followed once their kernel holds became hooks
   (sensing satisfies the look it takes; the planner sizes a step by asking its taker,
   `Module.size`); `Acquire` and `Apply` last, once the bidder answered its own held-claim
-  urgency through the `urgency` hook. The kernel's ontology kept `ag:Means`, the class, for
+  urgency through the `urgency` hook. The kernel's ontology kept `orexis:Means`, the class, for
   one more change — and then [the-action-is-the-kind](/decisions/the-action-is-the-kind.md)
   found nothing read it and retired the class too.
 - **The lot is still one number.** Offering's effect offers `market:offerQuantityL` capped by

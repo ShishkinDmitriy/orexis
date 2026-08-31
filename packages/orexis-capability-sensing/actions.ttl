@@ -1,15 +1,15 @@
 @prefix sh:      <http://www.w3.org/ns/shacl#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix ag:      <http://example.org/orexis#> .
+@prefix orexis:      <http://example.org/orexis#> .
 @prefix sosa:    <http://www.w3.org/ns/sosa/> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 
 #  THE ACTIONS THIS PACKAGE BRINGS — one node each, and the whole of one (knowledge/domain/action.md):
-#    ag:available  its PRECONDITION — a SELECT over the world binding ?property ?via ?direction,
+#    orexis:available  its PRECONDITION — a SELECT over the world binding ?property ?via ?direction,
 #                  and ?for_agent where the row is a duty owed to someone; `$me` and
 #                  `$properties` substituted by the collector, prefixes prepended by the store;
-#    sh:construct  its EFFECT, with ag:retracts, ag:landsAfter and ag:confirmedBy beside it;
-#    ag:takenBy    the capability whose module carries it out.
+#    sh:construct  its EFFECT, with orexis:retracts, orexis:landsAfter and orexis:confirmedBy beside it;
+#    orexis:takenBy    the capability whose module carries it out.
 #  Precondition, effect and taker were three files and a fourth surface; a STRIPS operator is one
 #  thing, and an author adds a way of acting by adding a node here and a `take()` to a module.
 
@@ -38,13 +38,13 @@
 #  ask whether one EXISTS with a property and a value, and a blank node exists exactly as well.
 
 sensing:Observing
-    a ag:Action ;
+    a orexis:Action ;
 
     #  AVAILABLE where I may ASK an instrument that monitors my subject for this property —
     #  `sensing:mayAsk`, not `sensing:polls`, so a device that takes no orders offers no row
     #  (a-lever-an-agent-cannot-pull-is-not-a-lever). DISTINCT because a region carries three
     #  property shapes and all three are wants. Reads the whole default graph: wiring is public.
-    ag:available """
+    orexis:available """
         SELECT DISTINCT ?want ?via ?direction WHERE {
           VALUES (?want ?about) { $wants }
           $me sensing:mayAsk ?via .
@@ -53,11 +53,11 @@ sensing:Observing
           # exactly that instrument, whatever it watches; a want ABOUT A PROPERTY — a stake —
           # through any instrument of this agent's that reads it on the subject it acts for.
           FILTER(?via = ?about
-                 || (?property = ?about && EXISTS { $me ag:actsFor ?subject }))
+                 || (?property = ?about && EXISTS { $me orexis:actsFor ?subject }))
         }""" ;
 
     #  WHO CARRIES IT OUT — the module whose family this names (knowledge/domain/actor.md).
-    ag:takenBy sensing:SensingCapability ;
+    orexis:takenBy sensing:SensingCapability ;
     rdfs:label "what looking makes true" ;
 
     #  WHO MADE IT is part of what a look makes true, and leaving it out was what let a
@@ -109,13 +109,13 @@ sensing:Observing
     #  emptily. What a look delays is KNOWLEDGE, and that is what the route below says. The
     #  record's sentence, from the other side: a sensing action changes what you know, not what
     #  is.
-    ag:landsAfter """
+    orexis:landsAfter """
         SELECT (0 AS ?seconds) WHERE { }""" ;
 
     #  The reading arriving IS the confirmation, which makes this the one act whose landing and
     #  whose confirmation are the same event.
 
-    ag:retracts """
+    orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
             ?sensor sensing:monitors $subject ; sosa:observes ?property .
             FILTER(?sensor = $about || ?property = $about)

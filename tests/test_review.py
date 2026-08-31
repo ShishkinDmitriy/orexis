@@ -154,7 +154,7 @@ def test_a_mandate_never_widens_what_the_constitution_allows(fern):
     """A mandate is intersected, so one looser than the constitution is the constitution.
 
     Written into the WORLD graph, which is where a mandate lives now — a world may narrow what
-    the society allows and never widen it. `ag:MandateWithinTheConstitutionShape` refuses this at
+    the society allows and never widen it. `orexis:MandateWithinTheConstitutionShape` refuses this at
     validation; the intersection here is the second line of defence, for a world already running.
     """
     fern.beliefs.update(f"""
@@ -407,7 +407,7 @@ def _states(**floors: int) -> str:
     two of them concatenated is a syntax error rather than two statements."""
     body = "\n".join(_ONE.format(sensor=s, seconds=n) for s, n in floors.items())
     return f"""
-PREFIX ag: <http://example.org/orexis#>
+PREFIX orexis: <http://example.org/orexis#>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX sensing: <http://example.org/orexis/sensing#>
 INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{

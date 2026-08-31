@@ -34,7 +34,7 @@ list where one page legitimately fixes two (`review` binds the family and the ma
 `intention` binds the record and the family). OKF permits producer-defined keys, so the bundle
 stays conformant for any consumer.
 
-**The value is a full IRI, never `prefix:Name`.** The first cut wrote `ag:Agent`, and the
+**The value is a full IRI, never `prefix:Name`.** The first cut wrote `orexis:Agent`, and the
 review caught what that is: a name resolvable only where the ontologies that declare the
 prefixes live. An OKF bundle is the unit of distribution — tarball `knowledge/` alone and a
 prefixed name is an opaque string, where `http://example.org/orexis#Agent` is still the term.
@@ -48,7 +48,7 @@ producer key rather than reusing it because `resource` is singular and a page ma
   namespace for the rest;
 - **one term, one owner** — two pages binding one term is the frontmatter form of the
   restatement the overlap gate refuses in prose;
-- the reverse, scoped to rule 2's unit: **every class `rdfs:subClassOf ag:Capability` must be
+- the reverse, scoped to rule 2's unit: **every class `rdfs:subClassOf orexis:Capability` must be
   bound by some page**. A family nobody answers for is the thing the capability rules exist to
   prevent, said about words.
 - only the dictionary binds: a decision is an argument about a term, never its owner.
@@ -73,10 +73,10 @@ could query.
 # Seams left open
 
 - **Members and single abilities are out of the reverse check.** `sensing:Subscribing`,
-  `market:Bidding`, `actuation:Actuation` are typed `a ag:Capability` (or a family) directly;
+  `market:Bidding`, `actuation:Actuation` are typed `a orexis:Capability` (or a family) directly;
   the family's page describes them, and requiring a binding each would manufacture owners. If
   a member ever grows a page of its own, binding it there is one frontmatter line.
-- **Non-capability classes have no reverse check.** `ag:Graph` subclasses, part and firmware
+- **Non-capability classes have no reverse check.** `orexis:Graph` subclasses, part and firmware
   models, review's evidence vocabulary — a page per class would be a registry, which is the
   shape this project refuses. The forward direction still covers them the day a page binds one.
 - **`schema` and `unit` are prefix-checked only** — vendoring schema.org wholesale is

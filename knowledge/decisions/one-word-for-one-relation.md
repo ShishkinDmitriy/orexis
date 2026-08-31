@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: One word for one relation, and a term of ours earns its place by answering a different question
-description: A subclass axiom is a claim that our term means something more, so where it does not, ours is a synonym with an unenforced comment. mc:carries, sensing:Sensor, actuation:Actuator and sensing:seconds went; ag:Device, sensing:senseMode and review:Revision stayed, and the reasons are the deliverable. The test that emerged is not whether a standard has a similar word but whether it is answering the same question — SOSA's axis is functional, ours is substrate, and terms on different axes cut across each other rather than duplicating.
+description: A subclass axiom is a claim that our term means something more, so where it does not, ours is a synonym with an unenforced comment. mc:carries, sensing:Sensor, actuation:Actuator and sensing:seconds went; orexis:Device, sensing:senseMode and review:Revision stayed, and the reasons are the deliverable. The test that emerged is not whether a standard has a similar word but whether it is answering the same question — SOSA's axis is functional, ours is substrate, and terms on different axes cut across each other rather than duplicating.
 status: accepted
 timestamp: 2026-08-11T00:00:00Z
 ---
@@ -43,12 +43,12 @@ hangs off the role instead, which is
 **`mc:carries` → `sosa:hosts`.** [#79](a-board-is-a-platform.md) declared it a subproperty, which
 was honest at the time. Its `rdfs:domain mc:Microcontroller` and `rdfs:range mc:Peripheral` were
 never enforced — neither is in `agent/inference.py`'s closure and no shape read them — so
-board-to-part was a comment. **The narrowing survives as `ag:ABoardCarriesPartsShape` and is
+board-to-part was a comment. **The narrowing survives as `orexis:ABoardCarriesPartsShape` and is
 checked for the first time**: a board hosting a non-peripheral is refused now and was accepted
 before. A term was given up and a rule was gained.
 
 **`sensing:Sensor` and `actuation:Actuator` → `sosa:Sensor`, `sosa:Actuator`.** These were
-intersections — `ag:Device ∧ sosa:X` — which is why earlier audits kept them. True, and beside
+intersections — `orexis:Device ∧ sosa:X` — which is why earlier audits kept them. True, and beside
 the point: a named class is not the only way to state an intersection. An instance carries both
 types, and the one shape that enforced the conjunction states it as two `sh:class` values.
 
@@ -116,7 +116,7 @@ decision to change **nothing**, and a decline produces no newer entity to hang t
 An agent's eleven declines are exactly the signal that the problem is elsewhere, and PROV cannot
 say them at all.
 
-**`actuation:Actuation` against `sosa:Actuation`.** Ours is `a ag:Capability` — the agent may
+**`actuation:Actuation` against `sosa:Actuation`.** Ours is `a orexis:Capability` — the agent may
 drive actuators it owns. SOSA's is an **event**: *an Actuation carries out a Procedure to change
 the state of the world using an Actuator*, sibling to `sosa:Observation`, its example being the
 activity of closing a window. An act and a permission share a word and nothing else.

@@ -29,7 +29,7 @@ ZZ = "http://example.org/orexis/zamioculcas#ZamioculcasZamiifolia"
 # present, so that editing that world fails this loudly instead of silently testing nothing —
 # a substitution that quietly matches nothing is the failure mode issue #106 exists for.
 _FERN = """:fern a water:Plant ;
-    ag:localId "fern" ; water:servedBy :barrel1 ;
+    orexis:localId "fern" ; water:servedBy :barrel1 ;
     sim:rainTopic "rain/fern" ;
     water:driesPerDay 0.12 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
@@ -50,7 +50,7 @@ _FERN = """:fern a water:Plant ;
 # What a world says when the pot holds a ZZ: its type, and nothing else. No range, no conditions,
 # no numbers — that is the whole point of the package.
 _ZZ = f""":fern a <{ZZ}> ;
-    ag:localId "fern" ; water:servedBy :barrel1 ;
+    orexis:localId "fern" ; water:servedBy :barrel1 ;
     water:driesPerDay 0.12 ; water:litresPerFraction 2.0 ."""
 
 
@@ -136,16 +136,16 @@ def test_it_cannot_thrive_where_it_would_not_survive():
 
     # a pot of it, and the operating ceiling pushed past the survival ceiling
     data.parse(format="turtle", data="""
-        @prefix ag: <http://example.org/orexis#> .
+        @prefix orexis: <http://example.org/orexis#> .
         @prefix water: <http://example.org/orexis/water#> .
         @prefix zz: <http://example.org/orexis/zamioculcas#> .
         @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
-        ag:pot a water:Plant ;
-            ag:localId "pot" ; water:litresPerFraction 2.0 ;
-            water:servedBy ag:tap ;
+        orexis:pot a water:Plant ;
+            orexis:localId "pot" ; water:litresPerFraction 2.0 ;
+            water:servedBy orexis:tap ;
             ssn-system:hasOperatingRange zz:IndoorOperatingRange ;
             ssn-system:hasSurvivalRange  zz:IndoorSurvivalRange .
-        ag:tap a water:WaterSource ; water:capacityL 10.0 .""")
+        orexis:tap a water:WaterSource ; water:capacityL 10.0 .""")
 
     # About the POT alone. A hand-built graph is not a world, and validating it whole would ask
     # after a supplier's capabilities and a market — none of which this is about. `conforms` takes

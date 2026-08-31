@@ -35,7 +35,7 @@ by the fact that makes it meaningful.
 # What is decided
 
 **Reaching the society is a capability, and the fact of a bus grants it.** `mqtt:Linking`, a
-`ag:Capability`, derived by the transport's own `rules.ru` for every agent in a world that
+`orexis:Capability`, derived by the transport's own `rules.ru` for every agent in a world that
 states an `mqtt:MessageBus` — as a polled sensor grants Subscribing. There is no choosing: an
 agent in a society that meets on a broker is on the broker. It is found as every capability is
 (`PROVIDES`, `registry_for`), and the loader's ownership map covers a transport's namespace as
@@ -74,7 +74,7 @@ transport meant replacing the transport would delete it in silence. See
   naming convention read by the ACL generator too, not a transport.
 - **The ACL and the credentials** — `orexis-mqtt` mints them as before; only their reader
   moved. [series-and-bus-isolation](/decisions/series-and-bus-isolation.md) is untouched.
-- **The watchdog's rule** — a corpse over a stale flag, a bound from `ag:resignAfterS`, a
+- **The watchdog's rule** — a corpse over a stale flag, a bound from `orexis:resignAfterS`, a
   resignation through SIGTERM. Its home moved; its text did not.
 - **Every other module's `subscriptions` and `handle`** — unchanged in body; only who calls
   them changed.

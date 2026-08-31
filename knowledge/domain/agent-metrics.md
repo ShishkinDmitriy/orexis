@@ -13,7 +13,7 @@ delivered, how many writes it lost, how long it has been up.
 
 ```bash
 # in that agent's beliefs, and nowhere else
-ag:fern_agent reporting:metricsIntervalS 60 .
+orexis:fern_agent reporting:metricsIntervalS 60 .
 ```
 
 # Why the agent and not something watching it
@@ -138,7 +138,7 @@ Three properties keep it honest: the buffer is **bounded** (the graph is the rec
 projection for eyes, so under a long outage the oldest markers are the right casualty); a
 failed write hands the drained events **back** (a figure missed is superseded by the next
 tick's, a transition missed is gone); and the text is **prose that must never be parsed** — the
-same contract as `ag:becauseOf`, whose projection it is. An agent without the intention
+same contract as `orexis:becauseOf`, whose projection it is. An agent without the intention
 capability tells no events and writes none; nothing new is granted anywhere.
 
 # Seams left open
@@ -148,7 +148,7 @@ capability tells no events and writes none; nothing new is granted anywhere.
   disambiguates it, and nothing joins them for you.
 - **Nothing alerts.** These are series on a dashboard; a write failure climbing at 3am is visible
   and unannounced. One figure now *acts* instead of waiting to be read: the disconnection clock,
-  which the transport's watchdog turns into a resignation past `ag:resignAfterS` — see
+  which the transport's watchdog turns into a resignation past `orexis:resignAfterS` — see
   [a-dead-session-is-resigned-not-endured](/decisions/a-dead-session-is-resigned-not-endured.md).
   Everything else still only shows.
 - **A report that fails is not counted.** The gap in the series says it, and a counter of

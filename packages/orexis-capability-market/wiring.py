@@ -36,7 +36,7 @@ def _markets_q(agent_uri: str, relation: str) -> str:
 SELECT ?market ?localId ?resource ?offerTopic ?bidTopic ?claimTopic ?redeemTopic ?window ?capacity
 WHERE {{ 
   <{agent_uri}> market:{relation} ?market .
-  ?market ag:localId ?localId ; market:marketFor ?resource ;
+  ?market orexis:localId ?localId ; market:marketFor ?resource ;
           market:offerTopic ?offerTopic ; market:bidTopic ?bidTopic ; market:claimTopic ?claimTopic .
   OPTIONAL {{ ?market market:redeemTopic ?redeemTopic }}
   OPTIONAL {{ ?market market:redeemWindowS ?window }}
@@ -51,7 +51,7 @@ WHERE {{
 def _ceilings_q(market_uri: str) -> str:
     return f"""
 SELECT ?agentId ?ceiling WHERE {{
-  ?agent market:bidsIn <{market_uri}> ; ag:localId ?agentId ;
+  ?agent market:bidsIn <{market_uri}> ; orexis:localId ?agentId ;
          market:allocationCeilingL ?ceiling }}"""
 
 
@@ -59,7 +59,7 @@ SELECT ?agentId ?ceiling WHERE {{
 def _participants_q(market_uri: str) -> str:
     return f"""
 SELECT ?agentId WHERE {{ 
-  ?agent market:bidsIn <{market_uri}> ; ag:localId ?agentId  }}"""
+  ?agent market:bidsIn <{market_uri}> ; orexis:localId ?agentId  }}"""
 
 
 def _market_from(row: dict) -> Market:

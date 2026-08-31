@@ -1,5 +1,5 @@
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
@@ -13,7 +13,7 @@
 # SPARQL constraints spell IRIs out in full: this runs on pyshacl, and a prefix declared in one
 # file and used in another is exactly the trap `store.PREFIXES` exists to catch elsewhere.
 
-ag:PinShape a sh:NodeShape ;
+orexis:PinShape a sh:NodeShape ;
     rdfs:comment "A GPIO number, where present, names a line this family actually has." ;
     sh:targetClass mc:Pin ;
     sh:property [ sh:path mc:gpio ; sh:maxCount 1 ; sh:datatype xsd:integer ;
@@ -24,13 +24,13 @@ ag:PinShape a sh:NodeShape ;
     sh:property [ sh:path skos:notation ; sh:maxCount 1 ; sh:datatype xsd:string ;
                   sh:message "a pin bears one marking on the silkscreen, not several" ] .
 
-ag:WireShape a sh:NodeShape ;
+orexis:WireShape a sh:NodeShape ;
     rdfs:comment "A wire joins exactly two pins. One is a dangling lead and three is a splice — both are real things on a breadboard and neither is what this model means, so saying so is better than letting a query silently pick one." ;
     sh:targetClass mc:Wire ;
     sh:property [ sh:path mc:joins ; sh:minCount 2 ; sh:maxCount 2 ; sh:class mc:Pin ;
                   sh:message "a wire joins exactly two pins" ] .
 
-ag:BoardPinShape a sh:NodeShape ;
+orexis:BoardPinShape a sh:NodeShape ;
     rdfs:comment "The flash lines. 6-11 are wired to the SPI flash, and a board driving one does not boot at all — which reads as a dead board rather than as a wiring mistake, and is why it is worth refusing on paper." ;
     sh:targetClass mc:Pin ;
     sh:sparql [
@@ -41,7 +41,7 @@ ag:BoardPinShape a sh:NodeShape ;
                 FILTER(?value >= 6 && ?value <= 11)
             }""" ] .
 
-ag:WiredPinShape a sh:NodeShape ;
+orexis:WiredPinShape a sh:NodeShape ;
     rdfs:comment "The two rules that decide whether a peripheral's leg can work on the line it is wired to. Both are asked of the WIRE, because that is where the two facts finally meet: the role lives on the peripheral's pin and the GPIO number on the board's, and neither end knows the other until something joins them." ;
     sh:targetClass mc:Wire ;
     sh:sparql [
@@ -64,7 +64,7 @@ ag:WiredPinShape a sh:NodeShape ;
                 FILTER(?value >= 34)
             }""" ] .
 
-ag:OneGpioOneLegShape a sh:NodeShape ;
+orexis:OneGpioOneLegShape a sh:NodeShape ;
     rdfs:comment "One line, one purpose. Two peripheral legs on the same GPIO is a short in the model, and it is the mistake a person makes when adding a device months after the first — which is exactly when nobody re-reads the whole file. Power and ground are excluded, because sharing a rail or a ground is not a mistake, it is how a breadboard works." ;
     sh:targetClass mc:Pin ;
     sh:sparql [
@@ -81,7 +81,7 @@ ag:OneGpioOneLegShape a sh:NodeShape ;
                 FILTER(?a != $this && ?b != $this && STR(?a) < STR(?b))
             }""" ] .
 
-ag:PoweredPeripheralShape a sh:NodeShape ;
+orexis:PoweredPeripheralShape a sh:NodeShape ;
     rdfs:comment "The rail decides the logic level, and that is the fault this whole remodelling exists to make sayable. A three-legged sensor carries a pull-up to its own VCC, so its data line idles at whatever it is powered from. Wire it to a 5V rail and it presents 5V to a 3.3V input that is not 5V tolerant — which does not fail, it degrades, over weeks, and looks like a flaky sensor." ;
     sh:targetClass mc:Peripheral ;
     sh:sparql [
@@ -105,7 +105,7 @@ ag:PoweredPeripheralShape a sh:NodeShape ;
                 FILTER(?value != ?logic)
             }""" ] .
 
-ag:MountedPeripheralShape a sh:NodeShape ;
+orexis:MountedPeripheralShape a sh:NodeShape ;
     rdfs:comment "A leg that is described and not wired. The old model could not express this at all — a pin WAS its connection — so an unconnected leg was invisible rather than wrong. A floating ground is the commonest reason a three-legged sensor answers with silence, and it looked exactly like a dead part." ;
     sh:targetClass mc:Peripheral ;
     sh:sparql [
@@ -120,13 +120,13 @@ ag:MountedPeripheralShape a sh:NodeShape ;
                     true }
             }""" ] .
 
-ag:MicrocontrollerShape a sh:NodeShape ;
+orexis:MicrocontrollerShape a sh:NodeShape ;
     rdfs:comment "A board says what it is, so a generated firmware config and a person ordering a replacement are reading the same fact." ;
     sh:targetClass mc:Microcontroller ;
     sh:property [ sh:path mc:model ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
                   sh:message "a board must state its model" ] .
 
-ag:ABoardCarriesPartsShape a sh:NodeShape ;
+orexis:ABoardCarriesPartsShape a sh:NodeShape ;
     rdfs:comment """A board hosts PARTS. `sosa:hosts` is general on purpose — SOSA lets a Platform host Sensors, Actuators, Samplers and other Platforms, which is what makes the board-hosts-part-hosts-channel chain expressible — but a BOARD hosting something that is not a peripheral is a wiring nobody could build.
 
 This is the narrowing `mc:carries` used to claim with `rdfs:domain` and `rdfs:range`, and never enforced: neither is in `agent/inference.py`'s closure and no shape read them. Stated here it is checked, which is the whole trade — a term was given up and a rule was gained.
@@ -136,7 +136,7 @@ Targeted at mc:Microcontroller rather than at sosa:Platform deliberately. A KY-0
     sh:property [ sh:path sosa:hosts ; sh:class mc:Peripheral ;
                   sh:message "a board hosts peripherals — this one hosts something that is not one" ] .
 
-ag:CarriedPeripheralShape a sh:NodeShape ;
+orexis:CarriedPeripheralShape a sh:NodeShape ;
     rdfs:comment "A peripheral with legs that no board mounts. It is what a mistyped identifier LOOKS like: the world calls a sensor one thing and the stand calls it another, so instead of one device described twice there are two devices each described once — a sensor nothing is wired to, and a part nothing polls. Both halves validate on their own, which is why this is worth a rule. It matters more now that a stand can be authored elsewhere and imported, because the identifiers then come from a second file and agreeing is no longer automatic." ;
     sh:targetClass mc:Peripheral ;
     sh:sparql [

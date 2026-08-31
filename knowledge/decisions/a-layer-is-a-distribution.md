@@ -114,7 +114,7 @@ this section exists to refuse.
   #452's to settle: the assembling shell above the layers, or absorbed into `assembly/`.
 - **An interchangeable deliberator is now a swap above a tested boundary.**
   [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) argued for one and
-  `ag:deliberatesBy` stayed unreserved; the layer split is what makes that arrival a member
+  `orexis:deliberatesBy` stayed unreserved; the layer split is what makes that arrival a member
   joining a family rather than surgery on the kernel.
 
 The trigger for revisiting: a contract module that grows logic. The day a layer's contract

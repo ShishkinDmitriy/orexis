@@ -3,7 +3,7 @@ type: Decision
 title: The assembly is not the mind — one extension mechanism, in a root package of its own
 description: >-
   A package contributed to a build in two unrelated ways: six filenames the kernel globbed, and
-  a runtime choir of `ag:Hook` terms. The first meant a new kind of contribution was a kernel
+  a runtime choir of `orexis:Hook` terms. The first meant a new kind of contribution was a kernel
   edit; the second was already open to any package but published no contract, so an answerer
   with the wrong parameters was logged and skipped. Decided that both become ONE mechanism —
   a named extension point, filled with `@contributes` — that it lives in `assembly/` beside
@@ -20,7 +20,7 @@ timestamp: 2026-08-27T12:00:00Z
 A package contributed *knowledge* by naming files the way the kernel expected —
 `ontology.ttl`, `shapes.ttl`, `rules.ru`, `desires.ru`, `actions.ttl`, `review.rq`, six literals
 in the loader reached through seven call sites. A package contributed *behaviour* through
-the [choir](/domain/choir.md): `ag:Hook` terms, `@hook(term)` on a method,
+the [choir](/domain/choir.md): `orexis:Hook` terms, `@hook(term)` on a method,
 `Agent.ask`/`Agent.tell`.
 
 The consequences were asymmetric and both wrong:
@@ -50,7 +50,7 @@ and the audience is decided by *where the decorated function lives*, so nothing 
 
 **`assembly/`, beside `agent/` and `onboarding/`.** It owns finding packages, the choir
 mechanism, and the extension vocabulary in its own namespace. `agent/` keeps the BDI extension
-points it owns — `ag:desires`, `ag:take`, `ag:size` — and stops owning the machinery.
+points it owns — `orexis:desires`, `orexis:take`, `orexis:size` — and stops owning the machinery.
 `lint-imports` gains the direction: **assembly ← agent ← onboarding**.
 
 **A point publishes its signature.** `assembly:signature` on the term, checked strictly against
@@ -64,7 +64,7 @@ That argument is the whole of the phase discipline. It is not handed a world, be
 is merged before any world is chosen; it is not handed a store, because `refresh_public` runs
 before the belief base is open. **A contribution cannot reach for what does not exist, because
 the argument is not there** — which is why no point declares a phase and none needs to, and why
-`ag:row` stays exactly what it was: whether ANSWERING may block or search, a fact about the
+`orexis:row` stays exactly what it was: whether ANSWERING may block or search, a fact about the
 cognitive layering that means nothing at assembly.
 
 **Content is the wider signature this record first promised, and it is NOT built.** A string of

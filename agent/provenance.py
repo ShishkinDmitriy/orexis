@@ -13,13 +13,13 @@ module, the store still knows what each one is.** `tests/test_provenance.py` hol
 
 **PROV-O only, and nothing invented.** `prov:` is already in `store.PREFIXES` and every
 observation already carries `prov:wasGeneratedBy`, so this is the existing habit rather than a
-new vocabulary. There is no `ag:Ratified`, no `ag:DerivedGraph`, no term of ours at all.
+new vocabulary. There is no `orexis:Ratified`, no `orexis:DerivedGraph`, no term of ours at all.
 
 **Sovereign is a role, not an identity.** An installation has several users — one authors a
 world, another operates it with fewer powers — so "the sovereign" is not a person to be named
 but a capacity someone acted in, on one occasion. `prov:qualifiedAssociation` says exactly that:
 the ratification activity has an association carrying `prov:agent` (which user) and
-`prov:hadRole` (in what capacity). There is no `ag:Sovereign` *agent* and there must not be one.
+`prov:hadRole` (in what capacity). There is no `orexis:Sovereign` *agent* and there must not be one.
 
 **And the world states the capacity, not this module.** The role was briefly a literal here,
 which reads as a detail and is not one: with the capacity assumed, a world could never say that
@@ -94,7 +94,7 @@ def file_iri(path: Path, world: Path | None = None) -> str:
 # a graph to say where it came from, not who to blame.
 _ATTRIBUTION_Q = """
 SELECT ?user ?role WHERE {
-  ?w a ag:World ; prov:qualifiedAttribution ?att .
+  ?w a orexis:World ; prov:qualifiedAttribution ?att .
   ?att prov:agent ?user ; prov:hadRole ?role .
 } LIMIT 1"""
 
@@ -102,7 +102,7 @@ SELECT ?user ?role WHERE {
 def _turtle(world: Path, attribution: tuple[str, str] | None = None,
             derived_graphs: tuple[str, ...] = (WORLD_DERIVED_GRAPH,)) -> str:
     """The description, as Turtle. One `prov:Entity` per public graph, each accounting for
-    itself — see `ag:PublicGraphShape`, which refuses one that does not."""
+    itself — see `orexis:PublicGraphShape`, which refuses one that does not."""
     ontology_files = " , ".join(f"<{file_iri(p)}>" for p in loader.ontology_files())
     world_files_ = " , ".join(
         f"<{file_iri(p, world)}>" for p in sorted(world.glob("*.ttl")))
@@ -110,14 +110,14 @@ def _turtle(world: Path, attribution: tuple[str, str] | None = None,
 
     lines = [
         "@prefix prov: <http://www.w3.org/ns/prov#> .",
-        "@prefix ag:   <http://example.org/orexis#> .",
+        "@prefix orexis:   <http://example.org/orexis#> .",
         "",
         "# --- asserted: read from files, and the chain stops there (see the module note) ---",
         f"<{ONTOLOGY_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {ontology_files} .",
     ]
     #  The actions, from the packages that own the acting (#238). Asserted from files
     #  exactly as the vocabulary is, and described here for the same reason: a public graph
-    #  that cannot say where it came from is the silence `ag:PublicGraphShape` refuses. A build
+    #  that cannot say where it came from is the silence `orexis:PublicGraphShape` refuses. A build
     #  where no package states an action still has the graph — empty, and honest about being
     #  derived from nothing rather than absent and unexplained.
     action_files = " , ".join(f"<{file_iri(p)}>" for p in loader.action_files())
@@ -153,7 +153,7 @@ def _turtle(world: Path, attribution: tuple[str, str] | None = None,
 
     # Every graph a rule writes into, not just the world's. A package may own one — desire does —
     # and a public graph that could not account for itself would be exactly the silence
-    # `ag:PublicGraphShape` and `tests/test_provenance.py` exist to refuse. Which graphs those
+    # `orexis:PublicGraphShape` and `tests/test_provenance.py` exist to refuse. Which graphs those
     # are is asked of the rules (see `genesis.write_targets`) rather than listed here, so the
     # kernel still names no package.
     lines += [
@@ -171,7 +171,7 @@ def _turtle(world: Path, attribution: tuple[str, str] | None = None,
     lines += [f"<{r}> a prov:SoftwareAgent ." for r in rules]
 
     #  What an agent says its OWN graphs are (the-mind-is-six-graphs): public, because a
-    #  modality-scoped query must resolve `?d a ag:DesireGraph` without naming an instance —
+    #  modality-scoped query must resolve `?d a orexis:DesireGraph` without naming an instance —
     #  and public means it accounts for itself here like every other public graph. Generated
     #  by the kernel from the vocabulary's graph classes and the one identifier the process
     #  is given, which is why the classification activity used the ontology and nothing else.

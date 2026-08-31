@@ -81,7 +81,7 @@ actually goes: rewiring a probe onto another board edits `hardware.ttl`, the soc
 answer, and every gate stays green because the society is internally consistent, the wiring is
 internally consistent, and no query spans them. Proved by mutating in both directions.
 
-**Not symmetric, deliberately.** The board carries `ag:status_led_fern` and the society omits it:
+**Not symmetric, deliberately.** The board carries `orexis:status_led_fern` and the society omits it:
 an agent polls sensors and has no business knowing about an indicator it can never observe.
 Demanding the society mirror the wiring would force hardware-only parts into it, which is the leak
 the no-hardware-vocabulary test exists to prevent. So the check is *wherever the wiring hosts
@@ -90,7 +90,7 @@ a host the wiring contradicts*.
 
 ## Which closes what #51 left open
 
-Splitting the KY-015 into two channels gave `ag:air_temp_fern` and `ag:air_humidity_fern` no link
+Splitting the KY-015 into two channels gave `orexis:air_temp_fern` and `orexis:air_humidity_fern` no link
 to the part they read — the society did not name that part at all. It does now, and the reason it
 is not a Sensor stands: a sensor here observes one property, and this observes none itself. What
 it is was corrected shortly after this record — an `ssn:System` with the two channels as
@@ -157,7 +157,7 @@ a fact about equipment, and a fact can be worth stating for what it rules out.
   measured hole is still open; what was blocking it is not.
 - **`mqtt:onBus` did not move either**, and it is the sharper case: it mints the broker credential,
   the firmware's `MQTT_USER` is `moisture_sensor_fern`, and moving it renames a principal. Worth
-  knowing meanwhile — **`ag:esp32_fern` already mints a credential with no grants at all**,
+  knowing meanwhile — **`orexis:esp32_fern` already mints a credential with no grants at all**,
   because `hardware.ttl` states `mqtt:onBus` on it and onboarding reads the whole world. One board,
   two principals: one real and mislabelled as a peripheral, one empty and correctly named. Filed
   as [#81](https://github.com/ShishkinDmitriy/orexis/issues/81).

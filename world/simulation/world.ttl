@@ -4,7 +4,7 @@
 @prefix water: <http://example.org/orexis/water#> .
 @prefix mqtt: <http://example.org/orexis/mqtt#> .
 @prefix actuation: <http://example.org/orexis/actuation#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix market: <http://example.org/orexis/market#> .
@@ -47,7 +47,7 @@
 #  environment tells a process is where the belief base is; this is part of what it finds there.
 
 :local_bus a mqtt:MessageBus ;
-    ag:localId "local_bus" ;
+    orexis:localId "local_bus" ;
     mqtt:brokerHost "localhost" ;
     mqtt:brokerPort 1885 ;
     # Agents connect here and prove who they are with a certificate; the boards keep the
@@ -55,7 +55,7 @@
     mqtt:brokerTlsPort 8885 .
 
 ##########  World version  ##########
-#  Found by TYPE (?w a ag:World), never by a well-known IRI.
+#  Found by TYPE (?w a orexis:World), never by a well-known IRI.
 
 #  Who ratified it. A REFERENCE, never a declaration: the world says which user stands behind
 #  these files and says nothing else about them — no name, no key, no type. A user is
@@ -63,7 +63,7 @@
 #  identifier it never resolves, exactly as `mqtt:brokerHost` names a host it never introspects.
 #  Sovereign is the ROLE that user held HERE — stated, not assumed, because another user may
 #  operate what this one ratified, and a loader that inferred the capacity could never say so.
-:world a ag:World ; ag:currentVersion :version_1 ;
+:world a orexis:World ; orexis:currentVersion :version_1 ;
     #  Ten bench minutes are one simulated day, so a week of drying, deciding and dosing
     #  fits in an evening — and every stand-in ages at this one rate, or a dose sized for a
     #  day's drying would land against an hour's. Faster was tried on paper and refused: at
@@ -74,8 +74,8 @@
     #  And someone with a watering can wanders through about every other simulated day,
     #  per pot: the third-party impulse of #151, made routine rather than hypothetical.
     sim:strayDoseMeanDays 2 ;
-    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole ag:Sovereign ] .
-:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
+    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole orexis:Sovereign ] .
+:version_1 a orexis:WorldVersion ; orexis:versionNumber 1 .
 
 
 ##########  The venue  ##########
@@ -88,7 +88,7 @@
 #  shop, and deleting it at an amendment is closing.
 
 :barrel1 a water:WaterSource ;
-    ag:localId "barrel1" ;
+    orexis:localId "barrel1" ;
     water:suppliedBy :supplier ;
     water:capacityL 5.0 ;
     #  How long a winner has to present. Generous on purpose: a holder waits for its watch to
@@ -122,7 +122,7 @@
 #  in is a litre held), and the ceiling is water:capacityL above — all three reach the model
 #  entailed, one statement each, the #164 pattern three times.
 :barrel1_level a sosa:Sensor ;
-    ag:localId "barrel1_level" ;
+    orexis:localId "barrel1_level" ;
     mqtt:onBus :local_bus ;
     sensing:senseMode sensing:PushProcedure ;
     sensing:monitors :barrel1 ;
@@ -140,8 +140,8 @@
 #  plumbed into no market as a buyer. Its
 #  class says none of this; its connections do.
 
-:supplier a ag:Agent ;
-    ag:localId "supplier" ;
+:supplier a orexis:Agent ;
+    orexis:localId "supplier" ;
     #  How it matches bids to the lot. Public because a bidder cannot bid well against a
     #  rule it does not know, and it is the HOST's — an auction's terms belong to whoever
     #  convenes it, not to the venue. The capability is derived from this, never declared.
@@ -152,7 +152,7 @@
     #  Since arc 4 it also has the LEVER for that want: the city's pipe reaches its barrel,
     #  so participation in the refill market DERIVES from the plumbing and the stake — the
     #  dealer buys upstream to sell downstream, and nothing here names either market.
-    ag:actsFor :barrel1 ;
+    orexis:actsFor :barrel1 ;
     sensing:polls :barrel1_level ;
     #  Where it announces what it notices (arc 4). Its stock's band travels here exactly as
     #  a fern's moisture band does, and the CITY subscribes — a LOW barrel is what convenes
@@ -181,13 +181,13 @@
 #  the uncontested case dissolving to the reserve with no contested-or-not test anywhere —
 #  see knowledge/decisions/uniform-price-dissolves-the-uncontested-round.md.
 
-:city a ag:Agent ;
-    ag:localId "city" ;
+:city a orexis:Agent ;
+    orexis:localId "city" ;
     market:matchesBy market:UniformPrice ;
     actuation:hasActuator :city_valve .
 
 :city_mains a water:WaterSource ;
-    ag:localId "city_mains" ;
+    orexis:localId "city_mains" ;
     water:suppliedBy :city ;
     water:capacityL 1000.0 ;
     market:redeemWindowS 900 .
@@ -198,7 +198,7 @@
 #  participation rule reads nothing else. The barrel is the one subject in this world on
 #  BOTH sides of the wire: these litres raise its stock, the plant valves' litres lower it.
 :city_valve a actuation:Valve ;
-    ag:localId "city_valve" ; mqtt:onBus :local_bus ;
+    orexis:localId "city_valve" ; mqtt:onBus :local_bus ;
     actuation:actuates :barrel1 ; actuation:drawsFrom :city_mains ;
     sim:simulatedBy [ a sim:Model ] ;
     mqtt:commandTopic "actuators/city_valve/command" ;
@@ -230,7 +230,7 @@
 #  how closely the board is watched, which is the whole of what issue #110 asked for.
 
 :fern a water:Plant ;
-    ag:localId "fern" ; water:servedBy :barrel1 ;
+    orexis:localId "fern" ; water:servedBy :barrel1 ;
     sim:rainTopic "rain/fern" ;
     water:driesPerDay 0.12 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
@@ -249,7 +249,7 @@
             schema:minValue 5.0 ; schema:maxValue 35.0 ; schema:unitCode unit:DEG_C ] ] .
 
 :tomato a water:Plant ;
-    ag:localId "tomato" ; water:servedBy :barrel1 ;
+    orexis:localId "tomato" ; water:servedBy :barrel1 ;
     sim:rainTopic "rain/tomato" ;
     water:driesPerDay 0.20 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
@@ -262,7 +262,7 @@
             schema:minValue 0.18 ; schema:maxValue 0.80 ; schema:unitCode unit:UNITLESS ] ] .
 
 :succulent a water:Plant ;
-    ag:localId "succulent" ; water:servedBy :barrel1 ;
+    orexis:localId "succulent" ; water:servedBy :barrel1 ;
     sim:rainTopic "rain/succulent" ;
     water:driesPerDay 0.04 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
@@ -280,21 +280,21 @@
 #  sensing:polls IS the access grant: fern's agent is wired to fern's sensor and to no other.
 #  From these two connections, derivation gives each of them Subscribing + Bidding.
 
-:fern_agent a ag:Agent ;
-    ag:localId "fern" ;
-    ag:actsFor :fern ;
+:fern_agent a orexis:Agent ;
+    orexis:localId "fern" ;
+    orexis:actsFor :fern ;
     sensing:polls :moisture_sensor_fern , :air_temp_fern ;
     mqtt:eventTopic "readings/fern" .
 
-:tomato_agent a ag:Agent ;
-    ag:localId "tomato" ;
-    ag:actsFor :tomato ;
+:tomato_agent a orexis:Agent ;
+    orexis:localId "tomato" ;
+    orexis:actsFor :tomato ;
     sensing:polls :moisture_sensor_tomato ;
     mqtt:eventTopic "readings/tomato" .
 
-:succulent_agent a ag:Agent ;
-    ag:localId "succulent" ;
-    ag:actsFor :succulent ;
+:succulent_agent a orexis:Agent ;
+    orexis:localId "succulent" ;
+    orexis:actsFor :succulent ;
     sensing:polls :moisture_sensor_succulent ;
     mqtt:eventTopic "readings/succulent" .
 
@@ -310,7 +310,7 @@
 #  notices. The supplier has none: it holds no revisable setting, so there is nothing to give it
 #  room on.
 #
-#  Note what is NOT written here: no ag:hasCapability. See AGENTS.md.
+#  Note what is NOT written here: no orexis:hasCapability. See AGENTS.md.
 
 :fern_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 600 ; review:notAbove 900 ] .
 :tomato_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 600 ; review:notAbove 900 ] .
@@ -337,12 +337,12 @@
 #  each takes its own number out of it with a JSON Pointer.
 #
 #  Note which one carries mqtt:onBus and which does not. The board holds ONE credential and
-#  publishes ONE message, so `ag:air_temp_fern` mints no principal of its own: a second credential
+#  publishes ONE message, so `orexis:air_temp_fern` mints no principal of its own: a second credential
 #  for a client that never connects is exactly what the hardware world refuses. It is reachable
 #  because its neighbour publishes for it, which is what `sim:StandInShape` now tests.
 
 :moisture_sensor_fern a sosa:Sensor ;
-    ag:localId "moisture_sensor_fern" ;
+    orexis:localId "moisture_sensor_fern" ;
     mqtt:onBus :local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
     #  This CHANNEL is watched for crossings (#151): the agent commands its region's edges
@@ -368,7 +368,7 @@
 #  observes a different property. Its range is degrees, not a fraction, which is the assumption
 #  sim:ModelShape had to stop making.
 :air_temp_fern a sosa:Sensor ;
-    ag:localId "air_temp_fern" ;
+    orexis:localId "air_temp_fern" ;
     #  Watched too (#151): a stand-in may watch every channel it has, where a real ESP32's ULP
     #  reaches only the analog probe — the per-channel statement is exactly for that asymmetry.
     ssn:implements sensing:AlarmProcedure ;
@@ -389,7 +389,7 @@
         sim:tickSeconds 3 ] .
 
 :moisture_sensor_tomato a sosa:Sensor ;
-    ag:localId "moisture_sensor_tomato" ;
+    orexis:localId "moisture_sensor_tomato" ;
     mqtt:onBus :local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
     #  This CHANNEL is watched for crossings (#151): the agent commands its region's edges
@@ -410,7 +410,7 @@
         sim:tickSeconds 3 ] .
 
 :moisture_sensor_succulent a sosa:Sensor ;
-    ag:localId "moisture_sensor_succulent" ;
+    orexis:localId "moisture_sensor_succulent" ;
     mqtt:onBus :local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
     #  This CHANNEL is watched for crossings (#151): the agent commands its region's edges
@@ -441,21 +441,21 @@
 #  dry — which is the whole point of making it verify.
 
 :valve_fern a actuation:Valve ;
-    ag:localId "valve_fern" ; mqtt:onBus :local_bus ; actuation:actuates :fern ; actuation:drawsFrom :barrel1 ;
+    orexis:localId "valve_fern" ; mqtt:onBus :local_bus ; actuation:actuates :fern ; actuation:drawsFrom :barrel1 ;
     sim:simulatedBy [ a sim:Model ] ;
     mqtt:commandTopic "actuators/valve_fern/command" ;
     mqtt:statusTopic "actuators/valve_fern/status" ;
     actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
 
 :valve_tomato a actuation:Valve ;
-    ag:localId "valve_tomato" ; mqtt:onBus :local_bus ; actuation:actuates :tomato ; actuation:drawsFrom :barrel1 ;
+    orexis:localId "valve_tomato" ; mqtt:onBus :local_bus ; actuation:actuates :tomato ; actuation:drawsFrom :barrel1 ;
     sim:simulatedBy [ a sim:Model ] ;
     mqtt:commandTopic "actuators/valve_tomato/command" ;
     mqtt:statusTopic "actuators/valve_tomato/status" ;
     actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
 
 :valve_succulent a actuation:Valve ;
-    ag:localId "valve_succulent" ; mqtt:onBus :local_bus ; actuation:actuates :succulent ; actuation:drawsFrom :barrel1 ;
+    orexis:localId "valve_succulent" ; mqtt:onBus :local_bus ; actuation:actuates :succulent ; actuation:drawsFrom :barrel1 ;
     sim:simulatedBy [ a sim:Model ] ;
     mqtt:commandTopic "actuators/valve_succulent/command" ;
     mqtt:statusTopic "actuators/valve_succulent/status" ;

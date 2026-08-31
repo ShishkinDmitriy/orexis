@@ -21,7 +21,7 @@ already seen is discarded — would quietly stop happening. The facts compared a
 CANONICAL, and the canonical form states what "the same place" means here:
 
 - **An observation is its upsert key and its value, and nothing else.** The sensed graph holds
-  one node per (subject, property) — the invariant every effect's `ag:retracts` already leans
+  one node per (subject, property) — the invariant every effect's `orexis:retracts` already leans
   on — so a reading canonicalises to that key plus its result, with the number rounded as the
   old signature rounded it. Node identity, `sosa:resultTime`, the `rdf:type` scaffolding: none
   of it is part of where a plan stands, which is also what keeps a look pruned — Observe
@@ -47,8 +47,8 @@ from __future__ import annotations
 import pyoxigraph as ox
 
 #  sosa WAS spelled here — an observation's upsert key and its result, by name. A package
-#  declares that now: `?class ag:keyedBy ?p` (the predicates that identify a node of that class)
-#  and `?class ag:carries ?p` (what such a node states), and this reads the declaration.
+#  declares that now: `?class orexis:keyedBy ?p` (the predicates that identify a node of that class)
+#  and `?class orexis:carries ?p` (what such a node states), and this reads the declaration.
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 _KEYS_Q = """
 SELECT ?class ?keyed ?carried WHERE {
@@ -78,7 +78,7 @@ def facts(triples, keys: dict | None = None) -> frozenset:
 
     `triples` is anything with `.subject`, `.predicate` and `.object` — a step's diff as
     `effects.apply` returns it, or the base as the store's own quads — and is read twice:
-    once to learn which nodes are KEYED (typed with a class some package declared `ag:keyedBy`)
+    once to learn which nodes are KEYED (typed with a class some package declared `orexis:keyedBy`)
     and what hangs off each blank node, once to emit. A keyed node canonicalises to its class,
     its key values and what it carries — never its identity, and never anything else on it
     (an instant, who made it), which is what keeps a look from being a new world every time.

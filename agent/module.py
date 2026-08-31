@@ -153,7 +153,7 @@ class Module:
 
         The choir's doing hook (knowledge/domain/actor.md): execution has planned, written the
         head row to the ledger as `intention`, and now hands it to every module the means'
-        `ag:takenBy` names. `row` is the affordance the step is — means, property, lever and,
+        `orexis:takenBy` names. `row` is the affordance the step is — means, property, lever and,
         for an obligation, whom it is owed to; `desire` is the want it serves. What to DO with them is
         this module's own, and the sizing stays where it always was — `value_bid`, `dose_for`,
         `redeem` — because an actor takes a step and never decides one.

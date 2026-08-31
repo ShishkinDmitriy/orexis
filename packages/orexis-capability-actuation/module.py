@@ -62,7 +62,7 @@ _SOSA = "http://www.w3.org/ns/sosa/"
 
 _CONVERSION_Q = """
 SELECT ?v WHERE {
-  <%s> ag:actsFor ?subject ; actuation:hasActuator ?lever .
+  <%s> orexis:actsFor ?subject ; actuation:hasActuator ?lever .
   ?lever actuation:actuates ?subject ; actuation:drawsFrom ?source .
   ?source market:offeredBy <%s> ; market:supplies ?good .
   ?term market:ofGood ?good ; market:aboutProperty <%s> .
@@ -126,8 +126,8 @@ class ActuationModule(Module):
         author a claim's sub as a subject directly and the coincidence path must keep working.
         """
         rows = bindings(self.agent.beliefs.query(
-            f'SELECT ?sid WHERE {{ ?a ag:localId "{winner_id}" ; ag:actsFor ?s . '
-            f'?s ag:localId ?sid }} LIMIT 1'))
+            f'SELECT ?sid WHERE {{ ?a orexis:localId "{winner_id}" ; orexis:actsFor ?s . '
+            f'?s orexis:localId ?sid }} LIMIT 1'))
         return rows[0]["sid"] if rows else winner_id
 
     def _subject_uri_of(self, winner_id: str) -> str | None:
@@ -141,8 +141,8 @@ class ActuationModule(Module):
         and the caller keeps the wire's own duration, which is what it did by accident before.
         """
         rows = bindings(self.agent.beliefs.query(
-            f'SELECT ?s WHERE {{ {{ ?a ag:localId "{winner_id}" ; ag:actsFor ?s }} '
-            f'UNION {{ ?s ag:localId "{winner_id}" . FILTER NOT EXISTS {{ ?s ag:actsFor ?x }} }} }} '
+            f'SELECT ?s WHERE {{ {{ ?a orexis:localId "{winner_id}" ; orexis:actsFor ?s }} '
+            f'UNION {{ ?s orexis:localId "{winner_id}" . FILTER NOT EXISTS {{ ?s orexis:actsFor ?x }} }} }} '
             f'LIMIT 1'))
         return rows[0]["s"] if rows else None
 
@@ -313,7 +313,7 @@ class ActuationModule(Module):
         """
         rows = bindings(self.agent.beliefs.query(f"""
 SELECT ?source ?p WHERE {{
-  <{self.me.uri}> ag:actsFor ?subject ; actuation:hasActuator ?lever ;
+  <{self.me.uri}> orexis:actsFor ?subject ; actuation:hasActuator ?lever ;
       sensing:polls ?s .
   ?lever actuation:actuates ?subject ; actuation:drawsFrom ?source .
   ?s sensing:monitors ?source ; sosa:observes ?p }} LIMIT 1"""))

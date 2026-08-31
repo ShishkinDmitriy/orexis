@@ -69,13 +69,13 @@ quantification level, is the invariant.
 
 Rule 1 survives both cases, and neither bends it: code never names an instance, and none is
 named here. A derivation BINDS instances from authored world facts — the same move
-`agent/desires.ru` already makes when `$me ag:actsFor ?subject` yields a shape about fern
+`agent/desires.ru` already makes when `$me orexis:actsFor ?subject` yields a shape about fern
 without any line of code knowing a fern exists — and an instance in a ratified root is authored
 in the world's own files, which rule 1 has never restricted.
 
 The bottom two levels are **already in the graph**, verified rather than assumed: the region
 derivation emits below-the-floor and above-the-ceiling as separate property shapes carrying
-`ag:violationIs` (`ag:Below`, `ag:Above`, `ag:Unmeasured`, `ag:Stale`), and each shape carries
+`orexis:violationIs` (`orexis:Below`, `orexis:Above`, `orexis:Unmeasured`, `orexis:Stale`), and each shape carries
 `prov:wasDerivedFrom` naming the subject or sensor it came from. What the forest adds is the
 levels ABOVE and the links BETWEEN: every node materialised with PROV to its **parent** and to
 its **premises** — the range statement, the roster membership — so that walking hot leaf to
@@ -133,7 +133,7 @@ recomputed rows is what a leaf has to carry that a validation-report row cannot:
 **aim** (its one pick inside the room), a resolvable **urgency measure** (its kind's, declared
 in a capability's `measures.ttl` and answered through the choir — the measure never rides on
 the node, and a per-leaf override remains future work for whichever package ships it), the
-`ag:pursues` link
+`orexis:pursues` link
 an intention holds across restarts — the keeper writes it, and a leaf that vanished on
 recomputation would orphan a live commitment — and a **series identity**, the row sensing's module
 already publishes per property with the region's edges and the aim on it. A report row exists
@@ -185,7 +185,7 @@ than its diff; if its review changes the carrier, the forest hangs off whatever 
 becomes. (Its review did exactly that, twice: the sovereign moved the measure's CONTENT off
 the node and then the measure MACHINERY out of the kernel entirely — declared per KIND in a
 capability's `measures.ttl`, sensing's for observation-backed wants, answered through the
-choir with no measure vocabulary in `ag:` at all — see
+choir with no measure vocabulary in `orexis:` at all — see
 [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md). The forest
 hangs off the node exactly as this paragraph provided for.)
 

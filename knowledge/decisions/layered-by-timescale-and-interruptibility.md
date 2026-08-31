@@ -92,8 +92,8 @@ What this closed: the sentence below saying the keeper's tick "still searches sy
 deliberately" was true while the tick had a thread of its own. A timer lands on the loop now,
 so the tick MARKS and the worker searches — the mind's clock is the deliberator's, and the
 search is never on the executing thread. And what a lower row has to say to a higher one it
-says as an EVENT through the choir rather than an import: progression tells `ag:stepDone`,
-`ag:planFinished` and `ag:planFailed`, and deliberation fills those points — a failed plan
+says as an EVENT through the choir rather than an import: progression tells `orexis:stepDone`,
+`orexis:planFinished` and `orexis:planFailed`, and deliberation fills those points — a failed plan
 is a want marked for re-planning, without the ledger ever importing the search.
 
 # What was already true of the code, before the mechanism
@@ -129,7 +129,7 @@ knowing, because each is the rule showing its teeth:
   pursued; the claim simply stays held, which is what happened anyway, and the ledger is the
   evidence rather than a log line.
 - **The window moved to where the act is taken.** `on_offer` used to write the bid's
-  `ag:notAfter` onto the intention it had just adopted; the actor writes it in `take`, from the
+  `orexis:notAfter` onto the intention it had just adopted; the actor writes it in `take`, from the
   round row it reads there — which is where the act record said it belonged.
 - ~~**The keeper's tick still searches synchronously**, deliberately: it is the mind's own clock
   rather than a callback, so marking there would only queue work for the thread already

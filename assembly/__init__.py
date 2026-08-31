@@ -3,7 +3,7 @@
 **Not the mind.** `agent/` is a BDI engine — belief, desire, intention, act, plan — and how a
 build is assembled from packages is none of those. This package owns finding packages, the
 extension mechanism they contribute through, and the vocabulary that names an extension point.
-The kernel keeps the points it OWNS (`ag:desires`, `ag:take`, `ag:size`) and stops owning the
+The kernel keeps the points it OWNS (`orexis:desires`, `orexis:take`, `orexis:size`) and stops owning the
 machinery (the-assembly-is-not-the-mind).
 
 The direction, held by `lint-imports`: **assembly <- agent <- onboarding**. Nothing here imports

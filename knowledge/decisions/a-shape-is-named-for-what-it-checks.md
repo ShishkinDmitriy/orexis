@@ -14,7 +14,7 @@ timestamp: 2026-08-28T12:00:00Z
 
 # What was wrong
 
-`sensing:BeyondSurvivalShape` (`ag:BeyondSurvivalShape` before the stake moved) was named and
+`sensing:BeyondSurvivalShape` (`orexis:BeyondSurvivalShape` before the stake moved) was named and
 commented for one check: *the last reading of a property this agent has a desire in lies outside
 what its subject survives*. That check is gone, and rightly — the deduction emits it now, as a
 shape targeting the subject, saying the same sentence in the language the checker already speaks,
@@ -47,7 +47,7 @@ comment against the paths and messages it constrains. Two more of the same speci
 - **`market:MarketShape` said *all three of its channels* and demanded four.** Offer, bid, claim,
   redeem — the redeem channel arrived with the presentation and the count did not follow. A
   comment describing a shape one constraint smaller than the one underneath it.
-- **`ag:WorldVersionShape` had no comment at all**, alone among every shape in the repo. A version
+- **`orexis:WorldVersionShape` had no comment at all**, alone among every shape in the repo. A version
   is one whole number, and it is what an observation stamps itself with, so a world whose version
   is missing or doubled makes every reading taken under it unattributable. Now said.
 

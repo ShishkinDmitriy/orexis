@@ -1,4 +1,4 @@
-@prefix ag:     <http://example.org/orexis#> .
+@prefix orexis:     <http://example.org/orexis#> .
 @prefix mc:     <http://example.org/orexis/microcontroller#> .
 @prefix wokwi:  <http://example.org/orexis/wokwi#> .
 @prefix : <http://example.org/orexis/wokwi#> .
@@ -25,7 +25,7 @@ Note what is otherwise NOT here: the pin names of a BOARD. An ESP32's legs alrea
     rdfs:comment "The part id in Wokwi's catalogue — 'wokwi-dht22', 'board-esp32-devkit-c-v4'. Free text, matched against their library rather than derived from anything here." .
 
 :pin a owl:ObjectProperty ; rdfs:label "wokwi pin" ;
-    rdfs:comment "One leg of that part, saying which of OUR roles it answers to. The join between a role and a drawing: this world says a leg is ag:PowerPinRole, Wokwi calls that leg VCC on a DHT and COM on nothing at all." .
+    rdfs:comment "One leg of that part, saying which of OUR roles it answers to. The join between a role and a drawing: this world says a leg is orexis:PowerPinRole, Wokwi calls that leg VCC on a DHT and COM on nothing at all." .
 
 :name a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "wokwi pin name" ;
     rdfs:comment "What Wokwi calls it, exactly. Case matters to their renderer." .

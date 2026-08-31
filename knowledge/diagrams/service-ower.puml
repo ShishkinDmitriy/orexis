@@ -22,8 +22,8 @@ skinparam component {
 
 
 database "Beliefs · repository" as BEL {
-  folder "ag:ObligationsGraph" as O
-  folder "ag:WorldGraph\nwho the counterparty is" as W
+  folder "orexis:ObligationsGraph" as O
+  folder "orexis:WorldGraph\nwho the counterparty is" as W
 }
 
 component "Ower\nruns debt keeping" as OW

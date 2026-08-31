@@ -123,7 +123,7 @@ note as N1
   mints the graph for a search node.
   ----
   **The menu repo holds TEMPLATES, never rows.** `menu_of()`
-  runs each template's `ag:available` per ask and returns
+  runs each template's `orexis:available` per ask and returns
   `list[Affordance]`. A row exists exactly while its premise
   holds (&#35;263), and `$state` is a parameter so the planner can
   ask for the menu of an IMAGINED world. Storing rows would

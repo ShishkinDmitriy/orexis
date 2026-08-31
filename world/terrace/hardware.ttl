@@ -1,6 +1,6 @@
 @prefix : <http://example.org/orexis/world/terrace#> .
 @prefix mqtt: <http://example.org/orexis/mqtt#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix bme280: <http://example.org/orexis/bme280#> .
@@ -24,21 +24,21 @@
 
 ##########  What runs the society  ##########
 
-:raspberry a ag:ComputeHost ;
-    ag:localId "raspberry" ;
+:raspberry a orexis:ComputeHost ;
+    orexis:localId "raspberry" ;
     mc:model "Raspberry Pi 5" ;
     # A name, not an address — the sensing world's hardware file records what an address cost.
-    ag:lanHost "raspberry.local" ;
+    orexis:lanHost "raspberry.local" ;
     rdfs:comment "Runs the agent container, the broker for this world, and the shared store." .
 
-:terrace_agent ag:runsOn :raspberry .
+:terrace_agent orexis:runsOn :raspberry .
 
 ##########  The board at the edge  ##########
 
 # Both classes spelled out, as in world/sensing: the Microcontroller typing is what the
 # generators query for, and the FireBeetle class is what carries the sleep-watcher fact.
 :esp32_terrace a mc:Microcontroller , esp32:FireBeetle2Esp32E ;
-    ag:localId "esp32_terrace" ;
+    orexis:localId "esp32_terrace" ;
     mc:model "DFRobot FireBeetle 2 ESP32-E" ;
     mqtt:onBus :local_bus ;
     #  No mc:firmware: the board's connecting DEVICE is typed outdoor:Node in world.ttl and
@@ -107,7 +107,7 @@
 # The address is the SDO strap's: 0x76 (118) as most breakouts ship it, 0x77 (119) with SDO
 # tied high — the bench unit answered to the sketch's probe of both; change this if it was 0x77.
 :air_sensor_terrace a bme280:Bme280 ;
-    ag:localId "air_sensor_terrace" ;
+    orexis:localId "air_sensor_terrace" ;
     mc:model "GY-BME280" ;
     mc:hasPin :bme_sda , :bme_scl , :bme_vcc , :bme_gnd ;
     i2c:address 118 .

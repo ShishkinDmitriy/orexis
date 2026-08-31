@@ -5,7 +5,7 @@ description: >-
   One row of what an agent could do NOW — an action whose precondition holds: a means, the
   property it is about, the lever it goes through, which way that moves it, and whom it
   serves if not the agent itself. Always DERIVED and never stored, because a stored row can
-  outlive the plumbing it was concluded from; each row comes from an action's `ag:available`
+  outlive the plumbing it was concluded from; each row comes from an action's `orexis:available`
   query, so a new way of acting is a new node rather than an edit to a registry. The menu is the union of those rows, and it is also the precondition language —
   a row whose premises cannot hold does not exist, so chaining needs no separate `requires`.
   The row that is ABSENT is a finding too: a desire with no lever is legitimate and legible.
@@ -20,7 +20,7 @@ written into it:
 |---|---|
 | `action` | the [action](/domain/action.md) — the kind of act: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `market:Offering` |
 | `want` | the [desire](/domain/desire.md) it serves — the node, which is the kernel's only key. Empty on a row that serves any want (a host's Offering) or an obligation's |
-| `about` | what that want is about — `ag:about`, said by whoever derived the want and opaque to the kernel: a property for a stake, an instrument for a freshness want. Carried to the effect as `$about` |
+| `about` | what that want is about — `orexis:about`, said by whoever derived the want and opaque to the kernel: a property for a stake, an instrument for a freshness want. Carried to the effect as `$about` |
 | `via` | the lever it goes through: this probe, this valve, this venue |
 | `direction` | which way it moves the property, or **empty** for a look |
 | `for_agent` | whom the row serves, where it is an obligation. Absent on the agent's own rows |
@@ -64,7 +64,7 @@ one validation; trusting a declaration that turns out to be wrong costs a plant.
 # Each package ships its own rows
 
 There is no menu file. Each package that owns a lever ships its [actions](/domain/action.md),
-and `menu_of` runs every action's `ag:available` it finds in the store — sensing contributes
+and `menu_of` runs every action's `orexis:available` it finds in the store — sensing contributes
 Observe, actuation Actuate, the market Acquire and the host's Apply.
 
 It began as one `menu.rq` in the deliberation package, which made the menu's KINDS a registry in
@@ -103,7 +103,7 @@ too coarse*, which is a distinction a planner that reported them alike would des
   and holds what a lever DOES — a row says only that one is available.
 - [desire](/domain/desire.md) is the other half of a decision: a row answers *what could I do*, a
   gap answers *about what*.
-- [actor](/domain/actor.md) is the code a row is linked to, through `ag:takenBy` on the row's means.
+- [actor](/domain/actor.md) is the code a row is linked to, through `orexis:takenBy` on the row's means.
 - [package](/domain/package.md) is how a contribution is found: a directory, and nothing lists it.
 - [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) places rows in the menu modality
   and explains why they are derived where a rule is asserted.

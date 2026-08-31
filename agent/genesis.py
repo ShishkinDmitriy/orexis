@@ -156,7 +156,7 @@ def world_dir(name: str) -> Path:
 _CAPABILITIES_Q = f"""
 SELECT ?agentId (GROUP_CONCAT(?cap; separator=", ") AS ?caps)
 WHERE {{ 
-  ?agent a ag:Agent ; ag:localId ?agentId ; ag:hasCapability ?c .
+  ?agent a orexis:Agent ; orexis:localId ?agentId ; orexis:hasCapability ?c .
   BIND(REPLACE(STR(?c), "^.*#", "") AS ?cap)
  }} GROUP BY ?agentId ORDER BY ?agentId"""
 
@@ -164,7 +164,7 @@ WHERE {{
 # A rule that owns a graph of its own names its CLASS, never the graph. `$into(pkg:SomeGraph)`
 # is resolved against the vocabulary here, which is the same discipline `store.public_graphs()`
 # follows for reads — a graph IRI is an instance, and rule 1 applies to it as much as it applies
-# to `ag:fern_agent`.
+# to `orexis:fern_agent`.
 #
 # Generic on purpose. The kernel learns no package's name: a package declares a graph class, types
 # one graph as an instance of it, and its rule writes there. `$derived` remains the default and
@@ -175,7 +175,7 @@ _GRAPH_OF_CLASS = "SELECT ?g WHERE {{ ?g a <{cls}> }}"
 
 
 def _expand(prefixed: str) -> str:
-    """`ag:ConstraintGraph` -> its full IRI, using the namespaces every rule already has.
+    """`orexis:ConstraintGraph` -> its full IRI, using the namespaces every rule already has.
 
     The same table `store.PREFIXES` is built from, so a rule may name a class exactly as it
     names one in its own WHERE clause and there is no second spelling to keep in step.
@@ -372,7 +372,7 @@ def drop_ghost_graphs(st: Store, agent_id: str) -> list[str]:
     nothing AND it is none of this agent's own. Anything owned or declared is left alone,
     because the safe direction to fail is to keep too much.
     """
-    from orexis_agent_progression.ontology import AG, PROVENANCE_GRAPH
+    from orexis_agent_progression.ontology import OREXIS, PROVENANCE_GRAPH
 
     declared = {r["g"] for r in bindings(st.query("SELECT ?g WHERE { ?g a ?class }"))
                 if r["g"].startswith(GRAPH_PREFIX)}
@@ -381,7 +381,7 @@ def drop_ghost_graphs(st: Store, agent_id: str) -> list[str]:
     # the instances under it. Listing them here instead would eat the next package's graphs,
     # which is exactly what the first draft did to review's summaries.
     prefixes = tuple(r["p"] for r in bindings(st.query(
-        f"SELECT ?p WHERE {{ ?class <{AG}graphPrefix> ?p }}")))
+        f"SELECT ?p WHERE {{ ?class <{OREXIS}graphPrefix> ?p }}")))
     ghosts = [g for g in st.graph_names()
               if g.startswith(GRAPH_PREFIX) and g not in declared and g != PROVENANCE_GRAPH
               and not g.startswith(prefixes)]
@@ -405,7 +405,7 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
     function of the vocabulary, so a graph whose modality is refined by an amendment says the
     new thing on the next boot without a migration.
     """
-    from orexis_agent_progression.ontology import AG, CLASSIFICATION_GRAPH, obligations_graph
+    from orexis_agent_progression.ontology import OREXIS, CLASSIFICATION_GRAPH, obligations_graph
 
     from orexis_agent_progression.graphs import intentions_graph
 
@@ -418,8 +418,8 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
         (obligations_graph(agent_id), ("ObligationsGraph",), "Received"),
     ]
     triples = " ".join(
-        f"<{iri}> a {' , '.join(f'<{AG}{c}>' for c in classes)} ; "
-        f"<{AG}arrivedBy> <{AG}{arrival}> ."
+        f"<{iri}> a {' , '.join(f'<{OREXIS}{c}>' for c in classes)} ; "
+        f"<{OREXIS}arrivedBy> <{OREXIS}{arrival}> ."
         for iri, classes, arrival in mine)
     st.clear_graph(CLASSIFICATION_GRAPH)
     st.update(f"INSERT DATA {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ {triples} }} }}")

@@ -12,8 +12,8 @@ it was concluded from. See knowledge/domain/affordance.md.
 where the rows were first needed; but three OTHER packages already reached for its vocabulary to
 describe their own rows — sensing, actuation and market each bound its Chosen mode by hand
 in their `affordances.rq`. A word three packages must speak to describe themselves is not the
-fourth package's word, which is the test the-mind-is-six-graphs set and `ag:Mode` now passes for
-the same reason `ag:Intention` did. The modes had already made this move once, out of `market:`,
+fourth package's word, which is the test the-mind-is-six-graphs set and `orexis:Mode` now passes for
+the same reason `orexis:Intention` did. The modes had already made this move once, out of `market:`,
 on exactly this argument.
 """
 
@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from orexis_agent_progression.ontology import AG, STATE_GRAPH
+from orexis_agent_progression.ontology import OREXIS, STATE_GRAPH
 from orexis_agent_progression.store import bindings
 
 @dataclass(frozen=True)
@@ -32,7 +32,7 @@ class Affordance:
     Whom it serves is the #218 half: a row of my own is an option a deliberator ranges over;
     one owed to somebody is an obligation exercised on a valid presentation and never proposed.
 
-    `want` is the desire's node, and `about` is what that want is ABOUT — `ag:about`, stated
+    `want` is the desire's node, and `about` is what that want is ABOUT — `orexis:about`, stated
     by whoever derived the want, and opaque here: sensing says a region want is about a
     property, and its own action queries join a lever to it. The kernel carries it from the
     want to the rule (`$about`) and never reads it. Both None on a row that serves any want —
@@ -59,17 +59,17 @@ class Affordance:
 
 
 #  What this agent wants and what each want is ABOUT — the kernel's words only. A want with no
-#  `ag:about` is one no action query could join a lever to, and it is simply absent from the
+#  `orexis:about` is one no action query could join a lever to, and it is simply absent from the
 #  VALUES block; the obligations are not here at all, because an obligation's row names whom it is owed
 #  to and joins on that. (This used to read the property off the met-shape, and the kernel
 #  no longer knows a want has one — the-stake-is-sensings-want.)
 _WANTS_Q = """SELECT ?want ?about WHERE {
-  <%s> ag:holds ?want .
-  ?want a ag:Desire ; ag:about ?about }"""
+  <%s> orexis:holds ?want .
+  ?want a orexis:Desire ; orexis:about ?about }"""
 
 
 _ACTIONS_Q = """SELECT ?action ?available WHERE {
-  ?action a ag:Action ; ag:available ?available }"""
+  ?action a orexis:Action ; orexis:available ?available }"""
 
 
 def wants_of(desires, agent_uri: str) -> dict[str, str]:
@@ -86,8 +86,8 @@ def affordances_of(query, agent_uri: str, desires, beliefs: str, state: str = ST
     row here is a move nothing should propose. Free function for the same reason `gaps_of` is —
     a test about what a world implies should not have to build an agent to ask.
 
-    THE UNION OF WHAT THE LOADED ACTIONS SAY (#207, an-action-is-one-node): every `ag:Action`
-    in the store carries its precondition as `ag:available`, and this runs each one with `$me`
+    THE UNION OF WHAT THE LOADED ACTIONS SAY (#207, an-action-is-one-node): every `orexis:Action`
+    in the store carries its precondition as `orexis:available`, and this runs each one with `$me`
     and the wanted `$wants` filled in — `VALUES (?want ?about) { … }`, one pair per want the
     agent holds and what its deriver says it is about — and `$beliefs` naming the agent's own
     graph.

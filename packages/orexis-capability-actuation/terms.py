@@ -1,6 +1,6 @@
 """The terms this package implements — the Python end of `ontology.ttl`.
 
-**This package owns a namespace**, and `term()` here builds into it. `ag:` is what every agent
+**This package owns a namespace**, and `term()` here builds into it. `orexis:` is what every agent
 has whatever it composed; touching the physical world is not that, so its vocabulary is this
 package's and says so. `tests/test_layout.py` holds `NS` and the `@prefix` in `ontology.ttl`
 together — drifting them apart would have Python name terms SHACL never validates, and the world

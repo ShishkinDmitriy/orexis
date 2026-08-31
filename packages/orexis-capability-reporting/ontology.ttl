@@ -1,6 +1,6 @@
 @prefix reporting: <http://example.org/orexis/reporting#> .
 @prefix : <http://example.org/orexis/reporting#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
@@ -23,12 +23,12 @@
 #  agent from a dead one, and an agent that could lose the ability to say it is unwell is the one
 #  you most need to hear from. See knowledge/decisions/telemetry-is-a-mandatory-capability.md.
 
-:ReportingCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+:ReportingCapability a owl:Class ; rdfs:subClassOf orexis:Capability ;
     rdfs:label "Reporting capability" ;
     rdfs:comment "The family. Rules true of reporting however it is done target this class, so nothing is restated per member, and a caller may ask for 'whoever reports' without knowing where it puts the figures." .
 
 :record a assembly:Extension ;
-    assembly:signature "(value, at=…, **tags) -> None" ; ag:row ag:Reactive ; rdfs:label "record" ; rdfs:comment "Told: a reading for the record — value, instant, tags. Answered by whoever holds the series sink, which is this package's Storing member." .
+    assembly:signature "(value, at=…, **tags) -> None" ; orexis:row orexis:Reactive ; rdfs:label "record" ; rdfs:comment "Told: a reading for the record — value, instant, tags. Answered by whoever holds the series sink, which is this package's Storing member." .
 
 :Storing a :ReportingCapability ; rdfs:label "Storing" ;
     rdfs:comment "Writes the account into this agent's own series bucket, on its own clock. The implemented member and the one every world derives. Its credential opens exactly one bucket, so what an agent can report about is what it can report on — see series-and-bus-isolation." .
@@ -40,6 +40,6 @@ It is the member worth building next, and for a reason particular to telemetry: 
 
 Note what a member is NOT: the ADDRESS of a sink is environment, because a service URL is not a belief anyone holds. A member is a manner of reporting; where that manner points is still INFLUX_URL's neighbour. Conflating the two is what made this look like a function.""" .
 
-:metricsIntervalS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+:metricsIntervalS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
     rdfs:label "reporting interval (s)" ;
     rdfs:comment "How often this agent reports on itself. An ordinary REQUIRED parameter of a capability every agent holds, exactly as review:reviewIntervalS is of reviewing. It was optional once, and its absence meant an agent reporting nothing — a side channel dressed as a decision by omission, and the same pattern self-review-is-a-capability refused for the review interval. Two things were wrong with it: no agent in any world ever omitted it, so the branch was exercised by nothing; and an agent permitted to report nothing produces silence that carries no information, which is the one thing telemetry exists to prevent. A rate belongs in beliefs for the same reason the sensing cadence does — a test world may want it faster than a deployed one." .

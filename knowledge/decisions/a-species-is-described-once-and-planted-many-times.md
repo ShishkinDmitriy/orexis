@@ -53,7 +53,7 @@ What a world writes when it acquires one:
 
 ```turtle
 ag:pot_by_the_window a zz:ZamioculcasZamiifolia ;
-    ag:localId "zz" ; water:servedBy ag:tap ; water:litresPerFraction 2.0 .
+    orexis:localId "zz" ; water:servedBy ag:tap ; water:litresPerFraction 2.0 .
 ```
 
 That is the whole of it. Eight conditions — two ranges across four properties, one of which

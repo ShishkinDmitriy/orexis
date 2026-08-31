@@ -49,7 +49,7 @@ def test_every_sensor_is_given_a_codec_and_a_calibration():
 
 def test_the_conclusions_land_in_the_derived_graph_not_the_world():
     """A world states premises; genesis writes conclusions. The same rule that keeps
-    `ag:hasCapability` out of `world.ttl` applies to a fact borne by a binding."""
+    `orexis:hasCapability` out of `world.ttl` applies to a fact borne by a binding."""
     store = genesis_store(world="sensing")
     asserted = bindings(store.query(PREFIXES + f"""
         SELECT ?s WHERE {{ GRAPH <{WORLD_GRAPH}> {{

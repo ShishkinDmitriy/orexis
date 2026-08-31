@@ -19,7 +19,7 @@ same over the instances a world states.
 ![inference — what it reads and writes](../diagrams/service-inference.svg)
 
 **A type does not distinguish these, and the arrival does.** `graph/ontology` and
-`graph/ontology/entailed` are both `ag:OntologyGraph`; what separates them is `ag:arrivedBy`. So
+`graph/ontology/entailed` are both `orexis:OntologyGraph`; what separates them is `orexis:arrivedBy`. So
 a diagram that names graphs by type must carry arrival beside it wherever a service writes back
 into the type it read.
 

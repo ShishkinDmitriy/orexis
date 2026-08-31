@@ -37,7 +37,7 @@ from agent.config import REPO_ROOT
 from pathlib import Path
 
 from agent.genesis import world_dir, worlds
-from orexis_agent_progression.ontology import AG, ONTOLOGY_GRAPH, WORLD_GRAPH
+from orexis_agent_progression.ontology import OREXIS, ONTOLOGY_GRAPH, WORLD_GRAPH
 from .namespaces import DHT11, ESP32, I2C, MC, ONEWIRE, PROBE, RGBLED
 
 
@@ -52,7 +52,7 @@ _DEVICES_Q = f"""
 SELECT ?device ?deviceId ?part ?attrs WHERE {{
   
     ?device <{MC}hasPin> ?anyPin .
-    OPTIONAL {{ ?device <{AG}localId> ?deviceId }}
+    OPTIONAL {{ ?device <{OREXIS}localId> ?deviceId }}
     ?device a ?class .
   
   
@@ -342,7 +342,7 @@ def _inverse(ds) -> tuple[dict[str, str], dict[str, dict[str, str]]]:
 def _qname(uri: str) -> str:
     """A prefixed name for a term, for readable output. Only the namespaces a draft can emit."""
     for pfx, ns in (("mc", MC), ("onewire", ONEWIRE), ("i2c", I2C), ("dht11", DHT11),
-                    ("rgbled", RGBLED), ("probe", PROBE), ("esp32", ESP32), ("ag", AG)):
+                    ("rgbled", RGBLED), ("probe", PROBE), ("esp32", ESP32), ("orexis", OREXIS)):
         if uri.startswith(ns):
             return f"{pfx}:{uri[len(ns):]}"
     return f"<{uri}>"
@@ -380,9 +380,9 @@ def draft(world: str, diagram: Path) -> str:
            "# It is left deliberately unvalidatable. A draft that passes orexis-validate is the",
            "# one nobody re-reads.",
            "",
-           "@prefix ag:    <http://example.org/orexis#> .",
+           "@prefix orexis:    <http://example.org/orexis#> .",
            # The DRAFT's own individuals go into the world's namespace (a world owns
-           # its individuals; ag: is the vocabulary's), spelled with the empty prefix.
+           # its individuals; orexis: is the vocabulary's), spelled with the empty prefix.
            f"@prefix : <http://example.org/orexis/world/{world}#> .",
            "@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .",
            "@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .",
@@ -403,7 +403,7 @@ def draft(world: str, diagram: Path) -> str:
         pid, ptype = part["id"], part["type"]
         if pid in boards:
             out += [f":{pid} a mc:Microcontroller ;",
-                    f'    ag:localId "{pid}" ;   # {_TODO} a name a person would use',
+                    f'    orexis:localId "{pid}" ;   # {_TODO} a name a person would use',
                     f'    mc:model "{_TODO}" ;',
                     f"    mc:logicVolts {_TODO} ;   # 3.3 for an ESP32; it decides what rail a part may take",
                     f"    mc:hasPin " + " , ".join(f":{pid}_{_slug(p)}"
@@ -412,7 +412,7 @@ def draft(world: str, diagram: Path) -> str:
             for pin in sorted(used.get(pid, ())):
                 gpio = f" mc:gpio {pin} ;" if pin.isdigit() else ""
                 notation = pin.split(".")[0]
-                out.append(f'ag:{pid}_{_slug(pin)} a mc:Pin ;{gpio} wokwi:name "{pin}" ; '
+                out.append(f'orexis:{pid}_{_slug(pin)} a mc:Pin ;{gpio} wokwi:name "{pin}" ; '
                            f'skos:notation "{notation}" .   # {_TODO} check the silkscreen')
             out.append("")
             continue
@@ -421,7 +421,7 @@ def draft(world: str, diagram: Path) -> str:
         cls = by_part[ptype]
         legs = roles.get(cls, {})
         out += [f":{pid} a {_qname(cls)} ;",
-                f'    ag:localId "{pid}" ;   # {_TODO} a name a person would use',
+                f'    orexis:localId "{pid}" ;   # {_TODO} a name a person would use',
                 f'    mc:model "{_TODO}" ;',
                 f"    mc:hasPin " + " , ".join(f":{pid}_{_slug(p)}"
                                                for p in sorted(used.get(pid, ()))) + " .",
@@ -443,7 +443,7 @@ def draft(world: str, diagram: Path) -> str:
         if pa not in used or pb not in used:
             continue
         col = f' ; mc:colour "{colour}"' if colour else ""
-        out.append(f"ag:w{i} a mc:Wire ; mc:joins ag:{pa}_{_slug(pina)} , "
+        out.append(f"orexis:w{i} a mc:Wire ; mc:joins orexis:{pa}_{_slug(pina)} , "
                    f":{pb}_{_slug(pinb)}{col} .")
     return "\n".join(out) + "\n"
 

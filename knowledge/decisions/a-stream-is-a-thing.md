@@ -71,7 +71,7 @@ one of them disagrees.
 **The methodological part is worth more than the fix.** The hole had been reported as measured,
 and the measurement was wrong twice over:
 
-- the probe mutated `ag:air_temp_fern` in the **society** world, where no such sensor exists, so
+- the probe mutated `orexis:air_temp_fern` in the **society** world, where no such sensor exists, so
   it asserted a triple about nothing and observed that nothing happened;
 - re-running the rules over a store `genesis_store` had **already derived once**, without
   clearing the derived graph, leaves the old conclusion beside the new one — so a sensor showed

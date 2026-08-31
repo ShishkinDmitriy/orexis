@@ -21,7 +21,7 @@ decides them all silently.
 **Consulting survives as a seam, and a better one.** Asking a model what next is a genuine
 alternative — it is the reason the extraction happened at all — but WHICH deliberator answers
 is a choice, and this project puts choices in beliefs rather than in grants: it becomes a pick
-(`ag:deliberatesBy`) that an agent's review can move inside whatever room its mandate leaves,
+(`orexis:deliberatesBy`) that an agent's review can move inside whatever room its mandate leaves,
 not a capability its world derives for it once at genesis. Everything
 knowledge/decisions/llm-heavy-deliberation.md fixes about it stands unchanged: a move from this
 vocabulary's menu and never free text-to-action, the bid number stays deterministic, and the
@@ -49,7 +49,7 @@ from . import planner, pursuit, trace
 from orexis_agent_progression.act import Act, Step
 from orexis_agent_deliberation.desire import Desire
 from .afforder import affordances_of
-from orexis_agent_progression.ontology import (AG, DELIBERATION_GRAPH, PLAN_FAILED, PLAN_FINISHED,
+from orexis_agent_progression.ontology import (OREXIS, DELIBERATION_GRAPH, PLAN_FAILED, PLAN_FINISHED,
                                                   SERIES, STATE_GRAPH, STEP_DONE, beliefs_graph)
 from .planner import Planner
 from orexis_agent_progression.store import bindings
@@ -322,7 +322,7 @@ class Deliberator:
 
         Returns the plan as ROWS, because a step is a row and not a means: which lever it
         goes through is half of what it says, and execution writes that half to the ledger
-        as `ag:through`. None where there is nothing to do, and that None is a decision.
+        as `orexis:through`. None where there is nothing to do, and that None is a decision.
 
         It takes the want itself, so an obligation reaches deliberation as what it is: a thing wanted,
         ranked in the same currency, pursued through an affordance like anything else. It is

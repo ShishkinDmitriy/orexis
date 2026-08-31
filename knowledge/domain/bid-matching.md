@@ -89,7 +89,7 @@ Bid matching is a **capability**, in the sense [capability-packages](/decisions/
 gives the word: a family with interchangeable members, asked for by family and never by name.
 
 - The host states `market:matchesBy market:PayAsBid` in the world. That is a fact about what it *does*.
-- The capability `ag:hasCapability market:PayAsBid` is **derived** from it at genesis, never written
+- The capability `orexis:hasCapability market:PayAsBid` is **derived** from it at genesis, never written
   by hand — the same as every other capability here.
 - At runtime `hosting.py` asks `agent.provider(BID_MATCHING)` and gets whichever module registered
   that member. The market package does not know that pay-as-bid is implemented in Python at all.

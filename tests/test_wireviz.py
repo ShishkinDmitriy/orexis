@@ -102,7 +102,7 @@ def test_a_board_leg_is_not_asked_for_a_role_it_should_not_have(drafted):
 def test_names_and_models_survive_where_a_drawing_lost_them(drafted):
     """What a harness is better at than a diagram: its YAML is meant to be TYPED, so it carries
     the names you chose and the models you wrote. A Wokwi import gave back `sen1`."""
-    assert 'ag:localId "air_sensor_fern"' in drafted
+    assert 'orexis:localId "air_sensor_fern"' in drafted
     assert 'mc:model "KY-015 (DHT11)"' in drafted
 
 

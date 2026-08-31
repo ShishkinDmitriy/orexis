@@ -15,7 +15,7 @@
 #  READ BY THIS PACKAGE'S OWN CODE (`module.py`), never by a kernel loader: the kernel asks
 #  "how urgent is this desire, in this world" through `Module.desire_urgency` and holds no
 #  measure vocabulary, no measure graph, no evaluator. Which is why the words here are
-#  sensing's own — `sensing:measureOf`, not `ag:` — the repo's promotion test being a word
+#  sensing's own — `sensing:measureOf`, not `orexis:` — the repo's promotion test being a word
 #  SEVERAL packages must speak, and today one does. When the market ships its duty measure by
 #  this same mechanic, promotion happens then.
 #

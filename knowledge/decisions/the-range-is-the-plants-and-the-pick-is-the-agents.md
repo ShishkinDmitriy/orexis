@@ -36,7 +36,7 @@ all.
 **A plant states the range it needs; its agent picks a target inside it.**
 
 ```turtle
-ag:fern a water:Plant ;
+orexis:fern a water:Plant ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
             ssn:forProperty water:SoilMoisture ;

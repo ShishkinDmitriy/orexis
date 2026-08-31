@@ -10,24 +10,24 @@
 # one over; the envelope's the same at `sh:Warning`. `$me` is the one agent asking.
 #
 # NOT narrowed to a graph: a want contributed by something other than this package's deduction
-# is simply seen, which is what `ag:DesireGraph` being a CLASS is for.
+# is simply seen, which is what `orexis:DesireGraph` being a CLASS is for.
 SELECT ?kind ?desire ?property ?low ?high ?floor ?ceiling ?instrument WHERE {
   {
     #  The desire is a NODE and the met-shape hangs off it (a-desire-states-its-own-measure) —
-    #  the region's numbers are read through `ag:metWhen`. No measure rides out: how badly a
+    #  the region's numbers are read through `orexis:metWhen`. No measure rides out: how badly a
     #  want is unmet is a capability's answer, asked through the choir, not a column here.
-    $me ag:holds ?desire .
-    ?desire ssn:forProperty ?property ; ag:metWhen ?met .
+    $me orexis:holds ?desire .
+    ?desire ssn:forProperty ?property ; orexis:metWhen ?met .
     ?met sh:property ?below , ?above .
-    ?below sh:severity ag:ShouldBecome ; ag:violationIs ag:Below ;
+    ?below sh:severity orexis:ShouldBecome ; orexis:violationIs orexis:Below ;
            sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
-    ?above sh:severity ag:ShouldBecome ; ag:violationIs ag:Above ;
+    ?above sh:severity orexis:ShouldBecome ; orexis:violationIs orexis:Above ;
            sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
-    OPTIONAL { $me ag:holds ?envelope .
+    OPTIONAL { $me orexis:holds ?envelope .
                ?envelope ssn:forProperty ?property ; sh:property ?underFloor , ?overCeiling .
-               ?underFloor sh:severity sh:Warning ; ag:violationIs ag:Below ;
+               ?underFloor sh:severity sh:Warning ; orexis:violationIs orexis:Below ;
                            sh:qualifiedValueShape/sh:property/sh:maxExclusive ?floor .
-               ?overCeiling sh:severity sh:Warning ; ag:violationIs ag:Above ;
+               ?overCeiling sh:severity sh:Warning ; orexis:violationIs orexis:Above ;
                             sh:qualifiedValueShape/sh:property/sh:minExclusive ?ceiling }
     BIND("stake" AS ?kind)
   }
@@ -52,8 +52,8 @@ SELECT ?kind ?desire ?property ?low ?high ?floor ?ceiling ?instrument WHERE {
     #  the premise is the sensor and only the sensor, which is what sensing's derivation
     #  writes — it carried the subject too, and every freshness want then arrived twice, the
     #  second copy keyed on a subject no instruments table has and so permanently unmeasured.
-    $me ag:holds ?desire .
-    ?desire ag:violationIs ag:Stale ; ssn:forProperty ?property ;
+    $me orexis:holds ?desire .
+    ?desire orexis:violationIs orexis:Stale ; ssn:forProperty ?property ;
             prov:wasDerivedFrom ?instrument .
     BIND("freshness" AS ?kind)
   }

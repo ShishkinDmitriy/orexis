@@ -186,7 +186,7 @@ world and a bidder in another. See [world](/domain/world.md).
 - **There is no record that an agent was born**, only the presence of its beliefs. That is
   enough to make birth happen once, but not enough to say *when* it happened or under which
   world version.
-- **World kind is not modelled.** There is no `ag:worldKind`, no defaults keyed to it, and no
+- **World kind is not modelled.** There is no `orexis:worldKind`, no defaults keyed to it, and no
   check that a bench world is not accidentally deployed with production cadences. Today the
   distinction lives only in which directory you seeded.
 - **The session is not tooled.** Narrate→draft→ratify happens in a chat window; nothing

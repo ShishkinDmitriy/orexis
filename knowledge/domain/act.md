@@ -32,8 +32,8 @@ held claim spent later — the futures seam in [claim](/domain/claim.md) — wou
 
 # Where it appears
 
-- an [intention](/domain/intention.md) commits to an act — `ag:by` names the act node, which
-  `ag:fills` the action and carries the lever (`ag:through`), the quantity and the window;
+- an [intention](/domain/intention.md) commits to an act — `orexis:by` names the act node, which
+  `orexis:fills` the action and carries the lever (`orexis:through`), the quantity and the window;
 - an [actor](/domain/actor.md) is handed one: `take(act, …)`;
 - a [commitment](/domain/commitment.md) promises one — a [claim](/domain/claim.md) is a
   commitment to the host's Serving act for so many litres, not after `exp`;

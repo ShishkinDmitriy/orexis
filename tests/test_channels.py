@@ -12,7 +12,7 @@ from orexis_agent_progression.store import bindings
 
 from conftest import genesis_store
 
-AG = "http://example.org/orexis#"
+OREXIS = "http://example.org/orexis#"
 
 _CHANNELS = f"""
 SELECT DISTINCT ?topic ?channel WHERE {{
@@ -21,7 +21,7 @@ SELECT DISTINCT ?topic ?channel WHERE {{
 
 _USERS = f"""
 SELECT ?id ?topic ?dir WHERE {{
-  ?d <{AG}localId> ?id .
+  ?d <{OREXIS}localId> ?id .
   {{ ?d <{MQTT}publishesOn> ?c . BIND("publishes" AS ?dir) }}
   UNION
   {{ ?d <{MQTT}listensOn> ?c . BIND("listens" AS ?dir) }}

@@ -15,7 +15,7 @@ The first two were near-duplicates, and the measurement is the argument:
 
 - **all four belief files were byte-identical**;
 - after normalising the `sim/` topic prefix and the device-id naming, **~45 lines of ~230
-  differed**, and every one of them was a simulated-device declaration (`ag:simulatedBy`, five
+  differed**, and every one of them was a simulated-device declaration (`orexis:simulatedBy`, five
   `ag:model*` parameters) or the air sensor added by [#88](https://github.com/ShishkinDmitriy/orexis/pull/88).
 
 Two worlds that differ only in whether their devices are stood in for are one world with a flag

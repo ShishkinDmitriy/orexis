@@ -1,4 +1,4 @@
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
@@ -14,10 +14,10 @@ What is NOT here any more is everything physical. `packages/orexis-part-microcon
 
 #################  Agents and capabilities (composition, not hierarchy)  #################
 
-ag:Agent a owl:Class ; rdfs:label "Agent" ;
+orexis:Agent a owl:Class ; rdfs:label "Agent" ;
     rdfs:comment "A self-interested principal with a stake. What an agent can DO is not its class — it is the set of capabilities composed onto it, so two agents of the same kind may run different modules." .
 
-ag:Capability a owl:Class ; rdfs:label "Capability" ;
+orexis:Capability a owl:Class ; rdfs:label "Capability" ;
     rdfs:comment "One thing an agent can do, defined by a module: a vocabulary (this ontology), rules (its SHACL shapes), and the code that reads them. Declaring a capability is what activates the module." .
 
 #################  The choir: a hook is a term  #################
@@ -40,83 +40,83 @@ ag:Capability a owl:Class ; rdfs:label "Capability" ;
 #  WHAT THE KERNEL OFFERS is not declared here, and that is deliberate. A service is a Python
 #  object and its CLASS says what it is — `Beliefs`, `Keeper`, `Metrics` — so a package imports
 #  the thing it wants and asks for it, with no parallel naming system to keep in step. Seven
-#  `ag:*Store` terms were declared here for one commit and removed the same day: a term is the
+#  `orexis:*Store` terms were declared here for one commit and removed the same day: a term is the
 #  right key for an EXTENSION POINT, which is a declared thing in the graph, and the wrong one
 #  for an object you can import (an-injected-service-is-reached-by-term).
 
-ag:Row a owl:Class ; rdfs:label "Row" ;
+orexis:Row a owl:Class ; rdfs:label "Row" ;
     rdfs:comment "One of the three cognitive layers, as a term. Latency and interruptibility are the axis: reactive is atomic and must never block, progression spans time and suspends, deliberation searches." .
 
-ag:Reactive a ag:Row ; rdfs:label "reactive" ;
+orexis:Reactive a orexis:Row ; rdfs:label "reactive" ;
     rdfs:comment "Milliseconds, atomic, no search. Classify and write — decode a payload, take a bid into a round, note a status. Must never block and must never reach the planner." .
-ag:Progression a ag:Row ; rdfs:label "progression" ;
+orexis:Progression a orexis:Row ; rdfs:label "progression" ;
     rdfs:comment "Seconds to minutes, suspends rather than blocks, searches nothing: carrying out what is already committed. BDI's own layer — intentions with a lifecycle, which is what holds a commitment across the gap between two deliberation episodes." .
-ag:Deliberative a ag:Row ; rdfs:label "deliberative" ;
+orexis:Deliberative a orexis:Row ; rdfs:label "deliberative" ;
     rdfs:comment "The search: bounded, ranked by simulation, and the only row a model may be asked in. Should be interruptible; today a pass runs to completion, which bounded depth is what makes affordable." .
 
-ag:row a owl:ObjectProperty ; rdfs:domain assembly:Extension ; rdfs:range ag:Row ;
+orexis:row a owl:ObjectProperty ; rdfs:domain assembly:Extension ; rdfs:range orexis:Row ;
     rdfs:label "row" ;
     rdfs:comment "Which cognitive layer answering this hook belongs to. Every hook declares one, and `tests/test_hooks.py` holds them to it." .
 
-#  `ag:Hook` WAS HERE and is `assembly:Extension` — the mechanism by which anything reaches
+#  `orexis:Hook` WAS HERE and is `assembly:Extension` — the mechanism by which anything reaches
 #  anything is not the mind's, and the kernel keeps only the points it OWNS
-#  (the-assembly-is-not-the-mind). `ag:Row` below stays: which cognitive row ANSWERING belongs
+#  (the-assembly-is-not-the-mind). `orexis:Row` below stays: which cognitive row ANSWERING belongs
 #  to is a fact about this project's layering, and an assembly-time point has none.
 
 
-ag:desires a assembly:Extension ;
-    assembly:signature "(now=…) -> list['Desire']" ; ag:row ag:Deliberative ; rdfs:label "desires" ; rdfs:comment "What do you contribute to what this agent pursues? Answers are ranked together, one want per node." .
-ag:desireUrgency a assembly:Extension ;
-    assembly:signature "(desire, query, state, value=…) -> float | None" ; ag:row ag:Deliberative ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
-ag:size a assembly:Extension ;
-    assembly:signature "(query, graph, row) -> float | None" ; ag:row ag:Deliberative ; rdfs:label "size" ; rdfs:comment "How big would the act this row commits to be? Asked of the row's taker before it is simulated." .
-ag:take a assembly:Extension ;
-    assembly:signature "(act, desire, intention) -> bool" ; ag:row ag:Progression ; rdfs:label "take" ; rdfs:comment "Carry this committed act out, if you are the one who can. True if you did." .
-ag:reports a assembly:Extension ;
-    assembly:signature "() -> dict" ; ag:row ag:Reactive ; rdfs:label "reports" ; rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." .
-ag:series a assembly:Extension ;
-    assembly:signature "() -> list[tuple[str, dict, dict]]" ; ag:row ag:Reactive ; rdfs:label "series" ; rdfs:comment "Which tagged rows go into this agent's own bucket? Concatenated by the sink." .
-ag:sweep a assembly:Extension ;
-    assembly:signature "() -> int" ; ag:row ag:Progression ; rdfs:label "sweep" ;
+orexis:desires a assembly:Extension ;
+    assembly:signature "(now=…) -> list['Desire']" ; orexis:row orexis:Deliberative ; rdfs:label "desires" ; rdfs:comment "What do you contribute to what this agent pursues? Answers are ranked together, one want per node." .
+orexis:desireUrgency a assembly:Extension ;
+    assembly:signature "(desire, query, state, value=…) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
+orexis:size a assembly:Extension ;
+    assembly:signature "(query, graph, row) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "size" ; rdfs:comment "How big would the act this row commits to be? Asked of the row's taker before it is simulated." .
+orexis:take a assembly:Extension ;
+    assembly:signature "(act, desire, intention) -> bool" ; orexis:row orexis:Progression ; rdfs:label "take" ; rdfs:comment "Carry this committed act out, if you are the one who can. True if you did." .
+orexis:reports a assembly:Extension ;
+    assembly:signature "() -> dict" ; orexis:row orexis:Reactive ; rdfs:label "reports" ; rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." .
+orexis:series a assembly:Extension ;
+    assembly:signature "() -> list[tuple[str, dict, dict]]" ; orexis:row orexis:Reactive ; rdfs:label "series" ; rdfs:comment "Which tagged rows go into this agent's own bucket? Concatenated by the sink." .
+orexis:sweep a assembly:Extension ;
+    assembly:signature "() -> int" ; orexis:row orexis:Progression ; rdfs:label "sweep" ;
     rdfs:comment "The clock has moved: retract whatever you hold that has stopped being true by it. Asked of every module on the agent's own housekeeping tick, because a fact that expires by the clock must not wait for an event some agent may stop receiving. Only the OWNER of a fact knows which treatment it deserves — retract it, keep and mark it, or keep it and let a want go cold (absence-is-not-retraction) — so the kernel asks and never sweeps." .
 
-ag:quiet a assembly:Extension ;
-    assembly:signature "() -> list[str]" ; ag:row ag:Reactive ; rdfs:label "quiet" ; rdfs:comment "What did you expect to hear and have stopped hearing? Log lines, said once on entry and once on recovery." .
-ag:stepDone a assembly:Extension ;
-    assembly:signature "(act, intention, took) -> None" ; ag:row ag:Reactive ; rdfs:label "step done" ; rdfs:comment "Progression handed a committed act to its actors and this is the answer: took, or not now. Told on the executing thread, to whoever above cares — a lower layer says this upward as an event, never as an import (#452)." .
-ag:planFinished a assembly:Extension ;
-    assembly:signature "(intention, action, want) -> None" ; ag:row ag:Reactive ; rdfs:label "plan finished" ; rdfs:comment "The world answered as the act promised: the expectation on this intention was met. Told by the keeper; deliberation fills it to reconsider the want." .
-ag:planFailed a assembly:Extension ;
-    assembly:signature "(intention, action, want) -> None" ; ag:row ag:Reactive ; rdfs:label "plan failed" ; rdfs:comment "The deadline passed and the world did not answer as the act promised: the expectation on this intention is unmet. Told by the keeper; deliberation fills it to re-plan the want." .
-ag:beliefRevised a assembly:Extension ;
-    assembly:signature "(belief_term, value) -> None" ; ag:row ag:Progression ; rdfs:label "belief revised" ; rdfs:comment "One of this agent's beliefs has been re-picked — take it up, if it is one of yours." .
-ag:subscriptions a assembly:Extension ;
-    assembly:signature "() -> list[str]" ; ag:row ag:Reactive ; rdfs:label "subscriptions" ; rdfs:comment "Which channels do you need? Asked by whoever holds the connection, once the session is up. The QUESTION is the kernel's; what a channel is carried over is the transport's." .
-ag:handle a assembly:Extension ;
-    assembly:signature "(topic, payload) -> bool" ; ag:row ag:Reactive ; rdfs:label "handle" ; rdfs:comment "Something arrived on this channel — take it if it is yours. Offered to every module; nobody taking it is logged." .
-ag:send a assembly:Extension ;
-    assembly:signature "(channel, payload, retain=…, not_after=…) -> bool" ; ag:row ag:Reactive ; rdfs:label "send" ; rdfs:comment "Carry this to the society, and say whether it left. True where it reached a live session, False where it did not — a message with a DEADLINE is refused rather than queued when there is none, because a queue would deliver it after the moment it meant anything (publishing-is-a-goal-and-the-protocol-is-a-primitive). Told by Module.publish; answered by whichever module holds the connection." .
+orexis:quiet a assembly:Extension ;
+    assembly:signature "() -> list[str]" ; orexis:row orexis:Reactive ; rdfs:label "quiet" ; rdfs:comment "What did you expect to hear and have stopped hearing? Log lines, said once on entry and once on recovery." .
+orexis:stepDone a assembly:Extension ;
+    assembly:signature "(act, intention, took) -> None" ; orexis:row orexis:Reactive ; rdfs:label "step done" ; rdfs:comment "Progression handed a committed act to its actors and this is the answer: took, or not now. Told on the executing thread, to whoever above cares — a lower layer says this upward as an event, never as an import (#452)." .
+orexis:planFinished a assembly:Extension ;
+    assembly:signature "(intention, action, want) -> None" ; orexis:row orexis:Reactive ; rdfs:label "plan finished" ; rdfs:comment "The world answered as the act promised: the expectation on this intention was met. Told by the keeper; deliberation fills it to reconsider the want." .
+orexis:planFailed a assembly:Extension ;
+    assembly:signature "(intention, action, want) -> None" ; orexis:row orexis:Reactive ; rdfs:label "plan failed" ; rdfs:comment "The deadline passed and the world did not answer as the act promised: the expectation on this intention is unmet. Told by the keeper; deliberation fills it to re-plan the want." .
+orexis:beliefRevised a assembly:Extension ;
+    assembly:signature "(belief_term, value) -> None" ; orexis:row orexis:Progression ; rdfs:label "belief revised" ; rdfs:comment "One of this agent's beliefs has been re-picked — take it up, if it is one of yours." .
+orexis:subscriptions a assembly:Extension ;
+    assembly:signature "() -> list[str]" ; orexis:row orexis:Reactive ; rdfs:label "subscriptions" ; rdfs:comment "Which channels do you need? Asked by whoever holds the connection, once the session is up. The QUESTION is the kernel's; what a channel is carried over is the transport's." .
+orexis:handle a assembly:Extension ;
+    assembly:signature "(topic, payload) -> bool" ; orexis:row orexis:Reactive ; rdfs:label "handle" ; rdfs:comment "Something arrived on this channel — take it if it is yours. Offered to every module; nobody taking it is logged." .
+orexis:send a assembly:Extension ;
+    assembly:signature "(channel, payload, retain=…, not_after=…) -> bool" ; orexis:row orexis:Reactive ; rdfs:label "send" ; rdfs:comment "Carry this to the society, and say whether it left. True where it reached a live session, False where it did not — a message with a DEADLINE is refused rather than queued when there is none, because a queue would deliver it after the moment it meant anything (publishing-is-a-goal-and-the-protocol-is-a-primitive). Told by Module.publish; answered by whichever module holds the connection." .
 
-ag:hasCapability a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Capability ;
+orexis:hasCapability a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range orexis:Capability ;
     rdfs:label "has capability" ;
     rdfs:comment "Composed onto the agent in the WORLD graph (public: peers must know what a counterparty can do). The PARAMETERS of a capability are private, in the agent's own beliefs." .
 
-ag:actsFor a owl:ObjectProperty ; rdfs:domain ag:Agent ;
+orexis:actsFor a owl:ObjectProperty ; rdfs:domain orexis:Agent ;
     rdfs:label "acts for" ;
     rdfs:comment "The subject whose interest this agent advances. Generic; a domain narrows the range (in the water domain, a Plant)." .
 
 #################  Devices — dumb mechanism at the edge  #################
 
-#  THE SUBSTRATE AND ITS STAND-IN WERE HERE — `ag:Device`, `ag:simulatedBy`, `ag:DeviceModel`
+#  THE SUBSTRATE AND ITS STAND-IN WERE HERE — `orexis:Device`, `orexis:simulatedBy`, `orexis:DeviceModel`
 #  and the physics a stand-in computes — and are `packages/orexis-part-device/`. A BDI kernel has no
 #  business saying what a thing is made of: the substrate axis is real (SOSA is explicit that
 #  its classes may be virtual, so `sosa:Sensor` asserts no hardware) and it is not the mind's.
 #  See knowledge/decisions/the-substrate-is-not-the-minds.md.
 
-ag:ComputeHost a owl:Class ; rdfs:label "Compute host" ;
+orexis:ComputeHost a owl:Class ; rdfs:label "Compute host" ;
     rdfs:comment "A machine that runs agent processes. Named so the world can say where its society actually executes." .
 
-ag:lanHost a owl:DatatypeProperty ; rdfs:domain ag:ComputeHost ; rdfs:range xsd:string ;
+orexis:lanHost a owl:DatatypeProperty ; rdfs:domain orexis:ComputeHost ; rdfs:range xsd:string ;
     rdfs:label "LAN host" ;
     rdfs:comment """How this host is reached by things NOT on it. A co-located agent reaches the broker at mqtt:brokerHost, which is loopback and must be, because host-networked agents have to agree on one name. A board on the wifi cannot use that name, so it needs a way to the machine running the broker. Two routes to one broker, and only the second is a fact about the network rather than about the society.
 
@@ -126,12 +126,12 @@ A hostname does not expire. `raspberry.local` is answered by the avahi already r
 
 An address is still a legal value — some networks have no name service — and stating one is choosing to own the consequence.""" .
 
-ag:runsOn a owl:ObjectProperty ; rdfs:range ag:ComputeHost ; rdfs:label "runs on" ;
+orexis:runsOn a owl:ObjectProperty ; rdfs:range orexis:ComputeHost ; rdfs:label "runs on" ;
     rdfs:comment "Which host executes this agent. Documents why the bus is where it is." .
 
 #################  Naming — stated, never derived  #################
 
-ag:localId a owl:DatatypeProperty ; rdfs:range xsd:string ;
+orexis:localId a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "local id" ;
     rdfs:comment "The short name a resource is known by outside RDF. Stated here so nothing has to infer it from the shape of a URI. The ONE instance identifier a process is given is an agent's localId; everything else it discovers." .
 
@@ -142,20 +142,20 @@ ag:localId a owl:DatatypeProperty ; rdfs:range xsd:string ;
 #  a clock no capability owns, because an agent granted no room to review itself must still
 #  compact. See orexis/upkeep.py and issue #45.
 
-ag:BeliefBase a owl:Class ; rdfs:label "Belief base" ;
+orexis:BeliefBase a owl:Class ; rdfs:label "Belief base" ;
     rdfs:comment "The store one agent keeps everything it knows in — the world it was given, what it has sensed, and its own beliefs. A class rather than a graph, because it is the whole store and not one graph inside it: what the agent BELIEVES is the sum of them. Named so that facts true of every agent's store have somewhere to be stated that no capability owns." .
 
-ag:maxBytesPerTriple a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+orexis:maxBytesPerTriple a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "max bytes per triple" ;
     rdfs:comment "Above this ratio a belief base is mostly write amplification rather than knowledge, and is compacted. Stated here rather than compiled in, for the same reason the cadence bounds are: it is a fact about what this society tolerates, not about how the code happens to be written. It hung off the review capability until that left the kernel — a threshold every agent is held to cannot be owned by a package an agent may not have." .
 
-ag:BeliefBase ag:maxBytesPerTriple 800 .
+orexis:BeliefBase orexis:maxBytesPerTriple 800 .
 
-ag:resignAfterS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+orexis:resignAfterS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "resign after seconds" ;
     rdfs:comment "How long an agent endures a dead bus before it resigns and lets its container bring it back fresh (#53). The fault this bounds is the one that cost two days: a session that ends and never returns, inside a container that looks perfectly healthy, on a bus whose broker never restarted. Ten minutes is far past any reconnect paho would ever achieve — a link that flaps recovers in seconds and never meets this — and far under the hours a quiet failure used to cost. Stated here rather than compiled in, like the compaction ratio above: it is what this society tolerates, not how the code happens to be written." .
 
-ag:Agent ag:resignAfterS 600 .
+orexis:Agent orexis:resignAfterS 600 .
 
 #################  Identity keys — published, because a verifier cannot read secrets  #########
 #
@@ -170,43 +170,43 @@ ag:Agent ag:resignAfterS 600 .
 #  its winner can open, #145). Absence is the pre-key era and stays legal — a world onboarded
 #  before keygen learned agents behaves exactly as it always did.
 
-ag:signingKey a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:string ;
+orexis:signingKey a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:string ;
     rdfs:label "signing key" ;
     rdfs:comment "Ed25519 public key, base64 raw. What a presentation is verified against: the durable identity exercising an ephemeral grant, per knowledge/decisions/authn-authz-capabilities.md." .
-ag:sealingKey a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:string ;
+orexis:sealingKey a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:string ;
     rdfs:label "sealing key" ;
     rdfs:comment "X25519 public key, base64 raw. What a claim is sealed to, so the bus carries an envelope only the winner can open — the ACL keeps agents out, the seal keeps the bus out." .
 
 #################  Who did it, and in what capacity  #################
-#  A ROLE, not an identity, and the distinction is the whole point. There is no `ag:Sovereign`
+#  A ROLE, not an identity, and the distinction is the whole point. There is no `orexis:Sovereign`
 #  agent and there must not be: an installation has several users — one authors a world, another
 #  operates it with fewer powers — and which of them was sovereign is a fact about ONE ACTIVITY,
 #  not a permanent property of a person. PROV-O models exactly this with `prov:qualifiedAssociation`,
 #  and expects the domain to name its own roles; naming one here is using PROV-O, not replacing it.
 #
-#  The role set is open on purpose. `ag:Operator` and whatever else will be needed are absent
+#  The role set is open on purpose. `orexis:Operator` and whatever else will be needed are absent
 #  because nothing distinguishes them yet, and a role no activity cites is speculation.
 
-ag:Sovereign a prov:Role ; rdfs:label "Sovereign" ;
+orexis:Sovereign a prov:Role ; rdfs:label "Sovereign" ;
     rdfs:comment "Held by whoever ratified a world: authored its files and stands behind them. A role a user has in one ratification, never a kind of user — the same person may hold it for one world and not another, and an installation's other users hold none. See knowledge/decisions/who-put-the-fact-there.md." .
 
 #################  The world and its versions  #################
 
-ag:World a owl:Class ; rdfs:label "World" ;
+orexis:World a owl:Class ; rdfs:label "World" ;
     rdfs:comment "The ratified world produced by genesis. Found by TYPE, never by a well-known IRI." .
-ag:WorldVersion a owl:Class ; rdfs:label "World version" ;
+orexis:WorldVersion a owl:Class ; rdfs:label "World version" ;
     rdfs:comment "One ratified version of the world's topology; the chain is append-only." .
-ag:currentVersion a owl:ObjectProperty ; rdfs:domain ag:World ; rdfs:range ag:WorldVersion ;
+orexis:currentVersion a owl:ObjectProperty ; rdfs:domain orexis:World ; rdfs:range orexis:WorldVersion ;
     rdfs:label "current version" .
-ag:versionNumber a owl:DatatypeProperty ; rdfs:domain ag:WorldVersion ; rdfs:range xsd:integer ;
+orexis:versionNumber a owl:DatatypeProperty ; rdfs:domain orexis:WorldVersion ; rdfs:range xsd:integer ;
     rdfs:label "version number" .
-ag:underWorldVersion a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+orexis:underWorldVersion a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "under world version" ;
     rdfs:comment "The world-version in force when this fact was recorded (provenance)." .
 
 #################  Graphs — typed, self-describing (not magic strings)  #################
 #
-#  A graph IRI is an INSTANCE. `ag:WorldGraph` is the term code may name;
+#  A graph IRI is an INSTANCE. `orexis:WorldGraph` is the term code may name;
 #  `…/graph/world` is a particular graph and code may not. The classes below are the terms;
 #  the instances at the end of this section are the data — and the split is what lets a reader
 #  ask for "public knowledge" without any Python knowing which graphs those happen to be.
@@ -215,7 +215,7 @@ ag:underWorldVersion a owl:DatatypeProperty ; rdfs:range xsd:integer ;
 #  installation-wide, like the shape of the store itself. Only the per-agent ones vary, and
 #  those are derived from the roster (rules.ru) rather than written out.
 
-ag:Graph a owl:Class ; rdfs:label "Named graph" .
+orexis:Graph a owl:Class ; rdfs:label "Named graph" .
 
 #################  Three axes over one graph  #################
 #
@@ -227,88 +227,88 @@ ag:Graph a owl:Class ; rdfs:label "Named graph" .
 #
 #  See knowledge/decisions/the-mind-is-six-graphs.md. The classes below say what a graph IS;
 #  which graphs are instances of each is data, asked for and never listed — the arrangement
-#  ag:PublicGraph already had, generalised to six modalities and five arrivals.
+#  orexis:PublicGraph already had, generalised to six modalities and five arrivals.
 
 #  --- modality: what the content asserts ---
 
 
-ag:BeliefGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Belief graph" ;
+orexis:BeliefGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Belief graph" ;
     rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, and what instruments report. NOT the graph historically called `beliefs`, which holds picks and no beliefs at all — that misnaming is what naming the axis exposed." .
 
 
 
 
-ag:PickRecordGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Pick record graph" ;
-    ag:graphPrefix "http://example.org/orexis/graph/beliefs/" ;
-    rdfs:comment "ONE agent's record of picking: what birth authored and review has since re-picked, one value per term, plus the belief-proper terms (conversions, the wallet) the #297 sort left beside them. A RECORD class, not a modality — the desire modality derives its wants and projects this record in as a premise-and-content, so what used to need a modality typing to be copied is now read by name, the one construction from an agent's own id the rules allow. The write boundary is ag:beliefsOf, unchanged." .
+orexis:PickRecordGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Pick record graph" ;
+    orexis:graphPrefix "http://example.org/orexis/graph/beliefs/" ;
+    rdfs:comment "ONE agent's record of picking: what birth authored and review has since re-picked, one value per term, plus the belief-proper terms (conversions, the wallet) the #297 sort left beside them. A RECORD class, not a modality — the desire modality derives its wants and projects this record in as a premise-and-content, so what used to need a modality typing to be copied is now read by name, the one construction from an agent's own id the rules allow. The write boundary is orexis:beliefsOf, unchanged." .
 
-ag:ObligationsGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Obligations record graph" ;
-    ag:graphPrefix "http://example.org/orexis/graph/obligations/" ;
-    rdfs:comment "ONE agent's record of debts: claims won against it, presented or not, discharged rows kept because a debt paid and a debt forgotten must not look alike. A RECORD class — the duty-wants the desire modality serves are this record projected, and the prefix moved here when ag:ConstraintGraph retired (#312)." .
+orexis:ObligationsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Obligations record graph" ;
+    orexis:graphPrefix "http://example.org/orexis/graph/obligations/" ;
+    rdfs:comment "ONE agent's record of debts: claims won against it, presented or not, discharged rows kept because a debt paid and a debt forgotten must not look alike. A RECORD class — the duty-wants the desire modality serves are this record projected, and the prefix moved here when orexis:ConstraintGraph retired (#312)." .
 
-#  `ag:Mode`, `ag:Chosen` and `ag:Honoured` WERE HERE and are retired (an-action-is-one-node):
-#  whether a row is the agent's own or a duty is whether its `ag:available` query bound
+#  `orexis:Mode`, `orexis:Chosen` and `orexis:Honoured` WERE HERE and are retired (an-action-is-one-node):
+#  whether a row is the agent's own or a duty is whether its `orexis:available` query bound
 #  `?for_agent`, and a second term for a fact one column already states was a second owner.
 
-ag:MenuGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Menu graph" ;
+orexis:MenuGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Menu graph" ;
     rdfs:comment """What the agent COULD do: the affordance rows, what others may demand of it, and what taking any of it would MAKE TRUE.
 
-A ROW is derived and never authored — it is a conclusion whose premises are stored, so an authored row could outlive its premise, and that is the one hazard this modality must never reintroduce. A RULE about a means is asserted, from the file of the package that owns the lever, and is in no danger of outliving anything because it is a schema rather than a conclusion. Both are the same modality and they differ in ARRIVAL, which is what `ag:arrivedBy` is for: the two axes were separated precisely so a class would not have to encode how its facts got there.""" .
+A ROW is derived and never authored — it is a conclusion whose premises are stored, so an authored row could outlive its premise, and that is the one hazard this modality must never reintroduce. A RULE about a means is asserted, from the file of the package that owns the lever, and is in no danger of outliving anything because it is a schema rather than a conclusion. Both are the same modality and they differ in ARRIVAL, which is what `orexis:arrivedBy` is for: the two axes were separated precisely so a class would not have to encode how its facts got there.""" .
 
-ag:IntentionGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Intention graph" ;
-    ag:graphPrefix "http://example.org/orexis/graph/intentions/" ;
+orexis:IntentionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Intention graph" ;
+    orexis:graphPrefix "http://example.org/orexis/graph/intentions/" ;
     rdfs:comment "What the agent is DOING: commitments adopted and not yet resolved. Small and live, because what is finished belongs to history." .
 
-ag:PossibleGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Possible graph" ;
+orexis:PossibleGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Possible graph" ;
     rdfs:comment """What WOULD be, if the agent did. The seventh modality, and the one a-plan-is-a-path-of-graph-diffs reserved when it said possible worlds are computed and dropped: belief is *is*, the menu is *could do*, and this is *would be, if I did*.
 
 Nothing here is believed, wanted, committed to or done, which is why it could not sit under any of the six. A reader who mistook it for belief would think an agent had observed a reading no instrument took.""" .
 
-ag:HistoryGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "History graph" ;
+orexis:HistoryGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "History graph" ;
     rdfs:comment "What the agent DID: resolved commitments, discharged obligations, doses delivered, amendments woken into. A bounded ring with the series store behind it — nothing points INTO history, because whatever must outlive the window copies what it needs at commit time, which is how an expectation already carries its own baseline." .
 
 #  --- how it arrived ---
 
-ag:Arrival a owl:Class ; rdfs:label "Arrival" ;
+orexis:Arrival a owl:Class ; rdfs:label "Arrival" ;
     rdfs:comment "How a graph's content got there. Five values and no sixth: everything in this system is said, computed one of two ways, done, or heard." .
 
-ag:Asserted a ag:Arrival ; rdfs:label "asserted" ;
+orexis:Asserted a orexis:Arrival ; rdfs:label "asserted" ;
     rdfs:comment "The sovereign said so. True by ratification, not by argument." .
-ag:Derived a ag:Arrival ; rdfs:label "derived" ;
+orexis:Derived a orexis:Arrival ; rdfs:label "derived" ;
     rdfs:comment "A package's rule concluded it from given facts. Policy: another society could rule otherwise with the same vocabulary." .
-ag:Entailed a ag:Arrival ; rdfs:label "entailed" ;
+orexis:Entailed a orexis:Arrival ; rdfs:label "entailed" ;
     rdfs:comment "The vocabulary's own logic implies it — subclass, subproperty, hasValue, property chains. Not policy: any reasoner over these axioms would agree." .
-ag:Recorded a ag:Arrival ; rdfs:label "recorded" ;
+orexis:Recorded a orexis:Arrival ; rdfs:label "recorded" ;
     rdfs:comment "This agent's own act, at runtime. Its word about itself." .
-ag:Received a ag:Arrival ; rdfs:label "received" ;
+orexis:Received a orexis:Arrival ; rdfs:label "received" ;
     rdfs:comment "Another party's word: an instrument's reading, a peer's claim. The only arrival whose trustworthiness is a question — an assertion is the sovereign's by definition and a derivation is checkable arithmetic, but this either carries a signature or does not, which is why the graph classification and the trust story are one story." .
 
-ag:arrivedBy a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Arrival ;
+orexis:arrivedBy a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range orexis:Arrival ;
     rdfs:label "arrived by" .
 
-ag:graphPrefix a owl:DatatypeProperty ; rdfs:domain ag:Graph ; rdfs:range xsd:string ;
+orexis:graphPrefix a owl:DatatypeProperty ; rdfs:domain orexis:Graph ; rdfs:range xsd:string ;
     rdfs:label "graph prefix" ;
     rdfs:comment "Where graphs of this class live, for the ones that cannot be declared: a per-agent graph does not exist until its agent does, so the vocabulary states the PREFIX and the instances are found under it. What this exists for is knowing litter from property — a graph nothing declares and no prefix claims is a ghost from an amendment, and dropping it is how a volume stops holding facts in a spelling nothing speaks. Declared by whichever package mints the graphs, which is why the sweep needs no list: it asks." .
 
-ag:PublicGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Public graph" ;
+orexis:PublicGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Public graph" ;
     rdfs:comment "Knowledge every agent in a world may read: the vocabulary, the topology, and what the rules and the RDFS closure made of them. This is the class `store.query` looks for — the default graph of every query is whatever is an instance of THIS, discovered rather than listed, so adding one is a vocabulary edit and touches no code. Membership is deliberately by declaration and not by exclusion: a graph nobody typed is invisible, which is the safe direction to fail — the other way round, a new private graph nobody remembered to exclude would leak into every query." .
 
 #  The existing classes, now saying their modality too. Nothing moves: a graph that was a
 #  WorldGraph is a WorldGraph AND a BeliefGraph, because "topology the sovereign ratified" and
 #  "an assertion about what is" are answers to different questions.
 
-ag:WorldGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "World graph" ;
+orexis:WorldGraph a owl:Class ; rdfs:subClassOf orexis:PublicGraph , orexis:BeliefGraph ; rdfs:label "World graph" ;
     rdfs:comment "Topology and composed capabilities: who is wired to what, and who can do what. Public, sovereign-authored. Covers what the sovereign ratified AND what the rules and the closure made of it — those are three graphs and one role, because what a graph holds and who put it there are different questions. The second is answered in PROV-O; see orexis/provenance.py." .
-ag:StateGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:BeliefGraph ; rdfs:label "State graph" ;
-    rdfs:comment "The world's CURRENT STATE as this agent holds it — the graph an effect rule rewrites and a plan forks per step, and the one a met-test reads. The kernel knows only that: what is in it is the packages' word (sensing writes observations into it, RECEIVED, since a reading is an instrument's word rather than this agent's). It was `ag:SensedGraph`, named for the one writer it had; the instance keeps its IRI so a deployed volume keeps its readings. What sensors read — a belief graph whose content RECEIVED, since a reading is an instrument's word rather than this agent's. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
-ag:OntologyGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "Ontology graph" ;
+orexis:StateGraph a owl:Class ; rdfs:subClassOf orexis:Graph , orexis:BeliefGraph ; rdfs:label "State graph" ;
+    rdfs:comment "The world's CURRENT STATE as this agent holds it — the graph an effect rule rewrites and a plan forks per step, and the one a met-test reads. The kernel knows only that: what is in it is the packages' word (sensing writes observations into it, RECEIVED, since a reading is an instrument's word rather than this agent's). It was `orexis:SensedGraph`, named for the one writer it had; the instance keeps its IRI so a deployed volume keeps its readings. What sensors read — a belief graph whose content RECEIVED, since a reading is an instrument's word rather than this agent's. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
+orexis:OntologyGraph a owl:Class ; rdfs:subClassOf orexis:PublicGraph , orexis:BeliefGraph ; rdfs:label "Ontology graph" ;
     rdfs:comment "The T-Box: this module and every other, plus what RDFS entails of it." .
-ag:ActionGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:MenuGraph ; rdfs:label "Action graph" ;
+orexis:ActionGraph a owl:Class ; rdfs:subClassOf orexis:PublicGraph , orexis:MenuGraph ; rdfs:label "Action graph" ;
     rdfs:comment """What each MEANS makes true — one `sh:SPARQLRule` per lever, loaded from the packages at genesis exactly as the T-Box is, and replaced from those files on every boot.
 
 PUBLIC and not belief. A rule here is a SCHEMA — what applying a lever WOULD do, stated once by the package that owns the lever — and schemas have always lived in the store: that is what the ontology graph is. It is not a belief, because nobody holds it and no agent may revise it; and it is not the menu, which is INSTANCES (this valve, this venue) and stays computed for the reason affordances are never stored — a stored row can outlive the plumbing it was concluded from, and a schema cannot.""" .
 
-ag:DeliberationGraph a owl:Class ; rdfs:subClassOf ag:PossibleGraph ; rdfs:label "Deliberation graph" ;
+orexis:DeliberationGraph a owl:Class ; rdfs:subClassOf orexis:PossibleGraph ; rdfs:label "Deliberation graph" ;
     rdfs:comment """What the planner considered on its last pass, per goal: the levers it simulated, the urgency each world would have reached, which one it took and why the others lost.
 
 THIS IS THE RECORD'S ONE EXCEPTION, TAKEN DELIBERATELY AND NOT AN EXEMPTION FROM THE RULE. Possible worlds are computed and dropped, because a stored conclusion can outlive the premise it came from — except where a reader outside the process needs one, and then it is materialised into a graph of its own class, cleared at the start of every pass, carrying PROV to what generated it, never public and never in belief. All four hold here. See a-plan-is-a-path-of-graph-diffs, "Possible worlds are computed, not kept".
@@ -330,93 +330,93 @@ And nothing may read it BACK: cycle detection lives in the search where it can b
 #  agent looked at and declined. Spelling the two alike would make "considered" and "adopted"
 #  indistinguishable to a query, which is exactly the distinction a trace is for.
 
-ag:Deliberation a owl:Class ; rdfs:label "Deliberation" ;
+orexis:Deliberation a owl:Class ; rdfs:label "Deliberation" ;
     rdfs:comment "One pass of the planner, about one goal. Replaced whenever that goal is planned again — the graph holds the last pass and never two, because a trace that outlives its pass is a conclusion sitting beside beliefs it can contradict." .
 
-ag:Candidate a owl:Class ; rdfs:label "Candidate" ;
+orexis:Candidate a owl:Class ; rdfs:label "Candidate" ;
     rdfs:comment "One lever, simulated. Carries the world it would have reached as a number and the reason it was or was not taken — the same lever may appear twice in one pass at different depths, because what a dose is worth depends on where it is taken from." .
 
-ag:deliberatedOn a owl:ObjectProperty ; rdfs:domain ag:Deliberation ;
+orexis:deliberatedOn a owl:ObjectProperty ; rdfs:domain orexis:Deliberation ;
     rdfs:label "deliberated on" ;
     rdfs:comment "The goal this pass was about — the shape itself, so a reader can join the trace to the want and see what was being pursued rather than a label for it." .
 
-ag:considered a owl:ObjectProperty ; rdfs:domain ag:Deliberation ; rdfs:range ag:Candidate ;
+orexis:considered a owl:ObjectProperty ; rdfs:domain orexis:Deliberation ; rdfs:range orexis:Candidate ;
     rdfs:label "considered" .
 
-ag:chose a owl:ObjectProperty ; rdfs:domain ag:Deliberation ; rdfs:range ag:Candidate ;
+orexis:chose a owl:ObjectProperty ; rdfs:domain orexis:Deliberation ; rdfs:range orexis:Candidate ;
     rdfs:label "chose" ;
-    rdfs:comment "The candidate whose world the plan commits to reaching. Absent when the pass took nothing, which is most of them and is an answer rather than a gap: `ag:verdict` then says which of the silences it was." .
+    rdfs:comment "The candidate whose world the plan commits to reaching. Absent when the pass took nothing, which is most of them and is an answer rather than a gap: `orexis:verdict` then says which of the silences it was." .
 
 #  NO DOMAIN, and deliberately: a verdict is said of a PASS (why it ended) and of a CANDIDATE
 #  (why it lost), and they are the same idea at two scales. Declaring a domain would make the
 #  closure type every candidate a Deliberation, which is worse than saying nothing.
-ag:verdict a owl:DatatypeProperty ; rdfs:range xsd:string ;
+orexis:verdict a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "verdict" ;
     rdfs:comment "Why it ended as it did. On a pass: satisfied, improved, no candidate, exhausted, not better, refused — six answers where a planner returning a move or None could give two. On a candidate: whether it met the goal, improved on standing still, was worse, or landed in a world already seen." .
 
-ag:wouldReach a owl:DatatypeProperty ; rdfs:domain ag:Candidate ; rdfs:range xsd:decimal ;
+orexis:wouldReach a owl:DatatypeProperty ; rdfs:domain orexis:Candidate ; rdfs:range xsd:decimal ;
     rdfs:label "would reach" ;
     rdfs:comment "The urgency of the world this lever would have made. The comparison the whole search turns on: a candidate is worth taking only if this is lower than where the agent already stands." .
 
-ag:standsAt a owl:DatatypeProperty ; rdfs:domain ag:Deliberation ; rdfs:range xsd:decimal ;
+orexis:standsAt a owl:DatatypeProperty ; rdfs:domain orexis:Deliberation ; rdfs:range xsd:decimal ;
     rdfs:label "stands at" ;
     rdfs:comment "The urgency of the world the agent is actually in — what every candidate is measured against, kept so a reader need not recompute it to understand the verdicts." .
 
-ag:wouldTake a owl:ObjectProperty ; rdfs:domain ag:Candidate ; rdfs:range ag:Action ;
+orexis:wouldTake a owl:ObjectProperty ; rdfs:domain orexis:Candidate ; rdfs:range orexis:Action ;
     rdfs:label "would take" ;
-    rdfs:comment "The action this candidate would take. NOT `ag:by`, whose domain is `ag:Intention` — spelling a weighed lever with the word for a carried-out one would have the closure type every candidate a commitment, which is the exact distinction a trace exists to keep." .
+    rdfs:comment "The action this candidate would take. NOT `orexis:by`, whose domain is `orexis:Intention` — spelling a weighed lever with the word for a carried-out one would have the closure type every candidate a commitment, which is the exact distinction a trace exists to keep." .
 
-ag:through a owl:ObjectProperty ;
+orexis:through a owl:ObjectProperty ;
     rdfs:label "through" ;
     rdfs:comment "The lever a step goes through. On a candidate, the lever it WOULD act through; on an act, the lever the plan's head chose — the same `via` column of the same affordance row, so the ledger says which valve or venue and not merely what kind of move. No domain, because it is stated of both and the closure would otherwise type one as the other. On a candidate: the lever the candidate would act through — the affordance row's own `via`, which is the PROV the record asks for: a trace says which thing in the world would have done this, not merely what kind of move it was." .
 
-ag:atDepth a owl:DatatypeProperty ; rdfs:domain ag:Candidate ; rdfs:range xsd:integer ;
+orexis:atDepth a owl:DatatypeProperty ; rdfs:domain orexis:Candidate ; rdfs:range xsd:integer ;
     rdfs:label "at depth" ;
     rdfs:comment "How many steps into the plan this candidate sits. Kept because a lever rejected at depth 0 and the same lever rejected at depth 1 are different findings — the second says a chain was tried." .
 
-ag:tookSeconds a owl:DatatypeProperty ; rdfs:domain ag:Deliberation ; rdfs:range xsd:decimal ;
+orexis:tookSeconds a owl:DatatypeProperty ; rdfs:domain orexis:Deliberation ; rdfs:range xsd:decimal ;
     rdfs:label "took seconds" ;
     rdfs:comment "How long the pass took. The one figure a trace could not already answer, and the one most likely to change this design: a pass validates a shape per candidate, and `series()` re-plans EVERY goal on every reporting tick, so an agent's dominant cost may turn out to be the instrumentation asking it what it wants. Recorded from inside the pass rather than timed by a caller, because a caller would be timing the trace write as well and reporting the observer's cost as the observed's." .
 
-ag:asOf a owl:DatatypeProperty ; rdfs:domain ag:Deliberation ; rdfs:range xsd:dateTime ;
+orexis:asOf a owl:DatatypeProperty ; rdfs:domain orexis:Deliberation ; rdfs:range xsd:dateTime ;
     rdfs:label "as of" ;
     rdfs:comment "When the pass ran. A trace is about a moment — the readings it weighed were the ones held then — and a reader who cannot tell how old it is cannot tell whether it explains what the agent is doing now or what it was doing before the last reading arrived." .
 
-ag:blind a owl:DatatypeProperty ; rdfs:domain ag:Deliberation ; rdfs:range xsd:boolean ;
+orexis:blind a owl:DatatypeProperty ; rdfs:domain orexis:Deliberation ; rdfs:range xsd:boolean ;
     rdfs:label "blind" ;
     rdfs:comment "Whether some lever was passed over for want of a stated effect, leaving the pass unable to claim it looked at everything. A verdict of `no candidate` beside this being true means the search saw part of the menu — which is why the deliberator defers to the reflex rather than reporting that nothing helps." .
 
-ag:ProvenanceGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Provenance graph" ;
+orexis:ProvenanceGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Provenance graph" ;
     rdfs:comment "What the other graphs ARE, in PROV-O. NOT public, and the reason is use versus mention: these are statements ABOUT graphs, so merging them into the default graph would make an ordinary `?device a ?class` start returning activities." .
 
-ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Agent ;
+orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range orexis:Agent ;
     rdfs:label "beliefs of" ;
-    rdfs:comment "Which agent owns this graph — the write boundary, made explicit. The domain is ag:Graph since ag:BeliefsGraph retired (#299): the whole store is beliefs, so a class naming one graph inside it 'the beliefs graph' asserted nothing — what the graph at .../graph/beliefs/<id> actually holds is the PICK RECORD, typed ag:PickRecordGraph for what it IS, and this property still says whose it is." .
+    rdfs:comment "Which agent owns this graph — the write boundary, made explicit. The domain is orexis:Graph since orexis:BeliefsGraph retired (#299): the whole store is beliefs, so a class naming one graph inside it 'the beliefs graph' asserted nothing — what the graph at .../graph/beliefs/<id> actually holds is the PICK RECORD, typed orexis:PickRecordGraph for what it IS, and this property still says whose it is." .
 
 ##  The instances. Data, not terms — code names the classes above and finds these by asking.
 ##  Three world graphs and two ontology graphs, because the role is what a graph HOLDS and how
-##  a fact got there is a separate question — which each instance now answers with ag:arrivedBy
+##  a fact got there is a separate question — which each instance now answers with orexis:arrivedBy
 ##  rather than by having its arrival encoded in its name.
 
-<http://example.org/orexis/graph/ontology>          a ag:OntologyGraph ; ag:arrivedBy ag:Asserted .
-<http://example.org/orexis/graph/ontology/entailed> a ag:OntologyGraph ; ag:arrivedBy ag:Entailed .
-<http://example.org/orexis/graph/world>             a ag:WorldGraph ;    ag:arrivedBy ag:Asserted .
-<http://example.org/orexis/graph/world/derived>     a ag:WorldGraph ;    ag:arrivedBy ag:Derived .
-<http://example.org/orexis/graph/world/entailed>    a ag:WorldGraph ;    ag:arrivedBy ag:Entailed .
-<http://example.org/orexis/graph/sensed>            a ag:StateGraph ;    ag:arrivedBy ag:Received .
+<http://example.org/orexis/graph/ontology>          a orexis:OntologyGraph ; orexis:arrivedBy orexis:Asserted .
+<http://example.org/orexis/graph/ontology/entailed> a orexis:OntologyGraph ; orexis:arrivedBy orexis:Entailed .
+<http://example.org/orexis/graph/world>             a orexis:WorldGraph ;    orexis:arrivedBy orexis:Asserted .
+<http://example.org/orexis/graph/world/derived>     a orexis:WorldGraph ;    orexis:arrivedBy orexis:Derived .
+<http://example.org/orexis/graph/world/entailed>    a orexis:WorldGraph ;    orexis:arrivedBy orexis:Entailed .
+<http://example.org/orexis/graph/sensed>            a orexis:StateGraph ;    orexis:arrivedBy orexis:Received .
 ##  `graph/instruments` — what the agent holds about the instruments it polls — is declared in
 ##  sensing's ontology: a package may own a belief graph, and this one is its.
-<http://example.org/orexis/graph/actions>            a ag:ActionGraph ;  ag:arrivedBy ag:Asserted .
-<http://example.org/orexis/graph/provenance>        a ag:ProvenanceGraph .
+<http://example.org/orexis/graph/actions>            a orexis:ActionGraph ;  orexis:arrivedBy orexis:Asserted .
+<http://example.org/orexis/graph/provenance>        a orexis:ProvenanceGraph .
 ##  One pass per goal and no more: written at the start of each, replacing what was there.
-<http://example.org/orexis/graph/deliberation>      a ag:DeliberationGraph ; ag:arrivedBy ag:Derived .
+<http://example.org/orexis/graph/deliberation>      a orexis:DeliberationGraph ; orexis:arrivedBy orexis:Derived .
 
 ##  Where an agent says what its OWN graphs are. A per-agent graph cannot be declared in a
 ##  T-Box — it does not exist until its agent does — so the agent classifies its own at boot,
 ##  and it has to land somewhere READABLE — a reader asks what a graph IS and must resolve
 ##  it without naming any graph instance, which is the rule that keeps a query from silently
 ##  reading part of the truth. (The example this comment carried, a modality-scoped
-##  `?d a ag:DesireGraph`, retired with the modality classes: the desire modality is a STORE
+##  `?d a orexis:DesireGraph`, retired with the modality classes: the desire modality is a STORE
 ##  now, and inside a store the graphs say only who put the fact there — #312.)
 ##
 ##  Public and belief-modality, because a classification is a fact about what a graph IS —
@@ -424,22 +424,22 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Agent ;
 ##  public too. Putting the per-agent ones in `provenance` (which is deliberately outside the
 ##  default union, to keep mentions of graphs from answering questions about devices) was the
 ##  inconsistency, and it showed up the first time a scoped query could not see them.
-<http://example.org/orexis/graph/classification>    a ag:PublicGraph , ag:BeliefGraph ;
-    ag:arrivedBy ag:Recorded .
+<http://example.org/orexis/graph/classification>    a orexis:PublicGraph , orexis:BeliefGraph ;
+    orexis:arrivedBy orexis:Recorded .
 
 ##  Where a world states a root desire: a TriG block in the world's own files, replaced from
 ##  them on every boot exactly as the world graph is, projected into the desire modality by
 ##  its build. Declared here so the ghost walk keeps it and so a world file needs no typing
 ##  line — naming the graph is enough, and a world may name instances.
-<http://example.org/orexis/graph/desire/asserted>   a ag:PublicGraph ;
-    ag:arrivedBy ag:Asserted .
+<http://example.org/orexis/graph/desire/asserted>   a orexis:PublicGraph ;
+    orexis:arrivedBy orexis:Asserted .
 
 
 
-#  `ag:Bounds`, `ag:boundedBy`, `ag:toleratedMin` and `ag:toleratedMax` were here and are GONE.
+#  `orexis:Bounds`, `orexis:boundedBy`, `orexis:toleratedMin` and `orexis:toleratedMax` were here and are GONE.
 #  They said that what an agent is held to is a kind of THING with two pairs of numbers; it is a
 #  kind of FORCE, and the numbers belong to shapes that already knew how to carry them. The
-#  region became a shape at ag:ShouldBecome and the envelope one at sh:Warning, so what used to
+#  region became a shape at orexis:ShouldBecome and the envelope one at sh:Warning, so what used to
 #  need four terms and a class now needs none. See a-desire-is-a-shape.
 
 #################  What an agent pursues, and with what force  #################
@@ -454,7 +454,7 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Agent ;
 #  since it was written, so an agent whose pot is dry starts, wants, and acts — which is the
 #  whole point of a desire being a shape rather than a rule.
 
-ag:ShouldBecome a sh:Severity ; rdfs:label "should become" ;
+orexis:ShouldBecome a sh:Severity ; rdfs:label "should become" ;
     rdfs:comment "The force of a want. A result at this severity is a GAP: legitimate, unsatisfactory, and addressed through the agent's levers rather than by refusing to run — the third point on the modality axis a-plan-is-a-path-of-graph-diffs named, finally expressible because SHACL lets severity be any IRI. It belongs on the shape that PRODUCES the result and not on the node shape above it: put it above and every unmet desire reports as a Violation, which would refuse to boot any agent whose pot is dry." .
 
 #  WHICH WAY a want is unmet, said by the shape rather than worked out by whoever reads the
@@ -464,20 +464,20 @@ ag:ShouldBecome a sh:Severity ; rdfs:label "should become" ;
 #  against when it declares which violations it repairs (#239): watering repairs Below, a fan
 #  repairs Above, and `market:direction` stops being a hardcoded bit in a reflex.
 
-ag:Side a owl:Class ; rdfs:label "Side" ;
+orexis:Side a owl:Class ; rdfs:label "Side" ;
     rdfs:comment "Which way a want is unmet. Three values and not two, because not having looked is its own answer rather than a point on the number line." .
 
-ag:Below a ag:Side ; rdfs:label "below" ;
+orexis:Below a orexis:Side ; rdfs:label "below" ;
     rdfs:comment "A reading sits under the floor of the region, or under the survival envelope. The side a lever that RAISES the property repairs." .
-ag:Above a ag:Side ; rdfs:label "above" ;
+orexis:Above a orexis:Side ; rdfs:label "above" ;
     rdfs:comment "A reading sits over the ceiling. The side a lever that LOWERS the property repairs — and for soil moisture in this domain, no lever does: a drowning plant is a real want with no answer, which is worth being able to say." .
-ag:Stale a ag:Side ; rdfs:label "stale" ;
-    rdfs:comment "A reading exists and stopped being evidence about now — older than the horizon this agent publishes for that sensor. Distinct from `ag:Unmeasured`, which is having no reading at all, because the two differ in fact and an agent should be able to say which: one has never looked, the other looked and let the answer go cold. Both are repaired by the same move, and by no other — no lever moves a number you cannot see." .
+orexis:Stale a orexis:Side ; rdfs:label "stale" ;
+    rdfs:comment "A reading exists and stopped being evidence about now — older than the horizon this agent publishes for that sensor. Distinct from `orexis:Unmeasured`, which is having no reading at all, because the two differ in fact and an agent should be able to say which: one has never looked, the other looked and let the answer go cold. Both are repaired by the same move, and by no other — no lever moves a number you cannot see." .
 
-ag:Unmeasured a ag:Side ; rdfs:label "unmeasured" ;
+orexis:Unmeasured a orexis:Side ; rdfs:label "unmeasured" ;
     rdfs:comment "Nothing has been read. Not a side of the range at all, which is why it is a value here rather than an absence: the repair is to LOOK, and the lever that answers it is Observe rather than anything that moves the world." .
 
-ag:violationIs a owl:ObjectProperty ; rdfs:domain sh:PropertyShape ; rdfs:range ag:Side ;
+orexis:violationIs a owl:ObjectProperty ; rdfs:domain sh:PropertyShape ; rdfs:range orexis:Side ;
     rdfs:label "violation is" ;
     rdfs:comment "What it MEANS when this property shape is violated. On the shape, so the answer travels with the constraint that produced the result and cannot be recomputed differently by two readers. The alternative was for every consumer to compare the value against the bounds again — which is what the module, the query and the dashboard each did separately, and which is how a fern above its region came to be reported as one unmet want indistinguishable from a fern dying of thirst." .
 
@@ -486,7 +486,7 @@ ag:violationIs a owl:ObjectProperty ; rdfs:domain sh:PropertyShape ; rdfs:range 
 #  A means states its effect as a CONSTRUCT: the triples that applying it would add. The
 #  vocabulary is SHACL-AF's — `sh:construct` for the query as a literal — because a rule with a
 #  construct IS the action schema this needed (`sh:condition` was carried too, and went: the
-#  precondition is the action's `ag:available` query, whole, and a second statement of it that
+#  precondition is the action's `orexis:available` query, whole, and a second statement of it that
 #  nothing evaluated was a statement that could disagree), already RDF, already persisted,
 #  already readable by a model and a sovereign. Nothing was invented here except the one thing
 #  the spec has no word for.
@@ -496,7 +496,7 @@ ag:violationIs a owl:ObjectProperty ; rdfs:domain sh:PropertyShape ; rdfs:range 
 #  triples can say that without predicting the number. A CONSTRUCT can, because this project
 #  already computes that prediction for verification.
 
-ag:retracts a owl:DatatypeProperty ; rdfs:domain ag:Action ; rdfs:range xsd:string ;
+orexis:retracts a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ;
     rdfs:label "retracts" ;
     rdfs:comment """A CONSTRUCT whose result is the triples this effect REMOVES. Ours, because SHACL-AF has none: its rules exist to add entailments, so the standard has no way to say a thing stops being true. A simulator computes `(beliefs - retracts) + adds`, which keeps the whole operation side-effect free — nothing is deleted anywhere, two graphs are subtracted.
 
@@ -520,7 +520,7 @@ It is not optional, and the reason is arithmetic rather than taste. `sensed_writ
 #  plans against one timeline and verifies against another, and the disagreement surfaces as
 #  false UNMET verdicts — the same failure arriving through the clock instead of the arithmetic.
 
-ag:landsAfter a owl:DatatypeProperty ; rdfs:domain ag:Action ; rdfs:range xsd:string ;
+orexis:landsAfter a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ;
     rdfs:label "lands after" ;
     rdfs:comment """A SELECT yielding `?seconds`: how long after the act until the WORLD CHANGE is complete. A query and not a number, because the duration is a function of the act rather than a property of the lever — a valve open for a two-litre dose is open longer than for a half-litre one, and `min(litres, cap) / calibration` is exactly the arithmetic the effect rule already performs. Its parameters are the effect's own, so one text answers for any act it could be asked about.
 
@@ -533,19 +533,19 @@ WHAT IT DOES NOT INCLUDE, said here because the name could be read as promising 
 
 
 
-#  `ag:effectOf` WAS HERE. An effect is a part of an ACTION now, and the action names its means
-#  with `ag:means`; see the block beside ag:Means.
+#  `orexis:effectOf` WAS HERE. An effect is a part of an ACTION now, and the action names its means
+#  with `orexis:means`; see the block beside orexis:Means.
 
-ag:holds a owl:ObjectProperty ; rdfs:domain ag:Agent ;
+orexis:holds a owl:ObjectProperty ; rdfs:domain orexis:Agent ;
     rdfs:label "holds" ;
-    rdfs:comment "What this agent is held to or holds to: an `ag:Desire` (which carries its met-shape and its measure), or a bare shape like the survival envelope, whose violation is a warning rather than a want. Replaces `ag:boundedBy`, which named only the first and named it as though bounds were a kind of thing rather than a kind of FORCE. No `rdfs:range` since the desire was reified: a held thing is a desire OR a shape, and a range naming one would quietly claim the other is not held." .
+    rdfs:comment "What this agent is held to or holds to: an `orexis:Desire` (which carries its met-shape and its measure), or a bare shape like the survival envelope, whose violation is a warning rather than a want. Replaces `orexis:boundedBy`, which named only the first and named it as though bounds were a kind of thing rather than a kind of FORCE. No `rdfs:range` since the desire was reified: a held thing is a desire OR a shape, and a range naming one would quietly claim the other is not held." .
 
 #################  THE MIND'S STATES  #################
 #
 #  What a mind CONTAINS — desires, obligations, intentions and the means they name — declared
 #  in the kernel because they are the lingua franca: four capability packages already had to
 #  name them (market's bidding and hosting, deliberation, actuation), and a term many packages
-#  must name is nobody's package-private word. `ag:IntentionGraph` holding `intention:Intention`
+#  must name is nobody's package-private word. `orexis:IntentionGraph` holding `intention:Intention`
 #  was a split brain the graph axes exposed.
 #
 #  WHAT STAYS IN THE PACKAGES is the HOW: `desire:Deducing` and `desire:Consulting` are two ways
@@ -561,23 +561,23 @@ ag:holds a owl:ObjectProperty ; rdfs:domain ag:Agent ;
 #################  What a desire IS  #################
 #
 #  A NODE with room on it, since the measure landed. For a while a desire had no class at all —
-#  it WAS a `sh:NodeShape` an agent `ag:holds`, carrying `ag:ShouldBecome` — and that form could
+#  it WAS a `sh:NodeShape` an agent `orexis:holds`, carrying `orexis:ShouldBecome` — and that form could
 #  say when a want is met and nothing else. What it could not say is HOW BADLY it is unmet:
 #  conformance is boolean while a want has distance, and a-plan-is-a-path-of-graph-diffs already
 #  named the consequence — "a goal-shape must state its measure or the planner ranks repairs
 #  blind". So the desire is reified: the shape's content is unchanged and hangs off the desire
 #  node instead of being it, and the measure hangs beside it.
 
-ag:Desire a owl:Class ; rdfs:label "Desire" ;
-    rdfs:comment "One thing an agent pursues: a node carrying the met-test (ag:metWhen, a SHACL shape, unchanged in content from when the desire WAS that shape) and a label a dashboard or the ask channel can print. Derived by the desire modality's build, never authored — the same discipline the shapes always had. What the node does NOT carry is a measure: how badly such a want is unmet is a capability's answer, asked through the choir (Module.desire_urgency) of whichever world is being judged, and the kernel holds no measure vocabulary at all — the comment after ag:metWhen says why." .
+orexis:Desire a owl:Class ; rdfs:label "Desire" ;
+    rdfs:comment "One thing an agent pursues: a node carrying the met-test (orexis:metWhen, a SHACL shape, unchanged in content from when the desire WAS that shape) and a label a dashboard or the ask channel can print. Derived by the desire modality's build, never authored — the same discipline the shapes always had. What the node does NOT carry is a measure: how badly such a want is unmet is a capability's answer, asked through the choir (Module.desire_urgency) of whichever world is being judged, and the kernel holds no measure vocabulary at all — the comment after orexis:metWhen says why." .
 
-ag:metWhen a owl:ObjectProperty ; rdfs:domain ag:Desire ; rdfs:range sh:NodeShape ;
+orexis:metWhen a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range sh:NodeShape ;
     rdfs:label "met when" ;
     rdfs:comment "The met-test: a SHACL node shape whose conformance says nothing is wanted here right now. Boolean by nature — it governs the outcome LABEL and a duty's discharge, never how hard to try. Validated exactly as it was when the desire WAS this shape: unfocused, over the shapes the agent holds." .
 
-ag:about a owl:ObjectProperty ; rdfs:domain ag:Desire ;
+orexis:about a owl:ObjectProperty ; rdfs:domain orexis:Desire ;
     rdfs:label "about" ;
-    rdfs:comment "What a want is ABOUT — the one node an action query may join a lever to. Stated by whoever derived the want, and opaque to the kernel: sensing says a region want and a freshness want are about an observable property, and its own action queries walk from there; a want that is about nothing (a debt, a call) states none and is joined to its rows another way. The kernel carries it from the want to the row to the rule (`VALUES (?want ?about)` in ag:available, `$about` in an effect) and never reads it. It replaced the ledger's and the row's `ssn:forProperty`, which was the kernel naming a sensing notion (the-stake-is-sensings-want)." .
+    rdfs:comment "What a want is ABOUT — the one node an action query may join a lever to. Stated by whoever derived the want, and opaque to the kernel: sensing says a region want and a freshness want are about an observable property, and its own action queries walk from there; a want that is about nothing (a debt, a call) states none and is joined to its rows another way. The kernel carries it from the want to the row to the rule (`VALUES (?want ?about)` in orexis:available, `$about` in an effect) and never reads it. It replaced the ledger's and the row's `ssn:forProperty`, which was the kernel naming a sensing notion (the-stake-is-sensings-want)." .
 
 #  NO measure vocabulary here, and the absence is the ruling rather than an omission. Two
 #  drafts put it in the kernel — first the measure's SPARQL compiled into the derivation, then
@@ -587,7 +587,7 @@ ag:about a owl:ObjectProperty ; rdfs:domain ag:Desire ;
 #  choir hook every module already answers (`Module.desire_urgency`): how urgent is this
 #  desire, in this world? A capability that owns the question answers from its own
 #  declaration — sensing's `measures.ttl`, in sensing's namespace, read by sensing's code —
-#  and a want nobody answers for scores 1.0, logged. Promotion of a measure word into ag: has
+#  and a want nobody answers for scores 1.0, logged. Promotion of a measure word into orexis: has
 #  the repo's usual trigger: a word SEVERAL packages must speak, which today none is.
 #  See a-desire-states-its-own-measure.
 #
@@ -605,7 +605,7 @@ ag:about a owl:ObjectProperty ; rdfs:domain ag:Desire ;
 
 
 
-#  THE AIM WAS HERE — `ag:Aim`, `ag:aims`, the pick inside a region — and is `sensing:Aim`,
+#  THE AIM WAS HERE — `orexis:Aim`, `orexis:aims`, the pick inside a region — and is `sensing:Aim`,
 #  `sensing:aims` now: a point in a property, checked against a range a subject states, read
 #  by the measure that scores a reading. Every word of that is sensing's
 #  (the-stake-is-sensings-want). `agent/vocabulary.py` carries the rename for a volume that
@@ -628,114 +628,114 @@ ag:about a owl:ObjectProperty ; rdfs:domain ag:Desire ;
 #  stored is what I owe NOW, in a graph of my own, because a debt outlives the process that
 #  incurred it: a host used to keep its issued claims in memory and forget them on restart.
 
-ag:Obligation a owl:Class ; rdfs:subClassOf ag:Desire ;
+orexis:Obligation a owl:Class ; rdfs:subClassOf orexis:Desire ;
     rdfs:label "Obligation" ;
-    rdfs:comment "A desire this agent did not source. It subclassed `ag:Bounds` until bounds became shapes and the class went; it is still DATA today — a counterparty, a claim, two timestamps — and becomes a shape itself when obligations drive acts, which is the step after this one. what it owes another, raised when the society issued that other a claim against this agent's hardware, discharged when the dose it names is confirmed. A subclass of Desire and not a sibling, because everything that reads desire should read this too — urgency, disclosure, and the deliberation that ranges over wants. What differs is only where it came from, which is what prov says." .
+    rdfs:comment "A desire this agent did not source. It subclassed `orexis:Bounds` until bounds became shapes and the class went; it is still DATA today — a counterparty, a claim, two timestamps — and becomes a shape itself when obligations drive acts, which is the step after this one. what it owes another, raised when the society issued that other a claim against this agent's hardware, discharged when the dose it names is confirmed. A subclass of Desire and not a sibling, because everything that reads desire should read this too — urgency, disclosure, and the deliberation that ranges over wants. What differs is only where it came from, which is what prov says." .
 
-ag:owedTo a owl:ObjectProperty ; rdfs:domain ag:Obligation ; rdfs:range ag:Agent ;
+orexis:owedTo a owl:ObjectProperty ; rdfs:domain orexis:Obligation ; rdfs:range orexis:Agent ;
     rdfs:label "owed to" ;
     rdfs:comment "The counterparty. Always an agent this world's wiring already connects to me — an obligation to a stranger is not a debt, it is a forgery, refused before it becomes a want." .
 
-ag:forClaim a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:string ;
+orexis:forClaim a owl:DatatypeProperty ; rdfs:domain orexis:Obligation ; rdfs:range xsd:string ;
     rdfs:label "for claim" ;
     rdfs:comment "The jti of the claim that sourced it — single-use there, single-use here, so a discharged obligation cannot be raised twice by a replayed presentation." .
 
-ag:presented a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:boolean ;
+orexis:presented a owl:DatatypeProperty ; rdfs:domain orexis:Obligation ; rdfs:range xsd:boolean ;
     rdfs:label "presented" ;
-    rdfs:comment "Whether the holder has asked yet. An unpresented claim requires NOTHING of me — the holder is waiting for its own watch to be live — and a presented one requires acting now. It says whether a debt is PURSUABLE, and no longer how hot it is: heat is `ag:expiresAt`'s job, so an unpresented claim near its deadline is a debt this agent can see coming and still may not act on. The two were one step while a claim had no deadline to be measured against." .
+    rdfs:comment "Whether the holder has asked yet. An unpresented claim requires NOTHING of me — the holder is waiting for its own watch to be live — and a presented one requires acting now. It says whether a debt is PURSUABLE, and no longer how hot it is: heat is `orexis:expiresAt`'s job, so an unpresented claim near its deadline is a debt this agent can see coming and still may not act on. The two were one step while a claim had no deadline to be measured against." .
 
-ag:owedAt a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:dateTime ;
+orexis:owedAt a owl:DatatypeProperty ; rdfs:domain orexis:Obligation ; rdfs:range xsd:dateTime ;
     rdfs:label "owed at" .
-ag:expiresAt a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:dateTime ;
+orexis:expiresAt a owl:DatatypeProperty ; rdfs:domain orexis:Obligation ; rdfs:range xsd:dateTime ;
     rdfs:label "expires at" ;
     rdfs:comment """When the venue stops holding the claim this debt came from — the claim's own `exp`, kept as the debt's. Absent where the market stated no window, and such a debt never becomes urgent, which is right: nobody is waiting on it.
 
-This is what gives an obligation its urgency, and the reason it had to exist as DATA before obligations could drive acts. A stake's urgency comes from a survival envelope — how much room is left before the subject ends — and a duty has no envelope, so the room it has is TIME: at issue the whole window is ahead and nothing has gone wrong, near expiry there is none and lateness is real. Read with `ag:owedAt`, which is why both are kept: urgency is the fraction of the window that has run, and an agent holding only the deadline would have to guess when the window opened.
+This is what gives an obligation its urgency, and the reason it had to exist as DATA before obligations could drive acts. A stake's urgency comes from a survival envelope — how much room is left before the subject ends — and a duty has no envelope, so the room it has is TIME: at issue the whole window is ahead and nothing has gone wrong, near expiry there is none and lateness is real. Read with `orexis:owedAt`, which is why both are kept: urgency is the fraction of the window that has run, and an agent holding only the deadline would have to guess when the window opened.
 
 The alternatives were measured against this and both are recorded as the risk in an-obligation-is-a-desire-someone-else-sourced: a duty pinned at maximum is the honoured mode returning by another name, since it outranks a plant that is dying, and a duty with no heat at all is an agent that quietly defects while its ledger looks tidy.""" .
 
-ag:amountL a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:decimal ;
+orexis:amountL a owl:DatatypeProperty ; rdfs:domain orexis:Obligation ; rdfs:range xsd:decimal ;
     rdfs:label "amount owed, litres" ;
     rdfs:comment """How much the claim is for, where the good is measured. Written by the ledger when a claim is recorded and read by the market's Apply and Offer effect rules, which will not discharge an obligation whose amount they cannot see.
 
 DECLARED LATE. This term was in use — one writer, three SHACL rules reading it — and no ontology declared it, for months. It worked because both ends spell it the same way by hand, which is precisely the accident `every-term-in-its-own-house` warns about: an IRI nothing declares is not an error, it is a pattern that matches nothing, and here it matched because nobody had typed it wrong yet. It surfaced when the concatenation that built it was renamed and the guard could finally see the sixth form.""" .
 
-ag:dischargedAt a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:dateTime ;
+orexis:dischargedAt a owl:DatatypeProperty ; rdfs:domain orexis:Obligation ; rdfs:range xsd:dateTime ;
     rdfs:label "discharged at" ;
     rdfs:comment "Absent while it stands. The same two-timestamps-and-a-reason shape an intention and a revision already have, because a debt paid and a debt forgotten must never look alike." .
 
 
 #################  What an intention IS  #################
 
-ag:Intention a owl:Class ; rdfs:label "Intention" ;
+orexis:Intention a owl:Class ; rdfs:label "Intention" ;
     rdfs:comment """One commitment: one want pursued by one action, adopted at a moment, resolved at another or still standing. `ssn:forProperty` names the property — the same term a region, a condition and an aim already use, so the gap an intention is about is joinable to the desire it serves by the vocabulary everything else speaks.
 
 
 
 The lifecycle is two timestamps and an outcome, not a state machine: standing is `adoptedAt` without `resolvedAt`, and how it ended is `outcome` — the same shape review:Revision has, for the same reason. A dropped intention keeps its `becauseOf`, because a commitment abandoned without a reason is indistinguishable from one forgotten.""" .
 
-ag:pursues a owl:ObjectProperty ; rdfs:domain ag:Intention ;
+orexis:pursues a owl:ObjectProperty ; rdfs:domain orexis:Intention ;
     rdfs:label "pursues" ;
     rdfs:comment """WHICH goal this commitment serves — the bounds an agent is held to, or the obligation a claim raised. A commitment keyed by (means, property) alone cannot tell two obligations about one property apart: a dealer owing water to fern and to tomato holds two Apply commitments that look identical, so satisfying one satisfies both and the patience absorbs the second impulse as if it were the first. That is the shape of the observation-keyed-by-subject bug (#one-agent-many-sensors), found before it went live rather than after — obligations do not yet drive acts, and this lands first so they never can while it is open.
 
 Optional, because the first three means predate goals having names: an intention with no goal is keyed as it always was, and every old row in a ledger stays readable.""" .
 
-ag:by a owl:ObjectProperty ; rdfs:domain ag:Intention ; rdfs:range ag:Act ;
+orexis:by a owl:ObjectProperty ; rdfs:domain orexis:Intention ; rdfs:range orexis:Act ;
     rdfs:label "by" ;
-    rdfs:comment "The ACT committed to — the filled action: which action (ag:fills), through which lever (ag:through), how much (ag:quantity), for whom, and when. It named the action node itself from the-action-is-the-kind until an-act-is-a-filled-action gave the filled one a node of its own. Not a plan: the how stays with whichever capability takes it." .
+    rdfs:comment "The ACT committed to — the filled action: which action (orexis:fills), through which lever (orexis:through), how much (orexis:quantity), for whom, and when. It named the action node itself from the-action-is-the-kind until an-act-is-a-filled-action gave the filled one a node of its own. Not a plan: the how stays with whichever capability takes it." .
 
 #################  An UPSERTED belief, for the planner's signature  #################
 
-ag:keyedBy a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ;
+orexis:keyedBy a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ;
     rdfs:label "keyed by" ;
     rdfs:comment "A predicate that IDENTIFIES a node of this class — the writer upserts one node per key. Declared by the package that writes such nodes (sensing: an observation is keyed by what it observes of what), and read by the planner's cycle detection, which canonicalises a keyed node to its class, its key values and what it carries — never its identity. The kernel used to spell sosa here by hand." .
 
-ag:carries a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ;
+orexis:carries a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ;
     rdfs:label "carries" ;
     rdfs:comment "The predicate a keyed node STATES — the value that makes two worlds different. Everything else on the node (an instant, who made it) is not where a plan stands: a look that predicts the value it already holds nets to nothing, which is what keeps looking from being a new world every time." .
 
 #################  What an action IS  #################
 
-ag:Action a owl:Class ; rdfs:label "Action" ;
-    rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `ag:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `ag:retracts` are its effect, with `ag:landsAfter` and `ag:confirmedBy` beside them; `ag:takenBy` is the capability whose module carries it out. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
+orexis:Action a owl:Class ; rdfs:label "Action" ;
+    rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `orexis:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `orexis:retracts` are its effect, with `orexis:landsAfter` and `orexis:confirmedBy` beside them; `orexis:takenBy` is the capability whose module carries it out. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
 
 
-ag:available a owl:DatatypeProperty ; rdfs:domain ag:Action ; rdfs:range xsd:string ;
+orexis:available a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ;
     rdfs:label "available" ;
     rdfs:comment """The precondition, as a SELECT over the world binding `?property ?via ?direction` and — where the row is a duty owed to someone rather than the agent's own option — `?for_agent`. `$me` and `$properties` (the properties the agent holds desires in) are substituted by the collector; prefixes are the store's. A row exists only where every hop of the walk holds, which is why the menu is the precondition language and chaining needs no `requires` of its own.""" .
 
-ag:takenBy a owl:ObjectProperty ; rdfs:domain ag:Action ; rdfs:range ag:Capability ;
+orexis:takenBy a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:range orexis:Capability ;
     rdfs:label "taken by" ;
     rdfs:comment """WHICH capability carries this means out — the link from an affordance row to the code that takes it, as a fact rather than a dispatch table. Stated on the ACTION node, in the package's `actions.ttl`, beside the precondition and the effect it carries out. Execution asks the T-Box for the family and `agent.providers` for whoever is loaded, so the kernel names no package and which code carries a step out is queryable. A means with no taker is a means no plan can execute, and none ships that way. See knowledge/domain/actor.md.""" .
 
 #################  An act: an action filled in  #################
 #
 #  An action is a template. What is committed, taken and promised is a FILLED one — the lever
-#  it goes through (`ag:through`), the want it serves and what that is about (`ag:about`),
+#  it goes through (`orexis:through`), the want it serves and what that is about (`orexis:about`),
 #  how much, for whom, and when. Execution's word; planning's is the STEP, an act at its place
 #  in a plan, which is never written anywhere. `agent/act.py` carries it, and the keeper writes
 #  the node beside every intention (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
 
-ag:Act a owl:Class ; rdfs:label "Act" ;
-    rdfs:comment "One ag:Action filled in: the lever it goes through, the want it serves, how much, for whom where it is a duty's, and the window in which taking it counts. What an intention commits to, what an actor is handed, what a commitment promises. Every act is an instance and no code names one." .
+orexis:Act a owl:Class ; rdfs:label "Act" ;
+    rdfs:comment "One orexis:Action filled in: the lever it goes through, the want it serves, how much, for whom where it is a duty's, and the window in which taking it counts. What an intention commits to, what an actor is handed, what a commitment promises. Every act is an instance and no code names one." .
 
-ag:fills a owl:ObjectProperty ; rdfs:domain ag:Act ; rdfs:range ag:Action ;
+orexis:fills a owl:ObjectProperty ; rdfs:domain orexis:Act ; rdfs:range orexis:Action ;
     rdfs:label "fills" ;
     rdfs:comment "Which action this act is an instance of — the template it fills. The one hop from a commitment to the precondition, the effect and the taker." .
 
-ag:forAgent a owl:ObjectProperty ; rdfs:domain ag:Act ; rdfs:range ag:Agent ;
+orexis:forAgent a owl:ObjectProperty ; rdfs:domain orexis:Act ; rdfs:range orexis:Agent ;
     rdfs:label "for agent" ;
     rdfs:comment "Whom the act serves, where it is a duty's — the counterparty a Serving act is owed to. Absent on an act of the agent's own." .
 
-ag:quantity a owl:DatatypeProperty ; rdfs:domain ag:Act ; rdfs:range xsd:decimal ;
+orexis:quantity a owl:DatatypeProperty ; rdfs:domain orexis:Act ; rdfs:range xsd:decimal ;
     rdfs:label "quantity" ;
     rdfs:comment "How much the act moves, in the good's unit — sized by whoever would take it (Module.size), never by the planner. Absent on an act that moves nothing: a look." .
 
-ag:notBefore a owl:DatatypeProperty ; rdfs:domain ag:Act ; rdfs:range xsd:dateTime ;
+orexis:notBefore a owl:DatatypeProperty ; rdfs:domain orexis:Act ; rdfs:range xsd:dateTime ;
     rdfs:label "not before" ;
     rdfs:comment "The window's opening. Declared and unwritten: a held claim spent later — futures — is the first thing that would write it, and that is the market's decision." .
 
-ag:notAfter a owl:DatatypeProperty ; rdfs:domain ag:Act ; rdfs:range xsd:dateTime ;
+orexis:notAfter a owl:DatatypeProperty ; rdfs:domain orexis:Act ; rdfs:range xsd:dateTime ;
     rdfs:label "not after" ;
     rdfs:comment "The window's close — what every hand-kept timer was saying: a bid not after the round closes, a serve not after the claim's expiry, a look not after the round that wanted it closes." .
 
@@ -743,30 +743,30 @@ ag:notAfter a owl:DatatypeProperty ; rdfs:domain ag:Act ; rdfs:range xsd:dateTim
 
 
 
-#  `ag:Means` WAS HERE — a class of five individuals that nothing ever read. A means was the
+#  `orexis:Means` WAS HERE — a class of five individuals that nothing ever read. A means was the
 #  JOINT between three surfaces (an affordance row, an effect rule, an intention), and
 #  an-action-is-one-node made those surfaces one node; a name whose only job was to point at
 #  that node one-to-one was a second owner of it (the-action-is-the-kind). The ACTION is the
-#  kind now: a row carries it, an intention commits to it (`ag:by`), a trace weighs it
-#  (`ag:wouldTake`), and the kernel's ontology keeps `ag:Action` and no individual of anything.
+#  kind now: a row carries it, an intention commits to it (`orexis:by`), a trace weighs it
+#  (`orexis:wouldTake`), and the kernel's ontology keeps `orexis:Action` and no individual of anything.
 
 #  EVERY MEANS WAS HERE and every one is its package's word now — `sensing:Observe`,
 #  `actuation:Actuate`, `market:Acquire`, `market:Apply`, `market:Offer` — each declared beside
-#  the action that carries it, as means.md always said a package could. `ag:Means` went too
-#  (the-action-is-the-kind): the kind is `ag:Action`. What let each leave was the kernel's last reference
+#  the action that carries it, as means.md always said a package could. `orexis:Means` went too
+#  (the-action-is-the-kind): the kind is `orexis:Action`. What let each leave was the kernel's last reference
 #  becoming a hook: sensing satisfies the look it takes; the planner sizes a step by asking
 #  its taker; the bidder answers its own held-claim urgency; the deliberator's tests import a
 #  package word from the package.
 
-ag:adoptedAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
+orexis:adoptedAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "adopted at" .
-ag:resolvedAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
+orexis:resolvedAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "resolved at" ;
     rdfs:comment "Absent while the intention stands. Its absence IS the standing state — no flag to keep in step." .
-ag:outcome a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:string ;
+orexis:outcome a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:string ;
     rdfs:label "outcome" ;
     rdfs:comment "How it ended: satisfied or dropped. A string rather than a class per outcome, exactly as review:outcome is." .
-ag:becauseOf a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:string ;
+orexis:becauseOf a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:string ;
     rdfs:label "because of" ;
     rdfs:comment "Why it was adopted, and — appended on resolution — why it ended. Prose for the operator reading a ledger, never parsed." .
 
@@ -784,25 +784,25 @@ ag:becauseOf a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:
 #  a SEPARATE fact: `endMet`. Satisfied-and-unmet is the false-knowledge signature — the graph
 #  said this lever moves this property, and the world kept disagreeing.
 
-ag:expectsRise a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:boolean ;
+orexis:expectsRise a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:boolean ;
     rdfs:label "expects the value to rise" ;
-    rdfs:comment "Which way the act promised to move the property — said by the actor that opened the watch, from the sign of the delta it sized or in so many words. It WAS `ag:expectsValueTo`, a market direction the keeper looked up itself; a package word in the kernel, and the actor always knew. An open watch written under the old term is not read back: it closes unjudged across this upgrade, and the next act opens a new one." .ag:baselineValue a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:decimal ;
+    rdfs:comment "Which way the act promised to move the property — said by the actor that opened the watch, from the sign of the delta it sized or in so many words. It WAS `orexis:expectsValueTo`, a market direction the keeper looked up itself; a package word in the kernel, and the actor always knew. An open watch written under the old term is not read back: it closes unjudged across this upgrade, and the next act opens a new one." .orexis:baselineValue a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:decimal ;
     rdfs:label "baseline value" ;
     rdfs:comment "Where the property stood when the expectation was adopted. Copied into the row, deliberately: the sensed graph upserts — one current observation per property — so the BEFORE of any before/after survives nowhere but here. The ledger is the memory of commitments, and this is the commitment's opening position." .
-ag:baselineAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
+orexis:baselineAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "baseline at" .
-ag:deadlineAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
+orexis:deadlineAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "deadline at" ;
     rdfs:comment "By when the movement should have shown. The patience serves as the horizon until something derives a better one from the dose and the physics — a recorded seam of #131, not an oversight." .
-ag:expectsDelta a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:decimal ;
+orexis:expectsDelta a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:decimal ;
     rdfs:label "expects delta" ;
     rdfs:comment "How far the act should move the property, when the actor can say — a dose of known litres through the domain's stated conversion. What the met-verdict measures its margin against (#165): a movement is the world answering only when it is commensurate with the act, and a breath of instrument grain past the baseline is not. Optional, because not every act can size its own effect; absent, the verdict falls back to exact crossing, which is the pre-noise behaviour and stays legal." .
 
 
-ag:endMet a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:boolean ;
+orexis:endMet a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:boolean ;
     rdfs:label "end met" ;
     rdfs:comment "Whether the world answered as the graph promised: a reading past the baseline in the expected direction before the deadline — and, where the row states an expectsDelta, past it by at least metFraction of that delta (#165) — or the deadline passed without one (false). Absent while the watch is still on. A row satisfied-and-unmet is one false-knowledge datum; enough of them for one (means, property) pair and the affordance is SUSPECT — flagged, never auto-retracted, because deleting knowledge would be reaching down a level." .
-ag:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
+orexis:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "end verified at" .
 
 
@@ -814,21 +814,21 @@ ag:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range 
 #  which is what they were always about: what counts as the world answering, and how long
 #  a commitment may absorb a repeat impulse.
 
-ag:metFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+orexis:metFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:label "met fraction" ;
     rdfs:comment "The fraction of an expected delta that counts as the world answering (#165). What this society accepts as evidence, not how the code is written. A quarter — generous to partially-absorbed doses, far above any instrument's grain. Chosen against the OTHER failure too: a margin so strict that honest doses read unmet would feed suspectAfter and mark truthful affordances false." .
 
-ag:suspectAfter a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+orexis:suspectAfter a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "suspect after" ;
     rdfs:comment "How many consecutive unmet expectations for one (means, property) pair make the affordance suspect. A fact about what this society tolerates before it stops trusting a claim, not about how the code is written." .
 
-ag:patienceS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+orexis:patienceS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
     rdfs:label "patience seconds" ;
     rdfs:comment "How long a standing intention blocks re-adoption of the same one. Within it, a second impulse to do the same thing is ABSORBED — that is the amortisation, and with a consulted deliberator it is the cost model. Past it, a new adoption supersedes the old, which is recorded as dropped with the reason. An OPINION, so it is each agent's own belief and review may move it; the bounds beside it are constitutional." .
 
-ag:minPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+orexis:minPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "minimum patience" .
-ag:maxPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+orexis:maxPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "maximum patience" .
 
-ag:Intention ag:metFraction 0.25 ; ag:suspectAfter 3 ; ag:minPatienceS 10 ; ag:maxPatienceS 86400 .
+orexis:Intention orexis:metFraction 0.25 ; orexis:suspectAfter 3 ; orexis:minPatienceS 10 ; orexis:maxPatienceS 86400 .

@@ -19,12 +19,12 @@ from orexis_agent_progression.store import bindings
 from conftest import WORLDS_ROOT, genesis_store, load_wired
 from test_shapes import _conforms, _flatten
 
-AG = "http://example.org/orexis#"
+OREXIS = "http://example.org/orexis#"
 SIM = "http://example.org/orexis/sim#"   # what stands in for hardware nobody built
 
 _CAPS_Q = f"""
 SELECT ?id ?cap WHERE {{ 
-  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}hasCapability> ?cap  }}"""
+  ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id ; <{OREXIS}hasCapability> ?cap  }}"""
 
 
 def _caps(world: str) -> dict[str, set[str]]:
@@ -63,7 +63,7 @@ def test_the_simulated_world_derives_what_a_wired_one_does():
     different world.
 
     What survives is sharper. Everything `sensing`'s fern derives, `simulation`'s fern derives
-    too, and what the market world adds follows from its fern having a STAKE: `ag:actsFor` a
+    too, and what the market world adds follows from its fern having a STAKE: `orexis:actsFor` a
     plant that states what it needs buys both the desire and the standing to bid for it, and
     neither is a fact about the hardware. Pinning the difference rather than asserting sameness
     is what still catches the failure this was written for: if a simulated probe ever stopped
@@ -85,7 +85,7 @@ def test_the_simulated_world_derives_what_a_wired_one_does():
 
 def _mutate_simulation(update: str) -> rdflib.Graph:
     st = genesis_store(world="simulation")
-    st.update("PREFIX ag: <http://example.org/orexis#>\n" + update)
+    st.update("PREFIX orexis: <http://example.org/orexis#>\n" + update)
     return _flatten(st, WORLDS_ROOT / "simulation")
 
 
@@ -135,7 +135,7 @@ def test_a_stand_in_may_share_a_neighbours_wire_without_a_bus_of_its_own():
     """
     st = genesis_store(world="simulation")
     rows = bindings(st.query(f"""
-        SELECT ?id WHERE {{ ?s <{AG}localId> ?id ; <{SIM}simulatedBy> ?m .
+        SELECT ?id WHERE {{ ?s <{OREXIS}localId> ?id ; <{SIM}simulatedBy> ?m .
                             FILTER NOT EXISTS {{ ?s <http://example.org/orexis/mqtt#onBus> ?b }} }}"""))
     assert [r["id"] for r in rows] == ["air_temp_fern"], \
         "the world that this test is about no longer has a stand-in sharing a wire"
@@ -233,7 +233,7 @@ def test_the_pot_is_the_only_statement_of_its_own_drying():
     import json
 
     from agent import ratified
-    from orexis_agent_progression.ontology import AG, WORLD_GRAPH
+    from orexis_agent_progression.ontology import OREXIS, WORLD_GRAPH
     from onboarding.compose import _SIMULATED_Q, _values
 
     ds = ratified.dataset("simulation")
@@ -259,13 +259,13 @@ def test_a_model_stating_its_own_drying_overrides_the_pot():
     import json
 
     from agent import ratified
-    from orexis_agent_progression.ontology import AG, WORLD_GRAPH
+    from orexis_agent_progression.ontology import OREXIS, WORLD_GRAPH
     from onboarding.compose import _SIMULATED_Q, _values
 
     ds = ratified.dataset("simulation")
     ds.update(f"""INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?m <{SIM}losesPerDay> 0.5 }} }}
 WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-    ?s <{AG}localId> "moisture_sensor_fern" ; <{SIM}simulatedBy> ?m }} }}""")
+    ?s <{OREXIS}localId> "moisture_sensor_fern" ; <{SIM}simulatedBy> ?m }} }}""")
     rows = [r for r in ratified.rows(ds, _SIMULATED_Q) if r["id"] == "moisture_sensor_fern"]
     values = json.loads(_values(rows))
     moisture = next(v for v in values if v["pointer"] == "/moisture")

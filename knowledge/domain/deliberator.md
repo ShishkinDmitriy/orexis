@@ -166,10 +166,10 @@ next pass:
 ```sparql
 SELECT ?desire ?verdict ?standsAt ?means ?via ?wouldReach ?why WHERE {
   GRAPH <http://example.org/orexis/graph/deliberation> {
-    ?d a ag:Deliberation ; ag:deliberatedOn ?desire ; ag:verdict ?verdict ;
-       ag:standsAt ?standsAt ; ag:considered ?c .
-    ?c ag:wouldTake ?means ; ag:through ?via ; ag:verdict ?why .
-    OPTIONAL { ?c ag:wouldReach ?wouldReach } } }
+    ?d a orexis:Deliberation ; orexis:deliberatedOn ?desire ; orexis:verdict ?verdict ;
+       orexis:standsAt ?standsAt ; orexis:considered ?c .
+    ?c orexis:wouldTake ?means ; orexis:through ?via ; orexis:verdict ?why .
+    OPTIONAL { ?c orexis:wouldReach ?wouldReach } } }
 ```
 
 Asked of the loner's gardener, wet at 0.42:
@@ -187,7 +187,7 @@ verdict on trust.
 **It is the record's one exception and not an exemption from the rule.** Possible worlds are
 computed and dropped, except where a reader outside the process needs one — and then: its own
 graph class, cleared at the start of every pass, PROV to what generated it, never public and
-never in belief. All four hold. `ag:through` is the PROV: a trace that said only `Actuate` would
+never in belief. All four hold. `orexis:through` is the PROV: a trace that said only `Actuate` would
 not answer *through which valve*, which stops being rhetorical the moment an agent holds two.
 
 Three things it must not become:
@@ -218,7 +218,7 @@ that slowed the thing it observes would be a poor trade.
 # What a pass cost, and what it could not see
 
 `agent_planning` carries the other half of the same trace: how long the pass took
-(`ag:tookSeconds`, the one figure the trace could not already answer), how many worlds it built,
+(`orexis:tookSeconds`, the one figure the trace could not already answer), how many worlds it built,
 how deep it reached, and what it did with each lever — `met`, `better`, `worse`, `cycles`,
 `unsimulated`, and `blind` for the desires where some lever had no stated effect at all. Read back
 out of the trace rather than counted a second time, so the pass being measured is the pass that

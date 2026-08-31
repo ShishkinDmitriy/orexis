@@ -33,8 +33,8 @@ TERM — an `assembly:Extension`, declared by whoever owns the question and refu
 [assembly](/decisions/the-assembly-is-not-the-mind.md)'s rather than the kernel's, because how
 anything reaches anything is not belief, desire or intention. A module fills a point with
 `@contributes(term)` on a method; an override by name inherits the term. Each RUN-TIME point also
-declares **which row** answering it belongs to — `ag:row`, one of `ag:Reactive`,
-`ag:Progression`, `ag:Deliberative` — because a row partitions the methods of one module, and no
+declares **which row** answering it belongs to — `orexis:row`, one of `orexis:Reactive`,
+`orexis:Progression`, `orexis:Deliberative` — because a row partitions the methods of one module, and no
 directory can ([layered-by-timescale-and-interruptibility](/decisions/layered-by-timescale-and-interruptibility.md)). The points about a READING
 are sensing's contract (`packages/orexis-capability-sensing/choir.py`): a module joins by defining the
 method, and sensing says what it is asked with and how the answers merge
@@ -76,7 +76,7 @@ method, and sensing says what it is asked with and how the answers merge
 the answers merge, and it is the contract's real owner. *Answered by* is every package that
 currently has an opinion, which changes as packages are added and removed and is exactly what no
 asker is allowed to know. Two rows say `kernel *(direct)*`: `size` and `take` are declared points
-but are NOT broadcast — the caller has already resolved WHICH module by `ag:takenBy` and
+but are NOT broadcast — the caller has already resolved WHICH module by `orexis:takenBy` and
 `agent.providers(family)`, and calls the method on that one.
 
 **Two ways to answer one.** Override the base method on `Module` — `reports()`, `desires()`,

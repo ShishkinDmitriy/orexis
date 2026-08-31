@@ -29,7 +29,7 @@ from pathlib import Path
 from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
-from orexis_agent_progression.ontology import AG, ONTOLOGY_GRAPH, WORLD_GRAPH
+from orexis_agent_progression.ontology import OREXIS, ONTOLOGY_GRAPH, WORLD_GRAPH
 from .namespaces import DHT11, ESP32, I2C, MC, ONEWIRE, PROBE, RGBLED, SOSA
 
 
@@ -50,7 +50,7 @@ _COLOURS = {
 _PINS_Q = f"""
 SELECT ?device ?deviceId ?model ?pin ?notation ?gpio ?role WHERE {{ 
   ?device <{MC}hasPin> ?pin .
-  OPTIONAL {{ ?device <{AG}localId> ?deviceId }}
+  OPTIONAL {{ ?device <{OREXIS}localId> ?deviceId }}
   OPTIONAL {{ ?device <{MC}model> ?model }}
   OPTIONAL {{ ?pin <{SKOS}notation> ?notation }}
   OPTIONAL {{ ?pin <{MC}gpio> ?gpio }}
@@ -263,9 +263,9 @@ def draft(world: str, harness: Path) -> str:
            "# Left deliberately unvalidatable. A draft that passes orexis-validate is the one",
            "# nobody re-reads.",
            "",
-           "@prefix ag:    <http://example.org/orexis#> .",
+           "@prefix orexis:    <http://example.org/orexis#> .",
            # The DRAFT's own individuals go into the world's namespace (a world owns
-           # its individuals; ag: is the vocabulary's), spelled with the empty prefix.
+           # its individuals; orexis: is the vocabulary's), spelled with the empty prefix.
            f"@prefix : <http://example.org/orexis/world/{world}#> .",
            "@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .",
            f"@prefix mc:      <{MC}> .",
@@ -286,7 +286,7 @@ def draft(world: str, harness: Path) -> str:
         note = ("   # GUESSED: nothing here resolved to a board, so this is the connector every"
                 " cable touches" if name == board and guessed else "")
         out += [f":{name} a {kind} ;{note}",
-                f'    ag:localId "{name}" ;']
+                f'    orexis:localId "{name}" ;']
         if spec.get("type"):
             out.append(f'    mc:model "{spec["type"]}" ;')
         if not cls:
@@ -317,9 +317,9 @@ def draft(world: str, harness: Path) -> str:
             if role:
                 out.append(f":{name}_{i+1} a mc:Pin ;{gpio} mc:pinRole {_qname(role)} .")
             elif name == board:
-                out.append(f'ag:{name}_{i+1} a mc:Pin ;{gpio} skos:notation "{label}" .')
+                out.append(f'orexis:{name}_{i+1} a mc:Pin ;{gpio} skos:notation "{label}" .')
             else:
-                out.append(f'ag:{name}_{i+1} a mc:Pin ; mc:pinRole {_TODO}   # labelled {label!r}')
+                out.append(f'orexis:{name}_{i+1} a mc:Pin ; mc:pinRole {_TODO}   # labelled {label!r}')
         out.append("")
 
     out.append("# The wires, which are the part a harness is actually good at.")
@@ -339,7 +339,7 @@ def draft(world: str, harness: Path) -> str:
             n += 1
             colour = inverse.get(colours[i] if i < len(colours) else "", "")
             col = f' ; mc:colour "{colour}"' if colour else ""
-            out.append(f"ag:w{n} a mc:Wire ; mc:joins {pin_id[a]} , {pin_id[b]}{col} .")
+            out.append(f"orexis:w{n} a mc:Wire ; mc:joins {pin_id[a]} , {pin_id[b]}{col} .")
     return "\n".join(out) + "\n"
 
 

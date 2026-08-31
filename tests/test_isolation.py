@@ -18,7 +18,7 @@ import pytest
 
 from agent import ratified
 from onboarding import influx as influx_admin, mqtt as mqtt_admin
-from orexis_agent_progression.ontology import AG, WORLD_GRAPH
+from orexis_agent_progression.ontology import OREXIS, WORLD_GRAPH
 from onboarding.namespaces import MARKET, MQTT, SENSING
 from conftest import build_agent, genesis_store, shipped_worlds
 
@@ -86,12 +86,12 @@ def test_no_agent_may_hear_a_neighbours_private_channel(world):
     private = {}  # agent id -> the topics that are its alone
     for row in ratified.rows(ds, f"""SELECT ?id ?claimTopic WHERE {{
         
-          ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{MARKET}bidsIn> ?m .
+          ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id ; <{MARKET}bidsIn> ?m .
           ?m <{MARKET}claimTopic> ?claimTopic .  }}"""):
         private.setdefault(row["id"], set()).add(f"{row['claimTopic']}/{row['id']}")
     for row in ratified.rows(ds, f"""SELECT ?id ?readingTopic WHERE {{
         
-          ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{SENSING}polls> ?s .
+          ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id ; <{SENSING}polls> ?s .
           ?s <{MQTT}readingTopic> ?readingTopic .  }}"""):
         private.setdefault(row["id"], set()).add(row["readingTopic"])
 

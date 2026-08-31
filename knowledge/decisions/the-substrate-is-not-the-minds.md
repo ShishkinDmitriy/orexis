@@ -15,8 +15,8 @@ timestamp: 2026-08-26T23:00:00Z
 
 # What was true before
 
-`agent/ontology.ttl` declared `ag:Device` ("a physical edge node"), `ag:simulatedBy` ("no such
-device exists; a process stands in for it"), `ag:DeviceModel` and eight `ag:model*` properties —
+`agent/ontology.ttl` declared `orexis:Device` ("a physical edge node"), `orexis:simulatedBy` ("no such
+device exists; a process stands in for it"), `orexis:DeviceModel` and eight `ag:model*` properties —
 initial value, dose effect, loses-per-day, daily swing, tick seconds, floor and ceiling — plus
 three world-level scenario knobs (`ag:timeScale`, `ag:strayDoseMeanDays`, `ag:rainTopic`); and
 `agent/shapes.ttl` held the three shapes that check them. Everything else non-BDI had already
@@ -47,9 +47,9 @@ and had to be corrected — see
 `packages/orexis-sim-standin/` exists and why nothing that observes or acts asks either package for
 anything.
 
-**The kernel keeps what is about the installation rather than the hardware**: `ag:ComputeHost`,
-`ag:lanHost`, `ag:runsOn` — where a society executes — which is a fact about a deployment and
-not about a thing with legs. `ag:ComputeHost` stops being a kind of device.
+**The kernel keeps what is about the installation rather than the hardware**: `orexis:ComputeHost`,
+`orexis:lanHost`, `orexis:runsOn` — where a society executes — which is a fact about a deployment and
+not about a thing with legs. `orexis:ComputeHost` stops being a kind of device.
 
 **And the ratchet reaches its floor.** The widener that read `sensing:monitors` from a kernel
 shape went with the model's shape; a package naming another package's word is ordinary, and only

@@ -16,7 +16,7 @@
 # streams. A derived node has to be stable and distinct; nothing looks one up by name.
 
 PREFIX mqtt: <http://example.org/orexis/mqtt#>
-PREFIX ag: <http://example.org/orexis#>
+PREFIX orexis: <http://example.org/orexis#>
 
 #  Where a device SENDS: what it read, or what it did.
 INSERT { GRAPH $derived {
@@ -43,6 +43,6 @@ WHERE  {
 #  choosing — an agent in a society that meets on a broker is on the broker — which is why the
 #  premise is the bus alone (the-kernel-has-no-mailbox).
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability mqtt:Linking } }
+    ?agent orexis:hasCapability mqtt:Linking } }
 $given
-WHERE  { ?agent a ag:Agent . ?bus a mqtt:MessageBus }
+WHERE  { ?agent a orexis:Agent . ?bus a mqtt:MessageBus }

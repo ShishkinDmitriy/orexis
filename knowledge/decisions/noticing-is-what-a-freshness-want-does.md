@@ -19,7 +19,7 @@ ontology, a base method on `Module` returning `[]`, and a real implementation in
 walked every sensor and reported the pairs it had never read or had let go cold.
 
 Its consumer was the deliberator. It stopped asking when freshness became a **want** — a
-`sensing:Freshness` desire derived per instrument, `ag:violationIs ag:Stale`, which the
+`sensing:Freshness` desire derived per instrument, `orexis:violationIs orexis:Stale`, which the
 [deliberator](/domain/deliberator.md)'s tick hands to the [executor](/domain/executor.md) like anything
 else the agent pursues. The hook was left computing the same judgment, one layer earlier,
 answerable to nothing.
@@ -52,7 +52,7 @@ the point's constant for a kernel-owned question, and a direct call on whoever p
 `size` and `take`, which are reached through `agent.provider(family)`.
 
 **It pins its own count, and that was earned.** The first version matched `:record` but not
-`ag:handle`, so it silently checked five of seventeen hooks and passed — the empty-glob failure
+`orexis:handle`, so it silently checked five of seventeen hooks and passed — the empty-glob failure
 [a-test-that-asserted-nothing](/decisions/a-test-that-asserted-nothing.md) records, wearing a
 regex. It now asserts a floor on how many declarations it found, so a pattern that stops matching
 a prefix form fails instead of narrowing.

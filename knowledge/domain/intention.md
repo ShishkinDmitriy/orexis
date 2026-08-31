@@ -110,7 +110,7 @@ Two consequences ride on the watch:
 
 # The patience
 
-The one piece of policy the keeper owns. Within `ag:patienceS` — each agent's own belief,
+The one piece of policy the keeper owns. Within `orexis:patienceS` — each agent's own belief,
 bounded by the family's constitutional floor and ceiling like a cadence — a second impulse to
 adopt the same commitment is **absorbed**: `adopt` returns None and the caller treats it as its
 own cooldown. Past it, a new adoption **supersedes**: the old one is resolved as dropped with
@@ -120,7 +120,7 @@ not at all.
 # Granted by a stake AND a lever
 
 Each capability is granted by whatever fact makes it meaningful. A commitment is to reduce a
-named gap by a named means, so the premise is both halves: `ag:actsFor` a subject that states
+named gap by a named means, so the premise is both halves: `orexis:actsFor` a subject that states
 needs (else nothing to commit *about* — the supplier, all levers and no stake, keeps no ledger)
 and at least one of a market position, an actuator, or a schedulable sensor (else nothing to
 commit *to* — wanting without means is a wish). `world/sensing`'s agent fails the first half and
@@ -130,8 +130,8 @@ records.
 
 - **Not a decider.** Nothing here chooses what to commit to; [executor](/domain/executor.md)
   calls `adopt` with the head of a plan, and the *whether* lives in
-  [deliberation](/domain/deliberator.md). A row written here names, `ag:by`, the [act](/domain/act.md) the
-  plan's head is — the action it fills, `ag:through` the lever, the quantity the taker sized,
+  [deliberation](/domain/deliberator.md). A row written here names, `orexis:by`, the [act](/domain/act.md) the
+  plan's head is — the action it fills, `orexis:through` the lever, the quantity the taker sized,
   the window — so the [actor](/domain/actor.md) handed it later takes the same act. Keeping and deciding share a granting premise and stay two capabilities
   because their replaceable parts differ.
 - **Not public.** The ledger is a graph of the agent's own, like its beliefs and its revisions:

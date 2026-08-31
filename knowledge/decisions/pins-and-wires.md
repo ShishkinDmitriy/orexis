@@ -42,7 +42,7 @@ no driver would be a promise the runtime cannot keep.
 
 ## The hardware layer keeps its own namespaces
 
-Every module here used to declare an `owl:Ontology` IRI and then put all its terms in `ag:` —
+Every module here used to declare an `owl:Ontology` IRI and then put all its terms in `orexis:` —
 the ontology IRI and the term namespace disagreed, which reads as an error and was a
 convention: one namespace, many documents.
 
@@ -57,7 +57,7 @@ that, so moving the *society* vocabulary would be a large and risky change for n
 but the hardware vocabulary is read only by `onboarding/firmware.py` and by the shapes, which
 spell IRIs in full anyway. Three files, none of them the runtime.
 
-The society kernel, the capabilities and the domain stay in `ag:`. Two conventions in one
+The society kernel, the capabilities and the domain stay in `orexis:`. Two conventions in one
 bundle is a cost, and the line between them is exactly the line the code already draws.
 
 `ComputeHost`, `lanHost` and `runsOn` went back to the kernel while this was being done.
@@ -68,7 +68,7 @@ They describe where agents execute; they are not electronics and never had pins.
 The old form fused two facts:
 
 ```turtle
-ag:probe ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio 34 ] .
+ag:probe orexis:pin [ ag:pinRole ag:AnalogIn ; ag:gpio 34 ] .
 ```
 
 `ag:AnalogIn` is a fact about the **probe's** leg — what that leg is for. `34` is a fact about
@@ -83,9 +83,9 @@ one thing on a breadboard that people actually get wrong, which is the wire.
 Now there are three objects and the wire is one of them:
 
 ```turtle
-ag:air_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
-ag:pin_3v3 a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 ; skos:notation "3V3" .
-[]         a mc:Wire ; mc:joins ag:air_vcc , ag:pin_3v3 .
+orexis:air_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
+orexis:pin_3v3 a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 ; skos:notation "3V3" .
+[]         a mc:Wire ; mc:joins orexis:air_vcc , orexis:pin_3v3 .
 ```
 
 **An instance of `mc:Pin` is a piece of metal. An instance of `mc:PinRole` is abstract — it has
@@ -191,7 +191,7 @@ something joins them.
 
 # Two bugs found by building it
 
-**A `rdfs:domain` turned a class into a device.** `ag:logicVolts` carries `rdfs:domain ag:Device`,
+**A `rdfs:domain` turned a class into a device.** `ag:logicVolts` carries `rdfs:domain orexis:Device`,
 so stating it on `ag:Dht11` made the *class* infer as a Device and get held to `DeviceShape`,
 which demands a `localId`. A class does not have one. Domain axioms are inference rules, not type
 declarations, and this is the second time that has cost something here.

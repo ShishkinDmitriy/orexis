@@ -447,12 +447,12 @@ def _declared() -> set[str]:
     The kernel is reached through the loader rather than through a path. It used to be
     `packages/core/orexis/` and is `agent/` now, so a `packages/**` glob alone would stop
     covering it — silently as far as this function is concerned, and loudly one line later,
-    since every `ag:` term a page names would read as undeclared.
+    since every `orexis:` term a page names would read as undeclared.
     """
     from assembly import loader
 
     #  ALL of the kernel's TTL, not just its ontology. A SHAPE is declared in `shapes.ttl` and a
-    #  page may legitimately name one — `ag:KeeperShape` does — and while the shapes lived in
+    #  page may legitimately name one — `orexis:KeeperShape` does — and while the shapes lived in
     #  packages the `packages/**` glob swept them up for free. It does not any more.
     names: set[str] = set()
     for ttl in list(loader.sources("*.ttl")) + list((REPO_ROOT / "world").rglob("*.ttl")):
@@ -466,12 +466,10 @@ def test_a_domain_page_names_only_terms_that_exist():
     # Terms the pages state do NOT exist. Each is a sentence saying so, which is a legitimate and
     # useful thing for a page to say — and is exactly why this cannot be a bare existence check.
     said_not_to_exist = {
-        # domain/auction.md: "no `ag:Auction` anywhere", "There is no `ag:Auction` to point at."
-        "ag:Auction",
-        # domain/genesis-process.md: "There is no `ag:worldKind`".
-        "ag:worldKind",
-        # domain/world.md, under "What this replaced": the simulation design that was removed.
-        "ag:models", "ag:ModelledSubject", "ag:SimulatedSensing",
+        # domain/auction.md: "no `orexis:Auction` anywhere", "There is no `orexis:Auction` to point at."
+        "orexis:Auction",
+        # domain/genesis-process.md: "There is no `orexis:worldKind`".
+        "orexis:worldKind",
         # domain/desire.md names this to say it is NOT a name that exists — it is what an earlier
         # version of the page invented for a constraint that has no shape of its own (#275).
         # When #275 lands and gives that constraint a real name, this entry comes out.
@@ -597,7 +595,7 @@ def test_a_dictionary_term_is_a_declared_one():
     #  Asked of the loader, not globbed. This was `packages/**/ontology.ttl` plus a firmware
     #  glob — the same list the loader already assembles, maintained twice — and when the kernel
     #  left `packages/core/orexis/` for `agent/` the glob went on matching twenty files while
-    #  covering none of `ag:`. Non-empty is not complete, and the two asserts at the foot of this
+    #  covering none of `orexis:`. Non-empty is not complete, and the two asserts at the foot of this
     #  function would both have passed.
     ontologies = list(loader.ontology_files())
     project = rdflib.Graph()
@@ -611,7 +609,7 @@ def test_a_dictionary_term_is_a_declared_one():
         vocabulary.parse(REPO_ROOT / "tests" / "fixtures" / "vocabularies" / filename)
         vendored[prefix] = {str(s) for s in vocabulary.subjects() if isinstance(s, rdflib.URIRef)}
 
-    #  Longest binding first, so nested namespaces (ag: inside every package's) resolve to the
+    #  Longest binding first, so nested namespaces (orexis: inside every package's) resolve to the
     #  package that actually owns the term rather than to the kernel.
     bindings = sorted(((str(iri), prefix) for prefix, iri in NAMESPACES.items()),
                       key=lambda pair: -len(pair[0]))
@@ -651,10 +649,10 @@ def test_a_dictionary_term_is_a_declared_one():
 
     # The reverse direction, scoped to what rule 2 calls its unit: every capability FAMILY the
     # ontologies declare is a word someone answers for. Members and single abilities typed
-    # `a ag:Capability` directly are deliberately out of scope — a member is the family's page's
+    # `a orexis:Capability` directly are deliberately out of scope — a member is the family's page's
     # to describe, not a second owner.
     RDFS = rdflib.RDFS
-    ag_capability = rdflib.URIRef(str(NAMESPACES["ag"]) + "Capability")
+    ag_capability = rdflib.URIRef(str(NAMESPACES["orexis"]) + "Capability")
     families = {str(s) for s in project.subjects(RDFS.subClassOf, ag_capability)}
     for family in sorted(families - set(owners)):
         wrong.append(f"{family} is a capability family no dictionary page binds")
@@ -672,7 +670,7 @@ def test_a_dictionary_term_is_a_declared_one():
 #  A bundle writes a graph as `:sensed` and an individual as `:fern_agent` — the same shorthand,
 #  and neither has a namespace to check. So this asks one question of both: does the project
 #  DECLARE the thing? A graph is declared in an ontology as `…/graph/<name>`, per-agent ones
-#  through an `ag:graphPrefix`; an individual is declared by the world that holds it, which
+#  through an `orexis:graphPrefix`; an individual is declared by the world that holds it, which
 #  `_declared()` already sweeps up for the term guard above.
 #
 #  This found #269 — `:attested`, `:opinion`, `:claims`, `:ledger` and `:exp/<agent>` across nine
@@ -697,7 +695,7 @@ def _graphs() -> tuple[set[str], set[str]]:
         fixed |= {iri[len(_GRAPH_BASE):]
                   for iri in re.findall(rf"<({re.escape(_GRAPH_BASE)}[^>]*)>", text)}
         prefixes |= {p[len(_GRAPH_BASE):]
-                     for p in re.findall(r'ag:graphPrefix\s+"([^"]+)"', text)
+                     for p in re.findall(r'orexis:graphPrefix\s+"([^"]+)"', text)
                      if p.startswith(_GRAPH_BASE)}
     return {f for f in fixed if f}, prefixes
 
@@ -746,7 +744,7 @@ def test_no_document_names_a_graph_the_store_has_never_had():
     docs = concepts()
     assert docs, "no concept documents found — the glob stopped matching"
     assert fixed, "no graphs found — the ontology scan stopped matching"
-    assert prefixes, "no per-agent graph prefixes found — `ag:graphPrefix` stopped matching"
+    assert prefixes, "no per-agent graph prefixes found — `orexis:graphPrefix` stopped matching"
 
     def resolves(name: str) -> bool:
         bare = name.lstrip(":")
@@ -837,7 +835,7 @@ def test_a_committed_diagram_is_not_stale():
 def test_every_declared_hook_has_an_asker():
     """A hook nobody asks is a contract every module must honour and nothing consumes.
 
-    `ag:notices` was exactly that for two releases — declared, given a base method and a real
+    `orexis:notices` was exactly that for two releases — declared, given a base method and a real
     override in sensing, and asked by NOBODY once the deliberator stopped: freshness had become
     a want, and the hook was left computing the same judgment on request that nobody made
     (#413). Deleting it is only half the fix; this is the half that keeps it deleted.
@@ -855,7 +853,7 @@ def test_every_declared_hook_has_an_asker():
     for f in sources:
         declared += [(f, n) for n in
                      re.findall(r"^\w*:(\w+) a assembly:Extension", f.read_text(), re.M)]
-    #  BOTH prefix forms, and the count is pinned: the kernel writes `ag:handle` and a package
+    #  BOTH prefix forms, and the count is pinned: the kernel writes `orexis:handle` and a package
     #  writes `:record` against its own base. A pattern that caught only one silently checked a
     #  third of the hooks and passed — which is the empty-glob failure wearing a regex.
     assert len(declared) >= 16, (

@@ -1,7 +1,7 @@
 @prefix mqtt: <http://example.org/orexis/mqtt#> .
 @prefix schema: <https://schema.org/> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
@@ -175,7 +175,7 @@ The difference is not academic — it is what the reading path got wrong. Believ
 # The restriction says every instance does, which is what a datasheet means.
 #
 # `agent/inference.py` materialises it (rule 5), so the sovereign — which alone loads both the
-# vocabulary and the wiring — observes `ag:air_sensor_fern ssn-system:hasSystemCapability
+# vocabulary and the wiring — observes `orexis:air_sensor_fern ssn-system:hasSystemCapability
 # dht11:ContinuousOperationCapability` without anyone having written it down. See
 # knowledge/decisions/what-is-true-of-a-part-is-true-of-every-one-of-them.md.
 :Dht11 rdfs:subClassOf [

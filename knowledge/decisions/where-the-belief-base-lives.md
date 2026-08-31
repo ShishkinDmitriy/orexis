@@ -161,8 +161,8 @@ store still says what the code reads. See
 
 # When the world changes under a running agent
 
-The world **does** change: genesis is amendable, `ag:versionNumber` exists for exactly this, and
-every observation is stamped `ag:underWorldVersion`. But an agent reads the version **once**, in
+The world **does** change: genesis is amendable, `orexis:versionNumber` exists for exactly this, and
+every observation is stamped `orexis:underWorldVersion`. But an agent reads the version **once**, in
 `Agent.__init__`, and never looks again. So today a world change is invisible until a restart,
 and an agent will happily keep stamping readings with a version that is no longer current.
 
@@ -289,7 +289,7 @@ token had to leave that file first. The same decision closed the bus, which was 
   world wires it to — see
   [series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
 - **An agent never re-reads the world.** Until it does something about a version bump, the
-  `ag:underWorldVersion` stamp is only as true as the last restart.
+  `orexis:underWorldVersion` stamp is only as true as the last restart.
 - **No store alternative offers graph-level per-user ACL.** [Oxigraph](https://github.com/oxigraph/oxigraph)
   is far lighter and would fit if isolation stopped depending on the store; RDF4J has no
   graph-level ACL; GraphDB's is in paid editions. Fuseki was chosen *for* this feature, and

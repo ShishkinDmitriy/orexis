@@ -35,14 +35,14 @@ log = logging.getLogger("validate")
 
 _DUPLICATE_IDS_Q = """
 SELECT ?id (COUNT(?a) AS ?n) (GROUP_CONCAT(STR(?a); separator=", ") AS ?nodes) WHERE {
-  ?a a ag:Agent ; ag:localId ?id
+  ?a a orexis:Agent ; orexis:localId ?id
 } GROUP BY ?id HAVING (COUNT(?a) > 1)"""
 
 
 def ids_are_unique(st) -> bool:
-    """No two agents answer to the same `ag:localId`.
+    """No two agents answer to the same `orexis:localId`.
 
-    SHACL cannot ask this: `ag:AgentShape`'s `sh:maxCount 1` is cardinality PER agent — each
+    SHACL cannot ask this: `orexis:AgentShape`'s `sh:maxCount 1` is cardinality PER agent — each
     has exactly one id — and there is no cross-node uniqueness constraint in the language. So
     it is asked here, where the sovereign checks the world entire, which is the only vantage
     from which the question exists at all.
@@ -93,7 +93,7 @@ def validate_world(world: str) -> bool:
         genesis.birth(st, path, agent_id)
 
     # Every public graph — asserted, derived and entailed — plus the meta-graph describing
-    # them, so `ag:PublicGraphShape` can fire. This check runs UNFOCUSED, over the whole
+    # them, so `orexis:PublicGraphShape` can fire. This check runs UNFOCUSED, over the whole
     # world, which is the only place a shape about graphs could ever fire: an agent's own
     # startup check is focused on its own node and would skip it silently.
     #
@@ -162,8 +162,8 @@ def deliberable(st, desires: dict) -> bool:
     #  waved through the very lever that matters. The action's own node says whether it
     #  states an effect; that is a fact about the loaded packages, and it is asked as one.
     for action in bindings(st.query(
-            "SELECT ?action WHERE { ?action a ag:Action ; "
-            "ag:available ?q FILTER NOT EXISTS { ?action sh:construct ?c } }")):
+            "SELECT ?action WHERE { ?action a orexis:Action ; "
+            "orexis:available ?q FILTER NOT EXISTS { ?action sh:construct ?c } }")):
         faults += 1
         log.error("%s offers rows and no loaded package says what that DOES — a "
                   "search that cannot simulate a lever passes it over, and then concludes "

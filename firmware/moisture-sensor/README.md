@@ -1,12 +1,12 @@
 # Moisture sensor (ESP32) — scheduled
 
 A stake-free sensor node. It declares itself `sensing:ScheduledProcedure` in the world, which gives its
-agent **`ag:Subscribing`**: the *agent* states the interval (how often to look), and this
+agent **`orexis:Subscribing`**: the *agent* states the interval (how often to look), and this
 board **keeps to it** — reads a capacitive soil-moisture sensor, publishes a 0..1 value,
 briefly listens for a new interval, then **deep-sleeps**. Big battery savings, and the agent
 still controls attention. One board per subject.
 
-Note what this is *not*. It is not `ag:Polling`, where the agent asks for each reading and the
+Note what this is *not*. It is not `orexis:Polling`, where the agent asks for each reading and the
 device replies: this board is unreachable while asleep, so a request would land on nothing.
 The agent hands it a standing instruction instead of a repeated one, and that trade — giving
 up "read now" to get deep sleep — is exactly why the two are separate capabilities. See
@@ -32,7 +32,7 @@ Publish a **retained** command to `sensors/<subject>/cmd` — the board reads it
 - `{"sense": true}` — take an extra reading while the board is briefly awake. **Best-effort**:
   the board is only awake between publishing a reading and being released, so a nudge sent at
   any other moment is simply lost, and it is never retained (a retained `sense` would re-fire
-  on every wake, forever). This is the seed of `ag:Polling`, not a substitute for it.
+  on every wake, forever). This is the seed of `orexis:Polling`, not a substitute for it.
 
 After publishing, the board **waits to be released** rather than idling out a fixed window
 (#152): the agent answers every reading, the answer carries `sleep_s`, and the board sleeps on
@@ -64,9 +64,9 @@ cp include/config.h.example include/config.h    # gitignored (WiFi secrets)
 Set WiFi, the Pi's IP as `MQTT_HOST`, the ADC pin, the cadence bounds, and calibration.
 
 `PLANT_ID` and `SENSOR_ID` must agree with `world/<name>/world.ttl`: the topics this board uses are
-built from `PLANT_ID`, and they have to be the `ag:readingTopic` / `ag:commandTopic` the world
-states for the matching `ag:Sensor`, whose `ag:localId` is `SENSOR_ID`. The `"sensor"` field in each published
-payload must equal that `ag:localId` — a mismatch is the failure that otherwise goes silent.
+built from `PLANT_ID`, and they have to be the `orexis:readingTopic` / `orexis:commandTopic` the world
+states for the matching `orexis:Sensor`, whose `orexis:localId` is `SENSOR_ID`. The `"sensor"` field in each published
+payload must equal that `orexis:localId` — a mismatch is the failure that otherwise goes silent.
 
 Read `ADC_DRY` (dry air) and `ADC_WET` (in water) from the monitor; the firmware maps
 `dry→0.0`, `wet→1.0`.
@@ -99,7 +99,7 @@ cd ../../world/sensing && podman compose up -d
 `world/sensing` is the smallest ratified world: one subject, one board, one agent, no
 market. The agent logs the interval it set, and the line appears in Grafana
 (`localhost:3000`, "Orexis — Moisture"). Two things to eyeball in the raw payloads: the
-`"sensor"` field must match the sensor's `ag:localId` in the world, and a value pinned at
+`"sensor"` field must match the sensor's `orexis:localId` in the world, and a value pinned at
 exactly `0.000` or `1.000` means `ADC_DRY`/`ADC_WET` are wrong.
 
 Seed `society` instead and the same board, unchanged, joins a market.
@@ -110,7 +110,7 @@ There is **no gateway** in v1 (trusted-agent mode) — each agent asserts its ow
 data. The agent-side half of this board is the **sensing capability**
 (`capabilities/sensing/`): it sets the cadence, takes the published reading, writes the
 series to Influx and asserts the observation to `:sensed` under its own authorship, with the
-`ag:polls` grant that entitles it to this sensor (see
+`orexis:polls` grant that entitles it to this sensor (see
 [connection determines authorization](../../knowledge/decisions/authn-authz-capabilities.md)).
 
 That capability runs alone, which is what `world/sensing` demonstrates: an agent there holds

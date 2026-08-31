@@ -67,21 +67,21 @@ rather than authored.**
 
 ```turtle
 # what the world says (public, authored)
-ag:fern ssn-system:hasOperatingRange [ ssn-system:inCondition
+orexis:fern ssn-system:hasOperatingRange [ ssn-system:inCondition
           [ ssn:forProperty water:SoilMoisture ; schema:minValue 0.45 ; schema:maxValue 0.65 ] ] ;
         ssn-system:hasSurvivalRange  [ ssn-system:inCondition
           [ ssn:forProperty water:SoilMoisture ; schema:minValue 0.20 ; schema:maxValue 0.85 ] ] .
 
 # what the agent concludes (public, derived, in its own graph) — a SHAPE, one per
 # (agent, property), the region and the envelope differing only in severity
-ag:fern_agent ag:holds ag:bounds.fern.SoilMoisture .
+orexis:fern_agent orexis:holds orexis:bounds.fern.SoilMoisture .
 
-ag:bounds.fern.SoilMoisture a sh:NodeShape ;
-    sh:targetNode ag:fern_agent ;
+orexis:bounds.fern.SoilMoisture a sh:NodeShape ;
+    sh:targetNode orexis:fern_agent ;
     ssn:forProperty water:SoilMoisture ;
     sh:property [
-        sh:severity ag:ShouldBecome ;                  # a want, never a refusal
-        sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+        sh:severity orexis:ShouldBecome ;                  # a want, never a refusal
+        sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
         sh:qualifiedMinCount 1 ;                       # unmeasured IS a gap
         sh:qualifiedValueShape [
             sh:property [ sh:path sosa:observedProperty ; sh:hasValue water:SoilMoisture ] ,
@@ -157,7 +157,7 @@ must not be read as knowing there is a lot.
 
 ## Deduced, not declared — which is what makes it a capability
 
-The premise is **a stake**: `ag:actsFor` a subject that states what it needs. AGENTS.md's rule is
+The premise is **a stake**: `orexis:actsFor` a subject that states what it needs. AGENTS.md's rule is
 that each capability is granted by whatever fact makes it meaningful and that the fact is its
 own — sensing's is equipment, review's is latitude, and this one's is having something to
 advance for. `world/sensing`'s agent is wired to three sensors and acts for nothing, so it
@@ -172,8 +172,8 @@ different answer to the same question; it is declared and deliberately unimpleme
 
 ## A graph class, not a graph
 
-`ag:ConstraintGraph` is a **class**, and `…/graph/constraint` is the one instance today. That is the
-same arrangement `ag:PublicGraph` has and it is here for the same reason: **a reader asks by type
+`orexis:ConstraintGraph` is a **class**, and `…/graph/constraint` is the one instance today. That is the
+same arrangement `orexis:PublicGraph` has and it is here for the same reason: **a reader asks by type
 and unions whatever it finds**, so a second source of desire — an operator's override, a regime
 selected for the season, a region an agent narrowed for itself — is a vocabulary edit that
 touches no Python.
@@ -222,7 +222,7 @@ is more urgent set how closely its board is watched. Nothing bids on air tempera
   recorded is unchanged: `ssn-system:inCondition` cannot say which of its conditions qualifies and
   which is the requirement, so *"0.30-0.50 when illuminance is low"* is not expressible. What has
   changed is that there is now somewhere for a selected regime to land — a second
-  `ag:ConstraintGraph` — so the missing half is the selection and no longer the representation.
+  `orexis:ConstraintGraph` — so the missing half is the selection and no longer the representation.
 - **Nothing weighs one desire against another.** Urgency is per property and sensing takes the
   max. An agent that is both too dry and too cold has no way to say which matters more, and a
   weight would have to come from somewhere no ratified file currently is.

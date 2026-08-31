@@ -92,7 +92,7 @@ def verify_command(payload: dict, host_pub, clearing_pub) -> bool:
 #
 # The same PEM contract as above, one pair per agent, minted by `orexis-keygen` beside the
 # world's own. The PUBLIC halves are published in the world graph (base64 of the raw 32 bytes,
-# `ag:signingKey` / `ag:sealingKey`), because a verifier cannot read another agent's secrets —
+# `orexis:signingKey` / `orexis:sealingKey`), because a verifier cannot read another agent's secrets —
 # that is the isolation — and the world is the one place every member already reads.
 
 

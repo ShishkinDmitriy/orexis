@@ -51,7 +51,7 @@ This is the whole argument, and it is not an analogy — it is the same fact twi
 is an object with a GPIO number and a rail voltage. [pins-and-wires](pins-and-wires.md) made it
 first-class for a stated reason, in `packages/orexis-part-microcontroller/ontology.ttl`:
 
-> `ag:pin [ mc:pinRole mc:AnalogInPinRole ; mc:gpio 34 ]` used to say in one node, and the length
+> `orexis:pin [ mc:pinRole mc:AnalogInPinRole ; mc:gpio 34 ]` used to say in one node, and the length
 > is the point: **the old form fused two facts about two different objects.**
 
 The role became a thing because there was a **pin** for it to be a role of. Before `mc:Pin`
@@ -63,13 +63,13 @@ the qualified pattern precisely because a role is meaningless free-floating: you
 ratifier, you are a ratifier **of** something.
 
 **And an auction has no object.** [auction](/domain/auction.md) says so deliberately: an auction is
-a process, it condenses and dissolves, and *there is no `ag:Auction` to point at — looking for one
+a process, it condenses and dissolves, and *there is no `orexis:Auction` to point at — looking for one
 is the usual sign that a market fact and an auction fact have been confused.* So a per-auction role has
 nothing to be a role in. Making one first-class today would mean either:
 
 - attaching it to the **market**, which is structural — and then it is `market:hosts` with more
   syntax, saying nothing the predicate did not; or
-- inventing `ag:Auction` to attach it to, which is a decision already taken the other way, and
+- inventing `orexis:Auction` to attach it to, which is a decision already taken the other way, and
   taking it as a side effect of a vocabulary tidy-up is the worst way to take it.
 
 **And a W3C Recommendation says the same thing in as many words.** The Organization Ontology
@@ -151,7 +151,7 @@ telling the truth about which is which. That it *looks* untidy is the cost of it
   its market except through `participants()`, which the host uses for addressing rather than for
   judgement. Whether a bidder should be able to see the field it is bidding against is a strategy
   question with no design.
-- **`ag:actsFor` is a fourth position and was not examined.** It says whose interest an agent
+- **`orexis:actsFor` is a fourth position and was not examined.** It says whose interest an agent
   advances — a plant, for a plant agent — and it is neither a market position nor a capability
   premise. Whether it is the same kind of fact as the two above is untested; it is left alone
   because nothing currently depends on the answer.

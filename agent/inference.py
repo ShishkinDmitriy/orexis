@@ -87,7 +87,7 @@ CLOSURE = (
     #    `USING` merges its graphs into one default graph, and a merged pattern cannot say which
     #    graph it matched. So reading the vocabulary and the world together made this rule fire on
     #    T-Box individuals as well — and since the graph catalog is itself asserted in the
-    #    vocabulary, `<…/graph/world> a ag:Graph` was entailed twice, once by rule 2 into
+    #    vocabulary, `<…/graph/world> a orexis:Graph` was entailed twice, once by rule 2 into
     #    `ontology/entailed` and again by this one into `world/entailed`. Semantically harmless,
     #    and it inflated a triple count that agent-metrics reports as flat while leaving "which
     #    graph holds this entailment" without a single answer.
@@ -102,7 +102,7 @@ CLOSURE = (
                   FILTER(?class != ?super && isIRI(?super)) }}""",
 
     # 4. And what a world statement implies under a subproperty. There are no `rdfs:subPropertyOf`
-    #    axioms today, again: the simulated-device work removed `ag:models` under
+    #    axioms today, again: the simulated-device work removed `orexis:models` under
     #    `sensing:polls` — the very fault that opened issue #27 — then #79 added `mc:carries`
     #    under `sosa:hosts`, and dropping that term for the standard one removed it again. Both
     #    removals were right and neither touched this rule, which is the point: it is here so

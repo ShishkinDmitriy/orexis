@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: A name does not expire, and an address did — three times
-description: ag:lanAddress held a DHCP lease and its own comment called it "a fact with an expiry date". It expired three times; the third silently took the bench off the air for a day, because the board went on dialling an address that was no longer the Pi and the broker logged nothing, since nothing arrived. The term is ag:lanHost now and the world states raspberry.local. No firmware code changed — mqtt.setServer has always taken a name — and ESP32's lwIP resolves .local because the framework sets CONFIG_LWIP_DNS_SUPPORT_MDNS_QUERIES.
+description: ag:lanAddress held a DHCP lease and its own comment called it "a fact with an expiry date". It expired three times; the third silently took the bench off the air for a day, because the board went on dialling an address that was no longer the Pi and the broker logged nothing, since nothing arrived. The term is orexis:lanHost now and the world states raspberry.local. No firmware code changed — mqtt.setServer has always taken a name — and ESP32's lwIP resolves .local because the framework sets CONFIG_LWIP_DNS_SUPPORT_MDNS_QUERIES.
 status: accepted
 timestamp: 2026-08-12T00:00:00Z
 ---
@@ -29,10 +29,10 @@ whether it does, and the reservation was never made.
 
 # What was decided
 
-**`ag:lanAddress` is `ag:lanHost`, and a world states a name.**
+**`ag:lanAddress` is `orexis:lanHost`, and a world states a name.**
 
 ```turtle
-ag:raspberry a ag:ComputeHost ; ag:lanHost "raspberry.local" .
+orexis:raspberry a orexis:ComputeHost ; orexis:lanHost "raspberry.local" .
 ```
 
 A name does not expire. Nothing in a world can be true about an address a router is free to

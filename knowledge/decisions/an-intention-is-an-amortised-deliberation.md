@@ -37,7 +37,7 @@ a happy absence. It is a gap, and this record says why and what to do about it.
 | BDI | orexis | state |
 |---|---|---|
 | **Beliefs** | the store: public graphs, private beliefs, `:sensed` | done |
-| **Desires** | the region shapes an agent `ag:holds`, plus the aim inside one | region done; aim still `water:hasTarget` |
+| **Desires** | the region shapes an agent `orexis:holds`, plus the aim inside one | region done; aim still `water:hasTarget` |
 | **Goals** | implicit — the worst gap wins attention | unnamed, deliberately |
 | **Intentions** | **proto only**: a pending bid, a held claim, a commanded cadence | no name, no lifecycle |
 | **Interpreter** | hardwired: reading → band → LOW → announce → bid → claim → actuate | welded; it IS the planner |
@@ -94,7 +94,7 @@ default; this repo refuses fabricated beliefs everywhere else and an aim is not 
 ## 3. Intention is named, by reifying what already exists
 
 No new behaviour. The three proto-intentions get one name and one lifecycle:
-`ag:Intention` is a commitment to reduce a named gap by a named means — *observe* (a
+`orexis:Intention` is a commitment to reduce a named gap by a named means — *observe* (a
 cadence command), *acquire* (a bid, satisfied by a claim), *apply* (a redemption) — with
 states adopted → active → satisfied | dropped and a `becauseOf`, the same PROV-flavoured shape
 `review:Revision` already has.
@@ -186,7 +186,7 @@ so this is that decision growing teeth rather than changing course.
 - **No composite distance.** The gap is per property; `max()` of normalised gaps ranks troubles,
   and the envelope already carries the weighting a `desire:weight` triple would duplicate. A
   scalar "wellness" number tells nobody which lever to pull, so it waits for a consumer.
-- **Regimes still unexpressed.** A second `ag:ConstraintGraph` is where a seasonal regime would
+- **Regimes still unexpressed.** A second `orexis:ConstraintGraph` is where a seasonal regime would
   land; the selection mechanism is still missing, unchanged from
   [the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md).
 - ~~**Which model, and what context window**~~ — the *when* and the *what-becomes-of-the-answer*

@@ -4,7 +4,7 @@ title: Reading
 term: http://www.w3.org/ns/sosa/hasSimpleResult
 description: >-
   The VALUE an observation carries, and the only thing in an agent's belief base that is somebody
-  else's word — `ag:Received`, the one arrival whose trustworthiness is a question at all. It is
+  else's word — `orexis:Received`, the one arrival whose trustworthiness is a question at all. It is
   the thing a plan moves: every shipped effect predicts one, and a possible world differs from
   the real one by exactly this. It ages rather than expires, and how long it stays actionable is
   the agent's own judgement rather than a property of the number — so "stale" is a verdict a
@@ -22,7 +22,7 @@ signature of a bug.
 # It is somebody else's word
 
 Every other kind of fact in a belief base is the agent's own or the sovereign's. A reading is an
-**instrument's**, and the graph says so: its arrival is `ag:Received`, which is *the only arrival
+**instrument's**, and the graph says so: its arrival is `orexis:Received`, which is *the only arrival
 whose trustworthiness is a question* — an assertion is the sovereign's by definition and a
 derivation is checkable arithmetic, but this either carries a signature or does not.
 

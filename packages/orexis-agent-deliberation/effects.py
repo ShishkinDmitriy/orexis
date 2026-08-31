@@ -1,7 +1,7 @@
 """What a lever would make true — reading the rules the packages ship, and running one.
 
 An action states its effect in SHACL-AF's words: `sh:construct` holding the query that yields
-the triples applying it would ADD, and `ag:retracts` — ours, because the standard has none — holding the query that
+the triples applying it would ADD, and `orexis:retracts` — ours, because the standard has none — holding the query that
 yields the triples it REMOVES. The actions live in the action graph, loaded from every package's
 `actions.ttl` at genesis, so a model or a sovereign can read the whole tool list without a
 second format existing anywhere.
@@ -75,7 +75,7 @@ def apply(store, action: str, **bind) -> tuple[list, list]:
 
     Nothing is written. Both halves are CONSTRUCTs, so this asks the dataset two questions and
     returns their answers — which is what makes a possible world computable as
-    `(beliefs - retracted) + added` without a single mutation anywhere. `ag:retracts` exists
+    `(beliefs - retracted) + added` without a single mutation anywhere. `orexis:retracts` exists
     because SHACL-AF has no deletion, and it is not optional: the sensed graph upserts one
     observation node per (subject, property), so an effect predicting a reading that did not
     retract the node it replaces would leave two results on one node — and a shape asking
@@ -174,7 +174,7 @@ def lands_after(store, action: str, **bind) -> float | None:
     `cmd.seconds + doseGraceS` is a claim about when the world should have answered; an agent
     that holds a second copy plans against one timeline and verifies against another, and the
     disagreement surfaces as a false UNMET that looks like a device lying. That is #238's
-    argument for magnitude, one axis over — see `ag:landsAfter`.
+    argument for magnitude, one axis over — see `orexis:landsAfter`.
 
     None where the rule declines: no effect stated for this action, no timing on the effect, or
     premises that do not hold (an agent whose lever does not reach this subject). Every caller

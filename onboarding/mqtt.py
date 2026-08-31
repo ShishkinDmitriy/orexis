@@ -58,7 +58,7 @@ from . import certs
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
 from orexis_capability_market.terms import NS as MARKET
-from orexis_agent_progression.ontology import AG, WORLD_GRAPH
+from orexis_agent_progression.ontology import OREXIS, WORLD_GRAPH
 from .namespaces import ACTUATION, MQTT, SENSING, SIM
 log = logging.getLogger("mqtt")
 
@@ -113,18 +113,18 @@ def _q(body: str) -> str:
 
 
 _AGENTS_Q = _q(f"""?id ?eventTopic WHERE {{ 
-  ?a a <{AG}Agent> ; <{AG}localId> ?id .
+  ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id .
   OPTIONAL {{ ?a <{MQTT}eventTopic> ?eventTopic }}
  }}""")
 
 _POLLS_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{ 
-  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{SENSING}polls> ?s .
+  ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id ; <{SENSING}polls> ?s .
   ?s <{MQTT}readingTopic> ?readingTopic .
   OPTIONAL {{ ?s <{MQTT}commandTopic> ?commandTopic }}
  }}""")
 
 _BIDS_Q = _q(f"""?id ?offerTopic ?bidTopic ?claimTopic ?redeemTopic WHERE {{ 
-  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{MARKET}bidsIn> ?m .
+  ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id ; <{MARKET}bidsIn> ?m .
   ?m <{MARKET}offerTopic> ?offerTopic ; <{MARKET}bidTopic> ?bidTopic ;
      <{MARKET}claimTopic> ?claimTopic .
   OPTIONAL {{ ?m <{MARKET}redeemTopic> ?redeemTopic }}
@@ -132,7 +132,7 @@ _BIDS_Q = _q(f"""?id ?offerTopic ?bidTopic ?claimTopic ?redeemTopic WHERE {{
 
 _HOSTS_Q = _q(f"""?id ?offerTopic ?bidTopic ?claimTopic ?redeemTopic ?bidderEvent
 WHERE {{ 
-  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{MARKET}hosts> ?m .
+  ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id ; <{MARKET}hosts> ?m .
   ?m <{MARKET}offerTopic> ?offerTopic ; <{MARKET}bidTopic> ?bidTopic ;
      <{MARKET}claimTopic> ?claimTopic .
   OPTIONAL {{ ?m <{MARKET}redeemTopic> ?redeemTopic }}
@@ -151,7 +151,7 @@ WHERE {{
 # of its own holding a single dose grant, for a client that never connects — the same defect
 # #81 names one level up, where a board authenticates as one of its own peripherals.
 _SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{
-  ?d <{AG}localId> ?id ; <{SIM}simulatedBy> ?model ; <{SENSING}monitors> ?subject ;
+  ?d <{OREXIS}localId> ?id ; <{SIM}simulatedBy> ?model ; <{SENSING}monitors> ?subject ;
      <{MQTT}onBus> ?bus .
   {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?statusTopic }}
   UNION
@@ -166,7 +166,7 @@ _SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{
 # because the status topic is the VALVE's testimony and rain is nobody's — the soil cannot tell
 # the two waters apart, but the record must never say a valve dispensed what a stranger poured.
 _SIM_RAIN_Q = _q(f"""?id ?rainTopic WHERE {{
-  ?d <{AG}localId> ?id ; <{SIM}simulatedBy> ?model ; <{SENSING}monitors> ?subject ;
+  ?d <{OREXIS}localId> ?id ; <{SIM}simulatedBy> ?model ; <{SENSING}monitors> ?subject ;
      <{MQTT}onBus> ?bus .
   ?subject <{SIM}rainTopic> ?rainTopic .
  }}""")
@@ -175,7 +175,7 @@ _SIM_RAIN_Q = _q(f"""?id ?rainTopic WHERE {{
 # every rain topic and nothing else. The worst a compromised meddler can do is be over-generous
 # with water — it cannot hear a reading, see an offer, or speak for a valve.
 _MEDDLER_Q = _q(f"""?rainTopic WHERE {{
-  ?w a <{AG}World> ; <{SIM}strayDoseMeanDays> ?mean .
+  ?w a <{OREXIS}World> ; <{SIM}strayDoseMeanDays> ?mean .
   ?subject <{SIM}rainTopic> ?rainTopic .
  }}""")
 
@@ -185,12 +185,12 @@ _MEDDLER_Q = _q(f"""?rainTopic WHERE {{
 # loud. The simulation was strictly more capable than the hardware it stands for, which is the
 # wrong way round.
 _VALVE_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{ 
-  ?v <{AG}localId> ?id ; <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?statusTopic .
+  ?v <{OREXIS}localId> ?id ; <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?statusTopic .
  }}""")
 
 # And whoever actuates it must be able to HEAR that report, or the confirmation goes nowhere.
 _ACTUATOR_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{ 
-  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{ACTUATION}hasActuator> ?v .
+  ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id ; <{ACTUATION}hasActuator> ?v .
   ?v <{MQTT}statusTopic> ?statusTopic .
  }}""")
 
@@ -198,7 +198,7 @@ _ACTUATOR_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{
 # different class held by a different property; it is an actuation:Valve that happens to be stood in
 # for now, so the agent side of this stopped needing to know the difference at all.
 _ACTUATES_Q = _q(f"""?id ?commandTopic WHERE {{ 
-  ?a a <{AG}Agent> ; <{AG}localId> ?id .
+  ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id .
   ?a <{ACTUATION}hasActuator> ?v .
   ?v <{MQTT}commandTopic> ?commandTopic .
  }}""")
@@ -206,7 +206,7 @@ _ACTUATES_Q = _q(f"""?id ?commandTopic WHERE {{
 # `mqtt:onBus` is the device's own declaration that it is reachable on a bus — the same test
 # `MqttDriver.claims()` applies. Anything without it speaks no MQTT and needs no credential.
 _DEVICES_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{ 
-  ?d <{AG}localId> ?id ; <{MQTT}onBus> ?bus .
+  ?d <{OREXIS}localId> ?id ; <{MQTT}onBus> ?bus .
   OPTIONAL {{ ?d <{MQTT}readingTopic> ?readingTopic }}
   OPTIONAL {{ ?d <{MQTT}commandTopic> ?commandTopic }}
  }}""")

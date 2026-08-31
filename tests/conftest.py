@@ -94,7 +94,7 @@ def genesis_store(readings: dict[str, float] | None = None,
 
     if readings:
         # The subject lives in the WORLD's namespace since a world took its individuals out
-        # of ag: — a seeded reading must point where the world's fern actually is.
+        # of orexis: — a seeded reading must point where the world's fern actually is.
         ns = f"http://example.org/orexis/world/{world}#"
         ts = (result_time or datetime.now(timezone.utc)).isoformat()
         st.update("INSERT DATA { GRAPH <%s> {\n%s\n} }" % (STATE_GRAPH, "\n".join(
@@ -307,7 +307,7 @@ def open_round_for(st_or_agent, agent_id: str, seconds: float = 60.0) -> list[st
     st = getattr(st_or_agent, "beliefs", st_or_agent)
     agent = st_or_agent if hasattr(st_or_agent, "beliefs") else SimpleNamespace(beliefs=st, id=agent_id)
     venues = [r["v"] for r in bindings(st.query(
-        f'SELECT ?v WHERE {{ ?a ag:localId "{agent_id}" ; market:bidsIn ?v }}'))]
+        f'SELECT ?v WHERE {{ ?a orexis:localId "{agent_id}" ; market:bidsIn ?v }}'))]
     closes = datetime.now(timezone.utc) + timedelta(seconds=seconds)
     return [rounds.open_round(agent, v, f"test-{agent_id}-{i}", 2.0, 0.4, closes)
             for i, v in enumerate(venues)]

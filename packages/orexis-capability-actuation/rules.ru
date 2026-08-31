@@ -6,7 +6,7 @@
 
 PREFIX actuation: <http://example.org/orexis/actuation#>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
-PREFIX ag:   <http://example.org/orexis#>
+PREFIX orexis:   <http://example.org/orexis#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 #  The WHERE reads what is GIVEN — the sovereign's world and what the vocabulary entails of it —
@@ -19,6 +19,6 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 #  "who put this here" is answerable by looking rather than by knowing. See
 #  knowledge/decisions/who-put-the-fact-there.md.
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability actuation:Actuation } }
+    ?agent orexis:hasCapability actuation:Actuation } }
 $given
 WHERE  { ?agent actuation:hasActuator ?device . ?device a sosa:Actuator }

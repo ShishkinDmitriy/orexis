@@ -44,14 +44,14 @@ a style question.** Ask whether the fact's absence is itself evidence:
 | treatment | when | here |
 |---|---|---|
 | **retract** | the absence says nothing worth keeping | a round past its `closesAt` — a bidder is never told a round closed, so the clock ends the row (`rounds.sweep_expired`) |
-| **keep and mark** | the absence IS evidence | an [obligation](/domain/obligation.md) past `ag:expiresAt` — a debt nobody presented is a fact about a counterparty, so it is `lapsed` and unpursuable, never deleted |
+| **keep and mark** | the absence IS evidence | an [obligation](/domain/obligation.md) past `orexis:expiresAt` — a debt nobody presented is a fact about a counterparty, so it is `lapsed` and unpursuable, never deleted |
 | **keep and let a want go cold** | the fact is still the best evidence there is | a reading past its horizon — kept, with its instant, and the want about knowing goes unmet |
 
 **Which rules out the tempting generalisation.** A single sweeper that retracted anything past
 its validity window would be wrong twice over: it would delete a lapsed debt, which is exactly
 the evidence a creditor wants, and it would delete a stale reading, leaving an agent that cannot
 tell *dry an hour ago* from *never measured*. Three words in three namespaces —
-`market:closesAt`, `ag:expiresAt`, `sensing:staleAfterS` — are not duplication; each belongs to
+`market:closesAt`, `orexis:expiresAt`, `sensing:staleAfterS` — are not duplication; each belongs to
 the owner that knows which treatment its fact deserves.
 
 # What this does not solve
@@ -69,12 +69,12 @@ background refresh.
   reconnect is therefore the one moment a buf-shaped diff would be possible, and we do not take
   it.
 - ~~**The round sweep runs on one agent's one event.**~~ Closed (#398). Retracting what the
-  clock has ended is a choir hook, `ag:sweep`, asked on the agent's own housekeeping tick —
+  clock has ended is a choir hook, `orexis:sweep`, asked on the agent's own housekeeping tick —
   the one clock every agent has, because keeping your own house is not a capability. The
   kernel asks and never sweeps: which fact expires, and which of the three treatments it
   deserves, stays with its owner. What the tick guarantees is BOUNDEDNESS rather than
   promptness — it is hourly, and a bidder still sweeps on an offer because a round beginning
   with yesterday's rows standing reads oddly in a trace.
-- **No belief carries its own validity in the kernel's words.** `ag:notAfter` exists for an
+- **No belief carries its own validity in the kernel's words.** `orexis:notAfter` exists for an
   ACT, and the same shape would fit a fact; nothing needs it yet, and inventing it before a
   third treatment appears would be the generalisation this record refuses.

@@ -4,10 +4,10 @@ title: An action is one node — precondition, effect and taker — and whom a r
 description: >-
   Adding a way of acting meant writing to three files and a fourth surface: `affordances.rq`
   for availability, `honoured.rq` for the obligation-shaped rows, `effects.ttl` for what it makes
-  true, and `ag:takenBy` in the ontology for who carries it out. They were four statements
+  true, and `orexis:takenBy` in the ontology for who carries it out. They were four statements
   about one thing, and the STRIPS operator this architecture rests on IS one thing. Now a
-  package ships `actions.ttl` — one `ag:Action` node per way of acting — and `ag:Mode`,
-  `ag:Chosen`, `ag:Honoured` and `ag:effectOf` are retired: whether a row is the agent's own or
+  package ships `actions.ttl` — one `orexis:Action` node per way of acting — and `orexis:Mode`,
+  `orexis:Chosen`, `orexis:Honoured` and `orexis:effectOf` are retired: whether a row is the agent's own or
   an obligation is whether its availability query bound `?for_agent`.
 status: accepted
 timestamp: 2026-08-25T00:00:00Z
@@ -19,43 +19,43 @@ timestamp: 2026-08-25T00:00:00Z
 architecture was already classical planning: a menu row's WHERE clause is an action schema's
 precondition, an effect rule its add/delete list, an intention a committed step. What it did not
 do was make the schema one object. The precondition lived in `affordances.rq` (and, for an obligation,
-`honoured.rq`), the effect in `effects.ttl` keyed back to the means by `ag:effectOf`, and — since
+`honoured.rq`), the effect in `effects.ttl` keyed back to the means by `orexis:effectOf`, and — since
 [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md) — the
-taker in `ontology.ttl` as `ag:takenBy` on the means. The loader found three file kinds, the menu
+taker in `ontology.ttl` as `orexis:takenBy` on the means. The loader found three file kinds, the menu
 read two of them, the planner joined the third by a term, execution joined a fourth. An author
 adding a way of acting learned four conventions to say one thing, and the sovereign asked for a
 bare minimum of BDI concepts that a new package could reuse rather than re-learn.
 
-The two-mode vocabulary was the same shape one level down. `ag:Chosen` and `ag:Honoured` were
-individuals of `ag:Mode`, bound by hand in every `affordances.rq` (`BIND(ag:Chosen AS ?mode)`),
+The two-mode vocabulary was the same shape one level down. `orexis:Chosen` and `orexis:Honoured` were
+individuals of `orexis:Mode`, bound by hand in every `affordances.rq` (`BIND(orexis:Chosen AS ?mode)`),
 and what they encoded was already stated by another column: an honoured row carried `?buyer`, a
 chosen row did not. Two terms for a fact one column states is a second owner of that fact.
 
 # What is decided
 
-**An [action](/domain/action.md) is one node**, `a ag:Action`, in a package's `actions.ttl`:
+**An [action](/domain/action.md) is one node**, `a orexis:Action`, in a package's `actions.ttl`:
 
 | part | property | what it is |
 |---|---|---|
-| kind | ~~`ag:means`~~ | the node itself, since [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) |
-| precondition | `ag:available` | a SELECT binding `?property ?via ?direction`, and `?for_agent` for an obligation |
-| effect | `sh:construct`, `ag:retracts`, `ag:landsAfter`, `ag:confirmedBy` | unchanged from the effect rule |
-| taker | `ag:takenBy` | the capability whose module carries it out |
+| kind | ~~`orexis:means`~~ | the node itself, since [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) |
+| precondition | `orexis:available` | a SELECT binding `?property ?via ?direction`, and `?for_agent` for an obligation |
+| effect | `sh:construct`, `orexis:retracts`, `orexis:landsAfter`, `orexis:confirmedBy` | unchanged from the effect rule |
+| taker | `orexis:takenBy` | the capability whose module carries it out |
 
 The loader finds `actions.ttl` where it found three files; genesis loads it into the **action
-graph** (`ag:ActionGraph`, was the effect graph); `menu_of` runs every action's `ag:available`;
-`effects.rule_for` and `execution.taken_by` join on `ag:means`. Nothing lists the actions, and a
+graph** (`orexis:ActionGraph`, was the effect graph); `menu_of` runs every action's `orexis:available`;
+`effects.rule_for` and `execution.taken_by` join on `orexis:means`. Nothing lists the actions, and a
 new way of acting is a node in a new directory plus a `take()`.
 
 **Whom a row serves is a column.** An [affordance](/domain/affordance.md) with `for_agent` bound
 is an obligation's — exercised for that counterparty on a valid presentation and never proposed for the
 agent's own gap; one without is the agent's own option. `Affordance.is_own` reads the column;
-the planner's filter and the deliberator's obligation fallback read the same column; `ag:Mode`,
-`ag:Chosen`, `ag:Honoured` and `ag:mode` are gone from the vocabulary, and `honoured.rq` is a
-second `ag:Action` (the host's `market:Serving`) in the same file as `market:Acquiring`.
+the planner's filter and the deliberator's obligation fallback read the same column; `orexis:Mode`,
+`orexis:Chosen`, `orexis:Honoured` and `ag:mode` are gone from the vocabulary, and `honoured.rq` is a
+second `orexis:Action` (the host's `market:Serving`) in the same file as `market:Acquiring`.
 
-**`ag:effectOf` is gone.** An effect is not a thing that is *of* a means; it is a part of the
-action that has the means. The join every reader walks is `ag:means`, once.
+**`orexis:effectOf` is gone.** An effect is not a thing that is *of* a means; it is a part of the
+action that has the means. The join every reader walks is `orexis:means`, once.
 
 # What did not change
 

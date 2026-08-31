@@ -9,13 +9,13 @@ timestamp: 2026-08-09T00:00:00Z
 # Context
 
 `refresh_public` loaded the ratified files into `:world`, then ran every package's `rules.ru`,
-which `INSERT`ed into **the same graph**. So `ag:hasCapability` — computed from the wiring — sat
+which `INSERT`ed into **the same graph**. So `orexis:hasCapability` — computed from the wiring — sat
 indistinguishably beside topology a sovereign typed. [one-graph-both-engines-read](one-graph-both-engines-read.md)
 then materialised the RDFS closure into those same two graphs, and a third kind of fact joined
 the pile.
 
 The rule that these are different things is real and load-bearing. AGENTS.md states it
-(*"capabilities are derived, never declared; world.ttl must not contain ag:hasCapability"*),
+(*"capabilities are derived, never declared; world.ttl must not contain orexis:hasCapability"*),
 `world.ttl` carries a comment saying so, and `tests/test_capabilities.py` asserts the derivation
 produces the right answer. **None of that is readable from the store.** Nothing an agent, a
 shape, or a query could ask distinguished a fact somebody wrote from one something computed.
@@ -73,8 +73,8 @@ The same mistake had a second floor. Having stopped the *names* carrying the mea
 still **listed** them: five constants in `ontology.py`, a `PUBLIC_GRAPHS` tuple, and — worst —
 four `USING` lines typed by hand into every rule of every capability's `rules.ru`.
 
-That is rule 1, violated in the open. `ag:WorldGraph` is a T-Box term and code may name it;
-`…/graph/world` is a particular graph and is no more nameable than a world's `:fern_agent` — which, since worlds took their individuals out of `ag:` entirely, no longer even shares the vocabulary's namespace. The
+That is rule 1, violated in the open. `orexis:WorldGraph` is a T-Box term and code may name it;
+`…/graph/world` is a particular graph and is no more nameable than a world's `:fern_agent` — which, since worlds took their individuals out of `orexis:` entirely, no longer even shares the vocabulary's namespace. The
 asymmetry gave it away: `beliefs_graph(agent_id)` *constructs* its IRI from the one identifier a
 process is legitimately handed, exactly as the rule allows, while the public five were bare
 constants nobody had questioned.
@@ -85,7 +85,7 @@ registry**, correctly, per rule, or the derivation silently returned nothing.
 
 So the instances moved into the kernel's ontology (`agent/ontology.ttl`), typed by class, and code asks:
 
-- `ag:PublicGraph` is the term. `store.public_graphs()` returns whatever is an instance of it.
+- `orexis:PublicGraph` is the term. `store.public_graphs()` returns whatever is an instance of it.
 - A rule writes `$given` and `$derived`; the loader substitutes. No `rules.ru` names a graph.
 - Adding a public graph is a **vocabulary edit that touches no Python**, and there is a test
   that says so.
@@ -109,12 +109,12 @@ would otherwise read.
 
 ## The per-agent catalog is derived, not written
 
-Every world used to carry `<…/graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf :fern_agent`,
+Every world used to carry `<…/graph/beliefs/fern> a orexis:BeliefsGraph ; orexis:beliefsOf :fern_agent`,
 once per agent, beside the roster it restated. A second list is a second thing to drift, and this
 one drifted silently — nothing failed if an agent was added and its line was not.
 
 It is a function of the roster, so the kernel's `agent/rules.ru` derives it, building the IRI from
-the agent's own `ag:localId` exactly as `ontology.beliefs_graph()` does. That also closes the seam
+the agent's own `orexis:localId` exactly as `ontology.beliefs_graph()` does. That also closes the seam
 an earlier pass recorded, where a computed description stood beside a hand-written one.
 
 ## Sovereign is a role, and a user is the identity
@@ -133,14 +133,14 @@ person. PROV-O models exactly this, and naming a role is what it expects a domai
 ```turtle
 <…/graph/world> prov:wasGeneratedBy <…/activity/ratification> .
 <…/activity/ratification> a prov:Activity ; prov:qualifiedAssociation
-    [ a prov:Association ; prov:agent <…/user/…> ; prov:hadRole ag:Sovereign ] .
+    [ a prov:Association ; prov:agent <…/user/…> ; prov:hadRole orexis:Sovereign ] .
 ```
 
-`ag:Sovereign a prov:Role` is the one term added, in `agent/ontology.ttl` — the kernel,
-because a world's ratification is true of every world and `ag:World` already lives there. **There
-is no `ag:Sovereign` agent and there must not be**; a test refuses one, because the moment the
+`orexis:Sovereign a prov:Role` is the one term added, in `agent/ontology.ttl` — the kernel,
+because a world's ratification is true of every world and `orexis:World` already lives there. **There
+is no `orexis:Sovereign` agent and there must not be**; a test refuses one, because the moment the
 role is also an identity, "who is the sovereign" becomes permanent and a second user cannot
-exist. `ag:Operator` and whatever follows are deliberately absent: the role set is open, and a
+exist. `orexis:Operator` and whatever follows are deliberately absent: the role set is open, and a
 role no activity cites is speculation.
 
 The rule files keep the plain `prov:wasAssociatedWith` they already had. A role would distinguish
@@ -180,7 +180,7 @@ on a host, so an absolute path would bake one machine into the store and make th
 describe itself differently depending on where it was built. World files are named from the world
 directory's own name for the same reason — a mounted world has no relationship to this checkout.
 
-`ag:PublicGraphShape` refuses a `prov:Entity` that records neither. It cannot catch **silence** —
+`orexis:PublicGraphShape` refuses a `prov:Entity` that records neither. It cannot catch **silence** —
 a graph nobody described is not a `prov:Entity`, so nothing targets it — so
 `test_provenance.py::test_every_public_graph_accounts_for_itself` walks `PUBLIC_GRAPHS` instead of
 waiting to be told. A shape catches an incomplete description; a test catches a missing one.
@@ -301,12 +301,12 @@ treatment if that ever changes.
 [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)
 added `…/graph/constraint`, so **"five" is now the count at the time of writing and not the claim**.
 Read every "five" below as "the public set", which is what the record actually argues for — the
-whole point of `ag:PublicGraph` being a class is that the number is data.
+whole point of `orexis:PublicGraph` being a class is that the number is data.
 
 Nothing about the axis moved. A region is **derived**: a rule computed it, the rule could have
-said otherwise, and it lands beside `ag:hasCapability` in provenance terms even though it lands
+said otherwise, and it lands beside `orexis:hasCapability` in provenance terms even though it lands
 in a different graph. What changed is only that a rule may now name **which** derived graph its
-conclusions belong in, by naming a graph *class* — `$into(ag:ConstraintGraph)` — which genesis
+conclusions belong in, by naming a graph *class* — `$into(orexis:ConstraintGraph)` — which genesis
 resolves. So *no rule names a graph* survives intact, and three things that were true of exactly
 one graph because there was exactly one are now asked of the rules rather than remembered: what
 `$given` excludes, what is cleared before a recompute, and what the meta-graph must account for.
@@ -332,8 +332,8 @@ described automatically now, and a graph a **world file** declares still is not.
   `orexis-keygen <world> sovereign`, which already works, plus verification — and verification is
   the part that makes it worth doing.
 - **A hand-written graph catalog still sits in every `world.ttl`.** `<…/graph/world> a
-  ag:WorldGraph` and two siblings, restated per world, covering three of the five and read by
-  nothing except the owned-graph shape (`ag:OwnedGraphShape`, once `ag:BeliefsGraphShape`) — which needs the beliefs entries, since `ag:beliefsOf`
+  orexis:WorldGraph` and two siblings, restated per world, covering three of the five and read by
+  nothing except the owned-graph shape (`orexis:OwnedGraphShape`, once `ag:BeliefsGraphShape`) — which needs the beliefs entries, since `orexis:beliefsOf`
   carries information nothing else has. It is the partial answer that existed before this record
   and it was missed on the first pass. Left alone deliberately: it is ratified content, removing
   it is a world-file change with its own review, and a computed description now stands beside it.

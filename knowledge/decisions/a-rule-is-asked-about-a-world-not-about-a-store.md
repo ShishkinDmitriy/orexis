@@ -41,7 +41,7 @@ of the two limits found by building.
 choosing between them is the work. It is, and the choice falls out of a measurement neither
 option assumed. Every shipped effect rule, by the graphs its two queries touch:
 
-| rule | its `sh:construct` reads | its `ag:retracts` reads |
+| rule | its `sh:construct` reads | its `orexis:retracts` reads |
 |---|---|---|
 | `sensing:ObserveEffect` | `$sensed` | `$sensed` |
 | `actuation:ActuateEffect` | the world graph, `$beliefs` | `$sensed` |
@@ -105,7 +105,7 @@ affordance rows applied to reach it, and a child is `parent.taken + (row,)`. The
 pointers and none are wanted: the frontier is one depth's worth of nodes, expansion produces the
 next, and the path is the only ancestry anything asks about. What this design adds is a NAME per
 node, and the path is what names it — deterministic, and it reads back in the trace beside the
-`ag:through` a candidate already records.
+`orexis:through` a candidate already records.
 
 **Fork, do not replay.** A node's graph is made by copying its parent's and applying the step's
 diff — 0.19 ms, against a hypothesis of five triples. The alternative is to keep only paths and
@@ -143,10 +143,10 @@ still one entry in `seen`.
 Both hold things that have not happened, which is enough of a resemblance to be worth refusing
 in writing before someone tidies them together.
 
-An **intention** is a commitment: `ag:IntentionGraph`, per agent, with an adoption, a resolution
+An **intention** is a commitment: `orexis:IntentionGraph`, per agent, with an adoption, a resolution
 and a reason, and it MUST survive a restart — a keeper that forgot what it had committed to
 would re-adopt what already stands, and the patience that makes an intention an amortised
-deliberation would amortise nothing. A **possible world** is `ag:PossibleGraph`, and it must
+deliberation would amortise nothing. A **possible world** is `orexis:PossibleGraph`, and it must
 never survive anything: it is a conclusion drawn from beliefs plus an effect, so keeping one
 would be keeping something that can outlive what it was concluded from.
 
@@ -230,7 +230,7 @@ followed:
 > **A SENSING ACTION ENDS A PLAN.** A world with no violations means "nothing I can foresee is
 > wrong", so a step chosen after a look was chosen against a value nobody has seen.
 
-The search enforced that by asking `ag:confirmedBy ag:ByObservation` — and every effect in this
+The search enforced that by asking `orexis:confirmedBy ag:ByObservation` — and every effect in this
 project answers exactly that. A dose is confirmed by observation; so is a bid; only a later
 reading says the water arrived. So the guard matched every lever, nothing was ever added to the
 next depth, and the search ran at depth 1 whatever the constant said. It was invisible because
@@ -338,11 +338,11 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
   belief and there would be nowhere to put it. A defect becomes an unrepresentable state, which
   is worth more than the 109 ms.
 
-  The desire store is the case that shows the shape working. `ag:ConstraintGraph` is deliberately
+  The desire store is the case that shows the shape working. `orexis:ConstraintGraph` is deliberately
   a CLASS rather than one graph, and its comment says why — *"desire may have more than one
   source and a reader must not have to know how many"* — so one store would hold the sovereign's
   ratified mandate, the regions deduced from the world's ranges, and the obligations received on other
-  agents' claims, as three graphs distinguished by `ag:arrivedBy`. Every reader still matches an
+  agents' claims, as three graphs distinguished by `orexis:arrivedBy`. Every reader still matches an
   unqualified pattern and sees all three, exactly as it does now.
 
   So this is blocked by a missing engine feature rather than by the design, and that is the

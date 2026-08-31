@@ -1,6 +1,6 @@
 @prefix water: <http://example.org/orexis/water#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
@@ -77,7 +77,7 @@ water:RefillBidderShape a sh:NodeShape ;
 water:PlantShape a sh:NodeShape ;
     rdfs:comment "A plant is drawn from a source and states its physics. It holds no desire — that belongs to its agent." ;
     sh:targetClass water:Plant ;
-    sh:property [ sh:path ag:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path orexis:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
     sh:property [ sh:path water:servedBy ; sh:minCount 1 ; sh:class water:WaterSource ] ;
     sh:property [ sh:path water:litresPerFraction ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] ;
@@ -129,6 +129,6 @@ water:RangesAgreeShape a sh:NodeShape ;
 water:WaterSourceShape a sh:NodeShape ;
     rdfs:comment "Every source has a supplier and a physical ceiling — the constitution's allocation limit." ;
     sh:targetClass water:WaterSource ;
-    sh:property [ sh:path water:suppliedBy ; sh:minCount 1 ; sh:class ag:Agent ] ;
+    sh:property [ sh:path water:suppliedBy ; sh:minCount 1 ; sh:class orexis:Agent ] ;
     sh:property [ sh:path water:capacityL ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] .

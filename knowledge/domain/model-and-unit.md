@@ -76,7 +76,7 @@ about each unit, and the two need different tools.
 `agent/inference.py` materialises entailments into the store at genesis, once, and validation runs
 with inference **off** against that same graph. So:
 
-- **Ask what a thing IS. Do not walk a subclass path.** `?d a ag:DesireGraph` reads the closure.
+- **Ask what a thing IS. Do not walk a subclass path.** `?d a orexis:DesireGraph` reads the closure.
   Six queries once carried `rdfs:subClassOf*` by hand for twenty-five declared axioms;
   `tests/test_inference.py` refuses a seventh.
 - If the closure does not cover your case, **widen `agent/inference.py`** rather than working

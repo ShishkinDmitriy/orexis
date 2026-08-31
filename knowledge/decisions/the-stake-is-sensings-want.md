@@ -9,7 +9,7 @@ description: >-
   same kind of want freshness already is: sensing's. Decided: sensing derives the stake as it
   derives the freshness want, keeps the region, the envelope and the gap, and answers the
   planner's and the keeper's questions about readings through hooks; the kernel keeps
-  `ag:Desire`, `ag:metWhen` and the ledger of debts, derives no want, and keys nothing by
+  `orexis:Desire`, `orexis:metWhen` and the ledger of debts, derives no want, and keys nothing by
   property: a want is its node, an intention is an act pursuing a want, and the aim moves to
   sensing with the region it sits in.
 status: accepted
@@ -62,8 +62,8 @@ sensing provider, the world files' aims respelled and `vocabulary.MOVED` carryin
 volume across. The deducer is gone — the kernel has no module in the desire modality now. The
 choir's verdicts on a reading (the band, the bounds a board watches, the
 urgency a cadence follows, the gaps and the health figures) are sensing's hooks now, and
-`ag:KeeperShape` asks for a patience from an agent that `ag:holds` a want whose violation is not
-`ag:Stale` — the stake said in the kernel's own words, where "acts for a subject that states
+`orexis:KeeperShape` asks for a patience from an agent that `orexis:holds` a want whose violation is not
+`orexis:Stale` — the stake said in the kernel's own words, where "acts for a subject that states
 what it needs" was its premise in sensing's.
 
 **What a reading looks like is asked, not walked** (#376, landed). `current_reading` is a
@@ -73,7 +73,7 @@ the actor that opens it; the planner reads no value at all — an effect rule re
 property stands from `$sensed` itself, and an actor sizing a step (`Module.size(query, graph,
 property)`) asks sensing's `value_in` at the node's graph; and the signature's "never the
 timestamp" is a declaration sensing makes on the class it writes — `sosa:Observation
-ag:keyedBy` its feature and property, `ag:carries` its result — which `signature.py` reads once
+orexis:keyedBy` its feature and property, `orexis:carries` its result — which `signature.py` reads once
 per pass and canonicalises by, naming no vocabulary. (The record first said `ag:volatile`;
 saying what a node is keyed by and what it carries is the same declaration from the side that
 keeps a look from being a new world, and it needs no list of what to ignore.)
@@ -86,9 +86,9 @@ implementing change found and this record did not foresee, said first:
 
 **A want is ABOUT something, and the kernel carries that without reading it.** The desire
 modality is its own store ([a-store-is-a-modality](/decisions/a-store-is-a-modality.md)), so an
-`ag:available` query or an effect rule, which run against the belief base or the imaginarium,
+`orexis:available` query or an effect rule, which run against the belief base or the imaginarium,
 cannot walk `?want ssn:forProperty ?p` themselves — the want is not in the graph they are asked
-about. What the kernel passes instead is `ag:about`: the one node a package's query may join a
+about. What the kernel passes instead is `orexis:about`: the one node a package's query may join a
 lever to, stated by whoever derived the want and opaque to the kernel. Sensing says a region
 want is about its property and a freshness want about its INSTRUMENT — which is what keeps a
 purchase from serving a want about knowing, since the market's queries join `?about` to a
@@ -102,14 +102,14 @@ a BDI notion; which property it is stays sensing's.
   `ObservedWant` — the kernel's `Desire` plus the property — is what sensing contributes, so a
   package that needs the property of a want asks sensing (`want_about`, `stake_about`,
   `wants_about`) or reads the field off the object sensing handed over;
-- an **intention** is `ag:pursues` the want and `ag:by` the act, and the ledger's
+- an **intention** is `orexis:pursues` the want and `orexis:by` the act, and the ledger's
   `ssn:forProperty` is gone; `adopt`, `satisfy`, `drop`, `standing`, `expect`,
   `open_expectations` and suspicion key on (act, want). The ledger migrates at the keeper's
   construction (`vocabulary.migrate_ledger`): a row with a property and no want is given the
-  want that property names for the agent, through `ag:about`, and the property triple is
+  want that property names for the agent, through `orexis:about`, and the property triple is
   dropped from every row;
 - an **affordance row** carries the want it serves and what that want is about; an action's
-  `ag:available` binds `(?want ?about)` from `$wants` and joins a lever to `?about` in its own
+  `orexis:available` binds `(?want ?about)` from `$wants` and joins a lever to `?about` in its own
   words, and an effect rule is handed `$want` and `$about`;
 - the **actors' door** is `pursue_for(want)`; an actor holding a reading asks sensing which
   want it means (bidding: the stake about the property it is priced in; actuation: sensing's
@@ -154,17 +154,17 @@ it; it no longer has to say it.
   with #377: nothing is left of the file at all — the aim went too.
 - **`ssn:forProperty` survives in the ledger migration alone** (`vocabulary._LEDGER_PROPERTY`),
   which names what it migrates FROM, as `MOVED` does. It leaves with the last pre-#380 volume.
-- **`ag:about` is one node.** A want about two things — a property on two subjects — would
+- **`orexis:about` is one node.** A want about two things — a property on two subjects — would
   need two, and nothing derives one; the day it does, `VALUES` grows a row per pair.
 
 # Paid since — the state graph, and the instruments graph
 
-The kernel's last sensing-shaped names went with the audit. `ag:SensedGraph` is `ag:StateGraph`:
+The kernel's last sensing-shaped names went with the audit. `orexis:SensedGraph` is `orexis:StateGraph`:
 the world's current state as this agent holds it — what an effect rewrites, what a plan forks
 per step, what a met-test reads — which is all the kernel knows of it; what is in it is the
 packages' word. The instance keeps its IRI (`graph/sensed`) so a deployed volume keeps its
 readings. The placeholder a rule is handed is `$state`. And `graph/instruments` is sensing's:
 declared in sensing's ontology, named in its terms, and found by the kernel as every graph is —
 `Store.recorded_graphs()` asks for belief graphs that arrive recorded, so the planner's
-imaginarium and the validator carry it without naming it. `ag:Means` and a duplicated
-`ag:Action` block left the ontology in the same sweep.
+imaginarium and the validator carry it without naming it. `orexis:Means` and a duplicated
+`orexis:Action` block left the ontology in the same sweep.

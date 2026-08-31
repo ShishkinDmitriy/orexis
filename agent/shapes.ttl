@@ -1,5 +1,5 @@
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -7,28 +7,28 @@
 # Rules for the society kernel. Each ontology module ships its own shapes file next to it;
 # together they are the constitution as code. Validated with `orexis-validate`.
 
-ag:AgentShape a sh:NodeShape ;
+orexis:AgentShape a sh:NodeShape ;
     rdfs:comment "Every agent is named and does at least one thing. An agent with no capability is a process with nothing to run." ;
-    sh:targetClass ag:Agent ;
-    sh:property [ sh:path ag:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
+    sh:targetClass orexis:Agent ;
+    sh:property [ sh:path orexis:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
                   sh:message "an agent must state the id it is known by" ] ;
-    sh:property [ sh:path ag:hasCapability ; sh:minCount 1 ; sh:class ag:Capability ;
+    sh:property [ sh:path orexis:hasCapability ; sh:minCount 1 ; sh:class orexis:Capability ;
                   sh:message "an agent must compose at least one capability" ] .
 
-ag:WorldShape a sh:NodeShape ;
+orexis:WorldShape a sh:NodeShape ;
     rdfs:comment "The world is versioned, so every fact recorded under it can say which world it was recorded in." ;
-    sh:targetClass ag:World ;
-    sh:property [ sh:path ag:currentVersion ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ag:WorldVersion ] .
+    sh:targetClass orexis:World ;
+    sh:property [ sh:path orexis:currentVersion ; sh:minCount 1 ; sh:maxCount 1 ; sh:class orexis:WorldVersion ] .
 
-ag:WorldVersionShape a sh:NodeShape ;
+orexis:WorldVersionShape a sh:NodeShape ;
     rdfs:comment "A version is one whole number. It is what an observation stamps itself with, so a world whose version is missing or doubled makes every reading taken under it unattributable — and the number is the only content this node has." ;
-    sh:targetClass ag:WorldVersion ;
-    sh:property [ sh:path ag:versionNumber ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ] .
+    sh:targetClass orexis:WorldVersion ;
+    sh:property [ sh:path orexis:versionNumber ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ] .
 
-ag:OwnedGraphShape a sh:NodeShape ;
-    rdfs:comment "A graph that names an owner names exactly one agent — the write boundary. Targeted on the property since ag:BeliefsGraph retired: presence is guaranteed by the rule that mints the row, and a class existing only to be a shape's target is the class this replaced." ;
-    sh:targetSubjectsOf ag:beliefsOf ;
-    sh:property [ sh:path ag:beliefsOf ; sh:maxCount 1 ; sh:class ag:Agent ] .
+orexis:OwnedGraphShape a sh:NodeShape ;
+    rdfs:comment "A graph that names an owner names exactly one agent — the write boundary. Targeted on the property since orexis:BeliefsGraph retired: presence is guaranteed by the rule that mints the row, and a class existing only to be a shape's target is the class this replaced." ;
+    sh:targetSubjectsOf orexis:beliefsOf ;
+    sh:property [ sh:path orexis:beliefsOf ; sh:maxCount 1 ; sh:class orexis:Agent ] .
 
 #################  Devices that are not there  #################################################
 #
@@ -39,7 +39,7 @@ ag:OwnedGraphShape a sh:NodeShape ;
 # SPARQL constraints spell IRIs out in full: this runs on pyshacl, and a prefix that is declared
 # in one file and used in another is exactly the trap `store.PREFIXES` exists to catch elsewhere.
 
-ag:PublicGraphShape a sh:NodeShape ;
+orexis:PublicGraphShape a sh:NodeShape ;
     rdfs:comment "Every public graph must say where it came from: read from files (prov:wasDerivedFrom) or computed by something (prov:wasGeneratedBy), one or the other. Public knowledge is several graphs and the difference between them decides whether a fact may be acted on, amended or revised — so a graph that cannot account for itself makes that question unanswerable for everything inside it. Stated in PROV-O because `prov:` is already how an observation records its author; nothing here is ours. Note what this shape CANNOT catch: a graph nobody described at all is not a prov:Entity and so is not targeted — silence is caught by tests/test_provenance.py, which walks the public set rather than waiting to be told about it." ;
     sh:targetClass prov:Entity ;
     sh:or (
@@ -48,7 +48,7 @@ ag:PublicGraphShape a sh:NodeShape ;
     ) ;
     sh:message "a public graph must record what it was derived from or what generated it — see orexis/provenance.py" .
 
-#  `ag:SimulatedDeviceShape` WAS HERE: "a stand-in must be reachable like a real device" — on
+#  `orexis:SimulatedDeviceShape` WAS HERE: "a stand-in must be reachable like a real device" — on
 #  a bus, or sharing a reading topic. It left as the transport's, being a sentence in the
 #  transport's words, and is `sim:StandInReachableShape` now: the rule is meaningless without
 #  stand-ins, so it is filed where deleting the package deletes it
@@ -66,24 +66,24 @@ ag:PublicGraphShape a sh:NodeShape ;
 #  stated: a planner reads the rule, commits to the act, and then has no answer to "has it
 #  landed yet" — which is the flooding failure with a plan wrapped around it.
 
-#  `ag:DeviceShape`, `ag:SimulatedDeviceShape` and `ag:DeviceModelShape` WERE HERE and are
+#  `orexis:DeviceShape`, `orexis:SimulatedDeviceShape` and `orexis:DeviceModelShape` WERE HERE and are
 #  `packages/orexis-part-device/shapes.ttl`'s: what a physical node must state, and what a stand-in
 #  must compute, are the substrate's rules (the-substrate-is-not-the-minds).
 
-ag:EffectRuleAccountsForItsTimingShape a sh:NodeShape ;
+orexis:EffectRuleAccountsForItsTimingShape a sh:NodeShape ;
     rdfs:comment "What a rule must say beyond what it does: when the world change completes, and by which route anyone would learn that it had." ;
     sh:targetClass sh:SPARQLRule ;
-    sh:property [ sh:path ag:landsAfter ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path orexis:landsAfter ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:string ;
                   sh:message "an effect must say when it lands — a SELECT yielding ?seconds, and zero is a real answer for an act that changes nothing about the world" ] .
 
 
 #################  Keeping commitments  #################
 
-ag:KeeperShape a sh:NodeShape ;
+orexis:KeeperShape a sh:NodeShape ;
     rdfs:comment """An agent that advances somebody's interest must say how patient it is — the patience is the whole of what makes a commitment mean something, and its bounds are constitutional: below the floor the agent re-decides constantly and has retired the point of committing, above the ceiling it will honour a dead commitment for a day.
 
-TARGETED ON THE STAKE — a want this agent holds that is not merely about knowing — and said in the kernel's own words: `ag:holds` a `ag:Desire` whose violation is not `ag:Stale`. It used to be said as "acts for a subject that states what it needs", which is the stake's PREMISE in sensing's vocabulary (`ssn-system:hasOperatingRange`); the want itself is the kernel's structure, and the want is what obliges a patience — see the-stake-is-sensings-want. The narrowing is deliberate. This was `intention:KeeperShape`, scoped by `ag:hasCapability intention:Keeping`, and that grant's premise was a stake AND a lever. The lever half cannot be said here without the kernel naming `market:bidsIn`, `actuation:hasActuator` and `sensing:polls` — three packages the kernel would then depend on, which is the layering this whole arrangement exists to keep one-way. A lever is an INSTANCE anyway, the `via` of a menu row derived from each package's own affordances.rq, so there is no term to target on even if the dependency were acceptable.
+TARGETED ON THE STAKE — a want this agent holds that is not merely about knowing — and said in the kernel's own words: `orexis:holds` a `orexis:Desire` whose violation is not `orexis:Stale`. It used to be said as "acts for a subject that states what it needs", which is the stake's PREMISE in sensing's vocabulary (`ssn-system:hasOperatingRange`); the want itself is the kernel's structure, and the want is what obliges a patience — see the-stake-is-sensings-want. The narrowing is deliberate. This was `intention:KeeperShape`, scoped by `orexis:hasCapability intention:Keeping`, and that grant's premise was a stake AND a lever. The lever half cannot be said here without the kernel naming `market:bidsIn`, `actuation:hasActuator` and `sensing:polls` — three packages the kernel would then depend on, which is the layering this whole arrangement exists to keep one-way. A lever is an INSTANCE anyway, the `via` of a menu row derived from each package's own affordances.rq, so there is no term to target on even if the dependency were acceptable.
 
 READ THAT AS THE RULE AND NOT AS THIS SHAPE'S SPECIAL PLEADING. The kernel names no package's word, in RDF as in Python, because a package is optional and the core depends on none of them. (The simulated-actuator shape that used to target `actuation:actuates` from here is actuation's now, and the desire warning that joined through two sensing terms is sensing's — `sensing:BeyondSurvivalShape`.) See decisions/the-kernel-names-no-package-word.md, which measures all nine and puts them in the order they should go.
 
@@ -99,18 +99,18 @@ What that costs: an agent with a stake and no lever is required to state a patie
                                           <http://example.org/orexis#Stale> }
             }
         """ ] ;
-    sh:property [ sh:path ag:patienceS ;
+    sh:property [ sh:path orexis:patienceS ;
                   sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ;
                   sh:minInclusive 10 ; sh:maxInclusive 86400 ;
                   sh:message "an agent with a stake must state its patience, within the constitutional bounds the kernel declares" ] .
 
 
-ag:DesireShape a sh:NodeShape ;
+orexis:DesireShape a sh:NodeShape ;
     rdfs:comment """What a deduced shape must be to be readable — a shape ABOUT shapes, which is the seam a-desire-is-a-shape names: SHACL has no containment operator, so anything said about what an agent pursues is said by treating its shapes as the RDF they are.
 
 Every figure here was computed, so this is arithmetic rather than authorship — but a check over derived data is worth exactly as much as one over authored data when the reader is code that will divide by the width.""" ;
     #  Both roads to a held shape, since the desire was reified: a DESIRE's met-test hangs one
-    #  `ag:metWhen` hop off the node the agent holds, while the envelope — and an asserted root
+    #  `orexis:metWhen` hop off the node the agent holds, while the envelope — and an asserted root
     #  desire in the old bare form — is still held directly. A target that knew only the second
     #  would have gone quietly blind to every deduced want the day the hop landed.
     sh:target [ a sh:SPARQLTarget ;

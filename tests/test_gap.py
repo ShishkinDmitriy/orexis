@@ -166,7 +166,7 @@ def test_a_desire_nothing_watches_warns_at_the_gate(monkeypatch):
 
     unwired = genesis_store()
     unwired.update(f"""
-        PREFIX ag: <http://example.org/orexis#>
+        PREFIX orexis: <http://example.org/orexis#>
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#fern_agent>
             <http://example.org/orexis/sensing#polls> <http://example.org/orexis/world/simulation#air_temp_fern> }} }}
         WHERE {{}}""")
@@ -286,7 +286,7 @@ def test_the_filter_keeps_a_violation_however_pyshacl_heads_it():
         "Constraint Violation in SPARQLConstraintComponent (http://example/x):\n"
         "\tSeverity: sh:Violation\n\tMessage: the aim sits outside the region\n"
         "Validation Result in QualifiedValueShapeConstraintComponent (http://example/y):\n"
-        "\tSeverity: ag:ShouldBecome\n\tMessage: a gap, which is what an agent is for\n")
+        "\tSeverity: orexis:ShouldBecome\n\tMessage: a gap, which is what an agent is for\n")
 
     kept = _without_wants(report)
     assert "the aim sits outside the region" in kept

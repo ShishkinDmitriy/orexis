@@ -1,7 +1,7 @@
 @prefix : <http://example.org/orexis/world/sensing#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix mqtt: <http://example.org/orexis/mqtt#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix dht11: <http://example.org/orexis/dht11#> .
@@ -26,7 +26,7 @@
 # Separate from the society beside it because they change for different reasons and are read by
 # different people. A plant is added by editing the society; a probe is moved to another pin by
 # editing this. Both are loaded into the one world graph, so every query sees them together —
-# `ag:moisture_sensor_fern` is declared in world.ttl as a sensor and given its wiring here,
+# `orexis:moisture_sensor_fern` is declared in world.ttl as a sensor and given its wiring here,
 # rather than being described twice.
 #
 # What this is FOR, beyond documentation: the shapes in kernel/shapes.ttl hold it to the
@@ -35,8 +35,8 @@
 
 ##########  What runs the society  ##########
 
-:raspberry a ag:ComputeHost ;
-    ag:localId "raspberry" ;
+:raspberry a orexis:ComputeHost ;
+    orexis:localId "raspberry" ;
     mc:model "Raspberry Pi 5" ;
     # A NAME, because the address was a fact with an expiry date and it expired three times.
     # .126, then .130, then .133 — and the third cost a day: the board went on opening TCP to
@@ -50,10 +50,10 @@
     #
     # A DHCP reservation is still worth having. It makes the lease stop moving; this makes the
     # world stop caring whether it does.
-    ag:lanHost "raspberry.local" ;
+    orexis:lanHost "raspberry.local" ;
     rdfs:comment "Runs the agent containers, the broker for this world, and the shared store." .
 
-:fern_agent ag:runsOn :raspberry .
+:fern_agent orexis:runsOn :raspberry .
 
 ##########  The board at the edge  ##########
 
@@ -63,7 +63,7 @@
 # a Microcontroller found nothing and the firmware generator reported that this
 # world states no boards at all. Third time that gap has cost something.
 :esp32_fern a mc:Microcontroller , esp32:DevKitC ;
-    ag:localId "esp32_fern" ;
+    orexis:localId "esp32_fern" ;
     mc:model "ESP32-WROOM-32D" ;
     mqtt:onBus :local_bus ;
     #  No mc:firmware stated since #175: the board's connecting DEVICE is typed governed:Node
@@ -163,7 +163,7 @@
 # 25/26/27 are safe outputs — no strapping duty at boot, and their ADC2 membership costs nothing
 # to a driven line. It is lit only while the board is awake and dark through every sleep.
 :status_led_fern a rgbled:RgbLed ;
-    ag:localId "status_led_fern" ;
+    orexis:localId "status_led_fern" ;
     mc:model "KY-016 4-pin RGB LED (common cathode)" ;
     mc:hasPin :led_r , :led_g , :led_b , :led_common .
 
@@ -178,7 +178,7 @@
 # Wired and stated, NOT yet polled — see issue #51. Its data leg is on 32 rather than 34 or 35
 # and the difference is not cosmetic: a one-wire line is DRIVEN, and 34-39 cannot drive.
 :air_sensor_fern a dht11:Dht11 ;
-    ag:localId "air_sensor_fern" ;
+    orexis:localId "air_sensor_fern" ;
     mc:model "KY-015 (DHT11)" ;
     mc:hasPin :air_data , :air_vcc , :air_gnd .
 
@@ -192,7 +192,7 @@
 #
 # Stating it here is what makes the vocabulary's description of a DHT11 reach these two devices:
 # `dht11:TemperatureSensor` carries the accuracy, the resolution and the procedure it
-# implements, and rule 5 lands them on `ag:air_temp_fern` without any of it being written twice.
+# implements, and rule 5 lands them on `orexis:air_temp_fern` without any of it being written twice.
 # The type is the only new fact — everything that follows from it is already in the package.
 :air_temp_fern     a dht11:TemperatureSensor .
 :air_humidity_fern a dht11:HumiditySensor .

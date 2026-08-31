@@ -238,7 +238,7 @@ def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
     # opposite of what the caller asked for.
     #
     # Anchored on the DECLARATION rather than on the bare name. Anchoring on the name meant the
-    # first mention won, and #79 gave those sensors an earlier one: `ag:air_sensor_fern` hosts
+    # first mention won, and #79 gave those sensors an earlier one: `orexis:air_sensor_fern` hosts
     # them, so the cut started inside the platform block and took the rest of it with it. The
     # part goes too — a KY-015 hosting two channels this world no longer has would be a
     # platform pointing at nothing.
@@ -253,15 +253,15 @@ def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
         "sensing:polls :moisture_sensor_fern ;")
 
     s = s.replace(
-        ":fern_agent a ag:Agent ;",
+        ":fern_agent a orexis:Agent ;",
         ':chatter_fern a sosa:Sensor , device:Device ;\n'
-        '    ag:localId "chatter_fern" ;\n'
+        '    orexis:localId "chatter_fern" ;\n'
         '    mqtt:onBus :local_bus ;\n'
         '    sensing:senseMode sensing:PushProcedure ;\n'          # keeps its own clock, takes no orders
         "    sensing:monitors :fern ;\n"
         f"    sosa:observes {observes} ;\n"
         '    mqtt:readingTopic "sensors/chatter_fern/reading" .\n\n'
-        ":fern_agent a ag:Agent ;",
+        ":fern_agent a orexis:Agent ;",
     )
     s = s.replace("sensing:polls :moisture_sensor_fern ;",
                   "sensing:polls :moisture_sensor_fern , :chatter_fern ;")
@@ -719,7 +719,7 @@ def test_two_probes_in_two_patches_keep_two_records(monkeypatch):
 
     st = genesis_store()
     st.update(f"""
-        PREFIX ag: <http://example.org/orexis#>
+        PREFIX orexis: <http://example.org/orexis#>
         PREFIX sosa: <http://www.w3.org/ns/sosa/>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         PREFIX mqtt: <http://example.org/orexis/mqtt#>
@@ -727,17 +727,17 @@ def test_two_probes_in_two_patches_keep_two_records(monkeypatch):
         PREFIX water: <http://example.org/orexis/water#>
         PREFIX unit: <http://qudt.org/vocab/unit/>
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:fern_east a sosa:Sample ; sosa:isSampleOf <http://example.org/orexis/world/simulation#fern> .
-            ag:fern_west a sosa:Sample ; sosa:isSampleOf <http://example.org/orexis/world/simulation#fern> .
-            <http://example.org/orexis/world/simulation#moisture_sensor_fern> sensing:samples ag:fern_east .
-            ag:second_probe_fern a sosa:Sensor , device:Device ; ag:localId "second_probe_fern" ;
+            orexis:fern_east a sosa:Sample ; sosa:isSampleOf <http://example.org/orexis/world/simulation#fern> .
+            orexis:fern_west a sosa:Sample ; sosa:isSampleOf <http://example.org/orexis/world/simulation#fern> .
+            <http://example.org/orexis/world/simulation#moisture_sensor_fern> sensing:samples orexis:fern_east .
+            orexis:second_probe_fern a sosa:Sensor , device:Device ; orexis:localId "second_probe_fern" ;
                 mqtt:onBus <http://example.org/orexis/world/simulation#local_bus> ; sensing:senseMode sensing:ScheduledProcedure ;
-                sensing:monitors <http://example.org/orexis/world/simulation#fern> ; sensing:samples ag:fern_west ;
+                sensing:monitors <http://example.org/orexis/world/simulation#fern> ; sensing:samples orexis:fern_west ;
                 sosa:observes water:SoilMoisture ;
                 scaling:quantityUnit unit:UNITLESS ;
                 mqtt:readingTopic "sensors/second_probe_fern/reading" ;
                 mqtt:commandTopic "sensors/second_probe_fern/command" .
-            <http://example.org/orexis/world/simulation#fern_agent> sensing:polls ag:second_probe_fern .
+            <http://example.org/orexis/world/simulation#fern_agent> sensing:polls orexis:second_probe_fern .
         }} }} WHERE {{}}""")
     fern = build_agent("fern", st, monkeypatch)
     p = fern.subscribing()

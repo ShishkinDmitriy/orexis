@@ -10,8 +10,8 @@ that other's family term and asks the agent for a provider; it never imports the
 The term is the interface, exactly as the constitution says — which is why matching living in
 this directory changes nothing about how `hosting.py` reaches it.
 
-**This package owns a namespace**, and `term()` here builds into it. `ag:` is what every agent
-has — `ag:Agent`, `ag:Capability`, `ag:hasCapability`, `ag:localId` — and those are reached
+**This package owns a namespace**, and `term()` here builds into it. `orexis:` is what every agent
+has — `orexis:Agent`, `orexis:Capability`, `orexis:hasCapability`, `orexis:localId` — and those are reached
 through `orexis_agent_progression.ontology` because they are the kernel's, not this package's to move. See
 knowledge/decisions/a-package-owns-its-namespace.md.
 """

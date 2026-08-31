@@ -18,7 +18,7 @@ timestamp: 2026-08-23T00:00:00Z
 
 [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) drew this line once and stopped
 halfway. It ruled that **what a mind CONTAINS is the kernel's and HOW a mind reaches them is the
-packages'**, moved the mental-state TERMS into `ag:`, and left the CODE where it was. That was a
+packages'**, moved the mental-state TERMS into `orexis:`, and left the CODE where it was. That was a
 defensible place to stop, and it did not survive contact with what the code already did.
 
 `Agent.__init__` built `Desires` and `Intentions` for every agent, unconditionally, before any
@@ -97,8 +97,8 @@ the fact underneath outlives it.
 
 ## What the shapes cost
 
-A capability scoped its shapes; with no capability, `ag:KeeperShape` and the desire shapes target
-the **stake alone** — `ag:actsFor` a subject that states what it needs.
+A capability scoped its shapes; with no capability, `orexis:KeeperShape` and the desire shapes target
+the **stake alone** — `orexis:actsFor` a subject that states what it needs.
 
 The old premises were a stake AND a lever, and **the lever half could not follow**. Saying it
 requires the kernel to name `market:bidsIn`, `actuation:hasActuator` and `sensing:polls` — three
@@ -129,7 +129,7 @@ a thing to rely on"*. A thing outside the tree cannot be sorted wrong.
 
 # A guard that greps cannot see a declaration
 
-Found by writing the bug. Five terms were inserted into the middle of `ag:Intention`'s
+Found by writing the bug. Five terms were inserted into the middle of `orexis:Intention`'s
 `rdfs:comment` — the anchor took the first blank line after the class, and that line falls inside
 the literal. Turtle nested in a literal parses fine and adds nothing: 23 triples were prose.
 
@@ -163,7 +163,7 @@ complete"*. This series hit it five more times, all in the same direction — a 
 **None of them failed. They narrowed**, which is invisible: a guard can check that its glob still
 matches SOMETHING, and four of these had exactly that assertion sitting beside them, passing.
 
-Two things found only because a widened guard could finally see: `ag:amountL`, written by the
+Two things found only because a widened guard could finally see: `orexis:amountL`, written by the
 ledger and read by three of the market's effect rules and declared by no ontology for months; and
 five terms of this very change sitting inside an `rdfs:comment` as prose. And one found only by
 diffing collected test ids — six tests of the region arithmetic that went into the bin with the
@@ -192,7 +192,7 @@ container for one idea? No — and the test that separates them is worth having 
 because it is not the one that looks obvious.
 
 It is **not** "is it universal". `reporting` is granted to every agent by a rule whose WHERE
-clause is `?agent a ag:Agent` — a premise that asks nothing — and it is still a capability.
+clause is `?agent a orexis:Agent` — a premise that asks nothing — and it is still a capability.
 [telemetry-is-a-mandatory-capability](telemetry-is-a-mandatory-capability.md) settled that
 exact question and its argument holds: mandatory and uniform are different, counting stays in
 the kernel because counting could not differ, and `reporting:Announcing` is a second member with
@@ -228,7 +228,7 @@ member is argued rather than imagined.
 - **The kernel's shapes name `mqtt:` and `actuation:`** — two prefixes declared in
   `agent/shapes.ttl` before any of this. The layering inversion this record refuses for the mind
   already exists in miniature there, and was left alone rather than widened.
-- **Which deliberator, as a pick, is unbuilt.** `ag:deliberatesBy` is not declared, because a
+- **Which deliberator, as a pick, is unbuilt.** `orexis:deliberatesBy` is not declared, because a
   reserved term nobody has an argument about is speculation. The argument exists
   ([llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md)); the term arrives with the
   implementation.

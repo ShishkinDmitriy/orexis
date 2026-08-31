@@ -31,7 +31,7 @@ branches that rank a debt beside a want.
 
 **Which needed no new mechanism**, and that is the point worth keeping. A package writing a graph
 the kernel declares is what [sensing](/domain/sensing.md) already does with `graph/sensed` — so
-the ledger writes `ag:ObligationsGraph` exactly as sensing writes the state graph, and nothing in
+the ledger writes `orexis:ObligationsGraph` exactly as sensing writes the state graph, and nothing in
 the kernel learns that market exists.
 
 **Not a capability of its own.** Keeping a record cannot be done two ways, and rule 2 reserves a

@@ -21,7 +21,7 @@
 # the two once both exist is an open seam — the rule is the last piece to add, not the first.
 
 PREFIX review: <http://example.org/orexis/review#>
-PREFIX ag: <http://example.org/orexis#>
+PREFIX orexis: <http://example.org/orexis#>
 
 #  ROOM means room. A mandate whose ends meet grants nothing: it is how an author says a figure
 #  is not up for review — by leaving nowhere to go rather than by a flag somewhere saying not to
@@ -33,10 +33,10 @@ PREFIX ag: <http://example.org/orexis#>
 #  the other — so this asks for the pair rather than assuming it, and a one-sided mandate is
 #  latitude too.
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability review:Reckoning } }
+    ?agent orexis:hasCapability review:Reckoning } }
 $given
 WHERE  {
-    ?agent a ag:Agent ; review:commits ?commitment .
+    ?agent a orexis:Agent ; review:commits ?commitment .
     ?commitment review:onTerm ?term .
     OPTIONAL { ?commitment review:notBelow ?below }
     OPTIONAL { ?commitment review:notAbove ?above }

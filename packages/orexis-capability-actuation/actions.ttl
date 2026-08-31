@@ -1,16 +1,16 @@
 @prefix sh:        <http://www.w3.org/ns/shacl#> .
 @prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix ag:        <http://example.org/orexis#> .
+@prefix orexis:        <http://example.org/orexis#> .
 @prefix sosa:      <http://www.w3.org/ns/sosa/> .
 @prefix market:    <http://example.org/orexis/market#> .
 @prefix actuation: <http://example.org/orexis/actuation#> .
 
 #  THE ACTIONS THIS PACKAGE BRINGS — one node each, and the whole of one (knowledge/domain/action.md):
-#    ag:available  its PRECONDITION — a SELECT over the world binding ?property ?via ?direction,
+#    orexis:available  its PRECONDITION — a SELECT over the world binding ?property ?via ?direction,
 #                  and ?for_agent where the row is a duty owed to someone; `$me` and
 #                  `$properties` substituted by the collector, prefixes prepended by the store;
-#    sh:construct  its EFFECT, with ag:retracts, ag:landsAfter and ag:confirmedBy beside it;
-#    ag:takenBy    the capability whose module carries it out.
+#    sh:construct  its EFFECT, with orexis:retracts, orexis:landsAfter and orexis:confirmedBy beside it;
+#    orexis:takenBy    the capability whose module carries it out.
 #  Precondition, effect and taker were three files and a fourth surface; a STRIPS operator is one
 #  thing, and an author adds a way of acting by adding a node here and a `take()` to a module.
 
@@ -38,17 +38,17 @@
 #  rather than a fragment somebody has to assemble.
 
 actuation:Dosing
-    a ag:Action ;
+    a orexis:Action ;
 
     #  AVAILABLE where BOTH chains end at $me (#190, the ladder's second rung): the LEVER chain —
     #  an actuator I hold, plumbed to my own subject — and the RESOURCE chain — it draws from a
     #  source that is MINE (market:offeredBy, entailed) AND that no market offers as its lot. The
     #  NOT EXISTS is the rule that keeps the rung honest: the market is about the resource, not
     #  the lever, so a pot-local pump on the shared barrel yields Acquire and only Acquire.
-    ag:available """
+    orexis:available """
         SELECT DISTINCT ?want ?via ?direction WHERE {
           VALUES (?want ?about) { $wants }
-          $me ag:actsFor ?subject .
+          $me orexis:actsFor ?subject .
           $me actuation:hasActuator ?via .
           ?via actuation:actuates ?subject ;
                actuation:drawsFrom ?source .
@@ -61,7 +61,7 @@ actuation:Dosing
         }""" ;
 
     #  WHO CARRIES IT OUT — the module whose family this names (knowledge/domain/actor.md).
-    ag:takenBy actuation:Actuation ;
+    orexis:takenBy actuation:Actuation ;
     rdfs:label "what a dose makes true" ;
 
     sh:construct """
@@ -72,7 +72,7 @@ actuation:Dosing
                  sosa:resultTime ?now ;
                  sosa:hasSimpleResult ?predicted .
         } WHERE {
-            $me ag:actsFor $subject ; actuation:hasActuator ?lever .
+            $me orexis:actsFor $subject ; actuation:hasActuator ?lever .
             ?lever actuation:actuates $subject ; actuation:drawsFrom ?source .
             ?source market:offeredBy $me ; market:supplies ?good .
             ?term market:ofGood ?good ; market:aboutProperty $about .
@@ -99,12 +99,12 @@ actuation:Dosing
     #  A QUERY and not a number because the duration is a function of the act: a two-litre dose
     #  holds the valve open longer than a half-litre one. The cap is the device's own, so a
     #  request past what it will pour is timed at what it will actually do.
-    #  NOT joined through `ag:actsFor`, where the construct above is. How long a valve stays
+    #  NOT joined through `orexis:actsFor`, where the construct above is. How long a valve stays
     #  open is a fact about the VALVE — the device's cap and its calibration — and a host
     #  dosing a buyer's pot needs it exactly as much as an agent dosing its own. Written with
     #  the stake join first and caught on the bench: every market dose fell back, so the
     #  single source held only for self-doses, which is the half that needed it least.
-    ag:landsAfter """
+    orexis:landsAfter """
         SELECT ?seconds WHERE {
             $me actuation:hasActuator ?lever .
             ?lever actuation:actuates $subject ;
@@ -125,7 +125,7 @@ actuation:Dosing
     #  one node — and a shape asking whether ANY reading sits past an edge would answer about
     #  the one the dose just superseded, which is how a planner comes to reject the plan that
     #  works.
-    ag:retracts """
+    orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
             GRAPH $state {
                 ?obs sosa:hasFeatureOfInterest $subject ;

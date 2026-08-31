@@ -2,7 +2,7 @@
 
 Every capability package names its terms in one small file like this, so nothing central has
 to know they exist. **This package owns a namespace**, and `term()` here builds into it —
-perceiving is what an agent wired to a sensor does, not what every agent does, so `ag:` was
+perceiving is what an agent wired to a sensor does, not what every agent does, so `orexis:` was
 never the right place for it. `tests/test_layout.py` holds `NS` and the `@prefix` in
 `ontology.ttl` together.
 """
@@ -44,7 +44,7 @@ STALE_AFTER_S = term("staleAfterS")
 #  is on the want rather than on the thing it is about.
 FRESHNESS = term("Freshness")
 
-# The pick inside a region — was `ag:Aim` / `ag:aims` (the-stake-is-sensings-want).
+# The pick inside a region — was `orexis:Aim` / `orexis:aims` (the-stake-is-sensings-want).
 AIM = term("Aim")
 AIMS = term("aims")
 

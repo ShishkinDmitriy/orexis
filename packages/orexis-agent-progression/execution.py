@@ -12,7 +12,7 @@ already the loop — a timer's tick, a deadline — and otherwise enqueues the t
 its result on the caller's own thread, which is a transport's callback or the mind's revision
 thread and never the loop. That is the one wait in this layer, and it is never the loop's.
 
-**Nothing here names a package.** The link from a row to its code is `ag:takenBy`, stated on
+**Nothing here names a package.** The link from a row to its code is `orexis:takenBy`, stated on
 the action node beside the precondition and the effect — a fact a sovereign can query. See
 knowledge/domain/executor.md, knowledge/domain/actor.md and
 knowledge/decisions/an-intention-is-a-plan-committed-to.md.
@@ -26,7 +26,7 @@ from dataclasses import replace
 
 from orexis_agent_reactive.loop import loop
 
-from .ontology import AG, STEP_DONE
+from .ontology import OREXIS, STEP_DONE
 from .store import bindings
 
 from .act import Act
@@ -35,7 +35,7 @@ log = logging.getLogger("execution")
 
 #  Asked by NAME of the whole default graph — the T-Box is public, and which capability takes
 #  a means is a fact about the vocabulary rather than about any world.
-_TAKEN_BY_Q = f"SELECT ?family WHERE {{ <%s> <{AG}takenBy> ?family }} LIMIT 1"
+_TAKEN_BY_Q = f"SELECT ?family WHERE {{ <%s> <{OREXIS}takenBy> ?family }} LIMIT 1"
 
 
 def taken_by(query, action: str) -> str | None:
@@ -52,9 +52,9 @@ def take_standing(agent, standing, desire) -> bool:
     the standing row is rebuilt from the ledger and handed over.
     """
     #  The act is the ledger's, read whole — action, lever, quantity, window — plus what the
-    #  want is ABOUT (`ag:about`, read back off the want), which is the want's and not the act's.
+    #  want is ABOUT (`orexis:about`, read back off the want), which is the want's and not the act's.
     rows = bindings(agent.desires.query_union(
-        f"SELECT ?about WHERE {{ <{standing.want}> <{AG}about> ?about }}"))
+        f"SELECT ?about WHERE {{ <{standing.want}> <{OREXIS}about> ?about }}"))
     act = replace(standing.act, about=rows[0]["about"] if rows else None)
     return carry_out(agent, act, desire, standing.uri)
 
@@ -78,7 +78,7 @@ def _take(agent, act: Act, desire, intention: str) -> bool:
         #  A row was shipped and no taker was stated. `tests/test_execution.py` refuses this
         #  for every means that has a row in a shipped world; reaching it at runtime is a
         #  package onboarded past that gate, and the honest thing is to say so loudly.
-        log.error("nothing takes %s — its package states no ag:takenBy, so this intention "
+        log.error("nothing takes %s — its package states no orexis:takenBy, so this intention "
                   "stands with nobody to carry it out", act.action.rsplit("#", 1)[-1])
         return False
     took = False
@@ -89,6 +89,6 @@ def _take(agent, act: Act, desire, intention: str) -> bool:
                  act.action.rsplit("#", 1)[-1], (act.via or "?").rsplit("#", 1)[-1])
     #  SAID UPWARD. Deliberation may want to know a step was taken, and progression may not
     #  import it — so this is an event through the choir, on the executing thread, and
-    #  whoever above fills `ag:stepDone` hears it (#452).
+    #  whoever above fills `orexis:stepDone` hears it (#452).
     agent.tell(STEP_DONE, act, intention, took)
     return took

@@ -1,4 +1,4 @@
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
@@ -12,10 +12,10 @@
 
 #################  Capabilities  #################
 
-:Bidding a ag:Capability ; rdfs:label "Bidding" ;
+:Bidding a orexis:Capability ; rdfs:label "Bidding" ;
     rdfs:comment "The agent answers offers in a market it participates in, with a bid computed from its own private valuation. Nobody else can compute that bid; that is the point of one process per agent." .
 
-:Hosting a ag:Capability ; rdfs:label "Hosting" ;
+:Hosting a orexis:Capability ; rdfs:label "Hosting" ;
     rdfs:comment "The agent runs rounds in a market: announces the offer, collects bids until the deadline, matches, has the trade validated, and issues claims. The scarce side hosts." .
 
 #################  The venue  #################
@@ -50,7 +50,7 @@
 :Raises a :Direction ; rdfs:label "raises" .
 :Lowers a :Direction ; rdfs:label "lowers" .
 
-:offeredBy a owl:ObjectProperty ; rdfs:range ag:Agent ;
+:offeredBy a owl:ObjectProperty ; rdfs:range orexis:Agent ;
     rdfs:label "offered by" ;
     rdfs:comment "The party whose standing offer this source is — the neutral word the venue derivation reads, with each domain bridging its own (water:suppliedBy is a subproperty, on the capacityL -> lotCapacity precedent). Together with the owner stating market:matchesBy, this is the whole premise of a shop: a source offered by someone who says how they match is a market, derived; everything else about the venue is minted from the source's id. See knowledge/decisions/a-market-arises-where-want-meets-supply.md." .
 
@@ -88,9 +88,9 @@
     rdfs:label "direction" ;
     rdfs:comment "Applying this valuation's lot moves the priced property this way. What the reflex steers by instead of a hardcoded sign: gap below the aim and a lever that Raises — or above it and one that Lowers — is the move. A heater against a cold snap is the same rule with no code change, which is the whole point of stating it." .
 
-:hosts a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range :Market ;
+:hosts a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range :Market ;
     rdfs:label "hosts" .
-:bidsIn a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range :Market ;
+:bidsIn a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range :Market ;
     rdfs:label "bids in" ;
     rdfs:comment "Composed in the world: participation is public, so a host knows who may bid. What the agent will PAY stays private." .
 
@@ -119,32 +119,32 @@ Must comfortably exceed the longest a holder may wait before presenting, which i
     rdfs:label "lot capacity" ;
     rdfs:comment "The physical ceiling of what a market's resource can supply — the constitution's total-allocation limit, read by clearing. Deliberately the MARKET's word (#148): the kernel loads a market's capacity and must name no domain, so a domain states its own term as a subproperty (water:capacityL does) and the closure entails this one — the same move mc:carries makes under sosa:hosts." .
 
-:allocationCeilingL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+:allocationCeilingL a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "allocation ceiling" ;
     rdfs:comment "The most this participant may be allocated in ONE trade, whatever it bid — the constitution's per-participant limit, read by clearing beside the total. Deliberately the MARKET's word for the same reason :lotCapacity is (#148): the kernel must name no domain, and what counts as too much is a fact only a domain knows. Unlike :lotCapacity this cannot be a subproperty bridge, because the number is COMPUTED rather than stated and the subproperty closure is materialised before any rule runs — so a domain DERIVES this term directly, as water/rules.ru does from the span of a subject's survival range. STRUCTURAL, and that is the whole of why it is safe: it is the span the subject could ever legitimately traverse, not a headroom measured from where the subject is now. A host cannot see a bidder's state and must not need to — see decisions/agent-centric-epistemics.md. A participant whose subject states no survival range simply has no ceiling, and clearing checks nothing for it: absent is not zero." .
 
 #################  The host's own terms (private belief)  #################
 
-:offerQuantityL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+:offerQuantityL a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "offer quantity litres" ;
     rdfs:comment "What the host puts up in a round." .
-:reservePricePerL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+:reservePricePerL a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "reserve price per litre" ;
     rdfs:comment "A genuine seller's floor: below this it would rather keep the resource. Private — buyers see the offer, never the reasoning." .
-:roundCooldownS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+:roundCooldownS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
     rdfs:label "round cooldown seconds" ;
     rdfs:comment "The host's floor on how often it will open a round, so a flapping participant cannot spam the market." .
-:bidWindowS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+:bidWindowS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
     rdfs:label "bid window seconds" ;
     rdfs:comment "How long the host waits for bids before matching. A bid that misses the deadline is simply not in the round." .
 
 #################  The bidder's own terms (private belief)  #################
 
-:hasEndowment a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+:hasEndowment a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "has endowment" ;
     rdfs:comment "OPENING wallet balance, authored at genesis — what an agent brought to the venue, not what it has left. The running balance is :balance, the agent's own belief; the authoritative one would be the mint's, which is not built (knowledge/domain/wallet.md)." .
 
-:balance a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+:balance a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "balance" ;
     rdfs:comment "What this agent has left, as its own belief in its own graph — written when a claim is won, read when a bid is priced. Absent until the first claim, which reads as the endowment: a wallet nobody has spent from is the wallet it was given. A BELIEF and not a pick: nothing chooses it, and review may not move it (the-wallet-is-a-belief-the-agent-keeps)." .
 
@@ -154,7 +154,7 @@ Must comfortably exceed the longest a holder may wait before presenting, which i
 #  test for a capability rather than a function: the HOW could differ. Bidding and hosting have
 #  one way each and are therefore not families; all three are capabilities of this package.
 
-:BidMatchingCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+:BidMatchingCapability a owl:Class ; rdfs:subClassOf orexis:Capability ;
     rdfs:label "Matching capability" ;
     rdfs:comment "The family. Anything that turns a lot and a set of bids into a proposed allocation with prices is one of these, so a host may ask for 'whoever matches' without knowing which member answered. The host PROPOSES; clearing still disposes — a matching capability decides an allocation, never whether it is permitted. Note the width of the term: a member supplies BOTH halves of what mechanism design calls a mechanism — an allocation rule (who gets how much) and a payment rule (what each winner pays) — but NOT how bidding proceeds. Ascending, descending and sealed-bid are the other half of what the literature calls an auction format, and that half is fixed here rather than pluggable — see knowledge/domain/bid-matching.md." .
 
@@ -166,7 +166,7 @@ Must comfortably exceed the longest a holder may wait before presenting, which i
 
 #################  What a host states  #################
 
-:matchesBy a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range :BidMatchingCapability ;
+:matchesBy a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range :BidMatchingCapability ;
     rdfs:label "matches by" ;
     rdfs:comment "How this host matches bids in the auctions it convenes. The host defines the terms of its own auction, so this is the host's fact and not the venue's — and it is PUBLIC, in the world, because a bidder cannot bid well against terms it does not know. Real auctions announce theirs; a sealed-bid first-price auction says so. Named `matchesBy` rather than `clearsBy` deliberately: clearing is a different thing here — the validator that co-signs a trade — and reusing the word would have made a host's allocation read as the notary's business. The capability is DERIVED from this, never declared." .
 

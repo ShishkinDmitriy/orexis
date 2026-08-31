@@ -22,11 +22,11 @@ skinparam component {
 
 
 database "Intentions · repository" as INT {
-  folder "ag:IntentionGraph" as I
+  folder "orexis:IntentionGraph" as I
 }
 
 database "Beliefs · repository" as BEL {
-  folder "ag:OntologyGraph\nsuspectAfter, metFraction" as ON
+  folder "orexis:OntologyGraph\nsuspectAfter, metFraction" as ON
 }
 
 database "Desires · repository" as DES {

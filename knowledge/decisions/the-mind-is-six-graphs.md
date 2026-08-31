@@ -65,15 +65,15 @@ does not. So the graph classification and the trust story turn out to be one sto
 ## What the frame immediately found
 
 **The region is a constraint, not a desire** — and the naming followed, in three steps the
-sovereign drove: the graph is `graph/constraint`, typed `ag:ConstraintGraph` **and**
-`ag:PublicGraph` (the two axes, needed independently — typing it on modality alone made it
+sovereign drove: the graph is `graph/constraint`, typed `orexis:ConstraintGraph` **and**
+`orexis:PublicGraph` (the two axes, needed independently — typing it on modality alone made it
 invisible to every reader for exactly as long as it took a test to say so); the class inside
-it is `ag:Bounds`, not `ag:Desire`; and the predicate is `ag:boundedBy`, because an agent does
+it is `orexis:Bounds`, not `orexis:Desire`; and the predicate is `orexis:boundedBy`, because an agent does
 not desire 0.45–0.65, it is HELD to it — what it desires is the aim, 0.55.
 
 *Both of those terms are gone, within a day, and the distinction they were drawn to make
 survives them:* a region and an aim became SHACL differing in severity, so the predicate is
-`ag:holds` for either and the class is `sh:NodeShape`. See
+`orexis:holds` for either and the class is `sh:NodeShape`. See
 [a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md). The reasoning above is why the
 constraint graph is not called the desire graph, and that outlived the vocabulary.
 
@@ -96,7 +96,7 @@ subject ending. That is `sh:Warning` against `sh:Violation` — the axis
 [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) already
 records — so they stay one node with two pairs, and urgency needs both at once.
 
-The obligation in all this is not the range at all: it is **`ag:actsFor`**, the office the
+The obligation in all this is not the range at all: it is **`orexis:actsFor`**, the office the
 sovereign appointed. That is why no range carries an `owedTo` — you are not obliged to a
 plant, which can present no claim; you are obliged by the appointment, and the plant is the
 beneficiary. The range only says what discharging the office looks like, numerically.
@@ -137,8 +137,8 @@ happening again when new room appears.
 If each start replaces the world graph, an amendment is invisible — the agent cannot tell
 being born into a world from waking into a changed one — and an act recorded last week was
 committed under a constitution that no longer exists anywhere, so "why did it do that" is
-unanswerable however carefully reasons were recorded. `ag:currentVersion` and
-`ag:WorldVersion` are already declared and observed by nothing, which is the tell.
+unanswerable however carefully reasons were recorded. `orexis:currentVersion` and
+`orexis:WorldVersion` are already declared and observed by nothing, which is the tell.
 
 **Worlds append rather than replace.** Each ratification is its own immutable graph; the
 current version says which is in force; and boot compares the version held with the version
@@ -165,19 +165,19 @@ reference counting, no pinning, no unbounded graph.
 ## The mind's STATES are the kernel's; the ways of reaching them are the packages'
 
 Asked by the sovereign once the axes existed: if this is the core of Orexis, should it be in
-the `ag:` namespace? The first answer drawn here was "the frame yes, the contents no" — and
+the `orexis:` namespace? The first answer drawn here was "the frame yes, the contents no" — and
 the sovereign's follow-up corrected it, rightly. Two arguments settle it the other way:
 
 **The states are already a lingua franca.** Four packages had to name them —
 market's bidding and hosting, deliberation, actuation — and a term many packages must name is
-not a package-private word. That is exactly what `ag:actsFor` and `ag:localId` are, and the
+not a package-private word. That is exactly what `orexis:actsFor` and `orexis:localId` are, and the
 kernel is where such words live.
 
 **And the objection against it does not survive.** "Not every agent is a BDI agent" —
 `world/sensing`'s agent wants nothing — argues against making the CAPABILITY mandatory, never
 against the TERM being kernel: a class most agents hold no instance of is still a class. The
 existence of a class was never a claim about the universality of its instances. (The example
-this used was `ag:Device`, which has since left for a reason of its own —
+this used was `orexis:Device`, which has since left for a reason of its own —
 [the-substrate-is-not-the-minds](/decisions/the-substrate-is-not-the-minds.md) — and the
 argument never depended on which class it was.)
 
@@ -191,7 +191,7 @@ patience, a met-fraction, what this society tolerates before it stops trusting a
 already settled the mirror case: universality never promoted a term, and here non-universality
 never demoted one.
 
-It also ends a split brain the axes had just created: `ag:IntentionGraph` holding
+It also ends a split brain the axes had just created: `orexis:IntentionGraph` holding
 `intention:Intention` instances, the container kernel and the content not.
 
 The general test, stated once: **not whether a term is universal, but whether the HOW could
@@ -203,7 +203,7 @@ is more than one way to report.
 The kernel therefore declares both what a graph IS — modality, visibility, arrival, which it
 resolves against itself — and what a mind contains. This does not reverse
 [every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md): that record's
-criterion is *whose term is it*, and it moved five packages' private words out of `ag:` by
+criterion is *whose term is it*, and it moved five packages' private words out of `orexis:` by
 applying it. Applying the same criterion here gives the opposite answer, because these words
 turned out to be everyone's.
 
@@ -221,11 +221,11 @@ rename, so writes moved while reads stayed — caught by tests, not by a scan.
 
 1. **Name the modalities** — vocabulary only, typing the graphs that exist. No data moves.
 2. **Goals get identity and source** — DONE. Bounds are minted as a function of the agent's
-   id and the property's local name (`ag:bounds.fern.SoilMoisture`, the channel precedent) and
+   id and the property's local name (`orexis:bounds.fern.SoilMoisture`, the channel precedent) and
    carry `prov:wasDerivedFrom` the subject whose ranges produced them; an obligation carries
    the claim that raised it. A blank node is a thing nothing can reference, and an intention
    must be able to say which end it serves.
-3. **`ag:pursues`** — DONE, before it could go live. Intentions keyed on `(means, property)`
+3. **`orexis:pursues`** — DONE, before it could go live. Intentions keyed on `(means, property)`
    alone, so two obligations about one property were indistinguishable: satisfying one
    satisfied both and the patience absorbed the second impulse as the first — the shape of the
    observation-keyed-by-subject bug, caught while obligations still do not drive acts. The
@@ -242,7 +242,7 @@ rename, so writes moved while reads stayed — caught by tests, not by a scan.
    the agent picks inside, review moves the pick. Default social, or the shipped worlds change
    behaviour.
 8. **What an agent pursues becomes SHACL** — constraint, desire and obligation as shapes
-   differing in severity and in whose graph they sit; `ag:Bounds`, `ag:boundedBy` and `sensing:Aim`
+   differing in severity and in whose graph they sit; `orexis:Bounds`, `orexis:boundedBy` and `sensing:Aim`
    retire. Before the next step, because a goal that is a pattern is what makes the next step
    expressible at all. This step was first designed as *desired states in belief's shape* and
    the sovereign turned it over within a day — see

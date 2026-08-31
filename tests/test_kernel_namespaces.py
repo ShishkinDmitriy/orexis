@@ -35,7 +35,7 @@ the tokenizer, never a docstring or a comment), and a rule or a Turtle file with
 and its string literals stripped. Prose that names a package's word is not a dependency on it.
 
 AND EVERY NAMESPACE OF OURS, not five families by hand. `loader.prefixes()` is what the ratchet
-scans for, less `ag:`, so a transport's or a part's namespace in the kernel counts exactly as a
+scans for, less `orexis:`, so a transport's or a part's namespace in the kernel counts exactly as a
 capability's does — which is what the rule says.
 
 AND IT RESOLVES (#344). A count cannot see a term that is merely misspelled: a package renames a
@@ -67,13 +67,13 @@ from assembly import loader
 # reader is actually checking. A bare `family#` with no local name is a namespace constant or
 # a PREFIX line, and counts: it is the kernel holding another tree's namespace, which is the
 # thing being ratcheted down.
-#  Less `ag:`, which is the kernel's own — and less `assembly:`, which is not a PACKAGE's. The
+#  Less `orexis:`, which is the kernel's own — and less `assembly:`, which is not a PACKAGE's. The
 #  kernel sits ON assembly: its extension points are instances of a class assembly declares, and
 #  naming that class is the kernel being assembled rather than the kernel reaching sideways into
 #  a tree it loads. `loader.packages()` types both roots `kind="kernel"`, and that is the test.
 _ROOTS = {p.name for p in loader.packages() if p.kind == loader.KERNEL_KIND}
 _NAMESPACES = {label: iri for label, iri in loader.prefixes().items()
-               if label != "ag" and label not in _ROOTS}
+               if label != "orexis" and label not in _ROOTS}
 _LABEL_OF = {iri: label for label, iri in _NAMESPACES.items()}
 
 _PACKAGE_IRI = re.compile(
@@ -267,7 +267,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     #     vocabulary for its premise; the capability derives the want its equipment implies.
     #
     # THE SHAPE ENTRY IS PAID, and it was the last one that was not a migration. The widener
-    # lived in `ag:DeviceModelShape` — a stand-in's initial value checked against the range of
+    # lived in `orexis:DeviceModelShape` — a stand-in's initial value checked against the range of
     # the subject it monitors — and the shape went to `packages/orexis-part-device/` with the rest of
     # the substrate vocabulary (the-substrate-is-not-the-minds). A package naming another
     # package's word is ordinary; only the kernel doing it was debt.
@@ -392,7 +392,7 @@ def test_the_scan_pattern_matches_the_shape_it_is_looking_for():
         "the kernel's own namespace is not a package's and must not be swept up"
     #  The prefixed form, and the three places it must NOT fire: inside an IRI, on the
     #  kernel's own prefix, and in prose the tokenizer keeps out of a query string.
-    assert [m.group(1, 2) for m in _PREFIXED.finditer("?a market:bidsIn ?v ; ag:localId ?i")] == \
+    assert [m.group(1, 2) for m in _PREFIXED.finditer("?a market:bidsIn ?v ; orexis:localId ?i")] == \
         [("market", "bidsIn")]
     assert not _PREFIXED.findall(f"<{stem}market#bidsIn>")
     assert _query_strings('_Q = f"""SELECT ?b WHERE {{ ?b a mqtt:MessageBus }}"""') == \

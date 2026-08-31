@@ -67,7 +67,7 @@ two files. See [world-graph](/decisions/world-graph.md) and [belief-base](/domai
 
 ## 1. State connections, never abilities
 
-**`world.ttl` must not contain `ag:hasCapability`.** State what exists and what is plugged into
+**`world.ttl` must not contain `orexis:hasCapability`.** State what exists and what is plugged into
 what; seeding runs each capability's `rules.ru` and derives what that wiring implies. This is
 load-bearing: a declaration can drift from reality, a derivation cannot.
 
@@ -132,11 +132,11 @@ Say you want `orchard/` — two trees on a shared tank, no market yet.
    has to answer.
 2. **Write `world/orchard/world.ttl`.** Copy `sensing/world.ttl` as the skeleton — it is the
    minimum: a bus, a world version, the graph catalog, a subject, a device, an agent. Every
-   agent needs an `ag:localId`; every device needs its channels.
+   agent needs an `orexis:localId`; every device needs its channels.
 3. **Write one `beliefs/<agent>.ttl` per agent**, with only the blocks for the capabilities the
    wiring will give it. Unsure which? Seed and read what derivation decided.
 4. **Register each beliefs graph** in the catalog inside `world.ttl`:
-   `<.../graph/beliefs/fern> a ag:DesireGraph ; ag:beliefsOf ag:fern_agent .`
+   `<.../graph/beliefs/fern> a orexis:DesireGraph ; orexis:beliefsOf orexis:fern_agent .`
 5. **Validate, and read what it derived.** `orexis-validate orchard` builds the world from the
    files and prints `tree_north  Subscribing`. An agent that derived nothing has wiring
    implying no ability — usually a missing `sensing:senseMode`, or a device that is not a kind of
@@ -220,7 +220,7 @@ What that buys:
 - **Worlds cannot touch each other**, and adding one disturbs nothing that is running. There is
   no shared config, no shared process and no restart.
 - **Readings stay with the agent that made them**, which closes a provenance hole: an
-  observation records `ag:underWorldVersion`, but two worlds can both be v1, so a shared
+  observation records `orexis:underWorldVersion`, but two worlds can both be v1, so a shared
   `:sensed` mixed readings nothing could tell apart.
 - **Isolation is structural**, which is [belief-base](/domain/belief-base.md)'s to state and
   the reason a world needs no access model of its own.
@@ -335,7 +335,7 @@ about because the model did not know simulation existed. It knows now.
 
 # Amending
 
-Edit the files and restart the agents. Bump `ag:versionNumber` on a structural change — every
+Edit the files and restart the agents. Bump `orexis:versionNumber` on a structural change — every
 recorded observation cites the world version it was made under, so the version is how you tell
 *when* within a world a fact was true. (*Which* world it was true in is now the dataset it is
 stored in, since a version number alone cannot distinguish two worlds that are both v1.)

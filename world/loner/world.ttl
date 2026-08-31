@@ -4,7 +4,7 @@
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix mqtt: <http://example.org/orexis/mqtt#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix scaling: <http://example.org/orexis/scaling#> .
@@ -31,20 +31,20 @@
 #  never meet on a bus.
 
 :local_bus a mqtt:MessageBus ;
-    ag:localId "local_bus" ;
+    orexis:localId "local_bus" ;
     mqtt:brokerHost "localhost" ;
     mqtt:brokerPort 1887 ;
     mqtt:brokerTlsPort 8887 .
 
-:world a ag:World ; ag:currentVersion :version_1 ;
+:world a orexis:World ; orexis:currentVersion :version_1 ;
     sim:timeScale 144 ;
-    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole ag:Sovereign ] .
-:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
+    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole orexis:Sovereign ] .
+:version_1 a orexis:WorldVersion ; orexis:versionNumber 1 .
 
 ##########  The plant — one triple, and the species does the rest  ##########
 
 :zz a zz:ZamioculcasZamiifolia ;
-    ag:localId "zz" ;
+    orexis:localId "zz" ;
     water:servedBy :water_butt ;
     #  This pot's own physics, not the species': a slow drinker in a small pot.
     water:driesPerDay 0.03 ; water:litresPerFraction 1.5 .
@@ -61,12 +61,12 @@
 #  the wanting continues and the means is gone — the ladder's honest floor.
 
 :water_butt a water:WaterSource ;
-    ag:localId "water_butt" ;
+    orexis:localId "water_butt" ;
     water:suppliedBy :gardener ;
     water:capacityL 20.0 .
 
 :butt_level a sosa:Sensor ;
-    ag:localId "butt_level" ;
+    orexis:localId "butt_level" ;
     mqtt:onBus :local_bus ;
     sensing:senseMode sensing:PushProcedure ;
     sensing:monitors :water_butt ;
@@ -85,16 +85,16 @@
 #  holds the pump). NOT Bidding and NOT Hosting: it is plumbed into no venue and offers
 #  none, which is the point of the whole world.
 
-:gardener a ag:Agent ;
-    ag:localId "gardener" ;
-    ag:actsFor :zz ;
+:gardener a orexis:Agent ;
+    orexis:localId "gardener" ;
+    orexis:actsFor :zz ;
     sensing:polls :moisture_probe , :butt_level ;
     actuation:hasActuator :pump .
 
 ##########  The probe — ordinary, scheduled, simulated  ##########
 
 :moisture_probe a sosa:Sensor ;
-    ag:localId "moisture_probe" ;
+    orexis:localId "moisture_probe" ;
     mqtt:onBus :local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
     sensing:monitors :zz ;
@@ -110,7 +110,7 @@
 ##########  The pump — the gardener's own lever on the gardener's own water  ##########
 
 :pump a actuation:Valve ;
-    ag:localId "pump" ; mqtt:onBus :local_bus ;
+    orexis:localId "pump" ; mqtt:onBus :local_bus ;
     actuation:actuates :zz ; actuation:drawsFrom :water_butt ;
     sim:simulatedBy [ a sim:Model ] ;
     mqtt:commandTopic "actuators/pump/command" ;

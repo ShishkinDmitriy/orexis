@@ -55,14 +55,14 @@ def summary_uri(subject_uri: str, observed_property: str, seq: int | None = None
     `seq is None` is the window being filled. Completed ones carry their sequence in the IRI so
     the ring is a set of distinct nodes rather than a list anything has to shuffle.
 
-    Minted from the subject's **URI** and not from its `ag:localId`, even though the two happen
+    Minted from the subject's **URI** and not from its `orexis:localId`, even though the two happen
     to slug identically today. A local id is stated rather than inferable from the shape of a
     URI, so deriving one from the other is the exact inference the vocabulary warns against —
     and here it would be load-bearing, because rolling a window over has to reach the same node
     that recording a reading created. Like the observation's own IRI, this only has to be stable
     and distinct; nothing ever looks a summary up by name.
     """
-    stem = f"ag:sum_{_slug(subject_uri)}_{_slug(observed_property)}"
+    stem = f"orexis:sum_{_slug(subject_uri)}_{_slug(observed_property)}"
     return stem if seq is None else f"{stem}_{seq}"
 
 

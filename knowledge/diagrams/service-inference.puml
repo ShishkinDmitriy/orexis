@@ -22,10 +22,10 @@ skinparam component {
 
 
 database "Beliefs · repository" as BEL {
-  folder "ag:OntologyGraph · Asserted" as OA
-  folder "ag:WorldGraph · Asserted" as WA
-  folder "ag:OntologyGraph · Entailed" as OE
-  folder "ag:WorldGraph · Entailed" as WE
+  folder "orexis:OntologyGraph · Asserted" as OA
+  folder "orexis:WorldGraph · Asserted" as WA
+  folder "orexis:OntologyGraph · Entailed" as OE
+  folder "orexis:WorldGraph · Entailed" as WE
 }
 
 component "Inference\nruns entailment\nmaterialisation" as INF

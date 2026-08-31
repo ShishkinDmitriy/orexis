@@ -5,10 +5,10 @@ term: http://example.org/orexis#Action
 description: >-
   One way of acting, whole — the STRIPS operator as a single node a package ships in its
   `actions.ttl` — and the KIND of act itself, which a row carries and an intention commits to:
-  when it is available (`ag:available`, a SELECT whose rows are the affordances it puts on the
+  when it is available (`orexis:available`, a SELECT whose rows are the affordances it puts on the
   menu now), what it makes true
-  (`sh:construct` and `ag:retracts`, with timing and confirmation route), and who carries it
-  out (`ag:takenBy`). Loaded into the action graph at genesis so a planner, a sovereign or a
+  (`sh:construct` and `orexis:retracts`, with timing and confirmation route), and who carries it
+  out (`orexis:takenBy`). Loaded into the action graph at genesis so a planner, a sovereign or a
   model reads the whole tool list in one place. Adding a way of acting is one node and one
   `take()`.
 ---
@@ -23,12 +23,12 @@ the KIND of act too, since [the-action-is-the-kind](/decisions/the-action-is-the
 there is no separate word for what a row offers, an intention commits to and a trace weighs.
 
 ```turtle
-market:Acquiring a ag:Action ;
-    ag:available  """SELECT ?property ?via ?direction WHERE { … }""" ;
+market:Acquiring a orexis:Action ;
+    orexis:available  """SELECT ?property ?via ?direction WHERE { … }""" ;
     sh:construct  """CONSTRUCT { … } WHERE { … }""" ;
-    ag:retracts   """CONSTRUCT { … } WHERE { … }""" ;
-    ag:landsAfter """SELECT ?seconds WHERE { … }""" ;
-    ag:takenBy    market:Bidding .
+    orexis:retracts   """CONSTRUCT { … } WHERE { … }""" ;
+    orexis:landsAfter """SELECT ?seconds WHERE { … }""" ;
+    orexis:takenBy    market:Bidding .
 ```
 
 Six ship: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `market:Offering`,
@@ -45,11 +45,11 @@ world and not in this one).
 `loader.action_files()` finds every package's `actions.ttl`; genesis loads them into the action
 graph beside the T-Box. Three readers, one join:
 
-- `menu_of` runs every action's `ag:available` with `$me` and the desired `$properties` filled
+- `menu_of` runs every action's `orexis:available` with `$me` and the desired `$properties` filled
   in, and each row it returns is an affordance carrying the action;
 - `effects.rule_for(action)` reads the node's construct and retraction and runs them against
   the [imaginarium](/domain/imaginarium.md);
-- `execution.taken_by(action)` reads the node's `ag:takenBy` and asks `agent.providers`.
+- `execution.taken_by(action)` reads the node's `orexis:takenBy` and asks `agent.providers`.
 
 # The precondition is the query, whole
 
@@ -63,7 +63,7 @@ is real and unbuilt; the day it is wanted, the slot is there.
 
 # What an author writes
 
-A node here, and a `take()` on the module its `ag:takenBy` names. Nothing else — no registry,
+A node here, and a `take()` on the module its `orexis:takenBy` names. Nothing else — no registry,
 no edit to the kernel, no second file. An action without `sh:construct` is legal to ship and
 refused at the gate the moment it puts a row on some agent's menu, because a lever the search
 cannot simulate is one it must not conclude about.

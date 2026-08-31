@@ -159,7 +159,7 @@ construct wide: **`owl:hasValue` is the only OWL a shape can act on here**, beca
 one the closure turns into ground triples. Everything else in OWL is documentation as far as
 validation is concerned.
 
-That is the whole reason `ag:Dht11StructureShape` exists and is not redundant with the
+That is the whole reason `orexis:Dht11StructureShape` exists and is not redundant with the
 `someValuesFrom` above it. The OWL states the structure for a reader and for any reasoner someone
 later points at these files; the shape is what makes a world that omits it fail. Deleting either
 leaves something true and unenforced — which, on the last line of that table, is a DHT11 with no

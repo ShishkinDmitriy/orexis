@@ -7,7 +7,7 @@
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix water: <http://example.org/orexis/water#> .
 @prefix reporting: <http://example.org/orexis/reporting#> .
-@prefix ag: <http://example.org/orexis#> .
+@prefix orexis: <http://example.org/orexis#> .
 @prefix market: <http://example.org/orexis/market#> .
 
 #  Tomato's agent's PRIVATE beliefs. See genesis/beliefs-fern.ttl for what each term means.
@@ -54,4 +54,4 @@
 #   adoption may supersede it. The ledger records what this agent does either way; the patience
 #   is what makes "already doing something about it" a fact with teeth. Two minutes: several
 #   auction rounds, and far past any one bid window.
-:tomato_agent ag:patienceS 120 .
+:tomato_agent orexis:patienceS 120 .

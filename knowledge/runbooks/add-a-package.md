@@ -114,7 +114,7 @@ the names below are what every package happens to use.
 | `shapes.ttl` | what must be true of a thing that has it | nothing to check |
 | `rules.ru` | the premise that GRANTS its capability | it grants none — knowledge only |
 | `desires.ru` | what an agent holding it therefore wants | it implies no wants |
-| `actions.ttl` | ways of acting: precondition, effect, `ag:takenBy` | nothing to plan with |
+| `actions.ttl` | ways of acting: precondition, effect, `orexis:takenBy` | nothing to plan with |
 | `review.rq` | what an agent may reconsider about itself | nothing revisable |
 | `terms.py` | its terms as constants, and the families it asks others for | — |
 | `beliefs.py` | its `Picks` — the private parameters it reads | it decides nothing |
@@ -271,7 +271,7 @@ Three extra things, in this order:
    **never another package's conclusions**: derivations run once, in package order, and a rule
    resting on another's output matches nothing and says nothing.
 2. **Capabilities are worked out at genesis, never hand-declared.** `world.ttl` must not contain
-   `ag:hasCapability`.
+   `orexis:hasCapability`.
 3. **A shape for what an agent holding it must believe.** Capability-aware: it applies only to
    agents the world derived that capability for.
 

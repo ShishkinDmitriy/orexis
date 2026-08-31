@@ -53,7 +53,7 @@ the distribution name, every `orexis-*` command, every `OREXIS_*` environment va
 container image tags, the base vocabulary's directory (`packages/core/orexis/` at the time,
 `agent/` since), and the ontology
 namespace: `http://example.org/orexis#` and each package's namespace under it. The prefix
-label `ag:` stays — it is a local binding, every query and rule already speaks it, and it
+label `orexis:` stays — it is a local binding, every query and rule already speaks it, and it
 reads as well for *agent* as it ever did for *agora*.
 
 # Consequences

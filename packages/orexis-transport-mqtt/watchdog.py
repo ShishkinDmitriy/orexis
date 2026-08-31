@@ -18,7 +18,7 @@ Three checks, ordered by how wrong things are:
   what a watchdog is for: the connected flag would stay stale-true forever, so this is checked
   before the flag is believed.
 - **disconnected past the bound** — paho has been retrying against something that never
-  answers for longer than `ag:resignAfterS`. A flapping link never meets this: the clock is
+  answers for longer than `orexis:resignAfterS`. A flapping link never meets this: the clock is
   continuous, and one successful reconnect resets it.
 - **something I expected to hear has gone silent** — each module's `quiet()`, the self-applied
   freshness check. Said out loud on entry and recovery rather than every tick, because a lamp
@@ -30,7 +30,7 @@ and the container's `restart: unless-stopped` brings the process back to a fresh
 fresh TLS session — which is what actually cured the incident. An agent that cannot reach its
 society is not an agent holding on; it is a process worth being reborn.
 
-The bound lives in the ontology (`ag:Agent ag:resignAfterS`), like the compaction ratio: what a
+The bound lives in the ontology (`orexis:Agent orexis:resignAfterS`), like the compaction ratio: what a
 society tolerates, not how the code is written. See knowledge/decisions/
 a-dead-session-is-resigned-not-endured.md.
 """
@@ -53,7 +53,7 @@ EVERY_S = 60
 
 _RESIGN_Q = """
 SELECT ?s WHERE {
-  GRAPH ?g { ag:Agent ag:resignAfterS ?s }
+  GRAPH ?g { orexis:Agent orexis:resignAfterS ?s }
 } LIMIT 1"""
 
 
@@ -67,7 +67,7 @@ class BusWatchdog:
         self._quiet: dict[str, str] = {}  # key -> the line last said, so it is said once
         rows = bindings(self.agent.beliefs.query(_RESIGN_Q))
         if not rows:
-            raise RuntimeError("the ontology states no ag:resignAfterS — re-run orexis-seed")
+            raise RuntimeError("the ontology states no orexis:resignAfterS — re-run orexis-seed")
         self.resign_after_s = int(rows[0]["s"])
 
     def start(self) -> None:

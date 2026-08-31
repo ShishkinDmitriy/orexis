@@ -26,7 +26,7 @@ from agent import genesis, inference
 
 from assembly import loader
 SOSA = "http://www.w3.org/ns/sosa/"   # spelled here: the kernel no longer names it (#378)
-from orexis_agent_progression.ontology import AG, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH
+from orexis_agent_progression.ontology import OREXIS, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH
 from onboarding.namespaces import MC, SENSING
 
 from orexis_agent_progression.store import Store, bindings
@@ -34,7 +34,7 @@ from orexis_agent_progression.store import Store, bindings
 MC = "http://example.org/orexis/microcontroller#"
 ONEWIRE = "http://example.org/orexis/onewire#"
 DHT11 = "http://example.org/orexis/dht11#"
-AG = "http://example.org/orexis#"
+OREXIS = "http://example.org/orexis#"
 SENSING_WORLD = "http://example.org/orexis/world/sensing#"
 
 

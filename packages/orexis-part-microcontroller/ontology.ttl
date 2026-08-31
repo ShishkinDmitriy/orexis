@@ -1,4 +1,4 @@
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
@@ -13,7 +13,7 @@
     rdfs:label "Microcontrollers and wiring" ;
     rdfs:comment """Boards, the peripherals mounted on them, the pins both have, and the wires between. Split out of the core because a society and a solder joint are different subjects that were sharing a file — the core says what an agent IS, this says what is soldered. Generic to microcontrollers rather than to this bench: nothing here knows what a plant is, and nothing knows which board.
 
-Where agents EXECUTE is not here — ag:ComputeHost belongs to the kernel, because a machine running containers has no pins and is not wired to anything.
+Where agents EXECUTE is not here — orexis:ComputeHost belongs to the kernel, because a machine running containers has no pins and is not wired to anything.
 
 It is written down for three reasons. Shapes can refuse a wiring that cannot work, before anything is soldered or flashed. Firmware configuration becomes derivable from the world rather than hand-kept in a C header. And someone debugging at 2am can ask which pin a probe is on instead of remembering.
 
@@ -80,7 +80,7 @@ No rdfs:domain, deliberately. It is stated on classes, and a domain axiom would 
 #  and no shape read them, so board-to-part was a comment. A distinction nothing can check is
 #  not a distinction.
 #
-#  The narrowing survives, and is enforced for the first time, as `ag:ABoardCarriesPartsShape`
+#  The narrowing survives, and is enforced for the first time, as `orexis:ABoardCarriesPartsShape`
 #  in shapes.ttl. SHACL scoped by class says what `rdfs:domain` only claimed — and says it where
 #  the claim belongs, since `mc:Microcontroller` exists only when the wiring is loaded, so the
 #  rule holds the SOVEREIGN and never reaches an agent that was never given a board.
@@ -90,7 +90,7 @@ No rdfs:domain, deliberately. It is stated on classes, and a domain axiom would 
 #################  Pins and wires  #################
 #
 # A pin belongs to a DEVICE and a wire joins two of them. That is a longer way to say what
-# `ag:pin [ mc:pinRole mc:AnalogInPinRole ; mc:gpio 34 ]` used to say in one node, and the length is
+# `orexis:pin [ mc:pinRole mc:AnalogInPinRole ; mc:gpio 34 ]` used to say in one node, and the length is
 # the point: the old form fused two facts about two different objects. `mc:AnalogInPinRole` is a fact
 # about the PROBE's leg — what that leg is for. `34` is a fact about the BOARD's leg — which
 # line it is on the silkscreen. Fusing them meant a peripheral could not describe a pin it had

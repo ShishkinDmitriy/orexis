@@ -1,7 +1,7 @@
 """What a lever says it makes true, and the one number that must not fork (#238).
 
 An action states its effect on its own node (an-action-is-one-node), which the package ships
-and genesis loads: `sh:construct` for what applying it would add, `ag:retracts` — ours — for what it removes. These hold the rules to what they claim, and hold the ACTUATOR to reading
+and genesis loads: `sh:construct` for what applying it would add, `orexis:retracts` — ours — for what it removes. These hold the rules to what they claim, and hold the ACTUATOR to reading
 its expectation out of the same rule a planner will read.
 """
 
@@ -84,7 +84,7 @@ def test_looking_refreshes_the_reading_and_carries_its_value_unchanged():
 
 
 def test_the_retraction_takes_the_whole_node_the_writer_would_replace():
-    """`ag:retracts` exists because SHACL-AF has none, and it is not decoration: the sensed
+    """`orexis:retracts` exists because SHACL-AF has none, and it is not decoration: the sensed
     graph does DELETE-then-INSERT on ONE node per (subject, property). A retraction that took
     less than the writer takes would leave a possible world holding two results on one node —
     and then a shape asking whether ANY reading sits past an edge answers about the reading the
@@ -208,7 +208,7 @@ def test_the_deadline_and_the_command_cannot_be_two_different_durations(monkeypa
 
 
 def test_a_dose_is_timed_by_the_valve_and_not_by_whose_pot_it_fills():
-    """Written after the first version of the rule joined through `ag:actsFor` and answered
+    """Written after the first version of the rule joined through `orexis:actsFor` and answered
     only for self-doses — so every market dose fell back to the local computation, and the
     single source held for the half that needed it least. How long a valve stays open is a fact
     about the VALVE."""

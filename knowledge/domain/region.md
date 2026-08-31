@@ -43,7 +43,7 @@ and two edges, denominated in one property and unable to want anything else.
 
 # Its graph is a class, not a name
 
-The result lives in a graph typed `ag:ConstraintGraph`, **found by that type rather than by name**,
+The result lives in a graph typed `orexis:ConstraintGraph`, **found by that type rather than by name**,
 because desire may have more than one source and a reader must not have to know how many. The
 sovereign's ratified mandate, the regions deduced from a subject's ranges, and the obligations received
 on a peer's claim are three sources and one question.

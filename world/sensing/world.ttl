@@ -4,7 +4,7 @@
 @prefix water: <http://example.org/orexis/water#> .
 @prefix mqtt: <http://example.org/orexis/mqtt#> .
 @prefix schema: <https://schema.org/> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
@@ -36,7 +36,7 @@
 ##########  The bus everyone speaks over  ##########
 
 :local_bus a mqtt:MessageBus ;
-    ag:localId "local_bus" ;
+    orexis:localId "local_bus" ;
     mqtt:brokerHost "localhost" ;
     mqtt:brokerPort 1884 ;
     # Agents connect here and prove who they are with a certificate; the boards keep the
@@ -51,9 +51,9 @@
 #  identifier it never resolves, exactly as `mqtt:brokerHost` names a host it never introspects.
 #  Sovereign is the ROLE that user held HERE — stated, not assumed, because another user may
 #  operate what this one ratified, and a loader that inferred the capacity could never say so.
-:world a ag:World ; ag:currentVersion :version_1 ;
-    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole ag:Sovereign ] .
-:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
+:world a orexis:World ; orexis:currentVersion :version_1 ;
+    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole orexis:Sovereign ] .
+:version_1 a orexis:WorldVersion ; orexis:versionNumber 1 .
 
 
 ##########  The subject — a thing that is watched, and nothing more  ##########
@@ -63,7 +63,7 @@
 #  an water:Plant over in world/society, because there it is one.
 
 :fern a sosa:FeatureOfInterest ;
-    ag:localId "fern" .
+    orexis:localId "fern" .
 
 ##########  The board  ##########
 
@@ -94,12 +94,12 @@
 #  `rdfs:subPropertyOf sosa:hosts`, so a sovereign loading both sees one fact twice and
 #  `tests/test_layout.py` refuses a society whose hosting contradicts its hardware.
 #
-#  `ag:status_led_fern` is deliberately absent. The board carries it and the society has no
+#  `orexis:status_led_fern` is deliberately absent. The board carries it and the society has no
 #  business knowing: an agent polls sensors, and a thing it can never observe is the
 #  sovereign's. What is projected is the hosting of things the society already names.
 
 :esp32_fern a sosa:Platform ;
-    ag:localId "esp32_fern" ;
+    orexis:localId "esp32_fern" ;
     sosa:hosts :moisture_sensor_fern , :air_sensor_fern ;
     rdfs:comment "The board. One MQTT client, one credential, one wake — which is why its three channels share a topic and a cadence, and why those are facts about IT rather than about any one of them." .
 
@@ -107,12 +107,12 @@
 #  loose sensors with nothing tying them to the part they read. That was the gap issue #51 left
 #  open when it split them, and hosting is the thing that closes it.
 :air_sensor_fern a ssn:System ;
-    ag:localId "air_sensor_fern" ;
+    orexis:localId "air_sensor_fern" ;
     ssn:hasSubSystem :air_temp_fern , :air_humidity_fern ;
     rdfs:comment "One part reporting two properties. A System rather than a Sensor because a sensor observes ONE property here, and this observes none itself — it has the two that do as sub-systems. Not a Platform either: it is hosted and has sub-systems, and nothing is MOUNTED on a KY-015. What the part itself does is produce both values in one frame, which is why they share an instant." .
 
 :moisture_sensor_fern a sosa:Sensor , device:Device , governed:Node ;
-    ag:localId "moisture_sensor_fern" ;
+    orexis:localId "moisture_sensor_fern" ;
     mqtt:onBus :local_bus ;
     #  No senseMode stated since #175: the FIRMWARE says what it is — this device is typed
     #  governed:Node above, and the mode (Scheduled -> its agent gains sensing:Subscribing)
@@ -139,11 +139,11 @@
 
 #  The KY-015's two channels. They are sensing:Sensor and NOT devices: they have no mqtt:onBus of
 #  their own and mint no credential, because the thing that connects to the broker is the
-#  board, which already has one. `ag:air_sensor_fern` in hardware.ttl is the peripheral they
+#  board, which already has one. `orexis:air_sensor_fern` in hardware.ttl is the peripheral they
 #  read — its pins, its model and its wires are stated there and nothing here repeats them.
 
 :air_temp_fern a sosa:Sensor , device:Device ;
-    ag:localId "air_temp_fern" ;
+    orexis:localId "air_temp_fern" ;
     #  no senseMode here since #96: the clock is the BOARD's, stated once where it
     #  connects — this element rides that wire and shares that answer
     sensing:monitors :fern ;
@@ -161,7 +161,7 @@
         ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 2 ; schema:unitCode unit:SEC ] ] .
 
 :air_humidity_fern a sosa:Sensor , device:Device ;
-    ag:localId "air_humidity_fern" ;
+    orexis:localId "air_humidity_fern" ;
     #  no senseMode here since #96: the clock is the BOARD's, stated once where it
     #  connects — this element rides that wire and shares that answer
     sensing:monitors :fern ;
@@ -179,11 +179,11 @@
         ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 2 ; schema:unitCode unit:SEC ] ] .
 
 ##########  The agent  ##########
-#  No ag:actsFor: with nothing to advance for it, this agent holds no stake — it records.
+#  No orexis:actsFor: with nothing to advance for it, this agent holds no stake — it records.
 #  No market:bidsIn and no market:hosts, so no market capability can be derived for it.
 
-:fern_agent a ag:Agent ;
-    ag:localId "fern" ;
+:fern_agent a orexis:Agent ;
+    orexis:localId "fern" ;
     sensing:polls :moisture_sensor_fern , :air_temp_fern , :air_humidity_fern ;
     mqtt:eventTopic "readings/fern" .
 
@@ -199,7 +199,7 @@
 #  notices. The supplier has none: it holds no revisable setting, so there is nothing to give it
 #  room on.
 #
-#  Note what is NOT written here: no ag:hasCapability. See AGENTS.md.
+#  Note what is NOT written here: no orexis:hasCapability. See AGENTS.md.
 
 :fern_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 10 ; review:notAbove 900 ] .
 :fern_agent review:commits [ review:onTerm sensing:alarmDeltaFraction ; review:notBelow 0.1 ; review:notAbove 0.5 ] .

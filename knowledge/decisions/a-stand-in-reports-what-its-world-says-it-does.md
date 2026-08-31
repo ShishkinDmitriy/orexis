@@ -49,15 +49,15 @@ world.
 
 Both were right when written and both had been overtaken by `world/sensing`.
 
-**`ag:SimulatedDeviceShape` demanded `mqtt:onBus` of everything stood in for.** Its reasoning was
+**`orexis:SimulatedDeviceShape` demanded `mqtt:onBus` of everything stood in for.** Its reasoning was
 sound — without a credential nothing publishes for it, and a permanently silent sensor reads like
 hardware that is not there. But the premise is satisfied another way now: a neighbour publishes on
-the same wire. `ag:air_temp_fern` has no bus at all on the real board, because a second credential
+the same wire. `orexis:air_temp_fern` has no bus at all on the real board, because a second credential
 for a client that never connects is what that world refuses. Demanding it here would have forced
 the simulation to model something no board does. The shape tests **reachability** now — on a bus,
 or sharing the reading topic of something that is.
 
-**`ag:DeviceModelShape` held every initial value to `0..1`**, "a fraction of the observed
+**`orexis:DeviceModelShape` held every initial value to `0..1`**, "a fraction of the observed
 property". True of everything modelled until a thermometer arrived, and 21.4 is not a fraction of
 anything. It is held to the model's **own** range now, which still catches the slip it was written
 for — 45 where 0.45 was meant, in a model that says it runs 0..1 — and catches it in a thermometer
@@ -65,7 +65,7 @@ too, where a rule spelling `0..1` could not look.
 
 ## And a grant that belonged to the wrong thing
 
-`_SIM_DOSE_Q` keyed on `ag:simulatedBy` alone, so the second sensor on a board minted a principal
+`_SIM_DOSE_Q` keyed on `orexis:simulatedBy` alone, so the second sensor on a board minted a principal
 of its own holding a single dose grant — for a client that never connects. Measured before it was
 fixed, then guarded on `mqtt:onBus`: **the grant belongs to whatever connects.** That is
 [#81](https://github.com/ShishkinDmitriy/orexis/issues/81) one level down, and it is the third time

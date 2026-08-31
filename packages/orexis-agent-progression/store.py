@@ -28,14 +28,14 @@ from typing import Callable
 import pyoxigraph as ox
 
 from assembly import loader
-from .ontology import AG, CLASSIFICATION_GRAPH, ONTOLOGY_GRAPH, PUBLIC_GRAPH
+from .ontology import OREXIS, CLASSIFICATION_GRAPH, ONTOLOGY_GRAPH, PUBLIC_GRAPH
 
 # A SPARQL SELECT -> the SPARQL-JSON results dict. The seam every reader is written against,
 # unchanged from when this was an HTTP client, so nothing above here knows the difference.
 QueryFn = Callable[[str], dict]
 
 # Which graphs are public — ASKED, not listed. A graph IRI is an instance, and code that named
-# five of them was doing what rule 1 forbids everywhere else; `ag:PublicGraph` is the term, the
+# five of them was doing what rule 1 forbids everywhere else; `orexis:PublicGraph` is the term, the
 # instances are declared in the kernel's `agent/ontology.ttl`, and adding one is a vocabulary edit
 # that touches no Python.
 #
@@ -70,15 +70,15 @@ _OWN = f"""
 SELECT DISTINCT ?g WHERE {{
   {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }} }}
   UNION
-  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?g a ?class ; <{AG}arrivedBy> ?arrival }} }}
-  ?class rdfs:subClassOf* <{AG}Graph> .
+  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?g a ?class ; <{OREXIS}arrivedBy> ?arrival }} }}
+  ?class rdfs:subClassOf* <{OREXIS}Graph> .
   #  ASKED OF THE GRAPH AND NOT OF THE CLASS THAT MATCHED: `graph/classification` is typed
   #  both public and belief, so a filter on one binding lets it through on the other. Both
   #  run in the DEFAULT graph, which `query` unions from the public ones — inside a GRAPH
   #  block pyoxigraph evaluates the NOT EXISTS before the UNION binds `?g`, and every row
   #  is dropped.
   FILTER NOT EXISTS {{ ?g a ?any . ?any rdfs:subClassOf* <{PUBLIC_GRAPH}> }}
-  FILTER NOT EXISTS {{ ?g a ?hyp . ?hyp rdfs:subClassOf* <{AG}PossibleGraph> }}
+  FILTER NOT EXISTS {{ ?g a ?hyp . ?hyp rdfs:subClassOf* <{OREXIS}PossibleGraph> }}
 }}"""
 
 # Sent with every query. This is the ONLY set a query may use — some engines silently pre-bind
@@ -95,7 +95,7 @@ SELECT DISTINCT ?g WHERE {{
 # What keeps a discovered label honest is `agent.loader`'s refusal of one label bound to two
 # IRIs anywhere in the tree — which is the whole of what the old "an external vocabulary is not
 # a package's to bind" argument needed, and it holds without the kernel naming the vocabulary.
-# `ag:` arrives the discovered way too, from the kernel's own `agent/ontology.ttl`.
+# `orexis:` arrives the discovered way too, from the kernel's own `agent/ontology.ttl`.
 #
 # Assembled eagerly, at import. A malformed or missing ontology is then an error the moment the
 # store is imported rather than the first time a query runs, which is the failure that used to
@@ -180,7 +180,7 @@ class Store:
         return sorted(row["g"] for row in bindings(self.query(_OWN)))
 
     def public_graphs(self) -> list[str]:
-        """Every graph the vocabulary types as an `ag:PublicGraph`.
+        """Every graph the vocabulary types as an `orexis:PublicGraph`.
 
         Cached because it is asked before every query and the answer only moves when something
         is written. Any write drops the cache rather than trying to work out whether it mattered
@@ -232,7 +232,7 @@ class Store:
         The agent's own were added when the obligations ledger stopped being the kernel's: a
         rule that must name `GRAPH $owed` to reach a record is a rule whose graph somebody
         outside the package has to know, and the planner was substituting it. Widening the
-        union lets a package's rule match `?o a ag:Obligation` and find its own record without
+        union lets a package's rule match `?o a orexis:Obligation` and find its own record without
         anyone naming a graph — which is rule 1 for graph IRIs, applied to the one road that
         had been exempt.
         """
@@ -338,7 +338,7 @@ class Store:
         it has never held is added with its blank-node closure (an aim is a structure, not a
         triple). The term and not the (subject, predicate) pair, measured rather than
         assumed: a beliefs graph has one owner, in whatever spelling its era wrote — a
-        volume from before the worlds-own-their-individuals sweep says `ag:fern_agent` where
+        volume from before the worlds-own-their-individuals sweep says `orexis:fern_agent` where
         today's files say the world's name — and pair-keying read that drift as novelty,
         doubling a migrated belief the first time the two met. Returns the terms added, so
         the caller can say what the amendment endowed; empty means the volume already holds

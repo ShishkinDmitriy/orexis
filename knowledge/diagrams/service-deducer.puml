@@ -22,9 +22,9 @@ skinparam component {
 
 
 database "Beliefs · repository" as BEL {
-  folder "ag:PickRecordGraph" as P
-  folder "ag:ObligationsGraph" as O
-  folder "ag:WorldGraph" as W
+  folder "orexis:PickRecordGraph" as P
+  folder "orexis:ObligationsGraph" as O
+  folder "orexis:WorldGraph" as W
 }
 
 database "Desires · repository" as DES {

@@ -21,11 +21,11 @@ timestamp: 2026-08-27T12:00:00Z
 shape that had enforced it:
 
 ```turtle
-sh:path sensing:polls      ; sh:class sosa:Sensor   , ag:Device .
-sh:path actuation:hasActuator ; sh:class sosa:Actuator , ag:Device .
+sh:path sensing:polls      ; sh:class sosa:Sensor   , orexis:Device .
+sh:path actuation:hasActuator ; sh:class sosa:Actuator , orexis:Device .
 ```
 
-`actuation:Valve` repeated it a level up, as `rdfs:subClassOf ag:Device , sosa:Actuator`. Three
+`actuation:Valve` repeated it a level up, as `rdfs:subClassOf orexis:Device , sosa:Actuator`. Three
 statements, one belief: **a thing that observes or acts is a thing somebody built.**
 
 # What was wrong
@@ -35,12 +35,12 @@ had already been paying for the opposite in three places.
 
 - **The simulated worlds contradicted themselves.** `world/simulation` and `world/loner` contain
   no board, no pin and no `mc:` triple of any kind, and every sensor in them read
-  `a sosa:Sensor , ag:Device` followed by `ag:simulatedBy`. The world asserted a physical edge
+  `a sosa:Sensor , orexis:Device` followed by `orexis:simulatedBy`. The world asserted a physical edge
   node and denied its existence two lines later. The type was there to pass the shape and for
   nothing else, which is the definition of ceremony.
 - **A conformant description was refused.** `tests/fixtures/w3c-ssn/` holds the W3C's own DHT22
   document. Its two channels are `sosa:Sensor , ssn:System` — typed by the people who wrote SSN —
-  and our deployment overlay had to add `ag:Device` to them. A vendor's file being told by us
+  and our deployment overlay had to add `orexis:Device` to them. A vendor's file being told by us
   what it is made of, in order to be a sensor, is the clearest evidence the demand was wrong.
 - **The word contradicted its own defence.** The audit's argument for keeping our substrate term
   was that SOSA's classes may be VIRTUAL. That argument says a `sosa:Sensor` need not exist; the
@@ -67,7 +67,7 @@ the role — and says the role has no referent: nobody built it, a process suppl
 Hanging that off a physical class was what produced the self-contradicting worlds, and putting
 the two words in one package would have kept them looking like halves of one idea.
 `packages/orexis-sim-standin/` holds the mark, `sim:Model` and the physics a stand-in computes; the
-`model` prefix each of those properties wore to fake a namespace inside `ag:` came off with the
+`model` prefix each of those properties wore to fake a namespace inside `orexis:` came off with the
 move, because `sim:losesPerDay` on a `sim:Model` needs no such help.
 
 **And a domain axiom is a demand too.** `sensing:senseMode` — who holds the clock — was declared
@@ -78,7 +78,7 @@ keeping a clock is implementing a procedure. `tests/test_shapes.py::test_no_capa
 is what found it, by reading the machine-read part of every capability's Turtle and ignoring
 prose; the two audits in sensing's and actuation's ontologies name the word and are meant to.
 
-**The wire name follows the role.** `ag:localId` used to be required by `device:DeviceShape`, so
+**The wire name follows the role.** `orexis:localId` used to be required by `device:DeviceShape`, so
 a sensor stated one because it was a device. But `onboarding/dashboards.py` names a row from
 every polled sensor's `localId` and `orexis-mqtt` writes the ACL from every reporting valve's, in
 worlds where three of the four valves are stood in for. So `sensing:SensorShape` requires it of a

@@ -6,7 +6,7 @@ belongs to, what it can do — and where every one of those things lives on the 
 
 Two rules hold throughout this module:
 
-- **Discovery by term, never by name.** The world is found by `?w a ag:World`, the market by
+- **Discovery by term, never by name.** The world is found by `?w a orexis:World`, the market by
   `market:bidsIn`, the supplier by whoever hosts. No query mentions an instance.
 - **No defaults for anything the graph should state.** A missing topic or a missing capability
   parameter is a genesis error, and it fails loudly at startup rather than quietly at 3am.
@@ -65,15 +65,15 @@ class World:
 
 _VERSION_Q = f"""
 SELECT ?v WHERE {{ 
-  ?world a ag:World ; ag:currentVersion/ag:versionNumber ?v  }} LIMIT 1"""
+  ?world a orexis:World ; orexis:currentVersion/orexis:versionNumber ?v  }} LIMIT 1"""
 
 
 def _self_q(agent_id: str) -> str:
     """Find me by my id — the only instance identifier the process is given."""
     return f"""
 SELECT ?agent ?capability ?actsFor ?actsForId WHERE {{ 
-  ?agent a ag:Agent ; ag:localId "{agent_id}" ; ag:hasCapability ?capability .
-  OPTIONAL {{ ?agent ag:actsFor ?actsFor . OPTIONAL {{ ?actsFor ag:localId ?actsForId }} }}
+  ?agent a orexis:Agent ; orexis:localId "{agent_id}" ; orexis:hasCapability ?capability .
+  OPTIONAL {{ ?agent orexis:actsFor ?actsFor . OPTIONAL {{ ?actsFor orexis:localId ?actsForId }} }}
  }}"""
 
 
@@ -89,7 +89,7 @@ def load_world(query: QueryFn) -> World:
     """
     rows = bindings(query(_VERSION_Q))
     if not rows:
-        raise WorldError("no ag:World with a current version — has the world been seeded?")
+        raise WorldError("no orexis:World with a current version — has the world been seeded?")
     return World(version=int(rows[0]["v"]))
 
 

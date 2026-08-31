@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 
 from orexis_agent_deliberation.desire import Desire
 from agent.module import Module
-from orexis_agent_progression.ontology import AG, obligations_graph
+from orexis_agent_progression.ontology import OREXIS, obligations_graph
 from orexis_agent_progression.store import bindings
 
 #  What I owe, as rows — the obligation branch of what used to be one shipped `desires.rq` for every
@@ -34,10 +34,10 @@ from orexis_agent_progression.store import bindings
 _DUTIES_Q = """
 SELECT ?desire ?owedTo ?claim ?presented ?at ?expires WHERE {
   GRAPH <%s> {
-    ?desire a ag:Obligation ; ag:owedTo ?owedTo ; ag:forClaim ?claim ;
-            ag:presented ?presented ; ag:owedAt ?at .
-    OPTIONAL { ?desire ag:expiresAt ?expires }
-    FILTER NOT EXISTS { ?desire ag:dischargedAt ?paid } }
+    ?desire a orexis:Obligation ; orexis:owedTo ?owedTo ; orexis:forClaim ?claim ;
+            orexis:presented ?presented ; orexis:owedAt ?at .
+    OPTIONAL { ?desire orexis:expiresAt ?expires }
+    FILTER NOT EXISTS { ?desire orexis:dischargedAt ?paid } }
 }"""
 
 
@@ -103,24 +103,24 @@ class Ower(Module):
         #  the pour from the record rather than from a module's memory (#255). Optional for
         #  the one market shape with no quantity; an obligation without it stays servable by
         #  the direct row and unplannable, which is the graceful half of the widening.
-        amount = (f' <{AG}amountL> {amount_l} ;' if amount_l is not None else "")
+        amount = (f' <{OREXIS}amountL> {amount_l} ;' if amount_l is not None else "")
         expiry = ""
         if expires_at is not None:
-            expiry = (f' ;\n                <{AG}expiresAt> '
+            expiry = (f' ;\n                <{OREXIS}expiresAt> '
                       f'"{datetime.fromtimestamp(expires_at, timezone.utc).isoformat()}"'
                       f'^^<http://www.w3.org/2001/XMLSchema#dateTime>')
-        uri = f"{AG}obligation.{claim_jti}"
+        uri = f"{OREXIS}obligation.{claim_jti}"
         graph = obligations_graph(self.agent.id)
         if bindings(self.agent.beliefs.query(
                 f"SELECT ?o WHERE {{ GRAPH <{graph}> {{ <{uri}> ?p ?o }} }} LIMIT 1")):
             return None
         self.agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
-            <{uri}> a <{AG}Obligation> ;
+            <{uri}> a <{OREXIS}Obligation> ;
                 <http://www.w3.org/ns/prov#wasDerivedFrom> "{claim_jti}" ;
-                <{AG}owedTo> <{to_agent}> ;
-                <{AG}forClaim> "{claim_jti}" ;
-                <{AG}presented> false ;{amount}
-                <{AG}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{expiry} }} }}""")
+                <{OREXIS}owedTo> <{to_agent}> ;
+                <{OREXIS}forClaim> "{claim_jti}" ;
+                <{OREXIS}presented> false ;{amount}
+                <{OREXIS}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{expiry} }} }}""")
         #  A debt arriving at runtime is a want arriving at runtime: the record above is the
         #  belief base's, and the desire modality is RECOMPUTED to hold it — the same
         #  record-then-rebuild order a re-pick follows, because recomputation is the only way
@@ -138,10 +138,10 @@ class Ower(Module):
         """
         graph = obligations_graph(self.agent.id)
         self.agent.beliefs.update(f"""
-            DELETE {{ GRAPH <{graph}> {{ ?o <{AG}presented> ?was }} }}
-            INSERT {{ GRAPH <{graph}> {{ ?o <{AG}presented> true }} }}
-            WHERE  {{ GRAPH <{graph}> {{ ?o <{AG}forClaim> "{claim_jti}" ;
-                                         <{AG}presented> ?was }} }}""")
+            DELETE {{ GRAPH <{graph}> {{ ?o <{OREXIS}presented> ?was }} }}
+            INSERT {{ GRAPH <{graph}> {{ ?o <{OREXIS}presented> true }} }}
+            WHERE  {{ GRAPH <{graph}> {{ ?o <{OREXIS}forClaim> "{claim_jti}" ;
+                                         <{OREXIS}presented> ?was }} }}""")
         self.agent.desires.rebuild()   # standing became demanded — the want moved
 
     def discharge(self, claim_jti: str) -> None:
@@ -150,21 +150,21 @@ class Ower(Module):
         stays in its ledger."""
         graph = obligations_graph(self.agent.id)
         self.agent.beliefs.update(f"""INSERT {{ GRAPH <{graph}> {{
-                ?o <{AG}dischargedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
-            WHERE {{ GRAPH <{graph}> {{ ?o <{AG}forClaim> "{claim_jti}" .
-                     FILTER NOT EXISTS {{ ?o <{AG}dischargedAt> ?done }} }} }}""")
+                ?o <{OREXIS}dischargedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
+            WHERE {{ GRAPH <{graph}> {{ ?o <{OREXIS}forClaim> "{claim_jti}" .
+                     FILTER NOT EXISTS {{ ?o <{OREXIS}dischargedAt> ?done }} }} }}""")
         self.agent.desires.rebuild()   # a paid debt is history, and the want is no longer implied
 
     def owed(self, presented_only: bool = False) -> list[dict]:
         """What still stands, newest first — what an agent owes, askable by the sovereign."""
-        extra = f'?o <{AG}presented> true .' if presented_only else ""
+        extra = f'?o <{OREXIS}presented> true .' if presented_only else ""
         return bindings(self.agent.beliefs.query(f"""
 SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
-  ?o a <{AG}Obligation> ; <{AG}owedTo> ?to ; <{AG}forClaim> ?jti ;
-     <{AG}presented> ?presented ; <{AG}owedAt> ?at .
-  OPTIONAL {{ ?o <{AG}expiresAt> ?expires }}
+  ?o a <{OREXIS}Obligation> ; <{OREXIS}owedTo> ?to ; <{OREXIS}forClaim> ?jti ;
+     <{OREXIS}presented> ?presented ; <{OREXIS}owedAt> ?at .
+  OPTIONAL {{ ?o <{OREXIS}expiresAt> ?expires }}
   {extra}
-  FILTER NOT EXISTS {{ ?o <{AG}dischargedAt> ?done }} }} }} ORDER BY DESC(?at)"""))
+  FILTER NOT EXISTS {{ ?o <{OREXIS}dischargedAt> ?done }} }} }} ORDER BY DESC(?at)"""))
 
     def obligations(self, now: datetime | None = None) -> list[Desire]:
         """What this agent owes, as desires — hottest first, and hot means CLOSE TO EXPIRY.

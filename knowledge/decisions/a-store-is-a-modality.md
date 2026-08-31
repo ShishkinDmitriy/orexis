@@ -64,11 +64,11 @@ precedents generalised, because modality *determines* lifecycle:
 | the [imaginarium](/domain/imaginarium.md) | memory, per pass | the planner | the end of the pass |
 
 **The modality graph classes are retired — ALL of them, by
-[#312](https://github.com/ShishkinDmitriy/orexis/issues/312)**: `ag:BeliefsGraph` first, then
-`ag:DesireGraph`, `ag:ConstraintGraph` and `ag:BoundsGraph` when the copy they selected
+[#312](https://github.com/ShishkinDmitriy/orexis/issues/312)**: `orexis:BeliefsGraph` first, then
+`orexis:DesireGraph`, `orexis:ConstraintGraph` and `ag:BoundsGraph` when the copy they selected
 dissolved — genesis derives no wants, the modality's own build runs the packages' `desires.ru`
 against the world and the records on every rebuild, and the belief base keeps records only,
-typed for what they are (`ag:PickRecordGraph`, `ag:ObligationsGraph`). That build is also
+typed for what they are (`orexis:PickRecordGraph`, `orexis:ObligationsGraph`). That build is also
 [#263](https://github.com/ShishkinDmitriy/orexis/issues/263)'s mechanism: re-derivation during
 a life is any rebuild, and a want whose premise has ceased is no longer implied. Everything
 in the beliefs

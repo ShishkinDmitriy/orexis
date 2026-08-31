@@ -27,7 +27,7 @@ only once something concrete is on the table:
 Copy `world/sensing/world.ttl` — it is the minimum that still produces a working agent: a
 bus, a world version, the graph catalog, a subject, a device, an agent.
 
-**Do not write `ag:hasCapability`.** State what exists and what is wired to what; seeding
+**Do not write `orexis:hasCapability`.** State what exists and what is wired to what; seeding
 derives the rest. This is the rule the whole design rests on — a declaration can drift from
 reality, a derivation cannot.
 
@@ -61,13 +61,13 @@ asked for is the *target*, and it must sit inside that region or the agent will 
 Register each in the catalog inside `world.ttl`:
 
 ```turtle
-<http://example.org/orexis/graph/beliefs/fern> a ag:DesireGraph ; ag:beliefsOf :fern_agent .
+<http://example.org/orexis/graph/beliefs/fern> a orexis:DesireGraph ; orexis:beliefsOf :fern_agent .
 ```
 
-**A world's individuals live in the world's own namespace, not in `ag:`.** Declare it once at
+**A world's individuals live in the world's own namespace, not in `orexis:`.** Declare it once at
 the top of every file in the world — `@prefix : <http://example.org/orexis/world/<name>#> .` —
 and write your agents, sensors, subjects and pins unprefixed: `:fern_agent`, `:local_bus`.
-`ag:` is the vocabulary's; a test refuses a world that puts an individual there. The same
+`orexis:` is the vocabulary's; a test refuses a world that puts an individual there. The same
 declaration goes in each `beliefs/<agent>.ttl`, whose subject is that same `:fern_agent`.
 
 # 4. Validate, and read what it derived

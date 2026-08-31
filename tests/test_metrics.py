@@ -214,7 +214,7 @@ def agent(monkeypatch):
 
 
 def test_a_delivered_sensor_is_reported_even_when_not_wired(agent):
-    """A simulated sensor is wired with ag:models, a sub-property of sensing:polls that SPARQL does
+    """A simulated sensor is wired with orexis:models, a sub-property of sensing:polls that SPARQL does
     not follow — so `me.sensors` is empty for a simulated agent while it records readings every
     few seconds. Reporting only the wired set omitted every one of them."""
     sensing_of(agent).observations.reading_recorded(_Sensor("sim_moisture_fern"))

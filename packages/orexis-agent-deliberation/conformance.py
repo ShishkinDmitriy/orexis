@@ -53,7 +53,7 @@ _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 #  every violation in the report's HEADER, where this dropped it along with the rest — the
 #  filter hid exactly the results it exists to preserve, and four tests caught it.
 _RESULT = re.compile(r"(?=(?:Constraint Violation|Validation Result) in )")
-_SHOULD_BECOME_FORMS = ("Severity: ag:ShouldBecome",
+_SHOULD_BECOME_FORMS = ("Severity: orexis:ShouldBecome",
                         "Severity: <http://example.org/orexis#ShouldBecome>")
 
 
@@ -110,7 +110,7 @@ def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
         **({"focus_nodes": [focus]} if focus else {}),
     )
     violated = _violated(results)
-    #  The shapes that agent holds, unfocused, over no others: ownership is `ag:holds`, so
+    #  The shapes that agent holds, unfocused, over no others: ownership is `orexis:holds`, so
     #  every result is about the asker by construction — which is the guarantee the focus
     #  filter was supposed to give and, for these shapes, does not.
     if focus and (mine := _shapes_held_by(data, focus)):
@@ -124,7 +124,7 @@ def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
 
 
 def _without_wants(report: str) -> str:
-    """Drop the `ag:ShouldBecome` results from what a person is shown.
+    """Drop the `orexis:ShouldBecome` results from what a person is shown.
 
     A want is a shape and an unmet want is a result, so once desires compiled to SHACL every
     report grew one block per property nobody has read yet — which at genesis is all of them.
@@ -152,7 +152,7 @@ def _violated(results: rdflib.Graph) -> bool:
 def _shapes_held_by(data: rdflib.Graph, agent_uri: str) -> rdflib.Graph:
     """The shapes this agent holds, with everything hanging off them.
 
-    Ownership is `ag:holds`, so this asks the graph rather than trusting a filter: a shape an
+    Ownership is `orexis:holds`, so this asks the graph rather than trusting a filter: a shape an
     agent holds is a shape about that agent, which is the guarantee focus filtering was being
     used for and does not actually give.
     """
@@ -161,7 +161,7 @@ def _shapes_held_by(data: rdflib.Graph, agent_uri: str) -> rdflib.Graph:
                               rdflib.URIRef("http://example.org/orexis#holds")):
         held += data.cbd(thing)
         #  A held DESIRE is a node carrying its shape (a-desire-states-its-own-measure), so
-        #  the met-test is one `ag:metWhen` hop further and a cbd of the desire alone would
+        #  the met-test is one `orexis:metWhen` hop further and a cbd of the desire alone would
         #  hand pySHACL a graph with no actual shape in it — silently, which is how this
         #  file has been wrong before. The desire's own cbd stays in too: pySHACL ignores a
         #  node it does not recognise as a shape, and the measure text rides along unread.
@@ -170,7 +170,7 @@ def _shapes_held_by(data: rdflib.Graph, agent_uri: str) -> rdflib.Graph:
             held += data.cbd(shape)
     #  A graph carved out of another keeps its spellings. pySHACL renders the report through
     #  the shapes graph's namespaces, so without this the second pass printed
-    #  `<http://example.org/orexis#ShouldBecome>` where the first printed `ag:ShouldBecome` —
+    #  `<http://example.org/orexis#ShouldBecome>` where the first printed `orexis:ShouldBecome` —
     #  one severity in two spellings, in one report, for no reason a reader could see.
     for prefix, namespace in data.namespaces():
         held.bind(prefix, namespace)
