@@ -7,9 +7,11 @@ requires-python = ">=3.10"
 # `orexis` is ASSEMBLY, the KERNEL and the OPERATOR'S TOOLS — the three trees at the repo root.
 # Every package under `packages/` is its own project with its own dependencies, and this one
 # depends on exactly ONE of them: the kernel loads packages and never needs a GRANTED one, but
-# the mind's stores are a package beneath the layers now, and until #455 derives the load set
-# from the grants, the kernel's own declared dependency is what carries them
-# (a-layer-is-a-package-and-need-loads-it). See knowledge/decisions/every-package-is-a-project.md.
+# the mind's stores are a package beneath the layers now, and the kernel imports the layers
+# itself, so its own declared dependency is what carries them — #455's pull derives the load
+# set for SERVICE providers, and the layers will follow it only when the kernel's imports
+# become need-declarations (a-layer-is-a-package-and-need-loads-it). See
+# knowledge/decisions/every-package-is-a-project.md.
 #
 # What did NOT come back is the boundary two pyprojects used to pretend to draw. `onboarding/`
 # still ships in this distribution beside `agent/`, because packaging never kept the operator's
@@ -26,8 +28,10 @@ dependencies = [
     #  — belonging to the shared root distribution, not to the layering (the imports are
     #  acyclic: assembly < reactive < progression < deliberation < agent), dissolving when
     #  assembly becomes a distribution of its own. It is why the Containerfile installs the
-    #  four editables in one pip call. Until #455 builds the pull, these lines are also what
-    #  LOAD the layers — the record's legitimate intermediate state.
+    #  four editables in one pip call. The pull (#455) is built and governs service
+    #  providers; these lines are still what LOAD the layers, because the kernel imports
+    #  them directly — the record's legitimate intermediate state, bounded now by the
+    #  kernel's own imports rather than by a missing mechanism.
     "orexis-agent-reactive",
     "orexis-agent-progression",
     "orexis-agent-deliberation",

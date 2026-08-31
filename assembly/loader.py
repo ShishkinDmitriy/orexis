@@ -529,6 +529,73 @@ def registry() -> dict[str, type]:
     return out
 
 
+def _required(cls) -> tuple:
+    """The service keys a class declares it cannot work without — its HARD needs.
+
+    Read off the value-less annotations, exactly as `Module.__init__` reads them; a soft one
+    (`X | None`) is left out here on purpose, because a soft need pulls nothing, ever."""
+    from .inject import injections_of
+
+    return tuple(key for _name, (key, optional) in injections_of(cls).items() if not optional)
+
+
+def packages_for(capabilities) -> tuple[Package, ...]:
+    """Every package one agent's build reaches: the grants' owners, and what their needs pull.
+
+    THE PULL (#455, a-layer-is-a-package-and-need-loads-it): a REQUIRED annotation on a
+    provided class is a hard dependency, so a key whose provider lives in a package no grant
+    names adds that package to the load set — and that package's own needs after it,
+    needs-after-needs, until nothing new is required. A SOFT annotation (`X | None`) pulls
+    nothing: it takes what is already there, and `Agent.offers` answers False for a provider
+    outside this set.
+
+    A required key this resolves to NO package is left alone rather than refused here: it is
+    either the kernel's — offered by class at construction, which the loader cannot see — or
+    nobody's, and `tests/test_layout.py` fails the latter by name, build-wide, before any
+    agent boots.
+    """
+    owners = _namespace_owners()
+    granted: list[Package] = []
+    for capability in sorted(capabilities):
+        package = next((p for ns, p in owners.items() if capability.startswith(ns)), None)
+        if package is not None and package not in granted:
+            granted.append(package)
+    return pulled(granted)
+
+
+def pulled(granted) -> tuple[Package, ...]:
+    """The transitive closure of `granted` under required injections — `packages_for`'s
+    mechanism, taking packages rather than capability terms so a test can hand it a synthetic
+    tree.
+
+    A cycle of needs terminates because a package enters the set once: the worklist grows only
+    on first sight, so two packages requiring each other's services are both loaded and
+    neither is visited twice. Importing a pulled package's `provides()` IS the load — the same
+    lazy door every granted package's classes come through — and a package that cannot be
+    imported pulls nothing, the declared degrade path (#216) `_provider_in` already walks.
+    """
+    loaded: list[Package] = list(granted)
+    queue: list[Package] = list(granted)
+    while queue:
+        package = queue.pop(0)
+        try:
+            classes = package.provides()
+        except ImportError as exc:
+            log.warning("%s cannot be imported (%s) — its needs pull nothing",
+                        package.import_name, exc)
+            continue
+        for cls in classes:
+            for key in _required(cls):
+                offer = offers().get(key)
+                if offer is None:
+                    continue
+                provider, _build = offer
+                if provider not in loaded:
+                    loaded.append(provider)
+                    queue.append(provider)
+    return tuple(loaded)
+
+
 @lru_cache(maxsize=1)
 def drivers() -> tuple[type, ...]:
     """Every transport's driver. Which one speaks to a given sensor is the driver's own

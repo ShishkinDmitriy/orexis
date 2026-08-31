@@ -122,7 +122,7 @@ So there are two families, and they behave differently:
   inside that region. See
   [desire](/domain/desire.md).
 
-Usefully, the split falls exactly on the capability packages: the operational family is
+Usefully, the split falls exactly on the packages: the operational family is
 sensing's block, the stake family is the market's.
 
 # Beliefs are created at birth — and birth is not start

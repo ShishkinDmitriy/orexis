@@ -4,8 +4,8 @@ title: An injected service is reached by term, and the bean graph is one per age
 description: >-
   Stores are attributes on the agent and no package can bring one; there is no way for a package
   to offer another package anything but a capability. The design is Anvil-style aggregation with
-  one substitution — the binding key is a URI rather than a type, because capability packages may
-  not import each other and because the graph addresses everything by term. Declared eagerly,
+  one substitution — the binding key is a URI rather than a type, because packages of the
+  capability family may not import each other and because the graph addresses everything by term. Declared eagerly,
   resolved lazily, one term one provider. BUILT — the sovereign's ruling that a seam this
   foundational should not wait for its first customer, because packages are shaped by its
   absence.
@@ -40,8 +40,8 @@ exists.
 
 **The key is the CONTRACT TYPE wherever one can be imported, and a term where none can.**
 
-This record first said a term, full stop, on the reasoning that `lint-imports` forbids capability
-packages importing each other — so market could not import sensing's type to key on. **That is
+This record first said a term, full stop, on the reasoning that `lint-imports` forbids packages
+of the capability family importing each other — so market could not import sensing's type to key on. **That is
 true of an implementation and false of a contract**, and importing a contract is the one
 cross-package import this project has always allowed: `packages/orexis-codec-json/` imports sensing's
 `Codec`. The sovereign made the correction — terms were proposed for extension POINTS, where a
@@ -115,9 +115,15 @@ build, different graphs, because the world says so.
 
 **The check turned out to be build-wide, not per agent**, which is simpler than this record
 first claimed and worth correcting. A service is offered by a PACKAGE, and every package is in
-every build; what differs between agents is which MODULES are constructed, and a module class's
-requirements are static. So the question is *does anything offer this*, and asking it needs no
-world at all — `test_every_hard_requirement_is_offered_by_something` runs against the tree.
+every checkout; what differs between agents is which MODULES are constructed, and a module
+class's requirements are static. So the question is *does anything offer this*, and asking it
+needs no world at all — `test_every_hard_requirement_is_offered_by_something` runs against the
+tree. (#455 split the runtime half off this: an agent's BUILD is its load set — the grants'
+owner packages closed over required injections — so `Agent.offers` answers from that set
+rather than from the checkout, a soft annotation resolves to None for a provider outside it,
+and a missing optional is a fact about which packages the needs pulled rather than about which
+were installed. The gate above stays tree-wide, because a required key must be offered
+wherever it lands.)
 
 What remains genuinely per-agent is capability composition, which was already checked. The
 per-agent framing came from assuming a service could be granted; it cannot, which is exactly what

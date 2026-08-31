@@ -172,7 +172,9 @@ it is a record wearing a bullet.
    place to state it. `PROVIDES` in `__init__.py` is how an implementation registers, and its absence
    is what makes a package knowledge-only. A package implements the terms IT declares —
    which is what lets imports follow grants: a runtime imports only the packages its own
-   capabilities name (#216). Adding one is adding a directory. Packages never
+   capabilities name (#216) — and, beneath the grants, a REQUIRED injection pulls the package
+   providing its key into the load set, needs after needs, while a soft one (`X | None`)
+   injects only what is already there and loads nothing (#455). Adding one is adding a directory. Packages never
    import each other's Python ACROSS a layer: ask `agent.provider(family)` or contribute via
    the choir's extension points (`desires`, `size`, `take`, `notices`, `series`, `quiet` — and, in sensing's
    words through `agent.ask`, `annotate`, `urgency`, `bounds`).

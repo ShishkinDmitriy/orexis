@@ -2,7 +2,7 @@
 type: Decision
 title: The mind is not a package, and the kernel is not discovered
 description: >-
-  Three capability packages held the mind — desire, intention, deliberation — while the STORES
+  Three granted packages held the mind — desire, intention, deliberation — while the STORES
   they read were built for every agent unconditionally, three lines above the modules in
   `Agent.__init__`. A modality nobody may write is not a modality. All three dissolve into
   `agent/`, the base vocabulary comes back with them (a family of exactly one is not a family),
