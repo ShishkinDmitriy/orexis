@@ -381,6 +381,16 @@ which an explicit scope says better. So ruled, and filed as
 - **the severity's three lived jobs re-plumb onto the `metWhen` linkage** — boot survives
   unmet wants, the report hides at-birth gaps and shows crossed envelopes — carried on #472.
 
+**The formula for `Always`, in the sovereign's words: not at-end every loop — EVERY STEP OF
+EACH LOOP.** Within one pass, every simulated state of the candidate plan is asked — which
+only the imaginarium's graph-per-node makes possible, since a state never materialised cannot
+be checked; across passes, every tick asks reality again; and between the two, the keeper's
+arc watches what acts actually did. This IS a change from what shipped: before this ruling a
+want was at-end repeated every loop — the projection section's *implemented as repeated
+at-end* is the before-picture, kept as written — and a balance walking 4 → −10 → 5 is the
+example that tells the two apart: at-end accepts it, every-step refuses it as law or prices
+it as a want, by force.
+
 What survives of the overridden position, so nobody over-reads the reversal: members still
 arrive by customer (`Sometime`, `at-most-once`, `sometime-before` stay unminted); the MOOD is
 still computed and never asserted; and the one-value claim for scope is corrected rather than
