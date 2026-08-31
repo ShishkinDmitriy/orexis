@@ -16,7 +16,10 @@ description: >-
   barely exists here — and refused mood classes and mood stores both, because modality decides
   the store, provenance the graph, and severity the force. The second cut ruled mood and
   provenance orthogonal — a Desire is my MUST, an Obligation someone's — gave each mood its
-  behaviour in the search, and sent the subclass itself away as a flag (#471).
+  behaviour in the search, and sent the subclass itself away as a flag (#471). The last
+  ruling brought the scope axis IN — severity narrows to two, a want states its scope in
+  PDDL's words, and orexis:ShouldBecome, older than the reified desire and made redundant by
+  it, retires (#472).
 status: accepted
 timestamp: 2026-08-31T17:36:56Z
 ---
@@ -353,6 +356,37 @@ wants — bouletic or deontic, the premise decides; `shapes.ttl` for law — eve
 shapes already gate validation; #469 adds the library door. A package that speaks a new mood
 edits nothing outside its directory, which is rule 2's mechanic doing what it always does.
 
+## The axis is ruled in: a want states its scope, and ShouldBecome retires
+
+The sovereign put the scope axis a second time — *we lack these PDDL scopes; keep only
+`sh:Violation` and `sh:Warning`, and add a scope axis for desire, in PDDL terms* — and the
+probe that came with it (*is ShouldBecome at-end?*) found the ground under the lazy-adoption
+position dissolved. `orexis:ShouldBecome` PREDATES the reification: it was minted when a
+desire WAS a bare `sh:NodeShape` and needed marking apart from law, and a want being a node
+(`orexis:Desire`, `orexis:metWhen`) made the mark redundant without anyone noticing. Its
+severity said who reacts, which the node's type now says; its time-meaning was implicit,
+which an explicit scope says better. So ruled, and filed as
+[#472](https://github.com/ShishkinDmitriy/orexis/issues/472):
+
+- **severity keeps TWO values** — `sh:Violation`, law, refused; `sh:Warning`, the operator's
+  notice — both claims about *now*, on shapes;
+- **a desire carries `orexis:scope`** — `orexis:Always`, `orexis:AtEnd`, `orexis:Within` —
+  PDDL's WORDS in the kernel's namespace, because every derivation writes one and the
+  planner reads it, which is the promotion test met; never a `pddl3:` import;
+- **the shipped assignments close a seam on arrival**: region → `Always`, freshness →
+  `Always`, obligation → `Within` reading `orexis:expiresAt` — the deadline stops being only
+  heat, and the within seam below is struck through rather than waited on;
+- **the planner branches on scope**: `Always` judged at every state of a candidate plan,
+  `AtEnd` at the end-world, `Within` as validity against the simulated clock;
+- **the severity's three lived jobs re-plumb onto the `metWhen` linkage** — boot survives
+  unmet wants, the report hides at-birth gaps and shows crossed envelopes — carried on #472.
+
+What survives of the overridden position, so nobody over-reads the reversal: members still
+arrive by customer (`Sometime`, `at-most-once`, `sometime-before` stay unminted); the MOOD is
+still computed and never asserted; and the one-value claim for scope is corrected rather than
+mourned — the values were three all along, once the obligation's deadline is read as scope
+rather than heat.
+
 # Seams left open
 
 - **The override order (character)** stays the obligation record's seam. This record adds one
@@ -361,14 +395,12 @@ edits nothing outside its directory, which is rule 2's mechanic doing what it al
 - **A deontic MUST NOT has no customer.** Nothing shipped is a prohibition anyone could
   breach; the day one arrives, it is #468's machinery with a peer's provenance, and this line
   is where that argument starts.
-- **A deadline is heat today, not plan validity — `within(t)` is the operator when that
-  stops being enough.** Urgency rises as an obligation's redeem window runs, but nothing
-  refuses a plan whose discharge would LAND after expiry; the world refuses the late
-  presentation instead, after the water is committed. The day a plan's landing time can
-  exceed a window — the neighbourhood of
-  [#250](https://github.com/ShishkinDmitriy/orexis/issues/250), patience against landing
-  time — `within` arrives as a validity check on the simulated plan's clock, not as a new
-  mood.
+- ~~**A deadline is heat today, not plan validity.**~~ CLOSED by the scope ruling, faster
+  than the seam expected: the obligation's scope is `orexis:Within`, reading
+  `orexis:expiresAt`, and the validity check on the simulated plan's clock rides with
+  [#472](https://github.com/ShishkinDmitriy/orexis/issues/472) — the
+  [#250](https://github.com/ShishkinDmitriy/orexis/issues/250) neighbourhood (patience
+  against landing time) is where its test case lives.
 - **The nouns are deliberately unminted.** "Avoidance" and "plan library" appear here as
   descriptions, not terms — a word enters the dictionary in the same change that builds its
   thing, and both issues carry that requirement.
@@ -389,5 +421,7 @@ general avoidance, and the deontic prohibition's future seat.
 tried before searching, re-verified on every use.
 [#471](https://github.com/ShishkinDmitriy/orexis/issues/471) — retire the Obligation
 subclass: one class of want, whose it is read from provenance.
+[#472](https://github.com/ShishkinDmitriy/orexis/issues/472) — a want states its scope in
+PDDL's words, and `orexis:ShouldBecome` retires.
 It engages [#466](https://github.com/ShishkinDmitriy/orexis/issues/466) rather than emitting
 it: costs are what make MAY's economics real.
