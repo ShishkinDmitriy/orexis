@@ -245,6 +245,38 @@ rest (`sometime`, `at-most-once`, `sometime-before`) need memory along the path 
 compiles them to automata tracked during search — which is machinery with no customer. A term
 nobody reads is annotation: an operator is adopted when a want needs it.
 
+## The shipped mind, in coordinates
+
+Asked by the sovereign: how would our desires look on the three axes? Projected rather than
+sketched — every row below is a want a shipped world holds today — and the punchline is that
+NOTHING NEW IS STORED: force is which carrier a want already has (met-shape hard, measure
+soft, severity for law), provenance is the premise PROV already names, and scope is defaulted
+by kind. The axes are how to READ the mind, not a migration.
+
+| want | force | provenance | scope |
+|---|---|---|---|
+| a property inside its region | MUST — the met-shape; SHALL — the measure toward the aim | region: the subject's ranges; aim: THE AGENT | `always`, delivered by the loop — `at-end` per pass |
+| the envelope beside it | neither — the SHALL's denominator, and a warning to the operator | the subject | — |
+| freshness, per instrument | MUST — the met-shape; measure boolean today | the wiring, ratified | `always` via the loop; the horizon re-arms it |
+| an obligation | MUST — the discharged-pattern | a peer's claim | `at-end`; `within(t)` is the seam above |
+| the conduct picks — cadence, patience, offer, reserve | soft, inside room | the agent, inside sovereign mandates | — |
+| the mandate | MUST NOT, hard | the sovereign, as law | `always` — each revision, each boot |
+| the constitution's shapes | MUST NOT, hard | the sovereign, as law | `always` — now every planned state |
+| an avoidance ([#468](https://github.com/ShishkinDmitriy/orexis/issues/468)) | SHALL NOT — a penalty | sovereign ratifying, or a peer | `always` |
+| a remembered plan ([#469](https://github.com/ShishkinDmitriy/orexis/issues/469)) | none — MAY | the agent's own past, or a model | — |
+
+Two findings fall out of doing the projection, and neither was designed:
+
+- **The agent's own column is soft-only.** Everywhere the agent appears as a source — the aim,
+  every conduct pick — the force is soft; hard comes exclusively from outside, the subject's
+  ranges, a peer's claim, the sovereign's law. The agent may prefer and may never bind, which
+  is [control-the-derivative](/decisions/control-the-derivative-not-the-value.md) restated as
+  an invariant of the axes, and it holds in every shipped world.
+- **The scope column is nearly constant — `always`, delivered by the loop** — which is why
+  scope never needed vocabulary here: re-deliberation each tick IS the always-operator,
+  implemented as repeated at-end. The one cell that will ever need a written operator is the
+  debt's `within(t)`, already a seam.
+
 
 
 ## No new classes, and no new stores — asked and refused
