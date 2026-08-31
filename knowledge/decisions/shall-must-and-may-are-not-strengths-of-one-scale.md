@@ -285,7 +285,17 @@ form than the no-new-classes section above: **each axis gets exactly ONE owner, 
 the three already have theirs.** Force is owned by SEVERITY — `sh:Violation`, `sh:Warning`,
 `orexis:ShouldBecome` — and the custom severity is the precedent that shows the mechanism:
 when force needed a new value, the house extended the severity vocabulary, not a class
-hierarchy, and a future hard avoidance is one more severity IRI, never a class. A
+hierarchy, and a future hard avoidance is one more severity IRI, never a class. One
+correction the sovereign's reading surfaced, worth pinning: the trio marks WHO REACTS, not
+the moods one-to-one. `sh:Violation` is refused — MUST NOT. `sh:Warning` is the OPERATOR'S
+row, not SHALL NOT: the envelope lives there, legitimate, worth a person's notice, pursued by
+nobody. `orexis:ShouldBecome` is the agent's row and carries BOTH SHALLs, polarity in the
+shape's content — the region's own side shapes are per-property SHALL NOTs minted at that
+severity. And the custom IRI earns its place three ways, all lived: an unmet want must never
+stop a boot, so `conforms()` filters by it; the human report must hide the forty at-birth
+gaps while showing a crossed envelope, which one IRI for both cannot do; and *should hold* is
+a claim about now where *should become* is pursued TOWARD, tolerating being unmet while the
+plan runs — the reason intentions exist. A
 `modality:MustNot` beside `sh:Violation` would be two owners of one claim — the thing the
 domain gate refuses in prose, arriving in the T-Box. Provenance is owned by PROV and the
 premises, and a class flagging it is the mistake
