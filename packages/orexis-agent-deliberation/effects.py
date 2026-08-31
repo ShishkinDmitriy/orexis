@@ -38,12 +38,13 @@ log = logging.getLogger("effects")
 #  means nobody loaded is one nothing will ever ask for. An action with no construct states no
 #  effect and is not returned — the gate refuses a world whose menu offers one.
 _RULE_Q = """
-SELECT ?rule ?construct ?retracts ?lands WHERE { GRAPH <%s> {
+SELECT ?rule ?construct ?retracts ?lands ?costs WHERE { GRAPH <%s> {
   BIND(<%s> AS ?rule)
   ?rule a <http://example.org/orexis#Action> ;
         <http://www.w3.org/ns/shacl#construct> ?construct .
   OPTIONAL { ?rule <http://example.org/orexis#retracts> ?retracts }
   OPTIONAL { ?rule <http://example.org/orexis#landsAfter> ?lands }
+  OPTIONAL { ?rule <http://example.org/orexis#costs> ?costs }
   } } LIMIT 1"""
 
 
@@ -188,6 +189,24 @@ def lands_after(store, action: str, **bind) -> float | None:
     if not rows or rows[0]["seconds"] is None:
         return None
     return float(rows[0]["seconds"].value)
+
+
+def cost_of(store, action: str, **bind) -> float | None:
+    """What taking this act would spend, in the wallet's unit — asked, never computed.
+
+    `orexis:landsAfter`'s twin (#466): the owning package declares the SELECT, the same
+    substitution fills it, and it travels the rules' own store door so a cost read off a
+    record binds exactly as a landing time does. None where the rule declines — no cost
+    declared, or premises that do not hold — and every caller must read None as FREE, the
+    statement an omitted declaration makes.
+    """
+    rule = rule_for(store, action)
+    if rule is None or not rule.get("costs"):
+        return None
+    rows = _select(store, rule["costs"], bind)
+    if not rows or rows[0]["cost"] is None:
+        return None
+    return float(rows[0]["cost"].value)
 
 
 def _select(store, text: str, bind: dict) -> list:

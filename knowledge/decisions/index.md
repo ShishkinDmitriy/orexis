@@ -89,6 +89,7 @@ The search itself, and the two places a language model is allowed near it.
 * [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) - Classical planning lifted to RDF: menu rows are action schemas and the Reflex is a depth-1 planner.
 * [a-rule-is-asked-about-a-world-not-about-a-store](/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md) - Effects run against the store, so step two never sees step one. Snapshot per plan and bind the hypothesis in.
 * [a-habit-is-a-compiled-deliberation](/decisions/a-habit-is-a-compiled-deliberation.md) - A stable environment lets deliberation compile into if-then policy, minted and retired by review on evidence.
+* [a-step-declares-its-cost](/decisions/a-step-declares-its-cost.md) - An action declares `orexis:costs` beside its timing; the search sums it and breaks urgency ties cheaper, never trading wellbeing for money.
 * [the-model-is-consulted-at-the-edge-of-knowledge](/decisions/the-model-is-consulted-at-the-edge-of-knowledge.md) - The LLM is a teacher, not a decider in the loop: consulted only when no written-down plan connects a gap to a lever.
 * [a-consulted-answer-is-a-premise](/decisions/a-consulted-answer-is-a-premise.md) - What comes back from a model must be premises rather than steps, so a model never authors an act.
 * [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) - Thin BDI: the LLM drives deliberation, so the formal layer becomes load-bearing rather than optional.

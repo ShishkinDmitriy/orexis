@@ -533,6 +533,14 @@ ZERO is a real answer and the honest one for a look. Observing changes nothing a
 
 WHAT IT DOES NOT INCLUDE, said here because the name could be read as promising it: SETTLING. This is delivery — when the valve stops — and not when the world has reached a steady state a reading would report. Three terms separate an act from its evidence: delivery (here, from the device's own calibration), absorption (the pot's, and stated in NO world today), and the next reading (the cadence the agent commanded plus its grace). Only the first and third are facts anyone has written down, and the sensor's cadence has been covering for the second by coincidence — a plant in trouble reads every thirty seconds, which is longer than a small pot takes to absorb a dose. A planner that wants to know when its work would become visible is wrong by exactly the missing term, and the honest first step is that somebody must say what these pots do, not that the code should pick a number.""" .
 
+orexis:costs a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ;
+    rdfs:label "costs" ;
+    rdfs:comment """A SELECT yielding `?cost`: what taking this act spends, in the wallet's unit — euros, the unit of account bids are already priced in. Declared by the package that owns the action, exactly as `orexis:landsAfter` declares its timing and for the same single-source reason: a search that invented a price would manufacture findings, and nothing upstream may pin a price on a specific act — the cost shapes the RANKING and nothing else (#466, control-the-derivative).
+
+ABSENCE IS FREE, and that is a statement rather than a gap — the reading an omitted effect and an omitted timing already get. A look's energy and a dose's spent litres are real and unpriced today; each is one declaration in its owning package's file the day a world cares.
+
+WHERE IT RANKS: under urgency, lexicographically. Cost speaks only between candidates urgency cannot separate — same urgency, cheaper wins — because wellbeing and money are different currencies and a scalar that mixed them could rank but never explain. A plan no better than standing still stays refused however cheap it is.""" .
+
 
 
 

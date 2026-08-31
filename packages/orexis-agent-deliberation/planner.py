@@ -111,6 +111,9 @@ class _Node:
     #  `orexis:landsAfter`, summed, for holding a candidate to a Within want's room (#472).
     #  The root has taken nothing and lands immediately.
     landing: float = 0.0
+    #  What this path SPENDS, in the wallet's unit — each step's own `orexis:costs`, summed
+    #  (#466). Free is the reading of an action that declares none.
+    cost: float = 0.0
 
 
 class Planner:
@@ -324,7 +327,15 @@ class Planner:
                     novel = where not in seen
                     if novel:
                         seen.add(where)
-                        if step.urgency < best.urgency:
+                        #  LEXICOGRAPHIC, urgency first (#466): cost speaks only where urgency
+                        #  cannot separate two candidates — same urgency, cheaper wins — and
+                        #  never outranks it, because a society that traded a plant's
+                        #  wellbeing for money would have that ranking ratified nowhere. The
+                        #  satisficing floor below is untouched: a plan no better than
+                        #  standing still stays refused however cheap it is.
+                        if (step.urgency < best.urgency
+                                or (step.urgency == best.urgency
+                                    and step.cost < best.cost)):
                             best = step
                     #  MET IS ASKED BEFORE THE PRUNE, and only for a want that is not met
                     #  ALREADY. Cycle detection is about EXPANSION — do not spend the depth
@@ -595,10 +606,13 @@ class Planner:
         #  stated timing — adds nothing, which is the keeper's own contract for it.
         lands = effects.lands_after(self.imaginarium, row.action, **bind)
         landing = node.landing + (lands or 0.0)
+        #  And what it spends — `orexis:costs`, the landing's twin (#466). None is free.
+        spent = effects.cost_of(self.imaginarium, row.action, **bind)
+        cost = node.cost + (spent or 0.0)
         urgency = self._urgency_in(world, graph, desire)
         taken = node.taken + (Step(act, urgency_after=urgency),)
         return _Node(world=world, graph=graph, taken=taken, urgency=urgency, diff=diff,
-                     landing=landing)
+                     landing=landing, cost=cost)
 
     def _bind(self, desire: Desire | None, node=None, row=None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.

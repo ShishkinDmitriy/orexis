@@ -77,6 +77,25 @@ market:Acquiring
           FILTER(?closes > NOW())
         }""" ;
 
+    #  WHAT IT SPENDS — the landing's twin (#466): the bidder's own CEILING, litres times
+    #  the pick it would never bid above. An estimate, and declared as one: the clearing
+    #  price is unknowable before the round (and under uniform price usually lower), so the
+    #  package declares the bound it owns rather than the guess it does not. The water term
+    #  is the same one deliberately domain-coupled corner `beliefs.py` argues for
+    #  `maxValuePerL`, speaking here for the same reason: what a bid is WORTH is the
+    #  domain's to say.
+    orexis:costs """
+        SELECT ?cost WHERE {
+            $me market:bidsIn ?via .
+            ?via market:marketFor ?src .
+            ?src market:supplies ?good .
+            ?valuation market:ofGood ?good ;
+                       market:aboutProperty $about .
+            GRAPH $beliefs { $me <http://example.org/orexis/water#maxValuePerL> ?ceiling }
+            FILTER($litres > 0)
+            BIND($litres * ?ceiling AS ?cost)
+        }""" ;
+
     #  WHO CARRIES IT OUT — the module whose family this names (knowledge/domain/actor.md).
     orexis:takenBy market:Bidding ;
     rdfs:label "what winning a bid makes true" ;
