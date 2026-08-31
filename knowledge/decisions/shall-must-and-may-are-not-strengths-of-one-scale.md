@@ -277,6 +277,37 @@ Two findings fall out of doing the projection, and neither was designed:
   implemented as repeated at-end. The one cell that will ever need a written operator is the
   debt's `within(t)`, already a seam.
 
+## One owner per axis, and the mood is computed like a band
+
+Asked by the sovereign, third and most concretely: do the axes need terms — a `pddl3:Always`,
+a `pddl3:AtEnd`, a `modality:Shall`, a `modality:MustNot`? No, and the reason has a sharper
+form than the no-new-classes section above: **each axis gets exactly ONE owner, and two of
+the three already have theirs.** Force is owned by SEVERITY — `sh:Violation`, `sh:Warning`,
+`orexis:ShouldBecome` — and the custom severity is the precedent that shows the mechanism:
+when force needed a new value, the house extended the severity vocabulary, not a class
+hierarchy, and a future hard avoidance is one more severity IRI, never a class. A
+`modality:MustNot` beside `sh:Violation` would be two owners of one claim — the thing the
+domain gate refuses in prose, arriving in the T-Box. Provenance is owned by PROV and the
+premises, and a class flagging it is the mistake
+[#471](https://github.com/ShishkinDmitriy/orexis/issues/471) is deleting, rotated ninety
+degrees. Scope has no owner because it has ONE value — `always`, via the loop — and a
+vocabulary whose every instance says the same thing is a term nobody reads.
+
+**The mood of a want is therefore COMPUTED, never asserted — like a band.** A want with a
+`orexis:metWhen` has a MUST half; a kind with a declared measure has a SHALL half; a shape at
+violation severity is law. A dashboard or the ask channel that wants to print "MUST,
+someone's, always" derives the label from the carriers on demand, and it can never disagree
+with the data beside it because it IS the data beside it. Even polarity needs no term: an
+avoidance's measure is high when the pattern is present and zero when it is absent — the
+gradient's own arithmetic is the polarity.
+
+**And no `pddl3:` namespace, ever** — naming PDDL is not proposing to parse it, and the
+carriers stay SHACL, SPARQL and PROV. The nicest case is `within(t)`, which may need ZERO
+vocabulary when its day comes: `orexis:expiresAt` is already on the obligation, and the change
+is the planner reading it as plan-validity — the simulated clock checked against it — rather
+than only as heat. A semantics change, not a term. The ontology's trajectory out of this
+sitting is net NEGATIVE: #471 removes a class, and the three axes add none.
+
 
 
 ## No new classes, and no new stores — asked and refused
