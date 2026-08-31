@@ -206,14 +206,14 @@ def test_the_sentinel_template_renders_the_terrace(terrace, monkeypatch):
     `sensing:maxReadingAgeS`, which is a belief and lives in no public graph, so it bound
     nothing and every sentinel would have compiled the 750 s default: 600 s, above the 300 s
     the terrace agent actually believes, so a healthy board would have been read as dead.
-    Asserting 240 is asserting that the belief was read."""
+    Asserting 1200 is asserting that the belief was read."""
     from onboarding import firmware
 
     monkeypatch.setattr(firmware, "_env", lambda path, key: {"MQTT_USERNAME": "u",
                                                              "MQTT_PASSWORD": "p"}.get(key))
     monkeypatch.setattr(firmware, "_wifi", lambda: ("ssid", "pass"))
     out = firmware.render_sentinel("terrace", terrace, ratified.dataset("terrace"))
-    assert "#define HEARTBEAT_S 240" in out            # max(60, 0.8 * 300)
+    assert "#define HEARTBEAT_S 1200" in out           # max(60, 0.8 * 1500)
     assert "#define WAKE_DELTA 0.087" in out           # 0.25 * (0.60 - 0.25), rounded
     assert "#define WAKE_PERSIST_LOOKS 2" in out
     assert "#define MOISTURE_PIN 34" in out

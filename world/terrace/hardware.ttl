@@ -117,10 +117,11 @@
 :bme_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
 :bme_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
 
-# WHICH channel each of the society's two air sensors is — the fact that lets the part's class
+# WHICH channel each of the society's three air sensors is — the fact that lets the part's class
 # reach them: range, accuracy, resolution, and the sampling floor world.ttl restates.
 :air_temp_terrace     a bme280:TemperatureSensor .
 :air_humidity_terrace a bme280:HumiditySensor .
+:air_pressure_terrace a bme280:PressureSensor .
 
 ##########  The wires  ##########
 # Named, so a fault can be pointed at. Colours are the jumpers on the bench.

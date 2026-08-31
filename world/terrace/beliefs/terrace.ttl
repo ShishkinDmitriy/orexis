@@ -19,7 +19,7 @@
 #  seen wants to be heard often. Raise it to 1800 or 3600 once the lamp has said so, and
 #  regenerate: the heartbeat follows this belief and nothing else.
 :terrace_agent
-    sensing:maxReadingAgeS 300 ;
+    sensing:maxReadingAgeS 1500 ;
     sensing:readingGraceS 120 .        # every perceiver states one; the slack past a
                                        # heartbeat before a reading counts as old
 

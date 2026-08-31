@@ -54,6 +54,9 @@ Denominated in lux, and stated as such with `unit:LUX`, because unlike a moistur
 :AirHumidity a sosa:ObservableProperty ; rdfs:label "Air humidity" ;
     rdfs:comment "The other half of that board, and the more dangerous half: it is a FRACTION, so its readings land in the same 0-1 range as soil moisture and inside the bands agents hold. A temperature mistaken for moisture reads as absurdly wet and is merely ignored; a humidity mistaken for moisture reads as a plausible, actionable dryness and gets bid on. Nothing in the number says which it is — only the property does." .
 
+:AirPressure a sosa:ObservableProperty ; rdfs:label "Air pressure" ;
+    rdfs:comment "Weather, not the plant: no range a species states mentions it and no market relieves it. It is here for the same structural reason Illuminance is — a property must be named before a channel can observe it — and it earned the naming the day the terrace deployment wanted its BME280's third value on a graph rather than only on the wire. Denominated in hectopascals (unit:HectoPA), the unit the part's own ontology already states its range in. The alternative, a weather domain package of one term, is deferred until something besides a dashboard reads it." .
+
 :servedBy a owl:ObjectProperty ; rdfs:domain :Plant ; rdfs:range :WaterSource ;
     rdfs:label "served by" ;
     rdfs:comment "Plumbing/reachability: which source can water this plant." .
