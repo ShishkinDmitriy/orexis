@@ -12,6 +12,9 @@ description: >-
   deontic scale — the sources differ in logic, urgency stays the unranked common currency,
   and the character seam stays open. Two gaps survive, each with an issue — a want met by
   absence (#468), and remembered plans (#469).
+  A follow-up sitting added the provenance axis — the moods compose with WHOSE, and internal
+  barely exists here — and refused mood classes and mood stores both, because modality decides
+  the store, provenance the graph, and severity the force.
 status: accepted
 timestamp: 2026-08-31T17:36:56Z
 ---
@@ -129,6 +132,65 @@ One line for the reading the sovereign explicitly set aside: RFC 2119's MAY — 
 also has an owner here, the mandate and its latitude, and nothing in this record licenses
 importing the RFC meanings into these five words.
 
+## One axis, not two taxonomies — the moods compose with provenance
+
+Asked by the sovereign on reading the mapping: *we also have internal and external
+(someone's) distinctions.* The axis exists, it is PROVENANCE, and it is orthogonal to the
+moods: force says how a crossed line binds, the source says whose line it is, and the two
+compose rather than multiplying into new words. The proof is already structural — MUST is
+SHALL from outside, and the ontology says so: `orexis:Obligation` is a subclass of
+`orexis:Desire`, in its own comment's words *because everything that reads desire should read
+this too; what differs is only where it came from, which is what prov says.*
+
+| source | its SHALL | its SHALL NOT | crossed means |
+|---|---|---|---|
+| the subject — whom I act for | the stake, a region from its stated ranges | the region's own side shapes | a gap — bouletic |
+| a peer — a counterparty | an obligation | the deontic prohibition, [#468](https://github.com/ShishkinDmitriy/orexis/issues/468)'s future seat | a breach — deontic |
+| the sovereign, ratifying a want | a world-stated root | a ratified avoidance, #468's door | a gap — bouletic |
+| the sovereign, as law | — | the shapes and the mandate | illegitimate — alethic |
+| the agent itself | only the aim — a pick inside room, never a want | nothing, by design | — |
+
+The last row is the axis's sharpest fact: **internal barely exists here, on purpose.** An
+agent authors no wants — the self-satisfaction loophole is shut in both directions — it only
+picks inside room others gave. So the working test is not internal against external but the
+one [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) already stated: **is there
+someone to be wronged?** Yes — deontic, a breach with a counterparty and a deadline. No, but
+ratified as law — alethic, refused. No, and merely stated as a need — bouletic, a gap,
+priced.
+
+## No new classes, and no new stores — asked and refused
+
+The sovereign asked both directly, and both dissolve against rules already paid for.
+
+**Concepts: the two that exist are enough.** `orexis:Desire`, with `orexis:Obligation` its
+subclass, and the KIND of a want read off the premises it has and the others do not — a stake
+carries a reading, an obligation a claim and a counterparty, an epistemic want its instrument
+— because a flag that can disagree with the data beside it is a flag that eventually does
+([desire](/domain/desire.md)). A mood class beside them — a Shall, an Avoidance, a
+Prohibition — would be exactly such a flag, and one nothing reads: the met-shape gives the
+state, the declared measure gives the urgency, the search minimises it, and an avoidance
+differs only in what its shape and measure SAY. A term nobody reads is annotation. What #468
+and [#469](https://github.com/ShishkinDmitriy/orexis/issues/469) genuinely need they mint in
+their owner's namespace in the change that builds it, promoted to `orexis:` only when several
+packages must speak it — the standing promotion test.
+
+**Stores: neither four nor one — the question dissolves, because a store is a modality and
+the four moods are not four modalities**
+([a-store-is-a-modality](/decisions/a-store-is-a-modality.md)). SHALL, SHALL NOT and the
+deontic MUST are all *would like*: ONE desires store, already built to take contributions
+from every loaded package's `desires.ru` and from the records — the obligations among them —
+rebuilt from premises and read-only to the runtime, so a new source of want is a new
+contributor to the build and no reader learns the count. The alethic MUST NOT is not a mental
+state at all: it lives where law lives, the ratified world and its shapes, public. MAY's
+plans, when #469 builds them, are the agent's own past — recorded, beside the ledger, not a
+want. Splitting the desires store by force would put severity where provenance belongs;
+merging the modalities into one store would repay the split for nothing.
+
+**And packages already contribute per mood, through doors that exist**: `desires.ru` for
+wants — bouletic or deontic, the premise decides; `shapes.ttl` for law — every package's
+shapes already gate validation; #469 adds the library door. A package that speaks a new mood
+edits nothing outside its directory, which is rule 2's mechanic doing what it always does.
+
 # Seams left open
 
 - **The override order (character)** stays the obligation record's seam. This record adds one
@@ -140,6 +202,14 @@ importing the RFC meanings into these five words.
 - **The nouns are deliberately unminted.** "Avoidance" and "plan library" appear here as
   descriptions, not terms — a word enters the dictionary in the same change that builds its
   thing, and both issues carry that requirement.
+
+- **Restriction is at commitment, not during search.** A world failing law is refused after
+  the search has picked it, and a refused winner yields NO plan rather than the next legal
+  candidate — [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md)'s
+  recorded seam, untriggerable while no shape refuses a state a lever can reach. The moment
+  #468's source mechanism lets a sovereign ratify at violation severity — a true MUST NOT
+  over a reachable state — it becomes triggerable, and the same change must close it the way
+  that record already names: ask the next candidate. Carried on #468's definition of done.
 
 # Issues this emits
 
