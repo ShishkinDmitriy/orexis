@@ -55,7 +55,7 @@ one — an agent holding only the deadline could not say how urgent it is withou
 clock started.
 
 Since [#472](https://github.com/ShishkinDmitriy/orexis/issues/472) the room is also the want's
-declared SCOPE — `orexis:scope orexis:Within` — and the planner holds a candidate plan's landing
+declared SCOPE — `orexis:bindsWhen orexis:Within` — and the planner holds a candidate plan's landing
 time to it: a serve that would land after expiry is discarded in the search, not discovered at
 the venue.
 

@@ -460,7 +460,7 @@ orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range or
 #  two values, both claims about NOW: `sh:Violation` refuses, `sh:Warning` is the operator's.
 #  A want's met-test enters no validation pass (the metWhen linkage takes it out, in
 #  `conformance.py`), so it needs no severity to be survivable; its time-meaning moved to
-#  `orexis:scope`.
+#  `orexis:bindsWhen`.
 
 #  WHICH WAY a want is unmet, said by the shape rather than worked out by whoever reads the
 #  result. A validation result carries `sh:sourceConstraintComponent`, and after the split both
@@ -596,9 +596,9 @@ orexis:about a owl:ObjectProperty ; rdfs:domain orexis:Desire ;
 orexis:Scope a owl:Class ; rdfs:label "Scope" ;
     rdfs:comment "WHEN a want binds along a plan. The planner is the reader: Always is judged at every state of a candidate plan — not at-end every loop, every step of each loop — AtEnd at the end-world alone, Within against the simulated clock." .
 
-orexis:scope a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range orexis:Scope ;
-    rdfs:label "scope" ;
-    rdfs:comment "The want's time semantics, stated by whoever derives it — no derived want defaults one (orexis:ScopedWantShape). On the DESIRE and never on its met-shape: the shape says WHAT would satisfy, the scope says WHEN along a path that question is asked." .
+orexis:bindsWhen a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range orexis:Scope ;
+    rdfs:label "binds when" ;
+    rdfs:comment "The want's time semantics, stated by whoever derives it — no derived want defaults one (orexis:ScopedWantShape). On the DESIRE and never on its met-shape, and named as `orexis:metWhen`'s sibling by the sentence that defines the axis: the met-test says WHAT would satisfy, this says WHEN along a path that question is asked. NOT `orexis:scope`, ruled by the sovereign on being asked: an axis is never a predicate's name here — force has no `orexis:force`, being carried by severity and the met/measure split — and scope's everyday reading is what a thing covers, not when it binds. Scope stays the axis's NOUN and the values' type." .
 
 orexis:Always a orexis:Scope ; rdfs:label "always" ;
     rdfs:comment "Every state of the plan is asked, not the end alone — and every tick asks reality again: the loop is the half of always the planner cannot give. The region and the freshness wants are Always." .

@@ -48,7 +48,7 @@ def test_a_region_is_readable_from_the_desires_store_alone(monkeypatch):
 
     rows = bindings(agent.desires.query_union(f"""
         SELECT ?low ?high WHERE {{
-          ?desire orexis:metWhen ?region ; orexis:scope orexis:Always .
+          ?desire orexis:metWhen ?region ; orexis:bindsWhen orexis:Always .
           ?region ssn:forProperty <{MOISTURE}> ; sh:property ?below , ?above .
           ?below orexis:violationIs orexis:Below ;
                  sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
@@ -56,7 +56,7 @@ def test_a_region_is_readable_from_the_desires_store_alone(monkeypatch):
                  sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
         }}"""))
     assert rows, ("the gardener's moisture region must be in the desires store — and the want "
-                  "must state its scope (#472): the pattern walks orexis:scope on purpose, so "
+                  "must state its scope (#472): the pattern walks orexis:bindsWhen on purpose, so "
                   "a derivation that stops writing one goes red here")
     assert float(rows[0]["low"]) < float(rows[0]["high"])
 

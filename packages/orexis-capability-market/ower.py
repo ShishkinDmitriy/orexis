@@ -119,7 +119,7 @@ class Ower(Module):
             return None
         self.agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
             <{uri}> a <{OREXIS}Desire> ;
-                <{OREXIS}scope> <{OREXIS}Within> ;
+                <{OREXIS}bindsWhen> <{OREXIS}Within> ;
                 <http://www.w3.org/ns/prov#wasDerivedFrom> "{claim_jti}" ;
                 <{OREXIS}owedTo> <{to_agent}> ;
                 <{OREXIS}forClaim> "{claim_jti}" ;

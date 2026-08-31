@@ -162,7 +162,7 @@ Every figure here was computed, so this is arithmetic rather than authorship —
 orexis:ScopedWantShape a sh:NodeShape ;
     rdfs:comment "Every derived want states WHEN it binds (#472) — no want defaults a scope, because a defaulted scope is the implicit convention the axis exists to retire. Targeted on the metWhen carriers: the derivations mint those fresh on every rebuild, so no volume can hold a legacy one. An obligation's record is deliberately NOT targeted — a volume written before the scope word existed carries rows the writer could not have scoped, and a boot check that refused them would refuse the debt it exists to keep visible; the deadline on the record is the fact, and the scope the ledger writes on new rows restates it." ;
     sh:targetSubjectsOf orexis:metWhen ;
-    sh:property [ sh:path orexis:scope ;
+    sh:property [ sh:path orexis:bindsWhen ;
                   sh:minCount 1 ; sh:maxCount 1 ;
                   sh:in ( orexis:Always orexis:AtEnd orexis:Within ) ;
                   sh:message "a derived want must state its scope — orexis:Always, orexis:AtEnd or orexis:Within — written by its derivation, defaulted by nothing" ] .

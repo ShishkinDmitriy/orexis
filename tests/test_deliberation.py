@@ -693,7 +693,7 @@ def test_a_plan_landing_after_the_wants_expiry_is_not_one(make):
     uri = "http://example.org/orexis#obligation.w1"
     supplier.beliefs.update(f"""INSERT DATA {{ GRAPH <{obligations_graph(supplier.id)}> {{
         <{uri}> a <http://example.org/orexis#Desire> ;
-            <http://example.org/orexis#scope> <http://example.org/orexis#Within> ;
+            <http://example.org/orexis#bindsWhen> <http://example.org/orexis#Within> ;
             <http://example.org/orexis#owedTo>
                 <http://example.org/orexis/world/simulation#fern_agent> ;
             <http://example.org/orexis#forClaim> "w1" ;
