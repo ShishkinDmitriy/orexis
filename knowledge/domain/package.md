@@ -140,7 +140,9 @@ look identical. The contracts carry the boundary alone:
   since the mind came home — **`agent` away from every GRANTED package**: the container loads
   them and never reaches into one. That contract could not be stated while three capability
   packages held the mind, and the violations were not theoretical. What it does import is the
-  three LAYERS, carried by its own declared dependencies until #455, and
+  three LAYERS, carried by its own declared dependencies — #455's pull derives the load set
+  for service providers, and the layers will follow it only when the kernel's imports become
+  need-declarations — and
   `tests/test_layering.py` finds them by family rather than by name and holds each to importing
   only the layers beneath it;
 - but it binds **Python and nothing else**, and the kernel does still reach into a package's

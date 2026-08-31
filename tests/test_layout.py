@@ -899,3 +899,266 @@ def test_an_ordinary_provider_leaves_nothing_to_close():
     service, close = opened(lambda agent: object(), None)
     assert service is not None
     assert close is None, "a plain provider should leave no teardown behind"
+
+
+# --- the pull: a required key loads its provider, a soft one takes what is there (#455) ------
+#
+#  The load set is the grants' owner packages plus every package a REQUIRED injection pulls,
+#  needs after needs (a-layer-is-a-package-and-need-loads-it). The tree ships no `@provides`
+#  offer today, so the pull is proved against a synthetic tree of real `loader.Package`
+#  records — real directories, real manifests, imported through the loader's own doors — and
+#  the marker files say WHEN a package's Python actually arrived, which is the fact under test.
+
+_PULL_ALPHA = '''\
+from pathlib import Path
+
+from assembly import inject
+
+
+class Alpha:
+    pass
+
+
+@inject.provides
+def alpha(agent) -> Alpha:
+    return Alpha()
+
+
+def provides():
+    Path(__file__).with_name("loaded.marker").write_text("pulled")
+    from orexis_pulled_beta import Beta
+
+    class AlphaModule:
+        beta: Beta          # required: the pull follows this
+
+    return (AlphaModule,)
+'''
+
+_PULL_BETA = '''\
+from pathlib import Path
+
+from assembly import inject
+
+
+class Beta:
+    pass
+
+
+@inject.provides
+def beta(agent) -> Beta:
+    return Beta()
+
+
+def provides():
+    Path(__file__).with_name("loaded.marker").write_text("pulled")
+    from orexis_pulled_gamma import Gamma
+
+    class BetaModule:
+        gamma: Gamma        # a pulled package's needs follow it
+
+    return (BetaModule,)
+'''
+
+_PULL_GAMMA = '''\
+from pathlib import Path
+
+from assembly import inject
+
+
+class Gamma:
+    pass
+
+
+@inject.provides
+def gamma(agent) -> Gamma:
+    return Gamma()
+
+
+def provides():
+    Path(__file__).with_name("loaded.marker").write_text("pulled")
+    from orexis_pulled_alpha import Alpha
+
+    class GammaModule:
+        alpha: Alpha        # the cycle back to the start — terminates, loads nothing twice
+
+    return (GammaModule,)
+'''
+
+_PULL_DELTA = '''\
+from pathlib import Path
+
+from assembly import inject
+
+
+class Delta:
+    pass
+
+
+@inject.provides
+def delta(agent) -> Delta:
+    Path(__file__).with_name("built.marker").write_text("x")
+    return Delta()
+
+
+def provides():
+    Path(__file__).with_name("loaded.marker").write_text("x")
+    return ()
+'''
+
+
+@pytest.fixture
+def synthetic_tree(tmp_path, monkeypatch):
+    """Real packages on disk, appended to the discovered tree.
+
+    `loader.Package` records over real directories, so equality, `manifest()` and `provides()`
+    behave exactly as production's do — the fakes differ from a shipped package only in being
+    somewhere temporary. `offers()` is cached over `packages()`, so the cache is cleared going
+    in and coming out, and the imported fakes leave `sys.modules` with the test.
+    """
+    import sys
+
+    from assembly import loader
+
+    def build(packages_py: dict[str, str]) -> list:
+        made = []
+        for module, body in packages_py.items():
+            d = tmp_path / module
+            d.mkdir()
+            (d / "__init__.py").write_text(body)
+            made.append(loader.Package(kind="service", name=module.rsplit("_", 1)[-1],
+                                       path=d, module=module))
+        monkeypatch.syspath_prepend(str(tmp_path))
+        real = loader.packages
+        monkeypatch.setattr(loader, "packages", lambda: real() + tuple(made))
+        loader.offers.cache_clear()
+        return made
+
+    yield build
+    loader.offers.cache_clear()
+    for name in [n for n in sys.modules if n.startswith("orexis_pulled_")]:
+        del sys.modules[name]
+
+
+def test_a_required_key_pulls_its_provider_transitively(synthetic_tree):
+    """Loading a package whose module requires a key offered by an unloaded package loads that
+    package too, and its needs after it — and a cycle of needs terminates.
+
+    Alpha's module requires Beta (another package's), Beta's requires Gamma, and Gamma's
+    requires Alpha back — so one walk proves the pull, the transitivity and the cycle at once:
+    exactly three packages, each loaded exactly once, in need order.
+    """
+    from assembly import loader
+
+    alpha, beta, gamma = synthetic_tree({
+        "orexis_pulled_alpha": _PULL_ALPHA,
+        "orexis_pulled_beta": _PULL_BETA,
+        "orexis_pulled_gamma": _PULL_GAMMA,
+    })
+    loaded = loader.pulled([alpha])
+    assert loaded == (alpha, beta, gamma), (
+        f"the pull should reach exactly alpha, beta, gamma in need order — got "
+        f"{[p.import_name for p in loaded]}")
+    assert (beta.path / "loaded.marker").exists(), (
+        "beta's Python never arrived — a required key must load its provider")
+    assert (gamma.path / "loaded.marker").exists(), (
+        "gamma's Python never arrived — a pulled package's needs must follow it")
+
+
+def test_a_soft_annotation_never_causes_a_load(synthetic_tree, monkeypatch):
+    """A provider IS in the tree, and stays unloaded when only an optional annotation names it.
+
+    The module gets None, the provider's `provides()` is never called and its offer never
+    runs — a soft need takes what is already there, and nothing about fern's grants puts
+    delta there.
+    """
+    from agent.module import Module
+    from conftest import build_agent
+
+    (delta,) = synthetic_tree({"orexis_pulled_delta": _PULL_DELTA})
+    from orexis_pulled_delta import Delta
+    #  Planted in this module's globals so the class body's string annotation (this file has
+    #  `from __future__ import annotations`) resolves; monkeypatch takes it back out.
+    monkeypatch.setitem(globals(), "Delta", Delta)
+
+    class Soft(Module):
+        name = "soft"
+        delta: Delta | None
+
+    agent = build_agent("fern", monkeypatch=monkeypatch)
+    module = Soft(agent)
+    assert module.delta is None, "a soft annotation must inject only what is already there"
+    assert delta not in agent._loaded, "an optional annotation must never enter the load set"
+    assert not (delta.path / "loaded.marker").exists(), (
+        "delta's Python was loaded with nothing but a soft annotation naming it")
+    assert not (delta.path / "built.marker").exists(), (
+        "delta's offer ran with nothing but a soft annotation naming it")
+
+
+def test_a_service_outside_the_load_set_is_refused_by_name(synthetic_tree, monkeypatch):
+    """A key offered only by a package no need pulled is refused, naming the package.
+
+    Before #455 `agent.service` resolved tree-wide, so being in the checkout was being in the
+    build. Now presence is the load set's, and the refusal says which package holds the offer
+    and what would pull it in — without running the offer, which is the other half of the claim.
+    """
+    from conftest import build_agent
+
+    (delta,) = synthetic_tree({"orexis_pulled_delta": _PULL_DELTA})
+    from orexis_pulled_delta import Delta
+
+    agent = build_agent("fern", monkeypatch=monkeypatch)
+    with pytest.raises(KeyError, match="load set"):
+        agent.service(Delta)
+    assert not (delta.path / "built.marker").exists(), (
+        "the refusal built the service it was refusing")
+
+
+SUBSCRIBING = "http://example.org/orexis/sensing#Subscribing"
+
+
+def test_the_pull_adds_nothing_a_sensing_grant_does_not_need():
+    """The load set of a sensing-only grant is sensing's package and no other — measured on
+    the built load set. Sensing's module classes declare no required key any package offers,
+    so the pull adds nothing; the layers it leans on arrive by import, which the xfail below
+    measures honestly."""
+    from assembly import loader
+
+    assert [p.import_name for p in loader.load_set({SUBSCRIBING})] == \
+        ["orexis_capability_sensing"], (
+        "a sensing-only grant should put exactly sensing's package in the load set")
+
+
+@pytest.mark.xfail(strict=True, reason=(
+    "a sensing-only grant still loads deliberation Python, and the pull cannot stop it: "
+    "agent/runtime.py, agent/module.py and agent/validate.py import "
+    "orexis_agent_deliberation unconditionally (Beliefs, Desires, Deliberator, Reviser, "
+    "conformance — the container builds the mind for every agent), and "
+    "orexis_capability_sensing itself imports orexis_agent_deliberation.desire.Desire and "
+    ".beliefs.Picks as layer contracts. Making those imports need-declarations means "
+    "decomposing the Agent object, which #455 stopped short of: the pull governs service "
+    "providers, and the layers are still loaded by the kernel's own declared dependencies."))
+def test_a_world_granting_only_sensing_loads_no_deliberation_python():
+    """MEASURED on what a sensing-only build imports, in a process of its own — not asserted.
+
+    The manifest (`orexis_agent_deliberation/__init__.py`) is excluded deliberately: every
+    package's manifest is imported at assembly by design and is held cheap by the gate above.
+    What must not arrive is the layer's actual Python — any submodule.
+    """
+    import json
+    import subprocess
+    import sys
+
+    code = (
+        "import json, sys\n"
+        "from assembly import loader\n"
+        f"loader.registry_for({{{SUBSCRIBING!r}}})\n"
+        f"loader.load_set({{{SUBSCRIBING!r}}})\n"
+        "print(json.dumps(sorted(m for m in sys.modules\n"
+        "                        if m.startswith('orexis_agent_deliberation.'))))\n"
+    )
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True,
+                         cwd=REPO_ROOT)
+    assert out.returncode == 0, out.stderr
+    offenders = json.loads(out.stdout.strip().splitlines()[-1])
+    assert not offenders, (
+        "a sensing-only grant imported deliberation Python: " + ", ".join(offenders))

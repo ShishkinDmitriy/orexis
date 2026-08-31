@@ -45,9 +45,10 @@ ROOT_DIST = "orexis"
 #  of those arrows and reads the order from here. The carve-outs are by FAMILY, never by
 #  name: a layer is `orexis-agent-<layer>`, the family `agent` grouping the three in a listing
 #  and the member being the row — one package each, not a family with members — so a capability can
-#  never slip in by being listed. Until #455 derives the load set from the grants, the root's own declared
-#  dependencies are what load the layers, which is why the root's list may name them and
-#  nothing else under `packages/`.
+#  never slip in by being listed. The pull (#455) derives the load set for service providers;
+#  the LAYERS are still loaded by the root's own declared dependencies, because the kernel
+#  imports them directly — which is why the root's list may name them and nothing else under
+#  `packages/`.
 LAYERS = ("reactive", "progression", "deliberation")
 
 

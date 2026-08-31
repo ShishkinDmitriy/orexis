@@ -129,6 +129,12 @@ class Agent:
         # IMPORTS follow the grants too: a capability names its owning package by namespace,
         # so nothing this agent was not granted is ever imported into this process.
         registry = loader.registry_for(self.me.capabilities)
+        #  THE LOAD SET (#455): the grants' owner packages plus every package a REQUIRED
+        #  injection pulls, needs after needs. `offers` and `service` below answer from this
+        #  set and the kernel's own table, so a soft annotation (`X | None`) injects what is
+        #  already there and never causes a load — a provider elsewhere in the tree is present
+        #  in the checkout, not in this build.
+        self._loaded = loader.load_set(self.me.capabilities)
         self.modules = [
             registry[c](self) for c in sorted(self.me.capabilities) if c in registry
         ]
@@ -216,7 +222,14 @@ class Agent:
                 "provides it, and the kernel does not. A service nobody offers is a "
                 "dependency nobody declared."
             )
-        _, build = offer
+        package, build = offer
+        if package not in self._loaded:
+            raise KeyError(
+                f"{attribute_for(key)} is offered by {package.import_name}, which is not in "
+                "this agent's load set — nothing this agent composed requires it. A required "
+                "annotation is what pulls a provider in (#455); a soft one takes only what "
+                "is already there."
+            )
         service, close = opened(build, self)
         self._services[key] = service
         if close is not None:
@@ -224,9 +237,15 @@ class Agent:
         return service
 
     def offers(self, key) -> bool:
-        """Is this service on the table at all? Asked without building it — which is what lets
-        an optional dependency be resolved to None rather than to a handle that would raise."""
-        return key in self._services or key in loader.offers()
+        """Is this service on the table FOR THIS AGENT? Asked without building it — which is
+        what lets an optional dependency be resolved to None rather than to a handle that
+        would raise. Scoped to the load set (#455): a provider outside it is a package this
+        agent has no need that pulls, so a soft annotation naming it stays None and the
+        package stays unloaded."""
+        if key in self._services:
+            return True
+        offer = loader.offers().get(key)
+        return offer is not None and offer[0] in self._loaded
 
     def offering(self, key, value) -> None:
         """The kernel putting one of its own on the table, under its class."""

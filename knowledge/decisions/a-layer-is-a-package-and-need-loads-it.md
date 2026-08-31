@@ -131,10 +131,18 @@ job is to carry that across the gap cannot be the layer that forgets it.
 
 # Seams left open
 
-- **The loading pull is unbuilt** — #455 is the mechanism, and until it lands, a layer package
-  loaded by the kernel's own declared dependencies is a legitimate intermediate state: the
-  placement is right and the roster is temporarily universal, which is where the superseded
-  record would have stopped permanently.
+- **The loading pull is built for services, and not yet for the layers.** #455 landed the
+  mechanism: `loader.load_set` closes the grants' owner packages over required injections,
+  needs after needs — a cycle terminates because a package enters the set once — a soft
+  annotation injects only what that set already holds and loads nothing, and `Agent.service`
+  refuses a provider outside the set by name. What the pull could not reach is the layer
+  roster: the container (`agent/runtime.py`, `agent/module.py`, `agent/validate.py`) and the
+  capability packages import the layer packages as contracts, so every agent still loads all
+  three by the kernel's own declared dependencies — the legitimate intermediate state this
+  seam first named, bounded now by those imports rather than by a missing mechanism. Making
+  them need-declarations means decomposing the `Agent` object, a decision for then;
+  `tests/test_layout.py` measures the gap as a strict xfail, so the day the imports go the
+  suite says so.
 - **What remains at the root** is `assembly/` and whatever shell of `agent/` survives #452 —
   the container the author asked for at the start. Whether that shell is a package too, or the
   one thing that is nobody's package because it is what asks, is #452's to discover.

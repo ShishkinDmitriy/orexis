@@ -115,9 +115,15 @@ build, different graphs, because the world says so.
 
 **The check turned out to be build-wide, not per agent**, which is simpler than this record
 first claimed and worth correcting. A service is offered by a PACKAGE, and every package is in
-every build; what differs between agents is which MODULES are constructed, and a module class's
-requirements are static. So the question is *does anything offer this*, and asking it needs no
-world at all — `test_every_hard_requirement_is_offered_by_something` runs against the tree.
+every checkout; what differs between agents is which MODULES are constructed, and a module
+class's requirements are static. So the question is *does anything offer this*, and asking it
+needs no world at all — `test_every_hard_requirement_is_offered_by_something` runs against the
+tree. (#455 split the runtime half off this: an agent's BUILD is its load set — the grants'
+owner packages closed over required injections — so `Agent.offers` answers from that set
+rather than from the checkout, a soft annotation resolves to None for a provider outside it,
+and a missing optional is a fact about which packages the needs pulled rather than about which
+were installed. The gate above stays tree-wide, because a required key must be offered
+wherever it lands.)
 
 What remains genuinely per-agent is capability composition, which was already checked. The
 per-agent framing came from assuming a service could be granted; it cannot, which is exactly what
