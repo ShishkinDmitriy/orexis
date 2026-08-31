@@ -88,9 +88,7 @@ def test_the_sovereign_asks_a_modality_and_the_desires_answer(fern):
                 <http://example.org/orexis/water#SoilMoisture> ;
                 <http://example.org/orexis#metWhen> ?region .
         ?region <http://www.w3.org/ns/shacl#property> ?below .
-        ?below <http://www.w3.org/ns/shacl#severity>
-               <http://example.org/orexis#ShouldBecome> ;
-               <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
+        ?below <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
                <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?low
     }""", modality="desires")
     answer = _answer(fern)

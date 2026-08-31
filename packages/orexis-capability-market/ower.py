@@ -119,6 +119,7 @@ class Ower(Module):
             return None
         self.agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
             <{uri}> a <{OREXIS}Desire> ;
+                <{OREXIS}scope> <{OREXIS}Within> ;
                 <http://www.w3.org/ns/prov#wasDerivedFrom> "{claim_jti}" ;
                 <{OREXIS}owedTo> <{to_agent}> ;
                 <{OREXIS}forClaim> "{claim_jti}" ;
@@ -203,6 +204,8 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
             lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])
             out.append(Desire(uri=row["desire"], urgency=_duty_urgency(row, now),
                               claim=row["claim"], owed_to=row["owedTo"],
+                              expires=(datetime.fromisoformat(row["expires"])
+                                       if row.get("expires") else None),
                               state="lapsed" if lapsed else
                                     ("demanded" if demanded else "standing"),
                               pursuable=demanded and not lapsed))

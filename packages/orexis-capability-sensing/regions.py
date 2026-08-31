@@ -114,9 +114,9 @@ SELECT ?property ?low ?high ?floor ?ceiling WHERE {
   <%s> orexis:holds ?desire .
   ?desire ssn:forProperty ?property ; orexis:metWhen ?shape .
   ?shape sh:property ?below , ?above .
-  ?below sh:severity orexis:ShouldBecome ; orexis:violationIs orexis:Below ;
+  ?below orexis:violationIs orexis:Below ;
          sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
-  ?above sh:severity orexis:ShouldBecome ; orexis:violationIs orexis:Above ;
+  ?above orexis:violationIs orexis:Above ;
          sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
   OPTIONAL {
     <%s> orexis:holds ?envelope .

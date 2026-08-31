@@ -39,6 +39,7 @@ BETTER = "better than standing still"
 WORSE = "no better than standing still"
 SEEN = "a world already reached"
 UNSIMULATED = "could not be simulated"
+LATE = "lands after the want expires"
 
 #  What each verdict is called in the series, declared HERE beside the verdict it names so the
 #  two cannot drift — the same one-definition-two-readers argument `gap.rq` and `urgency` make.
@@ -50,6 +51,7 @@ FIELD = {
     WORSE: "worse",
     SEEN: "cycles",
     UNSIMULATED: "unsimulated",
+    LATE: "late",
 }
 
 

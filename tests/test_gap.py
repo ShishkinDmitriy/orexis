@@ -240,10 +240,12 @@ def test_an_unmet_want_is_not_printed_as_a_finding(monkeypatch):
     world it was accepting. The verdict was never affected; the noise was, and noise in a gate
     teaches people to skip the gate.
 
-    Written so it fails from either end. The want must be REAL — the same store, asked through
-    the package's own reader, reports it — or this would pass on a world with nothing to say.
-    And the header has to agree with the body, because the filter rewrites a count pySHACL
-    wrote: a report claiming three results and showing one is how a filter goes wrong quietly.
+    Since #472 there is nothing to filter: a met-test enters no validation pass — the
+    metWhen linkage keeps it out — so the want produces no result to hide. Written to fail
+    from either end even so: the want must be REAL — the same store, asked through the
+    package's own reader, reports it — or this would pass on a world with nothing to say;
+    and the header must agree with the body, which now means pySHACL's own untouched report
+    agreeing with itself.
     """
     from agent import genesis
     from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
@@ -256,11 +258,8 @@ def test_an_unmet_want_is_not_printed_as_a_finding(monkeypatch):
 
     assert ok
     assert "a gap, which is what an agent is for" not in report, \
-        "the want's own message is the signal: the filter matches pySHACL's spelling of the " \
-        "severity, so its spelling is a dependency, and this is how a change in it surfaces"
-    #  Not a search for `ShouldBecome` anywhere — a surviving WARNING quotes the term inside
-    #  its own SPARQL text, and refusing that would be refusing a shape for talking about the
-    #  thing it is there to talk about.
+        "no want result may reach a person: since #472 a met-test enters no validation pass " \
+        "at all — the metWhen linkage keeps it out — where a filter used to drop its results"
 
     shown = report.count("Validation Result in")
     if claimed := re.search(r"Results \((\d+)\):", report):
@@ -270,29 +269,7 @@ def test_an_unmet_want_is_not_printed_as_a_finding(monkeypatch):
         "the store must still report the gap the report no longer prints"
 
 
-def test_the_filter_keeps_a_violation_however_pyshacl_heads_it():
-    """The filter reads pySHACL's prose, and prose has two headings.
 
-    A violation is written "Constraint Violation in ...", everything else "Validation Result
-    in ...". Knowing only the second put every violation into the report's HEADER, where the
-    filter discarded it along with the rest — so a world was refused with a report that said
-    it conformed. Four shape tests caught it; this one names it, because those four would all
-    have to be read before anyone suspected the filter.
-    """
-    from agent.validate import _without_wants
-
-    report = (
-        "Validation Report\nConforms: False\nResults (2):\n"
-        "Constraint Violation in SPARQLConstraintComponent (http://example/x):\n"
-        "\tSeverity: sh:Violation\n\tMessage: the aim sits outside the region\n"
-        "Validation Result in QualifiedValueShapeConstraintComponent (http://example/y):\n"
-        "\tSeverity: orexis:ShouldBecome\n\tMessage: a gap, which is what an agent is for\n")
-
-    kept = _without_wants(report)
-    assert "the aim sits outside the region" in kept
-    assert "a gap, which is what an agent is for" not in kept
-    assert "Results (1):" in kept, "the count must follow what survived"
-    assert _without_wants("Validation Report\nConforms: True") == "Validation Report\nConforms: True"
 
 
 def test_the_ranking_reaches_the_dashboards_with_the_split_that_matters(monkeypatch):

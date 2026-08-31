@@ -3,8 +3,9 @@ type: Domain Concept
 title: Shape
 description: >-
   SHACL, and the one language this project says both "you may not" and "I want" in — the
-  difference is SEVERITY, not structure. A violation refuses; `orexis:ShouldBecome` is a desire, and a
-  reader that treated them alike would stop a world onboarding because a plant is thirsty. The
+  difference used to be a third severity and is now the ROAD (#472): a violation refuses, a
+  warning is worth a look, and a want's met-test — known by hanging off its desire through
+  `orexis:metWhen` — enters no validation pass at all, so nothing has to mark it survivable. The
   severity split is ours: the spec defines conformance as no results AT ALL, so a warning would
   block exactly as hard as a violation and be pointless to write. Validated in two places by who
   owns the data — an agent checks its own beliefs at boot and refuses to run, the sovereign
@@ -29,7 +30,7 @@ The structure does not differ; the severity does.
 |---|---|---|
 | `sh:Violation` | this may not be | refuses — a world does not onboard, an agent does not start |
 | `sh:Warning` | legal, worth a look | printed and passed over |
-| `orexis:ShouldBecome` | this is wanted | not a finding about the world; it is the state of one |
+| *a want's met-test* | this is wanted | never validated in a pass (#472) — it hangs off its desire through `orexis:metWhen`, the planner asks it directly, and its state is the measure's job |
 
 **The severity split is ours, not SHACL's**, and it had to be. The spec defines conformance as
 *no results at all*, so pySHACL reports `conforms: False` for a warning exactly as it does for a

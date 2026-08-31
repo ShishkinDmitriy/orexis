@@ -19,9 +19,9 @@ SELECT ?kind ?desire ?property ?low ?high ?floor ?ceiling ?instrument WHERE {
     $me orexis:holds ?desire .
     ?desire ssn:forProperty ?property ; orexis:metWhen ?met .
     ?met sh:property ?below , ?above .
-    ?below sh:severity orexis:ShouldBecome ; orexis:violationIs orexis:Below ;
+    ?below orexis:violationIs orexis:Below ;
            sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
-    ?above sh:severity orexis:ShouldBecome ; orexis:violationIs orexis:Above ;
+    ?above orexis:violationIs orexis:Above ;
            sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
     OPTIONAL { $me orexis:holds ?envelope .
                ?envelope ssn:forProperty ?property ; sh:property ?underFloor , ?overCeiling .
