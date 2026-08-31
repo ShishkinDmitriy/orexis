@@ -37,7 +37,7 @@ Structured exactly as the DHT11 package — the worked example this repository s
 
 :PressureSensor a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
     rdfs:label "BME280 pressure sensor" ;
-    rdfs:comment "The third value in the same frame. No world observes pressure yet and no domain property names it — stated here because the part reports it whether or not anyone listens, and the day a domain wants weather, the channel is waiting." .
+    rdfs:comment "The third value in the same frame. Stated here from the start because the part reports it whether or not anyone listens — and the waiting paid: water:AirPressure names it now, and world/terrace was the first to poll the channel." .
 
 :Bme280 rdfs:subClassOf
     [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom :TemperatureSensor ] ,

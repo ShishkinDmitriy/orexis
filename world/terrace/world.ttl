@@ -98,16 +98,16 @@
     sosa:hosts :moisture_sensor_terrace , :air_sensor_terrace ;
     rdfs:comment "The board. One MQTT client, one credential, one wake — which is why its three channels share a topic and a clock, and why those are facts about IT rather than about any one of them." .
 
-#  The BME280 as the society sees it: a System with the two channels the water domain has
-#  words for as sub-systems. The part reports a THIRD value, pressure, and it is deliberately
-#  not a sensor here — no domain property names it (packages/orexis-part-bme280 says so), and
-#  a sensor observing nothing the society can name is a channel nobody polls. The firmware
-#  still puts it in the payload, because the part produces it whether or not anyone listens,
-#  and the day a domain wants weather the pointer is one triple away.
+#  The BME280 as the society sees it: a System with its three channels as sub-systems.
+#  Pressure was deliberately absent at first — no domain property named it, and a sensor
+#  observing nothing the society can name is a channel nobody polls — and the firmware put it
+#  in the payload anyway, because the part produces it whether or not anyone listens. The
+#  promised "one triple away" day arrived when the sovereign wanted weather on a graph:
+#  water:AirPressure now names it, and the channel below observes it.
 :air_sensor_terrace a ssn:System ;
     ag:localId "air_sensor_terrace" ;
-    ssn:hasSubSystem :air_temp_terrace , :air_humidity_terrace ;
-    rdfs:comment "One part reporting two properties the society names, and one it does not. A System rather than a Sensor because it observes nothing itself; a single forced-mode conversion yields all its values together, which is why they share an instant." .
+    ssn:hasSubSystem :air_temp_terrace , :air_humidity_terrace , :air_pressure_terrace ;
+    rdfs:comment "One part reporting three properties the society names. A System rather than a Sensor because it observes nothing itself; a single forced-mode conversion yields all its values together, which is why they share an instant." .
 
 :moisture_sensor_terrace a sosa:Sensor , device:Device , outdoor:Node ;
     ag:localId "moisture_sensor_terrace" ;
@@ -155,6 +155,19 @@
         ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "forced mode, full oversampling" ] ;
         ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 1 ; schema:unitCode unit:SEC ] ] .
 
+
+:air_pressure_terrace a sosa:Sensor , device:Device ;
+    ag:localId "air_pressure_terrace" ;
+    sensing:monitors :terrace_bed ;
+    sosa:observes water:AirPressure ;
+    scaling:quantityUnit unit:HectoPA ;
+    mqtt:readingTopic "sensors/moisture_sensor_terrace/reading" ;
+    mqtt:readingPointer "/pressure" ;
+    ssn-system:hasSystemCapability [
+        a ssn-system:SystemCapability ;
+        ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "forced mode, full oversampling" ] ;
+        ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 1 ; schema:unitCode unit:SEC ] ] .
+
 ##########  The agent  ##########
 #  No ag:actsFor: with nothing to advance for it, this agent holds no stake — it records.
 #  No market:bidsIn, no market:hosts, no actuation:hasActuator: no other capability can be
@@ -165,5 +178,5 @@
 
 :terrace_agent a ag:Agent ;
     ag:localId "terrace" ;
-    sensing:polls :moisture_sensor_terrace , :air_temp_terrace , :air_humidity_terrace ;
+    sensing:polls :moisture_sensor_terrace , :air_temp_terrace , :air_humidity_terrace , :air_pressure_terrace ;
     mqtt:eventTopic "readings/terrace" .
