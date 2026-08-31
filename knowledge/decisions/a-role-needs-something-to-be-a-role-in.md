@@ -138,7 +138,7 @@ telling the truth about which is which. That it *looks* untidy is the cost of it
 - **Two questions are now known to be one.** *Should positions be roles?* and *should an auction be
   an object?* have the same answer, and the second is the one to argue. Anyone reaching for roles
   again should be sent to [auction](/domain/auction.md) rather than to this record's conclusion.
-- **The rule generalises past markets.** A capability package adding a role should be asked what
+- **The rule generalises past markets.** A package adding a role should be asked what
   node it hangs off. If the answer is "the agent", it is a predicate.
 
 # Seams left open

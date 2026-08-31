@@ -51,8 +51,8 @@ packages import `orexis_capability_sensing`. That is a package importing another
 which rule 2 says never happens between *capabilities*; here the importer is not a
 capability but a member of a family sensing defines, importing the contract it exists to
 implement — the same relation a capability module has to `agent.module.Module`, one level
-down. The independence contract in `pyproject.toml` still holds among the four capability
-packages, and this record is where the exception is written.
+down. The independence contract in `pyproject.toml` still holds among the four packages
+of the capability family, and this record is where the exception is written.
 
 # What it cost
 

@@ -20,7 +20,7 @@ crowded name — the PyPI package is taken and the repository shared its name wi
 unrelated projects, so the project could not be found by its own name. The truthful one is
 more interesting: the name pointed at the wrong feature.
 
-Agora names the marketplace. But the market here is **one capability package among eight**,
+Agora names the marketplace. But the market here is **one package among eight**,
 and it is this architecture's own flagship example of interchangeability — pay-as-bid and
 uniform-price are two members of one [bid-matching](/decisions/bid-matching-is-a-capability.md)
 family, and `hosting.py` never learns which answered. A name should survive every planned

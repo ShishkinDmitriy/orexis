@@ -80,7 +80,7 @@ flag a boundary that stopped being used, where the dependencies gate fails on an
 declaration. And it ships nothing: one distribution cannot put only the executor and the stores
 on a dumb device's image.
 
-**Layers as granted capability packages.** Refused by the part of
+**Layers as granted packages.** Refused by the part of
 [the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md) that stands: stores built
 unconditionally with readers arriving by grant is exactly the failure shape that retired
 wanting, committing and deciding. A layer loads because the agent exists.

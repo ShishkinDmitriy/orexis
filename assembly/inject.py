@@ -31,10 +31,11 @@ and its type says what it is.
 is a handle: the object is built on first touch, which keeps construction order out of it and
 keeps imports following grants (#216).
 
-**A required annotation also PULLS (#455).** `loader.load_set` adds the package providing a
-required key to the agent's build, transitively — needs after needs — while a soft one
-(`X | None`) loads nothing and injects only what that set already holds. The split is declared
-here; the pull lives with the loader, because deciding what a build reaches is discovery's job.
+**A required annotation also PULLS (#455).** `loader.packages_for` adds the package providing
+a required key to the agent's build, transitively — needs after needs — while a soft one
+(`X | None`) loads nothing and injects only what those packages already offer. The split is
+declared here; the pull lives with the loader, because deciding what a build reaches is
+discovery's job.
 """
 
 from __future__ import annotations

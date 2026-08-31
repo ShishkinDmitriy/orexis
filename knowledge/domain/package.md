@@ -138,7 +138,7 @@ look identical. The contracts carry the boundary alone:
 
 - `lint-imports` holds `packages` away from `onboarding`, onboarding away from nothing, and —
   since the mind came home — **`agent` away from every GRANTED package**: the container loads
-  them and never reaches into one. That contract could not be stated while three capability
+  them and never reaches into one. That contract could not be stated while three granted
   packages held the mind, and the violations were not theoretical. What it does import is the
   three LAYERS, carried by its own declared dependencies — #455's pull derives the load set
   for service providers, and the layers will follow it only when the kernel's imports become

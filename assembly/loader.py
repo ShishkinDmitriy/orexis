@@ -539,7 +539,7 @@ def _required(cls) -> tuple:
     return tuple(key for _name, (key, optional) in injections_of(cls).items() if not optional)
 
 
-def load_set(capabilities) -> tuple[Package, ...]:
+def packages_for(capabilities) -> tuple[Package, ...]:
     """Every package one agent's build reaches: the grants' owners, and what their needs pull.
 
     THE PULL (#455, a-layer-is-a-package-and-need-loads-it): a REQUIRED annotation on a
@@ -564,8 +564,9 @@ def load_set(capabilities) -> tuple[Package, ...]:
 
 
 def pulled(granted) -> tuple[Package, ...]:
-    """The transitive closure of `granted` under required injections — `load_set`'s mechanism,
-    taking packages rather than capability terms so a test can hand it a synthetic tree.
+    """The transitive closure of `granted` under required injections — `packages_for`'s
+    mechanism, taking packages rather than capability terms so a test can hand it a synthetic
+    tree.
 
     A cycle of needs terminates because a package enters the set once: the worklist grows only
     on first sight, so two packages requiring each other's services are both loaded and

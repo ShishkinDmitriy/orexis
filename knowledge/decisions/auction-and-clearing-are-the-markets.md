@@ -33,8 +33,8 @@ relative inside the package; `tests/test_clearing.py` reaches through the packag
 market's own `test_auction.py` already did.
 
 **A claim embodies a commitment, and the commitment is the kernel's.** `actuation/module.py`
-imported `Claim` to mint a self-dose (#190), and after the move that would be one capability
-package importing another's Python — the independence contract in `pyproject.toml` refuses it,
+imported `Claim` to mint a self-dose (#190), and after the move that would be one package
+importing another's Python — the independence contract in `pyproject.toml` refuses it,
 and should. The first draft gave actuation a `Dose` of its own, the claim's shape restated; the
 sovereign's correction is the better answer: a claim is the *embodiment* of REA's commitment
 (the promised flow — [settlement-speaks-rea](/decisions/settlement-speaks-rea.md) already said

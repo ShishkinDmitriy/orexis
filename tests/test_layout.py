@@ -1087,7 +1087,8 @@ def test_a_soft_annotation_never_causes_a_load(synthetic_tree, monkeypatch):
     agent = build_agent("fern", monkeypatch=monkeypatch)
     module = Soft(agent)
     assert module.delta is None, "a soft annotation must inject only what is already there"
-    assert delta not in agent._loaded, "an optional annotation must never enter the load set"
+    assert delta not in agent._packages, (
+        "an optional annotation must never add to the packages an agent loads")
     assert not (delta.path / "loaded.marker").exists(), (
         "delta's Python was loaded with nothing but a soft annotation naming it")
     assert not (delta.path / "built.marker").exists(), (
@@ -1107,7 +1108,7 @@ def test_a_service_outside_the_load_set_is_refused_by_name(synthetic_tree, monke
     from orexis_pulled_delta import Delta
 
     agent = build_agent("fern", monkeypatch=monkeypatch)
-    with pytest.raises(KeyError, match="load set"):
+    with pytest.raises(KeyError, match="packages this agent loads"):
         agent.service(Delta)
     assert not (delta.path / "built.marker").exists(), (
         "the refusal built the service it was refusing")
@@ -1123,9 +1124,9 @@ def test_the_pull_adds_nothing_a_sensing_grant_does_not_need():
     measures honestly."""
     from assembly import loader
 
-    assert [p.import_name for p in loader.load_set({SUBSCRIBING})] == \
+    assert [p.import_name for p in loader.packages_for({SUBSCRIBING})] == \
         ["orexis_capability_sensing"], (
-        "a sensing-only grant should put exactly sensing's package in the load set")
+        "a sensing-only grant should load exactly sensing's package")
 
 
 @pytest.mark.xfail(strict=True, reason=(
@@ -1152,7 +1153,7 @@ def test_a_world_granting_only_sensing_loads_no_deliberation_python():
         "import json, sys\n"
         "from assembly import loader\n"
         f"loader.registry_for({{{SUBSCRIBING!r}}})\n"
-        f"loader.load_set({{{SUBSCRIBING!r}}})\n"
+        f"loader.packages_for({{{SUBSCRIBING!r}}})\n"
         "print(json.dumps(sorted(m for m in sys.modules\n"
         "                        if m.startswith('orexis_agent_deliberation.'))))\n"
     )

@@ -168,7 +168,7 @@ Asked by the sovereign once the axes existed: if this is the core of Orexis, sho
 the `ag:` namespace? The first answer drawn here was "the frame yes, the contents no" — and
 the sovereign's follow-up corrected it, rightly. Two arguments settle it the other way:
 
-**The states are already a lingua franca.** Four capability packages had to name them —
+**The states are already a lingua franca.** Four packages had to name them —
 market's bidding and hosting, deliberation, actuation — and a term many packages must name is
 not a package-private word. That is exactly what `ag:actsFor` and `ag:localId` are, and the
 kernel is where such words live.
