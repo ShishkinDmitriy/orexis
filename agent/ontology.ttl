@@ -454,8 +454,13 @@ orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range or
 #  since it was written, so an agent whose pot is dry starts, wants, and acts — which is the
 #  whole point of a desire being a shape rather than a rule.
 
-orexis:ShouldBecome a sh:Severity ; rdfs:label "should become" ;
-    rdfs:comment "The force of a want. A result at this severity is a GAP: legitimate, unsatisfactory, and addressed through the agent's levers rather than by refusing to run — the third point on the modality axis a-plan-is-a-path-of-graph-diffs named, finally expressible because SHACL lets severity be any IRI. It belongs on the shape that PRODUCES the result and not on the node shape above it: put it above and every unmet desire reports as a Violation, which would refuse to boot any agent whose pot is dry." .
+#  `orexis:ShouldBecome` WAS HERE and is retired (#472). It marked a shape as a want in the era
+#  when a desire WAS a bare shape and needed telling apart from law; a want is a NODE now,
+#  known by carrying `orexis:metWhen`, so the mark was redundant — and severity keeps exactly
+#  two values, both claims about NOW: `sh:Violation` refuses, `sh:Warning` is the operator's.
+#  A want's met-test enters no validation pass (the metWhen linkage takes it out, in
+#  `conformance.py`), so it needs no severity to be survivable; its time-meaning moved to
+#  `orexis:bindsWhen`.
 
 #  WHICH WAY a want is unmet, said by the shape rather than worked out by whoever reads the
 #  result. A validation result carries `sh:sourceConstraintComponent`, and after the split both
@@ -578,6 +583,29 @@ orexis:metWhen a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range sh:
 orexis:about a owl:ObjectProperty ; rdfs:domain orexis:Desire ;
     rdfs:label "about" ;
     rdfs:comment "What a want is ABOUT — the one node an action query may join a lever to. Stated by whoever derived the want, and opaque to the kernel: sensing says a region want and a freshness want are about an observable property, and its own action queries walk from there; a want that is about nothing (a debt, a call) states none and is joined to its rows another way. The kernel carries it from the want to the row to the rule (`VALUES (?want ?about)` in orexis:available, `$about` in an effect) and never reads it. It replaced the ledger's and the row's `ssn:forProperty`, which was the kernel naming a sensing notion (the-stake-is-sensings-want)." .
+
+#################  When a want binds: the scope axis  #################
+#
+#  The third axis of the #467 sitting — force × provenance × SCOPE — in PDDL's words and the
+#  kernel's namespace, never a pddl3: import: every derivation writes one and the planner
+#  reads it, which is the promotion test met. Three members ship because three have
+#  customers; `sometime`, `at-most-once` and `sometime-before` stay unminted until a want
+#  needs one. The class mirrors orexis:Side: a value-typing class, not a mood flag — the moods
+#  stay computed off the carriers, never asserted.
+
+orexis:Scope a owl:Class ; rdfs:label "Scope" ;
+    rdfs:comment "WHEN a want binds along a plan. The planner is the reader: Always is judged at every state of a candidate plan — not at-end every loop, every step of each loop — AtEnd at the end-world alone, Within against the simulated clock." .
+
+orexis:bindsWhen a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range orexis:Scope ;
+    rdfs:label "binds when" ;
+    rdfs:comment "The want's time semantics, stated by whoever derives it — no derived want defaults one (orexis:ScopedWantShape). On the DESIRE and never on its met-shape, and named as `orexis:metWhen`'s sibling by the sentence that defines the axis: the met-test says WHAT would satisfy, this says WHEN along a path that question is asked. NOT `orexis:scope`, ruled by the sovereign on being asked: an axis is never a predicate's name here — force has no `orexis:force`, being carried by severity and the met/measure split — and scope's everyday reading is what a thing covers, not when it binds. Scope stays the axis's NOUN and the values' type." .
+
+orexis:Always a orexis:Scope ; rdfs:label "always" ;
+    rdfs:comment "Every state of the plan is asked, not the end alone — and every tick asks reality again: the loop is the half of always the planner cannot give. The region and the freshness wants are Always." .
+orexis:AtEnd a orexis:Scope ; rdfs:label "at end" ;
+    rdfs:comment "The plan's end-world is asked and the road there is not. No shipped derivation writes it yet; it exists so the next achievement-shaped want does not land on Always by default." .
+orexis:Within a orexis:Scope ; rdfs:label "within" ;
+    rdfs:comment "Met before a deadline, or not met at all: a candidate plan's landing time is held to the room left (`orexis:expiresAt`, read with `orexis:owedAt`). The obligation's scope — a debt's room is time where a stake's is the envelope — and what closes the deadline-is-only-heat seam: a plan that would discharge after expiry is not a plan for this want." .
 
 #  NO measure vocabulary here, and the absence is the ruling rather than an omission. Two
 #  drafts put it in the kernel — first the measure's SPARQL compiled into the derivation, then

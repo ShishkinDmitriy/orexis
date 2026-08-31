@@ -748,6 +748,7 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
         INSERT { GRAPH <http://example.org/orexis/graph/constraint> {
             <http://example.org/orexis/world/simulation#fern_agent> <http://example.org/orexis#holds> [
                 a <http://example.org/orexis#Desire> ;
+                <http://example.org/orexis#bindsWhen> <http://example.org/orexis#Always> ;
                 <http://www.w3.org/ns/ssn/forProperty>
                     <http://example.org/orexis/water#AirHumidity> ;
                 <http://example.org/orexis#metWhen> [
@@ -757,8 +758,6 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
                 <http://www.w3.org/ns/ssn/forProperty>
                     <http://example.org/orexis/water#AirHumidity> ;
                 <http://www.w3.org/ns/shacl#property> [
-                    <http://www.w3.org/ns/shacl#severity>
-                        <http://example.org/orexis#ShouldBecome> ;
                     <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
                     <http://www.w3.org/ns/shacl#path> (
                         <http://example.org/orexis#actsFor>
@@ -776,8 +775,6 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
                                 <http://www.w3.org/ns/sosa/hasSimpleResult> ;
                             <http://www.w3.org/ns/shacl#maxExclusive> 0.60 ] ] ] ,
                 [
-                    <http://www.w3.org/ns/shacl#severity>
-                        <http://example.org/orexis#ShouldBecome> ;
                     <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
                     <http://www.w3.org/ns/shacl#path> (
                         <http://example.org/orexis#actsFor>

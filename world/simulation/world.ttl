@@ -190,7 +190,16 @@
     orexis:localId "city_mains" ;
     water:suppliedBy :city ;
     water:capacityL 1000.0 ;
-    market:redeemWindowS 900 .
+    #  SHORT, and shorter than the barrel venue's on purpose. The window exists for a holder
+    #  whose watch cycles slowly — a board-backed buyer may take most of a cadence to present —
+    #  and this venue's one buyer is the supplier agent, always connected, presenting the
+    #  moment it wins. It is also load-bearing the other way round, found by the Within gate
+    #  (#472): a refill's WORST-CASE landing includes this window (win, present, deliver), so
+    #  a downstream venue can only promise a redeem window longer than this one plus the
+    #  handling. While both stood at 900, the refill landed at ~954 against a fern claim's own
+    #  900 s of room, and every refill-then-serve plan was late by construction — the search
+    #  refused to found the one chain this world exists to demonstrate.
+    market:redeemWindowS 120 .
 
 #  The pipe that fills the barrel: draws from the mains, actuates the barrel. The same two
 #  triples that make a plant valve a market's delivery chain make this one the refill

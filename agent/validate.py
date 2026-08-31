@@ -34,7 +34,7 @@ from orexis_agent_progression.store import Store
 #  for the verdict by this module's name — onboarding, the review capability, the tests — is
 #  asking the agent's check, and that check IS this verdict.
 from orexis_agent_deliberation.conformance import (  # noqa: F401 — re-exported on purpose
-    _shapes_and_vocabulary, _without_wants, conforms, graph_from)
+    _shapes_and_vocabulary, conforms, graph_from)
 
 log = logging.getLogger("validate")
 

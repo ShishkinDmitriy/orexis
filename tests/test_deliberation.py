@@ -673,3 +673,43 @@ def test_the_figures_do_not_cost_what_they_report(make):
     each = (time.monotonic() - started) / 5
 
     assert each < 0.05, f"reading the figures took {each*1000:.0f}ms — it should be under 1ms"
+
+
+def test_a_plan_landing_after_the_wants_expiry_is_not_one(make):
+    """#472: an obligation's scope is `orexis:Within`, and the search holds every candidate's
+    landing time to the room left before the want expires. A serve that would land after the
+    claim lapses is discarded before the met-test can crown it — the plan comes back with no
+    steps, and the debt stays owed and visible, which is the evidence-producing posture. The
+    same want with a generous window keeps the very same plan: the control that proves the
+    gate did it, and not the fixture."""
+    from datetime import datetime, timedelta, timezone
+
+    from orexis_agent_deliberation.desire import Desire
+    from orexis_agent_deliberation.planner import Planner
+    from orexis_agent_progression.ontology import obligations_graph
+
+    supplier = make("supplier", genesis_store({("barrel1", STORED): 3.0}))
+    now = datetime.now(timezone.utc)
+    uri = "http://example.org/orexis#obligation.w1"
+    supplier.beliefs.update(f"""INSERT DATA {{ GRAPH <{obligations_graph(supplier.id)}> {{
+        <{uri}> a <http://example.org/orexis#Desire> ;
+            <http://example.org/orexis#bindsWhen> <http://example.org/orexis#Within> ;
+            <http://example.org/orexis#owedTo>
+                <http://example.org/orexis/world/simulation#fern_agent> ;
+            <http://example.org/orexis#forClaim> "w1" ;
+            <http://example.org/orexis#presented> true ;
+            <http://example.org/orexis#amountL> 0.5 ;
+            <http://example.org/orexis#owedAt> "{now.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
+    supplier.desires.rebuild()
+
+    def planned(seconds_left):
+        want = Desire(uri=uri, urgency=0.9, claim="w1",
+                    owed_to="http://example.org/orexis/world/simulation#fern_agent",
+                    expires=now + timedelta(seconds=seconds_left))
+        return Planner(supplier, supplier.me).plan(want)
+
+    generous = planned(86400.0)
+    assert generous.steps, \
+        "the control: with a day of room the serve is a plan — if this fails, the gate is untested"
+    assert not planned(0.5).steps, \
+        "half a second of room is less than any serve lands in, and a late world answers nothing"

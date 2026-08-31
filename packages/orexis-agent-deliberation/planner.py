@@ -28,6 +28,8 @@ rather than refinements, and each is here because a question found the failure i
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import logging
 import time
 from dataclasses import dataclass, field
@@ -105,6 +107,10 @@ class _Node:
     #  The net diff against the base world, in canonical facts — where this node IS, for cycle
     #  detection. The root stands nowhere but the world itself, so its diff is empty.
     diff: tuple = signature.EMPTY
+    #  Seconds after commitment this path's LAST world-change completes — each step's own
+    #  `orexis:landsAfter`, summed, for holding a candidate to a Within want's room (#472).
+    #  The root has taken nothing and lands immediately.
+    landing: float = 0.0
 
 
 class Planner:
@@ -271,6 +277,13 @@ class Planner:
             return self._record(desire, Plan(SATISFIED, (), here.urgency, here.urgency),
                                 here.urgency)
 
+        #  THE ROOM, for a want scoped `orexis:Within` (#472): seconds left before it expires.
+        #  The scope the ledger writes restates the deadline the record carries, and the
+        #  deadline is what this branches on — so a legacy row from before the scope word
+        #  behaves identically, which is the volume guarantee. None where nothing expires,
+        #  and every stake is that.
+        room = (max(0.0, (desire.expires - datetime.now(timezone.utc)).total_seconds())
+                if desire.expires is not None else None)
         best, saw_candidate = here, False
         self._skipped = False
         self._weighed = []
@@ -286,6 +299,14 @@ class Planner:
                     step = self._step_from(node, row, desire)
                     if step is None:
                         self._weighed.append((depth, row, None, trace.UNSIMULATED))
+                        continue
+                    if room is not None and step.landing > room:
+                        #  A world reached after the want has lapsed is not an answer to it
+                        #  (#472, `orexis:Within`): discarded BEFORE the met-test can crown
+                        #  it, so a serve landing past the claim's expiry never becomes
+                        #  SATISFIED — and never expands, since what it reaches it reaches
+                        #  too late.
+                        self._weighed.append((depth, row, step.urgency, trace.LATE))
                         continue
                     #  CYCLE DETECTION, and it compares WORLDS rather than action. The first
                     #  draft refused to apply the same means twice, which is not what a cycle
@@ -569,9 +590,15 @@ class Planner:
         diff = signature.advance(node.diff, signature.facts(added, self._keys),
                                  signature.facts(retracted, self._keys), self._base_facts)
         graph = self.imaginarium.reached(node.graph, path, added, retracted)
+        #  When this path's last change completes: the step's own `orexis:landsAfter`, asked of
+        #  the rule exactly as the keeper asks it, summed along the path (#472). None — no
+        #  stated timing — adds nothing, which is the keeper's own contract for it.
+        lands = effects.lands_after(self.imaginarium, row.action, **bind)
+        landing = node.landing + (lands or 0.0)
         urgency = self._urgency_in(world, graph, desire)
         taken = node.taken + (Step(act, urgency_after=urgency),)
-        return _Node(world=world, graph=graph, taken=taken, urgency=urgency, diff=diff)
+        return _Node(world=world, graph=graph, taken=taken, urgency=urgency, diff=diff,
+                     landing=landing)
 
     def _bind(self, desire: Desire | None, node=None, row=None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.

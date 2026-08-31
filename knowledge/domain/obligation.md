@@ -54,6 +54,11 @@ now and when it must be discharged. That is why an obligation carries both insta
 one — an agent holding only the deadline could not say how urgent it is without knowing when the
 clock started.
 
+Since [#472](https://github.com/ShishkinDmitriy/orexis/issues/472) the room is also the want's
+declared SCOPE — `orexis:bindsWhen orexis:Within` — and the planner holds a candidate plan's landing
+time to it: a serve that would land after expiry is discarded in the search, not discovered at
+the venue.
+
 # It is actionable because it names a creditor
 
 The counterparty is not decoration on the record — it is the key that finds the lever, through the

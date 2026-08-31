@@ -129,11 +129,12 @@ def test_the_want_fires_as_a_shape_and_does_not_refuse_the_boot(monkeypatch):
 
 
 def _fires(data) -> list:
-    """The freshness results this data produces, at the severity a want must carry.
+    """The freshness results this data produces when the want's shape is validated DIRECTLY.
 
-    A want reported as `sh:Violation` refuses the agent's boot, which is the one thing a want
-    must never do — pySHACL ignores `sh:severity` on a `sh:sparql` constraint and honours the
-    NODE shape's, measured both ways round, and this shape carried it in the wrong place once.
+    The planner's road (#472): a met-test enters no `conforms()` pass — the metWhen linkage
+    keeps it out, which is what lets it carry no severity — so firing is proven here the way
+    the planner asks: over the shapes the data holds, results at whatever severity the
+    engine defaults to.
     """
     from agent.validate import _shapes_and_vocabulary
 
@@ -145,7 +146,6 @@ def _fires(data) -> list:
                                    advanced=True, inference="none")
     stale = [r for r in results.subjects(rdflib.RDF.type, _SH.ValidationResult)
              if "reads now" in str(results.value(r, _SH.resultMessage))]
-    assert all(str(results.value(r, _SH.resultSeverity)).endswith("ShouldBecome") for r in stale)
     return stale
 
 

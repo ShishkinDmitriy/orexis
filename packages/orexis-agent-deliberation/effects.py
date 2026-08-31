@@ -185,19 +185,26 @@ def lands_after(store, action: str, **bind) -> float | None:
     if rule is None or not rule.get("lands"):
         return None
     rows = _select(store, rule["lands"], bind)
-    if not rows or rows[0].get("seconds") is None:
+    if not rows or rows[0]["seconds"] is None:
         return None
-    return float(rows[0]["seconds"])
+    return float(rows[0]["seconds"].value)
 
 
 def _select(store, text: str, bind: dict) -> list:
     """A rule's query that answers with BINDINGS rather than a graph. Same substitution, same
     swallowing of a rule that will not run: a package's broken query must not take an agent
-    down, and what is lost is precision about waiting rather than the ability to act."""
+    down, and what is lost is precision about waiting rather than the ability to act.
+
+    THROUGH THE RULES' OWN DOOR (`store.construct`), and that is a correction (#472): a
+    rule's SELECT must see exactly what its CONSTRUCT sees — public knowledge plus this
+    agent's own records — and `store.query` reads public alone, so a landing time computed
+    from an obligation RECORD (`orexis:forClaim`, `orexis:amountL`) bound nothing and every
+    serve landed "immediately", silently. The rows come back as engine solutions rather
+    than JSON bindings; the one consumer reads its column accordingly."""
     for name, value in bind.items():
         text = text.replace(f"${name}", value if isinstance(value, str) else repr(value))
     try:
-        return bindings(store.query(text))
+        return store.construct(text)
     except Exception as exc:
         log.error("timing query for this means would not run: %s", exc)
         return []

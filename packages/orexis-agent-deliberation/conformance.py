@@ -17,8 +17,6 @@ stores read the packages' namespaces.
 
 from __future__ import annotations
 
-import re
-
 import rdflib
 from pyshacl import validate as shacl_validate
 
@@ -43,18 +41,10 @@ def _shapes_and_vocabulary() -> tuple[rdflib.Graph, rdflib.Graph]:
 
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
-#  How pyshacl spells our severity in the text report, which is the only place this is read —
-#  the verdict itself is decided on the results GRAPH.
-#  Both spellings: a report renders the severity through whatever namespaces its shapes graph
-#  carries, and a filter that knew only the short form failed silently the first time a graph
-#  arrived without them. `tests/test_gap.py` fails if neither form matches any more.
-#  A result begins at one of TWO headings: pySHACL writes "Constraint Violation in ..." for a
-#  violation and "Validation Result in ..." for everything else. Knowing only the second put
-#  every violation in the report's HEADER, where this dropped it along with the rest — the
-#  filter hid exactly the results it exists to preserve, and four tests caught it.
-_RESULT = re.compile(r"(?=(?:Constraint Violation|Validation Result) in )")
-_SHOULD_BECOME_FORMS = ("Severity: orexis:ShouldBecome",
-                        "Severity: <http://example.org/orexis#ShouldBecome>")
+#  The report filter that dropped want results (`_without_wants`) WAS HERE and is gone with
+#  the severity it matched (#472): a want's met-test enters no validation pass at all — the
+#  metWhen linkage below keeps it out — so there is nothing to hide from a person any more.
+_MET_WHEN = rdflib.URIRef("http://example.org/orexis#metWhen")
 
 
 def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
@@ -88,8 +78,11 @@ def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
     data += ontology
     #  The shapes an agent HOLDS are shapes too (a-desire-is-a-shape). They arrive in the data
     #  because a derivation writes them there, and a validator reading only the files would see
-    #  a want as inert triples — so anything in the data typed `sh:NodeShape` joins the shapes
-    #  graph, and the severity decides which kind it is: a violation refuses, a want does not.
+    #  them as inert triples — so anything in the data typed `sh:NodeShape` joins the shapes
+    #  graph, EXCEPT a want's met-test, which the metWhen linkage keeps out (#472): it carries
+    #  no severity, so validated it would report at pySHACL's default, `sh:Violation`, and
+    #  refuse a boot for a dry pot. Its state is the measure's job and the planner validates
+    #  it directly. Of what joins, the severity decides: a violation refuses, a warning shows.
     #
     #  Only when nobody focused, though. A shape a desire compiles to reaches its readings
     #  through `sh:qualifiedValueShape`, and pySHACL answers those WRONG under `focus_nodes` —
@@ -99,7 +92,8 @@ def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
     #  unfocused. So a data-borne shape is checked exactly once, and never under a focus filter.
     if not focus:
         held = rdflib.Graph()
-        for shape in set(data.subjects(rdflib.RDF.type, _SH.NodeShape)):
+        met = set(data.objects(None, _MET_WHEN))
+        for shape in set(data.subjects(rdflib.RDF.type, _SH.NodeShape)) - met:
             held += data.cbd(shape)      # the shape and everything hanging off it
         if held:
             shapes = shapes + held
@@ -120,28 +114,7 @@ def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
             data, shacl_graph=mine, inference="none", advanced=True)
         violated = violated or _violated(own)
         report = report.strip() + "\n" + own_report.strip()
-    return not violated, _without_wants(report)
-
-
-def _without_wants(report: str) -> str:
-    """Drop the `orexis:ShouldBecome` results from what a person is shown.
-
-    A want is a shape and an unmet want is a result, so once desires compiled to SHACL every
-    report grew one block per property nobody has read yet — which at genesis is all of them.
-    `orexis-validate` printed forty lines about a world it was accepting. The gap is not a
-    finding about the world: it is the state of one, and `gap.rq` is where to ask for it.
-
-    Violations and warnings stay, header and all. The count is rewritten so it agrees with
-    what follows it, and a report left with nothing to say says so.
-    """
-    head, *blocks = _RESULT.split(report)
-    if not blocks:
-        return report.strip()
-    kept = [b for b in blocks if not any(form in b for form in _SHOULD_BECOME_FORMS)]
-    if not kept:
-        return "Validation Report\nConforms: True"
-    head = re.sub(r"Results \(\d+\):", f"Results ({len(kept)}):", head)
-    return (head + "".join(kept)).strip()
+    return not violated, report.strip()
 
 
 def _violated(results: rdflib.Graph) -> bool:
@@ -160,18 +133,16 @@ def _shapes_held_by(data: rdflib.Graph, agent_uri: str) -> rdflib.Graph:
     for thing in data.objects(rdflib.URIRef(agent_uri),
                               rdflib.URIRef("http://example.org/orexis#holds")):
         held += data.cbd(thing)
-        #  A held DESIRE is a node carrying its shape (a-desire-states-its-own-measure), so
-        #  the met-test is one `orexis:metWhen` hop further and a cbd of the desire alone would
-        #  hand pySHACL a graph with no actual shape in it — silently, which is how this
-        #  file has been wrong before. The desire's own cbd stays in too: pySHACL ignores a
-        #  node it does not recognise as a shape, and the measure text rides along unread.
-        for shape in data.objects(thing,
-                                  rdflib.URIRef("http://example.org/orexis#metWhen")):
-            held += data.cbd(shape)
+        #  The `orexis:metWhen` hop is deliberately NOT taken since #472: a want's met-test is
+        #  the planner's to validate and carries no severity, so walking to it here would
+        #  report every unmet want at pySHACL's default severity and refuse the boot this
+        #  check exists to allow. A held DESIRE contributes its own cbd — which pySHACL
+        #  ignores, not being a shape — and a held bare shape (the envelope, an asserted
+        #  root) contributes itself, force and all.
     #  A graph carved out of another keeps its spellings. pySHACL renders the report through
-    #  the shapes graph's namespaces, so without this the second pass printed
-    #  `<http://example.org/orexis#ShouldBecome>` where the first printed `orexis:ShouldBecome` —
-    #  one severity in two spellings, in one report, for no reason a reader could see.
+    #  the shapes graph's namespaces, so without this the second pass printed a severity as a
+    #  full IRI where the first printed the prefixed form — one severity in two spellings, in
+    #  one report, for no reason a reader could see.
     for prefix, namespace in data.namespaces():
         held.bind(prefix, namespace)
     return held

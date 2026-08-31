@@ -63,6 +63,7 @@ PREFIX schema: <https://schema.org/>
 INSERT { GRAPH $derived {
     $me orexis:holds ?fresh .
     ?fresh a orexis:Desire , sensing:Freshness ;
+        orexis:bindsWhen orexis:Always ;
         ssn:forProperty ?property ;
         orexis:about ?sensor ;
         #  THE SENSOR ALONE, and the subject is reached through it. This carried both for a
@@ -77,18 +78,12 @@ INSERT { GRAPH $derived {
     ?freshMet a sh:NodeShape ;
         sh:targetNode $me ;
         ssn:forProperty ?property ;
-        #  ON THE NODE SHAPE, and that is the opposite of where the declarative wants carry it.
-        #  Measured on pySHACL 0.40.1, both ways round: a `sh:sparql` constraint's own
-        #  `sh:severity` is IGNORED and the result comes back `sh:Violation`, while the node
-        #  shape's is honoured; for a core `sh:property` constraint it is the other way about,
-        #  which is why the region's three shapes carry theirs individually. Getting this wrong
-        #  is not cosmetic — a want reported as a violation refuses the agent's boot, which is
-        #  the one thing a want must never do, and it did exactly that before this line moved.
-        sh:severity orexis:ShouldBecome ;
+        #  NO severity, since #472: a met-test enters no validation pass — the metWhen
+        #  linkage takes it out in `conformance.py` — so it needs no force to be survivable,
+        #  and the severity that used to mark it as a want retired with the era when a desire
+        #  WAS a bare shape. The planner validates this shape directly and reads results at
+        #  whatever severity the engine defaults to.
         sh:sparql [
-            #  Kept here too: it is what the spec says, so a conformant engine reads it, and a
-            #  reader of this shape should not have to know our engine's quirk to see the force.
-            sh:severity orexis:ShouldBecome ;
             sh:message ?tooOld ;
             sh:select ?staleQuery ] } }
 $given
@@ -159,6 +154,7 @@ WHERE  {
 INSERT { GRAPH $derived {
     $me orexis:holds ?desire , ?envelope .
     ?desire a orexis:Desire ;
+        orexis:bindsWhen orexis:Always ;
         ssn:forProperty ?property ;
         orexis:about ?property ;
         prov:wasDerivedFrom ?subject ;
@@ -173,7 +169,6 @@ INSERT { GRAPH $derived {
         #  it is the true one. The two side shapes below cannot say this: each asks whether a
         #  reading is outside its edge, and no reading is outside anything.
         sh:property [
-            sh:severity orexis:ShouldBecome ;
             sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
             orexis:violationIs orexis:Unmeasured ;
             sh:qualifiedMinCount 1 ;
@@ -186,7 +181,6 @@ INSERT { GRAPH $derived {
         #  A means will declare which violations it repairs (#239), a message can name the side
         #  it is about, and a dashboard stops showing the two as one row.
         sh:property [
-            sh:severity orexis:ShouldBecome ;
             sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
             orexis:violationIs orexis:Below ;
             sh:qualifiedMaxCount 0 ;
@@ -195,7 +189,6 @@ INSERT { GRAPH $derived {
                 sh:property [ sh:path sosa:hasSimpleResult ; sh:maxExclusive ?low ] ] ;
             sh:message ?tooLow ] ;
         sh:property [
-            sh:severity orexis:ShouldBecome ;
             sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
             orexis:violationIs orexis:Above ;
             sh:qualifiedMaxCount 0 ;
