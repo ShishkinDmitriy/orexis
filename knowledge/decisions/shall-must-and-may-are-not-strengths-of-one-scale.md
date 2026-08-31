@@ -14,7 +14,9 @@ description: >-
   absence (#468), and remembered plans (#469).
   A follow-up sitting added the provenance axis — the moods compose with WHOSE, and internal
   barely exists here — and refused mood classes and mood stores both, because modality decides
-  the store, provenance the graph, and severity the force.
+  the store, provenance the graph, and severity the force. The second cut ruled mood and
+  provenance orthogonal — a Desire is my MUST, an Obligation someone's — gave each mood its
+  behaviour in the search, and sent the subclass itself away as a flag (#471).
 status: accepted
 timestamp: 2026-08-31T17:36:56Z
 ---
@@ -40,6 +42,10 @@ it, most of the taxonomy turns out to exist under the house's names:
 | MUST, unbreakable | not a stronger duty — the ratified shapes, the gates, the planner's refusal | alethic | built |
 | MUST NOT | the same split — the alethic half built (shapes, mandate), the deontic half without a customer | alethic / deontic | built / waiting |
 | MAY | not a modality — the plan library | none; a cost model | [#469](https://github.com/ShishkinDmitriy/orexis/issues/469) |
+
+This table maps the moods onto the class names that existed when it was drawn, and the same
+sitting then cut deeper: the names dissolve into cells of mood × provenance, and the subclass
+between them goes — the second cut, below.
 
 ## Why the principle decides it, in the machinery's own terms
 
@@ -137,10 +143,12 @@ importing the RFC meanings into these five words.
 Asked by the sovereign on reading the mapping: *we also have internal and external
 (someone's) distinctions.* The axis exists, it is PROVENANCE, and it is orthogonal to the
 moods: force says how a crossed line binds, the source says whose line it is, and the two
-compose rather than multiplying into new words. The proof is already structural — MUST is
-SHALL from outside, and the ontology says so: `orexis:Obligation` is a subclass of
-`orexis:Desire`, in its own comment's words *because everything that reads desire should read
-this too; what differs is only where it came from, which is what prov says.*
+compose rather than multiplying into new words. The first draft of this section offered the
+ontology as proof — `orexis:Obligation rdfs:subClassOf orexis:Desire`, its comment reading
+*what differs is only where it came from, which is what prov says* — and the sovereign turned
+the evidence against the witness: if provenance is the ONLY difference and prov already says
+it, the subclass is a FLAG — the kind-is-read-never-flagged rule, applied one level up, to a
+class. The axiom goes: [#471](https://github.com/ShishkinDmitriy/orexis/issues/471).
 
 | source | its SHALL | its SHALL NOT | crossed means |
 |---|---|---|---|
@@ -157,6 +165,49 @@ one [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) already state
 someone to be wronged?** Yes — deontic, a breach with a counterparty and a deadline. No, but
 ratified as law — alethic, refused. No, and merely stated as a need — bouletic, a gap,
 priced.
+
+## The second cut: a want is a cell, and the class names dissolve into it
+
+Ruled in the sitting's second pass: axis one is the MOOD — SHALL, SHALL NOT, MUST, MUST NOT —
+and axis two is PROVENANCE, and the existing class names are cells rather than moods: **a
+Desire is my MUST, and an Obligation is someone's MUST.** The first table mapped the moods
+onto class names because those were the surfaces that existed; this cut is deeper and
+simpler, and it is the one the implementation follows.
+
+And the house had already split along the mood line without naming it: **met is the label,
+urgency is the motive**
+([a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md)). One want
+carries BOTH a MUST — its met-shape, the boolean the plan is for — and a SHALL — its declared
+measure, the gradient that prefers one world over another inside *not met yet*. The region is
+the MUST half and the aim's gradient the SHALL half of the same node. The sovereign's four
+moods are that met/measure split crossed with polarity: a negative want carries a forbidding
+shape (its MUST NOT) and a penalty gradient (its SHALL NOT). Nothing has to be invented for
+SHALL — it is the measure, already built, and *prefer a SHALL state over neutral over a SHALL
+NOT state* is what one continuous score does, generalised from a three-way ordering to a
+gradient.
+
+## What each mood does to the search
+
+The sovereign's rulings, term by term — with the lookup named, per the plan record's own
+discipline, so the next widening is a lookup rather than a re-derivation: this is PDDL3
+re-derived from inside — hard at-end goals, hard trajectory constraints, soft preferences
+with violation costs.
+
+| mood | in the search | carrier |
+|---|---|---|
+| MUST | **the goal** — what the plan is FOR; the sovereign's *just the final state* is PDDL3's at-end. Deontic, so best-effort stays representable: a plan that only nears it reports IMPROVED, and the gap or breach stays visible, never silent | the met-shape |
+| MUST NOT | **a constraint on EVERY state** — a valid plan contains no state matching one, so a child world failing a violation-severity shape is discarded at expansion: never extended, never a candidate. The next-best LEGAL plan then wins by construction | violation-severity shapes — #468 |
+| SHALL | **a graded preference** — prefer the world that scores better; no new mechanism | the declared measure |
+| SHALL NOT | **a penalty plus bounded extra effort** — the search may end in one, but spends budget looking for better first: *avoid if we have alternatives* means alternatives are SEARCHED FOR, not merely compared among candidates already found; the budget is #466's to price | a measure penalty — #468, #466 |
+
+Two consequences worth stating before anyone builds. **The ranking must widen from the
+pursued want to the world**: today a candidate is scored by one want's urgency alone, and a
+SHALL NOT that is not the pursued want can bite only if the score aggregates the avoidance
+wants a candidate world violates — one more reason the measure, not a new class, is SHALL
+NOT's carrier. **And moving MUST NOT to expansion is a cost decision as much as a semantic
+one**: only violation-severity shapes run per node, the full rulebook stays at the gates, and
+the per-node price is measured on the Pi before it ships — both halves carried on #468's
+definition of done.
 
 ## No new classes, and no new stores — asked and refused
 
@@ -203,13 +254,13 @@ edits nothing outside its directory, which is rule 2's mechanic doing what it al
   descriptions, not terms — a word enters the dictionary in the same change that builds its
   thing, and both issues carry that requirement.
 
-- **Restriction is at commitment, not during search.** A world failing law is refused after
-  the search has picked it, and a refused winner yields NO plan rather than the next legal
-  candidate — [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md)'s
-  recorded seam, untriggerable while no shape refuses a state a lever can reach. The moment
-  #468's source mechanism lets a sovereign ratify at violation severity — a true MUST NOT
-  over a reachable state — it becomes triggerable, and the same change must close it the way
-  that record already names: ask the next candidate. Carried on #468's definition of done.
+- ~~**Restriction is at commitment, not during search.**~~ Ruled and CLOSED in the same
+  sitting, more strongly than the seam proposed: MUST NOT constrains every state, checked at
+  expansion, so the next legal candidate wins by construction and
+  [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md)'s
+  no-fallback seam RETIRES rather than being implemented. Mechanics and the per-node cost
+  measurement are carried on #468's definition of done — struck through rather than removed,
+  because the ruling only makes sense against what it overruled.
 
 # Issues this emits
 
@@ -217,5 +268,7 @@ edits nothing outside its directory, which is rule 2's mechanic doing what it al
 general avoidance, and the deontic prohibition's future seat.
 [#469](https://github.com/ShishkinDmitriy/orexis/issues/469) — remembered plans: the library,
 tried before searching, re-verified on every use.
+[#471](https://github.com/ShishkinDmitriy/orexis/issues/471) — retire the Obligation
+subclass: one class of want, whose it is read from provenance.
 It engages [#466](https://github.com/ShishkinDmitriy/orexis/issues/466) rather than emitting
 it: costs are what make MAY's economics real.
