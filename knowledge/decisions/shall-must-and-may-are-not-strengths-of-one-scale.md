@@ -223,6 +223,30 @@ and ranks whole worlds — which is how the absorbed reflex's own defect was cur
 direction-follower being a field-follower and watering a drowning plant. The field ranks; the
 search sees.
 
+## Scope is the third axis, and it is adopted lazily
+
+Asked by the sovereign on meeting PDDL3's trajectory constraints: are they better than the
+moods? Not better — ORTHOGONAL, and the decomposition is exact. PDDL3's own structure is
+operator × force: any scope operator (`at-end`, `always`, `always ¬`, `sometime`,
+`at-most-once`, `sometime-before`, `within`) may be hard or a preference. So a fully
+decomposed want is **force × provenance × scope**, polarity folding into the formula — and
+the four moods are force × polarity with the scope DEFAULTED: MUST is hard `at-end`, MUST NOT
+is hard `always ¬`, the SHALLs the same two soft. Scope cannot replace mood, because scope
+says nothing deontic: `always ¬` does not say who is wronged when it fails.
+
+The other operators wait for customers, and the audit says most never get one here.
+Maintenance (`always φ`) is delivered by the LOOP, not the plan: re-deliberation converts it
+into repeated achievement, and a-sensing-action-ends-a-plan keeps plans too short for
+within-plan scope to say much. Ordering (`sometime-before`) EMERGES from simulation — the
+premise-that-cannot-bind mechanism produced acquire-then-apply from two rules that never
+mention each other, where PDDL3 needs the operator because its goals are weaker than
+effects-plus-search. And the two per-state operators are exactly the two already ruled; the
+rest (`sometime`, `at-most-once`, `sometime-before`) need memory along the path — PDDL3
+compiles them to automata tracked during search — which is machinery with no customer. A term
+nobody reads is annotation: an operator is adopted when a want needs it.
+
+
+
 ## No new classes, and no new stores — asked and refused
 
 The sovereign asked both directly, and both dissolve against rules already paid for.
@@ -264,6 +288,14 @@ edits nothing outside its directory, which is rule 2's mechanic doing what it al
 - **A deontic MUST NOT has no customer.** Nothing shipped is a prohibition anyone could
   breach; the day one arrives, it is #468's machinery with a peer's provenance, and this line
   is where that argument starts.
+- **A deadline is heat today, not plan validity — `within(t)` is the operator when that
+  stops being enough.** Urgency rises as an obligation's redeem window runs, but nothing
+  refuses a plan whose discharge would LAND after expiry; the world refuses the late
+  presentation instead, after the water is committed. The day a plan's landing time can
+  exceed a window — the neighbourhood of
+  [#250](https://github.com/ShishkinDmitriy/orexis/issues/250), patience against landing
+  time — `within` arrives as a validity check on the simulated plan's clock, not as a new
+  mood.
 - **The nouns are deliberately unminted.** "Avoidance" and "plan library" appear here as
   descriptions, not terms — a word enters the dictionary in the same change that builds its
   thing, and both issues carry that requirement.
