@@ -89,7 +89,16 @@ because a plant past tolerating is a fact about the world rather than an illegit
 and an agent past its envelope must be allowed to start precisely so it can act. What the
 envelope actually does is PRICE the shall: [urgency](/domain/urgency.md) is distance from the
 aim scaled by the survival room on that side, so the envelope is the denominator of every want
-about the property. It serves SHALL's arithmetic, not MUST NOT's enforcement.
+about the property. It serves SHALL's arithmetic, not MUST NOT's enforcement. One extension
+from the sitting's examples pass, because the sovereign's reading — *property must be in
+survival range* — is also right and the two do not collide: GATE-HARD AND PLANNER-HARD ARE
+DIFFERENT CHECKS. A fact about now is not a choice about a path, so the envelope stays
+`sh:Warning` at validation (an agent past it must be allowed to boot precisely so it can act)
+while being hard-`Always` in planning: the agent may FIND ITSELF dying, it may never CHOOSE a
+route through dying. The subtlety that makes this safe — the hard `Always` reads as
+never-NEWLY-enter, judged from the plan's start state, or the recovery plan is pruned with
+everything else — is carried on
+[#468](https://github.com/ShishkinDmitriy/orexis/issues/468).
 
 ## SHALL NOT — one gap, and it covers the deontic MUST NOT too
 
