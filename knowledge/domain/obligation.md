@@ -1,7 +1,6 @@
 ---
 type: Domain Concept
 title: Obligation
-term: http://example.org/orexis#Obligation
 description: >-
   A desire this agent did not source — what it OWES because the society issued a claim against
   its hardware. BOID's O, recorded in a graph of its own with the counterparty, the claim that
@@ -28,6 +27,11 @@ BOID's O, and the reason the desire-graph class was a *class* from the start. An
 scored, ranked and pursued by the same machinery an agent's own wants are: it has an
 [urgency](/domain/urgency.md), it appears in *what am I pursuing*, and it competes for attention
 on the same scale.
+
+Since [#471](https://github.com/ShishkinDmitriy/orexis/issues/471) that is structural rather
+than taxonomic: there is **no Obligation class**. An obligation is an `orexis:Desire` whose
+premises are a claim and a counterparty — the kind is read off them, never off a type — and
+rows written before the fold keep the retired type harmlessly, because no reader asks.
 
 What differs is only **whose it is** and **whether there is anyone to be wronged**. An agent that
 lets its own aim slip disappoints itself; an agent that lets an obligation slip defaults on

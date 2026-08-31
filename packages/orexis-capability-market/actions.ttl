@@ -330,7 +330,7 @@ market:Serving
                  sosa:resultTime ?now ;
                  sosa:hasSimpleResult ?left .
         } WHERE {
-            ?obl a orexis:Obligation ; orexis:forClaim $claim ; orexis:amountL ?litres .
+            ?obl orexis:forClaim $claim ; orexis:amountL ?litres .
             FILTER NOT EXISTS { ?obl orexis:dischargedAt ?done }
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:drawsFrom ?vessel .
@@ -349,7 +349,7 @@ market:Serving
     #  computed anywhere else would be a second claim about when the world should answer.
     orexis:landsAfter """
         SELECT ?seconds WHERE {
-            ?obl a orexis:Obligation ; orexis:forClaim $claim ; orexis:amountL ?litres .
+            ?obl orexis:forClaim $claim ; orexis:amountL ?litres .
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:maxDoseMl ?cap ;
                    actuation:mlPerSecond ?rate .
@@ -367,7 +367,7 @@ market:Serving
     #  a dry vessel must not lose its standing reading to a serve that never happened.
     orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
-            ?obl a orexis:Obligation ; orexis:forClaim $claim ; orexis:amountL ?litres .
+            ?obl orexis:forClaim $claim ; orexis:amountL ?litres .
             FILTER NOT EXISTS { ?obl orexis:dischargedAt ?done }
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:drawsFrom ?vessel .
