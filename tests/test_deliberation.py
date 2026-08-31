@@ -467,7 +467,7 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     """The sovereign asking what an agent DOES gets its obligations beside its options — and asked
     about a PROPERTY it holds a stake in, deliberation proposes none of them.
 
-    An obligation IS a want (orexis:Obligation) and is meant to reach deliberation, through the
+    An obligation IS a want — a Desire whose premise is a claim (#471) — and reaches deliberation through the
     door that takes the want itself. What must not happen is an obligation answering a question about
     a stake: the honoured row exists because somebody else holds paper, and serving it is not
     a move this agent may choose for its own reasons. The search enforces it by filtering to

@@ -628,25 +628,27 @@ orexis:about a owl:ObjectProperty ; rdfs:domain orexis:Desire ;
 #  stored is what I owe NOW, in a graph of my own, because a debt outlives the process that
 #  incurred it: a host used to keep its issued claims in memory and forget them on restart.
 
-orexis:Obligation a owl:Class ; rdfs:subClassOf orexis:Desire ;
-    rdfs:label "Obligation" ;
-    rdfs:comment "A desire this agent did not source. It subclassed `orexis:Bounds` until bounds became shapes and the class went; it is still DATA today — a counterparty, a claim, two timestamps — and becomes a shape itself when obligations drive acts, which is the step after this one. what it owes another, raised when the society issued that other a claim against this agent's hardware, discharged when the dose it names is confirmed. A subclass of Desire and not a sibling, because everything that reads desire should read this too — urgency, disclosure, and the deliberation that ranges over wants. What differs is only where it came from, which is what prov says." .
+#  There is NO Obligation class (#471). An obligation is an `orexis:Desire` whose premises are
+#  a claim and a counterparty — whose it is is what prov says — and the subclass that used to
+#  say so was a flag: the kind-is-read-never-flagged rule, applied one level up, to a class.
+#  The properties below ARE the premises; readers match on them and never on a type, which is
+#  also what keeps a volume written before the class retired serving its rows.
 
-orexis:owedTo a owl:ObjectProperty ; rdfs:domain orexis:Obligation ; rdfs:range orexis:Agent ;
+orexis:owedTo a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range orexis:Agent ;
     rdfs:label "owed to" ;
     rdfs:comment "The counterparty. Always an agent this world's wiring already connects to me — an obligation to a stranger is not a debt, it is a forgery, refused before it becomes a want." .
 
-orexis:forClaim a owl:DatatypeProperty ; rdfs:domain orexis:Obligation ; rdfs:range xsd:string ;
+orexis:forClaim a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:string ;
     rdfs:label "for claim" ;
     rdfs:comment "The jti of the claim that sourced it — single-use there, single-use here, so a discharged obligation cannot be raised twice by a replayed presentation." .
 
-orexis:presented a owl:DatatypeProperty ; rdfs:domain orexis:Obligation ; rdfs:range xsd:boolean ;
+orexis:presented a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:boolean ;
     rdfs:label "presented" ;
     rdfs:comment "Whether the holder has asked yet. An unpresented claim requires NOTHING of me — the holder is waiting for its own watch to be live — and a presented one requires acting now. It says whether a debt is PURSUABLE, and no longer how hot it is: heat is `orexis:expiresAt`'s job, so an unpresented claim near its deadline is a debt this agent can see coming and still may not act on. The two were one step while a claim had no deadline to be measured against." .
 
-orexis:owedAt a owl:DatatypeProperty ; rdfs:domain orexis:Obligation ; rdfs:range xsd:dateTime ;
+orexis:owedAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ;
     rdfs:label "owed at" .
-orexis:expiresAt a owl:DatatypeProperty ; rdfs:domain orexis:Obligation ; rdfs:range xsd:dateTime ;
+orexis:expiresAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ;
     rdfs:label "expires at" ;
     rdfs:comment """When the venue stops holding the claim this debt came from — the claim's own `exp`, kept as the debt's. Absent where the market stated no window, and such a debt never becomes urgent, which is right: nobody is waiting on it.
 
@@ -654,13 +656,13 @@ This is what gives an obligation its urgency, and the reason it had to exist as 
 
 The alternatives were measured against this and both are recorded as the risk in an-obligation-is-a-desire-someone-else-sourced: a duty pinned at maximum is the honoured mode returning by another name, since it outranks a plant that is dying, and a duty with no heat at all is an agent that quietly defects while its ledger looks tidy.""" .
 
-orexis:amountL a owl:DatatypeProperty ; rdfs:domain orexis:Obligation ; rdfs:range xsd:decimal ;
+orexis:amountL a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:decimal ;
     rdfs:label "amount owed, litres" ;
     rdfs:comment """How much the claim is for, where the good is measured. Written by the ledger when a claim is recorded and read by the market's Apply and Offer effect rules, which will not discharge an obligation whose amount they cannot see.
 
 DECLARED LATE. This term was in use — one writer, three SHACL rules reading it — and no ontology declared it, for months. It worked because both ends spell it the same way by hand, which is precisely the accident `every-term-in-its-own-house` warns about: an IRI nothing declares is not an error, it is a pattern that matches nothing, and here it matched because nobody had typed it wrong yet. It surfaced when the concatenation that built it was renamed and the guard could finally see the sixth form.""" .
 
-orexis:dischargedAt a owl:DatatypeProperty ; rdfs:domain orexis:Obligation ; rdfs:range xsd:dateTime ;
+orexis:dischargedAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ;
     rdfs:label "discharged at" ;
     rdfs:comment "Absent while it stands. The same two-timestamps-and-a-reason shape an intention and a revision already have, because a debt paid and a debt forgotten must never look alike." .
 

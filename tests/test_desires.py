@@ -95,7 +95,7 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them(mo
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
     owed = datetime(2026, 8, 20, 12, 0, tzinfo=timezone.utc)
     st.update(f"""INSERT DATA {{ GRAPH <{obligations_graph("fern")}> {{
-        <http://example.org/orexis#obligation.j1> a <http://example.org/orexis#Obligation> ;
+        <http://example.org/orexis#obligation.j1> a <http://example.org/orexis#Desire> ;
             <http://example.org/orexis#owedTo>
                 <http://example.org/orexis/world/simulation#tomato_agent> ;
             <http://example.org/orexis#forClaim> "j1" ;
@@ -276,3 +276,33 @@ def test_this_store_will_not_divide_an_exact_zero_by_a_decimal():
     assert answer("BIND(0.1 / 0.3 AS ?r)") is not None, "while a nonzero one always did"
     assert answer("BIND(IF(0.0 <= 0, 0.0, 0.0 / 0.3) AS ?r)") is not None, \
         "and the IF short-circuits, which is what makes the guard a guard"
+
+
+def test_an_obligation_row_typed_before_the_class_retired_still_serves(monkeypatch):
+    """#471 folded the Obligation class, and readers match premises, never a type.
+
+    A live volume written before the fold holds rows typed with the retired IRI, and beliefs
+    are never reset — so the guarantee has to be a reader that does not care. This authors
+    exactly such a row and asserts the ledger still serves it, on both the desire road and the
+    ask road; the day a type-match regrows in `_DUTIES_Q` or `owed`, this goes red."""
+    from agent import genesis
+    from orexis_agent_progression.ontology import obligations_graph
+
+    st = genesis_store({("fern", MOISTURE): 0.55})
+    genesis.birth(st, genesis.world_dir("simulation"), "fern")
+    owed = datetime(2026, 8, 20, 12, 0, tzinfo=timezone.utc)
+    st.update(f"""INSERT DATA {{ GRAPH <{obligations_graph("fern")}> {{
+        <http://example.org/orexis#obligation.legacy> a <http://example.org/orexis#Obligation> ;
+            <http://example.org/orexis#owedTo>
+                <http://example.org/orexis/world/simulation#tomato_agent> ;
+            <http://example.org/orexis#forClaim> "legacy-1" ;
+            <http://example.org/orexis#presented> true ;
+            <http://example.org/orexis#owedAt> "{owed.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
+
+    fern = build_agent("fern", st, monkeypatch)
+    from orexis_capability_market.ower import Ower
+
+    ledger = Ower(fern)
+    assert any(g.claim == "legacy-1" for g in ledger.desires(now=owed)), \
+        "a pre-fold row must still be served: readers match premises, never the type"
+    assert any(r["jti"] == "legacy-1" for r in ledger.owed()), "and on the ask road too"

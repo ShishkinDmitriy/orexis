@@ -31,10 +31,13 @@ from orexis_agent_progression.store import bindings
 #  What I owe, as rows — the obligation branch of what used to be one shipped `desires.rq` for every
 #  kind of want. The stakes and the freshness wants went to sensing with the region
 #  (the-stake-is-sensings-want), and the ledger reads its own graph, which it always named.
+#  Rows are matched by their PREMISES — a counterparty, a claim — and never by a type: the
+#  Obligation class retired (#471), and a volume written before it did carries the old type
+#  triple harmlessly, because nothing asks.
 _DUTIES_Q = """
 SELECT ?desire ?owedTo ?claim ?presented ?at ?expires WHERE {
   GRAPH <%s> {
-    ?desire a orexis:Obligation ; orexis:owedTo ?owedTo ; orexis:forClaim ?claim ;
+    ?desire orexis:owedTo ?owedTo ; orexis:forClaim ?claim ;
             orexis:presented ?presented ; orexis:owedAt ?at .
     OPTIONAL { ?desire orexis:expiresAt ?expires }
     FILTER NOT EXISTS { ?desire orexis:dischargedAt ?paid } }
@@ -115,7 +118,7 @@ class Ower(Module):
                 f"SELECT ?o WHERE {{ GRAPH <{graph}> {{ <{uri}> ?p ?o }} }} LIMIT 1")):
             return None
         self.agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
-            <{uri}> a <{OREXIS}Obligation> ;
+            <{uri}> a <{OREXIS}Desire> ;
                 <http://www.w3.org/ns/prov#wasDerivedFrom> "{claim_jti}" ;
                 <{OREXIS}owedTo> <{to_agent}> ;
                 <{OREXIS}forClaim> "{claim_jti}" ;
@@ -160,7 +163,7 @@ class Ower(Module):
         extra = f'?o <{OREXIS}presented> true .' if presented_only else ""
         return bindings(self.agent.beliefs.query(f"""
 SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
-  ?o a <{OREXIS}Obligation> ; <{OREXIS}owedTo> ?to ; <{OREXIS}forClaim> ?jti ;
+  ?o <{OREXIS}owedTo> ?to ; <{OREXIS}forClaim> ?jti ;
      <{OREXIS}presented> ?presented ; <{OREXIS}owedAt> ?at .
   OPTIONAL {{ ?o <{OREXIS}expiresAt> ?expires }}
   {extra}
