@@ -48,7 +48,7 @@ def test_every_agent_keeps_a_ledger_and_the_stake_is_what_needs_a_patience(make)
     agent while the thing that WRITES it was a grant, and a modality nobody may write is not a
     modality. Commitment is not plug-in-able.
 
-    What survives is the SHAPE, and it is narrower on purpose. `ag:KeeperShape` targets the
+    What survives is the SHAPE, and it is narrower on purpose. `orexis:KeeperShape` targets the
     stake alone — an agent that holds a want that is not merely about knowing must state a
     patience within the constitutional bounds. The lever half could not follow it into the
     kernel without the kernel naming three packages' predicates, and a lever is an instance
@@ -159,8 +159,8 @@ def test_past_its_patience_a_new_adoption_supersedes(make):
 
     from orexis_agent_progression.store import bindings
     rows = bindings(fern.beliefs.query(
-        "SELECT ?why WHERE { GRAPH <%s> { <%s> ag:outcome \"dropped\" ; "
-        "ag:becauseOf ?why } }" % (intentions_graph("fern"), first)))
+        "SELECT ?why WHERE { GRAPH <%s> { <%s> orexis:outcome \"dropped\" ; "
+        "orexis:becauseOf ?why } }" % (intentions_graph("fern"), first)))
     assert any("outwaited" in r["why"] for r in rows)
 
 
@@ -178,7 +178,7 @@ def test_intentions_are_nobody_elses_to_read(make):
     assert intentions_graph("fern") not in fern.beliefs.public_graphs()
     from orexis_agent_progression.store import bindings
     assert bindings(fern.beliefs.query(
-        "SELECT ?i WHERE { ?i a ag:Intention }")) == []
+        "SELECT ?i WHERE { ?i a orexis:Intention }")) == []
 
 
 def test_the_agent_reports_what_stands_and_how_old(make):
@@ -353,22 +353,22 @@ def test_a_commitment_is_keyed_by_its_want_and_absorbed_by_it(make):
 
 
 def test_an_old_row_naming_an_action_is_rebuilt_as_an_act(make):
-    """A ledger written before an-act-is-a-filled-action pointed `ag:by` at the ACTION node and
-    kept `ag:through` on the intention. At the keeper's construction such a row is rebuilt: an
-    act node fills the action, the lever moves onto it, and `ag:by` names the act — so a reader
+    """A ledger written before an-act-is-a-filled-action pointed `orexis:by` at the ACTION node and
+    kept `orexis:through` on the intention. At the keeper's construction such a row is rebuilt: an
+    act node fills the action, the lever moves onto it, and `orexis:by` names the act — so a reader
     of the ledger sees one shape whatever the volume's age, and the migration finds nothing
     to do the second time."""
     from orexis_agent_progression import ledger
-    from orexis_agent_progression.ontology import AG
+    from orexis_agent_progression.ontology import OREXIS
 
     fern = make("fern")
     keeper = keeper_of(fern)
     keeper.agent.intentions.update(f"""INSERT DATA {{ GRAPH <{keeper.graph}> {{
-        <{AG}intent_fern_old1> a <{AG}Intention> ;
-            <{AG}pursues> <{stake_of(fern).uri}> ;
-            <{AG}by> <{ACQUIRING}> ;
-            <{AG}through> <urn:old-venue> ;
-            <{AG}adoptedAt> "2026-08-01T00:00:00+00:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
+        <{OREXIS}intent_fern_old1> a <{OREXIS}Intention> ;
+            <{OREXIS}pursues> <{stake_of(fern).uri}> ;
+            <{OREXIS}by> <{ACQUIRING}> ;
+            <{OREXIS}through> <urn:old-venue> ;
+            <{OREXIS}adoptedAt> "2026-08-01T00:00:00+00:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
     assert ledger.migrate_ledger_acts(keeper.agent.intentions, keeper.graph) == 1
     old = next(s for s in keeper.standing(action=ACQUIRING) if s.uri.endswith("old1"))
     assert old.act.action == ACQUIRING and old.act.via == "urn:old-venue"

@@ -42,43 +42,43 @@ from .act import Act
 from .store import bindings
 
 from .graphs import intentions_graph
-from .ontology import AG, PLAN_FAILED, PLAN_FINISHED, REPORTS
+from .ontology import OREXIS, PLAN_FAILED, PLAN_FINISHED, REPORTS
 
 #  What an intention is made of — the mind's own words, and they were the kernel's already
 #  (the-mind-is-six-graphs). What has joined them is the four figures the KEEPING member used to
 #  own privately: a patience, a suspicion threshold and the bounds on the patience. They are the
 #  kernel's now for the same reason the class is — every agent keeps a ledger, so a figure that
 #  governs keeping is not one package's private setting.
-INTENTION_CLASS = AG + "Intention"
-BY = AG + "by"
-PURSUES = AG + "pursues"
-ADOPTED_AT = AG + "adoptedAt"
-RESOLVED_AT = AG + "resolvedAt"
-OUTCOME = AG + "outcome"
-BECAUSE_OF = AG + "becauseOf"
+INTENTION_CLASS = OREXIS + "Intention"
+BY = OREXIS + "by"
+PURSUES = OREXIS + "pursues"
+ADOPTED_AT = OREXIS + "adoptedAt"
+RESOLVED_AT = OREXIS + "resolvedAt"
+OUTCOME = OREXIS + "outcome"
+BECAUSE_OF = OREXIS + "becauseOf"
 
 # The means — what kind of act the commitment is to.
 
 # The commitment policy — the belief, not the mechanism.
-PATIENCE_S = AG + "patienceS"
+PATIENCE_S = OREXIS + "patienceS"
 
 # The expectation — the END, judged apart from the action.
-EXPECTS_RISE = AG + "expectsRise"
-BASELINE_VALUE = AG + "baselineValue"
-BASELINE_AT = AG + "baselineAt"
-EXPECTS_DELTA = AG + "expectsDelta"
-#  `ag:deadlineAt` WAS HERE: the watch's deadline is the ACT's `ag:notAfter` now — one window,
+EXPECTS_RISE = OREXIS + "expectsRise"
+BASELINE_VALUE = OREXIS + "baselineValue"
+BASELINE_AT = OREXIS + "baselineAt"
+EXPECTS_DELTA = OREXIS + "expectsDelta"
+#  `orexis:deadlineAt` WAS HERE: the watch's deadline is the ACT's `orexis:notAfter` now — one window,
 #  read by the keeper, the bidder's give-up and the host's redeem check alike
 #  (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan). `ledger` migrates it.
-END_MET = AG + "endMet"
-END_VERIFIED_AT = AG + "endVerifiedAt"
-SUSPECT_AFTER = AG + "suspectAfter"
-MET_FRACTION = AG + "metFraction"
+END_MET = OREXIS + "endMet"
+END_VERIFIED_AT = OREXIS + "endVerifiedAt"
+SUSPECT_AFTER = OREXIS + "suspectAfter"
+MET_FRACTION = OREXIS + "metFraction"
 
 
 def kernel(name: str) -> str:
     """A mind state, by local name."""
-    return AG + name
+    return OREXIS + name
 
 # What this package asks OF others — namespaces, never Python. The direction a lever moves the
 # property it is priced in is the domain's statement (#127), copied into the expectation row;
@@ -93,15 +93,15 @@ def kernel(name: str) -> str:
 # patience bounds: what this society tolerates before it stops trusting a claim.
 _SUSPECT_Q = """
 SELECT ?n WHERE {
-  GRAPH ?g { ag:Intention ag:suspectAfter ?n }
+  GRAPH ?g { orexis:Intention orexis:suspectAfter ?n }
 } LIMIT 1"""
 
 # The fraction of an expected delta that counts as the world answering (#165). Carried by
-# `ag:Intention` itself now that there is no family to hang it on — what a society accepts as
+# `orexis:Intention` itself now that there is no family to hang it on — what a society accepts as
 # evidence is a fact about intentions, not about one way of keeping them.
 _MET_FRACTION_Q = """
 SELECT ?f WHERE {
-  GRAPH ?g { ag:Intention ag:metFraction ?f }
+  GRAPH ?g { orexis:Intention orexis:metFraction ?f }
 } LIMIT 1"""
 
 
@@ -119,10 +119,10 @@ class KeepingBeliefs:
 
 
 class NoPatience(LookupError):
-    """This agent states no `ag:patienceS`, and something asked for it.
+    """This agent states no `orexis:patienceS`, and something asked for it.
 
     An agent that keeps commitments and states no patience is missing something
-    `ag:Intention` needs, not something it was granted — `ag:KeeperShape` refuses to let an
+    `orexis:Intention` needs, not something it was granted — `orexis:KeeperShape` refuses to let an
     agent with a stake boot without one, so reaching this is a stakeless agent being asked to
     commit, which is a bug in the asker."""
 
@@ -130,12 +130,12 @@ class NoPatience(LookupError):
 @dataclass(frozen=True)
 class Standing:
     """One unresolved commitment, as a reader gets it back: the ACT committed to, and the want
-    it pursues. `ag:by` names the act node (an-act-is-a-filled-action…); the action, the
+    it pursues. `orexis:by` names the act node (an-act-is-a-filled-action…); the action, the
     lever and the quantity are the act's, read through it."""
 
     uri: str
     act: Act
-    want: str               # the desire's node — `ag:pursues`; the kernel's only key besides the act
+    want: str               # the desire's node — `orexis:pursues`; the kernel's only key besides the act
     adopted_at: datetime
 
     @property
@@ -192,8 +192,8 @@ class Keeper:
         #  A volume from before the ledger keyed on the want: rows carrying a property are
         #  given the want that property names for this agent, once, at construction.
         about_of = {r["want"]: r["about"] for r in bindings(agent.desires.query_union(
-            f"SELECT ?want ?about WHERE {{ <{self.me.uri}> <{AG}holds> ?want . "
-            f"?want <{AG}about> ?about }}"))}
+            f"SELECT ?want ?about WHERE {{ <{self.me.uri}> <{OREXIS}holds> ?want . "
+            f"?want <{OREXIS}about> ?about }}"))}
         if (n := ledger.migrate_ledger(agent.intentions, self.graph, about_of)):
             self.log.info("ledger migrated: %d row(s) keyed by a property now pursue a want", n)
         if (n := ledger.migrate_ledger_acts(agent.intentions, self.graph)):
@@ -208,12 +208,12 @@ class Keeper:
         killed `world/sensing`'s stakeless agent. Since #452 progression reads no belief at
         all: the container reads `KEEPING_PICKS` (the deliberator's) and assigns the result
         through the setter below, or assigns nothing where the agent states none. The check
-        is not softened: `ag:KeeperShape` still REFUSES to let an agent with a stake boot
+        is not softened: `orexis:KeeperShape` still REFUSES to let an agent with a stake boot
         without a patience inside the constitutional bounds, and an agent that reaches a
         commitment with none raises `NoPatience` here, naming the missing term.
         """
         if self._picks is None:
-            raise NoPatience(f"{self.agent.id} states no patience (ag:patienceS) and was asked "
+            raise NoPatience(f"{self.agent.id} states no patience (orexis:patienceS) and was asked "
                              "to keep a commitment")
         return self._picks
 
@@ -244,8 +244,8 @@ class Keeper:
 
         `act` is an `Act` — the plan's head, sized, through its lever — or, for an actor
         committing on its own event with nothing sized (a held claim), the action's IRI and
-        the lever as `via`. Either way the ledger holds an act NODE: `ag:by` names it, and it
-        carries `ag:fills` the action, `ag:through` the lever, `ag:quantity` and the window
+        the lever as `via`. Either way the ledger holds an act NODE: `orexis:by` names it, and it
+        carries `orexis:fills` the action, `orexis:through` the lever, `orexis:quantity` and the window
         (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
 
         KEYED ON (ACTION, WANT) and nothing else: a want is its node, and the kernel no longer
@@ -253,7 +253,7 @@ class Keeper:
         property but different wants were always distinct — a dealer owing water to fern and
         to tomato holds two Serving rows — and the property was only ever the coarser key.
 
-        `via` is the lever the plan's head goes through — written as `ag:through`, so the
+        `via` is the lever the plan's head goes through — written as `orexis:through`, so the
         ledger says which valve or venue and the actor handed the row later knows too.
         Execution passes it; an actor adopting on its own event (a held claim) may not.
 
@@ -282,8 +282,8 @@ class Keeper:
                           f"outwaited: stood {standing.age_s(now):.0f}s against a patience "
                           f"of {self.beliefs.patience_s}s, superseded by a new adoption")
         stem = uuid.uuid4().hex[:8]
-        uri = f"{AG}intent_{self.agent.id}_{stem}"
-        act_uri = f"{AG}act_{self.agent.id}_{stem}"
+        uri = f"{OREXIS}intent_{self.agent.id}_{stem}"
+        act_uri = f"{OREXIS}act_{self.agent.id}_{stem}"
         xsd = "http://www.w3.org/2001/XMLSchema#"
         facts = [f'<{kernel("fills")}> <{action}>']
         if act.via:
@@ -371,7 +371,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
         THE DEADLINE IS THE ACT'S WINDOW. `not_after`, where the actor states it (the act it
         committed to carries one), or else the landing time plus the seeing time computed
-        here — and either way it is written as the act's `ag:notAfter`, so the ledger holds
+        here — and either way it is written as the act's `orexis:notAfter`, so the ledger holds
         one window and every reader reads that one.
 
         The BASELINE — the reading the actor holds, handed in — is copied into the row: the

@@ -18,7 +18,7 @@ timestamp: 2026-08-26T22:00:00Z
 **Weak: publishing is a goal, not a primitive.** Right, and worth building. The apparatus
 already exists here and comes free — an [action](/domain/action.md) with a precondition and an
 effect, an [intention](/domain/intention.md) that stands until the world answers, a window
-(`ag:notAfter`) that is already what every hand-kept timer says, and a compensation the actor
+(`orexis:notAfter`) that is already what every hand-kept timer says, and a compensation the actor
 declares. The prize is the last one: *delivery failed* stops being an exception and becomes a
 fact the search can weigh. If a plant cannot get its bid to the venue, that is not a socket
 error — it is a reason to reconsider the want that motivated the bid.
@@ -47,7 +47,7 @@ question is where — and the answer is **below anything with retry semantics**.
 | whether to escalate to another route | reconnect backoff timing |
 
 The client library stays a library; the decision to use it becomes a plan. In this tree that
-has a shape: a `Delivering` action node in the transport package, `ag:takenBy` the link that
+has a shape: a `Delivering` action node in the transport package, `orexis:takenBy` the link that
 holds the connection, its window the deadline the message is worth anything by — the same
 mechanic as every other action, in the package that owns the words
 ([the-kernel-has-no-mailbox](/decisions/the-kernel-has-no-mailbox.md)).
@@ -87,7 +87,7 @@ that cannot tell a lost bid from a losing one.
 1. The outbox (#396, landed) — **and not as a new action**. What it was wanted FOR is one
    guarantee — a message the agent may stop meaning is never handed to a queue — and the act
    that carries the message already had every part of it: an [intention](/domain/intention.md) that stands, a
-   window, and an [actor](/domain/actor.md) whose False means *not now*. So `ag:send` answers
+   window, and an [actor](/domain/actor.md) whose False means *not now*. So `orexis:send` answers
    whether the message LEFT, a message that states when it stops mattering is refused rather
    than queued while the link is down, and the Acquire stands until the round's close drops it.
    A `Delivering` action node buys nothing over that and would put a second machinery under the
@@ -107,4 +107,4 @@ that cannot tell a lost bid from a losing one.
   and the receiver's idempotence is what makes it safe. Owning the retry outright still means
   QoS 0, and that is still a decision rather than an implementation detail.
 - **Nothing declares a compensation for a half-sent message.** The vocabulary exists
-  (`ag:retracts`, the confirmation routes); nothing uses it for delivery.
+  (`orexis:retracts`, the confirmation routes); nothing uses it for delivery.

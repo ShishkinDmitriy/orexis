@@ -2,7 +2,7 @@
 type: Decision
 title: A dead session is resigned, not endured
 description: >-
-  The kernel watchdog for issue #53 — an agent cut off from its bus past ag:resignAfterS sends
+  The kernel watchdog for issue #53 — an agent cut off from its bus past orexis:resignAfterS sends
   itself the same SIGTERM podman stop would, and the container's restart policy is the
   recovery. In the kernel like upkeep, on a clock of its own because paho's network thread is
   one of the things watched, with the bound in the ontology as what the society tolerates.
@@ -42,7 +42,7 @@ Three checks, ordered by how wrong things are:
 - **cut off past the bound.** `Metrics` keeps a *continuous* disconnection clock — started at
   construction (an agent whose CONNACK is refused in a loop is exactly as cut off as one whose
   session died), reset by one successful reconnect (a flapping link never accumulates its way
-  to a resignation; `mqtt_reconnects` is flapping's counter). Past `ag:resignAfterS`, resign.
+  to a resignation; `mqtt_reconnects` is flapping's counter). Past `orexis:resignAfterS`, resign.
 - **something expected has gone silent.** Each module's `quiet()` — sensing answers with
   every sensor that delivered once and then went silent past the same `stale_after_s` its
   freshness rule uses, so the log and the refusal cannot disagree. Said once on entry and once
@@ -54,7 +54,7 @@ writer flushes — and `restart: unless-stopped` brings the process back to the 
 that actually cured the incident. One CRITICAL line carries the story; in the series, the
 restart shows as `uptime_s` resetting.
 
-**The bound is the ontology's** — `ag:Agent ag:resignAfterS 600`, beside the compaction ratio
+**The bound is the ontology's** — `orexis:Agent orexis:resignAfterS 600`, beside the compaction ratio
 and for the same reason: what a society tolerates is not how the code happens to be written.
 Ten minutes is far past any reconnect paho would achieve and far under the hours a quiet
 failure used to cost.

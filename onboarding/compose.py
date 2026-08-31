@@ -36,7 +36,7 @@ from pathlib import Path
 
 from agent import ratified
 from agent.config import REPO_ROOT
-from orexis_agent_progression.ontology import AG, WORLD_GRAPH
+from orexis_agent_progression.ontology import OREXIS, WORLD_GRAPH
 from .namespaces import ACTUATION, MARKET, MQTT, SENSING, SIM, SOSA
 from agent import genesis
 from agent.genesis import world_dir, worlds
@@ -47,8 +47,8 @@ IMAGE = "orexis:local"
 
 _ROSTER_Q = f"""
 SELECT ?id ?cap WHERE {{ 
-  ?a a <{AG}Agent> ; <{AG}localId> ?id .
-  OPTIONAL {{ ?a <{AG}hasCapability> ?cap }}
+  ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id .
+  OPTIONAL {{ ?a <{OREXIS}hasCapability> ?cap }}
  }}"""
 
 # The CAPABILITY, not the namespace `ACTUATION` imported above. Naming both the same thing
@@ -225,7 +225,7 @@ _SIM_MODE = {
 #
 # NO DOMAIN TERM IS NAMED, and that is the contract rather than a nicety. The term that
 # carries `market:aboutProperty` IS the lot-per-property conversion — the domain states it on
-# each subject as the physics (`ag:fern water:litresPerFraction 2.0`) — so the query binds
+# each subject as the physics (`orexis:fern water:litresPerFraction 2.0`) — so the query binds
 # ?conversion from the denomination and uses it as the predicate. Swap the domain and its own
 # valuation term (watts per degree, litres per fraction) joins here with this file unchanged,
 # which is what "the domain is a plug-in" demands of a generator.
@@ -241,7 +241,7 @@ SELECT ?id ?readingTopic ?commandTopic ?senseMode ?tick ?doseTopic ?drainTopic ?
        ?pointer ?initial ?loses ?subjectLoses ?swing ?litres ?doseEffect ?minValue ?maxValue
        ?subjectMax ?scale ?rainTopic
 WHERE {{
-  ?d <{AG}localId> ?id ; <{SIM}simulatedBy> ?deviceModel ; <{MQTT}readingTopic> ?readingTopic ;
+  ?d <{OREXIS}localId> ?id ; <{SIM}simulatedBy> ?deviceModel ; <{MQTT}readingTopic> ?readingTopic ;
      <{MQTT}onBus> ?onBus .
   ?s <{MQTT}readingTopic> ?readingTopic ; <{SIM}simulatedBy> ?model ;
      <{SENSING}monitors> ?subject .
@@ -271,7 +271,7 @@ WHERE {{
   # of sim:maxValue) — one statement, the #164 pattern, read here like the drying is.
   OPTIONAL {{ ?subject <{SIM}maxValue> ?subjectMax }}
   OPTIONAL {{ ?subject <{SIM}doseEffect> ?doseEffect }}
-  OPTIONAL {{ ?w a <{AG}World> ; <{SIM}timeScale> ?scale }}
+  OPTIONAL {{ ?w a <{OREXIS}World> ; <{SIM}timeScale> ?scale }}
   OPTIONAL {{ ?subject <{SIM}rainTopic> ?rainTopic }}
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
  }}"""
@@ -320,7 +320,7 @@ def _values(rows: list[dict]) -> str:
 # rained on, how often on average, and at what pace the world runs.
 _MEDDLER_Q = f"""
 SELECT DISTINCT ?rainTopic ?strayDays ?scale ?port WHERE {{
-  ?w a <{AG}World> ; <{SIM}strayDoseMeanDays> ?strayDays .
+  ?w a <{OREXIS}World> ; <{SIM}strayDoseMeanDays> ?strayDays .
   ?subject <{SIM}rainTopic> ?rainTopic .
   OPTIONAL {{ ?w <{SIM}timeScale> ?scale }}
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
@@ -435,7 +435,7 @@ def _simulator(world: str, rows: list[dict]) -> str:
 _SIM_VALVES_Q = f"""
 SELECT ?id ?commandTopic ?statusTopic ?mlPerSecond ?maxDoseMl ?port
 WHERE {{ 
-  ?v <{AG}localId> ?id ; <{SIM}simulatedBy> ?model ; <{ACTUATION}actuates> ?subject ;
+  ?v <{OREXIS}localId> ?id ; <{SIM}simulatedBy> ?model ; <{ACTUATION}actuates> ?subject ;
      <{MQTT}commandTopic> ?commandTopic ; <{MQTT}statusTopic> ?statusTopic .
   OPTIONAL {{ ?v <{ACTUATION}mlPerSecond> ?mlPerSecond }}
   OPTIONAL {{ ?v <{ACTUATION}maxDoseMl> ?maxDoseMl }}

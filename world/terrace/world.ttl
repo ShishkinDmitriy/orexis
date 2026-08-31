@@ -3,7 +3,7 @@
 @prefix water: <http://example.org/orexis/water#> .
 @prefix mqtt: <http://example.org/orexis/mqtt#> .
 @prefix schema: <https://schema.org/> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
@@ -42,7 +42,7 @@
 ##########  The bus everyone speaks over  ##########
 
 :local_bus a mqtt:MessageBus ;
-    ag:localId "local_bus" ;
+    orexis:localId "local_bus" ;
     mqtt:brokerHost "localhost" ;
     #  A broker per world, on ports of its own: 1884 is sensing, 1885 simulation, 1887 loner.
     mqtt:brokerPort 1888 ;
@@ -50,9 +50,9 @@
 
 ##########  World version  ##########
 
-:world a ag:World ; ag:currentVersion :version_1 ;
-    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole ag:Sovereign ] .
-:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
+:world a orexis:World ; orexis:currentVersion :version_1 ;
+    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole orexis:Sovereign ] .
+:version_1 a orexis:WorldVersion ; orexis:versionNumber 1 .
 
 ##########  The subject — a thing that is watched, and nothing more  ##########
 #  A planter bed on the terrace. NOT a water:Plant, for the same reason world/sensing's fern is
@@ -60,7 +60,7 @@
 #  to join. It is also not a species — what grows in the bed is not stated because it is not
 #  known, and a species package (world/loner's Zamioculcas) would entail care ranges nobody
 #  has judged. Nobody acts for it, so no region and no patience is deduced: the sensing stake
-#  shapes target `ag:actsFor` a subject that states what it needs. When a plant is chosen,
+#  shapes target `orexis:actsFor` a subject that states what it needs. When a plant is chosen,
 #  typing this node is the whole edit.
 #
 #  It DOES state one range, and honestly for one reason: a sentinel's config is compiled from
@@ -73,7 +73,7 @@
 #  move of about 0.09 — rain or a watering can, never a warm afternoon's drift.
 
 :terrace_bed a sosa:FeatureOfInterest ;
-    ag:localId "terrace_bed" ;
+    orexis:localId "terrace_bed" ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
             ssn:forProperty water:SoilMoisture ;
@@ -94,7 +94,7 @@
 #  holds the two to agreeing.
 
 :esp32_terrace a sosa:Platform ;
-    ag:localId "esp32_terrace" ;
+    orexis:localId "esp32_terrace" ;
     sosa:hosts :moisture_sensor_terrace , :air_sensor_terrace ;
     rdfs:comment "The board. One MQTT client, one credential, one wake — which is why its three channels share a topic and a clock, and why those are facts about IT rather than about any one of them." .
 
@@ -105,12 +105,12 @@
 #  promised "one triple away" day arrived when the sovereign wanted weather on a graph:
 #  water:AirPressure now names it, and the channel below observes it.
 :air_sensor_terrace a ssn:System ;
-    ag:localId "air_sensor_terrace" ;
+    orexis:localId "air_sensor_terrace" ;
     ssn:hasSubSystem :air_temp_terrace , :air_humidity_terrace , :air_pressure_terrace ;
     rdfs:comment "One part reporting three properties the society names. A System rather than a Sensor because it observes nothing itself; a single forced-mode conversion yields all its values together, which is why they share an instant." .
 
 :moisture_sensor_terrace a sosa:Sensor , device:Device , outdoor:Node ;
-    ag:localId "moisture_sensor_terrace" ;
+    orexis:localId "moisture_sensor_terrace" ;
     mqtt:onBus :local_bus ;
     #  No senseMode, no firmware name, no alarm promise stated: the device is typed
     #  outdoor:Node, and the mode (Push -> its agent gains sensing:Listening), the firmware
@@ -132,7 +132,7 @@
 #  restates it here per channel; tests/test_layout.py holds the copy to the part.
 
 :air_temp_terrace a sosa:Sensor , device:Device ;
-    ag:localId "air_temp_terrace" ;
+    orexis:localId "air_temp_terrace" ;
     sensing:monitors :terrace_bed ;
     sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;
@@ -144,7 +144,7 @@
         ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 1 ; schema:unitCode unit:SEC ] ] .
 
 :air_humidity_terrace a sosa:Sensor , device:Device ;
-    ag:localId "air_humidity_terrace" ;
+    orexis:localId "air_humidity_terrace" ;
     sensing:monitors :terrace_bed ;
     sosa:observes water:AirHumidity ;
     scaling:quantityUnit unit:UNITLESS ;   # relative humidity as a fraction, 0-1
@@ -157,7 +157,7 @@
 
 
 :air_pressure_terrace a sosa:Sensor , device:Device ;
-    ag:localId "air_pressure_terrace" ;
+    orexis:localId "air_pressure_terrace" ;
     sensing:monitors :terrace_bed ;
     sosa:observes water:AirPressure ;
     scaling:quantityUnit unit:HectoPA ;
@@ -169,14 +169,14 @@
         ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 1 ; schema:unitCode unit:SEC ] ] .
 
 ##########  The agent  ##########
-#  No ag:actsFor: with nothing to advance for it, this agent holds no stake — it records.
+#  No orexis:actsFor: with nothing to advance for it, this agent holds no stake — it records.
 #  No market:bidsIn, no market:hosts, no actuation:hasActuator: no other capability can be
 #  derived. And NO review:commits — "for now just monitoring" grants no room to re-pick
 #  anything; there is no cadence to re-pick anyway, since the board keeps its own.
 #
-#  Note what is NOT written here: no ag:hasCapability. See AGENTS.md.
+#  Note what is NOT written here: no orexis:hasCapability. See AGENTS.md.
 
-:terrace_agent a ag:Agent ;
-    ag:localId "terrace" ;
+:terrace_agent a orexis:Agent ;
+    orexis:localId "terrace" ;
     sensing:polls :moisture_sensor_terrace , :air_temp_terrace , :air_humidity_terrace , :air_pressure_terrace ;
     mqtt:eventTopic "readings/terrace" .

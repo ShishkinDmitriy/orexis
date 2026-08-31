@@ -5,7 +5,7 @@
 #define WIFI_PASS "your-wifi-password"
 
 #define MQTT_HOST "192.168.1.50" // the Raspberry Pi's LAN IP (runs mosquitto)
-// Each world runs its own broker on its own port — see ag:brokerPort in that world's
+// Each world runs its own broker on its own port — see orexis:brokerPort in that world's
 // world.ttl. society is 1883, sensing 1884, simulation 1885.
 #define MQTT_PORT 1883
 

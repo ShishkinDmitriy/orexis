@@ -69,13 +69,13 @@ def tree_bytes(path: str | Path | None) -> int | None:
 # sixty times more often than the signal can move.
 EVERY_S = 3600
 
-# Read from the T-Box, never compiled in. It hangs off `ag:BeliefBase` — a fact about the store
+# Read from the T-Box, never compiled in. It hangs off `orexis:BeliefBase` — a fact about the store
 # every agent keeps, which is where it had to move when the review vocabulary left the kernel:
 # the kernel cannot reference a term a capability owns, and a capability that may not be
 # installed cannot be what says how large a belief base may get.
 _RATIO_Q = """
 SELECT ?ratio WHERE {
-  GRAPH ?g { ag:BeliefBase ag:maxBytesPerTriple ?ratio }
+  GRAPH ?g { orexis:BeliefBase orexis:maxBytesPerTriple ?ratio }
 } LIMIT 1"""
 
 
@@ -89,7 +89,7 @@ class BeliefBaseUpkeep:
         rows = bindings(agent.beliefs.query(_RATIO_Q))
         if not rows:
             raise RuntimeError(
-                "the ontology states no ag:maxBytesPerTriple — this build's vocabulary is older "
+                "the ontology states no orexis:maxBytesPerTriple — this build's vocabulary is older "
                 "than its code")
         self.max_bytes_per_triple = int(rows[0]["ratio"])
         self.compactions = 0

@@ -73,10 +73,10 @@ Desire: where a want comes from, what shape it has, and who is allowed to change
 What happens to a decision — committed as an intention, carried out by whoever the T-Box says takes it.
 
 * [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md) - BDI's third letter: a commitment to reduce a named gap by a named means, so a decision is made once.
-* [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md) - The plan's head is what the keeper writes, execution is one kernel road, and `ag:takenBy` links a row to the code that takes it.
+* [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md) - The plan's head is what the keeper writes, execution is one kernel road, and `orexis:takenBy` links a row to the code that takes it.
 * [an-intention-stands-until-the-world-answers](/decisions/an-intention-stands-until-the-world-answers.md) - An Actuate stands from the command to its verdict, so the standing rule is the whole patience and the `absorbs` hook is gone.
-* [an-action-is-one-node](/decisions/an-action-is-one-node.md) - Precondition, effect and taker are one `ag:Action` node in `actions.ttl`; chosen/honoured is a column, and four surfaces became one.
-* [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) - `ag:Means` read by nothing; the action node is what a row carries and an intention commits to, and the five means are gone.
+* [an-action-is-one-node](/decisions/an-action-is-one-node.md) - Precondition, effect and taker are one `orexis:Action` node in `actions.ttl`; chosen/honoured is a column, and four surfaces became one.
+* [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) - `orexis:Means` read by nothing; the action node is what a row carries and an intention commits to, and the five means are gone.
 * [an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan](/decisions/an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan.md) - An ACT is a filled action with a window, execution's word; a STEP is its place in a plan; a claim commits to a Serving act.
 * [the-ladder-of-means](/decisions/the-ladder-of-means.md) - Look, act with what is yours, buy what is not, ask what you do not know — each rung costlier and more social.
 * [a-lever-an-agent-cannot-pull-is-not-a-lever](/decisions/a-lever-an-agent-cannot-pull-is-not-a-lever.md) - Knowing becomes sensing's own want, repaired through the search; the Observe row exists only where the agent can ask.
@@ -127,7 +127,7 @@ Which package owns a word, what happens when one moves, and how a deployed volum
 * [the-substrate-is-not-the-minds](/decisions/the-substrate-is-not-the-minds.md) - SOSA's classes may be virtual, so a substrate word survives — but the kernel does not own it, and neither owns the stand-in.
 * [a-stand-in-is-not-a-device](/decisions/a-stand-in-is-not-a-device.md) - Observing is not something only a built thing can do, so a role asks for the role; substrate and existence are two other questions.
 * [a-shape-belongs-to-the-vocabulary-it-checks](/decisions/a-shape-belongs-to-the-vocabulary-it-checks.md) - Deleting a package must not leave a demand behind, so a shape lives where its constraints are declared and may select anywhere.
-* [a-hook-is-a-term](/decisions/a-hook-is-a-term.md) - Every choir question is an `ag:Hook` declared by whoever owns it; modules answer by decorating with the term; undeclared terms are refused.
+* [a-hook-is-a-term](/decisions/a-hook-is-a-term.md) - Every choir question is an `orexis:Hook` declared by whoever owns it; modules answer by decorating with the term; undeclared terms are refused.
 * [channel-is-the-word](/decisions/channel-is-the-word.md) - The per-topic node was channel and stream interchangeably; the T-Box declares mqtt:Channel, so the prose moved to the code's word.
 * [bid-matching-is-the-word](/decisions/bid-matching-is-the-word.md) - Matching covers the allocation rule and the payment rule; format over-claims and means two incompatible things.
 * [a-name-does-not-expire](/decisions/a-name-does-not-expire.md) - A DHCP lease is a fact with an expiry date. The world states a hostname, and no firmware code changed.

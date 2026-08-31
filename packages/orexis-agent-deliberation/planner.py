@@ -216,7 +216,7 @@ class Planner:
         """
         node = URIRef(desire.uri)
         #  The met-test hangs OFF the desire node since the reification — a desire is a node
-        #  carrying its shape, not the shape itself — so the walk is one hop of `ag:metWhen`.
+        #  carrying its shape, not the shape itself — so the walk is one hop of `orexis:metWhen`.
         #  A node that IS a shape stays legal: an asserted root desire is a bare NodeShape a
         #  world's TriG may state, and it never grew a desire node around it.
         met = self._shapes.value(node, _AG.metWhen)
@@ -347,7 +347,7 @@ class Planner:
                     #  does not help" arrives by, rather than by a rule of its own.
                     #
                     #  There WAS a rule of its own, and it is the reason depth was 1. It asked
-                    #  `ag:confirmedBy ag:ByObservation`, which every effect here answers — a
+                    #  `orexis:confirmedBy orexis:ByObservation`, which every effect here answers — a
                     #  dose and a bid included, since only a later reading says either arrived
                     #  — so the guard matched every lever, `nxt` came back empty at every
                     #  depth, and the search never took a second step whatever MAX_DEPTH said.
@@ -535,7 +535,7 @@ class Planner:
         #  pyoxigraph terms and the rdflib copy exists only for pySHACL.
         store = self.agent.beliefs
         #  Which beliefs are UPSERTED, and by what — declared by the package that writes them
-        #  (`ag:keyedBy`, `ag:carries` on the node's class), read once per pass so the signature
+        #  (`orexis:keyedBy`, `orexis:carries` on the node's class), read once per pass so the signature
         #  canonicalises a reading without this file knowing what one looks like.
         self._about_of = wants_of(self.agent.desires.query_union, self.me.uri)
         self._keys = signature.keys_of(store.query)
@@ -603,7 +603,7 @@ class Planner:
             "claim": f'"{desire.claim}"' if desire and desire.claim else '"urn:nobody"',
             "subject": f"<{self.me.acts_for}>" if self.me.acts_for else "<urn:nobody>",
             #  THE WANT AND WHAT IT IS ABOUT, carried from the row to the rule and never read
-            #  here: `$about` is whatever the want's deriver said (`ag:about`) — a property,
+            #  here: `$about` is whatever the want's deriver said (`orexis:about`) — a property,
             #  for a region want — and the rule joins on it in its own words.
             "want": f"<{desire.uri}>" if desire else "<urn:nothing>",
             "about": f"<{row.about}>" if row is not None and row.about else "<urn:nothing>",
@@ -622,7 +622,7 @@ class Planner:
         reach, and be wrong in the direction that looks like a device lying — the single-source
         argument #238 made for an effect's magnitude and #247 for its timing.
 
-        ASKED OF THE TAKER, found the way execution finds it — the action's `ag:takenBy` family
+        ASKED OF THE TAKER, found the way execution finds it — the action's `orexis:takenBy` family
         — and asked ABOUT A WORLD: the imaginarium at this node's graph, so a second dose is
         sized from where the first one left the property (#254). The taker reads the value
         there through sensing; nothing here knows what a reading looks like.
@@ -666,4 +666,4 @@ class Planner:
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 _AG = rdflib.Namespace("http://example.org/orexis#")
 #  No means or family is named here any more: sizing is `Module.size`, asked of the row's
-#  taker through `ag:takenBy` exactly as execution finds it.
+#  taker through `orexis:takenBy` exactly as execution finds it.

@@ -1,5 +1,5 @@
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix market: <http://example.org/orexis/market#> .
@@ -56,7 +56,7 @@ market:MarketShape a sh:NodeShape ;
                   sh:message "a market that takes presentations states how long it holds a winner's claim — a deadline is what makes a debt urgent rather than eternal, and what stops a host keeping paper for ever" ] .
 
 market:HostStatesHowItMatchesShape a sh:NodeShape ;
-    rdfs:comment "A host must say how it matches. Without it no matching capability is derived, `agent.provider` finds nobody, and the failure arrives at the END of a round — bids collected, deadline passed, nothing to allocate them with, and every bidder waiting on a claim that will not come. That is expensive and silent, and it is exactly what a world can be held to before anything starts. Targeted at whoever hosts rather than at ag:Agent, because an agent that hosts nothing has no auction to state terms for." ;
+    rdfs:comment "A host must say how it matches. Without it no matching capability is derived, `agent.provider` finds nobody, and the failure arrives at the END of a round — bids collected, deadline passed, nothing to allocate them with, and every bidder waiting on a claim that will not come. That is expensive and silent, and it is exactly what a world can be held to before anything starts. Targeted at whoever hosts rather than at orexis:Agent, because an agent that hosts nothing has no auction to state terms for." ;
     sh:targetSubjectsOf market:hosts ;
     sh:property [ sh:path market:matchesBy ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:class market:BidMatchingCapability ;

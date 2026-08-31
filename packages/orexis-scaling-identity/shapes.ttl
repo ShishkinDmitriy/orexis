@@ -1,7 +1,7 @@
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix sh:          <http://www.w3.org/ns/shacl#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix ag:          <http://example.org/orexis#> .
+@prefix orexis:          <http://example.org/orexis#> .
 @prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix scaling: <http://example.org/orexis/scaling#> .
 

@@ -61,7 +61,7 @@ def _event_topics_q(market_uri: str) -> str:
     """Where my participants announce what they notice. Public, like the rest of the wiring."""
     return f"""
 SELECT ?agentId ?eventTopic WHERE {{
-  ?agent market:bidsIn <{market_uri}> ; ag:localId ?agentId ; mqtt:eventTopic ?eventTopic  }}"""
+  ?agent market:bidsIn <{market_uri}> ; orexis:localId ?agentId ; mqtt:eventTopic ?eventTopic  }}"""
 
 
 # Which properties being in trouble are a reason to open a round HERE. Asked through THE
@@ -81,7 +81,7 @@ SELECT ?agentId ?eventTopic WHERE {{
 _ABOUT_Q = """
 SELECT DISTINCT ?property WHERE {
   <%s> market:marketFor ?src . ?src market:supplies ?good .
-  ?buyer market:bidsIn <%s> ; ag:actsFor ?subject .
+  ?buyer market:bidsIn <%s> ; orexis:actsFor ?subject .
   ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .
   ?range <http://www.w3.org/ns/ssn/systems/inCondition> ?cond .
   ?cond <http://www.w3.org/ns/ssn/forProperty> ?property .
@@ -91,7 +91,7 @@ SELECT DISTINCT ?property WHERE {
 # into the world graph. Absence is the pre-key era and stays legal — a world onboarded before
 # keygen learned agents has no rows here and behaves exactly as it always did.
 _KEY_Q = """
-SELECT ?key WHERE { ?a ag:localId "%s" ; ag:%s ?key } LIMIT 1"""
+SELECT ?key WHERE { ?a orexis:localId "%s" ; orexis:%s ?key } LIMIT 1"""
 
 
 class HostingModule(Module):

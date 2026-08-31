@@ -1,7 +1,7 @@
 @prefix review: <http://example.org/orexis/review#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix : <http://example.org/orexis/sensing#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
@@ -32,21 +32,21 @@
 #  terms (a-hook-is-a-term). Bidding answers :urgency for a held claim; sensing itself answers
 #  all four from the region it holds.
 :annotate a assembly:Extension ;
-    assembly:signature "(subject_uri, observed_property, value) -> dict" ; ag:row ag:Reactive ; rdfs:label "annotate" ; rdfs:comment "What do you add to this agent's public announcement about a reading of its own? Merged dict." .
+    assembly:signature "(subject_uri, observed_property, value) -> dict" ; orexis:row orexis:Reactive ; rdfs:label "annotate" ; rdfs:comment "What do you add to this agent's public announcement about a reading of its own? Merged dict." .
 :bounds a assembly:Extension ;
-    assembly:signature "(subject_uri, observed_property) -> tuple[float, float] | None" ; ag:row ag:Reactive ; rdfs:label "bounds" ; rdfs:comment "Where do you want this property held? The intersection — highest floor, lowest ceiling — is what a crossing-watching board is told." .
+    assembly:signature "(subject_uri, observed_property) -> tuple[float, float] | None" ; orexis:row orexis:Reactive ; rdfs:label "bounds" ; rdfs:comment "Where do you want this property held? The intersection — highest floor, lowest ceiling — is what a crossing-watching board is told." .
 :urgency a assembly:Extension ;
-    assembly:signature "(subject_uri, observed_property, value) -> float | None" ; ag:row ag:Reactive ; rdfs:label "urgency" ; rdfs:comment "How close does this reading put you to your own trouble, 0 to 1? The sharpest answer wins; None is no opinion. A None value asks how urgent not knowing is." .
+    assembly:signature "(subject_uri, observed_property, value) -> float | None" ; orexis:row orexis:Reactive ; rdfs:label "urgency" ; rdfs:comment "How close does this reading put you to your own trouble, 0 to 1? The sharpest answer wins; None is no opinion. A None value asks how urgent not knowing is." .
 :readingRecorded a assembly:Extension ;
-    assembly:signature "(subject_uri, observed_property, value) -> None" ; ag:row ag:Reactive ; rdfs:label "reading recorded" ; rdfs:comment "Told: this agent's sensing recorded something new — subject, property, value." .
+    assembly:signature "(subject_uri, observed_property, value) -> None" ; orexis:row orexis:Reactive ; rdfs:label "reading recorded" ; rdfs:comment "Told: this agent's sensing recorded something new — subject, property, value." .
 
 #  A BELIEF GRAPH of this package's own: what the agent holds about the instruments it polls
 #  — the horizon it published per sensor, which the freshness want reads. It arrives RECORDED
 #  because the agent writes it down as it goes; private, because nobody else needs to know
 #  what rhythm I am running. Found by the kernel as every graph is, by what it is typed.
-<http://example.org/orexis/graph/instruments> a ag:BeliefGraph ; ag:arrivedBy ag:Recorded .
+<http://example.org/orexis/graph/instruments> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Recorded .
 
-:SensingCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+:SensingCapability a owl:Class ; rdfs:subClassOf orexis:Capability ;
     rdfs:label "Sensing capability" ;
     rdfs:comment "The family. Rules true of sensing however it is done target this class, so nothing is restated per transport, and one capability may ask for 'whoever perceives' without knowing which of the three answered." .
 
@@ -97,7 +97,7 @@
 # behalf of a package that may not be installed.
 sosa:Sensor rdfs:subClassOf ssn:System .
 
-:polls a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sosa:Sensor ;
+:polls a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range sosa:Sensor ;
     rdfs:label "polls" ;
     rdfs:comment "The agent may read this sensor. This IS the access grant — expressed as topology rather than as a separate permission system, so isolation is visible in the wiring." .
 
@@ -109,7 +109,7 @@ sosa:Sensor rdfs:subClassOf ssn:System .
 #  as it concludes which sensing capability the agent gets, and from the same fact. `polls` is
 #  the access grant and says nothing about direction; this says the traffic can go the other
 #  way, which is what an affordance needs to be true before it may offer a look.
-:mayAsk a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sosa:Sensor ;
+:mayAsk a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range sosa:Sensor ;
     rdfs:label "may ask" ;
     rdfs:comment "The agent can REQUEST a reading of this sensor now, rather than only receive whatever it sends. A subset of what it polls: a device that keeps a clock it was given can be interrupted, and one that keeps its own cannot be addressed at all. Where it is absent the agent is a listener on that instrument, and looking is not among its means — which is what makes the want it cannot repair report as unequipped instead of being committed to and silently dropped." .
 
@@ -201,10 +201,10 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 
 # Required only of an agent that can actually act on them: driving a device is what makes a
 # cadence meaningful, so the transport's rules decide whether these are demanded.
-:fastSleepS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+:fastSleepS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
     rdfs:label "fast sleep seconds" ;
     rdfs:comment "Cadence when the agent judges itself in trouble — how closely it watches when worried." .
-:slowSleepS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+:slowSleepS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
     rdfs:label "slow sleep seconds" ;
     rdfs:comment "Cadence when comfortable. Attention costs energy, so looking less is a real choice." .
 
@@ -233,18 +233,18 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
     rdfs:label "reading grace" ;
     rdfs:comment "How long past the interval it ASKED for a subscribing agent still trusts a reading — a board's wake time and a late wifi association. Relative on purpose: an agent that chose to look every 600s cannot coherently refuse a 120s-old number, and an absolute limit made every comfortable plant look like a failed sensor." .
 
-:maxReadingAgeS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+:maxReadingAgeS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
     rdfs:label "max reading age seconds" ;
     rdfs:comment "How stale a reading may be and still back a decision. Without it, 'I choose when to look' becomes 'I choose which number to believe'." .
 
 #################  The constitutional bounds — stated, not compiled in  #################
 
-:minSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+:minSleepS a owl:DatatypeProperty ; rdfs:domain orexis:Capability ; rdfs:range xsd:integer ;
     rdfs:label "minimum sleep seconds" .
-:maxSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+:maxSleepS a owl:DatatypeProperty ; rdfs:domain orexis:Capability ; rdfs:range xsd:integer ;
     rdfs:label "maximum sleep seconds" .
 
-:relaxFactor a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
+:relaxFactor a owl:DatatypeProperty ; rdfs:domain orexis:Capability ; rdfs:range xsd:decimal ;
     rdfs:label "relax factor" ;
     rdfs:comment "Fast attack, slow release (#139). Tightening is INSTANTANEOUS — any voice in the urgency choir earns its cadence at once, because hesitating in that direction costs a plant — but relaxing is bounded per commanded step: the next sleep may exceed the last by at most this factor, so one comfortable reading cannot cliff a burst-tight cadence straight to the slow end. The release then runs geometrically (30, 45, 68, 101...), a few minutes of dense sampling during which the trend establishes and the #133 bound takes over — confidence is EARNED per reading, not assumed from one. On the family like the bounds, because how fast a society lets its members stop looking is the society's figure, not a compile-time constant." .
 
@@ -262,9 +262,9 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 # A ceiling of 0.5: any wider and the deviation half can never fire before a band edge does —
 # a delta past half the band's width is refusal spelled as a number, and refusing is done by
 # not stating a pick, not by picking an unreachable one.
-:minAlarmDeltaFraction a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
+:minAlarmDeltaFraction a owl:DatatypeProperty ; rdfs:domain orexis:Capability ; rdfs:range xsd:decimal ;
     rdfs:label "minimum alarm delta fraction" .
-:maxAlarmDeltaFraction a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
+:maxAlarmDeltaFraction a owl:DatatypeProperty ; rdfs:domain orexis:Capability ; rdfs:range xsd:decimal ;
     rdfs:label "maximum alarm delta fraction" .
 
 :SensingCapability :minAlarmDeltaFraction 0.05 ; :maxAlarmDeltaFraction 0.5 .
@@ -280,7 +280,7 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 # which is a vocabulary edit and a reflash, not a belief revision. Every watcher honours it:
 # both firmwares' ULP programs count it in RTC memory, and the stand-in counts its looks the
 # same way, so the bench rehearses what the boards do.
-:alarmPersistenceLooks a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+:alarmPersistenceLooks a owl:DatatypeProperty ; rdfs:domain orexis:Capability ; rdfs:range xsd:integer ;
     rdfs:label "alarm persistence looks" .
 
 :SensingCapability :alarmPersistenceLooks 2 .
@@ -378,11 +378,11 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 # than private for the same reason the sleep bounds are: left to each agent, these are the two
 # numbers a lazy one tunes until it is entitled to stop looking.
 
-:steadyFraction a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
+:steadyFraction a owl:DatatypeProperty ; rdfs:domain orexis:Capability ; rdfs:range xsd:decimal ;
     rdfs:label "steady fraction" ;
     rdfs:comment "How far a reading may range, as a fraction of its own mean, and still count as unchanging. Relative rather than absolute because one agent's property is a fraction and another's is degrees, and a threshold in either unit is nonsense in the other." .
 
-:reviewWindow a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+:reviewWindow a owl:DatatypeProperty ; rdfs:domain orexis:Capability ; rdfs:range xsd:integer ;
     rdfs:label "review window" ;
     rdfs:comment "How many readings must have accumulated before an agent may draw a conclusion about them. Guards the failure this mechanism could otherwise cause: two identical readings are a coincidence, and an agent that relaxed its attention on the strength of them would be reasoning from noise." .
 
@@ -392,7 +392,7 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 # the declared SELECT scores. Sensing's own and deliberately not the kernel's — the kernel
 # asks "how urgent is this desire, in this world" through the choir and holds no measure
 # vocabulary; this package answers for wants about what can be OBSERVED, from its own file,
-# with its own code. Promotion into ag: has the repo's usual trigger — a word several
+# with its own code. Promotion into orexis: has the repo's usual trigger — a word several
 # packages must speak — and fires when a second package ships a measure.
 
 :measureOf a owl:ObjectProperty ; rdfs:range owl:Class ;
@@ -402,10 +402,10 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 #  The want `desires.ru` mints, as a class, so the measure beside it has something to be the
 #  measure OF. Sensing's namespace because the want is sensing's: its premise is an instrument
 #  this agent polls, and the kernel could not state it without spelling this package's horizon
-#  term into a query. The KERNEL still says what a want IS — `ag:Desire`, `ag:metWhen`, and
-#  `ag:Stale` for which side of nothing this one is on — and every freshness node carries both
+#  term into a query. The KERNEL still says what a want IS — `orexis:Desire`, `orexis:metWhen`, and
+#  `orexis:Stale` for which side of nothing this one is on — and every freshness node carries both
 #  types, which is the ordinary way a package says what kind of a kernel thing it made.
-:Freshness a owl:Class ; rdfs:subClassOf ag:Desire ;
+:Freshness a owl:Class ; rdfs:subClassOf orexis:Desire ;
     rdfs:label "freshness want" ;
     rdfs:comment "Wanting a reading of one instrument to exist and to have been taken recently enough to be about now. Repaired by looking and by nothing else — no lever moves a number you cannot see — so an agent that cannot ask this instrument for a reading holds a want with no lever, which is a legitimate state and reported as one." .
 
@@ -416,10 +416,10 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 #  by what it observes of what — the sensed writer's own upsert key — and what it CARRIES is
 #  the result; nothing else on the node (its identity, its instant, who made it) counts as
 #  "where a plan stands", which is what keeps a look from being a new world every time.
-sosa:Observation ag:keyedBy sosa:hasFeatureOfInterest , sosa:observedProperty ;
-                 ag:carries sosa:hasSimpleResult .
+sosa:Observation orexis:keyedBy sosa:hasFeatureOfInterest , sosa:observedProperty ;
+                 orexis:carries sosa:hasSimpleResult .
 
-#  Was the kernel's (`ag:Aim`, `ag:aims`); the region it sits in is this package's, and so is
+#  Was the kernel's (`orexis:Aim`, `orexis:aims`); the region it sits in is this package's, and so is
 #  the aim (the-stake-is-sensings-want).
 #################
 #
@@ -445,6 +445,6 @@ sosa:Observation ag:keyedBy sosa:hasFeatureOfInterest , sosa:observedProperty ;
 sensing:Aim a owl:Class ; rdfs:label "Aim" ;
     rdfs:comment "One property and the value this agent is holding it toward: the pick inside the region. Shaped to lie inside the region for that same property, and meaningless — refused — for a property the agent holds no region in." .
 
-sensing:aims a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sensing:Aim ;
+sensing:aims a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range sensing:Aim ;
     rdfs:label "aims" ;
     rdfs:comment "Reads as the point this agent is steering one property toward. In the agent's own beliefs graph, never the world: the region answers to the sovereign's facts, the pick inside it answers to nobody — which is what makes it the agent's. Stated with ssn:forProperty and schema:value, the same two terms a region and a condition already use, so a reader that can read either can read this." .

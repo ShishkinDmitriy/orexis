@@ -1,17 +1,17 @@
 @prefix reporting: <http://example.org/orexis/reporting#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 reporting:EveryAgentReportsShape a sh:NodeShape ;
     rdfs:comment """Mandatory, insisted upon rather than assumed. Every agent must hold a member of this family, and a world where one does not is refused before anything starts.
 
-This is what "mandatory" has to mean to be worth anything. The term used to sit in the kernel declared `rdfs:subClassOf ag:Capability` directly above a comment saying it is not derived and not composed onto anyone — so it was a capability nothing granted and nothing required, which is a convention rather than a fact. A rule grants it now and this refuses its absence, and the two together are the difference.
+This is what "mandatory" has to mean to be worth anything. The term used to sit in the kernel declared `rdfs:subClassOf orexis:Capability` directly above a comment saying it is not derived and not composed onto anyone — so it was a capability nothing granted and nothing required, which is a convention rather than a fact. A rule grants it now and this refuses its absence, and the two together are the difference.
 
-Checked on the DERIVED fact, not on anything a world states: `world.ttl` still contains no ag:hasCapability, and the prohibition is untouched. So this shape cannot be satisfied by an author writing the conclusion — only by the derivation having run.""" ;
-    sh:targetClass ag:Agent ;
-    sh:property [ sh:path ag:hasCapability ;
+Checked on the DERIVED fact, not on anything a world states: `world.ttl` still contains no orexis:hasCapability, and the prohibition is untouched. So this shape cannot be satisfied by an author writing the conclusion — only by the derivation having run.""" ;
+    sh:targetClass orexis:Agent ;
+    sh:property [ sh:path orexis:hasCapability ;
                   sh:qualifiedValueShape [ sh:class reporting:ReportingCapability ] ;
                   sh:qualifiedMinCount 1 ;
                   sh:message "every agent must report on itself — no agent may be silent by construction, or a quiet one cannot be told from a dead one" ] .
@@ -21,7 +21,7 @@ reporting:ReportingAgentShape a sh:NodeShape ;
 
 Absence used to mean an agent reporting nothing. No world ever wrote that — all nine agents across all three worlds state an interval — so the branch that made this look like a choice was exercised by nothing, which is the same "side channel dressed as a decision by omission" self-review-is-a-capability refused for review:reviewIntervalS.
 
-Targeted through the capability rather than at ag:Agent directly, so the shape says what it means: this is required OF SOMETHING THAT REPORTS. That the two coincide today is the derivation's doing, not this shape's assumption.""" ;
+Targeted through the capability rather than at orexis:Agent directly, so the shape says what it means: this is required OF SOMETHING THAT REPORTS. That the two coincide today is the derivation's doing, not this shape's assumption.""" ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {

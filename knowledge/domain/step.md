@@ -21,7 +21,7 @@ of steps that reached it.
 The plan is re-derived every pass because the world moves, so a committed tail would be a
 promise about a future nobody has seen. [Execution](/domain/executor.md) takes the first
 step's act, hands it to the keeper as an [intention](/domain/intention.md), and the rest is
-trace: every step weighed is an `ag:Candidate` in the deliberation graph, chosen or not, and
+trace: every step weighed is an `orexis:Candidate` in the deliberation graph, chosen or not, and
 none of it is read back.
 
 # What it is not

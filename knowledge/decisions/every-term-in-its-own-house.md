@@ -2,7 +2,7 @@
 type: Decision
 title: A term is named seven ways, and a rename sees one of them
 description: >-
-  The five packages still declaring into ag: took namespaces of their own, finishing a
+  The five packages still declaring into orexis: took namespaces of their own, finishing a
   correction begun when review's terms left the kernel file but kept the kernel's name. The
   sweep's finding is bigger than the move: a term is named seven different ways here, six of
   them survive a rename by matching nothing, and one had been doing so undetected for four
@@ -17,7 +17,7 @@ timestamp: 2026-08-11T00:00:00Z
 [a-package-owns-its-namespace](a-package-owns-its-namespace.md) gave `capabilities/market` a
 namespace of its own and made `store.PREFIXES` assembled from each package's `ontology.ttl`, so
 the kernel no longer had to be edited for a package to be nameable in SPARQL. That removed the
-only reason the rest were still `ag:`. Five packages stayed anyway — 102 terms across
+only reason the rest were still `orexis:`. Five packages stayed anyway — 102 terms across
 `review`, `sensing`, `water`, `mqtt` and `actuation`.
 
 `agent/ontology.py` — the kernel vocabulary, `packages/orexis-agent-progression/ontology.py` since
@@ -25,7 +25,7 @@ only reason the rest were still `ag:`. Five packages stayed anyway — 102 terms
 That has been false the whole time, and
 [self-review-is-a-capability](self-review-is-a-capability.md) already found it: ~24 of the
 kernel's terms belonged to self-review. It moved the **file** into `capabilities/review/` and
-left the **name** behind, so `ag:` went on claiming universality for summaries, revisions and
+left the **name** behind, so `orexis:` went on claiming universality for summaries, revisions and
 mandates that only an agent with room to move holds. This is the other half of that.
 
 # Decision — five namespaces, and the kernel means what it says
@@ -77,14 +77,14 @@ protected, not that both kinds were.
 ## So there is a test for it now
 
 `tests/test_store.py::test_no_source_names_a_moved_term_in_the_kernel_namespace` scans every
-source tree for a full IRI in `ag:` whose local name the kernel's `agent/ontology.ttl` does not
+source tree for a full IRI in `orexis:` whose local name the kernel's `agent/ontology.ttl` does not
 declare. It is
 the same shape as the prefix scan beside it, and for the same reason: the harness was more
 forgiving than the store, so the class could not be caught by testing behaviour.
 
 Instances are exempt and that is why it is a *name* check rather than a ban —
-`ag:moisture_sensor_fern` was a thing in a world, not a term in a vocabulary. Since the worlds
-took their individuals into namespaces of their own, no world FILE puts an instance in `ag:`
+`orexis:moisture_sensor_fern` was a thing in a world, not a term in a vocabulary. Since the worlds
+took their individuals into namespaces of their own, no world FILE puts an instance in `orexis:`
 any more (a test refuses one that does) — but the exemption stays, because runtime-minted
 nodes (`ag:obs_…`) and synthetic test fixtures still do, legitimately. The heuristic is that a term is Capitalised or camelCase and an instance is a single
 lowercase word or carries an underscore. Verified by reintroducing the real defect: it fails on
@@ -111,7 +111,7 @@ the next person does not re-derive it:
 
 | ours | standard | verdict |
 |---|---|---|
-| `sensing:Sensor` | `sosa:Sensor` | already `rdfs:subClassOf` it, and an **intersection** with `ag:Device` rather than a synonym — keep |
+| `sensing:Sensor` | `sosa:Sensor` | already `rdfs:subClassOf` it, and an **intersection** with `orexis:Device` rather than a synonym — keep |
 | `actuation:Actuator` | `sosa:Actuator` | the same alignment, and it is **not** declared. An asymmetry: we aligned Sensor and not Actuator |
 | `sensing:monitors` | — | SOSA puts feature-of-interest on the **Observation**, not the Sensor. Nothing to defer to |
 | `sensing:senseMode` values | `sosa:Procedure` | Pull, Push and Scheduled are procedures by SOSA's own definition. A cheap alignment, untaken — it belongs with whatever next touches [who-holds-the-clock](who-holds-the-clock.md) |
@@ -129,11 +129,11 @@ and **eleven are not true of every agent**:
 - **The simulated device model — seven terms** *(eleven since the scenario grew: the physics
   went time-based and the weather arrived)*. (AMENDED, and this paragraph's own closing line is what
   happened: **the simulation package exists.** Every term here is `sim:` now, in
-  `packages/orexis-sim-standin/`, and shed the `model` prefix it wore to fake a namespace inside `ag:` —
+  `packages/orexis-sim-standin/`, and shed the `model` prefix it wore to fake a namespace inside `orexis:` —
   see [the-substrate-is-not-the-minds](/decisions/the-substrate-is-not-the-minds.md) for why it
   left the kernel and [a-stand-in-is-not-a-device](/decisions/a-stand-in-is-not-a-device.md) for
   why it is not filed with the hardware.)
-  `ag:DeviceModel`, `ag:simulatedBy`,
+  `orexis:DeviceModel`, `orexis:simulatedBy`,
   RESOLVED for the drying entry by #164's follow-up: the kernel term is `ag:modelLosesPerDay`
   now — property-neutral, with the domain's own `water:driesPerDay` bridging in by subproperty —
   so the kernel no longer speaks water. It was
@@ -143,11 +143,11 @@ and **eleven are not true of every agent**:
   `ag:strayDoseMeanDays`, `ag:rainTopic`. Used by `world/simulation` and no other world. They
   want a simulation package that does not exist — and the drying term is water-domain besides,
   since only a plant dries. The case for that package strengthens as this list grows.
-- **Deployment — three terms.** `ag:ComputeHost`, `ag:runsOn`, `ag:lanHost`, used by
+- **Deployment — three terms.** `orexis:ComputeHost`, `orexis:runsOn`, `orexis:lanHost`, used by
   `world/sensing` alone. Every agent runs somewhere, so these are closer to universal; what is
   not universal is stating *where*.
 - ~~**`ag:SelfReporting`**~~ — **settled, and the question turned out to be malformed.** It was
-  declared `rdfs:subClassOf ag:Capability`, had a shape, and appeared in no world. The reasoning
+  declared `rdfs:subClassOf orexis:Capability`, had a shape, and appeared in no world. The reasoning
   above assumed *a capability is what only some agents have*, which conflates two questions:
   rule 2 asks whether the HOW could differ, not who holds it. It is a package now,
   `packages/orexis-capability-reporting/`, granted to every agent by a rule and insisted on by a shape. See

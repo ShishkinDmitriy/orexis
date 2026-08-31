@@ -77,7 +77,7 @@ merely sorts after the named ones.
 
 | family | borne by | what having one means |
 |---|---|---|
-| `capability` | an **agent** | `ag:hasCapability` on the agent |
+| `capability` | an **agent** | `orexis:hasCapability` on the agent |
 | `transport`, `codec`, `scaling` | a **binding** | a predicate on the **sensor** |
 | `part`, `plant`, `bus`, `tool` | nothing — knowledge only | a model others are instances of |
 

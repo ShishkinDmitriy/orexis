@@ -1,7 +1,7 @@
 @prefix : <http://example.org/orexis/world/terrace#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix reporting: <http://example.org/orexis/reporting#> .
-@prefix ag: <http://example.org/orexis#> .
+@prefix orexis: <http://example.org/orexis#> .
 
 #  This agent's PRIVATE beliefs — one block, because it composed one capability.
 #

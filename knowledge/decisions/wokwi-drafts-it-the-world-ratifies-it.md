@@ -32,7 +32,7 @@ The asymmetry is the whole argument, so it is worth being concrete. For one temp
 
 | recovered | not expressible in Wokwi |
 |---|---|
-| the part type, so the class | `ag:localId` — it has ids, but `sen1`, not `air_sensor_fern` |
+| the part type, so the class | `orexis:localId` — it has ids, but `sen1`, not `air_sensor_fern` |
 | its legs, via the class's pin mapping | `mc:model` — "KY-015 (DHT11)" |
 | every wire, and the colours | `mc:railVolts`, `mc:logicVolts` |
 | where the parts sit | `probe:rawDry` / `rawWet` — the calibration |
@@ -98,12 +98,12 @@ and it does not weaken because the import got better.
 
 ## Identifiers come from the authoring file, which is a new way to be wrong
 
-A connector's name becomes a device's `ag:localId`, and `world.ttl` names the same sensors. When
+A connector's name becomes a device's `orexis:localId`, and `world.ttl` names the same sensors. When
 those disagree there is no error anywhere: instead of one device described twice you get two
 devices described once — a sensor nothing is wired to, and a part nothing polls. Both halves
 validate on their own.
 
-`ag:CarriedPeripheralShape` catches the visible half: a peripheral with legs that no board
+`orexis:CarriedPeripheralShape` catches the visible half: a peripheral with legs that no board
 mounts. It also forced a real omission out of the importer, which was drafting stands with no
 `mc:carries` at all — so every generator that walks a board from its parts found none of them.
 

@@ -51,7 +51,7 @@ def observation_uri(feature_id: str, observed_property: str) -> str:
     """The node one (feature, property) pair owns. Two properties, two nodes — and since #98
     the feature is the SAMPLE where the sensor states one, so two probes in two patches of one
     pot own two nodes instead of overwriting each other."""
-    return f"ag:obs_{_slug(feature_id)}_{_slug(observed_property)}"
+    return f"orexis:obs_{_slug(feature_id)}_{_slug(observed_property)}"
 
 
 class SensedWriter:
@@ -89,7 +89,7 @@ class SensedWriter:
         # does not speak for itself, which is every device here today.
         pt = (f'    sosa:phenomenonTime "{phenomenon_ts}"^^xsd:dateTime ;\n'
               if phenomenon_ts else "")
-        wv = f"    ag:underWorldVersion {int(world_version)} ;\n" if world_version is not None else ""
+        wv = f"    orexis:underWorldVersion {int(world_version)} ;\n" if world_version is not None else ""
 
         self.store.update(f"""
 WITH <{STATE_GRAPH}>

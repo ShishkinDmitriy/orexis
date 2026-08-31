@@ -1,4 +1,4 @@
-@prefix ag:     <http://example.org/orexis#> .
+@prefix orexis:     <http://example.org/orexis#> .
 @prefix mc:     <http://example.org/orexis/microcontroller#> .
 @prefix esp32:  <http://example.org/orexis/esp32#> .
 @prefix : <http://example.org/orexis/esp32#> .

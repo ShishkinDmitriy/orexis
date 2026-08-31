@@ -53,7 +53,7 @@ is allowed outright, so all seven of the kernel's services are keyed by their cl
 carve-out at all. A term remains available for a service whose contract is not an importable
 class.
 
-Seven `ag:*Store` terms were declared for this and removed the same day, which is the shortest
+Seven `orexis:*Store` terms were declared for this and removed the same day, which is the shortest
 life any term in this project has had.
 
 **And the key is read off the provider's return annotation**, so it is written once rather than

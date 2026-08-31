@@ -20,7 +20,7 @@ SENSING = "http://example.org/orexis/sensing#"   # the aim is sensing's (the-sta
 PROLOG = """@prefix : <http://example.org/orexis/world/simulation#> .
 @prefix market: <http://example.org/orexis/market#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix schema: <https://schema.org/> .
 """

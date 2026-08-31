@@ -126,7 +126,7 @@ retrieving the board.
 
 **Two routes to one broker.** An agent reaches it at `mqtt:brokerHost`, which is loopback and must
 be: agents are host-networked and every member has to agree on one name. A board on the wifi
-cannot use that name, so it is given the `ag:lanHost` of whichever host runs the broker. That
+cannot use that name, so it is given the `orexis:lanHost` of whichever host runs the broker. That
 is a fact about the network rather than about the society, which is why it hangs off the
 ComputeHost and not the bus — and it is what the hand-written headers had been quietly working
 around.

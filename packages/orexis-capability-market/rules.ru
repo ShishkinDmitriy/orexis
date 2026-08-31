@@ -5,7 +5,7 @@
 
 PREFIX review: <http://example.org/orexis/review#>
 PREFIX sensing: <http://example.org/orexis/sensing#>
-PREFIX ag:   <http://example.org/orexis#>
+PREFIX orexis:   <http://example.org/orexis#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX market: <http://example.org/orexis/market#>
 
@@ -18,12 +18,12 @@ PREFIX market: <http://example.org/orexis/market#>
 #  it. Never another rule's output — a derivation reads facts, not conclusions, so no rule can
 #  quietly depend on the order the packages happen to load in.
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability market:Bidding } }
+    ?agent orexis:hasCapability market:Bidding } }
 $given
 WHERE  { ?agent market:bidsIn ?market . ?market a market:Market } ;
 
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability market:Hosting } }
+    ?agent orexis:hasCapability market:Hosting } }
 $given
 WHERE  { ?agent market:hosts ?market . ?market a market:Market } ;
 
@@ -36,7 +36,7 @@ WHERE  { ?agent market:hosts ?market . ?market a market:Market } ;
 # something no participant asked it to hold.
 #
 # `market:matchesBy` is stated; the capability is derived from it. That distinction is the whole
-# reason this is derived and not declared: `world.ttl` may not contain `ag:hasCapability`,
+# reason this is derived and not declared: `world.ttl` may not contain `orexis:hasCapability`,
 # and it does not — it contains what the host does, and the ability follows.
 #
 # Guarded on market:hosts as well, so a would-be host that says how it matches but owns no venue
@@ -49,7 +49,7 @@ WHERE  { ?agent market:hosts ?market . ?market a market:Market } ;
 # `review:Consulting` already do. See knowledge/domain/bid-matching.md.
 
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability ?matching } }
+    ?agent orexis:hasCapability ?matching } }
 $given
 WHERE  {
     ?agent market:hosts ?market ; market:matchesBy ?matching .
@@ -83,17 +83,17 @@ WHERE  {
 # never forbids.
 INSERT { GRAPH $derived {
     ?market a market:Market ;
-        ag:localId ?marketId ;
+        orexis:localId ?marketId ;
         market:marketFor ?source ;
         market:offerTopic ?offer ; market:bidTopic ?bid ;
         market:claimTopic ?claim ; market:redeemTopic ?redeem ;
         market:redeemWindowS ?window .
     ?owner market:hosts ?market ;
-           ag:hasCapability market:Hosting ;
-           ag:hasCapability ?matching } }
+           orexis:hasCapability market:Hosting ;
+           orexis:hasCapability ?matching } }
 $given
 WHERE  {
-    ?source market:offeredBy ?owner ; ag:localId ?srcId .
+    ?source market:offeredBy ?owner ; orexis:localId ?srcId .
     OPTIONAL { ?source market:redeemWindowS ?window }
     ?owner market:matchesBy ?matching .
     ?matching a market:BidMatchingCapability .
@@ -124,16 +124,16 @@ WHERE  {
 # SAME sentence, not two facts that each happen to be true.
 INSERT { GRAPH $derived {
     ?buyer market:bidsIn ?market ;
-           ag:hasCapability market:Bidding } }
+           orexis:hasCapability market:Bidding } }
 $given
 WHERE  {
-    ?source market:offeredBy ?owner ; ag:localId ?srcId .
+    ?source market:offeredBy ?owner ; orexis:localId ?srcId .
     ?owner market:matchesBy ?matching .
     ?matching a market:BidMatchingCapability .
     ?source market:supplies ?good .
     ?valve <http://example.org/orexis/actuation#drawsFrom> ?source ;
            <http://example.org/orexis/actuation#actuates> ?pot .
-    ?buyer ag:actsFor ?pot .
+    ?buyer orexis:actsFor ?pot .
     ?pot <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .
     ?range <http://www.w3.org/ns/ssn/systems/inCondition> ?cond .
     ?cond <http://www.w3.org/ns/ssn/forProperty> ?prop .

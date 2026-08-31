@@ -364,7 +364,7 @@ def _readings_of(world, subject, prop):
 def test_a_second_dose_is_predicted_from_what_the_first_one_left(monkeypatch):
     """Depth 2, meaning what it says. The defect #254 closed, in the case that measured it.
 
-    A means' effect is a `sh:construct` and an `ag:retracts`, and both used to run against the
+    A means' effect is a `sh:construct` and an `orexis:retracts`, and both used to run against the
     STORE while the diff was applied to the HYPOTHESIS. So the retraction re-asked the belief
     base, found the observation still sitting there, and never saw what the previous step added:
     the second dose's predicted reading landed BESIDE the first's instead of replacing it, the
@@ -496,8 +496,8 @@ def test_a_sensing_action_still_ends_a_plan_with_no_rule_of_its_own(monkeypatch)
     """The constraint, and the whole of what now upholds it — which is not a term on the rule.
 
     "A plan may not chain PAST a sensing action" was enforced for a while by asking the
-    effect a question of its own, and that guard is what made depth 1: it read `ag:confirmedBy
-    ag:ByObservation`, which every effect here answers, so the frontier came back empty at every
+    effect a question of its own, and that guard is what made depth 1: it read `orexis:confirmedBy
+    orexis:ByObservation`, which every effect here answers, so the frontier came back empty at every
     depth whatever MAX_DEPTH said. Replacing it with a truer term was the first fix and the
     wrong one. **What a look does is already stated by its EFFECT** — it predicts the value it
     found — so the world it reaches carries its parent's signature and `seen` discards it, by
@@ -607,7 +607,7 @@ def test_a_path_that_returns_to_the_base_world_returns_to_the_empty_diff(monkeyp
     back = observation(ox.BlankNode(), repr(0.33 - 0.03),   # 0.30000000000000004
                        "double", "2026-01-01T00:02:00Z")
 
-    #  What sensing declares of an observation (`ag:keyedBy`, `ag:carries`), as the planner
+    #  What sensing declares of an observation (`orexis:keyedBy`, `orexis:carries`), as the planner
     #  reads it once per pass — the signature no longer spells sosa itself.
     keys = {sosa + "Observation": (frozenset({sosa + "hasFeatureOfInterest", sosa + "observedProperty"}),
                                    frozenset({sosa + "hasSimpleResult"}))}

@@ -24,7 +24,7 @@ on the loop; the layer between them is where a tick becomes a mark.
 The name is `orexis-agent-deliberation`: the family `agent` groups the three layers in a
 listing ("hard to locate packages in the list without it"), and a layer is ONE package, not a
 family with members. This one deliberates by a bounded search over predicted worlds; asking a model
-what next, which llm-heavy-deliberation argues for and `ag:deliberatesBy` would pick, is a
+what next, which llm-heavy-deliberation argues for and `orexis:deliberatesBy` would pick, is a
 decision for then — inside this package or beside it — rather than a sibling waiting for a slot.
 
 Not a capability: nothing grants it and there is no `provides()` here.

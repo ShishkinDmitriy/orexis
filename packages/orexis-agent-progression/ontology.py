@@ -14,23 +14,23 @@ equipment or a mandate. See knowledge/decisions/the-mind-is-not-a-package.md.
 **Fourteen terms in the kernel's own `agent/ontology.ttl` still make that claim false, and they
 are named rather than implied**: the eleven of the simulated world — the device model plus its clock and its
 weather (`sim:timeScale`, `sim:strayDoseMeanDays`, `sim:rainTopic`) — which only `world/simulation`
-uses and which want a simulation package that does not exist; and `ag:ComputeHost`, `ag:runsOn`
-and `ag:lanHost`, which only `world/sensing` states. See
+uses and which want a simulation package that does not exist; and `orexis:ComputeHost`, `orexis:runsOn`
+and `orexis:lanHost`, which only `world/sensing` states. See
 knowledge/decisions/every-term-in-its-own-house.md.
 
-`ag:SelfReporting` was one more and has left, to `packages/orexis-capability-reporting/`. It was declared a
+`orexis:SelfReporting` was one more and has left, to `packages/orexis-capability-reporting/`. It was declared a
 capability and granted by nothing; it is granted by a rule now, insisted on by a shape, and named
 in its own namespace. See knowledge/decisions/telemetry-is-a-mandatory-capability.md.
 
 Everything here is a **T-Box term**: a class or a property. Those are public and well-known,
 and code is written against them exactly as it is written against a function signature. What
-must never appear in code is an **instance** — no `"supplier"`, no `ag:world`, no
+must never appear in code is an **instance** — no `"supplier"`, no `orexis:world`, no
 `"sensors/{id}/moisture"`. Instances are discovered from the graph, starting from the single
 identifier a process is given: its own agent id.
 
 **Graph IRIs used to be listed here as though they were terms, and they are not.**
-`ag:WorldGraph` is the term; `…/graph/world` is a particular graph, no more a term than
-`ag:fern_agent` is. The instances now live in `agent/ontology.ttl`, typed by class,
+`orexis:WorldGraph` is the term; `…/graph/world` is a particular graph, no more a term than
+`orexis:fern_agent` is. The instances now live in `agent/ontology.ttl`, typed by class,
 and `store.public_graphs()` asks the store which ones they are — so a query means "public
 knowledge" without any Python knowing what that consists of, and a sixth public graph is a
 vocabulary edit that touches no code.
@@ -47,18 +47,19 @@ See knowledge/decisions/capability-packages.md.
 
 from __future__ import annotations
 
-AG = "http://example.org/orexis#"
-# **The kernel's namespace, and the kernel is `agent/`.** `ag:` is the base every package layers
+OREXIS = "http://example.org/orexis#"
+# **The kernel's namespace, and the kernel is `agent/`.** `orexis:` is the base every package layers
 # on: what an agent IS, what a graph is, and — since the mind came home — what a mind CONTAINS.
 # A package names its own terms through its own `terms.py`; `market:`, `sensing:` and the
 # hardware modules' `mc:`, `onewire:` and the rest have done so since pins-and-wires.
 #
-# **The label is a leftover that turned out to be right.** `ag` was short for *agora*, the
-# project's first name. The rename to Orexis took the IRI — this is `…/orexis#` — and kept the
-# label, on the argument that it "reads as well for agent as it ever did for agora". That was a
-# little generous at the time, since the vocabulary lived in `packages/core/orexis/` and `agent/`
-# was merely the loader. It is exact now: the kernel's directory is `agent/` and the kernel's
-# namespace is `ag:`, and they name the same thing. Nobody needs the history to read it.
+# **The label caught up with the name.** `ag` was short for *agora*, the project's first name.
+# The rename to Orexis took the IRI — this is `…/orexis#` — and kept the label for a while, on
+# the argument that it "reads as well for agent as it ever did for agora". The author asked for
+# the label to follow, so it did: the prefix is `orexis:` everywhere a reader sees one, the IRI
+# is unchanged, and no stored volume or serialized graph noticed — a prefix label is
+# presentation, and only the presentation moved. History quoted in `knowledge/` keeps the old
+# spelling where it quotes retired terms as they were written.
 # See knowledge/decisions/the-society-is-named-for-its-appetite.md.
 #
 # This used to say the hardware layer could afford separate namespaces *precisely because no
@@ -83,7 +84,7 @@ PROV = "http://www.w3.org/ns/prov#"
 def term(name: str) -> str:
     """A T-Box term by name. This is how a package names the capability it implements, and
     how one package refers to another's family without importing its Python."""
-    return AG + name
+    return OREXIS + name
 
 
 # --- the kernel's own terms ----------------------------------------------------------------
@@ -115,7 +116,7 @@ SEND = term("send")
 # kinds, and the difference between the last two is the one that took arguing:
 #
 #   asserted   somebody wrote it in a file — a package's vocabulary, or the sovereign's world
-#   derived    a rule computed it. `ag:hasCapability` is a DESIGN DECISION living in a
+#   derived    a rule computed it. `orexis:hasCapability` is a DESIGN DECISION living in a
 #              `rules.ru` that could have said otherwise; the fact has no latitude once the
 #              rule exists, but the rule had latitude when it was written
 #   entailed   RDFS said it. No author, no alternative — any engine applying the same
@@ -157,11 +158,11 @@ ACTIONS_GRAPH = _GRAPH + "actions"
 #  What the planner considered on its last pass, per desire — the record's one sanctioned
 #  materialisation of a possible world, for the reader who cannot re-run the search from
 #  outside because the belief base is locked by the process holding it. Private, replaced per
-#  pass, never read back by the planner itself. See ag:DeliberationGraph.
+#  pass, never read back by the planner itself. See orexis:DeliberationGraph.
 DELIBERATION_GRAPH = _GRAPH + "deliberation"
 PROVENANCE_GRAPH = _GRAPH + "provenance"
 #  What this agent's own graphs ARE, said by the agent at boot: public, because a
-#  modality-scoped query must resolve `?d a ag:DesireGraph` without naming an instance.
+#  modality-scoped query must resolve `?d a orexis:DesireGraph` without naming an instance.
 CLASSIFICATION_GRAPH = _GRAPH + "classification"
 _BELIEFS = _GRAPH + "beliefs/"
 
@@ -193,7 +194,7 @@ def beliefs_graph(agent_id: str) -> str:
 
 
 def obligations_graph(agent_id: str) -> str:
-    """The record of ONE agent's debts — kernel-named since `ag:ObligationsGraph` became a
+    """The record of ONE agent's debts — kernel-named since `orexis:ObligationsGraph` became a
     kernel record class (#312): the desire modality projects it, the planner's imaginarium
     copies it, and an effect rule may read it, none of which should import a package for a
     name built from the one id the rules allow building from."""

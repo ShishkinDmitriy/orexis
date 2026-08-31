@@ -33,7 +33,7 @@ import logging
 from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import worlds
-from orexis_agent_progression.ontology import AG, WORLD_GRAPH
+from orexis_agent_progression.ontology import OREXIS, WORLD_GRAPH
 from .namespaces import SENSING, SOSA
 
 SSN_SYSTEM = "http://www.w3.org/ns/ssn/systems/"
@@ -51,10 +51,10 @@ DASHBOARD_ROOT = REPO_ROOT / "infra" / "grafana" / "dashboards"
 # bucket, so it is what a panel is keyed on; the subject is what a person reading it cares about.
 _SENSORS_Q = f"""
 SELECT DISTINCT ?agentId ?sensorId ?subjectId ?property ?unit WHERE {{
-  ?agent a <{AG}Agent> ; <{AG}localId> ?agentId ; <{SENSING}polls> ?sensor .
-  ?sensor <{AG}localId> ?sensorId ; <{SENSING}monitors> ?subject ;
+  ?agent a <{OREXIS}Agent> ; <{OREXIS}localId> ?agentId ; <{SENSING}polls> ?sensor .
+  ?sensor <{OREXIS}localId> ?sensorId ; <{SENSING}monitors> ?subject ;
           <{SOSA}observes> ?property .
-  ?subject <{AG}localId> ?subjectId .
+  ?subject <{OREXIS}localId> ?subjectId .
   OPTIONAL {{ ?sensor <{SCALING}quantityUnit> ?unit }}
  }}"""
 
@@ -66,7 +66,7 @@ SELECT DISTINCT ?agentId ?sensorId ?subjectId ?property ?unit WHERE {{
 _RANGES_Q = f"""
 SELECT DISTINCT ?subjectId ?kind ?property ?lo ?hi WHERE {{
   VALUES ?rel {{ <{SSN_SYSTEM}hasOperatingRange> <{SSN_SYSTEM}hasSurvivalRange> }}
-  ?subject <{AG}localId> ?subjectId ; ?rel ?range .
+  ?subject <{OREXIS}localId> ?subjectId ; ?rel ?range .
   ?range a ?kind ; <{SSN_SYSTEM}inCondition> ?condition .
   ?condition <{SSN}forProperty> ?property ;
              <{SCHEMA}minValue> ?lo ; <{SCHEMA}maxValue> ?hi .
@@ -92,7 +92,7 @@ EVENT_MEASUREMENT = "agent_events"
 # and can go quiet exactly as loudly as a sensing agent can.
 _ROSTER_Q = f"""
 SELECT DISTINCT ?agentId WHERE {{ 
-  ?agent a <{AG}Agent> ; <{AG}localId> ?agentId .
+  ?agent a <{OREXIS}Agent> ; <{OREXIS}localId> ?agentId .
  }}"""
 
 

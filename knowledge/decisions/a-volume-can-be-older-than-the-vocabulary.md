@@ -3,7 +3,7 @@ type: Decision
 title: A volume can be older than the vocabulary, and nothing could see it
 description: >-
   Beliefs are authored once and never touched again, so a belief base outlives the code that
-  wrote it — and PR #85 moved 102 terms out of ag: while both gates stayed green. Boot now
+  wrote it — and PR #85 moved 102 terms out of orexis: while both gates stayed green. Boot now
   asks whether the vocabulary still declares what the store actually uses, which needs no
   version marker because the store already holds the evidence. Migration rewrites how a value
   is spelled and never which value it is, and it is a flag rather than a side effect.
@@ -14,7 +14,7 @@ timestamp: 2026-08-11T00:00:00Z
 # Context
 
 [a-package-owns-its-namespace](a-package-owns-its-namespace.md) and the sweep that followed it
-moved 102 terms out of `ag:` into their packages' namespaces. Every gate was green: 764 tests,
+moved 102 terms out of `orexis:` into their packages' namespaces. Every gate was green: 764 tests,
 three worlds conforming, grants byte-identical, compose and firmware unchanged.
 
 **It would have silenced every deployed agent on its next restart.**
@@ -70,10 +70,10 @@ store already holds the evidence — so nothing has to be recorded to answer it.
 A **predicate** is always a term, so a project predicate the T-Box does not declare is wrong
 however it got there — a rename, a deletion, or a typo in a hand-written beliefs file.
 
-Anywhere else a project IRI may be an instance: `ag:fern_agent` has exactly the shape of a term
+Anywhere else a project IRI may be an instance: `orexis:fern_agent` has exactly the shape of a term
 and is not one — and since the worlds moved their individuals into namespaces of their own, an
-`ag:`-spelled individual in a volume is itself a sign of age: a volume born before the move
-holds `ag:fern_agent` where the world now says `:fern_agent`, and such an agent refuses to
+`orexis:`-spelled individual in a volume is itself a sign of age: a volume born before the move
+holds `orexis:fern_agent` where the world now says `:fern_agent`, and such an agent refuses to
 start rather than half-believe. Rebirth is the remedy, exactly as this record prescribes. Those positions are flagged only where the rename map recognises them, which is
 where the answer is known rather than guessed. `review:revisedTerm ag:slowSleepS` is caught that
 way — the object is a term, and the map says what it became.

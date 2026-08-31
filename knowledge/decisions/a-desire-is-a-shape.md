@@ -19,7 +19,7 @@ timestamp: 2026-08-19T21:41:18Z
 > **Superseded in part** by
 > [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md). What does
 > not hold any more is the IDENTITY: a desire is no longer the `sh:NodeShape` itself but a
-> node (`ag:Desire`) CARRYING that shape through `ag:metWhen` — unchanged in content — beside
+> node (`orexis:Desire`) CARRYING that shape through `orexis:metWhen` — unchanged in content — beside
 > a label, with an urgency measure its KIND declares from a capability's `measures.ttl`,
 > because conformance is boolean while a want has
 > distance, and a bare shape had no room to say how badly it is unmet or where its zero sits
@@ -50,13 +50,13 @@ force and in whose graph they are in:
   sh:property [ sh:path …moisture ; sh:minInclusive 0.20 ; sh:maxInclusive 0.85 ] ]
 
 # the agent's, chosen — violating is a GAP
-[ sh:targetNode :fern ; sh:severity ag:ShouldBecome ;
+[ sh:targetNode :fern ; sh:severity orexis:ShouldBecome ;
   sh:property [ sh:path …moisture ; sh:minInclusive 0.45 ; sh:maxInclusive 0.65 ] ]
 ```
 
-`ag:Bounds`, `ag:boundedBy` and `sensing:Aim` retire — and with them the argument we had been having
+`orexis:Bounds`, `orexis:boundedBy` and `sensing:Aim` retire — and with them the argument we had been having
 for two days about what to call a thing that binds and motivates at once. It binds at
-`sh:Violation` and motivates at `ag:ShouldBecome`, and an obligation is the same shape again,
+`sh:Violation` and motivates at `orexis:ShouldBecome`, and an obligation is the same shape again,
 sourced by a peer's claim rather than by the sovereign or the agent.
 
 **Graphs keep provenance; shapes carry content.** Two axes, and the sovereign's phrasing is the
@@ -85,7 +85,7 @@ it is and how it arrived; the severity says what force it has.
 
 Three things the design rests on, checked rather than assumed:
 
-- **Custom severity survives the engine.** A result came back carrying `ag:ShouldBecome`, so
+- **Custom severity survives the engine.** A result came back carrying `orexis:ShouldBecome`, so
   force is expressible. And the filter that makes it usable already exists: `conforms()` was
   written months ago to let warnings through because pyshacl reports non-conformance for ANY
   result, so an unmet desire will not stop an agent from booting — machinery built for one
@@ -100,7 +100,7 @@ The two shape flavours differ in whether anything but the engine can read them, 
 decides where each belongs:
 
 - **Declarative** (`sh:property` with `sh:minInclusive`) — the numbers are ordinary RDF, so
-  urgency reads them with a query exactly as it reads `ag:Bounds` today. This is what the hot
+  urgency reads them with a query exactly as it reads `orexis:Bounds` today. This is what the hot
   path uses: a gap is computed on every reading, and running a validator there would be
   orders of magnitude slower for no gain.
 - **`sh:sparql`** — expressive enough for the all-properties form and for pattern goals, but
@@ -132,7 +132,7 @@ Three things the design had wrong or unsaid, found by writing it:
   measured from the other side, reported a plant sitting comfortably at 0.30 as past its
   survival envelope. Neither is a near miss: one is silence about a thirsty plant, the other a
   false catastrophe. So a shape carried in the DATA is validated exactly once, unfocused, over
-  the shapes that agent `ag:holds` and no others. Ownership does what the focus filter was
+  the shapes that agent `orexis:holds` and no others. Ownership does what the focus filter was
   there for, and does it by construction: every result is about the asker because the asker
   holds the shape. It cost most of a day to find, because the focused pass and the unfocused
   pass disagreed and the report concatenated both.
@@ -145,7 +145,7 @@ Three things the design had wrong or unsaid, found by writing it:
 - **A want is a result, so a report stopped being a list of defects.** `orexis-validate` printed
   forty lines about a world it was accepting: at genesis nothing has been observed, so every
   region reports a gap. The gap is the state of a world, not a finding about one, and `gap.rq`
-  is where to ask for it — so `ag:ShouldBecome` results are filtered out of the report a person
+  is where to ask for it — so `orexis:ShouldBecome` results are filtered out of the report a person
   is shown. The verdict was never affected; the noise would have trained someone to ignore it.
   The filter reads pySHACL's prose, and prose has two headings: a violation is written
   *Constraint Violation in …* and everything else *Validation Result in …*. The first draft
@@ -170,8 +170,8 @@ What the aim check became is the seam this record predicted, arriving immediatel
 SHACL validated by a query over SHACL, because there is no containment operator and a shape is
 data like anything else.
 
-Four terms retired: `ag:Bounds`, `ag:boundedBy`, `ag:toleratedMin`, `ag:toleratedMax`. What
-replaced them is `ag:holds` and vocabulary SHACL already had.
+Four terms retired: `orexis:Bounds`, `orexis:boundedBy`, `orexis:toleratedMin`, `orexis:toleratedMax`. What
+replaced them is `orexis:holds` and vocabulary SHACL already had.
 
 # Seams left open
 

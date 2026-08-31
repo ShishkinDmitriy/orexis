@@ -18,7 +18,7 @@
 
 PREFIX sensing: <http://example.org/orexis/sensing#>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
-PREFIX ag:          <http://example.org/orexis#>
+PREFIX orexis:          <http://example.org/orexis#>
 PREFIX scaling: <http://example.org/orexis/scaling#>
 
 #  Follows a stated curve -> that member calibrates it.

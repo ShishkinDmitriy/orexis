@@ -18,7 +18,7 @@ command — if there were, the check would be theatre.
 
 **Reporting is not optional.** Water reaching soil is physics, and physics has no wire. Between
 containers the only way the simulated sensor can learn that water actually flowed is this
-process saying so on `ag:statusTopic` — which is why it publishes there after dispensing and
+process saying so on `orexis:statusTopic` — which is why it publishes there after dispensing and
 stays silent when it refuses. `firmware/pump-valve` has always published a status "so the
 executor knows water actually flowed"; this does the same thing for the same reason.
 

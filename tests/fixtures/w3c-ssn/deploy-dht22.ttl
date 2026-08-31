@@ -9,7 +9,7 @@
 # Nothing here restates a fact their file already carries. The frequency floor, the accuracy, the
 # operating range and the sub-system structure all come from them, untouched.
 
-@prefix ag:         <http://example.org/orexis#> .
+@prefix orexis:         <http://example.org/orexis#> .
 # The subject is the SITE's — a deployment file is our half, and the world owns
 # its individuals, so the pot is named in the world's namespace, not the vocabulary's.
 @prefix world:      <http://example.org/orexis/world/sensing#> .
@@ -30,7 +30,7 @@
 # deployment overlay says what the channel watches and where it speaks; who holds the clock was
 # never a per-channel fact to say.
 dht22:TemperatureSensor
-    ag:localId "vendor_air_temp" ;
+    orexis:localId "vendor_air_temp" ;
     sensing:monitors world:fern ;
     sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;
@@ -39,7 +39,7 @@ dht22:TemperatureSensor
     mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
 
 dht22:HumiditySensor
-    ag:localId "vendor_air_humidity" ;
+    orexis:localId "vendor_air_humidity" ;
     sensing:monitors world:fern ;
     sosa:observes water:AirHumidity ;
     scaling:quantityUnit unit:UNITLESS ;

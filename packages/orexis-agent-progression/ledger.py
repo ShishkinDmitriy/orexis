@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 
-from orexis_agent_progression.ontology import AG
+from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import bindings
 
 log = logging.getLogger("intention")
@@ -19,7 +19,7 @@ log = logging.getLogger("intention")
 #  The ledger used to key a row on the property its want was about; a row is keyed on the
 #  want now (the-stake-is-sensings-want, #380), so a volume from before is brought across:
 #  a row with a property and no want is given the want that property named for this agent —
-#  found through `ag:about`, which is what the deriver says a want is about — and the property
+#  found through `orexis:about`, which is what the deriver says a want is about — and the property
 #  triple is then dropped from every row. The retired term is spelled here for the same
 #  reason `vocabulary.MOVED` spells its left-hand sides: a migration names what it migrates FROM.
 _LEDGER_PROPERTY = "http://www.w3.org/ns/ssn/forProperty"
@@ -36,7 +36,7 @@ def migrate_ledger(intentions, graph: str, about_of: dict[str, str]) -> int:
     rows = bindings(intentions.query(f"""
         SELECT ?i ?property WHERE {{ GRAPH <{graph}> {{
             ?i <{_LEDGER_PROPERTY}> ?property .
-            FILTER NOT EXISTS {{ ?i <{AG}pursues> ?want }} }} }}"""))
+            FILTER NOT EXISTS {{ ?i <{OREXIS}pursues> ?want }} }} }}"""))
     given = 0
     for row in rows:
         if (want := want_of.get(row["property"])) is None:
@@ -45,7 +45,7 @@ def migrate_ledger(intentions, graph: str, about_of: dict[str, str]) -> int:
                         row["property"])
             continue
         intentions.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
-            <{row['i']}> <{AG}pursues> <{want}> }} }}""")
+            <{row['i']}> <{OREXIS}pursues> <{want}> }} }}""")
         given += 1
     intentions.update(f"""
         DELETE {{ GRAPH <{graph}> {{ ?i <{_LEDGER_PROPERTY}> ?p }} }}
@@ -54,33 +54,33 @@ def migrate_ledger(intentions, graph: str, about_of: dict[str, str]) -> int:
 
 
 def migrate_ledger_acts(intentions, graph: str) -> int:
-    """Bring an intention that names an ACTION under `ag:by` to one that names an ACT.
+    """Bring an intention that names an ACTION under `orexis:by` to one that names an ACT.
 
-    Before an-act-is-a-filled-action, `ag:by` pointed at the action node and `ag:through` sat on
-    the intention. Such a row is rebuilt: an act node is minted, `ag:fills` the action,
-    `ag:through` moved onto it, and `ag:by` repointed. Told apart by structure — a `by` object
-    that is not `a ag:Act` in the ledger — so the migration is idempotent. Returns how many.
+    Before an-act-is-a-filled-action, `orexis:by` pointed at the action node and `orexis:through` sat on
+    the intention. Such a row is rebuilt: an act node is minted, `orexis:fills` the action,
+    `orexis:through` moved onto it, and `orexis:by` repointed. Told apart by structure — a `by` object
+    that is not `a orexis:Act` in the ledger — so the migration is idempotent. Returns how many.
     """
     rows = bindings(intentions.query(f"""
         SELECT ?i ?action ?through WHERE {{ GRAPH <{graph}> {{
-            ?i <{AG}by> ?action .
-            OPTIONAL {{ ?i <{AG}through> ?through }}
-            FILTER NOT EXISTS {{ ?action a <{AG}Act> }} }} }}"""))
+            ?i <{OREXIS}by> ?action .
+            OPTIONAL {{ ?i <{OREXIS}through> ?through }}
+            FILTER NOT EXISTS {{ ?action a <{OREXIS}Act> }} }} }}"""))
     for row in rows:
         act = row["i"].replace("intent_", "act_", 1) if "intent_" in row["i"] else row["i"] + ".act"
-        through = f'<{act}> <{AG}through> <{row["through"]}> .' if row.get("through") else ""
+        through = f'<{act}> <{OREXIS}through> <{row["through"]}> .' if row.get("through") else ""
         intentions.update(f"""
-            DELETE {{ GRAPH <{graph}> {{ <{row['i']}> <{AG}by> <{row['action']}> ;
-                                                    <{AG}through> ?t }} }}
-            INSERT {{ GRAPH <{graph}> {{ <{row['i']}> <{AG}by> <{act}> .
-                                        <{act}> a <{AG}Act> ; <{AG}fills> <{row['action']}> .
+            DELETE {{ GRAPH <{graph}> {{ <{row['i']}> <{OREXIS}by> <{row['action']}> ;
+                                                    <{OREXIS}through> ?t }} }}
+            INSERT {{ GRAPH <{graph}> {{ <{row['i']}> <{OREXIS}by> <{act}> .
+                                        <{act}> a <{OREXIS}Act> ; <{OREXIS}fills> <{row['action']}> .
                                         {through} }} }}
-            WHERE  {{ GRAPH <{graph}> {{ <{row['i']}> <{AG}by> <{row['action']}> .
-                                        OPTIONAL {{ <{row['i']}> <{AG}through> ?t }} }} }}""")
-    #  And the watch's deadline, which sat on the intention as `ag:deadlineAt` before the
-    #  window was the act's: moved onto the act as `ag:notAfter`.
+            WHERE  {{ GRAPH <{graph}> {{ <{row['i']}> <{OREXIS}by> <{row['action']}> .
+                                        OPTIONAL {{ <{row['i']}> <{OREXIS}through> ?t }} }} }}""")
+    #  And the watch's deadline, which sat on the intention as `orexis:deadlineAt` before the
+    #  window was the act's: moved onto the act as `orexis:notAfter`.
     intentions.update(f"""
-        DELETE {{ GRAPH <{graph}> {{ ?i <{AG}deadlineAt> ?d }} }}
-        INSERT {{ GRAPH <{graph}> {{ ?act <{AG}notAfter> ?d }} }}
-        WHERE  {{ GRAPH <{graph}> {{ ?i <{AG}deadlineAt> ?d ; <{AG}by> ?act }} }}""")
+        DELETE {{ GRAPH <{graph}> {{ ?i <{OREXIS}deadlineAt> ?d }} }}
+        INSERT {{ GRAPH <{graph}> {{ ?act <{OREXIS}notAfter> ?d }} }}
+        WHERE  {{ GRAPH <{graph}> {{ ?i <{OREXIS}deadlineAt> ?d ; <{OREXIS}by> ?act }} }}""")
     return len(rows)

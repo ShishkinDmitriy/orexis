@@ -1,6 +1,6 @@
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix mqtt: <http://example.org/orexis/mqtt#> .
-@prefix ag:    <http://example.org/orexis#> .
+@prefix orexis:    <http://example.org/orexis#> .
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:   <http://www.w3.org/2002/07/owl#> .
 @prefix codec: <http://example.org/orexis/codec#> .

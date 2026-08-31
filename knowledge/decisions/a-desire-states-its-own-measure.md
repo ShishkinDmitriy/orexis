@@ -50,14 +50,14 @@ aim.
 
 ## The design: a node with room on it
 
-A desire had no node — it WAS a `sh:NodeShape` the agent `ag:holds`
+A desire had no node — it WAS a `sh:NodeShape` the agent `orexis:holds`
 ([a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md), now superseded in this one part).
 A shape can say when a want is met and nothing else; conformance is boolean while a want has
-distance. So the desire is reified: `ag:Desire` in the kernel's vocabulary, minted by the same
+distance. So the desire is reified: `orexis:Desire` in the kernel's vocabulary, minted by the same
 derivation (`agent/desires.ru`), carrying the met-test and a name — and pointing, through its
 KIND, at a measure the kernel never authors.
 
-- **`ag:metWhen`** — the SHACL node shape that is the met-test. Its CONTENT is unchanged from
+- **`orexis:metWhen`** — the SHACL node shape that is the met-test. Its CONTENT is unchanged from
   when the desire was it; what changed is that it hangs off the desire node rather than being
   it. It governs the outcome LABEL and an obligation's discharge, never how hard to try.
 - **`rdfs:label` and `rdfs:comment`** — authored by the derivation ("SoilMoisture inside
@@ -94,13 +94,13 @@ every one of those was new core surface that is not BDI structure, whatever its 
 house already had (`urgency` was always a hook modules contribute; the keeper already answers
 it for open expectations):
 
-- **The kernel keeps** `ag:Desire`, `ag:metWhen`, the label, and the derivation minting them
+- **The kernel keeps** `orexis:Desire`, `orexis:metWhen`, the label, and the derivation minting them
   (the-mind-is-not-a-package is not re-litigated: the want, its shape and its node stay
   kernel-derived) — and ASKS: `Module.desire_urgency(desire, query, sensed, value=None)`, a
   hook signature, collected max-of-answers like every choir question, with the kernel
   iterating its modules and naming no family. No measure vocabulary, no measure graph, no
   evaluator: the kernel evaluator module, `loader.measure_files()`, `MEASURES_GRAPH` and the
-  three `ag:` terms are deleted.
+  three `orexis:` terms are deleted.
 - **Sensing owns its whole answer**: `measures.ttl` in its own directory, `sensing:measureOf`
   in its own namespace, parsed and evaluated by its own module, which answers the hook for
   observation-backed wants — a reading against the aim, and the reading is sensing's whole
@@ -182,7 +182,7 @@ unchanged — measurement names never split series.
 # Seams left open
 
 - **The measure words are one package's until a second speaks them.** `sensing:measureOf`
-  is sensing's namespace deliberately: the repo's promotion test for an `ag:` word is a word
+  is sensing's namespace deliberately: the repo's promotion test for an `orexis:` word is a word
   SEVERAL packages must speak, and today one does. The trigger is the second measure-shipping
   package — the market's obligation measure, when the engine allows it — and promotion happens
   then, not before.

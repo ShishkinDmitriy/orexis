@@ -86,7 +86,7 @@ SELECT ?subject ?property ?value ?at ?instrument WHERE {
 }"""
 
 
-# My own regions, read once at construction — through `ag:metWhen`, since the desire became a
+# My own regions, read once at construction — through `orexis:metWhen`, since the desire became a
 # node carrying its shape rather than being it. The only instance identifier named is my own
 # URI, which is the single one a process is handed — everything else is a term.
 #
@@ -108,22 +108,22 @@ SELECT ?subject ?property ?value ?at ?instrument WHERE {
 #  the Below shape refuses to see a reading under (`sh:maxExclusive`) and the ceiling is what
 #  the Above shape refuses to see one over (`sh:minExclusive`). That is one hop further than
 #  reading a min and a max off a single node, and it buys a violation that says WHICH WAY it
-#  went — which watering repairs and a fan does not. See ag:violationIs.
+#  went — which watering repairs and a fan does not. See orexis:violationIs.
 _REGIONS_Q = """
 SELECT ?property ?low ?high ?floor ?ceiling WHERE {
-  <%s> ag:holds ?desire .
-  ?desire ssn:forProperty ?property ; ag:metWhen ?shape .
+  <%s> orexis:holds ?desire .
+  ?desire ssn:forProperty ?property ; orexis:metWhen ?shape .
   ?shape sh:property ?below , ?above .
-  ?below sh:severity ag:ShouldBecome ; ag:violationIs ag:Below ;
+  ?below sh:severity orexis:ShouldBecome ; orexis:violationIs orexis:Below ;
          sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
-  ?above sh:severity ag:ShouldBecome ; ag:violationIs ag:Above ;
+  ?above sh:severity orexis:ShouldBecome ; orexis:violationIs orexis:Above ;
          sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
   OPTIONAL {
-    <%s> ag:holds ?envelope .
+    <%s> orexis:holds ?envelope .
     ?envelope ssn:forProperty ?property ; sh:property ?underFloor , ?overCeiling .
-    ?underFloor sh:severity sh:Warning ; ag:violationIs ag:Below ;
+    ?underFloor sh:severity sh:Warning ; orexis:violationIs orexis:Below ;
                 sh:qualifiedValueShape/sh:property/sh:maxExclusive ?floor .
-    ?overCeiling sh:severity sh:Warning ; ag:violationIs ag:Above ;
+    ?overCeiling sh:severity sh:Warning ; orexis:violationIs orexis:Above ;
                  sh:qualifiedValueShape/sh:property/sh:minExclusive ?ceiling }
 } ORDER BY ?property"""
 
@@ -420,7 +420,7 @@ def _known(beliefs) -> tuple[dict, dict]:
 
 def _subjects_of(beliefs, agent_uri: str) -> list[str]:
     return [r["s"] for r in bindings(beliefs(
-        f"SELECT ?s WHERE {{ <{agent_uri}> ag:actsFor ?s }}"))]
+        f"SELECT ?s WHERE {{ <{agent_uri}> orexis:actsFor ?s }}"))]
 
 
 def _region_of(row: dict) -> Region:

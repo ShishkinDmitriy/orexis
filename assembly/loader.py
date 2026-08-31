@@ -28,7 +28,7 @@ the kernel's included — and never imports a module from any of them.
 
 **The families are one mechanism split by BEARER, not by importance.** Every one of them is a
 family with interchangeable members registered by `PROVIDES`, which is what rule 2 calls a
-capability. What differs is what carries the conclusion: `ag:hasCapability` on an AGENT for the
+capability. What differs is what carries the conclusion: `orexis:hasCapability` on an AGENT for the
 first, a predicate on the SENSOR for the rest. Both are derived at genesis from a premise the
 world states, because both are known before anything runs — a board's protocol and its wire
 format are hardware, not discoveries.
@@ -105,7 +105,7 @@ CALIBRATIONS = "scaling"
 # The families whose members are borne by a BINDING rather than by an agent. Everything else is
 # the same: the world states a premise, that package's `rules.ru` derives which member serves the
 # SENSOR, and the runtime looks the term up against `PROVIDES`. What differs from a capability is
-# the bearer and the predicate — `codec:decodedBy` on a sensor rather than `ag:hasCapability` on
+# the bearer and the predicate — `codec:decodedBy` on a sensor rather than `orexis:hasCapability` on
 # an agent — and not when it is decided, which is genesis either way.
 BOUND_KINDS = (TRANSPORTS, CODECS, CALIBRATIONS)
 
@@ -383,9 +383,9 @@ def desires_rule_files() -> tuple[Path, ...]:
 def action_files() -> tuple[Path, ...]:
     """Every package's ACTIONS — what an agent can do through the things this package knows.
 
-    One `actions.ttl` per package, one `ag:Action` node per way of acting, carrying its
-    precondition (`ag:available`, a SELECT), its effect (`sh:construct`, `ag:retracts`, the
-    timing and the confirmation route) and its taker (`ag:takenBy`). RDF rather than a query
+    One `actions.ttl` per package, one `orexis:Action` node per way of acting, carrying its
+    precondition (`orexis:available`, a SELECT), its effect (`sh:construct`, `orexis:retracts`, the
+    timing and the confirmation route) and its taker (`orexis:takenBy`). RDF rather than a query
     file because a node with a condition and a construct already IS the action schema — it
     loads into the store at genesis, and a model or a sovereign reads the whole tool list
     without a second format existing anywhere.
@@ -657,7 +657,7 @@ def describe() -> str:
 # --- the fifth thing a package contributes: its namespace -----------------------------------
 #
 # A package that declares terms declares them somewhere, and where is its own business. The
-# base vocabulary keeps `ag:`; `capabilities/market` keeps `market:`; the hardware modules have
+# base vocabulary keeps `orexis:`; `capabilities/market` keeps `market:`; the hardware modules have
 # had `mc:`, `onewire:` and the rest since pins-and-wires. What was missing was any way for a
 # runtime query to USE one: `store.PREFIXES` was a kernel constant, so a package with a
 # namespace of its own could not be named in SPARQL without editing the kernel — a registry, in
@@ -755,7 +755,7 @@ def offers() -> dict:
 
 @lru_cache(maxsize=1)
 def extension_rows() -> dict[str, str]:
-    """Every extension point and the cognitive row it belongs to — `ag:row`, declared beside the point by
+    """Every extension point and the cognitive row it belongs to — `orexis:row`, declared beside the point by
     whoever owns the question (layered-by-timescale-and-interruptibility)."""
     import rdflib
 

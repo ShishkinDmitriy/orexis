@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from orexis_agent_progression.ontology import (AG, STATE_GRAPH, WORLD_GRAPH, beliefs_graph)
+from orexis_agent_progression.ontology import (OREXIS, STATE_GRAPH, WORLD_GRAPH, beliefs_graph)
 from orexis_agent_progression.store import bindings
 
 from conftest import build_agent, genesis_store
@@ -28,7 +28,7 @@ def _graphs_in(desires) -> set[str]:
 def test_the_desires_store_holds_wants_and_only_wants(monkeypatch):
     """Selection is by CLASS, not by list: every graph the catalog types with a desire
     modality is copied — the derived regions, and the picks, since the pick record is typed
-    `ag:DesireGraph` and the sovereign's ruling made that literal — and nothing else is.
+    `orexis:DesireGraph` and the sovereign's ruling made that literal — and nothing else is.
     A reading or a world fact in the desires store would be the modality split failing on
     day one."""
     agent = build_agent("gardener", genesis_store(world="loner"), monkeypatch)
@@ -49,9 +49,9 @@ def test_a_region_is_readable_from_the_desires_store_alone(monkeypatch):
     rows = bindings(agent.desires.query_union(f"""
         SELECT ?low ?high WHERE {{
           ?region ssn:forProperty <{MOISTURE}> ; sh:property ?below , ?above .
-          ?below sh:severity ag:ShouldBecome ; ag:violationIs ag:Below ;
+          ?below sh:severity orexis:ShouldBecome ; orexis:violationIs orexis:Below ;
                  sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
-          ?above sh:severity ag:ShouldBecome ; ag:violationIs ag:Above ;
+          ?above sh:severity orexis:ShouldBecome ; orexis:violationIs orexis:Above ;
                  sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
         }}"""))
     assert rows, "the gardener's moisture region must be in the desires store"
@@ -78,10 +78,10 @@ def test_recomputation_is_the_only_write_path(monkeypatch):
     agent = build_agent("gardener", st, monkeypatch)
     stale = agent.desires.query_union   # the surface as it stands before the premise moves
 
-    marker = f"<{AG}test_premise> a <{AG}Desire> ."
+    marker = f"<{OREXIS}test_premise> a <{OREXIS}Desire> ."
     st.update(f"INSERT DATA {{ GRAPH <{beliefs_graph('gardener')}> {{ {marker} }} }}")
 
-    ask = f"ASK {{ <{AG}test_premise> ?p ?o }}"
+    ask = f"ASK {{ <{OREXIS}test_premise> ?p ?o }}"
     assert not agent.desires.query_union(ask)["boolean"], "a copy must not see later writes"
     agent.desires.rebuild()
     assert agent.desires.query_union(ask)["boolean"], \
@@ -113,12 +113,12 @@ def test_a_world_can_state_a_root_desire_and_an_amendment_can_retire_it(monkeypa
     src = genesis.world_dir("loner")
     dst = tmp_path / "asserted"
     shutil.copytree(src, dst)
-    (dst / "desire.ttl").write_text(f"""@prefix ag: <http://example.org/orexis#> .
+    (dst / "desire.ttl").write_text(f"""@prefix orexis: <http://example.org/orexis#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 GRAPH <{ASSERTED_GRAPH}> {{
-  <{GARDENER}> ag:holds <{ROOT}> .
+  <{GARDENER}> orexis:holds <{ROOT}> .
   <{ROOT}> a sh:NodeShape ;
       rdfs:comment "everything the gardener tends stays alive — the sentence somebody ratified" .
 }}
@@ -128,10 +128,10 @@ GRAPH <{ASSERTED_GRAPH}> {{
     genesis.birth(st, dst, "gardener")
     agent = build_agent("gardener", st, monkeypatch)
 
-    ask = f"ASK {{ <{GARDENER}> ag:holds <{ROOT}> }}"
+    ask = f"ASK {{ <{GARDENER}> orexis:holds <{ROOT}> }}"
     assert agent.desires.query_union(ask)["boolean"], \
         "the root desire must reach the desire modality"
-    assert st.query(f"ASK {{ <{ASSERTED_GRAPH}> ag:arrivedBy ag:Asserted }}")["boolean"], \
+    assert st.query(f"ASK {{ <{ASSERTED_GRAPH}> orexis:arrivedBy orexis:Asserted }}")["boolean"], \
         "and the kernel's own declaration says who put it there — a world file needs no typing line"
 
     # The amendment: the sovereign stops stating it, and the want is no longer implied —

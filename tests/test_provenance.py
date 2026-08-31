@@ -3,7 +3,7 @@
 Public knowledge is several graphs: what a package asserted, what the sovereign ratified, what
 RDFS entailed of each, what the rules derived, and whatever a package owns of its own. The split
 exists so that "who put this here" is answerable by looking rather than by knowing, and these
-hold it to that. Nothing here counts them — `ag:PublicGraph` is a class and the set is data.
+hold it to that. Nothing here counts them — `orexis:PublicGraph` is a class and the set is data.
 
 The test that matters most is the last one, and it is not about graphs at all. Two engines
 compute a world — pyoxigraph for an agent, rdflib for the operator's tools — and the whole
@@ -24,7 +24,7 @@ import pytest
 from agent import genesis, ratified
 
 from assembly import loader
-from orexis_agent_progression.ontology import (AG, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
+from orexis_agent_progression.ontology import (OREXIS, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
                             WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH,
                             WORLD_GRAPH)
 from orexis_agent_progression.store import Store, bindings
@@ -56,8 +56,8 @@ def test_a_derived_capability_is_not_in_the_ratified_world(world):
     stopped a capability being *written* there and nothing could tell one apart afterwards.
     Now the ratified graph simply does not contain them."""
     st = _public(world)
-    assert not _in_graph(st, WORLD_GRAPH, "?a ag:hasCapability ?c")
-    assert _in_graph(st, WORLD_DERIVED_GRAPH, "?a ag:hasCapability ?c")
+    assert not _in_graph(st, WORLD_GRAPH, "?a orexis:hasCapability ?c")
+    assert _in_graph(st, WORLD_DERIVED_GRAPH, "?a orexis:hasCapability ?c")
 
 
 @pytest.mark.parametrize("world", WORLDS)
@@ -133,7 +133,7 @@ def test_private_graphs_are_not_in_the_default_graph():
 def test_every_public_graph_accounts_for_itself(world):
     """A sixth graph cannot be silent.
 
-    `ag:PublicGraphShape` refuses a described graph that says neither where it came from nor what
+    `orexis:PublicGraphShape` refuses a described graph that says neither where it came from nor what
     made it — but a graph nobody described at all is not a `prov:Entity`, so no shape targets it.
     That silence is what this catches, by walking the public set rather than waiting to be told.
     """
@@ -183,7 +183,7 @@ def test_the_graph_names_could_be_opaque_and_nothing_would_be_lost():
     assert len(activities) == 4, (
         "ratification, derivation, closure and classification are distinct — a fourth joined "
         "when an agent began saying what its own graphs ARE, which it must do somewhere "
-        "READABLE for a modality-scoped query to resolve `?d a ag:DesireGraph` without naming "
+        "READABLE for a modality-scoped query to resolve `?d a orexis:DesireGraph` without naming "
         "an instance (the-mind-is-six-graphs)")
 
 
@@ -213,14 +213,14 @@ def test_a_sixth_public_graph_needs_no_python():
     before = set(st.public_graphs())
 
     st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
-        <http://example.org/orexis/graph/sixth> a ag:PublicGraph }} }}""")
+        <http://example.org/orexis/graph/sixth> a orexis:PublicGraph }} }}""")
     st.update("""INSERT DATA { GRAPH <http://example.org/orexis/graph/sixth> {
-        <http://example.org/orexis/world/simulation#fern_agent> ag:somethingNew "yes" } }""")
+        <http://example.org/orexis/world/simulation#fern_agent> orexis:somethingNew "yes" } }""")
 
     assert set(st.public_graphs()) - before == {"http://example.org/orexis/graph/sixth"}
     # And an unqualified pattern reads it, which is the whole point: a reader asks what the
     # society knows and never learns which graph the answer came from.
-    assert bindings(st.query('SELECT ?v WHERE { <http://example.org/orexis/world/simulation#fern_agent> ag:somethingNew ?v }'))
+    assert bindings(st.query('SELECT ?v WHERE { <http://example.org/orexis/world/simulation#fern_agent> orexis:somethingNew ?v }'))
 
 
 def test_a_rule_names_the_class_of_graph_it_writes_to_and_never_the_graph():
@@ -283,14 +283,14 @@ def test_a_graph_typed_privately_stays_out_of_the_default_graph():
     """
     st = _public("simulation")
     st.update("""INSERT DATA { GRAPH <http://example.org/orexis/graph/private> {
-        <http://example.org/orexis/world/simulation#fern_agent> ag:aSecret "shh" } }""")
+        <http://example.org/orexis/world/simulation#fern_agent> orexis:aSecret "shh" } }""")
     assert "http://example.org/orexis/graph/private" not in st.public_graphs()
-    assert not bindings(st.query('SELECT ?v WHERE { <http://example.org/orexis/world/simulation#fern_agent> ag:aSecret ?v }'))
-    assert _in_graph(st, "http://example.org/orexis/graph/private", "?s ag:aSecret ?v")
+    assert not bindings(st.query('SELECT ?v WHERE { <http://example.org/orexis/world/simulation#fern_agent> orexis:aSecret ?v }'))
+    assert _in_graph(st, "http://example.org/orexis/graph/private", "?s orexis:aSecret ?v")
 
 
 def test_provenance_is_not_in_the_default_graph():
-    """Deliberately not an `ag:PublicGraph`, and the reason is use versus mention.
+    """Deliberately not an `orexis:PublicGraph`, and the reason is use versus mention.
 
     These are statements ABOUT the graphs, not facts IN the world. Merged into the default graph
     they would answer open patterns that mean something else entirely — `?device a ?class`, which
@@ -325,16 +325,16 @@ def test_the_ratified_world_records_who_ratified_it_and_in_what_capacity(world):
         <{WORLD_GRAPH}> prov:wasGeneratedBy ?act .
         ?act prov:qualifiedAssociation [ prov:agent ?user ; prov:hadRole ?role ] .""")
     assert rows, "the ratified graph names nobody"
-    assert rows[0]["role"] == AG + "Sovereign"
+    assert rows[0]["role"] == OREXIS + "Sovereign"
     assert rows[0]["user"].startswith("http://example.org/orexis/user/")
 
 
 def test_there_is_no_sovereign_agent_only_a_sovereign_role():
-    """The distinction the whole design turns on. `ag:Sovereign` is a `prov:Role`; if it were
+    """The distinction the whole design turns on. `orexis:Sovereign` is a `prov:Role`; if it were
     ever also typed as an agent, "who is the sovereign" would become a permanent property of a
     person rather than a fact about one ratification, and a second user could not exist."""
     st = _public("simulation")
-    kinds = {r["t"] for r in bindings(st.query(f"SELECT ?t WHERE {{ <{AG}Sovereign> a ?t }}"))}
+    kinds = {r["t"] for r in bindings(st.query(f"SELECT ?t WHERE {{ <{OREXIS}Sovereign> a ?t }}"))}
     assert "http://www.w3.org/ns/prov#Role" in kinds
     assert not {k for k in kinds if k.endswith(("Agent", "Person", "SoftwareAgent"))}
 
@@ -345,7 +345,7 @@ def test_the_world_references_a_user_and_declares_nothing_about_them():
     introspects. Saying more here would be a world asserting facts about the installation."""
     st = _public("simulation")
     user = bindings(st.query(
-        "SELECT ?u WHERE { ?w a ag:World ; prov:qualifiedAttribution [ prov:agent ?u ] }"))[0]["u"]
+        "SELECT ?u WHERE { ?w a orexis:World ; prov:qualifiedAttribution [ prov:agent ?u ] }"))[0]["u"]
     said = bindings(st.query(f"SELECT ?p WHERE {{ <{user}> ?p ?o }}"))
     assert not said, f"the world declares {[r['p'] for r in said]} about a user it only references"
 
@@ -362,7 +362,7 @@ def test_the_world_states_the_capacity_and_the_loader_does_not_assume_it():
 
     st = _public("simulation")
     user, role = provenance.attribution_of(st)
-    assert role == AG + "Sovereign"
+    assert role == OREXIS + "Sovereign"
     # Copied, not invented: change what the world says and the description follows.
     assert f"prov:hadRole <{role}>" in provenance._turtle(
         genesis.world_dir("simulation"), (user, role))
@@ -377,7 +377,7 @@ def test_a_user_named_without_a_capacity_gets_no_association():
     st.update(f"""
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?w prov:qualifiedAttribution ?a }} }}
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?w prov:wasAttributedTo <urn:someone> }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?w a ag:World ; prov:qualifiedAttribution ?a }} }}""")
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?w a orexis:World ; prov:qualifiedAttribution ?a }} }}""")
     assert provenance.attribution_of(st) is None
 
 
@@ -401,12 +401,12 @@ def test_both_engines_derive_the_same_world(world):
     """
     st = _public(world)
     from_store = {(r["id"], r["cap"]) for r in bindings(st.query(
-        "SELECT ?id ?cap WHERE { ?a a ag:Agent ; ag:localId ?id ; ag:hasCapability ?cap }"))}
+        "SELECT ?id ?cap WHERE { ?a a orexis:Agent ; orexis:localId ?id ; orexis:hasCapability ?cap }"))}
 
     ds = ratified.dataset(world)
     from_rdflib = {(r["id"], r["cap"]) for r in ratified.rows(ds, f"""
         SELECT ?id ?cap WHERE {{
-          ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}hasCapability> ?cap }}""")}
+          ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id ; <{OREXIS}hasCapability> ?cap }}""")}
 
     assert from_store == from_rdflib, (
         f"{world}: the two engines disagree about what agents can do — "

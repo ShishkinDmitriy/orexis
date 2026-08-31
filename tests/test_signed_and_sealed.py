@@ -45,7 +45,7 @@ def keyed(tmp_path, monkeypatch):
     sign_b64 = signing.raw_public_b64(signing.load_signing_private("fern").public_key())
     seal_b64 = signing.raw_public_b64(signing.load_sealing_private("fern").public_key())
     st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
-        <{FERN}> ag:signingKey "{sign_b64}" ; ag:sealingKey "{seal_b64}" . }} }}""")
+        <{FERN}> orexis:signingKey "{sign_b64}" ; orexis:sealingKey "{seal_b64}" . }} }}""")
     return st
 
 
@@ -176,7 +176,7 @@ def test_the_roster_attests_keys_against_each_agents_real_node(tmp_path, monkeyp
 
     st = Store()
     genesis.refresh_public(st, worlds / "sim2")
-    rows = bindings(st.query("""SELECT ?a WHERE { ?a ag:signingKey ?k }"""))
+    rows = bindings(st.query("""SELECT ?a WHERE { ?a orexis:signingKey ?k }"""))
     subjects = {r["a"] for r in rows}
     assert "http://example.org/orexis/world/simulation#supplier" in subjects
     assert "http://example.org/orexis/world/simulation#fern_agent" in subjects

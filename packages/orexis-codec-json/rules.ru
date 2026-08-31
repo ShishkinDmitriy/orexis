@@ -24,7 +24,7 @@
 
 PREFIX sensing: <http://example.org/orexis/sensing#>
 PREFIX mqtt: <http://example.org/orexis/mqtt#>
-PREFIX ag:    <http://example.org/orexis#>
+PREFIX orexis:    <http://example.org/orexis#>
 PREFIX codec: <http://example.org/orexis/codec#>
 
 #  Says what it sends -> that member decodes every stream it is on.

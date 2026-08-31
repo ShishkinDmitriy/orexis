@@ -24,7 +24,7 @@ PREFIX schema: <https://schema.org/>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX review: <http://example.org/orexis/review#>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
-PREFIX ag:   <http://example.org/orexis#>
+PREFIX orexis:   <http://example.org/orexis#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 #  Both rules ask what a thing IS, literally — no `rdfs:subClassOf*` walk, because the
@@ -45,7 +45,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 #  mqtt terms in a sensing rule, honestly: today the only carrier IS the bus, and the day a
 #  second transport exists, "shares the device's stream" needs a transport-neutral word here.
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability sensing:Subscribing } }
+    ?agent orexis:hasCapability sensing:Subscribing } }
 $given
 WHERE  { ?agent sensing:polls ?sensor . ?sensor a sosa:Sensor ; mqtt:readingTopic ?stream .
          ?device mqtt:readingTopic ?stream ; mqtt:onBus ?bus ;
@@ -53,7 +53,7 @@ WHERE  { ?agent sensing:polls ?sensor . ?sensor a sosa:Sensor ; mqtt:readingTopi
 
 #  Announces on its own clock -> the agent can only RECEIVE, and is never asked for a cadence.
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability sensing:Listening } }
+    ?agent orexis:hasCapability sensing:Listening } }
 $given
 WHERE  { ?agent sensing:polls ?sensor . ?sensor a sosa:Sensor ; mqtt:readingTopic ?stream .
          ?device mqtt:readingTopic ?stream ; mqtt:onBus ?bus ;

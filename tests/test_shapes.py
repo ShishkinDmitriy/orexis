@@ -126,7 +126,7 @@ def _mutate(update: str) -> rdflib.Graph:
     Adding what the rules would add leaves both intact.
     """
     ds = genesis_store()
-    ds.update("PREFIX ag: <http://example.org/orexis#>\n" + update)
+    ds.update("PREFIX orexis: <http://example.org/orexis#>\n" + update)
     for rule in loader.rule_files():
         ds.update(genesis.substitute(rule.read_text(), ds))
     return _flatten(ds)
@@ -265,7 +265,7 @@ def test_an_agent_that_only_listens_must_not_hold_a_cadence():
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:polls ?s .
                                            ?s sensing:senseMode sensing:ScheduledProcedure }} }} ;
         DELETE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
-            <http://example.org/orexis/world/simulation#fern_agent> ag:hasCapability sensing:Subscribing }} }}
+            <http://example.org/orexis/world/simulation#fern_agent> orexis:hasCapability sensing:Subscribing }} }}
         WHERE  {{}}"""))
 
 
@@ -278,26 +278,26 @@ def test_an_agent_may_hold_both_modes_at_once():
     """
     assert _conforms(_mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:chatter_fern a sosa:Sensor , device:Device ; ag:localId "chatter_fern" ; mqtt:onBus <http://example.org/orexis/world/simulation#local_bus> ;
+            orexis:chatter_fern a sosa:Sensor , device:Device ; orexis:localId "chatter_fern" ; mqtt:onBus <http://example.org/orexis/world/simulation#local_bus> ;
                 sensing:senseMode sensing:PushProcedure ; sensing:monitors <http://example.org/orexis/world/simulation#fern> ; sosa:observes water:SoilMoisture ;
                 scaling:quantityUnit unit:UNITLESS ;
                 mqtt:readingTopic "sensors/chatter_fern/reading" .
-            <http://example.org/orexis/world/simulation#fern_agent> sensing:polls ag:chatter_fern .
+            <http://example.org/orexis/world/simulation#fern_agent> sensing:polls orexis:chatter_fern .
         }} }} WHERE {{}} ;
         INSERT {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
-            <http://example.org/orexis/world/simulation#fern_agent> ag:hasCapability sensing:Listening }} }} WHERE {{}}"""))
+            <http://example.org/orexis/world/simulation#fern_agent> orexis:hasCapability sensing:Listening }} }} WHERE {{}}"""))
 
 
 def _duplicate_probe(observes: str) -> rdflib.Graph:
     return _mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:second_probe_fern a sosa:Sensor , device:Device ; ag:localId "second_probe_fern" ;
+            orexis:second_probe_fern a sosa:Sensor , device:Device ; orexis:localId "second_probe_fern" ;
                 mqtt:onBus <http://example.org/orexis/world/simulation#local_bus> ; sensing:senseMode sensing:ScheduledProcedure ; sensing:monitors <http://example.org/orexis/world/simulation#fern> ;
                 sosa:observes {observes} ;
                 scaling:quantityUnit unit:UNITLESS ;
                 mqtt:readingTopic "sensors/second_probe_fern/reading" ;
                 mqtt:commandTopic "sensors/second_probe_fern/command" .
-            <http://example.org/orexis/world/simulation#fern_agent> sensing:polls ag:second_probe_fern .
+            <http://example.org/orexis/world/simulation#fern_agent> sensing:polls orexis:second_probe_fern .
         }} }} WHERE {{}}""")
 
 
@@ -364,7 +364,7 @@ def test_market_must_state_all_three_channels():
 _WIRING_PREAMBLE = """
 @prefix schema: <https://schema.org/> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
-@prefix ag:      <http://example.org/orexis#> .
+@prefix orexis:      <http://example.org/orexis#> .
 @prefix mc: <http://example.org/orexis/microcontroller#> .
 @prefix onewire: <http://example.org/orexis/onewire#> .
 @prefix i2c:     <http://example.org/orexis/i2c#> .
@@ -372,13 +372,13 @@ _WIRING_PREAMBLE = """
 @prefix rgbled:  <http://example.org/orexis/rgb-led#> .
 @prefix probe:   <http://example.org/orexis/moisture-probe#> .
 @prefix sosa:    <http://www.w3.org/ns/sosa/> .
-ag:test_board a mc:Microcontroller ; ag:localId "test_board" ; mc:model "ESP32-WROOM-32D" ;
-    mc:logicVolts 3.3 ; mc:hasPin ag:t_3v3 , ag:t_gnd ;
+orexis:test_board a mc:Microcontroller ; orexis:localId "test_board" ; mc:model "ESP32-WROOM-32D" ;
+    mc:logicVolts 3.3 ; mc:hasPin orexis:t_3v3 , orexis:t_gnd ;
 """
 
 _RAILS = """
-ag:t_3v3 a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 .
-ag:t_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
+orexis:t_3v3 a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 .
+orexis:t_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
 """
 
 
@@ -392,19 +392,19 @@ def _leg(device, name, role, gpio=None, powered=True):
     would otherwise fail for a reason it is not about.
     """
     ttl = f"""
-ag:{name}_leg a mc:Pin ; mc:pinRole {role} .
-[] a mc:Wire ; mc:joins ag:{name}_leg , ag:{name}_line .
-ag:{name}_line a mc:Pin {f'; mc:gpio {gpio}' if gpio is not None else ''} .
-ag:test_board mc:hasPin ag:{name}_line .
-ag:{device} mc:hasPin ag:{name}_leg .
+orexis:{name}_leg a mc:Pin ; mc:pinRole {role} .
+[] a mc:Wire ; mc:joins orexis:{name}_leg , orexis:{name}_line .
+orexis:{name}_line a mc:Pin {f'; mc:gpio {gpio}' if gpio is not None else ''} .
+orexis:test_board mc:hasPin orexis:{name}_line .
+orexis:{device} mc:hasPin orexis:{name}_leg .
 """
     if powered:
         ttl += f"""
-ag:{device} mc:hasPin ag:{device}_vcc , ag:{device}_gnd .
-ag:{device}_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
-ag:{device}_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
-[] a mc:Wire ; mc:joins ag:{device}_vcc , ag:t_3v3 .
-[] a mc:Wire ; mc:joins ag:{device}_gnd , ag:t_gnd .
+orexis:{device} mc:hasPin orexis:{device}_vcc , orexis:{device}_gnd .
+orexis:{device}_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
+orexis:{device}_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
+[] a mc:Wire ; mc:joins orexis:{device}_vcc , orexis:t_3v3 .
+[] a mc:Wire ; mc:joins orexis:{device}_gnd , orexis:t_gnd .
 """
     return ttl
 
@@ -434,9 +434,9 @@ def _wiring(body: str) -> rdflib.Graph:
 def test_the_real_wiring_is_accepted():
     """The guard against a shape so strict that nothing passes it."""
     assert _conforms(_wiring("""
-    sosa:hosts ag:probe , ag:led .
-ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
-ag:led a rgbled:RgbLed ; ag:localId "led" .
+    sosa:hosts orexis:probe , orexis:led .
+orexis:probe a probe:CapacitiveMoistureProbe ; orexis:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
+orexis:led a rgbled:RgbLed ; orexis:localId "led" .
 """ + _leg("probe", "p", "mc:AnalogInPinRole", 34)
    + _leg("led", "r", "rgbled:RedPinRole", 25)
    + _leg("led", "g", "rgbled:GreenPinRole", 26, powered=False)
@@ -448,8 +448,8 @@ def test_a_flash_pin_is_refused(gpio):
     """6-11 are wired to the SPI flash. A board driving one does not boot at all, which reads
     as a dead board rather than as a wiring mistake."""
     assert not _conforms(_wiring("""
-    sosa:hosts ag:probe .
-ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
+    sosa:hosts orexis:probe .
+orexis:probe a probe:CapacitiveMoistureProbe ; orexis:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
 """ + _leg("probe", "p", "mc:DigitalOutPinRole", gpio)))
 
 
@@ -458,8 +458,8 @@ def test_an_analog_input_on_adc2_is_refused(gpio):
     """The sharpest of these: ADC2 is unusable while WiFi is up, and it fails by returning
     numbers that look like readings. Nothing downstream can tell they are rubbish."""
     assert not _conforms(_wiring("""
-    sosa:hosts ag:probe .
-ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
+    sosa:hosts orexis:probe .
+orexis:probe a probe:CapacitiveMoistureProbe ; orexis:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
 """ + _leg("probe", "p", "mc:AnalogInPinRole", gpio)))
 
 
@@ -467,8 +467,8 @@ ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 320
 def test_an_analog_input_on_adc1_is_accepted(gpio):
     """The other half of the same rule: ADC1 is exactly what an analog input should use."""
     assert _conforms(_wiring("""
-    sosa:hosts ag:probe .
-ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
+    sosa:hosts orexis:probe .
+orexis:probe a probe:CapacitiveMoistureProbe ; orexis:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
 """ + _leg("probe", "p", "mc:AnalogInPinRole", gpio)))
 
 
@@ -476,8 +476,8 @@ ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 320
 def test_driving_an_input_only_pin_is_refused(gpio):
     """34-39 can be read and never driven. An LED wired there simply never lights."""
     assert not _conforms(_wiring("""
-    sosa:hosts ag:led .
-ag:led a rgbled:RgbLed ; ag:localId "led" .
+    sosa:hosts orexis:led .
+orexis:led a rgbled:RgbLed ; orexis:localId "led" .
 """ + _leg("led", "r", "rgbled:RedPinRole", gpio)
    + _leg("led", "g", "rgbled:GreenPinRole", 26, powered=False)
    + _leg("led", "b", "rgbled:BluePinRole", 27, powered=False)))
@@ -493,8 +493,8 @@ def test_a_bidirectional_line_on_an_input_only_pin_is_refused(role, gpio):
     anything. Wired there, a DHT returns nothing but a timeout and an SDA hangs the bus.
     """
     assert not _conforms(_wiring("""
-    sosa:hosts ag:air .
-ag:air a mc:Peripheral ; ag:localId "air" .
+    sosa:hosts orexis:air .
+orexis:air a mc:Peripheral ; orexis:localId "air" .
 """ + _leg("air", "d", role, gpio)))
 
 
@@ -503,16 +503,16 @@ def test_a_bidirectional_line_on_a_drivable_pin_is_accepted(gpio):
     """The other half: any pin that can be driven will do, ADC membership included — a
     one-wire line is digital, so ADC2 costs it nothing."""
     assert _conforms(_wiring("""
-    sosa:hosts ag:air .
-ag:air a mc:Peripheral ; ag:localId "air" .
+    sosa:hosts orexis:air .
+orexis:air a mc:Peripheral ; orexis:localId "air" .
 """ + _leg("air", "d", "onewire:DataPinRole", gpio)))
 
 
 @pytest.mark.parametrize("gpio", [-1, 40, 99])
 def test_a_gpio_off_the_board_is_refused(gpio):
     assert not _conforms(_wiring("""
-    sosa:hosts ag:probe .
-ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
+    sosa:hosts orexis:probe .
+orexis:probe a probe:CapacitiveMoistureProbe ; orexis:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
 """ + _leg("probe", "p", "mc:AnalogInPinRole", gpio)))
 
 
@@ -523,9 +523,9 @@ def test_a_leg_that_no_wire_reaches_is_refused():
     unconnected leg was invisible rather than wrong. A floating ground is the commonest reason
     a three-legged sensor answers with silence, and it looks exactly like a dead part."""
     assert not _conforms(_wiring("""
-    sosa:hosts ag:air .
-ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_float .
-ag:air_float a mc:Pin ; mc:pinRole mc:GroundPinRole .
+    sosa:hosts orexis:air .
+orexis:air a mc:Peripheral ; orexis:localId "air" ; mc:hasPin orexis:air_float .
+orexis:air_float a mc:Pin ; mc:pinRole mc:GroundPinRole .
 """ + _leg("air", "d", "onewire:DataPinRole", 32)))
 
 
@@ -534,9 +534,9 @@ def test_a_leg_the_PART_never_connects_is_accepted():
     four positions and the die uses three — and that is true of every DHT ever made. Intrinsic,
     so it is a role."""
     assert _conforms(_wiring("""
-    sosa:hosts ag:air .
-ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_nc .
-ag:air_nc a mc:Pin ; mc:pinRole mc:NotConnectedPinRole .
+    sosa:hosts orexis:air .
+orexis:air a mc:Peripheral ; orexis:localId "air" ; mc:hasPin orexis:air_nc .
+orexis:air_nc a mc:Pin ; mc:pinRole mc:NotConnectedPinRole .
 """ + _leg("air", "d", "onewire:DataPinRole", 32)))
 
 
@@ -548,9 +548,9 @@ def test_a_leg_THIS_BUILD_leaves_unwired_is_accepted():
     about one breadboard inside the description of a component.
     """
     assert _conforms(_wiring("""
-    sosa:hosts ag:air .
-ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_spare .
-ag:air_spare a mc:Pin ; mc:pinRole mc:DigitalOutPinRole ; mc:unused true .
+    sosa:hosts orexis:air .
+orexis:air a mc:Peripheral ; orexis:localId "air" ; mc:hasPin orexis:air_spare .
+orexis:air_spare a mc:Pin ; mc:pinRole mc:DigitalOutPinRole ; mc:unused true .
 """ + _leg("air", "d", "onewire:DataPinRole", 32)))
 
 
@@ -559,9 +559,9 @@ def test_a_leg_that_is_merely_forgotten_is_still_refused():
     this leg' — a floating ground is the commonest reason a three-legged part answers with
     silence, and it looks exactly like a dead part."""
     assert not _conforms(_wiring("""
-    sosa:hosts ag:air .
-ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_spare .
-ag:air_spare a mc:Pin ; mc:pinRole mc:DigitalOutPinRole .
+    sosa:hosts orexis:air .
+orexis:air a mc:Peripheral ; orexis:localId "air" ; mc:hasPin orexis:air_spare .
+orexis:air_spare a mc:Pin ; mc:pinRole mc:DigitalOutPinRole .
 """ + _leg("air", "d", "onewire:DataPinRole", 32)))
 
 
@@ -574,14 +574,14 @@ def test_a_five_volt_rail_into_a_three_volt_input_is_refused():
     the old model to say which rail a device was on, so there was nothing to check.
     """
     assert not _conforms(_wiring("""
-    sosa:hosts ag:air .
-ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_vcc , ag:air_gnd .
-ag:air_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
-ag:air_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
-ag:t_vin a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 5.0 .
-ag:test_board mc:hasPin ag:t_vin .
-[] a mc:Wire ; mc:joins ag:air_vcc , ag:t_vin .
-[] a mc:Wire ; mc:joins ag:air_gnd , ag:t_gnd .
+    sosa:hosts orexis:air .
+orexis:air a mc:Peripheral ; orexis:localId "air" ; mc:hasPin orexis:air_vcc , orexis:air_gnd .
+orexis:air_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
+orexis:air_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
+orexis:t_vin a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 5.0 .
+orexis:test_board mc:hasPin orexis:t_vin .
+[] a mc:Wire ; mc:joins orexis:air_vcc , orexis:t_vin .
+[] a mc:Wire ; mc:joins orexis:air_gnd , orexis:t_gnd .
 """ + _leg("air", "d", "onewire:DataPinRole", 32, powered=False)))
 
 
@@ -589,17 +589,17 @@ def test_a_dht_must_name_all_three_of_its_legs():
     """Its data line alone was the old model's best effort — there was nowhere to put the
     other two — and it is precisely the missing ones that go wrong."""
     assert not _conforms(_wiring("""
-    sosa:hosts ag:air .
-ag:air a dht11:Dht11 ; ag:localId "air" .
+    sosa:hosts orexis:air .
+orexis:air a dht11:Dht11 ; orexis:localId "air" .
 """ + _leg("air", "d", "onewire:DataPinRole", 32, powered=False)))
 
 
 def test_two_peripherals_on_one_gpio_are_refused():
     """The mistake made months later, when a device is added and nobody re-reads the file."""
     assert not _conforms(_wiring("""
-    sosa:hosts ag:probe , ag:led .
-ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ mc:pinRole mc:AnalogInPinRole ; mc:gpio 34 ] .
-ag:led a rgbled:RgbLed ; ag:localId "led" ; ag:pin [ mc:pinRole rgbled:RedPinRole ; mc:gpio 34 ] ,
+    sosa:hosts orexis:probe , orexis:led .
+orexis:probe a probe:CapacitiveMoistureProbe ; orexis:localId "probe" ; orexis:pin [ mc:pinRole mc:AnalogInPinRole ; mc:gpio 34 ] .
+orexis:led a rgbled:RgbLed ; orexis:localId "led" ; orexis:pin [ mc:pinRole rgbled:RedPinRole ; mc:gpio 34 ] ,
                             [ mc:pinRole rgbled:GreenPinRole ; mc:gpio 26 ] ,
                             [ mc:pinRole rgbled:BluePinRole ; mc:gpio 27 ] .
 """))
@@ -608,8 +608,8 @@ ag:led a rgbled:RgbLed ; ag:localId "led" ; ag:pin [ mc:pinRole rgbled:RedPinRol
 def test_one_device_using_a_gpio_twice_is_refused():
     """Same rule, inside a single device: an RGB LED with two legs on one line."""
     assert not _conforms(_wiring("""
-    sosa:hosts ag:led .
-ag:led a rgbled:RgbLed ; ag:localId "led" ; ag:pin [ mc:pinRole rgbled:RedPinRole ; mc:gpio 25 ] ,
+    sosa:hosts orexis:led .
+orexis:led a rgbled:RgbLed ; orexis:localId "led" ; orexis:pin [ mc:pinRole rgbled:RedPinRole ; mc:gpio 25 ] ,
                             [ mc:pinRole rgbled:GreenPinRole ; mc:gpio 25 ] ,
                             [ mc:pinRole rgbled:BluePinRole ; mc:gpio 27 ] .
 """))
@@ -620,18 +620,18 @@ def test_an_rgb_led_missing_a_colour_is_refused(missing):
     """One channel that never lights looks, from across the room, exactly like a sleeping board."""
     legs = {"Red": "mc:gpio 25", "Green": "mc:gpio 26", "Blue": "mc:gpio 27"}
     del legs[missing]
-    pins = " ,\n           ".join(f"[ mc:pinRole ag:{c} ; {g} ]" for c, g in legs.items())
+    pins = " ,\n           ".join(f"[ mc:pinRole orexis:{c} ; {g} ]" for c, g in legs.items())
     assert not _conforms(_wiring(f"""
-    sosa:hosts ag:led .
-ag:led a rgbled:RgbLed ; ag:localId "led" ; ag:pin {pins} .
+    sosa:hosts orexis:led .
+orexis:led a rgbled:RgbLed ; orexis:localId "led" ; orexis:pin {pins} .
 """))
 
 
 def test_a_pin_without_a_role_is_refused():
     """A number with no role cannot be checked for direction, so it cannot be checked at all."""
     assert not _conforms(_wiring("""
-    sosa:hosts ag:probe .
-ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ mc:gpio 34 ] .
+    sosa:hosts orexis:probe .
+orexis:probe a probe:CapacitiveMoistureProbe ; orexis:localId "probe" ; orexis:pin [ mc:gpio 34 ] .
 """))
 
 
@@ -642,9 +642,9 @@ def test_a_board_without_a_model_is_refused():
     for path in loader.ontology_files():
         data.parse(path, format="turtle")
     data.parse(data="""
-@prefix ag:    <http://example.org/orexis#> .
+@prefix orexis:    <http://example.org/orexis#> .
 @prefix mc: <http://example.org/orexis/microcontroller#> .
-ag:nameless a mc:Microcontroller ; ag:localId "nameless" .
+orexis:nameless a mc:Microcontroller ; orexis:localId "nameless" .
 """, format="turtle")
     assert not _conforms(data)
 
@@ -737,11 +737,11 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
 
     Built as TWO SIDE SHAPES since #242, because that is what the aim check now reads — the
     floor off the Below shape's `sh:maxExclusive`, the ceiling off the Above shape's
-    `sh:minExclusive`, each identified by `ag:violationIs`. Left in the old single-shape form
+    `sh:minExclusive`, each identified by `orexis:violationIs`. Left in the old single-shape form
     this test went on passing and stopped meaning anything: the query matched the fixture
     nowhere, so the property match it exists to prove was no longer being exercised at all.
     A fixture that drifts from what the derivation emits fails silently, in the direction of
-    green — which is why it is now a DESIRE NODE carrying the shape through `ag:metWhen`,
+    green — which is why it is now a DESIRE NODE carrying the shape through `orexis:metWhen`,
     the form the derivation emits since a-desire-states-its-own-measure, for the same reason.
     """
     data = _mutate("""
@@ -836,19 +836,19 @@ def _duplicate_probe_in_its_own_patch() -> rdflib.Graph:
     """The second probe again, but each names its patch — the #98 statement."""
     return _mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:fern_east a <http://www.w3.org/ns/sosa/Sample> ;
+            orexis:fern_east a <http://www.w3.org/ns/sosa/Sample> ;
                 <http://www.w3.org/ns/sosa/isSampleOf> <http://example.org/orexis/world/simulation#fern> .
-            ag:fern_west a <http://www.w3.org/ns/sosa/Sample> ;
+            orexis:fern_west a <http://www.w3.org/ns/sosa/Sample> ;
                 <http://www.w3.org/ns/sosa/isSampleOf> <http://example.org/orexis/world/simulation#fern> .
-            <http://example.org/orexis/world/simulation#moisture_sensor_fern> sensing:samples ag:fern_east .
-            ag:second_probe_fern a sosa:Sensor , device:Device ; ag:localId "second_probe_fern" ;
+            <http://example.org/orexis/world/simulation#moisture_sensor_fern> sensing:samples orexis:fern_east .
+            orexis:second_probe_fern a sosa:Sensor , device:Device ; orexis:localId "second_probe_fern" ;
                 mqtt:onBus <http://example.org/orexis/world/simulation#local_bus> ; sensing:senseMode sensing:ScheduledProcedure ; sensing:monitors <http://example.org/orexis/world/simulation#fern> ;
-                sensing:samples ag:fern_west ;
+                sensing:samples orexis:fern_west ;
                 sosa:observes water:SoilMoisture ;
                 scaling:quantityUnit unit:UNITLESS ;
                 mqtt:readingTopic "sensors/second_probe_fern/reading" ;
                 mqtt:commandTopic "sensors/second_probe_fern/command" .
-            <http://example.org/orexis/world/simulation#fern_agent> sensing:polls ag:second_probe_fern .
+            <http://example.org/orexis/world/simulation#fern_agent> sensing:polls orexis:second_probe_fern .
         }} }} WHERE {{}}""")
 
 
@@ -866,9 +866,9 @@ def test_a_patch_of_the_wrong_pot_is_refused():
     nobody walks back to the right plant — recorded faithfully, found by no one."""
     assert not _conforms(_mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:tomato_patch a <http://www.w3.org/ns/sosa/Sample> ;
+            orexis:tomato_patch a <http://www.w3.org/ns/sosa/Sample> ;
                 <http://www.w3.org/ns/sosa/isSampleOf> <http://example.org/orexis/world/simulation#tomato> .
-            <http://example.org/orexis/world/simulation#moisture_sensor_fern> sensing:samples ag:tomato_patch .
+            <http://example.org/orexis/world/simulation#moisture_sensor_fern> sensing:samples orexis:tomato_patch .
         }} }} WHERE {{}}"""))
 
 
@@ -881,13 +881,13 @@ def _observation(extra: str) -> rdflib.Graph:
         PREFIX sosa: <http://www.w3.org/ns/sosa/>
         PREFIX prov: <http://www.w3.org/ns/prov#>
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:obs_test a sosa:Observation ;
+            orexis:obs_test a sosa:Observation ;
                 sosa:hasFeatureOfInterest <http://example.org/orexis/world/simulation#fern> ;
                 sosa:observedProperty water:SoilMoisture ;
                 sosa:resultTime "2026-08-15T10:00:00Z"^^xsd:dateTime ;
                 sosa:madeBySensor <http://example.org/orexis/world/simulation#moisture_sensor_fern> ;
                 sosa:usedProcedure sensing:ScheduledProcedure ;
-                ag:underWorldVersion 1 ;
+                orexis:underWorldVersion 1 ;
                 prov:wasGeneratedBy <http://example.org/orexis/world/simulation#fern_agent> ;
                 {extra} .
         }} }} WHERE {{}}""")
@@ -897,7 +897,7 @@ def test_a_structured_result_is_the_legal_alternative_to_the_scalar():
     """#101: one of the two forms — the scalar shortcut, or a sosa:Result with parts for the
     reading that is genuinely multi-component. The accelerometer's door, held open."""
     assert _conforms(_observation(
-        'sosa:hasResult [ a sosa:Result ; ag:x "0.1"^^xsd:decimal ]'))
+        'sosa:hasResult [ a sosa:Result ; orexis:x "0.1"^^xsd:decimal ]'))
 
 
 def test_an_observation_with_neither_result_form_is_refused():
@@ -941,7 +941,7 @@ def test_a_watched_channel_on_a_push_device_is_legal():
     device without the channel its bands would arrive on."""
     data = _mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:sentinel_x a sosa:Sensor , device:Device ; ag:localId "sentinel_x" ;
+            orexis:sentinel_x a sosa:Sensor , device:Device ; orexis:localId "sentinel_x" ;
                 mqtt:onBus <http://example.org/orexis/world/simulation#local_bus> ;
                 sensing:senseMode sensing:PushProcedure ;
                 <http://www.w3.org/ns/ssn/implements> sensing:AlarmProcedure ;
@@ -1212,7 +1212,7 @@ def test_every_shape_says_what_it_is_for():
 
     What IS checkable is that the sentence exists. A shape with no comment cannot be compared to
     its constraints at all, by a reader or by anyone auditing later, and one had none:
-    `ag:WorldVersionShape`, alone among every shape in the repo.
+    `orexis:WorldVersionShape`, alone among every shape in the repo.
 
     Blank-node shapes are excluded on purpose: an `sh:property [ … ]` is a constraint rather than
     a shape somebody names, and it carries an `sh:message` where it needs to say something.

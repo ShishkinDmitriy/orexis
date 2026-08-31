@@ -1,11 +1,11 @@
-// Orexis — ESP32 soil-moisture sensor node (sensing:ScheduledProcedure -> the agent holds ag:Subscribing).
+// Orexis — ESP32 soil-moisture sensor node (sensing:ScheduledProcedure -> the agent holds orexis:Subscribing).
 //
 // Inverted from a fixed-interval pusher: the *agent* owns the interval (policy), the board
 // keeps to it (mechanism: sense + sleep). Each wake it reads, publishes, briefly listens for a
 // new interval, then deep-sleeps. Realizes knowledge/decisions/agent-centric-epistemics.md
 // (agent-driven sensing) and the connection/authorization model in knowledge/domain/gateway.md.
 //
-// This is deliberately NOT ag:Polling. Between wakes the board is unreachable, so it cannot be
+// This is deliberately NOT orexis:Polling. Between wakes the board is unreachable, so it cannot be
 // asked for a reading — it can only be told, in advance, how often to take one. The retained
 // cadence command is what makes that reliable; `sense` is best-effort and lands only while the
 // board happens to be awake. See knowledge/domain/sensing.md.
@@ -19,7 +19,7 @@
 //                               "temperature":21.4,"humidity":0.463}
 //              one message for the whole board — one client, one credential, one
 //              channel. Each sensor in the world picks its own value out with an
-//              ag:readingPointer; the air fields are absent if the part did not answer.
+//              orexis:readingPointer; the air fields are absent if the part did not answer.
 //   subscribe: CMD_TOPIC        {"sleep_s":N, "band":"LOW"}  and/or  {"sense":true}  (retained)
 //
 // Both topic names come from config.h and are the world's own, so they are not spelled out
@@ -46,7 +46,7 @@
 #include "ulp_watch.h"
 
 // The topics come from config.h, which `orexis-firmware` generates from the world's own
-// ag:readingTopic and ag:commandTopic. They used to be built here as "sensors/" PLANT_ID
+// orexis:readingTopic and orexis:commandTopic. They used to be built here as "sensors/" PLANT_ID
 // "/moisture" — which assumed a topic SHAPE the world states explicitly, and would have gone
 // quietly wrong the day a world named a topic differently.
 
@@ -117,7 +117,7 @@ static bool published = false;
 
 // Common cathode: current out of a leg lights it. If yours is common anode, every colour here
 // comes out as its complement — which is the visible symptom, and the fix is the world's
-// `ag:model` being wrong rather than this file.
+// `orexis:model` being wrong rather than this file.
 //
 // Driven at a fraction of full duty rather than hard on. A modern indicator LED at 3.3V through
 // a 220R is unpleasant to look at across a room, and this one sits on a windowsill rather than
@@ -202,7 +202,7 @@ static void led(bool, bool, bool) {}
 //
 // One board is one MQTT client with one credential, so it publishes once however many
 // peripherals it carries. The world names three sensors on this one topic and each says which
-// value is its own with an ag:readingPointer (RFC 6901): the probe takes `/value`, and the
+// value is its own with an orexis:readingPointer (RFC 6901): the probe takes `/value`, and the
 // KY-015's two channels take `/temperature` and `/humidity`. Nothing new is granted — the
 // payload grew, the channel did not.
 //

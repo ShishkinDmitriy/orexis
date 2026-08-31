@@ -62,7 +62,7 @@ The host states `market:matchesBy` and the capability is derived from it:
 ```
 
 The stated fact is what the host *does*; the ability follows. So `world.ttl` still contains no
-`ag:hasCapability`, and the prohibition is untouched.
+`orexis:hasCapability`, and the prohibition is untouched.
 
 ## Named `matchesBy`, not `clearsBy`
 

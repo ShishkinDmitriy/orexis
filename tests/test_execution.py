@@ -54,7 +54,7 @@ def test_no_round_open_means_no_acquire_committed_and_the_trace_says_why(monkeyp
     assert keeper.standing(action=ACQUIRING) == [], "nothing to bid in, nothing committed"
     assert fern.sent.to(f"{wired_markets(fern)[0].bid_topic}/fern") == []
     weighed = {r["m"] for r in bindings(fern.beliefs.query_union(
-        "SELECT DISTINCT ?m WHERE { ?c ag:wouldTake ?m }"))}
+        "SELECT DISTINCT ?m WHERE { ?c orexis:wouldTake ?m }"))}
     assert OBSERVING in weighed and ACQUIRING not in weighed, \
         "the look was weighed; buying was not on the menu, not merely refused"
 
@@ -125,13 +125,13 @@ def _actions():
 
 
 def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monkeypatch):
-    """An action with no `ag:takenBy` is an intention nothing can carry out. Every means on any
+    """An action with no `orexis:takenBy` is an intention nothing can carry out. Every means on any
     shipped agent's menu comes from an action naming a family, and every agent holding such a
     row composes a module in that family — which is the whole of 'every affordance is linked
     to code'."""
     actions = _actions()
     takers = {str(a): str(f) for a, f in actions.subject_objects(TAKEN_BY)}
-    assert takers, "no ag:takenBy anywhere — the action files stopped stating it"
+    assert takers, "no orexis:takenBy anywhere — the action files stopped stating it"
     rows_seen = 0
     for world, agent_id in (("simulation", "fern"), ("simulation", "supplier"),
                             ("loner", "gardener")):
@@ -141,7 +141,7 @@ def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monk
         for row in afforder.affordances_of(agent.beliefs.query, agent.me.uri, agent.desires.query_union,
                                 beliefs_graph(agent.id)):
             rows_seen += 1
-            assert row.action in takers, f"{world}/{agent_id}: {row.action} has no ag:takenBy"
+            assert row.action in takers, f"{world}/{agent_id}: {row.action} has no orexis:takenBy"
             family = execution.taken_by(agent.beliefs.query, row.action)
             assert family == takers[row.action]
             assert agent.providers(family), \

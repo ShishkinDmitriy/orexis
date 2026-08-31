@@ -10,7 +10,7 @@ package that decodes what the board sends back.
 **The same mechanism as a capability; a different bearer.** Rule 2 defines a capability as a
 named ability with interchangeable implementations and says nothing about who bears it, so this
 is one — it is simply not something an AGENT has. A capability is derived onto an agent as
-`ag:hasCapability`; a codec is derived onto a SENSOR as `codec:decodedBy`. Same discipline
+`orexis:hasCapability`; a codec is derived onto a SENSOR as `codec:decodedBy`. Same discipline
 either way: the world states a premise, genesis writes the conclusion into the derived graph,
 and the runtime looks it up.
 

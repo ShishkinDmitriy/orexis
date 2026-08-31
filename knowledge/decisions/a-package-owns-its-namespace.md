@@ -20,7 +20,7 @@ sensing, actuation, the mqtt transport. The trees under `vocabulary/` went furth
 *terms* there too: `mc:`, `onewire:`, `i2c:`, `probe:`, since
 [pins-and-wires](pins-and-wires.md). So the convention existed, was in use, and was documented.
 
-**And every capability put its terms in `ag:` anyway.** `ag:Hosting`, `ag:matchesBy`,
+**And every capability put its terms in `orexis:` anyway.** `ag:Hosting`, `ag:matchesBy`,
 `review:reviewIntervalS` — declared by a package, spelled as though the kernel owned them. An ontology
 that declares an IRI and then defines nothing under it is an ontology in name only.
 
@@ -62,10 +62,10 @@ READ off whichever ontology declares it, exactly as a package's own namespace is
 reading, so it does not declare the vocabulary readings are written in. What the old "not a
 package's to bind" argument needed is the loader's refusal of one label bound to two IRIs, and
 that holds without the kernel naming the vocabulary. (This said `sosa:` was the kernel's; it was,
-while the kernel derived the stake.) `ag:` is read the same way, off the ontology that declares
+while the kernel derived the stake.) `orexis:` is read the same way, off the ontology that declares
 it, and hard-coding it would have made it an exception for no reason but habit.
 
-**AMENDED in one word.** This said `ag:` arrives "like any other package's, because the base
+**AMENDED in one word.** This said `orexis:` arrives "like any other package's, because the base
 vocabulary is a package". It is not one any more — it is the kernel, `agent/ontology.ttl`, not
 discovered but prepended. The mechanism is untouched and is the part that mattered: the prefix is
 read from the ontology rather than registered anywhere, so nothing here changed but the file's
@@ -105,9 +105,9 @@ it — one string in two files, with nothing to catch drift.
 
 Nineteen terms and five shapes. The line is **who declares the term**:
 
-| stays `ag:` | why |
+| stays `orexis:` | why |
 |---|---|
-| `ag:Agent`, `ag:Capability`, `ag:hasCapability`, `ag:localId` | the kernel's — true of every agent |
+| `orexis:Agent`, `orexis:Capability`, `orexis:hasCapability`, `orexis:localId` | the kernel's — true of every agent |
 | `water:hasTarget`, `water:bandLow`, `water:maxValuePerL` | `packages/orexis-plant-water`'s — what a bid is *worth* here |
 | `mqtt:eventTopic`, `mqtt:readingTopic` | the mqtt transport's |
 
@@ -125,7 +125,7 @@ out to weigh the wrong thing.
 Each was invisible while every term shared one namespace, and each is a real defect that a second
 namespace merely exposed.
 
-**A belief block mapped a field to a bare local name** and `agent/beliefs.py` wrapped `ag:` around
+**A belief block mapped a field to a bare local name** and `agent/beliefs.py` wrapped `orexis:` around
 it. So the kernel decided where every capability's beliefs lived, and a package could not carry a
 belief of its own at all. Blocks now hold full IRIs, built by each package with its own `term()`,
 and the reader learns nothing about where any of them live.
@@ -150,7 +150,7 @@ than assumed.
 - **`store.PREFIXES` grew the hardware prefixes** as a side effect, so a query *may* now name
   `mc:` or `onewire:`. Nothing does. The point is that it would work rather than 400.
 - **A world author sees which package owns a term.** `world.ttl` reads `ag:hosts`… no longer: it
-  reads `market:hosts` beside `ag:localId`, and the prefix says where to look. Noisier to write and
+  reads `market:hosts` beside `orexis:localId`, and the prefix says where to look. Noisier to write and
   self-documenting to read.
 - **`agent/world.py` still names market terms.** It queries `market:bidsIn` and `market:marketFor`
   to load an agent's own view of itself. That the kernel knows what a market is predates this
@@ -176,6 +176,6 @@ than assumed.
   prefix and every gate would pass; only a reader would notice. A shape could check that each
   package's `ontology.ttl` defines only terms under its own base, and would need an exception for
   the several packages that legitimately do not have one.
-- **The kernel still decides that `ag:` is what a package gets by default.** `orexis_agent_progression.ontology.term()`
+- **The kernel still decides that `orexis:` is what a package gets by default.** `orexis_agent_progression.ontology.term()`
   builds into `AG`, so a package that declares no `NS` silently inherits the kernel's namespace
   rather than being asked to choose. That is the state four packages are in.

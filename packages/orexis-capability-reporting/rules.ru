@@ -19,7 +19,7 @@
 # differ, not whether every agent has it.
 #
 # Derived, never declared, exactly like every other: `world.ttl` still contains no
-# ag:hasCapability, and the prohibition is untouched. What is new is a shape that REFUSES an
+# orexis:hasCapability, and the prohibition is untouched. What is new is a shape that REFUSES an
 # agent lacking this, so "every agent reports" is a fact the world is held to rather than a
 # convention nothing checks — which is what it was while the term sat in the kernel, declared a
 # capability and granted by nothing.
@@ -29,11 +29,11 @@
 # seam and the last piece to add, not the first.
 
 PREFIX reporting: <http://example.org/orexis/reporting#>
-PREFIX ag: <http://example.org/orexis#>
+PREFIX orexis: <http://example.org/orexis#>
 
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability reporting:Storing } }
+    ?agent orexis:hasCapability reporting:Storing } }
 $given
 WHERE  {
-    ?agent a ag:Agent .
+    ?agent a orexis:Agent .
 }

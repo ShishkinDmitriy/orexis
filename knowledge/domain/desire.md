@@ -25,9 +25,9 @@ merging every module's `desires()`.
 # Desire, and the word *want*
 
 They are the same thing, and the difference is grammatical rather than conceptual: **desire is
-the kind** — the type `Desire`, the term `ag:Desire`, the modality, the store — and **a want is
+the kind** — the type `Desire`, the term `orexis:Desire`, the modality, the store — and **a want is
 one of them**, identified by its node. That is what `?want` binds, what an
-[intention](/domain/intention.md) `ag:pursues`, and what the ledger is keyed on beside the
+[intention](/domain/intention.md) `orexis:pursues`, and what the ledger is keyed on beside the
 [act](/domain/act.md).
 
 So *the desire modality* holds *the wants this agent has*, a package contributes wants through
@@ -48,8 +48,8 @@ states in `ssn-system`, an instrument this agent polls and the horizon it keeps.
 kernel's is the mind — what a want is, when one is met, how wants rank — and it has no reading
 in it ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
 
-What the derivation mints is a NODE (`ag:Desire`) carrying the met-test as a SHACL shape
-(`ag:metWhen`) and a label a dashboard or the ask channel can print — reified so a want can
+What the derivation mints is a NODE (`orexis:Desire`) carrying the met-test as a SHACL shape
+(`orexis:metWhen`) and a label a dashboard or the ask channel can print — reified so a want can
 say how badly it is unmet, not only whether it is. The measure is deliberately NOT the
 kernel's in any part: whoever needs the number asks the choir (`Module.desire_urgency`), and
 the capability that owns the question answers from its own declaration —
@@ -57,7 +57,7 @@ the capability that owns the question answers from its own declaration —
 want's KIND at answer time; that page has the mechanics. The argument is
 [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md)'s.
 
-Deducing used to be granted by a stake — `ag:actsFor` a subject that states what it needs — and
+Deducing used to be granted by a stake — `orexis:actsFor` a subject that states what it needs — and
 the stake still decides everything except whether a module exists: an agent advancing nobody's
 interest states no ranges, so it holds no region, and the shapes that target a stake never reach
 it. The sensing world's agent has three sensors and no region at all, by the fact rather than by
@@ -205,7 +205,7 @@ Three deliberate differences from the diff above:
   uncomfortable, which is the answer `urgency(None)` has always given.
 - **`side` says which way out a stake sits.** For moisture only the low side has a lever, so a
   drowning plant and a dying one are both `unmet` at urgency 1.00 and mean opposite things. The
-  shape says the same thing in `ag:violationIs` now; the query still reaches it by comparing the
+  shape says the same thing in `orexis:violationIs` now; the query still reaches it by comparing the
   value to the bounds, which is the same answer, and reading it off a validation report waits for
   something that produces one in the hot path.
 - **A count is about wanting, not about distance.** `unmet` means the reading sits outside the

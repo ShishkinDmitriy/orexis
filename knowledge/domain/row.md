@@ -13,9 +13,9 @@ description: >-
 
 | row | how long | may it be interrupted | may it search |
 |---|---|---|---|
-| `ag:Reactive` | milliseconds | no — it runs to the end | never |
-| `ag:Progression` | seconds to minutes | it suspends and is resumed | never |
-| `ag:Deliberative` | seconds | it should be | that is what it is for |
+| `orexis:Reactive` | milliseconds | no — it runs to the end | never |
+| `orexis:Progression` | seconds to minutes | it suspends and is resumed | never |
+| `orexis:Deliberative` | seconds | it should be | that is what it is for |
 
 **Reactive** is classifying and writing: decode a payload, take a bid into a round, note a
 device's word. **Progression** is carrying out what is already committed — an
@@ -25,7 +25,7 @@ asked in.
 
 # It is a property of a hook, not of a file
 
-Every [choir](/domain/choir.md) hook declares its row (`ag:row`). That is where it belongs
+Every [choir](/domain/choir.md) hook declares its row (`orexis:row`). That is where it belongs
 because a single module answers in several: sensing decodes a payload (reactive), nudges a probe
 for a committed look (progression) and measures a want (deliberative) — three rows, one class,
 so no arrangement of directories could say it. A term can also be checked, and is: a reactive

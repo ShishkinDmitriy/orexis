@@ -49,7 +49,7 @@ class Picks:
 
     capability: str  # the term, so a missing belief names the capability that wanted it
     cls: type
-    # field name -> the FULL IRI of the term carrying it. Full, not a local name with `ag:`
+    # field name -> the FULL IRI of the term carrying it. Full, not a local name with `orexis:`
     # assumed around it: a belief term belongs to the package that declares it, and since
     # `capabilities/market` took a namespace of its own there is no one prefix to assume.
     # Each package builds these with its own `term()`, so this reader never learns where any
@@ -98,7 +98,7 @@ class Beliefs:
 
     The constructor takes the store and the ONE identifier a process is legitimately handed —
     its own local id, rule 1's single stated exception — and discovers everything else,
-    URI included, from the store: the world says `?a ag:localId "<id>"`, and the URI is the
+    URI included, from the store: the world says `?a orexis:localId "<id>"`, and the URI is the
     answer, not an argument. An empty volume at birth is why the id cannot be discovered too;
     by the time this class exists, birth has run and the lookup cannot miss.
     """
@@ -107,12 +107,12 @@ class Beliefs:
         self._store = store
         self.agent_id = agent_id
         self.graph = beliefs_graph(agent_id)
-        #  `a ag:Agent` is load-bearing, not decoration: a plant, a sensor and a valve carry
-        #  `ag:localId` too, and a world names its subject after its agent — so the bare
+        #  `a orexis:Agent` is load-bearing, not decoration: a plant, a sensor and a valve carry
+        #  `orexis:localId` too, and a world names its subject after its agent — so the bare
         #  pattern matches two things and LIMIT 1 picks by the store's internal order, which
         #  a change to load order silently flips. It did: every pick read asked the PLANT.
         rows = bindings(store.query(
-            f'SELECT ?a WHERE {{ ?a a ag:Agent ; ag:localId "{agent_id}" }} LIMIT 1'))
+            f'SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1'))
         if not rows:
             raise BeliefError(
                 f"no agent with localId '{agent_id}' in this store — "

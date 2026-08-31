@@ -54,7 +54,7 @@ model-driven claim reduced to something you can check by re-seeding.
 
 # Agents are born from the world
 
-Nothing lists the agents to run. `orexis-compose <world>` reads `?a a ag:Agent` out of the world
+Nothing lists the agents to run. `orexis-compose <world>` reads `?a a orexis:Agent` out of the world
 and writes one container per answer, each told the single thing an agent is ever told: its own
 id. The roster *is* the ratified world, so adding an agent is adding it to `world.ttl` — no
 unit file, no launcher edit, and no place for a list to drift from the model. The compose file

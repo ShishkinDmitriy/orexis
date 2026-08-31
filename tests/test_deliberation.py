@@ -445,10 +445,10 @@ def test_a_new_kind_of_move_is_a_new_directory(make, tmp_path, monkeypatch):
 
     toy = tmp_path / "actions.ttl"
     toy.write_text("""
-@prefix ag: <http://example.org/orexis#> .
+@prefix orexis: <http://example.org/orexis#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
-ag:Consulting a ag:Action ; ag:means ag:Consult ;
-    ag:available \"\"\"SELECT ?want ?via WHERE { VALUES (?want ?about) { $wants } BIND($me AS ?via) }\"\"\" ;
+orexis:Consulting a orexis:Action ; orexis:means orexis:Consult ;
+    orexis:available \"\"\"SELECT ?want ?via WHERE { VALUES (?want ?about) { $wants } BIND($me AS ?via) }\"\"\" ;
     sh:construct "CONSTRUCT {} WHERE {}" .
 """)
     real = loader.action_files()
@@ -467,7 +467,7 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     """The sovereign asking what an agent DOES gets its obligations beside its options — and asked
     about a PROPERTY it holds a stake in, deliberation proposes none of them.
 
-    An obligation IS a want (ag:Obligation) and is meant to reach deliberation, through the
+    An obligation IS a want (orexis:Obligation) and is meant to reach deliberation, through the
     door that takes the want itself. What must not happen is an obligation answering a question about
     a stake: the honoured row exists because somebody else holds paper, and serving it is not
     a move this agent may choose for its own reasons. The search enforces it by filtering to

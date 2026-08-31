@@ -6,7 +6,7 @@ description: >-
   re-decided when a round knocked, the actuator decided on its own reading, and each adopted
   its own intention. Now there is ONE road — plan, commit the head as an intention, hand it to
   the actor the means names — and the link from a row to the code that takes it is a triple,
-  `ag:takenBy`, stated by the package that ships the row. What changed is who carries a
+  `orexis:takenBy`, stated by the package that ships the row. What changed is who carries a
   decision out, never how one is reached.
 status: accepted
 timestamp: 2026-08-24T18:00:00Z
@@ -33,7 +33,7 @@ happened to be holding the trigger. The planner's rows already said *through whi
 
 **An intention is the head of a plan, committed to.** `Deliberator.decide(desire)` returns the
 [plan](/domain/deliberator.md) itself — rows, not a means — and what the keeper writes is the
-first row whole: `ag:by` the means, `ag:through` the lever, `ag:pursues` the desire. Only the
+first row whole: `orexis:by` the means, `orexis:through` the lever, `orexis:pursues` the desire. Only the
 head, and that is not a shortcut: the plan is re-derived every pass because the world moves, so
 a committed tail would be a promise about a future nobody has seen. The tail is in the trace for
 a reader; the head is in the ledger for the agent.
@@ -45,15 +45,15 @@ bidder, a presentation for the host. Nothing decides on the way: a trigger says 
 search says *what*, the ledger says *committed*, and the actor says *done*.
 
 **Every affordance is linked to the code that takes it, by a triple.** An [action](/domain/action.md)
-states `ag:takenBy` a capability, in the ontology of the package that ships the row —
-`ag:Observe ag:takenBy sensing:SensingCapability`, `ag:Acquire ag:takenBy market:Bidding`,
-`ag:Actuate ag:takenBy actuation:Actuation`, `ag:Apply ag:takenBy market:Hosting`. Execution
+states `orexis:takenBy` a capability, in the ontology of the package that ships the row —
+`ag:Observe orexis:takenBy sensing:SensingCapability`, `ag:Acquire orexis:takenBy market:Bidding`,
+`ag:Actuate orexis:takenBy actuation:Actuation`, `ag:Apply orexis:takenBy market:Hosting`. Execution
 asks the T-Box for the family and `agent.providers(family)` for whoever is loaded, and calls
 `take(row, desire, intention)` on each — the choir's newest hook, beside `notices` and `urgency`.
 The kernel names no package, and which code takes a step is a fact a sovereign can query —
 where `planner._dose` still spells the two sizing families by hand, because sizing a bid and
 sizing a dose are different questions with different names. A package that ships a row and no
-`ag:takenBy` has shipped an intention nothing can carry out, which
+`orexis:takenBy` has shipped an intention nothing can carry out, which
 `tests/test_execution.py` refuses. See [actor](/domain/actor.md).
 
 **The bidder answers a round from what stands.** A standing `Acquire` is a commitment spanning
@@ -75,7 +75,7 @@ metrics tick) are one, and `submit` no longer holds an opinion about whether to 
   plan with a step chosen blind.
 - **The host's trigger.** A host has no gap, and whether to *sell* is the
   [strategic-supplier](/decisions/strategic-supplier.md) seam. (`ag:Offer` was adopted on
-  deferral by hosting and carried no `ag:takenBy` when this was written; since
+  deferral by hosting and carried no `orexis:takenBy` when this was written; since
   [a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a-fact-and-offering-is-an-action.md)
   it is an action serving a [call](/domain/call.md), and the seam is unchanged: plannable is
   not wanted.)

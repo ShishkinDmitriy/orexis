@@ -91,7 +91,7 @@ something an *agent* has. What differs is the bearer, and the predicate follows 
 
 | tree | borne by | conclusion |
 |---|---|---|
-| `packages/orexis-capability-*/` | an agent | `ag:hasCapability` on the agent |
+| `packages/orexis-capability-*/` | an agent | `orexis:hasCapability` on the agent |
 | `packages/orexis-transport-*/`, `packages/orexis-codec-*/`, `packages/orexis-scaling-*/` | a binding | a predicate on the **sensor** |
 
 The reason is not convention. An agent's capability is about what it **is**, which is a fact the
@@ -112,7 +112,7 @@ The world states a **premise**; `rules.ru` writes the **conclusion** into the de
 | `scaling:curve` | `scaling:scaledBy` |
 
 Two predicates rather than one, because collapsing them would let a world state its own conclusion —
-the same discipline that keeps `ag:hasCapability` out of `world.ttl`. And `codec_for(sensor)` is now
+the same discipline that keeps `orexis:hasCapability` out of `world.ttl`. And `codec_for(sensor)` is now
 a lookup of the derived term against `PROVIDES`, exactly as `agent.provider(family)` is for a
 capability. Nothing searches.
 

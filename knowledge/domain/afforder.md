@@ -10,7 +10,7 @@ description: >-
 
 # What it runs
 
-**Affording.** For every `ag:Action` the [menu](/domain/menu.md) holds, run its `ag:available`
+**Affording.** For every `orexis:Action` the [menu](/domain/menu.md) holds, run its `orexis:available`
 query with `$me`, `$wants`, `$beliefs` and `$state` filled in, and collect the
 [affordance](/domain/affordance.md) rows it binds. Sorted, returned, written nowhere.
 

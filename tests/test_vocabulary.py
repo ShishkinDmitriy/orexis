@@ -16,7 +16,7 @@ from __future__ import annotations
 import pytest
 
 from agent import genesis, vocabulary
-from orexis_agent_progression.ontology import AG, beliefs_graph
+from orexis_agent_progression.ontology import OREXIS, beliefs_graph
 from orexis_agent_progression.store import Store, bindings
 
 from conftest import WORLDS_ROOT, genesis_store
@@ -25,7 +25,7 @@ from conftest import WORLDS_ROOT, genesis_store
 # namespace. Written out rather than generated, because a fixture that derived it from the
 # current vocabulary would move whenever the vocabulary did and stop being the old world.
 #
-# `ag:bandLow`, `ag:bandHigh` and `ag:hasTarget` were here and had to go, which is the one edit
+# `orexis:bandLow`, `orexis:bandHigh` and `orexis:hasTarget` were here and had to go, which is the one edit
 # that principle does not cover: the terms they were renamed TO have since been DELETED — the
 # bands in favour of the deduced region, the target in favour of `sensing:aims`, which is a
 # STRUCTURE and so not a rename at all — and a store holding them is now correctly unmigratable
@@ -33,17 +33,17 @@ from conftest import WORLDS_ROOT, genesis_store
 # is about. What that case looks like is tested directly, on a synthetic term, by
 # `test_a_term_with_no_successor_is_refused_rather_than_dropped`.
 BEFORE_THE_SWEEP = f"""
-@prefix ag: <{AG}> .
+@prefix orexis: <{OREXIS}> .
 
-ag:fern_agent
-    ag:fastSleepS 30 ;
-    ag:slowSleepS 600 ;
-    ag:readingGraceS 45 ;
-    ag:hasEndowment 100.0 ;
-    ag:litresPerFraction 2.0 ;
-    ag:maxValuePerL 0.80 ;
-    ag:metricsIntervalS 60 ;
-    ag:reviewIntervalS 300 .
+orexis:fern_agent
+    orexis:fastSleepS 30 ;
+    orexis:slowSleepS 600 ;
+    orexis:readingGraceS 45 ;
+    orexis:hasEndowment 100.0 ;
+    orexis:litresPerFraction 2.0 ;
+    orexis:maxValuePerL 0.80 ;
+    orexis:metricsIntervalS 60 ;
+    orexis:reviewIntervalS 300 .
 """
 
 
@@ -71,32 +71,32 @@ def test_a_shipped_world_is_current_by_construction(world):
 
 
 def test_a_kernel_term_that_still_exists_is_not_a_rename():
-    """`ag:localId` did not move, so no rename may claim it did.
+    """`orexis:localId` did not move, so no rename may claim it did.
 
     The map is built by local name, so a term the kernel still declares has to be excluded
     explicitly — otherwise a package that later declared its own `localId` would silently
     capture the kernel's.
 
-    This was written about `ag:metricsIntervalS`, which then genuinely moved into
+    This was written about `orexis:metricsIntervalS`, which then genuinely moved into
     `capabilities/reporting/`. The subject had to change; the assertion did not. Any term the
-    kernel still declares serves, and `ag:localId` is the one least likely to move next.
+    kernel still declares serves, and `orexis:localId` is the one least likely to move next.
     """
     settled, _ = vocabulary.renames(genesis_store(world="simulation"))
-    assert AG + "localId" not in settled
+    assert OREXIS + "localId" not in settled
 
 
 def test_a_name_two_packages_share_is_contested_rather_than_guessed():
     """`i2c:DataPinRole` and `onewire:DataPinRole` are both real and both correct.
 
-    A data pin means something different on each protocol, so `ag:DataPinRole` has no single
+    A data pin means something different on each protocol, so `orexis:DataPinRole` has no single
     answer and nothing here may pick one. It is reported only if a store actually uses it —
     neither was ever a kernel term, so refusing at load would have stopped every agent booting
     over a collision no volume can contain.
     """
     settled, contested = vocabulary.renames(genesis_store(world="simulation"))
-    assert AG + "DataPinRole" in contested
-    assert AG + "DataPinRole" not in settled
-    assert len(contested[AG + "DataPinRole"]) == 2
+    assert OREXIS + "DataPinRole" in contested
+    assert OREXIS + "DataPinRole" not in settled
+    assert len(contested[OREXIS + "DataPinRole"]) == 2
 
 
 # --- the defect itself ----------------------------------------------------------------------
@@ -107,8 +107,8 @@ def test_beliefs_a_vocabulary_behind_are_seen():
     found = vocabulary.stale(st)
     assert beliefs_graph("fern") in found, "a volume behind the vocabulary looked current"
     behind = found[beliefs_graph("fern")]
-    assert AG + "slowSleepS" in behind
-    assert behind[AG + "slowSleepS"].endswith("sensing#slowSleepS")
+    assert OREXIS + "slowSleepS" in behind
+    assert behind[OREXIS + "slowSleepS"].endswith("sensing#slowSleepS")
 
 
 def test_what_the_agent_would_have_read_instead_is_nothing():
@@ -167,7 +167,7 @@ def test_a_term_with_no_successor_is_refused_rather_than_dropped():
     """Deletion is not renaming, and guessing at it would lose a value silently."""
     st = _aged_store()
     st.update("INSERT DATA { GRAPH <%s> { <%sfern_agent> <%sabolishedS> 7 } }"
-              % (beliefs_graph("fern"), AG, AG))
+              % (beliefs_graph("fern"), OREXIS, OREXIS))
     with pytest.raises(SystemExit) as exc:
         vocabulary.check(st, migrating=True)
     assert "abolishedS" in str(exc.value)
@@ -228,9 +228,9 @@ def test_a_package_to_package_move_is_migrated_by_the_same_lookup():
     st = genesis_store(world="simulation")
     st.put_graph(beliefs_graph("fern"), f"""
 @prefix old: <http://example.org/orexis/perception#> .
-@prefix ag: <{AG}> .
+@prefix orexis: <{OREXIS}> .
 
-ag:fern_agent old:fastSleepS 30 ; old:slowSleepS 600 ; old:readingGraceS 45 .
+orexis:fern_agent old:fastSleepS 30 ; old:slowSleepS 600 ; old:readingGraceS 45 .
 """)
     found = vocabulary.stale(st)
     assert beliefs_graph("fern") in found, "a post-sweep volume looked current"
@@ -245,9 +245,9 @@ ag:fern_agent old:fastSleepS 30 ; old:slowSleepS 600 ; old:readingGraceS 45 .
 
 def test_a_term_that_changed_namespace_and_name_still_migrates(tmp_path):
     """`renames` infers a successor by LOCAL NAME, which answers the historical direction —
-    a term leaving `ag:` for the package it belongs to — and answers nothing when the move
+    a term leaving `orexis:` for the package it belongs to — and answers nothing when the move
     goes the other way or renames as it goes. Both happened when the mind's states became
-    kernel words: `desire:desires` became `ag:holds` (no candidate at all) and
+    kernel words: `desire:desires` became `orexis:holds` (no candidate at all) and
     `intention:outcome` had two candidates by local name with nothing able to choose. So a
     MOVE is data — a decision made once, written down, and preferred over the inference."""
     st = genesis_store(world="simulation")
@@ -259,8 +259,8 @@ def test_a_term_that_changed_namespace_and_name_still_migrates(tmp_path):
     older:outcome "dropped" .""")
     found = vocabulary.stale(st)
     successors = found[beliefs_graph("fern")]
-    assert successors["http://example.org/orexis/desire#desires"] == AG + "holds"
-    assert successors["http://example.org/orexis/intention#outcome"] == AG + "outcome"
+    assert successors["http://example.org/orexis/desire#desires"] == OREXIS + "holds"
+    assert successors["http://example.org/orexis/intention#outcome"] == OREXIS + "outcome"
 
 
 def test_a_graph_nothing_declares_any_more_is_dropped(tmp_path, monkeypatch):

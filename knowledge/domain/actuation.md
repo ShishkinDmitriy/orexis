@@ -54,7 +54,7 @@ first version of the rule joined through the stake instead, so every market dose
 local computation and the single source held only for self-doses, which is the half that needed it
 least.
 
-That number is the [effect](/domain/effect.md)'s `ag:landsAfter`, and the same arithmetic goes on
+That number is the [effect](/domain/effect.md)'s `orexis:landsAfter`, and the same arithmetic goes on
 the wire as the command's duration. Two copies would mean planning against one timeline and
 verifying against another, and the disagreement arrives looking like a device lying.
 

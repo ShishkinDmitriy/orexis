@@ -9,7 +9,7 @@ device happens to run is not the interesting part.
 **The whole claim is that nothing downstream can tell.** So this publishes what the real board
 publishes, byte for byte — obeys the same retained `{"sleep_s": N}`, answers the same
 `{"sense": true}`, and holds the same constitutional floor and ceiling on its cadence. An agent
-wired to one of these derives `ag:Subscribing` and runs the ordinary sensing module, because
+wired to one of these derives `orexis:Subscribing` and runs the ordinary sensing module, because
 from where it stands there is nothing else it could be.
 
 That is the point of the exercise. The simulation world used to exercise a parallel
@@ -43,7 +43,7 @@ indistinguishability is precisely what the society's sampling has to cope with (
 
 **Sense mode is honoured rather than assumed.** `scheduled` obeys the cadence command like a
 sleeping board; `push` publishes on its own clock and ignores commands, so its agent derives
-`ag:Listening` and never tries to instruct it. Same code, same wire, different device character.
+`orexis:Listening` and never tries to instruct it. Same code, same wire, different device character.
 
 **Why it watches a valve.** A real plant gets wet because water physically arrives. Nothing
 physical happens here, so the model has to learn about the dose somehow — and it does it by

@@ -22,12 +22,12 @@ skinparam component {
 
 
 database "Beliefs · repository" as BEL {
-  folder "ag:ActionGraph" as A
-  folder "ag:WorldGraph" as W
-  folder "ag:StateGraph" as S
-  folder "ag:PickRecordGraph" as P
-  folder "ag:ObligationsGraph" as O
-  folder "ag:DeliberationGraph" as D
+  folder "orexis:ActionGraph" as A
+  folder "orexis:WorldGraph" as W
+  folder "orexis:StateGraph" as S
+  folder "orexis:PickRecordGraph" as P
+  folder "orexis:ObligationsGraph" as O
+  folder "orexis:DeliberationGraph" as D
 }
 
 database "Desires · repository" as DES {
@@ -35,7 +35,7 @@ database "Desires · repository" as DES {
 }
 
 database "Imaginarium · repository" as IMG {
-  folder "ag:PossibleGraph" as V
+  folder "orexis:PossibleGraph" as V
 }
 
 component "Planner\nruns Planning" as PL

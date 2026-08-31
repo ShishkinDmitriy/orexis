@@ -77,7 +77,7 @@ below on why the graph, not the provenance triple, carries the trust):
 
 **And that is five of them.** The list above is the original trust partition and is no longer
 the whole store: the mind grew a graph per modality, and provenance grew one per arrival. The
-full set is whatever `ag:Graph` has instances of — ask, never count — but for orientation it is
+full set is whatever `orexis:Graph` has instances of — ask, never count — but for orientation it is
 now `graph/beliefs/<agent>`, `graph/sensed`, `graph/world`, `graph/world/derived`,
 `graph/world/entailed`, `graph/ontology`, `graph/ontology/entailed`, `graph/provenance`,
 `graph/desire/asserted`, `graph/obligations/<agent>`,
@@ -96,7 +96,7 @@ the intention modality's own room of the volume (`<state>/intentions`, beside
 did.
 
 The graphs themselves are **typed, self-describing resources** (`:world a orexis:WorldGraph`,
-`:beliefs/fern a orexis:DesireGraph ; orexis:beliefsOf orexis:fern_agent` — the pick record, typed by its modality since `ag:BeliefsGraph` retired) — a graph catalog,
+`:beliefs/fern a orexis:DesireGraph ; orexis:beliefsOf orexis:fern_agent` — the pick record, typed by its modality since `orexis:BeliefsGraph` retired) — a graph catalog,
 not magic strings. Topology (durable, authored) is kept out of `:sensed` (sensed, overwritten)
 and out of the belief graphs (opinion, revisable): three origins, three kinds of graph. See
 [genesis](/decisions/genesis.md) and [world-graph](/decisions/world-graph.md).
@@ -245,7 +245,7 @@ by asking a model, and compacting cannot be done two ways.
 # SOSA
 
 Observations use SOSA on the sensor edge, and the devices themselves are SOSA too:
-`orexis:Sensor` is a `sosa:Sensor`, `orexis:Valve` a `sosa:Actuator`, and a plant a
+`ag:Sensor` is a `sosa:Sensor`, `ag:Valve` a `sosa:Actuator`, and a plant a
 `sosa:FeatureOfInterest`. The political vocabulary (wallet, bid, desire, cadence) stays in a
 lean custom ontology — SOSA models observation, not negotiation. See
 [sensing](/domain/sensing.md).

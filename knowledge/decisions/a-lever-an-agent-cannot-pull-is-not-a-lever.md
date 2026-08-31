@@ -174,7 +174,7 @@ Three consequences worth having in one place, because each surprised somebody:
   trigger is [sensing](/domain/sensing.md)'s standing seam — *sensing is not yet priced* — and
   when a look costs something, the gradient becomes rankable against it.
 - **An Observe row is bound to the agent's own subject.** The row's walk demands
-  `$me ag:actsFor ?subject`, so an instrument pointed at something the agent does not act for
+  `$me orexis:actsFor ?subject`, so an instrument pointed at something the agent does not act for
   has no row even where the agent could ask it — the loner's water butt is unreachable twice
   over. Fixing it means the effect rule taking the row's subject as an argument instead of the
   agent's, which is a change to what a step is bound with rather than to any of this.

@@ -162,8 +162,8 @@ Measured on `world/sensing`, removing one `mqtt:commandTopic` at a time:
 | sensor | `mqtt:onBus` | world still conforms |
 |---|---|---|
 | `:moisture_sensor_fern` | yes | **no** — refused |
-| `ag:air_temp_fern` | no | yes |
-| `ag:air_humidity_fern` | no | yes |
+| `orexis:air_temp_fern` | no | yes |
+| `orexis:air_humidity_fern` | no | yes |
 
 The guard lives in `packages/orexis-transport-mqtt/shapes.ttl` and is conditioned on a sensor being **on a
 bus**. The two DHT channels are `sosa:Sensor` and deliberately not devices — they ride the board's

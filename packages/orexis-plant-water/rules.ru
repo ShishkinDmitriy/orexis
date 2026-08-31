@@ -33,7 +33,7 @@
 
 PREFIX water:  <http://example.org/orexis/water#>
 PREFIX market: <http://example.org/orexis/market#>
-PREFIX ag:     <http://example.org/orexis#>
+PREFIX orexis:     <http://example.org/orexis#>
 PREFIX ssn:    <http://www.w3.org/ns/ssn/>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX schema: <https://schema.org/>
@@ -41,7 +41,7 @@ PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
 
 #  The span of what the subject survives, in litres.
 #
-#  Both premises are AUTHORED or ENTAILED, never another package's conclusion: `ag:actsFor` and
+#  Both premises are AUTHORED or ENTAILED, never another package's conclusion: `orexis:actsFor` and
 #  `water:litresPerFraction` are in the world files, and the survival range reaches the pot from
 #  its species by a hasValue restriction, materialised before any rule runs. See AGENTS.md on
 #  why a premise may not rest on a conclusion.
@@ -54,7 +54,7 @@ INSERT { GRAPH $derived {
     ?agent market:allocationCeilingL ?ceiling } }
 $given
 WHERE  {
-    ?agent a ag:Agent ; ag:actsFor ?subject .
+    ?agent a orexis:Agent ; orexis:actsFor ?subject .
     ?subject water:litresPerFraction ?litresPerFraction ;
              ssn-system:hasSurvivalRange/ssn-system:inCondition ?condition .
     ?condition ssn:forProperty water:SoilMoisture ;

@@ -145,7 +145,7 @@ The strongest evidence is a defect this makes nameable. `firmware/moisture-senso
 #define MQTT_USER "moisture_sensor_fern"
 ```
 
-**The ESP32 authenticates to the broker as one of its own peripherals**, while `ag:esp32_fern`
+**The ESP32 authenticates to the broker as one of its own peripherals**, while `orexis:esp32_fern`
 holds a credential with zero grants that nothing ever uses. Both facts are on `main` today and
 predate all of this.
 

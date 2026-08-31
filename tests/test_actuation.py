@@ -46,7 +46,7 @@ class FakeAgent:
         self.sent.append((topic, payload))
 
     def ask(self, hook, *args, **kwargs):
-        #  `Module.publish` asks `ag:send` of whoever holds the connection — here, this fake,
+        #  `Module.publish` asks `orexis:send` of whoever holds the connection — here, this fake,
         #  which is always able to carry it.
         if hook.endswith("#send"):
             topic, payload = args[0], args[1]

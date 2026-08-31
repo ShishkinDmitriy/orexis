@@ -18,7 +18,7 @@ PREFIX sh: <http://www.w3.org/ns/shacl#>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX ag:   <http://example.org/orexis#>
+PREFIX orexis:   <http://example.org/orexis#>
 PREFIX ssn:  <http://www.w3.org/ns/ssn/>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX schema: <https://schema.org/>
@@ -61,19 +61,19 @@ PREFIX schema: <https://schema.org/>
 #  and `publish_horizon` writes it into the instruments graph. A shape that recomputed it would
 #  be a second definition free to drift; one that baked it would be wrong within a tick.
 INSERT { GRAPH $derived {
-    $me ag:holds ?fresh .
-    ?fresh a ag:Desire , sensing:Freshness ;
+    $me orexis:holds ?fresh .
+    ?fresh a orexis:Desire , sensing:Freshness ;
         ssn:forProperty ?property ;
-        ag:about ?sensor ;
+        orexis:about ?sensor ;
         #  THE SENSOR ALONE, and the subject is reached through it. This carried both for a
         #  while, on the reasoning that a want is about the thing as much as about the
         #  instrument — and `desires.rq` binds the instrument off `prov:wasDerivedFrom`, so two
         #  premises meant two rows, one of them keyed on a subject no instruments table has and
         #  therefore permanently unmeasured. One want, one premise, one row.
         prov:wasDerivedFrom ?sensor ;
-        ag:violationIs ag:Stale ;
+        orexis:violationIs orexis:Stale ;
         rdfs:label ?freshLabel ;
-        ag:metWhen ?freshMet .
+        orexis:metWhen ?freshMet .
     ?freshMet a sh:NodeShape ;
         sh:targetNode $me ;
         ssn:forProperty ?property ;
@@ -84,11 +84,11 @@ INSERT { GRAPH $derived {
         #  which is why the region's three shapes carry theirs individually. Getting this wrong
         #  is not cosmetic — a want reported as a violation refuses the agent's boot, which is
         #  the one thing a want must never do, and it did exactly that before this line moved.
-        sh:severity ag:ShouldBecome ;
+        sh:severity orexis:ShouldBecome ;
         sh:sparql [
             #  Kept here too: it is what the spec says, so a conformant engine reads it, and a
             #  reader of this shape should not have to know our engine's quirk to see the force.
-            sh:severity ag:ShouldBecome ;
+            sh:severity orexis:ShouldBecome ;
             sh:message ?tooOld ;
             sh:select ?staleQuery ] } }
 $given
@@ -104,7 +104,7 @@ WHERE  {
     #  the instrument and what it is pointed at: if this agent went to the trouble of polling
     #  something, it wants to know what that thing reads NOW. A stake is what makes the VALUE
     #  matter; a sensor is what makes the reading knowable, and this want is about knowing.
-    $me a ag:Agent ; ag:localId ?who ; sensing:polls ?sensor .
+    $me a orexis:Agent ; orexis:localId ?who ; sensing:polls ?sensor .
     ?sensor sensing:monitors ?subject ; sosa:observes ?property .
     BIND(STRAFTER(STR(?property), "#") AS ?name)
     #  Keyed by the SENSOR, not by the property: one agent may poll two instruments reading the
@@ -145,7 +145,7 @@ WHERE  {
 #  from what the subject STATES IT NEEDS (`ssn-system:hasOperatingRange`, narrowed by every
 #  instrument that monitors it) and met by an OBSERVATION of it sitting inside — both sensing's
 #  facts, in sensing's words, which is why the rule is here (the-stake-is-sensings-want). The
-#  node IRIs are unchanged: `ag:desire.<who>.<property>`, `ag:bounds.…`, `ag:envelope.…`, so
+#  node IRIs are unchanged: `orexis:desire.<who>.<property>`, `orexis:bounds.…`, `orexis:envelope.…`, so
 #  a ledger row that names one still resolves.
 #
 #  The regions and the envelopes are derived on every rebuild of the desire modality, never at
@@ -155,16 +155,16 @@ WHERE  {
 #  TWO NODE SHAPES per property, told apart by the FORCE they carry: the region, a violation of
 #  which is a gap, and the envelope, a violation of which is the subject ending. Within each the
 #  edges live on the SIDE shapes, one number apiece (#242), so a violation says WHICH WAY it
-#  went — see ag:violationIs.
+#  went — see orexis:violationIs.
 INSERT { GRAPH $derived {
-    $me ag:holds ?desire , ?envelope .
-    ?desire a ag:Desire ;
+    $me orexis:holds ?desire , ?envelope .
+    ?desire a orexis:Desire ;
         ssn:forProperty ?property ;
-        ag:about ?property ;
+        orexis:about ?property ;
         prov:wasDerivedFrom ?subject ;
         rdfs:label ?label ;
         rdfs:comment ?describes ;
-        ag:metWhen ?bounds .
+        orexis:metWhen ?bounds .
     ?bounds a sh:NodeShape ;
         sh:targetNode $me ;
         ssn:forProperty ?property ;
@@ -173,9 +173,9 @@ INSERT { GRAPH $derived {
         #  it is the true one. The two side shapes below cannot say this: each asks whether a
         #  reading is outside its edge, and no reading is outside anything.
         sh:property [
-            sh:severity ag:ShouldBecome ;
-            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-            ag:violationIs ag:Unmeasured ;
+            sh:severity orexis:ShouldBecome ;
+            sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            orexis:violationIs orexis:Unmeasured ;
             sh:qualifiedMinCount 1 ;
             sh:qualifiedValueShape [
                 sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ] ;
@@ -186,18 +186,18 @@ INSERT { GRAPH $derived {
         #  A means will declare which violations it repairs (#239), a message can name the side
         #  it is about, and a dashboard stops showing the two as one row.
         sh:property [
-            sh:severity ag:ShouldBecome ;
-            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-            ag:violationIs ag:Below ;
+            sh:severity orexis:ShouldBecome ;
+            sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            orexis:violationIs orexis:Below ;
             sh:qualifiedMaxCount 0 ;
             sh:qualifiedValueShape [
                 sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
                 sh:property [ sh:path sosa:hasSimpleResult ; sh:maxExclusive ?low ] ] ;
             sh:message ?tooLow ] ;
         sh:property [
-            sh:severity ag:ShouldBecome ;
-            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-            ag:violationIs ag:Above ;
+            sh:severity orexis:ShouldBecome ;
+            sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            orexis:violationIs orexis:Above ;
             sh:qualifiedMaxCount 0 ;
             sh:qualifiedValueShape [
                 sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
@@ -221,8 +221,8 @@ INSERT { GRAPH $derived {
         #  "outside the range" needed a negation, "past this edge" is `sh:maxExclusive`.
         sh:property [
             sh:severity sh:Warning ;
-            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-            ag:violationIs ag:Below ;
+            sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            orexis:violationIs orexis:Below ;
             sh:qualifiedMaxCount 0 ;
             sh:qualifiedValueShape [
                 sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
@@ -230,8 +230,8 @@ INSERT { GRAPH $derived {
             sh:message ?underFloor ] ;
         sh:property [
             sh:severity sh:Warning ;
-            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-            ag:violationIs ag:Above ;
+            sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            orexis:violationIs orexis:Above ;
             sh:qualifiedMaxCount 0 ;
             sh:qualifiedValueShape [
                 sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
@@ -240,7 +240,7 @@ INSERT { GRAPH $derived {
 $given
 WHERE  {
     { SELECT ?property ?subject (MAX(?min) AS ?low) (MIN(?max) AS ?high) WHERE {
-        $me a ag:Agent ; ag:actsFor ?subject .
+        $me a orexis:Agent ; orexis:actsFor ?subject .
         ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?need .
         ?need ssn:forProperty ?property .
         { ?subject ssn-system:hasOperatingRange ?range }
@@ -253,7 +253,7 @@ WHERE  {
       } GROUP BY ?property ?subject }
     OPTIONAL {
       SELECT ?property (MAX(?least) AS ?floor) (MIN(?most) AS ?ceiling) WHERE {
-        $me a ag:Agent ; ag:actsFor ?subject .
+        $me a orexis:Agent ; orexis:actsFor ?subject .
         ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?need .
         ?need ssn:forProperty ?property .
         { ?subject ssn-system:hasSurvivalRange ?envelope }
@@ -267,7 +267,7 @@ WHERE  {
     FILTER(?low <= ?high)
     #  After the subqueries, because a BIND sees only what its own group has bound so far —
     #  the scope rule plan.rq met the hard way (#206).
-    $me ag:localId ?who .
+    $me orexis:localId ?who .
     BIND(IRI(CONCAT("http://example.org/orexis#desire.", ENCODE_FOR_URI(?who), ".",
                     ENCODE_FOR_URI(STRAFTER(STR(?property), "#")))) AS ?desire)
     BIND(IRI(CONCAT("http://example.org/orexis#bounds.", ENCODE_FOR_URI(?who), ".",

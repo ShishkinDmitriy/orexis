@@ -8,7 +8,7 @@ description: The process, not a place. An auction condenses out of scarcity, col
 
 An **auction** is a **process**. It condenses out of scarcity, allocates a lot among the agents
 that want it, and dissolves. Between auctions there is nothing left of it: no state, no object in
-the world graph, no `ag:Auction` anywhere. What persists is the [market](/domain/market.md) — the
+the world graph, no `orexis:Auction` anywhere. What persists is the [market](/domain/market.md) — the
 standing structure of a resource, who can supply it, who can consume it, and the channels they
 meet on.
 
@@ -96,7 +96,7 @@ the second is the one to argue.
 - **Not a format.** *Auction format* names a bidding procedure and a payment rule together; this
   project models only the second, and [bid matching](/domain/bid-matching.md) says why and what the word
   costs when it is used loosely.
-- **Not an object in the graph.** There is no `ag:Auction` to point at. Looking for one is the
+- **Not an object in the graph.** There is no `orexis:Auction` to point at. Looking for one is the
   usual sign that a market fact and an auction fact have been confused.
 - **Not a round.** A [round](/domain/round.md) is one pass of bidding *inside* an auction, which is
   the standard meaning and not what this page describes. Exactly one is built, so the two coincide

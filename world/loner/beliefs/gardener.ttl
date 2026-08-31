@@ -7,7 +7,7 @@
 @prefix reporting: <http://example.org/orexis/reporting#> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix schema: <https://schema.org/> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 
 #  The gardener's PRIVATE beliefs. No market blocks at all — it buys nothing and sells
 #  nothing, which is what this world exists to show: an agent can want, watch, decide,
@@ -37,7 +37,7 @@
 ##  intention — the patience that stands between a reflex and a rotted rhizome: ten
 #   minutes, several cadences long, because a second impulse to water the same plant
 #   inside it is the same impulse.
-:gardener ag:patienceS 600 .
+:gardener orexis:patienceS 600 .
 
 ##  actuation — slack past a dose's own open-seconds before silence is counted.
 :gardener actuation:doseGraceS 10 .

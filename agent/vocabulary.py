@@ -3,8 +3,8 @@
 A belief base outlives the code that wrote it, and that is the point of it: beliefs are authored
 once at birth and never touched by start or stop, so an agent that restarts is the agent it had
 become rather than the one the sovereign first described. The same property means a volume can be
-**older than the vocabulary**. PR #85 made that concrete — 102 terms left `ag:` for their
-packages' namespaces, so a volume written before it holds `ag:hasTarget` where the code now asks
+**older than the vocabulary**. PR #85 made that concrete — 102 terms left `orexis:` for their
+packages' namespaces, so a volume written before it holds `orexis:hasTarget` where the code now asks
 `water:hasTarget`. The pattern matches nothing, and an agent with no target cannot bid.
 
 **Nothing could see it.** Every test builds a fresh store from the current files, so a test never
@@ -33,9 +33,9 @@ be recorded to answer it, because the store already holds the evidence.
 A **predicate** is always a term, so a project predicate the T-Box does not declare is wrong
 however it got there — a rename, a deletion, or a typo in a hand-written beliefs file.
 
-Anywhere else, a project IRI may be an instance: `ag:fern_agent` is the shape of a term and is
+Anywhere else, a project IRI may be an instance: `orexis:fern_agent` is the shape of a term and is
 not one. Those positions are flagged only when the rename map recognises them, which is the case
-where the answer is known rather than guessed. `review:revisedTerm ag:slowSleepS` is caught that
+where the answer is known rather than guessed. `review:revisedTerm orexis:slowSleepS` is caught that
 way — the object is a term, and the map says what it became.
 
 See knowledge/decisions/a-volume-can-be-older-than-the-vocabulary.md and issue #87.
@@ -45,7 +45,7 @@ from __future__ import annotations
 
 import logging
 
-from orexis_agent_progression.ontology import AG, ONTOLOGY_GRAPH
+from orexis_agent_progression.ontology import OREXIS, ONTOLOGY_GRAPH
 from orexis_agent_progression.store import bindings
 
 log = logging.getLogger("vocabulary")
@@ -89,11 +89,11 @@ def declared(st) -> set[str]:
 #  Moves this project has actually made, written down because they cannot be computed.
 #
 #  `renames` infers a successor by LOCAL NAME, which answers the historical direction — terms
-#  leaving `ag:` for a package they now belong to — and answers nothing when a term moved the
+#  leaving `orexis:` for a package they now belong to — and answers nothing when a term moved the
 #  other way, or moved and was renamed at once. Both happened when the mind's states became
 #  kernel words (the-mind-is-six-graphs): `intention:outcome` has two candidates by local name
-#  (`ag:outcome` and `review:outcome`) and nothing could choose, while `desire:desires` became
-#  `ag:holds` and has no candidate at all.
+#  (`orexis:outcome` and `review:outcome`) and nothing could choose, while `desire:desires` became
+#  `orexis:holds` and has no candidate at all.
 #
 #  So a MOVE is data. Each entry is a decision somebody made once, and the alternative — a
 #  heuristic that picks a namespace — would be this module guessing at meaning, which is the
@@ -120,14 +120,14 @@ MOVED = {
     #  Renamed as it moved: the region binds, so it is bounds, and an agent is held to it
     #  rather than desiring it — what it desires is the aim.
     #  Two moves in two days, so the map records the DESTINATION rather than the step: a
-    #  volume migrated yesterday holds `ag:boundedBy`, one migrated today holds neither, and
+    #  volume migrated yesterday holds `orexis:boundedBy`, one migrated today holds neither, and
     #  both must land on what the vocabulary says now. A migration table is a record of where
     #  things went, not of how they travelled.
     #  The host's move left the kernel for the market (a-round-is-a-fact-and-offering-is-an-
     #  action): a ledger holding Offer intentions under either older spelling lands on the
     #  package's word — the destination, not the step, as the note above says.
     #  The means went to their packages and then went altogether: the ACTION is the kind
-    #  (the-action-is-the-kind), so an intention's `ag:by` names the action node. Every older
+    #  (the-action-is-the-kind), so an intention's `orexis:by` names the action node. Every older
     #  spelling — the intention package's, the kernel's, and the packages' short-lived means —
     #  lands on the node. `Apply` lands on the buyer's hold (Presenting): that was its meaning
     #  for every ledger old enough to hold it; the host's serve (Serving) is newer than the
@@ -136,12 +136,12 @@ MOVED = {
         "http://example.org/orexis/intention#Offer", "http://example.org/orexis#Offer",
         "http://example.org/orexis/market#Offer")},
     #  The AIM went to sensing with the region it sits in (the-stake-is-sensings-want): a
-    #  volume authored while it was the kernel's holds `ag:aims`, and this is the rename.
+    #  volume authored while it was the kernel's holds `orexis:aims`, and this is the rename.
     #  THE SUBSTRATE went to `packages/orexis-part-device/`: a BDI kernel says nothing about what a
     #  thing is made of (the-substrate-is-not-the-minds). It went in ONE word, because the rest
     #  of what the kernel held was never about substrate at all — a stand-in is the ABSENCE of a
     #  device, so it went to `packages/orexis-sim-standin/` under its own name, and the `model` prefix
-    #  each of its physics terms carried to fake a namespace inside `ag:` came off with the move
+    #  each of its physics terms carried to fake a namespace inside `orexis:` came off with the move
     #  (a-stand-in-is-not-a-device).
     "http://example.org/orexis#Device": "http://example.org/orexis/device#Device",
     **{f"http://example.org/orexis#{old}": f"http://example.org/orexis/sim#{new}"
@@ -180,24 +180,24 @@ def renames(st) -> tuple[dict[str, str], dict[str, list[str]]]:
 
     **A local name two packages both declare is contested, not settled.** `i2c:DataPinRole` and
     `onewire:DataPinRole` are both real and both correct — a data pin means something different
-    on each protocol — so `ag:DataPinRole` has no single answer. Refusing outright was the first
+    on each protocol — so `orexis:DataPinRole` has no single answer. Refusing outright was the first
     attempt and it was wrong twice over: neither of those was ever a kernel term, so no volume
     can hold the old spelling, and raising here would have stopped every agent from booting over
     a collision that cannot be reached. Contested names are reported only if a store actually
     uses one, which is the difference between a hazard and a fact about the vocabulary.
     """
     terms = declared(st)
-    kernel_locals = {_local(t) for t in terms if t.startswith(AG)}
+    kernel_locals = {_local(t) for t in terms if t.startswith(OREXIS)}
     candidates: dict[str, list[str]] = {}
     for term in sorted(terms):
-        if term.startswith(AG):
+        if term.startswith(OREXIS):
             continue
         name = _local(term)
         if name in kernel_locals:
-            continue  # a kernel term of that name still exists; `ag:name` is current, not stale
+            continue  # a kernel term of that name still exists; `orexis:name` is current, not stale
         candidates.setdefault(name, []).append(term)
-    settled = {AG + n: v[0] for n, v in candidates.items() if len(v) == 1}
-    contested = {AG + n: v for n, v in candidates.items() if len(v) > 1}
+    settled = {OREXIS + n: v[0] for n, v in candidates.items() if len(v) == 1}
+    contested = {OREXIS + n: v for n, v in candidates.items() if len(v) > 1}
     return settled, contested
 
 
@@ -209,11 +209,11 @@ def stale(st) -> dict[str, dict[str, str | list[str] | None]]:
     than moved. All three are refusals; only the first can be migrated.
 
     The successor is found by LOCAL NAME among what the vocabulary declares, whatever namespace
-    the old spelling wore. The map used to know only kernel spellings — `ag:X` became `pkg:X`,
+    the old spelling wore. The map used to know only kernel spellings — `orexis:X` became `pkg:X`,
     the shape of the great sweep — and that quietly assumed a term moves namespace at most once.
     The sensing rename broke the assumption: a volume authored after the sweep holds
     `perception:slowSleepS`, an old spelling that never was a kernel one, and mapping it needs
-    nothing more than the same lookup unanchored from `ag:`. `renames()` keeps the kernel view,
+    nothing more than the same lookup unanchored from `orexis:`. `renames()` keeps the kernel view,
     which is that lookup's oldest special case.
 
     Public graphs are excluded because they are not the agent's: `refresh_public` replaces them
@@ -239,7 +239,7 @@ def stale(st) -> dict[str, dict[str, str | list[str] | None]]:
         candidates = by_local.get(_local(term), [])
         if position != "predicate" and not candidates:
             # An instance and a term are the same shape of IRI, so only a recognisable rename
-            # makes an object or a subject worth flagging. `ag:fern_agent` lives here and is
+            # makes an object or a subject worth flagging. `orexis:fern_agent` lives here and is
             # not a term — no declared term shares its name, so it is left alone.
             continue
         out.setdefault(graph, {})[term] = (

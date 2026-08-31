@@ -36,9 +36,9 @@ def _actuators_q(agent_uri: str) -> str:
 SELECT ?actuator ?localId ?subject ?subjectId ?commandTopic ?mlPerSecond ?maxDoseMl ?statusTopic
 WHERE {{
   <{agent_uri}> actuation:hasActuator ?actuator .
-  ?actuator ag:localId ?localId ; actuation:actuates ?subject ; mqtt:commandTopic ?commandTopic ;
+  ?actuator orexis:localId ?localId ; actuation:actuates ?subject ; mqtt:commandTopic ?commandTopic ;
             actuation:mlPerSecond ?mlPerSecond ; actuation:maxDoseMl ?maxDoseMl .
-  OPTIONAL {{ ?subject ag:localId ?subjectId }}
+  OPTIONAL {{ ?subject orexis:localId ?subjectId }}
   OPTIONAL {{ ?sensor sensing:samples ?sample }}
   OPTIONAL {{ ?actuator mqtt:statusTopic ?statusTopic }}
  }}"""

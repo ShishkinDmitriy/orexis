@@ -1,4 +1,4 @@
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix rgbled: <http://example.org/orexis/rgb-led#> .
@@ -26,7 +26,7 @@
 :CommonPinRole a mc:PinRole ; rdfs:label "common" ;
     rdfs:comment """The shared return of all three colours. Neither a ground nor a power leg, which is exactly why it is its own role and why Wokwi calls it COM: WHICH of the two it is, is the wire's business and not the part's. Tied to ground it is a common-cathode LED and a leg driven HIGH lights; tied to a rail it is common-anode and the logic inverts.
 
-Modelling it as ag:GroundPinRole was a small lie that only held for half the parts in the world, and it broke the moment a common-anode one was wired — the leg stopped being nameable at all, because the mapping was keyed on a role the part no longer had.""" .
+Modelling it as orexis:GroundPinRole was a small lie that only held for half the parts in the world, and it broke the moment a common-anode one was wired — the leg stopped being nameable at all, because the mapping was keyed on a role the part no longer had.""" .
 
 :RedPinRole a mc:OutputRole ; rdfs:label "red" .
 :GreenPinRole a mc:OutputRole ; rdfs:label "green" .

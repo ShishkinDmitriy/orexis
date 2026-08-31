@@ -1,7 +1,7 @@
 @prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
@@ -23,7 +23,7 @@ actuation:ActuatingAgentShape a sh:NodeShape ;
 actuation:ActuatorShape a sh:NodeShape ;
     rdfs:comment "An actuator delivers to exactly one subject, carries its own calibration and hard cap — so dosing is a fact about the actuator, not a constant in code — and states the short name the broker's ACL is written from. It does NOT state where it takes its commands: that is a sentence in a transport's words, and mqtt:MqttActuatorShape says it of every actuator on a bus (a-shape-belongs-to-the-vocabulary-it-checks). The name used to arrive from device:DeviceShape, which reached it because an actuator was required to be a physical device; an actuator is not (a-stand-in-is-not-a-device)." ;
     sh:targetClass sosa:Actuator ;
-    sh:property [ sh:path ag:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path orexis:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
     sh:property [ sh:path actuation:actuates ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path actuation:mlPerSecond ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] ;

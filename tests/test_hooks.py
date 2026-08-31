@@ -14,7 +14,7 @@ import pytest
 from assembly import loader
 from assembly.contribute import contributions_of
 from agent.module import Module
-from orexis_agent_progression.ontology import AG, DESIRES, HANDLE, REPORTS, SEND
+from orexis_agent_progression.ontology import OREXIS, DESIRES, HANDLE, REPORTS, SEND
 from conftest import build_agent, wired_sensors
 
 
@@ -41,7 +41,7 @@ def test_the_kernels_defaults_carry_the_kernels_terms():
 def test_an_override_by_name_inherits_the_term(monkeypatch):
     fern = build_agent("fern", monkeypatch=monkeypatch)
     keeper = fern.module("intention")
-    assert keeper.answer(REPORTS) == keeper.reports, "reports() overridden by name still answers ag:reports"
+    assert keeper.answer(REPORTS) == keeper.reports, "reports() overridden by name still answers orexis:reports"
 
 
 def test_a_hook_nobody_declared_is_refused(monkeypatch):
@@ -60,7 +60,7 @@ def test_the_transport_answers_send_and_nothing_else_does(monkeypatch):
 
 # --- the rows (layered-by-timescale-and-interruptibility) --------------------------------
 
-REACTIVE = AG + "Reactive"
+REACTIVE = OREXIS + "Reactive"
 
 
 ASSEMBLY = "http://example.org/orexis/assembly#"
@@ -81,8 +81,8 @@ def test_every_run_time_point_declares_which_row_answering_it_belongs_to():
     run_time = {d for d in declared if not d.startswith(ASSEMBLY)}
     assert run_time, "no run-time points found — the split stopped matching"
     missing = sorted(run_time - set(rows))
-    assert not missing, f"run-time points with no ag:row: {missing}"
-    assert set(rows.values()) <= {AG + "Reactive", AG + "Progression", AG + "Deliberative"}
+    assert not missing, f"run-time points with no orexis:row: {missing}"
+    assert set(rows.values()) <= {OREXIS + "Reactive", OREXIS + "Progression", OREXIS + "Deliberative"}
     stray = sorted(d for d in declared if d.startswith(ASSEMBLY) and d in rows)
     assert not stray, f"assembly-time points carrying a cognitive row: {stray}"
 
@@ -90,8 +90,8 @@ def test_every_run_time_point_declares_which_row_answering_it_belongs_to():
 def test_the_rows_say_what_the_records_say():
     rows = loader.extension_rows()
     assert rows[HANDLE] == REACTIVE, "a message arriving is reactive: classify and write"
-    assert rows[AG + "take"] == AG + "Progression", "taking a committed act spans time"
-    assert rows[AG + "desireUrgency"] == AG + "Deliberative", "measuring a want is the search's"
+    assert rows[OREXIS + "take"] == OREXIS + "Progression", "taking a committed act spans time"
+    assert rows[OREXIS + "desireUrgency"] == OREXIS + "Deliberative", "measuring a want is the search's"
 
 
 def test_a_reactive_hook_never_reaches_the_planner(monkeypatch):

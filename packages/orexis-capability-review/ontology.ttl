@@ -1,7 +1,7 @@
 @prefix review: <http://example.org/orexis/review#> .
 @prefix : <http://example.org/orexis/review#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
@@ -24,7 +24,7 @@
 #  worked out at genesis and wiring is one input, and there IS a premise here: an agent given room
 #  to move must be able to use it. See rules.ru.
 
-:ReviewCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+:ReviewCapability a owl:Class ; rdfs:subClassOf orexis:Capability ;
     rdfs:label "Review capability" ;
     rdfs:comment "The family. Rules true of reviewing however it is done target this class, so nothing is restated per implementation, and one capability may ask for 'whoever reviews' without knowing which way it does it." .
 
@@ -34,7 +34,7 @@
 :Consulting a :ReviewCapability ; rdfs:label "Consulting" ;
     rdfs:comment "The agent asks something else to choose — a language model, an oracle, a person. RESERVED: declared so the vocabulary is honest that the judgement is the replaceable part, but no rule grants it and no module implements it. Whatever answers would still be held to the same range and the same shapes, so it could be wrong and not unsafe. Adding it is a directory." .
 
-:reviewIntervalS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+:reviewIntervalS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
     rdfs:label "review interval (s)" ;
     rdfs:comment "The FLOOR between two arisings, not the schedule. A review plans its own next one from when its decision could possibly show an effect — checking sooner than a fresh window of readings can accumulate is looking at the same evidence twice. This figure only stops it planning something absurdly soon. Required of an agent that reviews, exactly as sensing:fastSleepS is required of one that subscribes; what says whether an agent reviews at all is whether it was given any room to move." .
 
@@ -64,10 +64,10 @@
 :Mandate a owl:Class ; rdfs:label "Mandate" ;
     rdfs:comment "How far one agent may re-pick one term. Stated in the world by whoever ratified it, because latitude granted is a governance fact and not an opinion. Its presence is what grants the review capability: room to move, and the ability to use it, are the same decision said once. Named for what everyone already called it: 'Commitment' collided twice — vf:Commitment is a promised economic flow, which is the CLAIM (settlement-speaks-rea), and BDI's commitment is an INTENTION — see knowledge/decisions/a-mandate-is-not-a-commitment.md." .
 
-:commits a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range :Mandate ;
+:commits a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range :Mandate ;
     rdfs:label "commits" ;
     rdfs:comment "Reads as what the world commits this agent to — the range it may move within, and by stating it, the grant of the capability to move at all." .
-:limitedTo a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range :Mandate ;
+:limitedTo a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range :Mandate ;
     rdfs:label "limited to" ;
     rdfs:comment """What the EQUIPMENT allows this agent, as against what the world does. The third source `ranges()` has always named and never had: constitution, mandate, hardware.
 
@@ -90,8 +90,8 @@ DERIVED, never stated. `capabilities/sensing/rules.ru` computes it from the sens
 #  ingest path knows nothing about them. (Whether they belong to sensing instead is issue #65
 #  and a separate argument.)
 
-:SummariesGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Summaries graph" ;
-    ag:graphPrefix "http://example.org/orexis/graph/summaries/" ;
+:SummariesGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Summaries graph" ;
+    orexis:graphPrefix "http://example.org/orexis/graph/summaries/" ;
     rdfs:comment "What ONE agent's readings came to. Apart from :sensed on purpose, and the separation is what makes the write boundary checkable: :sensed is the measurement record, written by whatever observed and never by a review, while a summary is the agent's own derived account of its own past. In one graph, 'a review does not touch the sensed record' would have been untestable — and an invariant nothing can check is a comment." .
 
 :ObservationSummary a owl:Class ; rdfs:label "Observation summary" ;
@@ -116,8 +116,8 @@ DERIVED, never stated. `capabilities/sensing/rules.ru` computes it from the sens
 
 #################  What a review saw, derived at each arising  #################
 
-:EvidenceGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Evidence graph" ;
-    ag:graphPrefix "http://example.org/orexis/graph/evidence/" ;
+:EvidenceGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Evidence graph" ;
+    orexis:graphPrefix "http://example.org/orexis/graph/evidence/" ;
     rdfs:comment "The reviewer's own scratch: statistics derived from the summaries, plus the range each revisable term may move in. Rebuilt at every arising and never read by anything else, so a rule can be plain SPARQL over well-known terms instead of arithmetic." .
 
 :Evidence a owl:Class ; rdfs:label "Evidence" ;
@@ -136,8 +136,8 @@ DERIVED, never stated. `capabilities/sensing/rules.ru` computes it from the sens
 
 #################  What it decided, and when to look again  #################
 
-:RevisionsGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Revisions graph" ;
-    ag:graphPrefix "http://example.org/orexis/graph/revisions/" ;
+:RevisionsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Revisions graph" ;
+    orexis:graphPrefix "http://example.org/orexis/graph/revisions/" ;
     rdfs:comment "What ONE agent has decided about itself. Append-only, and apart from the beliefs graph so that the beliefs graph still holds exactly one value per term — which is what every capability's shapes are written against. Deliberately NOT validated: it is the record of a decision, not a belief anyone acts on." .
 
 :Revision a owl:Class ; rdfs:label "Revision" ;

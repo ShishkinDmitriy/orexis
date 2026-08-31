@@ -116,7 +116,7 @@ def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
             f'        <{KERNEL}atDepth> {depth} ;\n'
             f'{reached}'
             f'        <{KERNEL}verdict> "{verdict}" .\n')
-    #  The chosen candidate is named rather than duplicated: a reader joining `ag:chose` to the
+    #  The chosen candidate is named rather than duplicated: a reader joining `orexis:chose` to the
     #  candidate gets its depth, its lever and the world it would reach, and the trace never
     #  says the same number twice in two places where they could drift apart.
     took = ""
@@ -181,7 +181,7 @@ def effort(query) -> dict[str, float]:
     """
     from orexis_agent_progression.store import bindings
 
-    #  `?c a ag:Candidate` is load-bearing, not tidiness: `ag:verdict` is deliberately declared
+    #  `?c a orexis:Candidate` is load-bearing, not tidiness: `orexis:verdict` is deliberately declared
     #  with NO domain because a pass and a candidate both carry one, so a query that forgot to
     #  say which it meant would count the six pass outcomes among the five candidate ones.
     counted = bindings(query(f"""

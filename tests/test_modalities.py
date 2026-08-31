@@ -11,7 +11,7 @@ import pytest
 from agent import genesis
 
 from assembly import loader
-from orexis_agent_progression.ontology import AG, PROVENANCE_GRAPH, beliefs_graph
+from orexis_agent_progression.ontology import OREXIS, PROVENANCE_GRAPH, beliefs_graph
 from orexis_agent_progression.store import bindings
 
 from conftest import genesis_store
@@ -33,7 +33,7 @@ def types_of(st, graph_iri: str) -> set[str]:
 
 def arrival_of(st, graph_iri: str) -> set[str]:
     rows = bindings(st.query_union(
-        f"SELECT ?a WHERE {{ <{graph_iri}> <{AG}arrivedBy> ?a }}"))
+        f"SELECT ?a WHERE {{ <{graph_iri}> <{OREXIS}arrivedBy> ?a }}"))
     return {r["a"].rsplit("#", 1)[-1] for r in rows}
 
 
@@ -75,7 +75,7 @@ def test_an_agents_own_graphs_classify_themselves(tmp_path, monkeypatch):
     """A per-agent graph cannot be declared in the vocabulary — the agent does not exist until
     it does — so it says what it is at boot, into a PUBLIC classification graph.
 
-    Public deliberately: a modality-scoped query asks `?d a ag:DesireGraph` and must resolve
+    Public deliberately: a modality-scoped query asks `?d a orexis:DesireGraph` and must resolve
     it without naming any graph instance, which is the rule that stops a query reading part of
     the truth. The static graphs have always been classified in the ontology graph, which is
     public too; the per-agent ones were going to `provenance`, which sits outside the default
@@ -84,7 +84,7 @@ def test_an_agents_own_graphs_classify_themselves(tmp_path, monkeypatch):
     st = genesis_store()
     genesis.classify_own_graphs(st, "fern")
     resolved = {r["g"] for r in bindings(st.query(
-        f"SELECT ?g WHERE {{ ?g a <{AG}PickRecordGraph> }}"))}
+        f"SELECT ?g WHERE {{ ?g a <{OREXIS}PickRecordGraph> }}"))}
     assert beliefs_graph("fern") in resolved, (
         "an unscoped, instance-free query must find what this agent's graphs are")
     kinds = types_of(st, beliefs_graph("fern"))
@@ -100,8 +100,8 @@ def test_the_modality_vocabulary_is_closed():
     arrival is a design decision, not a term someone adds in passing."""
     st = genesis_store()
     declared = {r["m"].rsplit("#", 1)[-1] for r in bindings(st.query(
-        f"SELECT ?m WHERE {{ ?m rdfs:subClassOf <{AG}Graph> }}"))}
+        f"SELECT ?m WHERE {{ ?m rdfs:subClassOf <{OREXIS}Graph> }}"))}
     assert MODALITIES <= declared
     arrivals = {r["a"].rsplit("#", 1)[-1] for r in bindings(st.query(
-        f"SELECT ?a WHERE {{ ?a a <{AG}Arrival> }}"))}
+        f"SELECT ?a WHERE {{ ?a a <{OREXIS}Arrival> }}"))}
     assert arrivals == ARRIVALS

@@ -177,7 +177,7 @@ Rebuild only when a **dependency** changes (`pyproject.toml`) or you added a fil
 image copies rather than mounts:
 
 ```bash
-podman build -t orexis:local .
+podman build -t ag:local .
 podman compose up -d --force-recreate
 ```
 

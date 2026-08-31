@@ -29,7 +29,7 @@ through affordances. Nothing needs a second decision path.
 
 ## It is the seat the design reserved
 
-`ag:ConstraintGraph` has been a CLASS since desire was built, and its comment says why: *"a
+`orexis:ConstraintGraph` has been a CLASS since desire was built, and its comment says why: *"a
 class rather than one graph, because desire may have more than one source and a reader must not
 have to know how many."* One source has existed all along — the region deduced from the ranges
 a subject states. This is the second, and it needs no new reader: `store.query` merges every
@@ -76,7 +76,7 @@ it ratifies a mandate rather than a belief.
 ## What shipped first, and why in that order
 
 Implemented as DATA before it drives acts, deliberately: a claim issued raises a
-`ag:Obligation` in a graph of the agent's own — counterparty, claim, presented-flag, two
+`orexis:Obligation` in a graph of the agent's own — counterparty, claim, presented-flag, two
 timestamps — stepped to demanded on presentation and discharged when the dose goes out, kept
 after payment because a debt paid and a debt forgotten must not look alike. Redemption itself
 still runs where it always ran, so nothing regressed while the motivation layer grew under
@@ -131,7 +131,7 @@ silently dropped from a dict.
 
 ## Owing is its own capability (#233)
 
-A debt was kept inside `desire:Deducing`, whose premise is a STAKE — `ag:actsFor` a subject that
+A debt was kept inside `desire:Deducing`, whose premise is a STAKE — `orexis:actsFor` a subject that
 states what it needs. `world/simulation`'s city has no stake: it acts for a mains that states a
 capacity and no ranges. So it deduced no region, composed no desire module, and recorded not one
 of the claims it had been issuing and redeeming all day. Under the step-9 framing that is the
@@ -175,7 +175,7 @@ facts were sayable in authored and entailed terms (`market:matchesBy`, `market:o
   [#255](https://github.com/ShishkinDmitriy/orexis/issues/255), the way the note said it had to
   be: the state is *this claim discharged* — a pattern over the record the planner's met-test
   asks of whatever world it judges — and the act stayed an affordance (`ag:Apply`, whose
-  effect rule now states what serving makes true, sized from the record's own `ag:amountL`).
+  effect rule now states what serving makes true, sized from the record's own `orexis:amountL`).
 - **What becomes of the honoured row.** ANSWERED: disclosure survived, the filter did not, and
   the row gained a job nobody had planned for it — it is how an obligation finds the lever that serves
   its counterparty. A pass about a PROPERTY still passes over honoured rows, which is not a

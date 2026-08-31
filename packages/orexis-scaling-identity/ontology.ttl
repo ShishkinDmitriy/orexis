@@ -1,5 +1,5 @@
 @prefix sensing: <http://example.org/orexis/sensing#> .
-@prefix ag:          <http://example.org/orexis#> .
+@prefix orexis:          <http://example.org/orexis#> .
 @prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:         <http://www.w3.org/2002/07/owl#> .
 @prefix scaling: <http://example.org/orexis/scaling#> .
@@ -7,7 +7,7 @@
 
 <http://example.org/orexis/scaling> a owl:Ontology ;
     rdfs:label "Orexis scalings" ;
-    rdfs:comment """How a raw value becomes a QUANTITY — the last of the three stages a reading passes through. Two things happen here and only one of them is arithmetic: a raw number is SCALED by whatever curve this device follows, and the result is given a UNIT. The second is easy to forget and bites first, because a board reporting several properties puts a soil moisture of 0.183 and an air humidity of 0.46 in the same store looking identical while meaning different things. A family borne by a BINDING rather than by an agent — so what is derived at genesis is a fact about the SENSOR, scaling:scaledBy, and not ag:hasCapability on anyone. Same mechanism as a capability, same discipline of premise-then-conclusion; only the bearer and the predicate differ. See knowledge/decisions/bytes-become-a-quantity-in-stages.md.""" .
+    rdfs:comment """How a raw value becomes a QUANTITY — the last of the three stages a reading passes through. Two things happen here and only one of them is arithmetic: a raw number is SCALED by whatever curve this device follows, and the result is given a UNIT. The second is easy to forget and bites first, because a board reporting several properties puts a soil moisture of 0.183 and an air humidity of 0.46 in the same store looking identical while meaning different things. A family borne by a BINDING rather than by an agent — so what is derived at genesis is a fact about the SENSOR, scaling:scaledBy, and not orexis:hasCapability on anyone. Same mechanism as a capability, same discipline of premise-then-conclusion; only the bearer and the predicate differ. See knowledge/decisions/bytes-become-a-quantity-in-stages.md.""" .
 
 #################  The family  #################
 
@@ -20,7 +20,7 @@
 
 :scaledBy a owl:ObjectProperty ; rdfs:range :Scaling ;
     rdfs:label "scaled by" ;
-    rdfs:comment "THE CONCLUSION, derived at genesis by rules.ru and never written by hand: which scaling actually serves this sensor. A world states the curve a probe follows; genesis writes down what serves it. The same premise-and-conclusion discipline as sensing:senseMode and ag:hasCapability, applied to a fact borne by a binding rather than by an agent." .
+    rdfs:comment "THE CONCLUSION, derived at genesis by rules.ru and never written by hand: which scaling actually serves this sensor. A world states the curve a probe follows; genesis writes down what serves it. The same premise-and-conclusion discipline as sensing:senseMode and orexis:hasCapability, applied to a fact borne by a binding rather than by an agent." .
 
 #################  The unit  #################
 

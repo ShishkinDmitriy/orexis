@@ -4,7 +4,7 @@ title: Actor
 term: http://example.org/orexis#takenBy
 description: >-
   The code an affordance is linked to — the module that carries a committed step out. Found
-  through one triple, `ag:takenBy`, which the package shipping a row states on the means the
+  through one triple, `orexis:takenBy`, which the package shipping a row states on the means the
   row offers, so the kernel dispatches by asking the T-Box and never names a package. Exposes
   `take(act, desire, intention)`, the choir hook that turns a committed act into a nudge, a bid,
   a dose or a serve; answers False where it cannot act now, and the intention stands.
@@ -20,12 +20,12 @@ link from a row to its code is a **fact in the graph** rather than a dispatch ta
 # The triple
 
 ```turtle
-sensing:Observing   ag:takenBy sensing:SensingCapability .
-market:Acquiring    ag:takenBy market:Bidding .
-actuation:Dosing    ag:takenBy actuation:Actuation .
-market:Offering     ag:takenBy market:Hosting .
-market:Serving      ag:takenBy market:Hosting .
-market:Presenting   ag:takenBy market:Bidding .
+sensing:Observing   orexis:takenBy sensing:SensingCapability .
+market:Acquiring    orexis:takenBy market:Bidding .
+actuation:Dosing    orexis:takenBy actuation:Actuation .
+market:Offering     orexis:takenBy market:Hosting .
+market:Serving      orexis:takenBy market:Hosting .
+market:Presenting   orexis:takenBy market:Bidding .
 ```
 
 Each is stated on the [action](/domain/action.md) node itself, beside the precondition and the
@@ -36,7 +36,7 @@ another: `agent.providers(family)`, through the T-Box, and every member of the f
 the step. That plural is deliberate — the gardener holds two sensing modules and only one can
 nudge a probe — and it is the same reason `providers` exists at all.
 
-**A means with no `ag:takenBy` is a means no plan can execute.** None ships that way any
+**A means with no `orexis:takenBy` is a means no plan can execute.** None ships that way any
 more — `ag:Offer` was the last, and `market:Offering` gave it a row, an effect and the host as
 its taker. A package that ships a *row* for a means and states no taker has shipped an
 intention nothing can carry out, and `tests/test_execution.py` refuses that at the gate rather than letting the ledger fill

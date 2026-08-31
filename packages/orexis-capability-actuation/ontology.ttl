@@ -1,6 +1,6 @@
 @prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix : <http://example.org/orexis/actuation#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
@@ -10,7 +10,7 @@
     rdfs:label "Orexis actuation" ;
     rdfs:comment """Touching the physical world. Held by the RESOURCE OWNER, not by the agent that won — a claim is a claim on the owner, redeemed by it. Dosing is a fact about the hardware and is stated on the device, so recalibrating is a genesis edit rather than a code change.""" .
 
-:Actuation a ag:Capability ; rdfs:label "Actuation" ;
+:Actuation a orexis:Capability ; rdfs:label "Actuation" ;
     rdfs:comment "The agent may drive actuators it owns, bounded by a validated claim and by the device's own cap. No plant agent has this: winning water is not the same as being able to open a valve." .
 
 #  `actuation:Actuator` was here, and it was `sosa:Actuator` wearing our name.
@@ -34,7 +34,7 @@
 :Valve a owl:Class ; rdfs:subClassOf sosa:Actuator ; rdfs:label "Valve" ;
     rdfs:comment "Opens for a bounded time to deliver to one subject. Not a device:Device: every valve this project has ever run is stood in for, and a class that asserted a physical node would have made each of those worlds contradict itself. An instance that IS built says so. Verifies its command before acting and runs its own fail-safe." .
 
-:hasActuator a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sosa:Actuator ;
+:hasActuator a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range sosa:Actuator ;
     rdfs:label "has actuator" .
 :actuates a owl:ObjectProperty ; rdfs:domain sosa:Actuator ;
     rdfs:label "actuates" ;
@@ -61,6 +61,6 @@
 #  the agent's own instruction — it cannot both ask a valve for a ninety-second pour and call
 #  the valve late after thirty.
 
-:doseGraceS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+:doseGraceS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
     rdfs:label "dose grace seconds" ;
     rdfs:comment "How long after a dose SHOULD have finished this agent still waits for the device to say it did. Added to the open-seconds the agent computed for that dose, never used alone: the deadline is this dose's own duration plus this slack. Silence past it is not proof the water did not flow — the report may simply be lost — which is why it is reported and counted rather than acted on. See knowledge/decisions/an-unconfirmed-dose-is-not-a-delivered-one.md." .

@@ -54,8 +54,8 @@ An agent that its world gives room to move gets the ability to use the room. One
 rule, in `packages/orexis-capability-review/rules.ru`:
 
 ```sparql
-INSERT { GRAPH $derived { ?agent ag:hasCapability review:Reckoning } }
-WHERE  { ?agent a ag:Agent ; review:commits ?commitment . ?commitment review:onTerm ?term }
+INSERT { GRAPH $derived { ?agent orexis:hasCapability review:Reckoning } }
+WHERE  { ?agent a orexis:Agent ; review:commits ?commitment . ?commitment review:onTerm ?term }
 ```
 
 Nothing declares it, nothing is listed anywhere, and there is no separate switch that could
@@ -149,7 +149,7 @@ nothing fails when a belief base merely grows.
 So `BeliefBaseUpkeep` now runs its own hourly timer, started and stopped by the runtime. This is
 also the right line and not just the safe one: **compaction is not a choice.** No agent decides
 whether to reclaim its own disk, nothing could be done differently, and by rule 2 that makes it a
-function rather than a capability. The ratio it fires on (`ag:maxBytesPerTriple`) stayed in the
+function rather than a capability. The ratio it fires on (`orexis:maxBytesPerTriple`) stayed in the
 kernel ontology with it.
 
 `agent/metrics.py` reflects the split. `belief_compactions` comes off the kernel and every agent

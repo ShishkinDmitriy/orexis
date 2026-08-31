@@ -1,10 +1,10 @@
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix rgbled: <http://example.org/orexis/rgb-led#> .
 @prefix mc: <http://example.org/orexis/microcontroller#> .
 
-ag:RgbLedShape a sh:NodeShape ;
+orexis:RgbLedShape a sh:NodeShape ;
     rdfs:comment "All three colours, or the missing one silently never lights — indistinguishable, from across the room, from the board being asleep. Expressed with qualified value shapes rather than SPARQL because a SPARQL constraint may not contain VALUES: SHACL binds $this that way itself." ;
     sh:targetClass rgbled:RgbLed ;
     sh:property [ sh:path ( mc:hasPin mc:pinRole ) ; sh:hasValue rgbled:RedPinRole ;

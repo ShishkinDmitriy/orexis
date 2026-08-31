@@ -7,7 +7,7 @@
 # project EMITS it, and only this shape has to recognise it.
 @prefix qudt11-unit: <http://qudt.org/1.1/vocab/unit#> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
@@ -35,7 +35,7 @@ sensing:PerceivingAgentShape a sh:NodeShape ;
 sensing:SensorShape a sh:NodeShape ;
     rdfs:comment "A sensor reads exactly one subject, says which property it observes, and states the short name everything outside RDF calls it by — its dashboard row, its bucket, its line in the ACL. That last used to arrive from device:DeviceShape, which reached it because a sensor was required to be a physical device; a sensor is not (a-stand-in-is-not-a-device), so the requirement moved to the role that actually needs it. How it is DRIVEN is no longer its fact to state (#96): the clock is the device's, demanded of every speaking device by the transport's shapes, and a sensor reaches its mode through the stream it shares with its board." ;
     sh:targetClass sosa:Sensor ;
-    sh:property [ sh:path ag:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path orexis:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
     sh:property [ sh:path sensing:monitors ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path sosa:observes ; sh:minCount 1 ; sh:nodeKind sh:IRI ] .
 
@@ -103,7 +103,7 @@ sensing:ObservationShape a sh:NodeShape ;
     sh:property [ sh:path sosa:usedProcedure ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:class sensing:SenseMode ;
                   sh:message "an observation says how it was made — one of the three sense modes, which is what its sensor already states" ] ;
-    sh:property [ sh:path ag:underWorldVersion ; sh:minCount 1 ; sh:datatype xsd:integer ] ;
+    sh:property [ sh:path orexis:underWorldVersion ; sh:minCount 1 ; sh:datatype xsd:integer ] ;
     sh:property [ sh:path prov:wasGeneratedBy ; sh:minCount 1 ; sh:nodeKind sh:IRI ;
                   sh:message "every reading carries an author" ] .
 
@@ -215,11 +215,11 @@ given, so validate_agent never targets this — the same scoping as the wiring s
 
 #################  The stake  #################
 #
-#  Were `ag:DesirerShape` and `ag:BeyondSurvivalShape` in the kernel's shapes, targeted on
+#  Were `orexis:DesirerShape` and `orexis:BeyondSurvivalShape` in the kernel's shapes, targeted on
 #  "acts for a subject that states what it needs" — `ssn-system:hasOperatingRange`, this
 #  package's premise for the region want it derives in `desires.ru`. A shape whose target is
 #  a sensing sentence is a sensing shape (the-stake-is-sensings-want). The kernel keeps
-#  `ag:KeeperShape`, which asks the same agents for a patience, targeted on the want itself.
+#  `orexis:KeeperShape`, which asks the same agents for a patience, targeted on the want itself.
 
 sensing:DesirerShape a sh:NodeShape ;
     rdfs:comment """An agent that acts for a subject stating what it needs must end up with at least one region. The two are derived from very nearly the same premise and can still come apart: the grant asks only that the subject state a range, and the deduction additionally asks that every range applying to a property AGREE. A plant whose pot says 0.45-0.65 in a world whose instrument says 0.10-0.30 produces an empty intersection, no region, and — without this shape — an agent that starts, holds the capability, and quietly has no opinion about anything.
@@ -235,7 +235,7 @@ That failure is the one this whole design is most exposed to, because its sympto
                            <https://schema.org/maxValue> ?max .
             }
         """ ] ;
-    sh:property [ sh:path ag:holds ; sh:minCount 1 ;
+    sh:property [ sh:path orexis:holds ; sh:minCount 1 ;
                   sh:message "this agent acts for a subject that states what it needs, but no region survived intersecting those ranges — check that every range stated for a property actually overlaps" ] .
 
 sensing:UnwatchedRegionShape a sh:NodeShape ;
@@ -330,7 +330,7 @@ sensing:AimShape a sh:NodeShape ;
 
 
 sensing:DeducedRegionShape a sh:NodeShape ;
-    rdfs:comment "What a deduced region or envelope must be to be readable by the code that will divide by its width — the property-shaped half of what was `ag:DesireShape`, whose kernel half still checks whose state a met-test is about and with what force. Every figure here was computed, so this is arithmetic rather than authorship; a check over derived data is worth exactly as much as one over authored data when the reader is code." ;
+    rdfs:comment "What a deduced region or envelope must be to be readable by the code that will divide by its width — the property-shaped half of what was `orexis:DesireShape`, whose kernel half still checks whose state a met-test is about and with what force. Every figure here was computed, so this is arithmetic rather than authorship; a check over derived data is worth exactly as much as one over authored data when the reader is code." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {

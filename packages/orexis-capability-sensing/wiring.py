@@ -73,7 +73,7 @@ SELECT ?sensor ?localId ?subject ?subjectId ?observes ?senseMode ?bus ?readingTo
        ?readingPointer ?commandTopic ?decodedBy ?scaledBy ?quantityUnit ?sample ?alarm
 WHERE {{
   <{agent_uri}> sensing:polls ?sensor .
-  ?sensor ag:localId ?localId ; sensing:monitors ?subject ; sosa:observes ?observes .
+  ?sensor orexis:localId ?localId ; sensing:monitors ?subject ; sosa:observes ?observes .
   # The mode is the DEVICE's (#96), reached through the stream the sensor shares with it —
   # a peripheral has no clock of its own, and its board's answer is the only answer there is.
   OPTIONAL {{ ?sensor mqtt:readingTopic ?stream .
@@ -83,7 +83,7 @@ WHERE {{
   # because which values a board can watch is a hardware fact per channel: a ULP reaches the
   # analog probe and never the DHT. The board wakes for any watched channel that crosses.
   OPTIONAL {{ ?sensor ssn:implements sensing:AlarmProcedure . BIND(true AS ?alarm) }}
-  OPTIONAL {{ ?subject ag:localId ?subjectId }}
+  OPTIONAL {{ ?subject orexis:localId ?subjectId }}
   OPTIONAL {{ ?sensor sensing:samples ?sample }}
   OPTIONAL {{ ?sensor mqtt:onBus ?bus }}
   OPTIONAL {{ ?sensor mqtt:readingTopic ?readingTopic }}

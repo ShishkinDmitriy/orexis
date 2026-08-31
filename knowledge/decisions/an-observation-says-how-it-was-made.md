@@ -79,13 +79,13 @@ is too wide to say that with. The same reasoning kept the *relation* ours in the
 
 ```turtle
 ag:obs_fern_SoilMoisture a sosa:Observation ;
-    sosa:hasFeatureOfInterest ag:fern ;
+    sosa:hasFeatureOfInterest orexis:fern ;
     sosa:observedProperty water:SoilMoisture ;
     sosa:hasSimpleResult "0.183"^^xsd:decimal ;
     sosa:resultTime "…"^^xsd:dateTime ;
     sosa:madeBySensor :moisture_sensor_fern ;
     sosa:usedProcedure sensing:ScheduledProcedure ;
-    ag:underWorldVersion 1 ;
+    orexis:underWorldVersion 1 ;
     prov:wasGeneratedBy :fern_agent .
 ```
 
@@ -137,7 +137,7 @@ reach across the boundary. Saying it once, in one dict, is what stops the next o
 
 The other five: prefixed TTL and SPARQL, a `term()` builder, a Python constant, a full IRI inside
 a `sh:sparql` `VALUES` clause in `transports/mqtt/shapes.ttl` — the form `tests/test_store.py`'s
-scan cannot see — and prose still spelling them `ag:` from before the namespace sweep.
+scan cannot see — and prose still spelling them `orexis:` from before the namespace sweep.
 
 One of those prose copies is in `onboarding/compose.py`, four lines above the `_SIM_MODE` lookup,
 and it is **emitted into every generated `compose.yaml`**. So the rename changes a generated

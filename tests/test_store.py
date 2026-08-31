@@ -18,7 +18,7 @@ from orexis_agent_progression import store
 
 from assembly import loader
 
-# `?s ag:foo ?o` — a prefixed name in a query. Deliberately loose; false positives are
+# `?s orexis:foo ?o` — a prefixed name in a query. Deliberately loose; false positives are
 # filtered by requiring the prefix to look like one, and a false positive here is a
 # prefix somebody should have declared anyway.
 _PREFIXED = re.compile(r"(?<![\w:<#/-])([a-zA-Z][\w.-]*):[a-zA-Z_]")
@@ -128,7 +128,7 @@ def test_every_package_namespace_reaches_the_prefixes_a_query_is_sent_with():
     """
     found = loader.prefixes()
     assert found, "no project-internal namespaces found — the ontology glob has gone stale"
-    assert "ag" in found, "the base vocabulary's own namespace is missing from the assembly"
+    assert "orexis" in found, "the base vocabulary's own namespace is missing from the assembly"
     missing = set(found) - store.DECLARED
     assert not missing, (
         f"{sorted(missing)} are declared by a package's ontology.ttl but are not in "
@@ -189,8 +189,8 @@ def test_one_external_label_bound_two_ways_is_refused(tmp_path, monkeypatch):
 # what the namespace sweep found seven ways of making: a term named by its FULL IRI in the
 # kernel namespace, when the package that declares it has a namespace of its own.
 #
-#     <{AG}bidsIn>                interpolated in the sovereign's tooling
-#     AG + "Sensor"               concatenated
+#     <{OREXIS}bidsIn>                interpolated in the sovereign's tooling
+#     OREXIS + "Sensor"               concatenated
 #     "http://example.org/orexis#SoilMoisture"   a plain constant
 #     term("slowSleepS")          the kernel builder, imported into a package or a test
 #
@@ -201,7 +201,7 @@ def test_one_external_label_bound_two_ways_is_refused(tmp_path, monkeypatch):
 # guard did not fire because a second query kept the dict non-empty.
 # The three forms that spell the kernel namespace outright, whatever the file.
 _KERNEL_IRI = re.compile(
-    r'(?:\{AG\}|AG \+ "|"http://example\.org/orexis#)([A-Za-z][A-Za-z0-9]*)')
+    r'(?:\{OREXIS\}|OREXIS \+ "|"http://example\.org/orexis#)([A-Za-z][A-Za-z0-9]*)')
 # And the fourth, which is only the kernel's when the KERNEL's builder is the one in scope. A
 # package's own `terms.py` defines a `term()` into its own namespace and every capability
 # imports that one — same call, different answer, which is precisely the confusion this sweep
@@ -244,10 +244,10 @@ def _kernel_terms() -> set[str]:
     one goes quiet — it would read an empty file, declare nothing, and pass every case below.
 
     And parsed rather than pattern-matched, which is the other half and was learnt the hard way.
-    This read `^ag:(\w+)` off the file's TEXT, so a block of Turtle sitting INSIDE an
+    This read `^orexis:(\w+)` off the file's TEXT, so a block of Turtle sitting INSIDE an
     `rdfs:comment` literal counted as declarations: the lines begin at column zero and look
     exactly right. That is not hypothetical — five terms were inserted into the middle of
-    `ag:Intention`'s comment, the file parsed, the suite went green, and the terms were prose.
+    `orexis:Intention`'s comment, the file parsed, the suite went green, and the terms were prose.
     A reader that greps cannot tell a declaration from a description of one, which is the same
     objection AGENTS.md already records against the vendored OKF check.
     """
@@ -259,7 +259,7 @@ def _kernel_terms() -> set[str]:
 
 
 def test_the_vocabulary_declares_what_it_appears_to_declare():
-    """Every `ag:Term` at the start of a line is a term the PARSER sees too.
+    """Every `orexis:Term` at the start of a line is a term the PARSER sees too.
 
     The specific shape of the bug above, named so it cannot come back quietly: Turtle nested in
     a literal is invisible to rdflib and indistinguishable to a regex. Anything the text offers
@@ -267,7 +267,7 @@ def test_the_vocabulary_declares_what_it_appears_to_declare():
     clothes.
     """
     text = loader.KERNEL.file(loader.ONTOLOGY).read_text()
-    looks_declared = set(re.findall(r"^ag:([A-Za-z][A-Za-z0-9]*)\b", text, re.M))
+    looks_declared = set(re.findall(r"^orexis:([A-Za-z][A-Za-z0-9]*)\b", text, re.M))
     really_declared = _kernel_terms()
     assert looks_declared, "the declaration pattern stopped matching — this guard is vacuous"
     swallowed = sorted(looks_declared - really_declared)
@@ -284,10 +284,10 @@ def test_the_kernel_vocabulary_is_still_found():
 
 @pytest.mark.parametrize("path", _ALL_TREES, ids=lambda p: p.name)
 def test_no_source_names_a_moved_term_in_the_kernel_namespace(path):
-    """A full IRI in `ag:` must name something the kernel declares.
+    """A full IRI in `orexis:` must name something the kernel declares.
 
     Instances are exempt and are the reason this is a name check rather than a ban: a world's
-    `<http://example.org/orexis/world/simulation#moisture_sensor_fern>` is a thing, not a term, and lives in `ag:` correctly. So the rule
+    `<http://example.org/orexis/world/simulation#moisture_sensor_fern>` is a thing, not a term, and lives in `orexis:` correctly. So the rule
     is not "never spell out the kernel namespace" — it is that when you do, the local name has
     to be one the kernel actually has.
     """
@@ -339,7 +339,7 @@ def test_an_ontology_gives_its_own_terms_the_default_prefix():
         if len(onts) != 1:
             continue
         if str(onts[0]) == "http://example.org/orexis/core":
-            # The kernel is the deliberate exception: ag: is the one namespace every world
+            # The kernel is the deliberate exception: orexis: is the one namespace every world
             # and every package speaks, so 'unprefixed means mine' would be a false signal —
             # and the kernel-term census two tests up reads its spellings as written.
             continue
@@ -354,7 +354,7 @@ def test_an_ontology_gives_its_own_terms_the_default_prefix():
 
 
 def test_an_availability_query_leans_on_the_stores_prefixes_like_a_review_rule():
-    """Same contract, third file kind (#207): an action's `ag:available` goes through
+    """Same contract, third file kind (#207): an action's `orexis:available` goes through
     `store.query`, which prepends PREFIXES — declaring them again is a duplicate-prefix error,
     and using an undeclared one fails exactly as a hand-written query would. Non-empty asserted
     first, because a glob that quietly empties has taken cases off a guard twice already."""

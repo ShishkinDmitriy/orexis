@@ -38,24 +38,24 @@ The world graph exists **so the wiring is stated once** instead of being repeate
 agent's beliefs — that is its whole job. It is deliberately thin:
 
 ```turtle
-ag:fern_agent a ag:Agent ; ag:localId "fern" ;
-    ag:actsFor ag:fern ; sensing:polls ag:moisture_sensor_fern ; market:bidsIn ag:barrel1_market .
-ag:moisture_sensor_fern a sensing:Sensor ; sensing:monitors ag:fern ; sensing:senseMode sensing:PolledProcedure .
-ag:valve_fern a actuation:Valve ; actuation:actuates ag:fern ; actuation:mlPerSecond 10.0 .
-ag:supplier a ag:Agent ; actuation:hasActuator ag:valve_fern , … .
+orexis:fern_agent a orexis:Agent ; orexis:localId "fern" ;
+    orexis:actsFor orexis:fern ; sensing:polls orexis:moisture_sensor_fern ; market:bidsIn ag:barrel1_market .
+orexis:moisture_sensor_fern a sensing:Sensor ; sensing:monitors orexis:fern ; sensing:senseMode sensing:PolledProcedure .
+orexis:valve_fern a actuation:Valve ; actuation:actuates orexis:fern ; actuation:mlPerSecond 10.0 .
+orexis:supplier a orexis:Agent ; actuation:hasActuator orexis:valve_fern , … .
 ```
 
 and each agent's own graph carries what it thinks:
 
 ```turtle
-ag:fern_agent sensing:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.55 ] ;
+orexis:fern_agent sensing:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.55 ] ;
     sensing:fastSleepS 30 ; sensing:slowSleepS 600 ; sensing:readingGraceS 45 ;
     water:litresPerFraction 2.0 ; water:maxValuePerL 0.80 .
 ```
 
 # Agent, Sensor, Actuator become first-class
 
-The T-Box gains `ag:Agent`, `sensing:Sensor` (`sosa:Sensor`), `actuation:Actuator`/`actuation:Valve`
+The T-Box gains `orexis:Agent`, `sensing:Sensor` (`sosa:Sensor`), `actuation:Actuator`/`actuation:Valve`
 (`sosa:Actuator`), and the connection properties `actsFor` / `polls` / `hasActuator` /
 `monitors` / `actuates`. (These were first drafted as `agentFor`/`hasSensor`; the later split
 into capability modules renamed them to the transport-neutral forms used above. See
@@ -96,7 +96,7 @@ That is the whole configuration story now.
 
 # The same term in two graphs, meaning two different things
 
-`orexis:litresPerFraction` appears on a *plant* in `:world` (how much water that pot actually
+`ag:litresPerFraction` appears on a *plant* in `:world` (how much water that pot actually
 takes) and on an *agent* in its beliefs (how much it **believes** its pot takes — which is
 what its bid is computed from). They coincide today. An agent that learns would revise its own
 copy, and being wrong about it would cost it money. Modelling the belief separately from the

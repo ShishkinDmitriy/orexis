@@ -9,7 +9,7 @@ description: >-
   not a capability. Every one is granted by its OWN premise, stated in its own `rules.ru`, and
   there is no pattern to fit a new one into — wiring grants some, latitude one, a stake another,
   a stake AND a lever two more. Never hand-declared: `world.ttl` must not contain
-  `ag:hasCapability`, because a capability nobody is answerable for is the thing the rule exists
+  `orexis:hasCapability`, because a capability nobody is answerable for is the thing the rule exists
   against.
 ---
 
@@ -64,14 +64,14 @@ code that reads them was a grant, and a modality nobody may write is not a modal
 kernel's now, granted by nothing.
 
 A stake has not stopped mattering; it stopped being a *grant*. It decides which SHAPES apply —
-`ag:KeeperShape` and the desire shapes target `ag:actsFor` a subject that states what it needs —
+`orexis:KeeperShape` and the desire shapes target `orexis:actsFor` a subject that states what it needs —
 so an agent with nothing to advance for still holds no region and states no patience. What
 changed is that this is now a fact about the agent rather than a thing its world handed it. See
 [the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md).
 
 # Deduced at genesis, never hand-declared
 
-`world.ttl` must not contain `ag:hasCapability`. Two kinds of fact end up there and neither is
+`world.ttl` must not contain `orexis:hasCapability`. Two kinds of fact end up there and neither is
 written by hand:
 
 - **derived** — a strict function of the wiring. A board that keeps an interval gives its agent

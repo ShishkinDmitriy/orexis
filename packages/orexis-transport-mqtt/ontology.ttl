@@ -1,6 +1,6 @@
 @prefix mqtt: <http://example.org/orexis/mqtt#> .
 @prefix : <http://example.org/orexis/mqtt#> .
-@prefix ag:   <http://example.org/orexis#> .
+@prefix orexis:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
@@ -16,7 +16,7 @@
 # thing a process is told by its environment is where the belief base is; the belief base
 # then says everything else, including this.
 
-:Linking a ag:Capability ; rdfs:label "Linking" ;
+:Linking a orexis:Capability ; rdfs:label "Linking" ;
     rdfs:comment "The ability to reach the society over this transport — granted by the FACT of a bus in the world, to every agent, as a sensor grants sensing. The module that holds it owns the connection, hands every message to whoever can handle it, sends for whoever asks, and watches its own session; the kernel has no mailbox (the-kernel-has-no-mailbox)." .
 
 :MessageBus a owl:Class ; rdfs:label "Message bus" ;

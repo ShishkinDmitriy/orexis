@@ -1,6 +1,6 @@
 """An act: an action filled in — and a step: an act at its place in a plan.
 
-An `ag:Action` is a template (a precondition, an effect, a taker). What gets committed, taken
+An `orexis:Action` is a template (a precondition, an effect, a taker). What gets committed, taken
 and promised is a FILLED one — the lever it goes through, the want it serves and what that
 want is about, how much, for whom where it is an obligation's, and WHEN — and until this file it had
 no name: an affordance row carried some of it, an intention some, a commitment some, and the
@@ -24,7 +24,7 @@ class Act:
     action: str                       # which template — `market:Acquiring`, `actuation:Dosing`
     via: str                          # the lever it goes through — this venue, this valve
     want: str | None = None           # the desire it serves, by node
-    about: str | None = None          # what that want is about (`ag:about`), opaque here
+    about: str | None = None          # what that want is about (`orexis:about`), opaque here
     quantity: float | None = None     # how much, sized by the taker — nothing, for a look
     direction: str | None = None      # which way it moves what it is about, where it moves
     for_agent: str | None = None      # whom it serves, where it is an obligation's

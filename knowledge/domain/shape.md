@@ -3,7 +3,7 @@ type: Domain Concept
 title: Shape
 description: >-
   SHACL, and the one language this project says both "you may not" and "I want" in — the
-  difference is SEVERITY, not structure. A violation refuses; `ag:ShouldBecome` is a desire, and a
+  difference is SEVERITY, not structure. A violation refuses; `orexis:ShouldBecome` is a desire, and a
   reader that treated them alike would stop a world onboarding because a plant is thirsty. The
   severity split is ours: the spec defines conformance as no results AT ALL, so a warning would
   block exactly as hard as a violation and be pointless to write. Validated in two places by who
@@ -29,7 +29,7 @@ The structure does not differ; the severity does.
 |---|---|---|
 | `sh:Violation` | this may not be | refuses — a world does not onboard, an agent does not start |
 | `sh:Warning` | legal, worth a look | printed and passed over |
-| `ag:ShouldBecome` | this is wanted | not a finding about the world; it is the state of one |
+| `orexis:ShouldBecome` | this is wanted | not a finding about the world; it is the state of one |
 
 **The severity split is ours, not SHACL's**, and it had to be. The spec defines conformance as
 *no results at all*, so pySHACL reports `conforms: False` for a warning exactly as it does for a
@@ -59,7 +59,7 @@ tomato as missing a band it was never entitled to see.
 than a preference: pySHACL answers `sh:qualifiedValueShape` wrong under `focus_nodes`, measured
 both ways round, and every held shape reaches its readings through one. A focused answer would be
 the wrong answer with nothing to show it had been. Ownership does the scoping instead — a shape an
-agent `ag:holds`, directly or as a desire's met-test one `ag:metWhen` hop away, is a shape about
+agent `orexis:holds`, directly or as a desire's met-test one `orexis:metWhen` hop away, is a shape about
 that agent by construction.
 
 # It is validated against a graph that already holds what the vocabulary implies

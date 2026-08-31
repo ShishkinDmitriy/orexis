@@ -263,7 +263,7 @@ that is the one move this architecture refuses everywhere. See
 And two that catch people out. **There is no default world** — every command takes one as a
 required argument and `current_world()` refuses rather than guessing, because a fallback puts a
 misconfigured agent on the same topics as the real one. Also: **capabilities are worked out at
-genesis, never hand-declared.** `world.ttl` must not contain `ag:hasCapability`.
+genesis, never hand-declared.** `world.ttl` must not contain `orexis:hasCapability`.
 
 **Wiring is one input, not the definition.** Sensing's are a strict function of the hardware —
 a board that keeps an interval gives its agent `sensing:Subscribing`, and nothing could have decided
@@ -287,8 +287,8 @@ resembles.
 capabilities were granted that way — wanting, committing, deciding — and all three are gone:
 they were the mind, every agent has one, and the STORES they read were already built for every
 agent unconditionally. A modality nobody may write is not a modality. What a stake still decides
-is which SHAPES apply — `ag:KeeperShape` targets a want that is not merely about knowing, and
-sensing's stake shapes target `ag:actsFor` a subject that states what it needs — so
+is which SHAPES apply — `orexis:KeeperShape` targets a want that is not merely about knowing, and
+sensing's stake shapes target `orexis:actsFor` a subject that states what it needs — so
 `world/sensing`'s agent still holds no region and states no patience, by the fact rather than
 by a grant. See
 [the-mind-is-not-a-package](knowledge/decisions/the-mind-is-not-a-package.md),
@@ -465,7 +465,7 @@ fails if pyshacl ever entails something the closure does not. See
 [one-graph-both-engines-read](knowledge/decisions/one-graph-both-engines-read.md).
 
 - **Name the graph CLASS, never an instance — and scope by MODALITY when you leave belief.**
-  `?d a ag:DesireGraph` unions every instance of that class, exactly as `store.public_graphs()`
+  `?d a orexis:DesireGraph` unions every instance of that class, exactly as `store.public_graphs()`
   does, so a scoped query keeps the property the rule below exists to protect. A MODALITY
   class is a legitimate thing to name; a graph instance never is. (This first carried a
   sharper warning — that a want and a fact would share their shape, so an unscoped query would
@@ -476,7 +476,7 @@ fails if pyshacl ever entails something the closure does not. See
 - **Never wrap `GRAPH <…>` around a SELECT.** Public knowledge is SEVERAL graphs — asserted,
   derived and entailed, for the vocabulary and for the world, plus whichever a package owns —
   and `store.query` merges them as the default graph, so an ordinary pattern reads all of them.
-  Never count them: `ag:PublicGraph` is a class and `store.public_graphs()` asks. A basic graph
+  Never count them: `orexis:PublicGraph` is a class and `store.public_graphs()` asks. A basic graph
   pattern inside one `GRAPH` clause must match entirely *within* that graph, so narrowing it
   returns **nothing** the moment a fact you wanted lives elsewhere, silently, because an empty
   result is not an error. Updates are the exception and must name their target; a `rules.ru`
@@ -484,7 +484,7 @@ fails if pyshacl ever entails something the closure does not. See
   a graph *class* is a T-Box term and genesis resolves it, so **no rule names a graph**.
   `tests/test_provenance.py` refuses a narrowed SELECT. See
   [who-put-the-fact-there](knowledge/decisions/who-put-the-fact-there.md).
-- **A graph IRI is an instance, so rule 1 applies to it.** `ag:WorldGraph` is the term code may
+- **A graph IRI is an instance, so rule 1 applies to it.** `orexis:WorldGraph` is the term code may
   name; `…/graph/world` is not, any more than a world's `:fern_agent` is. Ask `store.public_graphs()`.
   Two things are still named and both are writes or the bootstrap root, never a reader
   enumerating what to read — adding a public graph is a vocabulary edit that touches no Python.

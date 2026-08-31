@@ -6,7 +6,7 @@ description: >-
   the repositories it reads and the named graphs it writes — so `planner` holds planning, the
   imaginarium and the action templates rather than each getting a page. Four words, forced —
   Service, Process, Repository, Named Graph. Accepted for the wiring and REFUSED for the
-  dictionary: a term several services share has no service page to live in, and `ag:Act` is
+  dictionary: a term several services share has no service page to live in, and `orexis:Act` is
   written by one, committed by another and taken by a third. The diagram convention is adopted
   whole — a service is the hero and a graph is named by its TYPE, which is the rule the code
   already follows.
@@ -93,13 +93,13 @@ advantage, but PlantUML draws repositories as containers rather than boxes-in-bo
 project already had it. The nine sources were generated FROM the mermaid they replace, so the
 picture and the prose began identical.
 
-**A graph is named by its TYPE, never its instance** — `ag:StateGraph`, not `graph/sensed`. This
+**A graph is named by its TYPE, never its instance** — `orexis:StateGraph`, not `graph/sensed`. This
 is not a drawing convention borrowed from nowhere: it is rule 1 and the store's own discipline,
-which is why a reader asks `?g a ag:StateGraph` and never names a graph. A diagram that named
+which is why a reader asks `?g a orexis:StateGraph` and never names a graph. A diagram that named
 instances would teach the opposite of what the code enforces.
 
 **And the type is not always enough.** `graph/ontology` and `graph/ontology/entailed` are both
-`ag:OntologyGraph`; only `ag:arrivedBy` separates them. So a service writing back into the type
+`orexis:OntologyGraph`; only `orexis:arrivedBy` separates them. So a service writing back into the type
 it read carries the arrival beside it — [inference](/domain/inference.md) is the case, and the
 only one.
 
@@ -109,7 +109,7 @@ only one.
 and a word is defined before it is used. Fold the data pages into service pages and a term used
 by several services has no owner: [act](/domain/act.md) is sized by the planner, committed by
 execution, handed to an [actor](/domain/actor.md), and promised by a
-[commitment](/domain/commitment.md). Putting `ag:Act` inside any one of those pages picks an
+[commitment](/domain/commitment.md). Putting `orexis:Act` inside any one of those pages picks an
 arbitrary owner for a word the other three must speak.
 
 So the split is by **how many services share the word**:
@@ -131,7 +131,7 @@ graph types, `sensing` two, `review` three, `genesis` five. A graph carries auth
 subject, and collapsing to one output per service would conflate them.
 
 What the planner does support is a sharper claim: **one service, one output MODALITY.** It writes
-`ag:PossibleGraph` (a world per search node) and `ag:DeliberationGraph` (the trace) — and the
+`orexis:PossibleGraph` (a world per search node) and `orexis:DeliberationGraph` (the trace) — and the
 second is a subclass of the first, so both are possible-modality: the worlds that die with the
 pass, and the record that survives it because the health series read it.
 

@@ -63,7 +63,7 @@ from .terms import (ACQUIRING, BIDDING, PRESENTING,
 # my own conversion belief below.
 _ABOUT_Q = """
 SELECT ?property ?term WHERE {
-  <%s> market:bidsIn ?m ; ag:actsFor ?subject .
+  <%s> market:bidsIn ?m ; orexis:actsFor ?subject .
   ?m market:marketFor ?src .
   ?src market:supplies ?good .
   ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .

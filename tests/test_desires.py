@@ -217,7 +217,7 @@ def test_every_shipped_stake_resolves_a_declared_measure(monkeypatch):
         monkeypatch.setenv("OREXIS_WORLD", world)
         st = genesis_store(world=world)
         for row in bindings(st.query(
-                'SELECT ?a ?id WHERE { ?a a ag:Agent ; ag:localId ?id }')):
+                'SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }')):
             agent = build_agent(row["id"], st, monkeypatch)
             for prop in sensing_of(agent).regions:
                 probe = ObservedDesire(uri="urn:asked", urgency=1.0, observed_property=prop)

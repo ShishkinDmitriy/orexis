@@ -24,7 +24,7 @@ description: >-
 the words, check ours against it, borrow the words, state the deviations, and import no IRIs
 that nothing consumes. It found no canonical auction ontology and a very good accounting one.
 After [the-dictionary-names-its-terms](the-dictionary-names-its-terms.md) made term-binding a
-gate, the sovereign asked the same question of the mind: is the BDI layer — `ag:Intention`,
+gate, the sovereign asked the same question of the mind: is the BDI layer — `orexis:Intention`,
 the desire shapes, the deliberation modes, the modality graphs — reinventing something a
 standard owns?
 

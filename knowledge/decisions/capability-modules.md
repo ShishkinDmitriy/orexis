@@ -22,7 +22,7 @@ timestamp: 2026-08-03T00:00:00Z
 Configuration had already moved into the belief base (see
 [world-graph](/decisions/world-graph.md)), but the *code* was still full of the world:
 `"sensors/{id}/moisture"` built from a naming convention, `supplier_id = "supplier"`,
-`ag:world` as a well-known IRI, cadence bounds as Python constants, numeric fallbacks
+`orexis:world` as a well-known IRI, cadence bounds as Python constants, numeric fallbacks
 whenever a term was missing. And a single process loaded every agent, which meant the round
 was computed by reading everybody's private valuation — the thing the whole design forbids.
 

@@ -2,7 +2,7 @@
 # record (#312): the desire modality projects it by name, so no modality typing remains.
 #
 # This used to be written out by hand, once per agent, in every world — four lines of
-# `<…/graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .` that had to be kept
+# `<…/graph/beliefs/fern> a orexis:BeliefsGraph ; orexis:beliefsOf orexis:fern_agent .` that had to be kept
 # in step with the roster above them. A second list is a second thing to drift, and this one
 # drifted silently: nothing failed if an agent was added and its line was not.
 #
@@ -13,12 +13,12 @@
 # `$given` and `$derived` are substituted by the loader (see genesis.substitute): a rule says
 # what it concludes and never names a graph.
 
-PREFIX ag:   <http://example.org/orexis#>
+PREFIX orexis:   <http://example.org/orexis#>
 
 INSERT { GRAPH $derived {
-    ?graph a ag:PickRecordGraph ; ag:beliefsOf ?agent } }
+    ?graph a orexis:PickRecordGraph ; orexis:beliefsOf ?agent } }
 $given
 WHERE  {
-    ?agent a ag:Agent ; ag:localId ?id .
+    ?agent a orexis:Agent ; orexis:localId ?id .
     BIND(IRI(CONCAT("http://example.org/orexis/graph/beliefs/", ?id)) AS ?graph)
 }

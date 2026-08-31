@@ -1,6 +1,6 @@
 @prefix sh:        <http://www.w3.org/ns/shacl#> .
 @prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix ag:        <http://example.org/orexis#> .
+@prefix orexis:        <http://example.org/orexis#> .
 @prefix sosa:      <http://www.w3.org/ns/sosa/> .
 @prefix market:    <http://example.org/orexis/market#> .
 @prefix actuation: <http://example.org/orexis/actuation#> .
@@ -10,11 +10,11 @@
 @prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 
 #  THE ACTIONS THIS PACKAGE BRINGS — one node each, and the whole of one (knowledge/domain/action.md):
-#    ag:available  its PRECONDITION — a SELECT over the world binding ?property ?via ?direction,
+#    orexis:available  its PRECONDITION — a SELECT over the world binding ?property ?via ?direction,
 #                  and ?for_agent where the row is a duty owed to someone; `$me` and
 #                  `$properties` substituted by the collector, prefixes prepended by the store;
-#    sh:construct  its EFFECT, with ag:retracts, ag:landsAfter and ag:confirmedBy beside it;
-#    ag:takenBy    the capability whose module carries it out.
+#    sh:construct  its EFFECT, with orexis:retracts, orexis:landsAfter and orexis:confirmedBy beside it;
+#    orexis:takenBy    the capability whose module carries it out.
 #  Precondition, effect and taker were three files and a fourth surface; a STRIPS operator is one
 #  thing, and an author adds a way of acting by adding a node here and a `take()` to a module.
 
@@ -44,11 +44,11 @@
 #      make Acquire indistinguishable from doing nothing, and the search would go on refusing
 #      to bid — which is exactly the bug this closes.
 #
-#  What it must NOT do is hide that. The optimism is why `ag:landsAfter` below is generous and
-#  why `ag:confirmedBy` is by OBSERVATION: nothing is true until a reading says so.
+#  What it must NOT do is hide that. The optimism is why `orexis:landsAfter` below is generous and
+#  why `orexis:confirmedBy` is by OBSERVATION: nothing is true until a reading says so.
 
 market:Acquiring
-    a ag:Action ;
+    a orexis:Action ;
 
     #  AVAILABLE while a ROUND IS OPEN in a market I bid in WHOSE WINNINGS CAN PHYSICALLY REACH
     #  MY SUBJECT: the host
@@ -56,10 +56,10 @@ market:Acquiring
     #  link by link; only the last — that the good RAISES this property — is stated, once, by
     #  the domain, because it is physics. The valuation joins through the venue's good (#198):
     #  property alone put both directions on both rows the day two venues priced one property.
-    ag:available """
+    orexis:available """
         SELECT DISTINCT ?want ?via ?direction WHERE {
           VALUES (?want ?about) { $wants }
-          $me ag:actsFor ?subject .
+          $me orexis:actsFor ?subject .
           $me market:bidsIn ?via .
           ?via market:marketFor ?src .
           ?src market:supplies ?good .
@@ -78,7 +78,7 @@ market:Acquiring
         }""" ;
 
     #  WHO CARRIES IT OUT — the module whose family this names (knowledge/domain/actor.md).
-    ag:takenBy market:Bidding ;
+    orexis:takenBy market:Bidding ;
     rdfs:label "what winning a bid makes true" ;
 
     #  THE SAME ARITHMETIC AS A DOSE, and that is the point rather than a coincidence. Water
@@ -100,7 +100,7 @@ market:Acquiring
                  sosa:resultTime ?now ;
                  sosa:hasSimpleResult ?predicted .
         } WHERE {
-            $me ag:actsFor $subject ; market:bidsIn ?via .
+            $me orexis:actsFor $subject ; market:bidsIn ?via .
             ?via market:marketFor ?source .
             ?source market:supplies ?good .
             ?host market:hosts ?via ; actuation:hasActuator ?lever .
@@ -146,7 +146,7 @@ market:Acquiring
     #  round already open. A bid that has to wait for one lands later than this says, and the
     #  honest name for that gap is the convening seam
     #  (`the-lot-is-the-hosts-standing-offer`), not a number to invent here.
-    ag:landsAfter """
+    orexis:landsAfter """
         SELECT ?seconds WHERE {
             $me market:bidsIn ?via .
             ?via market:redeemWindowS ?window ; market:marketFor ?source .
@@ -171,7 +171,7 @@ market:Acquiring
     #  Retracts NOTHING when it adds nothing, for the same reason and by the same guard: a
     #  zero-size act that removed the standing reading would leave the world blinder than it
     #  found it, which is the opposite of the error above and just as wrong.
-    ag:retracts """
+    orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
             GRAPH $state {
                 ?obs sosa:hasFeatureOfInterest $subject ;
@@ -195,7 +195,7 @@ market:Acquiring
 #  untouched.
 
 market:Offering
-    a ag:Action ;
+    a orexis:Action ;
 
     #  AVAILABLE on a venue I host, while NO round stands on it (in what I hold, or in the
     #  world a plan is imagining — an Offer already taken in this plan leaves no room for a
@@ -208,7 +208,7 @@ market:Offering
     #  ?property is the stock I would be watching, or the good's own property where I watch
     #  nothing — the row needs a name and the intention is keyed by it; no direction, because
     #  offering moves no water. The serve does.
-    ag:available """
+    orexis:available """
         SELECT DISTINCT ?about ?via WHERE {
           $me market:hosts ?via .
           ?via market:marketFor ?source .
@@ -230,7 +230,7 @@ market:Offering
         }""" ;
 
     #  WHO CARRIES IT OUT — the host: it announces, exactly as it always did.
-    ag:takenBy market:Hosting ;
+    orexis:takenBy market:Hosting ;
     rdfs:label "what opening a round makes true" ;
 
     #  THE EFFECT: a round on the venue — the same fact `announce` writes, predicted. It
@@ -258,7 +258,7 @@ market:Offering
     #  AT ONCE, and BY CONSTRUCTION: saying so makes it so. The first effect here confirmed
     #  that way, and the reason the route was declared — nothing is waited for, nothing is
     #  read back; the round exists because the host announced it.
-    ag:landsAfter """
+    orexis:landsAfter """
         SELECT (0 AS ?seconds) WHERE { }""" ;
     .
 
@@ -268,12 +268,12 @@ market:Offering
 #  The buyer's own act with a won claim: hold it until the watch is live, then present it on
 #  the redeem channel. No precondition and no effect here, because no plan chooses it — the
 #  claim arriving IS the adoption, and the watch going live is the trigger (#132). It is a
-#  node so the hold can be a commitment (`ag:by market:Presenting`) and an urgency (a held
+#  node so the hold can be a commitment (`orexis:by market:Presenting`) and an urgency (a held
 #  claim tightens the cadence), now that an intention commits to an action and nothing else.
 
 market:Presenting
-    a ag:Action ;
-    ag:takenBy market:Bidding ;
+    a orexis:Action ;
+    orexis:takenBy market:Bidding ;
     rdfs:label "presenting a held claim" .
 
 
@@ -290,12 +290,12 @@ market:Presenting
 #  chaining would be.
 #
 #  THE AMOUNT HAS ONE SOURCE: the obligation record, written when the claim was issued
-#  (`ag:amountL`). An obligation recorded before the amount existed simply never binds here —
+#  (`orexis:amountL`). An obligation recorded before the amount existed simply never binds here —
 #  unplannable, still servable by the honoured row, which is the graceful arrival every
 #  widening in this repo is held to.
 
 market:Serving
-    a ag:Action ;
+    a orexis:Action ;
 
     #  AVAILABLE as a DUTY — ?for_agent bound — for each buyer this venue admits who acts for a
     #  subject my valve serves: the ACL's shape applied to obligation, so a presentation from
@@ -303,14 +303,14 @@ market:Serving
     #  stated need, not the good alone (#198 from the other side): a valve serving a pot must not
     #  also claim to move that pot's stored litres. Disclosure, not a filter — what an obligation
     #  makes me do arrives as a want, and the deliberator ranges over it like any other.
-    ag:available """
+    orexis:available """
         SELECT ?about ?via ?direction ?for_agent WHERE {
           $me market:hosts ?venue ; actuation:hasActuator ?via .
           ?venue market:marketFor ?source .
           ?via actuation:drawsFrom ?source ;
                actuation:actuates ?subject .
           ?source market:supplies ?good .
-          ?for_agent market:bidsIn ?venue ; ag:actsFor ?subject .
+          ?for_agent market:bidsIn ?venue ; orexis:actsFor ?subject .
           ?subject ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?about .
           ?valuation market:ofGood ?good ;
                      market:aboutProperty ?about ;
@@ -318,20 +318,20 @@ market:Serving
         }""" ;
 
     #  WHO CARRIES IT OUT — the module whose family this names (knowledge/domain/actor.md).
-    ag:takenBy market:Hosting ;
+    orexis:takenBy market:Hosting ;
     rdfs:label "what serving a presented claim makes true" ;
 
     sh:construct """
         CONSTRUCT {
-            ?obl ag:dischargedAt ?now .
+            ?obl orexis:dischargedAt ?now .
             ?obs a sosa:Observation ;
                  sosa:hasFeatureOfInterest ?vessel ;
                  sosa:observedProperty ?levelProp ;
                  sosa:resultTime ?now ;
                  sosa:hasSimpleResult ?left .
         } WHERE {
-            ?obl a ag:Obligation ; ag:forClaim $claim ; ag:amountL ?litres .
-            FILTER NOT EXISTS { ?obl ag:dischargedAt ?done }
+            ?obl a orexis:Obligation ; orexis:forClaim $claim ; orexis:amountL ?litres .
+            FILTER NOT EXISTS { ?obl orexis:dischargedAt ?done }
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:drawsFrom ?vessel .
             ?vessel ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?levelProp .
@@ -347,9 +347,9 @@ market:Serving
     #  WHEN IT LANDS: the valve's own open-seconds for the recorded amount, the identical
     #  arithmetic the dose and the bid state, off the same public device facts — a deadline
     #  computed anywhere else would be a second claim about when the world should answer.
-    ag:landsAfter """
+    orexis:landsAfter """
         SELECT ?seconds WHERE {
-            ?obl a ag:Obligation ; ag:forClaim $claim ; ag:amountL ?litres .
+            ?obl a orexis:Obligation ; orexis:forClaim $claim ; orexis:amountL ?litres .
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:maxDoseMl ?cap ;
                    actuation:mlPerSecond ?rate .
@@ -365,10 +365,10 @@ market:Serving
 
     #  The vessel reading it replaces — and ONLY when the premise held, by the same guard:
     #  a dry vessel must not lose its standing reading to a serve that never happened.
-    ag:retracts """
+    orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
-            ?obl a ag:Obligation ; ag:forClaim $claim ; ag:amountL ?litres .
-            FILTER NOT EXISTS { ?obl ag:dischargedAt ?done }
+            ?obl a orexis:Obligation ; orexis:forClaim $claim ; orexis:amountL ?litres .
+            FILTER NOT EXISTS { ?obl orexis:dischargedAt ?done }
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:drawsFrom ?vessel .
             ?vessel ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?levelProp .

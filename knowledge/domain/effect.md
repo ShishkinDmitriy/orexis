@@ -3,10 +3,10 @@ type: Domain Concept
 title: Effect
 description: >-
   What taking an action would MAKE TRUE, stated on the action's own node in SHACL-AF's words
-  — a construct for what it adds, and `ag:retracts` for what it
+  — a construct for what it adds, and `orexis:retracts` for what it
   removes, which is ours because the standard has no deletion. It is what turns an affordance
   row from "this is available" into something a planner can reason about, and it carries the
-  timing (`ag:landsAfter`) so that
+  timing (`orexis:landsAfter`) so that
   the number a planner predicts and the number a keeper later verifies cannot be two numbers.
   Most means have no effect, and that is an ordinary answer.
 ---
@@ -20,7 +20,7 @@ matching a desire to a lever means asking what the lever would make true.
 So the effect sits on the [action](/domain/action.md) node itself, beside the availability
 query and the taker, loaded into the action graph at genesis. The vocabulary is SHACL Advanced Features' — `sh:construct` for the query yielding
 the triples applying it would add. One
-term is ours, `ag:retracts`, because the standard has none: SHACL rules exist to add entailments,
+term is ours, `orexis:retracts`, because the standard has none: SHACL rules exist to add entailments,
 so nothing in it can say a thing stops being true.
 
 **The engine is not SHACL's.** pySHACL will execute a `sh:SPARQLRule`, but only forward-chaining
@@ -68,11 +68,11 @@ the failure would look like a device lying rather than like arithmetic disagreei
 
 Two more terms hang off the rule, for the same single-source reason one axis over.
 
-`ag:landsAfter` is a SELECT yielding `?seconds`: how long until the WORLD CHANGE completes. A
+`orexis:landsAfter` is a SELECT yielding `?seconds`: how long until the WORLD CHANGE completes. A
 query and not a number, because the duration is a function of the act — a two-litre dose holds a
 valve open longer than a half-litre one. **Zero is a real answer** and the honest one for a look.
 
-**There was a second term here, and it is gone.** `ag:confirmedBy` named the route by which an
+**There was a second term here, and it is gone.** `orexis:confirmedBy` named the route by which an
 effect becomes knowable — by construction, by report, by observation, or not at all — and every
 shipped effect answered *by observation*, so it discriminated nothing. The planner once read it to
 decide which acts end a plan, which meant every lever ended one and the search never reached its

@@ -5,7 +5,7 @@ description: >-
   Seven terms were declared, stated on every action an author ships, and required by SHACL —
   and nothing branched on the answer, because every shipped effect gave the same one. Retired,
   with the constitutive/causal distinction kept in prose. The cognitive rows were audited the
-  same way and REFUSED retirement: `assembly/loader.py` reads `ag:row`, and a test built on it
+  same way and REFUSED retirement: `assembly/loader.py` reads `orexis:row`, and a test built on it
   holds a reactive hook out of the search — which is exactly the enforcement a retirement would
   have thrown away.
 status: accepted
@@ -19,9 +19,9 @@ reader — or a `.rq`, `.ru` or shape names it, or a ratified world instantiates
 
 | terms | stated on | read by |
 |---|---|---|
-| `ag:ConfirmationRoute`, its four routes, `ag:confirmedBy` | all 6 actions, **required** by `ag:ActionShape` | nothing |
+| `ag:ConfirmationRoute`, its four routes, `orexis:confirmedBy` | all 6 actions, **required** by `ag:ActionShape` | nothing |
 | `ag:Modality` | nothing at all | nothing |
-| `ag:Row`, its three individuals, `ag:row` | all 18 hooks | **`assembly/loader.py::extension_rows()`** |
+| `orexis:Row`, its three individuals, `orexis:row` | all 18 hooks | **`assembly/loader.py::extension_rows()`** |
 
 # The routes are retired
 
@@ -49,7 +49,7 @@ agent wrote down what it just wrote down. It never needed an IRI to say so.
 
 They looked identical from the kernel: eighteen declarations, no consumer in `agent/`,
 `packages/` or `onboarding/`. **The reader is in `assembly/`** — `extension_rows()` parses every
-ontology for `ag:row`, and three tests consume it. One of them,
+ontology for `orexis:row`, and three tests consume it. One of them,
 `test_a_reactive_hook_never_reaches_the_planner`, holds a delivered message out of the search on
 the delivering thread: it was a strict xfail until
 [#392](https://github.com/ShishkinDmitriy/orexis/issues/392) landed, and it is the enforcement
@@ -69,7 +69,7 @@ them dead and be wrong, which is why #430 asked for one and does not get one.
 # Seams left open
 
 - **The graph classes and arrival individuals are unmeasured.** Readers ask for the parent
-  (`ag:PublicGraph`), so a subclass may be structural rather than dead, and telling those apart
+  (`orexis:PublicGraph`), so a subclass may be structural rather than dead, and telling those apart
   needs a different question than this one.
-- **A column SELECTed and never indexed is invisible to every gate here.** `ag:confirmedBy` was
+- **A column SELECTed and never indexed is invisible to every gate here.** `orexis:confirmedBy` was
   read out of the store into a dict and dropped for two releases.

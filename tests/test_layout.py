@@ -97,7 +97,7 @@ def test_no_scan_rederives_what_the_loader_already_assembles(tree):
 
     What it cost: one parametrised case lost from the subclass-path scan; the kernel's whole
     vocabulary dropped from two term censuses; every IRI in `agent/*.py` unread by the linker.
-    Two real defects hid in the gap — `ag:amountL`, undeclared and in use for months, and five
+    Two real defects hid in the gap — `orexis:amountL`, undeclared and in use for months, and five
     terms of a change sitting inside an `rdfs:comment` as prose, which the suite passed over.
 
     So the rule is not "remember to include the kernel". It is that a scan does not get to
@@ -161,7 +161,7 @@ def test_the_kernel_stands_alone_with_no_packages_at_all(tmp_path, monkeypatch):
             "with no packages the build should be the two roots — what assembles, and what it "
             f"assembles onto — got {[p.name for p in found]}")
         assert loader.registry() == {}, "no packages, no capabilities to implement"
-        assert loader.prefixes().get("ag"), "the kernel still declares its own namespace"
+        assert loader.prefixes().get("orexis"), "the kernel still declares its own namespace"
 
         #  And it is a WORKING build, not just a non-empty list: the kernel ships all four of
         #  the things a package may ship, and the vocabulary it declares is really there.
@@ -305,14 +305,14 @@ def test_the_society_hosting_agrees_with_the_wiring():
 
     NOT symmetric, and sharing a word does not change that — the reason is stronger than
     `silence is not contradiction`. **The society legitimately hosts things the wiring does
-    not.** `ag:air_sensor_fern sosa:hosts` its two channels and the wiring names neither of
+    not.** `orexis:air_sensor_fern sosa:hosts` its two channels and the wiring names neither of
     them; a simulated device has no wiring at all. So a society-side pair with no counterpart
     cannot be an error, and unwiring — deleting a part from `hardware.ttl` while the society
     still hosts it — is still not caught. Closing that needs a rule that can tell a board's
     hosting from a part's, which nothing here can: the society does not type the board as a
     `mc:Microcontroller`, because `mc:` is exactly what the test above forbids it.
 
-    The other direction is likewise deliberate. `ag:status_led_fern` is hosted by the board and
+    The other direction is likewise deliberate. `orexis:status_led_fern` is hosted by the board and
     absent from the society, which is correct: an agent polls sensors and has no business
     knowing about an indicator it can never observe.
     """
@@ -382,7 +382,7 @@ def test_the_society_repeats_every_limit_the_wiring_states():
 
     The vocabulary states it ONCE and reaches instances by entailment: `dht11:Dht11` is put under
     an `owl:hasValue` restriction, so a sovereign that loads the wiring observes the capability on
-    `ag:air_sensor_fern` with nobody having written it there. What that does NOT cross is the
+    `orexis:air_sensor_fern` with nobody having written it there. What that does NOT cross is the
     boundary — an agent is given no `a dht11:Dht11`, so nothing entails anything for it, and the
     society must still repeat the number. An agent may know a part's properties and not its
     identity. See knowledge/decisions/what-is-true-of-a-part-is-true-of-every-one-of-them.md.
@@ -513,7 +513,7 @@ def test_a_packages_python_namespace_is_the_one_its_ontology_declares():
             continue
         ns = getattr(importlib.import_module(f"{package.import_name}.terms"), "NS", None)
         if ns is None:
-            continue  # a package still living in the kernel's `ag:` names no namespace of its own
+            continue  # a package still living in the kernel's `orexis:` names no namespace of its own
         declared = {iri for iri in loader.prefixes().values()}
         assert ns in declared, (
             f"{package.name}/terms.py declares NS={ns!r}, which no ontology.ttl declares as a "
@@ -532,7 +532,7 @@ def test_a_packages_python_namespace_is_the_one_its_ontology_declares():
 # Instances that AGENTS.md names on purpose, as the thing rule 1 forbids. They are not terms and
 # must never be declared — naming them here is what keeps the check below from being weakened to
 # "any word with a colon in it".
-_COUNTER_EXAMPLES = {"ag:fern_agent", "ag:world"}
+_COUNTER_EXAMPLES = {"orexis:fern_agent", "orexis:world"}
 
 
 @pytest.mark.parametrize("doc", ["README.md", "AGENTS.md"])
@@ -540,7 +540,7 @@ def test_the_docs_only_name_terms_that_exist(doc):
     """Every `prefix:Term` in the two entry documents is declared by some package.
 
     Written after finding EIGHT in README.md that no vocabulary had declared since the namespace
-    split — `ag:senseMode`, `ag:Subscribing`, `ag:readingTopic` and five more. Every one had a
+    split — `orexis:senseMode`, `orexis:Subscribing`, `orexis:readingTopic` and five more. Every one had a
     live successor in another namespace, so the prose was not vague, it was wrong, and nothing
     failed: a renamed term leaves no dangling reference for a reader to trip over.
 
@@ -563,7 +563,7 @@ def test_the_docs_only_name_terms_that_exist(doc):
     inverse = {iri: label for label, iri in loader.prefixes().items()}
     declared = set()
     #  Shapes as well as ontologies. A SHAPE is a declared thing and prose may legitimately
-    #  name one — AGENTS.md cites `ag:KeeperShape` to say what a stake still decides. While the
+    #  name one — AGENTS.md cites `orexis:KeeperShape` to say what a stake still decides. While the
     #  shapes lived in packages this cost nothing to miss, because the docs happened not to name
     #  one; the kernel's shapes are named in the entry documents now.
     for path in loader.ontology_files() + loader.shapes_files():
@@ -576,7 +576,7 @@ def test_the_docs_only_name_terms_that_exist(doc):
                 for ns, label in inverse.items():
                     if str(node).startswith(ns):
                         declared.add(f"{label}:{str(node)[len(ns):]}")
-    known = set(loader.prefixes()) | {"ag"}
+    known = set(loader.prefixes()) | {"orexis"}
 
     named = {t for t in re.findall(r"`([a-z][a-z0-9-]*:[A-Za-z][A-Za-z0-9_]*)`",
                                    (REPO_ROOT / doc).read_text())
@@ -652,11 +652,11 @@ def test_the_kernel_names_no_domain():
 
 
 def test_the_kernel_namespace_holds_no_individuals():
-    """A world owns its individuals; ag: is the vocabulary's (#179's other half).
+    """A world owns its individuals; orexis: is the vocabulary's (#179's other half).
 
-    Every ag: name a world file uses must be a term the core ontology declares — classes,
+    Every orexis: name a world file uses must be a term the core ontology declares — classes,
     properties, the shared individuals the kernel itself defines. A world's OWN things (its
-    agents, sensors, pins, its ag:world node as was) live in that world's namespace, declared
+    agents, sensors, pins, its orexis:world node as was) live in that world's namespace, declared
     with the empty prefix, so the A-Box/T-Box split rule 1 polices in code is structural in
     the files. Parse-based, so a spelling choice can never fool it.
 
@@ -667,18 +667,18 @@ def test_the_kernel_namespace_holds_no_individuals():
 
     from assembly import loader
 
-    AG = "http://example.org/orexis#"
+    OREXIS = "http://example.org/orexis#"
     core = rdflib.Graph()
     core.parse(loader.KERNEL.file(loader.ONTOLOGY), format="turtle")
     declared = {str(n) for t in core for n in t
-                if isinstance(n, rdflib.URIRef) and str(n).startswith(AG)}
+                if isinstance(n, rdflib.URIRef) and str(n).startswith(OREXIS)}
 
     checked = 0
     for path in sorted((REPO_ROOT / "world").glob("*/**/*.ttl")):
         g = rdflib.Graph()
         g.parse(path, format="turtle")
         strays = {str(n) for t in g for n in t
-                  if isinstance(n, rdflib.URIRef) and str(n).startswith(AG)} - declared
+                  if isinstance(n, rdflib.URIRef) and str(n).startswith(OREXIS)} - declared
         assert not strays, (
             f"{path.relative_to(REPO_ROOT)} puts {sorted(strays)} in the kernel namespace, "
             "and the vocabulary declares none of them — a world's individuals belong in the "

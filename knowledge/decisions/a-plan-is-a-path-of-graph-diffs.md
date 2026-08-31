@@ -175,7 +175,7 @@ observation* — extra triples, and a recent date? Then intentions must construc
 may hold more than one action, and possible worlds might be worth keeping in the store.
 
 **The first half is already true, which is the useful thing to notice.** Since a desire became a
-shape, what fern holds is not a triple: it is a property shape walking `ag:actsFor` and then the
+shape, what fern holds is not a triple: it is a property shape walking `orexis:actsFor` and then the
 inverse of `sosa:hasFeatureOfInterest`, demanding `sh:qualifiedMinCount 1` over a shape that
 matches `sosa:observedProperty` AND `sosa:hasSimpleResult` in range. That is *there exists an
 observation, of this property, about my subject, whose value is inside my region* — existence
@@ -203,7 +203,7 @@ shown:
   can state that without predicting the number.
 
 A CONSTRUCT can predict it, because this project already computes that prediction: the keeper
-records `ag:expectsDelta` when it adopts an Apply, and actuation converts millilitres to a
+records `orexis:expectsDelta` when it adopts an Apply, and actuation converts millilitres to a
 delta. Which forces a constraint worth naming before anyone writes the code: **the number an
 effect predicts and the number verification expects must come from one source.** Two sources
 means an agent that plans against one future and checks against another, and the disagreement
@@ -376,7 +376,7 @@ is contingent planning, and the bounded answer this project should take is the s
 sensing action ends a plan. Look, then decide again with a reading in hand.
 
 **Nothing enforces this but the effect itself, and that is the right amount.** The search once
-carried a guard, reading `ag:confirmedBy ag:ByObservation` to spot a sensing act — a different
+carried a guard, reading `orexis:confirmedBy ag:ByObservation` to spot a sensing act — a different
 question whose answer is the same for every lever here, so the guard matched all of them,
 nothing was ever added to the next depth, and the search never went past one step at all (#254).
 Removing it changes no behaviour: Observe's effect predicts the value it found, so the world it

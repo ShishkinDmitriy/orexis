@@ -21,8 +21,8 @@ than a mutable state.
 
 ![planner — what it reads and writes](../diagrams/service-planner.svg)
 
-**One service, one output modality.** `ag:DeliberationGraph` is a subclass of
-`ag:PossibleGraph`, so both writes are possible-modality: the worlds that die with the pass, and
+**One service, one output modality.** `orexis:DeliberationGraph` is a subclass of
+`orexis:PossibleGraph`, so both writes are possible-modality: the worlds that die with the pass, and
 the trace that survives because the health series read it.
 
 # What it is not

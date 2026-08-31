@@ -21,7 +21,7 @@ IRIs the kernel spells out. It found nine in the kernel's **RDF** that none of i
 described, and parked them as `UNCLASSIFIED`, because deciding their fate was not a guard's
 business. [#337](https://github.com/ShishkinDmitriy/orexis/issues/337) is that decision.
 
-`ag:KeeperShape` says, in its own `rdfs:comment`, that it cannot be scoped by a lever because
+`orexis:KeeperShape` says, in its own `rdfs:comment`, that it cannot be scoped by a lever because
 
 > the kernel would then name `market:bidsIn`, `actuation:hasActuator` and `sensing:polls` — three
 > packages the kernel would then depend on, which is the layering this whole arrangement exists to
@@ -174,7 +174,7 @@ Two of the six rows are cheap deletions, one is a real bug, and the last three a
 somewhere for the knowledge to live — which is the honest reason they are last, rather than a claim
 that they are fine where they are.
 
-# `ag:KeeperShape` — the comment was right, and it now has a better reason
+# `orexis:KeeperShape` — the comment was right, and it now has a better reason
 
 Under the strict rule the comment's original claim needs no defending: it says the kernel must not
 name `market:bidsIn`, `actuation:hasActuator` and `sensing:polls`, and that is the rule. The shape
@@ -232,7 +232,7 @@ written to support.
 
 # Consequences
 
-- `ag:KeeperShape`'s comment keeps its original claim and gains the open-set argument. No target
+- `orexis:KeeperShape`'s comment keeps its original claim and gains the open-set argument. No target
   and no constraint moved — the shape's behaviour on every shipped world is unchanged.
 - The ratchet's `UNCLASSIFIED` block is reclassified in place: nine occurrences, all debt, in the
   order above, each saying what removes it. What the test *enforces* is untouched, and **#334's
@@ -241,7 +241,7 @@ written to support.
   eighteen since #339 retired the reflex. Corrected, and the ratchet named as the count of record
   so the number is not restated in two places again.
 - [the-mind-is-not-a-package](the-mind-is-not-a-package.md) says the same thing about the lever
-  half that `ag:KeeperShape` does, and under this rule it needed no amendment. It briefly carried
+  half that `orexis:KeeperShape` does, and under this rule it needed no amendment. It briefly carried
   one, from this record's first ruling; it was reverted.
 
 # Seams left open
@@ -289,7 +289,7 @@ kernel's `sosa:` went with it: `store.PREFIXES` no longer declares a vocabulary 
 not speak, and the `SOSA` constant is `onboarding/namespaces.py`'s. The scan then widened — every
 namespace, both forms, resolved — and what it found in the kernel was not the market vocabulary
 this record feared but the BUS: four `mqtt:` terms in `agent/world.py`'s one query, and the
-reachability check in `ag:SimulatedDeviceShape`. Both are on the list as a fifth kind, with the
+reachability check in `orexis:SimulatedDeviceShape`. Both are on the list as a fifth kind, with the
 transport package answering "where is the bus" itself as what removes them. The
 namespace constants — the ratchet's third kind, twelve once every namespace was scanned for —
 have since left the way `SOSA` did, to `onboarding/namespaces.py`: nothing in the kernel read

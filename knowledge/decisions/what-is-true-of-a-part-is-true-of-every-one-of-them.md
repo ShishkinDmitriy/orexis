@@ -108,7 +108,7 @@ materialises.
 
 ## One consequence, immediately
 
-A restriction is a class, so `ag:air_sensor_fern a _:restriction` follows from rule 3 — true, and
+A restriction is a class, so `orexis:air_sensor_fern a _:restriction` follows from rule 3 — true, and
 **unaskable**, because a blank node has no name to put in a query. That is precisely the "true,
 useless" category the closure exists to leave out, alongside `every resource is an rdfs:Resource`.
 Rules 2 and 3 gained `isIRI(?super)`, which was unnecessary until the vocabulary contained its
@@ -120,7 +120,7 @@ first class expression and is load-bearing from now on. See
 The entailment fires **in the sovereign's graph**, and stops there.
 
 `genesis.world_files` gives the sovereign every `.ttl` in a world — the society *and* `hardware.ttl`
-— so it holds `ag:air_sensor_fern a dht11:Dht11` and rule 5 has its premise. `genesis.society_files`
+— so it holds `orexis:air_sensor_fern a dht11:Dht11` and rule 5 has its premise. `genesis.society_files`
 is what an agent is mounted, and it excludes the wiring, so an agent is never told which part it
 holds. Rule 5 runs in the agent's store too and finds nothing to fire on, because the class
 membership is not there.
@@ -148,7 +148,7 @@ The others are not the same kind of fact, which is the bound worth stating rathe
 |---|---|---|
 | what every instance can honour | `dht11:Dht11` | this one — the reader needs it on an instance |
 | `mc:modelName`, `wokwi:part`, `wokwi:pin` | `dht11:Dht11`, `esp32:DevKitC`, `probe:CapacitiveMoistureProbe`, `rgbled:RgbLed` | read *as* class facts. `orexis-wokwi` and `orexis-firmware` hold the class in hand and want the part's drawing, not each instance's copy of it |
-| a family's parameter | `sensing:SensingCapability` (`minSleepS`, `maxSleepS`, `reviewWindow`), `ag:BeliefBase` (`maxBytesPerTriple`) | not "true of every instance" — a default the vocabulary states once and readers ask the *family* for |
+| a family's parameter | `sensing:SensingCapability` (`minSleepS`, `maxSleepS`, `reviewWindow`), `orexis:BeliefBase` (`maxBytesPerTriple`) | not "true of every instance" — a default the vocabulary states once and readers ask the *family* for |
 
 So the mechanism generalises to every future part with a datasheet, and to nothing else currently
 in the tree. That is a small return today and the right one: the alternative was inventing

@@ -20,13 +20,13 @@ and left eleven in the kernel that are not true of every agent. `ag:SelfReportin
 was a different kind of wrong from the rest: not misplaced, but **self-contradictory**.
 
 ```turtle
-ag:SelfReporting a owl:Class ; rdfs:subClassOf ag:Capability ;
+ag:SelfReporting a owl:Class ; rdfs:subClassOf orexis:Capability ;
     rdfs:comment "… NOT derived and NOT composed onto anyone: every agent reports …"
 ```
 
 The axiom says capability; the prose on the next line says it is granted to nobody and held by
 everybody. It appeared in no world, no `rules.ru` granted it, and nothing enumerates subclasses of
-`ag:Capability` — so it leaked into no behaviour. A capability that nothing grants and nothing
+`orexis:Capability` — so it leaked into no behaviour. A capability that nothing grants and nothing
 requires is a convention, not a fact.
 
 # The question that was being asked wrong
@@ -58,14 +58,14 @@ it, exactly as `review:Consulting` and `sensing:Polling` are.
 **Granted by a rule whose premise is being an agent:**
 
 ```sparql
-INSERT { GRAPH $derived { ?agent ag:hasCapability reporting:Storing } }
-WHERE  { ?agent a ag:Agent }
+INSERT { GRAPH $derived { ?agent orexis:hasCapability reporting:Storing } }
+WHERE  { ?agent a orexis:Agent }
 ```
 
-Derived, never declared — `world.ttl` still contains no `ag:hasCapability` and the prohibition is
+Derived, never declared — `world.ttl` still contains no `orexis:hasCapability` and the prohibition is
 untouched.
 
-**And insisted upon.** `reporting:EveryAgentReportsShape` refuses an `ag:Agent` holding no member
+**And insisted upon.** `reporting:EveryAgentReportsShape` refuses an `orexis:Agent` holding no member
 of the family. That is what makes *mandatory* a fact the world is held to rather than a convention
 nobody checks, and it is the difference from the state this record replaces. Verified by disabling
 the grant: three worlds go from `Conforms: True` to `Conforms: False`, with *"every agent must
@@ -196,4 +196,4 @@ kept coming back. They are not the same fact, and only the second could ever be 
   the one this record recommends.
 - **Nothing checks that a declared capability is granted by something.** This one was found by a
   sweep that happened to read every term. A test could ask it of every `rdfs:subClassOf
-  ag:Capability`, and none does.
+  orexis:Capability`, and none does.

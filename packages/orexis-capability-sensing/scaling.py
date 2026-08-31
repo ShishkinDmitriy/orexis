@@ -20,7 +20,7 @@ was a convention in prose; it is a stated fact now, and `scaling:quantityUnit` i
 sensor says it.
 
 **The same mechanism as a capability; a different bearer.** A capability is derived onto an
-agent as `ag:hasCapability`; a scaling is derived onto a SENSOR as
+agent as `orexis:hasCapability`; a scaling is derived onto a SENSOR as
 `scaling:scaledBy`, from the `scaling:curve` its world states or from the absence of
 one. Premise in the world, conclusion in the derived graph, lookup at runtime — the discipline
 is the same, and only the bearer and the predicate differ.

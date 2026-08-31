@@ -85,8 +85,8 @@ roster publishes keys:
   winner can open, so a port mirror or a curious operator carries ciphertext with the money in
   it. The co-signature chain stays about the *actuation command*, unchanged.
 
-Both interoperate with the pre-key era through the attested roster (`ag:signingKey` /
-`ag:sealingKey` in the world, written by `orexis-keygen`): no published key, no demand — a world
+Both interoperate with the pre-key era through the attested roster (`orexis:signingKey` /
+`orexis:sealingKey` in the world, written by `orexis-keygen`): no published key, no demand — a world
 onboarded before keygen learned agents behaves exactly as it always did.
 
 # Why it exists even for immediate watering

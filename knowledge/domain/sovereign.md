@@ -4,7 +4,7 @@ title: Sovereign
 term: http://example.org/orexis#Sovereign
 description: >-
   Whoever ratified a world — authored its files and stands behind them. A ROLE and not an
-  identity: `ag:Sovereign` is a `prov:Role`, there is no sovereign agent and there must not be,
+  identity: `orexis:Sovereign` is a `prov:Role`, there is no sovereign agent and there must not be,
   because an installation has several users and which of them was sovereign is a fact about ONE
   ratification rather than a permanent property of a person. It is outside the society looking
   in: it holds the tools no agent may hold, its authorship is what "ratified" means, and it may
@@ -17,11 +17,11 @@ description: >-
 The **sovereign** is whoever ratified a world: authored its files, and stands behind them.
 
 It is a **role**, not a kind of user. The same person may hold it for one world and not another;
-an installation's other users hold none. `ag:Sovereign` is a `prov:Role`, cited by a world's
+an installation's other users hold none. `orexis:Sovereign` is a `prov:Role`, cited by a world's
 `prov:qualifiedAttribution`, and **there is no sovereign agent** — that absence is deliberate, not
 an omission waiting to be filled.
 
-The role set is open on purpose. `ag:Operator` and whatever else is eventually needed are absent
+The role set is open on purpose. `orexis:Operator` and whatever else is eventually needed are absent
 because nothing distinguishes them yet, and a role no activity cites is speculation.
 
 # It is outside the society, and the boundary is enforced by absence
@@ -45,7 +45,7 @@ is built from those files at boot and replaced from them on every start.
 So the sovereign's authorship is the root of everything derived: capabilities are worked out from
 what the files say, and a fact in the derived graph traces back to a rule applied to something the
 sovereign wrote. **What the sovereign may NOT do is write a conclusion** — `world.ttl` must not
-contain `ag:hasCapability`, because a capability nobody is answerable for is exactly the thing
+contain `orexis:hasCapability`, because a capability nobody is answerable for is exactly the thing
 that rule exists against.
 
 # It may ask, and it may not reach in
