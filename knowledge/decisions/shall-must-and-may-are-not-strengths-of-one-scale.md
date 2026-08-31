@@ -209,6 +209,20 @@ one**: only violation-severity shapes run per node, the full rulebook stays at t
 the per-node price is measured on the Pi before it ships — both halves carried on #468's
 definition of done.
 
+**The sovereign's own image for it: a magnet.** A SHALL state attracts, a SHALL NOT repels —
+one field, opposite polarity — and the literature name is potential-field planning (Khatib's
+artificial potential fields): the measure IS a scalar field over worlds, zero at the aim, 1.0
+at the envelope, and a penalty is a repulsive bump on it. Two sharpenings keep the image
+honest. **MUST NOT is a wall, not a strong magnet** — a repulsor, however strong, can be
+crossed when the attraction behind it pays enough, which is exactly what the every-state
+ruling refuses, so the hard moods live in the TOPOLOGY (the goal test, the pruning) and never
+in the field; polarity is for the soft moods only. And **fields fail by local minima** — a
+hollow where attraction and repulsion balance and a gradient-follower stalls short of the
+goal. This house already answers that: the search does not follow the gradient, it simulates
+and ranks whole worlds — which is how the absorbed reflex's own defect was cured, a greedy
+direction-follower being a field-follower and watering a drowning plant. The field ranks; the
+search sees.
+
 ## No new classes, and no new stores — asked and refused
 
 The sovereign asked both directly, and both dissolve against rules already paid for.
