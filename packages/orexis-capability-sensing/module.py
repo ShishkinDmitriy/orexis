@@ -43,7 +43,11 @@ from __future__ import annotations
 from datetime import timedelta, datetime, timezone
 from pathlib import Path
 
-from orexis_agent_deliberation.desire import Desire
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    #  Annotation-only (#455): named in hook signatures, constructed nowhere at import.
+    from orexis_agent_deliberation.desire import Desire
 from .driver import driver_for
 from agent.module import Module, contributes
 from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS
@@ -52,10 +56,12 @@ from orexis_agent_progression.store import bindings
 
 
 from . import pointer
-from .beliefs import ALARM_PICKS, LISTENING_PICKS, SUBSCRIBING_PICKS
+#  The picks are touched, not imported (#455): `beliefs` builds them on first attribute
+#  access, so a sensing-only assembly never loads the layer that defines `Picks`.
+from . import beliefs as picks
 from .observation import Observations
 from . import choir
-from .regions import Gap, ObservedDesire, Region, aims_of, desires_of, gaps_of, regions_of
+from .regions import Gap, Region, aims_of, gaps_of, regions_of
 from .wiring import sensors_of
 from . import readings
 from .scaling import scaling_for
@@ -667,6 +673,10 @@ class SensingModule(Module):
             return None
         if value is None:
             return 1.0
+        #  Deferred (#455): the row type subclasses the mind's Desire, and a base class is
+        #  an import — at assembly a sensing-only grant must not load the deliberation
+        #  layer; in any running agent it is already loaded.
+        from .rows import ObservedDesire
         answer = self._measured(ObservedDesire(uri="urn:asked", urgency=1.0,
                                              observed_property=observed_property, value=value),
                                 value)
@@ -697,6 +707,7 @@ class SensingModule(Module):
     def desires(self, now: datetime | None = None) -> list[Desire]:
         """My contribution to what the agent is pursuing: its stakes and its freshness wants,
         the two kinds whose premise is an observation. The obligations are the ledger's."""
+        from .rows import desires_of  # deferred (#455): same reason as ObservedDesire above
         return desires_of(self.agent.desires.query_union, self.agent.beliefs.query,
                           self.me.uri, measure=self._measured)
 
@@ -770,11 +781,11 @@ class SubscribingModule(SensingModule):
     name = "subscribing"
 
     def __init__(self, agent):
-        self.beliefs = agent.desires.read(SUBSCRIBING_PICKS)
+        self.beliefs = agent.desires.read(picks.SUBSCRIBING_PICKS)
         # The jolt threshold is the agent's own pick, not the family's figure — it has to be,
         # because a review rewrites the agent's graph and nothing else. Optional, and absence
         # is a statement: no pick means band-only alarms.
-        self.alarm_beliefs = agent.desires.read_optional(ALARM_PICKS)
+        self.alarm_beliefs = agent.desires.read_optional(picks.ALARM_PICKS)
         super().__init__(agent)
         self.min_sleep_s, self.max_sleep_s, self.relax_factor = self._bounds()
         # The interval in force, which the freshness rule reads, and the whole last message,
@@ -1152,16 +1163,16 @@ class SubscribingModule(SensingModule):
         # `slowSleepS` in their own namespace, and the stripped form cannot tell them apart —
         # so a revision of somebody else's belief would have been taken up as this module's.
         # A block's terms are full IRIs, so there is nothing to strip.
-        if belief_term in ALARM_PICKS.terms.values():
+        if belief_term in picks.ALARM_PICKS.terms.values():
             # A re-picked jolt threshold, and the re-aim below re-arms every watched channel
             # with the new delta — the whole reason the pick is a belief and not a compile-time
             # figure: correcting the estimate reaches the board on its next wake, not at the
             # next reflash.
-            self.alarm_beliefs = self.agent.desires.read_optional(ALARM_PICKS)
-        elif belief_term not in SUBSCRIBING_PICKS.terms.values():
+            self.alarm_beliefs = self.agent.desires.read_optional(picks.ALARM_PICKS)
+        elif belief_term not in picks.SUBSCRIBING_PICKS.terms.values():
             return
         else:
-            self.beliefs = self.agent.desires.read(SUBSCRIBING_PICKS)
+            self.beliefs = self.agent.desires.read(picks.SUBSCRIBING_PICKS)
         for sensor in self.sensors:
             reading = readings.current_reading(self.agent.beliefs.query, sensor.subject, sensor.observes)
             if reading is not None:
@@ -1184,7 +1195,7 @@ class ListeningModule(SensingModule):
     name = "listening"
 
     def __init__(self, agent):
-        self.beliefs = agent.desires.read(LISTENING_PICKS)
+        self.beliefs = agent.desires.read(picks.LISTENING_PICKS)
         super().__init__(agent)
 
     def stale_after_s(self, subject_uri: str, observed_property: str) -> int:

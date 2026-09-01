@@ -1120,8 +1120,8 @@ SUBSCRIBING = "http://example.org/orexis/sensing#Subscribing"
 def test_the_pull_adds_nothing_a_sensing_grant_does_not_need():
     """The load set of a sensing-only grant is sensing's package and no other — measured on
     the built load set. Sensing's module classes declare no required key any package offers,
-    so the pull adds nothing; the layers it leans on arrive by import, which the xfail below
-    measures honestly."""
+    so the pull adds nothing — and since #455 closed, sensing's row types and picks load on
+    first touch, so no layer arrives at assembly either; the test below measures it."""
     from assembly import loader
 
     assert [p.import_name for p in loader.packages_for({SUBSCRIBING})] == \
@@ -1129,15 +1129,6 @@ def test_the_pull_adds_nothing_a_sensing_grant_does_not_need():
         "a sensing-only grant should load exactly sensing's package")
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "a sensing-only grant still loads deliberation Python, and the pull cannot stop it: "
-    "agent/runtime.py, agent/module.py and agent/validate.py import "
-    "orexis_agent_deliberation unconditionally (Beliefs, Desires, Deliberator, Reviser, "
-    "conformance — the container builds the mind for every agent), and "
-    "orexis_capability_sensing itself imports orexis_agent_deliberation.desire.Desire and "
-    ".beliefs.Picks as layer contracts. Making those imports need-declarations means "
-    "decomposing the Agent object, which #455 stopped short of: the pull governs service "
-    "providers, and the layers are still loaded by the kernel's own declared dependencies."))
 def test_a_world_granting_only_sensing_loads_no_deliberation_python():
     """MEASURED on what a sensing-only build imports, in a process of its own — not asserted.
 
