@@ -48,6 +48,32 @@ consumed, so nothing makes it urgent — and a want with no urgency never wins a
 the quiet reason no derivation writes one; a real AtEnd customer must declare its heat or
 borrow a clock, at which point it is really a Within.
 
+# How much unmet, when the want is not a number
+
+The met-shape says WHETHER (conformance is boolean); this number says HOW BADLY — and for a
+want that is not about a number, *how badly* has exactly four honest sources, every want
+falling to one:
+
+| the want's shape | its measure |
+|---|---|
+| a number a lever moves incrementally | **distance** — partial progress must rank, or a dose too small to finish is refused |
+| no metric, but a deadline | **the clock** — when state has no dimension, time is the room being consumed |
+| no intermediate worlds at all — discharged-or-not, fresh-or-not | **binary**, and that is sufficiency rather than a stopgap: a gradient earns its place only where part-way worlds exist and a lever can reach them |
+| a composite pattern — *all my debts honoured* | **decomposition** — the forest's roll-up: how much becomes how many leaves, and how hot, each leaf bottoming out in a row above |
+
+Beneath all four sits the loud default: a want nobody measures scores maximal, logged.
+
+Binary is enough for two structural reasons. The search never needed a gradient to cross an
+unmet valley — the frontier carries partial steps regardless of score, which is how
+refill-then-serve is found while the refill itself still scores 1.0 — and under the two-stage
+ranking a binary want's plan choice is achievement plus cost, no *how much* consulted. The
+gradient's one irreplaceable job is ranking partial ENDINGS, and only metric wants have those.
+
+And one refusal, written before anyone proposes it: no generic graph-distance — *how many
+triples short of matching* — ever. It is arithmetic nobody owns, incomparable to this common
+currency, and the counting mistake in disguise. Where partial progress in a pattern must
+rank, decompose the pattern into leaves; never mint a metric over it.
+
 # Not knowing is maximal, and that is the load-bearing choice
 
 `urgency(None)` is **1.0**, not 0.0. A property nobody has read is the most urgent thing an agent
