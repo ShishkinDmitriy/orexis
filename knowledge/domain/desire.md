@@ -290,6 +290,32 @@ ranges over the whole menu as a call does: any lever might exit a state. Its har
 not a desire at all — a ratified violation shape, pruned in the search at every step. See
 [a-want-met-by-absence](/decisions/a-want-met-by-absence.md).
 
+# A want that can say how far it still is
+
+A desire may also carry `orexis:estimates`: a node with one `sh:select` binding `?estimate`,
+the cost still to pay before the want is met, in the unit the actions' `orexis:costs` are
+stated in, run with `$state` naming whichever world is being judged. Urgency is the want's,
+cost is the action's, and an estimate is the want speaking about cost — which is why it hangs
+off the desire and not off any action. A want that declares none is not zero away; every
+unmet world reads equally far and the search falls back on urgency and cost alone.
+
+**It must never overstate.** The [planner](/domain/planner.md) is best-first on cost plus
+estimate and ends a pass when the head of its open list passes the cheapest achiever found,
+which is sound exactly because the estimate is a floor under what any plan through a world
+would finally spend. An estimate that overstated would end the pass on a dearer plan than
+exists, and nothing would go red.
+
+**The desire owns the term; the package owns the measure.** That promise is a claim about the
+package's own actions and their costs, and only their declarer can keep it, so the node a
+want points at — the estimate's and the avoided pattern's alike — is declared in the domain
+package's ontology beside the actions, and a world asserts the want and points at it
+(`world/courier/desire.ttl` says `orexis:estimates courier:drivesOwed`). A world may still
+write a select inline beside an asserted want, as the avoidance tests do, and the kernel
+reads either road; the domains ship theirs. The road after this one is derivation — the
+package deduces the want from what the world states, as
+[desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)
+argues for plants — and then a world states parcels and nothing about wanting them delivered.
+
 # Desires an agent did not source
 
 The class was a class from the start because a second source was expected, and

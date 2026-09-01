@@ -283,7 +283,7 @@ class Planner:
         node_uri = self._shapes.value(URIRef(desire.uri), _AG.estimates)
         if node_uri is None:
             return None
-        text = self._shapes.value(node_uri, _SH.select)
+        text = self._select_of(node_uri)
         if text is None:
             return None
         try:
@@ -300,8 +300,27 @@ class Planner:
         node = self._shapes.value(URIRef(desire.uri), _AG.unmetWhen)
         if node is None:
             return None
+        return self._select_of(node)
+
+    def _select_of(self, node) -> str | None:
+        """The one `sh:select` the node carries, wherever it was declared.
+
+        THE DESIRE OWNS THE TERM AND THE PACKAGE OWNS THE MEASURE: a want says `unmetWhen` and
+        `estimates` and points at a node, and that node is the DOMAIN's — declared in the
+        package's ontology beside the actions it is a promise about, since "never overstates"
+        is a claim about those actions' costs that only their declarer can keep. So the text
+        is looked for in the wants snapshot first (a world may still write it inline beside an
+        asserted want, and the avoidance tests do) and then in the belief base, whose default
+        graph merges public knowledge — the desire modality drops the public graphs after its
+        rebuild, so it cannot answer for a package's node. One text, either road, and the
+        same substitution after.
+        """
         text = self._shapes.value(node, _SH.select)
-        return str(text) if text is not None else None
+        if text is not None:
+            return str(text)
+        rows = bindings(self.agent.beliefs.query(
+            f"SELECT ?text WHERE {{ <{node}> <{_SH.select}> ?text }} LIMIT 1"))
+        return str(rows[0]["text"]) if rows and rows[0].get("text") else None
 
     def _pattern_binds(self, text: str, graph: str) -> bool:
         """Whether the avoided pattern binds in the world at `graph` — rows mean entered.

@@ -40,12 +40,16 @@ from assembly.inject import attribute_for, opened
 from orexis_agent_progression.ontology import DESIRES, DESIRE_URGENCY, STATE_GRAPH
 
 #  The avoided-pattern wants the kernel lifts into pursuit itself (#468) — see `pursuing`.
+#  The select is OPTIONAL here because the node a want points at may be the DOMAIN's — declared
+#  in a package's ontology, public knowledge the desire modality does not keep after its
+#  rebuild — and is then read from the belief base, whose default graph merges public knowledge.
 _AVOIDED_Q = """
-SELECT ?want ?select WHERE {
+SELECT ?want ?avoided ?select WHERE {
   <%s> orexis:holds ?want .
   ?want orexis:unmetWhen ?avoided .
-  ?avoided sh:select ?select .
+  OPTIONAL { ?avoided sh:select ?select }
 }"""
+_SELECT_Q = "SELECT ?select WHERE { <%s> sh:select ?select } LIMIT 1"
 from orexis_agent_deliberation.deliberator import KEEPING_PICKS, Deliberator
 from orexis_agent_deliberation.desire import Desire, Desires
 from orexis_agent_deliberation.reviser import Reviser
@@ -314,8 +318,20 @@ class Agent:
         for row in bindings(self.desires.query_union(_AVOIDED_Q % self.me.uri)):
             if row["want"] in seen:
                 continue
-            text = (row["select"].replace("$this", f"<{self.me.uri}>")
-                                 .replace("$state", f"<{STATE_GRAPH}>"))
+            #  THE DESIRE OWNS THE TERM AND THE PACKAGE OWNS THE MEASURE: a world may write
+            #  the pattern inline beside its asserted want, or point at a node the domain
+            #  package declares. The first rides in the modality; the second is public
+            #  knowledge and is asked of the belief base — one text, either road.
+            select = row.get("select")
+            if not select:
+                found = bindings(self.beliefs.query(_SELECT_Q % row["avoided"]))
+                select = found[0]["select"] if found else None
+            if not select:
+                log.error("%s: %s points at an avoided state with no sh:select", self.id,
+                          row["want"])
+                continue
+            text = (select.replace("$this", f"<{self.me.uri}>")
+                          .replace("$state", f"<{STATE_GRAPH}>"))
             try:
                 entered = bool(bindings(self.beliefs.query(text)))
             except Exception as exc:
