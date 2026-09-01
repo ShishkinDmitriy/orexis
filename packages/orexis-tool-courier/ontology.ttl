@@ -1,0 +1,53 @@
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix : <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+courier: a owl:Ontology ;
+    rdfs:label "the courier grid" ;
+    rdfs:comment """A second planning domain, and the first whose distance is a NUMBER.
+
+Hanoi proved a domain can be a plug-in; what it could not show is a search that needs
+guiding, because its want is binary — every world scores 1.0 until one scores 0.0, so
+nothing can be nearer. Here a want can be nearer: a van two cells from a parcel is closer
+than one five cells away, and Manhattan distance says so in the same units a move costs.
+
+That makes this world the case for an admissible heuristic. It is also the first domain
+whose effects DELETE: picking a parcel up removes where it was and puts nothing in its
+place, which every shipped effect until now has avoided by replacing a value instead of
+removing one.""" .
+
+#################  What the grid is  #################
+
+courier:Cell a owl:Class ;
+    rdfs:label "a place on the grid" ;
+    rdfs:comment "Authored by a world, with coordinates. Cells are the world's rather than the domain's — unlike Hanoi's three pegs, how big the grid is IS the puzzle." .
+
+courier:x a owl:DatatypeProperty ; rdfs:domain courier:Cell ; rdfs:range xsd:integer ;
+    rdfs:label "column" .
+courier:y a owl:DatatypeProperty ; rdfs:domain courier:Cell ; rdfs:range xsd:integer ;
+    rdfs:label "row" ;
+    rdfs:comment "Coordinates rather than a declared adjacency, because the heuristic needs to measure a distance the graph does not state. Two cells are neighbours where |dx| + |dy| = 1, which the move's own precondition works out." .
+
+courier:Van a owl:Class ;
+    rdfs:label "what moves, and what carries" ;
+    rdfs:comment "One per world here. It has no capability and no grant: like Hanoi's mover, it is a pure subject of the search." .
+
+courier:Parcel a owl:Class ;
+    rdfs:label "a thing with somewhere to be" .
+
+courier:destination a owl:ObjectProperty ; rdfs:domain courier:Parcel ; rdfs:range courier:Cell ;
+    rdfs:label "where this parcel is owed" ;
+    rdfs:comment "AUTHORED and never moved — the world states it, and no effect touches it. It is what the want is measured against." .
+
+#################  What is true at runtime  #################
+
+courier:at a owl:ObjectProperty ; rdfs:range courier:Cell ;
+    rdfs:label "where a van or an unloaded parcel stands" ;
+    rdfs:comment "Runtime, seeded by whoever poses the puzzle, exactly as a reading is. Functional for a van, and ABSENT for a parcel being carried — which is the point: a pick REMOVES this, and no effect in this repository had ever removed a fact without putting another in its place." .
+
+courier:carriedBy a owl:ObjectProperty ; rdfs:domain courier:Parcel ; rdfs:range courier:Van ;
+    rdfs:label "aboard" ;
+    rdfs:comment "The other half of the deletion: a parcel is at a cell OR aboard a van, never both and never neither." .

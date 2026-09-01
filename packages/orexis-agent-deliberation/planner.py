@@ -120,6 +120,10 @@ class _Node:
     #  `orexis:landsAfter`, summed, for holding a candidate to a Within want's room (#472).
     #  The root has taken nothing and lands immediately.
     landing: float = 0.0
+    #  What this world still owes the want, by the want's own declaration (`orexis:estimates`),
+    #  or None where it declares none. Never compared across desires — only between worlds of
+    #  one pass, which is the only comparison it means anything for.
+    estimate: float | None = None
     #  What this path SPENDS, in the wallet's unit — each step's own `orexis:costs`, summed
     #  (#466). Free is the reading of an action that declares none.
     cost: float = 0.0
@@ -249,6 +253,33 @@ class Planner:
         return bool(bindings(self.imaginarium.query(
             f"SELECT ?x WHERE {{ VALUES ?g {{ {graphs} }} "
             f"GRAPH ?g {{ <{subject}> <{predicate}> ?x }} }} LIMIT 1")))
+
+    def _estimate_in(self, node, desire: Desire) -> float | None:
+        """How far this world still is from meeting the want, by the want's own declaration.
+
+        The desire's term and the action's twin: `orexis:costs` says what a step spends,
+        `orexis:estimates` says what is left to spend. Both are SELECTs the domain writes and
+        the kernel runs, so a knowledge-only package can state one — which is the whole point,
+        since the two domains that need this most carry no Python at all.
+
+        None where the want declares none, and None where the select refuses to run: a want
+        with no estimate is not a want that is zero away, and treating a broken declaration as
+        "arrived" would crown a plan that achieved nothing.
+        """
+        node_uri = self._shapes.value(URIRef(desire.uri), _AG.estimates)
+        if node_uri is None:
+            return None
+        text = self._shapes.value(node_uri, _SH.select)
+        if text is None:
+            return None
+        try:
+            rows = bindings(self.imaginarium.query(
+                str(text).replace("$this", f"<{self.me.uri}>")
+                         .replace("$state", f"<{node.graph}>")))
+        except Exception as exc:
+            log.error("estimate failed to run for %s: %s", desire.uri, exc)
+            return None
+        return float(rows[0]["estimate"]) if rows and "estimate" in rows[0] else None
 
     def _avoided_pattern(self, desire: Desire) -> str | None:
         """The `orexis:unmetWhen` select this want carries, or None — the negative twin."""
@@ -384,6 +415,20 @@ class Planner:
                         if newly:
                             self._weighed.append((depth, row, step.urgency, trace.FORBIDDEN))
                             continue
+                    if bound is not None and step.cost + _near(step) > bound:
+                        #  A* PRUNING, and it is the estimate's whole reason for existing in
+                        #  the search rather than only in the ranking. `orexis:estimates` never
+                        #  overstates what is left, so `cost + estimate` is a floor under what
+                        #  any plan THROUGH this world would finally spend: past the bound, no
+                        #  completion of it can beat the plan already in hand. The candidate
+                        #  before the bound existed had to be simulated to be dismissed; this
+                        #  one is dismissed after its own world is known and before its
+                        #  children are, which is where the subtree goes.
+                        #
+                        #  A want declaring no estimate reads 0.0 and this is the plain cost
+                        #  bound above, exactly as before the term existed.
+                        self._weighed.append((depth, row, step.urgency, trace.COSTLY))
+                        continue
                     if room is not None and step.landing > room:
                         #  A world reached after the want has lapsed is not an answer to it
                         #  (#472, `orexis:Within`): discarded BEFORE the met-test can crown
@@ -414,9 +459,14 @@ class Planner:
                         #  wellbeing for money would have that ranking ratified nowhere. The
                         #  satisficing floor below is untouched: a plan no better than
                         #  standing still stays refused however cheap it is.
-                        if (step.urgency < best.urgency
-                                or (step.urgency == best.urgency
-                                    and step.cost < best.cost)):
+                        #  NEARER COUNTS AS BETTER when the want can say how near. A want
+                        #  that only knows met from unmet leaves `estimate` None, and this is
+                        #  the old comparison exactly; a want that declares one lets a world
+                        #  three moves from done beat a world five moves from done, which is
+                        #  what makes a search shallower than the solution worth running at
+                        #  all. Cost still breaks a tie, and urgency still outranks both.
+                        if (step.urgency, _near(step), step.cost) < (
+                                best.urgency, _near(best), best.cost):
                             best = step
                     #  MET IS ASKED BEFORE THE PRUNE, and only for a want that is not met
                     #  ALREADY. Cycle detection is about EXPANSION — do not spend the depth
@@ -509,7 +559,8 @@ class Planner:
             #  among keepers would be shopping for a want that is not shopping — so ordering
             #  the frontier there would change which keeper is answered with, for no gain: a
             #  met pass has no achiever to bound against.
-            frontier = nxt if met_now else sorted(nxt, key=lambda s: (s.urgency, s.cost))
+            frontier = nxt if met_now else sorted(
+                nxt, key=lambda s: (s.urgency, _near(s) + s.cost, s.cost))
             if not frontier:
                 break
 
@@ -533,7 +584,7 @@ class Planner:
             return self._record(desire, Plan(SATISFIED if met_now else NOTHING,
                                            (), here.urgency, here.urgency,
                                            self._skipped), here.urgency)
-        if best is here or best.urgency >= here.urgency:
+        if best is here or (best.urgency, _near(best)) >= (here.urgency, _near(here)):
             after = here.urgency if best is here else best.urgency
             return self._record(desire, Plan(SATISFIED if met_now else NOT_BETTER,
                                            (), here.urgency, after,
@@ -757,6 +808,7 @@ class Planner:
         self._invariant = (self.imaginarium.dump_nt(*self._invariant_graphs)
                            + self._shapes.serialize(format="nt"))
         here = _Node(graph=STATE_GRAPH)
+        here.estimate = self._estimate_in(here, desire)
         self._base_forbidden = (self._forbidden_keys(here)
                                 if self._law is not None else frozenset())
         here.urgency = self._urgency_in(here, desire)
@@ -817,6 +869,7 @@ class Planner:
         landing = node.landing + (lands or 0.0)
         step = _Node(graph=graph, diff=diff, landing=landing, cost=cost)
         step.urgency = self._urgency_in(step, desire)
+        step.estimate = self._estimate_in(step, desire)
         step.taken = node.taken + (Step(act, urgency_after=step.urgency),)
         return step
 
@@ -925,6 +978,16 @@ class Planner:
         #  and the world Apply's effect discharges an obligation in must hold it to discharge.
         return graph_from(self.agent.beliefs, *self.agent.beliefs.public_graphs(),
                           *self.agent.beliefs.recorded_graphs())
+
+
+def _near(node) -> float:
+    """A node's declared distance from its want, or 0.0 where the want declares none.
+
+    Zero rather than infinity, and the choice is what keeps a want with no estimate behaving
+    exactly as it did before this term existed: every world reads equally far, so the
+    comparisons that use it fall back on urgency and cost alone.
+    """
+    return node.estimate if node.estimate is not None else 0.0
 
 
 #  What `_step_from` hands back for a candidate that cannot beat the plan already in hand.

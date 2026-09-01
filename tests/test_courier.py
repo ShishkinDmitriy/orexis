@@ -1,0 +1,151 @@
+"""A courier on a grid: the domain whose distance is a NUMBER, and whose pick deletes.
+
+Hanoi proved a domain can be a plug-in and could not show a search being GUIDED — its want is
+binary, so no world is nearer than another. Here one is: a van two cells from a parcel is
+closer than a van five cells away, in the same unit a drive costs. That is what an admissible
+heuristic needs, and this world is the case for building one.
+
+It is also the first domain here whose effect genuinely DELETES. Every shipped retraction
+replaces a value — the observation node its own construct re-creates, the peg a disk was on —
+and a pick removes `courier:at` outright, putting the parcel aboard under another predicate.
+"""
+
+import pytest
+
+from conftest import genesis_store
+
+C = "http://example.org/orexis/courier#"
+W = "http://example.org/orexis/world/courier#"
+WANT = W + "every_parcel_delivered"
+STATE_GRAPH = "http://example.org/orexis/graph/sensed"
+
+
+def _pose(st, van, parcel):
+    """Seed the delivery: where the van stands and where the parcel waits. Runtime, exactly as
+    a reading is — the world authors the grid and the destination, never a position."""
+    st.update(f"""INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{
+        <{W}van> <{C}at> <{W}{van}> . <{W}parcel> <{C}at> <{W}{parcel}> . }} }}""")
+
+
+def _driver(monkeypatch, van, parcel):
+    """A plain Agent, not conftest's wired builder: this driver holds no bus, and the world's
+    whole point is the search — the same reason `test_hanoi` builds one by hand."""
+    from agent import genesis, runtime
+
+    monkeypatch.setenv("INFLUX_BUCKET", "test-courier")
+    monkeypatch.setenv("INFLUX_TOKEN", "test-token-courier")
+    st = genesis_store(world="courier")
+    _pose(st, van, parcel)
+    genesis.classify_own_graphs(st, "courier")
+    return runtime.Agent("courier", st=st)
+
+
+def _goal(agent):
+    return next(g for g in agent.pursuing() if g.uri == WANT)
+
+
+def _plan(agent, depth):
+    from orexis_agent_deliberation.planner import Planner
+
+    p = Planner(agent, agent.me)
+    p.MAX_DEPTH = depth
+    return p.plan(_goal(agent))
+
+
+def _steps(plan):
+    return [(str(s.act.action).split("#")[-1], str(s.act.about).split("#")[-1])
+            for s in plan.steps]
+
+
+def test_the_goal_is_pursued_and_the_kernel_judges_it(monkeypatch):
+    """Pure ratified data — no capability, no module, no measure — lifted and judged by the
+    kernel from its own pattern, exactly as hanoi's is. Aboard counts as astray: carrying a
+    parcel past its door is not delivering it."""
+    agent = _driver(monkeypatch, "c3_3", "c3_3")
+    assert _goal(agent).state == "met", "a parcel standing where it is owed is delivered"
+
+    agent = _driver(monkeypatch, "c0_0", "c0_0")
+    assert _goal(agent).state == "unmet" and _goal(agent).urgency == 1.0
+
+
+def test_a_delivery_is_planned_and_it_is_the_short_way_round(monkeypatch):
+    """Drive to the parcel, load it, drive to the door, set it down — and no step wasted. The
+    route is the cheapest achiever, by no code of this world's: every action costs one, so the
+    plan with fewest steps is the one the two-stage cut crowns."""
+    agent = _driver(monkeypatch, "c2_3", "c3_2")
+    plan = _plan(agent, 5)
+
+    assert len(plan.steps) == 5, f"the short way is five steps, got {_steps(plan)}"
+    assert [a for a, _ in _steps(plan)] == ["Drive", "Drive", "Pick", "Drive", "Drop"]
+    assert _steps(plan)[-1] == ("Drop", "c3_3"), "and it ends at the door"
+
+
+def test_too_shallow_to_arrive_still_answers_with_progress(monkeypatch):
+    """What a declared distance buys, and the reason this world exists.
+
+    The corner-to-corner delivery needs eight steps. Before the want could say how far it
+    still was, a search shallower than that returned NOTHING — every unmet world scored 1.0,
+    `best` never improved, and the satisficing floor refused the lot. With `orexis:estimates`
+    a world three drives from the parcel beats one five drives away, so two steps of depth
+    answer with two steps toward it, and the agent arrives across ticks rather than in one
+    pass. That is the architecture's own model of a long horizon: act, let the world move,
+    plan again.
+    """
+    agent = _driver(monkeypatch, "c0_0", "c1_2")
+    shallow = _plan(agent, 2)
+    assert [a for a, _ in _steps(shallow)] == ["Drive", "Drive"], \
+        "two steps of depth answer with two drives toward the parcel"
+
+    agent = _driver(monkeypatch, "c0_0", "c1_2")
+    plan = _plan(agent, 8)
+    assert len(plan.steps) == 8, f"and with depth enough it arrives: {_steps(plan)}"
+    assert _steps(plan)[-1] == ("Drop", "c3_3")
+
+
+def test_a_want_that_declares_no_distance_is_unchanged(monkeypatch):
+    """The other half of the term's contract: hanoi declares no estimate, so every world reads
+    equally far and the search behaves exactly as it did before `orexis:estimates` existed.
+    Asserted here rather than in the hanoi suite because what is being checked is this term's
+    silence, not that puzzle's answer."""
+    from orexis_agent_deliberation.planner import _near
+
+    agent = _driver(monkeypatch, "c0_0", "c1_2")
+    from orexis_agent_deliberation.planner import Planner
+    p = Planner(agent, agent.me)
+    node = p._begin(_goal(agent))
+    assert p._estimate_in(node, _goal(agent)) == 6.0, "the courier's want states its distance"
+
+    node.estimate = None
+    assert _near(node) == 0.0, "a want with none reads zero, which is the old comparison"
+
+
+def test_a_pick_removes_where_the_parcel_was_and_replaces_it_with_nothing(monkeypatch):
+    """THE FIRST REAL DELETE LIST IN THIS REPOSITORY, asserted rather than assumed.
+
+    Every other retraction here is an upsert: sensing, actuation and the market each remove the
+    observation node their own construct immediately re-creates, and hanoi's move removes the
+    peg a disk was on while stating the peg it is on now. The planner's fork subtracts before it
+    adds and has always been able to remove a fact outright; nothing had ever asked it to. A
+    pick does: `courier:at` goes, and what arrives is `courier:carriedBy` — another predicate
+    about the same parcel, so nothing takes the removed fact's place.
+    """
+    from orexis_agent_deliberation import effects
+    from orexis_agent_deliberation.planner import Planner
+
+    agent = _driver(monkeypatch, "c1_1", "c1_1")
+    p = Planner(agent, agent.me)
+    node = p._begin(_goal(agent))
+    row = next(r for r in p._candidates(node, _goal(agent)) if str(r.action).endswith("Pick"))
+    added, retracted = effects.apply(p.imaginarium, row.action, **p._bind(_goal(agent), node, row))
+
+    #  `.value` and not `str()`: a pyoxigraph term stringifies to its N-Triples form, angle
+    #  brackets and all, which is the trap `effects._triple` exists to keep out of rdflib.
+    assert [t[1].value for t in retracted] == [C + "at"], "the pick removes where it stood"
+    assert [t[1].value for t in added] == [C + "carriedBy"], "and puts it aboard, not elsewhere"
+    assert not [t for t in added if t[1].value == C + "at"], \
+        "nothing replaces the removed fact — that is what makes this a delete rather than an upsert"
+
+    world = p._step_from(node, row, _goal(agent))
+    text = p.imaginarium.dump_nt(world.graph)
+    assert f"<{W}parcel> <{C}at>" not in text, "and the world it reaches holds no position for it"
+    assert f"<{W}parcel> <{C}carriedBy>" in text

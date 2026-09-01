@@ -876,3 +876,23 @@ orexis:maxPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "maximum patience" .
 
 orexis:Intention orexis:metFraction 0.25 ; orexis:suspectAfter 3 ; orexis:minPatienceS 10 ; orexis:maxPatienceS 86400 .
+
+#  HOW FAR THIS WANT STILL IS, in the unit its actions cost. The desire's term, beside the
+#  action's `orexis:costs` — the sovereign's two-stage cut says urgency is the want's and cost
+#  is the action's, and an ESTIMATE is the want speaking about cost, which is why it lives here
+#  and not on any action.
+#
+#  It exists because a want that only knows MET from UNMET cannot be approached. Hanoi's is
+#  binary: every world scores 1.0 until one scores 0.0, so nothing is nearer, `best` never
+#  improves, and a search shallower than the whole solution returns NOT_BETTER rather than a
+#  step in the right direction. A want that can say "three moves left" makes progress
+#  measurable, and the search can be guided by it.
+#
+#  IT MUST NEVER OVERESTIMATE. The planner uses it to order what it looks at first, and an
+#  estimate that overstates the remaining cost makes the search prefer the wrong world — it
+#  cannot make the answer wrong today, because the winner is still the cheapest achiever
+#  actually found, but it is the property every stronger use of this term would rest on.
+orexis:estimates a owl:ObjectProperty ;
+    rdfs:domain orexis:Desire ;
+    rdfs:label "what is left to pay" ;
+    rdfs:comment "Points at a node carrying one `sh:select` that binds ?estimate — the remaining cost to meet this want, in the unit `orexis:costs` is stated in, evaluated against whichever world is being judged with $state naming that world's readings. Substituted and run exactly as an avoided pattern is: one declaration, the store's own engine, no Python anywhere. A want that declares none is simply not measurable this way, and the search treats every unmet world as equally far." .
