@@ -277,9 +277,13 @@ def test_an_agent_is_given_the_society_and_not_the_hardware():
     )
 
     for world in genesis.worlds():
-        g = rdflib.Graph()
+        #  A world file is TriG (genesis parses it so), and hanoi's desire.ttl carries a
+        #  GRAPH block — a plain Graph parsed as turtle raises, and parsed as trig silently
+        #  DROPS the named-graph triples, which is the vacuous direction. ConjunctiveGraph
+        #  keeps every quad and iterates across contexts.
+        g = rdflib.ConjunctiveGraph()
         for path in genesis.society_files(genesis.world_dir(world)):
-            g.parse(path, format="turtle")
+            g.parse(path, format="trig")
         leaked = {str(t) for triple in g for t in triple
                   if str(t).startswith(HARDWARE_NAMESPACES)}
         assert not leaked, (
@@ -324,9 +328,10 @@ def test_the_society_hosting_agrees_with_the_wiring():
 
     for world in genesis.worlds():
         world_path = genesis.world_dir(world)
-        society, wiring = rdflib.Graph(), rdflib.Graph()
+        #  TriG for the society files, for the reason the hardware-leak test states above.
+        society, wiring = rdflib.ConjunctiveGraph(), rdflib.Graph()
         for path in genesis.society_files(world_path):
-            society.parse(path, format="turtle")
+            society.parse(path, format="trig")
         for name in genesis.HARDWARE_FILES:
             if (world_path / name).exists():
                 wiring.parse(world_path / name, format="turtle")
@@ -675,8 +680,9 @@ def test_the_kernel_namespace_holds_no_individuals():
 
     checked = 0
     for path in sorted((REPO_ROOT / "world").glob("*/**/*.ttl")):
-        g = rdflib.Graph()
-        g.parse(path, format="turtle")
+        #  TriG, ConjunctiveGraph — a GRAPH block's names must be scanned, not dropped.
+        g = rdflib.ConjunctiveGraph()
+        g.parse(path, format="trig")
         strays = {str(n) for t in g for n in t
                   if isinstance(n, rdflib.URIRef) and str(n).startswith(OREXIS)} - declared
         assert not strays, (

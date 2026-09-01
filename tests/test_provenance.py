@@ -107,6 +107,11 @@ def test_an_ordinary_pattern_spans_every_public_graph(world):
     the default graph exists to close, and it is why queries here name no graph at all.
     """
     st = _public(world)
+    if not bindings(st.query("SELECT ?a WHERE { ?a sensing:polls ?s }")):
+        #  The spanning pattern is sensing-shaped on purpose (polls is asserted, the System
+        #  type entailed) — a world with no sensing wiring (hanoi: a pure mind) has no such
+        #  split to span, and asserting over it would test nothing.
+        pytest.skip(f"{world} wires no sensing — the asserted/entailed split has no instance here")
     spanning = bindings(st.query(
         "SELECT ?agent WHERE { ?agent sensing:polls ?s . ?s a ssn:System ; sensing:senseMode ?m }"))
     assert spanning, "a pattern spanning the asserted/entailed split found nothing"

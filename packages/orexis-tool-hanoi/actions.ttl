@@ -1,0 +1,36 @@
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+#  ONE move — the sovereign's ruling, striking the six-node grid the first build shipped.
+#  The affordance ROW was always the ground instance: one row per (disk, target) the state
+#  makes legal, `?via` the disk and `?about` the target peg. What made a grid look necessary
+#  was that an effect could not see which row was chosen; the kernel's `$via` channel closed
+#  that, and the schema went back to being one node, which is what an action is.
+
+hanoi:Move a orexis:Action ;
+    rdfs:label "move a movable disk onto a legal peg" ;
+    rdfs:comment "Available once per (disk, target) the state allows: the disk is on top of its stack, and the target holds no smaller disk — bigger or empty, in the sovereign's words. The effect is deterministic because the row pins both halves: $via says which disk, $about says which peg." ;
+    orexis:available """
+        SELECT ?via ?about WHERE {
+            GRAPH $state { ?via hanoi:on ?below .
+                           FILTER NOT EXISTS { ?x hanoi:on ?via } }
+            ?via hanoi:size ?ds .
+            ?about a hanoi:Peg .
+            FILTER NOT EXISTS { GRAPH $state { ?via (hanoi:on)+ ?about } }
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ ?about }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+        }""" ;
+    orexis:costs """
+        SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    orexis:retracts """
+        CONSTRUCT { $via hanoi:on ?old } WHERE {
+            GRAPH $state { $via hanoi:on ?old } }""" ;
+    sh:construct """
+        CONSTRUCT { $via hanoi:on ?dest } WHERE {
+            OPTIONAL { GRAPH $state { ?t (hanoi:on)+ $about .
+                                      FILTER NOT EXISTS { ?z hanoi:on ?t } } }
+            BIND(COALESCE(?t, $about) AS ?dest)
+        }""" .

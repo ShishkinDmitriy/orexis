@@ -1,0 +1,25 @@
+# orexis-tool-hanoi
+#
+# A package is a PROJECT, and its DIRECTORY IS ITS NAME. The family is the second segment —
+# `tool` — stated here and nowhere else. Knowledge-only: a classical planning domain is an
+# ontology and six ground actions, and a domain that needs no Python is the plug-in claim
+# proven at its strongest.
+[project]
+name = "orexis-tool-hanoi"
+version = "0.1.0"
+description = "Tower of Hanoi as a domain plug-in — three pegs in the T-Box, disks in the world, six ground moves"
+requires-python = ">=3.10"
+dependencies = [
+    "orexis",  # assembly (the manifest)
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["orexis_tool_hanoi"]
+package-dir = {"orexis_tool_hanoi" = "."}
+
+[tool.setuptools.package-data]
+"orexis_tool_hanoi" = ["*.ttl", "*.ru", "*.rq"]

@@ -62,6 +62,10 @@ def test_every_subscription_a_module_makes_is_granted(world, monkeypatch):
     """
     agents, _ = mqtt_admin.grants(world)
     store = genesis_store(world=world)
+    from orexis_agent_progression.store import bindings as _b
+    if not _b(store.query("SELECT ?b WHERE { ?b <http://example.org/orexis/mqtt#brokerPort> ?p }")):
+        pytest.skip(f"{world} declares no bus: a wire-less world makes no subscriptions, "
+                    "and its agents compose no transport for the builder to wire")
 
     for agent_id, principal in agents.items():
         agent = build_agent(agent_id, st=store, monkeypatch=monkeypatch)
@@ -95,6 +99,12 @@ def test_no_agent_may_hear_a_neighbours_private_channel(world):
           ?s <{MQTT}readingTopic> ?readingTopic .  }}"""):
         private.setdefault(row["id"], set()).add(row["readingTopic"])
 
+    if not private:
+        #  The anti-vacuous guard stays for every WIRED world; what changed is that a world
+        #  with no bus at all now exists (hanoi — a pure mind, nothing on the wire), and for
+        #  it "no private channels" is the design, not a test gone quiet.
+        if not ratified.rows(ds, "SELECT ?b WHERE { ?b <http://example.org/orexis/mqtt#brokerPort> ?p }"):
+            pytest.skip(f"{world} declares no bus — no channels exist to protect")
     assert private, f"{world} has no private channels to protect — the test proves nothing"
     for owner, topics in private.items():
         for other, principal in agents.items():

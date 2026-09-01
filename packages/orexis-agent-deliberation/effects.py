@@ -163,8 +163,18 @@ def _term(x):
     if isinstance(x, ox.BlankNode):
         return rdflib.BNode(x.value)
     if isinstance(x, ox.Literal):
+        #  A plain string stays PLAIN (found by #257's world): pyoxigraph reports xsd:string
+        #  on every simple literal, and rdflib holds a plain Literal and an explicitly
+        #  string-typed one as DISTINCT terms - so a triple arriving once through a
+        #  serialisation parse and once through this constructor landed twice, and every
+        #  asserted string in the world gate's two-road join was silently doubled. Invisible
+        #  until a shape counted one: hanoi's avoided-pattern node was the first focus any
+        #  maxCount here ever had.
+        dt = x.datatype.value if x.datatype else None
+        if dt == "http://www.w3.org/2001/XMLSchema#string" and not x.language:
+            dt = None
         return rdflib.Literal(x.value, lang=x.language,
-                              datatype=rdflib.URIRef(x.datatype.value) if x.datatype else None)
+                              datatype=rdflib.URIRef(dt) if dt else None)
     return x
 
 

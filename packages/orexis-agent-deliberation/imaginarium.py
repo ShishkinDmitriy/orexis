@@ -113,13 +113,20 @@ def _name(path) -> str:
     but a name that moved between runs would make two traces of the same search incomparable,
     which is the one thing anybody reads them for.
     """
-    tail = ".".join(f"{quote(_local(row.action), safe='')}-{quote(_local(row.via), safe='')}"
-                    for row in path)
+    tail = ".".join(
+        f"{quote(_local(row.action), safe='')}-{quote(_local(row.via), safe='')}"
+        + (f"-{quote(_local(row.about), safe='')}" if row.about else "")
+        for row in path)
     return _POSSIBLE + (tail or "here")
 
 
 def _local(iri: str) -> str:
-    """The tail of an IRI. A world's individuals share one namespace and a means is the
-    kernel's, so within one agent's menu the tails are unique — and a name only has to be
-    unique inside the one plan that mints it."""
+    """The tail of an IRI — unique enough only inside the one plan that mints these names.
+
+    The segment carries (action, via, about), and the third is load-bearing since hanoi's
+    one-Move ruling: a schema action yields several rows per lever differing only in what
+    they are about, and named by (action, via) alone two siblings COLLIDED — the second
+    child's quads merged into the first's graph, a disk resting on two supports at once, and
+    the search saw a menu of duplicates pointing home. Six ground actions had been hiding
+    the collision by differing in the action tail."""
     return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]

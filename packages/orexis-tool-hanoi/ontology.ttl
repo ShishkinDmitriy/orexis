@@ -1,0 +1,35 @@
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix : <http://example.org/orexis/hanoi#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/orexis/hanoi> a owl:Ontology ;
+    rdfs:label "Orexis hanoi" ;
+    rdfs:comment """Tower of Hanoi, as a domain plug-in (#257). The claim under test is AGENTS.md's own — the domain is a plug-in, plant/water language is the example — and this package is the proof at its strongest: a classical planning domain that ships an ontology and ONE move action and not one line of Python. The goal is a world-ratified desire met by absence (a disk off the target peg); legality lives in the move's precondition; the state is graph triples an effect really retracts — the first retraction that deletes rather than upserts; and the optimal solution is nobody's algorithm, it is the cheapest achiever under orexis:costs.""" .
+
+#################  The board  #################
+#  THE PEGS ARE T-BOX INDIVIDUALS because they are the puzzle's fixtures: every Tower of
+#  Hanoi ever posed has exactly these three, so a world that owned its own pegs would be
+#  restating an invariant. (They first moved here for a second reason — six GROUND actions
+#  had to name them, and code may not name a world instance — and that reason retired with
+#  the grid when the sovereign ruled one Move and the kernel gained $via.) The DISKS are
+#  the world's: a two-disk world and a three-disk world differ only there.
+
+:Peg a owl:Class ; rdfs:label "Peg" ;
+    rdfs:comment "One of the three rods — a T-Box individual each, because the pegs are the puzzle's invariant and a world authors only its disks." .
+:PegA a :Peg ; rdfs:label "peg A" ; rdfs:comment "Where every puzzle starts." .
+:PegB a :Peg ; rdfs:label "peg B" ; rdfs:comment "The spare." .
+:PegC a :Peg ; rdfs:label "peg C" ; rdfs:comment "Where every goal points." .
+
+:Disk a owl:Class ; rdfs:label "Disk" ;
+    rdfs:comment "A world's individuals, sized. How many there are is the world's whole authorship of an instance of this puzzle." .
+
+:size a owl:DatatypeProperty ; rdfs:domain :Disk ; rdfs:range xsd:integer ;
+    rdfs:label "size" ;
+    rdfs:comment "Smaller number, smaller disk. Legality is one comparison: a move onto a peg holding any smaller disk is no move at all — with an ordered start that is exactly the classical rule, said without naming tops." .
+
+:on a owl:ObjectProperty ; rdfs:domain :Disk ;
+    rdfs:label "on" ;
+    rdfs:comment "What a disk rests on — another disk, or a peg. RUNTIME STATE, never authored in a world: it lives in the state graph, effects retract and add it, and the chain (hanoi:on)+ down to a peg is what 'on peg P' means everywhere in this package's queries." .
