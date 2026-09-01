@@ -1,0 +1,249 @@
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+#  Six ground moves — the whole of acting in this domain, and the whole of the domain's
+#  executable surface. Each is available exactly where it is legal, costs one, retracts the
+#  REAL old support (the first retraction here that deletes rather than housekeeps an
+#  upsert, which is one of the three things #257 asked to see), and constructs the new one.
+
+#  Move the top disk of A onto B. Ground per (from, to) — six nodes, no parameters —
+#  because a row carries one lever and an effect sees `$about`, not the lever: baking the
+#  pair into the node needs no channel at all. Legality is the precondition's, said once as
+#  "no smaller disk anywhere on the target": with a legal start that is the classical rule.
+hanoi:MoveAB a orexis:Action ;
+    rdfs:label "move the top of A to B" ;
+    orexis:available """
+        SELECT ?via WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegA> .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegB> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+            BIND(?d AS ?via)
+        }""" ;
+    orexis:costs """
+        SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    orexis:retracts """
+        CONSTRUCT { ?d hanoi:on ?old } WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegA> ; hanoi:on ?old .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegB> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+        }""" ;
+    sh:construct """
+        CONSTRUCT { ?d hanoi:on ?dest } WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegA> .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegB> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+            OPTIONAL { GRAPH $state { ?t (hanoi:on)+ <http://example.org/orexis/hanoi#PegB> .
+                                        FILTER NOT EXISTS { ?z hanoi:on ?t } } }
+            BIND(COALESCE(?t, <http://example.org/orexis/hanoi#PegB>) AS ?dest)
+        }""" .
+
+#  Move the top disk of A onto C. Ground per (from, to) — six nodes, no parameters —
+#  because a row carries one lever and an effect sees `$about`, not the lever: baking the
+#  pair into the node needs no channel at all. Legality is the precondition's, said once as
+#  "no smaller disk anywhere on the target": with a legal start that is the classical rule.
+hanoi:MoveAC a orexis:Action ;
+    rdfs:label "move the top of A to C" ;
+    orexis:available """
+        SELECT ?via WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegA> .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegC> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+            BIND(?d AS ?via)
+        }""" ;
+    orexis:costs """
+        SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    orexis:retracts """
+        CONSTRUCT { ?d hanoi:on ?old } WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegA> ; hanoi:on ?old .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegC> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+        }""" ;
+    sh:construct """
+        CONSTRUCT { ?d hanoi:on ?dest } WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegA> .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegC> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+            OPTIONAL { GRAPH $state { ?t (hanoi:on)+ <http://example.org/orexis/hanoi#PegC> .
+                                        FILTER NOT EXISTS { ?z hanoi:on ?t } } }
+            BIND(COALESCE(?t, <http://example.org/orexis/hanoi#PegC>) AS ?dest)
+        }""" .
+
+#  Move the top disk of B onto A. Ground per (from, to) — six nodes, no parameters —
+#  because a row carries one lever and an effect sees `$about`, not the lever: baking the
+#  pair into the node needs no channel at all. Legality is the precondition's, said once as
+#  "no smaller disk anywhere on the target": with a legal start that is the classical rule.
+hanoi:MoveBA a orexis:Action ;
+    rdfs:label "move the top of B to A" ;
+    orexis:available """
+        SELECT ?via WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegB> .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegA> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+            BIND(?d AS ?via)
+        }""" ;
+    orexis:costs """
+        SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    orexis:retracts """
+        CONSTRUCT { ?d hanoi:on ?old } WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegB> ; hanoi:on ?old .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegA> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+        }""" ;
+    sh:construct """
+        CONSTRUCT { ?d hanoi:on ?dest } WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegB> .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegA> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+            OPTIONAL { GRAPH $state { ?t (hanoi:on)+ <http://example.org/orexis/hanoi#PegA> .
+                                        FILTER NOT EXISTS { ?z hanoi:on ?t } } }
+            BIND(COALESCE(?t, <http://example.org/orexis/hanoi#PegA>) AS ?dest)
+        }""" .
+
+#  Move the top disk of B onto C. Ground per (from, to) — six nodes, no parameters —
+#  because a row carries one lever and an effect sees `$about`, not the lever: baking the
+#  pair into the node needs no channel at all. Legality is the precondition's, said once as
+#  "no smaller disk anywhere on the target": with a legal start that is the classical rule.
+hanoi:MoveBC a orexis:Action ;
+    rdfs:label "move the top of B to C" ;
+    orexis:available """
+        SELECT ?via WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegB> .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegC> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+            BIND(?d AS ?via)
+        }""" ;
+    orexis:costs """
+        SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    orexis:retracts """
+        CONSTRUCT { ?d hanoi:on ?old } WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegB> ; hanoi:on ?old .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegC> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+        }""" ;
+    sh:construct """
+        CONSTRUCT { ?d hanoi:on ?dest } WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegB> .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegC> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+            OPTIONAL { GRAPH $state { ?t (hanoi:on)+ <http://example.org/orexis/hanoi#PegC> .
+                                        FILTER NOT EXISTS { ?z hanoi:on ?t } } }
+            BIND(COALESCE(?t, <http://example.org/orexis/hanoi#PegC>) AS ?dest)
+        }""" .
+
+#  Move the top disk of C onto A. Ground per (from, to) — six nodes, no parameters —
+#  because a row carries one lever and an effect sees `$about`, not the lever: baking the
+#  pair into the node needs no channel at all. Legality is the precondition's, said once as
+#  "no smaller disk anywhere on the target": with a legal start that is the classical rule.
+hanoi:MoveCA a orexis:Action ;
+    rdfs:label "move the top of C to A" ;
+    orexis:available """
+        SELECT ?via WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegC> .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegA> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+            BIND(?d AS ?via)
+        }""" ;
+    orexis:costs """
+        SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    orexis:retracts """
+        CONSTRUCT { ?d hanoi:on ?old } WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegC> ; hanoi:on ?old .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegA> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+        }""" ;
+    sh:construct """
+        CONSTRUCT { ?d hanoi:on ?dest } WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegC> .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegA> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+            OPTIONAL { GRAPH $state { ?t (hanoi:on)+ <http://example.org/orexis/hanoi#PegA> .
+                                        FILTER NOT EXISTS { ?z hanoi:on ?t } } }
+            BIND(COALESCE(?t, <http://example.org/orexis/hanoi#PegA>) AS ?dest)
+        }""" .
+
+#  Move the top disk of C onto B. Ground per (from, to) — six nodes, no parameters —
+#  because a row carries one lever and an effect sees `$about`, not the lever: baking the
+#  pair into the node needs no channel at all. Legality is the precondition's, said once as
+#  "no smaller disk anywhere on the target": with a legal start that is the classical rule.
+hanoi:MoveCB a orexis:Action ;
+    rdfs:label "move the top of C to B" ;
+    orexis:available """
+        SELECT ?via WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegC> .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegB> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+            BIND(?d AS ?via)
+        }""" ;
+    orexis:costs """
+        SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    orexis:retracts """
+        CONSTRUCT { ?d hanoi:on ?old } WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegC> ; hanoi:on ?old .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegB> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+        }""" ;
+    sh:construct """
+        CONSTRUCT { ?d hanoi:on ?dest } WHERE {
+            GRAPH $state { ?d (hanoi:on)+ <http://example.org/orexis/hanoi#PegC> .
+                            FILTER NOT EXISTS { ?x hanoi:on ?d } }
+            ?d hanoi:size ?ds .
+            FILTER NOT EXISTS {
+                GRAPH $state { ?s (hanoi:on)+ <http://example.org/orexis/hanoi#PegB> }
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+            OPTIONAL { GRAPH $state { ?t (hanoi:on)+ <http://example.org/orexis/hanoi#PegB> .
+                                        FILTER NOT EXISTS { ?z hanoi:on ?t } } }
+            BIND(COALESCE(?t, <http://example.org/orexis/hanoi#PegB>) AS ?dest)
+        }""" .
