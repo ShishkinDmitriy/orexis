@@ -92,16 +92,20 @@ class Plan:
 class _Node:
     """One point in the search: a world, how it was reached, and what it is worth.
 
-    The world is held TWICE, and the pair is what makes depth 2 mean what it says. `graph` names
-    this node's readings inside the plan's imaginarium, which is what the next step's rule reads
-    and where its `$state` points; `world` is the same readings flattened over public knowledge
-    into the one rdflib graph pySHACL and `_value_in` want. Two engines want different shapes of
-    the same fact, and materialising the second from the first is the piece of work the design
-    does not remove — see the seams in
-    knowledge/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md.
+    The world is held ONCE, in the imaginarium, and `graph` names it — what the next step's
+    rule reads and where its `$state` points. `readings` is that same graph as N-Triples text,
+    written by the store's own engine, because the judge takes text at the border.
+
+    It used to be held TWICE: the imaginarium graph AND the whole world flattened into an
+    rdflib graph per node, which was 198,144 `Graph.add` calls and fifty-five percent of a
+    hanoi solve — a full copy of a 2,300-triple world to express a step that changed four
+    triples. The flat copy existed because pySHACL read rdflib; nothing does now (#481). What
+    is left per node is the node's OWN readings, which is what actually differs: everything
+    else a judged world holds is the same for every node in the pass and is written once, in
+    `_begin`. See knowledge/runbooks/measure-the-search.md.
     """
 
-    world: object
+    readings: str = ""                           # this node's graph, as N-Triples
     graph: str = STATE_GRAPH                     # this node's readings, in the imaginarium
     taken: tuple = field(default_factory=tuple)   # the STEPS taken to get here, in order
     urgency: float = 1.0
@@ -141,7 +145,7 @@ class Planner:
 
     # --- what a world is worth ---------------------------------------------------------------
 
-    def _urgency_in(self, world, graph: str, desire: Desire) -> float:
+    def _urgency_in(self, node, desire: Desire) -> float:
         """How bad this desire is, in the world given. Lower is better; 1.0 is the worst there is.
 
         A CAPABILITY'S ANSWER, never this file's arithmetic: the choir is asked
@@ -161,11 +165,12 @@ class Planner:
         with, so a planner scoring by count would refuse every dose too small to finish the job
         — and refuse the second one for the same reason, having never taken the first.
 
-        `world` (the flat copy) stays a parameter for the wants that state no measure: an obligation
-        is met-or-not over the record, and anything else unmeasured scores 1.0, the not-knowing
-        answer.
+        The NODE is what arrives, and its graph is the whole of what a measure needs: the flat
+        rdflib copy this took alongside was only ever read by the wants that state no measure —
+        an obligation, met-or-not over the record — and those ask the imaginarium now too (#481).
+        Anything else unmeasured scores 1.0, the not-knowing answer.
         """
-        answer = self.agent.desire_urgency(desire, self.imaginarium.query, graph)
+        answer = self.agent.desire_urgency(desire, self.imaginarium.query, node.graph)
         if answer is not None:
             return answer
         #  An avoided-pattern want is binary by its own contract — met 0, unmet 1 — and the
@@ -174,9 +179,9 @@ class Planner:
         #  wants nothing whenever the pattern is held.
         pattern = self._avoided_pattern(desire)
         if pattern is not None:
-            return 1.0 if self._pattern_binds(pattern, graph) else 0.0
+            return 1.0 if self._pattern_binds(pattern, node.graph) else 0.0
         if desire.is_obligation:                        # met-or-not over the record
-            return 0.0 if self._met_in(world, desire) else 1.0
+            return 0.0 if self._met_in(node, desire) else 1.0
         #  A want whose kind nothing loaded answers for, scoring the defined fallback:
         #  maximal, because not knowing how bad IS how bad. It used to serve the freshness
         #  want too — epistemic wants had no declared measure, so every candidate world
@@ -190,7 +195,7 @@ class Planner:
     #  where the property stands from `$state` itself, and an actor sizing a step asks
     #  sensing at the node's graph (`Module.size(query, graph, property)`).
 
-    def _met_in(self, world, desire: Desire, graph: str | None = None) -> bool:
+    def _met_in(self, node, desire: Desire) -> bool:
         """Whether the desire's OWN shape is satisfied in this world.
 
         Its own and no others, which is what makes a pass affordable. Measured on the bench:
@@ -210,24 +215,36 @@ class Planner:
         #  force never opens.
         pattern = self._avoided_pattern(desire)
         if pattern is not None:
-            return not self._pattern_binds(pattern, graph or STATE_GRAPH)
-        shape = self._shape_of(desire, world)
+            return not self._pattern_binds(pattern, node.graph)
+        shape = self._shape_of(desire)
         if shape is None:
             #  A obligation's goal state is a PATTERN over the record, not a distance (#255): this
             #  claim discharged, in whatever world is being judged — which is what lets a
             #  possible world where Apply ran count as satisfying, and the world in hand not.
             if desire.is_obligation:
-                return (URIRef(desire.uri), _AG.dischargedAt, None) in world
+                return self._holds(node, desire.uri, str(_AG.dischargedAt))
             #  A want with no shape and no property — a CALL (#359) — is met exactly where
             #  whoever measures it says it is: zero urgency in the world being judged. Asked
             #  of the imaginarium at the node's graph, as `_urgency_in` asks.
-            if graph is not None:
-                answer = self.agent.desire_urgency(desire, self.imaginarium.query, graph)
-                if answer is not None:
-                    return answer <= 0.0
+            answer = self.agent.desire_urgency(desire, self.imaginarium.query, node.graph)
+            if answer is not None:
+                return answer <= 0.0
             return desire.is_met
-        results, _ = judge(world, shape)
+        results, _ = judge(self._border(node), shape)
         return not list(results.subjects(RDF.type, _SH.ValidationResult))
+
+    def _holds(self, node, subject: str, predicate: str) -> bool:
+        """Whether this node's world states anything about `subject` under `predicate`.
+
+        A membership test the flat world used to answer with `in`, asked of the imaginarium
+        instead (#481). SCOPED, and that is the whole care of it: an unscoped `GRAPH ?g` would
+        read every SIBLING world in the store too, so the graphs are named — this node's
+        readings and the invariant ones, which is exactly what `_border` writes.
+        """
+        graphs = " ".join(f"<{iri}>" for iri in self._invariant_graphs + (node.graph,))
+        return bool(bindings(self.imaginarium.query(
+            f"SELECT ?x WHERE {{ VALUES ?g {{ {graphs} }} "
+            f"GRAPH ?g {{ <{subject}> <{predicate}> ?x }} }} LIMIT 1")))
 
     def _avoided_pattern(self, desire: Desire) -> str | None:
         """The `orexis:unmetWhen` select this want carries, or None — the negative twin."""
@@ -253,14 +270,14 @@ class Planner:
             log.error("avoided-state pattern failed to run: %s", exc)
             return True
 
-    def _shape_of(self, desire: Desire, world):
+    def _shape_of(self, desire: Desire):
         """The desire's shape, with everything hanging off it, or None if it has none.
 
         Asked of the DESIRE MODALITY, not of the world being judged (#298): what is pursued
         and what is are different stores now, and validation was always two graphs — the
-        world is the data, the shape is the question. `world` stays a parameter because the
-        met-check is about it, and the shapes snapshot is per pass (`_begin`), so a rebuild
-        mid-search cannot hand two depths two different wants.
+        world is the data, the shape is the question. It took a `world` argument it never
+        read, for years, as a note that the met-check is about one; the shapes snapshot is per
+        pass (`_begin`), so a rebuild mid-search cannot hand two depths two different wants.
         """
         node = URIRef(desire.uri)
         #  The met-test hangs OFF the desire node since the reification — a desire is a node
@@ -302,7 +319,6 @@ class Planner:
         #  observer's cost as the observed's.
         self._started = time.monotonic()
         here = self._begin(desire)
-        base = here.world
         #  CLEARED AT THE START, which is the difference between a graph that holds one pass
         #  and one that holds two. It also means a pass that raises leaves no trace claiming
         #  to describe a decision nobody reached.
@@ -314,7 +330,7 @@ class Planner:
         #  urgency: inside the region and off the pick is a true situation. Only a desire
         #  whose measure reads zero has nothing a step could improve, so only that one skips
         #  the search — which also keeps the per-tick cost of a calm society what it was.
-        met_now = self._met_in(base, desire, STATE_GRAPH)
+        met_now = self._met_in(here, desire)
         if met_now and here.urgency <= 0.0:
             return self._record(desire, Plan(SATISFIED, (), here.urgency, here.urgency),
                                 here.urgency)
@@ -351,7 +367,7 @@ class Planner:
                         #  met-test can crown it and never expanded — and the next legal
                         #  candidate wins by construction, which retires the no-fallback
                         #  seam rather than implementing it.
-                        newly = self._forbidden_keys(step.world) - self._base_forbidden
+                        newly = self._forbidden_keys(step) - self._base_forbidden
                         if newly:
                             self._weighed.append((depth, row, step.urgency, trace.FORBIDDEN))
                             continue
@@ -413,7 +429,7 @@ class Planner:
                     #  would answer "look" on every tick — a step that changes nothing
                     #  reported as achieving something. Met and still urgent is steering
                     #  toward the pick, and steering is what `best` below is for.
-                    if (novel or not met_now) and self._met_in(step.world, desire, step.graph):
+                    if (novel or not met_now) and self._met_in(step, desire):
                         self._weighed.append((depth, row, step.urgency, trace.MET))
                         if met_now:
                             #  Already met and still steering: the first novel step that
@@ -424,7 +440,7 @@ class Planner:
                                 desire,
                                 self._offer(Plan(SATISFIED, step.taken, here.urgency,
                                                  step.urgency),
-                                            desire, step.world),
+                                            desire, step),
                                 here.urgency)
                         #  ACHIEVERS ARE COLLECTED, never returned on sight — the
                         #  sovereign's two-stage cut (#466): urgency is the DESIRE's term
@@ -481,7 +497,7 @@ class Planner:
             return self._record(
                 desire,
                 self._offer(Plan(SATISFIED, won.taken, here.urgency, won.urgency),
-                            desire, won.world),
+                            desire, won),
                 here.urgency)
 
         #  A pass that ends with no step worth taking is labelled by the SHAPE, not by the
@@ -499,8 +515,8 @@ class Planner:
                                            (), here.urgency, after,
                                            self._skipped), here.urgency)
         return self._record(desire, self._offer(
-            Plan(EXHAUSTED if not self._met_in(best.world, desire, best.graph) else SATISFIED,
-                 best.taken, here.urgency, best.urgency), desire, best.world), here.urgency)
+            Plan(EXHAUSTED if not self._met_in(best, desire) else SATISFIED,
+                 best.taken, here.urgency, best.urgency), desire, best), here.urgency)
 
     def _record(self, desire, plan, stands_at):
         """Write the pass down and hand back the plan unchanged.
@@ -515,7 +531,7 @@ class Planner:
                     time.monotonic() - self._started)
         return plan
 
-    def _offer(self, plan: Plan, desire: Desire, world) -> Plan:
+    def _offer(self, plan: Plan, desire: Desire, node) -> Plan:
         """A plan, once it has been checked for legality — and only the winner is checked.
 
         Validating every candidate against the whole rulebook was the obvious reading and costs
@@ -537,6 +553,12 @@ class Planner:
         """
         if not plan.steps:
             return plan
+        #  THE ONE PLACE A WORLD IS STILL FLATTENED INTO RDFLIB, and it is affordable because
+        #  it happens once per pass rather than once per node: `conforms` carves the shapes an
+        #  agent holds out of its own data with `cbd`, which is an rdflib walk. Parsed from
+        #  the same text every other verdict this pass was given.
+        world = rdflib.Graph()
+        world.parse(data=self._border(node), format="nt")
         ok, _ = conforms(world, focus=self.me.uri)
         if ok:
             return plan
@@ -562,7 +584,7 @@ class Planner:
             law.bind(prefix, ns)
         return law if found else None
 
-    def _forbidden_keys(self, world) -> frozenset:
+    def _forbidden_keys(self, node) -> frozenset:
         """Which forbidden states this world is in — keyed so never-newly-enter can subtract.
 
         The key is (shape, focus, value): enough to tell a NEW entry from the one the base
@@ -573,7 +595,7 @@ class Planner:
         #  declared-Violation cbds), so judge.py's severity gap cannot reach the keys. A law
         #  shape MIXING forces within itself would need the split conformance._judged does —
         #  none exists today, and the result filter below is where it would show.
-        results, _ = judge(world, self._law)
+        results, _ = judge(self._border(node), self._law)
         return frozenset(
             (str(results.value(r, _SH.sourceShape)),
              str(results.value(r, _SH.focusNode)),
@@ -700,19 +722,41 @@ class Planner:
         #  the gates, met from the planner's side. Empty in a world that ratifies no such
         #  shape, and then this costs nothing per node.
         self._law = self._violation_shapes(base)
-        self._base_forbidden = (self._forbidden_keys(base)
+        #  THE INVARIANT HALF OF EVERY WORLD THIS PASS WILL JUDGE, written once by the store's
+        #  own engine (#481). Every graph the imaginarium copied EXCEPT the readings — those
+        #  are what a step changes, and each node carries its own — plus the wants, which the
+        #  flat world carried before and `_offer` still needs. Asked rather than named, like
+        #  everything else about which graphs exist.
+        self._invariant_graphs = tuple(
+            iri for iri in list(self.agent.beliefs.public_graphs())
+            + list(self.agent.beliefs.recorded_graphs()) if iri != STATE_GRAPH)
+        self._invariant = (self.imaginarium.dump_nt(*self._invariant_graphs)
+                           + self._shapes.serialize(format="nt"))
+        here = _Node(graph=STATE_GRAPH, readings=self.imaginarium.dump_nt(STATE_GRAPH))
+        self._base_forbidden = (self._forbidden_keys(here)
                                 if self._law is not None else frozenset())
-        return _Node(world=base, graph=STATE_GRAPH,
-                     urgency=self._urgency_in(base, STATE_GRAPH, desire))
+        here.urgency = self._urgency_in(here, desire)
+        return here
+
+    def _border(self, node) -> str:
+        """This node's whole world as one N-Triples text, for the judge.
+
+        The invariant half is every graph a judged world holds that no step can change —
+        public knowledge, this agent's beliefs, whatever it records — plus the wants, which
+        ride along because `_offer`'s legality check needs them. Written once per pass in
+        `_begin`. The variant half is this node's readings, and a concatenation is all that
+        separates them because N-Triples lines stand alone.
+        """
+        return self._invariant + node.readings
 
     def _step_from(self, node, row, desire: Desire):
         """The node one step on from here, or None where the rule would not run.
 
-        The diff is computed ONCE and lands in both halves of what a node is: the imaginarium
-        graph the next step's rule will read, and the flat rdflib world validation reads. Asked
-        of the IMAGINARIUM and not of the belief base, which is the whole of #254 — a retraction
-        asked of the store finds the observation still on disk, so the second dose lands beside
-        the first instead of replacing it and is then discarded as a world already seen.
+        The diff lands in ONE place — the imaginarium graph the next step's rule will read —
+        and the node keeps that graph's text for the judge. Asked of the IMAGINARIUM and not of
+        the belief base, which is the whole of #254 — a retraction asked of the store finds the
+        observation still on disk, so the second dose lands beside the first instead of
+        replacing it and is then discarded as a world already seen.
         """
         bind = self._bind(desire, node, row)
         try:
@@ -720,7 +764,6 @@ class Planner:
         except Exception as exc:                 # a package's rule is not an agent's problem
             log.error("could not simulate %s: %s", row.action, exc)
             return None
-        world = effects.applied(node.world, added, retracted)
         #  THE ROW BECOMES AN ACT here, where it is sized — the quantity the taker answered is
         #  what the rule just simulated — and the act becomes a STEP once the world it reaches
         #  is scored. An act carries no window yet: nothing in a search knows when.
@@ -737,10 +780,11 @@ class Planner:
         #  And what it spends — `orexis:costs`, the landing's twin (#466). None is free.
         spent = effects.cost_of(self.imaginarium, row.action, **bind)
         cost = node.cost + (spent or 0.0)
-        urgency = self._urgency_in(world, graph, desire)
-        taken = node.taken + (Step(act, urgency_after=urgency),)
-        return _Node(world=world, graph=graph, taken=taken, urgency=urgency, diff=diff,
+        step = _Node(readings=self.imaginarium.dump_nt(graph), graph=graph, diff=diff,
                      landing=landing, cost=cost)
+        step.urgency = self._urgency_in(step, desire)
+        step.taken = node.taken + (Step(act, urgency_after=step.urgency),)
+        return step
 
     def _bind(self, desire: Desire | None, node=None, row=None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.

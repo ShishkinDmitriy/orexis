@@ -36,17 +36,33 @@ row — a number without its machine is an impression.
 | 2026-09-01 | `13876fc` | 5.71 s | 2.65 s | ONE Move action — one action costs nothing |
 | 2026-09-01 | `the-judge-speaks-rust` | 6.19 s | 2.55 s | rudof judge, Turtle border |
 | 2026-09-01 | `the-judge-speaks-rust` | **5.52 s** | 2.17 s | the border speaks N-Triples — rdflib's Turtle WRITER was a third of the judge's cost |
+| 2026-09-01 | `a-node-holds-one-world` | **2.03 s** | 1.67 s | the per-node rdflib copy is gone (#481) — 198,144 `Graph.add` calls became 23,282 |
 
 # Where the time goes (profiled at `13876fc`)
 
-- **~70% of the solve is `effects.applied`** — every candidate step copies the ENTIRE base
-  world (~2,300 triples) into a fresh rdflib graph, triple by triple, in Python. Expansion
-  is O(world), not O(diff): 76 candidates × 2,300 triples for a plan whose steps each
-  change 2–4.
-- **All 1,237 SPARQL queries cost 0.4 s** — pyoxigraph is never the problem.
-- **`conformance.conforms` ran twice and cost ~25%** — pySHACL judges a world in ~1.4 s,
-  most of it cloning and preparing the very graphs `applied` just built.
-- Boot (`runtime.Agent` + `validate_agent`) is ~2.6 s and outside the search.
+That reading is now history, and it is kept because the shape of it recurs: **~70% of the
+solve was `effects.applied`**, copying the entire ~2,300-triple world into a fresh rdflib graph
+per candidate to express a step that changed four triples — O(world) where the work is
+O(diff) — while all 1,237 SPARQL queries cost 0.4 s. The copy existed to feed a judge that
+read rdflib. Both are gone (#481,
+[a-node-holds-one-world](/decisions/a-node-holds-one-world.md)).
+
+Profiled at `a-node-holds-one-world`, the same solve:
+
+| | |
+|---|---|
+| pyoxigraph — 1,280 SPARQL queries and every world dump | 14% |
+| rudof — four verdicts, most of it its reader's fixed floor | 8% |
+| rdflib — down from 55%, and 23,282 `Graph.add` calls from 198,144 | 33% |
+| **our own planner and kernel Python** | **6%** |
+
+What is left of rdflib is per-PASS rather than per-node: parsing the wants, and the one world
+`_offer` flattens to check legality. Boot (`runtime.Agent` + `validate_agent`) is ~1.5 s and
+outside the search.
+
+**The planner's own logic has never been the cost** — 4–6% across every profile taken here.
+A faster language for it would buy that much and no more; what bought 3× twice over was
+moving data less.
 
 The two levers, in order: judge through a faster engine (below), and stop paying the
 per-node rdflib copy — a node's flat world already exists in the imaginarium, so the rdflib

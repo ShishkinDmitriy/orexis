@@ -273,6 +273,23 @@ class Store:
         )
         return out.getvalue().decode()
 
+    def dump_nt(self, *graph_iris: str) -> str:
+        """Several graphs as ONE N-Triples text, written by the store's own engine.
+
+        N-Triples because it CONCATENATES — every line stands alone, so several graphs join
+        with `+` and nothing has to be re-parsed to merge them — and because the writer is the
+        cost at a border: rdflib spends 86 ms on 2,400 triples of Turtle where N-Triples takes
+        12, since Turtle groups by subject and hunts for prefixes. Four times the bytes, and
+        nobody reads them. See knowledge/runbooks/measure-the-search.md.
+
+        A graph nobody has written to contributes nothing, exactly as `get_graph` allows.
+        """
+        out = io.BytesIO()
+        for iri in graph_iris:
+            self._store.dump(output=out, format=ox.RdfFormat.N_TRIPLES,
+                             from_graph=ox.NamedNode(iri))
+        return out.getvalue().decode()
+
     def quads(self, graph_iri: str):
         """One graph's contents as QUADS, for a reader that is going to put them somewhere else.
 

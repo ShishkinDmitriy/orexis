@@ -116,10 +116,16 @@ another one.
   building rdflib worlds per node — the O(world)-per-candidate copy
   [measure-the-search](/runbooks/measure-the-search.md) measured at seventy percent of a
   solve. That is a debt with a definition of done, filed rather than restated here.
-- **The gaps are reported nowhere upstream yet.** rudof's tracker does not know its
-  `sh:SPARQLTarget` is a silent no-op, nor that a qualified constraint overwrites an authored
-  message; when upstream closes them, `_resolved_ttl` and `_prose_restored` become removable —
-  each is one function, and each carries a comment naming this record.
+- **The two gaps are of different kinds, and rudof's own roadmap says which.**
+  [#94](https://github.com/rudof-project/rudof/issues/94) covers the SHACL Recommendation and
+  lists `sh:message` and `sh:severity` as supported; SPARQL-based TARGETS appear nowhere in it,
+  because they are SHACL-AF — the same spec as the constraints tracked in
+  [#671](https://github.com/rudof-project/rudof/issues/671). So `_resolved_ttl` supplies
+  something never claimed and is a stable arrangement rather than a temporary one, while
+  `_prose_restored` compensates for a claim the engine does not keep: measured at 0.3.16, an
+  authored message survives a `minCount` and is replaced by generated arithmetic on a
+  `sh:qualifiedMaxCount`. Neither is reported upstream yet, and the second is a bug worth
+  reporting with the six-line case that found it.
 
 # Issues this emits
 
