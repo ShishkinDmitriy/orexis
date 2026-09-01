@@ -60,9 +60,29 @@ What actually carries it is two things, neither about retraction:
   planner bookkeeping into **every package's `rules.ru`**, and a domain author would have to
   know how hypotheses are stored in order to ask whether a disk is on a peg. It holds whether
   the change is an upsert or a deletion.
-- **There is nothing left to save.** The mutable slice IS the diff, near enough: measured on a
-  3-disk solve, the per-node dump costs 0.01 s across 78 nodes and the fork 0.02 s, against
-  0.38 s for the rules themselves. An overlay would optimise three hundredths of a second.
+- **There is nothing left to save AT THIS SIZE, and size is the whole of it.** A node holds the
+  FULL mutable slice, not a diff — `reached` copies its parent's readings and applies the
+  change — so the per-node cost is O(state), not O(step). It is free here because the state is
+  three triples: measured on a 3-disk solve, the dump costs 0.01 s across 78 nodes and the fork
+  0.02 s, against 0.38 s for the rules. An overlay would optimise three hundredths of a second.
+
+  **That is a limit, not a property**, and it was measured rather than assumed. Forking one
+  node, as the mutable slice grows, the diff staying one triple throughout:
+
+  | mutable slice | per node | × 78 nodes |
+  |---|---|---|
+  | 3 triples | 0.05 ms | 0.004 s |
+  | 100 | 1.0 ms | 0.08 s |
+  | 1,000 | 5.9 ms | 0.46 s |
+  | 10,000 | 68 ms | **5.3 s** |
+  | 50,000 | 404 ms | **32 s** |
+
+  Linear in the slice, paid once per node. A society whose agents observe hundreds of subjects,
+  or a domain whose state is thousands of facts, crosses into the regime where the sovereign's
+  overlay is the right design and this one is not — and the cost of going there is stated
+  above: precedence has to enter the rule text. The number to watch is the size of the mutable
+  slice, and the place to watch it is
+  [measure-the-search](/runbooks/measure-the-search.md).
 
 So the world stays materialised per node — but in ONE store, the Rust one, forked by diff,
 which is what the imaginarium was always for. The copy that was deleted is not the world; it is

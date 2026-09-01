@@ -102,6 +102,28 @@ border once per `conforms` rather than once per shape. Closing #481 — crossing
 the imaginarium's pyoxigraph store, whose Rust writer replaces rdflib's — moves the whole curve
 and is where the remaining win is.
 
+# The number that decides the search's shape: the mutable slice
+
+A search node holds the FULL mutable slice of its world — its readings — not a diff, so
+expansion is O(state) per node however small the step was. Measure it before assuming a world
+is cheap to search:
+
+```bash
+python -c "
+import sys; sys.path.insert(0,'tests')
+from conftest import genesis_store
+from orexis_agent_progression.ontology import STATE_GRAPH
+st = genesis_store(world='<world>')
+print(len(st.dump_nt(STATE_GRAPH).splitlines()), 'triples in the mutable slice')"
+```
+
+Measured cost of one fork plus one dump, as that slice grows (the diff held at one triple):
+0.05 ms at 3 triples, 1.0 ms at 100, 5.9 ms at 1,000, 68 ms at 10,000, 404 ms at 50,000 —
+linear, and paid once per node. At 78 nodes that is 4 ms, 0.08 s, 0.46 s, 5.3 s, 32 s. The
+shipped worlds sit at 3–5 triples. Past roughly a thousand, the per-node copy stops being free
+and the design to reach for is an overlay, whose price is stated in
+[a-node-holds-one-world](/decisions/a-node-holds-one-world.md).
+
 # The judge in Rust: criteria before adoption
 
 The engine under everything else is already Rust (pyoxigraph). The judge is not:
