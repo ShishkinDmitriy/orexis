@@ -68,9 +68,19 @@ So the world stays materialised per node — but in ONE store, the Rust one, for
 which is what the imaginarium was always for. The copy that was deleted is not the world; it is
 the translation of the world into another library.
 
-**Worth noticing on its own: every state change in this system replaces a value rather than
-removing one.** That is not a rule anyone wrote down, and it is what makes the per-node fork
-cheap — the mutable slice stays the same size however long a plan runs.
+**Worth noticing, and worth not over-reading: today every state change in this system replaces
+a value rather than removing one.** It is a fact about five effects, not a property of the
+design, and it follows from what the mutable slice happens to be — observations keyed by
+(subject, property), and hanoi's `on` — both FUNCTIONAL, one value per subject, so the natural
+change is replacement. State modelled as a set-valued predicate would delete for real: a
+`clear(peg)` formulation of this same puzzle removes a fact with no replacement, and so would a
+lot leaving a venue's offers, or a sensor leaving a rig.
+
+**The machinery takes one already**, and was checked rather than assumed: a retraction with an
+empty add list forks a child whose readings are empty and whose `signature.advance` diff is a
+removal, which is what cycle detection reads. So this is a note about what the shipped domains
+happen to do, not a constraint on what one may do — and the moment a domain deletes for real,
+the overlay argument above gains the leg it does not have today.
 
 ## What did not change
 
