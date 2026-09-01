@@ -34,7 +34,8 @@ row — a number without its machine is an impression.
 |---|---|---|---|---|
 | 2026-08-31 | `718274e` | 5.8 s | 1.9 s | six ground actions; first measurement |
 | 2026-09-01 | `13876fc` | 5.71 s | 2.65 s | ONE Move action — one action costs nothing |
-| 2026-09-01 | `the-judge-speaks-rust` | 6.19 s | 2.55 s | rudof judge; caches recover most of the border tax, the rest is rdflib serializing at the crossing (#481) |
+| 2026-09-01 | `the-judge-speaks-rust` | 6.19 s | 2.55 s | rudof judge, Turtle border |
+| 2026-09-01 | `the-judge-speaks-rust` | **5.52 s** | 2.17 s | the border speaks N-Triples — rdflib's Turtle WRITER was a third of the judge's cost |
 
 # Where the time goes (profiled at `13876fc`)
 
@@ -49,7 +50,41 @@ row — a number without its machine is an impression.
 
 The two levers, in order: judge through a faster engine (below), and stop paying the
 per-node rdflib copy — a node's flat world already exists in the imaginarium, so the rdflib
-view could be derived lazily at the one boundary that needs it.
+view could be derived lazily at the one boundary that needs it (#481).
+
+# Why a Rust engine is not automatically faster
+
+Worth keeping, because the first swap made the bench SLOWER (5.71 s → 6.19 s) with an engine
+that is genuinely quicker at the thing it does. Measured per verdict on 2,400 triples:
+
+| | |
+|---|---|
+| rudof's validation proper | **16 ms** — against pySHACL's ~100 ms for the same work |
+| rudof's `read_data` | **67 ms for TWO triples**, a fixed floor paid on every call |
+| rdflib writing Turtle at the border | 86 ms — its writer groups by subject and hunts prefixes |
+| rdflib writing N-Triples instead | **12 ms**, four times the bytes and nobody reads them |
+
+So the engine was never the cost: the BORDER was, plus a fixed floor inside the reader. Two
+lessons generalise past this repo. **A faster engine behind a serialization boundary is a
+slower system until the boundary is cheaper than the win** — and the cheapest fix was choosing
+the dumber format, because the expensive half is the WRITER, not the parser. **And a fixed
+per-call floor decides everything at small volume**: our worlds are ~2,300 triples, where 67 ms
+is most of a verdict.
+
+In our pattern — the data arrives as an rdflib graph and must cross — the two judges cross
+over around **5,000 triples**:
+
+| triples | pySHACL | rudof (N-Triples border) | |
+|---|---|---|---|
+| 300 | 16 ms | 83 ms | pySHACL 5.2× |
+| 2,400 | 124 ms | 130 ms | even |
+| 9,000 | 478 ms | 276 ms | rudof 1.7× |
+| 60,000 | 3.7 s | 1.9 s | rudof 2.0× |
+
+We sit just below the crossover and still come out ahead end-to-end, because a solve pays the
+border once per `conforms` rather than once per shape. Closing #481 — crossing straight from
+the imaginarium's pyoxigraph store, whose Rust writer replaces rdflib's — moves the whole curve
+and is where the remaining win is.
 
 # The judge in Rust: criteria before adoption
 

@@ -10,9 +10,11 @@ description: >-
   staying on pySHACL, which cost a quarter of a hanoi solve, held the kernel to rdflib, and
   answered qualified shapes wrong under focus. pySHACL is not gone: the inference-parity gate
   and four test files still hold the closure to what it would entail. Measured on the bench:
-  three disks 6.43 s against 5.71 s before the swap and 7.95 s at the first cut — the caches
-  recovered most of the border tax, and what remains is rdflib serializing the data at the
-  crossing, which is the seam.
+  three disks 5.52 s against 5.71 s before the swap, having been 7.95 s at the first cut — and
+  the swap only paid once the border stopped speaking Turtle, since rdflib's Turtle WRITER was
+  a third of a verdict where the Rust validation is a sixth of pySHACL's. A faster engine
+  behind a serialization boundary is a slower system until the boundary is cheaper than the
+  win.
 status: accepted
 timestamp: 2026-09-01T17:20:00Z
 ---
@@ -105,9 +107,12 @@ another one.
 
 # Seams left open
 
-- **The data still crosses the border through rdflib.** `crossed` serializes the flat rdflib
-  world per `conforms`; the same content already sits in the imaginarium's pyoxigraph store,
-  whose Rust serializer is a fraction of the cost. Taking that road means the planner stops
+- **The data still crosses the border through rdflib, and rudof's reader has a floor.**
+  `crossed` serializes the flat rdflib world per `conforms` — cheaply now, in N-Triples — and
+  `read_data` then costs ~67 ms before it has looked at anything, measured on two triples.
+  Together they put the two judges' crossover around 5,000 triples, just above where our
+  worlds sit; the same content already lives in the imaginarium's pyoxigraph store, whose Rust
+  writer would remove our half of it. The floor is rudof's to fix and is unreported upstream. Taking that road means the planner stops
   building rdflib worlds per node — the O(world)-per-candidate copy
   [measure-the-search](/runbooks/measure-the-search.md) measured at seventy percent of a
   solve. That is a debt with a definition of done, filed rather than restated here.
