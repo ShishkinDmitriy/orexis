@@ -348,6 +348,10 @@ class Planner:
                 if desire.expires is not None else None)
         best, saw_candidate = here, False
         achieved = []
+        #  THE BOUND: what the cheapest achiever found so far spends. None until one is found,
+        #  and from then on a candidate spending MORE than it is discarded unexamined — see
+        #  `_beyond` below for why that is sound rather than a heuristic.
+        bound = None
         self._skipped = False
         self._weighed = []
         seen = {here.diff}
@@ -359,7 +363,12 @@ class Planner:
                     saw_candidate = True
                     #  Steps are ROWS, not means: a plan is a path through the affordance
                     #  graph, and which lever a step goes through is half of what it says.
-                    step = self._step_from(node, row, desire)
+                    step = self._step_from(node, row, desire, bound)
+                    if step is TOO_DEAR:
+                        #  Never simulated, so there is no urgency to report: what the trace
+                        #  records is that the search refused to spend on it, and why.
+                        self._weighed.append((depth, row, None, trace.COSTLY))
+                        continue
                     if step is None:
                         self._weighed.append((depth, row, None, trace.UNSIMULATED))
                         continue
@@ -455,6 +464,7 @@ class Planner:
                         #  An achiever still never extends the frontier: a step that
                         #  answers the question is not a place to search onward from.
                         achieved.append(step)
+                        bound = step.cost if bound is None else min(bound, step.cost)
                         continue
                     if not novel:
                         self._weighed.append((depth, row, step.urgency, trace.SEEN))
@@ -489,7 +499,17 @@ class Planner:
                     #  real question again exactly there, and nowhere earlier. See
                     #  `signature.py`.
                     nxt.append(step)
-            frontier = nxt
+            #  CHEAPEST AND NEAREST FIRST, which tightens the bound above sooner and decides
+            #  nothing else: the winner is `min` over the achievers by (cost, urgency), so
+            #  visiting order cannot change it — only how much is visited before the bound
+            #  starts refusing work.
+            #
+            #  NOT when the want is already met, and that exception is not caution. A met want
+            #  returns on the FIRST novel step that keeps it met, deliberately — re-picking
+            #  among keepers would be shopping for a want that is not shopping — so ordering
+            #  the frontier there would change which keeper is answered with, for no gain: a
+            #  met pass has no achiever to bound against.
+            frontier = nxt if met_now else sorted(nxt, key=lambda s: (s.urgency, s.cost))
             if not frontier:
                 break
 
@@ -759,7 +779,7 @@ class Planner:
             node.readings = self.imaginarium.dump_nt(node.graph)
         return self._invariant + node.readings
 
-    def _step_from(self, node, row, desire: Desire):
+    def _step_from(self, node, row, desire: Desire, bound: float | None = None):
         """The node one step on from here, or None where the rule would not run.
 
         The diff lands in ONE place — the imaginarium graph the next step's rule will read —
@@ -769,6 +789,14 @@ class Planner:
         replacing it and is then discarded as a world already seen.
         """
         bind = self._bind(desire, node, row)
+        #  WHAT IT SPENDS, ASKED FIRST — `orexis:costs`, the landing's twin (#466), and None is
+        #  free. It is asked before the rule is run because that is what makes the bound worth
+        #  having: a candidate already dearer than a plan in hand is dropped without simulating
+        #  its effect or forking its world, which are the two expensive things a step does.
+        spent = effects.cost_of(self.imaginarium, row.action, **bind)
+        cost = node.cost + (spent or 0.0)
+        if bound is not None and cost > bound:
+            return TOO_DEAR
         try:
             added, retracted = effects.apply(self.imaginarium, row.action, **bind)
         except Exception as exc:                 # a package's rule is not an agent's problem
@@ -787,9 +815,6 @@ class Planner:
         #  stated timing — adds nothing, which is the keeper's own contract for it.
         lands = effects.lands_after(self.imaginarium, row.action, **bind)
         landing = node.landing + (lands or 0.0)
-        #  And what it spends — `orexis:costs`, the landing's twin (#466). None is free.
-        spent = effects.cost_of(self.imaginarium, row.action, **bind)
-        cost = node.cost + (spent or 0.0)
         step = _Node(graph=graph, diff=diff, landing=landing, cost=cost)
         step.urgency = self._urgency_in(step, desire)
         step.taken = node.taken + (Step(act, urgency_after=step.urgency),)
@@ -797,6 +822,17 @@ class Planner:
 
     def _bind(self, desire: Desire | None, node=None, row=None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.
+
+        `bound` is what the cheapest plan found so far spends, or None while none has been.
+        BRANCH AND BOUND, and it changes which candidates are looked at rather than which plan
+        wins: `orexis:costs` is never negative and a path sums it, so a candidate already
+        dearer than a plan in hand can only grow dearer — no descendant of it can beat the
+        bound. Measured on a 3-disk solve, the first achiever lands at node 48 of 76.
+
+        STRICTLY dearer, and the strictness is load-bearing. An action that declares no cost is
+        FREE, so a descendant may cost exactly what its parent did — and an achiever tying on
+        cost still wins on urgency, the tie-break `min` applies among achievers. Pruning at
+        `>=` would throw away a plan that ties on money and is nearer the aim.
 
         `node` is where the step is being taken FROM, and passing it is what makes depth 2
         more than a number. It carries BOTH halves of that, and the second is #254: the value
@@ -890,6 +926,11 @@ class Planner:
         return graph_from(self.agent.beliefs, *self.agent.beliefs.public_graphs(),
                           *self.agent.beliefs.recorded_graphs())
 
+
+#  What `_step_from` hands back for a candidate that cannot beat the plan already in hand.
+#  Distinct from None, which means the rule would not run: one is a defect worth reporting and
+#  the other is the search declining work it has proved it does not need.
+TOO_DEAR = object()
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 _AG = rdflib.Namespace("http://example.org/orexis#")

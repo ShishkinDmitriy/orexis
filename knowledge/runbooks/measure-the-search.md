@@ -102,6 +102,42 @@ border once per `conforms` rather than once per shape. Closing #481 — crossing
 the imaginarium's pyoxigraph store, whose Rust writer replaces rdflib's — moves the whole curve
 and is where the remaining win is.
 
+# What the search costs, and the one thing that breaks it
+
+A pass is deep and narrow: the menu is 2–3 rows per node on hanoi and ONE in `world/simulation`,
+because a precondition query only yields a row whose premises hold. So the levers that pay are
+about depth, not width.
+
+**Cost bound**, landed: `orexis:costs` is asked before a candidate is simulated, and one already
+dearer than the cheapest plan in hand is dropped unsimulated and unforked. Sound rather than
+heuristic — cost is non-negative and a path sums it, so no descendant can beat the bound.
+Measured on 3 disks: 76 forks to 56, depth 8 to 7, 20 candidates refused, 2.05 s to 1.69 s.
+Strictly dearer, never `>=`: a free action lets a descendant tie, and an achiever tying on cost
+still wins on urgency.
+
+**Frontier ordering**, landed and doing NOTHING today: cheapest-and-nearest-first tightens the
+bound sooner in principle, but hanoi's want is binary — every node scores 1.0 until one scores
+0.0 — so the key cannot discriminate and a stable sort returns the old order. It will matter to
+a domain with continuous urgency AND branching, and it is measured as a no-op until then.
+
+**The thing that breaks all of it: a free action from another domain.** Added ONE to `world/hanoi`
+as data — a knob flipping between two positions, no cost, genuinely changing state:
+
+| | forks | refused by the bound | wall |
+|---|---|---|---|
+| hanoi alone | 56 | 20 | 2.26 s |
+| + one free foreign action | **157** | **20** | 3.77 s |
+
+2.8x from one lever, ~2^k from k of them, and every defence misses it: the bound is blind to a
+free action, cycle detection cannot fold a world that genuinely changed, and the want scoping in
+`_candidates` only filters rows whose `available` binds `?want` — which a foreign package need
+not, and which the hanoi want skips entirely for want of an `orexis:about`. The plan stays
+CORRECT; only the cost explodes, which is why nothing catches it.
+
+That is [#488](https://github.com/ShishkinDmitriy/orexis/issues/488), and it is a prerequisite
+for the plug-in claim rather than an optimisation of it: hanoi shows a domain can be a plug-in,
+and nothing yet shows two can share an agent.
+
 # The number that decides the search's shape: the mutable slice
 
 A search node holds the FULL mutable slice of its world — its readings — not a diff, so
