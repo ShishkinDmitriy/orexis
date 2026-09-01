@@ -1,108 +1,95 @@
 ---
 type: Decision
-title: A want met by absence, and the law beside it
+title: A want met by absence is ratified data, and the capability built for it dissolved
 description: >-
-  #468 built, in the two halves the #467 sitting ruled. SOFT: an aversion is a capability
-  package granted by the statement itself — `aversion:avoids`, one ratified node carrying
-  the pattern whose rows mean ENTERED — deriving a want with no `orexis:metWhen`, because
-  its met-test IS its measure reading zero: one text, one engine, against whichever world
-  is judged, which closes before it opens the flat-versus-named-graph split a met-shape
-  would have forced. Binary urgency, the achiever road out, cost picking among exits.
-  HARD: a ratified `sh:Violation` shape over a runtime state is pruned at EXPANSION with
-  never-newly-enter semantics — an agent already inside keeps its exit plans — and the
-  next legal candidate wins by construction, which retires the no-fallback seam rather
-  than implementing it. Measured on the bench: 53 ms per node, ≈372 ms a pass, paid only
-  where a world ratifies law. Refused: a metWhen for the want, pySHACL for the pattern,
-  a graph-distance gradient, and aggregation-now.
+  #468, built twice in one day, and the second build is the record. The first shipped a
+  capability package — a statement, a grant, a derivation, a module — and the sovereign
+  dismantled it in review with three cuts: it is closely coupled to desire because it IS a
+  desire; control belongs at the shape level, a pattern that violates when the state exists;
+  and a met-test pointing at the bad state reads inverted, so the kernel gained
+  `orexis:unmetWhen`, the negative twin, one of the two and never both. What replaced the
+  package is two kernel closes — the wants no module speaks for reach pursuing, because
+  wanting is the kernel's, and a pattern-carrying want is judged met-or-not by its own
+  select on the store's engine — plus the world ratifying the DESIRE itself through the
+  asserted block. The law half stands from the first build: violation shapes pruned at
+  expansion, never-newly-enter, 53 ms a node. The dissolved package is recorded, not hidden:
+  nothing could differ in its one member, and pure ratified data has no behaviour to grant.
 status: accepted
-timestamp: 2026-09-01T06:18:51Z
+timestamp: 2026-09-01T07:43:02Z
 ---
 
-# A want met by absence, and the law beside it
+# A want met by absence is ratified data, and the capability built for it dissolved
 
-[#468](https://github.com/ShishkinDmitriy/orexis/issues/468), built as the sitting ruled it:
-the SHALL NOT is soft — a want — and the MUST NOT is law — a shape — and neither borrows the
-other's machinery.
+[#468](https://github.com/ShishkinDmitriy/orexis/issues/468) was built twice in one day, and
+the record is the second build together with why the first was wrong — kept, because the
+dismantling is the argument.
 
-## The soft half: one statement, three jobs
+## The first build, and the three cuts that took it apart
 
-`aversion:avoids` is the premise, the grant and the want's content in one ratified statement,
-the latitude cut ([self-review-is-a-capability](/decisions/self-review-is-a-capability.md))
-applied again: being told what to steer clear of is the whole of what makes steering
-meaningful. Its object is a NAMED node — a want minted from it must survive a rebuild, and a
-blank node's label does not — carrying one `sh:select`, the pattern whose rows mean ENTERED.
-The package (`packages/orexis-capability-aversion/`) derives the want, copies the statement
-into the derived graph (the desires store drops its public premises, and a pattern left
-behind would be a dangling reference), and answers the choir for its own kind.
+The first build shipped `orexis-capability-aversion`: an `avoids` statement as premise and
+grant, a derivation minting the want, a module contributing and judging it, and a deliberate
+trick — the want carried no met-test at all, so that one text on one engine could judge it.
+The sovereign dismantled it in review:
 
-**The want carries no `orexis:metWhen`, and that is the record's sharpest choice.** A met-shape
-would have been a SECOND text beside the measure, and the two would have run on two engines
-with two graph visibilities — pySHACL over the flat world, the measure over named graphs —
-which is the exact split this repo has closed once already. Instead the met-test IS the
-measure reading zero, the road a call already takes (#359): the ratified select, `$this` and
-`$state` substituted (in the pattern, never the projection — a substituted IRI in a SELECT
-clause is a parse error, found the first time it ran), one engine, whichever world is judged.
-What this buys concretely: a held aversion scores 0.0 at the planner's root and the pass ends
-SATISFIED with no steps — where the flat not-knowing fallback would have sent the search
-shopping for a want that wants nothing — and an entered one is planned through the ordinary
-achiever road, a candidate world where the pattern no longer binds being MET by the same
-reading, with cost picking among the exits.
+1. **"Why a separate capability? Looks very closely coupled with Desires."** Because it IS a
+   desire — and the package existed only to paper over two KERNEL gaps: a want no module
+   contributes is invisible to `pursuing`, and a want no module measures scores the flat 1.0
+   that sends the search shopping for a want that wants nothing. The house's own test
+   convicts the member: nothing could differ in "run the ratified pattern", and *where
+   nothing could differ you have a function, not a capability*. Pure ratified data has no
+   behaviour to grant.
+2. **"Is it possible to control it on the shape level — SHACL that violates if it exists?"**
+   Yes — that is what every met-test already means, results being unmet — and taking it
+   seriously dissolves the derivation too: the world ratifies the DESIRE itself, through the
+   asserted block the store split built and
+   [a-desire-is-a-forest-of-derived-roots](/decisions/a-desire-is-a-forest-of-derived-roots.md)
+   reconciled as exactly this door. What the sovereign ratifies is the want, not a statement
+   something else expands.
+3. **"There is no negative here — it literally says desire to be dry and hot."** The reading
+   trap that named the mechanism: `orexis:metWhen` pointing at the avoided state evaluates
+   right and READS inverted, and a term that reads wrong to every skimmer is the
+   flag-that-eventually-disagrees, in the reader's head. So the kernel gained
+   **`orexis:unmetWhen`** — *unmet when this pattern binds* — one of the two and never both
+   (`orexis:MetTestShape`), its object one `sh:select` (`orexis:AvoidedPatternShape`).
 
-Urgency is binary, which the four-measures table calls sufficiency rather than a stopgap:
-between entered and held there is nothing to be nearer to, and the frontier carries a
-multi-step exit without a slope. A pattern that fails to RUN reads as entered — the loud
-direction: a select the gates admitted and the engine refuses is a defect someone must see,
-and a want stuck hot is how this architecture says so.
+## The second build: two kernel closes and a door already open
 
-## The hard half: the law prunes at expansion, never-newly-enter
+- **The wants no module speaks for reach `pursuing`.** Wanting is the kernel's
+  ([the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md)), so the kernel
+  lifts pattern-carrying wants from the desires store into pursuit itself — scoped to
+  `unmetWhen` carriers, whose judging is one select on the store's own engine.
+- **Met-or-not is the pattern-want's whole measure.** The planner judges an `unmetWhen` want
+  by running its select against whichever world is asked — the node's own graph, so
+  `GRAPH $state` works and no flat-versus-named split opens — beside the obligation branch
+  that already scores met-or-not over the record. Binary, per the four-measures table:
+  between entered and held there is nothing to be nearer to.
+- **No `orexis:about`, usually — and that is semantics, not omission**: an avoidance ranges
+  over the whole menu the way a call does, because any lever might exit a state. With
+  levers weighed and none helping the pass says NOT_BETTER, which is honest where "equip
+  me" would be false; the want stays hot and visible either way.
 
-A ratified `sh:Violation` shape over a runtime state is not a want and gets no urgency: it is
-LAW, and the planner now holds EVERY candidate state to it — the sovereign's every-step
-ruling, built. At `_begin` the pass collects the violation-severity shapes the DATA carries
-(world-authored; met-tests excluded by the linkage; empty in every shipped world, and then
-the check never runs) and the base world's own violation keys. A candidate whose keys grow
-is discarded before the met-test can crown it and never expands — so a plan that dips
-through a forbidden state dies at the dip however well it ends, and the next legal candidate
-wins by construction, which RETIRES the no-fallback seam ("ask the next candidate") rather
-than implementing it.
+## The law half, unchanged from the first build
 
-**Never-NEWLY-enter is the clause that makes the gate safe**: the subtraction against the
-base's own keys means an agent already standing in a forbidden state keeps its exit plans —
-the same argument that made the envelope a warning at the gates, honoured from the planner's
-side, and pinned by a test that starts inside and demands the exit.
-
-Measured on the bench before shipping, per the issue's own condition: 53 ms per candidate
-node against an 8-triple law, ≈372 ms across a 7-node pass — paid only where a world
-ratifies law, and the full rulebook stays at the gates.
-
-## What was refused
-
-- **A metWhen on the want** — the two-texts, two-engines split above.
-- **pySHACL for the pattern** — same refusal from the other side; the measure's engine is
-  the store's, everywhere.
-- **A gradient over the pattern** — the graph-distance refusal
-  ([urgency](/domain/urgency.md)) applied at its first temptation: where partial progress in
-  a pattern must rank, decompose it into leaves.
-- **Aggregation now** — avoidances penalising OTHER wants' candidate worlds is the
-  ranking widened from the pursued want to the whole world, a real design with a real cost
-  model, and folding it in here would have shipped it undecided. It is the seam below.
+A ratified `sh:Violation` shape over a runtime state is not a want: it is LAW, held against
+every candidate at EXPANSION — never-newly-enter, so an agent already inside a forbidden
+state keeps its exit plans, pinned by a test that starts inside and demands the exit — and
+the next legal candidate wins by construction, retiring the no-fallback seam. Measured: 53
+ms per node against an 8-triple law, ≈372 ms across a 7-node pass, paid only where a world
+ratifies law.
 
 # Seams left open
 
-- **The ranking still scores the pursued want alone.** An aversion is steered out of when
-  pursued; a plan for a DIFFERENT want that wanders into an avoided (soft) state pays
-  nothing for it yet. The law half covers the states that must never be entered; the
-  aggregation that would price the merely-avoided ones is its own decision, with the
-  composite-distance seam of [urgency](/domain/urgency.md) standing beside it.
-- **The scope gate does not reach metWhen-less wants.** `orexis:ScopedWantShape` targets
-  metWhen carriers; the aversion states `orexis:bindsWhen orexis:Always` by derivation, but
-  nothing refuses one that stopped. The gate's target widens the day a second metWhen-less
-  kind exists to generalise over.
-- **The law is world-authored only.** A package cannot ship a violation shape over runtime
-  states without it running for every world; whether a package should ever ratify law is a
-  question no customer has asked.
+- **`metWhen`-carrying asserted wants still reach `pursuing` through nobody.** The kernel
+  lift is scoped to `unmetWhen` carriers, whose judging is cheap; an asserted POSITIVE want
+  would need its met-shape validated per tick to be scored, and the one shipped asserted
+  root predates the desire node form anyway. The gap predates this change and is now named.
+- **The ranking still scores the pursued want alone.** A plan for a different want that
+  wanders into a merely-avoided state pays nothing yet; the aggregation that would price it
+  is its own decision, beside [urgency](/domain/urgency.md)'s composite-distance seam.
+- **The law is world-authored only.** Whether a package should ever ratify a violation shape
+  over runtime states is a question no customer has asked.
 
 # Issues this closes
 
-[#468](https://github.com/ShishkinDmitriy/orexis/issues/468), both halves, with the
-never-newly-enter clause and the measured per-node price its definition of done demanded.
+[#468](https://github.com/ShishkinDmitriy/orexis/issues/468), both halves — the soft one
+rebuilt to the sovereign's three cuts, the hard one standing from the first build.

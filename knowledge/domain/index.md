@@ -43,7 +43,6 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [obligation](/domain/obligation.md) - A desire the agent did not source. Whom it may owe is topology; what it owes now is private runtime state.
 
-* [aversion](/domain/aversion.md) - A want met by absence: a ratified pattern the agent is content exactly while nothing matches. Soft; the hard MUST NOT is law.
 
 * [desire](/domain/desire.md) - What an agent is trying to bring about, and the capability that deduces it. A stake and an obligation are the same type on purpose.
 

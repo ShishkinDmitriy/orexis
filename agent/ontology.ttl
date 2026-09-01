@@ -586,7 +586,13 @@ orexis:Desire a owl:Class ; rdfs:label "Desire" ;
 
 orexis:metWhen a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range sh:NodeShape ;
     rdfs:label "met when" ;
-    rdfs:comment "The met-test: a SHACL node shape whose conformance says nothing is wanted here right now. Boolean by nature — it governs the outcome LABEL and a duty's discharge, never how hard to try. Validated exactly as it was when the desire WAS this shape: unfocused, over the shapes the agent holds." .
+    rdfs:comment "The met-test: a SHACL node shape whose conformance says nothing is wanted here right now. Boolean by nature — it governs the outcome LABEL and a duty's discharge, never how hard to try. Validated exactly as it was when the desire WAS this shape: unfocused, over the shapes the agent holds. Its negative twin is `orexis:unmetWhen`, and a want carries one of the two, never both (orexis:MetTestShape)." .
+
+orexis:unmetWhen a owl:ObjectProperty ; rdfs:domain orexis:Desire ;
+    rdfs:label "unmet when" ;
+    rdfs:comment """The met-test's negative twin (#468): a want met by ABSENCE points here at the AVOIDED state — a node carrying one `sh:select`, the pattern whose rows mean the want is unmet. Ruled by the sovereign when the first build routed avoidance through `orexis:metWhen`: a met-test pointing at the bad state evaluates right and READS inverted — 'met when dry-and-hot' — and a term that reads wrong to every skimmer is the flag-that-eventually-disagrees, in the reader's head.
+
+The contract of the pattern: `$this` is the agent and `$state` names the graph the readings live in, both substituted exactly as a measure's parameters are — in the PATTERN, never the projection, where a substituted IRI is a parse error — and everything else is an unqualified pattern over public knowledge. Run by the STORE'S OWN ENGINE against whichever world is judged, live or a candidate node, so entered-or-held is one text on one engine; a pattern that fails to run reads as unmet, the loud direction. Its urgency is binary — met 0, unmet 1 — which the four-measures table calls sufficiency where no intermediate worlds exist, and the kernel judges it with no capability in the room: a want that is pure ratified data has no behaviour to grant, and where nothing could differ there is a function, not a capability.""" .
 
 orexis:about a owl:ObjectProperty ; rdfs:domain orexis:Desire ;
     rdfs:label "about" ;

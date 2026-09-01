@@ -277,6 +277,19 @@ themselves.
   module, no region, no band. `world/sensing`'s agent is exactly that: three sensors, no stake,
   and it records.
 
+# A want met by absence
+
+A desire may state its met-test NEGATIVELY: `orexis:unmetWhen` points at the avoided state —
+a node carrying one `sh:select` whose rows mean the want is unmet — the twin of
+`orexis:metWhen`, one of the two and never both (`orexis:MetTestShape`). Such a want is pure
+ratified data, authored directly in the asserted block, and NO capability is in the room:
+there is nothing to grant, so the kernel lifts it into pursuit and judges it — binary, by
+running the pattern with `$this` and `$state` substituted against whichever world is asked,
+the store's engine live and candidate alike. It usually states no `orexis:about`, and so
+ranges over the whole menu as a call does: any lever might exit a state. Its hard twin is
+not a desire at all — a ratified violation shape, pruned in the search at every step. See
+[a-want-met-by-absence](/decisions/a-want-met-by-absence.md).
+
 # Desires an agent did not source
 
 The class was a class from the start because a second source was expected, and

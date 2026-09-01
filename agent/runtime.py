@@ -37,7 +37,15 @@ from agent import config, genesis
 from assembly import loader
 from orexis_agent_deliberation.beliefs import BeliefError, Beliefs
 from assembly.inject import attribute_for, opened
-from orexis_agent_progression.ontology import DESIRES, DESIRE_URGENCY
+from orexis_agent_progression.ontology import DESIRES, DESIRE_URGENCY, STATE_GRAPH
+
+#  The avoided-pattern wants the kernel lifts into pursuit itself (#468) — see `pursuing`.
+_AVOIDED_Q = """
+SELECT ?want ?select WHERE {
+  <%s> orexis:holds ?want .
+  ?want orexis:unmetWhen ?avoided .
+  ?avoided sh:select ?select .
+}"""
 from orexis_agent_deliberation.deliberator import KEEPING_PICKS, Deliberator
 from orexis_agent_deliberation.desire import Desire, Desires
 from orexis_agent_deliberation.reviser import Reviser
@@ -297,6 +305,25 @@ class Agent:
         for wants in self.ask(DESIRES, now):
             for desire in wants:
                 seen.setdefault(desire.uri, desire)
+        #  THE WANTS NO MODULE SPEAKS FOR (#468): a world may ratify a desire DIRECTLY — the
+        #  asserted block — and wanting is the kernel's, so the kernel is who lifts such a
+        #  want into pursuit rather than a capability minted to re-say it. Scoped to the
+        #  avoided-pattern wants, whose judging is one select on the store's own engine;
+        #  binary, because between entered and held there is nothing to be nearer to. A
+        #  pattern that fails to run reads as unmet — the loud direction.
+        for row in bindings(self.desires.query_union(_AVOIDED_Q % self.me.uri)):
+            if row["want"] in seen:
+                continue
+            text = (row["select"].replace("$this", f"<{self.me.uri}>")
+                                 .replace("$state", f"<{STATE_GRAPH}>"))
+            try:
+                entered = bool(bindings(self.beliefs.query(text)))
+            except Exception as exc:
+                log.error("%s: avoided-state pattern failed to run: %s", self.id, exc)
+                entered = True
+            seen[row["want"]] = Desire(uri=row["want"],
+                                       urgency=1.0 if entered else 0.0,
+                                       state="unmet" if entered else "met")
         return sorted(seen.values(), key=lambda g: -g.urgency)
 
     def ask(self, point: str, *args, **kwargs) -> list:

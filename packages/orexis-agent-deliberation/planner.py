@@ -43,6 +43,7 @@ from orexis_agent_progression.act import Act, Step
 from orexis_agent_deliberation.desire import Desire
 from .afforder import wants_of
 from .imaginarium import Imaginarium
+from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
 from orexis_agent_deliberation.conformance import conforms, graph_from
@@ -167,6 +168,13 @@ class Planner:
         answer = self.agent.desire_urgency(desire, self.imaginarium.query, graph)
         if answer is not None:
             return answer
+        #  An avoided-pattern want is binary by its own contract — met 0, unmet 1 — and the
+        #  kernel judges it (#468): no capability answers for pure ratified data, and the
+        #  flat not-knowing fallback below would send the search shopping for a want that
+        #  wants nothing whenever the pattern is held.
+        pattern = self._avoided_pattern(desire)
+        if pattern is not None:
+            return 1.0 if self._pattern_binds(pattern, graph) else 0.0
         if desire.is_obligation:                        # met-or-not over the record
             return 0.0 if self._met_in(world, desire) else 1.0
         #  A want whose kind nothing loaded answers for, scoring the defined fallback:
@@ -196,6 +204,13 @@ class Planner:
         qualified. A candidate judged with a focus would be judged by the wrong answer, with
         nothing to show that it had been.
         """
+        #  A WANT MET BY ABSENCE (#468): `orexis:unmetWhen` points at the avoided pattern,
+        #  and met is the pattern binding nothing — one text, the store's own engine, judged
+        #  against this node's own readings, so the flat/named-graph split a met-shape would
+        #  force never opens.
+        pattern = self._avoided_pattern(desire)
+        if pattern is not None:
+            return not self._pattern_binds(pattern, graph or STATE_GRAPH)
         shape = self._shape_of(desire, world)
         if shape is None:
             #  A obligation's goal state is a PATTERN over the record, not a distance (#255): this
@@ -213,6 +228,30 @@ class Planner:
             return desire.is_met
         _, results, _ = shacl_validate(world, shacl_graph=shape, inference="none", advanced=True)
         return not list(results.subjects(RDF.type, _SH.ValidationResult))
+
+    def _avoided_pattern(self, desire: Desire) -> str | None:
+        """The `orexis:unmetWhen` select this want carries, or None — the negative twin."""
+        node = self._shapes.value(URIRef(desire.uri), _AG.unmetWhen)
+        if node is None:
+            return None
+        text = self._shapes.value(node, _SH.select)
+        return str(text) if text is not None else None
+
+    def _pattern_binds(self, text: str, graph: str) -> bool:
+        """Whether the avoided pattern binds in the world at `graph` — rows mean entered.
+
+        The same substitution a measure gets, run on the imaginarium so a candidate world
+        answers exactly as the live one does. A pattern that fails to run reads as ENTERED:
+        a select the gates admitted and the engine refuses is a defect someone must see,
+        and a want stuck hot is how this architecture says so.
+        """
+        text = (text.replace("$this", f"<{self.me.uri}>")
+                    .replace("$state", f"<{graph}>"))
+        try:
+            return bool(bindings(self.imaginarium.query(text)))
+        except Exception as exc:
+            log.error("avoided-state pattern failed to run: %s", exc)
+            return True
 
     def _shape_of(self, desire: Desire, world):
         """The desire's shape, with everything hanging off it, or None if it has none.
