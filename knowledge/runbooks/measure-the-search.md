@@ -117,12 +117,32 @@ st = genesis_store(world='<world>')
 print(len(st.dump_nt(STATE_GRAPH).splitlines()), 'triples in the mutable slice')"
 ```
 
-Measured cost of one fork plus one dump, as that slice grows (the diff held at one triple):
-0.05 ms at 3 triples, 1.0 ms at 100, 5.9 ms at 1,000, 68 ms at 10,000, 404 ms at 50,000 —
-linear, and paid once per node. At 78 nodes that is 4 ms, 0.08 s, 0.46 s, 5.3 s, 32 s. The
-shipped worlds sit at 3–5 triples. Past roughly a thousand, the per-node copy stops being free
-and the design to reach for is an overlay, whose price is stated in
+Measured cost of forking one node as that slice grows, the diff held at one triple:
+
+| mutable slice | fork | + dump, if the world is judged | × 78 nodes, unjudged |
+|---|---|---|---|
+| 1,000 | 3.8 ms | 4.5 ms | 0.30 s |
+| 10,000 | 45 ms | 57 ms | 3.5 s |
+| 50,000 | 263 ms | 321 ms | 21 s |
+
+Linear, paid once per node. The shipped worlds sit at 3–5 triples, where it rounds to nothing.
+Past roughly a thousand the per-node copy stops being free, and past ten thousand it IS the
+search; the design to reach for there is an overlay, whose price is stated in
 [a-node-holds-one-world](/decisions/a-node-holds-one-world.md).
+
+**Two things already keep that number down**, and a third looked obvious and was wrong:
+
+- the fork is the ENGINE's copy, not a Python loop over quads — a quarter off, all of it
+  interpreter overhead per quad;
+- a world is written out only if something JUDGES it. A 3-disk solve forks 76 worlds and reads
+  one, because a want met by a pattern is judged by the store at the node's graph and never
+  needs text;
+- **not** skipping the fork for a world already seen, which measured 49 of those 76. A
+  cycle-discarded step still has its urgency scored and its met-test run, both of which read
+  its world — deliberately, since a look nets to nothing in canonical form, so the step that
+  repairs a freshness want is ALWAYS the non-novel one. Pruning before the met-test would make
+  freshness unplannable, and reusing a graph by signature would conflate worlds differing only
+  in a timestamp, which is the same bug from the other side.
 
 # The judge in Rust: criteria before adoption
 

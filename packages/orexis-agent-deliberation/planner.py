@@ -105,7 +105,11 @@ class _Node:
     `_begin`. See knowledge/runbooks/measure-the-search.md.
     """
 
-    readings: str = ""                           # this node's graph, as N-Triples
+    #  This node's graph as N-Triples, or None until somebody asks. LAZY since the measure
+    #  that named it: a 3-disk solve forks 76 worlds and READS one — only a judged world needs
+    #  text, and a want met by a pattern is judged by the store's own engine at `graph`, so
+    #  most worlds are scored, weighed and discarded without ever being written out.
+    readings: str | None = None
     graph: str = STATE_GRAPH                     # this node's readings, in the imaginarium
     taken: tuple = field(default_factory=tuple)   # the STEPS taken to get here, in order
     urgency: float = 1.0
@@ -732,7 +736,7 @@ class Planner:
             + list(self.agent.beliefs.recorded_graphs()) if iri != STATE_GRAPH)
         self._invariant = (self.imaginarium.dump_nt(*self._invariant_graphs)
                            + self._shapes.serialize(format="nt"))
-        here = _Node(graph=STATE_GRAPH, readings=self.imaginarium.dump_nt(STATE_GRAPH))
+        here = _Node(graph=STATE_GRAPH)
         self._base_forbidden = (self._forbidden_keys(here)
                                 if self._law is not None else frozenset())
         here.urgency = self._urgency_in(here, desire)
@@ -746,7 +750,13 @@ class Planner:
         ride along because `_offer`'s legality check needs them. Written once per pass in
         `_begin`. The variant half is this node's readings, and a concatenation is all that
         separates them because N-Triples lines stand alone.
+
+        WRITING THE VARIANT HALF IS DEFERRED TO HERE, and cached on the node once written. A
+        pass forks far more worlds than it judges — 76 against 1 on a 3-disk solve — because
+        scoring a want met by a pattern asks the store at `node.graph` and never needs text.
         """
+        if node.readings is None:
+            node.readings = self.imaginarium.dump_nt(node.graph)
         return self._invariant + node.readings
 
     def _step_from(self, node, row, desire: Desire):
@@ -780,8 +790,7 @@ class Planner:
         #  And what it spends — `orexis:costs`, the landing's twin (#466). None is free.
         spent = effects.cost_of(self.imaginarium, row.action, **bind)
         cost = node.cost + (spent or 0.0)
-        step = _Node(readings=self.imaginarium.dump_nt(graph), graph=graph, diff=diff,
-                     landing=landing, cost=cost)
+        step = _Node(graph=graph, diff=diff, landing=landing, cost=cost)
         step.urgency = self._urgency_in(step, desire)
         step.taken = node.taken + (Step(act, urgency_after=step.urgency),)
         return step
