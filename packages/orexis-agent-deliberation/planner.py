@@ -288,6 +288,7 @@ class Planner:
         room = (max(0.0, (desire.expires - datetime.now(timezone.utc)).total_seconds())
                 if desire.expires is not None else None)
         best, saw_candidate = here, False
+        achieved = []
         self._skipped = False
         self._weighed = []
         seen = {here.diff}
@@ -363,11 +364,27 @@ class Planner:
                     #  toward the pick, and steering is what `best` below is for.
                     if (novel or not met_now) and self._met_in(step.world, desire, step.graph):
                         self._weighed.append((depth, row, step.urgency, trace.MET))
-                        return self._record(
-                            desire,
-                            self._offer(Plan(SATISFIED, step.taken, here.urgency, step.urgency),
-                                        desire, step.world),
-                            here.urgency)
+                        if met_now:
+                            #  Already met and still steering: the first novel step that
+                            #  keeps it met stays the answer — re-picking among keepers by
+                            #  cost would be shopping for a want that is not shopping for
+                            #  anything.
+                            return self._record(
+                                desire,
+                                self._offer(Plan(SATISFIED, step.taken, here.urgency,
+                                                 step.urgency),
+                                            desire, step.world),
+                                here.urgency)
+                        #  ACHIEVERS ARE COLLECTED, never returned on sight — the
+                        #  sovereign's two-stage cut (#466): urgency is the DESIRE's term
+                        #  and cost is the ACTION's. Urgency already picked which want this
+                        #  pass serves, so among plans that ACHIEVE it, cost alone decides
+                        #  — and returning the first met step was the one-axis shortcut,
+                        #  crowning whichever achiever the menu happened to yield first.
+                        #  An achiever still never extends the frontier: a step that
+                        #  answers the question is not a place to search onward from.
+                        achieved.append(step)
+                        continue
                     if not novel:
                         self._weighed.append((depth, row, step.urgency, trace.SEEN))
                         continue
@@ -404,6 +421,17 @@ class Planner:
             frontier = nxt
             if not frontier:
                 break
+
+        if achieved:
+            #  Achievement is absolute — the desire's demand — and cost orders the
+            #  achievers; the desire's own measure breaks a cost tie (nearer the aim wins),
+            #  so the answer is deterministic whatever order the menu yielded them in.
+            won = min(achieved, key=lambda s: (s.cost, s.urgency))
+            return self._record(
+                desire,
+                self._offer(Plan(SATISFIED, won.taken, here.urgency, won.urgency),
+                            desire, won.world),
+                here.urgency)
 
         #  A pass that ends with no step worth taking is labelled by the SHAPE, not by the
         #  search: a met desire that weighed its levers and found none worth pulling is

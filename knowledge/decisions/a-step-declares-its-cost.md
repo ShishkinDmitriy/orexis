@@ -4,8 +4,11 @@ title: A step declares its cost, and cost breaks ties under urgency
 description: >-
   #466's decision, taken with the fix. An action may carry `orexis:costs` beside
   `orexis:landsAfter` — a SELECT the owning package declares, in the wallet's unit, answered
-  about whichever world is being judged — and the search ranks candidates lexicographically:
-  urgency first, cost only between candidates urgency cannot separate. Refused: cost folded
+  about whichever world is being judged — and the ranking is the sovereign's two-stage cut —
+  urgency is the desire's term and cost is the action's: urgency picks which want a pass
+  serves; among plans that ACHIEVE it cost alone decides, achievers collected rather than
+  returned on sight; among plans that merely improve the measure stays primary and cost
+  breaks its ties. Refused: cost folded
   into the measure (money and wellbeing are different currencies, and mixing them is the
   strengths-of-one-scale conflation on a new axis); cost computed in the search (an invented
   number gives a convincing answer); cost outranking urgency anywhere (a society that trades
@@ -41,12 +44,23 @@ The constitution's constraint holds by construction:
 the RANKING, nothing upstream pins a price on a specific act, and the search hardcodes no
 figure of its own.
 
-## The ranking: lexicographic, urgency first
+## The ranking: the sovereign's two-stage cut
 
-Of two candidates urgency separates, urgency decides, exactly as before. Cost speaks only
-where urgency cannot: same urgency, cheaper wins. The satisficing floor is untouched — a plan
-no better than standing still stays NOT_BETTER however cheap it is, because free and useless
-is still useless.
+**Urgency is the DESIRE's term and cost is the ACTION's** — the sovereign's own sentence, and
+it assigns each number its bearer. Stage one: urgency picks WHICH want a pass serves —
+`pursuing`, hottest first, unchanged. Stage two, inside the pass:
+
+- **among plans that ACHIEVE the want, cost alone decides.** Achievement is absolute — the
+  desire's demand — so achievers are collected rather than returned on sight, and the
+  cheapest wins, the desire's measure breaking a cost tie. The first-met-returns shortcut
+  this replaced was the one-axis ranking in disguise: it crowned whichever achiever the menu
+  happened to yield first.
+- **among plans that merely improve, the desire's own measure stays primary** — a plan that
+  leaves you thirstier bought nothing — and cost breaks its ties: same urgency, cheaper wins.
+- the satisficing floor is untouched: no better than standing still stays NOT_BETTER however
+  cheap, because free and useless is still useless. And a want already met and merely
+  steering keeps the old flow — re-picking among keepers by cost would be shopping for a
+  want that is not shopping for anything.
 
 ## What was refused, and why
 
