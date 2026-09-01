@@ -33,6 +33,21 @@ That is the whole job: **a common currency, so the hottest want wins.**
 The sources differ; the meaning does not. A 0.8 from a deadline and a 0.8 from a dry pot are the
 same claim on the agent's attention, and that equivalence is deliberate rather than a convenience.
 
+Since the scope axis landed
+([shall-must-and-may-are-not-strengths-of-one-scale](/decisions/shall-must-and-may-are-not-strengths-of-one-scale.md),
+#472), the table's pattern has a name: **urgency is the fraction of the want's ROOM consumed,
+and the scope names which room.** An `orexis:Always` want's room is STATE — the survival
+envelope, so its urgency is the instantaneous degree of being off, a state function that moves
+only when the world moves. An `orexis:Within` want's room is TIME — the redeem window, so its
+urgency rises in a frozen world, which is why lapsing is judged by the reader's clock. And not
+knowing consumes the whole of either, which is what maximal always meant. One meaning, two
+projections — the stake and the debt formulas were never two ideas.
+
+The corollary explains an absence: an `orexis:AtEnd` want with no deadline has no room being
+consumed, so nothing makes it urgent — and a want with no urgency never wins attention. That is
+the quiet reason no derivation writes one; a real AtEnd customer must declare its heat or
+borrow a clock, at which point it is really a Within.
+
 # Not knowing is maximal, and that is the load-bearing choice
 
 `urgency(None)` is **1.0**, not 0.0. A property nobody has read is the most urgent thing an agent
