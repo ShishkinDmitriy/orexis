@@ -148,11 +148,10 @@ def test_the_world_asserts_the_want_and_the_package_owns_the_measure(monkeypatch
     agent = _driver(monkeypatch, "c0_0", "c1_2")
     inline = bindings(agent.desires.query_union(
         "SELECT ?n WHERE { GRAPH <http://example.org/orexis/graph/desire/asserted> "
-        "{ ?n <http://www.w3.org/ns/shacl#select> ?t } }"))
+        "{ ?n sh:select ?t } }"))
     assert not inline, f"the world file states no measure of its own: {inline}"
     where = bindings(agent.desires.query_union(
-        f"SELECT ?p ?e WHERE {{ <{WANT}> <http://example.org/orexis#unmetWhen> ?p ; "
-        f"<http://example.org/orexis#estimates> ?e }}"))[0]
+        f"SELECT ?p ?e WHERE {{ <{WANT}> orexis:unmetWhen ?p ; orexis:estimates ?e }}"))[0]
     assert where["p"].startswith(C) and where["e"].startswith(C), \
         "both point into the courier package's namespace"
 

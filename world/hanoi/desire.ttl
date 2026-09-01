@@ -1,3 +1,8 @@
+@prefix : <http://example.org/orexis/world/hanoi#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
 #  The goal, ratified as a DESIRE — the asserted block, the door built for exactly this.
 #  A want met by absence: unmet while any disk rests off peg C, by the pattern the hanoi
 #  package declares (`hanoi:diskAstray`), and approached by its count of disks astray
@@ -7,11 +12,10 @@
 #  urgency, judged by the kernel from the pattern; the optimal solution is the cheapest
 #  achiever, by no code of this world's.
 GRAPH <http://example.org/orexis/graph/desire/asserted> {
-  <http://example.org/orexis/world/hanoi#hanoi> <http://example.org/orexis#holds> <http://example.org/orexis/world/hanoi#every_disk_home> .
-  <http://example.org/orexis/world/hanoi#every_disk_home> a <http://example.org/orexis#Desire> ;
-      <http://example.org/orexis#bindsWhen> <http://example.org/orexis#AtEnd> ;
-      <http://www.w3.org/2000/01/rdf-schema#label>
-          "every disk home on peg C — the sentence the puzzle is" ;
-      <http://example.org/orexis#unmetWhen> <http://example.org/orexis/hanoi#diskAstray> ;
-      <http://example.org/orexis#estimates> <http://example.org/orexis/hanoi#disksAstray> .
+  :hanoi orexis:holds :every_disk_home .
+  :every_disk_home a orexis:Desire ;
+      orexis:bindsWhen orexis:AtEnd ;
+      rdfs:label "every disk home on peg C — the sentence the puzzle is" ;
+      orexis:unmetWhen hanoi:diskAstray ;
+      orexis:estimates hanoi:disksAstray .
 }

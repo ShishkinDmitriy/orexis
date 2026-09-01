@@ -1,3 +1,8 @@
+@prefix : <http://example.org/orexis/world/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
 #  The goal, ratified as a DESIRE — met by absence, judged by the kernel from a pattern the
 #  courier package declares (`courier:parcelAstray`), and approached by an estimate the same
 #  package declares (`courier:drivesOwed`). A world says WHAT it wants and points at the domain
@@ -6,11 +11,10 @@
 #  world cannot keep. Scope is orexis:AtEnd — nothing erodes while the van sits, and the plan's
 #  end is the whole of what is asked.
 GRAPH <http://example.org/orexis/graph/desire/asserted> {
-  <http://example.org/orexis/world/courier#courier> <http://example.org/orexis#holds> <http://example.org/orexis/world/courier#every_parcel_delivered> .
-  <http://example.org/orexis/world/courier#every_parcel_delivered> a <http://example.org/orexis#Desire> ;
-      <http://example.org/orexis#bindsWhen> <http://example.org/orexis#AtEnd> ;
-      <http://www.w3.org/2000/01/rdf-schema#label>
-          "every parcel where it is owed — the sentence the delivery is" ;
-      <http://example.org/orexis#unmetWhen> <http://example.org/orexis/courier#parcelAstray> ;
-      <http://example.org/orexis#estimates> <http://example.org/orexis/courier#drivesOwed> .
+  :courier orexis:holds :every_parcel_delivered .
+  :every_parcel_delivered a orexis:Desire ;
+      orexis:bindsWhen orexis:AtEnd ;
+      rdfs:label "every parcel where it is owed — the sentence the delivery is" ;
+      orexis:unmetWhen courier:parcelAstray ;
+      orexis:estimates courier:drivesOwed .
 }

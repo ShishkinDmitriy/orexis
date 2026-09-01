@@ -131,11 +131,11 @@ def test_the_budget_is_the_worlds_pick_and_the_kernel_bounds_it(monkeypatch):
 
     def restate(n):
         agent.beliefs.update(f"""DELETE {{ GRAPH <{agent.beliefs.graph}> {{
-            <{agent.me.uri}> <http://example.org/orexis#budgetWorlds> ?b }} }}
+            <{agent.me.uri}> orexis:budgetWorlds ?b }} }}
           INSERT {{ GRAPH <{agent.beliefs.graph}> {{
-            <{agent.me.uri}> <http://example.org/orexis#budgetWorlds> {n} }} }}
+            <{agent.me.uri}> orexis:budgetWorlds {n} }} }}
           WHERE  {{ GRAPH <{agent.beliefs.graph}> {{
-            <{agent.me.uri}> <http://example.org/orexis#budgetWorlds> ?b }} }}""")
+            <{agent.me.uri}> orexis:budgetWorlds ?b }} }}""")
         agent.desires.rebuild()
 
     restate(0)
@@ -144,7 +144,7 @@ def test_the_budget_is_the_worlds_pick_and_the_kernel_bounds_it(monkeypatch):
                        desires=agent.desires)
 
     agent.beliefs.update(f"""DELETE WHERE {{ GRAPH <{agent.beliefs.graph}> {{
-        <{agent.me.uri}> <http://example.org/orexis#budgetWorlds> ?b }} }}""")
+        <{agent.me.uri}> orexis:budgetWorlds ?b }} }}""")
     agent.desires.rebuild()
     assert Planner(agent, agent.me).budget == Planner.BUDGET, \
         "nothing stated: the engine's ceiling, and validation does not miss it"
