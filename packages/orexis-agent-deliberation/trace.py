@@ -40,6 +40,7 @@ WORSE = "no better than standing still"
 SEEN = "a world already reached"
 UNSIMULATED = "could not be simulated"
 LATE = "lands after the want expires"
+FORBIDDEN = "newly enters a state the society refuses"
 
 #  What each verdict is called in the series, declared HERE beside the verdict it names so the
 #  two cannot drift — the same one-definition-two-readers argument `gap.rq` and `urgency` make.
@@ -52,6 +53,7 @@ FIELD = {
     SEEN: "cycles",
     UNSIMULATED: "unsimulated",
     LATE: "late",
+    FORBIDDEN: "forbidden",
 }
 
 

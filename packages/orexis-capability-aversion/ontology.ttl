@@ -1,0 +1,35 @@
+@prefix aversion: <http://example.org/orexis/aversion#> .
+@prefix : <http://example.org/orexis/aversion#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+<http://example.org/orexis/aversion> a owl:Ontology ;
+    rdfs:label "Orexis aversion" ;
+    rdfs:comment """A want met by ABSENCE — the SHALL NOT the #467 sitting found missing (#468). The mind said states to avoid only per property, as the region's side shapes; a GENERAL avoidance — a state to steer away from that is not a band in one observed property — had no expressible form. This package gives it one: the world states a pattern, the agent derives a want that is met exactly while the pattern binds nothing, and the search steers out of it through the ordinary achiever road. Soft by construction: an entered avoided state is a hot want, never a refused world — the hard MUST NOT is a ratified sh:Violation shape and the planner's business, not a desire at all.""" .
+
+#################  The capability  #################
+#  The premise is the STATEMENT ITSELF, which is the latitude pattern rather than the equipment
+#  one: being told what to steer clear of is the whole of what makes steering meaningful, as a
+#  mandate is the whole of what makes reviewing meaningful. An agent whose world avoids nothing
+#  composes no module, keeps no aversion wants, and never runs a pattern — absent, not idle.
+
+:AversionCapability a owl:Class ; rdfs:subClassOf orexis:Capability ;
+    rdfs:label "Aversion capability" ;
+    rdfs:comment "The family: steering away from ratified avoided states. The HOW is the judging of entered-or-not, and Heeding is the deterministic way of having it." .
+
+:Heeding a :AversionCapability ; rdfs:label "Heeding" ;
+    rdfs:comment "Judge by RUNNING the ratified pattern — deterministic, inspectable, answerable: entered is rows, held is none, and every verdict traces to a select someone ratified." .
+
+#################  The statement  #################
+
+:avoids a owl:ObjectProperty ; rdfs:domain orexis:Agent ;
+    rdfs:label "avoids" ;
+    rdfs:comment """A state this agent steers clear of, ratified in its world — the premise, the grant and the want's content in one statement. The object is a NAMED node (a want minted from it must survive a rebuild, and a blank node's label does not) carrying ONE `sh:select`: the pattern that, binding any row, says the state is ENTERED. The contract of that text: `$this` is the agent and `$state` names the graph the current readings live in — both substituted exactly as a measure's parameters are, so they may appear in the PATTERN and never in the projection (a substituted IRI in a SELECT clause is a parse error); project anything, a bound constant will do. Everything else is an unqualified pattern over public knowledge. Results mean entered; no results mean held. Soft on purpose: 'avoid if we have alternatives' — the search prefers a world where the pattern binds nothing and reports honestly where none is reachable. A state that must be REFUSED is not stated here; it is a `sh:Violation` shape, which is law.""" .
+
+#################  The want's kind  #################
+
+:Aversion a owl:Class ;
+    rdfs:label "Aversion" ;
+    rdfs:comment """The kind a derived avoidance want carries, beside `orexis:Desire` — how the choir knows the want is this package's to answer for. Deliberately NO `orexis:metWhen`: its met-test IS its measure reading zero (the road a call takes, #359), so entered-or-held is one text run by one engine against whichever world is being judged — the live base or a candidate — and the flat-versus-named-graph split that two texts would open never opens. Its urgency is binary, which the four-measures table says is sufficiency where no intermediate worlds exist: between entered and held there is nothing to be nearer to.""" .

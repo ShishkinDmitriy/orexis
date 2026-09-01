@@ -1,0 +1,15 @@
+@prefix aversion: <http://example.org/orexis/aversion#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+#  What a ratified avoided state must be to be runnable — checked at the gates, where a bad
+#  statement is a world refused rather than a want that silently never fires.
+
+aversion:AvoidedStateShape a sh:NodeShape ;
+    rdfs:comment "The object of aversion:avoids: a NAMED node (the want minted from it is keyed by its name, and a blank node's label does not survive a reload) carrying exactly one sh:select — the pattern whose rows mean the state is entered." ;
+    sh:targetObjectsOf aversion:avoids ;
+    sh:nodeKind sh:IRI ;
+    sh:property [ sh:path sh:select ;
+                  sh:minCount 1 ; sh:maxCount 1 ; sh:datatype <http://www.w3.org/2001/XMLSchema#string> ;
+                  sh:message "an avoided state carries exactly one sh:select — the pattern whose rows mean ENTERED; without it nothing can ever judge the state, and the want would sit silently held for ever" ] .

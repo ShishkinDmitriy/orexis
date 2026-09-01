@@ -280,7 +280,8 @@ is left after the mind came home is two kinds of premise and no third. **Equipme
 in a market**: `actuation:hasActuator`, `market:bidsIn`/`market:hosts`, `sensing:polls` and a
 sense mode. **Latitude**: `review:Reckoning`, because revising your own settings means nothing
 without settings you are permitted to move, so an `review:commits` mandate whose ends differ is
-its premise. When you add one, ask what makes *yours* meaningful rather than which of these it
+its premise; and `aversion:Heeding`, because steering clear means nothing without a ratified
+statement of what to steer clear of, so an `aversion:avoids` statement is its premise (#468). When you add one, ask what makes *yours* meaningful rather than which of these it
 resembles.
 
 **A stake is NOT a premise for a capability, and neither is a stake and a lever.** Three
