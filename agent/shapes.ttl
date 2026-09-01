@@ -105,6 +105,17 @@ What that costs: an agent with a stake and no lever is required to state a patie
                   sh:message "an agent with a stake must state its patience, within the constitutional bounds the kernel declares" ] .
 
 
+orexis:BudgetShape a sh:NodeShape ;
+    rdfs:comment """An agent that states how much a pass may imagine states it once, as a count of worlds inside the constitutional bounds. Below one it may not think at all — a budget of zero is a search that forks nothing and answers NOTHING for every want, which is a misconfigured agent that looks calm. Above the ceiling a pass on a large world runs for minutes, which is the afternoon-planning-while-the-plant-dies the old depth constant refused, and nothing here should let a beliefs file re-open it.
+
+TARGETED ON THE STATEMENT, not on the stake: a budget is optional, and an agent that states none gets the engine's own default (`Planner.BUDGET`). This is deliberately weaker than `orexis:KeeperShape`, which demands a patience of every stake, because a missing patience makes a commitment meaningless while a missing budget merely leaves the ceiling where the kernel put it. See decisions/a-pass-is-budgeted-in-worlds.md.""" ;
+    sh:targetSubjectsOf orexis:budgetWorlds ;
+    sh:property [ sh:path orexis:budgetWorlds ;
+                  sh:maxCount 1 ; sh:datatype xsd:integer ;
+                  sh:minInclusive 1 ; sh:maxInclusive 1024 ;
+                  sh:message "a budget of worlds is stated once, within the constitutional bounds the kernel declares" ] .
+
+
 orexis:DesireShape a sh:NodeShape ;
     rdfs:comment """What a deduced shape must be to be readable — a shape ABOUT shapes, which is the seam a-desire-is-a-shape names: SHACL has no containment operator, so anything said about what an agent pursues is said by treating its shapes as the RDF they are.
 

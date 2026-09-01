@@ -128,6 +128,9 @@ it is a record wearing a bullet.
 - **A prune is only as good as when its bound arrives** — an admissible estimate refused
   nothing under breadth-first, because the first achiever came last, and the same estimate
   refused sixty percent of the courier's forks the day the search followed it.
+- **A ceiling on compute is stated in the unit the search spends** — depth was that unit
+  under breadth-first and stopped being it under best-first, and a budget of worlds is what a
+  sovereign can size from a measured cost per fork.
 - **A base class is an import and an annotation is not** — a layer contract named in a
   signature costs nothing at assembly; subclassed, it loads the layer, which is why sensing's
   row types live behind the touch (#455).

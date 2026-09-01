@@ -39,6 +39,7 @@ import rdflib
 from rdflib import RDF, URIRef
 
 from . import effects, signature, trace
+from .beliefs import Picks
 from orexis_agent_progression.act import Act, Step
 from orexis_agent_deliberation.desire import Desire
 from .afforder import wants_of
@@ -57,7 +58,7 @@ log = logging.getLogger("search")
 SATISFIED = "satisfied"      # a world where the desire is met
 IMPROVED = "improved"        # not met, but nearer than doing nothing
 NOTHING = "no candidate"     # no lever this agent holds points at this want
-EXHAUSTED = "exhausted"      # levers exist; none reaches the desire within the depth allowed
+EXHAUSTED = "exhausted"      # levers exist; none reaches the desire within the budget allowed
 NOT_BETTER = "not better"    # every world reachable is as bad as this one, or worse
 REFUSED = "refused"          # the world it would reach is one the society would not accept
 
@@ -138,15 +139,27 @@ class Planner:
     answers are its own.
     """
 
-    #  Depth 2 is what the record argues for and what the one real customer needs. It is a
-    #  constant here rather than a belief because it is not a preference: it is the ceiling on
-    #  how much compute a pass may spend, and an agent that could revise it could spend an
-    #  afternoon planning while its plant died.
-    MAX_DEPTH = 2
+    #  THE CEILING ON WHAT A PASS MAY SPEND, in the unit it spends: worlds forked in the
+    #  imaginarium (#494). It WAS a depth, 2, a constant here and not a belief, on the argument
+    #  that a ceiling on compute is not a preference an agent may revise — and that argument
+    #  still holds, so the agent still may not move it. What changed is the unit. Under a
+    #  breadth-first search depth WAS the ceiling on compute; best-first (#492) it bounds only
+    #  how far ahead a plan reaches, which nothing needs, since a plan is re-derived every pass
+    #  and only its head is acted on. A world costs what its mutable slice makes it, measured
+    #  in the runbook, so a sovereign can state this in seconds' worth of worlds for the world
+    #  it actually has. Where a sovereign states none, this is the ceiling: sized for a plant,
+    #  whose pass forks a handful, and enough to solve two disks (14) but not three (50).
+    BUDGET = 32
 
     def __init__(self, agent, me):
         self.agent = agent
         self.me = me
+        #  The sovereign's pick, read the way every pick is — from the desire modality's copy,
+        #  since the search is what reads a belief and nothing beneath it does — or the engine's
+        #  own ceiling where the agent's beliefs say nothing. Optional on purpose, unlike the
+        #  patience: `orexis:BudgetShape` bounds a stated one and demands none.
+        picks = self.agent.desires.read_optional(PLANNING_PICKS)
+        self.budget = picks.budget_worlds if picks is not None else self.BUDGET
         #  Alive only during a pass. Between passes there is no imaginarium, which is the point:
         #  a hypothesis explored against a world that has moved is not a hypothesis, so the
         #  snapshot is per plan and nothing carries over.
@@ -403,8 +416,16 @@ class Planner:
         #  what the key is and why a met want keeps the old order.
         opened = [(_priority(here, met_now), 0, here)]
         minted = 1                       # heap entries so far: the tie-break, so nodes never compare
+        forked = 0                       # worlds this pass has imagined, against `self.budget`
         while opened:
             _, _, node = heapq.heappop(opened)
+            if forked >= self.budget:
+                #  THE BUDGET IS SPENT, and the pass answers with what it has (#494): the
+                #  cheapest achiever found if any, else the nearest world, exactly as an
+                #  emptied open list answers below. The search is anytime by construction —
+                #  `best` and `achieved` are kept as it goes — so stopping here loses
+                #  nothing already found and forgoes only what was never looked at.
+                break
             if bound is not None and node.cost + _near(node) > bound:
                 #  EARLY TERMINATION, and it is the same floor the per-candidate prune below
                 #  stands on: this node's `cost + estimate` is under everything a plan through
@@ -417,6 +438,13 @@ class Planner:
             depth = len(node.taken)
             for row in self._candidates(node, desire):
                 saw_candidate = True
+                if forked >= self.budget:
+                    #  The budget ran out while this node was being expanded. Its remaining
+                    #  levers are recorded as never looked at rather than silently dropped,
+                    #  so a trace reads "this was there and the pass could not afford it"
+                    #  and not "this was weighed and lost".
+                    self._weighed.append((depth, row, None, trace.SPENT))
+                    continue
                 #  Steps are ROWS, not means: a plan is a path through the affordance
                 #  graph, and which lever a step goes through is half of what it says.
                 step = self._step_from(node, row, desire, bound)
@@ -428,6 +456,7 @@ class Planner:
                 if step is None:
                     self._weighed.append((depth, row, None, trace.UNSIMULATED))
                     continue
+                forked += 1              # a world exists now, whatever becomes of it below
                 if self._law is not None:
                     #  EVERY STATE of a plan is checked, not the end alone — the
                     #  sovereign's ruling (#468): a valid plan contains no state that
@@ -592,11 +621,10 @@ class Planner:
                 #  look" becomes a new world every time; chaining past a look becomes a
                 #  real question again exactly there, and nowhere earlier. See
                 #  `signature.py`.
-                if len(step.taken) < self.MAX_DEPTH:
-                    #  Bounded by depth exactly as the layer loop was: a world at MAX_DEPTH
-                    #  is scored and may achieve, and is never a place to search on from.
-                    heapq.heappush(opened, (_priority(step, met_now), minted, step))
-                    minted += 1
+                #  No depth bounds the push (#494): what bounds the pass is the budget above,
+                #  and a world is a place to search on from however long the path to it.
+                heapq.heappush(opened, (_priority(step, met_now), minted, step))
+                minted += 1
 
         if achieved:
             #  Achievement is absolute — the desire's demand — and cost orders the
@@ -1014,6 +1042,25 @@ class Planner:
                           *self.agent.beliefs.recorded_graphs())
 
 
+_AG_IRI = "http://example.org/orexis#"
+
+
+@dataclass
+class PlanningBeliefs:
+    """What the sovereign said about this agent's thinking: how many worlds a pass may fork."""
+
+    budget_worlds: int
+
+
+#  Read the way the keeper's patience is (`KEEPING_PICKS`), with the one difference that this
+#  block may be wholly absent: `read_optional`, and the engine's ceiling stands in.
+PLANNING_PICKS = Picks(
+    capability=_AG_IRI + "Deliberation",
+    cls=PlanningBeliefs,
+    terms={"budget_worlds": _AG_IRI + "budgetWorlds"},
+)
+
+
 def _priority(node, met_now: bool) -> tuple:
     """Where this world goes in the open list, lower first.
 
@@ -1055,6 +1102,6 @@ def _near(node) -> float:
 TOO_DEAR = object()
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
-_AG = rdflib.Namespace("http://example.org/orexis#")
+_AG = rdflib.Namespace(_AG_IRI)
 #  No means or family is named here any more: sizing is `Module.size`, asked of the row's
 #  taker through `orexis:takenBy` exactly as execution finds it.

@@ -44,12 +44,24 @@ def _goal(agent):
     return next(g for g in agent.pursuing() if g.uri == WANT)
 
 
-def _plan(agent, depth):
+def _plan(agent, budget=None):
+    """Plan with the budget the WORLD states, or with one pinned on this instance."""
     from orexis_agent_deliberation.planner import Planner
 
     p = Planner(agent, agent.me)
-    p.MAX_DEPTH = depth
+    if budget is not None:
+        p.budget = budget
     return p.plan(_goal(agent))
+
+
+def _counting_forks(monkeypatch):
+    from orexis_agent_deliberation import imaginarium
+
+    forks = []
+    reached = imaginarium.Imaginarium.reached
+    monkeypatch.setattr(imaginarium.Imaginarium, "reached",
+                        lambda self, *a, **k: (forks.append(1), reached(self, *a, **k))[1])
+    return forks
 
 
 def _steps(plan):
@@ -73,33 +85,40 @@ def test_a_delivery_is_planned_and_it_is_the_short_way_round(monkeypatch):
     route is the cheapest achiever, by no code of this world's: every action costs one, so the
     plan with fewest steps is the one the two-stage cut crowns."""
     agent = _driver(monkeypatch, "c2_3", "c3_2")
-    plan = _plan(agent, 5)
+    plan = _plan(agent)
 
     assert len(plan.steps) == 5, f"the short way is five steps, got {_steps(plan)}"
     assert [a for a, _ in _steps(plan)] == ["Drive", "Drive", "Pick", "Drive", "Drop"]
     assert _steps(plan)[-1] == ("Drop", "c3_3"), "and it ends at the door"
 
 
-def test_too_shallow_to_arrive_still_answers_with_progress(monkeypatch):
+def test_a_spent_budget_still_answers_with_progress(monkeypatch):
     """What a declared distance buys, and the reason this world exists.
 
-    The corner-to-corner delivery needs eight steps. Before the want could say how far it
-    still was, a search shallower than that returned NOTHING — every unmet world scored 1.0,
-    `best` never improved, and the satisficing floor refused the lot. With `orexis:estimates`
-    a world three drives from the parcel beats one five drives away, so two steps of depth
-    answer with two steps toward it, and the agent arrives across ticks rather than in one
-    pass. That is the architecture's own model of a long horizon: act, let the world move,
-    plan again.
+    The corner-to-corner delivery needs eight steps and 78 worlds. Before the want could say
+    how far it still was, a search that could not reach the end returned NOTHING — every
+    unmet world scored 1.0, `best` never improved, and the satisficing floor refused the lot.
+    With `orexis:estimates` a world three drives from the parcel beats one five drives away,
+    so a pass whose budget runs out answers with the drives toward it, and the agent arrives
+    across ticks rather than in one pass. That is the architecture's own model of a long
+    horizon: act, let the world move, plan again — and since #494 the ceiling is a budget of
+    WORLDS the pass never exceeds, not a depth.
     """
+    forks = _counting_forks(monkeypatch)
     agent = _driver(monkeypatch, "c0_0", "c1_2")
-    shallow = _plan(agent, 2)
-    assert [a for a, _ in _steps(shallow)] == ["Drive", "Drive"], \
-        "two steps of depth answer with two drives toward the parcel"
+    shallow = _plan(agent, budget=8)
+    assert len(forks) <= 8, f"a pass never imagines past its budget: {len(forks)} worlds"
+    assert shallow.outcome == "exhausted" and shallow.steps, _steps(shallow)
+    assert {a for a, _ in _steps(shallow)} == {"Drive"}, \
+        f"what eight worlds buy is drives toward the parcel: {_steps(shallow)}"
+    assert shallow.steps[-1].urgency_after == 1.0, "not delivered, and it does not say so"
 
+    forks.clear()
     agent = _driver(monkeypatch, "c0_0", "c1_2")
-    plan = _plan(agent, 8)
-    assert len(plan.steps) == 8, f"and with depth enough it arrives: {_steps(plan)}"
+    plan = _plan(agent)
+    assert len(plan.steps) == 8, f"and with the world's budget it arrives: {_steps(plan)}"
     assert _steps(plan)[-1] == ("Drop", "c3_3")
+    assert len(forks) <= 128, "inside the budget the world states"
 
 
 def test_the_search_follows_the_estimate_and_the_bound_then_refuses_work(monkeypatch):
@@ -109,14 +128,9 @@ def test_the_search_follows_the_estimate_and_the_bound_then_refuses_work(monkeyp
     without. Best-first by `cost + estimate` the search walks to an achiever early and the
     bound refuses the rest: 78 forks, the same eight-step plan. Pinned loosely, so a change
     that moves the number reports itself without every reordering breaking the suite."""
-    from orexis_agent_deliberation import imaginarium
-
-    forks = []
-    reached = imaginarium.Imaginarium.reached
-    monkeypatch.setattr(imaginarium.Imaginarium, "reached",
-                        lambda self, *a, **k: (forks.append(1), reached(self, *a, **k))[1])
+    forks = _counting_forks(monkeypatch)
     agent = _driver(monkeypatch, "c0_0", "c1_2")
-    plan = _plan(agent, 8)
+    plan = _plan(agent)
     assert len(plan.steps) == 8 and _steps(plan)[-1] == ("Drop", "c3_3"), _steps(plan)
     assert len(forks) < 120, \
         f"{len(forks)} forks: measured 78 best-first against 198 breadth-first (#492)"

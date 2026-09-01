@@ -92,9 +92,10 @@ So a world is a VALUE, one named graph per node, written once when the node is c
 never mutated. Choosing another branch is binding `$sensed` to another name. There is nothing
 to restore because nothing was disturbed.
 
-The tree is bounded and small: `MAX_DEPTH` is 2 and a plant's menu offers two rows, so the
-worst case is seven live worlds. That bound is the search's, not this design's — the same seven
-worlds exist today.
+The tree is bounded and small: `MAX_DEPTH` was 2 when this was written and a plant's menu
+offers two rows, so the worst case was seven live worlds; the bound is a budget of worlds now
+([a-pass-is-budgeted-in-worlds](/decisions/a-pass-is-budgeted-in-worlds.md)), 32 by default.
+That bound is the search's, not this design's.
 
 ## How the tree is held: paths, which are already there
 
@@ -226,7 +227,7 @@ knowledge, whatever that currently consists of.
 ## Depth was 1 for a second reason, and it hid the first — and the fix was to delete, not to add
 
 The contradiction at the top of this record says the second dose "is computed correctly and
-thrown away by cycle detection". It was not computed at all. `MAX_DEPTH` is 2 and the frontier
+thrown away by cycle detection". It was not computed at all. `MAX_DEPTH` was 2 and the frontier
 was empty at every depth, because of an unrelated defect in how the search decides a step may be
 followed:
 

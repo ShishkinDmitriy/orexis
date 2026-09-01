@@ -41,11 +41,14 @@ def _goal(agent):
     return next(g for g in agent.pursuing() if g.uri == WANT)
 
 
-def _solved(plan, agent, depth):
+def _solved(agent, budget=None):
+    """Plan with the budget the WORLD states (`world/hanoi/beliefs`), or with one pinned on this
+    instance — the way tests used to raise a depth, and the only place a budget is set by hand."""
     from orexis_agent_deliberation.planner import Planner
 
     p = Planner(agent, agent.me)
-    p.MAX_DEPTH = depth
+    if budget is not None:
+        p.budget = budget
     return p.plan(_goal(agent))
 
 
@@ -63,22 +66,24 @@ def test_the_goal_is_pursued_and_binary_with_no_module_in_the_room(monkeypatch):
 
 
 def test_two_disks_solve_in_exactly_three_moves(monkeypatch):
-    """The classical 2-disk optimum, found by the ordinary search: depth allows four, the
-    cheapest achiever costs three, so three it is — optimality from orexis:costs, not from
-    any Hanoi code."""
+    """The classical 2-disk optimum, found by the ordinary search: the budget allows a
+    four-move solution to be found too, the cheapest achiever costs three, so three it is —
+    optimality from orexis:costs, not from any Hanoi code. At the ENGINE'S default budget,
+    pinned here so the default is known to solve the small puzzle: the world's 64 is for three."""
     agent = _mover(monkeypatch, ["disk_1", "disk_2"])
-    plan = _solved(None, agent, depth=4)
+    from orexis_agent_deliberation.planner import Planner
+    plan = _solved(agent, budget=Planner.BUDGET)
     assert plan.outcome == "satisfied", plan.outcome
     assert len(plan.steps) == 3, [s.act.action.rsplit("#", 1)[-1] for s in plan.steps]
 
 
 def test_three_disks_solve_in_exactly_seven_moves(monkeypatch):
-    """The money assertion: 2^n − 1. Depth allows EIGHT, so an eight-move solution is
-    reachable — and the seven-move one must win, because achievers are ranked by cost alone
-    and every move costs one. The optimal Tower of Hanoi solution is the cheapest achiever,
-    by no algorithm anybody wrote."""
+    """The money assertion: 2^n − 1. The world's budget of 64 worlds allows eight-move
+    solutions to be reached — and the seven-move one must win, because achievers are ranked by
+    cost alone and every move costs one. The optimal Tower of Hanoi solution is the cheapest
+    achiever, by no algorithm anybody wrote."""
     agent = _mover(monkeypatch, ["disk_1", "disk_2", "disk_3"])
-    plan = _solved(None, agent, depth=8)
+    plan = _solved(agent)
     assert plan.outcome == "satisfied", plan.outcome
     moves = [(s.act.via.rsplit("_", 1)[-1], s.act.about.rsplit("#", 1)[-1])
              for s in plan.steps]
@@ -107,6 +112,41 @@ def test_the_want_counts_the_disks_astray_and_the_count_prunes(monkeypatch):
     reached = imaginarium.Imaginarium.reached
     monkeypatch.setattr(imaginarium.Imaginarium, "reached",
                         lambda self, *a, **k: (forks.append(1), reached(self, *a, **k))[1])
-    plan = _solved(None, agent, depth=8)
+    plan = _solved(agent)
     assert len(plan.steps) == 7, plan.outcome
     assert len(forks) < 56, f"{len(forks)} forks: measured 50 with the estimate, 56 without"
+
+
+def test_the_budget_is_the_worlds_pick_and_the_kernel_bounds_it(monkeypatch):
+    """A pass is budgeted in WORLDS, and the sovereign states it in the agent's beliefs like a
+    patience (#494). `world/hanoi` states 64 and the planner reads exactly that; an agent whose
+    beliefs say nothing gets the engine's own ceiling; and a statement outside the
+    constitutional bounds is refused at the gate, which is the piece a beliefs file can get
+    wrong — a budget of zero is an agent that never thinks and looks calm."""
+    from agent.validate import validate_agent
+    from orexis_agent_deliberation.planner import Planner
+
+    agent = _mover(monkeypatch, ["disk_1"])
+    assert Planner(agent, agent.me).budget == 64, "the world's own statement"
+
+    def restate(n):
+        agent.beliefs.update(f"""DELETE {{ GRAPH <{agent.beliefs.graph}> {{
+            <{agent.me.uri}> <http://example.org/orexis#budgetWorlds> ?b }} }}
+          INSERT {{ GRAPH <{agent.beliefs.graph}> {{
+            <{agent.me.uri}> <http://example.org/orexis#budgetWorlds> {n} }} }}
+          WHERE  {{ GRAPH <{agent.beliefs.graph}> {{
+            <{agent.me.uri}> <http://example.org/orexis#budgetWorlds> ?b }} }}""")
+        agent.desires.rebuild()
+
+    restate(0)
+    with pytest.raises(Exception):
+        validate_agent(agent.beliefs, "hanoi", agent.me.uri, agent.me.capabilities,
+                       desires=agent.desires)
+
+    agent.beliefs.update(f"""DELETE WHERE {{ GRAPH <{agent.beliefs.graph}> {{
+        <{agent.me.uri}> <http://example.org/orexis#budgetWorlds> ?b }} }}""")
+    agent.desires.rebuild()
+    assert Planner(agent, agent.me).budget == Planner.BUDGET, \
+        "nothing stated: the engine's ceiling, and validation does not miss it"
+    validate_agent(agent.beliefs, "hanoi", agent.me.uri, agent.me.capabilities,
+                   desires=agent.desires)
