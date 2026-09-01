@@ -161,11 +161,32 @@ Every figure here was computed, so this is arithmetic rather than authorship —
 
 orexis:ScopedWantShape a sh:NodeShape ;
     rdfs:comment "Every derived want states WHEN it binds (#472) — no want defaults a scope, because a defaulted scope is the implicit convention the axis exists to retire. Targeted on the metWhen carriers: the derivations mint those fresh on every rebuild, so no volume can hold a legacy one. An obligation's record is deliberately NOT targeted — a volume written before the scope word existed carries rows the writer could not have scoped, and a boot check that refused them would refuse the debt it exists to keep visible; the deadline on the record is the fact, and the scope the ledger writes on new rows restates it." ;
-    sh:targetSubjectsOf orexis:metWhen ;
+    sh:targetSubjectsOf orexis:metWhen , orexis:unmetWhen ;
     sh:property [ sh:path orexis:bindsWhen ;
                   sh:minCount 1 ; sh:maxCount 1 ;
                   sh:in ( orexis:Always orexis:AtEnd orexis:Within ) ;
                   sh:message "a derived want must state its scope — orexis:Always, orexis:AtEnd or orexis:Within — written by its derivation, defaulted by nothing" ] .
+
+orexis:MetTestShape a sh:NodeShape ;
+    rdfs:comment "A want says when it is MET (a shape, conformance) or when it is UNMET (a pattern, rows) — one of the two and never both, because two verdicts on one want is a want two readers disagree about. Carriers of neither stay legal: an obligation's discharge-test and a call's measure live in the planner's own roads." ;
+    sh:targetSubjectsOf orexis:metWhen , orexis:unmetWhen ;
+    sh:property [ sh:path orexis:metWhen ; sh:maxCount 1 ;
+                  sh:message "one met-test per want" ] ;
+    sh:property [ sh:path orexis:unmetWhen ; sh:maxCount 1 ;
+                  sh:message "one avoided pattern per want" ] ;
+    sh:sparql [
+        sh:message "a want carries orexis:metWhen or orexis:unmetWhen, never both" ;
+        sh:select """SELECT $this WHERE {
+            $this <http://example.org/orexis#metWhen> ?met .
+            $this <http://example.org/orexis#unmetWhen> ?avoided .
+        }""" ] .
+
+orexis:AvoidedPatternShape a sh:NodeShape ;
+    rdfs:comment "The object of orexis:unmetWhen: a node carrying exactly one sh:select — the pattern whose rows mean the want is unmet. Without it nothing can ever judge the state, and the want would sit silently met for ever, which is the quiet direction to be wrong." ;
+    sh:targetObjectsOf orexis:unmetWhen ;
+    sh:property [ sh:path <http://www.w3.org/ns/shacl#select> ;
+                  sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
+                  sh:message "an avoided state carries exactly one sh:select" ] .
 
 # The first consumer of the gap, and deliberately a WARNING. An observation outside the
 # survival envelope is not an invalid belief — it is an emergency, and an agent must be allowed

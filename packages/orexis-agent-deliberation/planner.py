@@ -43,6 +43,7 @@ from orexis_agent_progression.act import Act, Step
 from orexis_agent_deliberation.desire import Desire
 from .afforder import wants_of
 from .imaginarium import Imaginarium
+from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
 from orexis_agent_deliberation.conformance import conforms, graph_from
@@ -167,6 +168,13 @@ class Planner:
         answer = self.agent.desire_urgency(desire, self.imaginarium.query, graph)
         if answer is not None:
             return answer
+        #  An avoided-pattern want is binary by its own contract — met 0, unmet 1 — and the
+        #  kernel judges it (#468): no capability answers for pure ratified data, and the
+        #  flat not-knowing fallback below would send the search shopping for a want that
+        #  wants nothing whenever the pattern is held.
+        pattern = self._avoided_pattern(desire)
+        if pattern is not None:
+            return 1.0 if self._pattern_binds(pattern, graph) else 0.0
         if desire.is_obligation:                        # met-or-not over the record
             return 0.0 if self._met_in(world, desire) else 1.0
         #  A want whose kind nothing loaded answers for, scoring the defined fallback:
@@ -196,6 +204,13 @@ class Planner:
         qualified. A candidate judged with a focus would be judged by the wrong answer, with
         nothing to show that it had been.
         """
+        #  A WANT MET BY ABSENCE (#468): `orexis:unmetWhen` points at the avoided pattern,
+        #  and met is the pattern binding nothing — one text, the store's own engine, judged
+        #  against this node's own readings, so the flat/named-graph split a met-shape would
+        #  force never opens.
+        pattern = self._avoided_pattern(desire)
+        if pattern is not None:
+            return not self._pattern_binds(pattern, graph or STATE_GRAPH)
         shape = self._shape_of(desire, world)
         if shape is None:
             #  A obligation's goal state is a PATTERN over the record, not a distance (#255): this
@@ -213,6 +228,30 @@ class Planner:
             return desire.is_met
         _, results, _ = shacl_validate(world, shacl_graph=shape, inference="none", advanced=True)
         return not list(results.subjects(RDF.type, _SH.ValidationResult))
+
+    def _avoided_pattern(self, desire: Desire) -> str | None:
+        """The `orexis:unmetWhen` select this want carries, or None — the negative twin."""
+        node = self._shapes.value(URIRef(desire.uri), _AG.unmetWhen)
+        if node is None:
+            return None
+        text = self._shapes.value(node, _SH.select)
+        return str(text) if text is not None else None
+
+    def _pattern_binds(self, text: str, graph: str) -> bool:
+        """Whether the avoided pattern binds in the world at `graph` — rows mean entered.
+
+        The same substitution a measure gets, run on the imaginarium so a candidate world
+        answers exactly as the live one does. A pattern that fails to run reads as ENTERED:
+        a select the gates admitted and the engine refuses is a defect someone must see,
+        and a want stuck hot is how this architecture says so.
+        """
+        text = (text.replace("$this", f"<{self.me.uri}>")
+                    .replace("$state", f"<{graph}>"))
+        try:
+            return bool(bindings(self.imaginarium.query(text)))
+        except Exception as exc:
+            log.error("avoided-state pattern failed to run: %s", exc)
+            return True
 
     def _shape_of(self, desire: Desire, world):
         """The desire's shape, with everything hanging off it, or None if it has none.
@@ -304,6 +343,18 @@ class Planner:
                     if step is None:
                         self._weighed.append((depth, row, None, trace.UNSIMULATED))
                         continue
+                    if self._law is not None:
+                        #  EVERY STATE of a plan is checked, not the end alone — the
+                        #  sovereign's ruling (#468): a valid plan contains no state that
+                        #  NEWLY matches a violation-severity shape, so a 4 to -10 to 5
+                        #  walk dies at -10 however well it ends. Discarded before the
+                        #  met-test can crown it and never expanded — and the next legal
+                        #  candidate wins by construction, which retires the no-fallback
+                        #  seam rather than implementing it.
+                        newly = self._forbidden_keys(step.world) - self._base_forbidden
+                        if newly:
+                            self._weighed.append((depth, row, step.urgency, trace.FORBIDDEN))
+                            continue
                     if room is not None and step.landing > room:
                         #  A world reached after the want has lapsed is not an answer to it
                         #  (#472, `orexis:Within`): discarded BEFORE the met-test can crown
@@ -492,6 +543,41 @@ class Planner:
         log.warning("the world this plan would reach is one the society refuses — not taken")
         return Plan(REFUSED, (), plan.urgency_now, plan.urgency_after)
 
+    def _violation_shapes(self, world):
+        """The MUST NOT the data carries: violation-severity shapes, met-tests excluded.
+
+        Data-borne on purpose — the packages' shapes are about what an agent IS and run at
+        the gates; what a plan may PASS THROUGH is ratified in the world, arrives as data,
+        and is small, which is what makes asking it per node affordable. None where the
+        world states none, and the per-node check then never runs.
+        """
+        met = set(world.objects(None, _AG.metWhen))
+        law, found = rdflib.Graph(), False
+        for shape in set(world.subjects(rdflib.RDF.type, _SH.NodeShape)) - met:
+            cbd = world.cbd(shape)
+            if (None, _SH.severity, _SH.Violation) in cbd:
+                law += cbd
+                found = True
+        for prefix, ns in world.namespaces():
+            law.bind(prefix, ns)
+        return law if found else None
+
+    def _forbidden_keys(self, world) -> frozenset:
+        """Which forbidden states this world is in — keyed so never-newly-enter can subtract.
+
+        The key is (shape, focus, value): enough to tell a NEW entry from the one the base
+        already stood in, without counting a re-report of a standing violation as news.
+        Severity is filtered again on the RESULT, because one shape may mix forces.
+        """
+        _, results, _ = shacl_validate(world, shacl_graph=self._law,
+                                       inference="none", advanced=True)
+        return frozenset(
+            (str(results.value(r, _SH.sourceShape)),
+             str(results.value(r, _SH.focusNode)),
+             str(results.value(r, _SH.value)))
+            for r in results.subjects(rdflib.RDF.type, _SH.ValidationResult)
+            if results.value(r, _SH.resultSeverity) == _SH.Violation)
+
     def _candidates(self, node, desire: Desire):
         """The levers worth simulating from here — the menu, re-run in the world reached.
 
@@ -602,6 +688,17 @@ class Planner:
         self._base_facts = signature.facts((
             quad for iri in [*store.public_graphs(), *store.recorded_graphs()]
             for quad in store.quads(iri)), self._keys)
+        #  THE LAW THIS PASS PRUNES BY (#468): the violation-severity shapes the DATA
+        #  carries — a world-authored MUST NOT over a runtime state — collected once, held
+        #  against every candidate at expansion rather than against the winner alone. The
+        #  base's own violations are kept because the rule is NEVER-NEWLY-ENTER: an agent
+        #  already inside a forbidden state must keep its exit plans, or the recovery is
+        #  pruned with everything else — the same trap that made the envelope a warning at
+        #  the gates, met from the planner's side. Empty in a world that ratifies no such
+        #  shape, and then this costs nothing per node.
+        self._law = self._violation_shapes(base)
+        self._base_forbidden = (self._forbidden_keys(base)
+                                if self._law is not None else frozenset())
         return _Node(world=base, graph=STATE_GRAPH,
                      urgency=self._urgency_in(base, STATE_GRAPH, desire))
 
