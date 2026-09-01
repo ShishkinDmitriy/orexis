@@ -1,0 +1,8 @@
+@prefix : <http://example.org/orexis/world/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix reporting: <http://example.org/orexis/reporting#> .
+
+#  The driver's PRIVATE beliefs — the two picks every agent owes: a patience, because it holds
+#  a want, and a reporting interval, because no agent may be silent by construction.
+:courier orexis:patienceS 60 .
+:courier reporting:metricsIntervalS 60 .

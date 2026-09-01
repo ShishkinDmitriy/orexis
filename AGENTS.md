@@ -515,6 +515,12 @@ fails if pyshacl ever entails something the closure does not. See
   AUTHORED or ENTAILED facts, which every cross-package grant here already does: entailment is
   materialised before any rule runs, so `market:offeredBy` is available where `market:hosts`
   is not.
+- **A `BIND` inside a `UNION` branch cannot see a variable bound outside the union.** The
+  branches are evaluated on their own and joined with the surrounding pattern afterwards, so
+  the tidy form — state the preamble once, then `{ … } UNION { … }` — leaves every outer
+  variable unbound where the arithmetic runs. Measured on the courier's distance heuristic: it
+  returned 0 for every world, no error and no empty result, which reads as "already arrived".
+  Repeat the preamble inside each branch.
 - **An operation this engine lacks binds NOTHING — it does not fail.** `duration / duration`
   and `duration * number` return unbound in pyoxigraph, so a column computed that way reads
   empty for every row and no query errors, no test goes red. It is the same family as the
