@@ -405,7 +405,12 @@ def test_the_world_a_plan_reaches_holds_ONE_reading_per_subject_and_property(mon
     for step in plan.steps:
         node = planner._step_from(node, step, desire)
 
-    readings = _readings_of(node.world, agent.me.acts_for, MOISTURE)
+    #  The node's world is the imaginarium's, not a copy it carries (#481), so the assertion
+    #  reads it the way every judge does: through the planner's own border.
+    import rdflib
+    world = rdflib.Graph()
+    world.parse(data=planner._border(node), format="nt")
+    readings = _readings_of(world, agent.me.acts_for, MOISTURE)
     assert len(readings) == 1, \
         f"the plan's world holds {readings} — a step landed beside its predecessor"
     assert readings[0] > DRY, "and it is the reading the last step predicted, not the stored one"

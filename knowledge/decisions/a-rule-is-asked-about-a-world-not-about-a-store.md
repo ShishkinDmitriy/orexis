@@ -306,8 +306,10 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
   design does not remove, and it is why this is a change to what a possible world IS rather than
   only to which store a query runs against. It is also where the rdflib cost reappears, bounded:
   pyshacl was always going to run on rdflib, and did until
-  [the-judge-speaks-rust](/decisions/the-judge-speaks-rust.md); the flat view it read
-  survives the judge that replaced it, and remains that record's open seam.
+  [the-judge-speaks-rust](/decisions/the-judge-speaks-rust.md). The flat view it read did NOT
+  survive it: with no reader left, the per-node rdflib copy was deleted —
+  [a-node-holds-one-world](/decisions/a-node-holds-one-world.md), which closes this seam and
+  took fifty-five percent off a solve.
 - **One query reads one store, so this pattern does not generalise to derived facts.** The
   obvious next thought is that if a planning store can be in memory, so could the derived and
   entailed graphs — they are a function of the files and nothing durable depends on them
