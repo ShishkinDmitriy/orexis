@@ -713,3 +713,94 @@ def test_a_plan_landing_after_the_wants_expiry_is_not_one(make):
         "the control: with a day of room the serve is a plan — if this fails, the gate is untested"
     assert not planned(0.5).steps, \
         "half a second of room is less than any serve lands in, and a late world answers nothing"
+
+
+def test_of_two_worlds_the_same_urgency_apart_the_cheaper_is_the_plan(make, tmp_path,
+                                                                      monkeypatch):
+    """#466's done-when: the ranking gains its second axis, and only for ties.
+
+    Two toy levers repair the same stake identically — the same predicted reading, so every
+    candidate world scores the same urgency — and differ in exactly one declared figure:
+    `orexis:costs`, five against three. Distinct marker triples keep the two worlds distinct,
+    or cycle detection would discard the second as somewhere already seen before the ranking
+    ever compared them. Whatever order the menu yields them in, the plan must be the cheaper
+    one — which proves the tie-break from both sides with one assertion: if the cheap toy
+    came first, the dear one must not displace it; if the dear one came first, the cheap one
+    must."""
+    from assembly import loader
+    from orexis_agent_deliberation.planner import Planner
+
+    def toy(name, cost, mark):
+        return f"""
+toy:{name} a orexis:Action ;
+    orexis:available \"\"\"SELECT ?want ?via WHERE {{ VALUES (?want ?about) {{ $wants }} BIND($me AS ?via) }}\"\"\" ;
+    orexis:costs \"\"\"SELECT ?cost WHERE {{ BIND({cost} AS ?cost) }}\"\"\" ;
+    sh:construct \"\"\"CONSTRUCT {{
+            ?obs a <http://www.w3.org/ns/sosa/Observation> ;
+                 <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ;
+                 <http://www.w3.org/ns/sosa/observedProperty> $about ;
+                 <http://www.w3.org/ns/sosa/resultTime> ?now ;
+                 <http://www.w3.org/ns/sosa/hasSimpleResult> 0.40 .
+            <urn:mark:{mark}> <urn:took> <urn:it> .
+        }} WHERE {{ BIND(BNODE() AS ?obs) BIND(NOW() AS ?now) }}\"\"\" .
+"""
+
+    toys = tmp_path / "actions.ttl"
+    toys.write_text("@prefix orexis: <http://example.org/orexis#> .\n"
+                    "@prefix toy: <urn:toy#> .\n"
+                    "@prefix sh: <http://www.w3.org/ns/shacl#> .\n"
+                    + toy("Dearly", 5.0, "dear") + toy("Cheaply", 3.0, "cheap"))
+    real = loader.action_files()
+    monkeypatch.setattr(loader, "action_files", lambda: real + (toys,))
+
+    fern = make("fern", genesis_store({("fern", MOISTURE): 0.30}))
+    plan = Planner(fern, fern.me).plan(stake_of(fern))
+
+    assert plan.steps, "both toys improve 0.30 toward the region — one must be taken"
+    assert plan.steps[0].act.action == "urn:toy#Cheaply", \
+        "same urgency either way round, so the declared cost is the only thing left to decide"
+
+
+def test_among_plans_that_achieve_the_want_cost_alone_decides(make, tmp_path, monkeypatch):
+    """The sovereign's two-stage cut, stage two: urgency is the desire's term and cost is
+    the action's — urgency picks WHICH want, and among plans that ACHIEVE it, cost alone
+    decides. The first-met-returns shortcut crowned whichever achiever the menu yielded
+    first; this authors two achievers (both predict 0.55, inside the region) differing only
+    in the declared cost, and the cheaper must win from either order."""
+    from assembly import loader
+    from orexis_agent_deliberation.planner import Planner
+
+    def toy(name, cost, mark):
+        return f"""
+toy:{name} a orexis:Action ;
+    orexis:available \"\"\"SELECT ?want ?via WHERE {{ VALUES (?want ?about) {{ $wants }} BIND($me AS ?via) }}\"\"\" ;
+    orexis:costs \"\"\"SELECT ?cost WHERE {{ BIND({cost} AS ?cost) }}\"\"\" ;
+    orexis:retracts \"\"\"CONSTRUCT {{ ?old ?p ?o }} WHERE {{
+            GRAPH $state {{ ?old <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ;
+                                 <http://www.w3.org/ns/sosa/observedProperty> $about .
+                            ?old ?p ?o }} }}\"\"\" ;
+    sh:construct \"\"\"CONSTRUCT {{
+            ?obs a <http://www.w3.org/ns/sosa/Observation> ;
+                 <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ;
+                 <http://www.w3.org/ns/sosa/observedProperty> $about ;
+                 <http://www.w3.org/ns/sosa/resultTime> ?now ;
+                 <http://www.w3.org/ns/sosa/hasSimpleResult> 0.55 .
+            <urn:mark:{mark}> <urn:took> <urn:it> .
+        }} WHERE {{ BIND(BNODE() AS ?obs) BIND(NOW() AS ?now) }}\"\"\" .
+"""
+
+    toys = tmp_path / "actions.ttl"
+    toys.write_text("@prefix orexis: <http://example.org/orexis#> .\n"
+                    "@prefix toy: <urn:toy#> .\n"
+                    "@prefix sh: <http://www.w3.org/ns/shacl#> .\n"
+                    + toy("GoldPlated", 5.0, "gold") + toy("Thrifty", 3.0, "thrift"))
+    real = loader.action_files()
+    monkeypatch.setattr(loader, "action_files", lambda: real + (toys,))
+
+    fern = make("fern", genesis_store({("fern", MOISTURE): 0.30}))
+    plan = Planner(fern, fern.me).plan(stake_of(fern))
+
+    assert plan.outcome == "satisfied" and plan.steps, \
+        "both toys land 0.55 inside 0.45-0.65 — the want is achievable in one step"
+    assert plan.steps[0].act.action == "urn:toy#Thrifty", \
+        "two ways of achieving one want differ only in cost, and the cheaper must be the plan"

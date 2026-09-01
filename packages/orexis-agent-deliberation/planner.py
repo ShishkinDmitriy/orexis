@@ -111,6 +111,9 @@ class _Node:
     #  `orexis:landsAfter`, summed, for holding a candidate to a Within want's room (#472).
     #  The root has taken nothing and lands immediately.
     landing: float = 0.0
+    #  What this path SPENDS, in the wallet's unit — each step's own `orexis:costs`, summed
+    #  (#466). Free is the reading of an action that declares none.
+    cost: float = 0.0
 
 
 class Planner:
@@ -285,6 +288,7 @@ class Planner:
         room = (max(0.0, (desire.expires - datetime.now(timezone.utc)).total_seconds())
                 if desire.expires is not None else None)
         best, saw_candidate = here, False
+        achieved = []
         self._skipped = False
         self._weighed = []
         seen = {here.diff}
@@ -324,7 +328,15 @@ class Planner:
                     novel = where not in seen
                     if novel:
                         seen.add(where)
-                        if step.urgency < best.urgency:
+                        #  LEXICOGRAPHIC, urgency first (#466): cost speaks only where urgency
+                        #  cannot separate two candidates — same urgency, cheaper wins — and
+                        #  never outranks it, because a society that traded a plant's
+                        #  wellbeing for money would have that ranking ratified nowhere. The
+                        #  satisficing floor below is untouched: a plan no better than
+                        #  standing still stays refused however cheap it is.
+                        if (step.urgency < best.urgency
+                                or (step.urgency == best.urgency
+                                    and step.cost < best.cost)):
                             best = step
                     #  MET IS ASKED BEFORE THE PRUNE, and only for a want that is not met
                     #  ALREADY. Cycle detection is about EXPANSION — do not spend the depth
@@ -352,11 +364,27 @@ class Planner:
                     #  toward the pick, and steering is what `best` below is for.
                     if (novel or not met_now) and self._met_in(step.world, desire, step.graph):
                         self._weighed.append((depth, row, step.urgency, trace.MET))
-                        return self._record(
-                            desire,
-                            self._offer(Plan(SATISFIED, step.taken, here.urgency, step.urgency),
-                                        desire, step.world),
-                            here.urgency)
+                        if met_now:
+                            #  Already met and still steering: the first novel step that
+                            #  keeps it met stays the answer — re-picking among keepers by
+                            #  cost would be shopping for a want that is not shopping for
+                            #  anything.
+                            return self._record(
+                                desire,
+                                self._offer(Plan(SATISFIED, step.taken, here.urgency,
+                                                 step.urgency),
+                                            desire, step.world),
+                                here.urgency)
+                        #  ACHIEVERS ARE COLLECTED, never returned on sight — the
+                        #  sovereign's two-stage cut (#466): urgency is the DESIRE's term
+                        #  and cost is the ACTION's. Urgency already picked which want this
+                        #  pass serves, so among plans that ACHIEVE it, cost alone decides
+                        #  — and returning the first met step was the one-axis shortcut,
+                        #  crowning whichever achiever the menu happened to yield first.
+                        #  An achiever still never extends the frontier: a step that
+                        #  answers the question is not a place to search onward from.
+                        achieved.append(step)
+                        continue
                     if not novel:
                         self._weighed.append((depth, row, step.urgency, trace.SEEN))
                         continue
@@ -393,6 +421,17 @@ class Planner:
             frontier = nxt
             if not frontier:
                 break
+
+        if achieved:
+            #  Achievement is absolute — the desire's demand — and cost orders the
+            #  achievers; the desire's own measure breaks a cost tie (nearer the aim wins),
+            #  so the answer is deterministic whatever order the menu yielded them in.
+            won = min(achieved, key=lambda s: (s.cost, s.urgency))
+            return self._record(
+                desire,
+                self._offer(Plan(SATISFIED, won.taken, here.urgency, won.urgency),
+                            desire, won.world),
+                here.urgency)
 
         #  A pass that ends with no step worth taking is labelled by the SHAPE, not by the
         #  search: a met desire that weighed its levers and found none worth pulling is
@@ -595,10 +634,13 @@ class Planner:
         #  stated timing — adds nothing, which is the keeper's own contract for it.
         lands = effects.lands_after(self.imaginarium, row.action, **bind)
         landing = node.landing + (lands or 0.0)
+        #  And what it spends — `orexis:costs`, the landing's twin (#466). None is free.
+        spent = effects.cost_of(self.imaginarium, row.action, **bind)
+        cost = node.cost + (spent or 0.0)
         urgency = self._urgency_in(world, graph, desire)
         taken = node.taken + (Step(act, urgency_after=urgency),)
         return _Node(world=world, graph=graph, taken=taken, urgency=urgency, diff=diff,
-                     landing=landing)
+                     landing=landing, cost=cost)
 
     def _bind(self, desire: Desire | None, node=None, row=None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.
