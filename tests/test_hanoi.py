@@ -87,3 +87,26 @@ def test_three_disks_solve_in_exactly_seven_moves(monkeypatch):
     #  rides on via/about — which is what the kernel's $via channel exists for.
     assert {s.act.action for s in plan.steps} == {H + "Move"}
     assert moves[0] == ("1", "PegC"), moves
+
+
+def test_the_want_counts_the_disks_astray_and_the_count_prunes(monkeypatch):
+    """Hanoi's estimate — disks not yet home — was admissible and measured before #492 and
+    NOT shipped, because breadth-first it guided nothing. Best-first it does a little: 56
+    forks to 50 on three disks, still exactly seven moves. A little is the honest reading,
+    since the optimal path moves disks AWAY from C to free the ones beneath and a count cannot
+    see that; the pin is on the seven, and the fork count is held below where it stood."""
+    from orexis_agent_deliberation import imaginarium
+    from orexis_agent_deliberation.planner import Planner
+
+    agent = _mover(monkeypatch, ["disk_1", "disk_2", "disk_3"])
+    p = Planner(agent, agent.me)
+    assert p._estimate_in(p._begin(_goal(agent)), _goal(agent)) == 3.0, \
+        "three disks on A: every one at least a move from home"
+
+    forks = []
+    reached = imaginarium.Imaginarium.reached
+    monkeypatch.setattr(imaginarium.Imaginarium, "reached",
+                        lambda self, *a, **k: (forks.append(1), reached(self, *a, **k))[1])
+    plan = _solved(None, agent, depth=8)
+    assert len(plan.steps) == 7, plan.outcome
+    assert len(forks) < 56, f"{len(forks)} forks: measured 50 with the estimate, 56 without"

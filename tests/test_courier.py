@@ -102,6 +102,26 @@ def test_too_shallow_to_arrive_still_answers_with_progress(monkeypatch):
     assert _steps(plan)[-1] == ("Drop", "c3_3")
 
 
+def test_the_search_follows_the_estimate_and_the_bound_then_refuses_work(monkeypatch):
+    """What #492 bought, measured. Breadth-first, the estimate ranked worlds and pruned NONE
+    of them: the first achiever arrived in the last layer, and a bound that arrives last has
+    nothing left to refuse — 198 forks on the corner delivery with the heuristic and 198
+    without. Best-first by `cost + estimate` the search walks to an achiever early and the
+    bound refuses the rest: 78 forks, the same eight-step plan. Pinned loosely, so a change
+    that moves the number reports itself without every reordering breaking the suite."""
+    from orexis_agent_deliberation import imaginarium
+
+    forks = []
+    reached = imaginarium.Imaginarium.reached
+    monkeypatch.setattr(imaginarium.Imaginarium, "reached",
+                        lambda self, *a, **k: (forks.append(1), reached(self, *a, **k))[1])
+    agent = _driver(monkeypatch, "c0_0", "c1_2")
+    plan = _plan(agent, 8)
+    assert len(plan.steps) == 8 and _steps(plan)[-1] == ("Drop", "c3_3"), _steps(plan)
+    assert len(forks) < 120, \
+        f"{len(forks)} forks: measured 78 best-first against 198 breadth-first (#492)"
+
+
 def test_a_want_that_declares_no_distance_is_unchanged(monkeypatch):
     """The other half of the term's contract: hanoi declares no estimate, so every world reads
     equally far and the search behaves exactly as it did before `orexis:estimates` existed.

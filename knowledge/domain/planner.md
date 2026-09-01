@@ -2,8 +2,9 @@
 type: Service
 title: Planner
 description: >-
-  The service that runs planning — a bounded breadth-first search over simulated worlds, ranking
-  each by the urgency the want would have there. It reads the action templates and every graph a
+  The service that runs planning — a bounded best-first search over simulated worlds, ordered by
+  what a path has spent plus what its want says is left, ranking each by the urgency the want
+  would have there. It reads the action templates and every graph a
   premise may touch, writes one possible world per node it reaches, and returns a plan it never
   stores. The only service whose two outputs are one modality: the worlds die with the pass and
   the trace survives it.
@@ -14,8 +15,11 @@ description: >-
 **Planning.** Given one [desire](/domain/desire.md), walk the [affordance](/domain/affordance.md)
 rows the [afforder](/domain/afforder.md) yields, simulate each by applying its
 [effect](/domain/effect.md) to the world reached so far, and rank the results by urgency. Bounded
-depth, breadth-first, so siblings are alive at once — which is why a world is a value rather
-than a mutable state.
+depth, best-first over one open list keyed on `cost + estimate` — the A* key, so a want that
+declares [how far it still is](/domain/desire.md) is walked toward and the first achiever's cost
+then refuses the rest — and siblings are alive at once, which is why a world is a value rather
+than a mutable state. It was breadth-first by layer until #492, and measured that way the
+estimate pruned nothing: the first achiever arrived in the last layer.
 
 # What it reads and writes
 

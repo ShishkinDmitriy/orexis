@@ -7,8 +7,8 @@ description: >-
   because a SPARQL query reads ONE store, so "what would be true here" is answerable only if
   there is a store in which *here* is what is true; without it a step's retraction re-asked
   the belief base, found the observation still on disk, and depth beyond one was nominal. A
-  world is a VALUE — one graph per node, written once, never mutated — because the search is
-  breadth-first and siblings are alive at once, so branching rather than backtracking is the
+  world is a VALUE — one graph per node, written once, never mutated — because the search
+  holds a whole open list of siblings at once, so branching rather than backtracking is the
   hard case. Nothing in it ever reaches the belief base, and it is discarded whole when the
   pass ends: it is the one thing in this design REQUIRED to be lost.
 ---
@@ -68,7 +68,7 @@ The obvious reading is a single hypothesis graph each step overwrites. It is wro
 first thing anyone will try.
 
 **Planning is a search over a tree of states, and the states are alive at the same time.** The
-search is breadth-first — `frontier` holds every node at a depth, `nxt` collects their children —
+search is best-first — one open list holds every node not yet expanded, whatever its depth —
 so siblings coexist rather than being visited one after another. A single mutable graph would
 need save/restore around every expansion, and not even a stack discipline would serve, because
 the frontier is a set rather than a path. **Backtracking is not the hard case; branching is.**

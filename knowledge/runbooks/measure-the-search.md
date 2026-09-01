@@ -37,6 +37,7 @@ row — a number without its machine is an impression.
 | 2026-09-01 | `the-judge-speaks-rust` | 6.19 s | 2.55 s | rudof judge, Turtle border |
 | 2026-09-01 | `the-judge-speaks-rust` | **5.52 s** | 2.17 s | the border speaks N-Triples — rdflib's Turtle WRITER was a third of the judge's cost |
 | 2026-09-01 | `a-node-holds-one-world` | **2.03 s** | 1.67 s | the per-node rdflib copy is gone (#481) — 198,144 `Graph.add` calls became 23,282 |
+| 2026-09-01 | `best-first-by-what-is-left-to-spend` | 1.77 s | 1.51 s | best-first on `cost + estimate` (#492): hanoi 56 forks to 50, the courier's corner delivery 198 to 78 |
 
 # Where the time goes (profiled at `13876fc`)
 
@@ -115,10 +116,27 @@ Measured on 3 disks: 76 forks to 56, depth 8 to 7, 20 candidates refused, 2.05 s
 Strictly dearer, never `>=`: a free action lets a descendant tie, and an achiever tying on cost
 still wins on urgency.
 
-**Frontier ordering**, landed and doing NOTHING today: cheapest-and-nearest-first tightens the
-bound sooner in principle, but hanoi's want is binary — every node scores 1.0 until one scores
-0.0 — so the key cannot discriminate and a stable sort returns the old order. It will matter to
-a domain with continuous urgency AND branching, and it is measured as a no-op until then.
+**Best-first by `cost + estimate`**, landed (#492), and what it replaced is worth keeping because
+it looked like it should have worked. `orexis:estimates` arrived with `cost + estimate > bound`
+pruning, sound and measured to prune NOTHING: the search expanded breadth-first by layer, so
+the first achiever arrived in the last layer and a bound that arrives last has nothing left to
+refuse. Sorting within a layer could not help — the layer is expanded whatever the order. One
+heap keyed on `cost + estimate` (urgency, then cost, breaking ties) with early termination when
+the head's key passes the bound is the whole change, and a met want keeps the old
+insertion order because its answer IS the first keeper. Forks per solve, same plans:
+
+| | breadth-first | best-first |
+|---|---|---|
+| courier, corner delivery, optimal 8, depth 8 | 198 | **78** |
+| courier, near delivery, optimal 5, depth 8 | 63 | **34** |
+| hanoi, 3 disks, no estimate, depth 8 | 56 | 56 — plain cost is uniform-cost search, which is breadth-first for unit moves |
+| hanoi, 3 disks, counting disks astray, depth 8 | 56 | **50** — a weak floor, since the optimal path moves disks away from C |
+
+A world is claimed by the first path to reach it, and best-first can reach one by a dearer path
+first, so a world reached strictly cheaper is reopened. Measured: it never happens in either
+domain — unit costs and an estimate that moves by at most one per step give two paths to one
+world equal keys, and the cheaper pops first — so the guard has no witness here and is kept
+for the domain whose costs are real numbers.
 
 **The thing that breaks all of it: a free action from another domain.** Added ONE to `world/hanoi`
 as data — a knob flipping between two positions, no cost, genuinely changing state:

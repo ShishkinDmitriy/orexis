@@ -9,7 +9,8 @@ GRAPH <http://example.org/orexis/graph/desire/asserted> {
       <http://example.org/orexis#bindsWhen> <http://example.org/orexis#AtEnd> ;
       <http://www.w3.org/2000/01/rdf-schema#label>
           "every disk home on peg C — the sentence the puzzle is" ;
-      <http://example.org/orexis#unmetWhen> <http://example.org/orexis/world/hanoi#a_disk_astray> .
+      <http://example.org/orexis#unmetWhen> <http://example.org/orexis/world/hanoi#a_disk_astray> ;
+      <http://example.org/orexis#estimates> <http://example.org/orexis/world/hanoi#disks_astray> .
   <http://example.org/orexis/world/hanoi#a_disk_astray> <http://www.w3.org/ns/shacl#select>
       """SELECT (1 AS ?astray) WHERE {
           GRAPH $state { ?d <http://example.org/orexis/hanoi#on> ?rest . ?d (<http://example.org/orexis/hanoi#on>)+ ?p }
@@ -18,4 +19,19 @@ GRAPH <http://example.org/orexis/graph/desire/asserted> {
       }""" ;
       <http://www.w3.org/2000/01/rdf-schema#comment>
           "rows while any disk's chain bottoms out on a peg that is not C" .
+
+  #  HOW FAR STILL, in moves: every disk astray must move at least once more, so the count of
+  #  them never overstates what is left — which is all `orexis:estimates` asks. It is a WEAK
+  #  floor, deliberately: the optimal path moves disks away from C to free the ones beneath,
+  #  and a count cannot see that. Measured before the search followed its estimate (#492)
+  #  it guided nothing, since a bound that arrives in the last layer refuses nothing; with a
+  #  best-first open list the same count is what lets the bound arrive early.
+  <http://example.org/orexis/world/hanoi#disks_astray> <http://www.w3.org/ns/shacl#select>
+      """SELECT (COUNT(DISTINCT ?d) AS ?estimate) WHERE {
+          GRAPH $state { ?d <http://example.org/orexis/hanoi#on> ?rest . ?d (<http://example.org/orexis/hanoi#on>)+ ?p }
+          ?p a <http://example.org/orexis/hanoi#Peg> .
+          FILTER(?p != <http://example.org/orexis/hanoi#PegC>)
+      }""" ;
+      <http://www.w3.org/2000/01/rdf-schema#comment>
+          "the disks not yet home, each of which is at least one move from being so" .
 }
