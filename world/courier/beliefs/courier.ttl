@@ -5,4 +5,7 @@
 #  The driver's PRIVATE beliefs — the two picks every agent owes: a patience, because it holds
 #  a want, and a reporting interval, because no agent may be silent by construction.
 :courier orexis:patienceS 60 .
+#  And a budget, because the corner delivery needs 78 worlds and the engine's default is
+#  sized for a plant. A pass that runs out still answers with the drives toward the parcel.
+:courier orexis:budgetWorlds 128 .
 :courier reporting:metricsIntervalS 60 .

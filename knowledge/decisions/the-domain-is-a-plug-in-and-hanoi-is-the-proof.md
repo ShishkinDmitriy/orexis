@@ -112,11 +112,13 @@ the tree; the optimum is the deontic sitting's two-stage ranking doing what it s
 
 # Seams left open
 
-- **Depth is the engine's, and a world cannot ask for more.** The tests raise `MAX_DEPTH` on
-  their own Planner instance; the constant stays 2 for every running agent, per its own
-  comment — an agent that could revise it could spend an afternoon planning while its plant
-  died. If a deployed world ever needs deep search, that is the mandate pattern's decision —
-  a sovereign-bounded pick — and it is deliberately not taken here.
+- **Depth is the engine's, and a world cannot ask for more.** *Taken since, by
+  [a-pass-is-budgeted-in-worlds](/decisions/a-pass-is-budgeted-in-worlds.md) — in worlds rather
+  than depth: `world/hanoi` states `orexis:budgetWorlds 64` and the tests raise nothing.* As
+  written: the tests raised `MAX_DEPTH` on their own Planner instance; the constant stayed 2
+  for every running agent, per its own comment — an agent that could revise it could spend an
+  afternoon planning while its plant died. If a deployed world ever needed deep search, that
+  was the mandate pattern's decision — a sovereign-bounded pick — deliberately not taken then.
 - **#257's runtime half is unbuilt.** A hanoi DEVICE — moves as commands on a bus, state as
   observations, onboarding and compose — would make the mover a running society member
   rather than a planner fixture. The planner-level claim is answered; the running-society

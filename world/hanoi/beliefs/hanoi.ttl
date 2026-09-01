@@ -7,4 +7,7 @@
 #  silent by construction. Nothing else: no cadences (nothing sensed), no conversions
 #  (nothing poured), no market blocks (nothing bought).
 :hanoi orexis:patienceS 60 .
+#  And a budget, because the puzzle needs one: three disks solve in 50 worlds with the want's
+#  own estimate, and the engine's default is sized for a plant, not for a tower.
+:hanoi orexis:budgetWorlds 64 .
 :hanoi reporting:metricsIntervalS 60 .

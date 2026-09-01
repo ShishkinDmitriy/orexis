@@ -132,6 +132,10 @@ insertion order because its answer IS the first keeper. Forks per solve, same pl
 | hanoi, 3 disks, no estimate, depth 8 | 56 | 56 — plain cost is uniform-cost search, which is breadth-first for unit moves |
 | hanoi, 3 disks, counting disks astray, depth 8 | 56 | **50** — a weak floor, since the optimal path moves disks away from C |
 
+**The ceiling is a budget of worlds** (#494): `orexis:budgetWorlds` on the agent, 32 by the
+engine's default, 64 in `world/hanoi` and 128 in `world/courier`. Multiply by the fork cost for
+the mutable slice above to size one in seconds. A spent budget answers with the best so far.
+
 A world is claimed by the first path to reach it, and best-first can reach one by a dearer path
 first, so a world reached strictly cheaper is reopened. Measured: it never happens in either
 domain — unit costs and an estimate that moves by at most one per step give two paths to one

@@ -34,6 +34,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [region](/domain/region.md) - The range a subject needs a property to stay inside, deduced by intersection. Beside it, the envelope outside which the subject ends.
 
+* [budget](/domain/budget.md) - How many worlds one pass may imagine: the sovereign's pick in the agent's beliefs, bounded by shape, defaulted by the engine. Not a depth.
 * [aim](/domain/aim.md) - The point an agent picks inside its region. Its own, and a first pick rather than a bound — so constrain well, do not guess well.
 
 * [pick](/domain/pick.md) - A point chosen inside room the agent did not choose. Unfalsifiable, so a want; the aim is one, the cadences and patience the rest.

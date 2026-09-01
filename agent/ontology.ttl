@@ -870,6 +870,18 @@ orexis:patienceS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range 
     rdfs:label "patience seconds" ;
     rdfs:comment "How long a standing intention blocks re-adoption of the same one. Within it, a second impulse to do the same thing is ABSORBED — that is the amortisation, and with a consulted deliberator it is the cost model. Past it, a new adoption supersedes the old, which is recorded as dropped with the reason. An OPINION, so it is each agent's own belief and review may move it; the bounds beside it are constitutional." .
 
+#  HOW MUCH ONE PASS MAY IMAGINE, in worlds — the ceiling on what a deliberation spends, stated
+#  in the unit the search actually spends: a fork in the imaginarium, whose cost per world the
+#  runbook measures against the mutable slice. It was a DEPTH, a constant in the planner, and
+#  under a breadth-first search depth was a ceiling on compute; best-first (#492) it bounds
+#  only how far ahead a plan reaches, which nothing needs — a plan is re-derived every pass
+#  and only its head is acted on. A pick like the patience: authored per world, never moved
+#  by the agent unless a mandate says so, and the engine's own default where none is stated.
+#  See decisions/a-pass-is-budgeted-in-worlds.md.
+orexis:budgetWorlds a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
+    rdfs:label "budget, in worlds" ;
+    rdfs:comment "How many possible worlds one deliberation may fork before it answers with the best it has found. The search is anytime — it holds the best world seen and stops here — so a spent budget answers with progress, never with nothing. NOT a depth: a world's cost is what its mutable slice makes it, measured, and a sovereign states this in that unit. An OPINION of the sovereign's about this agent, authored in its beliefs; the agent does not move it." .
+
 orexis:minPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "minimum patience" .
 orexis:maxPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
@@ -888,10 +900,11 @@ orexis:Intention orexis:metFraction 0.25 ; orexis:suspectAfter 3 ; orexis:minPat
 #  step in the right direction. A want that can say "three moves left" makes progress
 #  measurable, and the search can be guided by it.
 #
-#  IT MUST NEVER OVERESTIMATE. The planner uses it to order what it looks at first, and an
-#  estimate that overstates the remaining cost makes the search prefer the wrong world — it
-#  cannot make the answer wrong today, because the winner is still the cheapest achiever
-#  actually found, but it is the property every stronger use of this term would rest on.
+#  IT MUST NEVER OVERESTIMATE. The search is best-first on `cost + estimate` and ends the pass
+#  when the head of its open list passes the cheapest achiever in hand (#492) — sound exactly
+#  because the estimate is a floor under what any plan through a world would finally spend.
+#  An estimate that overstates would let the pass end with a dearer plan than exists, and no
+#  test would go red on the domain's account: the plan is still a plan, only not the best.
 orexis:estimates a owl:ObjectProperty ;
     rdfs:domain orexis:Desire ;
     rdfs:label "what is left to pay" ;
