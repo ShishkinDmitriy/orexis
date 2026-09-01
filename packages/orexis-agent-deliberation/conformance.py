@@ -17,20 +17,29 @@ stores read the packages' namespaces.
 
 from __future__ import annotations
 
+import functools
+
 import rdflib
-from pyshacl import validate as shacl_validate
 
 from assembly import loader
+
+from orexis_agent_deliberation.judge import crossed, judge
 
 from orexis_agent_progression.store import Store
 
 
+@functools.cache
 def _shapes_and_vocabulary() -> tuple[rdflib.Graph, rdflib.Graph]:
     """Every package's shapes, and the T-Box they are written against.
 
     The vocabulary goes into the DATA as well as being the inference source: shapes target
     capability FAMILIES ("anything that perceives"), and which family a capability belongs to
     is a fact stated in the vocabulary.
+
+    CACHED, and safe to be: the files cannot change inside a process, every caller treats
+    both graphs as read-only (`data += ontology` and `shapes + held` build new graphs), and
+    the planner pays this on every candidate world it judges — measured at a quarter of what
+    `conforms` cost before the cache.
     """
     ontology, shapes = rdflib.Graph(), rdflib.Graph()
     for path in loader.ontology_files():
@@ -97,29 +106,49 @@ def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
             held += data.cbd(shape)      # the shape and everything hanging off it
         if held:
             shapes = shapes + held
-    # advanced=True enables SPARQL-based targets, which is how a shape scopes itself to the
-    # agents that composed its capability.
-    _, results, report = shacl_validate(
-        data, shacl_graph=shapes, ont_graph=ontology, inference="none", advanced=True,
-        **({"focus_nodes": [focus]} if focus else {}),
-    )
-    violated = _violated(results)
+    #  The judge is rudof, through judge.py — SPARQL-based targets resolved there, which is
+    #  how a shape scopes itself to the agents that composed its capability. No ont_graph:
+    #  the ontology is already inside `data`, and passing it twice only ever meant handing
+    #  the previous engine a second chance to disagree with itself.
+    #  CARVED FIRST, CROSSED AFTER. `cbd` recurses through blank nodes only, so a graph
+    #  skolemized before the carve stops at the first property shape and drops its authored
+    #  message — the verdict right, the report gutted. The two sides still agree because
+    #  `judge` names a blank node after its own id on both.
+    border = crossed(data)                    # once, however many verdicts share it
+    violated, report = _judged(border, shapes, focus=focus)
     #  The shapes that agent holds, unfocused, over no others: ownership is `orexis:holds`, so
     #  every result is about the asker by construction — which is the guarantee the focus
-    #  filter was supposed to give and, for these shapes, does not.
+    #  filter was supposed to give and, for these shapes, did not under pySHACL (the
+    #  qualifiedValueShape wrong answers the comment above records). The judge takes no focus
+    #  at all, so the pass survives as a guarantee of aboutness rather than a bug shelter.
     if focus and (mine := _shapes_held_by(data, focus)):
-        #  No `ont_graph`: the ontology is already inside `data`, and passing it twice only
-        #  ever meant handing pySHACL a second chance to disagree with itself.
-        _, own, own_report = shacl_validate(
-            data, shacl_graph=mine, inference="none", advanced=True)
-        violated = violated or _violated(own)
+        own_violated, own_report = _judged(border, mine)
+        violated = violated or own_violated
         report = report.strip() + "\n" + own_report.strip()
     return not violated, report.strip()
 
 
-def _violated(results: rdflib.Graph) -> bool:
-    return any(results.value(r, _SH.resultSeverity) == _SH.Violation
-               for r in results.subjects(rdflib.RDF.type, _SH.ValidationResult))
+def _judged(data: str, shapes: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
+    """One shapes graph judged, and the VIOLATIONS among the results decide.
+
+    There is no severity split here, and there nearly was. rudof looked at first as though it
+    flattened every result to `sh:Violation`; measured properly it honours `sh:severity`
+    exactly where pySHACL does, which is exactly where this repo's shapes declare it — DOWN on
+    the property shape for a declarative constraint, UP on the node shape for a `sh:sparql`
+    one ([a-desire-is-a-shape](knowledge/decisions/a-desire-is-a-shape.md) measured that rule
+    into existence against the previous engine, and the new one obeys the same one). The
+    engines agree, so the verdict is what it always was: a result at `sh:Violation` refuses,
+    anything softer is printed and passed over.
+
+    With `focus`, only results ABOUT that node decide — the same set pySHACL's `focus_nodes`
+    pre-filter produced, filtered after instead of before.
+    """
+    results, report = judge(data, shapes)
+    violated = any(
+        results.value(r, _SH.resultSeverity) == _SH.Violation
+        and (focus is None or str(results.value(r, _SH.focusNode)) == focus)
+        for r in results.subjects(rdflib.RDF.type, _SH.ValidationResult))
+    return violated, report
 
 
 def _shapes_held_by(data: rdflib.Graph, agent_uri: str) -> rdflib.Graph:

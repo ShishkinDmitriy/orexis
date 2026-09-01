@@ -173,6 +173,8 @@ place by a factor of seven — see *what building it corrected*:
 `_met_in` is 0.083 s per candidate and depth 2 weighs roughly twice as many — and the two
 figures above are close enough on this machine that the honest claim is *no measurable cost*
 rather than a speedup, even though the deleted `_world_of` replay genuinely removed work.
+(The judge and its figure have since changed:
+[the-judge-speaks-rust](/decisions/the-judge-speaks-rust.md).)
 
 The estimate this replaces read 1.45 ms for 486 quads and ≈ 7 ms a plan, against a pass of
 200–500 ms. Both halves moved: the copy is larger because it has to be, and the pass is longer
@@ -270,8 +272,9 @@ remove.
 # What this replaces, and the measurement that replaced it
 
 **The first version of this record chose an rdflib dataset**, on the reasoning that
-`world_after` already builds rdflib graphs and pyshacl already reads them, so the planning path
-was rdflib's anyway. It stated the cost as a second SPARQL engine reading one query text — the
+`world_after` already builds rdflib graphs and pyshacl already read them, so the planning path
+was rdflib's anyway — as it still is on the flat-view side, though the judge now crosses to
+Rust behind `judge.py` ([the-judge-speaks-rust](/decisions/the-judge-speaks-rust.md)). It stated the cost as a second SPARQL engine reading one query text — the
 hazard [one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md) exists to name —
 and proposed to pay it with a both-engines test.
 
@@ -302,7 +305,9 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
   from that pair when validation asks for it. That materialisation is the piece of work this
   design does not remove, and it is why this is a change to what a possible world IS rather than
   only to which store a query runs against. It is also where the rdflib cost reappears, bounded:
-  pyshacl was always going to run on rdflib, and it already does today.
+  pyshacl was always going to run on rdflib, and did until
+  [the-judge-speaks-rust](/decisions/the-judge-speaks-rust.md); the flat view it read
+  survives the judge that replaced it, and remains that record's open seam.
 - **One query reads one store, so this pattern does not generalise to derived facts.** The
   obvious next thought is that if a planning store can be in memory, so could the derived and
   entailed graphs — they are a function of the files and nothing durable depends on them

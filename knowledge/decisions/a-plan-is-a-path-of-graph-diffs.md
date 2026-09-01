@@ -237,7 +237,9 @@ Validation of a candidate runs the goal shape **unfocused**, which is not a deta
 answers qualified value shapes wrong under `focus_nodes`, measured both ways round
 ([a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md)), and every goal shape here is
 qualified. A candidate world validated with a focus would be silently judged by the wrong
-answer.
+answer. (The engine that had the bug has since been replaced —
+[the-judge-speaks-rust](/decisions/the-judge-speaks-rust.md) — and the unfocused run is now
+the only kind the judge has.)
 
 ### The sovereign's three amendments: rules in the store, and the diff as the report
 

@@ -35,7 +35,6 @@ import time
 from dataclasses import dataclass, field
 
 import rdflib
-from pyshacl import validate as shacl_validate
 from rdflib import RDF, URIRef
 
 from . import effects, signature, trace
@@ -47,6 +46,7 @@ from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
 from orexis_agent_deliberation.conformance import conforms, graph_from
+from orexis_agent_deliberation.judge import judge
 
 log = logging.getLogger("search")
 
@@ -226,7 +226,7 @@ class Planner:
                 if answer is not None:
                     return answer <= 0.0
             return desire.is_met
-        _, results, _ = shacl_validate(world, shacl_graph=shape, inference="none", advanced=True)
+        results, _ = judge(world, shape)
         return not list(results.subjects(RDF.type, _SH.ValidationResult))
 
     def _avoided_pattern(self, desire: Desire) -> str | None:
@@ -569,8 +569,11 @@ class Planner:
         already stood in, without counting a re-report of a standing violation as news.
         Severity is filtered again on the RESULT, because one shape may mix forces.
         """
-        _, results, _ = shacl_validate(world, shacl_graph=self._law,
-                                       inference="none", advanced=True)
+        #  The law graph is Violation-only by construction (`_violation_shapes` keeps only
+        #  declared-Violation cbds), so judge.py's severity gap cannot reach the keys. A law
+        #  shape MIXING forces within itself would need the split conformance._judged does —
+        #  none exists today, and the result filter below is where it would show.
+        results, _ = judge(world, self._law)
         return frozenset(
             (str(results.value(r, _SH.sourceShape)),
              str(results.value(r, _SH.focusNode)),
