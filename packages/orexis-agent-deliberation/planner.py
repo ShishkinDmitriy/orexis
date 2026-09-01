@@ -773,6 +773,12 @@ class Planner:
             #  for a region want — and the rule joins on it in its own words.
             "want": f"<{desire.uri}>" if desire else "<urn:nothing>",
             "about": f"<{row.about}>" if row is not None and row.about else "<urn:nothing>",
+            #  THE LEVER, since the sovereign struck hanoi's ground-action grid: a row always
+            #  carried which lever a step goes through, and the effect could never see it —
+            #  so a two-parameter action was inexpressible and hanoi shipped six ground
+            #  nodes. One schema needs the channel: $via is the row's lever, symmetric with
+            #  $about, and a rule that ignores it loses nothing.
+            "via": f"<{row.via}>" if row is not None else "<urn:nothing>",
             "beliefs": f"<{beliefs_graph(self.agent.id)}>",
             "state": f"<{graph}>",
             "litres": self._dose(row, graph) if desire and row is not None else 0.0,

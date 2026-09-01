@@ -80,4 +80,10 @@ def test_three_disks_solve_in_exactly_seven_moves(monkeypatch):
     agent = _mover(monkeypatch, ["disk_1", "disk_2", "disk_3"])
     plan = _solved(None, agent, depth=8)
     assert plan.outcome == "satisfied", plan.outcome
-    assert len(plan.steps) == 7, [s.act.action.rsplit("#", 1)[-1] for s in plan.steps]
+    moves = [(s.act.via.rsplit("_", 1)[-1], s.act.about.rsplit("#", 1)[-1])
+             for s in plan.steps]
+    assert len(plan.steps) == 7, moves
+    #  ONE schema, ground per ROW: every step is the same action, and the (disk, peg) pair
+    #  rides on via/about — which is what the kernel's $via channel exists for.
+    assert {s.act.action for s in plan.steps} == {H + "Move"}
+    assert moves[0] == ("1", "PegC"), moves

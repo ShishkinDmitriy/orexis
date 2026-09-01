@@ -7,17 +7,18 @@
 
 <http://example.org/orexis/hanoi> a owl:Ontology ;
     rdfs:label "Orexis hanoi" ;
-    rdfs:comment """Tower of Hanoi, as a domain plug-in (#257). The claim under test is AGENTS.md's own — the domain is a plug-in, plant/water language is the example — and this package is the proof at its strongest: a classical planning domain that ships an ontology and six ground actions and NOT ONE LINE of Python. The goal is a world-ratified desire met by absence (a disk off the target peg); legality lives in each move's precondition; the state is graph triples an effect really retracts — the first retraction that deletes rather than upserts; and the optimal solution is nobody's algorithm, it is the cheapest achiever under orexis:costs.""" .
+    rdfs:comment """Tower of Hanoi, as a domain plug-in (#257). The claim under test is AGENTS.md's own — the domain is a plug-in, plant/water language is the example — and this package is the proof at its strongest: a classical planning domain that ships an ontology and ONE move action and not one line of Python. The goal is a world-ratified desire met by absence (a disk off the target peg); legality lives in the move's precondition; the state is graph triples an effect really retracts — the first retraction that deletes rather than upserts; and the optimal solution is nobody's algorithm, it is the cheapest achiever under orexis:costs.""" .
 
 #################  The board  #################
-#  THE PEGS ARE T-BOX INDIVIDUALS, and that placement is rule 1 doing its work: the six
-#  ground actions must name the pegs, code (a package's query is code) may never name a
-#  WORLD instance, and every Tower of Hanoi that has ever been posed has exactly these three
-#  pegs — they are the domain's fixtures, exactly as orexis:Below is a fixture of violation.
-#  The DISKS are the world's: a two-disk world and a three-disk world differ only there.
+#  THE PEGS ARE T-BOX INDIVIDUALS because they are the puzzle's fixtures: every Tower of
+#  Hanoi ever posed has exactly these three, so a world that owned its own pegs would be
+#  restating an invariant. (They first moved here for a second reason — six GROUND actions
+#  had to name them, and code may not name a world instance — and that reason retired with
+#  the grid when the sovereign ruled one Move and the kernel gained $via.) The DISKS are
+#  the world's: a two-disk world and a three-disk world differ only there.
 
 :Peg a owl:Class ; rdfs:label "Peg" ;
-    rdfs:comment "One of the three rods. A T-Box individual each, because the actions are ground per (from, to) pair and code may name only T-Box terms." .
+    rdfs:comment "One of the three rods — a T-Box individual each, because the pegs are the puzzle's invariant and a world authors only its disks." .
 :PegA a :Peg ; rdfs:label "peg A" ; rdfs:comment "Where every puzzle starts." .
 :PegB a :Peg ; rdfs:label "peg B" ; rdfs:comment "The spare." .
 :PegC a :Peg ; rdfs:label "peg C" ; rdfs:comment "Where every goal points." .
