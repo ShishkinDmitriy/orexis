@@ -8,8 +8,8 @@ description: >-
   judge read rdflib, and nothing does since the judge moved to Rust. What a node keeps now is
   its own readings as N-Triples; the invariant half of every world in a pass is written once.
   The alternative the sovereign proposed — a base graph with per-node deltas, queried as a
-  union of named graphs — is refused by retraction: a union can add but cannot un-say, and
-  tombstones would put FILTER NOT EXISTS into every package's rules. Measured on the bench:
+  union of named graphs — is refused because SPARQL has no precedence and there is nothing
+  left to save, NOT by retraction: every retract in this tree is an upsert. Measured on the bench:
   three disks from 5.52 s to 1.9 s.
 status: accepted
 timestamp: 2026-09-01T21:40:00Z
@@ -37,22 +37,40 @@ by a step, so it is written ONCE per pass by the store's own engine and concaten
 of whichever node is being judged. N-Triples because its lines stand alone: two graphs join
 with `+`, and nothing is re-parsed to merge them.
 
-## The alternative, and why retraction refuses it
+## The alternative, and the argument that does NOT carry it
 
 The sovereign asked the right question: *we have a named graph per possible world — why not
-keep the first one big and the others on top of it, and query the list of named graphs?* It is
-the natural design, and one fact kills it. **A union of graphs can add but cannot un-say.** A
-move's `orexis:retracts` genuinely deletes — a disk leaves the peg it was on — and no
-combination of overlay graphs expresses "this triple is no longer here". The repair would be
-tombstones: a retraction writes a marker, and every query filters against it. That puts
-`FILTER NOT EXISTS { ... tombstone ... }` into **every package's `rules.ru`**, which breaks the
-contract those files are written under — that a rule is an ordinary SPARQL query about a world,
-not a query about a bookkeeping scheme. A domain author would have to know how the planner
-stores hypotheses in order to ask whether a disk is on a peg.
+keep the first one big and the others on top of it, and query the list of named graphs?*
+
+The first answer given was that **a union can add but cannot un-say**, since a move's
+`orexis:retracts` deletes. The sovereign refused the evidence, correctly: *you were lucky,
+because this world effectively has no delete list — a disk is always on top of something.*
+Checked across the tree, that is worse than a lucky example. **Every `retracts` clause here is
+an UPSERT.** Hanoi's removes `$via hanoi:on ?old` while its construct adds `$via hanoi:on
+?dest`; the other four remove `?obs ?p ?o` — the observation node their own construct
+immediately re-creates, because the sensed graph keeps one node per (subject, property). Five
+of five replace a value; none removes one. A domain with a genuine deletion would break an
+overlay, and this repo has never had one, so that cannot be the load-bearing argument and was
+not entitled to be stated as one.
+
+What actually carries it is two things, neither about retraction:
+
+- **SPARQL has no precedence.** An overlay needs *the newest value wins*, and a union of named
+  graphs does not mean that — the rule would have to say so itself, in its own text. That puts
+  planner bookkeeping into **every package's `rules.ru`**, and a domain author would have to
+  know how hypotheses are stored in order to ask whether a disk is on a peg. It holds whether
+  the change is an upsert or a deletion.
+- **There is nothing left to save.** The mutable slice IS the diff, near enough: measured on a
+  3-disk solve, the per-node dump costs 0.01 s across 78 nodes and the fork 0.02 s, against
+  0.38 s for the rules themselves. An overlay would optimise three hundredths of a second.
 
 So the world stays materialised per node — but in ONE store, the Rust one, forked by diff,
 which is what the imaginarium was always for. The copy that was deleted is not the world; it is
 the translation of the world into another library.
+
+**Worth noticing on its own: every state change in this system replaces a value rather than
+removing one.** That is not a rule anyone wrote down, and it is what makes the per-node fork
+cheap — the mutable slice stays the same size however long a plan runs.
 
 ## What did not change
 
