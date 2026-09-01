@@ -1,5 +1,5 @@
 """Tower of Hanoi through the ordinary search (#257): the domain-is-a-plug-in claim, tested
-on a classical planning task. The domain is an ontology and six ground actions with no
+on a classical planning task. The domain is an ontology and ONE move action with no
 Python; the goal is a world-ratified desire met by absence; and the optimal solution is the
 cheapest achiever — nobody's algorithm."""
 
