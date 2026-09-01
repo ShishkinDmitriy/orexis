@@ -33,6 +33,47 @@ That is the whole job: **a common currency, so the hottest want wins.**
 The sources differ; the meaning does not. A 0.8 from a deadline and a 0.8 from a dry pot are the
 same claim on the agent's attention, and that equivalence is deliberate rather than a convenience.
 
+Since the scope axis landed
+([shall-must-and-may-are-not-strengths-of-one-scale](/decisions/shall-must-and-may-are-not-strengths-of-one-scale.md),
+#472), the table's pattern has a name: **urgency is the fraction of the want's ROOM consumed,
+and the scope names which room.** An `orexis:Always` want's room is STATE — the survival
+envelope, so its urgency is the instantaneous degree of being off, a state function that moves
+only when the world moves. An `orexis:Within` want's room is TIME — the redeem window, so its
+urgency rises in a frozen world, which is why lapsing is judged by the reader's clock. And not
+knowing consumes the whole of either, which is what maximal always meant. One meaning, two
+projections — the stake and the debt formulas were never two ideas.
+
+The corollary explains an absence: an `orexis:AtEnd` want with no deadline has no room being
+consumed, so nothing makes it urgent — and a want with no urgency never wins attention. That is
+the quiet reason no derivation writes one; a real AtEnd customer must declare its heat or
+borrow a clock, at which point it is really a Within.
+
+# How much unmet, when the want is not a number
+
+The met-shape says WHETHER (conformance is boolean); this number says HOW BADLY — and for a
+want that is not about a number, *how badly* has exactly four honest sources, every want
+falling to one:
+
+| the want's shape | its measure |
+|---|---|
+| a number a lever moves incrementally | **distance** — partial progress must rank, or a dose too small to finish is refused |
+| no metric, but a deadline | **the clock** — when state has no dimension, time is the room being consumed |
+| no intermediate worlds at all — discharged-or-not, fresh-or-not | **binary**, and that is sufficiency rather than a stopgap: a gradient earns its place only where part-way worlds exist and a lever can reach them |
+| a composite pattern — *all my debts honoured* | **decomposition** — the forest's roll-up: how much becomes how many leaves, and how hot, each leaf bottoming out in a row above |
+
+Beneath all four sits the loud default: a want nobody measures scores maximal, logged.
+
+Binary is enough for two structural reasons. The search never needed a gradient to cross an
+unmet valley — the frontier carries partial steps regardless of score, which is how
+refill-then-serve is found while the refill itself still scores 1.0 — and under the two-stage
+ranking a binary want's plan choice is achievement plus cost, no *how much* consulted. The
+gradient's one irreplaceable job is ranking partial ENDINGS, and only metric wants have those.
+
+And one refusal, written before anyone proposes it: no generic graph-distance — *how many
+triples short of matching* — ever. It is arithmetic nobody owns, incomparable to this common
+currency, and the counting mistake in disguise. Where partial progress in a pattern must
+rank, decompose the pattern into leaves; never mint a metric over it.
+
 # Not knowing is maximal, and that is the load-bearing choice
 
 `urgency(None)` is **1.0**, not 0.0. A property nobody has read is the most urgent thing an agent
