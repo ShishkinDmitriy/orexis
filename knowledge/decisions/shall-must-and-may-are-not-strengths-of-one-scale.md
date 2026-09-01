@@ -411,6 +411,26 @@ still computed and never asserted; and the one-value claim for scope is correcte
 mourned — the values were three all along, once the obligation's deadline is read as scope
 rather than heat.
 
+**The whole menu, audited** — asked by the sovereign after the merge: are the three all of
+them? No, and every one of PDDL3's ten is accounted for:
+
+| PDDL3 operator | here |
+|---|---|
+| `at-end`, `always`, `within` | shipped — `orexis:bindsWhen`'s three values |
+| `preference (…)` | shipped as the OTHER axis: force — severity for law, the measure for wants |
+| `sometime` | subsumed: a plan ENDS when its goal is met, so at-end covers "at some state" within any one plan |
+| `at-most-once` | no customer: cycle detection discards a repeat that nets nothing, and caps are per-act |
+| `sometime-before` (ordering) | emerges from effects-plus-search — refill-before-serve needed no operator, a premise that cannot bind orders the steps itself |
+| `sometime-after` (response) | the keeper's verification arc, outside the plan by design: a sensing action ends a plan, so within-plan response is not even expressible |
+| `always-within` (bounded response) | the loop with patience and cadence — *whenever LOW, act within…* is re-deliberation on a clock urgency tightens |
+| `hold-during` / `hold-after` (clock-anchored) | the one FUTURE customer: *pump only at night* is an avoidance with a clock premise, [#468](https://github.com/ShishkinDmitriy/orexis/issues/468)'s territory — and `Act.not_before` is already the seat the code reserves as "the half nothing writes yet" |
+
+The pattern the audit surfaces is why the unshipped rows stay unshipped: they are the
+RESPONSE and ORDERING operators, and this architecture handles response through EXECUTION
+machinery — the keeper, the loop, effects — rather than plan constraints, because plans here
+are short by construction. PDDL3 needs those operators because its plans are long and its
+goals weaker than effects-plus-simulation.
+
 # Seams left open
 
 - **The override order (character)** stays the obligation record's seam. This record adds one
