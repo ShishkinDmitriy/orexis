@@ -21,7 +21,13 @@ from orexis_agent_progression.ontology import (BELIEF_REVISED, DESIRES, DESIRE_U
 
 from datetime import datetime
 
-from orexis_agent_deliberation.desire import Desire
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    #  Annotation-only (#455): the base Module names Desire in hook SIGNATURES and never
+    #  touches it — a contract annotation is free, where an import would make every module
+    #  that subclasses this load the deliberation layer at assembly.
+    from orexis_agent_deliberation.desire import Desire
 
 import json
 import logging

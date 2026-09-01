@@ -125,6 +125,9 @@ it is a record wearing a bullet.
 - **A record is engaged by its premises, not cited by its conclusion** — the mind's record
   refuses a granted mind, and was nearly spent against unconditional layer trees it never
   argued about.
+- **A base class is an import and an annotation is not** — a layer contract named in a
+  signature costs nothing at assembly; subclassed, it loads the layer, which is why sensing's
+  row types live behind the touch (#455).
 
 ## The rules the code lives by
 

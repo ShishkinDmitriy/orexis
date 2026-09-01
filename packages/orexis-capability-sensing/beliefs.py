@@ -15,9 +15,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from orexis_agent_deliberation.beliefs import Picks
-
-
 from .terms import LISTENING, SUBSCRIBING, term
 
 
@@ -65,24 +62,43 @@ class AlarmBeliefs:
     delta_fraction: float
 
 
-SUBSCRIBING_PICKS = Picks(
-    capability=SUBSCRIBING,
-    cls=SubscribingBeliefs,
-    terms={
-        "fast_sleep_s": term("fastSleepS"),
-        "slow_sleep_s": term("slowSleepS"),
-        "grace_s": term("readingGraceS"),
-    },
-)
+#  BUILT ON FIRST TOUCH (#455): `Picks` is deliberation's class, and these three constants
+#  were the whole reason importing this file loaded that layer. A sensing-only assembly never
+#  touches them; the first running module that reads its picks does, and every agent that
+#  runs holds the layer anyway. PEP 562 — `from .beliefs import SUBSCRIBING_PICKS` still
+#  works everywhere it is written, it just resolves here.
+_PICKS: dict | None = None
 
-ALARM_PICKS = Picks(
-    capability=SUBSCRIBING,
-    cls=AlarmBeliefs,
-    terms={"delta_fraction": term("alarmDeltaFraction")},
-)
 
-LISTENING_PICKS = Picks(
-    capability=LISTENING,
-    cls=ListeningBeliefs,
-    terms={"max_age_s": term("maxReadingAgeS")},
-)
+def _picks() -> dict:
+    global _PICKS
+    if _PICKS is None:
+        from orexis_agent_deliberation.beliefs import Picks  # deferred (#455): see above
+        _PICKS = {
+            "SUBSCRIBING_PICKS": Picks(
+                capability=SUBSCRIBING,
+                cls=SubscribingBeliefs,
+                terms={
+                    "fast_sleep_s": term("fastSleepS"),
+                    "slow_sleep_s": term("slowSleepS"),
+                    "grace_s": term("readingGraceS"),
+                },
+            ),
+            "ALARM_PICKS": Picks(
+                capability=SUBSCRIBING,
+                cls=AlarmBeliefs,
+                terms={"delta_fraction": term("alarmDeltaFraction")},
+            ),
+            "LISTENING_PICKS": Picks(
+                capability=LISTENING,
+                cls=ListeningBeliefs,
+                terms={"max_age_s": term("maxReadingAgeS")},
+            ),
+        }
+    return _PICKS
+
+
+def __getattr__(name: str):
+    if name in ("SUBSCRIBING_PICKS", "ALARM_PICKS", "LISTENING_PICKS"):
+        return _picks()[name]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

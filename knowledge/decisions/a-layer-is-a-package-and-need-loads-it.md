@@ -138,11 +138,18 @@ job is to carry that across the gap cannot be the layer that forgets it.
   `Agent.service` refuses a provider outside them by name. What the pull could not reach is
   the layer roster: the container (`agent/runtime.py`, `agent/module.py`,
   `agent/validate.py`) and the granted packages import the layer packages as contracts, so
-  every agent still loads all three by the kernel's own declared dependencies — the
-  legitimate intermediate state this seam first named, bounded now by those imports rather
-  than by a missing mechanism. Making them need-declarations means decomposing the `Agent`
-  object, a decision for then; `tests/test_layout.py` measures the gap as a strict xfail, so
-  the day the imports go the suite says so.
+  every agent still loads all three by the kernel's own declared dependencies. CLOSED at
+  the assembly half by #455's finish: the strict xfail flipped green — a sensing-only grant
+  imports no deliberation Python — and not by decomposing the `Agent`, but by making three
+  imports say what they were. The kernel's one `Desire` was annotation-only and went behind
+  TYPE_CHECKING; sensing's `Picks` constants build on first touch (PEP 562); and its row
+  types moved to `rows.py` behind a forwarding `__getattr__` — because **a contract named in
+  a signature is free where a contract SUBCLASSED is an import**, and `ObservedDesire(Desire)`
+  was making the whole of `regions.py` deliberation-freight. Every deferral carries its
+  reason and the AST walk resolves it. What stands, by ruling
+  (the-mind-is-not-a-package): the CONTAINER builds the mind for every agent, so an agent
+  PROCESS holds all three layers — what became need-shaped is what a package's import drags
+  in at assembly, which is what the measured bullet always measured.
 - **What remains at the root** is `assembly/` and whatever shell of `agent/` survives #452 —
   the container the author asked for at the start. Whether that shell is a package too, or the
   one thing that is nobody's package because it is what asks, is #452's to discover.
