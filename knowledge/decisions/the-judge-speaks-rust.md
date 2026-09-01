@@ -1,0 +1,124 @@
+---
+type: Decision
+title: The judge speaks Rust
+description: >-
+  The SHACL verdict is computed by rudof behind one door, packages/orexis-agent-deliberation/judge.py,
+  with the two gaps it ships closed there: SPARQL-based targets are resolved on our own
+  engine and handed over as explicit target nodes, and an authored sh:message is put back
+  where the engine wrote its own. Severity needed nothing — rudof honours it exactly where
+  pySHACL does, which is exactly where this repo declares it. The alternative refused is
+  staying on pySHACL, which cost a quarter of a hanoi solve, held the kernel to rdflib, and
+  answered qualified shapes wrong under focus. pySHACL is not gone: the inference-parity gate
+  and four test files still hold the closure to what it would entail. Measured on the bench:
+  three disks 6.43 s against 5.71 s before the swap and 7.95 s at the first cut — the caches
+  recovered most of the border tax, and what remains is rdflib serializing the data at the
+  crossing, which is the seam.
+status: accepted
+timestamp: 2026-09-01T17:20:00Z
+---
+
+# The judge speaks Rust
+
+The engine under everything else was already Rust — pyoxigraph holds every store and answers
+every query, 1,237 of them for 0.4 s in a hanoi solve. The judge was not: pySHACL is the one
+complete SHACL implementation Python has, it only speaks rdflib, and that single fact is most
+of why rdflib survived in this kernel at all. The sovereign ruled: track the performance, and
+use a Rust SHACL implementation — rudof, **if it is actively supported and improving**.
+
+It is, by measurement rather than impression: eight releases in August 2026, two on the day
+this was checked, PyPI in lockstep, and a SHACL-SPARQL constraint support that its own issue
+tracker still lists as missing — the code had moved past its paperwork. Probed at `pyrudof
+0.3.16` with one expected violation per feature, it evaluates EVERYTHING these packages'
+shapes use — qualified value shapes, `sh:xone`, SPARQL constraints, all of it — except two
+things, and the two are what this record is actually about.
+
+## The two gaps, closed at the door rather than worked around
+
+**`sh:SPARQLTarget` binds nothing, silently.** The empty-result trap in a new coat: twenty-one
+shape families would simply have stopped applying, and no test would have gone red on the
+engine's account. Closed where the house rules already point: a target select is a QUERY, and
+queries here run on pyoxigraph — so `judge.py` resolves every SPARQL target itself against
+the data and appends explicit `sh:targetNode`s to the shape text. A shape must be named to
+carry a SPARQL target through that door, and a blank one fails loudly rather than losing its
+targets.
+
+**An authored `sh:message` is sometimes overwritten** with the engine's own prose. rudof
+honours `sh:message` for most constraints and generates its own for some — a qualified
+max-count came back *"QualifiedValueShape: 1 nodes conform to shape _:c4d3…, which is grater
+than maxCount: 0"* where the shape said *"SoilMoisture is below 0.2 — past what fern survives,
+not merely uncomfortable"*. The generated line is about the constraint; the authored one is
+about the plant, and a report is read by whoever has to act. So the door restores the
+author's message wherever the shape that produced a result states one, correlating by
+`sh:sourceShape`.
+
+**And the gap that was not there.** The first cut of this record said severity was flattened
+to `sh:Violation` and built a whole apparatus to split shapes by force before the border.
+Measured properly, rudof honours `sh:severity` in EXACTLY pySHACL's two places: DOWN on the
+property shape for a declarative constraint, UP on the node shape for a `sh:sparql` one — the
+split rule [a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md) measured into existence
+against the old engine, obeyed to the letter by the new one. The apparatus was deleted. Two
+engines, one severity rule, nobody's workaround — and a reminder that the first measurement
+of an unfamiliar engine is a hypothesis.
+
+## What was refused
+
+- **Staying on pySHACL.** A real alternative — it is correct, complete, and maintained. Refused
+  because it cost a quarter of a hanoi solve in judging alone, answered qualified value shapes
+  wrong under `focus_nodes` in both directions ([a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md)
+  measured a silent thirsty plant and a false catastrophe), and held the kernel's flat worlds
+  to rdflib forever: no judge that reads rdflib can ever let the planner stop building rdflib
+  graphs.
+- **Splitting shapes by force before the border.** Built, run, and deleted when the engine
+  turned out to honour severity where we declare it. It survives in this record because the
+  reasoning was sound and the premise was false — and because the shape of the mistake is
+  reusable: an apparatus that compensates for an engine you have not measured precisely will
+  compensate for something the engine does not do.
+- **Removing pySHACL from the repository.** It remains what it is uniquely good for: the
+  reference implementation four test files and `tests/test_inference.py` hold the materialised
+  closure against. A gate is allowed to be slow and Python; a judge on the planning path is
+  not.
+
+## Blank nodes, skolemized at the crossing
+
+rudof pre-binds a SPARQL constraint's `$this` through a `VALUES` clause, and a blank node is
+illegal in `VALUES` — so a held envelope (a blank shape in belief data) was a parse error,
+"expected UNDEF", 114 tests deep. And a SPARQL target resolving to a blank node could not
+cross the serialization border as itself at all. `judge.crossed` therefore skolemizes the
+data once per verdict batch; the verdict logic never compares a skolem IRI to anything but
+another one.
+
+**Three things had to be learned about WHICH nodes may be named**, each by a failing suite:
+
+- **Not the shapes wholesale.** A property PATH is a blank-node structure — `[ sh:inversePath
+  … ]`, a sequence as an RDF list — so naming them turned every path into a plain IRI
+  predicate matching nothing: fifty shapes reporting minCount violations against beliefs that
+  were perfectly good. Only the constraint CARRIERS are named (the objects of `sh:property`
+  and `sh:sparql`), which is exactly what a result cites and never part of a path.
+- **Not before the carve.** A caller carves its data-borne shapes out with `cbd`, and cbd
+  recurses through BLANK nodes only — so skolemizing the data first stopped the carve at the
+  first property shape and dropped every nested constraint with its authored message. Carve
+  first, cross after.
+- **Deterministically, and by the node's own id.** rdflib's own `skolemize` mints a fresh UUID
+  per call, so a graph and a graph carved out of it disagree about every blank node they
+  share. Naming a blank node after its id makes the two agree without anything being passed
+  between them.
+
+# Seams left open
+
+- **The data still crosses the border through rdflib.** `crossed` serializes the flat rdflib
+  world per `conforms`; the same content already sits in the imaginarium's pyoxigraph store,
+  whose Rust serializer is a fraction of the cost. Taking that road means the planner stops
+  building rdflib worlds per node — the O(world)-per-candidate copy
+  [measure-the-search](/runbooks/measure-the-search.md) measured at seventy percent of a
+  solve. That is a debt with a definition of done, filed rather than restated here.
+- **The gaps are reported nowhere upstream yet.** rudof's tracker does not know its
+  `sh:SPARQLTarget` is a silent no-op, nor that a qualified constraint overwrites an authored
+  message; when upstream closes them, `_resolved_ttl` and `_prose_restored` become removable —
+  each is one function, and each carries a comment naming this record.
+
+# Issues this emits
+
+[#481](https://github.com/ShishkinDmitriy/orexis/issues/481) — a candidate world is copied
+into rdflib per node rather than diffed, which is now the largest single cost in a solve and
+the last thing holding the planning path to rdflib. The reasoning stays here; the issue says
+what is left.

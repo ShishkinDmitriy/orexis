@@ -135,7 +135,10 @@ Three things the design had wrong or unsaid, found by writing it:
   the shapes that agent `orexis:holds` and no others. Ownership does what the focus filter was
   there for, and does it by construction: every result is about the asker because the asker
   holds the shape. It cost most of a day to find, because the focused pass and the unfocused
-  pass disagreed and the report concatenated both.
+  pass disagreed and the report concatenated both. (rudof — the judge since
+  [the-judge-speaks-rust](/decisions/the-judge-speaks-rust.md) — takes no focus at all and
+  results are filtered after, so the ownership pass survives as a guarantee of aboutness
+  rather than a shelter from this bug.)
 - **An agent holds TWO shapes per property, and `ssn:forProperty` no longer identifies one.**
   The region and the survival envelope both carry it, so every query matching on it alone
   doubled: two Acquire rows where there is one lever, two of every affordance. The severity is
