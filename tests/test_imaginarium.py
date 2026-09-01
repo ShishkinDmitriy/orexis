@@ -59,10 +59,10 @@ def test_a_rule_asked_of_the_imaginarium_answers_what_it_answers_of_the_store():
 
 
 def test_a_node_forks_its_parents_readings_and_leaves_them_alone():
-    """A world is a VALUE, written once. The search is breadth-first, so siblings are alive at
-    the same time and BRANCHING is the hard case, not backtracking — a single mutable hypothesis
-    graph would need save/restore around every expansion and not even a stack discipline would
-    serve, because the frontier is a set rather than a path."""
+    """A world is a VALUE, written once. The search is best-first over one open list, so
+    siblings are alive at the same time and BRANCHING is the hard case, not backtracking — a
+    single mutable hypothesis graph would need save/restore around every expansion and not
+    even a stack discipline would serve, because the frontier is a set rather than a path."""
     st, im = _imaginarium()
     added, retracted = _dose(im, STATE_GRAPH)
 

@@ -82,8 +82,9 @@ overwrites. That is wrong, and it is wrong in a way worth stating because it is 
 anyone will try.
 
 **Planning is a search over a tree of states, and the states are alive at the same time.** The
-search is breadth-first — `frontier` holds every node at a depth, `nxt` collects their children
-— so siblings coexist rather than being visited one after another. A single mutable graph would
+search was breadth-first when this was written — `frontier` held every node at a depth, `nxt`
+collected their children — and is best-first over one open list since #492, which holds MORE
+depths alive at once, not fewer; siblings coexist rather than being visited one after another. A single mutable graph would
 need save/restore around every expansion, and not even a stack discipline would serve, because
 the frontier is a set rather than a path. Backtracking is not the hard case; *branching* is.
 

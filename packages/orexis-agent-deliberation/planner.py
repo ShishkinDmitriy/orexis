@@ -30,6 +30,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+import heapq
 import logging
 import time
 from dataclasses import dataclass, field
@@ -381,188 +382,221 @@ class Planner:
         achieved = []
         #  THE BOUND: what the cheapest achiever found so far spends. None until one is found,
         #  and from then on a candidate spending MORE than it is discarded unexamined — see
-        #  `_beyond` below for why that is sound rather than a heuristic.
+        #  `_bind` below for why that is sound rather than a heuristic.
         bound = None
         self._skipped = False
         self._weighed = []
-        seen = {here.diff}
-        frontier = [here]
-        for depth in range(self.MAX_DEPTH):
-            nxt = []
-            for node in frontier:
-                for row in self._candidates(node, desire):
-                    saw_candidate = True
-                    #  Steps are ROWS, not means: a plan is a path through the affordance
-                    #  graph, and which lever a step goes through is half of what it says.
-                    step = self._step_from(node, row, desire, bound)
-                    if step is TOO_DEAR:
-                        #  Never simulated, so there is no urgency to report: what the trace
-                        #  records is that the search refused to spend on it, and why.
-                        self._weighed.append((depth, row, None, trace.COSTLY))
-                        continue
-                    if step is None:
-                        self._weighed.append((depth, row, None, trace.UNSIMULATED))
-                        continue
-                    if self._law is not None:
-                        #  EVERY STATE of a plan is checked, not the end alone — the
-                        #  sovereign's ruling (#468): a valid plan contains no state that
-                        #  NEWLY matches a violation-severity shape, so a 4 to -10 to 5
-                        #  walk dies at -10 however well it ends. Discarded before the
-                        #  met-test can crown it and never expanded — and the next legal
-                        #  candidate wins by construction, which retires the no-fallback
-                        #  seam rather than implementing it.
-                        newly = self._forbidden_keys(step) - self._base_forbidden
-                        if newly:
-                            self._weighed.append((depth, row, step.urgency, trace.FORBIDDEN))
-                            continue
-                    if bound is not None and step.cost + _near(step) > bound:
-                        #  A* PRUNING, and it is the estimate's whole reason for existing in
-                        #  the search rather than only in the ranking. `orexis:estimates` never
-                        #  overstates what is left, so `cost + estimate` is a floor under what
-                        #  any plan THROUGH this world would finally spend: past the bound, no
-                        #  completion of it can beat the plan already in hand. The candidate
-                        #  before the bound existed had to be simulated to be dismissed; this
-                        #  one is dismissed after its own world is known and before its
-                        #  children are, which is where the subtree goes.
-                        #
-                        #  A want declaring no estimate reads 0.0 and this is the plain cost
-                        #  bound above, exactly as before the term existed.
-                        self._weighed.append((depth, row, step.urgency, trace.COSTLY))
-                        continue
-                    if room is not None and step.landing > room:
-                        #  A world reached after the want has lapsed is not an answer to it
-                        #  (#472, `orexis:Within`): discarded BEFORE the met-test can crown
-                        #  it, so a serve landing past the claim's expiry never becomes
-                        #  SATISFIED — and never expands, since what it reaches it reaches
-                        #  too late.
-                        self._weighed.append((depth, row, step.urgency, trace.LATE))
-                        continue
-                    #  CYCLE DETECTION, and it compares WORLDS rather than action. The first
-                    #  draft refused to apply the same means twice, which is not what a cycle
-                    #  is: two doses in a row reach somewhere new, and forbidding them would
-                    #  have made every dose too small to finish the job unplannable. What must
-                    #  not be explored twice is a world already seen — +3 then −3 lands back
-                    #  where it started, and expanding it again would spend the depth budget
-                    #  going nowhere.
-                    #
-                    #  KEYED ON THE WORLD AND NEVER ON THE GRAPH NAME, which is the one thing
-                    #  naming a graph per node could quietly have broken. `seen` is global
-                    #  across the search, so two paths arriving at the same world collide and
-                    #  the second is pruned — two names, one world, still one entry.
-                    where = step.diff
-                    novel = where not in seen
-                    if novel:
-                        seen.add(where)
-                        #  LEXICOGRAPHIC, urgency first (#466): cost speaks only where urgency
-                        #  cannot separate two candidates — same urgency, cheaper wins — and
-                        #  never outranks it, because a society that traded a plant's
-                        #  wellbeing for money would have that ranking ratified nowhere. The
-                        #  satisficing floor below is untouched: a plan no better than
-                        #  standing still stays refused however cheap it is.
-                        #  NEARER COUNTS AS BETTER when the want can say how near. A want
-                        #  that only knows met from unmet leaves `estimate` None, and this is
-                        #  the old comparison exactly; a want that declares one lets a world
-                        #  three moves from done beat a world five moves from done, which is
-                        #  what makes a search shallower than the solution worth running at
-                        #  all. Cost still breaks a tie, and urgency still outranks both.
-                        if (step.urgency, _near(step), step.cost) < (
-                                best.urgency, _near(best), best.cost):
-                            best = step
-                    #  MET IS ASKED BEFORE THE PRUNE, and only for a want that is not met
-                    #  ALREADY. Cycle detection is about EXPANSION — do not spend the depth
-                    #  budget on a world you have stood in — and a step that repairs the want
-                    #  is not a place to expand from, it is the answer. Pruning it first
-                    #  answered a question nobody asked.
-                    #
-                    #  It matters because of what the signature deliberately leaves out. An
-                    #  observation canonicalises to its upsert key and its VALUE, never its
-                    #  `sosa:resultTime`, so a look nets to nothing and the world it reaches
-                    #  carries its parent's signature — which is exactly right for "look, then
-                    #  water" and exactly wrong for a want whose whole content is that
-                    #  something was read RECENTLY. The one lever that repairs freshness was
-                    #  being discarded as somewhere already reached before anything asked
-                    #  whether it repaired anything. The record that built the signature named
-                    #  this as the day the question comes back; it came back from the other
-                    #  side, and the fix is here rather than in the canonical form, because
-                    #  putting the timestamp in would make every look a new world and "look,
-                    #  then look, then look" a three-step plan.
-                    #
-                    #  `met_now` guards it, and the guard is not caution: with the want
-                    #  already met, a look leaves it met, so without this every calm agent
-                    #  would answer "look" on every tick — a step that changes nothing
-                    #  reported as achieving something. Met and still urgent is steering
-                    #  toward the pick, and steering is what `best` below is for.
-                    if (novel or not met_now) and self._met_in(step, desire):
-                        self._weighed.append((depth, row, step.urgency, trace.MET))
-                        if met_now:
-                            #  Already met and still steering: the first novel step that
-                            #  keeps it met stays the answer — re-picking among keepers by
-                            #  cost would be shopping for a want that is not shopping for
-                            #  anything.
-                            return self._record(
-                                desire,
-                                self._offer(Plan(SATISFIED, step.taken, here.urgency,
-                                                 step.urgency),
-                                            desire, step),
-                                here.urgency)
-                        #  ACHIEVERS ARE COLLECTED, never returned on sight — the
-                        #  sovereign's two-stage cut (#466): urgency is the DESIRE's term
-                        #  and cost is the ACTION's. Urgency already picked which want this
-                        #  pass serves, so among plans that ACHIEVE it, cost alone decides
-                        #  — and returning the first met step was the one-axis shortcut,
-                        #  crowning whichever achiever the menu happened to yield first.
-                        #  An achiever still never extends the frontier: a step that
-                        #  answers the question is not a place to search onward from.
-                        achieved.append(step)
-                        bound = step.cost if bound is None else min(bound, step.cost)
-                        continue
-                    if not novel:
-                        self._weighed.append((depth, row, step.urgency, trace.SEEN))
-                        continue
-                    self._weighed.append(
-                        (depth, row, step.urgency,
-                         trace.BETTER if step.urgency < here.urgency else trace.WORSE))
-                    #  EVERY step that survived the cycle check extends the frontier, and a
-                    #  SENSING action still ends a plan — by the same road every other "this
-                    #  does not help" arrives by, rather than by a rule of its own.
-                    #
-                    #  There WAS a rule of its own, and it is the reason depth was 1. It asked
-                    #  `orexis:confirmedBy orexis:ByObservation`, which every effect here answers — a
-                    #  dose and a bid included, since only a later reading says either arrived
-                    #  — so the guard matched every lever, `nxt` came back empty at every
-                    #  depth, and the search never took a second step whatever MAX_DEPTH said.
-                    #  Replacing it with a truer term was the first fix and the wrong one: what
-                    #  a look does is already stated by its EFFECT, which predicts the value it
-                    #  found, so the world it reaches has the parent's signature and `seen`
-                    #  discards it. Measured with no guard at all, on three worlds including a
-                    #  first look with nothing sensed: Observe is pruned as a world already
-                    #  reached, every time. A second statement of a fact the effect settles is
-                    #  a fact that can disagree with it.
-                    #
-                    #  WHAT THIS RESTS ON, so the next person can see it break: the signature
-                    #  is the world's net diff in CANONICAL facts (#258), and in canonical form
-                    #  a look nets to nothing — an observation is its upsert key and its value,
-                    #  never its `sosa:resultTime`, so predicting the value you already hold is
-                    #  standing still, and a first look's valueless reading states no fact at
-                    #  all. The day a fresher timestamp counts as somewhere new, "look, then
-                    #  look" becomes a new world every time; chaining past a look becomes a
-                    #  real question again exactly there, and nowhere earlier. See
-                    #  `signature.py`.
-                    nxt.append(step)
-            #  CHEAPEST AND NEAREST FIRST, which tightens the bound above sooner and decides
-            #  nothing else: the winner is `min` over the achievers by (cost, urgency), so
-            #  visiting order cannot change it — only how much is visited before the bound
-            #  starts refusing work.
-            #
-            #  NOT when the want is already met, and that exception is not caution. A met want
-            #  returns on the FIRST novel step that keeps it met, deliberately — re-picking
-            #  among keepers would be shopping for a want that is not shopping — so ordering
-            #  the frontier there would change which keeper is answered with, for no gain: a
-            #  met pass has no achiever to bound against.
-            frontier = nxt if met_now else sorted(
-                nxt, key=lambda s: (s.urgency, _near(s) + s.cost, s.cost))
-            if not frontier:
+        #  Every world reached, with the least this pass has found it to cost. A world reached
+        #  again NO CHEAPER is somewhere already stood in; reached strictly cheaper, it is
+        #  reopened — see the novelty test below for why best-first needs that where
+        #  breadth-first did not.
+        seen = {here.diff: here.cost}
+        #  THE OPEN LIST, and it is one heap rather than one layer at a time (#492). The
+        #  search used to expand breadth-first: every world at depth d before any at d+1, so
+        #  the first achiever arrived in the LAST layer, and a bound that arrives last has
+        #  nothing left to refuse. Measured before the change, `cost + estimate` pruned no
+        #  node in either domain that declares an estimate — 198 forks on the courier's
+        #  corner delivery with the heuristic and 198 without. Ordered by what a path has
+        #  spent plus what its want says is left, the search follows the estimate to an
+        #  achiever early, and the bound it sets then refuses the rest — which is the whole
+        #  of A*, and the only reason a want's estimate is worth declaring. `_priority` says
+        #  what the key is and why a met want keeps the old order.
+        opened = [(_priority(here, met_now), 0, here)]
+        minted = 1                       # heap entries so far: the tie-break, so nodes never compare
+        while opened:
+            _, _, node = heapq.heappop(opened)
+            if bound is not None and node.cost + _near(node) > bound:
+                #  EARLY TERMINATION, and it is the same floor the per-candidate prune below
+                #  stands on: this node's `cost + estimate` is under everything a plan through
+                #  it would finally spend, so it cannot beat the plan in hand — and the heap
+                #  is ordered by exactly that sum, so neither can anything behind it. Strictly
+                #  dearer, like the prune: a world tying the bound may still yield an achiever
+                #  that ties on cost and wins on urgency. Never fires for a met want, whose
+                #  pass returns on its first keeper and sets no bound.
                 break
+            depth = len(node.taken)
+            for row in self._candidates(node, desire):
+                saw_candidate = True
+                #  Steps are ROWS, not means: a plan is a path through the affordance
+                #  graph, and which lever a step goes through is half of what it says.
+                step = self._step_from(node, row, desire, bound)
+                if step is TOO_DEAR:
+                    #  Never simulated, so there is no urgency to report: what the trace
+                    #  records is that the search refused to spend on it, and why.
+                    self._weighed.append((depth, row, None, trace.COSTLY))
+                    continue
+                if step is None:
+                    self._weighed.append((depth, row, None, trace.UNSIMULATED))
+                    continue
+                if self._law is not None:
+                    #  EVERY STATE of a plan is checked, not the end alone — the
+                    #  sovereign's ruling (#468): a valid plan contains no state that
+                    #  NEWLY matches a violation-severity shape, so a 4 to -10 to 5
+                    #  walk dies at -10 however well it ends. Discarded before the
+                    #  met-test can crown it and never expanded — and the next legal
+                    #  candidate wins by construction, which retires the no-fallback
+                    #  seam rather than implementing it.
+                    newly = self._forbidden_keys(step) - self._base_forbidden
+                    if newly:
+                        self._weighed.append((depth, row, step.urgency, trace.FORBIDDEN))
+                        continue
+                if bound is not None and step.cost + _near(step) > bound:
+                    #  A* PRUNING, and it is the estimate's whole reason for existing in
+                    #  the search rather than only in the ranking. `orexis:estimates` never
+                    #  overstates what is left, so `cost + estimate` is a floor under what
+                    #  any plan THROUGH this world would finally spend: past the bound, no
+                    #  completion of it can beat the plan already in hand. The candidate
+                    #  before the bound existed had to be simulated to be dismissed; this
+                    #  one is dismissed after its own world is known and before its
+                    #  children are, which is where the subtree goes.
+                    #
+                    #  A want declaring no estimate reads 0.0 and this is the plain cost
+                    #  bound above, exactly as before the term existed.
+                    self._weighed.append((depth, row, step.urgency, trace.COSTLY))
+                    continue
+                if room is not None and step.landing > room:
+                    #  A world reached after the want has lapsed is not an answer to it
+                    #  (#472, `orexis:Within`): discarded BEFORE the met-test can crown
+                    #  it, so a serve landing past the claim's expiry never becomes
+                    #  SATISFIED — and never expands, since what it reaches it reaches
+                    #  too late.
+                    self._weighed.append((depth, row, step.urgency, trace.LATE))
+                    continue
+                #  CYCLE DETECTION, and it compares WORLDS rather than action. The first
+                #  draft refused to apply the same means twice, which is not what a cycle
+                #  is: two doses in a row reach somewhere new, and forbidding them would
+                #  have made every dose too small to finish the job unplannable. What must
+                #  not be explored twice is a world already seen — +3 then −3 lands back
+                #  where it started, and expanding it again would spend the depth budget
+                #  going nowhere.
+                #
+                #  KEYED ON THE WORLD AND NEVER ON THE GRAPH NAME, which is the one thing
+                #  naming a graph per node could quietly have broken. `seen` is global
+                #  across the search, so two paths arriving at the same world collide and
+                #  the second is pruned — two names, one world, still one entry.
+                #
+                #  REOPENED WHEN REACHED STRICTLY CHEAPER, and best-first is why (#492).
+                #  Breadth-first reached every world by a shortest path first, so the path
+                #  that claimed a world was never dearer than any later one. A heap ordered
+                #  by `cost + estimate` expands a deep node before a shallow one whenever
+                #  the estimate says to, so a world can be claimed first by a dearer path
+                #  and the cheaper one arrive later — and a search that discarded it as
+                #  seen would crown an eight-move hanoi where seven exist, since every
+                #  achiever below that world would inherit the dear prefix. Reached no
+                #  cheaper is still somewhere already stood in, which keeps +3 then -3
+                #  pruned and a free action's return to the base world with it.
+                #
+                #  NO SHIPPED DOMAIN CAN WITNESS IT, measured: zero reopens on hanoi and on
+                #  eight courier poses at depth 9. Both move by unit cost and both estimates
+                #  move by at most one per step, so two paths to one world carry equal f and
+                #  the cheaper pops first by the key's own tie-break. It is kept for the
+                #  domain whose costs are real numbers — a dose priced in litres — where the
+                #  argument fails and the loss would be silent. The test goes beside the
+                #  courier's the day a domain can show it.
+                where = step.diff
+                novel = where not in seen or step.cost < seen[where]
+                if novel:
+                    seen[where] = step.cost
+                    #  LEXICOGRAPHIC, urgency first (#466): cost speaks only where urgency
+                    #  cannot separate two candidates — same urgency, cheaper wins — and
+                    #  never outranks it, because a society that traded a plant's
+                    #  wellbeing for money would have that ranking ratified nowhere. The
+                    #  satisficing floor below is untouched: a plan no better than
+                    #  standing still stays refused however cheap it is.
+                    #  NEARER COUNTS AS BETTER when the want can say how near. A want
+                    #  that only knows met from unmet leaves `estimate` None, and this is
+                    #  the old comparison exactly; a want that declares one lets a world
+                    #  three moves from done beat a world five moves from done, which is
+                    #  what makes a search shallower than the solution worth running at
+                    #  all. Cost still breaks a tie, and urgency still outranks both.
+                    if (step.urgency, _near(step), step.cost) < (
+                            best.urgency, _near(best), best.cost):
+                        best = step
+                #  MET IS ASKED BEFORE THE PRUNE, and only for a want that is not met
+                #  ALREADY. Cycle detection is about EXPANSION — do not spend the depth
+                #  budget on a world you have stood in — and a step that repairs the want
+                #  is not a place to expand from, it is the answer. Pruning it first
+                #  answered a question nobody asked.
+                #
+                #  It matters because of what the signature deliberately leaves out. An
+                #  observation canonicalises to its upsert key and its VALUE, never its
+                #  `sosa:resultTime`, so a look nets to nothing and the world it reaches
+                #  carries its parent's signature — which is exactly right for "look, then
+                #  water" and exactly wrong for a want whose whole content is that
+                #  something was read RECENTLY. The one lever that repairs freshness was
+                #  being discarded as somewhere already reached before anything asked
+                #  whether it repaired anything. The record that built the signature named
+                #  this as the day the question comes back; it came back from the other
+                #  side, and the fix is here rather than in the canonical form, because
+                #  putting the timestamp in would make every look a new world and "look,
+                #  then look, then look" a three-step plan.
+                #
+                #  `met_now` guards it, and the guard is not caution: with the want
+                #  already met, a look leaves it met, so without this every calm agent
+                #  would answer "look" on every tick — a step that changes nothing
+                #  reported as achieving something. Met and still urgent is steering
+                #  toward the pick, and steering is what `best` below is for.
+                if (novel or not met_now) and self._met_in(step, desire):
+                    self._weighed.append((depth, row, step.urgency, trace.MET))
+                    if met_now:
+                        #  Already met and still steering: the first novel step that
+                        #  keeps it met stays the answer — re-picking among keepers by
+                        #  cost would be shopping for a want that is not shopping for
+                        #  anything.
+                        return self._record(
+                            desire,
+                            self._offer(Plan(SATISFIED, step.taken, here.urgency,
+                                             step.urgency),
+                                        desire, step),
+                            here.urgency)
+                    #  ACHIEVERS ARE COLLECTED, never returned on sight — the
+                    #  sovereign's two-stage cut (#466): urgency is the DESIRE's term
+                    #  and cost is the ACTION's. Urgency already picked which want this
+                    #  pass serves, so among plans that ACHIEVE it, cost alone decides
+                    #  — and returning the first met step was the one-axis shortcut,
+                    #  crowning whichever achiever the menu happened to yield first.
+                    #  An achiever still never extends the frontier: a step that
+                    #  answers the question is not a place to search onward from.
+                    achieved.append(step)
+                    bound = step.cost if bound is None else min(bound, step.cost)
+                    continue
+                if not novel:
+                    self._weighed.append((depth, row, step.urgency, trace.SEEN))
+                    continue
+                self._weighed.append(
+                    (depth, row, step.urgency,
+                     trace.BETTER if step.urgency < here.urgency else trace.WORSE))
+                #  EVERY step that survived the cycle check extends the frontier, and a
+                #  SENSING action still ends a plan — by the same road every other "this
+                #  does not help" arrives by, rather than by a rule of its own.
+                #
+                #  There WAS a rule of its own, and it is the reason depth was 1. It asked
+                #  `orexis:confirmedBy orexis:ByObservation`, which every effect here answers — a
+                #  dose and a bid included, since only a later reading says either arrived
+                #  — so the guard matched every lever, `nxt` came back empty at every
+                #  depth, and the search never took a second step whatever MAX_DEPTH said.
+                #  Replacing it with a truer term was the first fix and the wrong one: what
+                #  a look does is already stated by its EFFECT, which predicts the value it
+                #  found, so the world it reaches has the parent's signature and `seen`
+                #  discards it. Measured with no guard at all, on three worlds including a
+                #  first look with nothing sensed: Observe is pruned as a world already
+                #  reached, every time. A second statement of a fact the effect settles is
+                #  a fact that can disagree with it.
+                #
+                #  WHAT THIS RESTS ON, so the next person can see it break: the signature
+                #  is the world's net diff in CANONICAL facts (#258), and in canonical form
+                #  a look nets to nothing — an observation is its upsert key and its value,
+                #  never its `sosa:resultTime`, so predicting the value you already hold is
+                #  standing still, and a first look's valueless reading states no fact at
+                #  all. The day a fresher timestamp counts as somewhere new, "look, then
+                #  look" becomes a new world every time; chaining past a look becomes a
+                #  real question again exactly there, and nowhere earlier. See
+                #  `signature.py`.
+                if len(step.taken) < self.MAX_DEPTH:
+                    #  Bounded by depth exactly as the layer loop was: a world at MAX_DEPTH
+                    #  is scored and may achieve, and is never a place to search on from.
+                    heapq.heappush(opened, (_priority(step, met_now), minted, step))
+                    minted += 1
 
         if achieved:
             #  Achievement is absolute — the desire's demand — and cost orders the
@@ -978,6 +1012,31 @@ class Planner:
         #  and the world Apply's effect discharges an obligation in must hold it to discharge.
         return graph_from(self.agent.beliefs, *self.agent.beliefs.public_graphs(),
                           *self.agent.beliefs.recorded_graphs())
+
+
+def _priority(node, met_now: bool) -> tuple:
+    """Where this world goes in the open list, lower first.
+
+    FOR AN UNMET WANT, what the path has spent plus what the want says is left — `cost +
+    estimate`, the A* key — so the search walks the estimate's gradient to an achiever early
+    and the bound that achiever sets refuses the rest. Urgency breaks the tie, then cost
+    alone: among worlds equally promising in the wallet's unit, the one nearer by the want's
+    own measure is looked under first. Neither decides the winner — that is still `min` over
+    the achievers by (cost, urgency), and `best` over every novel world — only how much is
+    visited before the bound starts refusing work. A want declaring no estimate reads 0.0
+    here, which makes the key plain cost: uniform-cost search, and the bound then refuses
+    exactly what it refused before this ordering existed.
+
+    FOR A MET WANT, depth then arrival — insertion order, layer by layer, which is exactly
+    the order the layer loop expanded in. A met want returns on the FIRST novel step that
+    keeps it met, deliberately: re-picking among keepers would be shopping for a want that is
+    not shopping for anything. So the order there IS the answer, and a heap that reordered
+    it would change which keeper a calm agent steers by, for no gain — a met pass has no
+    achiever to bound against.
+    """
+    if met_now:
+        return (len(node.taken),)
+    return (node.cost + _near(node), node.urgency, node.cost)
 
 
 def _near(node) -> float:
