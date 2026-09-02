@@ -48,6 +48,13 @@ verdict met, the deadline passing first the verdict unmet, and the arithmetic th
 judge every reading is inside the shape with its numbers baked at the instant the watch
 opened. A plan handed down whole holds each step's readiness on the previous step's answer.
 
+**And it is the plan, whole** (#510). Deliberation hands every step down; the intention has
+`orexis:step` to each, stands at the head, and moves along `orexis:then` as the world confirms
+each step's prediction — the met verdict on one step is the only license the next has, and no
+search runs while a plan is in progress. An unmet verdict stops the plan where it is: the
+intention resolves, the tail is abandoned, and deliberation is told to plan again. "Only the
+head is committed" was the rule before feedback could carry a plan; it is superseded.
+
 Two roads adopt one. A plan's head, chosen by the search, is the ordinary road; an event
 adopts the other — the market's Presenting, an [action](/domain/action.md) stating neither a
 precondition nor an effect, which a claim arriving adopts and a watch going live triggers —

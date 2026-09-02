@@ -194,6 +194,7 @@ class OpenExpectation:
     """A watch still on: the act happened, and the world has yet to answer as promised."""
 
     uri: str
+    step: str               # the step the watch is on — the intention stands at it
     action: str
     want: str
     rises: bool             # which way the act promised to move the value
@@ -327,6 +328,12 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
         recorded, and the new commitment adopted, because honouring a commitment forever is as
         wrong as honouring it not at all.
         """
+        #  A PLAN, HANDED DOWN WHOLE (#510): `act` may be the plan's steps in order. The head
+        #  is what the intention stands at (`orexis:by`); every step is `orexis:step`; each
+        #  names the next (`orexis:then`). Absorption is keyed on the head, as it always was.
+        steps = list(act) if isinstance(act, (list, tuple)) else None
+        if steps is not None:
+            act = steps[0]
         if isinstance(act, str):
             act = Step(action=act, via=via or "")
         action = act.action
@@ -339,28 +346,38 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
                           f"of {self.beliefs.patience_s}s, superseded by a new adoption")
         stem = uuid.uuid4().hex[:8]
         uri = f"{OREXIS}intent_{self.agent.id}_{stem}"
-        step_uri = f"{OREXIS}step_{self.agent.id}_{stem}"
         xsd = "http://www.w3.org/2001/XMLSchema#"
-        facts = [f'<{kernel("fills")}> <{action}>']
-        if act.via:
-            facts.append(f'<{kernel("through")}> <{act.via}>')
-        if act.for_agent:
-            facts.append(f'<{kernel("forAgent")}> <{act.for_agent}>')
-        if act.quantity is not None:
-            facts.append(f'<{kernel("quantity")}> "{act.quantity}"^^<{xsd}decimal>')
-        if act.not_before:
-            facts.append(f'<{kernel("notBefore")}> "{act.not_before.isoformat()}"^^<{xsd}dateTime>')
-        if act.not_after:
-            facts.append(f'<{kernel("notAfter")}> "{act.not_after.isoformat()}"^^<{xsd}dateTime>')
+        plan = steps if steps is not None else [act]
+        step_uris = [f"{OREXIS}step_{self.agent.id}_{stem}" + ("" if n == 0 else f"_{n}")
+                     for n in range(len(plan))]
+        blocks = []
+        for n, (step, step_uri) in enumerate(zip(plan, step_uris)):
+            facts = [f'<{kernel("fills")}> <{step.action}>']
+            if step.via:
+                facts.append(f'<{kernel("through")}> <{step.via}>')
+            if step.for_agent:
+                facts.append(f'<{kernel("forAgent")}> <{step.for_agent}>')
+            if step.quantity is not None:
+                facts.append(f'<{kernel("quantity")}> "{step.quantity}"^^<{xsd}decimal>')
+            if step.not_before:
+                facts.append(f'<{kernel("notBefore")}> "{step.not_before.isoformat()}"^^<{xsd}dateTime>')
+            if step.not_after:
+                facts.append(f'<{kernel("notAfter")}> "{step.not_after.isoformat()}"^^<{xsd}dateTime>')
+            if step.urgency_after is not None:
+                facts.append(f'<{kernel("predictedUrgency")}> "{step.urgency_after:.6f}"^^<{xsd}decimal>')
+            if n + 1 < len(plan):
+                facts.append(f'<{kernel("then")}> <{step_uris[n + 1]}>')
+            blocks.append(f'  <{step_uri}> a <{kernel("Step")}> ; {" ; ".join(facts)} .')
+        every = " , ".join(f"<{u}>" for u in step_uris)
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{uri}> a <{kernel("Intention")}> ;
     <{kernel("pursues")}> <{want}> ;
-    <{kernel("by")}> <{step_uri}> ;
-    <{kernel("step")}> <{step_uri}> ;
+    <{kernel("by")}> <{step_uris[0]}> ;
+    <{kernel("step")}> {every} ;
     <{kernel("adoptedAt")}> "{now.isoformat()}"^^<{xsd}dateTime> ;
     <{BECAUSE_OF}> {_literal(because)} .
-  <{step_uri}> a <{kernel("Step")}> ; {" ; ".join(facts)} .
+{chr(10).join(blocks)}
 }} }}""")
         self.log.info("adopted %s for %s: %s", action.rsplit("#", 1)[-1], _short(want), because)
         self._tell("adopted", action, want, because)
@@ -406,6 +423,11 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         at once whether it already answers. ON THE STEP: a planned thing is what waits; the
         act is the record of its taking, written when that happens."""
         node, triples = self._condition_triples(intention_uri, condition)
+        #  A NEW HOLD ON AN INTENTION ALREADY CLAIMED ONCE — the next step of a plan (#510) —
+        #  is a new wait: the claim that ended the previous one is released here, or the
+        #  second wait could never end.
+        with self._claim_lock:
+            self._claimed.discard(intention_uri)
         self.agent.intentions.update(f"""
 INSERT {{ GRAPH <{self.graph}> {{
   ?act <{predicate}> <{node}> ; <{kernel("whenLapsed")}> "{when_lapsed}" .
@@ -446,7 +468,7 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
   ?act ?p ?node ; <{kernel("whenLapsed")}> ?when .
   ?node a sh:NodeShape .
   FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>, <{kernel("answeredWhen")}>))
-  FILTER NOT EXISTS {{ ?i <{END_MET}> ?m }} }} }}"""))
+  FILTER NOT EXISTS {{ ?act <{END_MET}> ?m }} }} }}"""))
         standing = {s.uri: s for s in self.standing()}
         watches = {w.uri: w for w in self.open_expectations()}
         out = []
@@ -703,14 +725,17 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         delta = (f"""
     <{EXPECTS_DELTA}> "{expected_delta}"^^xsd:decimal ;"""
                  if expected_delta else "")
+        #  ON THE STEP the intention stands at (#510): a plan of several steps opens a watch
+        #  per step, and a verdict written on the intention would hide the second watch
+        #  behind the first's. The intention's `becauseOf` still says why.
         self.agent.intentions.update(f"""
-INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{intention_uri}>{delta}
+INSERT {{ GRAPH <{self.graph}> {{
+  ?step{delta}
     <{EXPECTS_RISE}> {"true" if rises else "false"} ;
     <{BASELINE_VALUE}> "{reading.value}"^^xsd:decimal ;
-    <{BASELINE_AT}> "{reading.result_time.isoformat()}"^^xsd:dateTime ;
-    <{BECAUSE_OF}> {_literal(because)} .
-}} }}""")
+    <{BASELINE_AT}> "{reading.result_time.isoformat()}"^^xsd:dateTime .
+  <{intention_uri}> <{BECAUSE_OF}> {_literal(because)} . }} }}
+WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?step }} }}""")
         self.window(intention_uri, deadline_dt)
         #  THE WATCH IS A HOLD (#516): the shape of an observation that answers this act,
         #  asked of whoever knows what a reading is (`orexis:answer` — sensing), and the
@@ -754,21 +779,21 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act .
         for all of them."""
         prop = f"FILTER(?want = <{want}>)" if want else ""
         rows = bindings(self.agent.intentions.query(f"""
-SELECT ?i ?action ?want ?rises ?baseline ?baselineAt ?deadline ?delta WHERE {{
+SELECT ?i ?step ?action ?want ?rises ?baseline ?baselineAt ?deadline ?delta WHERE {{
   GRAPH <{self.graph}> {{
-    ?i <{kernel("by")}> ?act ;
+    ?i <{kernel("by")}> ?step ;
        <{kernel("pursues")}> ?want .
-    ?act <{kernel("fills")}> ?action ;
-         <{kernel("notAfter")}> ?deadline .
-    ?i <{EXPECTS_RISE}> ?rises ;
-       <{BASELINE_VALUE}> ?baseline ;
-       <{BASELINE_AT}> ?baselineAt .
-    OPTIONAL {{ ?i <{EXPECTS_DELTA}> ?delta }}
-    FILTER NOT EXISTS {{ ?i <{END_MET}> ?met }}
+    ?step <{kernel("fills")}> ?action ;
+          <{kernel("notAfter")}> ?deadline ;
+          <{EXPECTS_RISE}> ?rises ;
+          <{BASELINE_VALUE}> ?baseline ;
+          <{BASELINE_AT}> ?baselineAt .
+    OPTIONAL {{ ?step <{EXPECTS_DELTA}> ?delta }}
+    FILTER NOT EXISTS {{ ?step <{END_MET}> ?met }}
     {prop}
   }} }}"""))
         return [OpenExpectation(
-            uri=r["i"], action=r["action"], want=r["want"],
+            uri=r["i"], step=r["step"], action=r["action"], want=r["want"],
             rises=r["rises"] in ("true", "1"), baseline=float(r["baseline"]),
             baseline_at=datetime.fromisoformat(r["baselineAt"]),
             deadline=datetime.fromisoformat(r["deadline"]),
@@ -782,13 +807,18 @@ SELECT ?i ?action ?want ?rises ?baseline ?baselineAt ?deadline ?delta WHERE {{
         now = datetime.now(timezone.utc).isoformat()
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{watch.uri}> <{END_MET}> "{'true' if met else 'false'}"^^xsd:boolean ;
-                <{END_VERIFIED_AT}> "{now}"^^xsd:dateTime ;
-                <{BECAUSE_OF}> {_literal(because)} .
+  <{watch.step}> <{END_MET}> "{'true' if met else 'false'}"^^xsd:boolean ;
+                 <{END_VERIFIED_AT}> "{now}"^^xsd:dateTime .
+  <{watch.uri}> <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
         (self.log.info if met else self.log.warning)(
             "end %s for %s: %s", "met" if met else "UNMET", _short(watch.want), because)
         self._tell("end-met" if met else "end-unmet", watch.action, watch.want, because)
+        if met and self._advance(watch):
+            #  THE PLAN GOES ON (#510): this step's prediction was confirmed by the world,
+            #  which is the only license the next step has — no search, no re-decision. The
+            #  intention stands; the plan is finished only when its last step is answered.
+            return
         #  SAID UPWARD (#452): the step's result is judged here, against the baseline the actor
         #  handed in and never against a belief; what deliberation does about it — re-plan the
         #  want, mostly — is its own, heard as an event because the ledger imports no search.
@@ -813,6 +843,45 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 "claims a movement the world keeps refusing",
                 watch.action.rsplit("#", 1)[-1], _short(watch.want), self._suspect_after())
 
+    def _advance(self, watch: OpenExpectation) -> bool:
+        """Move the intention to the step that follows the one just answered, and take it.
+        False where there is none — the plan's last step, finished the ordinary way."""
+        from .execution import carry_out
+
+        rows = bindings(self.agent.intentions.query_union(f"""
+SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{watch.step}> <{kernel("then")}> ?next }} }}"""))
+        if not rows:
+            return False
+        following = rows[0]["next"]
+        self.agent.intentions.update(f"""
+DELETE {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{kernel("by")}> ?was }} }}
+INSERT {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{kernel("by")}> <{following}> ;
+                                <{BECAUSE_OF}> {_literal("step answered as predicted — advancing to the next")} }} }}
+WHERE  {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{kernel("by")}> ?was }} }}""")
+        standing = next((s for s in self.standing(want=watch.want) if s.uri == watch.uri), None)
+        if standing is None:
+            return False
+        self.log.info("advanced %s to %s", _short(watch.uri), standing.action.rsplit("#", 1)[-1])
+        self._tell("advanced", standing.action, watch.want, "the previous step was answered")
+        desire = next((d for d in self.agent.pursuing() if d.uri == watch.want), None)
+        carry_out(self.agent, standing.step, desire, watch.uri)
+        return True
+
+    def in_progress(self, want: str):
+        """A standing intention for this want whose plan has a step still to come, and
+        which is younger than my patience — the case pursuit does not search over (#510):
+        the plan goes on by feedback, and a search would re-decide what the world has not
+        yet contradicted. None otherwise."""
+        now = datetime.now(timezone.utc)
+        for standing in self.standing(want=want):
+            if standing.age_s(now) > self.beliefs.patience_s:
+                continue
+            rows = bindings(self.agent.intentions.query_union(f"""
+SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{kernel("by")}> ?s . ?s <{kernel("then")}> ?next }} }}"""))
+            if rows:
+                return standing
+        return None
+
     def _suspect_after(self) -> int:
         rows = bindings(self.agent.beliefs.query(_SUSPECT_Q))
         return int(rows[0]["n"]) if rows else 3
@@ -829,12 +898,11 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         """
         rows = bindings(self.agent.intentions.query(f"""
 SELECT ?met WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{kernel("by")}> ?act ;
-     <{kernel("pursues")}> <{want}> ;
-     <{END_MET}> ?met .
-  ?act <{kernel("fills")}> <{action}> .
-  ?i
-     <{END_VERIFIED_AT}> ?at .
+  ?i <{kernel("step")}> ?act ;
+     <{kernel("pursues")}> <{want}> .
+  ?act <{kernel("fills")}> <{action}> ;
+       <{END_MET}> ?met ;
+       <{END_VERIFIED_AT}> ?at .
 }} }} ORDER BY DESC(?at) LIMIT {self._suspect_after()}"""))
         n = self._suspect_after()
         return len(rows) >= n and all(r["met"] == "false" for r in rows)
@@ -843,10 +911,10 @@ SELECT ?met WHERE {{ GRAPH <{self.graph}> {{
         """Every (action, want) pair currently suspect. What review and the report read."""
         pairs = {(r["action"], r["want"]) for r in bindings(self.agent.intentions.query(f"""
 SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{kernel("by")}> ?act ;
-     <{kernel("pursues")}> ?want ;
-     <{END_MET}> ?met .
-  ?act <{kernel("fills")}> ?action .
+  ?i <{kernel("step")}> ?act ;
+     <{kernel("pursues")}> ?want .
+  ?act <{kernel("fills")}> ?action ;
+       <{END_MET}> ?met .
 }} }}"""))}
         return sorted(p for p in pairs if self._is_suspect(*p))
 
@@ -883,9 +951,15 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
         rows = bindings(self.agent.intentions.query(
             "SELECT ?i ?act ?action ?want ?at ?through ?quantity ?forAgent ?notBefore ?notAfter "
             "WHERE { GRAPH <%s> { %s } }" % (self.graph, " ".join(clauses))))
+        #  WHAT THE WANT IS ABOUT rides along (#510): a step taken from the ledger — the
+        #  second of a plan, advanced to on feedback — goes to its actor exactly as the head
+        #  did from the search, and the actor reads the property off the step, not the want.
+        about_of = {w["want"]: w["about"] for w in bindings(self.agent.desires.query_union(
+            "SELECT ?want ?about WHERE { ?want orexis:about ?about }"))} if rows else {}
         return [Standing(
             uri=r["i"], want=r["want"], adopted_at=datetime.fromisoformat(r["at"]),
             step=Step(action=r["action"], via=r.get("through") or "", want=r["want"],
+                    about=about_of.get(r["want"]),
                     quantity=float(r["quantity"]) if r.get("quantity") else None,
                     for_agent=r.get("forAgent"),
                     not_before=datetime.fromisoformat(r["notBefore"]) if r.get("notBefore") else None,
@@ -909,8 +983,8 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
         # `satisfied` outcomes accumulate is the false-knowledge signature in series form;
         # `affordances_suspect` above zero is the flag itself.
         rows = bindings(self.agent.intentions.query(f"""
-SELECT ?met (COUNT(?i) AS ?n) WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{END_MET}> ?met }} }} GROUP BY ?met"""))
+SELECT ?met (COUNT(?s) AS ?n) WHERE {{ GRAPH <{self.graph}> {{
+  ?i <{kernel("step")}> ?s . ?s <{END_MET}> ?met }} }} GROUP BY ?met"""))
         counts = {r["met"]: int(r["n"]) for r in rows}
         out["expectations_open"] = len(self.open_expectations())
         out["expectations_met"] = counts.get("true", 0)

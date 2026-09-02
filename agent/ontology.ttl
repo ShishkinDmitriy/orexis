@@ -847,7 +847,10 @@ orexis:step a owl:ObjectProperty ; rdfs:domain orexis:Intention ; rdfs:range ore
     rdfs:comment "Every step of the plan this intention commits to. `orexis:by` names the one it stands at now; `orexis:then` orders the rest." .
 orexis:then a owl:ObjectProperty ; rdfs:domain orexis:Step ; rdfs:range orexis:Step ;
     rdfs:label "then" ;
-    rdfs:comment "The step that follows this one in the plan committed to — written by #510, read by nothing yet." .
+    rdfs:comment "The step that follows this one in the plan committed to (#510). Written when the plan is handed down whole; the keeper moves `orexis:by` along it when a step's expectation is met, taking the next with no search, and stops when one is unmet — the tail is then abandoned with the intention." .
+orexis:predictedUrgency a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
+    rdfs:label "predicted urgency" ;
+    rdfs:comment "What the search predicted the want's urgency would be in the world this step reaches — planning's figure, carried onto the committed step so the ledger says what each step was expected to buy." .
 
 orexis:until a owl:ObjectProperty ; rdfs:domain orexis:Step ;
     rdfs:label "held until" ;
@@ -880,25 +883,25 @@ orexis:becauseOf a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:ra
 #  a SEPARATE fact: `endMet`. Satisfied-and-unmet is the false-knowledge signature — the graph
 #  said this lever moves this property, and the world kept disagreeing.
 
-orexis:expectsRise a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:boolean ;
+orexis:expectsRise a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:boolean ;
     rdfs:label "expects the value to rise" ;
-    rdfs:comment "Which way the act promised to move the property — said by the actor that opened the watch, from the sign of the delta it sized or in so many words. It WAS `orexis:expectsValueTo`, a market direction the keeper looked up itself; a package word in the kernel, and the actor always knew. An open watch written under the old term is not read back: it closes unjudged across this upgrade, and the next act opens a new one." .orexis:baselineValue a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:decimal ;
+    rdfs:comment "Which way the act promised to move the property — said by the actor that opened the watch, from the sign of the delta it sized or in so many words. It WAS `orexis:expectsValueTo`, a market direction the keeper looked up itself; a package word in the kernel, and the actor always knew. An open watch written under the old term is not read back: it closes unjudged across this upgrade, and the next act opens a new one." .orexis:baselineValue a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
     rdfs:label "baseline value" ;
     rdfs:comment "Where the property stood when the expectation was adopted. Copied into the row, deliberately: the sensed graph upserts — one current observation per property — so the BEFORE of any before/after survives nowhere but here. The ledger is the memory of commitments, and this is the commitment's opening position." .
-orexis:baselineAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:dateTime ;
+orexis:baselineAt a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:dateTime ;
     rdfs:label "baseline at" .
 orexis:deadlineAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "deadline at" ;
     rdfs:comment "By when the movement should have shown. The patience serves as the horizon until something derives a better one from the dose and the physics — a recorded seam of #131, not an oversight." .
-orexis:expectsDelta a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:decimal ;
+orexis:expectsDelta a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
     rdfs:label "expects delta" ;
     rdfs:comment "How far the act should move the property, when the actor can say — a dose of known litres through the domain's stated conversion. What the met-verdict measures its margin against (#165): a movement is the world answering only when it is commensurate with the act, and a breath of instrument grain past the baseline is not. Optional, because not every act can size its own effect; absent, the verdict falls back to exact crossing, which is the pre-noise behaviour and stays legal." .
 
 
-orexis:endMet a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:boolean ;
+orexis:endMet a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:boolean ;
     rdfs:label "end met" ;
     rdfs:comment "Whether the world answered as the graph promised: a reading past the baseline in the expected direction before the deadline — and, where the row states an expectsDelta, past it by at least metFraction of that delta (#165) — or the deadline passed without one (false). Absent while the watch is still on. A row satisfied-and-unmet is one false-knowledge datum; enough of them for one (means, property) pair and the affordance is SUSPECT — flagged, never auto-retracted, because deleting knowledge would be reaching down a level." .
-orexis:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:dateTime ;
+orexis:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:dateTime ;
     rdfs:label "end verified at" .
 
 
