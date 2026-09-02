@@ -45,7 +45,7 @@ from .act import Step, predicts_from_json, predicts_json
 from .store import bindings
 
 from .graphs import intentions_graph
-from .ontology import ANSWER, OREXIS, PLAN_FAILED, PLAN_FINISHED, REPORTS
+from .ontology import ANSWER, OREXIS, PLAN_FAILED, PLAN_FINISHED, REPORTS, WITNESS
 
 #  What an intention is made of — the mind's own words, and they were the kernel's already
 #  (the-mind-is-six-graphs). What has joined them is the four figures the KEEPING member used to
@@ -103,6 +103,8 @@ PATIENCE_S = OREXIS + "patienceS"
 
 # The expectation — the END, judged apart from the action.
 PREDICTS = OREXIS + "predicts"
+PREDICTED_VALUE = OREXIS + "predictedValue"
+OBSERVED_VALUE = OREXIS + "observedValue"
 BASELINE_VALUE = OREXIS + "baselineValue"
 BASELINE_AT = OREXIS + "baselineAt"
 #  `orexis:deadlineAt` WAS HERE: the watch's deadline is the ACT's `orexis:notAfter` now — one window,
@@ -729,8 +731,12 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
   <{step}> <{BASELINE_VALUE}> "{value}"^^xsd:decimal ;
            <{BASELINE_AT}> "{since.isoformat()}"^^xsd:dateTime ."""
                  if value is not None else "")
+        #  A prediction handed in for a step the search did not make is the step's from here
+        #  on: the ledger, not the caller, is what the verdict and the reviewer read.
+        stated = (f"""
+  <{step}> <{PREDICTS}> {_literal(predicts_json(predicts))} .""" if persisted is None else "")
         self.agent.intentions.update(f"""
-INSERT DATA {{ GRAPH <{self.graph}> {{{based}
+INSERT DATA {{ GRAPH <{self.graph}> {{{based}{stated}
   <{intention_uri}> <{BECAUSE_OF}> {_literal(because)} . }} }}""")
         self.window(intention_uri, deadline_dt)
         shape = self._answering_shape(predicts, since, value, tolerance)
@@ -743,6 +749,23 @@ INSERT DATA {{ GRAPH <{self.graph}> {{{based}
                       _short(intention_uri), round(window), len(predicts[0]), len(predicts[1]),
                       f", from {value:.3f}" if value is not None else "", because)
         return True
+
+    def _residual_of(self, step_uri: str) -> tuple[float | None, float | None]:
+        """The one number a step predicted, and what the world shows for it now — None, None
+        where the prediction carries no number or more than one (a plain-fact step, a step
+        predicting two readings), or where nobody will witness it."""
+        rows = bindings(self.agent.intentions.query_union(f"""
+SELECT ?predicts WHERE {{ GRAPH <{self.graph}> {{ <{step_uri}> <{PREDICTS}> ?predicts }} }}"""))
+        if not rows:
+            return None, None
+        adds, _ = predicts_from_json(rows[0]["predicts"])
+        numbers = [f for f in adds if f and f[0] == "keyed"
+                   and isinstance(f[4], (int, float)) and not isinstance(f[4], bool)]
+        if len(numbers) != 1:
+            return None, None
+        _, cls, key, _, predicted = numbers[0]
+        observed = next((v for v in self.agent.ask(WITNESS, cls, dict(key)) if v is not None), None)
+        return float(predicted), (float(observed) if observed is not None else None)
 
     def _step_of(self, intention_uri: str) -> tuple[str | None, tuple | None]:
         """The step an intention stands at, and what it predicts — None where it predicts
@@ -864,11 +887,18 @@ SELECT ?i ?step ?action ?want ?baseline ?baselineAt ?deadline WHERE {{
 
     def _verdict(self, watch: OpenExpectation, met: bool, because: str) -> None:
         now = datetime.now(timezone.utc).isoformat()
+        #  THE RESIDUAL (#518): what the step said the world would show, and what it shows at
+        #  the verdict — met or unmet alike — written on the step for the reviewer, since the
+        #  sensed graph keeps only the current witness and the ledger is what remembers.
+        predicted, observed = self._residual_of(watch.step)
+        residual = "".join(f'\n  <{watch.step}> <{p}> "{v}"^^xsd:decimal .'
+                           for p, v in ((PREDICTED_VALUE, predicted), (OBSERVED_VALUE, observed))
+                           if v is not None)
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{watch.step}> <{END_MET}> "{'true' if met else 'false'}"^^xsd:boolean ;
                  <{END_VERIFIED_AT}> "{now}"^^xsd:dateTime .
-  <{watch.uri}> <{BECAUSE_OF}> {_literal(because)} .
+  <{watch.uri}> <{BECAUSE_OF}> {_literal(because)} .{residual}
 }} }}""")
         (self.log.info if met else self.log.warning)(
             "end %s for %s: %s", "met" if met else "UNMET", _short(watch.want), because)

@@ -131,6 +131,18 @@ DERIVED, never stated. `capabilities/sensing/rules.ru` computes it from the sens
 :newestAgeS a owl:DatatypeProperty ; rdfs:domain :Evidence ; rdfs:label "newest age (s)" .
 :windowsHeld a owl:DatatypeProperty ; rdfs:domain :Evidence ; rdfs:label "windows held" .
 
+:Residual a owl:Class ; rdfs:label "Residual" ;
+    rdfs:comment "One answered step of an action that predicts a number: the reading it predicted, the reading the world showed at the verdict, and where the property stood before — read off the agent's own ledger (orexis:predictedValue, orexis:observedValue, orexis:baselineValue) and published here so a package's rule can judge its own conversion without reading the ledger. The reviewer publishes the newest ones. What a rule does with them is the package's: the market's and actuation's rules re-pick the CONVERSION when residuals lean one way and the TOLERANCE when they scatter (#518)." .
+:ofAction a owl:ObjectProperty ; rdfs:domain :Residual ; rdfs:range orexis:Action ; rdfs:label "of action" .
+:predicted a owl:DatatypeProperty ; rdfs:domain :Residual ; rdfs:range xsd:decimal ; rdfs:label "predicted" .
+:observed a owl:DatatypeProperty ; rdfs:domain :Residual ; rdfs:range xsd:decimal ; rdfs:label "observed" .
+:baseline a owl:DatatypeProperty ; rdfs:domain :Residual ; rdfs:range xsd:decimal ; rdfs:label "baseline" .
+:verifiedAt a owl:DatatypeProperty ; rdfs:domain :Residual ; rdfs:range xsd:dateTime ; rdfs:label "verified at" .
+:residualWindow a owl:DatatypeProperty ; rdfs:domain :ReviewCapability ; rdfs:range xsd:integer ;
+    rdfs:label "residual window" ;
+    rdfs:comment "How many answered steps a rule needs before it may re-pick a conversion or a tolerance from residuals — constitutional, like the reading window, because one surprising dose is noise and three are a model." .
+:ReviewCapability :residualWindow 3 .
+
 :Range a owl:Class ; rdfs:label "Range" ;
     rdfs:comment "The room one term has, after the constitution's, the equipment's and the agent's mandate are intersected. Published as evidence so a rule reads a floor and a ceiling instead of re-deriving them, and so a human reading the graph can see exactly how much autonomy was in play." .
 

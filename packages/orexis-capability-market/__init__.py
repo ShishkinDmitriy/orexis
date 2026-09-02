@@ -17,7 +17,7 @@ knowledge/decisions/a-package-owns-its-namespace.md.
 
 from pathlib import Path
 
-from assembly import contributes, ACTIONS, DERIVATION, SHAPES, VOCABULARY
+from assembly import contributes, ACTIONS, DERIVATION, REVIEW, SHAPES, VOCABULARY
 from .terms import BID_MATCHING, BIDDING, HOSTING, MATCHES_BY, PAY_AS_BID, UNIFORM_PRICE
 
 @contributes(VOCABULARY)
@@ -51,3 +51,9 @@ def provides() -> tuple:
     return (BiddingModule, HostingModule, PayAsBidModule, UniformPriceModule)
 
 __all__ = ["value_bid", "BIDDING", "HOSTING", "BID_MATCHING", "PAY_AS_BID", "UNIFORM_PRICE", "MATCHES_BY"]
+
+
+@contributes(REVIEW)
+def review(package: Path) -> list[Path]:
+    """the second thought — a bidder's conversion and tolerance, from the lots it saw land (#518)."""
+    return [package / "review.rq"]

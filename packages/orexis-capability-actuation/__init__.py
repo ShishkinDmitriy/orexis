@@ -6,7 +6,7 @@ its holder to believe — it reads the device's own calibration from the world a
 
 from pathlib import Path
 
-from assembly import contributes, ACTIONS, DERIVATION, SHAPES, VOCABULARY
+from assembly import contributes, ACTIONS, DERIVATION, REVIEW, SHAPES, VOCABULARY
 from .terms import ACTUATION
 
 @contributes(VOCABULARY)
@@ -38,3 +38,9 @@ def provides() -> tuple:
     return (ActuationModule,)
 
 __all__ = ["Command", "ACTUATION"]
+
+
+@contributes(REVIEW)
+def review(package: Path) -> list[Path]:
+    """the second thought — an actuator's conversion and tolerance, from the doses it saw land (#518)."""
+    return [package / "review.rq"]
