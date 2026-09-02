@@ -217,7 +217,7 @@ def test_an_irrelevant_lever_is_never_even_asked(monkeypatch):
     asked = []
     query = imaginarium.Imaginarium.query
     monkeypatch.setattr(imaginarium.Imaginarium, "query",
-                        lambda self, sparql: (asked.append(sparql), query(self, sparql))[1])
+                        lambda self, sparql, *a, **k: (asked.append(sparql), query(self, sparql, *a, **k))[1])
 
     def pass_with(disks):
         agent = _driver(monkeypatch, "c0_0", "c1_2")

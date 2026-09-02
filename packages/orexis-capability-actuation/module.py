@@ -341,10 +341,13 @@ SELECT ?source ?p WHERE {{
         reaching this subject. The keeper takes None and falls back to the
         exact-crossing verdict, exactly as it did when the conversion belief was missing.
         """
+        #  `about`, the rule's own token for the property (#500 found this bound as
+        #  `property`, a name the rule no longer carried: the leftover `$about` parsed as a
+        #  free VARIABLE and the prediction matched an observation of ANY property).
         added, _ = effects.apply(
             self.agent.beliefs, DOSING,
             me=f"<{self.me.uri}>", subject=f"<{self.me.acts_for}>",
-            property=f"<{observed_property}>", state=f"<{STATE_GRAPH}>",
+            about=f"<{observed_property}>", state=f"<{STATE_GRAPH}>",
             beliefs=f"<{self.agent.beliefs.graph}>",
             litres=repr(float(litres)), value=repr(float(value)))
         #  `.value` and not `str()`: a pyoxigraph term stringifies to its N-Triples form, angle

@@ -38,7 +38,7 @@ from .config import REPO_ROOT
 from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, GRAPH_PREFIX, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
                        WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, beliefs_graph)
-from orexis_agent_progression.store import NAMESPACES, Store, bindings
+from orexis_agent_progression.store import NAMESPACES, Raw, Store, bind, bindings
 
 # Everything public that is computed rather than read from a file. Emptied before each recompute
 # so the answer is the files' and not last boot's — a fact that stops being entailed, or a rule
@@ -249,9 +249,9 @@ def substitute(rule: str, st: Store) -> str:
     out = []
     for line in rule.splitlines():
         if not line.lstrip().startswith("#"):
-            line = line.replace("$given", given).replace("$derived", f"<{WORLD_DERIVED_GRAPH}>")
             line = _INTO.sub(
                 lambda m: f"<{graph_of_class(st, _expand(m.group(1)))}>", line)
+            line = bind(line, given=Raw(given), derived=WORLD_DERIVED_GRAPH)
         out.append(line)
     return "\n".join(out)
 

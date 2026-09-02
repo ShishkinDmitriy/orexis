@@ -29,7 +29,8 @@ import pyoxigraph as ox
 import rdflib
 
 from orexis_agent_progression.ontology import ACTIONS_GRAPH
-from orexis_agent_progression.store import bindings
+from orexis_agent_progression.ontology import STATE_GRAPH
+from orexis_agent_progression.store import bindings, bind as bind_text
 
 log = logging.getLogger("effects")
 
@@ -37,15 +38,15 @@ log = logging.getLogger("effects")
 #  action graph by NAME, because that graph is the one place actions live and an action for a
 #  means nobody loaded is one nothing will ever ask for. An action with no construct states no
 #  effect and is not returned — the gate refuses a world whose menu offers one.
-_RULE_Q = """
-SELECT ?rule ?construct ?retracts ?lands ?costs WHERE { GRAPH <%s> {
-  BIND(<%s> AS ?rule)
+#  `?rule` is bound by SUBSTITUTION (#500), the engine's own parameter, projected.
+_RULE_Q = f"""
+SELECT ?rule ?construct ?retracts ?lands ?costs WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
   ?rule a <http://example.org/orexis#Action> ;
         <http://www.w3.org/ns/shacl#construct> ?construct .
-  OPTIONAL { ?rule <http://example.org/orexis#retracts> ?retracts }
-  OPTIONAL { ?rule <http://example.org/orexis#landsAfter> ?lands }
-  OPTIONAL { ?rule <http://example.org/orexis#costs> ?costs }
-  } } LIMIT 1"""
+  OPTIONAL {{ ?rule <http://example.org/orexis#retracts> ?retracts }}
+  OPTIONAL {{ ?rule <http://example.org/orexis#landsAfter> ?lands }}
+  OPTIONAL {{ ?rule <http://example.org/orexis#costs> ?costs }}
+  }} }} LIMIT 1"""
 
 
 def rule_for(store, action: str) -> dict | None:
@@ -55,7 +56,7 @@ def rule_for(store, action: str) -> dict | None:
     yet, and a lever whose consequences nobody has written down is still a lever that works —
     it is only one a planner cannot reason about.
     """
-    rows = bindings(store.query(_RULE_Q % (ACTIONS_GRAPH, action)))
+    rows = bindings(store.query(_RULE_Q, {"rule": action}))
     return rows[0] if rows else None
 
 
@@ -90,6 +91,12 @@ def apply(store, action: str, **bind) -> tuple[list, list]:
     rule = rule_for(store, action)
     if rule is None:
         return [], []
+    #  `$state` DEFAULTS TO THE AGENT'S OWN READINGS (#500): an actuator asking about the
+    #  world it stands in never named the graph, and the token it left in the text used to
+    #  parse as a VARIABLE — `GRAPH $state` matching every graph in the store at once,
+    #  silently. The binder refuses a leftover now, so the caller that means "here" gets
+    #  here, and only a planner names another world.
+    bind.setdefault("state", STATE_GRAPH)
     return (_run(store, rule.get("construct"), bind),
             _run(store, rule.get("retracts"), bind))
 
@@ -192,6 +199,7 @@ def lands_after(store, action: str, **bind) -> float | None:
     must take None and keep whatever it did before, because a lever with no stated timing is
     still a lever that works — it is only one nobody can wait for precisely.
     """
+    bind.setdefault("state", STATE_GRAPH)
     rule = rule_for(store, action)
     if rule is None or not rule.get("lands"):
         return None
@@ -210,6 +218,7 @@ def cost_of(store, action: str, **bind) -> float | None:
     declared, or premises that do not hold — and every caller must read None as FREE, the
     statement an omitted declaration makes.
     """
+    bind.setdefault("state", STATE_GRAPH)
     rule = rule_for(store, action)
     if rule is None or not rule.get("costs"):
         return None
@@ -230,10 +239,8 @@ def _select(store, text: str, bind: dict) -> list:
     from an obligation RECORD (`orexis:forClaim`, `orexis:amountL`) bound nothing and every
     serve landed "immediately", silently. The rows come back as engine solutions rather
     than JSON bindings; the one consumer reads its column accordingly."""
-    for name, value in bind.items():
-        text = text.replace(f"${name}", value if isinstance(value, str) else repr(value))
     try:
-        return store.construct(text)
+        return store.construct(bind_text(text, **bind))
     except Exception as exc:
         log.error("timing query for this means would not run: %s", exc)
         return []
@@ -242,10 +249,8 @@ def _select(store, text: str, bind: dict) -> list:
 def _run(store, text: str | None, bind: dict) -> list:
     if not text:
         return []
-    for name, value in bind.items():
-        text = text.replace(f"${name}", value if isinstance(value, str) else repr(value))
     try:
-        return list(store.construct(text))
+        return list(store.construct(bind_text(text, **bind)))
     except Exception as exc:
         #  A rule that will not run is a package's bug and must not take an agent down: the
         #  lever still works, and what is lost is the ability to reason about it in advance.

@@ -35,12 +35,12 @@ log = logging.getLogger("execution")
 
 #  Asked by NAME of the whole default graph — the T-Box is public, and which capability takes
 #  a means is a fact about the vocabulary rather than about any world.
-_TAKEN_BY_Q = f"SELECT ?family WHERE {{ <%s> <{OREXIS}takenBy> ?family }} LIMIT 1"
+_TAKEN_BY_Q = f"SELECT ?action ?family WHERE {{ ?action <{OREXIS}takenBy> ?family }} LIMIT 1"
 
 
 def taken_by(query, action: str) -> str | None:
     """The capability family that carries this means out, or None where no package says."""
-    rows = bindings(query(_TAKEN_BY_Q % action))
+    rows = bindings(query(_TAKEN_BY_Q, {"action": action}))
     return rows[0]["family"] if rows else None
 
 

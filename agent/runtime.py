@@ -45,19 +45,21 @@ from orexis_agent_progression.ontology import DESIRES, DESIRE_URGENCY, STATE_GRA
 #  The select is OPTIONAL here because the node a want points at may be the DOMAIN's — declared
 #  in a package's ontology, public knowledge the desire modality does not keep after its
 #  rebuild — and is then read from the belief base, whose default graph merges public knowledge.
+#  `?me`, `?node` are BOUND BY SUBSTITUTION (#500) — the engine's own parameters, projected
+#  so the engine can reach them — never spliced into the text.
 _AVOIDED_Q = """
-SELECT ?want ?avoided ?select WHERE {
-  <%s> orexis:holds ?want .
+SELECT ?me ?want ?avoided ?select WHERE {
+  ?me orexis:holds ?want .
   ?want orexis:unmetWhen ?avoided .
   OPTIONAL { ?avoided sh:select ?select }
 }"""
-_SELECT_Q = "SELECT ?select WHERE { <%s> sh:select ?select } LIMIT 1"
-_IS_SHAPE_Q = "SELECT ?s WHERE { <%s> a sh:NodeShape } LIMIT 1"
+_SELECT_Q = "SELECT ?node ?select WHERE { ?node sh:select ?select } LIMIT 1"
+_IS_SHAPE_Q = "SELECT ?node WHERE { ?node a sh:NodeShape } LIMIT 1"
 #  And the SHAPE-authored wants nobody speaks for (#497): a world may assert a positive want
 #  whose met-test is a shape the domain package declares; the kernel compiles it and judges.
 _SHAPED_Q = """
-SELECT ?want ?shape WHERE {
-  <%s> orexis:holds ?want .
+SELECT ?me ?want ?shape WHERE {
+  ?me orexis:holds ?want .
   ?want orexis:metWhen ?shape .
 }"""
 from orexis_agent_deliberation.deliberator import KEEPING_PICKS, Deliberator
@@ -67,7 +69,7 @@ from orexis_agent_progression.intentions import Intentions
 from orexis_agent_progression.keeper import Keeper
 from .metrics import Metrics
 from orexis_agent_progression.upkeep import BeliefBaseUpkeep
-from orexis_agent_progression.store import bindings
+from orexis_agent_progression.store import bind, bindings
 from orexis_agent_progression.scheduler import scheduler
 from orexis_agent_reactive.loop import loop
 from .validate import validate_agent
@@ -325,7 +327,7 @@ class Agent:
         #  avoided-pattern wants, whose judging is one select on the store's own engine;
         #  binary, because between entered and held there is nothing to be nearer to. A
         #  pattern that fails to run reads as unmet — the loud direction.
-        for row in bindings(self.desires.query_union(_AVOIDED_Q % self.me.uri)):
+        for row in bindings(self.desires.query_union(_AVOIDED_Q, {"me": self.me.uri})):
             if row["want"] in seen:
                 continue
             #  THE DESIRE OWNS THE TERM AND THE PACKAGE OWNS THE MEASURE: a world may write
@@ -334,14 +336,13 @@ class Agent:
             #  knowledge and is asked of the belief base — one text, either road.
             select = row.get("select")
             if not select:
-                found = bindings(self.beliefs.query(_SELECT_Q % row["avoided"]))
+                found = bindings(self.beliefs.query(_SELECT_Q, {"node": row["avoided"]}))
                 select = found[0]["select"] if found else None
             try:
                 if select:
-                    text = (select.replace("$this", f"<{self.me.uri}>")
-                                  .replace("$state", f"<{STATE_GRAPH}>"))
+                    text = bind(select, this=self.me.uri, state=STATE_GRAPH)
                     entered = bool(bindings(self.beliefs.query(text)))
-                elif bindings(self.beliefs.query(_IS_SHAPE_Q % row["avoided"])):
+                elif bindings(self.beliefs.query(_IS_SHAPE_Q, {"node": row["avoided"]})):
                     #  THE AVOIDED STATE AS A SHAPE (#499): compiled to its conformance
                     #  select — rows where the state has been entered — and run over the
                     #  same view a compiled positive want is.
@@ -364,7 +365,7 @@ class Agent:
         #  per want into the select whose rows are its violations — computed, never stored —
         #  and run on the store's own engine over the same view the judge would be handed.
         #  Binary, like the pattern wants above: met is no row.
-        for row in bindings(self.desires.query_union(_SHAPED_Q % self.me.uri)):
+        for row in bindings(self.desires.query_union(_SHAPED_Q, {"me": self.me.uri})):
             if row["want"] in seen:
                 continue
             try:

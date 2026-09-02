@@ -129,7 +129,7 @@ class Desire:
 
 from assembly import loader
 from orexis_agent_progression.ontology import DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH
-from orexis_agent_progression.store import Store
+from orexis_agent_progression.store import Raw, bind, Store
 
 #  The two modality classes whose instances are wants. ConstraintGraph is a want's boundary
 #  rather than a want — but gap, menu and validation all read the two together, and the record
@@ -166,9 +166,8 @@ class Deducer(Store):
             out = []
             for line in text.splitlines():
                 if not line.lstrip().startswith("#"):
-                    line = (line.replace("$derived", f"<{DESIRE_DERIVED_GRAPH}>")
-                                .replace("$given", given)
-                                .replace("$me", f"<{beliefs.agent_uri}>"))
+                    line = bind(line, derived=DESIRE_DERIVED_GRAPH, given=Raw(given),
+                                me=beliefs.agent_uri)
                 out.append(line)
             self.update("\n".join(out))
         for iri in publics:

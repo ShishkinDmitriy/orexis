@@ -35,6 +35,8 @@ import rdflib
 from rdflib import RDF, Literal, URIRef
 from rdflib.collection import Collection
 
+from orexis_agent_progression.store import Raw, bind
+
 SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 
 #  What a property shape and a node shape may carry in SHACL's OWN namespace beside a
@@ -200,7 +202,7 @@ class _Compiler:
         for forbidden in ("$PATH", "$value", "$currentShape", "$shapesGraph"):
             if forbidden in body:
                 raise Unsupported(f"{constraint}: {forbidden} is not compiled")
-        return body.replace("$this", focus).strip()
+        return bind(body, this=Raw(focus)).strip()
 
     # --- terms and paths ----------------------------------------------------------------------
 
