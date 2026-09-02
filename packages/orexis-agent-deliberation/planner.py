@@ -339,7 +339,7 @@ class Planner:
         if text is not None:
             return str(text)
         rows = bindings(self.agent.beliefs.query(
-            f"SELECT ?text WHERE {{ <{node}> <{_SH.select}> ?text }} LIMIT 1"))
+            f"SELECT ?text WHERE {{ <{node}> sh:select ?text }} LIMIT 1"))
         return str(rows[0]["text"]) if rows and rows[0].get("text") else None
 
     def _pattern_binds(self, text: str, graph: str) -> bool:

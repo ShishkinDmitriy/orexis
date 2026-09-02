@@ -163,8 +163,8 @@ def test_the_world_asserts_the_want_and_the_package_owns_the_measure(monkeypatch
     p = Planner(agent, agent.me)
     node = p._begin(_goal(agent))
     assert p._estimate_in(node, _goal(agent)) == 6.0
-    assert "FILTER NOT EXISTS" in p._unmet and "?this a <" + C + "Parcel>" in p._unmet, \
-        "the shape compiled to a select over every parcel"
+    assert "FILTER NOT EXISTS" in p._unmet and "?this a courier:Parcel" in p._unmet, \
+        "the shape compiled to a select over every parcel, in the prefixed names it was written in"
     assert _goal(agent).state == "unmet", "and the shape is judged by its compiled select"
 
 

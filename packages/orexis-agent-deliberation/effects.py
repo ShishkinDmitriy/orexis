@@ -41,11 +41,11 @@ log = logging.getLogger("effects")
 #  `?rule` is bound by SUBSTITUTION (#500), the engine's own parameter, projected.
 _RULE_Q = f"""
 SELECT ?rule ?construct ?retracts ?lands ?costs WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
-  ?rule a <http://example.org/orexis#Action> ;
-        <http://www.w3.org/ns/shacl#construct> ?construct .
-  OPTIONAL {{ ?rule <http://example.org/orexis#retracts> ?retracts }}
-  OPTIONAL {{ ?rule <http://example.org/orexis#landsAfter> ?lands }}
-  OPTIONAL {{ ?rule <http://example.org/orexis#costs> ?costs }}
+  ?rule a orexis:Action ;
+        sh:construct ?construct .
+  OPTIONAL {{ ?rule orexis:retracts ?retracts }}
+  OPTIONAL {{ ?rule orexis:landsAfter ?lands }}
+  OPTIONAL {{ ?rule orexis:costs ?costs }}
   }} }} LIMIT 1"""
 
 

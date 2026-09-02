@@ -71,15 +71,15 @@ _OWN = f"""
 SELECT DISTINCT ?g WHERE {{
   {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }} }}
   UNION
-  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?g a ?class ; <{OREXIS}arrivedBy> ?arrival }} }}
-  ?class rdfs:subClassOf* <{OREXIS}Graph> .
+  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?g a ?class ; orexis:arrivedBy ?arrival }} }}
+  ?class rdfs:subClassOf* orexis:Graph .
   #  ASKED OF THE GRAPH AND NOT OF THE CLASS THAT MATCHED: `graph/classification` is typed
   #  both public and belief, so a filter on one binding lets it through on the other. Both
   #  run in the DEFAULT graph, which `query` unions from the public ones — inside a GRAPH
   #  block pyoxigraph evaluates the NOT EXISTS before the UNION binds `?g`, and every row
   #  is dropped.
   FILTER NOT EXISTS {{ ?g a ?any . ?any rdfs:subClassOf* <{PUBLIC_GRAPH}> }}
-  FILTER NOT EXISTS {{ ?g a ?hyp . ?hyp rdfs:subClassOf* <{OREXIS}PossibleGraph> }}
+  FILTER NOT EXISTS {{ ?g a ?hyp . ?hyp rdfs:subClassOf* orexis:PossibleGraph }}
 }}"""
 
 # Sent with every query. This is the ONLY set a query may use — some engines silently pre-bind

@@ -30,12 +30,16 @@ clause and no `$state`: the caller runs it with the world's graphs as the defaul
 from __future__ import annotations
 
 import itertools
+import re
 
 import rdflib
 from rdflib import RDF, Literal, URIRef
 from rdflib.collection import Collection
 
-from orexis_agent_progression.store import Raw, bind
+from orexis_agent_progression.store import NAMESPACES, Raw, bind
+
+#  Longest namespace first, so a prefix whose namespace extends another's wins.
+_PREFIX_OF = dict(sorted(NAMESPACES.items(), key=lambda kv: -len(kv[1])))
 
 SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 
@@ -53,6 +57,20 @@ _NODE_ANNOTATIONS = {SH.targetNode, SH.targetClass, SH.targetSubjectsOf, SH.targ
 
 def _is_shacl(p) -> bool:
     return str(p).startswith(str(SH))
+
+
+_LOCAL = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*$")
+
+
+def qname(iri) -> str:
+    """The IRI as a prefixed name where the store declares the prefix and the local part is
+    plain, else in full. Readability alone (#500): the store hands the engine the same
+    dictionary, so the compiled text runs either way and reads the way its shape was written."""
+    text = str(iri)
+    for prefix, ns in _PREFIX_OF.items():
+        if text.startswith(ns) and _LOCAL.match(text[len(ns):]):
+            return f"{prefix}:{text[len(ns):]}"
+    return f"<{text}>"
 
 
 class Unsupported(ValueError):
@@ -207,7 +225,9 @@ class _Compiler:
     # --- terms and paths ----------------------------------------------------------------------
 
     def term(self, node) -> str:
-        if isinstance(node, (URIRef, Literal)):
+        if isinstance(node, URIRef):
+            return qname(node)
+        if isinstance(node, Literal):
             return node.n3()
         raise Unsupported(f"a blank node ({node}) cannot be named in a compiled select")
 
@@ -215,7 +235,7 @@ class _Compiler:
         if node is None:
             raise Unsupported("a property shape with no sh:path")
         if isinstance(node, URIRef):
-            return node.n3()
+            return qname(node)
         if (node, RDF.first, None) in self.g:               # a sequence
             return "(" + "/".join(self.path(p) for p in Collection(self.g, node)) + ")"
         for pred, form in ((SH.inversePath, "^({})"), (SH.oneOrMorePath, "({})+"),

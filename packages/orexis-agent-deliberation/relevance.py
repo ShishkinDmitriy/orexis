@@ -241,10 +241,10 @@ def _shacl_path_iris(g: rdflib.Graph, node) -> set | None:
 
 _ACTIONS_Q = f"""
 SELECT ?action ?available ?construct ?retracts WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
-  ?action a <http://example.org/orexis#Action> .
-  OPTIONAL {{ ?action <http://example.org/orexis#available> ?available }}
-  OPTIONAL {{ ?action <http://www.w3.org/ns/shacl#construct> ?construct }}
-  OPTIONAL {{ ?action <http://example.org/orexis#retracts> ?retracts }}
+  ?action a orexis:Action .
+  OPTIONAL {{ ?action orexis:available ?available }}
+  OPTIONAL {{ ?action sh:construct ?construct }}
+  OPTIONAL {{ ?action orexis:retracts ?retracts }}
 }} }}"""
 
 _SUBPROPERTIES_Q = """
@@ -280,8 +280,8 @@ def actions_of(query) -> dict[str, tuple]:
 
 _EFFECTLESS_Q = f"""
 SELECT ?action WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
-  ?action a <http://example.org/orexis#Action> .
-  FILTER NOT EXISTS {{ ?action <http://www.w3.org/ns/shacl#construct> ?c }}
+  ?action a orexis:Action .
+  FILTER NOT EXISTS {{ ?action sh:construct ?c }}
 }} }}"""
 
 

@@ -35,7 +35,7 @@ log = logging.getLogger("execution")
 
 #  Asked by NAME of the whole default graph — the T-Box is public, and which capability takes
 #  a means is a fact about the vocabulary rather than about any world.
-_TAKEN_BY_Q = f"SELECT ?action ?family WHERE {{ ?action <{OREXIS}takenBy> ?family }} LIMIT 1"
+_TAKEN_BY_Q = f"SELECT ?action ?family WHERE {{ ?action orexis:takenBy ?family }} LIMIT 1"
 
 
 def taken_by(query, action: str) -> str | None:
@@ -54,7 +54,7 @@ def take_standing(agent, standing, desire) -> bool:
     #  The act is the ledger's, read whole — action, lever, quantity, window — plus what the
     #  want is ABOUT (`orexis:about`, read back off the want), which is the want's and not the act's.
     rows = bindings(agent.desires.query_union(
-        f"SELECT ?about WHERE {{ <{standing.want}> <{OREXIS}about> ?about }}"))
+        f"SELECT ?about WHERE {{ <{standing.want}> orexis:about ?about }}"))
     act = replace(standing.act, about=rows[0]["about"] if rows else None)
     return carry_out(agent, act, desire, standing.uri)
 

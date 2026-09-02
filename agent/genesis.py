@@ -381,7 +381,7 @@ def drop_ghost_graphs(st: Store, agent_id: str) -> list[str]:
     # the instances under it. Listing them here instead would eat the next package's graphs,
     # which is exactly what the first draft did to review's summaries.
     prefixes = tuple(r["p"] for r in bindings(st.query(
-        f"SELECT ?p WHERE {{ ?class <{OREXIS}graphPrefix> ?p }}")))
+        f"SELECT ?p WHERE {{ ?class orexis:graphPrefix ?p }}")))
     ghosts = [g for g in st.graph_names()
               if g.startswith(GRAPH_PREFIX) and g not in declared and g != PROVENANCE_GRAPH
               and not g.startswith(prefixes)]
@@ -418,8 +418,8 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
         (obligations_graph(agent_id), ("ObligationsGraph",), "Received"),
     ]
     triples = " ".join(
-        f"<{iri}> a {' , '.join(f'<{OREXIS}{c}>' for c in classes)} ; "
-        f"<{OREXIS}arrivedBy> <{OREXIS}{arrival}> ."
+        f"<{iri}> a {' , '.join(f'orexis:{c}' for c in classes)} ; "
+        f"orexis:arrivedBy orexis:{arrival} ."
         for iri, classes, arrival in mine)
     st.clear_graph(CLASSIFICATION_GRAPH)
     st.update(f"INSERT DATA {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ {triples} }} }}")
