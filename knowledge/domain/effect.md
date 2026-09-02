@@ -57,9 +57,11 @@ uncertainty lives in re-planning and monitoring, which is where this project alr
 # The prediction has ONE source, and it is enforced rather than intended
 
 `litres / conversion` was already written twice in Python — the bidder sizing its expectation, the
-actuator sizing its self-dose — before anything asked what a dose would do. The actuator now runs
-the rule and subtracts rather than computing its own, so the number a planner uses to decide
-whether dosing helps is the number the keeper later holds the world to.
+actuator sizing its self-dose — before anything asked what a dose would do. Since #510 the actuator
+computes nothing at all: the reading the rule predicted rides on the [step](/domain/step.md) as
+`orexis:predicts`, and the keeper holds the world to it within the actor's
+[tolerance](/domain/tolerance.md), so the number a planner uses to decide whether dosing helps
+IS the number the world is later held to, by construction rather than by discipline.
 
 Two numbers would mean an agent planning against one future and verifying against another, and
 the failure would look like a device lying rather than like arithmetic disagreeing with itself.

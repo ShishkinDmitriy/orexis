@@ -28,8 +28,8 @@
 #  worst of it: an agent that plans against one future and verifies against another reports
 #  false UNMET verdicts, which is the false-knowledge bug arriving from the planning side, and
 #  it would look like a device lying rather than like arithmetic disagreeing with itself. So the
-#  actuator no longer computes its expectation: it runs this rule and subtracts. See
-#  `ActuationModule._expected_delta`.
+#  actuator computes no expectation at all (#510): the reading this rule predicts rides on the
+#  step, and the keeper holds the world to it within `actuation:tolerance` of the movement.
 #
 #  The conversion is the agent's OWN belief, keyed by the term the venue tie names — the copy an
 #  agent that learned would revise, and the copy it would lose money by being wrong about. The

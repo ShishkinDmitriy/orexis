@@ -41,7 +41,7 @@ from datetime import datetime, timezone
 
 from assembly.contribute import answer as contribution, contributes
 from . import ledger
-from .act import Step
+from .act import Step, predicts_from_json, predicts_json
 from .store import bindings
 
 from .graphs import intentions_graph
@@ -102,17 +102,15 @@ BECAUSE_OF = OREXIS + "becauseOf"
 PATIENCE_S = OREXIS + "patienceS"
 
 # The expectation — the END, judged apart from the action.
-EXPECTS_RISE = OREXIS + "expectsRise"
+PREDICTS = OREXIS + "predicts"
 BASELINE_VALUE = OREXIS + "baselineValue"
 BASELINE_AT = OREXIS + "baselineAt"
-EXPECTS_DELTA = OREXIS + "expectsDelta"
 #  `orexis:deadlineAt` WAS HERE: the watch's deadline is the ACT's `orexis:notAfter` now — one window,
 #  read by the keeper, the bidder's give-up and the host's redeem check alike
 #  (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan). `ledger` migrates it.
 END_MET = OREXIS + "endMet"
 END_VERIFIED_AT = OREXIS + "endVerifiedAt"
 SUSPECT_AFTER = OREXIS + "suspectAfter"
-MET_FRACTION = OREXIS + "metFraction"
 
 
 def kernel(name: str) -> str:
@@ -138,12 +136,6 @@ SELECT ?n WHERE {
 # The fraction of an expected delta that counts as the world answering (#165). Carried by
 # `orexis:Intention` itself now that there is no family to hang it on — what a society accepts as
 # evidence is a fact about intentions, not about one way of keeping them.
-_MET_FRACTION_Q = """
-SELECT ?f WHERE {
-  GRAPH ?g { orexis:Intention orexis:metFraction ?f }
-} LIMIT 1"""
-
-
 @dataclass(frozen=True)
 class KeepingBeliefs:
     """The commitment policy, which is the agent's own opinion."""
@@ -176,6 +168,7 @@ class Standing:
     step: Step
     want: str               # the desire's node — `orexis:pursues`; the kernel's only key besides the step
     adopted_at: datetime
+    advanced_at: datetime | None = None   # when it last moved to a next step (#510), if it did
 
     @property
     def action(self) -> str:
@@ -186,7 +179,10 @@ class Standing:
         return self.step.via or None
 
     def age_s(self, now: datetime | None = None) -> float:
-        return ((now or datetime.now(timezone.utc)) - self.adopted_at).total_seconds()
+        """How long it has stood AT THIS STEP — since adoption, or since the last advance:
+        a plan progressing by feedback is not stale for being long (#510)."""
+        since = max(self.adopted_at, self.advanced_at) if self.advanced_at else self.adopted_at
+        return ((now or datetime.now(timezone.utc)) - since).total_seconds()
 
 
 @dataclass(frozen=True)
@@ -197,11 +193,9 @@ class OpenExpectation:
     step: str               # the step the watch is on — the intention stands at it
     action: str
     want: str
-    rises: bool             # which way the act promised to move the value
-    baseline: float
-    baseline_at: datetime
     deadline: datetime
-    expected_delta: float | None = None  # how far the act should move it, when the actor knows
+    baseline: float | None = None        # where the property stood, where the step is about one
+    baseline_at: datetime | None = None
 
 
 class Keeper:
@@ -338,9 +332,14 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
             act = Step(action=act, via=via or "")
         action = act.action
         now = datetime.now(timezone.utc)
-        for standing in self.standing(action=action, want=want):
+        for standing in self.standing(want=want):
+            if standing.action != action and (steps is None or self._next_of(standing.uri) is None):
+                continue                  # a different commitment about this want stands apart
             if standing.age_s(now) <= self.beliefs.patience_s:
-                return None
+                if standing.action == action:
+                    return None
+                continue
+            #  A want has one plan at a time (#510): a stale one is superseded whatever its head.
             self._resolve(standing, "dropped",
                           f"outwaited: stood {standing.age_s(now):.0f}s against a patience "
                           f"of {self.beliefs.patience_s}s, superseded by a new adoption")
@@ -365,6 +364,8 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
                 facts.append(f'<{kernel("notAfter")}> "{step.not_after.isoformat()}"^^<{xsd}dateTime>')
             if step.urgency_after is not None:
                 facts.append(f'<{kernel("predictedUrgency")}> "{step.urgency_after:.6f}"^^<{xsd}decimal>')
+            if step.predicts is not None:
+                facts.append(f'<{PREDICTS}> {_literal(predicts_json(step.predicts))}')
             if n + 1 < len(plan):
                 facts.append(f'<{kernel("then")}> <{step_uris[n + 1]}>')
             blocks.append(f'  <{step_uri}> a <{kernel("Step")}> ; {" ; ".join(facts)} .')
@@ -552,8 +553,8 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
         if not self._claim(holder.uri):
             return
         if predicate == kernel("answeredWhen"):
-            self._verdict(holder, True, "moved as promised: an observation later than the "
-                                        "baseline shows the property past the threshold")
+            self._verdict(holder, True, "answered as the step predicted: the world conforms "
+                                        "to the shape generated from its prediction")
         else:
             self._release(holder, "the condition it was held for answers now")
 
@@ -579,6 +580,15 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
         for holder, _, predicate in self.held():
             if holder.uri == intention_uri:
                 self._lapse(holder, predicate)
+                return
+        #  NOT HELD: a plan standing at a step nobody took (#510) — its patience is its
+        #  deadline, and passing it drops the tail and says so upward, so deliberation
+        #  decides afresh from the world as it is.
+        for standing in self.standing():
+            if standing.uri == intention_uri:
+                self._resolve(standing, "dropped", "the step it stood at was not taken before "
+                                                   "its patience ran out — the tail is dropped")
+                self.agent.tell(PLAN_FAILED, standing.uri, standing.action, standing.want)
 
     def _when_lapsed(self, intention_uri: str) -> str:
         rows = bindings(self.agent.intentions.query_union(f"""
@@ -662,98 +672,149 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
     # --- the expectation: the end, judged apart from the means (#131) ---------------------
 
     def expect(self, intention_uri: str, because: str,
-               expected_delta: float | None = None,
-               lands_after_s: float | None = None,
-               rises: bool | None = None,
-               seeing_s: float | None = None,
                baseline=None,
-               not_after: datetime | None = None) -> bool:
-        """Open the watch: the act happened, now the world owes a movement.
+               tolerance: float | None = None,
+               lands_after_s: float | None = None,
+               seeing_s: float | None = None,
+               not_after: datetime | None = None,
+               predicts: tuple | None = None) -> bool:
+        """Open the watch: the step was taken, now the world owes the change it predicted.
 
-        THE DEADLINE IS THE ACT'S WINDOW. `not_after`, where the actor states it (the act it
-        committed to carries one), or else the landing time plus the seeing time computed
-        here — and either way it is written as the act's `orexis:notAfter`, so the ledger holds
-        one window and every reader reads that one.
+        ONE DECLARATION (#510, #518). What the world is held to is `orexis:predicts` on the
+        step the intention stands at — the facts the search said this step makes true and
+        false, the same facts its signature is made of — and nothing the actor sizes: the
+        actor that used to say a delta and a direction now says only how CLOSE the world must
+        land, `tolerance`, a fraction of the predicted movement, which is its own revisable
+        pick. A caller may hand `predicts` in for a step the search did not make.
 
-        The BASELINE — the reading the actor holds, handed in — is copied into the row: the
-        sensed graph keeps only the current witness, so the before of any before/after survives
-        nowhere but the ledger. WHICH WAY the value
-        should move is the actor's to say: `rises`, or the sign of `expected_delta` — how far
-        the act should move the property when the actor can size it (#165), which is what the
-        met-verdict measures its margin against. An act that cannot size itself passes `rises`
-        alone and keeps the exact-crossing verdict. The keeper used to look the direction up
-        from the market's statement on the valuation; that is a package word, and the actor
-        that opened the watch already holds it.
+        The answering shape is generated here (`_answering_shape`): a KEYED fact — an
+        observation, some package's `orexis:keyedBy` class — is put to that package through
+        the `orexis:answer` extension, since what a reading is is sensing's; a PLAIN fact is
+        the kernel's own, present for an addition and gone for a retraction, as one query
+        under a shape. The keeper holds the step on the shape as `orexis:answeredWhen` and
+        the verdict is its conformance before the deadline.
 
-        The DEADLINE is the act's landing time (`lands_after_s`, asked of the effect rule by
-        the actor, #247) PLUS how long a reading of that property may honestly take to arrive
-        (`seeing_s`, the cadence the actor's sensing keeps) — both figures somebody already
-        states. An act that cannot size itself gets the patience, unchanged: how long an agent
-        waits before re-deciding, not how long the physics takes, and holding a dose to it
-        called a valve late at 120s while the pot's own sensor reported every 600.
+        THE DEADLINE IS THE STEP'S WINDOW. `not_after` where the actor states it, or the
+        landing time plus the seeing time (#247) — an act that cannot say gets the patience:
+        how long an agent waits before re-deciding, not how long the physics takes.
 
-        The actor also asks its sensing to look once after opening the watch, so the freshest
-        before is on record; the keeper no longer names the sensing family to do it.
+        The BASELINE — the reading the actor holds, where the step is about a property —
+        is copied onto the step: the sensed graph keeps only the current witness, so the
+        before of any before/after survives nowhere but the ledger. Since a plain fact has
+        no baseline, it is optional, and `since` is then the moment of taking.
 
-        False rather than a row when something needed is missing — no reading to baseline on,
-        no direction said — and the reason is logged: an expectation that cannot be judged
-        would sit unverified forever, which is indistinguishable from the failure it exists to
-        catch.
+        False rather than a row when the step predicts nothing, or nothing can say what
+        would answer it — an expectation that cannot be judged would sit unverified
+        forever, which is indistinguishable from the failure it exists to catch.
         """
-        #  THE BASELINE IS THE ACTOR'S TO HAND IN: the reading it holds, value and instant.
-        #  The keeper used to read it off the belief base itself, which meant knowing what a
-        #  reading looks like — sensing's knowledge, not the ledger's. Anything with `.value`
-        #  and `.result_time` will do; a reading with no instant cannot be a before.
-        reading = baseline
-        if reading is None or getattr(reading, "result_time", None) is None:
-            self.log.warning("cannot expect an end for %s — no baselined reading to leave from",
+        step, persisted = self._step_of(intention_uri)
+        if step is None:
+            self.log.warning("cannot expect an end for %s — it stands at no step",
                              _short(intention_uri))
             return False
-        if rises is None and expected_delta:
-            rises = expected_delta > 0
-        if rises is None:
-            self.log.warning("cannot expect an end for %s — the actor said which way it "
-                             "should move neither by sign nor by word", _short(intention_uri))
+        predicts = predicts if predicts is not None else persisted
+        if not predicts or not (predicts[0] or predicts[1]):
+            self.log.warning("cannot expect an end for %s — the step predicts nothing, so "
+                             "there is nothing to hold the world to", _short(intention_uri))
             return False
-        expected_delta = abs(expected_delta) if expected_delta else None
         now = datetime.now(timezone.utc)
         window = (lands_after_s + (seeing_s or 0.0) if lands_after_s is not None
                   else float(self.beliefs.patience_s))
         deadline_dt = not_after or datetime.fromtimestamp(now.timestamp() + window,
                                                           tz=timezone.utc)
         window = (deadline_dt - now).total_seconds()
-        delta = (f"""
-    <{EXPECTS_DELTA}> "{expected_delta}"^^xsd:decimal ;"""
-                 if expected_delta else "")
-        #  ON THE STEP the intention stands at (#510): a plan of several steps opens a watch
-        #  per step, and a verdict written on the intention would hide the second watch
-        #  behind the first's. The intention's `becauseOf` still says why.
+        since = getattr(baseline, "result_time", None) or now
+        value = float(baseline.value) if baseline is not None else None
+        based = (f"""
+  <{step}> <{BASELINE_VALUE}> "{value}"^^xsd:decimal ;
+           <{BASELINE_AT}> "{since.isoformat()}"^^xsd:dateTime ."""
+                 if value is not None else "")
         self.agent.intentions.update(f"""
-INSERT {{ GRAPH <{self.graph}> {{
-  ?step{delta}
-    <{EXPECTS_RISE}> {"true" if rises else "false"} ;
-    <{BASELINE_VALUE}> "{reading.value}"^^xsd:decimal ;
-    <{BASELINE_AT}> "{reading.result_time.isoformat()}"^^xsd:dateTime .
-  <{intention_uri}> <{BECAUSE_OF}> {_literal(because)} . }} }}
-WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?step }} }}""")
+INSERT DATA {{ GRAPH <{self.graph}> {{{based}
+  <{intention_uri}> <{BECAUSE_OF}> {_literal(because)} . }} }}""")
         self.window(intention_uri, deadline_dt)
-        #  THE WATCH IS A HOLD (#516): the shape of an observation that answers this act,
-        #  asked of whoever knows what a reading is (`orexis:answer` — sensing), and the
-        #  step held on it as its COMPLETION condition. Conformance is the verdict met; the
-        #  deadline passing first is the verdict unmet. The arithmetic that used to judge
-        #  every reading here is inside that shape now, its numbers baked at this instant.
-        shape = next((g for g in self.agent.ask(
-            ANSWER, self.me.acts_for, self._about(intention_uri), reading.result_time,
-            float(reading.value), expected_delta, rises, self._met_fraction()) if g is not None), None)
+        shape = self._answering_shape(predicts, since, value, tolerance)
         if shape is None:
-            self.log.warning("nothing says what an observation answering %s would look like "
+            self.log.warning("nothing says what a world answering %s would look like "
                              "— the watch can only lapse", _short(intention_uri))
         else:
             self._hold_step(intention_uri, kernel("answeredWhen"), shape, deadline_dt, "unmet")
-        self.log.info("expecting %s to %s from %.3f within %ss: %s",
-                      _short(intention_uri),
-                      "rise" if rises else "fall", reading.value, round(window), because)
+        self.log.info("expecting %s to answer within %ss (%d predicted, %d retracted%s): %s",
+                      _short(intention_uri), round(window), len(predicts[0]), len(predicts[1]),
+                      f", from {value:.3f}" if value is not None else "", because)
         return True
+
+    def _step_of(self, intention_uri: str) -> tuple[str | None, tuple | None]:
+        """The step an intention stands at, and what it predicts — None where it predicts
+        nothing (a step an event adopted, a look)."""
+        rows = bindings(self.agent.intentions.query_union(f"""
+SELECT ?step ?predicts WHERE {{ GRAPH <{self.graph}> {{
+  <{intention_uri}> <{kernel("by")}> ?step .
+  OPTIONAL {{ ?step <{PREDICTS}> ?predicts }} }} }}"""))
+        if not rows:
+            return None, None
+        text = rows[0].get("predicts")
+        return rows[0]["step"], (predicts_from_json(text) if text else None)
+
+    def _answering_shape(self, predicts: tuple, since, baseline: float | None,
+                         tolerance: float | None):
+        """The shape a world answering this prediction conforms to, from the step's facts.
+
+        A KEYED fact (`("keyed", class, key, predicate, value)` — a node some package
+        declared `orexis:keyedBy`, an observation) is the package's to answer for: the
+        `orexis:answer` extension is asked with the class, its key and what it carries, and
+        the first opinion wins. A PLAIN fact `(s, p, o)` is the kernel's: every addition
+        present and every retraction gone, as one query under a shape (`condition_shape`),
+        so the ledger reads as the step meant it. A fact that cannot be stated as a triple
+        — a blank node the search labelled by content — is passed over and said so.
+
+        None where the step predicts nothing statable, or where a keyed fact finds no
+        answerer, or where the prediction spans more than one shape can hold (a step that
+        predicts both a reading and a world fact — no shipped action does; a seam).
+        """
+        adds, retracts = predicts
+        keyed: dict = {}
+        present, gone, anchors, passed = [], [], [], 0
+        for fact in adds:
+            if fact and fact[0] == "keyed":
+                _, cls, key, p, v = fact
+                keyed.setdefault((cls, key), {})[p] = v
+            elif (t := _plain_pattern(fact)) is not None:
+                present.append(t)
+                anchors.append(fact[0])
+            else:
+                passed += 1
+        for fact in retracts:
+            if fact and fact[0] == "keyed":
+                continue           # the old reading: superseded by the new one, not "gone"
+            if (t := _plain_pattern(fact)) is not None:
+                gone.append(t)
+                anchors.append(fact[0])
+            else:
+                passed += 1
+        if passed:
+            self.log.warning("%d predicted fact(s) cannot be stated as triples — the world is "
+                             "not held to them", passed)
+        shapes = []
+        for (cls, key), carried in keyed.items():
+            g = next((g for g in self.agent.ask(ANSWER, cls, dict(key), carried, since,
+                                                baseline, tolerance) if g is not None), None)
+            if g is None:
+                self.log.warning("nothing says what answers a predicted %s", cls.rsplit("#", 1)[-1])
+                return None
+            shapes.append(g)
+        if present or gone:
+            anchor = anchors[0]                 # the shape's focus: the first fact's subject
+            body = "\n  ".join(f"{s} {p} {o} ." for s, p, o in present)
+            body += "".join(f"\n  FILTER NOT EXISTS {{ {s} {p} {o} }}" for s, p, o in gone)
+            shapes.append(condition_shape(f"urn:orexis:answer:{uuid.uuid4().hex[:8]}", anchor,
+                                          f"SELECT $this WHERE {{\n  {body}\n}}"))
+        if len(shapes) != 1:
+            if shapes:
+                self.log.warning("a step predicting %d kinds of change is held to none — one "
+                                 "shape holds one kind", len(shapes))
+            return None
+        return shapes[0]
 
     def _about(self, intention_uri: str) -> str | None:
         """What the want this intention pursues is about — the property, for a stake."""
@@ -779,25 +840,23 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act .
         for all of them."""
         prop = f"FILTER(?want = <{want}>)" if want else ""
         rows = bindings(self.agent.intentions.query(f"""
-SELECT ?i ?step ?action ?want ?rises ?baseline ?baselineAt ?deadline ?delta WHERE {{
+SELECT ?i ?step ?action ?want ?baseline ?baselineAt ?deadline WHERE {{
   GRAPH <{self.graph}> {{
     ?i <{kernel("by")}> ?step ;
        <{kernel("pursues")}> ?want .
     ?step <{kernel("fills")}> ?action ;
           <{kernel("notAfter")}> ?deadline ;
-          <{EXPECTS_RISE}> ?rises ;
-          <{BASELINE_VALUE}> ?baseline ;
-          <{BASELINE_AT}> ?baselineAt .
-    OPTIONAL {{ ?step <{EXPECTS_DELTA}> ?delta }}
+          <{kernel("answeredWhen")}> ?shape .
+    OPTIONAL {{ ?step <{BASELINE_VALUE}> ?baseline ; <{BASELINE_AT}> ?baselineAt }}
     FILTER NOT EXISTS {{ ?step <{END_MET}> ?met }}
     {prop}
   }} }}"""))
         return [OpenExpectation(
             uri=r["i"], step=r["step"], action=r["action"], want=r["want"],
-            rises=r["rises"] in ("true", "1"), baseline=float(r["baseline"]),
-            baseline_at=datetime.fromisoformat(r["baselineAt"]),
             deadline=datetime.fromisoformat(r["deadline"]),
-            expected_delta=float(r["delta"]) if r.get("delta") else None) for r in rows]
+            baseline=float(r["baseline"]) if r.get("baseline") else None,
+            baseline_at=datetime.fromisoformat(r["baselineAt"]) if r.get("baselineAt") else None)
+            for r in rows]
 
     #  `judge(want, value)` WAS HERE — every open watch on a want compared against a number
     #  that arrived, by this class's own arithmetic. An expectation is a hold on the shape of
@@ -873,22 +932,25 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{kernel("by")}> ?was }} }}""")
         the plan goes on by feedback, and a search would re-decide what the world has not
         yet contradicted. None otherwise."""
         now = datetime.now(timezone.utc)
+        held = {h.uri for h, _, _ in self.held()} if self._holding else set()
         for standing in self.standing(want=want):
-            if standing.age_s(now) > self.beliefs.patience_s:
+            #  Stale at this step and not waiting on anything: a step nobody could take,
+            #  standing past the patience, is not progress — pursuit decides afresh and
+            #  `adopt` supersedes it. A held step has a deadline of its own.
+            if standing.uri not in held and standing.age_s(now) > self.beliefs.patience_s:
                 continue
-            rows = bindings(self.agent.intentions.query_union(f"""
-SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{kernel("by")}> ?s . ?s <{kernel("then")}> ?next }} }}"""))
-            if rows:
+            if self._next_of(standing.uri) is not None:
                 return standing
         return None
+
+    def _next_of(self, intention_uri: str) -> str | None:
+        rows = bindings(self.agent.intentions.query_union(f"""
+SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?s . ?s <{kernel("then")}> ?next }} }}"""))
+        return rows[0]["next"] if rows else None
 
     def _suspect_after(self) -> int:
         rows = bindings(self.agent.beliefs.query(_SUSPECT_Q))
         return int(rows[0]["n"]) if rows else 3
-
-    def _met_fraction(self) -> float:
-        rows = bindings(self.agent.beliefs.query(_MET_FRACTION_Q))
-        return float(rows[0]["f"]) if rows else 0.25
 
     def _is_suspect(self, action: str, want: str) -> bool:
         """The last suspectAfter verdicts for this pair, all unmet, none met among them.
@@ -946,11 +1008,13 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
             clauses.append(f"FILTER(?action = <{action}>)")
         if want:
             clauses.append(f"FILTER(?want = <{want}>)")
-        for term in ("through", "quantity", "forAgent", "notBefore", "notAfter"):
+        for term in ("through", "quantity", "forAgent", "notBefore", "notAfter", "predicts"):
             clauses.append(f'OPTIONAL {{ ?act <{kernel(term)}> ?{term} }}')
+        clauses.append(f'OPTIONAL {{ SELECT ?i (MAX(?v) AS ?advanced) WHERE {{ '
+                       f'?i <{kernel("step")}> ?done . ?done <{END_VERIFIED_AT}> ?v }} GROUP BY ?i }}')
         rows = bindings(self.agent.intentions.query(
             "SELECT ?i ?act ?action ?want ?at ?through ?quantity ?forAgent ?notBefore ?notAfter "
-            "WHERE { GRAPH <%s> { %s } }" % (self.graph, " ".join(clauses))))
+            "?predicts ?advanced WHERE { GRAPH <%s> { %s } }" % (self.graph, " ".join(clauses))))
         #  WHAT THE WANT IS ABOUT rides along (#510): a step taken from the ledger — the
         #  second of a plan, advanced to on feedback — goes to its actor exactly as the head
         #  did from the search, and the actor reads the property off the step, not the want.
@@ -958,8 +1022,10 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
             "SELECT ?want ?about WHERE { ?want orexis:about ?about }"))} if rows else {}
         return [Standing(
             uri=r["i"], want=r["want"], adopted_at=datetime.fromisoformat(r["at"]),
+            advanced_at=datetime.fromisoformat(r["advanced"]) if r.get("advanced") else None,
             step=Step(action=r["action"], via=r.get("through") or "", want=r["want"],
                     about=about_of.get(r["want"]),
+                    predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None,
                     quantity=float(r["quantity"]) if r.get("quantity") else None,
                     for_agent=r.get("forAgent"),
                     not_before=datetime.fromisoformat(r["notBefore"]) if r.get("notBefore") else None,
@@ -1001,3 +1067,23 @@ def _short(iri: str) -> str:
 def _literal(text: str) -> str:
     """A prose reason as a safe SPARQL string literal."""
     return '"%s"' % text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
+
+
+def _plain_pattern(fact) -> tuple[str, str, str] | None:
+    """A canonical plain fact as three SPARQL terms — None where one of them is a label the
+    search gave a blank node, which no query can name. An IRI is told from a string by its
+    scheme; a number is written bare so the store compares it as one."""
+    import re
+    if len(fact) != 3 or not all(isinstance(x, (str, int, float)) for x in fact):
+        return None
+    out = []
+    for x in fact:
+        if isinstance(x, bool):
+            out.append("true" if x else "false")
+        elif isinstance(x, (int, float)):
+            out.append(repr(float(x)))
+        elif re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:[^\s<>\"{}|^`\\]+$", x):
+            out.append(f"<{x}>")
+        else:
+            out.append(_literal(x))
+    return tuple(out)

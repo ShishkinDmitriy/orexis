@@ -219,6 +219,8 @@ def test_a_two_step_plan_is_taken_step_by_step_with_one_search(monkeypatch):
     assert pursuit.pursue(agent, desire) == uri and len(searches) == 1, \
         "a plan in progress is not searched over again"
 
-    write_reading(agent, 0.10, MOISTURE)     # the first dose landed: risen, still short of the aim
+    from conftest import predicted_readings
+    landed = predicted_readings(agent, keeper.open_expectations(desire.uri)[0].step)[0]
+    write_reading(agent, landed, MOISTURE)   # the first dose landed exactly as its step predicted
     assert len(searches) == 1, "the second step was taken by feedback, not by a search"
     assert len(agent.sent.to("actuators/pump/command")) > commands, "and the pump was commanded again"

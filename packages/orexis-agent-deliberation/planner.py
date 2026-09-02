@@ -1018,8 +1018,8 @@ class Planner:
         #  is scored. An act carries no window yet: nothing in a search knows when.
         act = Step.from_row(row, quantity=bind["litres"] or None)
         path = node.taken + (act,)
-        diff = signature.advance(node.diff, signature.facts(added, self._keys),
-                                 signature.facts(retracted, self._keys), self._base_facts)
+        adds, retracts = signature.facts(added, self._keys), signature.facts(retracted, self._keys)
+        diff = signature.advance(node.diff, adds, retracts, self._base_facts)
         graph = self.imaginarium.reached(node.graph, path, added, retracted)
         #  When this path's last change completes: the step's own `orexis:landsAfter`, asked of
         #  the rule exactly as the keeper asks it, summed along the path (#472). None — no
@@ -1029,7 +1029,9 @@ class Planner:
         step = _Node(graph=graph, diff=diff, landing=landing, cost=cost)
         step.urgency = self._urgency_in(step, desire)
         step.estimate = self._estimate_in(step, desire)
-        step.taken = node.taken + (replace(act, urgency_after=step.urgency),)
+        #  THE STEP CARRIES WHAT IT PREDICTED (#510): the same canonical facts the signature
+        #  is made of, so the keeper can hold the world to this step without an imaginarium.
+        step.taken = node.taken + (replace(act, urgency_after=step.urgency, predicts=(adds, retracts)),)
         return step
 
     def _bind(self, desire: Desire | None, node=None, row=None) -> dict:

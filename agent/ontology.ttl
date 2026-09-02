@@ -69,7 +69,7 @@ orexis:desires a assembly:Extension ;
 orexis:desireUrgency a assembly:Extension ;
     assembly:signature "(desire, query, state, value=…) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
 orexis:answer a assembly:Extension ;
-    assembly:signature "(subject_uri, observed_property, since, baseline, delta, rises, met_fraction) -> Graph | None" ; orexis:row orexis:Progression ; rdfs:label "answer" ; rdfs:comment "What would an observation that ANSWERS this act look like? A sh:NodeShape on the subject, conforming when a reading of the property later than `since` has moved from the baseline by at least met_fraction of delta in the promised direction — sensing's, because what a reading is is sensing's (#516). The keeper holds the act's step on it; None is no opinion." .
+    assembly:signature "(keyed_class, key, carried, since, baseline, tolerance) -> Graph | None" ; orexis:row orexis:Progression ; rdfs:label "answer" ; rdfs:comment "What would an observation that ANSWERS this predicted fact look like? Asked for each KEYED fact a step predicts (a class some package declared `orexis:keyedBy`): the class, its key values and what it carries, as the step's prediction states them. A sh:NodeShape on the subject, conforming when a reading of the property later than `since` lies within `tolerance` of the predicted movement from the baseline — sensing's, because what a reading is is sensing's (#516, #518). The keeper holds the step on it; None is no opinion, and the first opinion wins." .
 orexis:size a assembly:Extension ;
     assembly:signature "(query, graph, row) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "size" ; rdfs:comment "How big would the act this row commits to be? Asked of the row's taker before it is simulated." .
 orexis:take a assembly:Extension ;
@@ -883,9 +883,10 @@ orexis:becauseOf a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:ra
 #  a SEPARATE fact: `endMet`. Satisfied-and-unmet is the false-knowledge signature — the graph
 #  said this lever moves this property, and the world kept disagreeing.
 
-orexis:expectsRise a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:boolean ;
-    rdfs:label "expects the value to rise" ;
-    rdfs:comment "Which way the act promised to move the property — said by the actor that opened the watch, from the sign of the delta it sized or in so many words. It WAS `orexis:expectsValueTo`, a market direction the keeper looked up itself; a package word in the kernel, and the actor always knew. An open watch written under the old term is not read back: it closes unjudged across this upgrade, and the next act opens a new one." .orexis:baselineValue a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
+orexis:predicts a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:string ;
+    rdfs:label "predicts" ;
+    rdfs:comment "The change the search predicted this step makes: what its world holds that the one before did not, and what it lost — the same canonical facts the plan's signature is made of, as one JSON literal of two lists (`adds`, `retracts`). One declaration (#510): the effect the search planned on is the effect the world is held to, and the answering shape is generated from this rather than sized by the actor. A step the search did not make — adopted by an event, a look — predicts nothing, and nothing is expected of it." .
+orexis:baselineValue a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
     rdfs:label "baseline value" ;
     rdfs:comment "Where the property stood when the expectation was adopted. Copied into the row, deliberately: the sensed graph upserts — one current observation per property — so the BEFORE of any before/after survives nowhere but here. The ledger is the memory of commitments, and this is the commitment's opening position." .
 orexis:baselineAt a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:dateTime ;
@@ -893,29 +894,24 @@ orexis:baselineAt a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range 
 orexis:deadlineAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "deadline at" ;
     rdfs:comment "By when the movement should have shown. The patience serves as the horizon until something derives a better one from the dose and the physics — a recorded seam of #131, not an oversight." .
-orexis:expectsDelta a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
-    rdfs:label "expects delta" ;
-    rdfs:comment "How far the act should move the property, when the actor can say — a dose of known litres through the domain's stated conversion. What the met-verdict measures its margin against (#165): a movement is the world answering only when it is commensurate with the act, and a breath of instrument grain past the baseline is not. Optional, because not every act can size its own effect; absent, the verdict falls back to exact crossing, which is the pre-noise behaviour and stays legal." .
 
 
 orexis:endMet a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:boolean ;
     rdfs:label "end met" ;
-    rdfs:comment "Whether the world answered as the graph promised: a reading past the baseline in the expected direction before the deadline — and, where the row states an expectsDelta, past it by at least metFraction of that delta (#165) — or the deadline passed without one (false). Absent while the watch is still on. A row satisfied-and-unmet is one false-knowledge datum; enough of them for one (means, property) pair and the affordance is SUSPECT — flagged, never auto-retracted, because deleting knowledge would be reaching down a level." .
+    rdfs:comment "Whether the world answered as the step predicted: the shape held as `orexis:answeredWhen` — generated from `orexis:predicts`, an observation within the actor's tolerance of the predicted reading, a plain fact present and a retracted one gone — conformed before the deadline. False is the deadline passing first, the datum an affordance is suspected on." .
 orexis:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:dateTime ;
     rdfs:label "end verified at" .
 
 
 #################  What this society tolerates of a commitment  #################
 #
-#  Three figures that were `intention:IntentionCapability`'s, carried on the FAMILY because a
+#  Two figures that were `intention:IntentionCapability`'s, carried on the FAMILY because a
 #  family was the only thing there to carry them. There is no family — every agent keeps a
 #  ledger, so keeping is not one way of having an ability — and they hang on the class itself,
-#  which is what they were always about: what counts as the world answering, and how long
-#  a commitment may absorb a repeat impulse.
+#  which is what they were always about: how many refusals make a claim suspect, and how long
+#  a commitment may absorb a repeat impulse. (What counts as the world answering is the
+#  actor's tolerance on its own prediction now — a package's pick, not a kernel figure.)
 
-orexis:metFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
-    rdfs:label "met fraction" ;
-    rdfs:comment "The fraction of an expected delta that counts as the world answering (#165). What this society accepts as evidence, not how the code is written. A quarter — generous to partially-absorbed doses, far above any instrument's grain. Chosen against the OTHER failure too: a margin so strict that honest doses read unmet would feed suspectAfter and mark truthful affordances false." .
 
 orexis:suspectAfter a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "suspect after" ;
@@ -942,7 +938,7 @@ orexis:minPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
 orexis:maxPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "maximum patience" .
 
-orexis:Intention orexis:metFraction 0.25 ; orexis:suspectAfter 3 ; orexis:minPatienceS 10 ; orexis:maxPatienceS 86400 .
+orexis:Intention orexis:suspectAfter 3 ; orexis:minPatienceS 10 ; orexis:maxPatienceS 86400 .
 
 #  HOW FAR THIS WANT STILL IS, in the unit its actions cost. The desire's term, beside the
 #  action's `orexis:costs` — the sovereign's two-stage cut says urgency is the want's and cost

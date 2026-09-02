@@ -209,3 +209,53 @@ def test_the_budget_is_the_worlds_pick_and_the_kernel_bounds_it(monkeypatch):
         "nothing stated: the engine's ceiling, and validation does not miss it"
     validate_agent(agent.beliefs, "hanoi", agent.me.uri, agent.me.capabilities,
                    desires=agent.desires)
+
+
+# --- the plan is handed down whole, and the world steps it (#510) -------------
+
+def _answer(agent, predicts):
+    """The world answering exactly as a step predicted: its retractions gone from the sensed
+    graph, its additions in it — what a device would report, written by hand in a world
+    that has no device."""
+    def term(x):
+        return repr(float(x)) if isinstance(x, (int, float)) else f"<{x}>"
+    adds, retracts = predicts
+    gone = " . ".join(" ".join(map(term, f)) for f in retracts if len(f) == 3)
+    come = " . ".join(" ".join(map(term, f)) for f in adds if len(f) == 3)
+    if gone:
+        agent.beliefs.update(f"DELETE DATA {{ GRAPH <{STATE_GRAPH}> {{ {gone} . }} }}")
+    if come:
+        agent.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ {come} . }} }}")
+
+
+def test_three_disks_are_solved_with_one_search_and_seven_answered_steps(monkeypatch):
+    """#510: the search runs ONCE and hands the keeper the whole plan; every move after the
+    first is taken because the world confirmed the move before it — the step's own
+    prediction, plain facts present and gone — and never because a search said so again.
+    There is no mover in this world, so the world answers by hand and the watch is opened
+    where an actor would open it; what is tested is the keeper's stepping, not the device."""
+    from datetime import datetime, timedelta, timezone
+    from orexis_agent_deliberation import planner, pursuit
+
+    agent = _mover(monkeypatch, ["disk_1", "disk_2", "disk_3"])
+    searches = []
+    real = planner.Planner.plan
+    monkeypatch.setattr(planner.Planner, "plan", lambda self, d: (searches.append(1), real(self, d))[1])
+    keeper = agent.keeper
+    uri = pursuit.pursue(agent, _goal(agent))
+    assert uri is not None and len(searches) == 1
+    assert len(keeper.standing(want=WANT)) == 1 and keeper.in_progress(WANT) is not None
+    taken = []
+    for _ in range(7):
+        step = keeper.standing(want=WANT)[0].step
+        taken.append(step)
+        assert step.predicts is not None, "a step from the ledger carries what it predicted"
+        assert keeper.expect(uri, "moved — show me",
+                             not_after=datetime.now(timezone.utc) + timedelta(hours=1))
+        _answer(agent, step.predicts)                       # the world answers as predicted
+    assert len(taken) == 7 and len({s.about for s in taken} | {s.via for s in taken}) >= 1
+    assert keeper.standing(want=WANT) == [], "the plan finished with its last step answered"
+    assert keeper.in_progress(WANT) is None
+    assert len(searches) == 1, "seven moves, one search"
+    assert _goal(agent).state == "met", "and the stack stands on the home peg"
+    assert keeper.reports()["expectations_met"] == 7

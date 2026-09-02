@@ -19,4 +19,5 @@ def term(name: str) -> str:
 
 ACTUATION = term("Actuation")  # holds the hardware, and may therefore touch the world
 
-DOSING = term("Dosing")            # the dose — the action, and the kind of act it is
+DOSING = term("Dosing")
+TOLERANCE = term("tolerance")    # how close the world must land to a predicted reading (#518)            # the dose — the action, and the kind of act it is

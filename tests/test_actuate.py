@@ -16,7 +16,7 @@ from orexis_capability_sensing.terms import OBSERVING
 
 from orexis_agent_progression.ontology import beliefs_graph
 from orexis_capability_sensing.regions import ObservedDesire
-from conftest import sensing_of, stake_of, build_agent, genesis_store, desires_build, open_round_for, write_reading
+from conftest import sensing_of, stake_of, build_agent, genesis_store, desires_build, open_round_for, write_reading, predicted_readings
 
 MOIST = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
@@ -154,7 +154,9 @@ def test_a_self_dose_is_commanded_co_signed_and_ledgered(gardener):
 
     keeper = next(m for m in gardener.modules if m.name == "intention")
     watches = keeper.open_expectations(stake_of(gardener, MOIST).uri)
-    assert len(watches) == 1 and watches[0].expected_delta == pytest.approx(0.08)
+    assert len(watches) == 1
+    assert predicted_readings(gardener, watches[0].step) == [pytest.approx(0.18, abs=1e-3)], \
+        "the step carries the reading the rule predicted: 0.10 plus 0.08 (#510)"
 
 
 def test_an_unanswered_self_dose_blocks_the_next(gardener):

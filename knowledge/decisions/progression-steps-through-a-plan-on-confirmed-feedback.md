@@ -63,10 +63,9 @@ rule run. A world that has moved shows up as a failed match, which is the case t
 
 # Seams left open
 
-- **What "matches" means.** The step's canonical diff against the world's actual change since
-  the step was taken, in `signature.py`'s terms. A reading that landed a little off the
-  prediction is the plant's ordinary case, and the tolerance is the keeper's met-fraction
-  rather than equality — to be settled in the build.
+- **What "matches" means** — settled in the build: the step's canonical diff is held to the
+  world as a generated shape, and how close a reading must land is the actor's own pick,
+  [the-effect-is-one-declaration-and-the-tolerance-is-a-pick](/decisions/the-effect-is-one-declaration-and-the-tolerance-is-a-pick.md).
 - **A look still ends a plan.** A sensing action's tail depends on what the look returns, so no
   tail follows one; that rule is unchanged.
 - **The budget and the tail.** A pass that ran out of budget hands down the best plan it had,

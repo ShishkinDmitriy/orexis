@@ -203,8 +203,9 @@ shown:
   can state that without predicting the number.
 
 A CONSTRUCT can predict it, because this project already computes that prediction: the keeper
-records `orexis:expectsDelta` when it adopts an Apply, and actuation converts millilitres to a
-delta. Which forces a constraint worth naming before anyone writes the code: **the number an
+recorded `orexis:expectsDelta` when it adopted an Apply, and actuation converted millilitres to a
+delta (since #510 the step carries the rule's own prediction as `orexis:predicts` and nobody
+converts anything). Which forces a constraint worth naming before anyone writes the code: **the number an
 effect predicts and the number verification expects must come from one source.** Two sources
 means an agent that plans against one future and checks against another, and the disagreement
 would show up as false UNMET verdicts — the shape of the false-knowledge bug, arriving from the

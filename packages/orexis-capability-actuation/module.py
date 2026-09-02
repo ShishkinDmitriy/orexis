@@ -44,7 +44,7 @@ from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import bindings
 
 from .beliefs import ACTUATION_PICKS
-from .terms import ACTUATION, DOSING
+from .terms import ACTUATION, DOSING, TOLERANCE
 from .wiring import actuator_for, actuators_of
 
 SENSING = "http://example.org/orexis/sensing#SensingCapability"  # whoever can look, asked by family
@@ -258,9 +258,8 @@ class ActuationModule(Module):
                 intention,
                 f"self-dosed {litres}L ({cmd.ml:.0f} ml commanded) — the graph says this "
                 f"raises what I am short of, so show me",
-                expected_delta=self._expected_delta(observed_property, litres, value),
-                rises=True, seeing_s=seeing, baseline=reading, lands_after_s=lands,
-                not_after=not_after)
+                baseline=reading, tolerance=self.tolerance(), seeing_s=seeing,
+                lands_after_s=lands, not_after=not_after)
             if opened and sensing is not None:
                 sensing.sense_now()   # the freshest before on record
             if not opened:
@@ -323,49 +322,15 @@ SELECT ?source ?p WHERE {{
         reading = sensing.current_reading(rows[0]["source"], rows[0]["p"]) if sensing else None
         return reading.value if reading is not None else None
 
-    def _expected_delta(self, observed_property: str, litres: float,
-                        value: float) -> float | None:
-        """How far this dose should move the property — asked of the EFFECT RULE, not computed.
-
-        `litres / conversion` used to be written here, and separately in the bidder, and the
-        rule for #238 would have made a third copy. That is the arrangement the planning record
-        names as the whole risk: an agent that plans against one future and verifies against
-        another reports false UNMET verdicts, and the failure LOOKS like a device lying rather
-        than like arithmetic disagreeing with itself. So the rule is the single source and this
-        runs it: the number the planner will use to decide whether dosing helps is the number
-        the keeper will later hold the world to.
-
-        The subtraction is not a second formula — it inverts the rule's own answer, which is
-        stated as a predicted READING because that is what an effect can honestly say about a
-        valve. None whenever the rule declines to predict: no conversion belief, or no lever
-        reaching this subject. The keeper takes None and falls back to the
-        exact-crossing verdict, exactly as it did when the conversion belief was missing.
-        """
-        #  `about`, the rule's own token for the property (#500 found this bound as
-        #  `property`, a name the rule no longer carried: the leftover `$about` parsed as a
-        #  free VARIABLE and the prediction matched an observation of ANY property).
-        added, _ = effects.apply(
-            self.agent.beliefs, DOSING,
-            me=f"<{self.me.uri}>", subject=f"<{self.me.acts_for}>",
-            about=f"<{observed_property}>", state=f"<{STATE_GRAPH}>",
-            beliefs=f"<{self.agent.beliefs.graph}>",
-            litres=repr(float(litres)), value=repr(float(value)))
-        #  `.value` and not `str()`: a pyoxigraph term stringifies to its N-Triples form, angle
-        #  brackets and datatype included, so comparing `str(predicate)` to an IRI silently
-        #  never matches and every expectation comes back None. It cost a test run to notice,
-        #  which is cheap only because the test was pinning a number rather than a shape.
-        #  The rule reads where the property STANDS from the sensed graph (it no longer takes
-        #  the base as an argument), so the delta is its prediction against that same standing
-        #  reading — read through sensing, which owns what a reading looks like. `value`, the
-        #  reading the actor was handed, is the same number by construction: `Observations.record`
-        #  writes before it announces.
-        sensing = self.agent.provider(SENSING)
-        standing = sensing.current_reading(self.me.acts_for, observed_property) if sensing else None
-        base = standing.value if standing is not None else value
-        for triple in added:
-            if triple.predicate.value == f"{_SOSA}hasSimpleResult":
-                return float(triple.object.value) - base
-        return None
+    def tolerance(self) -> float:
+        """How close the world must land to the reading a dose predicts — my pick, or the
+        capability's default where I state none (#518). A fraction of the predicted movement."""
+        rows = bindings(self.agent.desires.query_union(f"""
+SELECT ?t ?mine WHERE {{
+  {{ <{self.me.uri}> <{TOLERANCE}> ?t . BIND(true AS ?mine) }}
+  UNION {{ <{ACTUATION}> <{TOLERANCE}> ?t . BIND(false AS ?mine) }} }}"""))
+        rows.sort(key=lambda r: r["mine"] != "true")
+        return float(rows[0]["t"]) if rows else 0.5
 
     def _conversion_for(self, observed_property: str) -> float | None:
         rows = bindings(self.agent.beliefs.query(_CONVERSION_Q % (

@@ -14,7 +14,7 @@ from orexis_capability_market.terms import ACQUIRING
 from orexis_agent_progression.ontology import PLAN_FAILED, PLAN_FINISHED, STEP_DONE
 from orexis_agent_reactive.loop import loop
 
-from conftest import MOISTURE, build_agent, genesis_store, open_round_for, reading_of, stake_of, write_reading
+from conftest import MOISTURE, build_agent, genesis_store, open_round_for, reading_of, stake_of, write_reading, predicted_reading
 
 
 @pytest.fixture
@@ -36,7 +36,8 @@ def test_an_unmet_expectation_is_told_upward_and_marks_the_want(thirsty):
     uri = keeper.adopt(ACQUIRING, want, "a dose that will not land")
     before = dict(failed=thirsty.deliberator._plans_failed,
                   finished=thirsty.deliberator._plans_finished)
-    assert keeper.expect(uri, "watching", rises=True, baseline=reading_of(thirsty, MOISTURE))
+    assert keeper.expect(uri, "watching", baseline=reading_of(thirsty, MOISTURE),
+                         predicts=predicted_reading(thirsty.me.acts_for, MOISTURE, 0.31))
     write_reading(thirsty, 0.29, MOISTURE)                           # fell — not an answer
     #  The deadline passes — fired here as the keeper's scheduler would (#516), on this
     #  thread, so the event it tells upward has landed when the next line asserts.
@@ -49,7 +50,8 @@ def test_an_unmet_expectation_is_told_upward_and_marks_the_want(thirsty):
 def test_a_met_expectation_is_counted_and_not_re_planned(thirsty):
     keeper, want = thirsty.keeper, stake_of(thirsty).uri
     uri = keeper.adopt(ACQUIRING, want, "a dose that lands")
-    assert keeper.expect(uri, "watching", rises=True, baseline=reading_of(thirsty, MOISTURE))
+    assert keeper.expect(uri, "watching", baseline=reading_of(thirsty, MOISTURE),
+                         predicts=predicted_reading(thirsty.me.acts_for, MOISTURE, 0.31))
     write_reading(thirsty, 0.31, MOISTURE)
     assert thirsty.deliberator._plans_finished == 1
     assert want not in thirsty.reviser._pending, \

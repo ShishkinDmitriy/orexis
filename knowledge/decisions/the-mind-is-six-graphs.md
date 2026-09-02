@@ -185,7 +185,7 @@ So the line falls one notch over: **what a mind CONTAINS is the kernel's — des
 obligations, intentions and the means they name — and HOW a mind reaches them is the
 packages'.** `desire:Deducing` and `desire:Consulting` are two ways of arriving at a region;
 `intention:Keeping` is one way of keeping a ledger; each family keeps its own figures (a
-patience, a met-fraction, what this society tolerates before it stops trusting a claim). Rule
+patience, what this society tolerates before it stops trusting a claim). Rule
 2 is untouched, because it asks only whether the HOW could differ — and
 [telemetry-is-a-mandatory-capability](/decisions/telemetry-is-a-mandatory-capability.md)
 already settled the mirror case: universality never promoted a term, and here non-universality
