@@ -51,12 +51,15 @@ graph beside the T-Box. Three readers, one join:
   the [imaginarium](/domain/imaginarium.md);
 - `execution.taken_by(action)` reads the node's `orexis:takenBy` and asks `agent.providers`.
 
-# Two kinds, and the vocabulary says which
+# Both texts, or neither
 
-This page is the menu's kind: chosen by a plan, with both texts stated and the gate refusing
-either missing. The other kind is the [triggered action](/domain/triggered-action.md), which an
-event adopts and which owns its own description. Naming the second kind is what let the
-runtime stop guessing from absence — a missing effect used to mean "passed over, plan
+An action states a precondition and an effect, or neither, and the gate refuses one with
+only one of the two. Both is the menu's kind, chosen by a plan. Neither is an action an event
+adopts — the market's Presenting, which a claim arriving adopts and a watch going live
+triggers, on nobody's menu, a node so an [intention](/domain/intention.md) can name it. The
+kind is read off the texts rather than declared: a class for the second kind was weighed and
+dropped, its whole content being that "neither" be said on purpose. Holding the rule at the
+gate is what let the runtime stop guessing — a missing effect used to mean "passed over, plan
 partial", and now means a world the gate refuses.
 
 # The precondition is the query, whole

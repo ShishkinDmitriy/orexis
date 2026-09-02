@@ -49,7 +49,6 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [root desire](/domain/root-desire.md) - A want quantified over a class, one per premise; the forest above the per-instance, per-property, per-side wants an agent pursues.
 
-* [triggered action](/domain/triggered-action.md) - An action an event adopts: no precondition, no effect, on no menu, and still a node a commitment can name. The vocabulary says the kind.
 * [intention](/domain/intention.md) - A commitment to reduce a named gap by a named action, kept in a private ledger. Granted by a stake AND a lever.
 
 * [deliberation](/domain/deliberator.md) - The whether: name the next move by building the world each lever would make and keeping the one worth reaching. One road.

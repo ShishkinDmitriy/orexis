@@ -81,14 +81,14 @@ def test_a_lever_nothing_states_an_effect_for_is_refused(monkeypatch, caplog):
         "the refusal must name the lever — a gate that says only 'no' is a gate nobody can act on"
 
 
-def test_an_action_a_plan_may_choose_states_both_texts_and_a_triggered_one_neither(monkeypatch, caplog):
-    """Two kinds of action, told apart in the vocabulary rather than by absence (#506). A
-    choosable action with a precondition and no effect was already refused above; one with
-    an effect and no precondition is refused too — a lever nobody can ever reach. The
-    market's Presenting is declared `orexis:TriggeredAction`, states neither, validates, and
-    appears on nobody's menu; a triggered action given a precondition is a choosable one
-    mislabelled, and refused as such. With the gate holding both, the runtime has nothing
-    left to flag: `Plan.partial`, the trace's `blind` and the planner's skip are gone."""
+def test_an_action_states_both_texts_or_neither(monkeypatch, caplog):
+    """The rule by structure (#506): a lever a plan may choose states a precondition and an
+    effect, and one with a precondition and no effect was refused above; one with an effect
+    and no precondition is refused too — a lever nobody can ever reach. An action with
+    NEITHER is adopted by an event — the market's Presenting — and it validates, appears on
+    nobody's menu, and needs no class of its own to say so: the sovereign weighed one and
+    dropped it. With the gate holding the rule, the runtime has nothing left to flag —
+    `Plan.partial`, the trace's `blind` and the planner's skip are gone."""
     from orexis_agent_deliberation.afforder import affordances_of
     from agent.world import load_self
     from orexis_agent_progression.ontology import beliefs_graph
@@ -100,7 +100,7 @@ def test_an_action_a_plan_may_choose_states_both_texts_and_a_triggered_one_neith
         me = load_self(st.query, agent_id)
         rows = affordances_of(st.query, me.uri, agent_wants.query_union, beliefs_graph(agent_id))
         assert not any(r.action.endswith("Presenting") for r in rows), \
-            f"{agent_id}: an action an event adopts is on no menu"
+            f"{agent_id}: an action with neither text is on no menu"
 
     caplog.clear()
     st.update("""INSERT DATA { GRAPH <%s> {
@@ -108,13 +108,6 @@ def test_an_action_a_plan_may_choose_states_both_texts_and_a_triggered_one_neith
             sh:construct "CONSTRUCT {} WHERE {}" . } }""" % ACTIONS_GRAPH)
     assert not deliberable(st, wants), "an effect nobody can reach is refused"
     assert "Unreachable" in caplog.text and "no precondition" in caplog.text
-
-    st = build("simulation", monkeypatch)
-    caplog.clear()
-    st.update("""INSERT DATA { GRAPH <%s> {
-        market:Presenting orexis:available "SELECT ?via WHERE {}" . } }""" % ACTIONS_GRAPH)
-    assert not deliberable(st, desires_of(st)), "a triggered action with a precondition is mislabelled"
-    assert "Presenting" in caplog.text and "mislabelled" in caplog.text
 
 
 def test_a_stake_nothing_can_measure_is_refused(monkeypatch, caplog):

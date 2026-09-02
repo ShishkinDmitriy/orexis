@@ -155,34 +155,28 @@ def deliberable(st, desires: dict) -> bool:
     from orexis_agent_progression.store import bindings
 
     faults = 0
-    #  EVERY ACTION, held to its KIND (#506). One a plan may choose states a precondition AND
-    #  an effect: a menu row nobody can simulate is a conclusion drawn from part of the menu,
-    #  and an effect nothing can reach is a lever nobody can take. One an event adopts
-    #  (`orexis:TriggeredAction`) states neither, or it is a choosable one mislabelled. Asked
-    #  of the action's own node — a fact about the loaded packages, not about any menu a world
-    #  happens to hold at genesis — so a lever whose premise is told at runtime (an open
-    #  round, #358) is held to it as firmly as one whose premise is wiring.
+    #  EVERY ACTION STATES BOTH TEXTS OR NEITHER (#506). One with both is a lever a plan may
+    #  choose; one with neither is adopted by an event — the market's Presenting — and never
+    #  asked by the afforder. One with a precondition and no effect is a menu row nobody can
+    #  simulate, a conclusion drawn from part of the menu; one with an effect and no
+    #  precondition is a lever nobody can reach. Asked of the action's own node — a fact about
+    #  the loaded packages, not about any menu a world holds at genesis — so a lever whose
+    #  premise is told at runtime (an open round, #358) is held to it as firmly as one whose
+    #  premise is wiring. The kind is read off the texts: a class for the second kind was
+    #  weighed and dropped.
     for action in bindings(st.query("""
             SELECT ?action ?available ?construct WHERE {
               ?action a orexis:Action .
-              FILTER NOT EXISTS { ?action a orexis:TriggeredAction }
               OPTIONAL { ?action orexis:available ?available }
               OPTIONAL { ?action sh:construct ?construct }
-              FILTER(!BOUND(?available) || !BOUND(?construct)) }""")):
+              FILTER(BOUND(?available) != BOUND(?construct)) }""")):
         faults += 1
         missing = "precondition" if not action.get("available") else "effect"
-        log.error("%s is an action a plan may choose and states no %s — "
-                  "no loaded package says when it is available or what that DOES, and a search "
-                  "cannot simulate a lever nobody describes",
-                  action["action"].rsplit("#", 1)[-1], missing)
-    for action in bindings(st.query("""
-            SELECT ?action WHERE {
-              ?action a orexis:TriggeredAction .
-              { ?action orexis:available ?q } UNION { ?action sh:construct ?c } }""")):
-        faults += 1
-        log.error("%s is declared an action an event adopts and carries a precondition or an "
-                  "effect — a triggered action with either is a choosable one mislabelled",
-                  action["action"].rsplit("#", 1)[-1])
+        log.error("%s states an action's %s and no %s — no loaded package says %s, and a "
+                  "search cannot simulate a lever nobody describes",
+                  action["action"].rsplit("#", 1)[-1],
+                  "effect" if missing == "precondition" else "precondition", missing,
+                  "when it is available" if missing == "precondition" else "what that DOES")
     for agent_id, wants in desires.items():
         me = load_self(st.query, agent_id)
         #  Asked of the CLASSES this agent's grants would load, never of a built agent: an

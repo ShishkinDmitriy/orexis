@@ -50,9 +50,10 @@ SELECT ?rule ?construct ?retracts ?lands ?costs WHERE {
 def rule_for(store, action: str) -> dict | None:
     """The effect rule an action carries, or None for an action an event adopts.
 
-    None is the answer for `orexis:TriggeredAction` — the market's Presenting, never on a
-    menu — and for nothing else: an action a plan may choose states an effect, or the gate
-    (`onboarding/validate.deliberable`) refuses the world before an agent runs (#506).
+    None is the answer for an action that states neither text — the market's Presenting,
+    adopted by an event and never on a menu — and for nothing else: an action with a
+    precondition states an effect, or the gate (`deliberable`, in `onboarding/validate.py`)
+    refuses the world before an agent runs (#506).
     """
     rows = bindings(store.query(_RULE_Q, {"rule": action}))
     return rows[0] if rows else None

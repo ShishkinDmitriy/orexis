@@ -744,17 +744,15 @@ orexis:Action a owl:Class ; rdfs:label "Action" ;
     rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `orexis:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `orexis:retracts` are its effect, with `orexis:landsAfter` and `orexis:confirmedBy` beside them; `orexis:takenBy` is the capability whose module carries it out. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
 
 
-#  TWO KINDS OF ACTION, told apart in the vocabulary rather than by absence (#506). An action a
-#  plan may CHOOSE — the menu's kind — states both a precondition and an effect, and the gate
-#  refuses one that lacks either: the search is the only road to a lever since the reflex was
-#  absorbed, and a lever the search cannot simulate is one nothing can take. An action an EVENT
-#  adopts states neither: no plan chooses it, the event is its adoption and a trigger its
-#  taking, and it exists as a node so a commitment can name it (`orexis:by`) and a hold can
-#  carry an urgency. The market's Presenting is the one shipped.
-orexis:TriggeredAction a owl:Class ; rdfs:subClassOf orexis:Action ;
-    rdfs:label "an action an event adopts" ;
-    rdfs:comment "An action no plan chooses: adopted by an event and taken on a trigger, so it states no `orexis:available` and no `sh:construct`, and the afforder never asks it. Still an Action, so an intention commits to it and a ledger row names it; never on a menu, so the search never sees it. The gate refuses one carrying either text — a triggered action with a precondition is a choosable one mislabelled." .
-
+#  AN ACTION STATES BOTH TEXTS OR NEITHER (#506). One a plan may CHOOSE — the menu's kind —
+#  states a precondition and an effect, and the gate refuses one that lacks either: the search
+#  is the only road to a lever since the reflex was absorbed, and a lever the search cannot
+#  simulate is one nothing can take. One an EVENT adopts states neither: no plan chooses it,
+#  the event is its adoption and a trigger its taking, the afforder never asks it, and it
+#  exists as a node so a commitment can name it (`orexis:by`) and a hold can carry an
+#  urgency — the market's Presenting. The kind is read off the texts, not declared: the
+#  sovereign weighed a class for the second kind and dropped it, since its whole content was
+#  that "neither" be said on purpose, and a term nobody reads is annotation.
 orexis:available a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ;
     rdfs:label "available" ;
     rdfs:comment """The precondition, as a SELECT over the world binding `?property ?via ?direction` and — where the row is a duty owed to someone rather than the agent's own option — `?for_agent`. `$me` and `$properties` (the properties the agent holds desires in) are substituted by the collector; prefixes are the store's. A row exists only where every hop of the walk holds, which is why the menu is the precondition language and chaining needs no `requires` of its own.""" .
