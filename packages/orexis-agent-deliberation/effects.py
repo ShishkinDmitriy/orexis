@@ -28,25 +28,23 @@ import logging
 import pyoxigraph as ox
 import rdflib
 
-from orexis_agent_progression.ontology import ACTIONS_GRAPH
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import bindings, bind as bind_text
 
 log = logging.getLogger("effects")
 
-#  Which ACTION carries this action, and the two queries it carries as its effect. Asked of the
-#  action graph by NAME, because that graph is the one place actions live and an action for a
-#  means nobody loaded is one nothing will ever ask for. An action with no construct states no
-#  effect and is not returned — the gate refuses a world whose menu offers one.
-#  `?rule` is bound by SUBSTITUTION (#500), the engine's own parameter, projected.
-_RULE_Q = f"""
-SELECT ?rule ?construct ?retracts ?lands ?costs WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
-  ?rule a orexis:Action ;
-        sh:construct ?construct .
-  OPTIONAL {{ ?rule orexis:retracts ?retracts }}
-  OPTIONAL {{ ?rule orexis:landsAfter ?lands }}
-  OPTIONAL {{ ?rule orexis:costs ?costs }}
-  }} }} LIMIT 1"""
+#  The action's effect texts, read off public knowledge like everything else — the actions
+#  graph is public and the store's default graph merges the public graphs, so no `GRAPH`
+#  clause names it (AGENTS.md: never wrap GRAPH around a SELECT). `?rule` is bound by
+#  SUBSTITUTION (#500), the engine's own parameter, projected. An action with no construct
+#  states no effect and is not returned.
+_RULE_Q = """
+SELECT ?rule ?construct ?retracts ?lands ?costs WHERE {
+  ?rule a orexis:Action ; sh:construct ?construct .
+  OPTIONAL { ?rule orexis:retracts ?retracts }
+  OPTIONAL { ?rule orexis:landsAfter ?lands }
+  OPTIONAL { ?rule orexis:costs ?costs }
+} LIMIT 1"""
 
 
 def rule_for(store, action: str) -> dict | None:
