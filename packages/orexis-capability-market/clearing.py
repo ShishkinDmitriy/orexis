@@ -121,7 +121,7 @@ def issue_claims(trade: Trade, auction_id: str,
             auction_id=auction_id,
             jti=uuid4().hex,
             exp=expires,
-            act=act_for(line, expires) if act_for is not None else None,
+            step=act_for(line, expires) if act_for is not None else None,
         )
         for line in trade.lines
     ]

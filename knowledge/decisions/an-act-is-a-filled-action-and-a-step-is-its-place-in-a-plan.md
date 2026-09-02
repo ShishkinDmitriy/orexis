@@ -42,9 +42,12 @@ a commitment to a `Dosing` act with nobody to pay. See [act](/domain/act.md).
 
 **A step is planning's word.** An act at its place in a plan, with what the search predicted
 it would reach. `Plan.steps` holds steps; the trace's `orexis:Candidate` is a weighed step; only
-the head's act is ever committed. *Amended, 2026-09-02: the step is FOLDED into the act — a
-step is a link (`orexis:step`, `orexis:then`), not a thing, since every act is minted for the
-place it fills; see [act](/domain/act.md). "Only the head is committed" is superseded by
+the head's act is ever committed. *Amended, 2026-09-02, the sovereign's ruling: the words are
+kept and their contents swap. A STEP is the planned instance — filled, windowed, predicted,
+waiting — and a plan, an intention and a claim are made of steps; an ACT is the record that a
+step was taken, written by execution, one per attempt. A plan is not executed, so its elements
+are not acts. See [step](/domain/step.md) and [act](/domain/act.md). "Only the head is
+committed" is superseded by
 [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/progression-steps-through-a-plan-on-confirmed-feedback.md).*
 
 **The window is the act's, not the actor's.** Not-after is what every hand-kept timer was

@@ -41,7 +41,7 @@ from datetime import datetime, timezone
 
 from assembly.contribute import answer as contribution, contributes
 from . import ledger
-from .act import Act
+from .act import Step
 from .store import bindings
 
 from .graphs import intentions_graph
@@ -169,21 +169,21 @@ class NoPatience(LookupError):
 @dataclass(frozen=True)
 class Standing:
     """One unresolved commitment, as a reader gets it back: the ACT committed to, and the want
-    it pursues. `orexis:by` names the act node (an-act-is-a-filled-action…); the action, the
-    lever and the quantity are the act's, read through it."""
+    it pursues. `orexis:by` names the STEP the intention stands at — planned, not done; the
+    action, the lever and the quantity are the step's, read through it."""
 
     uri: str
-    act: Act
-    want: str               # the desire's node — `orexis:pursues`; the kernel's only key besides the act
+    step: Step
+    want: str               # the desire's node — `orexis:pursues`; the kernel's only key besides the step
     adopted_at: datetime
 
     @property
     def action(self) -> str:
-        return self.act.action
+        return self.step.action
 
     @property
     def via(self) -> str | None:
-        return self.act.via or None
+        return self.step.via or None
 
     def age_s(self, now: datetime | None = None) -> float:
         return ((now or datetime.now(timezone.utc)) - self.adopted_at).total_seconds()
@@ -240,6 +240,11 @@ class Keeper:
         #  THE HOLDS (#512): re-armed from the ledger's `orexis:until` rows on every belief
         #  write, and their deadlines on the scheduler. A restart loses a deadline's clock
         #  and keeps the condition — the next write re-asks it — which is the honest half.
+        #  A pre-fold volume typed the node `orexis:by` names an Act; it is a STEP — planned,
+        #  and the act is the record of its taking (the sovereign's ruling). Retyped, once.
+        agent.intentions.update(f"""
+INSERT {{ GRAPH <{self.graph}> {{ ?s a <{kernel("Step")}> }} }}
+WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ ?s a <{kernel("Step")}> }} }} }}""")
         self._deadlines: dict = {}
         self._compiled_conditions: dict = {}
         self._reconsidering = False
@@ -323,7 +328,7 @@ class Keeper:
         wrong as honouring it not at all.
         """
         if isinstance(act, str):
-            act = Act(action=act, via=via or "")
+            act = Step(action=act, via=via or "")
         action = act.action
         now = datetime.now(timezone.utc)
         for standing in self.standing(action=action, want=want):
@@ -334,7 +339,7 @@ class Keeper:
                           f"of {self.beliefs.patience_s}s, superseded by a new adoption")
         stem = uuid.uuid4().hex[:8]
         uri = f"{OREXIS}intent_{self.agent.id}_{stem}"
-        act_uri = f"{OREXIS}act_{self.agent.id}_{stem}"
+        step_uri = f"{OREXIS}step_{self.agent.id}_{stem}"
         xsd = "http://www.w3.org/2001/XMLSchema#"
         facts = [f'<{kernel("fills")}> <{action}>']
         if act.via:
@@ -351,11 +356,11 @@ class Keeper:
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{uri}> a <{kernel("Intention")}> ;
     <{kernel("pursues")}> <{want}> ;
-    <{kernel("by")}> <{act_uri}> ;
-    <{kernel("step")}> <{act_uri}> ;
+    <{kernel("by")}> <{step_uri}> ;
+    <{kernel("step")}> <{step_uri}> ;
     <{kernel("adoptedAt")}> "{now.isoformat()}"^^<{xsd}dateTime> ;
     <{BECAUSE_OF}> {_literal(because)} .
-  <{act_uri}> a <{kernel("Act")}> ; {" ; ".join(facts)} .
+  <{step_uri}> a <{kernel("Step")}> ; {" ; ".join(facts)} .
 }} }}""")
         self.log.info("adopted %s for %s: %s", action.rsplit("#", 1)[-1], _short(want), because)
         self._tell("adopted", action, want, because)
@@ -383,7 +388,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         the select the store runs — conformance for `until`, violation for `until_not`. A
         condition that is naturally a query is a shape carrying a `sh:sparql` constraint,
         the form SHACL already has (`condition_shape` builds one). The ledger keeps the shape
-        ON THE ACT the intention stands at, so a sovereign asking sees what an act waits for.
+        ON THE STEP the intention stands at, so a sovereign asking sees what a step waits for.
         """
         if (until is None) == (until_not is None):
             raise ValueError("a hold is `until` or `until_not`, exactly one")
@@ -397,9 +402,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
     def _hold_step(self, intention_uri: str, predicate: str, condition, not_after,
                    when_lapsed: str) -> None:
-        """Write a condition on the act the intention stands at, arm its deadline, and ask
-        at once whether it already answers. ON THE ACT: the same node that was planned is
-        the one that waits, is taken, and is answered — its place in the plan is a link."""
+        """Write a condition on the step the intention stands at, arm its deadline, and ask
+        at once whether it already answers. ON THE STEP: a planned thing is what waits; the
+        act is the record of its taking, written when that happens."""
         node, triples = self._condition_triples(intention_uri, condition)
         self.agent.intentions.update(f"""
 INSERT {{ GRAPH <{self.graph}> {{
@@ -428,7 +433,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act }} }}"
         return str(roots[0]), condition.serialize(format="nt")
 
     def held(self) -> list[tuple]:
-        """Every act still waiting: `(holder, select, predicate)` — the select the store
+        """Every step still waiting: `(holder, select, predicate)` — the select the store
         runs, compiled from the shape: conformance for `until` and `answeredWhen`, violation
         for `untilNot`, so rows always mean the wait is over — and which wait it was. A
         READINESS wait (`until`, `untilNot`) holds a STANDING intention and releases its act;
@@ -497,7 +502,7 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
                                    _short(holder.uri), exc)
                     continue
                 deadline = (holder.deadline if isinstance(holder, OpenExpectation)
-                            else holder.act.not_after)
+                            else holder.step.not_after)
                 if rows:
                     self._answered(holder, predicate)
                 elif deadline is not None and now >= deadline:
@@ -565,7 +570,7 @@ SELECT ?when WHERE {{ GRAPH <{self.graph}> {{
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{BECAUSE_OF}> {_literal(because)} . }} }}""")
         self.log.info("releasing %s: %s", standing.action.rsplit("#", 1)[-1], because)
-        carry_out(self.agent, standing.act, None, standing.uri)
+        carry_out(self.agent, standing.step, None, standing.uri)
 
     def _unhold(self, intention_uri: str) -> None:
         entry = self._deadlines.pop(intention_uri, None)
@@ -880,7 +885,7 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
             "WHERE { GRAPH <%s> { %s } }" % (self.graph, " ".join(clauses))))
         return [Standing(
             uri=r["i"], want=r["want"], adopted_at=datetime.fromisoformat(r["at"]),
-            act=Act(action=r["action"], via=r.get("through") or "", want=r["want"],
+            step=Step(action=r["action"], via=r.get("through") or "", want=r["want"],
                     quantity=float(r["quantity"]) if r.get("quantity") else None,
                     for_agent=r.get("forAgent"),
                     not_before=datetime.fromisoformat(r["notBefore"]) if r.get("notBefore") else None,

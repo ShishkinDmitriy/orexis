@@ -46,7 +46,7 @@ from orexis_agent_progression.keeper import (INTENTION_CLASS, PATIENCE_S, Keepin
 from orexis_agent_progression.timer import Timer
 
 from . import planner, pursuit, trace
-from orexis_agent_progression.act import Act
+from orexis_agent_progression.act import Step
 from orexis_agent_deliberation.desire import Desire
 from .afforder import affordances_of
 from orexis_agent_progression.ontology import (OREXIS, DELIBERATION_GRAPH, PLAN_FAILED, PLAN_FINISHED,
@@ -382,7 +382,7 @@ class Deliberator:
                            beliefs_graph(self.agent.id)):
             if row.for_agent == desire.owed_to:
                 #  A obligation's row, unsized: the host sizes the serve from the claim it holds.
-                return planner.Plan(OBLIGATION, ((Act.from_row(row)),))
+                return planner.Plan(OBLIGATION, ((Step.from_row(row)),))
         return None
 
     def _planned(self, desire: Desire) -> planner.Plan | None:

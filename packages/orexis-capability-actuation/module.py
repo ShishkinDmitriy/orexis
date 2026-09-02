@@ -245,7 +245,7 @@ class ActuationModule(Module):
         promised = replace(act, quantity=litres, want=desire.uri, not_after=not_after)
         cmd = self.redeem(Commitment(sub=self.me.agent_id, scope="actuate:self",
                                      amount_l=litres, auction_id=f"self-{jti[:8]}", jti=jti,
-                                     act=promised))
+                                     step=promised))
         if keeper is not None:
             #  THE INTENTION STANDS until the world answers (#353). It is to the END — a wetter
             #  pot — not to the command, so the watch opens on the standing row and the keeper

@@ -1,0 +1,36 @@
+---
+type: Domain Concept
+title: Step
+term: http://example.org/orexis#Step
+description: >-
+  A planned instance of an action, not yet done: the lever, the quantity, the window, what the
+  search predicted taking it would reach, what it waits for, what follows. A plan is steps, an
+  intention commits to steps and stands at one, a claim promises one. Taking a step writes an
+  act, the record; a step may be attempted more than once.
+---
+
+# What it is
+
+`orexis:Step`. One [action](/domain/action.md) filled in and planned — which template, the lever
+it goes through, the want it serves and what that want is about, how much, for whom where it is
+an obligation's, and its window — with what the search predicted it would reach. Nothing has
+happened yet, and that is the whole reason for the word: a plan is not executed, so its
+elements are not [acts](/domain/act.md). The sovereign's ruling, 2026-09-02.
+
+# Where it appears
+
+- a plan is a sequence of them, each with the urgency the want would have in the world it reaches
+- an [intention](/domain/intention.md) commits to them — `orexis:step` to each, `orexis:by` to the
+  one it stands at, `orexis:then` between them in order
+- a [claim](/domain/claim.md) promises one: the host's Serving step, so many litres, not after the
+  window closes
+- the step is what WAITS: its readiness (`orexis:until`, `orexis:untilNot`), its completion
+  (`orexis:answeredWhen`), and what the keeper does if a wait lapses (`orexis:whenLapsed`)
+
+# What it is not
+
+**Not an act.** An act is the record that a step was taken. One step, possibly several acts,
+since an actor may be unable to take it now and a later tick takes it.
+
+**Not a place of its own beside the thing placed.** Every step is minted for the place it fills,
+so its place in the plan is the links from the intention and to the next step, not a node.
