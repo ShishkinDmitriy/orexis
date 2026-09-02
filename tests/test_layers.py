@@ -14,7 +14,7 @@ from orexis_capability_market.terms import ACQUIRING
 from orexis_agent_progression.ontology import PLAN_FAILED, PLAN_FINISHED, STEP_DONE
 from orexis_agent_reactive.loop import loop
 
-from conftest import MOISTURE, build_agent, genesis_store, open_round_for, reading_of, stake_of
+from conftest import MOISTURE, build_agent, genesis_store, open_round_for, reading_of, stake_of, write_reading
 
 
 @pytest.fixture
@@ -33,12 +33,14 @@ def test_an_unmet_expectation_is_told_upward_and_marks_the_want(thirsty):
     about a plan that failed is deliberation's, and it hears it as an event rather than the
     ledger importing the search."""
     keeper, want = thirsty.keeper, stake_of(thirsty).uri
-    keeper.beliefs = replace(keeper.beliefs, patience_s=0)          # the deadline is now
     uri = keeper.adopt(ACQUIRING, want, "a dose that will not land")
-    assert keeper.expect(uri, "watching", rises=True, baseline=reading_of(thirsty, MOISTURE))
     before = dict(failed=thirsty.deliberator._plans_failed,
                   finished=thirsty.deliberator._plans_finished)
-    keeper.judge(want, 0.29)                                         # fell, past the deadline
+    assert keeper.expect(uri, "watching", rises=True, baseline=reading_of(thirsty, MOISTURE))
+    write_reading(thirsty, 0.29, MOISTURE)                           # fell — not an answer
+    #  The deadline passes — fired here as the keeper's scheduler would (#516), on this
+    #  thread, so the event it tells upward has landed when the next line asserts.
+    keeper.lapse(uri)
     assert thirsty.deliberator._plans_failed == before["failed"] + 1
     assert thirsty.deliberator._plans_finished == before["finished"]
     assert want in thirsty.reviser._pending, "a failed plan is a want marked for re-planning"
@@ -48,7 +50,7 @@ def test_a_met_expectation_is_counted_and_not_re_planned(thirsty):
     keeper, want = thirsty.keeper, stake_of(thirsty).uri
     uri = keeper.adopt(ACQUIRING, want, "a dose that lands")
     assert keeper.expect(uri, "watching", rises=True, baseline=reading_of(thirsty, MOISTURE))
-    keeper.judge(want, 0.31)
+    write_reading(thirsty, 0.31, MOISTURE)
     assert thirsty.deliberator._plans_finished == 1
     assert want not in thirsty.reviser._pending, \
         "a finished plan re-planned itself and raced the next offer (see on_plan_finished)"

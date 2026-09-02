@@ -68,6 +68,8 @@ orexis:desires a assembly:Extension ;
     assembly:signature "(now=…) -> list['Desire']" ; orexis:row orexis:Deliberative ; rdfs:label "desires" ; rdfs:comment "What do you contribute to what this agent pursues? Answers are ranked together, one want per node." .
 orexis:desireUrgency a assembly:Extension ;
     assembly:signature "(desire, query, state, value=…) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
+orexis:answer a assembly:Extension ;
+    assembly:signature "(subject_uri, observed_property, since, baseline, delta, rises, met_fraction) -> Graph | None" ; orexis:row orexis:Progression ; rdfs:label "answer" ; rdfs:comment "What would an observation that ANSWERS this act look like? A sh:NodeShape on the subject, conforming when a reading of the property later than `since` has moved from the baseline by at least met_fraction of delta in the promised direction — sensing's, because what a reading is is sensing's (#516). The keeper holds the act's step on it; None is no opinion." .
 orexis:size a assembly:Extension ;
     assembly:signature "(query, graph, row) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "size" ; rdfs:comment "How big would the act this row commits to be? Asked of the row's taker before it is simulated." .
 orexis:take a assembly:Extension ;
@@ -845,6 +847,9 @@ orexis:then a owl:ObjectProperty ; rdfs:domain orexis:Step ; rdfs:range orexis:S
 orexis:until a owl:ObjectProperty ; rdfs:domain orexis:Step ;
     rdfs:label "held until" ;
     rdfs:comment "The condition a step is held for, released when it HOLDS: a sh:NodeShape, released when its focus node conforms — compiled by the kernel into the select it runs (#514). Always a shape: a condition that is naturally a query is a shape carrying a sh:sparql constraint, the form SHACL already has, so the ledger holds one kind of node for one kind of thing. One of orexis:until / orexis:untilNot per hold, never both. Removed when the hold ends, so a taken act is an ordinary standing intention." .
+orexis:answeredWhen a owl:ObjectProperty ; rdfs:domain orexis:Step ;
+    rdfs:label "answered when" ;
+    rdfs:comment "The step's COMPLETION condition (#516): a sh:NodeShape that conforms when the world has answered the act — an observation past the baseline, in sensing's words — as against `orexis:until`, its READINESS condition. Conformance is the verdict met; the deadline passing first is the verdict unmet, the false-knowledge datum. A plan handed down whole (#510) holds each step's readiness on the previous step's answer." .
 orexis:untilNot a owl:ObjectProperty ; rdfs:domain orexis:Step ;
     rdfs:label "held until it stops holding" ;
     rdfs:comment "The negative twin (#514): a sh:NodeShape, released when its focus node VIOLATES — hold while the round is open, hold while the board sleeps. The mirror of orexis:until exactly as orexis:unmetWhen mirrors orexis:metWhen, and one form for the same reason." .

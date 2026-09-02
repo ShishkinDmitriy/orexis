@@ -22,7 +22,7 @@ from orexis_agent_progression.graphs import intentions_graph
 from orexis_capability_market.terms import ACQUIRING
 from orexis_capability_sensing.terms import OBSERVING
 
-from conftest import sensing_of, stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of
+from conftest import sensing_of, stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading
 
 FERN = "http://example.org/orexis#fern_agent"
 
@@ -219,10 +219,10 @@ def test_every_transition_is_told_to_the_metrics_with_its_reason(make):
     assert keeper.expect(uri, "the dose owes a rise", rises=True,
                          baseline=reading_of(fern, MOISTURE))
     fern.metrics.take_events()
-    keeper.judge(stake, 0.50)
+    write_reading(fern, 0.50, MOISTURE)
     verdicts = fern.metrics.take_events()
     assert [kind for _, kind, _, _ in verdicts] == ["end-met"]
-    assert "moved from" in verdicts[0][2]
+    assert "moved as promised" in verdicts[0][2]
 
 
 # --- gap-driven deliberation (#208) -----------------------------------------
@@ -470,7 +470,7 @@ def test_a_hold_may_be_a_shape_and_may_release_when_a_condition_stops(make):
     shaped = keeper.adopt("urn:toy#OnTheFlag", "urn:toy#other", "waiting for the flag, as a shape",
                           until=shape, not_after=later, when_lapsed="drop")
     held = keeper.held()
-    assert [s.uri for s, _ in held] == [shaped]
+    assert [s.uri for s, *_ in held] == [shaped]
     assert "FILTER EXISTS" in held[0][1], "compiled to the conformance select"
     stored = bindings(fern.intentions.query_union(f"""SELECT ?n WHERE {{ GRAPH <{keeper.graph}> {{
         <{shaped}> orexis:at ?step . ?step a orexis:Step ; orexis:takes ?act ; orexis:until ?n .

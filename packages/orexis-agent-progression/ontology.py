@@ -94,6 +94,7 @@ CAPABILITY = term("Capability")  # the root every capability term is a kind of
 HOOK = term("Hook")
 DESIRES = term("desires")
 DESIRE_URGENCY = term("desireUrgency")
+ANSWER = term("answer")          # the shape of an observation that answers an act (#516)
 SIZE = term("size")
 TAKE = term("take")
 REPORTS = term("reports")
