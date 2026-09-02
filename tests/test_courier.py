@@ -201,6 +201,49 @@ def test_two_domains_in_one_world_and_a_delivery_pass_moves_no_disk(monkeypatch)
     assert int(rows[0]["n"]) > 0, "Move rows were on the menu, and the trace says so"
 
 
+def test_an_irrelevant_lever_is_never_even_asked(monkeypatch):
+    """#504: relevance stopped the search SIMULATING a foreign row; the afforder still ran
+    every action's precondition at every node and threw the rows away. Now a lever outside
+    the relevant set is asked ONCE, at the root, so the trace can say truthfully that it was
+    there — and never again at any of the 78 nodes. Move is in the vocabulary whether or not a
+    disk is in the world, so both passes ask it exactly once and make exactly the same number
+    of queries; what differs is that with a disk the root ask yields rows, and the trace names
+    them."""
+    from orexis_agent_deliberation import imaginarium, trace
+    from orexis_agent_deliberation.planner import Planner
+    from orexis_agent_progression.store import bindings
+
+    HANOI = "http://example.org/orexis/hanoi#"
+    asked = []
+    query = imaginarium.Imaginarium.query
+    monkeypatch.setattr(imaginarium.Imaginarium, "query",
+                        lambda self, sparql: (asked.append(sparql), query(self, sparql))[1])
+
+    def pass_with(disks):
+        agent = _driver(monkeypatch, "c0_0", "c1_2")
+        if disks:
+            agent.beliefs.update(f"""INSERT DATA {{
+                GRAPH <http://example.org/orexis/graph/world> {{
+                    <urn:disk_1> a <{HANOI}Disk> ; <{HANOI}size> 1 . }}
+                GRAPH <{STATE_GRAPH}> {{ <urn:disk_1> <{HANOI}on> <{HANOI}PegA> . }} }}""")
+            agent.desires.rebuild()
+        asked.clear()
+        plan = Planner(agent, agent.me).plan(_goal(agent))
+        assert len(plan.steps) == 8, _steps(plan)
+        return agent, len(asked), sum(1 for q in asked if "hanoi:size" in q or f"{HANOI}size" in q)
+
+    _, without, _ = pass_with(False)
+    agent, with_disks, move_asked = pass_with(True)
+    assert move_asked == 1, \
+        "Move's precondition — the only text reading hanoi:size — ran once, at the root"
+    assert with_disks == without, \
+        f"{with_disks} queries with a disk in the world, {without} without: none per node"
+    rows = bindings(agent.beliefs.query_union(f"""SELECT (COUNT(?c) AS ?n) WHERE {{
+        ?c <http://example.org/orexis#wouldTake> <{HANOI}Move> ;
+           <http://example.org/orexis#verdict> "{trace.IRRELEVANT}" }}"""))
+    assert int(rows[0]["n"]) == 2, "one disk on a peg, two pegs to move it to: two rows, at the root"
+
+
 def test_a_want_that_declares_no_distance_is_unchanged(monkeypatch):
     """The other half of the term's contract: hanoi declares no estimate, so every world reads
     equally far and the search behaves exactly as it did before `orexis:estimates` existed.

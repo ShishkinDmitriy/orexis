@@ -278,6 +278,20 @@ def actions_of(query) -> dict[str, tuple]:
     return out
 
 
+_EFFECTLESS_Q = f"""
+SELECT ?action WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
+  ?action a <http://example.org/orexis#Action> .
+  FILTER NOT EXISTS {{ ?action <http://www.w3.org/ns/shacl#construct> ?c }}
+}} }}"""
+
+
+def effectless_of(query) -> frozenset:
+    """Every action stating no effect. Outside the closure, since it is never simulated —
+    but still ON THE MENU: a pass that passes one over must say it could not see the whole
+    menu (`Plan.partial`), and it can only say so for a row it was handed."""
+    return frozenset(r["action"] for r in bindings(query(_EFFECTLESS_Q)))
+
+
 def relevant(want_reads, actions: dict[str, tuple], rules: tuple = (),
              subproperties: dict | None = None) -> frozenset | None:
     """The actions that could serve a want reading `want_reads`, closed backward through the
