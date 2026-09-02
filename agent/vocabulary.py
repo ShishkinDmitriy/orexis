@@ -102,14 +102,14 @@ MOVED = {
     **{f"http://example.org/orexis/intention#{n}": f"http://example.org/orexis#{n}"
        for n in ("Intention", "by", "Means",
                  "adoptedAt", "resolvedAt", "outcome", "becauseOf", "expectsValueTo",
-                 "baselineValue", "baselineAt", "deadlineAt", "expectsDelta", "endMet",
+                 "baselineValue", "baselineAt", "deadlineAt", "endMet",
                  "endVerifiedAt")},
     #  And the four figures that were the KEEPING member's own, when keeping was one way of
     #  having an ability. Every agent keeps a ledger now, so they are the kernel's; `patienceS`
     #  is the one a deployed volume actually holds, and the local names are unchanged, so this
     #  is the by-local-name path doing exactly what it was built for.
     **{f"http://example.org/orexis/intention#{n}": f"http://example.org/orexis#{n}"
-       for n in ("patienceS", "metFraction", "suspectAfter", "minPatienceS", "maxPatienceS")},
+       for n in ("patienceS", "suspectAfter", "minPatienceS", "maxPatienceS")},
     **{f"http://example.org/orexis/desire#{n}": f"http://example.org/orexis#{n}"
        for n in ("Aim", "aims", "Obligation", "owedTo", "forClaim", "presented", "owedAt",
                  "dischargedAt")},

@@ -671,18 +671,29 @@ class SensingModule(Module):
         return (region.low, region.high) if region else None
 
     @contributes(ANSWER)
-    def answering_shape(self, subject_uri: str, observed_property: str, since, baseline: float,
-                        delta: float | None, rises: bool, met_fraction: float):
-        """The shape of an observation that would ANSWER an act (#516) — sensing's, because
-        what a reading is is sensing's: on the subject, at least one observation of the
-        property later than `since` whose value has moved from the baseline in the promised
-        direction — by met_fraction of the delta where the act sized itself (#165: a lying
-        instrument can breathe past a baseline), strictly past it where it could not. The
-        numbers are baked in: they do not change for the expectation's lifetime, unlike a
-        horizon. The keeper holds the act's step on it and reads the verdict off conformance."""
+    def answering_shape(self, keyed_class: str, key: dict, carried: dict, since,
+                        baseline: float | None, tolerance: float | None):
+        """What an observation answering a PREDICTED one looks like — the keeper's question
+        for each keyed fact a step predicts (#510, #516, #518). Only a `sosa:Observation` is
+        sensing's to answer: the key names the subject and the property, what it carries is
+        the predicted result. The shape: on the subject, at least one observation of the
+        property later than `since` whose value lies within `tolerance` of the predicted
+        MOVEMENT from the baseline — predicted ± tolerance × |predicted − baseline| — so an
+        overshoot is as much a surprise as a shortfall, and both are the conversion's to
+        answer for at review. With no baseline or no tolerance the value must be the
+        predicted one exactly, which is what a plain fact gets too. The numbers are baked
+        in: they do not change for the expectation's lifetime, unlike a horizon."""
         import rdflib
+        SOSA = "http://www.w3.org/ns/sosa/"
+        if keyed_class != SOSA + "Observation":
+            return None
+        subject_uri = key.get(SOSA + "hasFeatureOfInterest")
+        observed_property = key.get(SOSA + "observedProperty")
+        predicted = carried.get(SOSA + "hasSimpleResult")
+        if subject_uri is None or observed_property is None or predicted is None:
+            return None
+        predicted = float(predicted)
         SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
-        SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
         XSD = rdflib.Namespace("http://www.w3.org/2001/XMLSchema#")
         g = rdflib.Graph()
         root = rdflib.URIRef(f"urn:orexis:answer:{uuid.uuid4().hex[:8]}")
@@ -691,24 +702,21 @@ class SensingModule(Module):
         g.add((root, SH.targetNode, rdflib.URIRef(subject_uri)))
         g.add((root, SH.property, outer))
         g.add((outer, SH.path, path))
-        g.add((path, SH.inversePath, SOSA.hasFeatureOfInterest))
+        g.add((path, SH.inversePath, rdflib.URIRef(SOSA + "hasFeatureOfInterest")))
         g.add((outer, SH.qualifiedMinCount, rdflib.Literal(1)))
         g.add((outer, SH.qualifiedValueShape, inner))
         g.add((inner, SH.property, on_property))
-        g.add((on_property, SH.path, SOSA.observedProperty))
+        g.add((on_property, SH.path, rdflib.URIRef(SOSA + "observedProperty")))
         g.add((on_property, SH.hasValue, rdflib.URIRef(observed_property)))
         g.add((inner, SH.property, on_time))
-        g.add((on_time, SH.path, SOSA.resultTime))
+        g.add((on_time, SH.path, rdflib.URIRef(SOSA + "resultTime")))
         g.add((on_time, SH.minExclusive, rdflib.Literal(since.isoformat(), datatype=XSD.dateTime)))
         g.add((inner, SH.property, on_value))
-        g.add((on_value, SH.path, SOSA.hasSimpleResult))
-        if delta:
-            threshold = baseline + met_fraction * delta if rises else baseline - met_fraction * delta
-            g.add((on_value, SH.minInclusive if rises else SH.maxInclusive,
-                   rdflib.Literal(round(threshold, 6), datatype=XSD.decimal)))
-        else:
-            g.add((on_value, SH.minExclusive if rises else SH.maxExclusive,
-                   rdflib.Literal(baseline, datatype=XSD.decimal)))
+        g.add((on_value, SH.path, rdflib.URIRef(SOSA + "hasSimpleResult")))
+        band = (abs(tolerance) * abs(predicted - baseline)
+                if tolerance is not None and baseline is not None else 0.0)
+        g.add((on_value, SH.minInclusive, rdflib.Literal(round(predicted - band, 6), datatype=XSD.decimal)))
+        g.add((on_value, SH.maxInclusive, rdflib.Literal(round(predicted + band, 6), datatype=XSD.decimal)))
         return g
 
     @contributes(URGENCY)

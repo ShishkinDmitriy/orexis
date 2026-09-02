@@ -14,7 +14,7 @@ from orexis_agent_deliberation import effects
 from orexis_agent_progression.ontology import ACTIONS_GRAPH, STATE_GRAPH, beliefs_graph
 from orexis_agent_progression.store import bindings
 
-from conftest import stake_of, MOISTURE, build_agent, genesis_store
+from conftest import stake_of, MOISTURE, build_agent, genesis_store, predicted_readings
 
 OBSERVING = "http://example.org/orexis/sensing#Observing"
 DOSING = "http://example.org/orexis/actuation#Dosing"
@@ -142,9 +142,9 @@ def test_the_dose_the_actuator_expects_is_the_dose_its_rule_predicts(monkeypatch
         subject=f"<{actuation.me.acts_for}>", about=f"<{MOISTURE}>",
         state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>",
         litres=repr(litres), value="0.1")
-    from_rule = float(_values(predicted)[0]) - 0.10
+    from_rule = float(_values(predicted)[0])
 
-    assert watches[0].expected_delta == pytest.approx(from_rule), \
+    assert predicted_readings(gardener, watches[0].step) == [pytest.approx(from_rule, abs=1e-3)], \
         "the number the keeper holds the world to must be the number the rule predicted"
 
 
@@ -162,7 +162,17 @@ def test_the_prediction_is_a_function_of_value_litres_and_the_agents_own_belief(
     actuation = next(m for m in gardener.modules if m.name == "actuation")
 
     def delta(value, litres):
-        return actuation._expected_delta(MOISTURE, litres, value)
+        """The movement the rule predicts from where the sensed graph says the property
+        stands — `value` is written there first, since the rule reads its base from the
+        world it is asked about (the planner's imagined one, or this one)."""
+        from conftest import write_reading
+        write_reading(gardener, value, MOISTURE)
+        predicted, _ = effects.apply(
+            gardener.beliefs, DOSING, me=f"<{actuation.me.uri}>",
+            subject=f"<{actuation.me.acts_for}>", about=f"<{MOISTURE}>",
+            state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>",
+            litres=repr(litres))
+        return float(_values(predicted)[0]) - value
 
     assert delta(0.10, 0.12) == pytest.approx(delta(0.90, 0.12)), \
         "the same dose moves the property the same distance wherever it started"

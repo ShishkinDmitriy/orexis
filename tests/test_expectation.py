@@ -21,7 +21,7 @@ from orexis_capability_actuation.terms import DOSING as _ACTUATE
 from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import OREXIS
 
-from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading
+from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading, predicted_readings
 
 
 @pytest.fixture
@@ -56,9 +56,10 @@ def test_a_claim_opens_a_watch_with_the_baseline_in_the_row(thirsty):
     watches = keeper.open_expectations(stake_of(thirsty).uri)
     assert len(watches) == 1
     watch = watches[0]
-    assert watch.baseline == 0.30
-    assert watch.rises is True   # said by the actor, from the domain's #127 statement on its valuation
+    assert watch.baseline == 0.30 and watch.baseline_at is not None
     assert watch.action == ACQUIRING
+    assert [p for _, _, p in keeper.held()] == [f"{OREXIS}answeredWhen"], \
+        "held on the shape that answers the step's own prediction (#510)"
 
 
 def test_opening_the_watch_asks_for_a_look(thirsty):
@@ -72,11 +73,11 @@ def test_opening_the_watch_asks_for_a_look(thirsty):
 # --- the verdict: met, unmet, and never both ---------------------------------
 
 def test_the_dose_landing_meets_the_end(thirsty):
-    """Movement past the baseline in the promised direction, before the deadline — met, early
-    is fine, that is the dose landing. The watch closes and the row now carries BOTH facts:
-    outcome satisfied (the claim) and endMet true (the world answered)."""
+    """The reading the step predicted, before the deadline — met, early is fine, that is the
+    dose landing. The watch closes and the row now carries BOTH facts: outcome satisfied (the
+    claim) and endMet true (the world answered as the search planned)."""
     win(thirsty)
-    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.42})
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.55})
     keeper = keeper_of(thirsty)
     assert keeper.open_expectations() == []
     assert keeper.reports()["expectations_met"] == 1
@@ -122,7 +123,7 @@ def test_an_open_watch_is_maximum_urgency_and_a_verdict_releases_it(thirsty):
     # maximum urgency earns the agent's OWN fast cadence — the floor is a clamp, not a target
     assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == p.beliefs.fast_sleep_s
 
-    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.42})   # dose lands
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.55})   # dose lands as predicted
     assert not keeper.watching(stake_of(thirsty).uri)
     assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == calm
 
@@ -289,34 +290,49 @@ def test_a_held_claim_is_maximum_urgency(thirsty):
 def test_a_breath_of_grain_past_the_baseline_is_not_the_world_answering(thirsty):
     """The live incident, replayed: a watch was closed by +0.001 of instrument grain two
     seconds before its dose landed, and the closed watch let the same gap be bought twice
-    (#167). A movement counts only when commensurate with the act: metFraction (0.25) of the
-    expected delta (0.5 L through 2.0 L-per-fraction = 0.25) is 0.0625, and grain clears
-    nothing."""
+    (#167). A movement counts only when it is the one the step PREDICTED (#510): 0.5 L
+    through 2.0 L-per-fraction from 0.30 is a reading of 0.55, and the bidder's tolerance
+    (0.5 of the movement, the capability's default) admits 0.425–0.675. Grain clears
+    nothing, and so does a reading short of the band."""
     win(thirsty)
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.301})
     keeper = keeper_of(thirsty)
     assert len(keeper.open_expectations()) == 1, "grain must not close a watch"
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.37})
+    assert len(keeper.open_expectations()) == 1, "a rise short of the prediction is not it either"
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.50})
     assert keeper.open_expectations() == []
     assert keeper.reports()["expectations_met"] == 1
 
 
-def test_the_row_carries_how_far_the_act_should_move_it(thirsty):
-    """The act sizes its own effect: 0.5 L through the same conversion the bid was priced
-    with. Copied into the row like the baseline, so the verdict needs no join at reading time."""
+def test_the_step_carries_the_reading_the_rule_predicted(thirsty):
+    """ONE DECLARATION (#510): the actor sizes nothing. The step the search made carries the
+    reading Acquiring's own rule predicted — 0.30 plus 0.5 L through 2.0 L-per-fraction —
+    and that is what the watch holds the world to."""
     win(thirsty, amount=0.5)
     watch = keeper_of(thirsty).open_expectations(stake_of(thirsty).uri)[0]
-    assert watch.expected_delta == pytest.approx(0.25)
+    assert predicted_readings(thirsty, watch.step) == [pytest.approx(0.55, abs=1e-3)]
 
 
-def test_an_act_that_cannot_size_itself_keeps_the_exact_crossing(thirsty):
-    """No delta stated, no margin demanded — the pre-noise verdict stays legal for whatever
-    cannot say how far it should move the world."""
+def test_a_step_that_predicts_nothing_opens_no_watch(thirsty):
+    """A step the search did not make — adopted by hand, by an event — predicts nothing, and
+    an expectation that cannot be judged is refused rather than left to sit unverified."""
     keeper = keeper_of(thirsty)
-    uri = keeper.adopt(ACQUIRING, stake_of(thirsty).uri, "an act of unknowable size")
-    assert keeper.expect(uri, "no delta stated", rises=True,
-                         baseline=reading_of(thirsty, MOISTURE))
+    uri = keeper.adopt(ACQUIRING, stake_of(thirsty).uri, "an act of unknowable effect")
+    assert not keeper.expect(uri, "nothing predicted", baseline=reading_of(thirsty, MOISTURE))
+    assert keeper.open_expectations() == []
+
+
+def test_no_tolerance_holds_the_world_to_the_exact_reading(thirsty):
+    """A caller that states no tolerance gets the reading itself: grain past the baseline is
+    not it, the predicted value is."""
+    keeper = keeper_of(thirsty)
+    uri = keeper.adopt(ACQUIRING, stake_of(thirsty).uri, "an act predicting 0.35")
+    assert keeper.expect(uri, "exactly 0.35", baseline=reading_of(thirsty, MOISTURE),
+                         predicts=predicted_reading(thirsty.me.acts_for, MOISTURE, 0.35))
     write_reading(thirsty, 0.301, MOISTURE)
+    assert len(keeper.open_expectations()) == 1
+    write_reading(thirsty, 0.35, MOISTURE)
     assert keeper.open_expectations() == []
     assert keeper.reports()["expectations_met"] == 1
 
@@ -336,7 +352,7 @@ def test_no_new_purchase_while_my_own_dose_is_unanswered(thirsty, caplog):
         "a phantom deficit was priced while my own dose was unanswered"
     assert "my own dose has not answered yet" in caplog.text
 
-    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.42})   # the world answers
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.43})   # the world answers, inside the band
     thirsty.deliver(market.offer_topic, {"auction_id": "r3", "closes_in_s": 30})
     assert len(thirsty.sent.to(f"{market.bid_topic}/fern")) == bids + 1
 
@@ -382,7 +398,8 @@ def test_the_watch_runs_until_the_dose_lands_and_a_reading_could_show_it(monkeyp
     before = datetime.now(timezone.utc).timestamp()
     #  Both halves are the ACTOR's to pass now: the landing from its effect rule, the seeing
     #  from the sensing it holds — the keeper names neither package to find them.
-    assert keeper.expect(uri, "50 seconds of pouring", expected_delta=0.1,
+    assert keeper.expect(uri, "50 seconds of pouring",
+                         predicts=predicted_reading(gardener.me.acts_for, MOISTURE, 0.2),
                          lands_after_s=50.0, seeing_s=seeing,
                          baseline=reading_of(gardener, MOISTURE))
 
@@ -397,8 +414,8 @@ SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{OREXIS}by> ?act . ?act <{
 
 
 def test_an_act_that_cannot_size_itself_keeps_the_patience(monkeypatch):
-    """The fallback, and it is the same shape as `expected_delta`'s: a caller that cannot say
-    passes nothing and keeps exactly the behaviour it had. A buyer is the real case — it holds
+    """The fallback: a caller that cannot say how long the physics takes passes nothing and
+    keeps exactly the behaviour it had. A buyer is the real case — it holds
     a claim on somebody else's valve and cannot ask its own rules how long that valve stays
     open, so patience is the only honest bound it has."""
     from datetime import datetime, timezone
@@ -408,7 +425,8 @@ def test_an_act_that_cannot_size_itself_keeps_the_patience(monkeypatch):
     keeper = keeper_of(gardener)
     uri = keeper.adopt(_ACTUATE, MOISTURE, "something is on its way")
     before = datetime.now(timezone.utc).timestamp()
-    assert keeper.expect(uri, "bought from someone else's valve", expected_delta=0.1,
+    assert keeper.expect(uri, "bought from someone else's valve",
+                         predicts=predicted_reading(gardener.me.acts_for, MOISTURE, 0.2),
                          baseline=reading_of(gardener, MOISTURE))
 
     rows = bindings(gardener.beliefs.query(f"""

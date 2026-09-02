@@ -18,7 +18,10 @@ actuation:ActuatingAgentShape a sh:NodeShape ;
                   sh:message "an agent that actuates must own at least one actuator" ] ;
     sh:property [ sh:path actuation:doseGraceS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minInclusive 0 ;
-                  sh:message "an agent that actuates must say how long it waits for a device to confirm a dose — actuation:doseGraceS, added to the open-seconds it computed for that dose" ] .
+                  sh:message "an agent that actuates must say how long it waits for a device to confirm a dose — actuation:doseGraceS, added to the open-seconds it computed for that dose" ] ;
+    sh:property [ sh:path actuation:tolerance ; sh:maxCount 1 ;
+                  sh:datatype xsd:decimal ; sh:minInclusive 0.05 ; sh:maxInclusive 1.0 ;
+                  sh:message "a tolerance on a predicted effect is a pick within the constitutional bounds — below 0.05 sensor noise reads as a lie, at 1.0 no movement at all would pass. Optional: an agent that states none gets the capability's default" ] .
 
 actuation:ActuatorShape a sh:NodeShape ;
     rdfs:comment "An actuator delivers to exactly one subject, carries its own calibration and hard cap — so dosing is a fact about the actuator, not a constant in code — and states the short name the broker's ACL is written from. It does NOT state where it takes its commands: that is a sentence in a transport's words, and mqtt:MqttActuatorShape says it of every actuator on a bus (a-shape-belongs-to-the-vocabulary-it-checks). The name used to arrive from device:DeviceShape, which reached it because an actuator was required to be a physical device; an actuator is not (a-stand-in-is-not-a-device)." ;

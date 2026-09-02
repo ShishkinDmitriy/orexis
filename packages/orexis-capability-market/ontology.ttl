@@ -3,6 +3,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix review: <http://example.org/orexis/review#> .
 @prefix market: <http://example.org/orexis/market#> .
 @prefix : <http://example.org/orexis/market#> .
 
@@ -229,3 +230,24 @@ Must comfortably exceed the longest a holder may wait before presenting, which i
 :mayConveneAt a owl:DatatypeProperty ; rdfs:domain :Market ; rdfs:range xsd:dateTime ;
     rdfs:label "may convene at" ;
     rdfs:comment "When the host's cooldown on this venue runs out — written at close, from `roundCooldownS`, into the host's own graph. An instant rather than the duration, so the Offering action's precondition compares it to NOW() and the private cooldown itself is never on a row anyone else could read." .
+
+#################  How close a bought lot must land  #################
+#
+#  The effect an action states is ONE declaration (#510, #518): the reading the search planned
+#  on is the reading the world is held to, and the actor sizes nothing of its own any more.
+#  What is left to say is how close a number must land to count as the same effect, and that
+#  is not physics — it is a belief about how good the conversion is, held like every belief
+#  here: a PICK inside constitutional bounds, review moving it on evidence (residuals lean
+#  one way: the conversion is wrong; they scatter: the tolerance is). A FRACTION of the
+#  predicted movement, so it is scale-free across properties; below the floor sensor noise
+#  reads as a lie, at 1.0 the band reaches back to the baseline and no movement at all would
+#  pass, which is why the ceiling is there. No domain is stated, deliberately: an agent holds
+#  its pick and the CAPABILITY holds the default an agent that states none gets, as
+#  `orexis:Intention` holds `suspectAfter`. The sensing grain as a floor is a seam (#518).
+:tolerance a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    rdfs:label "tolerance" ;
+    rdfs:comment "How far, as a fraction of the movement a step predicted, an observed value may land from the predicted one and still count as the effect the search planned on. An agent's pick within :minTolerance and :maxTolerance; the capability carries the default." .
+:minTolerance a owl:DatatypeProperty ; rdfs:domain orexis:Capability ; rdfs:range xsd:decimal ; rdfs:label "min tolerance" .
+:maxTolerance a owl:DatatypeProperty ; rdfs:domain orexis:Capability ; rdfs:range xsd:decimal ; rdfs:label "max tolerance" .
+:tolerance a review:RevisableBelief ; review:revisableToward :minTolerance , :maxTolerance .
+:Bidding :tolerance 0.5 ; :minTolerance 0.05 ; :maxTolerance 1.0 .

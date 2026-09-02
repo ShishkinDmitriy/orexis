@@ -41,8 +41,8 @@ take on feedback — and it is why nothing above it needs a timer of its own.
 **And an expectation is the same primitive, waiting on the shape of an answering observation**
 (#516). When an act is taken, the keeper asks whoever knows what a reading is — sensing,
 through `orexis:answer` — for the shape of an observation that would answer it: on the
-subject, later than the baseline, moved in the promised direction by the met-fraction of what
-the act sized itself at. The step is held on that shape as its COMPLETION condition
+subject, later than the baseline, within the actor's [tolerance](/domain/tolerance.md) of the
+value the step predicted (#510). The step is held on that shape as its COMPLETION condition
 (`orexis:answeredWhen`, beside its readiness condition `orexis:until`); conformance is the
 verdict met, the deadline passing first the verdict unmet, and the arithmetic that used to
 judge every reading is inside the shape with its numbers baked at the instant the watch
@@ -116,23 +116,25 @@ holding period this gave a mechanism to.
 Before #131, an Acquire resolved when the claim arrived and nothing ever checked whether the
 gap moved: an agent whose water never reached the pot bought, recorded satisfied, and bought
 again forever — transaction confirmed, outcome never audited. Now resolving the means opens a
-**watch**: the row gains the *baseline* (value and instant, copied into the ledger because the
-sensed graph keeps only the current witness — the ledger is what remembers), the *promised
-direction* — said by the actor that opened the watch, which holds the domain's `market:direction`
-(#127) or its own effect's sign, and copied so the row stays judgeable — and a *deadline*: the
+**watch**: the step gains the *baseline* (value and instant, copied into the ledger because the
+sensed graph keeps only the current witness — the ledger is what remembers) and a *deadline*: the
 act's landing time plus how long a reading takes to arrive, both passed by the actor, or the
-patience where the act cannot size itself.
+patience where the act cannot say.
 
-Every reading is a chance to judge: past the baseline in the promised direction — **met**, early
-is fine, that is the dose landing — and past it by at least `metFraction` of the act's own
-stated size where the act could size itself (`expectsDelta`, #165): a lying instrument can
-breathe past a baseline, and the first noisy world closed a watch on +0.001 two seconds before
-its dose arrived, which then let the same gap be bought twice (#167 — the bidder now declines a
-new acquisition while its own dose is unanswered, bounded by the watch's deadline). Deadline
-passed without it — **unmet**. Movement the wrong way *before* the deadline proves nothing,
-since a dose may land late. The verdict is a separate fact beside the outcome, and
-**satisfied-and-unmet is the false-knowledge signature**: the graph claims a movement the world
-keeps refusing.
+What the world is held to is **the step's own prediction** (`orexis:predicts`, #510) — the facts
+the search said taking it makes true and false, the same facts its signature is made of — and
+the actor sizes nothing: it says only how close, a [tolerance](/domain/tolerance.md) on the
+predicted movement. The keeper generates the answering shape from the prediction and holds the
+step on it as `orexis:answeredWhen`: a predicted reading is put to sensing, which answers with
+an observation later than the baseline within the tolerance of the predicted value; a plain
+fact is the kernel's, present for an addition and gone for a retraction. Conformance before the
+deadline — **met**. Deadline passed without it — **unmet**. An overshoot is as much a surprise
+as a shortfall, and both are the conversion's to answer for at review. The first noisy world
+closed a watch on +0.001 two seconds before its dose arrived and let the same gap be bought
+twice (#167 — the bidder still declines a new acquisition while its own dose is unanswered,
+bounded by the watch's deadline); a band around the prediction is what makes grain not an
+answer. The verdict is a separate fact beside the outcome, and **satisfied-and-unmet is the
+false-knowledge signature**: the graph claims a movement the world keeps refusing.
 
 Two consequences ride on the watch:
 

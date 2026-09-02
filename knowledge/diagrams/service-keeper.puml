@@ -26,7 +26,7 @@ database "Intentions · repository" as INT {
 }
 
 database "Beliefs · repository" as BEL {
-  folder "orexis:OntologyGraph\nsuspectAfter, metFraction" as ON
+  folder "orexis:OntologyGraph\nsuspectAfter" as ON
 }
 
 database "Desires · repository" as DES {

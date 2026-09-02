@@ -34,6 +34,8 @@ class Step:
     not_before: datetime | None = None
     not_after: datetime | None = None
     urgency_after: float | None = None  # the want's urgency in the world this step was predicted to reach
+    predicts: tuple | None = None     # (adds, retracts): the canonical facts the search said this
+                                      # step makes true and false — what the world is held to (#510)
 
     @classmethod
     def from_row(cls, row, quantity: float | None = None, not_after: datetime | None = None):
@@ -54,3 +56,22 @@ class Act:
     step: str                         # the ledger's step node, by IRI
     taken_at: datetime
     took: bool                        # some actor took it, or none could now — standing
+
+
+def predicts_json(predicts) -> str:
+    """The step's predicted diff as one literal for the ledger: two lists of canonical facts,
+    exactly as `signature.facts` states them, so a step read back from the ledger can be
+    checked against the world without an imaginarium."""
+    import json
+    adds, retracts = predicts
+    return json.dumps({"adds": sorted(map(list, adds), key=repr),
+                       "retracts": sorted(map(list, retracts), key=repr)})
+
+
+def predicts_from_json(text: str) -> tuple:
+    import json
+
+    def tup(x):
+        return tuple(tup(y) for y in x) if isinstance(x, list) else x
+    d = json.loads(text)
+    return (frozenset(tup(f) for f in d["adds"]), frozenset(tup(f) for f in d["retracts"]))

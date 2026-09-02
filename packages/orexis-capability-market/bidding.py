@@ -63,7 +63,7 @@ from . import rounds, wallet
 from .wiring import bidding_markets_of
 from .beliefs import BIDDING_PICKS
 from .terms import (ACQUIRING, BIDDING, PRESENTING,
-                    SENSING)
+                    SENSING, TOLERANCE)
 
 # What my bids are priced in, found THROUGH MY VENUE AND MY STAKE (#198) rather than by
 # naming any term: the market I bid in is for a source, the source states its good (entailed
@@ -149,10 +149,6 @@ class BiddingModule(Module):
         self.holding: dict | None = None
         self.about, self._valuation_term = self._what_my_bids_are_priced_in()
         self.conversion = self._my_conversion()
-        #  WHICH WAY the lot moves the property I am priced in — the domain's statement on my
-        #  valuation term (#127), read here rather than by the keeper, because it is the
-        #  market's word and the watch I open is mine to describe.
-        self._rises = self._lot_raises()
 
     def _what_my_bids_are_priced_in(self) -> tuple[str, str]:
         """The observable property my valuation is denominated in, and the term that says so.
@@ -176,11 +172,6 @@ class BiddingModule(Module):
                 f"market:supplies good, no term carries market:ofGood/market:aboutProperty "
                 f"for it, or the stake's ranges and the good's valuations do not meet")
         return rows[0]["property"], rows[0]["term"]
-
-    def _lot_raises(self) -> bool:
-        rows = bindings(self.agent.beliefs.query(
-            f"SELECT ?d WHERE {{ <{self._valuation_term}> market:direction ?d }} LIMIT 1"))
-        return not rows or not rows[0]["d"].endswith("Lowers")
 
     def _baseline(self):
         """The reading I hold of my property — the before a watch leaves from."""
@@ -320,14 +311,15 @@ class BiddingModule(Module):
             return payload
         return {**payload, "sig": signing.sign(key, signing.canonical(payload))}
 
-    def _delta_of(self, amount_l: float) -> float | None:
-        """How far a dose of this many litres should move my property — the act sizing its own
-        effect for the met-verdict's margin (#165), through the same conversion the bid was
-        priced with. None when the belief cannot say, which keeps the exact-crossing verdict."""
-        lpf = self.conversion
-        if not (lpf > 0 and amount_l):
-            return None
-        return (float(amount_l) / lpf) * (1 if self._rises else -1)
+    def tolerance(self) -> float:
+        """How close the world must land to the reading a bought lot predicts — my pick, or
+        the capability's default where I state none (#518)."""
+        rows = bindings(self.agent.desires.query_union(f"""
+SELECT ?t ?mine WHERE {{
+  {{ <{self.me.uri}> <{TOLERANCE}> ?t . BIND(true AS ?mine) }}
+  UNION {{ <{BIDDING}> <{TOLERANCE}> ?t . BIND(false AS ?mine) }} }}"""))
+        rows.sort(key=lambda r: r["mine"] != "true")
+        return float(rows[0]["t"]) if rows else 0.5
 
     def _keeper(self):
         """Whoever keeps my commitments, or None — and None is a complete answer.
@@ -702,8 +694,8 @@ class BiddingModule(Module):
                 keeper.expect(uri,
                               f"paid {debit} for {amount}L on a market with no redeem channel "
                               f"— the host has already redeemed, so show me",
-                              expected_delta=self._delta_of(amount), rises=self._rises,
-                              seeing_s=self._seeing_s(), baseline=self._baseline())
+                              baseline=self._baseline(), tolerance=self.tolerance(),
+                              seeing_s=self._seeing_s())
             if (sensing := self.agent.provider(SENSING)) is not None:
                 sensing.sense_now()   # the freshest before on record
             return
@@ -716,7 +708,7 @@ class BiddingModule(Module):
             self.log.warning("a second claim arrived while %s was held — presenting the newer",
                              self.holding.get("jti"))
         self.holding = {"jti": claim["jti"], "market": market,
-                        "amount_l": amount, "debit": debit}
+                        "amount_l": amount, "debit": debit, "acquired": acquire_uris}
         if (sensing := self.agent.provider(SENSING)) is not None:
             sensing.sense_now()
             bound = sensing.stale_after_s(self.me.acts_for, self.about)
@@ -755,12 +747,16 @@ class BiddingModule(Module):
             # sense_now inside expect() lands on a board that is provably (or at least
             # plausibly) awake and fast. The watch hangs on the Apply row, because applying is
             # the act whose end the movement is.
-            for uri in keeper.satisfy(PRESENTING, self._stake_uri(),
-                                      f"claim {held['jti']} presented: {why}"):
+            keeper.satisfy(PRESENTING, self._stake_uri(),
+                           f"claim {held['jti']} presented: {why}")
+            #  THE END EXPECTED IS ACQUIRING'S (#510): presenting predicts nothing of the
+            #  world — the reading the lot should bring is what the Acquiring step the search
+            #  made predicted, so the watch opens on that intention, resolved though it is.
+            for uri in held.get("acquired", ()):
                 keeper.expect(uri,
                               f"presented {held['jti']} for {held['amount_l']}L — the graph "
                               f"says this moves what I am short of, so show me",
-                              expected_delta=self._delta_of(held["amount_l"]), rises=self._rises,
-                              seeing_s=self._seeing_s(), baseline=self._baseline())
+                              baseline=self._baseline(), tolerance=self.tolerance(),
+                              seeing_s=self._seeing_s())
             if (sensing := self.agent.provider(SENSING)) is not None:
                 sensing.sense_now()

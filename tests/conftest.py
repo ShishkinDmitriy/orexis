@@ -420,3 +420,25 @@ def write_reading(agent, value: float, observed_property: str | None = None, age
         value=value, sensor_uri=sensor.uri, observed_property=sensor.observes,
         author_uri=agent.me.uri, used_procedure=sensor.sense_mode,
         ts=(datetime.now(timezone.utc) - timedelta(seconds=age_s)).isoformat())
+
+
+def predicted_reading(subject_uri: str, observed_property: str, value: float) -> tuple:
+    """A step's prediction of one reading, in the canonical fact form the search states it in
+    (`signature.facts`) — what `orexis:predicts` holds for a dose. For tests that adopt a step
+    by hand and still want a watch on its end (#510): (adds, retracts)."""
+    SOSA = "http://www.w3.org/ns/sosa/"
+    key = ((SOSA + "hasFeatureOfInterest", subject_uri), (SOSA + "observedProperty", observed_property))
+    return (frozenset({("keyed", SOSA + "Observation", key, SOSA + "hasSimpleResult", value)}),
+            frozenset())
+
+
+def predicted_readings(agent, step_uri: str) -> list[float]:
+    """The readings a ledger step predicts — the values under `orexis:predicts`."""
+    from orexis_agent_progression.act import predicts_from_json
+    from orexis_agent_progression.store import bindings
+    rows = bindings(agent.intentions.query_union(
+        f"SELECT ?p WHERE {{ <{step_uri}> <http://example.org/orexis#predicts> ?p }}"))
+    if not rows:
+        return []
+    adds, _ = predicts_from_json(rows[0]["p"])
+    return [float(f[4]) for f in adds if f[0] == "keyed" and f[3].endswith("hasSimpleResult")]

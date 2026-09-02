@@ -26,6 +26,10 @@ elements are not [acts](/domain/act.md). The sovereign's ruling, 2026-09-02.
   window closes
 - the step is what WAITS: its readiness (`orexis:until`, `orexis:untilNot`), its completion
   (`orexis:answeredWhen`), and what the keeper does if a wait lapses (`orexis:whenLapsed`)
+- it carries what it PREDICTED (`orexis:predicts`): the facts the search said taking it makes
+  true and false, in the plan's own canonical form — which is what the world is held to once it
+  is taken, within the actor's [tolerance](/domain/tolerance.md), and why no actor sizes an
+  expectation of its own
 
 # What it is not
 

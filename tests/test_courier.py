@@ -291,3 +291,44 @@ def test_a_pick_removes_where_the_parcel_was_and_replaces_it_with_nothing(monkey
     text = p.imaginarium.dump_nt(world.graph)
     assert f"<{W}parcel> <{C}at>" not in text, "and the world it reaches holds no position for it"
     assert f"<{W}parcel> <{C}carriedBy>" in text
+
+
+# --- a surprise drops the tail and a new plan is made (#510) ------------------
+
+def test_a_parcel_moved_under_a_standing_plan_drops_the_tail_and_replans(monkeypatch):
+    """#510's surprise: the van sets off toward the parcel with the whole delivery in the
+    ledger; the parcel is moved while it drives. The first drive still answers as predicted
+    — the van is where it said — but the next step cannot be taken and lapses, which drops
+    the tail, tells deliberation, and the next pursue searches again from the new world."""
+    from datetime import datetime, timedelta, timezone
+    from orexis_agent_deliberation import planner, pursuit
+
+    agent = _driver(monkeypatch, "c0_0", "c1_2")
+    searches = []
+    real = planner.Planner.plan
+    monkeypatch.setattr(planner.Planner, "plan", lambda self, d: (searches.append(1), real(self, d))[1])
+    keeper = agent.keeper
+    uri = pursuit.pursue(agent, _goal(agent))
+    assert uri is not None and len(searches) == 1
+    first = keeper.standing(want=WANT)[0].step
+    assert keeper.in_progress(WANT) is not None, "the whole delivery stands as one plan"
+    assert keeper.expect(uri, "driving — show me",
+                         not_after=datetime.now(timezone.utc) + timedelta(hours=1))
+    # the parcel is moved while the van drives: the world differs from the plan's tail
+    agent.beliefs.update(f"""DELETE DATA {{ GRAPH <{STATE_GRAPH}> {{ <{W}parcel> <{C}at> <{W}c1_2> . }} }}""")
+    agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <{W}parcel> <{C}at> <{W}c2_2> . }} }}""")
+    assert keeper.standing(want=WANT)[0].step.predicts == first.predicts, \
+        "the drive itself is not answered by that"
+    adds, retracts = first.predicts                       # the drive lands as predicted
+    for f in retracts:
+        agent.beliefs.update(f"DELETE DATA {{ GRAPH <{STATE_GRAPH}> {{ <{f[0]}> <{f[1]}> <{f[2]}> . }} }}")
+    for f in adds:
+        agent.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <{f[0]}> <{f[1]}> <{f[2]}> . }} }}")
+    second = keeper.standing(want=WANT)[0].step
+    assert second.predicts != first.predicts, "advanced to the next step on the drive's own answer"
+    failed = agent.deliberator._plans_failed
+    keeper.lapse(uri)                    # the next step could not be taken; its deadline passes
+    assert agent.deliberator._plans_failed == failed + 1
+    assert keeper.standing(want=WANT) == [] and keeper.in_progress(WANT) is None, "the tail is dropped"
+    again = pursuit.pursue(agent, _goal(agent))
+    assert again is not None and again != uri and len(searches) == 2, "a new plan from the new world"

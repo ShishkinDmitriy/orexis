@@ -22,7 +22,7 @@ from orexis_agent_progression.graphs import intentions_graph
 from orexis_capability_market.terms import ACQUIRING
 from orexis_capability_sensing.terms import OBSERVING
 
-from conftest import sensing_of, stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading
+from conftest import sensing_of, stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading
 
 FERN = "http://example.org/orexis#fern_agent"
 
@@ -216,13 +216,13 @@ def test_every_transition_is_told_to_the_metrics_with_its_reason(make):
         "bid 0.4L to close my deficit", "claim for 0.4L at a debit of 0.29"]
 
     # and the end's verdict, which is the payoff line of the whole arc (#131)
-    assert keeper.expect(uri, "the dose owes a rise", rises=True,
-                         baseline=reading_of(fern, MOISTURE))
+    assert keeper.expect(uri, "the dose owes a rise", baseline=reading_of(fern, MOISTURE),
+                         predicts=predicted_reading(fern.me.acts_for, MOISTURE, 0.50))
     fern.metrics.take_events()
     write_reading(fern, 0.50, MOISTURE)
     verdicts = fern.metrics.take_events()
     assert [kind for _, kind, _, _ in verdicts] == ["end-met"]
-    assert "moved as promised" in verdicts[0][2]
+    assert "answered as the step predicted" in verdicts[0][2]
 
 
 # --- gap-driven deliberation (#208) -----------------------------------------
@@ -516,8 +516,9 @@ def test_a_plan_is_committed_whole_advances_on_a_met_step_and_stops_on_an_unmet_
     assert keeper.standing(action="urn:toy#Go1", want=want) and keeper.in_progress(want) is not None
 
     before = fern.deliberator._plans_finished
-    assert keeper.expect(uri, "watching the first step", rises=True,
-                         expected_delta=0.1, baseline=reading_of(fern, MOISTURE),
+    assert keeper.expect(uri, "watching the first step", tolerance=0.5,
+                         predicts=predicted_reading(fern.me.acts_for, MOISTURE, 0.9),
+                         baseline=reading_of(fern, MOISTURE),
                          not_after=datetime.now(timezone.utc) + timedelta(hours=1))
     write_reading(fern, 0.9, MOISTURE)                              # the first step answered
     assert keeper.standing(action="urn:toy#Go2", want=want), "advanced to the second step"
@@ -526,8 +527,9 @@ def test_a_plan_is_committed_whole_advances_on_a_met_step_and_stops_on_an_unmet_
     assert keeper.in_progress(want) is not None, "still a step to come after the second"
 
     failed = fern.deliberator._plans_failed
-    assert keeper.expect(uri, "watching the second step", rises=True,
-                         expected_delta=0.1, baseline=reading_of(fern, MOISTURE),
+    assert keeper.expect(uri, "watching the second step", tolerance=0.5,
+                         predicts=predicted_reading(fern.me.acts_for, MOISTURE, 0.9),
+                         baseline=reading_of(fern, MOISTURE),
                          not_after=datetime.now(timezone.utc) + timedelta(hours=1))
     keeper.lapse(uri)                                               # the world did not answer
     assert fern.deliberator._plans_failed == failed + 1, "failed upward — re-plan"

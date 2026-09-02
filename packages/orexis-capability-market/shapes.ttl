@@ -18,7 +18,10 @@ market:BiddingAgentShape a sh:NodeShape ;
                   sh:message "a bidder must participate in a market" ] ;
     sh:property [ sh:path market:hasEndowment ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minInclusive 0 ;
-                  sh:message "a bidder must have an opening balance" ] .
+                  sh:message "a bidder must have an opening balance" ] ;
+    sh:property [ sh:path market:tolerance ; sh:maxCount 1 ;
+                  sh:datatype xsd:decimal ; sh:minInclusive 0.05 ; sh:maxInclusive 1.0 ;
+                  sh:message "a tolerance on a predicted effect is a pick within the constitutional bounds — below 0.05 sensor noise reads as a lie, at 1.0 no movement at all would pass. Optional: a bidder that states none gets the capability's default" ] .
 
 market:HostingAgentShape a sh:NodeShape ;
     rdfs:comment "A host must run a venue and state its terms: what it puts up, the floor it will not sell below, how long it waits for bids, and how often it will open a round at all." ;

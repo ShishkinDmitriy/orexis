@@ -32,7 +32,8 @@ def term(name: str) -> str:
 
 
 # --- the three capabilities this package provides ---
-BIDDING = term("Bidding")  # plumbed into a market: it answers offers with a private number
+BIDDING = term("Bidding")
+TOLERANCE = term("tolerance")   # how close the world must land to the reading a lot predicts (#518)  # plumbed into a market: it answers offers with a private number
 HOSTING = term("Hosting")  # owns the venue: it runs rounds
 
 # The matching family, and its two members. A host asks for the FAMILY and is answered by
