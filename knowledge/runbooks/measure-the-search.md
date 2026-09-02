@@ -163,9 +163,18 @@ free action, cycle detection cannot fold a world that genuinely changed, and the
 not, and which the hanoi want skips entirely for want of an `orexis:about`. The plan stays
 CORRECT; only the cost explodes, which is why nothing catches it.
 
-That is [#488](https://github.com/ShishkinDmitriy/orexis/issues/488), and it is a prerequisite
-for the plug-in claim rather than an optimisation of it: hanoi shows a domain can be a plug-in,
-and nothing yet shows two can share an agent.
+That was [#488](https://github.com/ShishkinDmitriy/orexis/issues/488), closed by
+[relevance](/domain/relevance.md): what the want reads off its shape, what each action writes
+and reads off its texts, closed backward. Re-measured with the budget in place of depth, which
+changes what the knob costs — no longer a slower solve but a SPENT budget and no solution:
+
+| | relevance off | relevance on |
+|---|---|---|
+| hanoi, 3 disks + the knob, budget 64 | 64 forks, EXHAUSTED at 3 moves | **50 forks, solved in 7** |
+| courier, corner delivery + two of hanoi's disks in the world, budget 128 | 128 forks, EXHAUSTED at 6 steps | **78 forks, delivered in 8** |
+
+The same forks as with no foreign lever at all, in both. Two domains share an agent now, which
+is the half of the plug-in claim that was owed.
 
 # The number that decides the search's shape: the mutable slice
 

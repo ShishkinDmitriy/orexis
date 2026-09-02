@@ -168,6 +168,39 @@ def test_the_world_asserts_the_want_and_the_package_owns_the_measure(monkeypatch
     assert _goal(agent).state == "unmet", "and the shape is judged by its compiled select"
 
 
+def test_two_domains_in_one_world_and_a_delivery_pass_moves_no_disk(monkeypatch):
+    """The plug-in claim's other half (#488): two domains sharing one agent. Hanoi's disks
+    are declared into the courier's world and posed on a peg, so Move rows appear on the
+    van's menu beside Drive; a delivery pass reads what the delivered shape reads — where
+    things are and where they are owed — finds Move writes only what a disk rests on, and
+    never simulates a move: the same 78 forks and the same eight steps as with no disk in
+    the world, and the trace names every Move row as irrelevant rather than losing it."""
+    from orexis_agent_deliberation import trace
+    from orexis_agent_deliberation.planner import Planner
+    from orexis_agent_progression.store import bindings
+
+    HANOI = "http://example.org/orexis/hanoi#"
+    forks = _counting_forks(monkeypatch)
+    agent = _driver(monkeypatch, "c0_0", "c1_2")
+    agent.beliefs.update(f"""INSERT DATA {{
+        GRAPH <http://example.org/orexis/graph/world> {{
+            <urn:disk_1> a <{HANOI}Disk> ; <{HANOI}size> 1 .
+            <urn:disk_2> a <{HANOI}Disk> ; <{HANOI}size> 2 . }}
+        GRAPH <{STATE_GRAPH}> {{
+            <urn:disk_2> <{HANOI}on> <{HANOI}PegA> . <urn:disk_1> <{HANOI}on> <urn:disk_2> . }} }}""")
+    agent.desires.rebuild()
+    p = Planner(agent, agent.me)
+    plan = p.plan(_goal(agent))
+    assert len(plan.steps) == 8 and _steps(plan)[-1] == ("Drop", "c3_3"), _steps(plan)
+    assert {a for a, _ in _steps(plan)} <= {"Drive", "Pick", "Drop"}
+    assert len(forks) == 78, f"{len(forks)} forks: 78 with no disk in the world"
+    assert HANOI + "Move" not in p._relevant
+    rows = bindings(agent.beliefs.query_union(f"""SELECT (COUNT(?c) AS ?n) WHERE {{
+        ?c <http://example.org/orexis#wouldTake> <{HANOI}Move> ;
+           <http://example.org/orexis#verdict> "{trace.IRRELEVANT}" }}"""))
+    assert int(rows[0]["n"]) > 0, "Move rows were on the menu, and the trace says so"
+
+
 def test_a_want_that_declares_no_distance_is_unchanged(monkeypatch):
     """The other half of the term's contract: hanoi declares no estimate, so every world reads
     equally far and the search behaves exactly as it did before `orexis:estimates` existed.

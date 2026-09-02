@@ -38,7 +38,7 @@ from dataclasses import dataclass, field
 import rdflib
 from rdflib import RDF, URIRef
 
-from . import effects, signature, trace, violation
+from . import effects, relevance, signature, trace, violation
 from .beliefs import Picks
 from orexis_agent_progression.act import Act, Step
 from orexis_agent_deliberation.desire import Desire
@@ -377,6 +377,27 @@ class Planner:
         source = self._shapes if (root, RDF.type, _SH.NodeShape) in self._shapes else self._base
         return source.cbd(root)
 
+    def _relevant_actions(self, desire: Desire, shape) -> frozenset | None:
+        """The actions relevant to this want, or None for all of them — see `relevance.py`."""
+        if shape is not None:
+            reads = relevance.reads_of_shape(shape, self._shape_root(desire))
+        else:
+            avoided = self._shapes.value(URIRef(desire.uri), _AG.unmetWhen)
+            pattern = self._avoided_pattern(desire) if avoided is not None else None
+            if pattern is not None:
+                reads = relevance.reads_of_select(pattern)
+            elif avoided is not None and self._unmet is not None:
+                source = (self._shapes if (avoided, RDF.type, _SH.NodeShape) in self._shapes
+                          else self._base)
+                reads = relevance.reads_of_shape(source.cbd(avoided), avoided)
+            else:
+                reads = relevance.ANYTHING          # an obligation, a call: anything
+        if reads is relevance.ANYTHING:
+            return None
+        return relevance.relevant(reads, relevance.actions_of(self.agent.beliefs.query),
+                                  relevance.rule_edges(),
+                                  relevance.subproperties_of(self.agent.beliefs.query))
+
     def _shape_root(self, desire: Desire):
         """The node the desire's shape hangs from, or None where it has none."""
         node = URIRef(desire.uri)
@@ -489,6 +510,13 @@ class Planner:
                 break
             depth = len(node.taken)
             for row in self._candidates(node, desire):
+                if self._relevant is not None and row.action not in self._relevant:
+                    #  A lever that touches nothing this want reads, by its own effect and
+                    #  by nothing it could enable (#488). Recorded, never simulated, and not
+                    #  a candidate seen: a menu of such rows is NOTHING — equip me — which is
+                    #  the honest finding when no lever points at the want.
+                    self._weighed.append((depth, row, None, trace.IRRELEVANT))
+                    continue
                 saw_candidate = True
                 if forked >= self.budget:
                     #  The budget ran out while this node was being expanded. Its remaining
@@ -939,6 +967,13 @@ class Planner:
                       else None)
             if source is not None:
                 self._unmet = violation.entered_select(source.cbd(avoided), avoided)
+        #  WHICH LEVERS COULD SERVE THIS WANT (#488): what the want reads, off its shape or
+        #  its pattern; what each action writes and reads, off the actions themselves; the
+        #  backward closure of the two. A row whose action is outside the set is never
+        #  simulated — one free foreign action multiplied a hanoi solve 2.8 times, and this is
+        #  the only defence that sees it. None where the want reads anything a parser cannot
+        #  name, and then every row is weighed exactly as before: over-approximation is safe.
+        self._relevant = self._relevant_actions(desire, shape)
         here = _Node(graph=STATE_GRAPH)
         here.estimate = self._estimate_in(here, desire)
         self._base_forbidden = (self._forbidden_keys(here)

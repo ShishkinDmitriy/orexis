@@ -117,6 +117,65 @@ def test_the_want_counts_the_disks_astray_and_the_count_prunes(monkeypatch):
     assert len(forks) < 56, f"{len(forks)} forks: measured 50 with the estimate, 56 without"
 
 
+KNOB = '''@prefix orexis: <http://example.org/orexis#> .
+@prefix knob: <urn:knob#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+#  A FREE FOREIGN ACTION that genuinely changes state: a knob flipping between two positions,
+#  no cost, nothing a solved puzzle reads. The runbook measured it at 2.8x the forks of a
+#  three-disk solve before anything could see it.
+knob:Flip a orexis:Action ;
+    orexis:available """SELECT ?via ?about WHERE {
+        GRAPH $state { ?via <urn:knob#at> ?here }
+        ?about a <urn:knob#Position> . FILTER(?about != ?here) }""" ;
+    orexis:retracts """CONSTRUCT { $via <urn:knob#at> ?old } WHERE { GRAPH $state { $via <urn:knob#at> ?old } }""" ;
+    sh:construct """CONSTRUCT { $via <urn:knob#at> $about } WHERE { }""" .
+knob:left a knob:Position . knob:right a knob:Position .
+'''
+
+
+def _with_knob(monkeypatch, tmp_path, agent_factory):
+    from assembly import loader
+
+    knob = tmp_path / "knob.ttl"
+    knob.write_text(KNOB)
+    real = loader.action_files()
+    monkeypatch.setattr(loader, "action_files", lambda: real + (knob,))
+    agent = agent_factory()
+    agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{
+        <urn:knob#dial> <urn:knob#at> <urn:knob#left> }} }}""")
+    agent.desires.rebuild()
+    return agent
+
+
+def test_a_free_foreign_action_no_longer_multiplies_the_solve(monkeypatch, tmp_path):
+    """The runbook's knob (#488): one free action from another domain, flipping a dial the
+    puzzle never reads. Before relevance it took a three-disk solve from 56 forks to 157 —
+    the bound is blind to a free action and cycle detection cannot fold a world that really
+    changed. Relevance reads the knob's effect off its own construct, finds it touches
+    nothing the solved want reads, records it as such and never simulates it: the same 50
+    forks as without the knob, and the same seven moves."""
+    from orexis_agent_deliberation import imaginarium, trace
+    from orexis_agent_deliberation.planner import Planner
+    from orexis_agent_progression.store import bindings
+
+    agent = _with_knob(monkeypatch, tmp_path,
+                       lambda: _mover(monkeypatch, ["disk_1", "disk_2", "disk_3"]))
+    forks = []
+    reached = imaginarium.Imaginarium.reached
+    monkeypatch.setattr(imaginarium.Imaginarium, "reached",
+                        lambda self, *a, **k: (forks.append(1), reached(self, *a, **k))[1])
+    p = Planner(agent, agent.me)
+    plan = p.plan(_goal(agent))
+    assert len(plan.steps) == 7, plan.outcome
+    assert len(forks) == 50, f"{len(forks)} forks: 50 without the knob, 157 with it unseen"
+    assert "urn:knob#Flip" not in p._relevant, "the knob touches nothing the want reads"
+    rows = bindings(agent.beliefs.query_union(f"""SELECT (COUNT(?c) AS ?n) WHERE {{
+        ?c <http://example.org/orexis#wouldTake> <urn:knob#Flip> ;
+           <http://example.org/orexis#verdict> "{trace.IRRELEVANT}" }}"""))
+    assert int(rows[0]["n"]) > 0, "and the trace says so, rather than the row vanishing"
+
+
 def test_the_budget_is_the_worlds_pick_and_the_kernel_bounds_it(monkeypatch):
     """A pass is budgeted in WORLDS, and the sovereign states it in the agent's beliefs like a
     patience (#494). `world/hanoi` states 64 and the planner reads exactly that; an agent whose
