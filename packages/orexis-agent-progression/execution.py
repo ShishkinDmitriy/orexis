@@ -21,6 +21,7 @@ knowledge/decisions/an-intention-is-a-plan-committed-to.md.
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 
 from dataclasses import replace
 
@@ -29,7 +30,7 @@ from orexis_agent_reactive.loop import loop
 from .ontology import OREXIS, STEP_DONE
 from .store import bindings
 
-from .act import Act
+from .act import Step
 
 log = logging.getLogger("execution")
 
@@ -55,11 +56,11 @@ def take_standing(agent, standing, desire) -> bool:
     #  want is ABOUT (`orexis:about`, read back off the want), which is the want's and not the act's.
     rows = bindings(agent.desires.query_union(
         f"SELECT ?about WHERE {{ <{standing.want}> orexis:about ?about }}"))
-    act = replace(standing.act, about=rows[0]["about"] if rows else None)
+    act = replace(standing.step, about=rows[0]["about"] if rows else None)
     return carry_out(agent, act, desire, standing.uri)
 
 
-def carry_out(agent, act: Act, desire, intention: str) -> bool:
+def carry_out(agent, act: Step, desire, intention: str) -> bool:
     """Hand one committed act to whoever the T-Box says takes its action. True if anyone did.
 
     On the loop. A caller that IS the loop takes it now; any other caller enqueues it and
@@ -72,7 +73,7 @@ def carry_out(agent, act: Act, desire, intention: str) -> bool:
     return on.submit(_take, agent, act, desire, intention).result()
 
 
-def _take(agent, act: Act, desire, intention: str) -> bool:
+def _take(agent, act: Step, desire, intention: str) -> bool:
     family = taken_by(agent.beliefs.query, act.action)
     if family is None:
         #  A row was shipped and no taker was stated. `tests/test_execution.py` refuses this

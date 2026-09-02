@@ -3,40 +3,34 @@ type: Domain Concept
 title: Step
 term: http://example.org/orexis#Step
 description: >-
-  One act at its place in a plan. On the search's side, with what the search predicted taking
-  it would reach; in the ledger, what an intention stands at — it takes the act, waits for a
-  condition if it has one, says what happens if the wait lapses, and may name the step that
-  follows. A weighed step that was not chosen is a candidate in the trace.
+  A planned instance of an action, not yet done: the lever, the quantity, the window, what the
+  search predicted taking it would reach, what it waits for, what follows. A plan is steps, an
+  intention commits to steps and stands at one, a claim promises one. Taking a step writes an
+  act, the record; a step may be attempted more than once.
 ---
 
 # What it is
 
-A **step** is an [act](/domain/act.md) at a position in a plan: its order, and what the
-search predicted — the urgency the want would have in the world after it (`urgency_after`).
-`Plan.steps` holds them (`packages/orexis-agent-progression/act.py`'s `Step`); the [imaginarium](/domain/imaginarium.md)
-holds the world each one reached, for the life of one pass, and names that world by the path
-of steps that reached it.
+`orexis:Step`. One [action](/domain/action.md) filled in and planned — which template, the lever
+it goes through, the want it serves and what that want is about, how much, for whom where it is
+an obligation's, and its window — with what the search predicted it would reach. Nothing has
+happened yet, and that is the whole reason for the word: a plan is not executed, so its
+elements are not [acts](/domain/act.md). The sovereign's ruling, 2026-09-02.
 
-# In the ledger
+# Where it appears
 
-`orexis:Step`, since #514. An intention stands at a step (`orexis:at`); the step takes the act
-(`orexis:takes`); and the step is where readiness lives — `orexis:until` or `orexis:untilNot`,
-a shape it waits for, and `orexis:whenLapsed`, what the keeper does if the deadline passes
-first. The intention is the commitment, the act is the doing, the step is the place: three
-words because three readers ask three questions. `orexis:then` names the following step and is
-[#510](https://github.com/ShishkinDmitriy/orexis/issues/510)'s to write: a plan handed down
-whole is a chain of steps, each held until the previous one's expectation conforms.
-
-# Only the head is committed
-
-The plan is re-derived every pass because the world moves, so a committed tail would be a
-promise about a future nobody has seen. [Execution](/domain/executor.md) takes the first
-step's act, hands it to the keeper as an [intention](/domain/intention.md), and the rest is
-trace: every step weighed is an `orexis:Candidate` in the deliberation graph, chosen or not, and
-none of it is read back.
+- a plan is a sequence of them, each with the urgency the want would have in the world it reaches
+- an [intention](/domain/intention.md) commits to them — `orexis:step` to each, `orexis:by` to the
+  one it stands at, `orexis:then` between them in order
+- a [claim](/domain/claim.md) promises one: the host's Serving step, so many litres, not after the
+  window closes
+- the step is what WAITS: its readiness (`orexis:until`, `orexis:untilNot`), its completion
+  (`orexis:answeredWhen`), and what the keeper does if a wait lapses (`orexis:whenLapsed`)
 
 # What it is not
 
-**Not an act.** The act is what the step proposes; it survives the plan when committed. The
-step does not — it is a hypothesis about a world, and a hypothesis must survive nothing
-([imaginarium](/domain/imaginarium.md)).
+**Not an act.** An act is the record that a step was taken. One step, possibly several acts,
+since an actor may be unable to take it now and a later tick takes it.
+
+**Not a place of its own beside the thing placed.** Every step is minted for the place it fills,
+so its place in the plan is the links from the intention and to the next step, not a node.

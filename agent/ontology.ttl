@@ -726,7 +726,7 @@ orexis:pursues a owl:ObjectProperty ; rdfs:domain orexis:Intention ;
 
 Optional, because the first three means predate goals having names: an intention with no goal is keyed as it always was, and every old row in a ledger stays readable.""" .
 
-orexis:by a owl:ObjectProperty ; rdfs:domain orexis:Intention ; rdfs:range orexis:Act ;
+orexis:by a owl:ObjectProperty ; rdfs:domain orexis:Intention ; rdfs:range orexis:Step ;
     rdfs:label "by" ;
     rdfs:comment "The ACT committed to — the filled action: which action (orexis:fills), through which lever (orexis:through), how much (orexis:quantity), for whom, and when. It named the action node itself from the-action-is-the-kind until an-act-is-a-filled-action gave the filled one a node of its own. Not a plan: the how stays with whichever capability takes it." .
 
@@ -771,26 +771,35 @@ orexis:takenBy a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:range ore
 #  in a plan, which is never written anywhere. `agent/act.py` carries it, and the keeper writes
 #  the node beside every intention (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
 
+orexis:Step a owl:Class ; rdfs:label "Step" ;
+    rdfs:comment "One orexis:Action filled in and PLANNED — not yet done (the sovereign's ruling, 2026-09-02: a plan is not executed, so its elements are not acts). The lever it goes through, the want it serves, how much, for whom where it is a duty's, its window, what the search predicted taking it would reach, what it waits for (orexis:until, orexis:untilNot), what counts as the world having answered it (orexis:answeredWhen), what follows (orexis:then). A plan is steps; an intention commits to them (orexis:step) and stands at one (orexis:by); a claim promises one. Minted per adoption, so it is also the place it fills." .
 orexis:Act a owl:Class ; rdfs:label "Act" ;
-    rdfs:comment "One orexis:Action filled in: the lever it goes through, the want it serves, how much, for whom where it is a duty's, and the window in which taking it counts. What an intention commits to, what an actor is handed, what a commitment promises. Every act is an instance and no code names one." .
+    rdfs:comment "The RECORD that a step was taken: which step (orexis:of), when (orexis:takenAt), whether anyone took it (orexis:taken) — history, and only history. Written by execution the moment the actors have been asked; one step may be attempted more than once, and each attempt is an act. What the world made of it — the verdict — is the intention's today and lands here as the ledger grows." .
+orexis:of a owl:ObjectProperty ; rdfs:domain orexis:Act ; rdfs:range orexis:Step ;
+    rdfs:label "of" .
+orexis:takenAt a owl:DatatypeProperty ; rdfs:domain orexis:Act ; rdfs:range xsd:dateTime ;
+    rdfs:label "taken at" .
+orexis:taken a owl:DatatypeProperty ; rdfs:domain orexis:Act ; rdfs:range xsd:boolean ;
+    rdfs:label "taken" ;
+    rdfs:comment "Whether an actor took it; false is an attempt no actor could carry out now, the step standing for the next." .
 
-orexis:fills a owl:ObjectProperty ; rdfs:domain orexis:Act ; rdfs:range orexis:Action ;
+orexis:fills a owl:ObjectProperty ; rdfs:domain orexis:Step ; rdfs:range orexis:Action ;
     rdfs:label "fills" ;
     rdfs:comment "Which action this act is an instance of — the template it fills. The one hop from a commitment to the precondition, the effect and the taker." .
 
-orexis:forAgent a owl:ObjectProperty ; rdfs:domain orexis:Act ; rdfs:range orexis:Agent ;
+orexis:forAgent a owl:ObjectProperty ; rdfs:domain orexis:Step ; rdfs:range orexis:Agent ;
     rdfs:label "for agent" ;
     rdfs:comment "Whom the act serves, where it is a duty's — the counterparty a Serving act is owed to. Absent on an act of the agent's own." .
 
-orexis:quantity a owl:DatatypeProperty ; rdfs:domain orexis:Act ; rdfs:range xsd:decimal ;
+orexis:quantity a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
     rdfs:label "quantity" ;
     rdfs:comment "How much the act moves, in the good's unit — sized by whoever would take it (Module.size), never by the planner. Absent on an act that moves nothing: a look." .
 
-orexis:notBefore a owl:DatatypeProperty ; rdfs:domain orexis:Act ; rdfs:range xsd:dateTime ;
+orexis:notBefore a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:dateTime ;
     rdfs:label "not before" ;
     rdfs:comment "The window's opening. Declared and unwritten: a held claim spent later — futures — is the first thing that would write it, and that is the market's decision." .
 
-orexis:notAfter a owl:DatatypeProperty ; rdfs:domain orexis:Act ; rdfs:range xsd:dateTime ;
+orexis:notAfter a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:dateTime ;
     rdfs:label "not after" ;
     rdfs:comment "The window's close — what every hand-kept timer was saying: a bid not after the round closes, a serve not after the claim's expiry, a look not after the round that wanted it closes." .
 
@@ -821,25 +830,21 @@ orexis:resolvedAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:r
 orexis:outcome a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:string ;
     rdfs:label "outcome" ;
     rdfs:comment "How it ended: satisfied or dropped. A string rather than a class per outcome, exactly as review:outcome is." .
-#  A STEP HELD UNTIL A CONDITION (#512, #514): progression's primitive. ON THE STEP — the
-#  sovereign's correction, twice: an intention is the commitment (which want, why, when
-#  adopted, when resolved); an act is the doing (lever, quantity, whom for, its window); and
-#  a step is the act's PLACE — when it is due, what it waits for, what follows. A plan
-#  committing to a sequence (#510) gives each step its own condition and names the next.
-#  The keeper adopts an act at a step, with a SHAPE over the agent's beliefs and a deadline; it re-asks the select whenever a
-#  belief lands and keeps the deadline on its scheduler; when the select binds, the act is
-#  handed to whoever takes it, and when the deadline passes first the act is taken as lapsed
-#  or dropped, as the adopter said. The market's held claim was this road, written inside the
-#  bidder with a private timer and a per-reading check; a plan's next step is this road with
-#  the previous step's prediction as the condition (#510). The condition is DATA, so a
-#  sovereign asking the ledger sees what an intention waits for.
-orexis:Step a owl:Class ; rdfs:label "Step" ;
-    rdfs:comment "An act's place in a plan, in the LEDGER (#514): what an intention stands at. It takes one act (`orexis:takes`), may wait for a condition (`orexis:until` / `orexis:untilNot`) with a rule for the deadline (`orexis:whenLapsed`), and may name the step that follows (`orexis:then`, #510). Planning's step (knowledge/domain/step.md) is the same thing on the search's side — an act with what taking it was predicted to reach — and the ledger's is the one committed to." .
-orexis:at a owl:ObjectProperty ; rdfs:domain orexis:Intention ; rdfs:range orexis:Step ;
-    rdfs:label "stands at" ;
-    rdfs:comment "The step an intention stands at. `orexis:by` still names the act directly — the doing the ledger's readers ask for — and the step is where its readiness lives." .
-orexis:takes a owl:ObjectProperty ; rdfs:domain orexis:Step ; rdfs:range orexis:Act ;
-    rdfs:label "takes" .
+#  A STEP HELD UNTIL A CONDITION (#512, #514, #516): progression's primitive. ON THE STEP — a
+#  planned thing is what waits; the intention is the commitment (which want, why, when
+#  adopted, when resolved); the act is the record of a taking, written when one happens. A
+#  plan committing to a sequence (#510) links its steps (`orexis:step`, `orexis:then`) and
+#  gives each its own condition. The keeper adopts a step with a SHAPE over the agent's
+#  beliefs and a deadline; it re-asks the shape whenever a belief lands and keeps the deadline
+#  on its scheduler; when the shape conforms the step is handed to whoever takes it, and when
+#  the deadline passes first it is taken as lapsed or dropped, as the adopter said. The
+#  market's held claim was this road, written inside the bidder with a private timer and a
+#  per-reading check; a plan's next step is this road with the previous step's prediction as
+#  the condition (#510). The condition is DATA, so a sovereign asking the ledger sees what a
+#  step waits for.
+orexis:step a owl:ObjectProperty ; rdfs:domain orexis:Intention ; rdfs:range orexis:Step ;
+    rdfs:label "step" ;
+    rdfs:comment "Every step of the plan this intention commits to. `orexis:by` names the one it stands at now; `orexis:then` orders the rest." .
 orexis:then a owl:ObjectProperty ; rdfs:domain orexis:Step ; rdfs:range orexis:Step ;
     rdfs:label "then" ;
     rdfs:comment "The step that follows this one in the plan committed to — written by #510, read by nothing yet." .

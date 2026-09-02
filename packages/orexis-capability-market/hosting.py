@@ -42,7 +42,7 @@ from orexis_agent_progression.timer import Timer
 from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
-from orexis_agent_progression.act import Act
+from orexis_agent_progression.act import Step
 from orexis_agent_progression.ontology import WORLD_GRAPH
 from orexis_agent_progression.store import bindings
 
@@ -425,11 +425,11 @@ SELECT ?r WHERE {{
                            "so the bids are discarded. Check its market:matchesBy.", auction_id)
             return
 
-        #  Every claim is a commitment to MY Serving act: this venue, so many litres, for
-        #  this buyer, not after the window closes — the act the buyer's presentation will
-        #  ask me to take (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
+        #  Every claim is a commitment to MY Serving STEP: this venue, so many litres, for
+        #  this buyer, not after the window closes — planned, not done; the buyer's
+        #  presentation is what asks me to take it, and the taking is the act.
         def serving(line, expires):
-            return Act(action=SERVING, via=market.uri, quantity=line.qty_l,
+            return Step(action=SERVING, via=market.uri, quantity=line.qty_l,
                        for_agent=node_of(self.agent.beliefs.query, line.agent),
                        not_after=(datetime.fromtimestamp(expires, tz=timezone.utc)
                                   if expires is not None else None))

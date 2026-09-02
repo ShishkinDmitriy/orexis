@@ -33,14 +33,14 @@ from datetime import datetime, timezone
 import heapq
 import logging
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import rdflib
 from rdflib import RDF, URIRef
 
 from . import effects, relevance, signature, trace
 from .beliefs import Picks
-from orexis_agent_progression.act import Act, Step
+from orexis_agent_progression.act import Step
 from orexis_agent_deliberation.desire import Desire
 from .afforder import affordances_of, wants_of
 from .imaginarium import Imaginarium
@@ -73,7 +73,7 @@ class Plan:
     """
 
     outcome: str
-    steps: tuple = ()                 # of `act.Step`: an act each, with what it would reach
+    steps: tuple = ()                 # of `act.Step`: each with what it was predicted to reach
     urgency_now: float | None = None
     urgency_after: float | None = None
 
@@ -1016,8 +1016,8 @@ class Planner:
         #  THE ROW BECOMES AN ACT here, where it is sized — the quantity the taker answered is
         #  what the rule just simulated — and the act becomes a STEP once the world it reaches
         #  is scored. An act carries no window yet: nothing in a search knows when.
-        act = Act.from_row(row, quantity=bind["litres"] or None)
-        path = node.taken + (Step(act),)
+        act = Step.from_row(row, quantity=bind["litres"] or None)
+        path = node.taken + (act,)
         diff = signature.advance(node.diff, signature.facts(added, self._keys),
                                  signature.facts(retracted, self._keys), self._base_facts)
         graph = self.imaginarium.reached(node.graph, path, added, retracted)
@@ -1029,7 +1029,7 @@ class Planner:
         step = _Node(graph=graph, diff=diff, landing=landing, cost=cost)
         step.urgency = self._urgency_in(step, desire)
         step.estimate = self._estimate_in(step, desire)
-        step.taken = node.taken + (Step(act, urgency_after=step.urgency),)
+        step.taken = node.taken + (replace(act, urgency_after=step.urgency),)
         return step
 
     def _bind(self, desire: Desire | None, node=None, row=None) -> dict:

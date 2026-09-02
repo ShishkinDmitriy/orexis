@@ -371,26 +371,26 @@ def test_an_old_row_naming_an_action_is_rebuilt_as_an_act(make):
             <{OREXIS}adoptedAt> "2026-08-01T00:00:00+00:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
     assert ledger.migrate_ledger_acts(keeper.agent.intentions, keeper.graph) == 1
     old = next(s for s in keeper.standing(action=ACQUIRING) if s.uri.endswith("old1"))
-    assert old.act.action == ACQUIRING and old.act.via == "urn:old-venue"
+    assert old.step.action == ACQUIRING and old.step.via == "urn:old-venue"
     assert ledger.migrate_ledger_acts(keeper.agent.intentions, keeper.graph) == 0, \
         "idempotent — a row already naming an act is left alone"
 
 
 def test_the_ledger_holds_the_act_sized_and_windowed(make):
     """What the plan's head committed to is written whole: the action it fills, the lever, the
-    quantity the taker sized, and the window — read back as one `Act`, which is what an actor
+    quantity the taker sized, and the window — read back as one `Step`, which is what an actor
     is handed when the trigger changes and the decision does not."""
     from datetime import datetime, timezone
-    from orexis_agent_progression.act import Act
+    from orexis_agent_progression.act import Step
 
     fern = make("fern")
     keeper = keeper_of(fern)
     closes = datetime(2026, 9, 1, 12, 0, tzinfo=timezone.utc)
-    act = Act(action=ACQUIRING, via="urn:venue", quantity=0.4, not_after=closes)
+    act = Step(action=ACQUIRING, via="urn:venue", quantity=0.4, not_after=closes)
     keeper.adopt(act, stake_of(fern).uri, "bid 0.4L, not after the round closes")
     standing = keeper.standing(action=ACQUIRING)[0]
-    assert (standing.act.action, standing.act.via, standing.act.quantity,
-            standing.act.not_after) == (ACQUIRING, "urn:venue", 0.4, closes)
+    assert (standing.step.action, standing.step.via, standing.step.quantity,
+            standing.step.not_after) == (ACQUIRING, "urn:venue", 0.4, closes)
 
 
 # --- an intention held until a condition (#512) ------------------------------------------
@@ -473,10 +473,9 @@ def test_a_hold_may_be_a_shape_and_may_release_when_a_condition_stops(make):
     assert [s.uri for s, *_ in held] == [shaped]
     assert "FILTER EXISTS" in held[0][1], "compiled to the conformance select"
     stored = bindings(fern.intentions.query_union(f"""SELECT ?n WHERE {{ GRAPH <{keeper.graph}> {{
-        <{shaped}> orexis:at ?step . ?step a orexis:Step ; orexis:takes ?act ; orexis:until ?n .
-        ?n a sh:NodeShape }} }}"""))
+        <{shaped}> orexis:by ?step . ?step a orexis:Step ; orexis:until ?n . ?n a sh:NodeShape }} }}"""))
     assert stored and stored[0]["n"] == str(root), \
-        "the ledger keeps the shape as what the STEP waits for — the act's place, not the act"
+        "the ledger keeps the shape as what the STEP waits for — planned, not yet done"
 
     fern.beliefs.update(f"INSERT DATA {{ GRAPH <{graph}> {{ <urn:flag> <urn:p> 1 }} }}")
     assert keeper.held() == [], "the flag came to conform: released"

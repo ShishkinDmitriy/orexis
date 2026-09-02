@@ -41,7 +41,7 @@ def pursue(agent, desire) -> str | None:
     plan = agent.deliberator.decide(desire)
     if plan is None or not plan.steps:
         return None
-    act = plan.steps[0].act
+    act = plan.steps[0]
     keeper = agent.keeper
     if keeper is None:
         return None

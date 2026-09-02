@@ -26,8 +26,9 @@ select over the agent's beliefs and a deadline; it re-asks the select whenever a
 and keeps the deadline on its scheduler. The first time the select binds, the act is handed to
 whoever takes it; if the deadline passes first, the act is taken as lapsed or dropped, as the
 adopter said. The condition sits on the [step](/domain/step.md) the intention stands at — an
-intention is the commitment, which want and why; the act is the doing; the step is the act's
-place, which is what waits — as data on the ledger (`orexis:until`, or its twin
+intention is the commitment, which want and why; the step is the planned instance, and a
+planned thing is what waits; the [act](/domain/act.md) is the record of its taking — as data on
+the ledger (`orexis:until`, or its twin
 `orexis:untilNot`, released when the condition stops holding — hold while the round is open),
 and it is always a SHAPE — a condition that is naturally a query is a shape carrying a
 `sh:sparql` constraint, the form SHACL already has — which the keeper compiles to the select

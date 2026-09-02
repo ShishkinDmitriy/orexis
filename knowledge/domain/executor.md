@@ -28,7 +28,7 @@ item on the executing thread.
 1. **Plan.** `deliberator.decide(desire)` — the search, unchanged, returning its
    [plan](/domain/deliberator.md) as rows. No steps means nothing to execute, and that None is
    the deliberator's decision, not this process's.
-2. **Commit.** The head [step](/domain/step.md)'s [act](/domain/act.md) goes to the keeper:
+2. **Commit.** The head [step](/domain/step.md) goes to the keeper:
    `adopt(action, want, because, via=lever)`.
    The [intention](/domain/intention.md) written carries the lever the plan chose. If one
    already stands within patience, `adopt` returns None and the process ends here — the same

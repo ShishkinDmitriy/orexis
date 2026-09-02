@@ -65,7 +65,7 @@ def _counting_forks(monkeypatch):
 
 
 def _steps(plan):
-    return [(str(s.act.action).split("#")[-1], str(s.act.about).split("#")[-1])
+    return [(str(s.action).split("#")[-1], str(s.about).split("#")[-1])
             for s in plan.steps]
 
 

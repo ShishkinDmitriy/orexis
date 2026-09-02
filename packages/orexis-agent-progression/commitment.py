@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .act import Act
+from .act import Step
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -36,4 +36,4 @@ class Commitment:
     #  is a commitment to the host's Serving act — this venue, so many litres, for this buyer,
     #  not after `exp`; a self-dose is a commitment to a Dosing act with nobody to pay. None on
     #  a commitment that arrived over the wire, where the act is the host's and stays with it.
-    act: Act | None = None
+    step: Step | None = None

@@ -54,8 +54,8 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [deliberation](/domain/deliberator.md) - The whether: name the next move by building the world each lever would make and keeping the one worth reaching. One road.
 
 * [action](/domain/action.md) - One way of acting as one node — and the kind of act itself: precondition, effect, taker. A package adds one node and one `take()`.
-* [act](/domain/act.md) - An action filled in — lever, want, quantity, whom for, and a window. Execution's word: committed, taken, promised.
-* [step](/domain/step.md) - Planning's word: an act at its place in a plan with what the search predicted. Only the head's act is committed.
+* [step](/domain/step.md) - A planned instance of an action: lever, quantity, window, prediction, what it waits for. A plan is steps; not yet done.
+* [act](/domain/act.md) - The record that a step was taken: which step, when, whether anyone took it. History, and only history.
 
 * [relevance](/domain/relevance.md) - Which levers could serve a want: read off the actions, closed backward through preconditions, never declared; unreadable keeps every lever.
 * [affordance](/domain/affordance.md) - One row of what an agent could do now — an action whose precondition holds. Derived and never stored; whom it serves is a column.

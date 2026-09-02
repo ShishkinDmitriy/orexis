@@ -112,7 +112,7 @@ def write(store, agent_id: str, desire, plan, considered, stands_at: float,
 def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
            took_s: float) -> None:
     node = _uri(agent_id, desire.uri)
-    chosen = plan.steps[0].act.action if plan.steps else None
+    chosen = plan.steps[0].action if plan.steps else None
     rows = []
     for i, (depth, row, urgency, verdict) in enumerate(considered):
         candidate = f"{node}.{i}"

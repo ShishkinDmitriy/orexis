@@ -121,7 +121,7 @@ toy:{name} a orexis:Action ;
     plan = Planner(agent, agent.me).plan(_avoidance_row(agent))
     assert plan.outcome == "satisfied" and plan.steps, \
         "clearing the marker is achievable in one step, and the pass must say so"
-    assert plan.steps[0].act.action == "urn:toy#Cleanse", \
+    assert plan.steps[0].action == "urn:toy#Cleanse", \
         "two roads out differ only in cost, and the cheaper wins"
 
 
@@ -271,7 +271,7 @@ def test_the_law_prunes_at_expansion_and_the_next_legal_plan_wins(tmp_path, monk
     plan = Planner(agent, agent.me).plan(stake)
 
     assert plan.steps, "the stake is achievable — one lever is legal"
-    assert plan.steps[0].act.action == "urn:toy#Honest", \
+    assert plan.steps[0].action == "urn:toy#Honest", \
         "better on BOTH ranking axes and still not taken: the law prunes at expansion"
 
 
@@ -298,4 +298,4 @@ toy:Exit a orexis:Action ;
     plan = Planner(agent, agent.me).plan(_avoidance_row(agent))
     assert plan.outcome == "satisfied" and plan.steps, \
         "the recovery must be plannable from inside the forbidden state"
-    assert plan.steps[0].act.action == "urn:toy#Exit", "and it is the exit itself"
+    assert plan.steps[0].action == "urn:toy#Exit", "and it is the exit itself"
