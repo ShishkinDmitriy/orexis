@@ -3,19 +3,25 @@ type: Domain Concept
 title: Triggered action
 term: http://example.org/orexis#TriggeredAction
 description: >-
-  An action no plan chooses: adopted by an event and taken on a trigger, so it states neither
-  a precondition nor an effect and is on nobody's menu. Still an action, so an intention can
-  commit to it and a ledger row can name it. The other kind of action, and the vocabulary says
-  which is which rather than leaving it to absence.
+  Progression's kind of action, not deliberation's: an intention adopted by an event and taken
+  on a trigger, never chosen by a plan, so it states neither a precondition nor an effect and
+  is on nobody's menu. Still an action, so the ledger names it and an expectation can wait on
+  it. The vocabulary says which kind an action is rather than leaving it to absence.
 ---
 
 # What it is
 
-`orexis:TriggeredAction`, a subclass of [action](/domain/action.md). The market's Presenting is
-the one shipped: a bidder holds a won [claim](/domain/claim.md) until the watch is live, then
-presents it on the redeem channel. No plan chooses that — the claim arriving IS the adoption,
-the watch going live is the trigger — and it exists as a node so the hold can be a
-[commitment](/domain/intention.md) (`orexis:by`) and can carry an urgency.
+`orexis:TriggeredAction`, a subclass of [action](/domain/action.md) — and the layer it belongs
+to is the middle one. The search never sees it. A message arrives through the transport and
+becomes an event on the reactive loop; the keeper adopts an [intention](/domain/intention.md)
+for it; a second event is the trigger; and the capability takes the act on the loop thread.
+That is progression's whole road — adopt, wait, take on feedback — with no deliberation above
+it, and this class is that road's word for the action at the end of it.
+
+The market's Presenting is the one shipped: a bidder holds a won [claim](/domain/claim.md)
+until the watch is live, then presents it on the redeem channel. No plan chooses that — the
+claim arriving IS the adoption, the watch going live is the trigger — and it exists as a node
+so the hold can be a commitment (`orexis:by`) and can carry an urgency.
 
 # How to use it
 
