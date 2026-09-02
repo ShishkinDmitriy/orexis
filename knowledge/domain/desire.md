@@ -300,7 +300,19 @@ worlds author their goals positively — `courier:delivered`, `hanoi:solved` —
 "a parcel astray" by hand. Coverage is the fragment the derivations emit and a shape outside it
 refuses, named, never compiling to something quiet; `tests/test_violation.py` holds every
 compiled select to the judge on the same world. An authored `orexis:unmetWhen` stays the road
-for an aversion, whose content IS the avoided state.
+for an aversion, whose content IS the avoided state — and since #499 it too may be a shape,
+compiled to its conformance select, so both polarities read either form. The two terms are
+not folded: `unmetWhen S` is `metWhen [sh:not S]` in logic, and an author made to write "met
+when not the marker" gets back the double negative the compiler takes away.
+
+**The rule of thumb, agreed with the sovereign (2026-09-02).** Author in SHACL what is a test
+over a focus node or a monotone rule from one — a met-test, an avoided state, a structural
+derivation — because then its predicates are data, the kernel can compile it, and relevance
+can read it. Author in SPARQL what enumerates, computes, aggregates or retracts — a
+precondition (rows: lever and target), an [effect](/domain/effect.md) (it retracts, and SHACL
+cannot), an estimate (arithmetic and a sum). The compiler runs one way, every shape in the
+fragment to a select and no select to a shape, so the choice is made at authoring and the
+direction is never ambiguous.
 
 # A want that can say how far it still is
 

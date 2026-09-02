@@ -206,11 +206,18 @@ orexis:MetTestShape a sh:NodeShape ;
         }""" ] .
 
 orexis:AvoidedPatternShape a sh:NodeShape ;
-    rdfs:comment "The object of orexis:unmetWhen: a node carrying exactly one sh:select — the pattern whose rows mean the want is unmet. Without it nothing can ever judge the state, and the want would sit silently met for ever, which is the quiet direction to be wrong." ;
+    rdfs:comment "The object of orexis:unmetWhen: EITHER a node carrying exactly one sh:select — the pattern whose rows mean the want is unmet — OR, since #499, a sh:NodeShape describing the avoided state, which the kernel compiles into that pattern. One or the other, never neither: without either nothing can ever judge the state, and the want would sit silently met for ever, which is the quiet direction to be wrong." ;
     sh:targetObjectsOf orexis:unmetWhen ;
     sh:property [ sh:path <http://www.w3.org/ns/shacl#select> ;
-                  sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
-                  sh:message "an avoided state carries exactly one sh:select" ] .
+                  sh:maxCount 1 ; sh:datatype xsd:string ;
+                  sh:message "an avoided state carries at most one sh:select" ] ;
+    sh:sparql [
+        sh:message "an avoided state is a sh:select or a sh:NodeShape — never neither" ;
+        sh:select """
+            SELECT $this WHERE {
+                FILTER NOT EXISTS { $this <http://www.w3.org/ns/shacl#select> ?q }
+                FILTER NOT EXISTS { $this a <http://www.w3.org/ns/shacl#NodeShape> }
+            }""" ] .
 
 # The first consumer of the gap, and deliberately a WARNING. An observation outside the
 # survival envelope is not an invalid belief — it is an emergency, and an agent must be allowed

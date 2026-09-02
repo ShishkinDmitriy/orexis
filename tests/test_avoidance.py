@@ -19,16 +19,29 @@ MARKER = "<urn:naughty> <urn:p> <urn:o>"
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 
 
-def _avoiding_world(tmp_path, both=False):
+def _avoiding_world(tmp_path, both=False, shaped=False):
     """The loner world plus one ratified avoidance — the desire authored DIRECTLY, which is
     the whole point of the rebuild: what the sovereign ratifies is the want, not a statement
-    something else expands."""
+    something else expands.
+
+    TWO AUTHORED FORMS of the avoided state (#499), and every behaviour below holds for
+    both: a select whose rows mean entered, or a SHAPE describing the state — targeted on
+    the marker node, conforming exactly when the marker stands — which the kernel compiles
+    into that select. The want, and its polarity, are the same either way."""
     from agent import genesis
 
     dst = tmp_path / "avoiding"
     shutil.copytree(genesis.world_dir("loner"), dst)
     met_too = (f"<{WANT}> <http://example.org/orexis#metWhen> <{PATTERN}> .\n  "
                if both else "")
+    avoided = (f'''<{PATTERN}> a <http://www.w3.org/ns/shacl#NodeShape> ;
+      <http://www.w3.org/ns/shacl#targetNode> <urn:naughty> ;
+      <http://www.w3.org/ns/shacl#property> [
+          <http://www.w3.org/ns/shacl#path> <urn:p> ;
+          <http://www.w3.org/ns/shacl#hasValue> <urn:o> ] .'''
+               if shaped else
+               f'''<{PATTERN}> <http://www.w3.org/ns/shacl#select>
+      """SELECT (1 AS ?entered) WHERE {{ GRAPH $state {{ {MARKER} }} }}""" .''')
     (dst / "desire.ttl").write_text(f'''GRAPH <{ASSERTED}> {{
   <{GARDENER}> <http://example.org/orexis#holds> <{WANT}> .
   <{WANT}> a <http://example.org/orexis#Desire> ;
@@ -36,18 +49,17 @@ def _avoiding_world(tmp_path, both=False):
       <http://www.w3.org/2000/01/rdf-schema#label>
           "never let the naughty marker stand — the sentence somebody ratified" ;
       <http://example.org/orexis#unmetWhen> <{PATTERN}> .
-  {met_too}<{PATTERN}> <http://www.w3.org/ns/shacl#select>
-      """SELECT (1 AS ?entered) WHERE {{ GRAPH $state {{ {MARKER} }} }}""" .
+  {met_too}{avoided}
 }}
 ''')
     return dst
 
 
-def _gardener(tmp_path, monkeypatch, world=None):
+def _gardener(tmp_path, monkeypatch, world=None, shaped=False):
     from agent import genesis
     from orexis_agent_progression.store import Store
 
-    dst = world or _avoiding_world(tmp_path)
+    dst = world or _avoiding_world(tmp_path, shaped=shaped)
     st = Store()
     genesis.refresh_public(st, dst)
     genesis.birth(st, dst, "gardener")
@@ -58,11 +70,12 @@ def _avoidance_row(agent):
     return next(g for g in agent.pursuing() if g.uri == WANT)
 
 
-def test_a_ratified_avoidance_is_pursued_with_no_capability_in_the_room(tmp_path, monkeypatch):
+@pytest.mark.parametrize("shaped", [False, True], ids=["select", "shape"])
+def test_a_ratified_avoidance_is_pursued_with_no_capability_in_the_room(tmp_path, monkeypatch, shaped):
     """The rebuild's whole claim: the want is pure ratified data, so no module exists for it
     and none is needed — the KERNEL lifts it into pursuit, because wanting is the kernel's —
     and its urgency is the pattern's own verdict, binary: held at zero, entered at one."""
-    agent, st = _gardener(tmp_path, monkeypatch)
+    agent, st = _gardener(tmp_path, monkeypatch, shaped=shaped)
 
     assert not any(m.name == "aversion" for m in agent.modules), \
         "no capability composes for pure ratified data — that is the ruling, held"
@@ -77,7 +90,8 @@ def test_a_ratified_avoidance_is_pursued_with_no_capability_in_the_room(tmp_path
         "the marker standing is the pattern's own verdict"
 
 
-def test_the_search_exits_an_avoided_state_by_the_cheapest_road(tmp_path, monkeypatch):
+@pytest.mark.parametrize("shaped", [False, True], ids=["select", "shape"])
+def test_the_search_exits_an_avoided_state_by_the_cheapest_road(tmp_path, monkeypatch, shaped):
     """Steering out is the ordinary achiever road: a candidate world where the pattern no
     longer binds is MET by the same one text on the same one engine, joins the achievers,
     and cost decides between two exits."""
@@ -101,7 +115,7 @@ toy:{name} a orexis:Action ;
     real = loader.action_files()
     monkeypatch.setattr(loader, "action_files", lambda: real + (toys,))
 
-    agent, st = _gardener(tmp_path, monkeypatch)
+    agent, st = _gardener(tmp_path, monkeypatch, shaped=shaped)
     st.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ {MARKER} }} }}")
 
     plan = Planner(agent, agent.me).plan(_avoidance_row(agent))
@@ -111,7 +125,8 @@ toy:{name} a orexis:Action ;
         "two roads out differ only in cost, and the cheaper wins"
 
 
-def test_an_avoided_state_nothing_can_exit_stays_hot_and_says_so(tmp_path, monkeypatch):
+@pytest.mark.parametrize("shaped", [False, True], ids=["select", "shape"])
+def test_an_avoided_state_nothing_can_exit_stays_hot_and_says_so(tmp_path, monkeypatch, shaped):
     """Soft means soft: nothing on the menu clears the marker, the search proposes nothing,
     and the want stays entered at full heat, visible to the ask. The outcome is NOT_BETTER
     and not NOTHING, deliberately: an avoidance states no `orexis:about`, so it ranges over
@@ -120,13 +135,42 @@ def test_an_avoided_state_nothing_can_exit_stays_hot_and_says_so(tmp_path, monke
     me" would be false."""
     from orexis_agent_deliberation.planner import Planner
 
-    agent, st = _gardener(tmp_path, monkeypatch)
+    agent, st = _gardener(tmp_path, monkeypatch, shaped=shaped)
     st.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ {MARKER} }} }}")
 
     plan = Planner(agent, agent.me).plan(_avoidance_row(agent))
     assert plan.outcome == "not better" and not plan.steps, \
         "levers were weighed and none exits the state — said as what it is"
     assert _avoidance_row(agent).urgency == 1.0, "and the want stays hot, never shrugged off"
+
+
+def test_the_shape_form_agrees_with_the_judge(tmp_path, monkeypatch):
+    """Parity for the negative twin, as `tests/test_violation.py` holds it for the positive
+    one: the avoided state as a shape, judged by rudof on the same world — conforming is
+    entered — beside the kernel's compiled conformance select, held and entered alike."""
+    import rdflib
+
+    from orexis_agent_deliberation.judge import judge
+    from orexis_agent_deliberation.planner import Planner
+
+    SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
+    agent, st = _gardener(tmp_path, monkeypatch, shaped=True)
+    seen = set()
+    for standing in (False, True):
+        if standing:
+            st.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ {MARKER} }} }}")
+        want = _avoidance_row(agent)
+        p = Planner(agent, agent.me)
+        node = p._begin(want)
+        assert "FILTER EXISTS" in p._unmet, "compiled to the CONFORMANCE select"
+        shape = p._base.cbd(rdflib.URIRef(PATTERN))
+        results, _ = judge(p._border(node), shape)
+        conforms = not list(results.subjects(rdflib.RDF.type, SH.ValidationResult))
+        assert conforms == standing, "the judge says the marker conforms exactly when it stands"
+        assert (want.state == "unmet") == conforms, \
+            f"and the kernel's verdict follows: {want.state} with the judge conforming={conforms}"
+        seen.add(conforms)
+    assert seen == {True, False}
 
 
 def test_a_want_saying_met_and_unmet_at_once_is_refused(tmp_path, monkeypatch):

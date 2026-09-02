@@ -119,6 +119,9 @@ def test_a_spent_budget_still_answers_with_progress(monkeypatch):
     assert len(plan.steps) == 8, f"and with the world's budget it arrives: {_steps(plan)}"
     assert _steps(plan)[-1] == ("Drop", "c3_3")
     assert len(forks) <= 128, "inside the budget the world states"
+    assert plan.urgency_after == 0.0 and plan.steps[-1].urgency_after == 0.0, \
+        "a compiled want nobody measures is binary: the delivered world scores 0, not the " \
+        "not-knowing 1.0 the fallback gave it before #499"
 
 
 def test_the_search_follows_the_estimate_and_the_bound_then_refuses_work(monkeypatch):
