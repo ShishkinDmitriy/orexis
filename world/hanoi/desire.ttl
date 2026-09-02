@@ -4,8 +4,8 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 #  The goal, ratified as a DESIRE — the asserted block, the door built for exactly this.
-#  A want met by absence: unmet while any disk rests off peg C, by the pattern the hanoi
-#  package declares (`hanoi:diskAstray`), and approached by its count of disks astray
+#  A positive want: every disk's chain bottoms out on peg C, by the SHAPE the hanoi package
+#  declares (`hanoi:solved`) and the kernel compiles, approached by its count of disks astray
 #  (`hanoi:disksAstray`). The world says what it wants; the package says what that means and
 #  how far it is. Scope is orexis:AtEnd — the first honest writer of the achievement scope:
 #  nothing erodes while the puzzle sits, the plan's end is the whole of what is asked. Binary
@@ -16,6 +16,6 @@ GRAPH <http://example.org/orexis/graph/desire/asserted> {
   :every_disk_home a orexis:Desire ;
       orexis:bindsWhen orexis:AtEnd ;
       rdfs:label "every disk home on peg C — the sentence the puzzle is" ;
-      orexis:unmetWhen hanoi:diskAstray ;
+      orexis:metWhen hanoi:solved ;
       orexis:estimates hanoi:disksAstray .
 }

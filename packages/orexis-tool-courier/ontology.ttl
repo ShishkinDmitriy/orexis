@@ -55,22 +55,20 @@ courier:carriedBy a owl:ObjectProperty ; rdfs:domain courier:Parcel ; rdfs:range
 
 #################  What wanting a delivery MEANS — the domain's, not a world's  #################
 #
-#  A world asserts the want and points here. The two selects used to be written inline in
+#  A world asserts the want and points here. Both used to be written inline in
 #  `world/courier/desire.ttl`, beside the want, and that was the wrong home: what "delivered"
 #  means and how far away it is are courier knowledge, a second courier world would have had
 #  to copy both, and the estimate is a PROMISE about this package's own actions — that it never
 #  overstates what Drive, Pick and Drop will cost to finish — which only whoever declares those
-#  costs can keep. The desire owns the term (`orexis:unmetWhen`, `orexis:estimates` hang off
-#  the want); the package owns the measure. Both are substituted and run by the kernel with
-#  $state naming whichever world is being judged.
+#  costs can keep. The desire owns the term (`orexis:metWhen`, `orexis:estimates` hang off the
+#  want); the package owns the measure. The shape is compiled by the kernel; the estimate is
+#  run by it with $state naming whichever world is being judged.
 
-courier:parcelAstray sh:select """
-        SELECT (1 AS ?astray) WHERE {
-            ?p a courier:Parcel ; courier:destination ?owed .
-            FILTER NOT EXISTS { GRAPH $state { ?p courier:at ?owed } }
-        }""" ;
-    rdfs:label "a parcel not standing where it is owed" ;
-    rdfs:comment "Rows while any parcel is anywhere but its destination — aboard the van included: carrying it past the door is not delivering it. The object of a want's orexis:unmetWhen." .
+courier:delivered a sh:NodeShape ;
+    rdfs:label "every parcel standing where it is owed" ;
+    rdfs:comment "What a want to deliver MEANS, said positively: on every parcel, the cell it is at equals the cell it is owed at. A carried parcel is at no cell, so its `courier:at` values are none and the equality fails — carrying it past the door is not delivering it. The kernel compiles this into the select whose rows are the parcels astray (#497); nobody writes that negation by hand any more. The object of a want's orexis:metWhen." ;
+    sh:targetClass courier:Parcel ;
+    sh:property [ sh:path courier:at ; sh:equals courier:destination ] .
 
 courier:drivesOwed sh:select """
         SELECT (SUM(?d) AS ?estimate) WHERE {
