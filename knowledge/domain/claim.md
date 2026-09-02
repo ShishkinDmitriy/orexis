@@ -117,3 +117,12 @@ oversight: settlement here is atomic.
 It stops being true if **futures** land — a claim held and spent later (see
 [roadmap](/decisions/roadmap.md)) pulls delivery and payment apart in time, and a claim may become
 a thing worth naming. See [settlement-speaks-rea](/decisions/settlement-speaks-rea.md).
+
+# Held, by the keeper
+
+Winning is not actuating: the claim is held until the bidder's watch is live, or until one
+full cycle of the cadence in force has passed, and then presented — blind, in the second
+case, because a dose delayed forever is worse than a dose unobserved. Since #512 the wait is
+the [keeper](/domain/intention.md)'s: the bidder adopts Presenting held until
+`sensing:watchLive` is true on the sensor monitoring its subject, with the bound as deadline,
+and provides only the presenting when released.

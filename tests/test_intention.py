@@ -391,3 +391,41 @@ def test_the_ledger_holds_the_act_sized_and_windowed(make):
     standing = keeper.standing(action=ACQUIRING)[0]
     assert (standing.act.action, standing.act.via, standing.act.quantity,
             standing.act.not_after) == (ACQUIRING, "urn:venue", 0.4, closes)
+
+
+# --- an intention held until a condition (#512) ------------------------------------------
+
+def test_an_intention_held_until_a_condition_is_released_by_a_write_and_lapses_by_the_clock(make):
+    """Progression's primitive, exercised through the keeper alone. An act is adopted with a
+    condition — a select over the agent's beliefs — and a deadline. A write that leaves the
+    condition unmet leaves the hold; the write that meets it releases the act, and the hold
+    is gone from the ledger while the intention still stands. A hold whose deadline passes
+    first is dropped when the adopter said drop. The market's held claim is this road with
+    the watch as its condition; a plan's next step will be this road with the previous
+    step's prediction (#510)."""
+    from datetime import datetime, timedelta, timezone
+
+    fern = make("fern")
+    keeper = fern.keeper
+    graph = fern.beliefs.graph
+    later = datetime.now(timezone.utc) + timedelta(hours=1)
+
+    waiting = keeper.adopt("urn:toy#Wait", "urn:toy#want", "waiting for the flag",
+                           until=f"SELECT ?x WHERE {{ GRAPH <{graph}> {{ <urn:flag> <urn:p> ?x }} }} LIMIT 1",
+                           not_after=later, when_lapsed="take")
+    assert waiting and [s.uri for s, _, _ in keeper.held()] == [waiting]
+
+    fern.beliefs.update(f"INSERT DATA {{ GRAPH <{graph}> {{ <urn:other> <urn:p> 1 }} }}")
+    assert [s.uri for s, _, _ in keeper.held()] == [waiting], "an unrelated write leaves the hold"
+
+    fern.beliefs.update(f"INSERT DATA {{ GRAPH <{graph}> {{ <urn:flag> <urn:p> 1 }} }}")
+    assert keeper.held() == [], "the write that meets the condition releases the act"
+    assert [s.uri for s in keeper.standing(action="urn:toy#Wait")] == [waiting], \
+        "released, not resolved: nothing takes a toy action, so it stands as an ordinary intention"
+
+    doomed = keeper.adopt("urn:toy#Doomed", "urn:toy#other", "waiting for nothing",
+                          until="SELECT ?x WHERE { <urn:never> <urn:p> ?x } LIMIT 1",
+                          not_after=later, when_lapsed="drop")
+    keeper.lapse(doomed)
+    assert keeper.held() == [] and keeper.standing(action="urn:toy#Doomed") == [], \
+        "the deadline passed first and the adopter said drop"

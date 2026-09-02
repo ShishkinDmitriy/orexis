@@ -225,6 +225,10 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 #  Publishing the ANSWER rather than its inputs is what keeps one definition: nothing recomputes
 #  it, so nothing can disagree with it. `tests/test_freshness.py` fails if the triple and the
 #  method ever part company.
+:watchLive a owl:DatatypeProperty ; rdfs:range xsd:boolean ;
+    rdfs:label "watch live" ;
+    rdfs:comment "Whether a dose landing NOW would be seen at the fast cadence — the board has acknowledged a cadence at or under the fast end, or is alarm-armed with its thresholds sent. Written by the sensing module beside the horizon whenever the answer changes, into the instruments graph, so a held claim's condition (#512) is a select over beliefs rather than a method: the bidder waits for `sensing:watchLive true` on the sensor that monitors its subject, and the keeper does the waiting." .
+
 :staleAfterS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "stale after (s)" ;
     rdfs:comment "How old a reading of this sensor may be before the agent stops trusting it — the cadence in force plus grace where the agent sets the interval, an absolute where the device keeps its own clock. Written by the sensing module whenever the answer changes, into the agent's instruments graph. A fact about an instrument, so it lives with the instrument and not with the reading: a horizon stored on an observation would be a snapshot, and would say 35 seconds about a board that has since been told to sleep for ten minutes." .

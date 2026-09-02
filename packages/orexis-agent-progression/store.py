@@ -433,6 +433,19 @@ class Store:
     def update(self, sparql: str) -> None:
         self._store.update(sparql, prefixes=NAMESPACES)
         self._public = None
+        for listener in list(self.__dict__.get("_listeners", ())):
+            listener()
+
+    def on_write(self, listener) -> None:
+        """Be told after every update — the one event the store itself emits (#512).
+
+        For the keeper: an intention held until a condition on the world re-asks its
+        condition when the world changes, and the world changes by a write. Called on the
+        writer's thread, after the write, with nothing: the listener asks the store what it
+        wants to know. Progression's own hook, so the layer above the store learns of a
+        belief landing without the kernel naming any package's event.
+        """
+        self.__dict__.setdefault("_listeners", []).append(listener)
 
     def put_graph(self, graph_iri: str, ttl: str, dataset: bool = False) -> None:
         """Replace a graph with the given Turtle. Public knowledge only — see the module note.

@@ -65,7 +65,7 @@ from .regions import Gap, Region, aims_of, gaps_of, regions_of
 from .wiring import sensors_of
 from . import readings
 from .scaling import scaling_for
-from .terms import (INSTRUMENTS_GRAPH, ANNOTATE, BOUNDS, READING_RECORDED, URGENCY, FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S,
+from .terms import (INSTRUMENTS_GRAPH, ANNOTATE, BOUNDS, READING_RECORDED, URGENCY, FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S, WATCH_LIVE,
                     SUBSCRIBING)
 
 #  The measure this capability declares (a-desire-states-its-own-measure, completed): how
@@ -355,16 +355,23 @@ class SensingModule(Module):
         """
         for aimed in ([sensor] if sensor is not None else self.sensors):
             horizon = int(self.stale_after_s(aimed.subject, aimed.observes))
-            if self._published.get(aimed.uri) == horizon:
+            #  AND WHETHER THE WATCH IS LIVE (#512), the same way and for the same reason:
+            #  a held claim waits for it, and a wait the keeper keeps is a select over
+            #  beliefs, which a method cannot be.
+            live = bool(self.watch_is_live(aimed.subject, aimed.observes))
+            if self._published.get(aimed.uri) == (horizon, live):
                 continue
-            self._published[aimed.uri] = horizon
+            self._published[aimed.uri] = (horizon, live)
             self.agent.beliefs.update(f"""
                 DELETE {{ GRAPH <{INSTRUMENTS_GRAPH}> {{
-                    <{aimed.uri}> <{STALE_AFTER_S}> ?was }} }}
+                    <{aimed.uri}> <{STALE_AFTER_S}> ?was ; <{WATCH_LIVE}> ?live }} }}
                 WHERE  {{ GRAPH <{INSTRUMENTS_GRAPH}> {{
-                    <{aimed.uri}> <{STALE_AFTER_S}> ?was }} }} ;
+                    <{aimed.uri}> <{STALE_AFTER_S}> ?was .
+                    OPTIONAL {{ <{aimed.uri}> <{WATCH_LIVE}> ?live }} }} }} ;
+                DELETE WHERE {{ GRAPH <{INSTRUMENTS_GRAPH}> {{ <{aimed.uri}> <{WATCH_LIVE}> ?l }} }} ;
                 INSERT DATA {{ GRAPH <{INSTRUMENTS_GRAPH}> {{
-                    <{aimed.uri}> <{STALE_AFTER_S}> {horizon} }} }}""")
+                    <{aimed.uri}> <{STALE_AFTER_S}> {horizon} ;
+                                  <{WATCH_LIVE}> {"true" if live else "false"} }} }}""")
 
     @contributes(SUBSCRIPTIONS)
     def subscriptions(self) -> list[str]:
