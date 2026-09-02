@@ -106,7 +106,9 @@ def test_a_presentation_carries_the_winners_own_signature(keyed, make):
     market = market_of(fern)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     fern.deliver(f"{market.claim_topic}/fern", {"jti": "v1", "amount_l": 0.5, "debit": 0.2})
-    fern.bidding()._present_blind()
+    #  The bound is the keeper's deadline now (#512): fire it as the scheduler would.
+    from orexis_capability_market.terms import PRESENTING
+    fern.keeper.lapse(fern.keeper.standing(action=PRESENTING)[0].uri)
     presented = fern.sent.to(f"{market.redeem_topic}/fern")[-1]
     assert presented["sig"]
     payload = {k: v for k, v in presented.items() if k != "sig"}

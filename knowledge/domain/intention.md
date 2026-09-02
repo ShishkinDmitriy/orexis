@@ -21,6 +21,16 @@ description: >-
 
 # What it is
 
+**An intention may be held until a condition holds** (#512). The keeper adopts an act with a
+select over the agent's beliefs and a deadline; it re-asks the select whenever a belief lands
+and keeps the deadline on its scheduler. The first time the select binds, the act is handed to
+whoever takes it; if the deadline passes first, the act is taken as lapsed or dropped, as the
+adopter said. The condition is data on the ledger (`orexis:until`), so a sovereign asking sees
+what an intention waits for. The market's held [claim](/domain/claim.md) is this road with the
+live watch as its condition, and a plan's next step is this road with the previous step's
+prediction as its condition. This is the middle layer's whole job in one call — adopt, wait,
+take on feedback — and it is why nothing above it needs a timer of its own.
+
 Two roads adopt one. A plan's head, chosen by the search, is the ordinary road; an event
 adopts the other — the market's Presenting, an [action](/domain/action.md) stating neither a
 precondition nor an effect, which a claim arriving adopts and a watch going live triggers —

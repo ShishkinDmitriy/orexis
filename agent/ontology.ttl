@@ -819,6 +819,21 @@ orexis:resolvedAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:r
 orexis:outcome a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:string ;
     rdfs:label "outcome" ;
     rdfs:comment "How it ended: satisfied or dropped. A string rather than a class per outcome, exactly as review:outcome is." .
+#  AN INTENTION HELD UNTIL A CONDITION (#512): progression's primitive. The keeper adopts an
+#  act with a SELECT over the agent's beliefs and a deadline; it re-asks the select whenever a
+#  belief lands and keeps the deadline on its scheduler; when the select binds, the act is
+#  handed to whoever takes it, and when the deadline passes first the act is taken as lapsed
+#  or dropped, as the adopter said. The market's held claim was this road, written inside the
+#  bidder with a private timer and a per-reading check; a plan's next step is this road with
+#  the previous step's prediction as the condition (#510). The condition is DATA, so a
+#  sovereign asking the ledger sees what an intention waits for.
+orexis:until a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:string ;
+    rdfs:label "held until" ;
+    rdfs:comment "A SELECT over this agent's beliefs; while it binds nothing the intention is held, and the first time it binds the act is taken. Removed when the hold ends, so a taken act is an ordinary standing intention." .
+orexis:whenLapsed a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:string ;
+    rdfs:label "when the deadline passes first" ;
+    rdfs:comment "`take` — the act is taken anyway, as lapsed (a held claim redeems blind rather than never) — or `drop`, the intention resolved as dropped." .
+
 orexis:becauseOf a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:string ;
     rdfs:label "because of" ;
     rdfs:comment "Why it was adopted, and — appended on resolution — why it ended. Prose for the operator reading a ledger, never parsed." .

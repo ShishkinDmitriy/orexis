@@ -198,6 +198,13 @@ class Keeper:
             self.log.info("ledger migrated: %d row(s) keyed by a property now pursue a want", n)
         if (n := ledger.migrate_ledger_acts(agent.intentions, self.graph)):
             self.log.info("ledger migrated: %d row(s) naming an action now commit to an act", n)
+        #  THE HOLDS (#512): re-armed from the ledger's `orexis:until` rows on every belief
+        #  write, and their deadlines on the scheduler. A restart loses a deadline's clock
+        #  and keeps the condition — the next write re-asks it — which is the honest half.
+        self._deadlines: dict = {}
+        self._reconsidering = False
+        self._holding = True               # ask once; `reconsider` learns whether any stands
+        agent.beliefs.on_write(self._on_written)
 
     @property
     def beliefs(self) -> KeepingBeliefs:
@@ -239,7 +246,9 @@ class Keeper:
 
     # --- the ledger, written -------------------------------------------------------------
 
-    def adopt(self, act, want: str, because: str, via: str | None = None) -> str | None:
+    def adopt(self, act, want: str, because: str, via: str | None = None,
+              until: str | None = None, not_after: datetime | None = None,
+              when_lapsed: str = "take") -> str | None:
         """Commit to one ACT toward one want. Returns the intention's IRI, or None.
 
         `act` is an `Act` — the plan's head, sized, through its lever — or, for an actor
@@ -307,7 +316,108 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 }} }}""")
         self.log.info("adopted %s for %s: %s", action.rsplit("#", 1)[-1], _short(want), because)
         self._tell("adopted", action, want, because)
+        if until is not None:
+            self.hold(uri, until, not_after, when_lapsed)
         return uri
+
+    # --- an intention held until a condition (#512) -----------------------------------------
+
+    def hold(self, intention_uri: str, until: str, not_after: datetime | None,
+             when_lapsed: str = "take") -> None:
+        """Hold an adopted intention until `until` — a SELECT over my beliefs — binds, or
+        until `not_after` passes, whichever is first.
+
+        PROGRESSION'S PRIMITIVE, and the whole of the middle layer's job in one call: adopt,
+        wait, take on feedback. The wait is two things. A condition on the world, re-asked
+        whenever a belief lands (`Store.on_write`), so the hold ends the moment the world
+        answers and never on a clock's guess; and a deadline on the scheduler, so a world that
+        never answers does not hold the act forever — taken as lapsed (a held claim redeems
+        blind rather than never) or dropped, as the adopter said. The bidder used to do all
+        of this itself with a private timer and a check on every reading; now it says what
+        it waits for and the layer that waits does the waiting.
+        """
+        if when_lapsed not in ("take", "drop"):
+            raise ValueError(f"whenLapsed is `take` or `drop`, not {when_lapsed!r}")
+        self.agent.intentions.update(f"""
+INSERT DATA {{ GRAPH <{self.graph}> {{
+  <{intention_uri}> <{kernel("until")}> {_literal(until)} ;
+                    <{kernel("whenLapsed")}> "{when_lapsed}" . }} }}""")
+        if not_after is not None:
+            self.window(intention_uri, not_after)
+            delay = (not_after - datetime.now(timezone.utc)).total_seconds()
+            from .scheduler import scheduler
+            self._deadlines[intention_uri] = scheduler().at(
+                max(0.0, delay), lambda: self.lapse(intention_uri))
+        self._holding = True
+        self.reconsider()                  # the condition may hold already
+
+    def held(self) -> list[tuple]:
+        """Every intention still held: `(standing, until, when_lapsed)`."""
+        rows = bindings(self.agent.intentions.query_union(f"""
+SELECT ?i ?until ?when WHERE {{ GRAPH <{self.graph}> {{
+  ?i <{kernel("until")}> ?until ; <{kernel("whenLapsed")}> ?when .
+  FILTER NOT EXISTS {{ ?i <{RESOLVED_AT}> ?r }} }} }}"""))
+        by_uri = {s.uri: s for s in self.standing()}
+        return [(by_uri[r["i"]], r["until"], r["when"]) for r in rows if r["i"] in by_uri]
+
+    def reconsider(self) -> None:
+        """Re-ask every held condition; release the intentions whose condition holds.
+
+        Called after every belief write while anything is held, on the writer's thread —
+        the release hands the act to the loop and waits, as any take does. Re-entrant
+        writes (the release itself writes the ledger) find the guard and return.
+        """
+        if not self._holding or self._reconsidering:
+            return
+        self._reconsidering = True
+        try:
+            held = self.held()
+            self._holding = bool(held)
+            for standing, until, _ in held:
+                try:
+                    binds = bool(bindings(self.agent.beliefs.query_union(until)))
+                except Exception as exc:                        # noqa: BLE001 — a bad select
+                    self.log.error("the condition %s waits for will not run: %s",
+                                   _short(standing.uri), exc)
+                    continue
+                if binds:
+                    self._release(standing, "the condition it was held for holds now")
+        finally:
+            self._reconsidering = False
+
+    def lapse(self, intention_uri: str) -> None:
+        """The deadline passed before the condition held: take as lapsed, or drop."""
+        for standing, _, when in self.held():
+            if standing.uri != intention_uri:
+                continue
+            if when == "drop":
+                self._unhold(standing.uri)
+                self._resolve(standing, "dropped",
+                              "the deadline passed and the condition it waited for never held")
+            else:
+                self._release(standing, "the deadline passed before the condition held — "
+                                        "taken as lapsed rather than never")
+
+    def _release(self, standing: Standing, because: str) -> None:
+        from .execution import carry_out
+
+        self._unhold(standing.uri)
+        self.agent.intentions.update(f"""
+INSERT DATA {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{BECAUSE_OF}> {_literal(because)} . }} }}""")
+        self.log.info("releasing %s: %s", standing.action.rsplit("#", 1)[-1], because)
+        carry_out(self.agent, standing.act, None, standing.uri)
+
+    def _unhold(self, intention_uri: str) -> None:
+        entry = self._deadlines.pop(intention_uri, None)
+        if entry is not None:
+            entry.cancel()
+        self.agent.intentions.update(f"""
+DELETE WHERE {{ GRAPH <{self.graph}> {{
+  <{intention_uri}> <{kernel("until")}> ?u ; <{kernel("whenLapsed")}> ?w . }} }}""")
+
+    def _on_written(self) -> None:
+        if self._holding:
+            self.reconsider()
 
     def satisfy(self, action: str, want: str | None, because: str) -> list[str]:
         """The world answered: whatever stood for this action and want is done — or, with the

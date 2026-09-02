@@ -181,6 +181,14 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
 
     market = market_of(thirsty)
     keeper = keeper_of(thirsty)
+    #  THE ACKNOWLEDGEMENT ROAD, which is what this test is about. An alarm-armed board is
+    #  a live watch the moment its thresholds go out (#151, its own test in
+    #  test_subscribing), and the first reading below tightens the cadence and sends them —
+    #  so with the alarm armed the claim would rightly go out there. The bidder's own check
+    #  used to run before the tightening in the same hook and missed it; the keeper re-asks
+    #  after every write and does not (#512). Disarmed, so the stamp is the only road.
+    for sensor in thirsty.subscribing().sensors:
+        object.__setattr__(sensor, "alarm", False)
     thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     thirsty.deliver(f"{market.claim_topic}/fern",
                     {"jti": "v1", "amount_l": 0.5, "debit": 0.2})
@@ -204,6 +212,31 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
     assert len(watches) == 1 and watches[0].baseline == 0.29
 
 
+def test_an_alarm_armed_watch_releases_the_claim_on_the_first_tightening(thirsty):
+    """The other road to a live watch (#151): an alarm-armed board announces a crossing
+    itself, so the watch is live the moment its thresholds have gone out. The first reading
+    after the win tightens the cadence and sends them; the sensing module writes
+    `sensing:watchLive true` beside the horizon; the keeper, re-asking the hold's condition
+    on that write, releases Presenting there — no acknowledgement needed, and no check of
+    the bidder's own. This is the behaviour the bidder's in-hook check used to miss by
+    running before the tightening (#512)."""
+    from orexis_capability_market.terms import PRESENTING
+
+    market = market_of(thirsty)
+    keeper = keeper_of(thirsty)
+    assert all(s.alarm for s in thirsty.subscribing().sensors), "the fixture's boards are armed"
+    thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
+    thirsty.deliver(f"{market.claim_topic}/fern",
+                    {"jti": "v9", "amount_l": 0.5, "debit": 0.2})
+    assert thirsty.sent.to(f"{market.redeem_topic}/fern") == [] and keeper.held(), \
+        "thresholds not yet sent: held"
+
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.29})
+    presented = thirsty.sent.to(f"{market.redeem_topic}/fern")
+    assert presented and presented[-1]["jti"] == "v9", "armed and sent: live, released, presented"
+    assert keeper.held() == [] and keeper.standing(action=PRESENTING) == []
+
+
 def test_the_bounded_wait_redeems_blind_rather_than_never(thirsty):
     """Old firmware that never acks, a board mid-sleep on a long cadence — a watch that cannot
     be confirmed within one full cycle is not going to be, and a dose delayed forever is worse
@@ -214,9 +247,15 @@ def test_the_bounded_wait_redeems_blind_rather_than_never(thirsty):
                     {"jti": "v2", "amount_l": 0.5, "debit": 0.2})
     assert thirsty.sent.to(f"{market.redeem_topic}/fern") == []
 
-    thirsty.bidding()._present_blind()
+    #  The deadline is the KEEPER's now (#512): fire it as the scheduler would.
+    from orexis_capability_market.terms import PRESENTING
+    keeper = keeper_of(thirsty)
+    held = keeper.standing(action=PRESENTING)
+    assert len(held) == 1 and keeper.held(), "the claim stands, held until the watch is live"
+    keeper.lapse(held[0].uri)
     presented = thirsty.sent.to(f"{market.redeem_topic}/fern")
     assert presented and presented[-1]["jti"] == "v2"
+    assert keeper.held() == [] and keeper.standing(action=PRESENTING) == []
 
 
 def test_a_held_claim_is_maximum_urgency(thirsty):
@@ -365,3 +404,7 @@ def test_an_act_that_cannot_size_itself_keeps_the_patience(monkeypatch):
 SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{OREXIS}by> ?act . ?act <{OREXIS}notAfter> ?d }} }}"""))
     window = datetime.fromisoformat(rows[0]["d"]).timestamp() - before
     assert abs(window - keeper.beliefs.patience_s) < 2.0
+
+
+
+

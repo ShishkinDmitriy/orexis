@@ -40,6 +40,10 @@ from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, SWEEP
 
 SENSING_URGENCY = "http://example.org/orexis/sensing#urgency"       # sensing's hook, spelled as every cross-package reference is
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"
+#  What a held claim waits for (#512): the sensor monitoring my subject for my property says
+#  its watch is live — sensing's fact, in sensing's words, written beside the horizon.
+LIVE_WATCH_Q = """SELECT ?sensor WHERE {
+  ?sensor sensing:monitors <%s> ; sosa:observes <%s> ; sensing:watchLive true } LIMIT 1"""
 from orexis_agent_progression.ontology import ONTOLOGY_GRAPH
 from orexis_agent_progression.store import bindings
 
@@ -131,7 +135,6 @@ class BiddingModule(Module):
         # acquisition while one stands, so a second unpresented claim cannot normally arise;
         # if the market misbehaves and one does, the newer claim replaces the older, logged.
         self.holding: dict | None = None
-        self._present_deadline: Timer | None = None
         self.about, self._valuation_term = self._what_my_bids_are_priced_in()
         self.conversion = self._my_conversion()
         #  WHICH WAY the lot moves the property I am priced in — the domain's statement on my
@@ -342,8 +345,6 @@ class BiddingModule(Module):
     def stop(self) -> None:
         if self._deadline:
             self._deadline.stop()
-        if self._present_deadline:
-            self._present_deadline.stop()
 
     @contributes(SWEEP)
     def sweep(self) -> int:
@@ -479,8 +480,6 @@ class BiddingModule(Module):
         Matching on the subject alone meant that on a pot with two sensors, whichever reported
         first won the race, and a temperature could be submitted as a bid on soil moisture.
         """
-        if subject_uri == self.me.acts_for and observed_property == self.about:
-            self._maybe_present()  # a held claim checks its watch on every look (#132)
         if not self.pending or subject_uri != self.me.acts_for:
             return
         if observed_property != self.about:
@@ -583,7 +582,9 @@ class BiddingModule(Module):
         return self.qty_for(row.about, value) if value is not None else None
 
     def take(self, act, desire, intention: str) -> bool:
-        """Carry out a committed Acquire: bid in the round that is open, if one is.
+        """Carry out a committed Acquire: bid in the round that is open, if one is — or a
+        released Presenting: the keeper held the claim until my watch was live or the bound
+        passed (#512), and hands it here to present.
 
         The actor for `market:Acquire` (knowledge/domain/actor.md). No round pending is "not
         now": the intention stands, and the next offer runs `submit`, which finds it standing
@@ -591,6 +592,12 @@ class BiddingModule(Module):
         knock without a second search. The reading is the one in hand: `on_offer` looked
         first, and a stale one is never bid on.
         """
+        if act.action == PRESENTING:
+            if self.holding is None:
+                return False
+            self._present("released by the keeper — my watch is live, or the bound passed and "
+                          "a dose delayed forever is worse than a dose unobserved")
+            return True
         if act.action != ACQUIRING or act.about != self.about:
             return False
         #  THE ROUND IS THE FACT, read off the row's own lever (#358): the row exists only
@@ -698,10 +705,6 @@ class BiddingModule(Module):
                              self.holding.get("jti"))
         self.holding = {"jti": claim["jti"], "market": market,
                         "amount_l": amount, "debit": debit}
-        if keeper is not None and (stake := self._stake_uri()) is not None:
-            keeper.adopt(PRESENTING, stake,
-                         f"holding claim {claim['jti']} ({amount}L) until my watch is "
-                         f"live — never spend a dose you cannot watch land")
         if (sensing := self.agent.provider(SENSING)) is not None:
             sensing.sense_now()
             bound = sensing.stale_after_s(self.me.acts_for, self.about)
@@ -711,33 +714,22 @@ class BiddingModule(Module):
         # could not be confirmed is not going to be — old firmware that never acks, a listening
         # rig, a board mid-sleep on a long cadence. Redeem blind and say so, because a dose
         # delayed forever is worse than a dose unobserved.
-        #  Also a DEADLINE. `_present_blind` never stopped it, so a repeating one re-presented
-        #  a claim every `bound` seconds for as long as the process lived.
-        if self._present_deadline:
-            self._present_deadline.stop()
-        self._present_deadline = Timer(float(bound), self._present_blind, repeat=False)
-        self._present_deadline.start()
-        self._maybe_present()
-
-    def _maybe_present(self) -> None:
-        """Present the held claim if the watch is live. Called on every reading of my property."""
-        if self.holding is None:
-            return
-        sensing = self.agent.provider(SENSING)
-        if sensing is None or not sensing.watch_is_live(self.me.acts_for, self.about):
-            return
-        self._present("my watch is live — a reading arrived acknowledged at my fast cadence")
-
-    def _present_blind(self) -> None:
-        if self.holding is None:
-            return
-        self._present("the wait is over and the watch never confirmed live — redeeming blind, "
-                      "because a dose delayed forever is worse than a dose unobserved")
+        #
+        # THE WAIT IS THE KEEPER'S (#512): the claim adopts Presenting held UNTIL my watch is
+        # live — `sensing:watchLive true` on the sensor that monitors my subject, a select the
+        # keeper re-asks whenever a belief lands — and NOT AFTER the bound, when it is taken
+        # as lapsed. This module used to keep a timer of its own and check the watch on every
+        # reading; now it says what it waits for and provides the taking (`take`, below).
+        if keeper is not None and (stake := self._stake_uri()) is not None:
+            keeper.adopt(PRESENTING, stake,
+                         f"holding claim {claim['jti']} ({amount}L) until my watch is "
+                         f"live — never spend a dose you cannot watch land",
+                         until=LIVE_WATCH_Q % (self.me.acts_for, self.about),
+                         not_after=datetime.now(timezone.utc) + timedelta(seconds=float(bound)),
+                         when_lapsed="take")
 
     def _present(self, why: str) -> None:
         held, self.holding = self.holding, None
-        if self._present_deadline:
-            self._present_deadline.stop()
         if held is None:
             return
         market = held["market"]
