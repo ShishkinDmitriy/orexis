@@ -128,6 +128,10 @@ it is a record wearing a bullet.
 - **A prune is only as good as when its bound arrives** — an admissible estimate refused
   nothing under breadth-first, because the first achiever came last, and the same estimate
   refused sixty percent of the courier's forks the day the search followed it.
+- **A kind said by absence is a kind two readers disagree about** — an action with no effect
+  was "a lever the reflex may take" to one road and "passed over, plan partial" to another,
+  until the gate held every action to both texts or neither, and a class for the second kind
+  was weighed and dropped as a term nobody would read.
 - **A lever that touches nothing the want reads is never simulated, and the closure is what
   makes that safe** — filtering to the goal's predicates deletes every chain; closing backward
   through preconditions keeps the bid that makes the dose possible.

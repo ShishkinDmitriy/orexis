@@ -418,17 +418,6 @@ class Deliberator:
                 "a comparison that means nothing. `orexis-validate` refuses this world.",
                 _short(desire.uri))
         plan = Planner(self.agent, self.me).plan(desire)
-        #  A SEARCH OVER PART OF THE MENU CANNOT SAY "NOTHING HELPS", and it no longer has
-        #  anywhere to hand the question to. Some lever had no stated effect and was passed
-        #  over, so the one that works may be the one nobody simulated — fern buys its water,
-        #  and a search blind to Acquire would find that looking does not wet soil and stop
-        #  the plant buying. The gate exists to make this unreachable; if it is reached, the
-        #  agent acts on what it could see and the log says what it could not.
-        if plan.partial:
-            self.log.error(
-                "%s: a lever on my menu states no effect, so I weighed part of my options and "
-                "am answering as if that were all of them. `orexis-validate` refuses this "
-                "world.", _short(desire.uri))
         if plan.steps:
             self.log.info("%s: %s (urgency %.2f -> %.2f)",
                           _short(desire.uri), plan.outcome, plan.urgency_now, plan.urgency_after)

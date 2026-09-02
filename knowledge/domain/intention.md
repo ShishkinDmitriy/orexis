@@ -21,6 +21,13 @@ description: >-
 
 # What it is
 
+Two roads adopt one. A plan's head, chosen by the search, is the ordinary road; an event
+adopts the other — the market's Presenting, an [action](/domain/action.md) stating neither a
+precondition nor an effect, which a claim arriving adopts and a watch going live triggers —
+with no search above it, and both stand in the same ledger and wait on the same kind of
+expectation.
+
+
 A **commitment**: one want pursued by one action, adopted at a moment and standing
 until the world answers. BDI's third letter, and the one this project ran longest without —
 `bidding.pending` was an intention to observe and a bid awaiting its claim was an intention to

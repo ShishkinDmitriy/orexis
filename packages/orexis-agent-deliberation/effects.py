@@ -48,11 +48,12 @@ SELECT ?rule ?construct ?retracts ?lands ?costs WHERE {
 
 
 def rule_for(store, action: str) -> dict | None:
-    """The effect rule a means carries, or None where the package shipped no `effects.ttl`.
+    """The effect rule an action carries, or None for an action an event adopts.
 
-    None is an ordinary answer and every caller must take it: most means have no effect stated
-    yet, and a lever whose consequences nobody has written down is still a lever that works —
-    it is only one a planner cannot reason about.
+    None is the answer for an action that states neither text — the market's Presenting,
+    adopted by an event and never on a menu — and for nothing else: an action with a
+    precondition states an effect, or the gate (`deliberable`, in `onboarding/validate.py`)
+    refuses the world before an agent runs (#506).
     """
     rows = bindings(store.query(_RULE_Q, {"rule": action}))
     return rows[0] if rows else None

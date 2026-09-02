@@ -81,6 +81,35 @@ def test_a_lever_nothing_states_an_effect_for_is_refused(monkeypatch, caplog):
         "the refusal must name the lever — a gate that says only 'no' is a gate nobody can act on"
 
 
+def test_an_action_states_both_texts_or_neither(monkeypatch, caplog):
+    """The rule by structure (#506): a lever a plan may choose states a precondition and an
+    effect, and one with a precondition and no effect was refused above; one with an effect
+    and no precondition is refused too — a lever nobody can ever reach. An action with
+    NEITHER is adopted by an event — the market's Presenting — and it validates, appears on
+    nobody's menu, and needs no class of its own to say so: the sovereign weighed one and
+    dropped it. With the gate holding the rule, the runtime has nothing left to flag —
+    `Plan.partial`, the trace's `blind` and the planner's skip are gone."""
+    from orexis_agent_deliberation.afforder import affordances_of
+    from agent.world import load_self
+    from orexis_agent_progression.ontology import beliefs_graph
+
+    st = build("simulation", monkeypatch)
+    wants = desires_of(st)
+    assert deliberable(st, wants), "the shipped world, Presenting included, passes"
+    for agent_id, agent_wants in wants.items():
+        me = load_self(st.query, agent_id)
+        rows = affordances_of(st.query, me.uri, agent_wants.query_union, beliefs_graph(agent_id))
+        assert not any(r.action.endswith("Presenting") for r in rows), \
+            f"{agent_id}: an action with neither text is on no menu"
+
+    caplog.clear()
+    st.update("""INSERT DATA { GRAPH <%s> {
+        <urn:toy#Unreachable> a orexis:Action ;
+            sh:construct "CONSTRUCT {} WHERE {}" . } }""" % ACTIONS_GRAPH)
+    assert not deliberable(st, wants), "an effect nobody can reach is refused"
+    assert "Unreachable" in caplog.text and "no precondition" in caplog.text
+
+
 def test_a_stake_nothing_can_measure_is_refused(monkeypatch, caplog):
     """A want with no measure ranks every possible world alike, and a search over worlds that
     all score the same concludes — confidently — that nothing helps.

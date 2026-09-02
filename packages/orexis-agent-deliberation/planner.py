@@ -75,13 +75,6 @@ class Plan:
     steps: tuple = ()                 # of `act.Step`: an act each, with what it would reach
     urgency_now: float | None = None
     urgency_after: float | None = None
-    #  Whether some lever was passed over for want of a stated effect. A search that could not
-    #  see every row must never report "nothing helps" as a finding: it did not look at
-    #  everything, and the lever it could not simulate may be the one that works. Caught by
-    #  fern, which buys its water — Acquire has no effect rule, so the search saw only Observe,
-    #  correctly found that looking does not wet soil, and would have concluded that nothing
-    #  does. The plant would have stopped buying.
-    partial: bool = False
 
     @property
     def first(self) -> str | None:
@@ -468,7 +461,6 @@ class Planner:
         #  and from then on a candidate spending MORE than it is discarded unexamined — see
         #  `_bind` below for why that is sound rather than a heuristic.
         bound = None
-        self._skipped = False
         self._weighed = [(0, row, None, trace.IRRELEVANT) for row in self._passed_over]
         #  Every world reached, with the least this pass has found it to cost. A world reached
         #  again NO CHEAPER is somewhere already stood in; reached strictly cheaper, it is
@@ -722,13 +714,11 @@ class Planner:
         #  NOT_BETTER (my doses are too coarse) or NOTHING (equip me), and those must not blur.
         if not saw_candidate:
             return self._record(desire, Plan(SATISFIED if met_now else NOTHING,
-                                           (), here.urgency, here.urgency,
-                                           self._skipped), here.urgency)
+                                           (), here.urgency, here.urgency), here.urgency)
         if best is here or (best.urgency, _near(best)) >= (here.urgency, _near(here)):
             after = here.urgency if best is here else best.urgency
             return self._record(desire, Plan(SATISFIED if met_now else NOT_BETTER,
-                                           (), here.urgency, after,
-                                           self._skipped), here.urgency)
+                                           (), here.urgency, after), here.urgency)
         return self._record(desire, self._offer(
             Plan(EXHAUSTED if not self._met_in(best, desire) else SATISFIED,
                  best.taken, here.urgency, best.urgency), desire, best), here.urgency)
@@ -858,14 +848,6 @@ class Planner:
                 if (row.want is not None and row.want != desire.uri
                         and desire.uri in self._about_of):
                     continue
-            if effects.rule_for(self.agent.beliefs, row.action) is None:
-                #  A lever whose package never said what it does. It still works — the reflex
-                #  can take it — but nothing can simulate it, and a planner that guessed would
-                #  be inventing the consequence it is supposed to be checking. Remembered
-                #  rather than merely skipped, because a conclusion drawn without it is a
-                #  conclusion about part of the menu.
-                self._skipped = True
-                continue
             yield row
 
     def _begin(self, desire: Desire) -> _Node:
@@ -970,11 +952,10 @@ class Planner:
         #  the only defence that sees it. None where the want reads anything a parser cannot
         #  name, and then every row is weighed exactly as before: over-approximation is safe.
         self._relevant = self._relevant_actions(desire, shape)
-        #  WHAT THE MENU IS ASKED FOR, per node (#504): the relevant levers, plus every lever
-        #  stating no effect — outside the closure, never simulated, but a row of it must
-        #  still reach the pass so the pass can say it could not see the whole menu.
-        self._asked = (None if self._relevant is None
-                       else self._relevant | relevance.effectless_of(self.agent.beliefs.query))
+        #  WHAT THE MENU IS ASKED FOR, per node (#504): the relevant levers. Every action on a
+        #  menu states an effect — the gate holds a choosable action to both texts (#506) —
+        #  so there is no lever to keep on the menu for the sake of saying it was passed over.
+        self._asked = self._relevant
         #  THE LEVERS PASSED OVER, asked ONCE per pass at the root rather than at every node,
         #  and written as passed over only where they had a row to pass over: a trace that
         #  named every irrelevant action in the vocabulary would name Move in a plant world

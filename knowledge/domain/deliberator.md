@@ -72,10 +72,10 @@ declines. *Not better* is a decision.
 Four things bound it, and each exists because building it found the failure:
 
 - **A search that could not see every lever may not conclude that nothing helps.** A means whose
-  package states no effect cannot be simulated, so it is passed over and the plan is marked
-  PARTIAL — and a plant in `world/simulation` BUYS its water, so a search blind to Acquire finds
-  correctly that looking does not wet soil and reports that nothing does. The plant stops
-  bidding. That used to be survived by handing the question to the chain; it is refused at the
+  package states no effect cannot be simulated — and a plant in `world/simulation` BUYS its
+  water, so a search blind to Acquire would find correctly that looking does not wet soil and
+  report that nothing does. The plant would stop bidding. That used to be survived by marking
+  the plan PARTIAL and handing the question to the chain; it is refused at the
   gates now, because which levers a world implies is a fact about ratified files
   ([a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md)).
 - **The dose is asked of the actuator, never computed here.** `dose_for` is the sizing the actor
@@ -231,9 +231,10 @@ rule's CONSTRUCTs running against the store rather than the world, and a cycle s
 was only the desire's own value, so a step that moved nothing else was indistinguishable from
 having gone nowhere. Both are closed (#254, #258); if it pins again, `cycles` climbing beside
 it says the search keeps arriving back at worlds already reached rather than being unable to
-go further. `blind` above zero is a package that never said what its lever does — a world
-`orexis-validate` refuses, so above zero means a society was started past its gate, and the
-agent logs that it is answering from part of its options rather than quietly finding another
+go further. A package that never said what its lever does is a world `orexis-validate` refuses at the
+gate (#506: an action a plan may choose states both its texts, an action an event adopts
+neither), so the runtime carries no flag for it any more — `blind` and the partial plan went
+with the gate that made them unreachable — and does not quietly find another
 opinion.
 
 **And the figure that surfaced something uncomfortable: a reporting tick IS a planning pass.**
@@ -335,8 +336,9 @@ Runs one per candidate, against the [imaginarium](/domain/imaginarium.md). What 
 [effect](/domain/effect.md) IS, what it may claim, and its timing are that page's.
 
 The consequence for this loop: an [action](/domain/action.md) carrying no rule cannot be simulated,
-so the pass is marked PARTIAL — a flag that used to route the question elsewhere and now only
-says loudly what happened. Concluding from part of the menu is concluding wrongly, and the row
+which is why the gate refuses a choosable one without a rule (#506); the pass used to be marked
+PARTIAL, a flag that routed the question elsewhere and then only said what happened, and it is
+gone with the condition it flagged. Concluding from part of the menu is concluding wrongly, and the row
 nobody could simulate may be the one that works — measured on fern, which buys its water. Which
 is why a world holding such a lever is refused before it can run.
 
