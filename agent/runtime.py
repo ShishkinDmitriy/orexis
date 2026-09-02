@@ -52,6 +52,7 @@ SELECT ?want ?avoided ?select WHERE {
   OPTIONAL { ?avoided sh:select ?select }
 }"""
 _SELECT_Q = "SELECT ?select WHERE { <%s> sh:select ?select } LIMIT 1"
+_IS_SHAPE_Q = "SELECT ?s WHERE { <%s> a sh:NodeShape } LIMIT 1"
 #  And the SHAPE-authored wants nobody speaks for (#497): a world may assert a positive want
 #  whose met-test is a shape the domain package declares; the kernel compiles it and judges.
 _SHAPED_Q = """
@@ -335,14 +336,23 @@ class Agent:
             if not select:
                 found = bindings(self.beliefs.query(_SELECT_Q % row["avoided"]))
                 select = found[0]["select"] if found else None
-            if not select:
-                log.error("%s: %s points at an avoided state with no sh:select", self.id,
-                          row["want"])
-                continue
-            text = (select.replace("$this", f"<{self.me.uri}>")
-                          .replace("$state", f"<{STATE_GRAPH}>"))
             try:
-                entered = bool(bindings(self.beliefs.query(text)))
+                if select:
+                    text = (select.replace("$this", f"<{self.me.uri}>")
+                                  .replace("$state", f"<{STATE_GRAPH}>"))
+                    entered = bool(bindings(self.beliefs.query(text)))
+                elif bindings(self.beliefs.query(_IS_SHAPE_Q % row["avoided"])):
+                    #  THE AVOIDED STATE AS A SHAPE (#499): compiled to its conformance
+                    #  select — rows where the state has been entered — and run over the
+                    #  same view a compiled positive want is.
+                    text = self._unmet_select(row["want"], row["avoided"], entered=True)
+                    entered = bool(bindings(self.beliefs.query_over(
+                        text, *self.beliefs.public_graphs(),
+                        *self.beliefs.recorded_graphs())))
+                else:
+                    log.error("%s: %s points at an avoided state that is neither a select "
+                              "nor a shape", self.id, row["want"])
+                    continue
             except Exception as exc:
                 log.error("%s: avoided-state pattern failed to run: %s", self.id, exc)
                 entered = True
@@ -369,18 +379,20 @@ class Agent:
                                        state="unmet" if violated else "met")
         return sorted(seen.values(), key=lambda g: -g.urgency)
 
-    def _unmet_select(self, want: str, shape: str) -> str:
-        """The compiled violation select of an asserted want's shape, once per process: an
-        asserted want never changes while the agent runs, and compiling is a carve and a
-        string. Read from public knowledge, where a package's shape lives."""
+    def _unmet_select(self, want: str, shape: str, entered: bool = False) -> str:
+        """The compiled select of an asserted want's shape, once per process: an asserted
+        want never changes while the agent runs, and compiling is a carve and a string. Read
+        from public knowledge, where a package's shape lives — and the asserted block is
+        public too. `entered` picks the conformance select, for a shape under `unmetWhen`."""
         from orexis_agent_deliberation.conformance import graph_from
-        from orexis_agent_deliberation.violation import unmet_select
+        from orexis_agent_deliberation.violation import entered_select, unmet_select
 
         cache = self.__dict__.setdefault("_compiled_wants", {})
-        if want not in cache:
+        if (want, entered) not in cache:
             public = graph_from(self.beliefs, *self.beliefs.public_graphs())
-            cache[want] = unmet_select(public.cbd(URIRef(shape)), URIRef(shape))
-        return cache[want]
+            compile = entered_select if entered else unmet_select
+            cache[(want, entered)] = compile(public.cbd(URIRef(shape)), URIRef(shape))
+        return cache[(want, entered)]
 
     def ask(self, point: str, *args, **kwargs) -> list:
         """Every module's answer to one question, in module order, None left out.

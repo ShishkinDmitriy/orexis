@@ -202,6 +202,12 @@ class Planner:
         pattern = self._avoided_pattern(desire)
         if pattern is not None:
             return 1.0 if self._pattern_binds(pattern, node.graph) else 0.0
+        if self._unmet is not None:
+            #  A compiled want nobody measures — the puzzles', an aversion authored as a
+            #  shape — is binary by the same contract as a pattern want: unmet 1, met 0.
+            #  Without this the not-knowing fallback below scored the delivered world 1.0
+            #  beside the undelivered one, and only the met-test could tell them apart.
+            return 0.0 if self._met_in(node, desire) else 1.0
         if desire.is_obligation:                        # met-or-not over the record
             return 0.0 if self._met_in(node, desire) else 1.0
         #  A want whose kind nothing loaded answers for, scoring the defined fallback:
@@ -309,6 +315,11 @@ class Planner:
         """The `orexis:unmetWhen` select this want carries, or None — the negative twin."""
         node = self._shapes.value(URIRef(desire.uri), _AG.unmetWhen)
         if node is None:
+            return None
+        #  A node that is a SHAPE carries no select of its own: it was compiled in `_begin`
+        #  (#499) and `self._unmet` answers for it.
+        if (node, RDF.type, _SH.NodeShape) in self._shapes or \
+                (node, RDF.type, _SH.NodeShape) in self._base:
             return None
         return self._select_of(node)
 
@@ -918,6 +929,16 @@ class Planner:
         shape = self._shape_of(desire)
         self._unmet = (violation.unmet_select(shape, self._shape_root(desire))
                        if shape is not None else None)
+        #  THE NEGATIVE TWIN AS A SHAPE (#499): an aversion under `orexis:unmetWhen` authored
+        #  as the avoided state, compiled to its CONFORMANCE select — rows where the state
+        #  has been entered — and judged by the same road as a compiled positive want.
+        avoided = self._shapes.value(URIRef(desire.uri), _AG.unmetWhen)
+        if avoided is not None and self._unmet is None:
+            source = (self._shapes if (avoided, RDF.type, _SH.NodeShape) in self._shapes
+                      else self._base if (avoided, RDF.type, _SH.NodeShape) in self._base
+                      else None)
+            if source is not None:
+                self._unmet = violation.entered_select(source.cbd(avoided), avoided)
         here = _Node(graph=STATE_GRAPH)
         here.estimate = self._estimate_in(here, desire)
         self._base_forbidden = (self._forbidden_keys(here)

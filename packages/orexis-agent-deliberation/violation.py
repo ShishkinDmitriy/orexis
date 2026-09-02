@@ -63,6 +63,14 @@ def unmet_select(shapes: rdflib.Graph, shape) -> str:
     return _Compiler(shapes).select(shape)
 
 
+def entered_select(shapes: rdflib.Graph, shape) -> str:
+    """The select whose rows are the focus nodes that CONFORM to `shape` — the negative twin
+    (#499). An aversion under `orexis:unmetWhen` is authored as the avoided state itself, so
+    its want is unmet exactly where a focus node conforms; the two terms keep their polarity
+    and the compiler reads either. Same fragment, same refusals, same parity."""
+    return _Compiler(shapes).select(shape, entered=True)
+
+
 class _Compiler:
     def __init__(self, g: rdflib.Graph):
         self.g = g
@@ -73,12 +81,14 @@ class _Compiler:
 
     # --- the whole ----------------------------------------------------------------------------
 
-    def select(self, shape) -> str:
+    def select(self, shape, entered: bool = False) -> str:
         target = self.target(shape)
         alternatives = self.violations(shape, "?this")
         if not alternatives:
             raise Unsupported(f"{shape} states no constraint this compiler knows — a want "
                               "with nothing to violate would read as met for ever")
+        if entered:
+            return f"SELECT DISTINCT ?this WHERE {{ {target} {self.conforms(shape, '?this')} }}"
         branches = " UNION ".join(f"{{ {target} {alt} }}" for alt in alternatives)
         return f"SELECT DISTINCT ?this WHERE {{ {branches} }}"
 
