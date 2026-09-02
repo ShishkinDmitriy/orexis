@@ -8,9 +8,18 @@ description: >-
   the actor the means names — and the link from a row to the code that takes it is a triple,
   `orexis:takenBy`, stated by the package that ships the row. What changed is who carries a
   decision out, never how one is reached.
-status: accepted
+status: superseded-in-part
+superseded-by: progression-steps-through-a-plan-on-confirmed-feedback
 timestamp: 2026-08-24T18:00:00Z
 ---
+
+
+> **Superseded in part, 2026-09-02.** The clause "a committed tail is a promise about a future
+> nobody has seen, so the tail is trace, not ledger" is answered by
+> [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/progression-steps-through-a-plan-on-confirmed-feedback.md):
+> the tail rides on the intention as its expected continuation and is advanced only when each
+> step's prediction is confirmed by the feedback the keeper already checks. The one road, the
+> head committed as an intention, and `orexis:takenBy` all stand.
 
 # What was true before
 
