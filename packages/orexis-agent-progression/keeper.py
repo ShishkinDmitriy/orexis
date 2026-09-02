@@ -335,7 +335,6 @@ class Keeper:
         stem = uuid.uuid4().hex[:8]
         uri = f"{OREXIS}intent_{self.agent.id}_{stem}"
         act_uri = f"{OREXIS}act_{self.agent.id}_{stem}"
-        step_uri = f"{OREXIS}step_{self.agent.id}_{stem}"
         xsd = "http://www.w3.org/2001/XMLSchema#"
         facts = [f'<{kernel("fills")}> <{action}>']
         if act.via:
@@ -353,11 +352,10 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
   <{uri}> a <{kernel("Intention")}> ;
     <{kernel("pursues")}> <{want}> ;
     <{kernel("by")}> <{act_uri}> ;
-    <{kernel("at")}> <{step_uri}> ;
+    <{kernel("step")}> <{act_uri}> ;
     <{kernel("adoptedAt")}> "{now.isoformat()}"^^<{xsd}dateTime> ;
     <{BECAUSE_OF}> {_literal(because)} .
   <{act_uri}> a <{kernel("Act")}> ; {" ; ".join(facts)} .
-  <{step_uri}> a <{kernel("Step")}> ; <{kernel("takes")}> <{act_uri}> .
 }} }}""")
         self.log.info("adopted %s for %s: %s", action.rsplit("#", 1)[-1], _short(want), because)
         self._tell("adopted", action, want, because)
@@ -385,9 +383,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         the select the store runs — conformance for `until`, violation for `until_not`. A
         condition that is naturally a query is a shape carrying a `sh:sparql` constraint,
         the form SHACL already has (`condition_shape` builds one). The ledger keeps the shape
-        ON THE STEP the intention stands at — the intention is the commitment, the act the
-        doing, the step the act's place, which is what waits — so a sovereign asking sees
-        what a step waits for.
+        ON THE ACT the intention stands at, so a sovereign asking sees what an act waits for.
         """
         if (until is None) == (until_not is None):
             raise ValueError("a hold is `until` or `until_not`, exactly one")
@@ -401,15 +397,15 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
     def _hold_step(self, intention_uri: str, predicate: str, condition, not_after,
                    when_lapsed: str) -> None:
-        """Write a condition on the step the intention stands at, arm its deadline, and ask
-        at once whether it already answers. ON THE STEP: the intention is the commitment,
-        the act is the doing, and the step — the act's place — is what waits."""
+        """Write a condition on the act the intention stands at, arm its deadline, and ask
+        at once whether it already answers. ON THE ACT: the same node that was planned is
+        the one that waits, is taken, and is answered — its place in the plan is a link."""
         node, triples = self._condition_triples(intention_uri, condition)
         self.agent.intentions.update(f"""
 INSERT {{ GRAPH <{self.graph}> {{
-  ?step <{predicate}> <{node}> ; <{kernel("whenLapsed")}> "{when_lapsed}" .
+  ?act <{predicate}> <{node}> ; <{kernel("whenLapsed")}> "{when_lapsed}" .
   {triples} }} }}
-WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("at")}> ?step }} }}""")
+WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act }} }}""")
         if not_after is not None:
             delay = (not_after - datetime.now(timezone.utc)).total_seconds()
             from .scheduler import scheduler
@@ -432,7 +428,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("at")}> ?step }} }}
         return str(roots[0]), condition.serialize(format="nt")
 
     def held(self) -> list[tuple]:
-        """Every step still waiting: `(holder, select, predicate)` — the select the store
+        """Every act still waiting: `(holder, select, predicate)` — the select the store
         runs, compiled from the shape: conformance for `until` and `answeredWhen`, violation
         for `untilNot`, so rows always mean the wait is over — and which wait it was. A
         READINESS wait (`until`, `untilNot`) holds a STANDING intention and releases its act;
@@ -441,8 +437,8 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("at")}> ?step }} }}
         answers with the verdict. The holder is the `Standing` or the `OpenExpectation`."""
         rows = bindings(self.agent.intentions.query_union(f"""
 SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{kernel("at")}> ?step .
-  ?step ?p ?node ; <{kernel("whenLapsed")}> ?when .
+  ?i <{kernel("by")}> ?act .
+  ?act ?p ?node ; <{kernel("whenLapsed")}> ?when .
   ?node a sh:NodeShape .
   FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>, <{kernel("answeredWhen")}>))
   FILTER NOT EXISTS {{ ?i <{END_MET}> ?m }} }} }}"""))
@@ -560,7 +556,7 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
     def _when_lapsed(self, intention_uri: str) -> str:
         rows = bindings(self.agent.intentions.query_union(f"""
 SELECT ?when WHERE {{ GRAPH <{self.graph}> {{
-  <{intention_uri}> <{kernel("at")}> ?step . ?step <{kernel("whenLapsed")}> ?when }} }}"""))
+  <{intention_uri}> <{kernel("by")}> ?act . ?act <{kernel("whenLapsed")}> ?when }} }}"""))
         return rows[0]["when"] if rows else "take"
 
     def _release(self, standing: Standing, because: str) -> None:
@@ -578,9 +574,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{BECAUSE_OF}> {_literal
         #  The condition's own triples stay in the ledger as the record of what was waited
         #  for; only the hold — the pointer and the lapse rule — goes.
         self.agent.intentions.update(f"""
-DELETE {{ GRAPH <{self.graph}> {{ ?step ?p ?c ; <{kernel("whenLapsed")}> ?w }} }}
-WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("at")}> ?step .
-          ?step ?p ?c ; <{kernel("whenLapsed")}> ?w .
+DELETE {{ GRAPH <{self.graph}> {{ ?act ?p ?c ; <{kernel("whenLapsed")}> ?w }} }}
+WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act .
+          ?act ?p ?c ; <{kernel("whenLapsed")}> ?w .
           FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>, <{kernel("answeredWhen")}>)) }} }}""")
 
     def _on_written(self) -> None:

@@ -9,7 +9,8 @@ description: >-
   after); a STEP is planning's word for an act at its place in a plan with what the search
   predicted; an intention commits to an act; a commitment promises one; a claim is a
   commitment to the host's Serving act for so many litres, not after its expiry.
-status: accepted
+status: superseded-in-part
+superseded-by: progression-steps-through-a-plan-on-confirmed-feedback
 timestamp: 2026-08-26T18:00:00Z
 ---
 
@@ -41,9 +42,10 @@ a commitment to a `Dosing` act with nobody to pay. See [act](/domain/act.md).
 
 **A step is planning's word.** An act at its place in a plan, with what the search predicted
 it would reach. `Plan.steps` holds steps; the trace's `orexis:Candidate` is a weighed step; only
-the head's act is ever committed. See [step](/domain/step.md). The two words keep the two
-scopes apart: a step is a hypothesis that must not outlive its pass, an act is what survives
-it.
+the head's act is ever committed. *Amended, 2026-09-02: the step is FOLDED into the act — a
+step is a link (`orexis:step`, `orexis:then`), not a thing, since every act is minted for the
+place it fills; see [act](/domain/act.md). "Only the head is committed" is superseded by
+[progression-steps-through-a-plan-on-confirmed-feedback](/decisions/progression-steps-through-a-plan-on-confirmed-feedback.md).*
 
 **The window is the act's, not the actor's.** Not-after is what every hand-kept timer was
 saying: a bid not after `closesAt`, a serve not after `exp`, a look not after the round that

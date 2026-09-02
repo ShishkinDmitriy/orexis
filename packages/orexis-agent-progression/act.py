@@ -1,13 +1,14 @@
-"""An act: an action filled in — and a step: an act at its place in a plan.
+"""An act: an action filled in, and the record of that instance through its life.
 
-An `orexis:Action` is a template (a precondition, an effect, a taker). What gets committed, taken
-and promised is a FILLED one — the lever it goes through, the want it serves and what that
-want is about, how much, for whom where it is an obligation's, and WHEN — and until this file it had
-no name: an affordance row carried some of it, an intention some, a commitment some, and the
-timing lived in actors' timers. An act is execution's word for that thing; a step is
-planning's word for an act at a position in a plan with what the search predicted. The two
-words keep the two scopes apart: a step is a hypothesis that must not outlive its pass, an act
-is what survives it. See knowledge/domain/act.md, knowledge/domain/step.md and
+An `orexis:Action` is a template (a precondition, an effect, a taker). What gets committed,
+taken and promised is a FILLED one — the lever it goes through, the want it serves and what
+that want is about, how much, for whom where it is an obligation's, WHEN — and, since the fold
+of the step into it (the sovereign's ruling, 2026-09-02), what the search predicted taking it
+would reach. One node, three moments: planned, taken, answered. Its place in a plan is a LINK,
+not a thing — `orexis:step` from the intention to each act, `orexis:then` from an act to the
+one that follows — because every act is minted for the place it fills, so a step node was a
+distinction without a difference. Two nouns, action and act, and both are needed: one template,
+many fillings. See knowledge/domain/act.md and
 knowledge/decisions/an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan.md.
 """
 
@@ -33,38 +34,13 @@ class Act:
     #  the half nothing writes yet — where a held claim spent later would arrive.
     not_before: datetime | None = None
     not_after: datetime | None = None
+    urgency_after: float | None = None  # the want's urgency in the world this act was predicted to reach
 
     @classmethod
     def from_row(cls, row, quantity: float | None = None, not_after: datetime | None = None):
         """An affordance row, filled: sized, and windowed where the caller knows when. Handed
-        a step or an act already, it fills that one again — a search re-sizes a step it takes
-        from a different world."""
-        row = getattr(row, "act", row)
+        an act already, it fills that one again — a search re-sizes an act it takes from a
+        different world."""
         return cls(action=row.action, via=row.via, want=row.want, about=row.about,
                    quantity=quantity, direction=row.direction, for_agent=row.for_agent,
                    not_after=not_after)
-
-
-@dataclass(frozen=True)
-class Step:
-    """An act at its place in a plan, with what the search predicted taking it would reach."""
-
-    act: Act
-    urgency_after: float | None = None   # the want's urgency in the world this step reaches
-
-    #  The act's identity, read through: a plan reads as a sequence of acts.
-    @property
-    def action(self) -> str:
-        return self.act.action
-
-    @property
-    def via(self) -> str:
-        return self.act.via
-
-    @property
-    def want(self) -> str | None:
-        return self.act.want
-
-    @property
-    def about(self) -> str | None:
-        return self.act.about

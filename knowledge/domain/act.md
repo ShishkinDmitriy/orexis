@@ -37,7 +37,18 @@ held claim spent later — the futures seam in [claim](/domain/claim.md) — wou
 - an [actor](/domain/actor.md) is handed one: `take(act, …)`;
 - a [commitment](/domain/commitment.md) promises one — a [claim](/domain/claim.md) is a
   commitment to the host's Serving act for so many litres, not after `exp`;
-- a [step](/domain/step.md) holds one, at its place in a plan, with what the search predicted.
+- a plan holds several, each at its place — a LINK, `orexis:step` from the intention and `orexis:then` between acts, not a node of its own — with what the search predicted.
+
+# Its place in a plan is a link, and its life is one node
+
+There is no step. The sovereign folded it (2026-09-02): every act is minted for the place it
+fills, in the search and in the ledger alike, so "the act" and "its step" were always the
+same thing under two names. The intention has `orexis:step` to every act of the plan it
+commits to, `orexis:by` names the one it stands at, and `orexis:then` orders the rest. The act
+carries what the search predicted it would reach, what it waits for before it is due
+(`orexis:until`, `orexis:untilNot`), what counts as the world having answered it
+(`orexis:answeredWhen`), and what happens if a wait lapses. Planned, held, taken, answered:
+one node, and reading it afterwards is reading the history of that instance.
 
 # What it is not
 

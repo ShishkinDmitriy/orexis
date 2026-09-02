@@ -755,7 +755,7 @@ toy:{name} a orexis:Action ;
     plan = Planner(fern, fern.me).plan(stake_of(fern))
 
     assert plan.steps, "both toys improve 0.30 toward the region — one must be taken"
-    assert plan.steps[0].act.action == "urn:toy#Cheaply", \
+    assert plan.steps[0].action == "urn:toy#Cheaply", \
         "same urgency either way round, so the declared cost is the only thing left to decide"
 
 
@@ -800,5 +800,5 @@ toy:{name} a orexis:Action ;
 
     assert plan.outcome == "satisfied" and plan.steps, \
         "both toys land 0.55 inside 0.45-0.65 — the want is achievable in one step"
-    assert plan.steps[0].act.action == "urn:toy#Thrifty", \
+    assert plan.steps[0].action == "urn:toy#Thrifty", \
         "two ways of achieving one want differ only in cost, and the cheaper must be the plan"
