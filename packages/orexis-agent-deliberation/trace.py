@@ -43,6 +43,7 @@ LATE = "lands after the want expires"
 FORBIDDEN = "newly enters a state the society refuses"
 COSTLY = "costs more than a plan already found"
 SPENT = "the budget was spent before this was simulated"
+IRRELEVANT = "touches nothing this want reads"
 
 #  What each verdict is called in the series, declared HERE beside the verdict it names so the
 #  two cannot drift — the same one-definition-two-readers argument `gap.rq` and `urgency` make.
@@ -58,6 +59,7 @@ FIELD = {
     FORBIDDEN: "forbidden",
     COSTLY: "costly",
     SPENT: "spent",
+    IRRELEVANT: "irrelevant",
 }
 
 

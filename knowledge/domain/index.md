@@ -57,6 +57,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [act](/domain/act.md) - An action filled in — lever, want, quantity, whom for, and a window. Execution's word: committed, taken, promised.
 * [step](/domain/step.md) - Planning's word: an act at its place in a plan with what the search predicted. Only the head's act is committed.
 
+* [relevance](/domain/relevance.md) - Which levers could serve a want: read off the actions, closed backward through preconditions, never declared; unreadable keeps every lever.
 * [affordance](/domain/affordance.md) - One row of what an agent could do now — an action whose precondition holds. Derived and never stored; whom it serves is a column.
 
 * [lever](/domain/lever.md) - The INSTRUMENT an act goes through, always an instance. Its absence is what removes a row, with nothing edited.

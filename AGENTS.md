@@ -128,6 +128,9 @@ it is a record wearing a bullet.
 - **A prune is only as good as when its bound arrives** — an admissible estimate refused
   nothing under breadth-first, because the first achiever came last, and the same estimate
   refused sixty percent of the courier's forks the day the search followed it.
+- **A lever that touches nothing the want reads is never simulated, and the closure is what
+  makes that safe** — filtering to the goal's predicates deletes every chain; closing backward
+  through preconditions keeps the bid that makes the dose possible.
 - **A want is authored positive and the kernel writes the negation** — rows are
   existential and a want is universal, so somebody turns the shape inside out, and a compiler
   held to the judge by parity does it once where every author would do it differently.
