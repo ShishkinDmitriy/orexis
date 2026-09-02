@@ -168,7 +168,8 @@ def deliberable(st, desires: dict) -> bool:
             SELECT ?action ?available ?construct WHERE {
               ?action a orexis:Action .
               OPTIONAL { ?action orexis:available ?available }
-              OPTIONAL { ?action sh:construct ?construct }
+              OPTIONAL { { ?action sh:construct ?construct }
+                         UNION { ?action orexis:outcome ?o . ?o sh:construct ?construct } }
               FILTER(BOUND(?available) != BOUND(?construct)) }""")):
         faults += 1
         missing = "precondition" if not action.get("available") else "effect"

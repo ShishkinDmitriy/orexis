@@ -242,8 +242,11 @@ _ACTIONS_Q = """
 SELECT ?action ?available ?construct ?retracts WHERE {
   ?action a orexis:Action .
   OPTIONAL { ?action orexis:available ?available }
-  OPTIONAL { ?action sh:construct ?construct }
-  OPTIONAL { ?action orexis:retracts ?retracts }
+  { OPTIONAL { ?action sh:construct ?construct }
+    OPTIONAL { ?action orexis:retracts ?retracts } }
+  UNION
+  { ?action orexis:outcome ?o . ?o sh:construct ?construct .
+    OPTIONAL { ?o orexis:retracts ?retracts } }
 }"""
 
 _SUBPROPERTIES_Q = """
@@ -263,16 +266,20 @@ def actions_of(query) -> dict[str, tuple]:
         #  No precondition text is a lever with nothing to widen the want by — the afforder
         #  yields it no rows, but a construct it does carry says what it would write.
         reads = reads_of_select(row["available"]) if row.get("available") else frozenset()
-        writes: set | None = set()
-        for text in (row["construct"], row.get("retracts")):
-            if not text:
-                continue
-            part = writes_of_construct(text)
-            if part is None:
-                writes = ANYTHING
-                break
-            writes |= part
-        out[row["action"]] = (reads, frozenset(writes) if writes is not ANYTHING else ANYTHING)
+        #  ONE ROW PER OUTCOME (#522): an action's writes are the union over every way it
+        #  may turn out, since a plan may rely on any of them.
+        seen_reads, writes = out.get(row["action"], (reads, set()))
+        if writes is not ANYTHING:
+            writes = set(writes)
+            for text in (row["construct"], row.get("retracts")):
+                if not text:
+                    continue
+                part = writes_of_construct(text)
+                if part is None:
+                    writes = ANYTHING
+                    break
+                writes |= part
+        out[row["action"]] = (seen_reads, frozenset(writes) if writes is not ANYTHING else ANYTHING)
     return out
 
 

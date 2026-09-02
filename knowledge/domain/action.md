@@ -54,7 +54,8 @@ graph beside the T-Box. Three readers, one join:
 # Both texts, or neither
 
 An action states a precondition and an effect, or neither, and the gate refuses one with
-only one of the two. Both is the menu's kind, chosen by a plan. Neither is an action an event
+only one of the two — where the effect may sit on the action or on each of its
+[outcomes](/domain/outcome.md), the ways it may turn out (#522). Both is the menu's kind, chosen by a plan. Neither is an action an event
 adopts — the market's Presenting, which a claim arriving adopts and a watch going live
 triggers, on nobody's menu, a node so an [intention](/domain/intention.md) can name it. The
 kind is read off the texts rather than declared: a class for the second kind was weighed and

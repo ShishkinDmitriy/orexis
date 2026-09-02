@@ -99,6 +99,26 @@ market:Acquiring
     #  WHO CARRIES IT OUT — the module whose family this names (knowledge/domain/actor.md).
     orexis:takenBy market:Bidding ;
     rdfs:label "what winning a bid makes true" ;
+    orexis:outcome market:Allocated , market:NotAllocated .
+
+#  TWO WAYS A BID TURNS OUT (#522). Losing a round is not chance — it is what the other
+#  bidders did — so the odds are a first-order belief about this venue: rounds I entered and
+#  rounds that cleared to me, kept by the bidder in its own graph, read here BANDED to the
+#  quarter (a raw rate would re-decide the plan on every round) with Laplace's prior, so a
+#  venue nobody has tried is an even chance and one that never allocates still gets tried at
+#  eight times its price, never refused outright. The search relies on ONE of these per step
+#  and holds the world to it; the other exists so the plan can say what it is not counting
+#  on, and it nets to nothing — a world already reached, which the search discards.
+market:Allocated a orexis:Outcome ;
+    rdfs:label "allocated: the round cleared to me, and the host's valve puts the lot where I am" ;
+    orexis:likelihood """
+        SELECT ?likelihood WHERE {
+          OPTIONAL { GRAPH $beliefs { $via market:roundsEntered ?n } }
+          OPTIONAL { GRAPH $beliefs { $via market:roundsWon ?w } }
+          BIND((COALESCE(?w, 0) + 1.0) / (COALESCE(?n, 0) + 2.0) AS ?rate)
+          BIND(xsd:double(ROUND(?rate * 4)) / 4 AS ?band)
+          BIND(IF(?band < 0.125, 0.125, ?band) AS ?likelihood)
+        }""" ;
 
     #  THE SAME ARITHMETIC AS A DOSE, and that is the point rather than a coincidence. Water
     #  bought and water poured raise the same property by the same amount; what differs is who
@@ -199,6 +219,19 @@ market:Acquiring
             }
             FILTER($litres > 0)
         }""" .
+
+market:NotAllocated a orexis:Outcome ;
+    rdfs:label "not allocated: the round cleared to someone else, or to nobody — nothing moves" ;
+    orexis:likelihood """
+        SELECT ?likelihood WHERE {
+          OPTIONAL { GRAPH $beliefs { $via market:roundsEntered ?n } }
+          OPTIONAL { GRAPH $beliefs { $via market:roundsWon ?w } }
+          BIND((COALESCE(?w, 0) + 1.0) / (COALESCE(?n, 0) + 2.0) AS ?rate)
+          BIND(xsd:double(ROUND(?rate * 4)) / 4 AS ?band)
+          BIND(IF(?band < 0.125, 0.125, ?band) AS ?allocated)
+          BIND(1 - ?allocated AS ?likelihood)
+        }""" ;
+    sh:construct """CONSTRUCT {} WHERE {}""" .
 
 #################  What OFFERING makes true  #################
 #

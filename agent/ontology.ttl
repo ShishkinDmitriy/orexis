@@ -505,7 +505,7 @@ orexis:violationIs a owl:ObjectProperty ; rdfs:domain sh:PropertyShape ; rdfs:ra
 #  triples can say that without predicting the number. A CONSTRUCT can, because this project
 #  already computes that prediction for verification.
 
-orexis:retracts a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ;
+orexis:retracts a owl:DatatypeProperty ; rdfs:range xsd:string ;   # on an Action, or on one of its Outcomes
     rdfs:label "retracts" ;
     rdfs:comment """A CONSTRUCT whose result is the triples this effect REMOVES. Ours, because SHACL-AF has none: its rules exist to add entailments, so the standard has no way to say a thing stops being true. A simulator computes `(beliefs - retracts) + adds`, which keeps the whole operation side-effect free — nothing is deleted anywhere, two graphs are subtracted.
 
@@ -529,7 +529,7 @@ It is not optional, and the reason is arithmetic rather than taste. `sensed_writ
 #  plans against one timeline and verifies against another, and the disagreement surfaces as
 #  false UNMET verdicts — the same failure arriving through the clock instead of the arithmetic.
 
-orexis:landsAfter a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ;
+orexis:landsAfter a owl:DatatypeProperty ; rdfs:range xsd:string ;   # on an Action, or on one of its Outcomes
     rdfs:label "lands after" ;
     rdfs:comment """A SELECT yielding `?seconds`: how long after the act until the WORLD CHANGE is complete. A query and not a number, because the duration is a function of the act rather than a property of the lever — a valve open for a two-litre dose is open longer than for a half-litre one, and `min(litres, cap) / calibration` is exactly the arithmetic the effect rule already performs. Its parameters are the effect's own, so one text answers for any act it could be asked about.
 
@@ -760,6 +760,25 @@ orexis:Action a owl:Class ; rdfs:label "Action" ;
 orexis:available a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ;
     rdfs:label "available" ;
     rdfs:comment """The precondition, as a SELECT over the world binding `?property ?via ?direction` and — where the row is a duty owed to someone rather than the agent's own option — `?for_agent`. `$me` and `$properties` (the properties the agent holds desires in) are substituted by the collector; prefixes are the store's. A row exists only where every hop of the walk holds, which is why the menu is the precondition language and chaining needs no `requires` of its own.""" .
+
+#################  An action may turn out more than one way  #################
+#
+#  Losing a round is not chance: it is what the other bidders did. A pump that fails is chance.
+#  The modelling rule splits them (#522): a venue's odds change which plan is selected — bid,
+#  or self-dose from the butt — so they are believed, banded and first-order; a pump's failure
+#  changes no plan chosen beforehand, and stays telemetry. Contingent plans are REFUSED in
+#  favour of determinize-and-replan: a step relies on ONE outcome, the keeper holds the world
+#  to it, and an unmet verdict drops the tail and asks deliberation again. What an outcome adds
+#  to the search is expected cost — a bid at half odds costs twice its price in attempts — and
+#  never a branch in the plan.
+orexis:Outcome a owl:Class ; rdfs:label "Outcome" ;
+    rdfs:comment "One of the ways taking an action may turn out: its own effect (`sh:construct`, `orexis:retracts`, `orexis:landsAfter`) and its likelihood. An action stating no outcome has exactly one, itself — its effect texts sit on the action, and nothing changes for it. An action stating outcomes states its effect on each, and the search treats each as its own candidate (all-outcomes determinization): a step relies on the one it was planned through, `orexis:reliesOn`, and the world is held to that." .
+orexis:outcome a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:range orexis:Outcome ; rdfs:label "outcome" .
+orexis:likelihood a owl:DatatypeProperty ; rdfs:domain orexis:Outcome ; rdfs:range xsd:string ;
+    rdfs:label "likelihood" ;
+    rdfs:comment "A SELECT answering `?likelihood`, the probability in (0, 1] that taking the action turns out this way — asked with the rule's own tokens ($me, $via, $beliefs …), so a package reads it off what the agent believes about the venue, banded rather than raw. Omitted, the outcome is certain. The search divides an action's cost by it: the expected cost of relying on an outcome is the cost of the attempts it takes on average, which is how odds choose between a venue and a butt without a branch in the plan. An outcome whose likelihood binds nothing or zero is one the search will not rely on." .
+orexis:reliesOn a owl:ObjectProperty ; rdfs:domain orexis:Step ; rdfs:range orexis:Outcome ; rdfs:label "relies on" ;
+    rdfs:comment "Which outcome the step was planned through, where its action states several — what `orexis:predicts` is the diff of, and what the world is held to. Absent for an action with one way of turning out." .
 
 orexis:takenBy a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:range orexis:Capability ;
     rdfs:label "taken by" ;

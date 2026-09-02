@@ -38,16 +38,32 @@ log = logging.getLogger("effects")
 #  clause names it (AGENTS.md: never wrap GRAPH around a SELECT). `?rule` is bound by
 #  SUBSTITUTION (#500), the engine's own parameter, projected. An action with no construct
 #  states no effect and is not returned.
-_RULE_Q = """
-SELECT ?rule ?construct ?retracts ?lands ?costs WHERE {
-  ?rule a orexis:Action ; sh:construct ?construct .
-  OPTIONAL { ?rule orexis:retracts ?retracts }
-  OPTIONAL { ?rule orexis:landsAfter ?lands }
+#  ONE ROW PER WAY OF TURNING OUT (#522): an action stating no outcome answers one row with
+#  no ?outcome, its effect texts on itself; an action stating outcomes answers one per
+#  outcome, each with its own effect and likelihood. The cost is the action's either way.
+_OUTCOMES_Q = """
+SELECT ?rule ?outcome ?construct ?retracts ?lands ?costs ?likelihood WHERE {
+  ?rule a orexis:Action .
   OPTIONAL { ?rule orexis:costs ?costs }
-} LIMIT 1"""
+  { ?rule sh:construct ?construct .
+    OPTIONAL { ?rule orexis:retracts ?retracts }
+    OPTIONAL { ?rule orexis:landsAfter ?lands } }
+  UNION
+  { ?rule orexis:outcome ?outcome . ?outcome sh:construct ?construct .
+    OPTIONAL { ?outcome orexis:retracts ?retracts }
+    OPTIONAL { ?outcome orexis:landsAfter ?lands }
+    OPTIONAL { ?outcome orexis:likelihood ?likelihood } }
+} ORDER BY ?outcome"""
 
 
-def rule_for(store, action: str) -> dict | None:
+def outcomes_of(store, action: str) -> list[dict]:
+    """Every way this action may turn out, each with its effect texts — one entry, with no
+    `outcome`, for an action that states its effect on itself. Empty for an action that
+    states no effect at all (the market's Presenting, adopted by an event)."""
+    return bindings(store.query(_OUTCOMES_Q, {"rule": action}))
+
+
+def rule_for(store, action: str, outcome: str | None = None) -> dict | None:
     """The effect rule an action carries, or None for an action an event adopts.
 
     None is the answer for an action that states neither text — the market's Presenting,
@@ -55,11 +71,28 @@ def rule_for(store, action: str) -> dict | None:
     precondition states an effect, or the gate (`deliberable`, in `onboarding/validate.py`)
     refuses the world before an agent runs (#506).
     """
-    rows = bindings(store.query(_RULE_Q, {"rule": action}))
+    rows = outcomes_of(store, action)
+    if outcome is not None:
+        rows = [r for r in rows if r.get("outcome") == outcome]
     return rows[0] if rows else None
 
 
-def apply(store, action: str, **bind) -> tuple[list, list]:
+def likelihood_of(store, rule: dict, **bind) -> float:
+    """How likely the way of turning out `rule` describes is, in (0, 1] — asked of the
+    outcome's own `orexis:likelihood`, never computed here; 1.0 where none is stated. Zero
+    where the select binds nothing or answers nothing positive: an outcome the search will
+    not rely on, which every caller must read as "do not simulate this one"."""
+    text = rule.get("likelihood")
+    if not text:
+        return 1.0
+    bind.setdefault("state", STATE_GRAPH)
+    rows = _select(store, text, bind)
+    if not rows or rows[0]["likelihood"] is None:
+        return 0.0
+    return max(0.0, min(1.0, float(rows[0]["likelihood"].value)))
+
+
+def apply(store, action: str, outcome: str | None = None, **bind) -> tuple[list, list]:
     """Run one means' effect: `(added, retracted)`, as triples, against nothing.
 
     **`store` is whichever dataset the question is being asked ABOUT, and that is the whole of
@@ -87,7 +120,7 @@ def apply(store, action: str, **bind) -> tuple[list, list]:
     `$me`, `$subject`, `$property`, `$litres`. Substitution rather than SPARQL's own binding
     because the text is a literal in the graph and the engine takes a string.
     """
-    rule = rule_for(store, action)
+    rule = rule_for(store, action, outcome)
     if rule is None:
         return [], []
     #  `$state` DEFAULTS TO THE AGENT'S OWN READINGS (#500): an actuator asking about the
@@ -184,7 +217,7 @@ def _term(x):
     return x
 
 
-def lands_after(store, action: str, **bind) -> float | None:
+def lands_after(store, action: str, outcome: str | None = None, **bind) -> float | None:
     """How long after this act the world change completes, in seconds — asked, never computed.
 
     The figure a waiter needs and the figure a planner needs, and they must be the same one.
@@ -199,7 +232,7 @@ def lands_after(store, action: str, **bind) -> float | None:
     still a lever that works — it is only one nobody can wait for precisely.
     """
     bind.setdefault("state", STATE_GRAPH)
-    rule = rule_for(store, action)
+    rule = rule_for(store, action, outcome)
     if rule is None or not rule.get("lands"):
         return None
     rows = _select(store, rule["lands"], bind)
@@ -208,7 +241,7 @@ def lands_after(store, action: str, **bind) -> float | None:
     return float(rows[0]["seconds"].value)
 
 
-def cost_of(store, action: str, **bind) -> float | None:
+def cost_of(store, action: str, outcome: str | None = None, **bind) -> float | None:
     """What taking this act would spend, in the wallet's unit — asked, never computed.
 
     `orexis:landsAfter`'s twin (#466): the owning package declares the SELECT, the same
@@ -218,7 +251,7 @@ def cost_of(store, action: str, **bind) -> float | None:
     statement an omitted declaration makes.
     """
     bind.setdefault("state", STATE_GRAPH)
-    rule = rule_for(store, action)
+    rule = rule_for(store, action, outcome)
     if rule is None or not rule.get("costs"):
         return None
     rows = _select(store, rule["costs"], bind)

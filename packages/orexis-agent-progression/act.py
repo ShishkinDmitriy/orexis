@@ -36,6 +36,8 @@ class Step:
     urgency_after: float | None = None  # the want's urgency in the world this step was predicted to reach
     predicts: tuple | None = None     # (adds, retracts): the canonical facts the search said this
                                       # step makes true and false — what the world is held to (#510)
+    relies_on: str | None = None      # which outcome it was planned through, where the action
+                                      # states several (`orexis:reliesOn`, #522)
 
     @classmethod
     def from_row(cls, row, quantity: float | None = None, not_after: datetime | None = None):

@@ -83,7 +83,11 @@ KERNEL = "http://example.org/orexis#"
 # the keeper itself now, reached as `agent.keeper` rather than asked for by family.
 ACQUIRING = term("Acquiring")     # buying — the action, and the kind of act it is
 SERVING = term("Serving")         # the host pouring a presented claim
-PRESENTING = term("Presenting")   # the buyer holding, then presenting, a won claim (#132)
+PRESENTING = term("Presenting")
+ALLOCATED = term("Allocated")          # the way a bid turns out that a plan relies on (#522)
+NOT_ALLOCATED = term("NotAllocated")   # and the way it does not
+ROUNDS_ENTERED = term("roundsEntered") # the venue's odds, as two counts the bidder keeps
+ROUNDS_WON = term("roundsWon")   # the buyer holding, then presenting, a won claim (#132)
 OFFERING = term("Offering")       # the host opening a round
 
 

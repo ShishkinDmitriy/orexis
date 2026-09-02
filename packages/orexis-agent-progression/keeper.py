@@ -368,6 +368,8 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
                 facts.append(f'<{kernel("predictedUrgency")}> "{step.urgency_after:.6f}"^^<{xsd}decimal>')
             if step.predicts is not None:
                 facts.append(f'<{PREDICTS}> {_literal(predicts_json(step.predicts))}')
+            if step.relies_on:
+                facts.append(f'<{kernel("reliesOn")}> <{step.relies_on}>')
             if n + 1 < len(plan):
                 facts.append(f'<{kernel("then")}> <{step_uris[n + 1]}>')
             blocks.append(f'  <{step_uri}> a <{kernel("Step")}> ; {" ; ".join(facts)} .')
@@ -1038,13 +1040,13 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
             clauses.append(f"FILTER(?action = <{action}>)")
         if want:
             clauses.append(f"FILTER(?want = <{want}>)")
-        for term in ("through", "quantity", "forAgent", "notBefore", "notAfter", "predicts"):
+        for term in ("through", "quantity", "forAgent", "notBefore", "notAfter", "predicts", "reliesOn"):
             clauses.append(f'OPTIONAL {{ ?act <{kernel(term)}> ?{term} }}')
         clauses.append(f'OPTIONAL {{ SELECT ?i (MAX(?v) AS ?advanced) WHERE {{ '
                        f'?i <{kernel("step")}> ?done . ?done <{END_VERIFIED_AT}> ?v }} GROUP BY ?i }}')
         rows = bindings(self.agent.intentions.query(
             "SELECT ?i ?act ?action ?want ?at ?through ?quantity ?forAgent ?notBefore ?notAfter "
-            "?predicts ?advanced WHERE { GRAPH <%s> { %s } }" % (self.graph, " ".join(clauses))))
+            "?predicts ?reliesOn ?advanced WHERE { GRAPH <%s> { %s } }" % (self.graph, " ".join(clauses))))
         #  WHAT THE WANT IS ABOUT rides along (#510): a step taken from the ledger — the
         #  second of a plan, advanced to on feedback — goes to its actor exactly as the head
         #  did from the search, and the actor reads the property off the step, not the want.
@@ -1056,6 +1058,7 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
             step=Step(action=r["action"], via=r.get("through") or "", want=r["want"],
                     about=about_of.get(r["want"]),
                     predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None,
+                    relies_on=r.get("reliesOn"),
                     quantity=float(r["quantity"]) if r.get("quantity") else None,
                     for_agent=r.get("forAgent"),
                     not_before=datetime.fromisoformat(r["notBefore"]) if r.get("notBefore") else None,

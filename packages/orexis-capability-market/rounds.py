@@ -26,7 +26,7 @@ from orexis_agent_progression.ontology import beliefs_graph
 from orexis_agent_progression.store import bindings
 
 from .terms import (CLOSES_AT, HAS_ROUND, LOT_L, MAY_CONVENE_AT, NS, RESERVE_PER_L,
-                    ROUND, ROUND_ID)
+                    ROUND, ROUND_ID, ROUNDS_ENTERED, ROUNDS_WON)
 
 _XSD = "http://www.w3.org/2001/XMLSchema#"
 
@@ -109,3 +109,25 @@ DELETE {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{MAY_CONVENE_AT}> 
 WHERE  {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{MAY_CONVENE_AT}> ?was }} }} ;
 INSERT DATA {{ GRAPH <{beliefs_graph(agent.id)}> {{
   <{venue_uri}> <{MAY_CONVENE_AT}> "{until.isoformat()}"^^<{_XSD}dateTime> }} }}""")
+
+
+def tally(agent, venue_uri: str, won: bool) -> None:
+    """Count what this venue did for me (#522): a round entered when my bid goes out, a
+    round won when its claim comes back. Two integers on the venue in my own graph — the
+    first-order fact Acquiring's `market:Allocated` outcome reads its odds off, banded."""
+    term = ROUNDS_WON if won else ROUNDS_ENTERED
+    agent.beliefs.update(f"""
+DELETE {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{term}> ?was }} }}
+INSERT {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{term}> ?now }} }}
+WHERE  {{ OPTIONAL {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{term}> ?was }} }}
+         BIND(COALESCE(?was, 0) + 1 AS ?now) }}""")
+
+
+def tallies(agent, venue_uri: str) -> tuple[int, int]:
+    """(entered, won) for one venue, as this agent counts them."""
+    rows = bindings(agent.beliefs.query(f"""
+SELECT ?n ?w WHERE {{ GRAPH <{beliefs_graph(agent.id)}> {{
+  OPTIONAL {{ <{venue_uri}> <{ROUNDS_ENTERED}> ?n }}
+  OPTIONAL {{ <{venue_uri}> <{ROUNDS_WON}> ?w }} }} }}"""))
+    row = rows[0] if rows else {}
+    return int(row.get("n") or 0), int(row.get("w") or 0)

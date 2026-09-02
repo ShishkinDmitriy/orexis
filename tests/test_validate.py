@@ -71,8 +71,11 @@ def test_a_lever_nothing_states_an_effect_for_is_refused(monkeypatch, caplog):
     state from the runtime side.
     """
     st = build("simulation", monkeypatch)
-    st.update("""DELETE { GRAPH <%s> { market:Acquiring sh:construct ?c } }
-                 WHERE  { GRAPH <%s> { market:Acquiring sh:construct ?c } }"""
+    #  Acquiring states its effect on its OUTCOMES since #522, so it is theirs that go.
+    st.update("""DELETE { GRAPH <%s> { ?x sh:construct ?c } }
+                 WHERE  { GRAPH <%s> { { BIND(market:Acquiring AS ?x) }
+                                       UNION { market:Acquiring orexis:outcome ?x }
+                                       ?x sh:construct ?c } }"""
               % (ACTIONS_GRAPH, ACTIONS_GRAPH))
 
     assert not deliberable(st, desires_of(st)), \

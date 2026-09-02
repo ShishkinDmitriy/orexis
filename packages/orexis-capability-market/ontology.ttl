@@ -231,6 +231,18 @@ Must comfortably exceed the longest a holder may wait before presenting, which i
     rdfs:label "may convene at" ;
     rdfs:comment "When the host's cooldown on this venue runs out — written at close, from `roundCooldownS`, into the host's own graph. An instant rather than the duration, so the Offering action's precondition compares it to NOW() and the private cooldown itself is never on a row anyone else could read." .
 
+#################  What a venue did for me  #################
+#
+#  Two counts a bidder keeps in its own graph, on the venue (#522): the rounds it entered
+#  and the rounds that cleared to it. First-order — what the venue DID, never what its host
+#  believes — and the only fact about other agents a plan branches on: Acquiring's
+#  `market:Allocated` outcome reads its odds off them, banded, so a poor venue costs more
+#  in expected attempts and the search prefers a butt or a better venue without a branch.
+:roundsEntered a owl:DatatypeProperty ; rdfs:domain :Market ; rdfs:range xsd:integer ;
+    rdfs:label "rounds entered" ; rdfs:comment "How many rounds on this venue this agent has bid in." .
+:roundsWon a owl:DatatypeProperty ; rdfs:domain :Market ; rdfs:range xsd:integer ;
+    rdfs:label "rounds won" ; rdfs:comment "How many of those cleared to this agent." .
+
 #################  How close a bought lot must land  #################
 #
 #  The effect an action states is ONE declaration (#510, #518): the reading the search planned

@@ -667,6 +667,7 @@ SELECT ?t ?mine WHERE {{
             "balance": round(self.balance, 4),
         }, not_after=not_after)
         if sent:
+            rounds.tally(self.agent, market.uri, won=False)   # a round entered (#522)
             done()
         return sent
 
@@ -675,6 +676,7 @@ SELECT ?t ?mine WHERE {{
     def on_claim(self, market, claim: dict) -> None:
         if claim.get("auction_id"):
             rounds.close_round(self.agent, claim["auction_id"])   # over for me: I won
+        rounds.tally(self.agent, market.uri, won=True)             # and the venue's odds say so
         amount = float(claim.get("amount_l", 0.0))
         debit = float(claim.get("debit", 0.0))
         left = wallet.debit(self.agent, debit)

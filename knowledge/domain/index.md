@@ -64,6 +64,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [lever](/domain/lever.md) - The INSTRUMENT an act goes through, always an instance. Its absence is what removes a row, with nothing edited.
 * [transport](/domain/transport.md) - How an agent reaches its society: a capability the bus grants, holding the connection and three choir hooks. Not a driver.
 
+* [outcome](/domain/outcome.md) - One way an action may turn out: its effect and its likelihood. The search divides cost by likelihood; a step relies on one; never a branch.
 * [effect](/domain/effect.md) - What taking an action would make true: a package's SHACL rule, with its timing and the route by which anyone would learn it landed.
 
 * [gap](/domain/gap.md) - The signed, normalised distance from what is sensed to what is wanted. A verdict, computed always and stored never; no reading yields no row.

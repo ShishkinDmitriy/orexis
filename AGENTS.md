@@ -141,6 +141,9 @@ it is a record wearing a bullet.
 - **A want is authored positive and the kernel writes the negation** — rows are
   existential and a want is universal, so somebody turns the shape inside out, and a compiler
   held to the judge by parity does it once where every author would do it differently.
+- **Chance is not another agent's choice** — a venue's odds change which plan is selected and
+  are believed, banded; a pump's one-in-a-hundred changes no plan and stays telemetry; and
+  neither branches the plan, since odds enter as the cost of the attempts they take.
 - **An effect is one declaration** — the diff the search planned on rides on the step and is
   what the world is held to, so no actor sizes an expectation of its own; the one thing an
   actor adds is how close, and that is a bounded pick rather than a kernel constant.

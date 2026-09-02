@@ -53,6 +53,9 @@ precede it and the possible world comes back holding neither reading.
 so the rule predicts the world in which the bid clears. That is what planning does everywhere — a
 STRIPS schema states what an action achieves, not what it achieves times a probability — and the
 uncertainty lives in re-planning and monitoring, which is where this project already puts it.
+Since #522 that optimism is named: Acquire states its effect on an [outcome](/domain/outcome.md),
+`market:Allocated`, beside a `market:NotAllocated` that constructs nothing, and the odds of the
+first enter the search as the cost of the attempts it takes — never as a branch.
 
 # The prediction has ONE source, and it is enforced rather than intended
 
