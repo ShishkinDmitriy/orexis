@@ -1,11 +1,12 @@
 ---
 type: Domain Concept
 title: Step
+term: http://example.org/orexis#Step
 description: >-
-  Planning's word — one act at its place in a plan, with what the search predicted taking it
-  would reach. A plan is a sequence of steps; only the head's act is ever committed, because
-  the plan is re-derived every pass. A weighed step that was not chosen is a candidate in the
-  trace, and a step never outlives the pass that found it.
+  One act at its place in a plan. On the search's side, with what the search predicted taking
+  it would reach; in the ledger, what an intention stands at — it takes the act, waits for a
+  condition if it has one, says what happens if the wait lapses, and may name the step that
+  follows. A weighed step that was not chosen is a candidate in the trace.
 ---
 
 # What it is
@@ -15,6 +16,16 @@ search predicted — the urgency the want would have in the world after it (`urg
 `Plan.steps` holds them (`packages/orexis-agent-progression/act.py`'s `Step`); the [imaginarium](/domain/imaginarium.md)
 holds the world each one reached, for the life of one pass, and names that world by the path
 of steps that reached it.
+
+# In the ledger
+
+`orexis:Step`, since #514. An intention stands at a step (`orexis:at`); the step takes the act
+(`orexis:takes`); and the step is where readiness lives — `orexis:until` or `orexis:untilNot`,
+a shape it waits for, and `orexis:whenLapsed`, what the keeper does if the deadline passes
+first. The intention is the commitment, the act is the doing, the step is the place: three
+words because three readers ask three questions. `orexis:then` names the following step and is
+[#510](https://github.com/ShishkinDmitriy/orexis/issues/510)'s to write: a plan handed down
+whole is a chain of steps, each held until the previous one's expectation conforms.
 
 # Only the head is committed
 

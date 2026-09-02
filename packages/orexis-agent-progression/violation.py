@@ -25,6 +25,10 @@ The compiled text is COMPUTED and never stored (model-it-only-if-a-plan-would-br
 anything the interpreter already knows is computed, never asserted). It carries no `GRAPH`
 clause and no `$state`: the caller runs it with the world's graphs as the default graph —
 `Store.query_over` — which is the same view the judge is handed as one flat text.
+
+PROGRESSION'S, since #514: a pure function over RDF with no search in it, and the keeper —
+which may not import the layer above — compiles a held condition authored as a shape
+(`orexis:until`, `orexis:untilNot`). Deliberation and the container import it downward.
 """
 
 from __future__ import annotations
@@ -36,7 +40,7 @@ import rdflib
 from rdflib import RDF, Literal, URIRef
 from rdflib.collection import Collection
 
-from orexis_agent_progression.store import NAMESPACES, Raw, bind
+from .store import NAMESPACES, Raw, bind
 
 #  Longest namespace first, so a prefix whose namespace extends another's wins.
 _PREFIX_OF = dict(sorted(NAMESPACES.items(), key=lambda kv: -len(kv[1])))

@@ -32,6 +32,8 @@ rules.ru. See knowledge/decisions/an-intention-is-an-amortised-deliberation.md.
 from __future__ import annotations
 
 import logging
+
+from rdflib import URIRef
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -54,6 +56,42 @@ BY = OREXIS + "by"
 PURSUES = OREXIS + "pursues"
 ADOPTED_AT = OREXIS + "adoptedAt"
 RESOLVED_AT = OREXIS + "resolvedAt"
+_SH_NODE_SHAPE = URIRef("http://www.w3.org/ns/shacl#NodeShape")
+
+
+def condition_shape(root: str, focus: str, binds: str):
+    """A condition that is naturally a query, as a shape that CONFORMS when the query binds.
+
+    SHACL's own polarity runs the other way — a `sh:sparql` constraint's rows are violations
+    — so the query goes under `sh:not`: the shape conforms exactly where the constraint is
+    violated, which is where `binds` returns rows for `$this`. Held `until`, the act is
+    released when the query binds; `until_not`, when it stops binding. Written this way
+    rather than inverted at the call site, so the ledger reads as the caller meant it.
+    """
+    import rdflib
+    SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
+    g = rdflib.Graph()
+    node, negated, constraint = rdflib.URIRef(root), rdflib.BNode(), rdflib.BNode()
+    g.add((node, rdflib.RDF.type, SH.NodeShape))
+    g.add((node, SH.targetNode, rdflib.URIRef(focus)))
+    g.add((node, SH["not"], negated))
+    g.add((negated, rdflib.RDF.type, SH.NodeShape))
+    g.add((negated, SH.sparql, constraint))
+    g.add((constraint, SH.select, rdflib.Literal(binds)))
+    return g
+
+
+def _rdflib_term(t):
+    """One engine term as rdflib's, for the shape compiler, which walks rdflib graphs."""
+    import pyoxigraph as ox
+    import rdflib
+    if isinstance(t, ox.NamedNode):
+        return rdflib.URIRef(t.value)
+    if isinstance(t, ox.BlankNode):
+        return rdflib.BNode(t.value)
+    if t.language:
+        return rdflib.Literal(t.value, lang=t.language)
+    return rdflib.Literal(t.value, datatype=rdflib.URIRef(t.datatype.value))
 OUTCOME = OREXIS + "outcome"
 BECAUSE_OF = OREXIS + "becauseOf"
 
@@ -202,6 +240,7 @@ class Keeper:
         #  write, and their deadlines on the scheduler. A restart loses a deadline's clock
         #  and keeps the condition — the next write re-asks it — which is the honest half.
         self._deadlines: dict = {}
+        self._compiled_conditions: dict = {}
         self._reconsidering = False
         self._holding = True               # ask once; `reconsider` learns whether any stands
         agent.beliefs.on_write(self._on_written)
@@ -247,7 +286,7 @@ class Keeper:
     # --- the ledger, written -------------------------------------------------------------
 
     def adopt(self, act, want: str, because: str, via: str | None = None,
-              until: str | None = None, not_after: datetime | None = None,
+              until=None, until_not=None, not_after: datetime | None = None,
               when_lapsed: str = "take") -> str | None:
         """Commit to one ACT toward one want. Returns the intention's IRI, or None.
 
@@ -293,6 +332,7 @@ class Keeper:
         stem = uuid.uuid4().hex[:8]
         uri = f"{OREXIS}intent_{self.agent.id}_{stem}"
         act_uri = f"{OREXIS}act_{self.agent.id}_{stem}"
+        step_uri = f"{OREXIS}step_{self.agent.id}_{stem}"
         xsd = "http://www.w3.org/2001/XMLSchema#"
         facts = [f'<{kernel("fills")}> <{action}>']
         if act.via:
@@ -310,38 +350,56 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
   <{uri}> a <{kernel("Intention")}> ;
     <{kernel("pursues")}> <{want}> ;
     <{kernel("by")}> <{act_uri}> ;
+    <{kernel("at")}> <{step_uri}> ;
     <{kernel("adoptedAt")}> "{now.isoformat()}"^^<{xsd}dateTime> ;
     <{BECAUSE_OF}> {_literal(because)} .
   <{act_uri}> a <{kernel("Act")}> ; {" ; ".join(facts)} .
+  <{step_uri}> a <{kernel("Step")}> ; <{kernel("takes")}> <{act_uri}> .
 }} }}""")
         self.log.info("adopted %s for %s: %s", action.rsplit("#", 1)[-1], _short(want), because)
         self._tell("adopted", action, want, because)
-        if until is not None:
-            self.hold(uri, until, not_after, when_lapsed)
+        if until is not None or until_not is not None:
+            self.hold(uri, until=until, until_not=until_not, not_after=not_after,
+                      when_lapsed=when_lapsed)
         return uri
 
-    # --- an intention held until a condition (#512) -----------------------------------------
+    # --- an intention held until a condition (#512, #514) --------------------------------
 
-    def hold(self, intention_uri: str, until: str, not_after: datetime | None,
-             when_lapsed: str = "take") -> None:
-        """Hold an adopted intention until `until` — a SELECT over my beliefs — binds, or
-        until `not_after` passes, whichever is first.
+    def hold(self, intention_uri: str, until=None, until_not=None,
+             not_after: datetime | None = None, when_lapsed: str = "take") -> None:
+        """Hold an adopted intention until a condition — or until `not_after`, whichever first.
 
         PROGRESSION'S PRIMITIVE, and the whole of the middle layer's job in one call: adopt,
         wait, take on feedback. The wait is two things. A condition on the world, re-asked
         whenever a belief lands (`Store.on_write`), so the hold ends the moment the world
         answers and never on a clock's guess; and a deadline on the scheduler, so a world that
         never answers does not hold the act forever — taken as lapsed (a held claim redeems
-        blind rather than never) or dropped, as the adopter said. The bidder used to do all
-        of this itself with a private timer and a check on every reading; now it says what
-        it waits for and the layer that waits does the waiting.
+        blind rather than never) or dropped, as the adopter said.
+
+        TWO POLARITIES, ONE OF THEM (#514): `until` releases when the condition HOLDS,
+        `until_not` when it stops holding — hold while the round is open. ONE FORM: a SHAPE,
+        an rdflib graph whose one named `sh:NodeShape` is the condition, compiled here into
+        the select the store runs — conformance for `until`, violation for `until_not`. A
+        condition that is naturally a query is a shape carrying a `sh:sparql` constraint,
+        the form SHACL already has (`condition_shape` builds one). The ledger keeps the shape
+        ON THE STEP the intention stands at — the intention is the commitment, the act the
+        doing, the step the act's place, which is what waits — so a sovereign asking sees
+        what a step waits for.
         """
+        if (until is None) == (until_not is None):
+            raise ValueError("a hold is `until` or `until_not`, exactly one")
         if when_lapsed not in ("take", "drop"):
             raise ValueError(f"whenLapsed is `take` or `drop`, not {when_lapsed!r}")
+        predicate = kernel("until") if until is not None else kernel("untilNot")
+        condition = until if until is not None else until_not
+        node, triples = self._condition_triples(intention_uri, condition)
+        #  ON THE STEP: the intention is the commitment, the act is the doing, and the step —
+        #  the act's place — is what waits, and what says what happens if the wait lapses.
         self.agent.intentions.update(f"""
-INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{intention_uri}> <{kernel("until")}> {_literal(until)} ;
-                    <{kernel("whenLapsed")}> "{when_lapsed}" . }} }}""")
+INSERT {{ GRAPH <{self.graph}> {{
+  ?step <{predicate}> <{node}> ; <{kernel("whenLapsed")}> "{when_lapsed}" .
+  {triples} }} }}
+WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("at")}> ?step }} }}""")
         if not_after is not None:
             self.window(intention_uri, not_after)
             delay = (not_after - datetime.now(timezone.utc)).total_seconds()
@@ -351,17 +409,51 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         self._holding = True
         self.reconsider()                  # the condition may hold already
 
+    def _condition_triples(self, intention_uri: str, condition) -> tuple[str, str]:
+        """The condition as ledger triples: the shape's own graph, and its one named root."""
+        import rdflib
+        if not isinstance(condition, rdflib.Graph):
+            raise TypeError("a condition is a shape — an rdflib graph with one named "
+                            "sh:NodeShape; a query is a shape with a sh:sparql constraint "
+                            "(`condition_shape`)")
+        roots = [s for s in condition.subjects(rdflib.RDF.type, _SH_NODE_SHAPE)
+                 if isinstance(s, rdflib.URIRef)]
+        if len(roots) != 1:
+            raise ValueError("a shape condition is one graph with exactly one named sh:NodeShape")
+        return str(roots[0]), condition.serialize(format="nt")
+
     def held(self) -> list[tuple]:
-        """Every intention still held: `(standing, until, when_lapsed)`."""
+        """Every intention still held: `(standing, select)` — the select the store runs,
+        compiled from the shape the act waits for: conformance for `until`, violation for
+        `until_not`, so rows always mean release."""
         rows = bindings(self.agent.intentions.query_union(f"""
-SELECT ?i ?until ?when WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{kernel("until")}> ?until ; <{kernel("whenLapsed")}> ?when .
+SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
+  ?i <{kernel("at")}> ?step .
+  ?step ?p ?node ; <{kernel("whenLapsed")}> ?when .
+  ?node a sh:NodeShape .
+  FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>))
   FILTER NOT EXISTS {{ ?i <{RESOLVED_AT}> ?r }} }} }}"""))
         by_uri = {s.uri: s for s in self.standing()}
-        return [(by_uri[r["i"]], r["until"], r["when"]) for r in rows if r["i"] in by_uri]
+        return [(by_uri[r["i"]], self._compiled(r["node"], r["p"] == kernel("until")))
+                for r in rows if r["i"] in by_uri]
+
+    def _compiled(self, node: str, holds: bool) -> str:
+        """The select a shape condition compiles to, once per node: conformance where the
+        hold releases when the shape HOLDS, violation where it releases when it stops."""
+        key = (node, holds)
+        if key not in self._compiled_conditions:
+            import rdflib
+            from . import violation
+            g = rdflib.Graph()
+            for quad in self.agent.intentions.quads(self.graph):
+                g.add(tuple(_rdflib_term(t) for t in (quad.subject, quad.predicate, quad.object)))
+            shape = g.cbd(rdflib.URIRef(node))
+            compile = violation.entered_select if holds else violation.unmet_select
+            self._compiled_conditions[key] = compile(shape, rdflib.URIRef(node))
+        return self._compiled_conditions[key]
 
     def reconsider(self) -> None:
-        """Re-ask every held condition; release the intentions whose condition holds.
+        """Re-ask every held condition; release the intentions whose condition says so.
 
         Called after every belief write while anything is held, on the writer's thread —
         the release hands the act to the loop and waits, as any take does. Re-entrant
@@ -373,30 +465,39 @@ SELECT ?i ?until ?when WHERE {{ GRAPH <{self.graph}> {{
         try:
             held = self.held()
             self._holding = bool(held)
-            for standing, until, _ in held:
+            for standing, select in held:
                 try:
-                    binds = bool(bindings(self.agent.beliefs.query_union(until)))
+                    rows = bindings(self.agent.beliefs.query_over(
+                        select, *self.agent.beliefs.public_graphs(),
+                        *self.agent.beliefs.recorded_graphs()))
                 except Exception as exc:                        # noqa: BLE001 — a bad select
                     self.log.error("the condition %s waits for will not run: %s",
                                    _short(standing.uri), exc)
                     continue
-                if binds:
-                    self._release(standing, "the condition it was held for holds now")
+                if rows:
+                    self._release(standing, "the condition it was held for answers now")
         finally:
             self._reconsidering = False
 
     def lapse(self, intention_uri: str) -> None:
-        """The deadline passed before the condition held: take as lapsed, or drop."""
-        for standing, _, when in self.held():
+        """The deadline passed before the condition answered: take as lapsed, or drop."""
+        for standing, _ in self.held():
             if standing.uri != intention_uri:
                 continue
+            when = self._when_lapsed(intention_uri)
             if when == "drop":
                 self._unhold(standing.uri)
                 self._resolve(standing, "dropped",
-                              "the deadline passed and the condition it waited for never held")
+                              "the deadline passed and the condition it waited for never answered")
             else:
-                self._release(standing, "the deadline passed before the condition held — "
+                self._release(standing, "the deadline passed before the condition answered — "
                                         "taken as lapsed rather than never")
+
+    def _when_lapsed(self, intention_uri: str) -> str:
+        rows = bindings(self.agent.intentions.query_union(f"""
+SELECT ?when WHERE {{ GRAPH <{self.graph}> {{
+  <{intention_uri}> <{kernel("at")}> ?step . ?step <{kernel("whenLapsed")}> ?when }} }}"""))
+        return rows[0]["when"] if rows else "take"
 
     def _release(self, standing: Standing, because: str) -> None:
         from .execution import carry_out
@@ -411,9 +512,13 @@ INSERT DATA {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{BECAUSE_OF}> {_literal
         entry = self._deadlines.pop(intention_uri, None)
         if entry is not None:
             entry.cancel()
+        #  The condition's own triples stay in the ledger as the record of what was waited
+        #  for; only the hold — the pointer and the lapse rule — goes.
         self.agent.intentions.update(f"""
-DELETE WHERE {{ GRAPH <{self.graph}> {{
-  <{intention_uri}> <{kernel("until")}> ?u ; <{kernel("whenLapsed")}> ?w . }} }}""")
+DELETE {{ GRAPH <{self.graph}> {{ ?step ?p ?c ; <{kernel("whenLapsed")}> ?w }} }}
+WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("at")}> ?step .
+          ?step ?p ?c ; <{kernel("whenLapsed")}> ?w .
+          FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>)) }} }}""")
 
     def _on_written(self) -> None:
         if self._holding:

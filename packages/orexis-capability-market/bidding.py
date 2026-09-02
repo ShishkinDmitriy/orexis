@@ -40,10 +40,22 @@ from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, SWEEP
 
 SENSING_URGENCY = "http://example.org/orexis/sensing#urgency"       # sensing's hook, spelled as every cross-package reference is
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"
-#  What a held claim waits for (#512): the sensor monitoring my subject for my property says
-#  its watch is live — sensing's fact, in sensing's words, written beside the horizon.
-LIVE_WATCH_Q = """SELECT ?sensor WHERE {
-  ?sensor sensing:monitors <%s> ; sosa:observes <%s> ; sensing:watchLive true } LIMIT 1"""
+#  What a held claim waits for (#512, #514): the sensor monitoring my subject for my property
+#  says its watch is live — sensing's fact, in sensing's words, written beside the horizon.
+#  A SHAPE, since the rule of thumb puts a test over one focus node in SHACL: the keeper
+#  compiles it to the select it runs, and the ledger keeps the shape as what was waited for.
+def _live_watch_shape(sensor_uri: str, claim_jti: str):
+    import rdflib
+    SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
+    g = rdflib.Graph()
+    root = rdflib.URIRef(f"urn:orexis:hold:{claim_jti}:watch-live")
+    prop = rdflib.BNode()
+    g.add((root, rdflib.RDF.type, SH.NodeShape))
+    g.add((root, SH.targetNode, rdflib.URIRef(sensor_uri)))
+    g.add((root, SH.property, prop))
+    g.add((prop, SH.path, rdflib.URIRef("http://example.org/orexis/sensing#watchLive")))
+    g.add((prop, SH.hasValue, rdflib.Literal(True)))
+    return g
 from orexis_agent_progression.ontology import ONTOLOGY_GRAPH
 from orexis_agent_progression.store import bindings
 
@@ -720,11 +732,12 @@ class BiddingModule(Module):
         # keeper re-asks whenever a belief lands — and NOT AFTER the bound, when it is taken
         # as lapsed. This module used to keep a timer of its own and check the watch on every
         # reading; now it says what it waits for and provides the taking (`take`, below).
-        if keeper is not None and (stake := self._stake_uri()) is not None:
+        sensor = sensing.sensor_for(self.me.acts_for, self.about) if sensing is not None else None
+        if keeper is not None and (stake := self._stake_uri()) is not None and sensor is not None:
             keeper.adopt(PRESENTING, stake,
                          f"holding claim {claim['jti']} ({amount}L) until my watch is "
                          f"live — never spend a dose you cannot watch land",
-                         until=LIVE_WATCH_Q % (self.me.acts_for, self.about),
+                         until=_live_watch_shape(sensor.uri, claim["jti"]),
                          not_after=datetime.now(timezone.utc) + timedelta(seconds=float(bound)),
                          when_lapsed="take")
 
