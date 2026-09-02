@@ -59,6 +59,28 @@ RESOLVED_AT = OREXIS + "resolvedAt"
 _SH_NODE_SHAPE = URIRef("http://www.w3.org/ns/shacl#NodeShape")
 
 
+def condition_shape(root: str, focus: str, binds: str):
+    """A condition that is naturally a query, as a shape that CONFORMS when the query binds.
+
+    SHACL's own polarity runs the other way — a `sh:sparql` constraint's rows are violations
+    — so the query goes under `sh:not`: the shape conforms exactly where the constraint is
+    violated, which is where `binds` returns rows for `$this`. Held `until`, the act is
+    released when the query binds; `until_not`, when it stops binding. Written this way
+    rather than inverted at the call site, so the ledger reads as the caller meant it.
+    """
+    import rdflib
+    SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
+    g = rdflib.Graph()
+    node, negated, constraint = rdflib.URIRef(root), rdflib.BNode(), rdflib.BNode()
+    g.add((node, rdflib.RDF.type, SH.NodeShape))
+    g.add((node, SH.targetNode, rdflib.URIRef(focus)))
+    g.add((node, SH["not"], negated))
+    g.add((negated, rdflib.RDF.type, SH.NodeShape))
+    g.add((negated, SH.sparql, constraint))
+    g.add((constraint, SH.select, rdflib.Literal(binds)))
+    return g
+
+
 def _rdflib_term(t):
     """One engine term as rdflib's, for the shape compiler, which walks rdflib graphs."""
     import pyoxigraph as ox
@@ -352,13 +374,13 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         blind rather than never) or dropped, as the adopter said.
 
         TWO POLARITIES, ONE OF THEM (#514): `until` releases when the condition HOLDS,
-        `until_not` when it stops holding — hold while the round is open. TWO FORMS, EITHER:
-        a select text over this agent's beliefs, or a SHAPE (an rdflib graph whose one named
-        `sh:NodeShape` is the condition) compiled here into the select the store runs —
-        conformance for `until`, violation for `until_not`. The ledger keeps what was
-        written, select or shape, ON THE ACT beside its window — the intention is the
-        commitment, the act is what is executed and when — so a sovereign asking sees what
-        an act waits for.
+        `until_not` when it stops holding — hold while the round is open. ONE FORM: a SHAPE,
+        an rdflib graph whose one named `sh:NodeShape` is the condition, compiled here into
+        the select the store runs — conformance for `until`, violation for `until_not`. A
+        condition that is naturally a query is a shape carrying a `sh:sparql` constraint,
+        the form SHACL already has (`condition_shape` builds one). The ledger keeps the shape
+        ON THE ACT beside its window — the intention is the commitment, the act is what is
+        executed and when — so a sovereign asking sees what an act waits for.
         """
         if (until is None) == (until_not is None):
             raise ValueError("a hold is `until` or `until_not`, exactly one")
@@ -384,11 +406,12 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act }} }}"
         self.reconsider()                  # the condition may hold already
 
     def _condition_triples(self, intention_uri: str, condition) -> tuple[str, str]:
-        """The condition as ledger triples: a select carrier, or the shape's own graph."""
-        if isinstance(condition, str):
-            node = f"{intention_uri}.until"
-            return node, f"<{node}> sh:select {_literal(condition)} ."
+        """The condition as ledger triples: the shape's own graph, and its one named root."""
         import rdflib
+        if not isinstance(condition, rdflib.Graph):
+            raise TypeError("a condition is a shape — an rdflib graph with one named "
+                            "sh:NodeShape; a query is a shape with a sh:sparql constraint "
+                            "(`condition_shape`)")
         roots = [s for s in condition.subjects(rdflib.RDF.type, _SH_NODE_SHAPE)
                  if isinstance(s, rdflib.URIRef)]
         if len(roots) != 1:
@@ -396,32 +419,19 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act }} }}"
         return str(roots[0]), condition.serialize(format="nt")
 
     def held(self) -> list[tuple]:
-        """Every intention still held: `(standing, release_when_rows, select)` — the select
-        the store runs, compiled from a shape where one was written, and whether rows mean
-        release (a holding condition, or a violated `until_not` shape) or the absence of
-        rows does (an `until_not` select)."""
+        """Every intention still held: `(standing, select)` — the select the store runs,
+        compiled from the shape the act waits for: conformance for `until`, violation for
+        `until_not`, so rows always mean release."""
         rows = bindings(self.agent.intentions.query_union(f"""
-SELECT ?i ?p ?node ?select ?shape WHERE {{ GRAPH <{self.graph}> {{
+SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
   ?i <{kernel("by")}> ?act .
   ?act ?p ?node ; <{kernel("whenLapsed")}> ?when .
+  ?node a sh:NodeShape .
   FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>))
-  OPTIONAL {{ ?node sh:select ?select }}
-  OPTIONAL {{ ?node a sh:NodeShape . BIND(true AS ?shape) }}
   FILTER NOT EXISTS {{ ?i <{RESOLVED_AT}> ?r }} }} }}"""))
         by_uri = {s.uri: s for s in self.standing()}
-        out = []
-        for r in rows:
-            if r["i"] not in by_uri:
-                continue
-            holds = r["p"] == kernel("until")
-            if r.get("select"):
-                out.append((by_uri[r["i"]], holds, r["select"], False))
-            elif r.get("shape"):
-                out.append((by_uri[r["i"]], True, self._compiled(r["node"], holds), True))
-            else:
-                self.log.error("%s is held on a condition that is neither a select nor a "
-                               "shape — released by nothing but its deadline", _short(r["i"]))
-        return out
+        return [(by_uri[r["i"]], self._compiled(r["node"], r["p"] == kernel("until")))
+                for r in rows if r["i"] in by_uri]
 
     def _compiled(self, node: str, holds: bool) -> str:
         """The select a shape condition compiles to, once per node: conformance where the
@@ -451,28 +461,23 @@ SELECT ?i ?p ?node ?select ?shape WHERE {{ GRAPH <{self.graph}> {{
         try:
             held = self.held()
             self._holding = bool(held)
-            for standing, release_when_rows, select, compiled in held:
+            for standing, select in held:
                 try:
-                    if compiled:
-                        rows = bindings(self.agent.beliefs.query_over(
-                            select, *self.agent.beliefs.public_graphs(),
-                            *self.agent.beliefs.recorded_graphs()))
-                    else:
-                        rows = bindings(self.agent.beliefs.query_union(select))
+                    rows = bindings(self.agent.beliefs.query_over(
+                        select, *self.agent.beliefs.public_graphs(),
+                        *self.agent.beliefs.recorded_graphs()))
                 except Exception as exc:                        # noqa: BLE001 — a bad select
                     self.log.error("the condition %s waits for will not run: %s",
                                    _short(standing.uri), exc)
                     continue
-                if bool(rows) == release_when_rows:
-                    self._release(standing, "the condition it was held for "
-                                            + ("holds now" if release_when_rows and not compiled
-                                               else "answers now"))
+                if rows:
+                    self._release(standing, "the condition it was held for answers now")
         finally:
             self._reconsidering = False
 
     def lapse(self, intention_uri: str) -> None:
         """The deadline passed before the condition answered: take as lapsed, or drop."""
-        for standing, *_ in self.held():
+        for standing, _ in self.held():
             if standing.uri != intention_uri:
                 continue
             when = self._when_lapsed(intention_uri)

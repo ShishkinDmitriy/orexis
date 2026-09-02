@@ -823,8 +823,9 @@ orexis:outcome a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:rang
 #  window — the sovereign's correction: an intention is the commitment (which want, why,
 #  when adopted, when resolved) and the act it commits to is what is executed and WHEN, so
 #  a condition is the other half of `orexis:notBefore`, and a plan committing to a sequence
-#  of acts (#510) gives each its own. The keeper adopts an act with a SELECT over the agent's
-#  beliefs and a deadline; it re-asks the select whenever a
+#  of acts (#510) gives each its own — on the STEP, once the ledger holds steps; the act
+#  carries them on the step's behalf until then. The keeper adopts an act with a SHAPE over
+#  the agent's beliefs and a deadline; it re-asks the select whenever a
 #  belief lands and keeps the deadline on its scheduler; when the select binds, the act is
 #  handed to whoever takes it, and when the deadline passes first the act is taken as lapsed
 #  or dropped, as the adopter said. The market's held claim was this road, written inside the
@@ -833,10 +834,10 @@ orexis:outcome a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:rang
 #  sovereign asking the ledger sees what an intention waits for.
 orexis:until a owl:ObjectProperty ; rdfs:domain orexis:Act ;
     rdfs:label "held until" ;
-    rdfs:comment "The condition an intention is held for, released when it HOLDS: a node carrying one sh:select over this agent's beliefs (released when it binds), or a sh:NodeShape (released when its focus node conforms — compiled by the kernel into that select, #514). One of orexis:until / orexis:untilNot per hold, never both. Removed when the hold ends, so a taken act is an ordinary standing intention." .
+    rdfs:comment "The condition an act is held for, released when it HOLDS: a sh:NodeShape, released when its focus node conforms — compiled by the kernel into the select it runs (#514). Always a shape: a condition that is naturally a query is a shape carrying a sh:sparql constraint, the form SHACL already has, so the ledger holds one kind of node for one kind of thing. One of orexis:until / orexis:untilNot per hold, never both. Removed when the hold ends, so a taken act is an ordinary standing intention." .
 orexis:untilNot a owl:ObjectProperty ; rdfs:domain orexis:Act ;
     rdfs:label "held until it stops holding" ;
-    rdfs:comment "The negative twin (#514): a node carrying one sh:select (released when it binds NOTHING) or a sh:NodeShape (released when its focus node VIOLATES) — hold while the round is open, hold while the board sleeps. The mirror of orexis:until exactly as orexis:unmetWhen mirrors orexis:metWhen." .
+    rdfs:comment "The negative twin (#514): a sh:NodeShape, released when its focus node VIOLATES — hold while the round is open, hold while the board sleeps. The mirror of orexis:until exactly as orexis:unmetWhen mirrors orexis:metWhen, and one form for the same reason." .
 orexis:whenLapsed a owl:DatatypeProperty ; rdfs:domain orexis:Act ; rdfs:range xsd:string ;
     rdfs:label "when the deadline passes first" ;
     rdfs:comment "`take` — the act is taken anyway, as lapsed (a held claim redeems blind rather than never) — or `drop`, the intention resolved as dropped." .

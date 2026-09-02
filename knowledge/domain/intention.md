@@ -29,9 +29,10 @@ adopter said. The condition sits on the ACT, beside its window — an intention 
 commitment, which want and why; the act is what is executed and when, and a condition is the
 other half of `notBefore` — as data on the ledger (`orexis:until`, or its twin
 `orexis:untilNot`, released when the condition stops holding — hold while the round is open),
-and either may be written as a select or as a SHAPE, which the keeper compiles to the select
+and it is always a SHAPE — a condition that is naturally a query is a shape carrying a
+`sh:sparql` constraint, the form SHACL already has — which the keeper compiles to the select
 it runs (conformance for `until`, violation for `untilNot`) while the ledger keeps the shape,
-so a sovereign asking sees what an intention waits for as it was written (#514). The market's held [claim](/domain/claim.md) is this road with the
+so a sovereign asking sees what an act waits for as it was written (#514). The market's held [claim](/domain/claim.md) is this road with the
 live watch as its condition, and a plan's next step is this road with the previous step's
 prediction as its condition. This is the middle layer's whole job in one call — adopt, wait,
 take on feedback — and it is why nothing above it needs a timer of its own.

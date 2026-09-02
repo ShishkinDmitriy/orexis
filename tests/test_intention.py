@@ -410,8 +410,10 @@ def test_an_intention_held_until_a_condition_is_released_by_a_write_and_lapses_b
     graph = fern.beliefs.graph
     later = datetime.now(timezone.utc) + timedelta(hours=1)
 
+    from orexis_agent_progression.keeper import condition_shape
     waiting = keeper.adopt("urn:toy#Wait", "urn:toy#want", "waiting for the flag",
-                           until=f"SELECT ?x WHERE {{ GRAPH <{graph}> {{ <urn:flag> <urn:p> ?x }} }} LIMIT 1",
+                           until=condition_shape("urn:toy:hold:flag", "urn:flag",
+                                                 "SELECT $this WHERE { $this <urn:p> ?x }"),
                            not_after=later, when_lapsed="take")
     assert waiting and [s.uri for s, *_ in keeper.held()] == [waiting]
 
@@ -424,7 +426,8 @@ def test_an_intention_held_until_a_condition_is_released_by_a_write_and_lapses_b
         "released, not resolved: nothing takes a toy action, so it stands as an ordinary intention"
 
     doomed = keeper.adopt("urn:toy#Doomed", "urn:toy#other", "waiting for nothing",
-                          until="SELECT ?x WHERE { <urn:never> <urn:p> ?x } LIMIT 1",
+                          until=condition_shape("urn:toy:hold:never", "urn:never",
+                                                "SELECT $this WHERE { $this <urn:p> ?x }"),
                           not_after=later, when_lapsed="drop")
     keeper.lapse(doomed)
     assert keeper.held() == [] and keeper.standing(action="urn:toy#Doomed") == [], \
@@ -432,10 +435,11 @@ def test_an_intention_held_until_a_condition_is_released_by_a_write_and_lapses_b
 
 
 def test_a_hold_may_be_a_shape_and_may_release_when_a_condition_stops(make):
-    """#514: the two polarities and the two forms. `until_not` on a select releases on the
-    write that removes its last binding — hold while the flag stands. `until` on a SHAPE
-    releases when the focus node comes to conform, the keeper having compiled the shape to
-    the select it runs, and the ledger keeps the shape as what was waited for."""
+    """#514: the two polarities, one form. `until_not` on a query-shaped condition — a shape
+    carrying a `sh:sparql` constraint, the form SHACL has for a query — releases on the write
+    that removes its last binding: hold while the round is open. `until` on a shape of
+    property constraints releases when the focus node comes to conform; the keeper compiles
+    either to the select it runs, and the ledger keeps the shape as what was waited for."""
     import rdflib
     from datetime import datetime, timedelta, timezone
     from orexis_agent_progression.store import bindings
@@ -446,8 +450,10 @@ def test_a_hold_may_be_a_shape_and_may_release_when_a_condition_stops(make):
     later = datetime.now(timezone.utc) + timedelta(hours=1)
     fern.beliefs.update(f"INSERT DATA {{ GRAPH <{graph}> {{ <urn:round> <urn:open> true }} }}")
 
+    from orexis_agent_progression.keeper import condition_shape
     while_open = keeper.adopt("urn:toy#AfterTheRound", "urn:toy#want", "waiting for the round to close",
-                              until_not=f"SELECT ?x WHERE {{ GRAPH <{graph}> {{ <urn:round> <urn:open> true }} }} LIMIT 1",
+                              until_not=condition_shape("urn:toy:hold:round-open", "urn:round",
+                                                        "SELECT $this WHERE { $this <urn:open> true }"),
                               not_after=later, when_lapsed="drop")
     assert [s.uri for s, *_ in keeper.held()] == [while_open], "held while the round is open"
     fern.beliefs.update(f"DELETE WHERE {{ GRAPH <{graph}> {{ <urn:round> <urn:open> ?o }} }}")
@@ -464,9 +470,8 @@ def test_a_hold_may_be_a_shape_and_may_release_when_a_condition_stops(make):
     shaped = keeper.adopt("urn:toy#OnTheFlag", "urn:toy#other", "waiting for the flag, as a shape",
                           until=shape, not_after=later, when_lapsed="drop")
     held = keeper.held()
-    assert [s.uri for s, *_ in held] == [shaped]
-    assert held[0][1] is True and "FILTER EXISTS" in held[0][2] and held[0][3], \
-        "compiled to the conformance select, and run as a compiled one"
+    assert [s.uri for s, _ in held] == [shaped]
+    assert "FILTER EXISTS" in held[0][1], "compiled to the conformance select"
     stored = bindings(fern.intentions.query_union(f"""SELECT ?n WHERE {{ GRAPH <{keeper.graph}> {{
         <{shaped}> orexis:by ?act . ?act orexis:until ?n . ?n a sh:NodeShape }} }}"""))
     assert stored and stored[0]["n"] == str(root), \
@@ -477,4 +482,6 @@ def test_a_hold_may_be_a_shape_and_may_release_when_a_condition_stops(make):
 
     import pytest
     with pytest.raises(ValueError, match="exactly one"):
-        keeper.hold(shaped, until="SELECT ?x WHERE {}", until_not="SELECT ?x WHERE {}")
+        keeper.hold(shaped, until=shape, until_not=shape)
+    with pytest.raises(TypeError, match="a condition is a shape"):
+        keeper.hold(shaped, until="SELECT ?x WHERE {}")
