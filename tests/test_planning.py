@@ -121,48 +121,6 @@ def test_met_is_the_label_and_the_aim_is_the_target_with_a_deadband_at_the_pick(
         "at the pick: no move, decided — not deferred to a reflex that might disagree"
 
 
-def test_a_search_that_could_not_see_every_lever_says_so_and_has_nowhere_to_defer(monkeypatch):
-    """The finding that would have stopped fern buying water, and where it is answered now.
-
-    A plant in `world/simulation` acquires its water, so the lever that works is Acquire. With
-    no package stating what Acquire does, the search sees Observe alone, correctly finds that
-    looking does not wet soil, and reports that nothing helps — and the plant stops bidding.
-    That is not a defect in the search: it is a conclusion drawn from part of the menu, and the
-    part it could not see is the part that mattered.
-
-    For a while the answer was a second road — a plan that passed over any lever was marked
-    PARTIAL and the deliberator handed the question to the reflex. The reflex is gone, so the
-    answer moved to the GATES: `orexis-validate` refuses a world in which a means that
-    contributes an affordance row has no effect rule, which is the condition this test creates
-    by hand. See `tests/test_validate.py`.
-
-    What is asserted here is the runtime half of that ruling. `partial` is still computed and
-    still true, the agent still says loudly that it is answering from part of its options, and
-    it does NOT quietly find a second opinion — it declines, which is what a search that
-    cannot see the water lever should conclude and exactly why the world is refused before it
-    can run.
-    """
-    from orexis_agent_progression.ontology import ACTIONS_GRAPH
-
-    monkeypatch.setenv("OREXIS_WORLD", "simulation")
-    st = genesis_store({("fern", MOISTURE): 0.30})
-    st.update("""DELETE { GRAPH <%s> { market:Acquiring sh:construct ?c } }
-                 WHERE  { GRAPH <%s> { market:Acquiring sh:construct ?c } }"""
-              % (ACTIONS_GRAPH, ACTIONS_GRAPH))
-
-    fern = build_agent("fern", st, monkeypatch)
-    open_round_for(fern, "fern")
-    desire = next(g for g in fern.pursuing()
-                  if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
-
-    plan = Planner(fern, fern.me).plan(desire)
-    assert plan.partial, "with Acquire's rule removed, the menu was not fully simulated"
-    assert plan.first is None, "and nothing it COULD see wets soil"
-
-    assert fern.deliberator.propose_for(desire) is None, \
-        "a search blind to the lever that works must not be second-guessed by another road"
-
-
 def test_a_possible_world_is_computed_and_nothing_is_written(monkeypatch):
     """The guarantee that makes hypotheses safe: the store never learns anyone imagined this.
 
@@ -288,7 +246,6 @@ def test_a_plant_that_buys_its_water_can_see_the_lever_that_waters_it(monkeypatc
 
     plan = Planner(fern, fern.me).plan(desire)
 
-    assert not plan.partial, "every lever on this menu states its effect"
     assert [s.action for s in plan.steps] == ["http://example.org/orexis/market#Acquiring"], \
         "the lever that waters this plant is the one the search found"
     assert plan.urgency_after < plan.urgency_now, \

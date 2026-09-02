@@ -291,7 +291,7 @@ market:Offering
 #  claim tightens the cadence), now that an intention commits to an action and nothing else.
 
 market:Presenting
-    a orexis:Action ;
+    a orexis:TriggeredAction ;
     orexis:takenBy market:Bidding ;
     rdfs:label "presenting a held claim" .
 

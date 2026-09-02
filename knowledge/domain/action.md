@@ -51,6 +51,14 @@ graph beside the T-Box. Three readers, one join:
   the [imaginarium](/domain/imaginarium.md);
 - `execution.taken_by(action)` reads the node's `orexis:takenBy` and asks `agent.providers`.
 
+# Two kinds, and the vocabulary says which
+
+This page is the menu's kind: chosen by a plan, with both texts stated and the gate refusing
+either missing. The other kind is the [triggered action](/domain/triggered-action.md), which an
+event adopts and which owns its own description. Naming the second kind is what let the
+runtime stop guessing from absence — a missing effect used to mean "passed over, plan
+partial", and now means a world the gate refuses.
+
 # The precondition is the query, whole
 
 An action carries no `sh:condition`. SHACL-AF has the slot, and the three shipped actions

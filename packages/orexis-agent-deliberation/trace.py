@@ -141,7 +141,6 @@ def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
         orexis:verdict "{plan.outcome}" ;
         orexis:standsAt {stands_at:.6f} ;
         orexis:tookSeconds {took_s:.6f} ;
-        orexis:blind {"true" if plan.partial else "false"} ;
 {took}        orexis:asOf "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime .
 {"".join(rows)}}} }}""")
 
@@ -185,9 +184,6 @@ def effort(query) -> dict[str, float]:
     - `cycles` climbing while `deepest` stays at 1 says the search keeps arriving back where it
       started rather than being unable to go further.
     - `unsimulated` counts levers whose rule raised — an error, not a shrug.
-    - `blind` counts desires where some lever had no stated effect at all, so the pass could not
-      claim it looked at everything. That is a package that never said what its lever does, and
-      it is why a partial plan defers to the reflex rather than reporting that nothing helps.
     """
     from orexis_agent_progression.store import bindings
 
@@ -217,9 +213,6 @@ SELECT ?k ?v WHERE {{
   UNION
   {{ SELECT ("deepest" AS ?k) (MAX(?depth) AS ?v)
      WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?c orexis:atDepth ?depth }} }} }}
-  UNION
-  {{ SELECT ("blind" AS ?k) (COUNT(?d) AS ?v)
-     WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?d orexis:blind true }} }} }}
 }}"""))
     got = {r["k"]: r["v"] for r in scalars if r.get("v") not in (None, "")}
 
@@ -232,5 +225,4 @@ SELECT ?k ?v WHERE {{
     #  everyone except the person who wrote the loop, and a pass that weighed nothing reports
     #  0 rather than 1 — no path was considered at all.
     out["deepest"] = float(got["deepest"]) + 1.0 if "deepest" in got else 0.0
-    out["blind"] = float(got.get("blind", 0.0))
     return out

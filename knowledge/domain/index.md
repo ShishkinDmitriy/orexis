@@ -54,6 +54,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [deliberation](/domain/deliberator.md) - The whether: name the next move by building the world each lever would make and keeping the one worth reaching. One road.
 
 * [action](/domain/action.md) - One way of acting as one node — and the kind of act itself: precondition, effect, taker. A package adds one node and one `take()`.
+* [triggered action](/domain/triggered-action.md) - An action an event adopts: no precondition, no effect, on no menu, and still a node a commitment can name. The vocabulary says the kind.
 * [act](/domain/act.md) - An action filled in — lever, want, quantity, whom for, and a window. Execution's word: committed, taken, promised.
 * [step](/domain/step.md) - Planning's word: an act at its place in a plan with what the search predicted. Only the head's act is committed.
 

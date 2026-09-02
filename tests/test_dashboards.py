@@ -97,7 +97,7 @@ def test_what_planning_costs_is_drawn_per_agent():
         #  The three that make a recorded limit visible. A panel that dropped one of them
         #  would still look like a planning panel and would stop answering the question it
         #  exists for.
-        for diagnostic in ("cycles", "blind", "unsimulated"):
+        for diagnostic in ("cycles", "unsimulated"):
             assert f'r._field == "{diagnostic}"' in target["query"], \
                 f"{diagnostic} is the signature of a known limit and must stay drawn"
         assert "r._field }" in target["query"], "lines are split by field, one per agent"

@@ -343,15 +343,13 @@ def _levers_panel(buckets: dict, y: int, panel_id: int) -> dict:
     - `cycles` climbing while depth stays at 1 says the search keeps arriving back where it
       started (#258 — the cycle signature is the desire's own value, so a step that moves nothing
       else is indistinguishable from having gone nowhere);
-    - `blind` above zero is a package that never stated what its lever does, so the pass could
-      not claim it looked at everything and deferred to the reflex;
     - `unsimulated` is a rule that RAISED, which is an error rather than a shrug;
     - `better` flat at zero while `worse` climbs is an agent whose levers exist and never help.
 
     Counts per pass rather than rates, because the trace holds one pass per desire and is cleared
     at the start of the next: each point is what the last pass did, not a total since boot.
     """
-    fields = ("worlds", "better", "worse", "cycles", "unsimulated", "blind")
+    fields = ("worlds", "better", "worse", "cycles", "unsimulated")
     matches = " or ".join(f'r._field == "{f}"' for f in fields)
     return {
         "id": panel_id,
@@ -359,9 +357,7 @@ def _levers_panel(buckets: dict, y: int, panel_id: int) -> dict:
         "title": "What the planner did with each lever",
         "description": (
             "Per pass, not since boot — the trace holds the last pass per desire and is cleared "
-            "at the start of the next. `cycles` high with depth pinned at 1 is #258; `blind` "
-            "above zero is a lever whose package never said what it does, which is why a "
-            "partial plan defers to the reflex instead of reporting that nothing helps; "
+            "at the start of the next. `cycles` high with depth pinned at 1 is #258; "
             "`unsimulated` is a rule that raised and is a fault, not a shrug. All zero "
             "means nothing was DELIBERATED at all — an agent whose wants are unmeasured or "
             "stale is answered by Observe before any search runs, which is a state to read "

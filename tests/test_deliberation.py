@@ -643,8 +643,6 @@ def test_a_pass_reports_what_it_cost_and_what_it_could_not_see(make):
     planning = rows["agent_planning"]
 
     assert planning["seconds"] > 0, "a pass that took no time did not happen"
-    assert planning["blind"] == 0, \
-        "since #268 every lever on fern's menu states its effect, so no desire is passed over"
     assert planning["deepest"] <= 1, \
         "depth beyond one step is nominal today (#254, #258) — if this rises, those were fixed"
     assert set(trace.FIELD.values()) <= set(planning), \

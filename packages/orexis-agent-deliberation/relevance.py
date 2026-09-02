@@ -255,11 +255,10 @@ def actions_of(query) -> dict[str, tuple]:
     out = {}
     for row in bindings(query(_ACTIONS_Q)):
         if not row.get("construct"):
-            #  AN ACTION STATING NO EFFECT is one the search never simulates — `_candidates`
-            #  skips its rows and marks the pass partial — so it has no place in a closure
-            #  that decides what gets simulated. Reading it as ANYTHING-writes-ANYTHING
-            #  instead collapsed every want's closure to everything, for a lever nobody
-            #  could have forked: the market's Presenting, honoured on a claim, never chosen.
+            #  AN ACTION STATING NO EFFECT is an action an event adopts (#506) — never on a
+            #  menu, never simulated — and has no place in a closure that decides what gets
+            #  simulated. Reading it as ANYTHING-writes-ANYTHING collapsed every want's
+            #  closure to everything, for the market's Presenting.
             continue
         #  No precondition text is a lever with nothing to widen the want by — the afforder
         #  yields it no rows, but a construct it does carry says what it would write.
@@ -275,20 +274,6 @@ def actions_of(query) -> dict[str, tuple]:
             writes |= part
         out[row["action"]] = (reads, frozenset(writes) if writes is not ANYTHING else ANYTHING)
     return out
-
-
-_EFFECTLESS_Q = """
-SELECT ?action WHERE {
-  ?action a orexis:Action .
-  FILTER NOT EXISTS { ?action sh:construct ?c }
-}"""
-
-
-def effectless_of(query) -> frozenset:
-    """Every action stating no effect. Outside the closure, since it is never simulated —
-    but still ON THE MENU: a pass that passes one over must say it could not see the whole
-    menu (`Plan.partial`), and it can only say so for a row it was handed."""
-    return frozenset(r["action"] for r in bindings(query(_EFFECTLESS_Q)))
 
 
 def relevant(want_reads, actions: dict[str, tuple], rules: tuple = (),

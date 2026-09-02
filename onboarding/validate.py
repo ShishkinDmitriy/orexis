@@ -68,6 +68,8 @@ def validate_world(world: str) -> bool:
     every agent's opening beliefs — and validates the lot. This is what genesis is checked
     with, and it needs no store, no server and no credentials.
     """
+    from orexis_agent_deliberation import effects
+
     # The LINK step first (#210): a world built on packages that reference terms nobody
     # declares would validate against constraints that match nothing — the vacuous kind of
     # green. Cheapest check, loudest failure, so it goes before anything is built.
@@ -102,7 +104,6 @@ def validate_world(world: str) -> bool:
     # judges the world against it. The pick records travel the same road and only that road —
     # flattened beside their projections they would split every blank-node aim in two.
     data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH)
-    from orexis_agent_deliberation import effects
     from orexis_agent_deliberation.beliefs import Beliefs
     from orexis_agent_deliberation.desire import Desires
 
@@ -146,9 +147,7 @@ def deliberable(st, desires: dict) -> bool:
 
     See knowledge/decisions/a-plan-is-a-path-of-graph-diffs.md.
     """
-    from orexis_agent_deliberation import effects
     from assembly import loader
-    from orexis_agent_deliberation.afforder import affordances_of
     from orexis_capability_sensing.regions import regions_of
     from agent.world import load_self
 
@@ -156,27 +155,36 @@ def deliberable(st, desires: dict) -> bool:
     from orexis_agent_progression.store import bindings
 
     faults = 0
-    #  EVERY ACTION THAT CAN PUT A ROW ON A MENU, not every row a menu happens to hold now.
-    #  A premise may be a fact an agent is told at runtime — an open round (#358) — so the
-    #  menu at genesis is not the menu at noon, and a gate that read the rows would have
-    #  waved through the very lever that matters. The action's own node says whether it
-    #  states an effect; that is a fact about the loaded packages, and it is asked as one.
-    for action in bindings(st.query(
-            "SELECT ?action WHERE { ?action a orexis:Action ; "
-            "orexis:available ?q FILTER NOT EXISTS { ?action sh:construct ?c } }")):
+    #  EVERY ACTION, held to its KIND (#506). One a plan may choose states a precondition AND
+    #  an effect: a menu row nobody can simulate is a conclusion drawn from part of the menu,
+    #  and an effect nothing can reach is a lever nobody can take. One an event adopts
+    #  (`orexis:TriggeredAction`) states neither, or it is a choosable one mislabelled. Asked
+    #  of the action's own node — a fact about the loaded packages, not about any menu a world
+    #  happens to hold at genesis — so a lever whose premise is told at runtime (an open
+    #  round, #358) is held to it as firmly as one whose premise is wiring.
+    for action in bindings(st.query("""
+            SELECT ?action ?available ?construct WHERE {
+              ?action a orexis:Action .
+              FILTER NOT EXISTS { ?action a orexis:TriggeredAction }
+              OPTIONAL { ?action orexis:available ?available }
+              OPTIONAL { ?action sh:construct ?construct }
+              FILTER(!BOUND(?available) || !BOUND(?construct)) }""")):
         faults += 1
-        log.error("%s offers rows and no loaded package says what that DOES — a "
-                  "search that cannot simulate a lever passes it over, and then concludes "
-                  "from the rest of the menu", action["action"].rsplit("#", 1)[-1])
+        missing = "precondition" if not action.get("available") else "effect"
+        log.error("%s is an action a plan may choose and states no %s — "
+                  "no loaded package says when it is available or what that DOES, and a search "
+                  "cannot simulate a lever nobody describes",
+                  action["action"].rsplit("#", 1)[-1], missing)
+    for action in bindings(st.query("""
+            SELECT ?action WHERE {
+              ?action a orexis:TriggeredAction .
+              { ?action orexis:available ?q } UNION { ?action sh:construct ?c } }""")):
+        faults += 1
+        log.error("%s is declared an action an event adopts and carries a precondition or an "
+                  "effect — a triggered action with either is a choosable one mislabelled",
+                  action["action"].rsplit("#", 1)[-1])
     for agent_id, wants in desires.items():
         me = load_self(st.query, agent_id)
-        for row in affordances_of(st.query, me.uri, wants.query_union, beliefs_graph(agent_id)):
-            if effects.rule_for(st, row.action) is None:
-                faults += 1
-                log.error("%s could take %s through %s, and no loaded package says what that "
-                          "DOES — a search that cannot simulate a lever passes it over, and "
-                          "then concludes from the rest of the menu", agent_id,
-                          row.action.rsplit("#", 1)[-1], row.via.rsplit("#", 1)[-1])
         #  Asked of the CLASSES this agent's grants would load, never of a built agent: an
         #  agent needs credentials onboarding has not minted yet, and a gate that had to run
         #  the runtime would be checking the thing it exists to run before.
