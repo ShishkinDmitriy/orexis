@@ -28,7 +28,7 @@ item on the executing thread.
 1. **Plan.** `deliberator.decide(desire)` — the search, unchanged, returning its
    [plan](/domain/deliberator.md) as rows. No steps means nothing to execute, and that None is
    the deliberator's decision, not this process's.
-2. **Commit.** The head [step](/domain/step.md) goes to the keeper:
+2. **Commit.** The whole plan goes to the keeper — every [step](/domain/step.md), the head stood at — and the head is taken; each further step is taken when the world confirms the one before it (#510):
    `adopt(action, want, because, via=lever)`.
    The [intention](/domain/intention.md) written carries the lever the plan chose. If one
    already stands within patience, `adopt` returns None and the process ends here — the same
@@ -74,6 +74,6 @@ not exist ([a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a
   search rejected.
 - **Not a second keeper.** It calls `adopt` and never writes the ledger; the one-writer scan in
   `tests/test_intention.py` still holds.
-- **Not the tail.** Only the head is committed, because the plan is re-derived every pass and the
-  world moves between them — the argument is
-  [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md)'s.
+- **Not a re-decider.** The tail is committed with the head, and the keeper steps along it on
+  the world's feedback; this pass does not search while that plan is in progress — the argument
+  is [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/progression-steps-through-a-plan-on-confirmed-feedback.md)'s.

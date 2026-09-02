@@ -192,3 +192,33 @@ def test_an_impulse_within_patience_writes_no_row(monkeypatch):
     everything = bindings(keeper.agent.intentions.query(
         "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a <http://example.org/orexis#Intention> } }"))
     assert int(everything[0]["n"]) == n, "no dropped rows either"
+
+
+def test_a_two_step_plan_is_taken_step_by_step_with_one_search(monkeypatch):
+    """The loner's gardener with a nearly empty butt plans two doses. `pursue` searches ONCE,
+    commits both steps, and takes the first; a second `pursue` while the plan is in progress
+    searches nothing; the reading that answers the first dose takes the second with no search
+    at all (#510)."""
+    from conftest import write_reading
+    from orexis_agent_deliberation import planner, pursuit
+    from test_planning import _thirsty_with_a_nearly_empty_butt, MOISTURE
+
+    agent, _, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
+    searches = []
+    real = planner.Planner.plan
+    monkeypatch.setattr(planner.Planner, "plan", lambda self, d: (searches.append(1), real(self, d))[1])
+    keeper = agent.keeper
+
+    uri = pursuit.pursue(agent, desire)
+    assert uri and len(searches) == 1
+    standing = keeper.standing(want=desire.uri)
+    assert len(standing) == 1 and keeper.in_progress(desire.uri) is not None, "two steps stand as one plan"
+    commands = len(agent.sent.to("actuators/pump/command"))
+    assert commands >= 1, "the first dose was commanded"
+
+    assert pursuit.pursue(agent, desire) == uri and len(searches) == 1, \
+        "a plan in progress is not searched over again"
+
+    write_reading(agent, 0.10, MOISTURE)     # the first dose landed: risen, still short of the aim
+    assert len(searches) == 1, "the second step was taken by feedback, not by a search"
+    assert len(agent.sent.to("actuators/pump/command")) > commands, "and the pump was commanded again"

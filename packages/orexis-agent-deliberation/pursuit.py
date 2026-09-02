@@ -10,15 +10,17 @@ says — was dropped between the planner and the ledger.
 Now every trigger arrives here and none of them decides. `pursue(agent, desire)`:
 
 1. PLAN — `deliberator.decide(desire)`, the search, answering with rows;
-2. COMMIT — the head step's ACT to the keeper, `orexis:by` the action, `orexis:through` the lever,
+2. COMMIT — every step to the keeper, the head stood at, `orexis:through` the lever,
    `orexis:pursues` the desire. Absorbed within patience means nothing to carry out;
 3. TAKE — handed DOWN to progression's `carry_out`, which asks the T-Box who takes the action
    and runs the take on the reactive loop. False from every actor is "not now": the intention
    stands and the next trigger finds it.
 
-**Only the head is committed**, and that is not a shortcut: the plan is re-derived every pass
-because the world moves, so a committed tail would be a promise about a future nobody has seen.
-The tail is in the trace for a reader.
+**The plan is handed down whole** (#510, progression-steps-through-a-plan-on-confirmed-feedback):
+every step goes to the keeper, the head is taken, and each further step is taken when the
+world confirms the one before it — by feedback, with no search above it. A plan in progress
+is not searched over again until it lapses or the world contradicts it; that is the
+amortisation, moved from "adopt absorbs the same head" to "a standing plan is not re-decided".
 
 This file and progression's `execution.py` were one `agent/execution.py`; the layer split cut
 it at the one line where deciding stops and doing starts. See knowledge/domain/executor.md and
@@ -38,11 +40,16 @@ def pursue(agent, desire) -> str | None:
     None is a decision somebody else made: the search found no step (its trace says why).
     An absorbed impulse is NOT None — the commitment stands, and the caller is told which.
     """
+    keeper = agent.keeper
+    if keeper is not None and (going := keeper.in_progress(desire.uri)) is not None:
+        #  A PLAN IN PROGRESS IS NOT RE-DECIDED (#510): its next step is taken when the world
+        #  confirms the one before it, and a lapse or a surprise is what brings the question
+        #  back here. A search now would re-decide what nothing has contradicted.
+        return going.uri
     plan = agent.deliberator.decide(desire)
     if plan is None or not plan.steps:
         return None
     act = plan.steps[0]
-    keeper = agent.keeper
     if keeper is None:
         return None
     #  THE PATIENCE IS `adopt`'S, whole: a commitment that STANDS within patience absorbs the
@@ -53,7 +60,7 @@ def pursue(agent, desire) -> str | None:
     because = _because(plan, desire)
 
     def commit_and_take() -> str | None:
-        uri = keeper.adopt(act, desire.uri, because)
+        uri = keeper.adopt(plan.steps, desire.uri, because)          # the WHOLE plan (#510)
         if uri is None:
             #  ABSORBED: the same commitment already stands within patience. Say WHICH, so a
             #  caller that needs to know whether anything is on its way (a bidder waiting for

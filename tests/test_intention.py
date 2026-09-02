@@ -485,3 +485,51 @@ def test_a_hold_may_be_a_shape_and_may_release_when_a_condition_stops(make):
         keeper.hold(shaped, until=shape, until_not=shape)
     with pytest.raises(TypeError, match="a condition is a shape"):
         keeper.hold(shaped, until="SELECT ?x WHERE {}")
+
+
+# --- a plan handed down whole (#510) ------------------------------------------------------
+
+def test_a_plan_is_committed_whole_advances_on_a_met_step_and_stops_on_an_unmet_one(make):
+    """The sovereign's ruling on the three layers: deliberation hands the WHOLE plan down and
+    progression steps through it by feedback. Three toy steps adopted at once are three steps
+    in the ledger, chained by `then`, the intention standing at the head. A met verdict on the
+    head moves `by` to the second step and takes it — no search — and the plan is not finished.
+    An unmet verdict on the second stops there: the intention resolves, the plan is failed
+    upward, and the third step is never stood at."""
+    from datetime import datetime, timedelta, timezone
+
+    from conftest import reading_of, write_reading
+    from orexis_agent_progression.act import Step
+    from orexis_agent_progression.store import bindings
+
+    from conftest import genesis_store
+    fern = make("fern", genesis_store({"fern": 0.30}))          # a reading to baseline on
+    keeper = fern.keeper
+    want = stake_of(fern).uri
+    plan = tuple(Step(action=f"urn:toy#Go{n}", via="urn:toy#lever", urgency_after=0.5 - n * 0.1)
+                 for n in (1, 2, 3))
+    uri = keeper.adopt(plan, want, "three steps, handed down whole")
+    rows = bindings(fern.intentions.query_union(f"""SELECT ?head ?n (COUNT(?s) AS ?steps) WHERE {{
+        GRAPH <{keeper.graph}> {{ <{uri}> orexis:by ?head ; orexis:step ?s . ?head orexis:then ?n }} }}
+        GROUP BY ?head ?n"""))
+    assert len(rows) == 1 and int(rows[0]["steps"]) == 3, "three steps, one head, chained"
+    assert keeper.standing(action="urn:toy#Go1", want=want) and keeper.in_progress(want) is not None
+
+    before = fern.deliberator._plans_finished
+    assert keeper.expect(uri, "watching the first step", rises=True,
+                         expected_delta=0.1, baseline=reading_of(fern, MOISTURE),
+                         not_after=datetime.now(timezone.utc) + timedelta(hours=1))
+    write_reading(fern, 0.9, MOISTURE)                              # the first step answered
+    assert keeper.standing(action="urn:toy#Go2", want=want), "advanced to the second step"
+    assert not keeper.standing(action="urn:toy#Go1", want=want)
+    assert fern.deliberator._plans_finished == before, "not finished: two steps remain"
+    assert keeper.in_progress(want) is not None, "still a step to come after the second"
+
+    failed = fern.deliberator._plans_failed
+    assert keeper.expect(uri, "watching the second step", rises=True,
+                         expected_delta=0.1, baseline=reading_of(fern, MOISTURE),
+                         not_after=datetime.now(timezone.utc) + timedelta(hours=1))
+    keeper.lapse(uri)                                               # the world did not answer
+    assert fern.deliberator._plans_failed == failed + 1, "failed upward — re-plan"
+    assert keeper.standing(want=want) == [], "the intention resolved; the tail is abandoned"
+    assert keeper.in_progress(want) is None
