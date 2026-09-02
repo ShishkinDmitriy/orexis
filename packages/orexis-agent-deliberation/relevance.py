@@ -48,7 +48,6 @@ from rdflib.paths import AlternativePath, InvPath, MulPath, NegatedPath, Sequenc
 from rdflib.plugins.sparql.algebra import translateQuery, translateUpdate, traverse
 from rdflib.plugins.sparql.parser import parseQuery, parseUpdate
 
-from orexis_agent_progression.ontology import ACTIONS_GRAPH
 from orexis_agent_progression.store import PREFIXES, bindings
 
 log = logging.getLogger("relevance")
@@ -239,13 +238,13 @@ def _shacl_path_iris(g: rdflib.Graph, node) -> set | None:
 
 # --- the closure --------------------------------------------------------------------------------
 
-_ACTIONS_Q = f"""
-SELECT ?action ?available ?construct ?retracts WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
-  ?action a <http://example.org/orexis#Action> .
-  OPTIONAL {{ ?action <http://example.org/orexis#available> ?available }}
-  OPTIONAL {{ ?action <http://www.w3.org/ns/shacl#construct> ?construct }}
-  OPTIONAL {{ ?action <http://example.org/orexis#retracts> ?retracts }}
-}} }}"""
+_ACTIONS_Q = """
+SELECT ?action ?available ?construct ?retracts WHERE {
+  ?action a orexis:Action .
+  OPTIONAL { ?action orexis:available ?available }
+  OPTIONAL { ?action sh:construct ?construct }
+  OPTIONAL { ?action orexis:retracts ?retracts }
+}"""
 
 _SUBPROPERTIES_Q = """
 SELECT ?narrow ?broad WHERE { ?narrow rdfs:subPropertyOf ?broad . FILTER(?narrow != ?broad) }"""
@@ -278,11 +277,11 @@ def actions_of(query) -> dict[str, tuple]:
     return out
 
 
-_EFFECTLESS_Q = f"""
-SELECT ?action WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
-  ?action a <http://example.org/orexis#Action> .
-  FILTER NOT EXISTS {{ ?action <http://www.w3.org/ns/shacl#construct> ?c }}
-}} }}"""
+_EFFECTLESS_Q = """
+SELECT ?action WHERE {
+  ?action a orexis:Action .
+  FILTER NOT EXISTS { ?action sh:construct ?c }
+}"""
 
 
 def effectless_of(query) -> frozenset:

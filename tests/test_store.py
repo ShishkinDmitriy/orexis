@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from orexis_agent_progression import store
+from orexis_agent_progression.store import bindings
 
 from assembly import loader
 
@@ -378,3 +379,57 @@ def test_an_availability_query_leans_on_the_stores_prefixes_like_a_review_rule()
     assert checked >= 4, "the actions stopped carrying availability queries"
 
 
+
+
+# --- binding a parameter (#500) ---------------------------------------------------------------
+
+KERNEL = [p for p in _SOURCES
+          if "packages" not in p.parts or any(part.startswith("orexis-agent-") for part in p.parts)]
+
+
+def test_the_kernel_splices_no_parameter_into_query_text():
+    """Since #500 a parameter reaches a query as the engine's own substitution, or a rule text
+    through `store.bind`; never as `<%s>` formatting or a chain of `.replace("$…")`. Both
+    forms had the failure this refuses: a token replaced as a prefix of a longer one, an IRI
+    with a `>` in it, and a `$state` left in the text for the engine to read as a variable
+    that matches every graph. Kernel only — a capability's own Python may follow."""
+    import re
+
+    assert KERNEL, "the kernel's sources are not where this looks"
+    offenders = []
+    for path in KERNEL:
+        text = path.read_text()
+        for pattern in (r'\.replace\("\$', r'_Q % ', r'Q % \('):
+            if re.search(pattern, text):
+                offenders.append(f"{path.relative_to(loader.REPO_ROOT)}: {pattern}")
+    assert not offenders, offenders
+
+
+def test_bind_renders_terms_matches_whole_tokens_and_refuses_leftovers():
+    import pytest
+
+    from orexis_agent_progression.store import Raw, Unbound, bind
+
+    text = "SELECT ?x WHERE { GRAPH $state { $this <urn:p> ?x } FILTER(?x > $litres) $thisOther }"
+    out = bind(text, state="urn:g", this="urn:me", litres=2.5, thisOther=Raw("."))
+    assert out == "SELECT ?x WHERE { GRAPH <urn:g> { <urn:me> <urn:p> ?x } FILTER(?x > 2.5) . }"
+    with pytest.raises(Unbound, match=r"\$thisOther"):
+        bind(text, state="urn:g", this="urn:me", litres=1)
+    assert bind("no tokens here", anything="urn:x") == "no tokens here", "unused values are fine"
+
+
+def test_a_projected_variable_is_bound_by_substitution_and_an_unprojected_one_refuses():
+    """The engine's parameter mechanism, and the limit that keeps rule texts on tokens: a
+    substituted variable must be in the SELECT projection, so a subquery that does not
+    project it and an aggregate that does not group it are out of its reach (SEP-0007)."""
+    import pytest
+
+    from orexis_agent_progression.store import Store
+
+    st = Store()
+    st.update("INSERT DATA { GRAPH <urn:g> { <urn:a> <urn:p> 1 } }")
+    assert bindings(st.query_over("SELECT ?s ?o WHERE { ?s <urn:p> ?o }", "urn:g",
+                                  substitutions={"s": "urn:a"})) == [{"s": "urn:a", "o": "1"}]
+    with pytest.raises(Exception, match="projection"):
+        st.query_over("SELECT (SUM(?o) AS ?e) WHERE { ?s <urn:p> ?o }", "urn:g",
+                      substitutions={"s": "urn:a"})

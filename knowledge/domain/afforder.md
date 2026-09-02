@@ -21,7 +21,10 @@ query with `$me`, `$wants`, `$beliefs` and `$state` filled in, and collect the
 **`$state` is a parameter, and that is the whole reason nothing is stored.** The
 [planner](/domain/planner.md) binds it to a node of the [imaginarium](/domain/imaginarium.md), so
 stock after a refill appears among that world's rows and not among this one's. A stored answer
-has one state; a search needs one per node.
+has one state; a search needs one per node. Every such token is bound by `store.bind` (#500): a whole token, rendered as the term the
+value is, and a text still carrying a token nobody bound refuses rather than reaching the
+engine as a free variable — where the engine's own parameters (`substitutions=`) serve only
+the kernel's simple queries, since they cannot reach a subquery or an aggregate.
 
 # What it is not
 

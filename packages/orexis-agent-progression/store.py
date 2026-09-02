@@ -21,6 +21,7 @@ Two kinds of knowledge live here, and their lifetimes differ:
 from __future__ import annotations
 
 import io
+import re
 import json
 from pathlib import Path
 from typing import Callable
@@ -70,15 +71,15 @@ _OWN = f"""
 SELECT DISTINCT ?g WHERE {{
   {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }} }}
   UNION
-  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?g a ?class ; <{OREXIS}arrivedBy> ?arrival }} }}
-  ?class rdfs:subClassOf* <{OREXIS}Graph> .
+  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?g a ?class ; orexis:arrivedBy ?arrival }} }}
+  ?class rdfs:subClassOf* orexis:Graph .
   #  ASKED OF THE GRAPH AND NOT OF THE CLASS THAT MATCHED: `graph/classification` is typed
   #  both public and belief, so a filter on one binding lets it through on the other. Both
   #  run in the DEFAULT graph, which `query` unions from the public ones — inside a GRAPH
   #  block pyoxigraph evaluates the NOT EXISTS before the UNION binds `?g`, and every row
   #  is dropped.
   FILTER NOT EXISTS {{ ?g a ?any . ?any rdfs:subClassOf* <{PUBLIC_GRAPH}> }}
-  FILTER NOT EXISTS {{ ?g a ?hyp . ?hyp rdfs:subClassOf* <{OREXIS}PossibleGraph> }}
+  FILTER NOT EXISTS {{ ?g a ?hyp . ?hyp rdfs:subClassOf* orexis:PossibleGraph }}
 }}"""
 
 # Sent with every query. This is the ONLY set a query may use — some engines silently pre-bind
@@ -118,11 +119,113 @@ for _label, _iri in loader.external_prefixes().items():
 
 NAMESPACES = {**loader.external_prefixes(), **_KERNEL, **loader.prefixes()}
 
+#  The header as TEXT, for the readers that parse rather than run: rdflib in `relevance.py`,
+#  and any tool that wants a query to stand alone. The store itself hands the engine
+#  `NAMESPACES` as a dictionary (#500), so no query text carries a header it did not write.
 PREFIXES = "\n" + "\n".join(
     f"PREFIX {label}: <{iri}>" for label, iri in sorted(NAMESPACES.items())
 ) + "\n"
 
 DECLARED = frozenset(NAMESPACES)
+
+_XSD = "http://www.w3.org/2001/XMLSchema#"
+
+
+def _terms(values: dict | None) -> dict | None:
+    """A caller's substitutions as the engine's: name -> term. A Python string is an IRI —
+    every parameter the kernel binds this way is one — a number or a bool a typed literal,
+    and an engine term passes through; a string LITERAL is passed as `ox.Literal`."""
+    if not values:
+        return None
+    out = {}
+    for name, value in values.items():
+        if isinstance(value, (ox.NamedNode, ox.BlankNode, ox.Literal)):
+            term = value
+        elif isinstance(value, bool):
+            term = ox.Literal("true" if value else "false", datatype=ox.NamedNode(_XSD + "boolean"))
+        elif isinstance(value, int):
+            term = ox.Literal(str(value), datatype=ox.NamedNode(_XSD + "integer"))
+        elif isinstance(value, float):
+            term = ox.Literal(repr(value), datatype=ox.NamedNode(_XSD + "double"))
+        elif isinstance(value, str):
+            term = ox.NamedNode(value)
+        else:
+            raise TypeError(f"cannot bind ?{name} to {value!r}")
+        out[ox.Variable(name)] = term
+    return out
+
+
+#  ── binding a rule TEXT ────────────────────────────────────────────────────────────────────
+#
+#  A rule text a package ships — a precondition, an effect, an estimate, a pattern — takes its
+#  parameters as `$name` tokens, and they are bound by TEXT, deliberately (#500). The engine's
+#  own parameter mechanism (SEP-0007 substitution, above) reaches only a variable the query
+#  projects at its top level: measured, it cannot reach a subquery that does not project it,
+#  nor an aggregate at all unless the variable is grouped — and an estimate is an aggregate
+#  over a subquery reading `GRAPH $state`. A token reaches every scope. What this binder adds
+#  over a chain of `.replace` is the three things a chain got wrong: it matches a WHOLE token
+#  (`$this` never touches `$thisOther`), it renders a value as the term it is, and it REFUSES
+#  a text that still carries a token nobody bound — the loud direction, where a chain left
+#  `$state` in the text for the engine to parse as a variable named `state` and match every
+#  graph at once.
+
+_TOKEN = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)\b")
+_IRI = re.compile(r"^(https?://|urn:|mailto:|file:)\S*$")
+
+
+class Raw(str):
+    """A value spliced in verbatim: a VALUES block, a USING list, a variable name — text that
+    is not a term. The only way to put unrendered text through `bind`, and it says so."""
+
+
+class Unbound(ValueError):
+    """A rule text still carries `$tokens` after binding. Named, so the package can add the
+    parameter or the caller can bind it; never left for the engine to read as a variable."""
+
+
+def render(value) -> str:
+    """One value as the SPARQL text of the term it is."""
+    if isinstance(value, Raw):
+        return str(value)
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return repr(value)
+    if isinstance(value, ox.NamedNode):
+        return f"<{value.value}>"
+    if isinstance(value, ox.Literal):
+        return str(value)                                   # its N-Triples form
+    if isinstance(value, str):
+        #  A bare IRI is wrapped; anything else that arrives as a string — `<…>`, `"…"`, a
+        #  number's repr — is text already rendered and passes as written: a capability's
+        #  Python and the tests still hand terms over rendered, and wrapping twice is the
+        #  failure this must not add.
+        if _IRI.match(value):
+            return f"<{value}>"
+        return value
+    raise TypeError(f"cannot render {value!r} into a query")
+
+
+#  The one token that may survive binding: SHACL's own `$this`, pre-bound by the judge and
+#  not by us, which a derivation legitimately writes INTO a shape's `sh:select` string — the
+#  freshness rule builds one with CONCAT — and which is therefore not a parameter of the
+#  rule the string sits in. A caller that does bind it (a pattern run by the planner) gets it
+#  replaced like any other.
+_SHACLS_OWN = {"this"}
+
+
+def bind(text: str, **values) -> str:
+    """The rule text with every `$name` replaced by the term its value is, refusing leftovers.
+
+    Tokens the text does not carry are ignored — a rule that ignores `$via` loses nothing —
+    and tokens the caller did not bind raise `Unbound` with their names, `$this` excepted.
+    """
+    rendered = {name: render(value) for name, value in values.items()}
+    out = _TOKEN.sub(lambda m: rendered.get(m.group(1), m.group(0)), text)
+    left = sorted(set(_TOKEN.findall(out)) - _SHACLS_OWN)
+    if left:
+        raise Unbound(f"unbound in a rule text: {', '.join('$' + n for n in left)}")
+    return out
 
 
 # How many decimal places a derived number is written with. Well under the eighteen the store's
@@ -192,13 +295,13 @@ class Store:
         build a bare store and query one graph are unaffected.
         """
         if self._public is None:
-            rows = self._store.query(PREFIXES + _DISCOVER)
+            rows = self._store.query(_DISCOVER, prefixes=NAMESPACES)
             self._public = sorted(str(row["g"].value) for row in rows)
         return self._public
 
     # --- reading ---
 
-    def query(self, sparql: str) -> dict:
+    def query(self, sparql: str, substitutions: dict | None = None) -> dict:
         """Read. There is no privileged variant: it is all yours, and only yours.
 
         An unqualified pattern reads **public knowledge** — the vocabulary, the world, and what
@@ -212,12 +315,13 @@ class Store:
         """
         out = io.BytesIO()
         public = [ox.NamedNode(g) for g in self.public_graphs()]
-        self._store.query(PREFIXES + sparql, default_graph=public).serialize(
+        self._store.query(sparql, prefixes=NAMESPACES, default_graph=public,
+                          substitutions=_terms(substitutions)).serialize(
             output=out, format=ox.QueryResultsFormat.JSON
         )
         return json.loads(out.getvalue())
 
-    def construct(self, sparql: str):
+    def construct(self, sparql: str, substitutions: dict | None = None):
         """Run a CONSTRUCT and hand back the triples, which are not written anywhere.
 
         The one thing `query` cannot do: it serialises results as JSON bindings, and a
@@ -237,13 +341,14 @@ class Store:
         had been exempt.
         """
         public = [ox.NamedNode(g) for g in (*self.public_graphs(), *self.recorded_graphs())]
-        return list(self._store.query(PREFIXES + sparql, default_graph=public))
+        return list(self._store.query(sparql, prefixes=NAMESPACES, default_graph=public,
+                                      substitutions=_terms(substitutions)))
 
     # Kept so callers written against the old two-door store still read: with one private store
     # per agent, the distinction it drew — "as myself" versus "as admin" — has no meaning.
     query_all = query
 
-    def query_over(self, sparql: str, *graphs: str) -> dict:
+    def query_over(self, sparql: str, *graphs: str, substitutions: dict | None = None) -> dict:
         """Read with the default graph being EXACTLY these graphs, merged.
 
         For a text that carries no `GRAPH` clause and no `$state` — a compiled violation
@@ -253,12 +358,13 @@ class Store:
         a search has one and an unqualified union would read every sibling world at once.
         """
         out = io.BytesIO()
-        self._store.query(PREFIXES + sparql,
-                          default_graph=[ox.NamedNode(g) for g in graphs]).serialize(
+        self._store.query(sparql, prefixes=NAMESPACES,
+                          default_graph=[ox.NamedNode(g) for g in graphs],
+                          substitutions=_terms(substitutions)).serialize(
             output=out, format=ox.QueryResultsFormat.JSON)
         return json.loads(out.getvalue())
 
-    def query_union(self, sparql: str) -> dict:
+    def query_union(self, sparql: str, substitutions: dict | None = None) -> dict:
         """Read with the default graph as the union of EVERYTHING this store holds.
 
         For two callers. The sovereign's question channel (packages/orexis-capability-reporting/sovereign.py): an
@@ -271,7 +377,8 @@ class Store:
         query API, which structurally cannot execute an update.
         """
         out = io.BytesIO()
-        self._store.query(PREFIXES + sparql, use_default_graph_as_union=True).serialize(
+        self._store.query(sparql, prefixes=NAMESPACES, use_default_graph_as_union=True,
+                          substitutions=_terms(substitutions)).serialize(
             output=out, format=ox.QueryResultsFormat.JSON
         )
         return json.loads(out.getvalue())
@@ -324,7 +431,7 @@ class Store:
     # --- writing ---
 
     def update(self, sparql: str) -> None:
-        self._store.update(PREFIXES + sparql)
+        self._store.update(sparql, prefixes=NAMESPACES)
         self._public = None
 
     def put_graph(self, graph_iri: str, ttl: str, dataset: bool = False) -> None:

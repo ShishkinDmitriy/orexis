@@ -22,7 +22,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from orexis_agent_progression.ontology import OREXIS, STATE_GRAPH
-from orexis_agent_progression.store import bindings
+from orexis_agent_progression.store import Raw, bind, bindings
 
 @dataclass(frozen=True)
 class Affordance:
@@ -63,8 +63,8 @@ class Affordance:
 #  VALUES block; the obligations are not here at all, because an obligation's row names whom it is owed
 #  to and joins on that. (This used to read the property off the met-shape, and the kernel
 #  no longer knows a want has one — the-stake-is-sensings-want.)
-_WANTS_Q = """SELECT ?want ?about WHERE {
-  <%s> orexis:holds ?want .
+_WANTS_Q = """SELECT ?me ?want ?about WHERE {
+  ?me orexis:holds ?want .
   ?want a orexis:Desire ; orexis:about ?about }"""
 
 
@@ -76,7 +76,7 @@ def wants_of(desires, agent_uri: str) -> dict[str, str]:
     """Every want this agent holds that is ABOUT something, want -> about. A want absent here
     — a debt, a call — is about nothing an action query could join, and the planner lets it
     range over any row of the agent's own."""
-    return {r["want"]: r["about"] for r in bindings(desires(_WANTS_Q % agent_uri))}
+    return {r["want"]: r["about"] for r in bindings(desires(_WANTS_Q, {"me": agent_uri}))}
 
 
 def affordances_of(query, agent_uri: str, desires, beliefs: str, state: str = STATE_GRAPH,
@@ -118,9 +118,10 @@ def affordances_of(query, agent_uri: str, desires, beliefs: str, state: str = ST
         #  `$state` names the readings a premise may read — this agent's, or the graph of a
         #  world a plan is imagining, so a row whose premise an earlier step made true (stock
         #  after a refill, #359) appears in the menu of THAT world and not of this one.
-        q = (action["available"].replace("$me", f"<{agent_uri}>")
-             .replace("$wants", wants).replace("$beliefs", f"<{beliefs}>")
-             .replace("$state", f"<{state}>"))
+        #  `$wants` is a VALUES block — rows, not a term — and goes in as `Raw`; the rest
+        #  are IRIs the binder renders. A precondition carrying a token nobody binds refuses.
+        q = bind(action["available"], me=agent_uri, wants=Raw(wants), beliefs=beliefs,
+                 state=state)
         rows += [Affordance(action=action["action"], via=r["via"], want=r.get("want"),
                             about=about_of.get(r.get("want")) or r.get("about"),
                             direction=r.get("direction"), for_agent=r.get("for_agent"))

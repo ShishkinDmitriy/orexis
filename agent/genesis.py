@@ -38,7 +38,7 @@ from .config import REPO_ROOT
 from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, GRAPH_PREFIX, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
                        WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, beliefs_graph)
-from orexis_agent_progression.store import NAMESPACES, Store, bindings
+from orexis_agent_progression.store import NAMESPACES, Raw, Store, bind, bindings
 
 # Everything public that is computed rather than read from a file. Emptied before each recompute
 # so the answer is the files' and not last boot's — a fact that stops being entailed, or a rule
@@ -249,9 +249,9 @@ def substitute(rule: str, st: Store) -> str:
     out = []
     for line in rule.splitlines():
         if not line.lstrip().startswith("#"):
-            line = line.replace("$given", given).replace("$derived", f"<{WORLD_DERIVED_GRAPH}>")
             line = _INTO.sub(
                 lambda m: f"<{graph_of_class(st, _expand(m.group(1)))}>", line)
+            line = bind(line, given=Raw(given), derived=WORLD_DERIVED_GRAPH)
         out.append(line)
     return "\n".join(out)
 
@@ -381,7 +381,7 @@ def drop_ghost_graphs(st: Store, agent_id: str) -> list[str]:
     # the instances under it. Listing them here instead would eat the next package's graphs,
     # which is exactly what the first draft did to review's summaries.
     prefixes = tuple(r["p"] for r in bindings(st.query(
-        f"SELECT ?p WHERE {{ ?class <{OREXIS}graphPrefix> ?p }}")))
+        f"SELECT ?p WHERE {{ ?class orexis:graphPrefix ?p }}")))
     ghosts = [g for g in st.graph_names()
               if g.startswith(GRAPH_PREFIX) and g not in declared and g != PROVENANCE_GRAPH
               and not g.startswith(prefixes)]
@@ -418,8 +418,8 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
         (obligations_graph(agent_id), ("ObligationsGraph",), "Received"),
     ]
     triples = " ".join(
-        f"<{iri}> a {' , '.join(f'<{OREXIS}{c}>' for c in classes)} ; "
-        f"<{OREXIS}arrivedBy> <{OREXIS}{arrival}> ."
+        f"<{iri}> a {' , '.join(f'orexis:{c}' for c in classes)} ; "
+        f"orexis:arrivedBy orexis:{arrival} ."
         for iri, classes, arrival in mine)
     st.clear_graph(CLASSIFICATION_GRAPH)
     st.update(f"INSERT DATA {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ {triples} }} }}")

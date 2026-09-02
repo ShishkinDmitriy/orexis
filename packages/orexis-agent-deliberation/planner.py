@@ -44,7 +44,7 @@ from orexis_agent_progression.act import Act, Step
 from orexis_agent_deliberation.desire import Desire
 from .afforder import affordances_of, wants_of
 from .imaginarium import Imaginarium
-from orexis_agent_progression.store import bindings
+from orexis_agent_progression.store import Raw, bind, bindings
 from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
 from orexis_agent_deliberation.conformance import conforms, graph_from
@@ -304,8 +304,7 @@ class Planner:
             return None
         try:
             rows = bindings(self.imaginarium.query(
-                str(text).replace("$this", f"<{self.me.uri}>")
-                         .replace("$state", f"<{node.graph}>")))
+                bind(str(text), this=self.me.uri, state=node.graph)))
         except Exception as exc:
             log.error("estimate failed to run for %s: %s", desire.uri, exc)
             return None
@@ -340,7 +339,7 @@ class Planner:
         if text is not None:
             return str(text)
         rows = bindings(self.agent.beliefs.query(
-            f"SELECT ?text WHERE {{ <{node}> <{_SH.select}> ?text }} LIMIT 1"))
+            f"SELECT ?text WHERE {{ <{node}> sh:select ?text }} LIMIT 1"))
         return str(rows[0]["text"]) if rows and rows[0].get("text") else None
 
     def _pattern_binds(self, text: str, graph: str) -> bool:
@@ -351,9 +350,8 @@ class Planner:
         a select the gates admitted and the engine refuses is a defect someone must see,
         and a want stuck hot is how this architecture says so.
         """
-        text = (text.replace("$this", f"<{self.me.uri}>")
-                    .replace("$state", f"<{graph}>"))
         try:
+            text = bind(text, this=self.me.uri, state=graph)
             return bool(bindings(self.imaginarium.query(text)))
         except Exception as exc:
             log.error("avoided-state pattern failed to run: %s", exc)
@@ -1087,24 +1085,27 @@ class Planner:
         one reached is the act the actor would actually take next — which is the whole of what
         makes "too small to finish in one" a plannable situation rather than an unreachable one.
         """
+        #  VALUES, NOT TEXT (#500): each is the IRI, the number or the literal it is, and
+        #  `store.bind` renders it as the term where the rule's `$token` stands — whole token,
+        #  never a prefix of a longer one, and a token nobody bound refuses.
         graph = node.graph if node is not None else STATE_GRAPH
         return {
-            "me": f"<{self.me.uri}>",
-            "claim": f'"{desire.claim}"' if desire and desire.claim else '"urn:nobody"',
-            "subject": f"<{self.me.acts_for}>" if self.me.acts_for else "<urn:nobody>",
+            "me": self.me.uri,
+            "claim": Raw(f'"{desire.claim}"') if desire and desire.claim else Raw('"urn:nobody"'),
+            "subject": self.me.acts_for if self.me.acts_for else "urn:nobody",
             #  THE WANT AND WHAT IT IS ABOUT, carried from the row to the rule and never read
             #  here: `$about` is whatever the want's deriver said (`orexis:about`) — a property,
             #  for a region want — and the rule joins on it in its own words.
-            "want": f"<{desire.uri}>" if desire else "<urn:nothing>",
-            "about": f"<{row.about}>" if row is not None and row.about else "<urn:nothing>",
+            "want": desire.uri if desire else "urn:nothing",
+            "about": row.about if row is not None and row.about else "urn:nothing",
             #  THE LEVER, since the sovereign struck hanoi's ground-action grid: a row always
             #  carried which lever a step goes through, and the effect could never see it —
             #  so a two-parameter action was inexpressible and hanoi shipped six ground
             #  nodes. One schema needs the channel: $via is the row's lever, symmetric with
             #  $about, and a rule that ignores it loses nothing.
-            "via": f"<{row.via}>" if row is not None else "<urn:nothing>",
-            "beliefs": f"<{beliefs_graph(self.agent.id)}>",
-            "state": f"<{graph}>",
+            "via": row.via if row is not None else "urn:nothing",
+            "beliefs": beliefs_graph(self.agent.id),
+            "state": graph,
             "litres": self._dose(row, graph) if desire and row is not None else 0.0,
         }
 

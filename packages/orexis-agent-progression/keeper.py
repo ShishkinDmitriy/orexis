@@ -192,8 +192,8 @@ class Keeper:
         #  A volume from before the ledger keyed on the want: rows carrying a property are
         #  given the want that property names for this agent, once, at construction.
         about_of = {r["want"]: r["about"] for r in bindings(agent.desires.query_union(
-            f"SELECT ?want ?about WHERE {{ <{self.me.uri}> <{OREXIS}holds> ?want . "
-            f"?want <{OREXIS}about> ?about }}"))}
+            f"SELECT ?want ?about WHERE {{ <{self.me.uri}> orexis:holds ?want . "
+            f"?want orexis:about ?about }}"))}
         if (n := ledger.migrate_ledger(agent.intentions, self.graph, about_of)):
             self.log.info("ledger migrated: %d row(s) keyed by a property now pursue a want", n)
         if (n := ledger.migrate_ledger_acts(agent.intentions, self.graph)):
@@ -340,7 +340,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         now = datetime.now(timezone.utc).isoformat()
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{standing.uri}> <{kernel("resolvedAt")}> "{now}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+  <{standing.uri}> <{kernel("resolvedAt")}> "{now}"^^xsd:dateTime ;
           <{kernel("outcome")}> {_literal(outcome)} ;
           <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
@@ -422,14 +422,14 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                                                           tz=timezone.utc)
         window = (deadline_dt - now).total_seconds()
         delta = (f"""
-    <{EXPECTS_DELTA}> "{expected_delta}"^^<http://www.w3.org/2001/XMLSchema#decimal> ;"""
+    <{EXPECTS_DELTA}> "{expected_delta}"^^xsd:decimal ;"""
                  if expected_delta else "")
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{intention_uri}>{delta}
     <{EXPECTS_RISE}> {"true" if rises else "false"} ;
-    <{BASELINE_VALUE}> "{reading.value}"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
-    <{BASELINE_AT}> "{reading.result_time.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+    <{BASELINE_VALUE}> "{reading.value}"^^xsd:decimal ;
+    <{BASELINE_AT}> "{reading.result_time.isoformat()}"^^xsd:dateTime ;
     <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
         self.window(intention_uri, deadline_dt)
@@ -443,7 +443,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         give-up, the host's redeem check and the expectation's verdict all read."""
         self.agent.intentions.update(f"""
 DELETE {{ GRAPH <{self.graph}> {{ ?act <{kernel("notAfter")}> ?was }} }}
-INSERT {{ GRAPH <{self.graph}> {{ ?act <{kernel("notAfter")}> "{not_after.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
+INSERT {{ GRAPH <{self.graph}> {{ ?act <{kernel("notAfter")}> "{not_after.isoformat()}"^^xsd:dateTime }} }}
 WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act .
                                   OPTIONAL {{ ?act <{kernel("notAfter")}> ?was }} }} }}""")
 
@@ -516,8 +516,8 @@ SELECT ?i ?action ?want ?rises ?baseline ?baselineAt ?deadline ?delta WHERE {{
         now = datetime.now(timezone.utc).isoformat()
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{watch.uri}> <{END_MET}> "{'true' if met else 'false'}"^^<http://www.w3.org/2001/XMLSchema#boolean> ;
-                <{END_VERIFIED_AT}> "{now}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+  <{watch.uri}> <{END_MET}> "{'true' if met else 'false'}"^^xsd:boolean ;
+                <{END_VERIFIED_AT}> "{now}"^^xsd:dateTime ;
                 <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
         (self.log.info if met else self.log.warning)(

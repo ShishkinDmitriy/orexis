@@ -530,6 +530,14 @@ fails if pyshacl ever entails something the closure does not. See
   AUTHORED or ENTAILED facts, which every cross-package grant here already does: entailment is
   materialised before any rule runs, so `market:offeredBy` is available where `market:hosts`
   is not.
+- **The engine's own query parameters reach only a variable the query PROJECTS at its top
+  level.** pyoxigraph's `substitutions=` (SEP-0007) was measured refusing a subquery that does
+  not project the variable and every aggregate that does not group it — which is the shape of
+  every estimate — so the kernel's own simple queries bind that way and a rule text takes its
+  parameters as `$tokens` through ONE binder, `store.bind`: whole-token match, values
+  rendered as the terms they are, and a token nobody bound REFUSES. A chain of `.replace`
+  left `$about` in the dosing rule to parse as a free variable, and the prediction matched
+  an observation of any property (#500).
 - **A `BIND` inside a `UNION` branch cannot see a variable bound outside the union.** The
   branches are evaluated on their own and joined with the surrounding pattern afterwards, so
   the tidy form — state the preamble once, then `{ … } UNION { … }` — leaves every outer
