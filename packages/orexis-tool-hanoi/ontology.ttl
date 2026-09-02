@@ -4,6 +4,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
 
 <http://example.org/orexis/hanoi> a owl:Ontology ;
     rdfs:label "Orexis hanoi" ;
@@ -33,3 +34,26 @@
 :on a owl:ObjectProperty ; rdfs:domain :Disk ;
     rdfs:label "on" ;
     rdfs:comment "What a disk rests on — another disk, or a peg. RUNTIME STATE, never authored in a world: it lives in the state graph, effects retract and add it, and the chain (hanoi:on)+ down to a peg is what 'on peg P' means everywhere in this package's queries." .
+
+#  WHAT SOLVING MEANS, AND HOW FAR IT IS — the puzzle's, not a world's. A world asserts the
+#  want and points here; the selects used to sit inline in `world/hanoi/desire.ttl`, and the
+#  courier package's ontology says why they moved. Both are run by the kernel with $state
+#  naming whichever world is being judged.
+
+:diskAstray sh:select """
+        SELECT (1 AS ?astray) WHERE {
+            GRAPH $state { ?d hanoi:on ?rest . ?d (hanoi:on)+ ?p }
+            ?p a hanoi:Peg .
+            FILTER(?p != hanoi:PegC)
+        }""" ;
+    rdfs:label "a disk whose chain bottoms out off peg C" ;
+    rdfs:comment "Rows while any disk's chain bottoms out on a peg that is not C. The object of a want's orexis:unmetWhen." .
+
+:disksAstray sh:select """
+        SELECT (COUNT(DISTINCT ?d) AS ?estimate) WHERE {
+            GRAPH $state { ?d hanoi:on ?rest . ?d (hanoi:on)+ ?p }
+            ?p a hanoi:Peg .
+            FILTER(?p != hanoi:PegC)
+        }""" ;
+    rdfs:label "disks not yet home" ;
+    rdfs:comment "How far the puzzle still is, in moves: every disk astray must move at least once more, so the count never overstates what is left — which is all orexis:estimates asks, and the promise the search ends on. A WEAK floor, deliberately: the optimal path moves disks away from C to free the ones beneath, and a count cannot see that. Measured: 56 forks to 50 on three disks. The object of a want's orexis:estimates." .

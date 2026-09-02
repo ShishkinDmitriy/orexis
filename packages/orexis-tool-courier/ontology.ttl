@@ -4,6 +4,7 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
 
 courier: a owl:Ontology ;
     rdfs:label "the courier grid" ;
@@ -51,3 +52,49 @@ courier:at a owl:ObjectProperty ; rdfs:range courier:Cell ;
 courier:carriedBy a owl:ObjectProperty ; rdfs:domain courier:Parcel ; rdfs:range courier:Van ;
     rdfs:label "aboard" ;
     rdfs:comment "The other half of the deletion: a parcel is at a cell OR aboard a van, never both and never neither." .
+
+#################  What wanting a delivery MEANS — the domain's, not a world's  #################
+#
+#  A world asserts the want and points here. The two selects used to be written inline in
+#  `world/courier/desire.ttl`, beside the want, and that was the wrong home: what "delivered"
+#  means and how far away it is are courier knowledge, a second courier world would have had
+#  to copy both, and the estimate is a PROMISE about this package's own actions — that it never
+#  overstates what Drive, Pick and Drop will cost to finish — which only whoever declares those
+#  costs can keep. The desire owns the term (`orexis:unmetWhen`, `orexis:estimates` hang off
+#  the want); the package owns the measure. Both are substituted and run by the kernel with
+#  $state naming whichever world is being judged.
+
+courier:parcelAstray sh:select """
+        SELECT (1 AS ?astray) WHERE {
+            ?p a courier:Parcel ; courier:destination ?owed .
+            FILTER NOT EXISTS { GRAPH $state { ?p courier:at ?owed } }
+        }""" ;
+    rdfs:label "a parcel not standing where it is owed" ;
+    rdfs:comment "Rows while any parcel is anywhere but its destination — aboard the van included: carrying it past the door is not delivering it. The object of a want's orexis:unmetWhen." .
+
+courier:drivesOwed sh:select """
+        SELECT (SUM(?d) AS ?estimate) WHERE {
+            SELECT ?p (MIN(?dist) AS ?d) WHERE {
+                {
+                    ?p a courier:Parcel ; courier:destination ?owed .
+                    ?owed courier:x ?ox ; courier:y ?oy .
+                    GRAPH $state { ?p courier:carriedBy ?van . ?van courier:at ?vc }
+                    ?vc courier:x ?vx ; courier:y ?vy .
+                    BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) AS ?dist)
+                } UNION {
+                    ?p a courier:Parcel ; courier:destination ?owed .
+                    ?owed courier:x ?ox ; courier:y ?oy .
+                    GRAPH $state { ?p courier:at ?pc . ?v courier:at ?vc }
+                    ?v a courier:Van .
+                    ?pc courier:x ?px ; courier:y ?py .
+                    ?vc courier:x ?vx ; courier:y ?vy .
+                    FILTER(?px != ?ox || ?py != ?oy)
+                    BIND(ABS(?vx - ?px) + ABS(?vy - ?py)
+                         + ABS(?px - ?ox) + ABS(?py - ?oy) AS ?dist)
+                }
+            } GROUP BY ?p
+        }""" ;
+    rdfs:label "drives still owed" ;
+    rdfs:comment """How far a delivery still is, in the unit a drive costs: Manhattan distance, because the grid is four-connected and a drive moves one cell — aboard the van it is the road to the door, standing somewhere it is the road to the parcel and then the parcel's road home. It counts drives and ignores the pick and the drop, so it NEVER OVERSTATES what is left, which is the promise the search ends on. The object of a want's orexis:estimates.
+
+EACH BRANCH REPEATS THE PREAMBLE, and the repetition is not clumsiness: a UNION's branches are evaluated on their own and joined with the surrounding pattern afterwards, so a BIND inside a branch cannot see a variable bound outside it. Written the tidy way, ?ox and ?oy were unbound where the arithmetic ran and the aggregate came back 0 for every world — a heuristic that said every world was already home.""" .

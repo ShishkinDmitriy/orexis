@@ -1,61 +1,20 @@
-#  The goal, ratified as a DESIRE — met by absence, judged by the kernel from the pattern.
-#  A parcel is astray while it is anywhere but its destination, aboard included: carrying it
-#  past the door is not delivering it. Scope is orexis:AtEnd — nothing erodes while the van
-#  sits, and the plan's end is the whole of what is asked.
+@prefix : <http://example.org/orexis/world/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+#  The goal, ratified as a DESIRE — met by absence, judged by the kernel from a pattern the
+#  courier package declares (`courier:parcelAstray`), and approached by an estimate the same
+#  package declares (`courier:drivesOwed`). A world says WHAT it wants and points at the domain
+#  for what that means and how far it is: the desire owns the term, the package owns the
+#  measure, because "never overstates" is a promise about the package's own actions that a
+#  world cannot keep. Scope is orexis:AtEnd — nothing erodes while the van sits, and the plan's
+#  end is the whole of what is asked.
 GRAPH <http://example.org/orexis/graph/desire/asserted> {
-  <http://example.org/orexis/world/courier#courier> <http://example.org/orexis#holds> <http://example.org/orexis/world/courier#every_parcel_delivered> .
-  <http://example.org/orexis/world/courier#every_parcel_delivered> a <http://example.org/orexis#Desire> ;
-      <http://example.org/orexis#bindsWhen> <http://example.org/orexis#AtEnd> ;
-      <http://www.w3.org/2000/01/rdf-schema#label>
-          "every parcel where it is owed — the sentence the delivery is" ;
-      <http://example.org/orexis#unmetWhen> <http://example.org/orexis/world/courier#a_parcel_astray> ;
-      <http://example.org/orexis#estimates> <http://example.org/orexis/world/courier#how_far_still> .
-  <http://example.org/orexis/world/courier#a_parcel_astray> <http://www.w3.org/ns/shacl#select>
-      """SELECT (1 AS ?astray) WHERE {
-          ?p a <http://example.org/orexis/courier#Parcel> ;
-             <http://example.org/orexis/courier#destination> ?owed .
-          FILTER NOT EXISTS { GRAPH $state { ?p <http://example.org/orexis/courier#at> ?owed } }
-      }""" ;
-      <http://www.w3.org/2000/01/rdf-schema#comment>
-          "rows while any parcel is not standing at the cell it is owed at — aboard the van counts as astray" .
-
-  #  HOW FAR STILL, in the unit a drive costs — the want speaking about cost, which is what
-  #  lets a search be guided rather than exhaustive. Manhattan distance, because the grid is
-  #  four-connected and a drive moves one cell: aboard the van it is the road from the van to
-  #  the door; standing somewhere it is the road to the parcel and then the parcel's road home.
-  #
-  #  IT NEVER OVERESTIMATES, which is the property everything rests on: it counts drives and
-  #  ignores the pick and the drop, so the real remaining cost is always at least this. That
-  #  is what makes a nearer world safe to prefer.
-  <http://example.org/orexis/world/courier#how_far_still> <http://www.w3.org/ns/shacl#select>
-      """SELECT (SUM(?d) AS ?estimate) WHERE {
-          SELECT ?p (MIN(?dist) AS ?d) WHERE {
-              {
-                  ?p a <http://example.org/orexis/courier#Parcel> ; <http://example.org/orexis/courier#destination> ?owed .
-                  ?owed <http://example.org/orexis/courier#x> ?ox ; <http://example.org/orexis/courier#y> ?oy .
-                  GRAPH $state { ?p <http://example.org/orexis/courier#carriedBy> ?van . ?van <http://example.org/orexis/courier#at> ?vc }
-                  ?vc <http://example.org/orexis/courier#x> ?vx ; <http://example.org/orexis/courier#y> ?vy .
-                  BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) AS ?dist)
-              } UNION {
-                  ?p a <http://example.org/orexis/courier#Parcel> ; <http://example.org/orexis/courier#destination> ?owed .
-                  ?owed <http://example.org/orexis/courier#x> ?ox ; <http://example.org/orexis/courier#y> ?oy .
-                  GRAPH $state { ?p <http://example.org/orexis/courier#at> ?pc . ?v <http://example.org/orexis/courier#at> ?vc }
-                  ?v a <http://example.org/orexis/courier#Van> .
-                  ?pc <http://example.org/orexis/courier#x> ?px ; <http://example.org/orexis/courier#y> ?py .
-                  ?vc <http://example.org/orexis/courier#x> ?vx ; <http://example.org/orexis/courier#y> ?vy .
-                  FILTER(?px != ?ox || ?py != ?oy)
-                  BIND(ABS(?vx - ?px) + ABS(?vy - ?py)
-                       + ABS(?px - ?ox) + ABS(?py - ?oy) AS ?dist)
-              }
-          } GROUP BY ?p
-      }""" ;
-      <http://www.w3.org/2000/01/rdf-schema#comment>
-          """drives still owed, counting neither the pick nor the drop — so it never overstates.
-
-          EACH BRANCH REPEATS THE PREAMBLE, and the repetition is not clumsiness. A UNION's
-          branches are evaluated on their own and joined with the surrounding pattern
-          afterwards, so a BIND inside a branch cannot see a variable bound outside it: written
-          the tidy way, ?ox and ?oy were unbound where the arithmetic ran, ?dist bound nowhere,
-          and the aggregate came back 0 for every world — no error, no empty result, just a
-          heuristic that said every world was already home.""" .
+  :courier orexis:holds :every_parcel_delivered .
+  :every_parcel_delivered a orexis:Desire ;
+      orexis:bindsWhen orexis:AtEnd ;
+      rdfs:label "every parcel where it is owed — the sentence the delivery is" ;
+      orexis:unmetWhen courier:parcelAstray ;
+      orexis:estimates courier:drivesOwed .
 }

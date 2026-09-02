@@ -1,37 +1,21 @@
-#  The goal, ratified as a DESIRE — the asserted block, the door built for exactly this.
-#  A want met by absence: unmet while any disk rests off peg C. Scope is orexis:AtEnd — the
-#  first honest writer of the achievement scope: nothing erodes while the puzzle sits, the
-#  plan's end is the whole of what is asked. Binary urgency, judged by the kernel from the
-#  pattern below; the optimal solution is the cheapest achiever, by no code of this world's.
-GRAPH <http://example.org/orexis/graph/desire/asserted> {
-  <http://example.org/orexis/world/hanoi#hanoi> <http://example.org/orexis#holds> <http://example.org/orexis/world/hanoi#every_disk_home> .
-  <http://example.org/orexis/world/hanoi#every_disk_home> a <http://example.org/orexis#Desire> ;
-      <http://example.org/orexis#bindsWhen> <http://example.org/orexis#AtEnd> ;
-      <http://www.w3.org/2000/01/rdf-schema#label>
-          "every disk home on peg C — the sentence the puzzle is" ;
-      <http://example.org/orexis#unmetWhen> <http://example.org/orexis/world/hanoi#a_disk_astray> ;
-      <http://example.org/orexis#estimates> <http://example.org/orexis/world/hanoi#disks_astray> .
-  <http://example.org/orexis/world/hanoi#a_disk_astray> <http://www.w3.org/ns/shacl#select>
-      """SELECT (1 AS ?astray) WHERE {
-          GRAPH $state { ?d <http://example.org/orexis/hanoi#on> ?rest . ?d (<http://example.org/orexis/hanoi#on>)+ ?p }
-          ?p a <http://example.org/orexis/hanoi#Peg> .
-          FILTER(?p != <http://example.org/orexis/hanoi#PegC>)
-      }""" ;
-      <http://www.w3.org/2000/01/rdf-schema#comment>
-          "rows while any disk's chain bottoms out on a peg that is not C" .
+@prefix : <http://example.org/orexis/world/hanoi#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-  #  HOW FAR STILL, in moves: every disk astray must move at least once more, so the count of
-  #  them never overstates what is left — which is all `orexis:estimates` asks. It is a WEAK
-  #  floor, deliberately: the optimal path moves disks away from C to free the ones beneath,
-  #  and a count cannot see that. Measured before the search followed its estimate (#492)
-  #  it guided nothing, since a bound that arrives in the last layer refuses nothing; with a
-  #  best-first open list the same count is what lets the bound arrive early.
-  <http://example.org/orexis/world/hanoi#disks_astray> <http://www.w3.org/ns/shacl#select>
-      """SELECT (COUNT(DISTINCT ?d) AS ?estimate) WHERE {
-          GRAPH $state { ?d <http://example.org/orexis/hanoi#on> ?rest . ?d (<http://example.org/orexis/hanoi#on>)+ ?p }
-          ?p a <http://example.org/orexis/hanoi#Peg> .
-          FILTER(?p != <http://example.org/orexis/hanoi#PegC>)
-      }""" ;
-      <http://www.w3.org/2000/01/rdf-schema#comment>
-          "the disks not yet home, each of which is at least one move from being so" .
+#  The goal, ratified as a DESIRE — the asserted block, the door built for exactly this.
+#  A want met by absence: unmet while any disk rests off peg C, by the pattern the hanoi
+#  package declares (`hanoi:diskAstray`), and approached by its count of disks astray
+#  (`hanoi:disksAstray`). The world says what it wants; the package says what that means and
+#  how far it is. Scope is orexis:AtEnd — the first honest writer of the achievement scope:
+#  nothing erodes while the puzzle sits, the plan's end is the whole of what is asked. Binary
+#  urgency, judged by the kernel from the pattern; the optimal solution is the cheapest
+#  achiever, by no code of this world's.
+GRAPH <http://example.org/orexis/graph/desire/asserted> {
+  :hanoi orexis:holds :every_disk_home .
+  :every_disk_home a orexis:Desire ;
+      orexis:bindsWhen orexis:AtEnd ;
+      rdfs:label "every disk home on peg C — the sentence the puzzle is" ;
+      orexis:unmetWhen hanoi:diskAstray ;
+      orexis:estimates hanoi:disksAstray .
 }

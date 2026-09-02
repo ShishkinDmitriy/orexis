@@ -128,6 +128,9 @@ it is a record wearing a bullet.
 - **A prune is only as good as when its bound arrives** — an admissible estimate refused
   nothing under breadth-first, because the first achiever came last, and the same estimate
   refused sixty percent of the courier's forks the day the search followed it.
+- **The desire owns the term and the package owns the measure** — a want says `unmetWhen`
+  and `estimates`; what the pattern means and that the estimate never overstates are promises
+  about the package's own actions and costs, which a world file cannot keep.
 - **A ceiling on compute is stated in the unit the search spends** — depth was that unit
   under breadth-first and stopped being it under best-first, and a budget of worlds is what a
   sovereign can size from a measured cost per fork.

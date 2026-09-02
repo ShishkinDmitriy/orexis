@@ -37,7 +37,8 @@ plug-in claim proven at its strongest form.
 
 - **A goal that is not a range** — the goal is a world-ratified desire in the asserted block,
   met by ABSENCE: `orexis:unmetWhen` a pattern binding while any disk's chain bottoms out on
-  a peg that is not C. The kernel lifts and judges it with no capability in the room —
+  a peg that is not C — the pattern itself the package's (`hanoi:diskAstray`) since the
+  measure moved home, the want still the world's. The kernel lifts and judges it with no capability in the room —
   machinery the deontic sitting built for the general avoidance, serving its second customer
   unchanged.
 - **A retraction that really deletes** — every effect before this replaced a reading with a
