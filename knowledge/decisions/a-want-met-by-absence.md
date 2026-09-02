@@ -77,6 +77,18 @@ the next legal candidate wins by construction, retiring the no-fallback seam. Me
 ms per node against an 8-triple law, ≈372 ms across a 7-node pass, paid only where a world
 ratifies law.
 
+# Amended, 2026-09-02 (#497)
+
+The negative twin is no longer only authored. A want written as a positive shape is compiled
+by the kernel into exactly the pattern this record describes — one select, rows are the
+violating focus nodes, judged by the store's own engine — so the two puzzle worlds that used to
+hand-write `unmetWhen` as a double negative now author `metWhen` and the kernel turns it inside
+out. What this record argued survives unchanged: met-or-not IS the pattern-want's whole measure,
+and the judging is one select. What it did not foresee is that the pattern could be derived
+rather than authored, and that for a want whose content is positive it should be. An authored
+`unmetWhen` remains the honest form for an aversion, whose content is the avoided state itself.
+See [desire](/domain/desire.md).
+
 # Seams left open
 
 - **`metWhen`-carrying asserted wants still reach `pursuing` through nobody.** The kernel

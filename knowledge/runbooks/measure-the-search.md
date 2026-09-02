@@ -132,6 +132,13 @@ insertion order because its answer IS the first keeper. Forks per solve, same pl
 | hanoi, 3 disks, no estimate, depth 8 | 56 | 56 — plain cost is uniform-cost search, which is breadth-first for unit moves |
 | hanoi, 3 disks, counting disks astray, depth 8 | 56 | **50** — a weak floor, since the optimal path moves disks away from C |
 
+**A shape want is judged by its compiled select** (#497): the judge's reader floors at ~67 ms
+per call and a plant pass judged every candidate world with it; the select the kernel compiles
+from the shape runs on the store's own engine in about a millisecond. Measured on the fern, dry,
+one pass at the default budget: **0.41 s with the judge per node, 0.21 s compiled**. Hanoi and
+the courier are unchanged, since their patterns were selects already — now derived rather than
+written. The judge is reached once per pass, for the winner's legality.
+
 **The ceiling is a budget of worlds** (#494): `orexis:budgetWorlds` on the agent, 32 by the
 engine's default, 64 in `world/hanoi` and 128 in `world/courier`. Multiply by the fork cost for
 the mutable slice above to size one in seconds. A spent budget answers with the best so far.

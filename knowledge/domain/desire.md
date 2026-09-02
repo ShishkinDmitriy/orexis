@@ -290,6 +290,18 @@ ranges over the whole menu as a call does: any lever might exit a state. Its har
 not a desire at all — a ratified violation shape, pruned in the search at every step. See
 [a-want-met-by-absence](/decisions/a-want-met-by-absence.md).
 
+**And the kernel writes that negation itself for a want authored as a shape** (#497). A shape
+is positive and universal — every parcel at its destination — and rows are existential, so
+judging a shape by rows means turning it inside out; the search does that once per pass, in
+`violation.py`, compiling the shape's constraints into the one select whose rows are the focus
+nodes that violate it, and runs that on the store's own engine at every candidate world for a
+millisecond where the judge's reader floors at tens. Computed, never stored. The two puzzle
+worlds author their goals positively — `courier:delivered`, `hanoi:solved` — and nobody writes
+"a parcel astray" by hand. Coverage is the fragment the derivations emit and a shape outside it
+refuses, named, never compiling to something quiet; `tests/test_violation.py` holds every
+compiled select to the judge on the same world. An authored `orexis:unmetWhen` stays the road
+for an aversion, whose content IS the avoided state.
+
 # A want that can say how far it still is
 
 A desire may also carry `orexis:estimates`: a node with one `sh:select` binding `?estimate`,

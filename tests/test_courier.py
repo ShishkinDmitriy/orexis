@@ -137,28 +137,32 @@ def test_the_search_follows_the_estimate_and_the_bound_then_refuses_work(monkeyp
 
 
 def test_the_world_asserts_the_want_and_the_package_owns_the_measure(monkeypatch):
-    """The desire owns the term, the package owns the select. `world/courier` says what it
-    wants and points at `courier:parcelAstray` and `courier:drivesOwed`; the texts live in the
-    package's ontology beside the actions they are a promise about, and the world's asserted
-    graph carries no select at all. The kernel reads them through the desire modality, which
-    holds public knowledge, and the estimate still says six from the corner."""
+    """The desire owns the term, the package owns the measure. `world/courier` says what it
+    wants and points at `courier:delivered` — a POSITIVE shape, on every parcel the cell it is
+    at equals the cell it is owed at — and at `courier:drivesOwed`; both live in the package's
+    ontology beside the actions they are promises about, and the world's asserted graph carries
+    neither a select nor a shape of its own. The kernel compiles the shape into the rows that
+    violate it (#497), so nobody writes "a parcel astray" by hand, and the estimate still says
+    six from the corner."""
     from orexis_agent_deliberation.planner import Planner
     from orexis_agent_progression.store import bindings
 
     agent = _driver(monkeypatch, "c0_0", "c1_2")
     inline = bindings(agent.desires.query_union(
         "SELECT ?n WHERE { GRAPH <http://example.org/orexis/graph/desire/asserted> "
-        "{ ?n sh:select ?t } }"))
+        "{ { ?n sh:select ?t } UNION { ?n a sh:NodeShape } } }"))
     assert not inline, f"the world file states no measure of its own: {inline}"
     where = bindings(agent.desires.query_union(
-        f"SELECT ?p ?e WHERE {{ <{WANT}> orexis:unmetWhen ?p ; orexis:estimates ?e }}"))[0]
-    assert where["p"].startswith(C) and where["e"].startswith(C), \
+        f"SELECT ?m ?e WHERE {{ <{WANT}> orexis:metWhen ?m ; orexis:estimates ?e }}"))[0]
+    assert where["m"].startswith(C) and where["e"].startswith(C), \
         "both point into the courier package's namespace"
 
     p = Planner(agent, agent.me)
     node = p._begin(_goal(agent))
     assert p._estimate_in(node, _goal(agent)) == 6.0
-    assert _goal(agent).state == "unmet", "and the pattern is still judged"
+    assert "FILTER NOT EXISTS" in p._unmet and "?this a <" + C + "Parcel>" in p._unmet, \
+        "the shape compiled to a select over every parcel"
+    assert _goal(agent).state == "unmet", "and the shape is judged by its compiled select"
 
 
 def test_a_want_that_declares_no_distance_is_unchanged(monkeypatch):

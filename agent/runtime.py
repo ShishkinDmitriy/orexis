@@ -32,6 +32,8 @@ import logging
 from datetime import datetime
 import signal
 
+from rdflib import URIRef
+
 from agent import config, genesis
 
 from assembly import loader
@@ -50,6 +52,13 @@ SELECT ?want ?avoided ?select WHERE {
   OPTIONAL { ?avoided sh:select ?select }
 }"""
 _SELECT_Q = "SELECT ?select WHERE { <%s> sh:select ?select } LIMIT 1"
+#  And the SHAPE-authored wants nobody speaks for (#497): a world may assert a positive want
+#  whose met-test is a shape the domain package declares; the kernel compiles it and judges.
+_SHAPED_Q = """
+SELECT ?want ?shape WHERE {
+  <%s> orexis:holds ?want .
+  ?want orexis:metWhen ?shape .
+}"""
 from orexis_agent_deliberation.deliberator import KEEPING_PICKS, Deliberator
 from orexis_agent_deliberation.desire import Desire, Desires
 from orexis_agent_deliberation.reviser import Reviser
@@ -340,7 +349,38 @@ class Agent:
             seen[row["want"]] = Desire(uri=row["want"],
                                        urgency=1.0 if entered else 0.0,
                                        state="unmet" if entered else "met")
+        #  A SHAPE WANT NO MODULE SPEAKS FOR (#497): the courier's and hanoi's, authored
+        #  positive and universal, pointing at a shape the package declares. Compiled once
+        #  per want into the select whose rows are its violations — computed, never stored —
+        #  and run on the store's own engine over the same view the judge would be handed.
+        #  Binary, like the pattern wants above: met is no row.
+        for row in bindings(self.desires.query_union(_SHAPED_Q % self.me.uri)):
+            if row["want"] in seen:
+                continue
+            try:
+                text = self._unmet_select(row["want"], row["shape"])
+                violated = bool(bindings(self.beliefs.query_over(
+                    text, *self.beliefs.public_graphs(), *self.beliefs.recorded_graphs())))
+            except Exception as exc:
+                log.error("%s: could not judge %s by its shape: %s", self.id, row["want"], exc)
+                violated = True
+            seen[row["want"]] = Desire(uri=row["want"],
+                                       urgency=1.0 if violated else 0.0,
+                                       state="unmet" if violated else "met")
         return sorted(seen.values(), key=lambda g: -g.urgency)
+
+    def _unmet_select(self, want: str, shape: str) -> str:
+        """The compiled violation select of an asserted want's shape, once per process: an
+        asserted want never changes while the agent runs, and compiling is a carve and a
+        string. Read from public knowledge, where a package's shape lives."""
+        from orexis_agent_deliberation.conformance import graph_from
+        from orexis_agent_deliberation.violation import unmet_select
+
+        cache = self.__dict__.setdefault("_compiled_wants", {})
+        if want not in cache:
+            public = graph_from(self.beliefs, *self.beliefs.public_graphs())
+            cache[want] = unmet_select(public.cbd(URIRef(shape)), URIRef(shape))
+        return cache[want]
 
     def ask(self, point: str, *args, **kwargs) -> list:
         """Every module's answer to one question, in module order, None left out.

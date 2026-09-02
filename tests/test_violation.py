@@ -1,0 +1,174 @@
+"""A want's shape, compiled to the select whose rows violate it — held to the judge by parity.
+
+Two engines read one declaration: the judge (rudof) validates the shape, the store's own engine
+runs the compiled select, and the search trusts the second because it costs a millisecond where
+the judge's reader floors at tens. That trust is exactly the disagreement this repository closed
+once already between pyshacl and the runtime (one-graph-both-engines-read), so every shipped
+want is held here to the judge on the same world, met and unmet alike — and a shape the
+compiler cannot say REFUSES rather than compiling to something quiet (#497).
+"""
+
+import pytest
+import rdflib
+
+from conftest import genesis_store
+
+SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
+STATE_GRAPH = "http://example.org/orexis/graph/sensed"
+HANOI = "http://example.org/orexis/hanoi#"
+HANOI_W = "http://example.org/orexis/world/hanoi#"
+COURIER = "http://example.org/orexis/courier#"
+COURIER_W = "http://example.org/orexis/world/courier#"
+
+
+def _agent(monkeypatch, world, name, pose=None, readings=None):
+    from agent import genesis, runtime
+
+    monkeypatch.setenv("INFLUX_BUCKET", f"test-{world}")
+    monkeypatch.setenv("INFLUX_TOKEN", f"test-token-{world}")
+    st = genesis_store(readings, world=world) if readings else genesis_store(world=world)
+    if pose:
+        st.update("INSERT DATA { GRAPH <%s> { %s } }" % (STATE_GRAPH, pose))
+    genesis.classify_own_graphs(st, world)
+    return runtime.Agent(name, st=st)
+
+
+def _both_verdicts(agent):
+    """For every shape-authored want the agent pursues: (want, compiled says unmet, judge says
+    unmet). Wants that are not shapes — patterns, obligations, calls — are not this file's."""
+    from orexis_agent_deliberation.judge import judge
+    from orexis_agent_deliberation.planner import Planner
+    from orexis_agent_progression.store import bindings
+
+    out = []
+    for desire in agent.pursuing():
+        p = Planner(agent, agent.me)
+        node = p._begin(desire)
+        shape = p._shape_of(desire)
+        if shape is None:
+            continue
+        compiled = bool(bindings(agent.beliefs.query_over(
+            p._unmet, *p._invariant_graphs, STATE_GRAPH)))
+        results, _ = judge(p._border(node), shape)
+        judged = bool(list(results.subjects(rdflib.RDF.type, SH.ValidationResult)))
+        out.append((desire.uri.rsplit("#", 1)[-1], compiled, judged, desire.state))
+    return out
+
+
+CASES = {
+    "fern, dry": ("simulation", "fern", None, {"fern": 0.10}),
+    "fern, watered": ("simulation", "fern", None, {"fern": 0.40}),
+    "loner's gardener": ("loner", "gardener", None, None),
+    "hanoi, one disk astray": ("hanoi", "hanoi",
+                               f"<{HANOI_W}disk_1> <{HANOI}on> <{HANOI}PegA> .", None),
+    "hanoi, one disk home": ("hanoi", "hanoi",
+                             f"<{HANOI_W}disk_1> <{HANOI}on> <{HANOI}PegC> .", None),
+    "hanoi, three astray": ("hanoi", "hanoi",
+                            f"<{HANOI_W}disk_3> <{HANOI}on> <{HANOI}PegA> . "
+                            f"<{HANOI_W}disk_2> <{HANOI}on> <{HANOI_W}disk_3> . "
+                            f"<{HANOI_W}disk_1> <{HANOI}on> <{HANOI_W}disk_2> .", None),
+    "courier, parcel astray": ("courier", "courier",
+                               f"<{COURIER_W}van> <{COURIER}at> <{COURIER_W}c0_0> . "
+                               f"<{COURIER_W}parcel> <{COURIER}at> <{COURIER_W}c1_2> .", None),
+    "courier, parcel aboard": ("courier", "courier",
+                               f"<{COURIER_W}van> <{COURIER}at> <{COURIER_W}c3_3> . "
+                               f"<{COURIER_W}parcel> <{COURIER}carriedBy> <{COURIER_W}van> .",
+                               None),
+    "courier, delivered": ("courier", "courier",
+                           f"<{COURIER_W}van> <{COURIER}at> <{COURIER_W}c3_3> . "
+                           f"<{COURIER_W}parcel> <{COURIER}at> <{COURIER_W}c3_3> .", None),
+}
+
+
+@pytest.mark.parametrize("case", list(CASES))
+def test_the_compiled_select_agrees_with_the_judge(monkeypatch, case):
+    world, name, pose, readings = CASES[case]
+    agent = _agent(monkeypatch, world, name, pose, readings)
+    verdicts = _both_verdicts(agent)
+    assert verdicts, f"{case}: no shape-authored want to compare — the case asserts nothing"
+    for want, compiled, judged, state in verdicts:
+        assert compiled == judged, \
+            f"{case}, {want}: compiled says {'unmet' if compiled else 'met'}, " \
+            f"the judge says {'unmet' if judged else 'met'}"
+        #  A sensing want speaks its own vocabulary — `stale`, `unmeasured` — beside met and
+        #  unmet; whatever the word, a want the module calls anything but met is one the
+        #  compiled select must find violated, and a met one it must find clean.
+        assert (state != "met") == compiled, \
+            f"{case}, {want}: pursuing() reports {state} against the compiled {compiled}"
+
+
+def test_both_answers_are_reached_so_the_parity_is_not_vacuous(monkeypatch):
+    """A parity that only ever saw one answer would agree by accident. Delivered and astray,
+    home and astray, watered and dry are all above; this pins that both verdicts occur."""
+    seen = set()
+    for case in ("hanoi, one disk home", "hanoi, one disk astray",
+                 "courier, delivered", "courier, parcel aboard"):
+        world, name, pose, readings = CASES[case]
+        for _, compiled, _, _ in _both_verdicts(_agent(monkeypatch, world, name, pose, readings)):
+            seen.add(compiled)
+    assert seen == {True, False}
+
+
+def test_a_carried_parcel_is_astray_by_the_shape_alone(monkeypatch):
+    """Positive shape, no negation authored anywhere: `courier:at` must equal
+    `courier:destination` on every parcel. Aboard the van a parcel is at no cell, so the
+    equality fails — carrying it past the door is not delivering it — and the compiled
+    select says so without anyone having written "astray"."""
+    world, name, pose, readings = CASES["courier, parcel aboard"]
+    agent = _agent(monkeypatch, world, name, pose, readings)
+    assert next(d for d in agent.pursuing()
+                if d.uri.endswith("every_parcel_delivered")).state == "unmet"
+
+
+def test_a_shape_the_compiler_cannot_say_refuses():
+    """A component outside the fragment — `sh:closed` here — raises, named. Never an empty
+    pattern, which would read as met for ever: the quiet direction to be wrong."""
+    from orexis_agent_deliberation.violation import Unsupported, unmet_select
+
+    g = rdflib.Graph()
+    g.parse(data="""
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix ex: <http://example.org/x#> .
+        ex:S a sh:NodeShape ; sh:targetClass ex:Thing ; sh:closed true ;
+            sh:property [ sh:path ex:p ; sh:hasValue ex:v ] .
+        ex:T a sh:NodeShape ; sh:targetClass ex:Thing ;
+            sh:property [ sh:path ex:p ; sh:minCount 3 ] .
+        ex:U a sh:NodeShape ; sh:property [ sh:path ex:p ; sh:hasValue ex:v ] .
+    """, format="turtle")
+    ex = rdflib.Namespace("http://example.org/x#")
+    with pytest.raises(Unsupported, match="closed"):
+        unmet_select(g, ex.S)
+    with pytest.raises(Unsupported, match="minCount"):
+        unmet_select(g, ex.T)
+    with pytest.raises(Unsupported, match="targets nothing"):
+        unmet_select(g, ex.U)
+
+
+def test_the_fragment_compiles_to_readable_sparql():
+    """The shapes the derivations emit, in one small shape: a sequence path with an inverse
+    step, a qualified value shape with min count one, another with max count zero and a
+    bound inside, a hasValue, an equals. Each becomes the pattern the SHACL specification
+    defines as its violation, and each branch repeats the target so its filters see ?this."""
+    from orexis_agent_deliberation.violation import unmet_select
+
+    g = rdflib.Graph()
+    g.parse(data="""
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix ex: <http://example.org/x#> .
+        ex:S a sh:NodeShape ; sh:targetNode ex:me ;
+            sh:property [ sh:path ( ex:for [ sh:inversePath ex:of ] ) ;
+                          sh:qualifiedMinCount 1 ;
+                          sh:qualifiedValueShape [ sh:property [ sh:path ex:prop ; sh:hasValue ex:m ] ] ] ;
+            sh:property [ sh:path ( ex:for [ sh:inversePath ex:of ] ) ;
+                          sh:qualifiedMaxCount 0 ;
+                          sh:qualifiedValueShape [ sh:property [ sh:path ex:prop ; sh:hasValue ex:m ] ;
+                                                   sh:property [ sh:path ex:value ; sh:maxExclusive 0.3 ] ] ] ;
+            sh:property [ sh:path ex:at ; sh:equals ex:home ] .
+    """, format="turtle")
+    text = unmet_select(g, rdflib.URIRef("http://example.org/x#S"))
+    assert text.startswith("SELECT DISTINCT ?this WHERE {")
+    assert text.count("VALUES ?this { <http://example.org/x#me> }") == 4, \
+        "the target is repeated in every branch: one for the min, one for the max, two for equals"
+    assert "(<http://example.org/x#for>/^(<http://example.org/x#of>))" in text
+    assert "FILTER NOT EXISTS { ?this (<http://example.org/x#for>/^(<http://example.org/x#of>)) ?v" in text
+    assert "FILTER(!(" in text and "< \"0.3\"^^<http://www.w3.org/2001/XMLSchema#decimal>" in text

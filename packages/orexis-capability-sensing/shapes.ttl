@@ -335,6 +335,11 @@ sensing:DeducedRegionShape a sh:NodeShape ;
                 UNION
                 { ?agent <http://example.org/orexis#holds> ?this .
                   ?this a <http://www.w3.org/ns/shacl#NodeShape> . }
+                #  A DEDUCED shape is about one agent's state and says so with sh:targetNode.
+                #  A domain package's shape — the courier's "delivered", on every parcel —
+                #  targets a class and is about no property; it is a want the kernel compiles
+                #  (#497), not a region, and this gate has nothing to say about it.
+                ?this <http://www.w3.org/ns/shacl#targetNode> ?about .
             }
         """ ] ;
     sh:property [ sh:path <http://www.w3.org/ns/ssn/forProperty> ;

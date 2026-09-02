@@ -38,7 +38,7 @@ from dataclasses import dataclass, field
 import rdflib
 from rdflib import RDF, URIRef
 
-from . import effects, signature, trace
+from . import effects, signature, trace, violation
 from .beliefs import Picks
 from orexis_agent_progression.act import Act, Step
 from orexis_agent_deliberation.desire import Desire
@@ -238,6 +238,16 @@ class Planner:
         pattern = self._avoided_pattern(desire)
         if pattern is not None:
             return not self._pattern_binds(pattern, node.graph)
+        if self._unmet is not None:
+            #  A SHAPE-AUTHORED WANT, judged by its compiled violation select (#497): the
+            #  shape is positive and universal, the select is its negation as rows, the
+            #  kernel compiled it once in `_begin`, and the store's own engine runs it at
+            #  this node's world — public knowledge, the records, and this node's readings
+            #  as the default graph, the same view the judge was handed as one flat text.
+            #  About a millisecond where the judge's reader floors at tens; held to the judge
+            #  by parity in tests/test_violation.py.
+            return not bindings(self.imaginarium.query_over(
+                self._unmet, *self._invariant_graphs, node.graph))
         shape = self._shape_of(desire)
         if shape is None:
             #  A obligation's goal state is a PATTERN over the record, not a distance (#255): this
@@ -347,17 +357,29 @@ class Planner:
         read, for years, as a note that the met-check is about one; the shapes snapshot is per
         pass (`_begin`), so a rebuild mid-search cannot hand two depths two different wants.
         """
+        root = self._shape_root(desire)
+        if root is None:
+            return None
+        #  THE PACKAGE OWNS THE MEASURE: a world's asserted want may point at a shape the
+        #  domain package declares — public knowledge, in the flat base this pass built,
+        #  and not in the wants snapshot — so the carve is asked of whichever holds it.
+        source = self._shapes if (root, RDF.type, _SH.NodeShape) in self._shapes else self._base
+        return source.cbd(root)
+
+    def _shape_root(self, desire: Desire):
+        """The node the desire's shape hangs from, or None where it has none."""
         node = URIRef(desire.uri)
         #  The met-test hangs OFF the desire node since the reification — a desire is a node
         #  carrying its shape, not the shape itself — so the walk is one hop of `orexis:metWhen`.
         #  A node that IS a shape stays legal: an asserted root desire is a bare NodeShape a
         #  world's TriG may state, and it never grew a desire node around it.
         met = self._shapes.value(node, _AG.metWhen)
-        if met is not None and (met, RDF.type, _SH.NodeShape) in self._shapes:
-            return self._shapes.cbd(met)
-        if (node, RDF.type, _SH.NodeShape) not in self._shapes:
-            return None
-        return self._shapes.cbd(node)
+        if met is not None and ((met, RDF.type, _SH.NodeShape) in self._shapes
+                                or (met, RDF.type, _SH.NodeShape) in self._base):
+            return met
+        if (node, RDF.type, _SH.NodeShape) in self._shapes:
+            return node
+        return None
 
     # --- the search --------------------------------------------------------------------------
 
@@ -849,6 +871,7 @@ class Planner:
             f"VALUES ?g {{ <{DESIRE_DERIVED_GRAPH}> <{DESIRE_ASSERTED_GRAPH}> }} "
             f"GRAPH ?g {{ ?s ?p ?o }} }}"), ())
         base = self._beliefs()
+        self._base = base
         #  The wants ride in the flat world too, exactly as they did when the constraint graph
         #  was public: `_offer`'s legality check validates the world the plan would reach, and
         #  the capability shapes demand the regions — a world without them is refused for a
@@ -888,6 +911,13 @@ class Planner:
             + list(self.agent.beliefs.recorded_graphs()) if iri != STATE_GRAPH)
         self._invariant = (self.imaginarium.dump_nt(*self._invariant_graphs)
                            + self._shapes.serialize(format="nt"))
+        #  THE WANT'S VIOLATION SELECT, compiled once for the pass (#497) — None where the
+        #  want is not a shape (a pattern want, an obligation, a call). A shape this compiler
+        #  cannot say REFUSES here, loudly, rather than judging by something quieter: a want
+        #  that silently read as met is the failure the compiler exists to rule out.
+        shape = self._shape_of(desire)
+        self._unmet = (violation.unmet_select(shape, self._shape_root(desire))
+                       if shape is not None else None)
         here = _Node(graph=STATE_GRAPH)
         here.estimate = self._estimate_in(here, desire)
         self._base_forbidden = (self._forbidden_keys(here)

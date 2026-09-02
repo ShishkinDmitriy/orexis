@@ -243,6 +243,21 @@ class Store:
     # per agent, the distinction it drew — "as myself" versus "as admin" — has no meaning.
     query_all = query
 
+    def query_over(self, sparql: str, *graphs: str) -> dict:
+        """Read with the default graph being EXACTLY these graphs, merged.
+
+        For a text that carries no `GRAPH` clause and no `$state` — a compiled violation
+        select (`violation.py`) — asked about one world: public knowledge, this agent's
+        records and ONE readings graph, which is the same view the judge is handed as a flat
+        text. The caller names the readings graph, because in the imaginarium every node of
+        a search has one and an unqualified union would read every sibling world at once.
+        """
+        out = io.BytesIO()
+        self._store.query(PREFIXES + sparql,
+                          default_graph=[ox.NamedNode(g) for g in graphs]).serialize(
+            output=out, format=ox.QueryResultsFormat.JSON)
+        return json.loads(out.getvalue())
+
     def query_union(self, sparql: str) -> dict:
         """Read with the default graph as the union of EVERYTHING this store holds.
 

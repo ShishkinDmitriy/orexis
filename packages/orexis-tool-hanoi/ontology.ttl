@@ -36,18 +36,15 @@
     rdfs:comment "What a disk rests on — another disk, or a peg. RUNTIME STATE, never authored in a world: it lives in the state graph, effects retract and add it, and the chain (hanoi:on)+ down to a peg is what 'on peg P' means everywhere in this package's queries." .
 
 #  WHAT SOLVING MEANS, AND HOW FAR IT IS — the puzzle's, not a world's. A world asserts the
-#  want and points here; the selects used to sit inline in `world/hanoi/desire.ttl`, and the
-#  courier package's ontology says why they moved. Both are run by the kernel with $state
-#  naming whichever world is being judged.
+#  want and points here; both used to sit inline in `world/hanoi/desire.ttl`, and the courier
+#  package's ontology says why they moved. The shape is compiled by the kernel; the estimate
+#  is run by it with $state naming whichever world is being judged.
 
-:diskAstray sh:select """
-        SELECT (1 AS ?astray) WHERE {
-            GRAPH $state { ?d hanoi:on ?rest . ?d (hanoi:on)+ ?p }
-            ?p a hanoi:Peg .
-            FILTER(?p != hanoi:PegC)
-        }""" ;
-    rdfs:label "a disk whose chain bottoms out off peg C" ;
-    rdfs:comment "Rows while any disk's chain bottoms out on a peg that is not C. The object of a want's orexis:unmetWhen." .
+:solved a sh:NodeShape ;
+    rdfs:label "every disk's chain bottoms out on peg C" ;
+    rdfs:comment "What solving MEANS, said positively: on every disk IN PLAY — one resting on something — following `hanoi:on` one or more times reaches peg C. Targeted on the subjects of `on` rather than on the class, because a world declares its disks and a puzzle may pose fewer: the two-disk puzzle is posed on a world that declares three, and a disk resting on nothing is not astray, it is not in play. The kernel compiles this into the select whose rows are the disks astray (#497). The object of a want's orexis:metWhen." ;
+    sh:targetSubjectsOf :on ;
+    sh:property [ sh:path [ sh:oneOrMorePath :on ] ; sh:hasValue :PegC ] .
 
 :disksAstray sh:select """
         SELECT (COUNT(DISTINCT ?d) AS ?estimate) WHERE {

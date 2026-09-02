@@ -134,8 +134,21 @@ Every figure here was computed, so this is arithmetic rather than authorship —
                   ?this a <http://www.w3.org/ns/shacl#NodeShape> . }
             }
         """ ] ;
-    sh:property [ sh:path sh:targetNode ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
-                  sh:message "a deduced shape must say whose state it is about" ] ;
+    #  BY NODE, BY CLASS, OR BY A PREDICATE'S ENDS (#497): a deduced shape names the one agent
+    #  whose state it is about; a domain package's shape — the courier's "delivered", on every
+    #  parcel; hanoi's "solved", on every disk resting on something — names a class or a
+    #  predicate, which says whose state it is about just as well. Any, and never none.
+    sh:property [ sh:path sh:targetNode ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "a deduced shape is about one agent, named" ] ;
+    sh:sparql [
+        sh:message "a held shape must say whose state it is about — a target node, a class, or the subjects or objects of a predicate" ;
+        sh:select """
+            SELECT $this WHERE {
+                FILTER NOT EXISTS { $this <http://www.w3.org/ns/shacl#targetNode> ?n }
+                FILTER NOT EXISTS { $this <http://www.w3.org/ns/shacl#targetClass> ?c }
+                FILTER NOT EXISTS { $this <http://www.w3.org/ns/shacl#targetSubjectsOf> ?s }
+                FILTER NOT EXISTS { $this <http://www.w3.org/ns/shacl#targetObjectsOf> ?o }
+            }""" ] ;
     #  WHERE THE ENGINE WILL READ IT, which differs by constraint kind and was measured both
     #  ways round on pySHACL 0.40.1. A core `sh:property` constraint takes its severity from
     #  the property shape and ignores the node shape's; a `sh:sparql` constraint does the

@@ -20,7 +20,9 @@ keyed on `cost + estimate` — the A* key, so a want that
 declares [how far it still is](/domain/desire.md) is walked toward and the first achiever's cost
 then refuses the rest — and siblings are alive at once, which is why a world is a value rather
 than a mutable state. It was breadth-first by layer until #492, and measured that way the
-estimate pruned nothing: the first achiever arrived in the last layer.
+estimate pruned nothing: the first achiever arrived in the last layer. A shape-authored want
+is judged at every node by the select the kernel compiled from its shape (#497), on the store's
+own engine; the judge is reached once per pass, for the winner's legality.
 
 # What it reads and writes
 
