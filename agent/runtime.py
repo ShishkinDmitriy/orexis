@@ -386,7 +386,7 @@ class Agent:
         from public knowledge, where a package's shape lives — and the asserted block is
         public too. `entered` picks the conformance select, for a shape under `unmetWhen`."""
         from orexis_agent_deliberation.conformance import graph_from
-        from orexis_agent_deliberation.violation import entered_select, unmet_select
+        from orexis_agent_progression.violation import entered_select, unmet_select
 
         cache = self.__dict__.setdefault("_compiled_wants", {})
         if (want, entered) not in cache:

@@ -38,12 +38,13 @@ from dataclasses import dataclass, field
 import rdflib
 from rdflib import RDF, URIRef
 
-from . import effects, relevance, signature, trace, violation
+from . import effects, relevance, signature, trace
 from .beliefs import Picks
 from orexis_agent_progression.act import Act, Step
 from orexis_agent_deliberation.desire import Desire
 from .afforder import affordances_of, wants_of
 from .imaginarium import Imaginarium
+from orexis_agent_progression import violation
 from orexis_agent_progression.store import Raw, bind, bindings
 from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)

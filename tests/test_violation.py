@@ -123,7 +123,7 @@ def test_a_carried_parcel_is_astray_by_the_shape_alone(monkeypatch):
 def test_a_shape_the_compiler_cannot_say_refuses():
     """A component outside the fragment — `sh:closed` here — raises, named. Never an empty
     pattern, which would read as met for ever: the quiet direction to be wrong."""
-    from orexis_agent_deliberation.violation import Unsupported, unmet_select
+    from orexis_agent_progression.violation import Unsupported, unmet_select
 
     g = rdflib.Graph()
     g.parse(data="""
@@ -149,7 +149,7 @@ def test_the_fragment_compiles_to_readable_sparql():
     step, a qualified value shape with min count one, another with max count zero and a
     bound inside, a hasValue, an equals. Each becomes the pattern the SHACL specification
     defines as its violation, and each branch repeats the target so its filters see ?this."""
-    from orexis_agent_deliberation.violation import unmet_select
+    from orexis_agent_progression.violation import unmet_select
 
     g = rdflib.Graph()
     g.parse(data="""

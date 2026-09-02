@@ -293,7 +293,7 @@ not a desire at all — a ratified violation shape, pruned in the search at ever
 **And the kernel writes that negation itself for a want authored as a shape** (#497). A shape
 is positive and universal — every parcel at its destination — and rows are existential, so
 judging a shape by rows means turning it inside out; the search does that once per pass, in
-`violation.py`, compiling the shape's constraints into the one select whose rows are the focus
+`packages/orexis-agent-progression/violation.py`, compiling the shape's constraints into the one select whose rows are the focus
 nodes that violate it, and runs that on the store's own engine at every candidate world for a
 millisecond where the judge's reader floors at tens. Computed, never stored. The two puzzle
 worlds author their goals positively — `courier:delivered`, `hanoi:solved` — and nobody writes

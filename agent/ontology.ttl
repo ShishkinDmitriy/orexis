@@ -827,9 +827,12 @@ orexis:outcome a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:rang
 #  bidder with a private timer and a per-reading check; a plan's next step is this road with
 #  the previous step's prediction as the condition (#510). The condition is DATA, so a
 #  sovereign asking the ledger sees what an intention waits for.
-orexis:until a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:string ;
+orexis:until a owl:ObjectProperty ; rdfs:domain orexis:Intention ;
     rdfs:label "held until" ;
-    rdfs:comment "A SELECT over this agent's beliefs; while it binds nothing the intention is held, and the first time it binds the act is taken. Removed when the hold ends, so a taken act is an ordinary standing intention." .
+    rdfs:comment "The condition an intention is held for, released when it HOLDS: a node carrying one sh:select over this agent's beliefs (released when it binds), or a sh:NodeShape (released when its focus node conforms — compiled by the kernel into that select, #514). One of orexis:until / orexis:untilNot per hold, never both. Removed when the hold ends, so a taken act is an ordinary standing intention." .
+orexis:untilNot a owl:ObjectProperty ; rdfs:domain orexis:Intention ;
+    rdfs:label "held until it stops holding" ;
+    rdfs:comment "The negative twin (#514): a node carrying one sh:select (released when it binds NOTHING) or a sh:NodeShape (released when its focus node VIOLATES) — hold while the round is open, hold while the board sleeps. The mirror of orexis:until exactly as orexis:unmetWhen mirrors orexis:metWhen." .
 orexis:whenLapsed a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:string ;
     rdfs:label "when the deadline passes first" ;
     rdfs:comment "`take` — the act is taken anyway, as lapsed (a held claim redeems blind rather than never) — or `drop`, the intention resolved as dropped." .

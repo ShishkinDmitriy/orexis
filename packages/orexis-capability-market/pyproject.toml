@@ -10,6 +10,8 @@ version = "0.1.0"
 description = "The market: bidding, hosting, and the matching family — pay-as-bid and uniform-price"
 requires-python = ">=3.10"
 dependencies = [
+    # The held claim\'s condition is a SHAPE the bidder builds (#514), and a shape is RDF.
+    "rdflib>=7",
     "orexis",  # assembly (the manifest) and, where there is behaviour, the kernel
     "orexis-agent-progression",  # Timer, Act, Commitment, and take_standing — progression's contract
     "orexis-agent-deliberation",  # effects and the reviser's door — deliberation's contract
