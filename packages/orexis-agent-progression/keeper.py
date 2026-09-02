@@ -356,7 +356,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         a select text over this agent's beliefs, or a SHAPE (an rdflib graph whose one named
         `sh:NodeShape` is the condition) compiled here into the select the store runs —
         conformance for `until`, violation for `until_not`. The ledger keeps what was
-        written, select or shape, so a sovereign asking sees what an intention waits for.
+        written, select or shape, ON THE ACT beside its window — the intention is the
+        commitment, the act is what is executed and when — so a sovereign asking sees what
+        an act waits for.
         """
         if (until is None) == (until_not is None):
             raise ValueError("a hold is `until` or `until_not`, exactly one")
@@ -365,10 +367,13 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         predicate = kernel("until") if until is not None else kernel("untilNot")
         condition = until if until is not None else until_not
         node, triples = self._condition_triples(intention_uri, condition)
+        #  ON THE ACT, beside its window: the intention is the commitment, the act is what is
+        #  executed and when, and a condition is the other half of `notBefore`.
         self.agent.intentions.update(f"""
-INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{intention_uri}> <{predicate}> <{node}> ; <{kernel("whenLapsed")}> "{when_lapsed}" .
-  {triples} }} }}""")
+INSERT {{ GRAPH <{self.graph}> {{
+  ?act <{predicate}> <{node}> ; <{kernel("whenLapsed")}> "{when_lapsed}" .
+  {triples} }} }}
+WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act }} }}""")
         if not_after is not None:
             self.window(intention_uri, not_after)
             delay = (not_after - datetime.now(timezone.utc)).total_seconds()
@@ -397,7 +402,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         rows does (an `until_not` select)."""
         rows = bindings(self.agent.intentions.query_union(f"""
 SELECT ?i ?p ?node ?select ?shape WHERE {{ GRAPH <{self.graph}> {{
-  ?i ?p ?node ; <{kernel("whenLapsed")}> ?when .
+  ?i <{kernel("by")}> ?act .
+  ?act ?p ?node ; <{kernel("whenLapsed")}> ?when .
   FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>))
   OPTIONAL {{ ?node sh:select ?select }}
   OPTIONAL {{ ?node a sh:NodeShape . BIND(true AS ?shape) }}
@@ -480,7 +486,8 @@ SELECT ?i ?p ?node ?select ?shape WHERE {{ GRAPH <{self.graph}> {{
 
     def _when_lapsed(self, intention_uri: str) -> str:
         rows = bindings(self.agent.intentions.query_union(f"""
-SELECT ?when WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("whenLapsed")}> ?when }} }}"""))
+SELECT ?when WHERE {{ GRAPH <{self.graph}> {{
+  <{intention_uri}> <{kernel("by")}> ?act . ?act <{kernel("whenLapsed")}> ?when }} }}"""))
         return rows[0]["when"] if rows else "take"
 
     def _release(self, standing: Standing, because: str) -> None:
@@ -499,8 +506,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{BECAUSE_OF}> {_literal
         #  The condition's own triples stay in the ledger as the record of what was waited
         #  for; only the hold — the pointer and the lapse rule — goes.
         self.agent.intentions.update(f"""
-DELETE {{ GRAPH <{self.graph}> {{ <{intention_uri}> ?p ?c ; <{kernel("whenLapsed")}> ?w }} }}
-WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> ?p ?c ; <{kernel("whenLapsed")}> ?w .
+DELETE {{ GRAPH <{self.graph}> {{ ?act ?p ?c ; <{kernel("whenLapsed")}> ?w }} }}
+WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act .
+          ?act ?p ?c ; <{kernel("whenLapsed")}> ?w .
           FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>)) }} }}""")
 
     def _on_written(self) -> None:

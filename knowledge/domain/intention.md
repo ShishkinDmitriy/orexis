@@ -25,7 +25,9 @@ description: >-
 select over the agent's beliefs and a deadline; it re-asks the select whenever a belief lands
 and keeps the deadline on its scheduler. The first time the select binds, the act is handed to
 whoever takes it; if the deadline passes first, the act is taken as lapsed or dropped, as the
-adopter said. The condition is data on the ledger (`orexis:until`, or its twin
+adopter said. The condition sits on the ACT, beside its window — an intention is the
+commitment, which want and why; the act is what is executed and when, and a condition is the
+other half of `notBefore` — as data on the ledger (`orexis:until`, or its twin
 `orexis:untilNot`, released when the condition stops holding — hold while the round is open),
 and either may be written as a select or as a SHAPE, which the keeper compiles to the select
 it runs (conformance for `until`, violation for `untilNot`) while the ledger keeps the shape,

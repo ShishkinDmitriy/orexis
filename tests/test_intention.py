@@ -468,8 +468,9 @@ def test_a_hold_may_be_a_shape_and_may_release_when_a_condition_stops(make):
     assert held[0][1] is True and "FILTER EXISTS" in held[0][2] and held[0][3], \
         "compiled to the conformance select, and run as a compiled one"
     stored = bindings(fern.intentions.query_union(f"""SELECT ?n WHERE {{ GRAPH <{keeper.graph}> {{
-        <{shaped}> orexis:until ?n . ?n a sh:NodeShape }} }}"""))
-    assert stored and stored[0]["n"] == str(root), "the ledger keeps the shape as what was waited for"
+        <{shaped}> orexis:by ?act . ?act orexis:until ?n . ?n a sh:NodeShape }} }}"""))
+    assert stored and stored[0]["n"] == str(root), \
+        "the ledger keeps the shape as what the ACT waits for — beside its window, not on the intention"
 
     fern.beliefs.update(f"INSERT DATA {{ GRAPH <{graph}> {{ <urn:flag> <urn:p> 1 }} }}")
     assert keeper.held() == [], "the flag came to conform: released"
