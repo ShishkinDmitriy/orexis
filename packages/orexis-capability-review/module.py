@@ -281,6 +281,20 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
      review:windowsHeld {held} ;
      {f'review:sampleGapS {decimal(gap)} ;' if gap else ''}
      review:windowSeq {window.seq or 0} .""")
+        #  RESIDUALS (#518): what each answered step predicted against what the world showed,
+        #  off the agent's own ledger — the reviewer is the one place the ledger meets the
+        #  belief base, and a package's rule reads the evidence graph, never the ledger.
+        ledger = getattr(self.agent, "intentions", None)
+        for row in (bindings(ledger.query_union("""
+SELECT ?action ?p ?o ?b ?t WHERE {
+  ?i orexis:step ?s . ?s orexis:fills ?action ; orexis:predictedValue ?p ;
+     orexis:observedValue ?o ; orexis:endVerifiedAt ?t .
+  OPTIONAL { ?s orexis:baselineValue ?b } } ORDER BY DESC(?t) LIMIT 20""")) if ledger is not None else []):
+            baseline = f"review:baseline {decimal(float(row['b']))} ;" if row.get("b") else ""
+            lines.append(f"""
+  [] a review:Residual ; review:ofAction <{row['action']}> ;
+     review:predicted {decimal(float(row['p']))} ; review:observed {decimal(float(row['o']))} ;
+     {baseline} review:verifiedAt "{row['t']}"^^xsd:dateTime .""")
         for r in ranges.values():
             lines.append(f"""
   [] a review:Range ; review:onTerm <{r.term}> ;
@@ -389,9 +403,19 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         return True
 
     def _write(self, graph: str, belief_term: str, value) -> None:
+        """Replace the pick, IN THE DATATYPE THE OLD ONE HAD. A cadence is an integer and a
+        conversion a decimal, and the shapes hold each to its own; a whole-valued decimal
+        written as an integer (5.0 as 5) failed the water shape the first time a conversion
+        was re-picked (#518), so the literal follows the record rather than the number."""
+        rows = bindings(self.agent.beliefs.query(f"""
+SELECT (DATATYPE(?old) AS ?dt) WHERE {{ GRAPH <{graph}> {{
+  <{self.agent.me.uri}> <{belief_term}> ?old }} }} LIMIT 1"""))
+        integer = bool(rows) and str(rows[0].get("dt", "")).endswith("integer")
+        literal = _literal(value) if integer or isinstance(value, bool) else \
+            f'"{float(value)}"^^xsd:decimal'
         self.agent.beliefs.update(f"""
 DELETE {{ GRAPH <{graph}> {{ <{self.agent.me.uri}> <{belief_term}> ?old }} }}
-INSERT {{ GRAPH <{graph}> {{ <{self.agent.me.uri}> <{belief_term}> {_literal(value)} }} }}
+INSERT {{ GRAPH <{graph}> {{ <{self.agent.me.uri}> <{belief_term}> {literal} }} }}
 WHERE  {{ GRAPH <{graph}> {{ <{self.agent.me.uri}> <{belief_term}> ?old }} }}""")
 
     # --- memory, which is also the schedule -------------------------------------------------

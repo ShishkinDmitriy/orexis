@@ -40,6 +40,7 @@
 :fern_agent
     market:hasEndowment 100.0 ;
     water:litresPerFraction 2.0 ;  # what it BELIEVES its pot takes (the world knows the truth)
+    market:tolerance 0.5 ;         # how close a lot must land to what that conversion predicts (#518)
     water:maxValuePerL 0.80 .      # willingness to pay at peak urgency — never disclosed
 
 ##  How often it says how it is — belief base size, reading freshness, silent write failures.

@@ -30,6 +30,9 @@ elements are not [acts](/domain/act.md). The sovereign's ruling, 2026-09-02.
   true and false, in the plan's own canonical form — which is what the world is held to once it
   is taken, within the actor's [tolerance](/domain/tolerance.md), and why no actor sizes an
   expectation of its own
+- once answered, the number it predicted and the number the world showed
+  (`orexis:predictedValue`, `orexis:observedValue`) — the residual [review](/domain/review.md)
+  reads, met or unmet alike
 
 # What it is not
 

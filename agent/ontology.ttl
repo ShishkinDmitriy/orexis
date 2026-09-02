@@ -70,6 +70,8 @@ orexis:desireUrgency a assembly:Extension ;
     assembly:signature "(desire, query, state, value=…) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
 orexis:answer a assembly:Extension ;
     assembly:signature "(keyed_class, key, carried, since, baseline, tolerance) -> Graph | None" ; orexis:row orexis:Progression ; rdfs:label "answer" ; rdfs:comment "What would an observation that ANSWERS this predicted fact look like? Asked for each KEYED fact a step predicts (a class some package declared `orexis:keyedBy`): the class, its key values and what it carries, as the step's prediction states them. A sh:NodeShape on the subject, conforming when a reading of the property later than `since` lies within `tolerance` of the predicted movement from the baseline — sensing's, because what a reading is is sensing's (#516, #518). The keeper holds the step on it; None is no opinion, and the first opinion wins." .
+orexis:witness a assembly:Extension ;
+    assembly:signature "(keyed_class, key) -> float | None" ; orexis:row orexis:Progression ; rdfs:label "witness" ; rdfs:comment "What value does the world show NOW for this keyed fact — the reading a step predicted, as it stands at the verdict? Asked once per verdict for the residual (observed against predicted) the reviewer reads; sensing's, because what a reading is is sensing's (#518). None is no opinion." .
 orexis:size a assembly:Extension ;
     assembly:signature "(query, graph, row) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "size" ; rdfs:comment "How big would the act this row commits to be? Asked of the row's taker before it is simulated." .
 orexis:take a assembly:Extension ;
@@ -889,6 +891,12 @@ orexis:predicts a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xs
 orexis:baselineValue a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
     rdfs:label "baseline value" ;
     rdfs:comment "Where the property stood when the expectation was adopted. Copied into the row, deliberately: the sensed graph upserts — one current observation per property — so the BEFORE of any before/after survives nowhere but here. The ledger is the memory of commitments, and this is the commitment's opening position." .
+orexis:predictedValue a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
+    rdfs:label "predicted value" ;
+    rdfs:comment "The one number the step's prediction carried — the reading it said the world would show — written beside the verdict so the residual survives the sensed graph's upsert. Only where the prediction carries exactly one number; a plain-fact step writes none." .
+orexis:observedValue a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
+    rdfs:label "observed value" ;
+    rdfs:comment "What the world showed for that fact when the verdict was reached — asked of whoever owns the fact's kind through `orexis:witness` — met or unmet alike, since a shortfall at the deadline is as much evidence about the conversion as an answer. The reviewer publishes observed against predicted as residual evidence (review:Residual) and re-picks the conversion when they lean and the tolerance when they scatter (#518)." .
 orexis:baselineAt a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:dateTime ;
     rdfs:label "baseline at" .
 orexis:deadlineAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:dateTime ;

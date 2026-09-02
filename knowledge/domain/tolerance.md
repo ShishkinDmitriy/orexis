@@ -42,6 +42,6 @@ delta arithmetic.
 world cannot keep; sensing's grain as the floor is a named seam (#518), since no sensing term
 states a grain yet.
 
-**Not moved here.** Review's rule over residuals — observed minus predicted, per act — re-picks
-the conversion when they lean one way and the tolerance when they scatter; that is the
-[reviser](/domain/reviser.md)'s, filed with #518.
+**Not moved here.** Review's rule over residuals — observed against predicted, per answered
+step — re-picks the conversion when they lean one way and the tolerance when they scatter; that
+is [review](/domain/review.md)'s, and each package's `review.rq` says it in its own words.

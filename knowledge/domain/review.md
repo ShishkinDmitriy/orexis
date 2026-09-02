@@ -59,6 +59,19 @@ Its write boundary is the agent's own beliefs graph and nothing else. It reads t
 constraint and the sensed graph as evidence, and changes neither — which is what makes the graph
 classes load-bearing rather than documentation.
 
+**And it is the belief revision function proper, since #518.** Every answered
+[step](/domain/step.md) that predicted a number leaves a residual in the ledger — the reading it
+predicted, the reading the world showed at the verdict, where the property stood before — and
+review publishes the newest of them into its evidence graph as `review:Residual`, beside the
+summaries. The reviewer is the one place the ledger meets the belief base; a package's rule
+reads the evidence and never the ledger. What a rule makes of residuals is the package's, and
+the two that ship say the same thing in their own words: when residuals LEAN one way the
+conversion is wrong by that ratio and is re-picked, and when they SCATTER the
+[tolerance](/domain/tolerance.md) is wrong and is re-picked to the widest miss with slack — both
+inside their ranges, both only past `review:residualWindow` answered steps, both legitimate
+exactly when `validate_agent` still passes. The water domain declares its conversion revisable
+for this, with the society's bounds on what a pot may take.
+
 # Compaction is not part of this
 
 Reclaiming space in the belief base is **not a choice**, so it stayed in the kernel on a clock of

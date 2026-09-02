@@ -6,6 +6,7 @@
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix market: <http://example.org/orexis/market#> .
+@prefix review: <http://example.org/orexis/review#> .
 @prefix sim:  <http://example.org/orexis/sim#> .
 
 <http://example.org/orexis/water> a owl:Ontology ;
@@ -132,3 +133,18 @@ Denominated in lux, and stated as such with `unit:LUX`, because unlike a moistur
 #  The three words survive above, because the verdict is still the agent's to compute and still
 #  never recorded. What is gone is the idea that the agent gets to pick where the edges are.
 #  See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.
+
+
+#################  The conversion is a pick, and review moves it  #################
+#
+#  `litresPerFraction` on an AGENT is what it believes its pot takes, and the one belief it
+#  would lose money by being wrong about. Since the effect became one declaration (#510) the
+#  world is held to the reading that conversion predicts, and every answered dose leaves a
+#  residual; when the residuals lean one way the conversion is what is wrong, and the market's
+#  and actuation's review rules re-pick it — inside these bounds, which are the society's:
+#  below a quarter of a litre per fraction no pot exists, above eight a pot is a field.
+:litresPerFraction a review:RevisableBelief ;
+    review:revisableToward :minLitresPerFraction , :maxLitresPerFraction .
+:minLitresPerFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "min litres per fraction" .
+:maxLitresPerFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "max litres per fraction" .
+:Water :minLitresPerFraction 0.25 ; :maxLitresPerFraction 8.0 .

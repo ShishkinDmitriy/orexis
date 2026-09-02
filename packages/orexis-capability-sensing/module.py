@@ -51,7 +51,7 @@ if TYPE_CHECKING:
     from orexis_agent_deliberation.desire import Desire
 from .driver import driver_for
 from agent.module import Module, contributes
-from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, ANSWER
+from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, ANSWER, WITNESS
 from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
 from orexis_agent_progression.store import bindings
 
@@ -718,6 +718,21 @@ class SensingModule(Module):
         g.add((on_value, SH.minInclusive, rdflib.Literal(round(predicted - band, 6), datatype=XSD.decimal)))
         g.add((on_value, SH.maxInclusive, rdflib.Literal(round(predicted + band, 6), datatype=XSD.decimal)))
         return g
+
+    @contributes(WITNESS)
+    def witnessed(self, keyed_class: str, key: dict) -> float | None:
+        """What the world shows now for a predicted observation — the current reading of the
+        property on the subject the key names, for the residual the keeper writes at a
+        verdict (#518). Only a `sosa:Observation` is sensing's to witness."""
+        SOSA = "http://www.w3.org/ns/sosa/"
+        if keyed_class != SOSA + "Observation":
+            return None
+        subject_uri = key.get(SOSA + "hasFeatureOfInterest")
+        observed_property = key.get(SOSA + "observedProperty")
+        if subject_uri is None or observed_property is None:
+            return None
+        reading = self.current_reading(subject_uri, observed_property)
+        return float(reading.value) if reading is not None else None
 
     @contributes(URGENCY)
     def urgency(self, subject_uri: str, observed_property: str,

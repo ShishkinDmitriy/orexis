@@ -55,8 +55,10 @@ eight drives are held to the world by the same road as a dose, with no actor at 
   held to neither and says so; no shipped action does both, and the combination waits for one
   that does.
 - **Sensing's grain as the floor** of the tolerance: no sensing term states a grain yet (#518).
-- **The review rule over residuals** — the belief revision function proper — is the second
-  half of #518, beside this.
+- **The review rule over residuals** — settled, 2026-09-03: the keeper writes what a step
+  predicted and what the world showed beside the verdict, review publishes them as
+  `review:Residual`, and the market's and actuation's `review.rq` re-pick the conversion on a
+  lean and the tolerance on a scatter. See [review](/domain/review.md).
 - **A fact the search labelled by content** (a blank node's) cannot be stated as a triple and
   is passed over with a warning; the market's claim nodes are the case to watch.
 - **Booleans and string literals** in a plain fact are told from IRIs by their shape, not by
