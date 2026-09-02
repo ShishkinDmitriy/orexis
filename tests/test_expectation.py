@@ -21,7 +21,7 @@ from orexis_capability_actuation.terms import DOSING as _ACTUATE
 from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import OREXIS
 
-from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of
+from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading
 
 
 @pytest.fixture
@@ -136,7 +136,6 @@ def test_an_affordance_that_never_pays_becomes_suspect(monkeypatch, caplog):
     paying is a decision, not a reflex. The agent must end up FLAGGED, not looping unmarked."""
     fern = build_agent("fern", genesis_store({"fern": 0.30}), monkeypatch)
     keeper = keeper_of(fern)
-    keeper.beliefs = replace(keeper.beliefs, patience_s=0)
 
     value = 0.30
     with caplog.at_level(logging.WARNING):
@@ -144,6 +143,10 @@ def test_an_affordance_that_never_pays_becomes_suspect(monkeypatch, caplog):
             win(fern, auction=auction)
             value -= 0.01                                    # the world keeps refusing
             fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": round(value, 2)})
+            #  The deadline passes — fired as the keeper's scheduler would (#516): the watch
+            #  is a hold, and a deadline of "now" would race the reading it is meant to judge.
+            for watch in keeper.open_expectations():
+                keeper.lapse(watch.uri)
 
     assert keeper.reports()["expectations_unmet"] == 3
     assert keeper.reports()["affordances_suspect"] == 1
@@ -156,14 +159,19 @@ def test_one_success_resets_the_suspicion(monkeypatch):
     """Consecutive, not cumulative: an affordance that mostly pays is noisy, not false."""
     fern = build_agent("fern", genesis_store({"fern": 0.30}), monkeypatch)
     keeper = keeper_of(fern)
-    keeper.beliefs = replace(keeper.beliefs, patience_s=0)
+
+    def lapse_all():
+        for watch in keeper.open_expectations():
+            keeper.lapse(watch.uri)
 
     win(fern, auction="r1")
-    fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.29})   # unmet
+    fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.29})   # not an answer
+    lapse_all()                                                              # unmet
     win(fern, auction="r2")
     fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.40})   # met — the reset
     win(fern, auction="r3")
-    fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.39})   # unmet
+    fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.39})   # not an answer
+    lapse_all()                                                              # unmet
 
     assert keeper.reports()["expectations_unmet"] == 2
     assert keeper.reports()["affordances_suspect"] == 0
@@ -234,7 +242,9 @@ def test_an_alarm_armed_watch_releases_the_claim_on_the_first_tightening(thirsty
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.29})
     presented = thirsty.sent.to(f"{market.redeem_topic}/fern")
     assert presented and presented[-1]["jti"] == "v9", "armed and sent: live, released, presented"
-    assert keeper.held() == [] and keeper.standing(action=PRESENTING) == []
+    assert keeper.standing(action=PRESENTING) == [] and not [
+        h for h in keeper.held() if not h[2].endswith("answeredWhen")], \
+        "the readiness hold is gone; what is held now is the watch on the dose's end"
 
 
 def test_the_bounded_wait_redeems_blind_rather_than_never(thirsty):
@@ -255,7 +265,8 @@ def test_the_bounded_wait_redeems_blind_rather_than_never(thirsty):
     keeper.lapse(held[0].uri)
     presented = thirsty.sent.to(f"{market.redeem_topic}/fern")
     assert presented and presented[-1]["jti"] == "v2"
-    assert keeper.held() == [] and keeper.standing(action=PRESENTING) == []
+    assert keeper.standing(action=PRESENTING) == [] and not [
+        h for h in keeper.held() if not h[2].endswith("answeredWhen")]
 
 
 def test_a_held_claim_is_maximum_urgency(thirsty):
@@ -305,7 +316,7 @@ def test_an_act_that_cannot_size_itself_keeps_the_exact_crossing(thirsty):
     uri = keeper.adopt(ACQUIRING, stake_of(thirsty).uri, "an act of unknowable size")
     assert keeper.expect(uri, "no delta stated", rises=True,
                          baseline=reading_of(thirsty, MOISTURE))
-    keeper.judge(stake_of(thirsty).uri, 0.301)
+    write_reading(thirsty, 0.301, MOISTURE)
     assert keeper.open_expectations() == []
     assert keeper.reports()["expectations_met"] == 1
 
@@ -404,6 +415,9 @@ def test_an_act_that_cannot_size_itself_keeps_the_patience(monkeypatch):
 SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{OREXIS}by> ?act . ?act <{OREXIS}notAfter> ?d }} }}"""))
     window = datetime.fromisoformat(rows[0]["d"]).timestamp() - before
     assert abs(window - keeper.beliefs.patience_s) < 2.0
+
+
+
 
 
 

@@ -40,6 +40,7 @@ Derivation: capabilities/sensing/rules.ru. See knowledge/domain/sensing.md.
 
 from __future__ import annotations
 
+import uuid
 from datetime import timedelta, datetime, timezone
 from pathlib import Path
 
@@ -50,7 +51,7 @@ if TYPE_CHECKING:
     from orexis_agent_deliberation.desire import Desire
 from .driver import driver_for
 from agent.module import Module, contributes
-from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS
+from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, ANSWER
 from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
 from orexis_agent_progression.store import bindings
 
@@ -559,8 +560,9 @@ class SensingModule(Module):
             return
         for want in self.wants_about(observed_property, subject_uri):
             keeper.satisfy(OBSERVING, want.uri, "a reading arrived — the look happened")
-            if subject_uri == self.me.acts_for:
-                keeper.judge(want.uri, value)
+        #  The open watches used to be JUDGED here, by name, against the number. Since #516
+        #  an expectation is a hold on the shape of an answering observation — the shape this
+        #  module writes below — and the write of the reading is what re-asks it.
 
     # --- which want a reading is about: this package's to say --------------------------
 
@@ -667,6 +669,47 @@ class SensingModule(Module):
             return None
         region = self.regions.get(observed_property)
         return (region.low, region.high) if region else None
+
+    @contributes(ANSWER)
+    def answering_shape(self, subject_uri: str, observed_property: str, since, baseline: float,
+                        delta: float | None, rises: bool, met_fraction: float):
+        """The shape of an observation that would ANSWER an act (#516) — sensing's, because
+        what a reading is is sensing's: on the subject, at least one observation of the
+        property later than `since` whose value has moved from the baseline in the promised
+        direction — by met_fraction of the delta where the act sized itself (#165: a lying
+        instrument can breathe past a baseline), strictly past it where it could not. The
+        numbers are baked in: they do not change for the expectation's lifetime, unlike a
+        horizon. The keeper holds the act's step on it and reads the verdict off conformance."""
+        import rdflib
+        SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
+        SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
+        XSD = rdflib.Namespace("http://www.w3.org/2001/XMLSchema#")
+        g = rdflib.Graph()
+        root = rdflib.URIRef(f"urn:orexis:answer:{uuid.uuid4().hex[:8]}")
+        outer, inner, on_property, on_time, on_value, path = (rdflib.BNode() for _ in range(6))
+        g.add((root, rdflib.RDF.type, SH.NodeShape))
+        g.add((root, SH.targetNode, rdflib.URIRef(subject_uri)))
+        g.add((root, SH.property, outer))
+        g.add((outer, SH.path, path))
+        g.add((path, SH.inversePath, SOSA.hasFeatureOfInterest))
+        g.add((outer, SH.qualifiedMinCount, rdflib.Literal(1)))
+        g.add((outer, SH.qualifiedValueShape, inner))
+        g.add((inner, SH.property, on_property))
+        g.add((on_property, SH.path, SOSA.observedProperty))
+        g.add((on_property, SH.hasValue, rdflib.URIRef(observed_property)))
+        g.add((inner, SH.property, on_time))
+        g.add((on_time, SH.path, SOSA.resultTime))
+        g.add((on_time, SH.minExclusive, rdflib.Literal(since.isoformat(), datatype=XSD.dateTime)))
+        g.add((inner, SH.property, on_value))
+        g.add((on_value, SH.path, SOSA.hasSimpleResult))
+        if delta:
+            threshold = baseline + met_fraction * delta if rises else baseline - met_fraction * delta
+            g.add((on_value, SH.minInclusive if rises else SH.maxInclusive,
+                   rdflib.Literal(round(threshold, 6), datatype=XSD.decimal)))
+        else:
+            g.add((on_value, SH.minExclusive if rises else SH.maxExclusive,
+                   rdflib.Literal(baseline, datatype=XSD.decimal)))
+        return g
 
     @contributes(URGENCY)
     def urgency(self, subject_uri: str, observed_property: str,

@@ -378,3 +378,12 @@ the agent must steer attention, the sentinel where the world's own events are th
   cadence from urgency alone; no wallet debit per `sense`. The lever exists, the price does not.
 - **Cadence is a reflex, not a deliberation.** `cadence_for` is deterministic code, like the
   bid. An LLM stance could later argue for more attention; the clamp still binds.
+
+# The shape of an answer
+
+What a reading is is sensing's, so the shape of one that answers an act is too (#516). Asked
+through the kernel's `orexis:answer` extension, this module writes it as Core SHACL — a
+qualified value shape reaching the subject's observations, the same family the region wants
+use — with the threshold and the instant baked in when the watch opens. How the
+[keeper](/domain/intention.md) waits on it is that page's; this one only says who writes it and
+that no `sosa` word ever reaches the kernel.

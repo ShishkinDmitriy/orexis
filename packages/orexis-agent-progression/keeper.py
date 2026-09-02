@@ -32,6 +32,7 @@ rules.ru. See knowledge/decisions/an-intention-is-an-amortised-deliberation.md.
 from __future__ import annotations
 
 import logging
+import threading
 
 from rdflib import URIRef
 import uuid
@@ -44,7 +45,7 @@ from .act import Act
 from .store import bindings
 
 from .graphs import intentions_graph
-from .ontology import OREXIS, PLAN_FAILED, PLAN_FINISHED, REPORTS
+from .ontology import ANSWER, OREXIS, PLAN_FAILED, PLAN_FINISHED, REPORTS
 
 #  What an intention is made of — the mind's own words, and they were the kernel's already
 #  (the-mind-is-six-graphs). What has joined them is the four figures the KEEPING member used to
@@ -242,6 +243,8 @@ class Keeper:
         self._deadlines: dict = {}
         self._compiled_conditions: dict = {}
         self._reconsidering = False
+        self._claim_lock = threading.Lock()
+        self._claimed: set = set()
         self._holding = True               # ask once; `reconsider` learns whether any stands
         agent.beliefs.on_write(self._on_written)
 
@@ -392,16 +395,22 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             raise ValueError(f"whenLapsed is `take` or `drop`, not {when_lapsed!r}")
         predicate = kernel("until") if until is not None else kernel("untilNot")
         condition = until if until is not None else until_not
+        if not_after is not None:
+            self.window(intention_uri, not_after)
+        self._hold_step(intention_uri, predicate, condition, not_after, when_lapsed)
+
+    def _hold_step(self, intention_uri: str, predicate: str, condition, not_after,
+                   when_lapsed: str) -> None:
+        """Write a condition on the step the intention stands at, arm its deadline, and ask
+        at once whether it already answers. ON THE STEP: the intention is the commitment,
+        the act is the doing, and the step — the act's place — is what waits."""
         node, triples = self._condition_triples(intention_uri, condition)
-        #  ON THE STEP: the intention is the commitment, the act is the doing, and the step —
-        #  the act's place — is what waits, and what says what happens if the wait lapses.
         self.agent.intentions.update(f"""
 INSERT {{ GRAPH <{self.graph}> {{
   ?step <{predicate}> <{node}> ; <{kernel("whenLapsed")}> "{when_lapsed}" .
   {triples} }} }}
 WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("at")}> ?step }} }}""")
         if not_after is not None:
-            self.window(intention_uri, not_after)
             delay = (not_after - datetime.now(timezone.utc)).total_seconds()
             from .scheduler import scheduler
             self._deadlines[intention_uri] = scheduler().at(
@@ -423,19 +432,31 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("at")}> ?step }} }}
         return str(roots[0]), condition.serialize(format="nt")
 
     def held(self) -> list[tuple]:
-        """Every intention still held: `(standing, select)` — the select the store runs,
-        compiled from the shape the act waits for: conformance for `until`, violation for
-        `until_not`, so rows always mean release."""
+        """Every step still waiting: `(holder, select, predicate)` — the select the store
+        runs, compiled from the shape: conformance for `until` and `answeredWhen`, violation
+        for `untilNot`, so rows always mean the wait is over — and which wait it was. A
+        READINESS wait (`until`, `untilNot`) holds a STANDING intention and releases its act;
+        a COMPLETION wait (`answeredWhen`) holds an expectation on an intention the means
+        already RESOLVED — resolving the means is where the watch on the end begins — and
+        answers with the verdict. The holder is the `Standing` or the `OpenExpectation`."""
         rows = bindings(self.agent.intentions.query_union(f"""
 SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
   ?i <{kernel("at")}> ?step .
   ?step ?p ?node ; <{kernel("whenLapsed")}> ?when .
   ?node a sh:NodeShape .
-  FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>))
-  FILTER NOT EXISTS {{ ?i <{RESOLVED_AT}> ?r }} }} }}"""))
-        by_uri = {s.uri: s for s in self.standing()}
-        return [(by_uri[r["i"]], self._compiled(r["node"], r["p"] == kernel("until")))
-                for r in rows if r["i"] in by_uri]
+  FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>, <{kernel("answeredWhen")}>))
+  FILTER NOT EXISTS {{ ?i <{END_MET}> ?m }} }} }}"""))
+        standing = {s.uri: s for s in self.standing()}
+        watches = {w.uri: w for w in self.open_expectations()}
+        out = []
+        for r in rows:
+            if r["p"] == kernel("answeredWhen"):
+                holder = watches.get(r["i"])
+            else:
+                holder = standing.get(r["i"])
+            if holder is not None:
+                out.append((holder, self._compiled(r["node"], r["p"] != kernel("untilNot")), r["p"]))
+        return out
 
     def _compiled(self, node: str, holds: bool) -> str:
         """The select a shape condition compiles to, once per node: conformance where the
@@ -459,39 +480,82 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
         the release hands the act to the loop and waits, as any take does. Re-entrant
         writes (the release itself writes the ledger) find the guard and return.
         """
+        #  NO LOCK HERE, and the absence is load-bearing: a release hands the act to the
+        #  loop and WAITS, the loop's take writes beliefs, and that write calls back into
+        #  this method on the loop's thread. A lock held across the release deadlocked the
+        #  agent; the flag lets the nested call return and the outer one finish.
         if not self._holding or self._reconsidering:
             return
         self._reconsidering = True
         try:
             held = self.held()
             self._holding = bool(held)
-            for standing, select in held:
+            now = datetime.now(timezone.utc)
+            for holder, select, predicate in held:
                 try:
                     rows = bindings(self.agent.beliefs.query_over(
                         select, *self.agent.beliefs.public_graphs(),
                         *self.agent.beliefs.recorded_graphs()))
                 except Exception as exc:                        # noqa: BLE001 — a bad select
                     self.log.error("the condition %s waits for will not run: %s",
-                                   _short(standing.uri), exc)
+                                   _short(holder.uri), exc)
                     continue
+                deadline = (holder.deadline if isinstance(holder, OpenExpectation)
+                            else holder.act.not_after)
                 if rows:
-                    self._release(standing, "the condition it was held for answers now")
+                    self._answered(holder, predicate)
+                elif deadline is not None and now >= deadline:
+                    #  THE DEADLINE, checked here as well as on the scheduler: a write that
+                    #  lands after it lapses the wait at once, on this thread, rather than
+                    #  a clock's tick later.
+                    self._lapse(holder, predicate)
         finally:
             self._reconsidering = False
 
+    def _claim(self, intention_uri: str) -> bool:
+        """End this hold, once. Two roads reach a hold — a write on the writer's thread and
+        the deadline on the loop's — and both may find it still held; the first to claim it
+        ends it, the second finds it gone. The lock covers the claim and the ledger's
+        unhold only, never a release or a verdict, which is what deadlocked before."""
+        with self._claim_lock:
+            if intention_uri in self._claimed:
+                return False
+            self._claimed.add(intention_uri)
+            self._unhold(intention_uri)
+            return True
+
+    def _answered(self, holder, predicate: str) -> None:
+        """The wait is over: a readiness wait releases the act, a completion wait is met."""
+        if not self._claim(holder.uri):
+            return
+        if predicate == kernel("answeredWhen"):
+            self._verdict(holder, True, "moved as promised: an observation later than the "
+                                        "baseline shows the property past the threshold")
+        else:
+            self._release(holder, "the condition it was held for answers now")
+
+    def _lapse(self, holder, predicate: str) -> None:
+        when = self._when_lapsed(holder.uri)     # read before the claim removes it
+        if not self._claim(holder.uri):
+            return
+        if predicate == kernel("answeredWhen"):
+            self._verdict(holder, False,
+                          f"deadline passed, baseline {holder.baseline} — the act was "
+                          f"honoured and the world did not answer as the graph promised")
+        elif when == "drop":
+            self._resolve(holder, "dropped",
+                          "the deadline passed and the condition it waited for never answered")
+        else:
+            self._release(holder, "the deadline passed before the condition answered — "
+                                  "taken as lapsed rather than never")
+
     def lapse(self, intention_uri: str) -> None:
-        """The deadline passed before the condition answered: take as lapsed, or drop."""
-        for standing, _ in self.held():
-            if standing.uri != intention_uri:
-                continue
-            when = self._when_lapsed(intention_uri)
-            if when == "drop":
-                self._unhold(standing.uri)
-                self._resolve(standing, "dropped",
-                              "the deadline passed and the condition it waited for never answered")
-            else:
-                self._release(standing, "the deadline passed before the condition answered — "
-                                        "taken as lapsed rather than never")
+        """The deadline passed before the condition answered: take as lapsed, drop, or — for
+        a completion wait — the verdict unmet. The scheduler's road; `reconsider` takes the
+        same road on a write that lands past the deadline."""
+        for holder, _, predicate in self.held():
+            if holder.uri == intention_uri:
+                self._lapse(holder, predicate)
 
     def _when_lapsed(self, intention_uri: str) -> str:
         rows = bindings(self.agent.intentions.query_union(f"""
@@ -502,7 +566,6 @@ SELECT ?when WHERE {{ GRAPH <{self.graph}> {{
     def _release(self, standing: Standing, because: str) -> None:
         from .execution import carry_out
 
-        self._unhold(standing.uri)
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{BECAUSE_OF}> {_literal(because)} . }} }}""")
         self.log.info("releasing %s: %s", standing.action.rsplit("#", 1)[-1], because)
@@ -518,7 +581,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{BECAUSE_OF}> {_literal
 DELETE {{ GRAPH <{self.graph}> {{ ?step ?p ?c ; <{kernel("whenLapsed")}> ?w }} }}
 WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("at")}> ?step .
           ?step ?p ?c ; <{kernel("whenLapsed")}> ?w .
-          FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>)) }} }}""")
+          FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>, <{kernel("answeredWhen")}>)) }} }}""")
 
     def _on_written(self) -> None:
         if self._holding:
@@ -648,10 +711,33 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
     <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
         self.window(intention_uri, deadline_dt)
+        #  THE WATCH IS A HOLD (#516): the shape of an observation that answers this act,
+        #  asked of whoever knows what a reading is (`orexis:answer` — sensing), and the
+        #  step held on it as its COMPLETION condition. Conformance is the verdict met; the
+        #  deadline passing first is the verdict unmet. The arithmetic that used to judge
+        #  every reading here is inside that shape now, its numbers baked at this instant.
+        shape = next((g for g in self.agent.ask(
+            ANSWER, self.me.acts_for, self._about(intention_uri), reading.result_time,
+            float(reading.value), expected_delta, rises, self._met_fraction()) if g is not None), None)
+        if shape is None:
+            self.log.warning("nothing says what an observation answering %s would look like "
+                             "— the watch can only lapse", _short(intention_uri))
+        else:
+            self._hold_step(intention_uri, kernel("answeredWhen"), shape, deadline_dt, "unmet")
         self.log.info("expecting %s to %s from %.3f within %ss: %s",
                       _short(intention_uri),
                       "rise" if rises else "fall", reading.value, round(window), because)
         return True
+
+    def _about(self, intention_uri: str) -> str | None:
+        """What the want this intention pursues is about — the property, for a stake."""
+        rows = bindings(self.agent.intentions.query_union(f"""
+SELECT ?want WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("pursues")}> ?want }} }}"""))
+        if not rows:
+            return None
+        about = bindings(self.agent.desires.query_union(
+            "SELECT ?want ?about WHERE { ?want orexis:about ?about }", {"want": rows[0]["want"]}))
+        return about[0]["about"] if about else None
 
     def window(self, intention_uri: str, not_after: datetime) -> None:
         """Set the window's close on the act an intention names — the one figure the bidder's
@@ -687,45 +773,9 @@ SELECT ?i ?action ?want ?rises ?baseline ?baselineAt ?deadline ?delta WHERE {{
             deadline=datetime.fromisoformat(r["deadline"]),
             expected_delta=float(r["delta"]) if r.get("delta") else None) for r in rows]
 
-    def judge(self, want: str, value: float) -> None:
-        """A number arrived for this want: judge every open watch on it.
-
-        Told by sensing, per want — a reading is about a property, and which wants that is
-        about is sensing's to say (the-stake-is-sensings-want). This was a choir hook on a
-        reading, keyed by property in the ledger; the ledger keys on the want now.
-
-        Met when the value crosses the baseline in the promised direction — early is fine,
-        that is the dose landing — and, where the act sized itself (expectsDelta), crosses by
-        at least metFraction of that size (#165): a lying instrument can breathe past a
-        baseline, and a watch closed by grain is the false-knowledge detector defeated by
-        noise. Unmet only at the deadline: movement the wrong way before it proves nothing,
-        since a dose may land late. The verdict is a separate fact from the outcome, written
-        beside it — satisfied-and-unmet is the false-knowledge signature review and the
-        dashboard look for.
-
-        A reading is also a look that happened (#208), and the sensing module — the actor
-        for the look — satisfies the standing Observe itself now; this used to do it by name,
-        and it was the last kernel reference holding that means here. An Observe
-        can stand that no auction is waiting on, and the reading IS its arrival.
-        """
-        now = datetime.now(timezone.utc)
-        for watch in self.open_expectations(want):
-            moved = value > watch.baseline if watch.rises else value < watch.baseline
-            if moved and watch.expected_delta:
-                # The margin (#165): a movement is the world answering only when it is
-                # commensurate with the act — metFraction of what the dose should have moved.
-                # A breath of instrument grain past the baseline closed a watch two seconds
-                # before its dose landed, live, and the closed watch then let the same gap be
-                # bought twice (#167). Crossing alone stops counting where the act sized itself.
-                moved = (abs(value - watch.baseline)
-                         >= self._met_fraction() * watch.expected_delta)
-            if moved:
-                self._verdict(watch, True, f"moved from {watch.baseline} to {value}")
-            elif now >= watch.deadline:
-                self._verdict(watch, False,
-                              f"deadline passed at {value}, baseline {watch.baseline} — the "
-                              f"act was honoured and the world did not answer as the graph "
-                              f"promised")
+    #  `judge(want, value)` WAS HERE — every open watch on a want compared against a number
+    #  that arrived, by this class's own arithmetic. An expectation is a hold on the shape of
+    #  an answering observation now (#516), and the reading's write is what re-asks it.
 
     def _verdict(self, watch: OpenExpectation, met: bool, because: str) -> None:
         now = datetime.now(timezone.utc).isoformat()

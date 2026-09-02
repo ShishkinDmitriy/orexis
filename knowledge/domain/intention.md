@@ -37,6 +37,16 @@ live watch as its condition, and a plan's next step is this road with the previo
 prediction as its condition. This is the middle layer's whole job in one call — adopt, wait,
 take on feedback — and it is why nothing above it needs a timer of its own.
 
+**And an expectation is the same primitive, waiting on the shape of an answering observation**
+(#516). When an act is taken, the keeper asks whoever knows what a reading is — sensing,
+through `orexis:answer` — for the shape of an observation that would answer it: on the
+subject, later than the baseline, moved in the promised direction by the met-fraction of what
+the act sized itself at. The step is held on that shape as its COMPLETION condition
+(`orexis:answeredWhen`, beside its readiness condition `orexis:until`); conformance is the
+verdict met, the deadline passing first the verdict unmet, and the arithmetic that used to
+judge every reading is inside the shape with its numbers baked at the instant the watch
+opened. A plan handed down whole holds each step's readiness on the previous step's answer.
+
 Two roads adopt one. A plan's head, chosen by the search, is the ordinary road; an event
 adopts the other — the market's Presenting, an [action](/domain/action.md) stating neither a
 precondition nor an effect, which a claim arriving adopts and a watch going live triggers —

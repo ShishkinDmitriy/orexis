@@ -12,6 +12,15 @@ status: accepted
 timestamp: 2026-08-25T12:00:00Z
 ---
 
+
+> **Amended, 2026-09-02 (#516).** The watch is a hold on the shape of an answering observation
+> now — sensing writes the shape through `orexis:answer`, the keeper holds the act's step on it
+> as `orexis:answeredWhen`, conformance is the verdict met and a lapse the verdict unmet. What
+> this record argued survives whole: the intention stands until the world answers, the verdict
+> is a separate fact from the outcome, satisfied-and-unmet is the false-knowledge signature.
+> What moved is where the judging happens: in a shape the ledger holds, not in the keeper's
+> arithmetic. See [intention](/domain/intention.md).
+
 # What was wrong
 
 Two means had two lifecycles for no reason the model states. An `Acquire` stood from the first
