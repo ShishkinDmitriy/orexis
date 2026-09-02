@@ -42,7 +42,7 @@ from . import effects, relevance, signature, trace, violation
 from .beliefs import Picks
 from orexis_agent_progression.act import Act, Step
 from orexis_agent_deliberation.desire import Desire
-from .afforder import wants_of
+from .afforder import affordances_of, wants_of
 from .imaginarium import Imaginarium
 from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
@@ -471,7 +471,7 @@ class Planner:
         #  `_bind` below for why that is sound rather than a heuristic.
         bound = None
         self._skipped = False
-        self._weighed = []
+        self._weighed = [(0, row, None, trace.IRRELEVANT) for row in self._passed_over]
         #  Every world reached, with the least this pass has found it to cost. A world reached
         #  again NO CHEAPER is somewhere already stood in; reached strictly cheaper, it is
         #  reopened — see the novelty test below for why best-first needs that where
@@ -838,15 +838,13 @@ class Planner:
         and simulation is the authority either way. Trying a lever that turns out not to help
         costs one validation; trusting a declaration that turns out to be wrong costs a plant.
         """
-        from .afforder import affordances_of
-
         #  ASKED OF THE IMAGINARIUM, at the node's own graph (#359): a premise may be a fact
         #  an earlier step made true — Offering needs stock, Acquiring's effect raises it, and
         #  "acquire, then offer" is a plan only if the menu of the world after the first step
         #  shows the second. The root node's graph is the agent's own readings, so at depth 0
         #  this is the ordinary menu, exactly as before.
         for row in affordances_of(self.imaginarium.query, self.me.uri, self.agent.desires.query_union,
-                           beliefs_graph(self.agent.id), node.graph):
+                           beliefs_graph(self.agent.id), node.graph, only=self._asked):
             if desire.is_obligation:
                 #  A obligation may be served by its counterparty's honoured row, or approached
                 #  through this agent's own levers — refilling the vessel is an Acquire on its
@@ -974,6 +972,20 @@ class Planner:
         #  the only defence that sees it. None where the want reads anything a parser cannot
         #  name, and then every row is weighed exactly as before: over-approximation is safe.
         self._relevant = self._relevant_actions(desire, shape)
+        #  WHAT THE MENU IS ASKED FOR, per node (#504): the relevant levers, plus every lever
+        #  stating no effect — outside the closure, never simulated, but a row of it must
+        #  still reach the pass so the pass can say it could not see the whole menu.
+        self._asked = (None if self._relevant is None
+                       else self._relevant | relevance.effectless_of(self.agent.beliefs.query))
+        #  THE LEVERS PASSED OVER, asked ONCE per pass at the root rather than at every node,
+        #  and written as passed over only where they had a row to pass over: a trace that
+        #  named every irrelevant action in the vocabulary would name Move in a plant world
+        #  with no disk in it. One query per foreign action per pass is what a truthful
+        #  trace costs, against one per node before this.
+        self._passed_over = [] if self._relevant is None else affordances_of(
+            self.imaginarium.query, self.me.uri, self.agent.desires.query_union,
+            beliefs_graph(self.agent.id), STATE_GRAPH,
+            only=frozenset(relevance.actions_of(self.agent.beliefs.query)) - self._relevant)
         here = _Node(graph=STATE_GRAPH)
         here.estimate = self._estimate_in(here, desire)
         self._base_forbidden = (self._forbidden_keys(here)

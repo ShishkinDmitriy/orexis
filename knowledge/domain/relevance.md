@@ -13,7 +13,9 @@ description: >-
 
 The set of [actions](/domain/action.md) whose effect writes a predicate the [want](/domain/desire.md)
 reads, or whose effect writes what a relevant action's precondition reads, and so on to a
-fixed point. Computed per pass in `packages/orexis-agent-deliberation/relevance.py`, from three
+fixed point. An action outside it is neither simulated nor asked per node: the afforder
+runs a precondition only for a relevant action, so a menu that grows by unrelated domains costs
+a pass one query per foreign action, at the root, and nothing per node. Computed per pass in `packages/orexis-agent-deliberation/relevance.py`, from three
 sets that are all derived:
 
 - **what the want reads** — every `sh:path` on its shape flattened to predicates, and the
@@ -32,9 +34,11 @@ fold it. See [relevance-is-read-off-the-actions-and-closed-backward](/decisions/
 they imply. A declared list of what each action touches would be a second statement of what the construct
 settles, and the search carries the scar of a guard that disagreed with the effect it described.
 
-**Read the trace.** A row the filter passed over is written as `irrelevant` beside the rows
-that were weighed, so "this lever was there and touched nothing the want reads" is visible and
-distinct from "this was weighed and lost". A menu of only such rows is the finding NOTHING —
+**Read the trace.** A lever the filter passed over is written as `irrelevant` beside the rows
+that were weighed — its precondition asked once per pass, at the root, and never at any other
+node (#504) — so "this was there and touched nothing the want reads" is visible, truthful, and
+distinct from "this was weighed and lost". An action stating no effect stays on the menu,
+outside the closure, so a pass that passes it over can still say it did not see everything. A menu of only such rows is the finding NOTHING —
 equip me — which is honest where no lever points at the want.
 
 **The rule it rests on: over-approximation is safe.** A `sh:sparql` body the parser refuses, an

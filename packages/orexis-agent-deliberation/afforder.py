@@ -79,7 +79,8 @@ def wants_of(desires, agent_uri: str) -> dict[str, str]:
     return {r["want"]: r["about"] for r in bindings(desires(_WANTS_Q % agent_uri))}
 
 
-def affordances_of(query, agent_uri: str, desires, beliefs: str, state: str = STATE_GRAPH) -> list[Affordance]:
+def affordances_of(query, agent_uri: str, desires, beliefs: str, state: str = STATE_GRAPH,
+                   only=None) -> list[Affordance]:
     """What one agent could do, about what, through which lever — derived, never written.
 
     The Consulting member's prompt substrate and the reflex's worldview as data: a move with no
@@ -95,6 +96,11 @@ def affordances_of(query, agent_uri: str, desires, beliefs: str, state: str = ST
     `?for_agent` makes the row an obligation's. Sensing brings Observe, the market Acquire and the
     host's Apply, actuation Actuate — and a new way of acting is a node in a new directory,
     never an edit here. Sorted because per-action order is no order.
+
+    `only` is the set of actions worth asking at all — the search's RELEVANT set (#504), or
+    None for every action. A precondition is a query per action per world, and a lever that
+    touches nothing the want reads was already never simulated; now it is never asked
+    either, so a menu that grows by unrelated domains costs a pass nothing.
     """
     #  The desired properties, asked of the desire modality once and injected into every
     #  walk: a row is wiring x want, and since the dataset split (#298) the want half lives
@@ -104,6 +110,8 @@ def affordances_of(query, agent_uri: str, desires, beliefs: str, state: str = ST
     wants = " ".join(f"(<{w}> <{a}>)" for w, a in sorted(about_of.items()))
     rows = []
     for action in bindings(query(_ACTIONS_Q)):
+        if only is not None and action["action"] not in only:
+            continue
         #  `$beliefs` names the agent's OWN graph, as it does for an effect rule: a premise
         #  may be something only this agent was told — an open round is one (#358) — and
         #  the default graph is public knowledge, so a walk that needs it must say so.
