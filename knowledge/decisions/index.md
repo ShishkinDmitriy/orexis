@@ -75,6 +75,7 @@ Desire: where a want comes from, what shape it has, and who is allowed to change
 What happens to a decision — committed as an intention, carried out by whoever the T-Box says takes it.
 
 * [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md) - BDI's third letter: a commitment to reduce a named gap by a named means, so a decision is made once.
+* [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/progression-steps-through-a-plan-on-confirmed-feedback.md) - Deliberation hands the whole plan down; progression advances a step when its prediction is confirmed, and re-plans on surprise.
 * [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md) - The plan's head is what the keeper writes, execution is one kernel road, and `orexis:takenBy` links a row to the code that takes it.
 * [an-intention-stands-until-the-world-answers](/decisions/an-intention-stands-until-the-world-answers.md) - An Actuate stands from the command to its verdict, so the standing rule is the whole patience and the `absorbs` hook is gone.
 * [an-action-is-one-node](/decisions/an-action-is-one-node.md) - Precondition, effect and taker are one `orexis:Action` node in `actions.ttl`; chosen/honoured is a column, and four surfaces became one.

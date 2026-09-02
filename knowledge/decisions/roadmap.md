@@ -18,6 +18,7 @@ trusted), then clearing (pure code, fully unit-testable with scripted bids), the
 (the only LLM part, stubbed against a working clearing).
 
 Supplier cost is a **fixed constant** with a reserve price. See [strategic-supplier](/decisions/strategic-supplier.md).
+- **Progression steps through a plan** — [#510](https://github.com/ShishkinDmitriy/orexis/issues/510), the build of [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/progression-steps-through-a-plan-on-confirmed-feedback.md): one search per delivery, re-plan on surprise.
 
 # Parked, with the seam that unlocks each
 
