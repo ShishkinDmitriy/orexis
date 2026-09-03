@@ -45,18 +45,18 @@ from .act import Step, method_of, predicts_from_json, predicts_json
 from .store import bind, bindings
 
 from .graphs import intentions_graph
-from .ontology import ANSWER, OREXIS, PLAN_FAILED, PLAN_FINISHED, REPORTS, WITNESS
+from .ontology import ANSWER, LAYER_OF, OREXIS, PLAN_FAILED, PLAN_FINISHED, REPORTS, WITNESS, PROGRESSION
 
 #  What an intention is made of — the mind's own words, and they were the kernel's already
 #  (the-mind-is-six-graphs). What has joined them is the four figures the KEEPING member used to
 #  own privately: a patience, a suspicion threshold and the bounds on the patience. They are the
 #  kernel's now for the same reason the class is — every agent keeps a ledger, so a figure that
 #  governs keeping is not one package's private setting.
-INTENTION_CLASS = OREXIS + "Intention"
-BY = OREXIS + "by"
-PURSUES = OREXIS + "pursues"
-ADOPTED_AT = OREXIS + "adoptedAt"
-RESOLVED_AT = OREXIS + "resolvedAt"
+INTENTION_CLASS = PROGRESSION + "Intention"
+BY = PROGRESSION + "by"
+PURSUES = PROGRESSION + "pursues"
+ADOPTED_AT = PROGRESSION + "adoptedAt"
+RESOLVED_AT = PROGRESSION + "resolvedAt"
 _SH_NODE_SHAPE = URIRef("http://www.w3.org/ns/shacl#NodeShape")
 
 
@@ -93,31 +93,32 @@ def _rdflib_term(t):
     if t.language:
         return rdflib.Literal(t.value, lang=t.language)
     return rdflib.Literal(t.value, datatype=rdflib.URIRef(t.datatype.value))
-OUTCOME = OREXIS + "outcome"
-BECAUSE_OF = OREXIS + "becauseOf"
+OUTCOME = PROGRESSION + "outcome"
+BECAUSE_OF = PROGRESSION + "becauseOf"
 
 # The means — what kind of act the commitment is to.
 
 # The commitment policy — the belief, not the mechanism.
-PATIENCE_S = OREXIS + "patienceS"
+PATIENCE_S = PROGRESSION + "patienceS"
 
 # The expectation — the END, judged apart from the action.
-PREDICTS = OREXIS + "predicts"
-PREDICTED_VALUE = OREXIS + "predictedValue"
-OBSERVED_VALUE = OREXIS + "observedValue"
-BASELINE_VALUE = OREXIS + "baselineValue"
-BASELINE_AT = OREXIS + "baselineAt"
-#  `orexis:deadlineAt` WAS HERE: the watch's deadline is the ACT's `orexis:notAfter` now — one window,
+PREDICTS = PROGRESSION + "predicts"
+PREDICTED_VALUE = PROGRESSION + "predictedValue"
+OBSERVED_VALUE = PROGRESSION + "observedValue"
+BASELINE_VALUE = PROGRESSION + "baselineValue"
+BASELINE_AT = PROGRESSION + "baselineAt"
+#  `progression:deadlineAt` WAS HERE: the watch's deadline is the ACT's `progression:notAfter` now — one window,
 #  read by the keeper, the bidder's give-up and the host's redeem check alike
 #  (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan). `ledger` migrates it.
-END_MET = OREXIS + "endMet"
-END_VERIFIED_AT = OREXIS + "endVerifiedAt"
-SUSPECT_AFTER = OREXIS + "suspectAfter"
+END_MET = PROGRESSION + "endMet"
+END_VERIFIED_AT = PROGRESSION + "endVerifiedAt"
+SUSPECT_AFTER = PROGRESSION + "suspectAfter"
 
 
 def kernel(name: str) -> str:
-    """A mind state, by local name."""
-    return OREXIS + name
+    """A mind state, by local name — in the ledger's own namespace where the name is the
+    ledger's (#529), `orexis:` where it is everyone's (`about`)."""
+    return LAYER_OF.get(name, OREXIS) + name
 
 # What this package asks OF others — namespaces, never Python. The direction a lever moves the
 # property it is priced in is the domain's statement (#127), copied into the expectation row;
@@ -132,11 +133,11 @@ def kernel(name: str) -> str:
 # patience bounds: what this society tolerates before it stops trusting a claim.
 _SUSPECT_Q = """
 SELECT ?n WHERE {
-  GRAPH ?g { orexis:Intention orexis:suspectAfter ?n }
+  GRAPH ?g { progression:Intention progression:suspectAfter ?n }
 } LIMIT 1"""
 
 # The fraction of an expected delta that counts as the world answering (#165). Carried by
-# `orexis:Intention` itself now that there is no family to hang it on — what a society accepts as
+# `progression:Intention` itself now that there is no family to hang it on — what a society accepts as
 # evidence is a fact about intentions, not about one way of keeping them.
 @dataclass(frozen=True)
 class KeepingBeliefs:
@@ -152,10 +153,10 @@ class KeepingBeliefs:
 
 
 class NoPatience(LookupError):
-    """This agent states no `orexis:patienceS`, and something asked for it.
+    """This agent states no `progression:patienceS`, and something asked for it.
 
     An agent that keeps commitments and states no patience is missing something
-    `orexis:Intention` needs, not something it was granted — `orexis:KeeperShape` refuses to let an
+    `progression:Intention` needs, not something it was granted — `orexis:KeeperShape` refuses to let an
     agent with a stake boot without one, so reaching this is a stakeless agent being asked to
     commit, which is a bug in the asker."""
 
@@ -163,12 +164,12 @@ class NoPatience(LookupError):
 @dataclass(frozen=True)
 class Standing:
     """One unresolved commitment, as a reader gets it back: the ACT committed to, and the want
-    it pursues. `orexis:by` names the STEP the intention stands at — planned, not done; the
+    it pursues. `progression:by` names the STEP the intention stands at — planned, not done; the
     action, the lever and the quantity are the step's, read through it."""
 
     uri: str
     step: Step
-    want: str               # the desire's node — `orexis:pursues`; the kernel's only key besides the step
+    want: str               # the desire's node — `progression:pursues`; the kernel's only key besides the step
     adopted_at: datetime
     advanced_at: datetime | None = None   # when it last moved to a next step (#510), if it did
 
@@ -198,7 +199,7 @@ class OpenExpectation:
     deadline: datetime
     baseline: float | None = None        # where the property stood, where the step is about one
     baseline_at: datetime | None = None
-    about_world: bool = True             # a step that predicted the world (`orexis:predicts`), not
+    about_world: bool = True             # a step that predicted the world (`progression:predicts`), not
                                          # one held on its action's doneWhen (#523)
 
 
@@ -236,14 +237,14 @@ class Keeper:
             self.log.info("ledger migrated: %d row(s) keyed by a property now pursue a want", n)
         if (n := ledger.migrate_ledger_acts(agent.intentions, self.graph)):
             self.log.info("ledger migrated: %d row(s) naming an action now commit to an act", n)
-        #  THE HOLDS (#512): re-armed from the ledger's `orexis:until` rows on every belief
+        #  THE HOLDS (#512): re-armed from the ledger's `progression:until` rows on every belief
         #  write, and their deadlines on the scheduler. A restart loses a deadline's clock
         #  and keeps the condition — the next write re-asks it — which is the honest half.
-        #  A pre-fold volume typed the node `orexis:by` names an Act; it is a STEP — planned,
+        #  A pre-fold volume typed the node `progression:by` names an Act; it is a STEP — planned,
         #  and the act is the record of its taking (the sovereign's ruling). Retyped, once.
         agent.intentions.update(f"""
-INSERT {{ GRAPH <{self.graph}> {{ ?s a <{kernel("Step")}> }} }}
-WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ ?s a <{kernel("Step")}> }} }} }}""")
+INSERT {{ GRAPH <{self.graph}> {{ ?s a <{PROGRESSION + "Step"}> }} }}
+WHERE  {{ GRAPH <{self.graph}> {{ ?i <{PROGRESSION + "by"}> ?s . FILTER NOT EXISTS {{ ?s a <{PROGRESSION + "Step"}> }} }} }}""")
         self._deadlines: dict = {}
         self._compiled_conditions: dict = {}
         self._reconsidering = False
@@ -267,7 +268,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
         commitment with none raises `NoPatience` here, naming the missing term.
         """
         if self._picks is None:
-            raise NoPatience(f"{self.agent.id} states no patience (orexis:patienceS) and was asked "
+            raise NoPatience(f"{self.agent.id} states no patience (progression:patienceS) and was asked "
                              "to keep a commitment")
         return self._picks
 
@@ -300,8 +301,8 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
 
         `act` is an `Act` — the plan's head, sized, through its lever — or, for an actor
         committing on its own event with nothing sized (a held claim), the action's IRI and
-        the lever as `via`. Either way the ledger holds an act NODE: `orexis:by` names it, and it
-        carries `orexis:fills` the action, `orexis:through` the lever, `orexis:quantity` and the window
+        the lever as `via`. Either way the ledger holds an act NODE: `progression:by` names it, and it
+        carries `progression:fills` the action, `progression:through` the lever, `progression:quantity` and the window
         (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
 
         KEYED ON (ACTION, WANT) and nothing else: a want is its node, and the kernel no longer
@@ -309,7 +310,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
         property but different wants were always distinct — a dealer owing water to fern and
         to tomato holds two Serving rows — and the property was only ever the coarser key.
 
-        `via` is the lever the plan's head goes through — written as `orexis:through`, so the
+        `via` is the lever the plan's head goes through — written as `progression:through`, so the
         ledger says which valve or venue and the actor handed the row later knows too.
         Execution passes it; an actor adopting on its own event (a held claim) may not.
 
@@ -328,8 +329,8 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
         wrong as honouring it not at all.
         """
         #  A PLAN, HANDED DOWN WHOLE (#510): `act` may be the plan's steps in order. The head
-        #  is what the intention stands at (`orexis:by`); every step is `orexis:step`; each
-        #  names the next (`orexis:then`). Absorption is keyed on the head, as it always was.
+        #  is what the intention stands at (`progression:by`); every step is `progression:step`; each
+        #  names the next (`progression:then`). Absorption is keyed on the head, as it always was.
         steps = list(act) if isinstance(act, (list, tuple)) else None
         if steps is not None:
             act = steps[0]
@@ -357,51 +358,51 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
                      for n in range(len(plan))]
         blocks, parents, written = [], {}, set()
         for n, (step, step_uri) in enumerate(zip(plan, step_uris)):
-            facts = [f'<{kernel("fills")}> <{step.action}>']
+            facts = [f'<{PROGRESSION + "fills"}> <{step.action}>']
             if step.via:
-                facts.append(f'<{kernel("through")}> <{step.via}>')
+                facts.append(f'<{PROGRESSION + "through"}> <{step.via}>')
             if step.for_agent:
-                facts.append(f'<{kernel("forAgent")}> <{step.for_agent}>')
+                facts.append(f'<{PROGRESSION + "forAgent"}> <{step.for_agent}>')
             if step.quantity is not None:
-                facts.append(f'<{kernel("quantity")}> "{step.quantity}"^^<{xsd}decimal>')
+                facts.append(f'<{PROGRESSION + "quantity"}> "{step.quantity}"^^<{xsd}decimal>')
             if step.not_before:
-                facts.append(f'<{kernel("notBefore")}> "{step.not_before.isoformat()}"^^<{xsd}dateTime>')
+                facts.append(f'<{PROGRESSION + "notBefore"}> "{step.not_before.isoformat()}"^^<{xsd}dateTime>')
             if step.not_after:
-                facts.append(f'<{kernel("notAfter")}> "{step.not_after.isoformat()}"^^<{xsd}dateTime>')
+                facts.append(f'<{PROGRESSION + "notAfter"}> "{step.not_after.isoformat()}"^^<{xsd}dateTime>')
             if step.urgency_after is not None:
-                facts.append(f'<{kernel("predictedUrgency")}> "{step.urgency_after:.6f}"^^<{xsd}decimal>')
+                facts.append(f'<{PROGRESSION + "predictedUrgency"}> "{step.urgency_after:.6f}"^^<{xsd}decimal>')
             if step.predicts is not None:
                 facts.append(f'<{PREDICTS}> {_literal(predicts_json(step.predicts))}')
             if step.about:
                 facts.append(f'<{kernel("about")}> <{step.about}>')
             if step.part_of is not None:
                 parent_uri = parents.setdefault(id(step.part_of), f"{OREXIS}step_{self.agent.id}_{stem}_of{len(parents)}")
-                facts.append(f'<{kernel("partOf")}> <{parent_uri}>')
+                facts.append(f'<{PROGRESSION + "partOf"}> <{parent_uri}>')
                 if id(step.part_of) not in written:
                     written.add(id(step.part_of))
                     p = step.part_of
-                    pfacts = [f'<{kernel("fills")}> <{p.action}>']
+                    pfacts = [f'<{PROGRESSION + "fills"}> <{p.action}>']
                     if p.via:
-                        pfacts.append(f'<{kernel("through")}> <{p.via}>')
+                        pfacts.append(f'<{PROGRESSION + "through"}> <{p.via}>')
                     if p.about:
                         pfacts.append(f'<{kernel("about")}> <{p.about}>')
                     if p.predicts is not None:
                         pfacts.append(f'<{PREDICTS}> {_literal(predicts_json(p.predicts))}')
                     if p.part_of is not None:
                         grand = parents.setdefault(id(p.part_of), f"{OREXIS}step_{self.agent.id}_{stem}_of{len(parents)}")
-                        pfacts.append(f'<{kernel("partOf")}> <{grand}>')
-                    blocks.append(f'  <{parent_uri}> a <{kernel("Step")}> ; {" ; ".join(pfacts)} .')
+                        pfacts.append(f'<{PROGRESSION + "partOf"}> <{grand}>')
+                    blocks.append(f'  <{parent_uri}> a <{PROGRESSION + "Step"}> ; {" ; ".join(pfacts)} .')
             if n + 1 < len(plan):
-                facts.append(f'<{kernel("then")}> <{step_uris[n + 1]}>')
-            blocks.append(f'  <{step_uri}> a <{kernel("Step")}> ; {" ; ".join(facts)} .')
+                facts.append(f'<{PROGRESSION + "then"}> <{step_uris[n + 1]}>')
+            blocks.append(f'  <{step_uri}> a <{PROGRESSION + "Step"}> ; {" ; ".join(facts)} .')
         every = " , ".join(f"<{u}>" for u in step_uris)
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{uri}> a <{kernel("Intention")}> ;
-    <{kernel("pursues")}> <{want}> ;
-    <{kernel("by")}> <{step_uris[0]}> ;
-    <{kernel("step")}> {every} ;
-    <{kernel("adoptedAt")}> "{now.isoformat()}"^^<{xsd}dateTime> ;
+  <{uri}> a <{PROGRESSION + "Intention"}> ;
+    <{PROGRESSION + "pursues"}> <{want}> ;
+    <{PROGRESSION + "by"}> <{step_uris[0]}> ;
+    <{PROGRESSION + "step"}> {every} ;
+    <{PROGRESSION + "adoptedAt"}> "{now.isoformat()}"^^<{xsd}dateTime> ;
     <{BECAUSE_OF}> {_literal(because)} .
 {chr(10).join(blocks)}
 }} }}""")
@@ -524,7 +525,7 @@ SELECT ?bridge ?construct ?estimate WHERE {{
         triples = f"""
   <{self.me.uri}> orexis:holds <{want}> .
   <{want}> a orexis:Desire ; orexis:bindsWhen orexis:AtEnd ;
-      orexis:promisedBy <{step_uri}> ;
+      progression:promisedBy <{step_uri}> ;
       orexis:unmetWhen [ sh:select {_literal(unmet)} ]{estimate} ;
       rdfs:label {_literal("the promise of " + standing.action.rsplit("#", 1)[-1] + " below")} ."""
         #  Written to the belief base — the record — and the desire modality REBUILT from it,
@@ -540,7 +541,7 @@ SELECT ?bridge ?construct ?estimate WHERE {{
 
     def _promise_of(self, step_uri: str) -> str | None:
         rows = bindings(self.agent.desires.query_union(
-            f"SELECT ?w WHERE {{ ?w orexis:promisedBy <{step_uri}> }}"))
+            f"SELECT ?w WHERE {{ ?w progression:promisedBy <{step_uri}> }}"))
         return rows[0]["w"] if rows else None
 
     def _withdraw(self, step_uri: str, kept: bool) -> None:
@@ -609,7 +610,7 @@ WHERE  {{ GRAPH <{promises_graph(self.agent.id)}> {{
     def ready(self, intention_uri: str) -> bool:
         """May the step this intention stands at be taken now? True where its action states no
         `orexis:readyWhen`, or states one that holds; otherwise the step is HELD on it
-        (`orexis:until`, taken when it lapses) and this answers False — `carry_out`'s question
+        (`progression:until`, taken when it lapses) and this answers False — `carry_out`'s question
         before it asks any actor (#523), and the same question after a release, when the
         condition holds and the answer is yes."""
         if intention_uri in self._released:
@@ -637,7 +638,7 @@ WHERE  {{ GRAPH <{promises_graph(self.agent.id)}> {{
 
     def after_take(self, intention_uri: str) -> None:
         """The step was taken: where its action states `orexis:doneWhen`, hold the step on it
-        as its completion (`orexis:answeredWhen`) — met advances the plan, lapsing is an unmet
+        as its completion (`progression:answeredWhen`) — met advances the plan, lapsing is an unmet
         verdict that drops the tail (#523)."""
         standing = next((s for s in self.standing() if s.uri == intention_uri), None)
         if standing is None:
@@ -653,7 +654,7 @@ WHERE  {{ GRAPH <{promises_graph(self.agent.id)}> {{
         self.window(intention_uri, deadline)
         self.log.info("expecting %s to be done by %s: its action's condition",
                       standing.action.rsplit("#", 1)[-1], deadline.isoformat(timespec="seconds"))
-        self._hold_step(intention_uri, kernel("answeredWhen"), shape, deadline, "unmet")
+        self._hold_step(intention_uri, PROGRESSION + "answeredWhen", shape, deadline, "unmet")
 
     def hold(self, intention_uri: str, until=None, until_not=None,
              not_after: datetime | None = None, when_lapsed: str = "take") -> None:
@@ -678,7 +679,7 @@ WHERE  {{ GRAPH <{promises_graph(self.agent.id)}> {{
             raise ValueError("a hold is `until` or `until_not`, exactly one")
         if when_lapsed not in ("take", "drop"):
             raise ValueError(f"whenLapsed is `take` or `drop`, not {when_lapsed!r}")
-        predicate = kernel("until") if until is not None else kernel("untilNot")
+        predicate = PROGRESSION + "until" if until is not None else PROGRESSION + "untilNot"
         condition = until if until is not None else until_not
         if not_after is not None:
             self.window(intention_uri, not_after)
@@ -697,9 +698,9 @@ WHERE  {{ GRAPH <{promises_graph(self.agent.id)}> {{
             self._claimed.discard(intention_uri)
         self.agent.intentions.update(f"""
 INSERT {{ GRAPH <{self.graph}> {{
-  ?act <{predicate}> <{node}> ; <{kernel("whenLapsed")}> "{when_lapsed}" .
+  ?act <{predicate}> <{node}> ; <{PROGRESSION + "whenLapsed"}> "{when_lapsed}" .
   {triples} }} }}
-WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act }} }}""")
+WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "by"}> ?act }} }}""")
         if not_after is not None:
             delay = (not_after - datetime.now(timezone.utc)).total_seconds()
             from .scheduler import scheduler
@@ -731,21 +732,21 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act }} }}"
         answers with the verdict. The holder is the `Standing` or the `OpenExpectation`."""
         rows = bindings(self.agent.intentions.query_union(f"""
 SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{kernel("by")}> ?act .
-  ?act ?p ?node ; <{kernel("whenLapsed")}> ?when .
+  ?i <{PROGRESSION + "by"}> ?act .
+  ?act ?p ?node ; <{PROGRESSION + "whenLapsed"}> ?when .
   ?node a sh:NodeShape .
-  FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>, <{kernel("answeredWhen")}>))
+  FILTER(?p IN (<{PROGRESSION + "until"}>, <{PROGRESSION + "untilNot"}>, <{PROGRESSION + "answeredWhen"}>))
   FILTER NOT EXISTS {{ ?act <{END_MET}> ?m }} }} }}"""))
         standing = {s.uri: s for s in self.standing()}
         watches = {w.uri: w for w in self.open_expectations(every=True)}
         out = []
         for r in rows:
-            if r["p"] == kernel("answeredWhen"):
+            if r["p"] == PROGRESSION + "answeredWhen":
                 holder = watches.get(r["i"])
             else:
                 holder = standing.get(r["i"])
             if holder is not None:
-                out.append((holder, self._compiled(r["node"], r["p"] != kernel("untilNot")), r["p"]))
+                out.append((holder, self._compiled(r["node"], r["p"] != PROGRESSION + "untilNot"), r["p"]))
         return out
 
     def _compiled(self, node: str, holds: bool) -> str:
@@ -818,7 +819,7 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
         """The wait is over: a readiness wait releases the act, a completion wait is met."""
         if not self._claim(holder.uri):
             return
-        if predicate == kernel("answeredWhen"):
+        if predicate == PROGRESSION + "answeredWhen":
             self._verdict(holder, True, "answered as the step predicted: the world conforms "
                                         "to the shape generated from its prediction")
         else:
@@ -828,7 +829,7 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
         when = self._when_lapsed(holder.uri)     # read before the claim removes it
         if not self._claim(holder.uri):
             return
-        if predicate == kernel("answeredWhen"):
+        if predicate == PROGRESSION + "answeredWhen":
             self._verdict(holder, False,
                           f"deadline passed, baseline {holder.baseline} — the act was "
                           f"honoured and the world did not answer as the graph promised")
@@ -859,7 +860,7 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
     def _when_lapsed(self, intention_uri: str) -> str:
         rows = bindings(self.agent.intentions.query_union(f"""
 SELECT ?when WHERE {{ GRAPH <{self.graph}> {{
-  <{intention_uri}> <{kernel("by")}> ?act . ?act <{kernel("whenLapsed")}> ?when }} }}"""))
+  <{intention_uri}> <{PROGRESSION + "by"}> ?act . ?act <{PROGRESSION + "whenLapsed"}> ?when }} }}"""))
         return rows[0]["when"] if rows else "take"
 
     def _release(self, standing: Standing, because: str) -> None:
@@ -880,10 +881,10 @@ INSERT DATA {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{BECAUSE_OF}> {_literal
         #  The condition's own triples stay in the ledger as the record of what was waited
         #  for; only the hold — the pointer and the lapse rule — goes.
         self.agent.intentions.update(f"""
-DELETE {{ GRAPH <{self.graph}> {{ ?act ?p ?c ; <{kernel("whenLapsed")}> ?w }} }}
-WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act .
-          ?act ?p ?c ; <{kernel("whenLapsed")}> ?w .
-          FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>, <{kernel("answeredWhen")}>)) }} }}""")
+DELETE {{ GRAPH <{self.graph}> {{ ?act ?p ?c ; <{PROGRESSION + "whenLapsed"}> ?w }} }}
+WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "by"}> ?act .
+          ?act ?p ?c ; <{PROGRESSION + "whenLapsed"}> ?w .
+          FILTER(?p IN (<{PROGRESSION + "until"}>, <{PROGRESSION + "untilNot"}>, <{PROGRESSION + "answeredWhen"}>)) }} }}""")
 
     def _on_written(self) -> None:
         if self._holding:
@@ -920,8 +921,8 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act .
         now = datetime.now(timezone.utc).isoformat()
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{standing.uri}> <{kernel("resolvedAt")}> "{now}"^^xsd:dateTime ;
-          <{kernel("outcome")}> {_literal(outcome)} ;
+  <{standing.uri}> <{PROGRESSION + "resolvedAt"}> "{now}"^^xsd:dateTime ;
+          <{PROGRESSION + "outcome"}> {_literal(outcome)} ;
           <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
         self.log.info("%s: %s", outcome, because)
@@ -949,7 +950,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                predicts: tuple | None = None) -> bool:
         """Open the watch: the step was taken, now the world owes the change it predicted.
 
-        ONE DECLARATION (#510, #518). What the world is held to is `orexis:predicts` on the
+        ONE DECLARATION (#510, #518). What the world is held to is `progression:predicts` on the
         step the intention stands at — the facts the search said this step makes true and
         false, the same facts its signature is made of — and nothing the actor sizes: the
         actor that used to say a delta and a direction now says only how CLOSE the world must
@@ -960,7 +961,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         observation, some package's `orexis:keyedBy` class — is put to that package through
         the `orexis:answer` extension, since what a reading is is sensing's; a PLAIN fact is
         the kernel's own, present for an addition and gone for a retraction, as one query
-        under a shape. The keeper holds the step on the shape as `orexis:answeredWhen` and
+        under a shape. The keeper holds the step on the shape as `progression:answeredWhen` and
         the verdict is its conformance before the deadline.
 
         THE DEADLINE IS THE STEP'S WINDOW. `not_after` where the actor states it, or the
@@ -1011,7 +1012,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{{based}{stated}
             self.log.warning("nothing says what a world answering %s would look like "
                              "— the watch can only lapse", _short(intention_uri))
         else:
-            self._hold_step(intention_uri, kernel("answeredWhen"), shape, deadline_dt, "unmet")
+            self._hold_step(intention_uri, PROGRESSION + "answeredWhen", shape, deadline_dt, "unmet")
         self.log.info("expecting %s to answer within %ss (%d predicted, %d retracted%s): %s",
                       _short(intention_uri), round(window), len(predicts[0]), len(predicts[1]),
                       f", from {value:.3f}" if value is not None else "", because)
@@ -1039,7 +1040,7 @@ SELECT ?predicts WHERE {{ GRAPH <{self.graph}> {{ <{step_uri}> <{PREDICTS}> ?pre
         nothing (a step an event adopted, a look)."""
         rows = bindings(self.agent.intentions.query_union(f"""
 SELECT ?step ?predicts WHERE {{ GRAPH <{self.graph}> {{
-  <{intention_uri}> <{kernel("by")}> ?step .
+  <{intention_uri}> <{PROGRESSION + "by"}> ?step .
   OPTIONAL {{ ?step <{PREDICTS}> ?predicts }} }} }}"""))
         if not rows:
             return None, None
@@ -1109,7 +1110,7 @@ SELECT ?step ?predicts WHERE {{ GRAPH <{self.graph}> {{
     def _about(self, intention_uri: str) -> str | None:
         """What the want this intention pursues is about — the property, for a stake."""
         rows = bindings(self.agent.intentions.query_union(f"""
-SELECT ?want WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("pursues")}> ?want }} }}"""))
+SELECT ?want WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "pursues"}> ?want }} }}"""))
         if not rows:
             return None
         about = bindings(self.agent.desires.query_union(
@@ -1120,10 +1121,10 @@ SELECT ?want WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("pursue
         """Set the window's close on the act an intention names — the one figure the bidder's
         give-up, the host's redeem check and the expectation's verdict all read."""
         self.agent.intentions.update(f"""
-DELETE {{ GRAPH <{self.graph}> {{ ?act <{kernel("notAfter")}> ?was }} }}
-INSERT {{ GRAPH <{self.graph}> {{ ?act <{kernel("notAfter")}> "{not_after.isoformat()}"^^xsd:dateTime }} }}
-WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act .
-                                  OPTIONAL {{ ?act <{kernel("notAfter")}> ?was }} }} }}""")
+DELETE {{ GRAPH <{self.graph}> {{ ?act <{PROGRESSION + "notAfter"}> ?was }} }}
+INSERT {{ GRAPH <{self.graph}> {{ ?act <{PROGRESSION + "notAfter"}> "{not_after.isoformat()}"^^xsd:dateTime }} }}
+WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "by"}> ?act .
+                                  OPTIONAL {{ ?act <{PROGRESSION + "notAfter"}> ?was }} }} }}""")
 
     def open_expectations(self, want: str | None = None, *, every: bool = False) -> list[OpenExpectation]:
         """Every watch still on: expectation adopted, end not yet verified — for one want, or
@@ -1136,11 +1137,11 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act .
         rows = bindings(self.agent.intentions.query(f"""
 SELECT ?i ?step ?action ?want ?baseline ?baselineAt ?deadline ?predicts WHERE {{
   GRAPH <{self.graph}> {{
-    ?i <{kernel("by")}> ?step ;
-       <{kernel("pursues")}> ?want .
-    ?step <{kernel("fills")}> ?action ;
-          <{kernel("notAfter")}> ?deadline ;
-          <{kernel("answeredWhen")}> ?shape .
+    ?i <{PROGRESSION + "by"}> ?step ;
+       <{PROGRESSION + "pursues"}> ?want .
+    ?step <{PROGRESSION + "fills"}> ?action ;
+          <{PROGRESSION + "notAfter"}> ?deadline ;
+          <{PROGRESSION + "answeredWhen"}> ?shape .
     OPTIONAL {{ ?step <{PREDICTS}> ?predicts }}
     OPTIONAL {{ ?step <{BASELINE_VALUE}> ?baseline ; <{BASELINE_AT}> ?baselineAt }}
     FILTER NOT EXISTS {{ ?step <{END_MET}> ?met }}
@@ -1225,15 +1226,15 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         from .execution import carry_out
 
         rows = bindings(self.agent.intentions.query_union(f"""
-SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{watch.step}> <{kernel("then")}> ?next }} }}"""))
+SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{watch.step}> <{PROGRESSION + "then"}> ?next }} }}"""))
         if not rows:
             return False
         following = rows[0]["next"]
         self.agent.intentions.update(f"""
-DELETE {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{kernel("by")}> ?was }} }}
-INSERT {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{kernel("by")}> <{following}> ;
+DELETE {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{PROGRESSION + "by"}> ?was }} }}
+INSERT {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{PROGRESSION + "by"}> <{following}> ;
                                 <{BECAUSE_OF}> {_literal("step answered as predicted — advancing to the next")} }} }}
-WHERE  {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{kernel("by")}> ?was }} }}""")
+WHERE  {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{PROGRESSION + "by"}> ?was }} }}""")
         standing = next((s for s in self.standing(want=watch.want) if s.uri == watch.uri), None)
         if standing is None:
             return False
@@ -1266,7 +1267,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{kernel("by")}> ?was }} }}""")
 
     def _next_of(self, intention_uri: str) -> str | None:
         rows = bindings(self.agent.intentions.query_union(f"""
-SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?s . ?s <{kernel("then")}> ?next }} }}"""))
+SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "by"}> ?s . ?s <{PROGRESSION + "then"}> ?next }} }}"""))
         return rows[0]["next"] if rows else None
 
     def _suspect_after(self) -> int:
@@ -1281,9 +1282,9 @@ SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}>
         """
         rows = bindings(self.agent.intentions.query(f"""
 SELECT ?met WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{kernel("step")}> ?act ;
-     <{kernel("pursues")}> <{want}> .
-  ?act <{kernel("fills")}> <{action}> ;
+  ?i <{PROGRESSION + "step"}> ?act ;
+     <{PROGRESSION + "pursues"}> <{want}> .
+  ?act <{PROGRESSION + "fills"}> <{action}> ;
        <{END_MET}> ?met ;
        <{END_VERIFIED_AT}> ?at .
 }} }} ORDER BY DESC(?at) LIMIT {self._suspect_after()}"""))
@@ -1294,9 +1295,9 @@ SELECT ?met WHERE {{ GRAPH <{self.graph}> {{
         """Every (action, want) pair currently suspect. What review and the report read."""
         pairs = {(r["action"], r["want"]) for r in bindings(self.agent.intentions.query(f"""
 SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{kernel("step")}> ?act ;
-     <{kernel("pursues")}> ?want .
-  ?act <{kernel("fills")}> ?action ;
+  ?i <{PROGRESSION + "step"}> ?act ;
+     <{PROGRESSION + "pursues"}> ?want .
+  ?act <{PROGRESSION + "fills"}> ?action ;
        <{END_MET}> ?met .
 }} }}"""))}
         return sorted(p for p in pairs if self._is_suspect(*p))
@@ -1333,7 +1334,7 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
                      "about", "partOf"):
             clauses.append(f'OPTIONAL {{ ?act <{kernel(term)}> ?{term} }}')
         clauses.append(f'OPTIONAL {{ SELECT ?i (MAX(?v) AS ?advanced) WHERE {{ '
-                       f'?i <{kernel("step")}> ?done . ?done <{END_VERIFIED_AT}> ?v }} GROUP BY ?i }}')
+                       f'?i <{PROGRESSION + "step"}> ?done . ?done <{END_VERIFIED_AT}> ?v }} GROUP BY ?i }}')
         rows = bindings(self.agent.intentions.query(
             "SELECT ?i ?act ?action ?want ?at ?through ?quantity ?forAgent ?notBefore ?notAfter "
             "?predicts ?about ?partOf ?advanced WHERE { GRAPH <%s> { %s } }"
@@ -1374,7 +1375,7 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
         # `affordances_suspect` above zero is the flag itself.
         rows = bindings(self.agent.intentions.query(f"""
 SELECT ?met (COUNT(?s) AS ?n) WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{kernel("step")}> ?s . ?s <{END_MET}> ?met ; <{PREDICTS}> ?world }} }} GROUP BY ?met"""))
+  ?i <{PROGRESSION + "step"}> ?s . ?s <{END_MET}> ?met ; <{PREDICTS}> ?world }} }} GROUP BY ?met"""))
         counts = {r["met"]: int(r["n"]) for r in rows}
         out["expectations_open"] = len(self.open_expectations())
         out["expectations_met"] = counts.get("true", 0)

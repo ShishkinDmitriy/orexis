@@ -44,7 +44,7 @@ def test_a_taker_less_step_with_a_bridge_raises_its_promise_as_a_want(monkeypatc
     assert len(promised) == 1 and promised[0].state == "unmet", "the promise is a want the agent holds"
     rows = bindings(fern.beliefs.query_union(f"""
 SELECT ?w ?step ?sel WHERE {{ GRAPH <{promises_graph(fern.id)}> {{
-  <{fern.me.uri}> orexis:holds ?w . ?w orexis:promisedBy ?step ; orexis:estimates ?est . ?est sh:select ?sel }} }}"""))
+  <{fern.me.uri}> orexis:holds ?w . ?w progression:promisedBy ?step ; orexis:estimates ?est . ?est sh:select ?sel }} }}"""))
     assert len(rows) == 1 and "?estimate" in rows[0]["sel"], "with the bridge's estimate, bound to this promise"
     assert keeper.open_expectations(want), "and the step waits on the translated fact"
     # the level beneath keeps the promise: the box is at pier B, in the lower vocabulary

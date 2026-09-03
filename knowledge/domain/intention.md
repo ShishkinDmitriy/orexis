@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Intention
-term: http://example.org/orexis#Intention
+term: http://example.org/orexis/progression#Intention
 description: >-
   BDI's third letter, and the KERNEL's — every agent keeps a ledger, because a mind is not
   plug-in-able and the intention STORE was already built for every agent while the thing that
@@ -28,8 +28,8 @@ whoever takes it; if the deadline passes first, the act is taken as lapsed or dr
 adopter said. The condition sits on the [step](/domain/step.md) the intention stands at — an
 intention is the commitment, which want and why; the step is the planned instance, and a
 planned thing is what waits; the [act](/domain/act.md) is the record of its taking — as data on
-the ledger (`orexis:until`, or its twin
-`orexis:untilNot`, released when the condition stops holding — hold while the round is open),
+the ledger (`progression:until`, or its twin
+`progression:untilNot`, released when the condition stops holding — hold while the round is open),
 and it is always a SHAPE — a condition that is naturally a query is a shape carrying a
 `sh:sparql` constraint, the form SHACL already has — which the keeper compiles to the select
 it runs (conformance for `until`, violation for `untilNot`) while the ledger keeps the shape,
@@ -43,13 +43,13 @@ take on feedback — and it is why nothing above it needs a timer of its own.
 through `orexis:answer` — for the shape of an observation that would answer it: on the
 subject, later than the baseline, within the actor's [tolerance](/domain/tolerance.md) of the
 value the step predicted (#510). The step is held on that shape as its COMPLETION condition
-(`orexis:answeredWhen`, beside its readiness condition `orexis:until`); conformance is the
+(`progression:answeredWhen`, beside its readiness condition `progression:until`); conformance is the
 verdict met, the deadline passing first the verdict unmet, and the arithmetic that used to
 judge every reading is inside the shape with its numbers baked at the instant the watch
 opened. A plan handed down whole holds each step's readiness on the previous step's answer.
 
 **And it is the plan, whole** (#510). Deliberation hands every step down; the intention has
-`orexis:step` to each, stands at the head, and moves along `orexis:then` as the world confirms
+`progression:step` to each, stands at the head, and moves along `progression:then` as the world confirms
 each step's prediction — the met verdict on one step is the only license the next has, and no
 search runs while a plan is in progress. An unmet verdict stops the plan where it is: the
 intention resolves, the tail is abandoned, and deliberation is told to plan again. "Only the
@@ -124,11 +124,11 @@ sensed graph keeps only the current witness — the ledger is what remembers) an
 act's landing time plus how long a reading takes to arrive, both passed by the actor, or the
 patience where the act cannot say.
 
-What the world is held to is **the step's own prediction** (`orexis:predicts`, #510) — the facts
+What the world is held to is **the step's own prediction** (`progression:predicts`, #510) — the facts
 the search said taking it makes true and false, the same facts its signature is made of — and
 the actor sizes nothing: it says only how close, a [tolerance](/domain/tolerance.md) on the
 predicted movement. The keeper generates the answering shape from the prediction and holds the
-step on it as `orexis:answeredWhen`: a predicted reading is put to sensing, which answers with
+step on it as `progression:answeredWhen`: a predicted reading is put to sensing, which answers with
 an observation later than the baseline within the tolerance of the predicted value; a plain
 fact is the kernel's, present for an addition and gone for a retraction. Conformance before the
 deadline — **met**. Deadline passed without it — **unmet**. An overshoot is as much a surprise
@@ -156,7 +156,7 @@ Two consequences ride on the watch:
 
 # The patience
 
-The one piece of policy the keeper owns. Within `orexis:patienceS` — each agent's own belief,
+The one piece of policy the keeper owns. Within `progression:patienceS` — each agent's own belief,
 bounded by the family's constitutional floor and ceiling like a cadence — a second impulse to
 adopt the same commitment is **absorbed**: `adopt` returns None and the caller treats it as its
 own cooldown. Past it, a new adoption **supersedes**: the old one is resolved as dropped with
@@ -176,8 +176,8 @@ records.
 
 - **Not a decider.** Nothing here chooses what to commit to; [executor](/domain/executor.md)
   calls `adopt` with the head of a plan, and the *whether* lives in
-  [deliberation](/domain/deliberator.md). A row written here names, `orexis:by`, the [act](/domain/act.md) the
-  plan's head is — the action it fills, `orexis:through` the lever, the quantity the taker sized,
+  [deliberation](/domain/deliberator.md). A row written here names, `progression:by`, the [act](/domain/act.md) the
+  plan's head is — the action it fills, `progression:through` the lever, the quantity the taker sized,
   the window — so the [actor](/domain/actor.md) handed it later takes the same act. Keeping and deciding share a granting premise and stay two capabilities
   because their replaceable parts differ.
 - **Not public.** The ledger is a graph of the agent's own, like its beliefs and its revisions:

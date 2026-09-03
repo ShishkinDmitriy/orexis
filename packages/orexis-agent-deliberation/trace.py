@@ -92,7 +92,7 @@ def clear(store, agent_id: str, desire_uri: str) -> None:
         DELETE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?c ?cp ?co . <{node}> ?p ?o }} }}
         WHERE  {{ GRAPH <{DELIBERATION_GRAPH}> {{
                     <{node}> ?p ?o .
-                    OPTIONAL {{ <{node}> orexis:considered ?c . ?c ?cp ?co }} }} }}""")
+                    OPTIONAL {{ <{node}> deliberation:considered ?c . ?c ?cp ?co }} }} }}""")
 
 
 def write(store, agent_id: str, desire, plan, considered, stands_at: float,
@@ -117,31 +117,31 @@ def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
     for i, (depth, row, urgency, verdict) in enumerate(considered):
         candidate = f"{node}.{i}"
         reached = "" if urgency is None else \
-            f'        orexis:wouldReach {urgency:.6f} ;\n'
+            f'        deliberation:wouldReach {urgency:.6f} ;\n'
         rows.append(
-            f'    <{node}> orexis:considered <{candidate}> .\n'
-            f'    <{candidate}> a orexis:Candidate ;\n'
-            f'        orexis:wouldTake <{row.action}> ;\n'
-            f'        orexis:through <{row.via}> ;\n'
-            f'        orexis:atDepth {depth} ;\n'
+            f'    <{node}> deliberation:considered <{candidate}> .\n'
+            f'    <{candidate}> a deliberation:Candidate ;\n'
+            f'        deliberation:wouldTake <{row.action}> ;\n'
+            f'        progression:through <{row.via}> ;\n'
+            f'        deliberation:atDepth {depth} ;\n'
             f'{reached}'
-            f'        orexis:verdict "{verdict}" .\n')
-    #  The chosen candidate is named rather than duplicated: a reader joining `orexis:chose` to the
+            f'        deliberation:verdict "{verdict}" .\n')
+    #  The chosen candidate is named rather than duplicated: a reader joining `deliberation:chose` to the
     #  candidate gets its depth, its lever and the world it would reach, and the trace never
     #  says the same number twice in two places where they could drift apart.
     took = ""
     if chosen is not None:
         for i, (_, row, _, _) in enumerate(considered):
             if row.action == chosen:
-                took = f'        orexis:chose <{node}.{i}> ;\n'
+                took = f'        deliberation:chose <{node}.{i}> ;\n'
                 break
     store.update(f"""INSERT DATA {{ GRAPH <{DELIBERATION_GRAPH}> {{
-    <{node}> a orexis:Deliberation ;
-        orexis:deliberatedOn <{desire.uri}> ;
-        orexis:verdict "{plan.outcome}" ;
-        orexis:standsAt {stands_at:.6f} ;
-        orexis:tookSeconds {took_s:.6f} ;
-{took}        orexis:asOf "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime .
+    <{node}> a deliberation:Deliberation ;
+        deliberation:deliberatedOn <{desire.uri}> ;
+        deliberation:verdict "{plan.outcome}" ;
+        deliberation:standsAt {stands_at:.6f} ;
+        deliberation:tookSeconds {took_s:.6f} ;
+{took}        deliberation:asOf "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime .
 {"".join(rows)}}} }}""")
 
 
@@ -156,7 +156,7 @@ def outcomes(query) -> dict[str, int]:
 
     rows = bindings(query(f"""
 SELECT ?verdict (COUNT(?d) AS ?n) WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
-  ?d a orexis:Deliberation ; orexis:verdict ?verdict }} }} GROUP BY ?verdict"""))
+  ?d a deliberation:Deliberation ; deliberation:verdict ?verdict }} }} GROUP BY ?verdict"""))
     return {r["verdict"]: int(r["n"]) for r in rows}
 
 
@@ -187,12 +187,12 @@ def effort(query) -> dict[str, float]:
     """
     from orexis_agent_progression.store import bindings
 
-    #  `?c a orexis:Candidate` is load-bearing, not tidiness: `orexis:verdict` is deliberately declared
+    #  `?c a deliberation:Candidate` is load-bearing, not tidiness: `deliberation:verdict` is deliberately declared
     #  with NO domain because a pass and a candidate both carry one, so a query that forgot to
     #  say which it meant would count the six pass outcomes among the five candidate ones.
     counted = bindings(query(f"""
 SELECT ?verdict (COUNT(?c) AS ?n) WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
-  ?c a orexis:Candidate ; orexis:verdict ?verdict }} }} GROUP BY ?verdict"""))
+  ?c a deliberation:Candidate ; deliberation:verdict ?verdict }} }} GROUP BY ?verdict"""))
 
     out = {name: 0.0 for name in FIELD.values()}
     for row in counted:
@@ -206,13 +206,13 @@ SELECT ?verdict (COUNT(?c) AS ?n) WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
     scalars = bindings(query(f"""
 SELECT ?k ?v WHERE {{
   {{ SELECT ("seconds" AS ?k) (SUM(?s) AS ?v)
-     WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?d orexis:tookSeconds ?s }} }} }}
+     WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?d deliberation:tookSeconds ?s }} }} }}
   UNION
   {{ SELECT ("worlds" AS ?k) (COUNT(?c) AS ?v)
-     WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?c orexis:wouldReach ?u }} }} }}
+     WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?c deliberation:wouldReach ?u }} }} }}
   UNION
   {{ SELECT ("deepest" AS ?k) (MAX(?depth) AS ?v)
-     WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?c orexis:atDepth ?depth }} }} }}
+     WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?c deliberation:atDepth ?depth }} }} }}
 }}"""))
     got = {r["k"]: r["v"] for r in scalars if r.get("v") not in (None, "")}
 

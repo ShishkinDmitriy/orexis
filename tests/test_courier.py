@@ -196,8 +196,8 @@ def test_two_domains_in_one_world_and_a_delivery_pass_moves_no_disk(monkeypatch)
     assert len(forks) == 78, f"{len(forks)} forks: 78 with no disk in the world"
     assert HANOI + "Move" not in p._relevant
     rows = bindings(agent.beliefs.query_union(f"""SELECT (COUNT(?c) AS ?n) WHERE {{
-        ?c <http://example.org/orexis#wouldTake> <{HANOI}Move> ;
-           <http://example.org/orexis#verdict> "{trace.IRRELEVANT}" }}"""))
+        ?c <http://example.org/orexis/deliberation#wouldTake> <{HANOI}Move> ;
+           <http://example.org/orexis/deliberation#verdict> "{trace.IRRELEVANT}" }}"""))
     assert int(rows[0]["n"]) > 0, "Move rows were on the menu, and the trace says so"
 
 
@@ -239,8 +239,8 @@ def test_an_irrelevant_lever_is_never_even_asked(monkeypatch):
     assert with_disks == without, \
         f"{with_disks} queries with a disk in the world, {without} without: none per node"
     rows = bindings(agent.beliefs.query_union(f"""SELECT (COUNT(?c) AS ?n) WHERE {{
-        ?c <http://example.org/orexis#wouldTake> <{HANOI}Move> ;
-           <http://example.org/orexis#verdict> "{trace.IRRELEVANT}" }}"""))
+        ?c <http://example.org/orexis/deliberation#wouldTake> <{HANOI}Move> ;
+           <http://example.org/orexis/deliberation#verdict> "{trace.IRRELEVANT}" }}"""))
     assert int(rows[0]["n"]) == 2, "one disk on a peg, two pegs to move it to: two rows, at the root"
 
 

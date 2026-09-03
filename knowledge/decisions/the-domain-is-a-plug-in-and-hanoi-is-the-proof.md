@@ -116,7 +116,7 @@ the tree; the optimum is the deontic sitting's two-stage ranking doing what it s
 
 - **Depth is the engine's, and a world cannot ask for more.** *Taken since, by
   [a-pass-is-budgeted-in-worlds](/decisions/a-pass-is-budgeted-in-worlds.md) — in worlds rather
-  than depth: `world/hanoi` states `orexis:budgetWorlds 64` and the tests raise nothing.* As
+  than depth: `world/hanoi` states `deliberation:budgetWorlds 64` and the tests raise nothing.* As
   written: the tests raised `MAX_DEPTH` on their own Planner instance; the constant stayed 2
   for every running agent, per its own comment — an agent that could revise it could spend an
   afternoon planning while its plant died. If a deployed world ever needed deep search, that

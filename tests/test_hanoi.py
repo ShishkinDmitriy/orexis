@@ -171,8 +171,8 @@ def test_a_free_foreign_action_no_longer_multiplies_the_solve(monkeypatch, tmp_p
     assert len(forks) == 50, f"{len(forks)} forks: 50 without the knob, 157 with it unseen"
     assert "urn:knob#Flip" not in p._relevant, "the knob touches nothing the want reads"
     rows = bindings(agent.beliefs.query_union(f"""SELECT (COUNT(?c) AS ?n) WHERE {{
-        ?c <http://example.org/orexis#wouldTake> <urn:knob#Flip> ;
-           <http://example.org/orexis#verdict> "{trace.IRRELEVANT}" }}"""))
+        ?c <http://example.org/orexis/deliberation#wouldTake> <urn:knob#Flip> ;
+           <http://example.org/orexis/deliberation#verdict> "{trace.IRRELEVANT}" }}"""))
     assert int(rows[0]["n"]) > 0, "and the trace says so, rather than the row vanishing"
 
 
@@ -190,11 +190,11 @@ def test_the_budget_is_the_worlds_pick_and_the_kernel_bounds_it(monkeypatch):
 
     def restate(n):
         agent.beliefs.update(f"""DELETE {{ GRAPH <{agent.beliefs.graph}> {{
-            <{agent.me.uri}> orexis:budgetWorlds ?b }} }}
+            <{agent.me.uri}> deliberation:budgetWorlds ?b }} }}
           INSERT {{ GRAPH <{agent.beliefs.graph}> {{
-            <{agent.me.uri}> orexis:budgetWorlds {n} }} }}
+            <{agent.me.uri}> deliberation:budgetWorlds {n} }} }}
           WHERE  {{ GRAPH <{agent.beliefs.graph}> {{
-            <{agent.me.uri}> orexis:budgetWorlds ?b }} }}""")
+            <{agent.me.uri}> deliberation:budgetWorlds ?b }} }}""")
         agent.desires.rebuild()
 
     restate(0)
@@ -203,7 +203,7 @@ def test_the_budget_is_the_worlds_pick_and_the_kernel_bounds_it(monkeypatch):
                        desires=agent.desires)
 
     agent.beliefs.update(f"""DELETE WHERE {{ GRAPH <{agent.beliefs.graph}> {{
-        <{agent.me.uri}> orexis:budgetWorlds ?b }} }}""")
+        <{agent.me.uri}> deliberation:budgetWorlds ?b }} }}""")
     agent.desires.rebuild()
     assert Planner(agent, agent.me).budget == Planner.BUDGET, \
         "nothing stated: the engine's ceiling, and validation does not miss it"

@@ -133,7 +133,7 @@ recomputed rows is what a leaf has to carry that a validation-report row cannot:
 **aim** (its one pick inside the room), a resolvable **urgency measure** (its kind's, declared
 in a capability's `measures.ttl` and answered through the choir — the measure never rides on
 the node, and a per-leaf override remains future work for whichever package ships it), the
-`orexis:pursues` link
+`progression:pursues` link
 an intention holds across restarts — the keeper writes it, and a leaf that vanished on
 recomputation would orphan a live commitment — and a **series identity**, the row sensing's module
 already publishes per property with the region's edges and the aim on it. A report row exists

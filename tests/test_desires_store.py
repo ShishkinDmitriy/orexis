@@ -170,7 +170,7 @@ def test_a_commitment_survives_a_restart_in_its_own_room(monkeypatch, tmp_path):
     genesis.refresh_public(st, world)
     genesis.birth(st, world, "gardener")
     st.update(f"""INSERT DATA {{ GRAPH <{intentions_graph("gardener")}> {{
-        <urn:test:i1> a <http://example.org/orexis#Intention> }} }}""")
+        <urn:test:i1> a <http://example.org/orexis/progression#Intention> }} }}""")
     del st
 
     # first boot with rooms: layout migrates, the modality adopts the ledger

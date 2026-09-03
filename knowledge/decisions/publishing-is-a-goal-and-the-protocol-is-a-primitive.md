@@ -18,7 +18,7 @@ timestamp: 2026-08-26T22:00:00Z
 **Weak: publishing is a goal, not a primitive.** Right, and worth building. The apparatus
 already exists here and comes free — an [action](/domain/action.md) with a precondition and an
 effect, an [intention](/domain/intention.md) that stands until the world answers, a window
-(`orexis:notAfter`) that is already what every hand-kept timer says, and a compensation the actor
+(`progression:notAfter`) that is already what every hand-kept timer says, and a compensation the actor
 declares. The prize is the last one: *delivery failed* stops being an exception and becomes a
 fact the search can weigh. If a plant cannot get its bid to the venue, that is not a socket
 error — it is a reason to reconsider the want that motivated the bid.

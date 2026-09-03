@@ -1,0 +1,94 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix progression: <http://example.org/orexis/progression#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix assembly: <http://example.org/orexis/assembly#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix : <http://example.org/orexis/deliberation#> .
+
+<http://example.org/orexis/deliberation> a owl:Ontology ;
+    rdfs:label "Orexis deliberation" ;
+    rdfs:comment """The top layer's own words (#529): the trace — a deliberation, its candidates, what was considered and chosen and why — the budget of worlds, the possible graph, and the extension points answered on the deliberative row.""" .
+
+
+
+
+deliberation:DeliberationGraph a owl:Class ; rdfs:subClassOf orexis:PossibleGraph ; rdfs:label "Deliberation graph" ;
+    rdfs:comment """What the planner considered on its last pass, per goal: the levers it simulated, the urgency each world would have reached, which one it took and why the others lost.
+
+THIS IS THE RECORD'S ONE EXCEPTION, TAKEN DELIBERATELY AND NOT AN EXEMPTION FROM THE RULE. Possible worlds are computed and dropped, because a stored conclusion can outlive the premise it came from — except where a reader outside the process needs one, and then it is materialised into a graph of its own class, cleared at the start of every pass, carrying PROV to what generated it, never public and never in belief. All four hold here. See a-plan-is-a-path-of-graph-diffs, "Possible worlds are computed, not kept".
+
+The reader who needs it cannot get it any other way: pyoxigraph holds an exclusive lock on the belief base, so nothing outside the process can re-run the search to see what it saw. That is the same fact `orexis-ask` exists for.
+
+NOT PUBLIC, and the reason is not tidiness. Which levers an agent weighed and rejected is a disclosure nobody decided to make, and a rival reading it would learn what its neighbour can nearly do.
+
+And nothing may read it BACK: cycle detection lives in the search where it can be reasoned about, not in a graph the agent consults about its own past thinking. A trace that becomes memory is a conclusion feeding a conclusion, which is the failure the computed-not-stored rule exists to prevent.""" .
+
+deliberation:Deliberation a owl:Class ; rdfs:label "Deliberation" ;
+    rdfs:comment "One pass of the planner, about one goal. Replaced whenever that goal is planned again — the graph holds the last pass and never two, because a trace that outlives its pass is a conclusion sitting beside beliefs it can contradict." .
+
+deliberation:Candidate a owl:Class ; rdfs:label "Candidate" ;
+    rdfs:comment "One lever, simulated. Carries the world it would have reached as a number and the reason it was or was not taken — the same lever may appear twice in one pass at different depths, because what a dose is worth depends on where it is taken from." .
+
+deliberation:deliberatedOn a owl:ObjectProperty ; rdfs:domain deliberation:Deliberation ;
+    rdfs:label "deliberated on" ;
+    rdfs:comment "The goal this pass was about — the shape itself, so a reader can join the trace to the want and see what was being pursued rather than a label for it." .
+
+deliberation:considered a owl:ObjectProperty ; rdfs:domain deliberation:Deliberation ; rdfs:range deliberation:Candidate ;
+    rdfs:label "considered" .
+
+deliberation:chose a owl:ObjectProperty ; rdfs:domain deliberation:Deliberation ; rdfs:range deliberation:Candidate ;
+    rdfs:label "chose" ;
+    rdfs:comment "The candidate whose world the plan commits to reaching. Absent when the pass took nothing, which is most of them and is an answer rather than a gap: `deliberation:verdict` then says which of the silences it was." .
+
+#  NO DOMAIN, and deliberately: a verdict is said of a PASS (why it ended) and of a CANDIDATE
+#  (why it lost), and they are the same idea at two scales. Declaring a domain would make the
+#  closure type every candidate a Deliberation, which is worse than saying nothing.
+deliberation:verdict a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    rdfs:label "verdict" ;
+    rdfs:comment "Why it ended as it did. On a pass: satisfied, improved, no candidate, exhausted, not better, refused — six answers where a planner returning a move or None could give two. On a candidate: whether it met the goal, improved on standing still, was worse, or landed in a world already seen." .
+
+deliberation:wouldReach a owl:DatatypeProperty ; rdfs:domain deliberation:Candidate ; rdfs:range xsd:decimal ;
+    rdfs:label "would reach" ;
+    rdfs:comment "The urgency of the world this lever would have made. The comparison the whole search turns on: a candidate is worth taking only if this is lower than where the agent already stands." .
+
+deliberation:standsAt a owl:DatatypeProperty ; rdfs:domain deliberation:Deliberation ; rdfs:range xsd:decimal ;
+    rdfs:label "stands at" ;
+    rdfs:comment "The urgency of the world the agent is actually in — what every candidate is measured against, kept so a reader need not recompute it to understand the verdicts." .
+
+deliberation:wouldTake a owl:ObjectProperty ; rdfs:domain deliberation:Candidate ; rdfs:range orexis:Action ;
+    rdfs:label "would take" ;
+    rdfs:comment "The action this candidate would take. NOT `progression:by`, whose domain is `progression:Intention` — spelling a weighed lever with the word for a carried-out one would have the closure type every candidate a commitment, which is the exact distinction a trace exists to keep." .
+
+deliberation:atDepth a owl:DatatypeProperty ; rdfs:domain deliberation:Candidate ; rdfs:range xsd:integer ;
+    rdfs:label "at depth" ;
+    rdfs:comment "How many steps into the plan this candidate sits. Kept because a lever rejected at depth 0 and the same lever rejected at depth 1 are different findings — the second says a chain was tried." .
+
+deliberation:tookSeconds a owl:DatatypeProperty ; rdfs:domain deliberation:Deliberation ; rdfs:range xsd:decimal ;
+    rdfs:label "took seconds" ;
+    rdfs:comment "How long the pass took. The one figure a trace could not already answer, and the one most likely to change this design: a pass validates a shape per candidate, and `series()` re-plans EVERY goal on every reporting tick, so an agent's dominant cost may turn out to be the instrumentation asking it what it wants. Recorded from inside the pass rather than timed by a caller, because a caller would be timing the trace write as well and reporting the observer's cost as the observed's." .
+
+deliberation:asOf a owl:DatatypeProperty ; rdfs:domain deliberation:Deliberation ; rdfs:range xsd:dateTime ;
+    rdfs:label "as of" ;
+    rdfs:comment "When the pass ran. A trace is about a moment — the readings it weighed were the ones held then — and a reader who cannot tell how old it is cannot tell whether it explains what the agent is doing now or what it was doing before the last reading arrived." .
+
+deliberation:blind a owl:DatatypeProperty ; rdfs:domain deliberation:Deliberation ; rdfs:range xsd:boolean ;
+    rdfs:label "blind" ;
+    rdfs:comment "Whether some lever was passed over for want of a stated effect, leaving the pass unable to claim it looked at everything. A verdict of `no candidate` beside this being true means the search saw part of the menu — which is why the deliberator defers to the reflex rather than reporting that nothing helps." .
+
+#  HOW MUCH ONE PASS MAY IMAGINE, in worlds — the ceiling on what a deliberation spends, stated
+#  in the unit the search actually spends: a fork in the imaginarium, whose cost per world the
+#  runbook measures against the mutable slice. It was a DEPTH, a constant in the planner, and
+#  under a breadth-first search depth was a ceiling on compute; best-first (#492) it bounds
+#  only how far ahead a plan reaches, which nothing needs — a plan is re-derived every pass
+#  and only its head is acted on. A pick like the patience: authored per world, never moved
+#  by the agent unless a mandate says so, and the engine's own default where none is stated.
+#  See decisions/a-pass-is-budgeted-in-worlds.md.
+deliberation:budgetWorlds a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
+    rdfs:label "budget, in worlds" ;
+    rdfs:comment "How many possible worlds one deliberation may fork before it answers with the best it has found. The search is anytime — it holds the best world seen and stops here — so a spent budget answers with progress, never with nothing. NOT a depth: a world's cost is what its mutable slice makes it, measured, and a sovereign states this in that unit. An OPINION of the sovereign's about this agent, authored in its beliefs; the agent does not move it." .
+

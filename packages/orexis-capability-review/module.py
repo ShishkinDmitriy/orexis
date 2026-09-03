@@ -287,9 +287,9 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         ledger = getattr(self.agent, "intentions", None)
         for row in (bindings(ledger.query_union("""
 SELECT ?action ?p ?o ?b ?t WHERE {
-  ?i orexis:step ?s . ?s orexis:fills ?action ; orexis:predictedValue ?p ;
-     orexis:observedValue ?o ; orexis:endVerifiedAt ?t .
-  OPTIONAL { ?s orexis:baselineValue ?b } } ORDER BY DESC(?t) LIMIT 20""")) if ledger is not None else []):
+  ?i progression:step ?s . ?s progression:fills ?action ; progression:predictedValue ?p ;
+     progression:observedValue ?o ; progression:endVerifiedAt ?t .
+  OPTIONAL { ?s progression:baselineValue ?b } } ORDER BY DESC(?t) LIMIT 20""")) if ledger is not None else []):
             baseline = f"review:baseline {decimal(float(row['b']))} ;" if row.get("b") else ""
             lines.append(f"""
   [] a review:Residual ; review:ofAction <{row['action']}> ;

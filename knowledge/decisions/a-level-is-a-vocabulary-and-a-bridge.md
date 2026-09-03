@@ -34,9 +34,9 @@ mentions one. The want is whole at the top.
 **An action nobody takes is a promise the level beneath will keep.** Move has no taker; drive,
 pick and drop are taken. When the keeper reaches a step of a taker-less action it cannot hand
 it to anyone, so it translates the step's promised fact — the one triple its
-`orexis:predicts` carries — through the bridge into the lower vocabulary, and puts that to
+`progression:predicts` carries — through the bridge into the lower vocabulary, and puts that to
 deliberation as a want, from the world as it then is. The plan that comes back is spliced
-in under the step, its steps [`orexis:partOf`](/domain/step.md) the abstract step's filling,
+in under the step, its steps [`progression:partOf`](/domain/step.md) the abstract step's filling,
 and walked as any plan is. When the last of them is answered the abstract step's own verdict
 is judged through the same bridge, and the next abstract step becomes current and is planned
 in turn, from wherever the van now stands. The parts of the desire appear one level down as
@@ -80,7 +80,7 @@ ordinary want. The keeper writes the translated fact as an `orexis:Desire` the a
 (its promises graph, projected into the desire modality), the ordinary road lifts and plans
 it, and the abstract step waits on the same fact; the verdict withdraws the want and writes
 the coarse fact. Nothing is spliced — the sub-plan is an intention of its own for the promise
-want, and `orexis:promisedBy` links the two. The tower world runs seven Moves planned once
+want, and `progression:promisedBy` links the two. The tower world runs seven Moves planned once
 above and seven drives-plans below (`tests/test_tower.py`). Found on the way: relevance read
 nothing from a select whose only pattern sits under `FILTER NOT EXISTS`, since rdflib leaves
 that pattern untranslated; it reads it now.

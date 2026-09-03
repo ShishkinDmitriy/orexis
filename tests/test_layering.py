@@ -25,6 +25,8 @@ importing a capability, the assembly importing anything, a capability importing 
 
 from __future__ import annotations
 
+import pathlib
+
 from pathlib import Path
 
 import pytest
@@ -155,3 +157,22 @@ def test_capability_packages_do_not_import_each_other(pkg):
         if imported([path]) & others
     }
     assert not offenders, f"{pkg.name} imports another capability: {offenders}"
+
+
+def test_a_layer_names_no_higher_layers_prefix():
+    """The layers' vocabularies follow the imports (#529): a term one layer reads and writes
+    carries its prefix, so a query naming a lower layer's prefix is a visible downward read
+    and one naming a higher layer's is refused here, as an upward import is. Scanned in every
+    file kind a layer ships that can carry an IRI."""
+    import re
+    order = ["reactive", "progression", "deliberation"]
+    faults = []
+    for k, layer in enumerate(order):
+        higher = order[k + 1:]
+        root = pathlib.Path(f"packages/orexis-agent-{layer}")
+        for path in list(root.glob("*.py")) + list(root.glob("*.ttl")) + list(root.glob("*.rq")) + list(root.glob("*.ru")):
+            text = path.read_text(errors="ignore")
+            for h in higher:
+                if re.search(rf"\b{h}:[A-Za-z]|orexis/{h}#|\b{h.upper()}\b", text):
+                    faults.append(f"{path}: names {h}'s vocabulary")
+    assert not faults, "\n  ".join(["a layer speaks a higher layer's words:"] + faults)

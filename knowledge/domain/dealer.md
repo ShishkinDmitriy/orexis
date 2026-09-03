@@ -41,5 +41,5 @@ ledger (#206), and phantom water is a closed chapter.
 # What grants it
 
 The dealer premise is **levers that compose** — acting for a source it offers, refillable
-from a source another offers — and it is what grants `deliberation:Planning`: depth-2
+from a source another offers — and it is what granted the retired deliberation package's `Planning`: depth-2
 deliberation is meaningful for exactly this shape, and for nothing shipped besides it.

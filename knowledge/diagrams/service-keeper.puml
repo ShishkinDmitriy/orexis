@@ -22,7 +22,7 @@ skinparam component {
 
 
 database "Intentions · repository" as INT {
-  folder "orexis:IntentionGraph" as I
+  folder "progression:IntentionGraph" as I
 }
 
 database "Beliefs · repository" as BEL {

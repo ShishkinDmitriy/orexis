@@ -204,7 +204,7 @@ shown:
 
 A CONSTRUCT can predict it, because this project already computes that prediction: the keeper
 recorded `orexis:expectsDelta` when it adopted an Apply, and actuation converted millilitres to a
-delta (since #510 the step carries the rule's own prediction as `orexis:predicts` and nobody
+delta (since #510 the step carries the rule's own prediction as `progression:predicts` and nobody
 converts anything). Which forces a constraint worth naming before anyone writes the code: **the number an
 effect predicts and the number verification expects must come from one source.** Two sources
 means an agent that plans against one future and checks against another, and the disagreement

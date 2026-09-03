@@ -13,7 +13,7 @@ where the rows were first needed; but three OTHER packages already reached for i
 describe their own rows — sensing, actuation and market each bound its Chosen mode by hand
 in their `affordances.rq`. A word three packages must speak to describe themselves is not the
 fourth package's word, which is the test the-mind-is-six-graphs set and `orexis:Mode` now passes for
-the same reason `orexis:Intention` did. The modes had already made this move once, out of `market:`,
+the same reason `progression:Intention` did. The modes had already made this move once, out of `market:`,
 on exactly this argument.
 """
 

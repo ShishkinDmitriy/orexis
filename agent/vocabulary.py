@@ -92,13 +92,70 @@ def declared(st) -> set[str]:
 #  leaving `orexis:` for a package they now belong to — and answers nothing when a term moved the
 #  other way, or moved and was renamed at once. Both happened when the mind's states became
 #  kernel words (the-mind-is-six-graphs): `intention:outcome` has two candidates by local name
-#  (`orexis:outcome` and `review:outcome`) and nothing could choose, while `desire:desires` became
+#  (`progression:outcome` and `review:outcome`) and nothing could choose, while `desire:desires` became
 #  `orexis:holds` and has no candidate at all.
 #
 #  So a MOVE is data. Each entry is a decision somebody made once, and the alternative — a
 #  heuristic that picks a namespace — would be this module guessing at meaning, which is the
 #  one thing its own error message refuses to do.
 MOVED = {
+    #  #529: the kernel's terms by LAYER — a term one layer reads and writes carries its prefix.
+    "http://example.org/orexis#Act": "http://example.org/orexis/progression#Act",
+    "http://example.org/orexis#Candidate": "http://example.org/orexis/deliberation#Candidate",
+    "http://example.org/orexis#Deliberation": "http://example.org/orexis/deliberation#Deliberation",
+    "http://example.org/orexis#DeliberationGraph": "http://example.org/orexis/deliberation#DeliberationGraph",
+    "http://example.org/orexis#Intention": "http://example.org/orexis/progression#Intention",
+    "http://example.org/orexis#IntentionGraph": "http://example.org/orexis/progression#IntentionGraph",
+    "http://example.org/orexis#PromisesGraph": "http://example.org/orexis/progression#PromisesGraph",
+    "http://example.org/orexis#Step": "http://example.org/orexis/progression#Step",
+    "http://example.org/orexis#adoptedAt": "http://example.org/orexis/progression#adoptedAt",
+    "http://example.org/orexis#answeredWhen": "http://example.org/orexis/progression#answeredWhen",
+    "http://example.org/orexis#asOf": "http://example.org/orexis/deliberation#asOf",
+    "http://example.org/orexis#atDepth": "http://example.org/orexis/deliberation#atDepth",
+    "http://example.org/orexis#baselineAt": "http://example.org/orexis/progression#baselineAt",
+    "http://example.org/orexis#baselineValue": "http://example.org/orexis/progression#baselineValue",
+    "http://example.org/orexis#becauseOf": "http://example.org/orexis/progression#becauseOf",
+    "http://example.org/orexis#blind": "http://example.org/orexis/deliberation#blind",
+    "http://example.org/orexis#budgetWorlds": "http://example.org/orexis/deliberation#budgetWorlds",
+    "http://example.org/orexis#by": "http://example.org/orexis/progression#by",
+    "http://example.org/orexis#chose": "http://example.org/orexis/deliberation#chose",
+    "http://example.org/orexis#considered": "http://example.org/orexis/deliberation#considered",
+    "http://example.org/orexis#deadlineAt": "http://example.org/orexis/progression#deadlineAt",
+    "http://example.org/orexis#deliberatedOn": "http://example.org/orexis/deliberation#deliberatedOn",
+    "http://example.org/orexis#endMet": "http://example.org/orexis/progression#endMet",
+    "http://example.org/orexis#endVerifiedAt": "http://example.org/orexis/progression#endVerifiedAt",
+    "http://example.org/orexis#fills": "http://example.org/orexis/progression#fills",
+    "http://example.org/orexis#forAgent": "http://example.org/orexis/progression#forAgent",
+    "http://example.org/orexis#maxPatienceS": "http://example.org/orexis/progression#maxPatienceS",
+    "http://example.org/orexis#minPatienceS": "http://example.org/orexis/progression#minPatienceS",
+    "http://example.org/orexis#notAfter": "http://example.org/orexis/progression#notAfter",
+    "http://example.org/orexis#notBefore": "http://example.org/orexis/progression#notBefore",
+    "http://example.org/orexis#observedValue": "http://example.org/orexis/progression#observedValue",
+    "http://example.org/orexis#of": "http://example.org/orexis/progression#of",
+    "http://example.org/orexis#outcome": "http://example.org/orexis/progression#outcome",
+    "http://example.org/orexis#partOf": "http://example.org/orexis/progression#partOf",
+    "http://example.org/orexis#patienceS": "http://example.org/orexis/progression#patienceS",
+    "http://example.org/orexis#predictedUrgency": "http://example.org/orexis/progression#predictedUrgency",
+    "http://example.org/orexis#predictedValue": "http://example.org/orexis/progression#predictedValue",
+    "http://example.org/orexis#predicts": "http://example.org/orexis/progression#predicts",
+    "http://example.org/orexis#promisedBy": "http://example.org/orexis/progression#promisedBy",
+    "http://example.org/orexis#pursues": "http://example.org/orexis/progression#pursues",
+    "http://example.org/orexis#quantity": "http://example.org/orexis/progression#quantity",
+    "http://example.org/orexis#resolvedAt": "http://example.org/orexis/progression#resolvedAt",
+    "http://example.org/orexis#standsAt": "http://example.org/orexis/deliberation#standsAt",
+    "http://example.org/orexis#step": "http://example.org/orexis/progression#step",
+    "http://example.org/orexis#suspectAfter": "http://example.org/orexis/progression#suspectAfter",
+    "http://example.org/orexis#taken": "http://example.org/orexis/progression#taken",
+    "http://example.org/orexis#takenAt": "http://example.org/orexis/progression#takenAt",
+    "http://example.org/orexis#then": "http://example.org/orexis/progression#then",
+    "http://example.org/orexis#through": "http://example.org/orexis/progression#through",
+    "http://example.org/orexis#tookSeconds": "http://example.org/orexis/deliberation#tookSeconds",
+    "http://example.org/orexis#until": "http://example.org/orexis/progression#until",
+    "http://example.org/orexis#untilNot": "http://example.org/orexis/progression#untilNot",
+    "http://example.org/orexis#verdict": "http://example.org/orexis/deliberation#verdict",
+    "http://example.org/orexis#whenLapsed": "http://example.org/orexis/progression#whenLapsed",
+    "http://example.org/orexis#wouldReach": "http://example.org/orexis/deliberation#wouldReach",
+    "http://example.org/orexis#wouldTake": "http://example.org/orexis/deliberation#wouldTake",
     **{f"http://example.org/orexis/intention#{n}": f"http://example.org/orexis#{n}"
        for n in ("Intention", "by", "Means",
                  "adoptedAt", "resolvedAt", "outcome", "becauseOf", "expectsValueTo",
@@ -127,7 +184,7 @@ MOVED = {
     #  action): a ledger holding Offer intentions under either older spelling lands on the
     #  package's word — the destination, not the step, as the note above says.
     #  The means went to their packages and then went altogether: the ACTION is the kind
-    #  (the-action-is-the-kind), so an intention's `orexis:by` names the action node. Every older
+    #  (the-action-is-the-kind), so an intention's `progression:by` names the action node. Every older
     #  spelling — the intention package's, the kernel's, and the packages' short-lived means —
     #  lands on the node. `Apply` lands on the buyer's hold (Presenting): that was its meaning
     #  for every ledger old enough to hold it; the host's serve (Serving) is newer than the
@@ -233,7 +290,14 @@ def stale(st) -> dict[str, dict[str, str | list[str] | None]]:
         #  A recorded MOVE wins over the local-name inference, and is the only thing that
         #  can answer where a term changed namespace and name at once, or where its local
         #  name is contested by a package that also declares it.
-        if (moved := MOVED.get(term)) is not None and moved in known:
+        #  A move may chain (#529): `intention:outcome` became `orexis:outcome`, which became
+        #  `progression:outcome` — follow the table until it lands on what is declared.
+        moved = MOVED.get(term)
+        seen = set()
+        while moved is not None and moved not in known and moved in MOVED and moved not in seen:
+            seen.add(moved)
+            moved = MOVED[moved]
+        if moved is not None and moved in known:
             out.setdefault(graph, {})[term] = moved
             continue
         candidates = by_local.get(_local(term), [])

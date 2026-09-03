@@ -37,7 +37,7 @@ def answered(agent, observed: float, predicted: float = PREDICTED) -> str:
 
 def step_of(agent, uri):
     return bindings(agent.intentions.query_union(f"""
-SELECT ?p ?o WHERE {{ <{uri}> orexis:by ?s . ?s orexis:predictedValue ?p ; orexis:observedValue ?o }}"""))
+SELECT ?p ?o WHERE {{ <{uri}> progression:by ?s . ?s progression:predictedValue ?p ; progression:observedValue ?o }}"""))
 
 
 def test_a_verdict_records_what_was_predicted_and_what_the_world_showed(fern):

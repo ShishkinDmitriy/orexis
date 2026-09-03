@@ -28,10 +28,12 @@ clause and no `$state`: the caller runs it with the world's graphs as the defaul
 
 PROGRESSION'S, since #514: a pure function over RDF with no search in it, and the keeper —
 which may not import the layer above — compiles a held condition authored as a shape
-(`orexis:until`, `orexis:untilNot`). Deliberation and the container import it downward.
+(`progression:until`, `progression:untilNot`). Deliberation and the container import it downward.
 """
 
 from __future__ import annotations
+
+from orexis_agent_progression.ontology import PROGRESSION
 
 import itertools
 import re

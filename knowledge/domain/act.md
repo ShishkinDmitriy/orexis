@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Act
-term: http://example.org/orexis#Act
+term: http://example.org/orexis/progression#Act
 description: >-
   The record that a step was taken: which step, when, whether anyone took it — history, and
   only history. Written by execution the moment the actors have been asked; one step may be
@@ -11,8 +11,8 @@ description: >-
 
 # What it is
 
-`orexis:Act`. The record of a taking: `orexis:of` the [step](/domain/step.md), `orexis:takenAt`,
-and `orexis:taken` — whether an actor carried it out or none could now, the step standing for
+`progression:Act`. The record of a taking: `progression:of` the [step](/domain/step.md), `progression:takenAt`,
+and `progression:taken` — whether an actor carried it out or none could now, the step standing for
 the next tick. Nothing planned lives here: planning's noun is the step, and this one says that
 one of them was carried out (the sovereign's ruling, 2026-09-02).
 

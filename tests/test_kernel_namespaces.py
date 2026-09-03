@@ -72,7 +72,8 @@ from assembly import loader
 #  naming that class is the kernel being assembled rather than the kernel reaching sideways into
 #  a tree it loads. `loader.packages()` types both roots `kind="kernel"`, and that is the test.
 _ROOTS = {p.name for p in loader.packages() if p.kind == loader.KERNEL_KIND}
-_NAMESPACES = {label: iri for label, iri in loader.prefixes().items()
+_LAYERS = {"progression", "deliberation", "reactive"}   # the kernel's own layers (#529)
+_NAMESPACES = {label: iri for label, iri in loader.prefixes().items() if label not in _LAYERS
                if label != "orexis" and label not in _ROOTS}
 _LABEL_OF = {iri: label for label, iri in _NAMESPACES.items()}
 
@@ -388,7 +389,7 @@ def test_the_scan_pattern_matches_the_shape_it_is_looking_for():
         ["market#Bidding"]
     assert [_tail(m) for m in _PACKAGE_IRI.finditer(f"PREFIX sensing: <{stem}sensing#>")] == \
         ["sensing#"]
-    assert not _PACKAGE_IRI.findall("http://example.org/orexis#Intention"), \
+    assert not _PACKAGE_IRI.findall("http://example.org/orexis/progression#Intention"), \
         "the kernel's own namespace is not a package's and must not be swept up"
     #  The prefixed form, and the three places it must NOT fire: inside an IRI, on the
     #  kernel's own prefix, and in prose the tokenizer keeps out of a query string.

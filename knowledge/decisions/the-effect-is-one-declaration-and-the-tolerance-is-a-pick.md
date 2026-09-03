@@ -24,7 +24,7 @@ direction. One declaration read twice, by two pieces of arithmetic that had alre
 disagreed once (the false-UNMET incident the effect page records), and a kernel figure,
 `orexis:metFraction`, saying how much of the actor's delta counted.
 
-Now a [step](/domain/step.md) carries what its world predicted — `orexis:predicts`, the same
+Now a [step](/domain/step.md) carries what its world predicted — `progression:predicts`, the same
 canonical facts the plan's signature is made of — and the keeper generates the answering shape
 from that when the step is taken. A predicted READING is put to the package that declared the
 observation keyed (sensing, through `orexis:answer`), which answers with an observation later

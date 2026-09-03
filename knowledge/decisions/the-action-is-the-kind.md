@@ -6,7 +6,7 @@ description: >-
   joint between three surfaces — an affordance row, an effect rule, an intention — and
   an-action-is-one-node made those surfaces one node, so a name whose only job was to point at
   that node one-to-one was a second owner of it. Retired: an intention commits to the action
-  (`orexis:by`), a row carries it, a trace weighs it, the packages' short-lived means
+  (`progression:by`), a row carries it, a trace weighs it, the packages' short-lived means
   (`market:Acquire`, `sensing:Observe`, …) go with the class, and the kernel's ontology keeps
   `orexis:Action` and no individual of anything.
 status: accepted
@@ -17,7 +17,7 @@ timestamp: 2026-08-26T00:00:00Z
 
 Five means, each typed `orexis:Means`: Observe, Actuate, Acquire, Apply, Offer. `means.md` called
 a means "the joint" — the one term an affordance row offered, an effect rule attached to
-(`orexis:effectOf`), and an intention committed to (`orexis:by`), so that three parts of the design
+(`orexis:effectOf`), and an intention committed to (`progression:by`), so that three parts of the design
 that knew nothing of each other could be joined without storing a correspondence. That was
 true and useful while the three were three files.
 
@@ -32,7 +32,7 @@ restated by another node is a second owner of that content.
 # What is decided
 
 **The [action](/domain/action.md) is the kind.** What a row carries (`Affordance.action`),
-what an intention commits to (`orexis:by`), what a trace weighs (`orexis:wouldTake`) and what the
+what an intention commits to (`progression:by`), what a trace weighs (`deliberation:wouldTake`) and what the
 keeper keys patience and suspicion on is the action node: `sensing:Observing`,
 `actuation:Dosing`, `market:Acquiring`, `market:Offering`, `market:Serving` — and
 `market:Presenting`, the buyer's hold on a won claim, which needed a node the moment an

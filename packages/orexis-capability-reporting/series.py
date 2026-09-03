@@ -87,7 +87,7 @@ class SeriesWriter:
         are drained on the reporter's tick, and a marker drawn at the tick would put the knee of
         a curve in the wrong place. `kind` and the other tags are what an annotation query
         filters and captions on; `text` is a string field holding prose for humans, under the
-        same never-parse contract as `orexis:becauseOf`, whose projection it is.
+        same never-parse contract as `progression:becauseOf`, whose projection it is.
         """
         points = []
         for at, kind, text, tags in events:

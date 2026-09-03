@@ -322,7 +322,7 @@ class Deliberator:
 
         Returns the plan as ROWS, because a step is a row and not a means: which lever it
         goes through is half of what it says, and execution writes that half to the ledger
-        as `orexis:through`. None where there is nothing to do, and that None is a decision.
+        as `progression:through`. None where there is nothing to do, and that None is a decision.
 
         It takes the want itself, so an obligation reaches deliberation as what it is: a thing wanted,
         ranked in the same currency, pursued through an affordance like anything else. It is

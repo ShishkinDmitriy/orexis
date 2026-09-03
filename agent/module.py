@@ -16,8 +16,8 @@ See knowledge/decisions/capability-packages.md.
 
 from __future__ import annotations
 
-from orexis_agent_progression.ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, QUIET, REPORTS,
-                       SEND, SERIES, SIZE, SWEEP)
+from orexis_agent_progression.ontology import BELIEF_REVISED, QUIET, REPORTS, SEND, SERIES, SWEEP
+from orexis_agent_progression.ontology import DESIRES, DESIRE_URGENCY, SIZE
 
 from datetime import datetime
 

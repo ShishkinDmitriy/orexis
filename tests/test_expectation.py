@@ -19,7 +19,7 @@ from orexis_capability_market.terms import ACQUIRING, TENDERING, PRESENTING
 from orexis_capability_actuation.terms import DOSING as _ACTUATE
 
 from orexis_agent_progression.store import bindings
-from orexis_agent_progression.ontology import OREXIS
+from orexis_agent_progression.ontology import OREXIS, PROGRESSION
 
 from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading, predicted_readings
 
@@ -58,7 +58,7 @@ def test_a_claim_opens_a_watch_with_the_baseline_in_the_row(thirsty):
     watch = watches[0]
     assert watch.baseline == 0.30 and watch.baseline_at is not None
     assert watch.action == PRESENTING, "the watch is on the method's last step (#523)"
-    assert [p for _, _, p in keeper.held()] == [f"{OREXIS}answeredWhen"], \
+    assert [p for _, _, p in keeper.held()] == [f"{PROGRESSION}answeredWhen"], \
         "held on the shape that answers the step's own prediction (#510)"
 
 
@@ -405,7 +405,7 @@ def test_the_watch_runs_until_the_dose_lands_and_a_reading_could_show_it(monkeyp
                          baseline=reading_of(gardener, MOISTURE))
 
     rows = bindings(gardener.beliefs.query(f"""
-SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{OREXIS}by> ?act . ?act <{OREXIS}notAfter> ?d }} }}"""))
+SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{PROGRESSION}by> ?act . ?act <{PROGRESSION}notAfter> ?d }} }}"""))
     window = datetime.fromisoformat(rows[0]["d"]).timestamp() - before
     assert abs(window - (50.0 + seeing)) < 2.0, (
         f"the watch should run for the dose (50s) plus how long seeing takes ({seeing}s), "
@@ -431,7 +431,7 @@ def test_an_act_that_cannot_size_itself_keeps_the_patience(monkeypatch):
                          baseline=reading_of(gardener, MOISTURE))
 
     rows = bindings(gardener.beliefs.query(f"""
-SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{OREXIS}by> ?act . ?act <{OREXIS}notAfter> ?d }} }}"""))
+SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{PROGRESSION}by> ?act . ?act <{PROGRESSION}notAfter> ?d }} }}"""))
     window = datetime.fromisoformat(rows[0]["d"]).timestamp() - before
     assert abs(window - keeper.beliefs.patience_s) < 2.0
 

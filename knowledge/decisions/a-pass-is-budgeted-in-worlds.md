@@ -2,7 +2,7 @@
 type: Decision
 title: A pass is budgeted in worlds, not in depth
 description: >-
-  #494's decision. The ceiling on what one deliberation may spend is `orexis:budgetWorlds`, a
+  #494's decision. The ceiling on what one deliberation may spend is `deliberation:budgetWorlds`, a
   count of possible worlds the pass may fork, stated by the sovereign in the agent's beliefs
   like a patience, bounded by a kernel shape, defaulted by the engine where unstated; the
   search stops there and answers with its best. `MAX_DEPTH` is gone. Refused: keeping a depth
@@ -30,7 +30,7 @@ acted on.
 What a pass spends is worlds: forks in the [imaginarium](/domain/imaginarium.md), each a
 measured cost per mutable-slice size
 ([measure-the-search](/runbooks/measure-the-search.md)). So the ceiling is stated in that unit,
-`orexis:budgetWorlds`, and the search counts what it forks and stops there. It is anytime by
+`deliberation:budgetWorlds`, and the search counts what it forks and stops there. It is anytime by
 construction — `best` and the achievers are kept as it goes — so stopping loses nothing
 already found, and a spent budget answers with the cheapest achiever in hand, or the nearest
 world, or the finding that nothing helps, exactly as an emptied open list does. The levers a

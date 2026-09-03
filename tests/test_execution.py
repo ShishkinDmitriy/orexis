@@ -54,7 +54,7 @@ def test_no_round_open_means_no_acquire_committed_and_the_trace_says_why(monkeyp
     assert keeper.standing(action=TENDERING) == [], "nothing to bid in, nothing committed"
     assert fern.sent.to(f"{wired_markets(fern)[0].bid_topic}/fern") == []
     weighed = {r["m"] for r in bindings(fern.beliefs.query_union(
-        "SELECT DISTINCT ?m WHERE { ?c orexis:wouldTake ?m }"))}
+        "SELECT DISTINCT ?m WHERE { ?c deliberation:wouldTake ?m }"))}
     assert OBSERVING in weighed and ACQUIRING not in weighed, \
         "the look was weighed; buying was not on the menu, not merely refused"
 
@@ -189,7 +189,7 @@ def test_an_impulse_within_patience_writes_no_row(monkeypatch):
     assert len(keeper.standing()) == n
     from orexis_agent_progression.store import bindings
     everything = bindings(keeper.agent.intentions.query(
-        "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a <http://example.org/orexis#Intention> } }"))
+        "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a <http://example.org/orexis/progression#Intention> } }"))
     assert int(everything[0]["n"]) == n, "no dropped rows either"
 
 

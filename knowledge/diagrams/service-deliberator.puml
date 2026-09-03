@@ -24,7 +24,7 @@ skinparam component {
 database "Beliefs · repository" as BEL {
   folder "orexis:StateGraph" as S
   folder "orexis:PickRecordGraph" as P
-  folder "orexis:DeliberationGraph" as D
+  folder "deliberation:DeliberationGraph" as D
 }
 
 database "Desires · repository" as DES {

@@ -28,13 +28,13 @@ It chooses Acquiring by the reading its rule predicts and by what it costs, exac
 and hands the plan down whole ([intention](/domain/intention.md)).
 
 The [keeper](/domain/intention.md) expands at adoption, recursively: a [step](/domain/step.md)
-of an action with a method becomes one step per member, chained with `orexis:then`, and a
+of an action with a method becomes one step per member, chained with `progression:then`, and a
 member with a method of its own expands in turn, so the ledger walks a flat chain. Each step is
-`orexis:partOf` the filling it came from — the parent step stays in the ledger, off the chain,
+`progression:partOf` the filling it came from — the parent step stays in the ledger, off the chain,
 so a reader can recover the tree. Every member is a step of the parent's lever and subject —
 a method is declared only for a PROTOCOL, whose steps share the parent's parameters; where a
 step's parameters would have to be worked out from the world, the step is not declared but
-planned (below). The last member inherits the parent's `orexis:predicts` and predicted urgency, since
+planned (below). The last member inherits the parent's `progression:predicts` and predicted urgency, since
 the end the search planned on is reached when the method is done. Then the plan is stepped as
 any plan is — each step taken when the one before it is confirmed, the tail dropped on a
 surprise.
@@ -46,11 +46,11 @@ waits for as SELECT templates with the rules' own tokens (`$me`, `$via`, `$about
 `$subject`, `$beliefs`, `$since` — the intention's adoption), bound when the step becomes
 current:
 
-- `orexis:readyWhen` holds the step before it is taken, as its `orexis:until`; a step whose
+- `orexis:readyWhen` holds the step before it is taken, as its `progression:until`; a step whose
   condition already holds is taken at once, and one whose wait lapses is taken anyway, as a
   held claim redeems blind rather than never. Presenting waits for the bidder's watch to be
   live, or for a claim the host already redeemed.
-- `orexis:doneWhen` holds the step after it is taken, as its `orexis:answeredWhen`, so the
+- `orexis:doneWhen` holds the step after it is taken, as its `progression:answeredWhen`, so the
   keeper advances on it; a wait that lapses is an unmet verdict, which drops the tail and
   asks deliberation again. Tendering is done when a claim on the venue cleared to me since the
   intention was adopted, and lapses at the round's close: losing a round is a step lapsing.
