@@ -888,6 +888,29 @@ orexis:becauseOf a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:ra
 #  a SEPARATE fact: `endMet`. Satisfied-and-unmet is the false-knowledge signature — the graph
 #  said this lever moves this property, and the world kept disagreeing.
 
+#################  A method: the steps taking an action comes to  #################
+#
+#  HTN's shape (#523): an action the search chooses may be ABSTRACT — Acquiring is the decision
+#  to enter a venue at a price — and the package that owns it declares the steps taking it
+#  comes to, in order: tender, present. The search never expands them; it chooses the action
+#  by its effect and its cost. The keeper expands a step of such an action at adoption into
+#  its method's steps, the last inheriting the prediction, and steps through them on feedback
+#  as it steps through any plan. Each step's action may declare what it WAITS for, as query
+#  templates with the rule's own tokens ($me, $via, $about, $subject, $beliefs), bound when
+#  the step becomes current: `orexis:readyWhen` holds it before it is taken, `orexis:doneWhen`
+#  holds it after, and `orexis:lapsesAt` says when either wait is over. The protocol that was
+#  a chain of reactions in the bidder's Python — an offer, a bid, a claim, a hold, a redeem —
+#  is thereby a plan the ledger shows, and losing a round is a step lapsing, which drops the
+#  tail and asks deliberation again.
+orexis:method a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "method" ;
+    rdfs:comment "The steps taking this action comes to, in order — an rdf:List of actions. Declared by the package that owns the action. A step of an action with a method is expanded by the keeper at adoption into one step per member, chained with `orexis:then`; the last inherits the parent's `orexis:predicts`, since the end the search planned on is reached when the method is done. An action with no method is its own one step." .
+orexis:readyWhen a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ; rdfs:label "ready when" ;
+    rdfs:comment "A SELECT template that binds when a step of this action may be taken — a claim held, a watch live. Bound with the step's tokens when the step becomes current and held as its `orexis:until`; a step whose condition already holds is taken at once. Lapsing takes the step anyway (`whenLapsed` take), as a held claim redeems blind rather than never." .
+orexis:doneWhen a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ; rdfs:label "done when" ;
+    rdfs:comment "A SELECT template that binds when a taken step of this action has done what it was for — a bid answered by a claim. Bound when the step is taken and held as its `orexis:answeredWhen`, so the keeper advances to the next step on it; lapsing is an unmet verdict, which drops the tail and asks deliberation again. An action predicting a reading needs none of this: its end is its `orexis:predicts`." .
+orexis:lapsesAt a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ; rdfs:label "lapses at" ;
+    rdfs:comment "A SELECT template answering when a wait on a step of this action is over — `?at`, a dateTime such as the round's close, or `?seconds` from now, such as the sensor's horizon. Absent, or binding nothing, the wait is the patience." .
+
 orexis:predicts a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:string ;
     rdfs:label "predicts" ;
     rdfs:comment "The change the search predicted this step makes: what its world holds that the one before did not, and what it lost — the same canonical facts the plan's signature is made of, as one JSON literal of two lists (`adds`, `retracts`). One declaration (#510): the effect the search planned on is the effect the world is held to, and the answering shape is generated from this rather than sized by the actor. A step the search did not make — adopted by an event, a look — predicts nothing, and nothing is expected of it." .

@@ -15,7 +15,7 @@ from dataclasses import replace
 
 import pytest
 
-from orexis_capability_market.terms import ACQUIRING
+from orexis_capability_market.terms import ACQUIRING, TENDERING, PRESENTING
 from orexis_capability_actuation.terms import DOSING as _ACTUATE
 
 from orexis_agent_progression.store import bindings
@@ -57,7 +57,7 @@ def test_a_claim_opens_a_watch_with_the_baseline_in_the_row(thirsty):
     assert len(watches) == 1
     watch = watches[0]
     assert watch.baseline == 0.30 and watch.baseline_at is not None
-    assert watch.action == ACQUIRING
+    assert watch.action == PRESENTING, "the watch is on the method's last step (#523)"
     assert [p for _, _, p in keeper.held()] == [f"{OREXIS}answeredWhen"], \
         "held on the shape that answers the step's own prediction (#510)"
 
@@ -152,7 +152,7 @@ def test_an_affordance_that_never_pays_becomes_suspect(monkeypatch, caplog):
     assert keeper.reports()["expectations_unmet"] == 3
     assert keeper.reports()["affordances_suspect"] == 1
     assert [pair for pair in keeper.suspects()
-            if pair[0] == ACQUIRING and pair[1] == stake_of(fern).uri]
+            if pair[0] == PRESENTING and pair[1] == stake_of(fern).uri]
     assert "AFFORDANCE SUSPECT" in caplog.text
 
 
@@ -216,7 +216,8 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.29, "sleep_s": fast})
     presented = thirsty.sent.to(f"{market.redeem_topic}/fern")
     assert presented and presented[-1]["jti"] == "v1"
-    assert keeper.standing(action=PRESENTING) == []
+    assert not [p for _, _, p in keeper.held() if not p.endswith("answeredWhen")], \
+        "the readiness hold is gone; the intention stands at Presenting with its watch on the end (#523)"
     watches = keeper.open_expectations(stake_of(thirsty).uri)
     assert len(watches) == 1 and watches[0].baseline == 0.29
 
@@ -243,7 +244,7 @@ def test_an_alarm_armed_watch_releases_the_claim_on_the_first_tightening(thirsty
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.29})
     presented = thirsty.sent.to(f"{market.redeem_topic}/fern")
     assert presented and presented[-1]["jti"] == "v9", "armed and sent: live, released, presented"
-    assert keeper.standing(action=PRESENTING) == [] and not [
+    assert not [
         h for h in keeper.held() if not h[2].endswith("answeredWhen")], \
         "the readiness hold is gone; what is held now is the watch on the dose's end"
 
@@ -266,7 +267,7 @@ def test_the_bounded_wait_redeems_blind_rather_than_never(thirsty):
     keeper.lapse(held[0].uri)
     presented = thirsty.sent.to(f"{market.redeem_topic}/fern")
     assert presented and presented[-1]["jti"] == "v2"
-    assert keeper.standing(action=PRESENTING) == [] and not [
+    assert not [
         h for h in keeper.held() if not h[2].endswith("answeredWhen")]
 
 
@@ -318,7 +319,7 @@ def test_a_step_that_predicts_nothing_opens_no_watch(thirsty):
     """A step the search did not make — adopted by hand, by an event — predicts nothing, and
     an expectation that cannot be judged is refused rather than left to sit unverified."""
     keeper = keeper_of(thirsty)
-    uri = keeper.adopt(ACQUIRING, stake_of(thirsty).uri, "an act of unknowable effect")
+    uri = keeper.adopt(TENDERING, stake_of(thirsty).uri, "an act of unknowable effect")
     assert not keeper.expect(uri, "nothing predicted", baseline=reading_of(thirsty, MOISTURE))
     assert keeper.open_expectations() == []
 
@@ -327,7 +328,7 @@ def test_no_tolerance_holds_the_world_to_the_exact_reading(thirsty):
     """A caller that states no tolerance gets the reading itself: grain past the baseline is
     not it, the predicted value is."""
     keeper = keeper_of(thirsty)
-    uri = keeper.adopt(ACQUIRING, stake_of(thirsty).uri, "an act predicting 0.35")
+    uri = keeper.adopt(TENDERING, stake_of(thirsty).uri, "an act predicting 0.35")
     assert keeper.expect(uri, "exactly 0.35", baseline=reading_of(thirsty, MOISTURE),
                          predicts=predicted_reading(thirsty.me.acts_for, MOISTURE, 0.35))
     write_reading(thirsty, 0.301, MOISTURE)

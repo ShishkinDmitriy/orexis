@@ -50,6 +50,14 @@
 market:Acquiring
     a orexis:Action ;
 
+    #  THE METHOD (#523): Acquiring is the DECISION to enter this venue at a price, and the
+    #  search chooses it by its effect and its cost. What taking it comes to is two steps the
+    #  keeper walks on feedback — tender a bid into the open round, then present the claim
+    #  it wins — each saying what it waits for below. Losing is Tendering lapsing at the
+    #  round's close with no claim held: the tail is dropped and deliberation is asked again,
+    #  which is the next round. The protocol used to be a chain of reactions in bidding.py.
+    orexis:method ( market:Tendering market:Presenting ) ;
+
     #  AVAILABLE while a ROUND IS OPEN in a market I bid in WHOSE WINNINGS CAN PHYSICALLY REACH
     #  MY SUBJECT: the host
     #  holds an actuator plumbed to my own pot, so opening it puts the good where I am. Deduced
@@ -287,9 +295,45 @@ market:Offering
 #  node so the hold can be a commitment (`orexis:by market:Presenting`) and an urgency (a held
 #  claim tightens the cadence), now that an intention commits to an action and nothing else.
 
+#################  The steps Acquiring comes to  #################
+#
+#  Neither is on a menu: no precondition, no effect, adopted only by the method above. Each
+#  says what it waits for, as a SELECT template with the rule's tokens, and the keeper holds
+#  the step on it (`orexis:readyWhen` before it is taken, `orexis:doneWhen` after) and reads
+#  when the wait is over off `orexis:lapsesAt`.
+
+market:Tendering
+    a orexis:Action ;
+    rdfs:label "tendering a bid into the open round" ;
+    #  DONE when a claim on this venue cleared to me since this intention was adopted —
+    #  never a claim left over from an earlier round.
+    orexis:doneWhen """
+        SELECT $this WHERE {
+          GRAPH $beliefs { $me market:holdsClaim ?claim .
+                           ?claim market:onVenue $via ; market:claimedAt ?at . FILTER(?at > $since) } }""" ;
+    #  ... or not by the time the round closes: a bidder is told the outcome or nothing.
+    orexis:lapsesAt """
+        SELECT (MAX(?t) AS ?at) WHERE {
+          GRAPH $beliefs { $via market:hasRound ?round . ?round market:closesAt ?t } }""" .
+
 market:Presenting
     a orexis:Action ;
-    rdfs:label "presenting a held claim" .
+    rdfs:label "presenting a held claim" ;
+    #  READY when my watch on the property is provably live (#132, #135): the sensor
+    #  monitoring my subject for what the lot moves says so, in sensing's words — or when
+    #  the host already redeemed the claim for me (a venue with no redeem channel), and
+    #  there is nothing to present but the watch to open.
+    orexis:readyWhen """
+        SELECT $this WHERE {
+          { ?sensor sensing:monitors $subject ; sosa:observes $about ; sensing:watchLive true }
+          UNION
+          { GRAPH $beliefs { $me market:holdsClaim ?claim . ?claim market:onVenue $via ;
+                             market:claimedAt ?at ; market:presentedAt ?done . FILTER(?at > $since) } } }""" ;
+    #  ... and no longer than the sensor's own horizon: a dose delayed forever is worse than a
+    #  dose unobserved, so the step lapses into being taken.
+    orexis:lapsesAt """
+        SELECT (MIN(?s) AS ?seconds) WHERE {
+          ?sensor sensing:monitors $subject ; sosa:observes $about ; sensing:staleAfterS ?s }""" .
 
 
 #################  What SERVING a presented claim makes true  #################

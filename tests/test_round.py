@@ -13,6 +13,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from orexis_capability_market.terms import TENDERING
+
 from conftest import sensing_of, HUMIDITY, MOISTURE, build_agent, genesis_store, open_round_for, wired_actuator_for, wired_hosted_markets, wired_markets, wired_sensors
 
 
@@ -545,12 +547,12 @@ def test_a_bid_the_link_cannot_carry_is_held_and_never_arrives_late(make):
     from orexis_capability_market.terms import ACQUIRING
 
     keeper = next(m for m in fern.modules if m.name == "intention")
-    assert keeper.standing(action=ACQUIRING), \
+    assert keeper.standing(action=TENDERING), \
         "and it is HELD as an intention rather than queued as bytes"
 
     fern.bidding().give_up()          # the round closed while the link was away
     link.connected = True             # and the session came back afterwards
-    assert keeper.standing(action=ACQUIRING) == [], "the want died, so the message died with it"
+    assert keeper.standing(action=TENDERING) == [], "the want died, so the message died with it"
     assert fern.sent.under(f"{market.bid_topic}/") == [], \
         "a queue would have delivered a bid the agent no longer meant"
 

@@ -94,6 +94,10 @@ a ranking: `actuation:Dosing` is offered exactly where the lever and the resourc
 agent's own and `market:Acquiring` where the resource is someone else's, and what chooses
 between two rungs is which reaches the better world.
 
+**And it may declare a method** — the steps taking it comes to, walked by the keeper and never
+searched ([method](/domain/method.md), #523) — and what a step of it waits for, before and after
+it is taken.
+
 **And it is an extension point.** The method that carries an action out is
 `@contributes(<the action>)` on the module that takes it (#523); the signature and the row are
 declared once on `orexis:Action`. The contribution says who and how in one place, and the

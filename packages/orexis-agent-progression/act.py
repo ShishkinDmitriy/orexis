@@ -75,3 +75,29 @@ def predicts_from_json(text: str) -> tuple:
         return tuple(tup(y) for y in x) if isinstance(x, list) else x
     d = json.loads(text)
     return (frozenset(tup(f) for f in d["adds"]), frozenset(tup(f) for f in d["retracts"]))
+
+
+def method_of(query, action: str) -> list[str]:
+    """The actions an action's `orexis:method` names, in list order (#523) — walked from the
+    list's head, since a property path loses the order. Empty for an action with none, which
+    is its own one step. Asked of the belief base, where the action graph is."""
+    rows = list(query(f"""
+SELECT ?head ?node ?first ?rest WHERE {{
+  <{action}> orexis:method ?head . ?head rdf:rest* ?node . ?node rdf:first ?first ; rdf:rest ?rest }}""")["results"]["bindings"])
+    if not rows:
+        return []
+    first = {r["node"]["value"]: r["first"]["value"] for r in rows}
+    rest = {r["node"]["value"]: r["rest"]["value"] for r in rows}
+    out, node = [], rows[0]["head"]["value"]
+    while node in first:
+        out.append(first[node])
+        node = rest[node]
+    return out
+
+
+def takers_of(agent, action: str) -> list:
+    """The modules that carry an action out: whoever contributes it, or — for an action with
+    a method — whoever contributes any step it comes to, since an abstract action is taken
+    through its steps (#523). Who sizes a bid is who tenders it."""
+    actions = [action] + method_of(agent.beliefs.query, action)
+    return [m for m in agent.modules if any(m.answer(a) is not None for a in actions)]

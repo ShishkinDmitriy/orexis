@@ -21,6 +21,7 @@ from orexis_agent_progression.ontology import beliefs_graph
 from conftest import MOISTURE, build_agent, genesis_store, open_round_for, wired_markets
 
 ACQUIRING = "http://example.org/orexis/market#Acquiring"
+TENDERING = "http://example.org/orexis/market#Tendering"
 OBSERVING = "http://example.org/orexis/sensing#Observing"
 DOSING = "http://example.org/orexis/actuation#Dosing"
 SERVING = "http://example.org/orexis/market#Serving"
@@ -50,7 +51,7 @@ def test_no_round_open_means_no_acquire_committed_and_the_trace_says_why(monkeyp
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     keeper = keeper_of(fern)
     keeper.agent.deliberator.deliberate_on_gaps()
-    assert keeper.standing(action=ACQUIRING) == [], "nothing to bid in, nothing committed"
+    assert keeper.standing(action=TENDERING) == [], "nothing to bid in, nothing committed"
     assert fern.sent.to(f"{wired_markets(fern)[0].bid_topic}/fern") == []
     weighed = {r["m"] for r in bindings(fern.beliefs.query_union(
         "SELECT DISTINCT ?m WHERE { ?c orexis:wouldTake ?m }"))}
@@ -65,7 +66,7 @@ def test_the_tick_bids_when_a_round_is_open(monkeypatch):
     open_round_for(fern, "fern")
     keeper = keeper_of(fern)
     keeper.agent.deliberator.deliberate_on_gaps()
-    acquires = keeper.standing(action=ACQUIRING, want=stake_of(fern).uri)
+    acquires = keeper.standing(action=TENDERING, want=stake_of(fern).uri)
     assert len(acquires) == 1 and acquires[0].via == wired_markets(fern)[0].uri
     assert len(fern.sent.to(f"{wired_markets(fern)[0].bid_topic}/fern")) == 1
 
@@ -77,7 +78,7 @@ def test_a_round_is_decided_once_and_a_second_impulse_is_absorbed(monkeypatch):
     market = wired_markets(fern)[0]
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1
-    assert keeper_of(fern).standing(action=ACQUIRING)
+    assert keeper_of(fern).standing(action=TENDERING)
     from orexis_agent_deliberation.planner import NOT_BETTER, Plan
 
     passes = []
@@ -88,7 +89,7 @@ def test_a_round_is_decided_once_and_a_second_impulse_is_absorbed(monkeypatch):
     #  The freshness want is met and the stake stands, so the tick has nothing to search
     #  FOR; the one pass it may run is the stake's, which `adopt` then absorbs.
     assert not [d for d in passes if not d.is_epistemic] or \
-        len(keeper_of(fern).standing(action=ACQUIRING)) == 1
+        len(keeper_of(fern).standing(action=TENDERING)) == 1
 
 
 def test_a_round_with_nothing_standing_plans_once_and_commits(monkeypatch):
@@ -98,7 +99,7 @@ def test_a_round_with_nothing_standing_plans_once_and_commits(monkeypatch):
     market = wired_markets(fern)[0]
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1
-    standing = keeper_of(fern).standing(action=ACQUIRING, want=stake_of(fern).uri)
+    standing = keeper_of(fern).standing(action=TENDERING, want=stake_of(fern).uri)
     assert len(standing) == 1 and standing[0].via == market.uri
 
 
@@ -110,7 +111,7 @@ def test_the_bidder_holds_no_opinion_of_its_own(monkeypatch):
     market = wired_markets(fern)[0]
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert fern.sent.to(f"{market.bid_topic}/fern") == []
-    assert keeper_of(fern).standing(action=ACQUIRING) == []
+    assert keeper_of(fern).standing(action=TENDERING) == []
 
 
 # --- the link from a row to its code is a triple ---------------------------------------------
@@ -136,8 +137,10 @@ def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monk
         for row in afforder.affordances_of(agent.beliefs.query, agent.me.uri, agent.desires.query_union,
                                 beliefs_graph(agent.id)):
             rows_seen += 1
-            takers = [m.name for m in agent.modules if m.answer(row.action) is not None]
-            assert takers, f"{world}/{agent_id}: {row.action} is contributed by none of its modules"
+            from orexis_agent_progression.act import takers_of
+            takers = [m.name for m in takers_of(agent, row.action)]
+            assert takers, f"{world}/{agent_id}: {row.action} is contributed by none of its modules — " \
+                           "not itself, and not through a method's steps (#523)"
     assert rows_seen >= 4
     hosts = [m for m in build_agent("supplier", genesis_store(world="simulation"), monkeypatch).modules
              if m.answer(OFFERING) is not None]
@@ -158,7 +161,7 @@ def test_execution_dispatches_by_the_triple_and_never_by_name(monkeypatch):
     assert execution.carry_out(fern, Step.from_row(row), stake, "urn:intent") is False
     assert handed == ["subscribing"], "Observe went to sensing and to nothing else"
     handed.clear()
-    row = afforder.Affordance(action=ACQUIRING, want=stake.uri, about=MOISTURE, via="urn:venue")
+    row = afforder.Affordance(action=TENDERING, want=stake.uri, about=MOISTURE, via="urn:venue")
     execution.carry_out(fern, Step.from_row(row), stake, "urn:intent")
     assert handed == ["bidding"]
 

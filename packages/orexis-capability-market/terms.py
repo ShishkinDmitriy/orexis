@@ -83,7 +83,16 @@ KERNEL = "http://example.org/orexis#"
 # the keeper itself now, reached as `agent.keeper` rather than asked for by family.
 ACQUIRING = term("Acquiring")     # buying — the action, and the kind of act it is
 SERVING = term("Serving")         # the host pouring a presented claim
-PRESENTING = term("Presenting")   # the buyer holding, then presenting, a won claim (#132)
+PRESENTING = term("Presenting")
+TENDERING = term("Tendering")     # the bid itself — the first step Acquiring's method comes to (#523)
+CLAIM = term("Claim")              # a lot a round cleared to me, held until presented
+HOLDS_CLAIM = term("holdsClaim")
+CLAIM_ID = term("claimId")
+CLAIM_L = term("claimL")
+CLAIM_DEBIT = term("claimDebit")
+ON_VENUE = term("onVenue")
+PRESENTED_AT = term("presentedAt")
+CLAIMED_AT = term("claimedAt")   # the buyer holding, then presenting, a won claim (#132)
 OFFERING = term("Offering")       # the host opening a round
 
 

@@ -68,7 +68,10 @@ def pursue(agent, desire) -> str | None:
             #  to come back as None, and the second is the only one that means "sit out".
             standing = keeper.standing(action=act.action, want=desire.uri)
             return standing[0].uri if standing else None
-        carry_out(agent, act, desire, uri)
+        #  THE STEP THE LEDGER STANDS AT, not the plan's head as the search wrote it: an
+        #  action with a method was expanded at adoption (#523), and its first step is
+        #  what there is to take.
+        carry_out(agent, keeper.current(uri) or act, desire, uri)
         return uri
 
     #  ONLY THE RESULT CROSSES ONTO THE LOOP. The search ran on whoever called — the

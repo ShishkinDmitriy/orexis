@@ -231,6 +231,25 @@ Must comfortably exceed the longest a holder may wait before presenting, which i
     rdfs:label "may convene at" ;
     rdfs:comment "When the host's cooldown on this venue runs out — written at close, from `roundCooldownS`, into the host's own graph. An instant rather than the duration, so the Offering action's precondition compares it to NOW() and the private cooldown itself is never on a row anyone else could read." .
 
+#################  A claim I hold  #################
+#
+#  What winning a round leaves me with, as a FACT in my own graph (#523): the bidder's
+#  Python held it as a dict, so nothing in the ledger could wait on it. Now a claim arriving
+#  is a triple, Tendering's `orexis:doneWhen` binds on it, and presenting marks it so the
+#  same claim is never presented twice. What a claim IS on the host's side — an obligation,
+#  a debt owed — is the ower's record; this is the buyer's copy of the fact that it won.
+:Claim a owl:Class ; rdfs:label "Claim" ;
+    rdfs:comment "A lot a round cleared to this agent, held until presented: its id, its litres, its debit, the venue it came from, and when it was presented." .
+:holdsClaim a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range :Claim ; rdfs:label "holds claim" .
+:claimId a owl:DatatypeProperty ; rdfs:domain :Claim ; rdfs:range xsd:string ; rdfs:label "claim id" .
+:claimL a owl:DatatypeProperty ; rdfs:domain :Claim ; rdfs:range xsd:decimal ; rdfs:label "claim litres" .
+:claimDebit a owl:DatatypeProperty ; rdfs:domain :Claim ; rdfs:range xsd:decimal ; rdfs:label "claim debit" .
+:onVenue a owl:ObjectProperty ; rdfs:domain :Claim ; rdfs:range :Market ; rdfs:label "on venue" .
+:claimedAt a owl:DatatypeProperty ; rdfs:domain :Claim ; rdfs:range xsd:dateTime ; rdfs:label "claimed at" ;
+    rdfs:comment "When the round cleared to me — what a tender adopted before it is done by, and a stale claim from an earlier round is not." .
+:presentedAt a owl:DatatypeProperty ; rdfs:domain :Claim ; rdfs:range xsd:dateTime ; rdfs:label "presented at" ;
+    rdfs:comment "When I presented it — or when the host redeemed it for me, on a venue with no redeem channel, written with the claim so presenting has nothing left to do." .
+
 #################  How close a bought lot must land  #################
 #
 #  The effect an action states is ONE declaration (#510, #518): the reading the search planned

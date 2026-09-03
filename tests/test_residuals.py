@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from orexis_capability_market.terms import ACQUIRING, TOLERANCE
+from orexis_capability_market.terms import ACQUIRING, TOLERANCE, TENDERING
 from orexis_agent_progression.store import bindings
 from orexis_capability_review.graphs import evidence_graph
 from conftest import (MOISTURE, build_agent, genesis_store, predicted_reading, reading_of,
@@ -26,7 +26,7 @@ def answered(agent, observed: float, predicted: float = PREDICTED) -> str:
     Inside the band the verdict is met on the reading; outside it the deadline passes."""
     keeper, want = agent.keeper, stake_of(agent).uri
     write_reading(agent, BASELINE, MOISTURE)
-    uri = keeper.adopt(ACQUIRING, want, "a lot on its way")
+    uri = keeper.adopt(TENDERING, want, "a lot on its way")
     assert keeper.expect(uri, "show me", baseline=reading_of(agent, MOISTURE), tolerance=0.5,
                          predicts=predicted_reading(agent.me.acts_for, MOISTURE, predicted))
     write_reading(agent, observed, MOISTURE)
@@ -57,7 +57,7 @@ def test_residuals_are_published_as_evidence_off_the_ledger(fern):
     review.publish_evidence(review.ranges())
     rows = bindings(fern.beliefs.query(f"""
 SELECT ?o ?b WHERE {{ GRAPH <{evidence_graph(fern.id)}> {{
-  ?r a review:Residual ; review:ofAction <{ACQUIRING}> ; review:predicted ?p ;
+  ?r a review:Residual ; review:ofAction <{TENDERING}> ; review:predicted ?p ;
      review:observed ?o ; review:baseline ?b }} }} ORDER BY ?o"""))
     assert [float(r["o"]) for r in rows] == [pytest.approx(0.40), pytest.approx(0.60)]
     assert all(float(r["b"]) == pytest.approx(BASELINE) for r in rows)

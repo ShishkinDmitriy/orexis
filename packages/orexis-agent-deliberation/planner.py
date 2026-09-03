@@ -1115,8 +1115,9 @@ class Planner:
         """
         if row is None or row.about is None:
             return 0.0
+        from orexis_agent_progression.act import takers_of
         litres = None
-        for actor in (m for m in self.agent.modules if m.answer(row.action) is not None):
+        for actor in takers_of(self.agent, row.action):
             litres = actor.size(self.imaginarium.query, graph, row)
             if litres is not None:
                 break
