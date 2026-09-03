@@ -36,6 +36,8 @@ class Step:
     urgency_after: float | None = None  # the want's urgency in the world this step was predicted to reach
     predicts: tuple | None = None     # (adds, retracts): the canonical facts the search said this
                                       # step makes true and false — what the world is held to (#510)
+    part_of: object = None            # the step this one was expanded from (#523): a Step while
+                                      # planned, the ledger's step IRI once read back
 
     @classmethod
     def from_row(cls, row, quantity: float | None = None, not_after: datetime | None = None):

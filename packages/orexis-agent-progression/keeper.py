@@ -355,7 +355,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
         action = plan[0].action
         step_uris = [f"{OREXIS}step_{self.agent.id}_{stem}" + ("" if n == 0 else f"_{n}")
                      for n in range(len(plan))]
-        blocks = []
+        blocks, parents, written = [], {}, set()
         for n, (step, step_uri) in enumerate(zip(plan, step_uris)):
             facts = [f'<{kernel("fills")}> <{step.action}>']
             if step.via:
@@ -372,6 +372,25 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
                 facts.append(f'<{kernel("predictedUrgency")}> "{step.urgency_after:.6f}"^^<{xsd}decimal>')
             if step.predicts is not None:
                 facts.append(f'<{PREDICTS}> {_literal(predicts_json(step.predicts))}')
+            if step.about:
+                facts.append(f'<{kernel("about")}> <{step.about}>')
+            if step.part_of is not None:
+                parent_uri = parents.setdefault(id(step.part_of), f"{OREXIS}step_{self.agent.id}_{stem}_of{len(parents)}")
+                facts.append(f'<{kernel("partOf")}> <{parent_uri}>')
+                if id(step.part_of) not in written:
+                    written.add(id(step.part_of))
+                    p = step.part_of
+                    pfacts = [f'<{kernel("fills")}> <{p.action}>']
+                    if p.via:
+                        pfacts.append(f'<{kernel("through")}> <{p.via}>')
+                    if p.about:
+                        pfacts.append(f'<{kernel("about")}> <{p.about}>')
+                    if p.predicts is not None:
+                        pfacts.append(f'<{PREDICTS}> {_literal(predicts_json(p.predicts))}')
+                    if p.part_of is not None:
+                        grand = parents.setdefault(id(p.part_of), f"{OREXIS}step_{self.agent.id}_{stem}_of{len(parents)}")
+                        pfacts.append(f'<{kernel("partOf")}> <{grand}>')
+                    blocks.append(f'  <{parent_uri}> a <{kernel("Step")}> ; {" ; ".join(pfacts)} .')
             if n + 1 < len(plan):
                 facts.append(f'<{kernel("then")}> <{step_uris[n + 1]}>')
             blocks.append(f'  <{step_uri}> a <{kernel("Step")}> ; {" ; ".join(facts)} .')
@@ -397,21 +416,28 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
     def _expanded(self, plan: list) -> list:
         """The plan with every step of an action that declares a METHOD (#523) replaced by
-        the method's steps in order — same lever, same want — the last inheriting the
-        parent's prediction and predicted urgency, since the end the search planned on is
-        reached when the method is done. One level: a method's own steps are taken as they
-        are, and a method naming an action with a method of its own is a seam."""
+        the method's steps in order — recursively, a member with a method of its own
+        expanding in turn — same lever, same want, the last member inheriting the parent's
+        prediction and predicted urgency, since the end the search planned on is reached
+        when the method is done. The parent is kept on each member (`part_of`) and written
+        to the ledger as the filling they came from."""
         out = []
         for step in plan:
-            members = self._method_of(step.action)
-            if not members:
-                out.append(step)
-                continue
-            for n, action in enumerate(members):
-                last = n == len(members) - 1
-                out.append(_replace(step, action=action,
-                                    predicts=step.predicts if last else None,
-                                    urgency_after=step.urgency_after if last else None))
+            out.extend(self._members_of(step, depth=0))
+        return out
+
+    def _members_of(self, step, depth: int) -> list:
+        members = self._method_of(step.action)
+        if not members or depth > 8:
+            return [step]
+        out = []
+        for n, action in enumerate(members):
+            last = n == len(members) - 1
+            child = _replace(step, action=action,
+                             predicts=step.predicts if last else None,
+                             urgency_after=step.urgency_after if last else None,
+                             part_of=step)
+            out.extend(self._members_of(child, depth + 1))
         return out
 
     def _method_of(self, action: str) -> list[str]:
@@ -1185,13 +1211,15 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
             clauses.append(f"FILTER(?action = <{action}>)")
         if want:
             clauses.append(f"FILTER(?want = <{want}>)")
-        for term in ("through", "quantity", "forAgent", "notBefore", "notAfter", "predicts"):
+        for term in ("through", "quantity", "forAgent", "notBefore", "notAfter", "predicts",
+                     "about", "partOf"):
             clauses.append(f'OPTIONAL {{ ?act <{kernel(term)}> ?{term} }}')
         clauses.append(f'OPTIONAL {{ SELECT ?i (MAX(?v) AS ?advanced) WHERE {{ '
                        f'?i <{kernel("step")}> ?done . ?done <{END_VERIFIED_AT}> ?v }} GROUP BY ?i }}')
         rows = bindings(self.agent.intentions.query(
             "SELECT ?i ?act ?action ?want ?at ?through ?quantity ?forAgent ?notBefore ?notAfter "
-            "?predicts ?advanced WHERE { GRAPH <%s> { %s } }" % (self.graph, " ".join(clauses))))
+            "?predicts ?about ?partOf ?advanced WHERE { GRAPH <%s> { %s } }"
+            % (self.graph, " ".join(clauses))))
         #  WHAT THE WANT IS ABOUT rides along (#510): a step taken from the ledger — the
         #  second of a plan, advanced to on feedback — goes to its actor exactly as the head
         #  did from the search, and the actor reads the property off the step, not the want.
@@ -1201,7 +1229,8 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
             uri=r["i"], want=r["want"], adopted_at=datetime.fromisoformat(r["at"]),
             advanced_at=datetime.fromisoformat(r["advanced"]) if r.get("advanced") else None,
             step=Step(action=r["action"], via=r.get("through") or "", want=r["want"],
-                    about=about_of.get(r["want"]),
+                    about=r.get("about") or about_of.get(r["want"]),
+                    part_of=r.get("partOf"),
                     predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None,
                     quantity=float(r["quantity"]) if r.get("quantity") else None,
                     for_agent=r.get("forAgent"),
