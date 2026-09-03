@@ -187,6 +187,12 @@ def deliberable(st, desires: dict) -> bool:
                   action["action"].rsplit("#", 1)[-1],
                   "effect" if missing == "precondition" else "precondition", missing,
                   "when it is available" if missing == "precondition" else "what that DOES")
+    from orexis_agent_deliberation.relevance import unkeepable_bridges
+    #  A BRIDGE INTO NOTHING (#532): a promise the level beneath could never keep, since no
+    #  action writes the facts it translates into — refused once for the world, not per agent.
+    for fault in unkeepable_bridges(st.query):
+        faults += 1
+        log.error("%s", fault)
     for agent_id, wants in desires.items():
         me = load_self(st.query, agent_id)
         #  Asked of the CLASSES this agent's grants would load, never of a built agent: an

@@ -94,6 +94,8 @@ that pattern untranslated; it reads it now.
   refinement replans the outer level from the world as it is, and if every outer plan fails at
   the same refinement the two levels loop. The refused Move should cost more, or be barred,
   on the next pass — the same shape as suspicion.
-- **A promise nobody could ever keep is a misconfigured world** (an issue): a taker-less action
-  on some agent's menu whose effect no bridge connects to any taken action should be refused
-  at onboarding, the way a want nothing measures is refused now.
+- **A promise nobody could ever keep is a misconfigured world** — settled (#532): a bridge into
+  facts no declared action writes is refused at onboarding and at boot. Narrower than first
+  filed, and rightly: a taker-less action with no bridge at all is knowledge-only and admitted,
+  since a wire-less world's whole point is the search, and the actions a bridge lands on need
+  not be taken here — a level nobody executes is still a level somebody could plan.

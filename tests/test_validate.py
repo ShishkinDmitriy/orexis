@@ -188,3 +188,20 @@ def test_load_self_refuses_rather_than_picking_one(monkeypatch):
     _clone_agent_under_the_same_id(st, "fern")
     with pytest.raises(WorldError, match="answer to localId"):
         load_self(st.query, "fern")
+
+
+
+def test_a_bridge_into_facts_no_action_writes_is_refused(monkeypatch, caplog):
+    """A promise nobody could keep (#532): a bridge is a claim that a level beneath exists,
+    and it is held to the actions the tree declares — whether or not they are taken here,
+    since a level nobody executes is still a level somebody could plan. The tower's bridge
+    writes `courier:at`, which the courier's drives write; rewrite it to write a predicate
+    nothing writes and the world is refused, naming the bridge and the fact."""
+    st = build("tower", monkeypatch)
+    assert deliberable(st, desires_of(st)), "the shipped tower passes: its bridge lands on the courier's facts"
+    st.update("""DELETE { GRAPH ?g { ?b sh:construct ?c } }
+                 INSERT { GRAPH ?g { ?b sh:construct "CONSTRUCT { $via <urn:nowhere#teleportedTo> $about } WHERE { }" } }
+                 WHERE  { GRAPH ?g { ?b a orexis:Bridge ; sh:construct ?c } }""")
+    with caplog.at_level("ERROR"):
+        assert not deliberable(st, desires_of(st))
+    assert "MoveOnGrid" in caplog.text and "teleportedTo" in caplog.text and "nobody could keep" in caplog.text

@@ -349,3 +349,38 @@ def rule_edges() -> tuple:
     for path in loader.rule_files():
         edges.extend(edges_of_update(path.read_text()))
     return tuple(edges)
+
+
+_BRIDGES_Q = """
+SELECT ?bridge ?action ?construct WHERE {
+  ?bridge a orexis:Bridge ; orexis:refines ?action ; sh:construct ?construct }"""
+
+
+def unkeepable_bridges(query) -> list[str]:
+    """Bridges that translate an action's promise into facts NO declared action writes — a
+    promise nobody could keep (#532). A taker-less action with no bridge is knowledge-only
+    and admitted: planned, never executed, a wire-less world's point. A bridge is a claim
+    that a level beneath exists, and this holds the claim to the actions the tree declares:
+    every predicate the bridge's construct writes must be one some action's effect writes,
+    whether or not that action is taken here — a level nobody executes is still a level
+    somebody could plan. An unreadable construct is admitted, and an action whose writes are
+    unreadable vouches for nothing: unreadable is a finding for relevance, not a refusal.
+    Each fault is one sentence."""
+    #  An action whose effect relevance cannot read (ANYTHING) is left out rather than let
+    #  stand for everything: sensing's look is one, and letting it keep every promise would
+    #  disable the gate in every world that senses.
+    written: set = set()
+    for _, writes in actions_of(query).values():
+        if writes is not ANYTHING:
+            written |= set(writes)
+    faults = []
+    for row in bindings(query(_BRIDGES_Q)):
+        writes = writes_of_construct(row["construct"])
+        if writes is None or writes is ANYTHING:
+            continue
+        missing = sorted(str(p).rsplit("#", 1)[-1] for p in writes if p not in written)
+        if missing:
+            faults.append(f"{row['bridge'].rsplit('#', 1)[-1]} refines "
+                          f"{row['action'].rsplit('#', 1)[-1]} into facts no action writes "
+                          f"({', '.join(missing)}) — a promise nobody could keep")
+    return faults

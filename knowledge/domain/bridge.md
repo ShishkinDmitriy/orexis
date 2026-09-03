@@ -43,8 +43,13 @@ world as it is when the step is reached.
 bridge is not a rule inside the search: relevance keeps each search inside its want's
 vocabulary. Applied inside the search, seven moves would be thirty drives in one budget.
 
-**Not optional for a taker-less action.** A taker-less action with no bridge is a promise
-nobody could keep, said loudly at execution and to be refused at onboarding (#532).
+**Not a claim the world is allowed to make lightly.** A bridge asserts that a level beneath
+exists, and onboarding and boot hold it to the actions the tree declares: every predicate its
+construct writes must be one some action's effect writes, taken here or not, since a level
+nobody executes is still a level somebody could plan (#532). A bridge into facts no action
+writes is refused with its name and the fact. A taker-less action with NO bridge is a different
+thing and admitted: knowledge-only, planned and never executed — hanoi's own world, whose point
+is the search — and said loudly at execution when a step of it is reached.
 
 The tower package (`packages/orexis-tool-tower/`) is the one that ships: one axiom (a disk is
 a parcel), one bridge, one estimate, and a world naming both domains.
