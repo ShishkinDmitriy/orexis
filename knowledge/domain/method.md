@@ -78,4 +78,5 @@ reactions — an offer, a bid, a claim held in a dict, a redeem — invisible to
 claim is a fact in the bidder's own graph now (`market:Claim`), which is what lets a step
 wait on it.
 
-See [a-method-is-the-steps-an-action-comes-to](/decisions/a-method-is-the-steps-an-action-comes-to.md).
+See [a-method-is-the-steps-an-action-comes-to](/decisions/a-method-is-the-steps-an-action-comes-to.md)
+and, for the planned road, [a-level-is-a-vocabulary-and-a-bridge](/decisions/a-level-is-a-vocabulary-and-a-bridge.md).
