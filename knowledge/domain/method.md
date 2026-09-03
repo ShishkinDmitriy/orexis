@@ -11,6 +11,15 @@ description: >-
 
 # What it is
 
+A template of several steps, the way an [action](/domain/action.md) is a template of one: an
+aggregation of actions, or of methods, with shared variables — combine templates and you get
+a template. The axis is the one action and act already sit on. A method filled is a
+**plan**; a plan's steps taken are acts. The search fills a method it composes on the spot
+out of actions; the keeper fills a package's when it adopts the action that carries it; and
+a plan that worked can be lifted back to its method, the same instance across steps becoming
+the same variable, which is what would make it reusable (#469). An action with a method is a
+method whose composed effect is stated by its package rather than computed from its steps.
+
 `orexis:method`, an rdf:List of [actions](/domain/action.md) on an action. HTN's shape: an
 action the search chooses may be ABSTRACT — `market:Acquiring` is the decision to enter a
 venue at a price — and what taking it comes to is a sequence the package declares: tender a
@@ -49,7 +58,9 @@ prediction is answered, which is every action that predicts a reading.
 
 **Not a search.** The method's steps are never simulated; a method is what the package knows
 about its own protocol, and the search's question is whether to enter it. A method naming an
-action that itself has a method is a seam: one level is expanded.
+action that itself has a method is a seam: one level is expanded, and the ledger stays flat —
+recursion is a loop at adoption, and which method a step's filling came from is one link the
+ledger does not yet keep.
 
 **Not a branch.** A method is a sequence. Winning or losing is not two branches in the plan
 but one step done or lapsed, and lapsing is the replanning road every plan takes.
