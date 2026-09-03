@@ -22,7 +22,7 @@ skinparam component {
 
 
 database "Beliefs · repository" as BEL {
-  folder "orexis:ActionGraph\norexis:takenBy" as A
+  folder "orexis:ActionGraph" as A
 }
 
 database "Desires · repository" as DES {

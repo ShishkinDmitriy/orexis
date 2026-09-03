@@ -201,24 +201,33 @@ def test_what_fills_a_point_matches_the_signature_it_publishes():
 
 
 
-def test_every_action_is_taken_by_its_familys_providers_and_by_nobody_else():
-    """An action is a point its taker contributes to (#523). The T-Box says WHO — `orexis:takenBy`
-    names a family — and the code says HOW — `@contributes(<action>)` on the family's provider
-    — and the two are held together here, in both directions: a family's every provider
-    contributes every action handed to it (a family of two takes a look in both), and a class
-    contributing an action it does not provide the family for is a stray. Onboarding and boot
-    run the same check for one agent's grants; this runs it for the whole tree."""
+def test_every_action_is_taken_by_one_family_and_by_every_agent_that_holds_it():
+    """An action is a point its taker contributes to (#523), and nothing restates who: the
+    family is read off the contributing class's capability. Held here in two directions over
+    the whole tree — an action contributed by two families is two owners of one word, and a
+    family that takes an action has at least one provider contributing it — and by onboarding
+    and boot for each agent's own grants (`loader.untaken_actions`), where a member may decline
+    (listening declines a look) while the family still answers."""
     import rdflib
     declared = loader.actions_declared()
     assert declared, "no package declares an action — the scan stopped matching"
-    members: dict[str, set[str]] = {}
+    families: dict[str, set[str]] = {}
     for path in loader.ontology_files():
         g = rdflib.Graph().parse(path, format="turtle")
         for c, family in g.subject_objects(rdflib.RDF.type):
-            members.setdefault(str(family), set()).add(str(c))
+            families.setdefault(str(c), set()).add(str(family))
     classes = _provided_classes()
+    def families_of(capability):
+        return sorted(families.get(capability, set()) | {capability}) if capability else []
+    taken = {}
+    for cls in classes:
+        for term in contributions_of(cls):
+            if term in declared:
+                taken.setdefault(term, set()).update(families_of(cls.CAPABILITY))
+    assert taken, "no class contributes an action — the scan stopped matching"
+    for action, family in taken.items():
+        roots = {f for f in family if all(c == f or f in families.get(c, set()) for c in family)}
+        assert len(roots) == 1, f"{action} is taken by more than one family: {sorted(roots)}"
     capabilities = {c.CAPABILITY for c in classes if getattr(c, "CAPABILITY", None)}
-    faults = loader.untaken_actions(capabilities, lambda f: sorted(members.get(f, ())), classes)
-    assert not faults, "\n  ".join(["the triple and the contribution disagree:"] + faults)
-    taken = [a for a, f in declared.items() if f]
-    assert taken and all(any(a in contributions_of(c) for c in classes) for a in taken)
+    faults = loader.untaken_actions(capabilities, families_of, classes, tree=classes)
+    assert not faults, "\n  ".join(["a family takes an action none of its providers contributes:"] + faults)

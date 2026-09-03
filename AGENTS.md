@@ -141,9 +141,10 @@ it is a record wearing a bullet.
 - **A want is authored positive and the kernel writes the negation** — rows are
   existential and a want is universal, so somebody turns the shape inside out, and a compiler
   held to the judge by parity does it once where every author would do it differently.
-- **An action is a point its taker contributes to** — `orexis:takenBy` says who, `@contributes(<action>)`
-  says how, and a gate in the repo, at onboarding and at boot holds the two together, because a
-  taker missing at runtime looked exactly like an actor that was busy.
+- **An action is a point its taker contributes to** — `@contributes(<action>)` on a module says who
+  and how in one place, a triple restating who was retired as a duplicate, and a gate in the
+  repo, at onboarding and at boot holds a family to its actions, because a taker missing at
+  runtime looked exactly like an actor that was busy.
 - **An effect is one declaration** — the diff the search planned on rides on the step and is
   what the world is held to, so no actor sizes an expectation of its own; the one thing an
   actor adds is how close, and that is a bounded pick rather than a kernel constant.

@@ -166,8 +166,8 @@ job is to carry that across the gap cannot be the layer that forgets it.
   like every other — three segments, the loader relaxed for nothing — and
   `tests/test_projects.py` knows a layer by family `agent` and a member in the one spelling of
   the order, `LAYERS`.
-- **Progression still reads the T-Box through the belief store's query surface** — `orexis:takenBy`
-  for who takes an action, `orexis:suspectAfter` for the verdict's figure —
+- **Progression still reads the T-Box through the belief store's query surface** — (until #523 `orexis:takenBy`
+  for who takes an action) `orexis:suspectAfter` for the verdict's figure —
   by attribute on the container, never by import. Those are vocabulary facts and not beliefs,
   but the surface they arrive through is the belief base's, and a reader who wants "never
   reads a belief" to be structural rather than a discipline would hand progression its own

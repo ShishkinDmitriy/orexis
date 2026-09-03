@@ -35,7 +35,7 @@ item on the executing thread.
    impulse, absorbed, and no row written. That is the whole of the patience, because every
    means stands until the world answers
    ([an-intention-stands-until-the-world-answers](/decisions/an-intention-stands-until-the-world-answers.md)).
-3. **Take.** The means' `orexis:takenBy` family is asked of the T-Box, `agent.providers(family)` of
+3. **Take.** The choir is asked by the action — every action is a point — and the module contributing it takes it;
    the runtime, and each [actor](/domain/actor.md) is handed the act. At least one True is the
    step taken; all False is logged and the intention stands for the next trigger.
 

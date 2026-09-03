@@ -7,8 +7,8 @@ description: >-
   `actions.ttl` — and the KIND of act itself, which a row carries and an intention commits to:
   when it is available (`orexis:available`, a SELECT whose rows are the affordances it puts on the
   menu now), what it makes true
-  (`sh:construct` and `orexis:retracts`, with timing and confirmation route), and who carries it
-  out (`orexis:takenBy`). Loaded into the action graph at genesis so a planner, a sovereign or a
+  (`sh:construct` and `orexis:retracts`, with timing and confirmation route); who carries it out
+  is the code's to say, by `@contributes`. Loaded into the action graph at genesis so a planner, a sovereign or a
   model reads the whole tool list in one place. Adding a way of acting is one node and one
   `take()`.
 ---
@@ -27,8 +27,7 @@ market:Acquiring a orexis:Action ;
     orexis:available  """SELECT ?property ?via ?direction WHERE { … }""" ;
     sh:construct  """CONSTRUCT { … } WHERE { … }""" ;
     orexis:retracts   """CONSTRUCT { … } WHERE { … }""" ;
-    orexis:landsAfter """SELECT ?seconds WHERE { … }""" ;
-    orexis:takenBy    market:Bidding .
+    orexis:landsAfter """SELECT ?seconds WHERE { … }""" .
 ```
 
 Six ship: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `market:Offering`,
@@ -49,7 +48,7 @@ graph beside the T-Box. Three readers, one join:
   in, and each row it returns is an affordance carrying the action;
 - `effects.rule_for(action)` reads the node's construct and retraction and runs them against
   the [imaginarium](/domain/imaginarium.md);
-- `execution.taken_by(action)` reads the node's `orexis:takenBy` and asks `agent.providers`.
+- execution asks the choir by the action, and the module that contributes it answers.
 
 # Both texts, or neither
 
@@ -74,7 +73,7 @@ is real and unbuilt; the day it is wanted, the slot is there.
 
 # What an author writes
 
-A node here, and a `take()` on the module its `orexis:takenBy` names. Nothing else — no registry,
+A node here, and a `@contributes(<the action>)` method on the module that takes it. Nothing else — no registry,
 no edit to the kernel, no second file. An action without `sh:construct` is legal to ship and
 refused at the gate the moment it puts a row on some agent's menu, because a lever the search
 cannot simulate is one it must not conclude about.
@@ -96,7 +95,6 @@ agent's own and `market:Acquiring` where the resource is someone else's, and wha
 between two rungs is which reaches the better world.
 
 **And it is an extension point.** The method that carries an action out is
-`@contributes(<the action>)` on the module providing the capability `orexis:takenBy` names
-(#523); the signature and the row are declared once on `orexis:Action`. The triple says who,
-the contribution says how, and the [actor](/domain/actor.md) page says how the two are held
-together.
+`@contributes(<the action>)` on the module that takes it (#523); the signature and the row are
+declared once on `orexis:Action`. The contribution says who and how in one place, and the
+[actor](/domain/actor.md) page says how a family is held to its actions.

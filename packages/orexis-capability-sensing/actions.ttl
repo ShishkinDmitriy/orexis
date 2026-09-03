@@ -9,7 +9,7 @@
 #                  and ?for_agent where the row is a duty owed to someone; `$me` and
 #                  `$properties` substituted by the collector, prefixes prepended by the store;
 #    sh:construct  its EFFECT, with orexis:retracts, orexis:landsAfter and orexis:confirmedBy beside it;
-#    orexis:takenBy    the capability whose module carries it out.
+#    (who carries it out is the code's to say: `@contributes(<this action>)` on its module.)
 #  Precondition, effect and taker were three files and a fourth surface; a STRIPS operator is one
 #  thing, and an author adds a way of acting by adding a node here and a `take()` to a module.
 
@@ -56,8 +56,6 @@ sensing:Observing
                  || (?property = ?about && EXISTS { $me orexis:actsFor ?subject }))
         }""" ;
 
-    #  WHO CARRIES IT OUT — the module whose family this names (knowledge/domain/actor.md).
-    orexis:takenBy sensing:SensingCapability ;
     rdfs:label "what looking makes true" ;
 
     #  WHO MADE IT is part of what a look makes true, and leaving it out was what let a

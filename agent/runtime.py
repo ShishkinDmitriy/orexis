@@ -171,8 +171,10 @@ class Agent:
         #  refuse to start — a visible fault, where an intention standing forever is not.
         untaken = loader.untaken_actions(
             self.me.capabilities,
-            lambda f: [r["capability"] for r in bindings(self.beliefs.query(_family_q(f)))],
-            self.modules)
+            lambda c: [r["f"] for r in bindings(self.beliefs.query(
+                f"SELECT ?f WHERE {{ <{c}> a ?f . ?f a owl:Class }}"))] + [c],
+            self.modules,
+            [c for p in self._packages for c in p.provides() if isinstance(c, type)])
         if untaken:
             raise RuntimeError(f"{agent_id} would stand with nobody to act: " + "; ".join(untaken))
 

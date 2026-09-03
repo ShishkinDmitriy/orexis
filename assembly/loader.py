@@ -385,7 +385,7 @@ def action_files() -> tuple[Path, ...]:
 
     One `actions.ttl` per package, one `orexis:Action` node per way of acting, carrying its
     precondition (`orexis:available`, a SELECT), its effect (`sh:construct`, `orexis:retracts`, the
-    timing and the confirmation route) and its taker (`orexis:takenBy`). RDF rather than a query
+    timing and the confirmation route). RDF rather than a query
     file because a node with a condition and a construct already IS the action schema — it
     loads into the store at genesis, and a model or a sovereign reads the whole tool list
     without a second format existing anywhere.
@@ -774,55 +774,49 @@ def extension_rows() -> dict[str, str]:
 
 
 @lru_cache(maxsize=1)
-def actions_declared() -> dict[str, str | None]:
-    """Every `orexis:Action` any package's `actions.ttl` declares, and the capability its
-    `orexis:takenBy` names (None where it names none — an action an event adopts). An action
-    IS an extension point (#523): the method that carries it out is `@contributes(action)`,
-    the signature and the row are declared once on the class, and the T-Box's `takenBy` says
-    which family must answer while the contribution says how."""
+def actions_declared() -> frozenset[str]:
+    """Every `orexis:Action` any package's `actions.ttl` declares. An action IS an extension
+    point (#523): the method that carries it out is `@contributes(action)` on its module, the
+    signature and the row are declared once on the class, and WHO takes it is read off that
+    contribution — `orexis:takenBy` restated it and retired."""
     import rdflib
     ACTION = rdflib.URIRef("http://example.org/orexis#Action")
-    TAKEN_BY = rdflib.URIRef("http://example.org/orexis#takenBy")
-    out: dict[str, str | None] = {}
+    out: set[str] = set()
     for path in ask(terms.ACTIONS):
         g = rdflib.Graph().parse(path, format="turtle")
-        for action in g.subjects(rdflib.RDF.type, ACTION):
-            family = g.value(action, TAKEN_BY)
-            out[str(action)] = str(family) if family is not None else None
-    return out
+        out.update(str(a) for a in g.subjects(rdflib.RDF.type, ACTION))
+    return frozenset(out)
 
 
-def untaken_actions(capabilities, members_of, classes) -> list[str]:
-    """Actions the T-Box hands to one of `capabilities` that some class among `classes`
-    does not contribute — the consistency the registry forces (#523). `members_of(family)`
-    answers which capability terms belong to a family (the family itself included);
-    `classes` are module classes or instances, whatever `contributions_of` reads. AT LEAST
-    ONE provider of the family among them contributes the action — a member may decline by
+def untaken_actions(capabilities, families_of, mine, tree) -> list[str]:
+    """Actions handed to one of `capabilities` that none of `mine` contributes — the consistency
+    the registry forces (#523), with no triple to restate it. WHO takes an action is the
+    family of whoever contributes it among `tree` — the classes of the packages the grants
+    reach, never every package, since reading PROVIDES imports the package and imports follow
+    grants (#455); the repo test hands the whole tree: `families_of(capability)` answers the families a capability term
+    belongs to, itself included. Holding one of those families, an agent must have AT LEAST
+    ONE provider of it among `mine` contributing the action — a member may decline by
     contributing nothing, as listening declines a look it cannot nudge, while the family
-    still answers — and a class contributing an action it is not the family's provider for
-    is a fault too. Each fault is one sentence, and an empty list is a consistent set."""
+    still answers. An action nobody in the tree contributes is knowledge-only — planned,
+    never executed, hanoi's Move — and is not a fault. Each fault is one sentence."""
     from .contribute import contributions_of
+    tree = list(tree)
     faults: list[str] = []
-    declared = actions_declared()
     held = set(capabilities)
-    for action, family in declared.items():
-        if family is None:
+    for action in sorted(actions_declared()):
+        takers = [c for c in tree if action in contributions_of(c)]
+        if not takers:
             continue
-        members = set(members_of(family)) | {family}
-        providers = [c for c in classes if getattr(c, "CAPABILITY", None) in members
-                     and getattr(c, "CAPABILITY", None) in held]
+        family = set()
+        for c in takers:
+            family |= set(families_of(getattr(c, "CAPABILITY", None)))
+        providers = [m for m in mine if getattr(m, "CAPABILITY", None) in family
+                     and getattr(m, "CAPABILITY", None) in held]
         if providers and not any(action in contributions_of(p) for p in providers):
             names = ", ".join((p if isinstance(p, type) else type(p)).__name__ for p in providers)
-            faults.append(f"{action.rsplit('#', 1)[-1]} is taken by {family.rsplit('#', 1)[-1]}, "
-                          f"and none of its providers ({names}) contributes a method for it")
-    for cls in classes:
-        capability = getattr(cls, "CAPABILITY", None)
-        for term in contributions_of(cls):
-            family = declared.get(term, "")
-            if term in declared and family and capability not in (set(members_of(family)) | {family}):
-                name = cls if isinstance(cls, type) else type(cls)
-                faults.append(f"{name.__name__} contributes {term.rsplit('#', 1)[-1]}, which "
-                              f"{family.rsplit('#', 1)[-1]} takes and {name.__name__} does not provide")
+            faults.append(f"{action.rsplit('#', 1)[-1]} is taken by "
+                          f"{', '.join(sorted(f.rsplit('#', 1)[-1] for f in family))}, and none of "
+                          f"its providers here ({names}) contributes a method for it")
     return faults
 
 

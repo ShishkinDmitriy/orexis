@@ -744,13 +744,14 @@ orexis:carries a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range <http:/
 
 orexis:Action a owl:Class ; rdfs:label "Action" ;
     #  EVERY ACTION IS AN EXTENSION POINT (#523): the method that carries one out is
-    #  `@contributes(<the action>)` on the module providing the capability `orexis:takenBy`
-    #  names, and the signature and the row are stated here once for every member. The
-    #  triple says WHO answers, the contribution says HOW, and the gates hold the two
-    #  together — in the repo, at onboarding and at boot. `orexis:take`, the one hook every
-    #  module implemented with an if-chain on the action inside, retired here.
+    #  `@contributes(<the action>)` on the module that takes it, and the signature and the row
+    #  are stated here once for every member. WHO takes an action is read off that
+    #  contribution — the contributing class's capability, and its family — and nowhere else:
+    #  `orexis:takenBy` restated it and retired as a duplicate, with `orexis:take`, the one
+    #  hook every module implemented with an if-chain on the action inside. The gates hold a
+    #  family to its actions — in the repo, at onboarding and at boot.
     assembly:signature "(act, desire, intention) -> bool" ; orexis:row orexis:Progression ;
-    rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `orexis:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `orexis:retracts` are its effect, with `orexis:landsAfter` and `orexis:confirmedBy` beside them; `orexis:takenBy` is the capability whose module carries it out. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
+    rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `orexis:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `orexis:retracts` are its effect, with `orexis:landsAfter` and `orexis:confirmedBy` beside them; who carries it out is the code's to say, by `@contributes`. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
 
 
 #  AN ACTION STATES BOTH TEXTS OR NEITHER (#506). One a plan may CHOOSE — the menu's kind —
@@ -766,9 +767,6 @@ orexis:available a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range
     rdfs:label "available" ;
     rdfs:comment """The precondition, as a SELECT over the world binding `?property ?via ?direction` and — where the row is a duty owed to someone rather than the agent's own option — `?for_agent`. `$me` and `$properties` (the properties the agent holds desires in) are substituted by the collector; prefixes are the store's. A row exists only where every hop of the walk holds, which is why the menu is the precondition language and chaining needs no `requires` of its own.""" .
 
-orexis:takenBy a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:range orexis:Capability ;
-    rdfs:label "taken by" ;
-    rdfs:comment """WHICH capability carries this means out — the link from an affordance row to the code that takes it, as a fact rather than a dispatch table. Stated on the ACTION node, in the package's `actions.ttl`, beside the precondition and the effect it carries out. Execution asks the T-Box for the family and `agent.providers` for whoever is loaded, so the kernel names no package and which code carries a step out is queryable. A means with no taker is a means no plan can execute, and none ships that way. See knowledge/domain/actor.md.""" .
 
 #################  An act: an action filled in  #################
 #

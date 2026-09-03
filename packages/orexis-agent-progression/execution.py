@@ -12,8 +12,9 @@ already the loop — a timer's tick, a deadline — and otherwise enqueues the t
 its result on the caller's own thread, which is a transport's callback or the mind's revision
 thread and never the loop. That is the one wait in this layer, and it is never the loop's.
 
-**Nothing here names a package.** The link from a row to its code is `orexis:takenBy`, stated on
-the action node beside the precondition and the effect — a fact a sovereign can query. See
+**Nothing here names a package.** The link from a step to its code is the action itself: every
+action is an extension point, and the module that carries it out is `@contributes(<action>)`
+(#523) — the choir is asked by the action and whoever contributes it answers. See
 knowledge/domain/executor.md, knowledge/domain/actor.md and
 knowledge/decisions/an-intention-is-a-plan-committed-to.md.
 """
@@ -36,15 +37,6 @@ log = logging.getLogger("execution")
 
 #  Asked by NAME of the whole default graph — the T-Box is public, and which capability takes
 #  a means is a fact about the vocabulary rather than about any world.
-_TAKEN_BY_Q = f"SELECT ?action ?family WHERE {{ ?action orexis:takenBy ?family }} LIMIT 1"
-
-
-def taken_by(query, action: str) -> str | None:
-    """The capability family that carries this means out, or None where no package says."""
-    rows = bindings(query(_TAKEN_BY_Q, {"action": action}))
-    return rows[0]["family"] if rows else None
-
-
 def take_standing(agent, standing, desire) -> bool:
     """Carry out a step that already stands — the trigger changed, the decision did not.
 
@@ -74,18 +66,16 @@ def carry_out(agent, act: Step, desire, intention: str) -> bool:
 
 
 def _take(agent, act: Step, desire, intention: str) -> bool:
-    family = taken_by(agent.beliefs.query, act.action)
-    if family is None:
-        #  A row was shipped and no taker was stated. `tests/test_execution.py` refuses this
-        #  for every means that has a row in a shipped world; reaching it at runtime is a
-        #  package onboarded past that gate, and the honest thing is to say so loudly.
-        log.error("nothing takes %s — its package states no orexis:takenBy, so this intention "
+    #  BY THE ACTION'S OWN POINT (#523): every action is an extension point, and the module
+    #  that carries it out contributes the method — asking the choir by the action reaches
+    #  exactly its takers, every member of a family of two, and nobody else. An action nobody
+    #  declared, or one no module of mine contributes, stands with nobody to carry it out —
+    #  said loudly, since onboarding and boot refuse the ordinary cases before this is reached.
+    from assembly import loader
+    if act.action not in loader.extensions() or not any(m.answer(act.action) for m in agent.modules):
+        log.error("nothing takes %s — no module of mine contributes it, so this intention "
                   "stands with nobody to carry it out", act.action.rsplit("#", 1)[-1])
         return False
-    #  BY THE ACTION'S OWN POINT (#523): every action is an extension point, and the module
-    #  providing the family `takenBy` names contributes the method that carries it out. The
-    #  gates hold the two together, so asking the choir by the action reaches exactly the
-    #  family's providers — every member of it, since a family of two takes a look in both.
     took = any(bool(answer) for answer in agent.ask(act.action, act, desire, intention))
     if not took:
         log.info("%s through %s: no actor could take it now — standing",
