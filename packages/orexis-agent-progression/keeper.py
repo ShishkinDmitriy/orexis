@@ -374,10 +374,6 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
                 facts.append(f'<{PREDICTS}> {_literal(predicts_json(step.predicts))}')
             if step.about:
                 facts.append(f'<{kernel("about")}> <{step.about}>')
-            if step.via_by:
-                facts.append(f'<{kernel("viaBy")}> {_literal(step.via_by)}')
-            if step.about_by:
-                facts.append(f'<{kernel("aboutBy")}> {_literal(step.about_by)}')
             if step.part_of is not None:
                 parent_uri = parents.setdefault(id(step.part_of), f"{OREXIS}step_{self.agent.id}_{stem}_of{len(parents)}")
                 facts.append(f'<{kernel("partOf")}> <{parent_uri}>')
@@ -409,7 +405,6 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
     <{BECAUSE_OF}> {_literal(because)} .
 {chr(10).join(blocks)}
 }} }}""")
-        self._bind_parameters(uri)
         self.log.info("adopted %s for %s: %s", action.rsplit("#", 1)[-1], _short(want), because)
         self._tell("adopted", action, want, because)
         if until is not None or until_not is not None:
@@ -421,13 +416,11 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
     def _expanded(self, plan: list) -> list:
         """The plan with every step of an action that declares a METHOD (#523) replaced by
-        the method's members in order — recursively, a member with a method of its own
-        expanding in turn — the last member inheriting the parent's prediction and predicted
-        urgency, since the end the search planned on is reached when the method is done. A
-        member is a step of the parent's lever and subject unless it carries templates of its
-        own (`via_by`, `about_by`), which are bound when the step becomes current. The parent
-        is kept on each member (`part_of`) and written to the ledger as the filling they came
-        from."""
+        the method's steps in order — recursively, a member with a method of its own
+        expanding in turn — same lever, same want, the last member inheriting the parent's
+        prediction and predicted urgency, since the end the search planned on is reached
+        when the method is done. The parent is kept on each member (`part_of`) and written
+        to the ledger as the filling they came from."""
         out = []
         for step in plan:
             out.extend(self._members_of(step, depth=0))
@@ -438,17 +431,16 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         if not members or depth > 8:
             return [step]
         out = []
-        for n, member in enumerate(members):
+        for n, action in enumerate(members):
             last = n == len(members) - 1
-            child = _replace(step, action=member["action"],
-                             via_by=member["via_by"], about_by=member["about_by"],
+            child = _replace(step, action=action,
                              predicts=step.predicts if last else None,
                              urgency_after=step.urgency_after if last else None,
                              part_of=step)
             out.extend(self._members_of(child, depth + 1))
         return out
 
-    def _method_of(self, action: str) -> list[dict]:
+    def _method_of(self, action: str) -> list[str]:
         return method_of(self.agent.beliefs.query, action)
 
     def _template_of(self, action: str, term: str) -> str | None:
@@ -466,45 +458,6 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 "subject": self.me.acts_for or "urn:nobody", "want": step.want or "urn:nothing",
                 "beliefs": beliefs_graph(self.agent.id),
                 "since": Raw(f'"{since}"^^xsd:dateTime')}      # when this intention was adopted
-
-    def _bind_parameters(self, intention_uri: str) -> None:
-        """LATE BINDING (#523): a method member that fills its lever or its subject by a
-        template does so when it becomes current, against the world as it then is — the
-        third move's disk is where the first two left it — with the parent step's lever and
-        subject as `$via` and `$about`. Written onto the ledger step as `orexis:through` and
-        `orexis:about`, where every later reader finds them."""
-        from .ontology import beliefs_graph, STATE_GRAPH
-        rows = bindings(self.agent.intentions.query_union(f"""
-SELECT ?step ?viaBy ?aboutBy ?pvia ?pabout WHERE {{ GRAPH <{self.graph}> {{
-  <{intention_uri}> <{kernel("by")}> ?step .
-  OPTIONAL {{ ?step <{kernel("viaBy")}> ?viaBy }}
-  OPTIONAL {{ ?step <{kernel("aboutBy")}> ?aboutBy }}
-  OPTIONAL {{ ?step <{kernel("partOf")}> ?parent .
-             OPTIONAL {{ ?parent <{kernel("through")}> ?pvia }}
-             OPTIONAL {{ ?parent <{kernel("about")}> ?pabout }} }} }} }}"""))
-        if not rows or not (rows[0].get("viaBy") or rows[0].get("aboutBy")):
-            return
-        r = rows[0]
-        tokens = {"me": self.me.uri, "subject": self.me.acts_for or "urn:nobody",
-                  "via": r.get("pvia") or "urn:nothing", "about": r.get("pabout") or "urn:nothing",
-                  "beliefs": beliefs_graph(self.agent.id), "state": STATE_GRAPH}
-        for term, text, var in (("through", r.get("viaBy"), "via"), ("about", r.get("aboutBy"), "about")):
-            if not text:
-                continue
-            try:
-                answer = bindings(self.agent.beliefs.query_over(
-                    bind(text, **tokens), *self.agent.beliefs.public_graphs(),
-                    *self.agent.beliefs.recorded_graphs()))
-            except Exception as exc:                                # noqa: BLE001
-                self.log.error("a step's %s template will not run: %s", term, exc)
-                continue
-            if not answer or not answer[0].get(var):
-                self.log.warning("a step's %s template bound nothing — the step keeps the parent's", term)
-                continue
-            self.agent.intentions.update(f"""
-DELETE {{ GRAPH <{self.graph}> {{ <{r["step"]}> <{kernel(term)}> ?was }} }}
-INSERT {{ GRAPH <{self.graph}> {{ <{r["step"]}> <{kernel(term)}> <{answer[0][var]}> }} }}
-WHERE  {{ OPTIONAL {{ GRAPH <{self.graph}> {{ <{r["step"]}> <{kernel(term)}> ?was }} }} }}""")
 
     def _lapses_at(self, action: str, tokens: dict) -> datetime | None:
         """When a wait on a step of this action is over, asked of the action's own
@@ -1163,7 +1116,6 @@ DELETE {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{kernel("by")}> ?was }} }}
 INSERT {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{kernel("by")}> <{following}> ;
                                 <{BECAUSE_OF}> {_literal("step answered as predicted — advancing to the next")} }} }}
 WHERE  {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{kernel("by")}> ?was }} }}""")
-        self._bind_parameters(watch.uri)
         standing = next((s for s in self.standing(want=watch.want) if s.uri == watch.uri), None)
         if standing is None:
             return False
@@ -1260,13 +1212,13 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
         if want:
             clauses.append(f"FILTER(?want = <{want}>)")
         for term in ("through", "quantity", "forAgent", "notBefore", "notAfter", "predicts",
-                     "about", "viaBy", "aboutBy", "partOf"):
+                     "about", "partOf"):
             clauses.append(f'OPTIONAL {{ ?act <{kernel(term)}> ?{term} }}')
         clauses.append(f'OPTIONAL {{ SELECT ?i (MAX(?v) AS ?advanced) WHERE {{ '
                        f'?i <{kernel("step")}> ?done . ?done <{END_VERIFIED_AT}> ?v }} GROUP BY ?i }}')
         rows = bindings(self.agent.intentions.query(
             "SELECT ?i ?act ?action ?want ?at ?through ?quantity ?forAgent ?notBefore ?notAfter "
-            "?predicts ?about ?viaBy ?aboutBy ?partOf ?advanced WHERE { GRAPH <%s> { %s } }"
+            "?predicts ?about ?partOf ?advanced WHERE { GRAPH <%s> { %s } }"
             % (self.graph, " ".join(clauses))))
         #  WHAT THE WANT IS ABOUT rides along (#510): a step taken from the ledger — the
         #  second of a plan, advanced to on feedback — goes to its actor exactly as the head
@@ -1278,7 +1230,7 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
             advanced_at=datetime.fromisoformat(r["advanced"]) if r.get("advanced") else None,
             step=Step(action=r["action"], via=r.get("through") or "", want=r["want"],
                     about=r.get("about") or about_of.get(r["want"]),
-                    via_by=r.get("viaBy"), about_by=r.get("aboutBy"), part_of=r.get("partOf"),
+                    part_of=r.get("partOf"),
                     predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None,
                     quantity=float(r["quantity"]) if r.get("quantity") else None,
                     for_agent=r.get("forAgent"),

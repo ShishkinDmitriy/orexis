@@ -20,9 +20,7 @@ a plan that worked can be lifted back to its method, the same instance across st
 the same variable, which is what would make it reusable (#469). An action with a method is a
 method whose composed effect is stated by its package rather than computed from its steps.
 
-`orexis:method`, an rdf:List on an action whose members are [actions](/domain/action.md) or
-step nodes — `[ orexis:does <action> ; orexis:viaBy <select> ; orexis:aboutBy <select> ]`, a
-member that fills its own lever and subject from the parent's by a template. HTN's shape: an
+`orexis:method`, an rdf:List of [actions](/domain/action.md) on an action. HTN's shape: an
 action the search chooses may be ABSTRACT — `market:Acquiring` is the decision to enter a
 venue at a price — and what taking it comes to is a sequence the package declares: tender a
 bid into the open round, then present the claim it wins. The search never sees the sequence.
@@ -33,10 +31,10 @@ The [keeper](/domain/intention.md) expands at adoption, recursively: a [step](/d
 of an action with a method becomes one step per member, chained with `orexis:then`, and a
 member with a method of its own expands in turn, so the ledger walks a flat chain. Each step is
 `orexis:partOf` the filling it came from — the parent step stays in the ledger, off the chain,
-so a reader can recover the tree. A bare member reuses the parent's lever and subject; a member
-with templates binds them LATE, when the step becomes current, against the world as it then is:
-the third move's disk is where the first two left it, and the first two have not happened at
-adoption. The last member inherits the parent's `orexis:predicts` and predicted urgency, since
+so a reader can recover the tree. Every member is a step of the parent's lever and subject —
+a method is declared only for a PROTOCOL, whose steps share the parent's parameters; where a
+step's parameters would have to be worked out from the world, the step is not declared but
+planned (below). The last member inherits the parent's `orexis:predicts` and predicted urgency, since
 the end the search planned on is reached when the method is done. Then the plan is stepped as
 any plan is — each step taken when the one before it is confirmed, the tail dropped on a
 surprise.
@@ -64,10 +62,13 @@ prediction is answered, which is every action that predicts a reading.
 
 # What it is not
 
-**Not a search.** The method's steps are never simulated; a method is what the package knows
-about its own protocol, and the search's question is whether to enter it. What a method cannot
-yet say is a member that IS a search — a sub-want planned when the step is reached, which is
-what a travel across a grid is (planning inside another); that is the next piece.
+**Not a search, and not written where a search would do.** A declared method's steps are
+never simulated; a method is what the package knows about its own protocol, and the search's
+question is whether to enter it. The sovereign's rule (2026-09-03): hand-written methods only
+for protocols. Physics is DEDUCED — a step of an action nobody takes at its own level (hanoi's
+Move) is achieved by planning its prediction with the actions that are taken (the courier's
+drives), when the step is reached, from the world as it then is. That plan is spliced in
+where a declared method would be, its steps part of the same filling; it is the next piece.
 
 **Not a branch.** A method is a sequence. Winning or losing is not two branches in the plan
 but one step done or lapsed, and lapsing is the replanning road every plan takes.

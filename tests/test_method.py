@@ -18,7 +18,7 @@ def _fern(monkeypatch, moisture=0.30):
 
 def test_the_method_is_read_in_order_and_the_takers_follow_it(monkeypatch):
     fern = _fern(monkeypatch)
-    assert [m["action"] for m in method_of(fern.beliefs.query, ACQUIRING)] == [TENDERING, PRESENTING]
+    assert method_of(fern.beliefs.query, ACQUIRING) == [TENDERING, PRESENTING]
     assert method_of(fern.beliefs.query, TENDERING) == [], "a step of a method is its own one step"
     assert [m.name for m in takers_of(fern, ACQUIRING)] == ["bidding"], \
         "an abstract action is taken through its steps, so its taker is theirs"
@@ -74,40 +74,34 @@ def test_a_won_round_walks_the_method_and_a_lost_one_lapses_it(monkeypatch):
             assert all(x.uri != s.uri for x in keeper.standing(want=want)), "and its tail is dropped"
 
 
-def test_a_member_fills_its_own_parameters_late_and_a_method_of_methods_expands_flat(monkeypatch):
-    """A method's member may be a step node with templates for its lever and subject, bound
-    when the step becomes current against the world as it then is; a member with a method
-    of its own expands in turn; the ledger stays flat, each step `partOf` the filling it came
-    from, so the tree is recoverable."""
+def test_a_method_of_methods_expands_flat_and_every_step_knows_its_filling(monkeypatch):
+    """A member with a method of its own expands in turn; the ledger walks a flat chain; each
+    step is `partOf` the filling it came from, and the parent stays in the ledger off the
+    chain, so the tree is recoverable."""
     from orexis_agent_progression.act import Step
-    from orexis_agent_progression.ontology import ACTIONS_GRAPH, STATE_GRAPH
+    from orexis_agent_progression.ontology import ACTIONS_GRAPH
     fern = _fern(monkeypatch)
     keeper, want = fern.keeper, stake_of(fern).uri
     T = "urn:toy#"
     fern.beliefs.update(f"""INSERT DATA {{ GRAPH <{ACTIONS_GRAPH}> {{
       <{T}Errand> a orexis:Action ; orexis:method ( <{T}Fetch> <{T}Return> ) .
-      <{T}Fetch> a orexis:Action ; orexis:method (
-          [ orexis:does <{T}Go> ;
-            orexis:aboutBy "SELECT ?about WHERE {{ GRAPH $state {{ $via <{T}at> ?about }} }}" ]
-          <{T}Grab> ) .
+      <{T}Fetch> a orexis:Action ; orexis:method ( <{T}Go> <{T}Grab> ) .
       <{T}Go> a orexis:Action . <{T}Grab> a orexis:Action . <{T}Return> a orexis:Action . }} }}""")
-    fern.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <{T}parcel> <{T}at> <{T}c1> }} }}")
     uri = keeper.adopt(Step(action=T + "Errand", via=T + "parcel", want=want, urgency_after=0.1,
                             predicts=predicted_reading(fern.me.acts_for, MOISTURE, 0.55)),
                        want, "run the errand")
     rows = bindings(fern.intentions.query_union(f"""
-SELECT ?a ?about ?next ?parent ?pa ?grand ?ga ?p WHERE {{
+SELECT ?a ?next ?pa ?ga ?p WHERE {{
   <{uri}> orexis:step ?s . ?s orexis:fills ?a .
-  OPTIONAL {{ ?s orexis:about ?about }} OPTIONAL {{ ?s orexis:then ?next }} OPTIONAL {{ ?s orexis:predicts ?p }}
+  OPTIONAL {{ ?s orexis:then ?next }} OPTIONAL {{ ?s orexis:predicts ?p }}
   OPTIONAL {{ ?s orexis:partOf ?parent . ?parent orexis:fills ?pa .
              OPTIONAL {{ ?parent orexis:partOf ?grand . ?grand orexis:fills ?ga }} }} }}"""))
     by = {r["a"].rsplit("#", 1)[-1]: r for r in rows}
     assert set(by) == {"Go", "Grab", "Return"}, "flat: the walked steps, and only them"
-    assert by["Go"]["about"] == T + "c1", "Go's subject was filled from the parcel's place, late"
     assert by["Go"]["pa"].endswith("Fetch") and by["Go"]["ga"].endswith("Errand"), \
         "Go is part of a Fetch filling, which is part of the Errand filling"
     assert by["Return"]["pa"].endswith("Errand") and by["Return"].get("p"), \
         "Return is the last member and carries the end the search planned on"
     assert by["Go"].get("next") and by["Grab"].get("next") and not by["Return"].get("next")
-    assert keeper.current(uri).action == T + "Go" and keeper.current(uri).about == T + "c1"
-    assert keeper.current(uri).part_of, "and the ledger's step knows its filling"
+    assert keeper.current(uri).action == T + "Go" and keeper.current(uri).part_of, \
+        "and the ledger's step knows its filling"

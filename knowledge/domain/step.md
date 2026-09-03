@@ -31,8 +31,7 @@ elements are not [acts](/domain/act.md). The sovereign's ruling, 2026-09-02.
   is taken, within the actor's [tolerance](/domain/tolerance.md), and why no actor sizes an
   expectation of its own
 - where it was expanded from a [method](/domain/method.md), the filling it is part of
-  (`orexis:partOf`), and the templates its lever and subject were bound from (`orexis:viaBy`,
-  `orexis:aboutBy`) when it became current
+  (`orexis:partOf`)
 - once answered, the number it predicted and the number the world showed
   (`orexis:predictedValue`, `orexis:observedValue`) — the residual [review](/domain/review.md)
   reads, met or unmet alike
