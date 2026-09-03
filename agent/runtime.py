@@ -177,6 +177,9 @@ class Agent:
             [c for p in self._packages for c in p.provides() if isinstance(c, type)])
         if untaken:
             raise RuntimeError(f"{agent_id} would stand with nobody to act: " + "; ".join(untaken))
+        from orexis_agent_deliberation.relevance import unkeepable_bridges
+        if (unkept := unkeepable_bridges(self.beliefs.query)):
+            raise RuntimeError(f"{agent_id} holds a promise nobody could keep: " + "; ".join(unkept))
 
         # Check myself before acting. A shape applies only to capabilities I actually derived,
         # so this asks exactly the right questions — and refusing to start is the enforcement.
