@@ -141,6 +141,9 @@ it is a record wearing a bullet.
 - **A want is authored positive and the kernel writes the negation** — rows are
   existential and a want is universal, so somebody turns the shape inside out, and a compiler
   held to the judge by parity does it once where every author would do it differently.
+- **An action is a point its taker contributes to** — `orexis:takenBy` says who, `@contributes(<action>)`
+  says how, and a gate in the repo, at onboarding and at boot holds the two together, because a
+  taker missing at runtime looked exactly like an actor that was busy.
 - **An effect is one declaration** — the diff the search planned on rides on the step and is
   what the world is held to, so no actor sizes an expectation of its own; the one thing an
   actor adds is how close, and that is a bounded pick rather than a kernel constant.
@@ -204,7 +207,7 @@ it is a record wearing a bullet.
    providing its key into the load set, needs after needs, while a soft one (`X | None`)
    injects only what is already there and loads nothing (#455). Adding one is adding a directory. Packages never
    import each other's Python ACROSS a layer: ask `agent.provider(family)` or contribute via
-   the choir's extension points (`desires`, `size`, `take`, `notices`, `series`, `quiet` — and, in sensing's
+   the choir's extension points (`desires`, `size`, every ACTION, `notices`, `series`, `quiet` — and, in sensing's
    words through `agent.ask`, `annotate`, `urgency`, `bounds`).
    The one ordinary import is DOWNWARD, of the contract of the layer beneath: a family's plug-ins
    import the family's contract — `packages/orexis-codec-*`, `packages/orexis-scaling-*` and

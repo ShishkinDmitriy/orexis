@@ -17,7 +17,7 @@ See knowledge/decisions/capability-packages.md.
 from __future__ import annotations
 
 from orexis_agent_progression.ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, QUIET, REPORTS,
-                       SEND, SERIES, SIZE, SWEEP, TAKE)
+                       SEND, SERIES, SIZE, SWEEP)
 
 from datetime import datetime
 
@@ -153,7 +153,6 @@ class Module:
         """
         return None
 
-    @contributes(TAKE)
     def take(self, act, desire, intention: str) -> bool:
         """Carry out one committed step, if I am the one who can. True if I did.
 

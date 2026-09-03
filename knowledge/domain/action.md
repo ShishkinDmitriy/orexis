@@ -94,3 +94,9 @@ directory. The ladder — look, act with what is yours, buy what is not — is t
 a ranking: `actuation:Dosing` is offered exactly where the lever and the resource are both the
 agent's own and `market:Acquiring` where the resource is someone else's, and what chooses
 between two rungs is which reaches the better world.
+
+**And it is an extension point.** The method that carries an action out is
+`@contributes(<the action>)` on the module providing the capability `orexis:takenBy` names
+(#523); the signature and the row are declared once on `orexis:Action`. The triple says who,
+the contribution says how, and the [actor](/domain/actor.md) page says how the two are held
+together.

@@ -82,9 +82,11 @@ def _take(agent, act: Step, desire, intention: str) -> bool:
         log.error("nothing takes %s — its package states no orexis:takenBy, so this intention "
                   "stands with nobody to carry it out", act.action.rsplit("#", 1)[-1])
         return False
-    took = False
-    for actor in agent.providers(family):
-        took = bool(actor.take(act, desire, intention)) or took
+    #  BY THE ACTION'S OWN POINT (#523): every action is an extension point, and the module
+    #  providing the family `takenBy` names contributes the method that carries it out. The
+    #  gates hold the two together, so asking the choir by the action reaches exactly the
+    #  family's providers — every member of it, since a family of two takes a look in both.
+    took = any(bool(answer) for answer in agent.ask(act.action, act, desire, intention))
     if not took:
         log.info("%s through %s: no actor could take it now — standing",
                  act.action.rsplit("#", 1)[-1], (act.via or "?").rsplit("#", 1)[-1])

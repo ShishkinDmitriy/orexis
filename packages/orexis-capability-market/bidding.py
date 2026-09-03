@@ -58,6 +58,7 @@ def _live_watch_shape(sensor_uri: str, claim_jti: str):
     return g
 from orexis_agent_progression.ontology import ONTOLOGY_GRAPH
 from orexis_agent_progression.store import bindings
+from assembly.contribute import contributes
 
 from . import rounds, wallet
 from .wiring import bidding_markets_of
@@ -585,24 +586,27 @@ SELECT ?t ?mine WHERE {{
         value = sensing.value_in(query, graph, self.me.acts_for, row.about) if sensing else None
         return self.qty_for(row.about, value) if value is not None else None
 
-    def take(self, act, desire, intention: str) -> bool:
-        """Carry out a committed Acquire: bid in the round that is open, if one is — or a
-        released Presenting: the keeper held the claim until my watch was live or the bound
-        passed (#512), and hands it here to present.
+    @contributes(PRESENTING)
+    def present(self, act, desire, intention: str) -> bool:
+        """A released Presenting: the keeper held the claim until my watch was live or the
+        bound passed (#512), and hands it here to present."""
+        if self.holding is None:
+            return False
+        self._present("released by the keeper — my watch is live, or the bound passed and "
+                      "a dose delayed forever is worse than a dose unobserved")
+        return True
 
-        The actor for `market:Acquire` (knowledge/domain/actor.md). No round pending is "not
+    @contributes(ACQUIRING)
+    def acquire(self, act, desire, intention: str) -> bool:
+        """Carry out a committed Acquire: bid in the round that is open, if one is.
+
+        The actor for `market:Acquiring` (knowledge/domain/actor.md). No round pending is "not
         now": the intention stands, and the next offer runs `submit`, which finds it standing
         and comes back here — a bid adopted on the keeper's tick is answered by the market's
         knock without a second search. The reading is the one in hand: `on_offer` looked
         first, and a stale one is never bid on.
         """
-        if act.action == PRESENTING:
-            if self.holding is None:
-                return False
-            self._present("released by the keeper — my watch is live, or the bound passed and "
-                          "a dose delayed forever is worse than a dose unobserved")
-            return True
-        if act.action != ACQUIRING or act.about != self.about:
+        if act.about != self.about:
             return False
         #  THE ROUND IS THE FACT, read off the row's own lever (#358): the row exists only
         #  while one is open on that venue, so this is a lookup and never a wait. `pending`

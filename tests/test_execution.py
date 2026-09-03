@@ -153,10 +153,13 @@ def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monk
 def test_execution_dispatches_by_the_triple_and_never_by_name(monkeypatch):
     """The row goes to whoever the T-Box says, and to every member of the family."""
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
+    from assembly.contribute import contributions_of
     handed = []
+    actions = set(loader.actions_declared())
     for m in fern.modules:
-        if m.CAPABILITY:
-            monkeypatch.setattr(m, "take", lambda row, desire, i, m=m: handed.append(m.name) or False)
+        for term, name in contributions_of(m).items():
+            if term in actions:      # every action is a point; its taker contributes it (#523)
+                monkeypatch.setattr(m, name, lambda row, desire, i, m=m: handed.append(m.name) or False)
     stake = stake_of(fern)
     row = afforder.Affordance(action=OBSERVING, want=stake.uri, about=MOISTURE, via="urn:probe")
     assert execution.carry_out(fern, Step.from_row(row), stake, "urn:intent") is False

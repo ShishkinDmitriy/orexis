@@ -106,6 +106,7 @@ metrics tick) are one, and `submit` no longer holds an opinion about whether to 
 - **The tail is trace, not ledger.** `ag:plannedThen` would be one triple and a reader outside
   could see a two-step plan on the intention that heads it. Not written until something reads it:
   a projection nobody consumes is a claim that can rot.
-- **`take` returns a boolean and execution logs on False.** What an agent should DO about a row
+- **`take` returns a boolean and execution logs on False** (since #523 the method is the
+  action's own point, `@contributes(<action>)`, and the boolean is unchanged). What an agent should DO about a row
   its actor declined — a bid with no round, a dose with no fresh reading — is today "stand and
   wait for the trigger", which is right for both shipped cases and is not a rule.

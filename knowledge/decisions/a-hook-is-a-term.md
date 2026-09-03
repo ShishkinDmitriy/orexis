@@ -64,4 +64,6 @@ The askers, the answerers and the merging rules. What was `ask("reports")` is
   that yet.
 - **`take` and `size` are declared and asked by method**, of a family's providers rather than
   of the choir — an actor's contract. Declared so the roster is complete; the dispatch stays
-  `orexis:takenBy`'s.
+  `orexis:takenBy`'s. (Since #523 `take` is gone: every ACTION is a point of its own,
+  inheriting its signature and row from `orexis:Action`, filled by `@contributes(<action>)`
+  and asked through the choir like the rest; `orexis:takenBy` still says who.)

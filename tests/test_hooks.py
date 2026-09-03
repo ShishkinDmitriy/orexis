@@ -90,7 +90,8 @@ def test_every_run_time_point_declares_which_row_answering_it_belongs_to():
 def test_the_rows_say_what_the_records_say():
     rows = loader.extension_rows()
     assert rows[HANDLE] == REACTIVE, "a message arriving is reactive: classify and write"
-    assert rows[OREXIS + "take"] == OREXIS + "Progression", "taking a committed act spans time"
+    assert rows["http://example.org/orexis/actuation#Dosing"] == OREXIS + "Progression", \
+        "taking a committed step spans time — every action inherits the row its class declares (#523)"
     assert rows[OREXIS + "desireUrgency"] == OREXIS + "Deliberative", "measuring a want is the search's"
 
 
@@ -138,6 +139,10 @@ def _declared_signatures() -> dict[str, str]:
         graph = rdflib.Graph().parse(path, format="turtle")
         for term, value in graph.subject_objects(sig):
             out[str(term)] = str(value)
+    #  Every action is a point, and inherits the signature its class declares (#523).
+    if (taking := out.get("http://example.org/orexis#Action")) is not None:
+        for action in loader.actions_declared():
+            out.setdefault(action, taking)
     return out
 
 
@@ -193,3 +198,27 @@ def test_what_fills_a_point_matches_the_signature_it_publishes():
         "a filler disagrees with the signature its point publishes. `Agent.ask` calls it "
         "straight through, so this is a module that would be logged and stepped over rather "
         "than a failure anyone would see:\n  " + "\n  ".join(wrong))
+
+
+
+def test_every_action_is_taken_by_its_familys_providers_and_by_nobody_else():
+    """An action is a point its taker contributes to (#523). The T-Box says WHO — `orexis:takenBy`
+    names a family — and the code says HOW — `@contributes(<action>)` on the family's provider
+    — and the two are held together here, in both directions: a family's every provider
+    contributes every action handed to it (a family of two takes a look in both), and a class
+    contributing an action it does not provide the family for is a stray. Onboarding and boot
+    run the same check for one agent's grants; this runs it for the whole tree."""
+    import rdflib
+    declared = loader.actions_declared()
+    assert declared, "no package declares an action — the scan stopped matching"
+    members: dict[str, set[str]] = {}
+    for path in loader.ontology_files():
+        g = rdflib.Graph().parse(path, format="turtle")
+        for c, family in g.subject_objects(rdflib.RDF.type):
+            members.setdefault(str(family), set()).add(str(c))
+    classes = _provided_classes()
+    capabilities = {c.CAPABILITY for c in classes if getattr(c, "CAPABILITY", None)}
+    faults = loader.untaken_actions(capabilities, lambda f: sorted(members.get(f, ())), classes)
+    assert not faults, "\n  ".join(["the triple and the contribution disagree:"] + faults)
+    taken = [a for a, f in declared.items() if f]
+    assert taken and all(any(a in contributions_of(c) for c in classes) for a in taken)

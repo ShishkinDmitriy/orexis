@@ -767,7 +767,75 @@ def extension_rows() -> dict[str, str]:
         for term in g.subjects(rdflib.RDF.type, point):
             for value in g.objects(term, row):
                 out[str(term)] = str(value)
+    if (taking := _class_row("http://example.org/orexis#Action")) is not None:
+        for action in actions_declared():
+            out.setdefault(action, taking)   # an action inherits the row its class declares
     return out
+
+
+@lru_cache(maxsize=1)
+def actions_declared() -> dict[str, str | None]:
+    """Every `orexis:Action` any package's `actions.ttl` declares, and the capability its
+    `orexis:takenBy` names (None where it names none — an action an event adopts). An action
+    IS an extension point (#523): the method that carries it out is `@contributes(action)`,
+    the signature and the row are declared once on the class, and the T-Box's `takenBy` says
+    which family must answer while the contribution says how."""
+    import rdflib
+    ACTION = rdflib.URIRef("http://example.org/orexis#Action")
+    TAKEN_BY = rdflib.URIRef("http://example.org/orexis#takenBy")
+    out: dict[str, str | None] = {}
+    for path in ask(terms.ACTIONS):
+        g = rdflib.Graph().parse(path, format="turtle")
+        for action in g.subjects(rdflib.RDF.type, ACTION):
+            family = g.value(action, TAKEN_BY)
+            out[str(action)] = str(family) if family is not None else None
+    return out
+
+
+def untaken_actions(capabilities, members_of, classes) -> list[str]:
+    """Actions the T-Box hands to one of `capabilities` that some class among `classes`
+    does not contribute — the consistency the registry forces (#523). `members_of(family)`
+    answers which capability terms belong to a family (the family itself included);
+    `classes` are module classes or instances, whatever `contributions_of` reads. AT LEAST
+    ONE provider of the family among them contributes the action — a member may decline by
+    contributing nothing, as listening declines a look it cannot nudge, while the family
+    still answers — and a class contributing an action it is not the family's provider for
+    is a fault too. Each fault is one sentence, and an empty list is a consistent set."""
+    from .contribute import contributions_of
+    faults: list[str] = []
+    declared = actions_declared()
+    held = set(capabilities)
+    for action, family in declared.items():
+        if family is None:
+            continue
+        members = set(members_of(family)) | {family}
+        providers = [c for c in classes if getattr(c, "CAPABILITY", None) in members
+                     and getattr(c, "CAPABILITY", None) in held]
+        if providers and not any(action in contributions_of(p) for p in providers):
+            names = ", ".join((p if isinstance(p, type) else type(p)).__name__ for p in providers)
+            faults.append(f"{action.rsplit('#', 1)[-1]} is taken by {family.rsplit('#', 1)[-1]}, "
+                          f"and none of its providers ({names}) contributes a method for it")
+    for cls in classes:
+        capability = getattr(cls, "CAPABILITY", None)
+        for term in contributions_of(cls):
+            family = declared.get(term, "")
+            if term in declared and family and capability not in (set(members_of(family)) | {family}):
+                name = cls if isinstance(cls, type) else type(cls)
+                faults.append(f"{name.__name__} contributes {term.rsplit('#', 1)[-1]}, which "
+                              f"{family.rsplit('#', 1)[-1]} takes and {name.__name__} does not provide")
+    return faults
+
+
+def _class_row(cls_iri: str) -> str | None:
+    """The cognitive row a CLASS of points declares for every member — `orexis:Action`'s."""
+    import rdflib
+    row = rdflib.URIRef("http://example.org/orexis#row")
+    for path in ontology_files():
+        g = rdflib.Graph().parse(path, format="turtle")
+        value = g.value(rdflib.URIRef(cls_iri), row)
+        if value is not None:
+            return str(value)
+    return None
 
 
 @lru_cache(maxsize=1)
@@ -782,4 +850,5 @@ def extensions() -> frozenset[str]:
     for path in ontology_files():
         g = rdflib.Graph().parse(path, format="turtle")
         out.update(str(s) for s in g.subjects(rdflib.RDF.type, point))
+    out.update(actions_declared())          # every action is a point its taker contributes to
     return frozenset(out)

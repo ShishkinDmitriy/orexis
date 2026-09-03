@@ -166,6 +166,15 @@ class Agent:
         if unknown:
             log.warning("no package implements %s — the world expects more than this build has",
                         ", ".join(unknown))
+        #  NOTHING I MAY BE HANDED STANDS WITH NOBODY TO TAKE IT (#523): every action the T-Box
+        #  hands to one of my capabilities is contributed by the module I built for it, or I
+        #  refuse to start — a visible fault, where an intention standing forever is not.
+        untaken = loader.untaken_actions(
+            self.me.capabilities,
+            lambda f: [r["capability"] for r in bindings(self.beliefs.query(_family_q(f)))],
+            self.modules)
+        if untaken:
+            raise RuntimeError(f"{agent_id} would stand with nobody to act: " + "; ".join(untaken))
 
         # Check myself before acting. A shape applies only to capabilities I actually derived,
         # so this asks exactly the right questions — and refusing to start is the enforcement.
