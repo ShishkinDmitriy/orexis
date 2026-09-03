@@ -72,7 +72,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [executor](/domain/executor.md) - Plan, commit the head as an intention, hand it to its actor. One road for every trigger; a standing step is taken, not re-decided.
 
-* [actor](/domain/actor.md) - The module an affordance is linked to, through `orexis:takenBy` stated by the package that ships the row. Takes a step; never decides one.
+* [actor](/domain/actor.md) - The module an affordance is linked to: whichever contributes the action. Takes a step; never decides one.
 
 # Doing
 

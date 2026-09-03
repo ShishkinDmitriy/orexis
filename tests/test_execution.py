@@ -25,7 +25,6 @@ OBSERVING = "http://example.org/orexis/sensing#Observing"
 DOSING = "http://example.org/orexis/actuation#Dosing"
 SERVING = "http://example.org/orexis/market#Serving"
 OFFERING = "http://example.org/orexis/market#Offering"
-TAKEN_BY = rdflib.URIRef("http://example.org/orexis#takenBy")
 
 
 def keeper_of(agent):
@@ -125,13 +124,9 @@ def _actions():
 
 
 def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monkeypatch):
-    """An action with no `orexis:takenBy` is an intention nothing can carry out. Every means on any
-    shipped agent's menu comes from an action naming a family, and every agent holding such a
-    row composes a module in that family — which is the whole of 'every affordance is linked
-    to code'."""
-    actions = _actions()
-    takers = {str(a): str(f) for a, f in actions.subject_objects(TAKEN_BY)}
-    assert takers, "no orexis:takenBy anywhere — the action files stopped stating it"
+    """A row on some agent's menu that no module of that agent contributes is an intention
+    nothing can carry out. Every means on any shipped agent's menu is contributed by a module
+    that agent composes (#523) — the T-Box no longer restates who; the contribution says."""
     rows_seen = 0
     for world, agent_id in (("simulation", "fern"), ("simulation", "supplier"),
                             ("loner", "gardener")):
@@ -141,22 +136,23 @@ def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monk
         for row in afforder.affordances_of(agent.beliefs.query, agent.me.uri, agent.desires.query_union,
                                 beliefs_graph(agent.id)):
             rows_seen += 1
-            assert row.action in takers, f"{world}/{agent_id}: {row.action} has no orexis:takenBy"
-            family = execution.taken_by(agent.beliefs.query, row.action)
-            assert family == takers[row.action]
-            assert agent.providers(family), \
-                f"{world}/{agent_id}: {row.action} is taken by {family}, which it does not compose"
+            takers = [m.name for m in agent.modules if m.answer(row.action) is not None]
+            assert takers, f"{world}/{agent_id}: {row.action} is contributed by none of its modules"
     assert rows_seen >= 4
-    assert takers[OFFERING].endswith("Hosting"), "Offer is an action since #359, taken by the host"
-
+    hosts = [m for m in build_agent("supplier", genesis_store(world="simulation"), monkeypatch).modules
+             if m.answer(OFFERING) is not None]
+    assert hosts and hosts[0].name == "hosting", "Offer is an action since #359, taken by the host"
 
 def test_execution_dispatches_by_the_triple_and_never_by_name(monkeypatch):
     """The row goes to whoever the T-Box says, and to every member of the family."""
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
+    from assembly.contribute import contributions_of
     handed = []
+    actions = set(loader.actions_declared())
     for m in fern.modules:
-        if m.CAPABILITY:
-            monkeypatch.setattr(m, "take", lambda row, desire, i, m=m: handed.append(m.name) or False)
+        for term, name in contributions_of(m).items():
+            if term in actions:      # every action is a point; its taker contributes it (#523)
+                monkeypatch.setattr(m, name, lambda row, desire, i, m=m: handed.append(m.name) or False)
     stake = stake_of(fern)
     row = afforder.Affordance(action=OBSERVING, want=stake.uri, about=MOISTURE, via="urn:probe")
     assert execution.carry_out(fern, Step.from_row(row), stake, "urn:intent") is False

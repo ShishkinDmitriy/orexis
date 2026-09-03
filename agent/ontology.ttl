@@ -74,8 +74,6 @@ orexis:witness a assembly:Extension ;
     assembly:signature "(keyed_class, key) -> float | None" ; orexis:row orexis:Progression ; rdfs:label "witness" ; rdfs:comment "What value does the world show NOW for this keyed fact — the reading a step predicted, as it stands at the verdict? Asked once per verdict for the residual (observed against predicted) the reviewer reads; sensing's, because what a reading is is sensing's (#518). None is no opinion." .
 orexis:size a assembly:Extension ;
     assembly:signature "(query, graph, row) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "size" ; rdfs:comment "How big would the act this row commits to be? Asked of the row's taker before it is simulated." .
-orexis:take a assembly:Extension ;
-    assembly:signature "(act, desire, intention) -> bool" ; orexis:row orexis:Progression ; rdfs:label "take" ; rdfs:comment "Carry this committed act out, if you are the one who can. True if you did." .
 orexis:reports a assembly:Extension ;
     assembly:signature "() -> dict" ; orexis:row orexis:Reactive ; rdfs:label "reports" ; rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." .
 orexis:series a assembly:Extension ;
@@ -745,7 +743,15 @@ orexis:carries a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range <http:/
 #################  What an action IS  #################
 
 orexis:Action a owl:Class ; rdfs:label "Action" ;
-    rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `orexis:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `orexis:retracts` are its effect, with `orexis:landsAfter` and `orexis:confirmedBy` beside them; `orexis:takenBy` is the capability whose module carries it out. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
+    #  EVERY ACTION IS AN EXTENSION POINT (#523): the method that carries one out is
+    #  `@contributes(<the action>)` on the module that takes it, and the signature and the row
+    #  are stated here once for every member. WHO takes an action is read off that
+    #  contribution — the contributing class's capability, and its family — and nowhere else:
+    #  `orexis:takenBy` restated it and retired as a duplicate, with `orexis:take`, the one
+    #  hook every module implemented with an if-chain on the action inside. The gates hold a
+    #  family to its actions — in the repo, at onboarding and at boot.
+    assembly:signature "(act, desire, intention) -> bool" ; orexis:row orexis:Progression ;
+    rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `orexis:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `orexis:retracts` are its effect, with `orexis:landsAfter` and `orexis:confirmedBy` beside them; who carries it out is the code's to say, by `@contributes`. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
 
 
 #  AN ACTION STATES BOTH TEXTS OR NEITHER (#506). One a plan may CHOOSE — the menu's kind —
@@ -761,9 +767,6 @@ orexis:available a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range
     rdfs:label "available" ;
     rdfs:comment """The precondition, as a SELECT over the world binding `?property ?via ?direction` and — where the row is a duty owed to someone rather than the agent's own option — `?for_agent`. `$me` and `$properties` (the properties the agent holds desires in) are substituted by the collector; prefixes are the store's. A row exists only where every hop of the walk holds, which is why the menu is the precondition language and chaining needs no `requires` of its own.""" .
 
-orexis:takenBy a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:range orexis:Capability ;
-    rdfs:label "taken by" ;
-    rdfs:comment """WHICH capability carries this means out — the link from an affordance row to the code that takes it, as a fact rather than a dispatch table. Stated on the ACTION node, in the package's `actions.ttl`, beside the precondition and the effect it carries out. Execution asks the T-Box for the family and `agent.providers` for whoever is loaded, so the kernel names no package and which code carries a step out is queryable. A means with no taker is a means no plan can execute, and none ships that way. See knowledge/domain/actor.md.""" .
 
 #################  An act: an action filled in  #################
 #

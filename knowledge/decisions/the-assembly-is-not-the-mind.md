@@ -50,7 +50,7 @@ and the audience is decided by *where the decorated function lives*, so nothing 
 
 **`assembly/`, beside `agent/` and `onboarding/`.** It owns finding packages, the choir
 mechanism, and the extension vocabulary in its own namespace. `agent/` keeps the BDI extension
-points it owns — `orexis:desires`, `orexis:take`, `orexis:size` — and stops owning the machinery.
+points it owns — `orexis:desires`, `orexis:take` (since #523 every action is its own point), `orexis:size` — and stops owning the machinery.
 `lint-imports` gains the direction: **assembly ← agent ← onboarding**.
 
 **A point publishes its signature.** `assembly:signature` on the term, checked strictly against

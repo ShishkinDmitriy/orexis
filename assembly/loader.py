@@ -385,7 +385,7 @@ def action_files() -> tuple[Path, ...]:
 
     One `actions.ttl` per package, one `orexis:Action` node per way of acting, carrying its
     precondition (`orexis:available`, a SELECT), its effect (`sh:construct`, `orexis:retracts`, the
-    timing and the confirmation route) and its taker (`orexis:takenBy`). RDF rather than a query
+    timing and the confirmation route). RDF rather than a query
     file because a node with a condition and a construct already IS the action schema — it
     loads into the store at genesis, and a model or a sovereign reads the whole tool list
     without a second format existing anywhere.
@@ -767,7 +767,69 @@ def extension_rows() -> dict[str, str]:
         for term in g.subjects(rdflib.RDF.type, point):
             for value in g.objects(term, row):
                 out[str(term)] = str(value)
+    if (taking := _class_row("http://example.org/orexis#Action")) is not None:
+        for action in actions_declared():
+            out.setdefault(action, taking)   # an action inherits the row its class declares
     return out
+
+
+@lru_cache(maxsize=1)
+def actions_declared() -> frozenset[str]:
+    """Every `orexis:Action` any package's `actions.ttl` declares. An action IS an extension
+    point (#523): the method that carries it out is `@contributes(action)` on its module, the
+    signature and the row are declared once on the class, and WHO takes it is read off that
+    contribution — `orexis:takenBy` restated it and retired."""
+    import rdflib
+    ACTION = rdflib.URIRef("http://example.org/orexis#Action")
+    out: set[str] = set()
+    for path in ask(terms.ACTIONS):
+        g = rdflib.Graph().parse(path, format="turtle")
+        out.update(str(a) for a in g.subjects(rdflib.RDF.type, ACTION))
+    return frozenset(out)
+
+
+def untaken_actions(capabilities, families_of, mine, tree) -> list[str]:
+    """Actions handed to one of `capabilities` that none of `mine` contributes — the consistency
+    the registry forces (#523), with no triple to restate it. WHO takes an action is the
+    family of whoever contributes it among `tree` — the classes of the packages the grants
+    reach, never every package, since reading PROVIDES imports the package and imports follow
+    grants (#455); the repo test hands the whole tree: `families_of(capability)` answers the families a capability term
+    belongs to, itself included. Holding one of those families, an agent must have AT LEAST
+    ONE provider of it among `mine` contributing the action — a member may decline by
+    contributing nothing, as listening declines a look it cannot nudge, while the family
+    still answers. An action nobody in the tree contributes is knowledge-only — planned,
+    never executed, hanoi's Move — and is not a fault. Each fault is one sentence."""
+    from .contribute import contributions_of
+    tree = list(tree)
+    faults: list[str] = []
+    held = set(capabilities)
+    for action in sorted(actions_declared()):
+        takers = [c for c in tree if action in contributions_of(c)]
+        if not takers:
+            continue
+        family = set()
+        for c in takers:
+            family |= set(families_of(getattr(c, "CAPABILITY", None)))
+        providers = [m for m in mine if getattr(m, "CAPABILITY", None) in family
+                     and getattr(m, "CAPABILITY", None) in held]
+        if providers and not any(action in contributions_of(p) for p in providers):
+            names = ", ".join((p if isinstance(p, type) else type(p)).__name__ for p in providers)
+            faults.append(f"{action.rsplit('#', 1)[-1]} is taken by "
+                          f"{', '.join(sorted(f.rsplit('#', 1)[-1] for f in family))}, and none of "
+                          f"its providers here ({names}) contributes a method for it")
+    return faults
+
+
+def _class_row(cls_iri: str) -> str | None:
+    """The cognitive row a CLASS of points declares for every member — `orexis:Action`'s."""
+    import rdflib
+    row = rdflib.URIRef("http://example.org/orexis#row")
+    for path in ontology_files():
+        g = rdflib.Graph().parse(path, format="turtle")
+        value = g.value(rdflib.URIRef(cls_iri), row)
+        if value is not None:
+            return str(value)
+    return None
 
 
 @lru_cache(maxsize=1)
@@ -782,4 +844,5 @@ def extensions() -> frozenset[str]:
     for path in ontology_files():
         g = rdflib.Graph().parse(path, format="turtle")
         out.update(str(s) for s in g.subjects(rdflib.RDF.type, point))
+    out.update(actions_declared())          # every action is a point its taker contributes to
     return frozenset(out)

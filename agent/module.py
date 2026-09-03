@@ -17,7 +17,7 @@ See knowledge/decisions/capability-packages.md.
 from __future__ import annotations
 
 from orexis_agent_progression.ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, QUIET, REPORTS,
-                       SEND, SERIES, SIZE, SWEEP, TAKE)
+                       SEND, SERIES, SIZE, SWEEP)
 
 from datetime import datetime
 
@@ -153,13 +153,12 @@ class Module:
         """
         return None
 
-    @contributes(TAKE)
     def take(self, act, desire, intention: str) -> bool:
         """Carry out one committed step, if I am the one who can. True if I did.
 
         The choir's doing hook (knowledge/domain/actor.md): execution has planned, written the
         head row to the ledger as `intention`, and now hands it to every module the means'
-        `orexis:takenBy` names. `row` is the affordance the step is — means, property, lever and,
+        the action's contribution names. `row` is the affordance the step is — means, property, lever and,
         for an obligation, whom it is owed to; `desire` is the want it serves. What to DO with them is
         this module's own, and the sizing stays where it always was — `value_bid`, `dose_for`,
         `redeem` — because an actor takes a step and never decides one.

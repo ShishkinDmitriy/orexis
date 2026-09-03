@@ -16,7 +16,7 @@ One node per way of acting, and everything a search needs to reason about it:
 |---|---|
 | precondition | `orexis:available` — a SELECT binding the lever, the want and the direction |
 | effect | `sh:construct`, `orexis:retracts`, `orexis:landsAfter` |
-| taker | `orexis:takenBy` — the capability family that carries it out |
+| taker | the module that contributes the action — `@contributes(<action>)`, read off the code |
 
 Each package ships its own in `actions.ttl`, so adding a way of acting is a node in a new
 directory rather than an edit here.

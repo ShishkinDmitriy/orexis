@@ -1205,7 +1205,8 @@ class SubscribingModule(SensingModule):
             if self.drivers[sensor.uri]:
                 self.drivers[sensor.uri].sense_now(sensor)
 
-    def take(self, act, desire, intention: str) -> bool:
+    @contributes(OBSERVING)
+    def look(self, act, desire, intention: str) -> bool:
         """Carry out a committed look: nudge the driver that watches this row's lever.
 
         The actor for `sensing:Observe` (knowledge/domain/actor.md) — the FAMILY is named, so the
@@ -1213,8 +1214,6 @@ class SubscribingModule(SensingModule):
         only where a driver exists to nudge. The look is satisfied by the reading arriving,
         whoever caused it, exactly as before: `on_reading_recorded` here resolves it, per want.
         """
-        if act.action != OBSERVING:
-            return False
         nudged = False
         for sensor in self.sensors:
             if act.about in (sensor.observes, sensor.uri) and self.drivers[sensor.uri]:
@@ -1262,6 +1261,15 @@ class ListeningModule(SensingModule):
     which now works as a *detector* rather than a control: if the board goes quiet, readings
     go stale and the agent stops acting on them instead of quietly using old numbers.
     """
+
+    @contributes(OBSERVING)
+    def look(self, act, desire, intention: str) -> bool:
+        """A look, declined: a listening device takes no orders, so there is nothing to nudge.
+        Contributed rather than left to the family's other member, because the family must
+        answer for every look handed to it (#523), and an agent that ONLY listens has no other
+        member — its look stands, and what ends it is the reading the device sends when it
+        will. False is "not now", said every time."""
+        return False
 
     CAPABILITY = LISTENING
     SENSE_MODE = PUSH

@@ -90,7 +90,8 @@ def test_every_run_time_point_declares_which_row_answering_it_belongs_to():
 def test_the_rows_say_what_the_records_say():
     rows = loader.extension_rows()
     assert rows[HANDLE] == REACTIVE, "a message arriving is reactive: classify and write"
-    assert rows[OREXIS + "take"] == OREXIS + "Progression", "taking a committed act spans time"
+    assert rows["http://example.org/orexis/actuation#Dosing"] == OREXIS + "Progression", \
+        "taking a committed step spans time — every action inherits the row its class declares (#523)"
     assert rows[OREXIS + "desireUrgency"] == OREXIS + "Deliberative", "measuring a want is the search's"
 
 
@@ -138,6 +139,10 @@ def _declared_signatures() -> dict[str, str]:
         graph = rdflib.Graph().parse(path, format="turtle")
         for term, value in graph.subject_objects(sig):
             out[str(term)] = str(value)
+    #  Every action is a point, and inherits the signature its class declares (#523).
+    if (taking := out.get("http://example.org/orexis#Action")) is not None:
+        for action in loader.actions_declared():
+            out.setdefault(action, taking)
     return out
 
 
@@ -193,3 +198,36 @@ def test_what_fills_a_point_matches_the_signature_it_publishes():
         "a filler disagrees with the signature its point publishes. `Agent.ask` calls it "
         "straight through, so this is a module that would be logged and stepped over rather "
         "than a failure anyone would see:\n  " + "\n  ".join(wrong))
+
+
+
+def test_every_action_is_taken_by_one_family_and_by_every_agent_that_holds_it():
+    """An action is a point its taker contributes to (#523), and nothing restates who: the
+    family is read off the contributing class's capability. Held here in two directions over
+    the whole tree — an action contributed by two families is two owners of one word, and a
+    family that takes an action has at least one provider contributing it — and by onboarding
+    and boot for each agent's own grants (`loader.untaken_actions`), where a member may decline
+    (listening declines a look) while the family still answers."""
+    import rdflib
+    declared = loader.actions_declared()
+    assert declared, "no package declares an action — the scan stopped matching"
+    families: dict[str, set[str]] = {}
+    for path in loader.ontology_files():
+        g = rdflib.Graph().parse(path, format="turtle")
+        for c, family in g.subject_objects(rdflib.RDF.type):
+            families.setdefault(str(c), set()).add(str(family))
+    classes = _provided_classes()
+    def families_of(capability):
+        return sorted(families.get(capability, set()) | {capability}) if capability else []
+    taken = {}
+    for cls in classes:
+        for term in contributions_of(cls):
+            if term in declared:
+                taken.setdefault(term, set()).update(families_of(cls.CAPABILITY))
+    assert taken, "no class contributes an action — the scan stopped matching"
+    for action, family in taken.items():
+        roots = {f for f in family if all(c == f or f in families.get(c, set()) for c in family)}
+        assert len(roots) == 1, f"{action} is taken by more than one family: {sorted(roots)}"
+    capabilities = {c.CAPABILITY for c in classes if getattr(c, "CAPABILITY", None)}
+    faults = loader.untaken_actions(capabilities, families_of, classes, tree=classes)
+    assert not faults, "\n  ".join(["a family takes an action none of its providers contributes:"] + faults)

@@ -76,7 +76,7 @@ method, and sensing says what it is asked with and how the answers merge
 the answers merge, and it is the contract's real owner. *Answered by* is every package that
 currently has an opinion, which changes as packages are added and removed and is exactly what no
 asker is allowed to know. Two rows say `kernel *(direct)*`: `size` and `take` are declared points
-but are NOT broadcast — the caller has already resolved WHICH module by `orexis:takenBy` and
+but are NOT broadcast — the caller has already resolved WHICH module by the action's own contribution and
 `agent.providers(family)`, and calls the method on that one.
 
 **Two ways to answer one.** Override the base method on `Module` — `reports()`, `desires()`,

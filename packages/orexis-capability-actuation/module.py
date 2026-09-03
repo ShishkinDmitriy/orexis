@@ -199,7 +199,8 @@ class ActuationModule(Module):
         value = sensing.value_in(query, graph, self.me.acts_for, row.about) if sensing else None
         return self.dose_for(row.about, value) if value is not None else None
 
-    def take(self, act, desire, intention: str) -> bool:
+    @contributes(DOSING)
+    def dose(self, act, desire, intention: str) -> bool:
         """Carry out a committed self-dose: size it from the reading in hand and command it.
 
         The actor for `actuation:Actuate` (knowledge/domain/actor.md). Everything the market path
@@ -208,8 +209,6 @@ class ActuationModule(Module):
         silent — and opens an expectation on the end. An unconfirmed self-dose is not a
         delivered one either; the REA event stands, it merely fulfils no exchange.
         """
-        if act.action != DOSING:
-            return False
         observed_property = act.about
         sensing = self.agent.provider(SENSING)
         reading = sensing.current_reading(self.me.acts_for, observed_property) if sensing else None

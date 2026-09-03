@@ -1103,7 +1103,7 @@ class Planner:
         reach, and be wrong in the direction that looks like a device lying — the single-source
         argument #238 made for an effect's magnitude and #247 for its timing.
 
-        ASKED OF THE TAKER, found the way execution finds it — the action's `orexis:takenBy` family
+        ASKED OF THE TAKER, found the way execution finds it — whichever module contributes the action
         — and asked ABOUT A WORLD: the imaginarium at this node's graph, so a second dose is
         sized from where the first one left the property (#254). The taker reads the value
         there through sensing; nothing here knows what a reading looks like.
@@ -1115,11 +1115,8 @@ class Planner:
         """
         if row is None or row.about is None:
             return 0.0
-        from orexis_agent_progression.execution import taken_by
-
-        family = taken_by(self.agent.beliefs.query, row.action)
         litres = None
-        for actor in (self.agent.providers(family) if family else []):
+        for actor in (m for m in self.agent.modules if m.answer(row.action) is not None):
             litres = actor.size(self.imaginarium.query, graph, row)
             if litres is not None:
                 break
@@ -1206,4 +1203,4 @@ TOO_DEAR = object()
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 _AG = rdflib.Namespace(_AG_IRI)
 #  No means or family is named here any more: sizing is `Module.size`, asked of the row's
-#  taker through `orexis:takenBy` exactly as execution finds it.
+#  taker by the action's own contribution exactly as execution finds it.

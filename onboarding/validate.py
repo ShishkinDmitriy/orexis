@@ -126,6 +126,16 @@ def validate_world(world: str) -> bool:
     return ok
 
 
+def _families_of(query, capability: str | None) -> list[str]:
+    """Which families a capability term belongs to, asked of the T-Box — `a family`, and the
+    term itself, since a capability of one is its own family (`Agent.providers`)."""
+    from orexis_agent_progression.store import bindings
+    if not capability:
+        return []
+    return [r["f"] for r in bindings(query(
+        f"SELECT ?f WHERE {{ <{capability}> a ?f . ?f a <http://www.w3.org/2002/07/owl#Class> }}"))] + [capability]
+
+
 def deliberable(st, desires: dict) -> bool:
     """Can every agent in this world actually be deliberated FOR? Refuse here if not.
 
@@ -183,6 +193,15 @@ def deliberable(st, desires: dict) -> bool:
         #  agent needs credentials onboarding has not minted yet, and a gate that had to run
         #  the runtime would be checking the thing it exists to run before.
         answering = loader.registry_for(me.capabilities).values()
+        #  EVERY ACTION ON THIS AGENT'S MENU HAS A TAKER (#523): the T-Box says which family,
+        #  the family's providers contribute the method, and a mismatch is refused here
+        #  rather than found as an intention standing forever with nobody to carry it out.
+        reach = [c for p in loader.packages_for(me.capabilities) for c in p.provides()
+                 if isinstance(c, type)]
+        for fault in loader.untaken_actions(me.capabilities, lambda c: _families_of(st.query, c),
+                                            list(answering), reach):
+            faults += 1
+            log.error("%s: %s", agent_id, fault)
         for observed_property in sorted(regions_of(wants.query_union, me.uri)):
             if any(getattr(cls, "measures", None) is not None
                    and cls.measures(st.query, observed_property) for cls in answering):
