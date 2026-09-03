@@ -1,0 +1,41 @@
+@prefix tower: <http://example.org/orexis/tower#> .
+@prefix : <http://example.org/orexis/tower#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+
+<http://example.org/orexis/tower> a owl:Ontology ;
+    rdfs:label "Orexis tower" ;
+    rdfs:comment """Hanoi's disks on the courier's grid — planning inside another (#523). Two domains, each planned at its own level in its own words, and this package is the BRIDGE between them: what a Move's promise means one level down, and how far it is. Nothing here is a method; the drives are found by the courier's search when a Move is reached, from wherever the van then stands. A level is a vocabulary (a-level-is-a-vocabulary-and-a-bridge): hanoi's search never sees a cell, the courier's never sees a peg, and the bridge is applied to a step's promise going down and its verdict coming back, never to the world a search plans over.""" .
+
+#  A DISK IS A PARCEL — the one axiom the two domains need to share. Entailed at genesis,
+#  so the courier's pick and drop apply to a disk without either package naming the other.
+hanoi:Disk rdfs:subClassOf courier:Parcel .
+
+#  THE BRIDGE. A Move promises `disk on peg`; on the grid that is the disk at the peg's cell.
+#  The construct is bound as $via (the disk) and $about (the peg) from the step, and reads
+#  the peg's cell from the world; the estimate is the same tokens over the state — how far
+#  the van has to go to carry the disk there, a drive per cell, a pick and a drop.
+:MoveOnGrid a orexis:Bridge ;
+    rdfs:label "a move is carrying the disk to the peg's cell" ;
+    orexis:refines hanoi:Move ;
+    sh:construct """
+        CONSTRUCT { $via courier:at ?cell } WHERE { $about courier:at ?cell }""" ;
+    orexis:estimates :drivesToPlace .
+
+:drivesToPlace sh:select """
+        SELECT (?d AS ?estimate) WHERE {
+            $about courier:at ?target . ?target courier:x ?tx ; courier:y ?ty .
+            ?van a courier:Van .
+            GRAPH $state { ?van courier:at ?vc }
+            ?vc courier:x ?vx ; courier:y ?vy .
+            OPTIONAL { GRAPH $state { $via courier:at ?dc } ?dc courier:x ?dx ; courier:y ?dy }
+            BIND(IF(BOUND(?dx),
+                    IF(sameTerm(?dc, ?target), 0,
+                       ABS(?vx - ?dx) + ABS(?vy - ?dy) + ABS(?dx - ?tx) + ABS(?dy - ?ty) + 2),
+                    ABS(?vx - ?tx) + ABS(?vy - ?ty) + 1) AS ?d)
+        }""" .

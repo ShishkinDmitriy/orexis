@@ -67,8 +67,9 @@ never simulated; a method is what the package knows about its own protocol, and 
 question is whether to enter it. The sovereign's rule (2026-09-03): hand-written methods only
 for protocols. Physics is DEDUCED — a step of an action nobody takes at its own level (hanoi's
 Move) is achieved by planning its prediction with the actions that are taken (the courier's
-drives), when the step is reached, from the world as it then is. That plan is spliced in
-where a declared method would be, its steps part of the same filling; it is the next piece.
+drives), when the step is reached, from the world as it then is. That plan is pursued as
+a want of the agent's own — the promise, raised through the [bridge](/domain/bridge.md) — and
+the abstract step waits on the fact it brings about; the tower world is the instance.
 
 **Not a branch.** A method is a sequence. Winning or losing is not two branches in the plan
 but one step done or lapsed, and lapsing is the replanning road every plan takes.

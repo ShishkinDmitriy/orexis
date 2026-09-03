@@ -73,8 +73,14 @@ def _take(agent, act: Step, desire, intention: str) -> bool:
     #  said loudly, since onboarding and boot refuse the ordinary cases before this is reached.
     from assembly import loader
     if act.action not in loader.extensions() or not any(m.answer(act.action) for m in agent.modules):
-        log.error("nothing takes %s — no module of mine contributes it, so this intention "
-                  "stands with nobody to carry it out", act.action.rsplit("#", 1)[-1])
+        #  A PROMISE THE LEVEL BENEATH KEEPS (#523): an action nobody takes, with a bridge
+        #  declared for it, is planned below — its predicted fact becomes a want the taken
+        #  actions can bring about, and the step waits on that fact.
+        keeper = getattr(agent, "keeper", None)
+        if keeper is not None and keeper.promise(intention):
+            return False
+        log.error("nothing takes %s — no module of mine contributes it and no bridge refines it, "
+                  "so this intention stands with nobody to carry it out", act.action.rsplit("#", 1)[-1])
         return False
     #  READINESS IS THE KEEPER'S (#523): a step whose action says what it waits for is held
     #  rather than handed out, and comes back here when the wait is over.

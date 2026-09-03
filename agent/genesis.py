@@ -405,7 +405,7 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
     function of the vocabulary, so a graph whose modality is refined by an amendment says the
     new thing on the next boot without a migration.
     """
-    from orexis_agent_progression.ontology import OREXIS, CLASSIFICATION_GRAPH, obligations_graph
+    from orexis_agent_progression.ontology import OREXIS, CLASSIFICATION_GRAPH, obligations_graph, promises_graph
 
     from orexis_agent_progression.graphs import intentions_graph
 
@@ -416,6 +416,7 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
         (beliefs_graph(agent_id), ("PickRecordGraph",), "Asserted"),
         (intentions_graph(agent_id), ("IntentionGraph",), "Recorded"),
         (obligations_graph(agent_id), ("ObligationsGraph",), "Received"),
+        (promises_graph(agent_id), ("PromisesGraph",), "Recorded"),
     ]
     triples = " ".join(
         f"<{iri}> a {' , '.join(f'orexis:{c}' for c in classes)} ; "

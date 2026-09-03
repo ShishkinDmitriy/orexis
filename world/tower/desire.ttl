@@ -1,0 +1,13 @@
+@prefix : <http://example.org/orexis/world/tower#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+GRAPH <http://example.org/orexis/graph/desire/asserted> {
+  :mover orexis:holds :every_disk_home .
+  :every_disk_home a orexis:Desire ;
+      orexis:bindsWhen orexis:AtEnd ;
+      rdfs:label "every disk home on peg C — hanoi's sentence, on the courier's grid" ;
+      orexis:metWhen hanoi:solved ;
+      orexis:estimates hanoi:disksAstray .
+}

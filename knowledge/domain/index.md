@@ -53,6 +53,9 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [deliberation](/domain/deliberator.md) - The whether: name the next move by building the world each lever would make and keeping the one worth reaching. One road.
 
+
+# Means — actions, steps, and what taking one comes to
+
 * [action](/domain/action.md) - One way of acting as one node — and the kind of act itself: precondition, effect, taker. A package adds one node and one `take()`.
 * [step](/domain/step.md) - A planned instance of an action: lever, quantity, window, prediction, what it waits for. A plan is steps; not yet done.
 * [tolerance](/domain/tolerance.md) - How close the world must land to a step's predicted value: a fraction of the movement, a bounded revisable pick, never a kernel constant.
@@ -64,6 +67,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [lever](/domain/lever.md) - The INSTRUMENT an act goes through, always an instance. Its absence is what removes a row, with nothing edited.
 * [transport](/domain/transport.md) - How an agent reaches its society: a capability the bus grants, holding the connection and three choir hooks. Not a driver.
 
+* [bridge](/domain/bridge.md) - Joins an abstract action to the vocabulary beneath: translates its promised facts down and its verdict back, with the lower level's estimate. Never a method.
 * [method](/domain/method.md) - The steps an action comes to, declared by its package: expanded at adoption, walked on feedback, never searched; each step says what it waits for.
 * [effect](/domain/effect.md) - What taking an action would make true: a package's SHACL rule, with its timing and the route by which anyone would learn it landed.
 

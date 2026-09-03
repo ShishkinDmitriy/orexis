@@ -116,3 +116,12 @@ def test_the_rule_texts_parse_with_their_tokens_stood_in():
     assert edges, "no rule anywhere would mean the loader found nothing"
     unreadable = [e for e in edges if e[0] is R.ANYTHING or e[1] is R.ANYTHING]
     assert not unreadable, f"{len(unreadable)} rule edges read as ANYTHING"
+
+
+def test_a_pattern_under_not_exists_is_read():
+    """A want saying "unmet while this fact is absent" reads that fact's predicate — the
+    shape a promise's want takes (#523) — and `traverse` never descended into a filter's
+    expression on its own, so such a want read nothing and every action was irrelevant."""
+    text = ("SELECT ?unmet WHERE { BIND(1 AS ?unmet) FILTER NOT EXISTS { GRAPH $state { "
+            "<urn:x#disk> <urn:x#at> <urn:x#cell> . } } }")
+    assert {str(p) for p in R.reads_of_select(text)} == {"urn:x#at"}
