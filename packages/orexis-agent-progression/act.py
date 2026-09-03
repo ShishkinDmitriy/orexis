@@ -36,6 +36,9 @@ class Step:
     urgency_after: float | None = None  # the want's urgency in the world this step was predicted to reach
     predicts: tuple | None = None     # (adds, retracts): the canonical facts the search said this
                                       # step makes true and false — what the world is held to (#510)
+    via_by: str | None = None         # a method member's template for its lever, bound when current (#523)
+    about_by: str | None = None       # and for what it is about
+    part_of: str | None = None        # the ledger step this one was expanded from
 
     @classmethod
     def from_row(cls, row, quantity: float | None = None, not_after: datetime | None = None):
@@ -77,21 +80,28 @@ def predicts_from_json(text: str) -> tuple:
     return (frozenset(tup(f) for f in d["adds"]), frozenset(tup(f) for f in d["retracts"]))
 
 
-def method_of(query, action: str) -> list[str]:
-    """The actions an action's `orexis:method` names, in list order (#523) — walked from the
-    list's head, since a property path loses the order. Empty for an action with none, which
+def method_of(query, action: str) -> list[dict]:
+    """The members an action's `orexis:method` names, in list order (#523) — walked from the
+    list's head, since a property path loses the order. Each member is a dict: `action`, and
+    `via_by` / `about_by` where the member is a step node with templates of its own; a bare
+    action member reuses the parent's lever and subject. Empty for an action with none, which
     is its own one step. Asked of the belief base, where the action graph is."""
     rows = list(query(f"""
-SELECT ?head ?node ?first ?rest WHERE {{
-  <{action}> orexis:method ?head . ?head rdf:rest* ?node . ?node rdf:first ?first ; rdf:rest ?rest }}""")["results"]["bindings"])
+SELECT ?head ?node ?first ?rest ?does ?viaBy ?aboutBy WHERE {{
+  <{action}> orexis:method ?head . ?head rdf:rest* ?node . ?node rdf:first ?first ; rdf:rest ?rest .
+  OPTIONAL {{ ?first orexis:does ?does }}
+  OPTIONAL {{ ?first orexis:viaBy ?viaBy }}
+  OPTIONAL {{ ?first orexis:aboutBy ?aboutBy }} }}""")["results"]["bindings"])
     if not rows:
         return []
-    first = {r["node"]["value"]: r["first"]["value"] for r in rows}
-    rest = {r["node"]["value"]: r["rest"]["value"] for r in rows}
+    by_node = {r["node"]["value"]: r for r in rows}
     out, node = [], rows[0]["head"]["value"]
-    while node in first:
-        out.append(first[node])
-        node = rest[node]
+    while node in by_node:
+        r = by_node[node]
+        out.append({"action": r["does"]["value"] if r.get("does") else r["first"]["value"],
+                    "via_by": r["viaBy"]["value"] if r.get("viaBy") else None,
+                    "about_by": r["aboutBy"]["value"] if r.get("aboutBy") else None})
+        node = r["rest"]["value"]
     return out
 
 
@@ -99,5 +109,5 @@ def takers_of(agent, action: str) -> list:
     """The modules that carry an action out: whoever contributes it, or — for an action with
     a method — whoever contributes any step it comes to, since an abstract action is taken
     through its steps (#523). Who sizes a bid is who tenders it."""
-    actions = [action] + method_of(agent.beliefs.query, action)
+    actions = [action] + [m["action"] for m in method_of(agent.beliefs.query, action)]
     return [m for m in agent.modules if any(m.answer(a) is not None for a in actions)]

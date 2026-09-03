@@ -20,18 +20,26 @@ a plan that worked can be lifted back to its method, the same instance across st
 the same variable, which is what would make it reusable (#469). An action with a method is a
 method whose composed effect is stated by its package rather than computed from its steps.
 
-`orexis:method`, an rdf:List of [actions](/domain/action.md) on an action. HTN's shape: an
+`orexis:method`, an rdf:List on an action whose members are [actions](/domain/action.md) or
+step nodes — `[ orexis:does <action> ; orexis:viaBy <select> ; orexis:aboutBy <select> ]`, a
+member that fills its own lever and subject from the parent's by a template. HTN's shape: an
 action the search chooses may be ABSTRACT — `market:Acquiring` is the decision to enter a
 venue at a price — and what taking it comes to is a sequence the package declares: tender a
 bid into the open round, then present the claim it wins. The search never sees the sequence.
 It chooses Acquiring by the reading its rule predicts and by what it costs, exactly as before,
 and hands the plan down whole ([intention](/domain/intention.md)).
 
-The [keeper](/domain/intention.md) expands at adoption: a [step](/domain/step.md) of an action
-with a method becomes one step per member, chained with `orexis:then`, same lever and same
-want; the last inherits the parent's `orexis:predicts` and predicted urgency, since the end the
-search planned on is reached when the method is done. Then the plan is stepped as any plan is —
-each step taken when the one before it is confirmed, the tail dropped on a surprise.
+The [keeper](/domain/intention.md) expands at adoption, recursively: a [step](/domain/step.md)
+of an action with a method becomes one step per member, chained with `orexis:then`, and a
+member with a method of its own expands in turn, so the ledger walks a flat chain. Each step is
+`orexis:partOf` the filling it came from — the parent step stays in the ledger, off the chain,
+so a reader can recover the tree. A bare member reuses the parent's lever and subject; a member
+with templates binds them LATE, when the step becomes current, against the world as it then is:
+the third move's disk is where the first two left it, and the first two have not happened at
+adoption. The last member inherits the parent's `orexis:predicts` and predicted urgency, since
+the end the search planned on is reached when the method is done. Then the plan is stepped as
+any plan is — each step taken when the one before it is confirmed, the tail dropped on a
+surprise.
 
 # What a step waits for
 
@@ -57,10 +65,9 @@ prediction is answered, which is every action that predicts a reading.
 # What it is not
 
 **Not a search.** The method's steps are never simulated; a method is what the package knows
-about its own protocol, and the search's question is whether to enter it. A method naming an
-action that itself has a method is a seam: one level is expanded, and the ledger stays flat —
-recursion is a loop at adoption, and which method a step's filling came from is one link the
-ledger does not yet keep.
+about its own protocol, and the search's question is whether to enter it. What a method cannot
+yet say is a member that IS a search — a sub-want planned when the step is reached, which is
+what a travel across a grid is (planning inside another); that is the next piece.
 
 **Not a branch.** A method is a sequence. Winning or losing is not two branches in the plan
 but one step done or lapsed, and lapsing is the replanning road every plan takes.

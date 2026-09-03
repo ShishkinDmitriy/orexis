@@ -43,8 +43,10 @@ what a step can wait on. See [method](/domain/method.md).
 
 # Seams left open
 
-- **One level.** A method naming an action with a method of its own is expanded one level;
-  nesting waits for the courier-and-hanoi world, where a Move comes to drives.
+- **One level** — settled the day after: expansion recurses, members carry their own
+  parameter templates bound late, and each step is `partOf` the filling it came from.
+  What still waits for the courier-and-hanoi world is a member that is a search — a travel
+  planned when the step is reached.
 - **The residual rides on the method's last step.** The market's review rule reads residuals
   off Acquiring, Tendering and Presenting alike, since the prediction moved to the step that
   carries it.
