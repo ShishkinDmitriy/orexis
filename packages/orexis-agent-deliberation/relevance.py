@@ -107,6 +107,18 @@ def _predicates_in(node, out: set) -> bool:
                     ok[0] = False
                 else:
                     out.update(iris)
+        elif getattr(n, "name", None) == "TriplesBlock":
+            #  A pattern under EXISTS / NOT EXISTS is READ as much as one in the group — a
+            #  want saying "unmet while this fact is absent" reads that fact's predicate —
+            #  and rdflib leaves it UNTRANSLATED inside the filter's expression: a parse-tree
+            #  TriplesBlock rather than a BGP (#523: a promise's want is exactly that shape,
+            #  and read nothing before this).
+            for triple in n["triples"]:
+                iris = _path_iris(triple[1]) if len(triple) == 3 else None
+                if iris is None:
+                    ok[0] = False
+                else:
+                    out.update(iris)
         return n
     traverse(node, visitPost=visit)
     return ok[0]

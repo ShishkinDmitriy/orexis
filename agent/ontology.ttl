@@ -252,6 +252,10 @@ orexis:ObligationsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label 
 #  whether a row is the agent's own or a duty is whether its `orexis:available` query bound
 #  `?for_agent`, and a second term for a fact one column already states was a second owner.
 
+orexis:PromisesGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Promises graph" ;
+    orexis:graphPrefix "http://example.org/orexis/graph/promises/" ;
+    rdfs:comment "ONE agent's promises (#523, a-level-is-a-vocabulary-and-a-bridge): when the keeper reaches a step of an action nobody takes, the step's predicted fact is translated through the bridge into the vocabulary beneath and written here as an `orexis:Desire` the agent holds — `orexis:promisedBy` the step — with the bridge's estimate, so the ordinary road plans it over the actions that ARE taken. The step waits on the same fact; when its verdict lands the promise is withdrawn. A record, projected into the desire modality like the debts." .
+
 orexis:MenuGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Menu graph" ;
     rdfs:comment """What the agent COULD do: the affordance rows, what others may demand of it, and what taking any of it would MAKE TRUE.
 
@@ -912,6 +916,21 @@ orexis:doneWhen a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range 
     rdfs:comment "A SELECT template that binds when a taken step of this action has done what it was for — a bid answered by a claim. Bound when the step is taken and held as its `orexis:answeredWhen`, so the keeper advances to the next step on it; lapsing is an unmet verdict, which drops the tail and asks deliberation again. An action predicting a reading needs none of this: its end is its `orexis:predicts`." .
 orexis:lapsesAt a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ; rdfs:label "lapses at" ;
     rdfs:comment "A SELECT template answering when a wait on a step of this action is over — `?at`, a dateTime such as the round's close, or `?seconds` from now, such as the sensor's horizon. Absent, or binding nothing, the wait is the patience." .
+
+#################  A bridge: where one vocabulary's promise is the next one's want  #################
+#
+#  A level is a vocabulary (a-level-is-a-vocabulary-and-a-bridge). An action nobody takes at
+#  its own level — hanoi's Move — is a promise the level beneath keeps: its predicted fact,
+#  translated, is a want the actions that ARE taken can bring about. The BRIDGE is what
+#  translates: declared by the package that joins two vocabularies (the tower's: a peg is at a
+#  cell), never by the kernel, and applied to FACTS — a step's promise going down, its verdict
+#  coming back — never to the world a search plans over, which is what keeps the outer search
+#  at seven moves rather than thirty drives.
+orexis:Bridge a owl:Class ; rdfs:label "Bridge" ;
+    rdfs:comment "Joins an abstract action to the vocabulary beneath it: `orexis:refines` the action; `sh:construct` translates the action's predicted facts, bound as $via and $about with the world at $state, into the lower vocabulary's facts; `orexis:estimates` names the lower package's estimate for the want those facts make. A taker-less action with no bridge is a promise nobody could keep (#532)." .
+orexis:refines a owl:ObjectProperty ; rdfs:domain orexis:Bridge ; rdfs:range orexis:Action ; rdfs:label "refines" .
+orexis:promisedBy a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range orexis:Step ; rdfs:label "promised by" ;
+    rdfs:comment "The step whose promise this want is — a step of a taker-less action, waiting on the fact the want brings about. Withdrawn with the step's verdict." .
 
 orexis:predicts a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:string ;
     rdfs:label "predicts" ;

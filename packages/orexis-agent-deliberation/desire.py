@@ -152,11 +152,11 @@ class Deducer(Store):
     """
 
     def __init__(self, beliefs):
-        from orexis_agent_progression.ontology import obligations_graph
+        from orexis_agent_progression.ontology import obligations_graph, promises_graph
 
         super().__init__()
         publics = list(beliefs.public_graphs())
-        records = [beliefs.graph, obligations_graph(beliefs.agent_id)]
+        records = [beliefs.graph, obligations_graph(beliefs.agent_id), promises_graph(beliefs.agent_id)]
         for iri in publics + records:
             for quad in beliefs.quads(iri):
                 self._store.add(quad)

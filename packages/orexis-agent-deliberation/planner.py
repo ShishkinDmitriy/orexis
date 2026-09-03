@@ -46,7 +46,7 @@ from .afforder import affordances_of, wants_of
 from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import Raw, bind, bindings
-from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
+from orexis_agent_progression.ontology import (promises_graph, DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
 from orexis_agent_deliberation.conformance import conforms, graph_from
 from orexis_agent_deliberation.judge import judge
@@ -886,7 +886,7 @@ class Planner:
         #  refuses as not steering.
         self._shapes = effects.applied((), self.agent.desires.construct(
             f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ "
-            f"VALUES ?g {{ <{DESIRE_DERIVED_GRAPH}> <{DESIRE_ASSERTED_GRAPH}> }} "
+            f"VALUES ?g {{ <{DESIRE_DERIVED_GRAPH}> <{DESIRE_ASSERTED_GRAPH}> <{promises_graph(self.agent.id)}> }} "
             f"GRAPH ?g {{ ?s ?p ?o }} }}"), ())
         base = self._beliefs()
         self._base = base

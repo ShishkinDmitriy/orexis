@@ -194,6 +194,14 @@ def beliefs_graph(agent_id: str) -> str:
     return _BELIEFS + agent_id
 
 
+def promises_graph(agent_id: str) -> str:
+    """ONE agent's promises (#523): the wants a step of a taker-less action raises for the
+    level beneath, translated through the bridge — each an `orexis:Desire` the agent holds
+    while the step waits, gone when the step's verdict lands. A record the desire modality
+    projects like its debts, so `pursuing` lifts a promise as it lifts any want."""
+    return _GRAPH + "promises/" + agent_id
+
+
 def obligations_graph(agent_id: str) -> str:
     """The record of ONE agent's debts — kernel-named since `orexis:ObligationsGraph` became a
     kernel record class (#312): the desire modality projects it, the planner's imaginarium

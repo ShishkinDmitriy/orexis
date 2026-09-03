@@ -459,6 +459,123 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 "beliefs": beliefs_graph(self.agent.id),
                 "since": Raw(f'"{since}"^^xsd:dateTime')}      # when this intention was adopted
 
+    # --- a promise the level beneath keeps (#523) ----------------------------------------------
+
+    def _bridge_of(self, action: str) -> dict | None:
+        rows = bindings(self.agent.beliefs.query(f"""
+SELECT ?bridge ?construct ?estimate WHERE {{
+  ?bridge a orexis:Bridge ; orexis:refines <{action}> ; sh:construct ?construct .
+  OPTIONAL {{ ?bridge orexis:estimates ?estimate }} }} LIMIT 1"""))
+        return rows[0] if rows else None
+
+    def _translated(self, standing, bridge: dict) -> list[tuple]:
+        """The step's promised facts in the vocabulary beneath: the bridge's construct, bound
+        as $via and $about with the world at $state, as (s, p, o) IRIs and literals."""
+        from .ontology import beliefs_graph, STATE_GRAPH
+        text = bind(bridge["construct"], me=self.me.uri, via=standing.step.via or "urn:nothing",
+                    about=standing.step.about or "urn:nothing", subject=self.me.acts_for or "urn:nobody",
+                    beliefs=beliefs_graph(self.agent.id), state=STATE_GRAPH)
+        out = []
+        for t in self.agent.beliefs.construct(text):
+            out.append((str(t.subject.value), str(t.predicate.value),
+                        t.object.value if hasattr(t.object, "value") else str(t.object)))
+        return out
+
+    def promise(self, intention_uri: str) -> bool:
+        """The step this intention stands at is of an action nobody takes: raise its promise
+        as a want for the level beneath and wait on it. The predicted fact, translated through
+        the bridge, becomes an `orexis:Desire` this agent holds — in its promises graph, and
+        in the desire modality at once — with the bridge's estimate, so `pursuing` lifts it
+        and the ordinary road plans it over the actions that are taken. The step is held on
+        the same translated fact as its completion; the verdict withdraws the promise. False
+        where the action has no bridge: a promise nobody could keep, said loudly (#532)."""
+        from .ontology import promises_graph
+        standing = next((s for s in self.standing() if s.uri == intention_uri), None)
+        if standing is None or standing.step.predicts is None:
+            return False
+        bridge = self._bridge_of(standing.action)
+        if bridge is None:
+            return False
+        facts = [f for f in self._translated(standing, bridge) if _plain_pattern(f) is not None]
+        if not facts:
+            self.log.warning("the bridge for %s translated %s's promise to nothing",
+                             standing.action.rsplit("#", 1)[-1], _short(intention_uri))
+            return False
+        step_uri = next((r["s"] for r in bindings(self.agent.intentions.query_union(
+            f"SELECT ?s WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel('by')}> ?s }} }}"))), None)
+        want = f"{OREXIS}promise_{self.agent.id}_{uuid.uuid4().hex[:8]}"
+        patterns = " ".join(f"{s} {p} {o} ." for s, p, o in (_plain_pattern(f) for f in facts))
+        unmet = f"SELECT ?unmet WHERE {{ BIND(1 AS ?unmet) FILTER NOT EXISTS {{ GRAPH $state {{ {patterns} }} }} }}"
+        #  THE ESTIMATE is the bridge's, a template over the parent's $via and $about: bound
+        #  here, once, into a node of this promise's own; $this and $state stay the planner's.
+        estimate = ""
+        if bridge.get("estimate"):
+            texts = bindings(self.agent.beliefs.query(
+                f"SELECT ?t WHERE {{ <{bridge['estimate']}> sh:select ?t }}"))
+            if texts:
+                from .store import render
+                import re as _re
+                bound = texts[0]["t"]
+                for token, value in (("via", standing.step.via or "urn:nothing"),
+                                     ("about", standing.step.about or "urn:nothing"),
+                                     ("me", self.me.uri)):
+                    bound = _re.sub(rf"\${token}\b", render(value), bound)
+                estimate = f" ; orexis:estimates [ sh:select {_literal(bound)} ]"
+        triples = f"""
+  <{self.me.uri}> orexis:holds <{want}> .
+  <{want}> a orexis:Desire ; orexis:bindsWhen orexis:AtEnd ;
+      orexis:promisedBy <{step_uri}> ;
+      orexis:unmetWhen [ sh:select {_literal(unmet)} ]{estimate} ;
+      rdfs:label {_literal("the promise of " + standing.action.rsplit("#", 1)[-1] + " below")} ."""
+        #  Written to the belief base — the record — and the desire modality REBUILT from it,
+        #  since that modality is read-only on its surface and projects the promises graph.
+        self.agent.beliefs.update(f"INSERT DATA {{ GRAPH <{promises_graph(self.agent.id)}> {{ {triples} }} }}")
+        self.agent.desires.rebuild()
+        self.log.info("promising %s below: %s wants %d fact(s) the level beneath can bring about",
+                      standing.action.rsplit("#", 1)[-1], _short(want), len(facts))
+        self._tell("promised", standing.action, standing.want, "planned by the level beneath")
+        self.expect(intention_uri, f"promised below as {_short(want)}",
+                    predicts=(frozenset(facts), frozenset()))
+        return True
+
+    def _promise_of(self, step_uri: str) -> str | None:
+        rows = bindings(self.agent.desires.query_union(
+            f"SELECT ?w WHERE {{ ?w orexis:promisedBy <{step_uri}> }}"))
+        return rows[0]["w"] if rows else None
+
+    def _withdraw(self, step_uri: str, kept: bool) -> None:
+        """The promised step's verdict landed: the want it raised is withdrawn from both
+        stores, whatever stands for it is resolved, and — where the promise was KEPT — the
+        step's own predicted facts are written to the state, since the bridge says the fact
+        the world showed and the fact the step promised are one thing described twice.
+        Materialising the bridge upward is the keeper's until a saturation rule exists."""
+        from .ontology import promises_graph, STATE_GRAPH
+        want = self._promise_of(step_uri)
+        if want is None:
+            return
+        self.agent.beliefs.update(f"""
+DELETE {{ GRAPH <{promises_graph(self.agent.id)}> {{ ?s ?p ?o }} }}
+WHERE  {{ GRAPH <{promises_graph(self.agent.id)}> {{
+  {{ ?s ?p ?o . FILTER(?s = <{want}> || ?o = <{want}>) }}
+  UNION {{ <{want}> orexis:unmetWhen ?s . ?s ?p ?o }} }} }}""")
+        self.agent.desires.rebuild()
+        for standing in self.standing(want=want):
+            self._resolve(standing, "dropped", "the promise it served was withdrawn")
+        if kept:
+            rows = bindings(self.agent.intentions.query_union(
+                f"SELECT ?p WHERE {{ GRAPH <{self.graph}> {{ <{step_uri}> <{PREDICTS}> ?p }} }}"))
+            if rows:
+                adds, retracts = predicts_from_json(rows[0]["p"])
+                gone = [t for f in retracts if (t := _plain_pattern(f)) is not None]
+                come = [t for f in adds if (t := _plain_pattern(f)) is not None]
+                if gone:
+                    self.agent.beliefs.update("DELETE DATA { GRAPH <%s> { %s } }" % (
+                        STATE_GRAPH, " ".join(f"{s} {p} {o} ." for s, p, o in gone)))
+                if come:
+                    self.agent.beliefs.update("INSERT DATA { GRAPH <%s> { %s } }" % (
+                        STATE_GRAPH, " ".join(f"{s} {p} {o} ." for s, p, o in come)))
+        self.log.info("promise %s withdrawn: %s", _short(want), "kept" if kept else "not kept")
+
     def _lapses_at(self, action: str, tokens: dict) -> datetime | None:
         """When a wait on a step of this action is over, asked of the action's own
         `orexis:lapsesAt` — a dateTime, or seconds from now; None is the patience."""
@@ -1062,6 +1179,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         #  A step held on its action's `orexis:doneWhen` (#523) is the same wait inside the
         #  keeper and a different thing outside: a bid answered by a claim, or not. It
         #  advances or drops the plan, and says so in its own words.
+        self._withdraw(watch.step, kept=met)
         world = watch.about_world
         if world:
             (self.log.info if met else self.log.warning)(

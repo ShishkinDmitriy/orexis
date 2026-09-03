@@ -1,0 +1,39 @@
+@prefix : <http://example.org/orexis/world/tower#> .
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+
+#  THE TOWER: hanoi's puzzle on the courier's grid (#523). The mover plans Moves at hanoi's
+#  level and never sees a cell; each Move, when reached, is planned as drives by the courier's
+#  search from wherever the van then stands. Three pegs at three cells of a 3x3 grid, the van
+#  in the middle, three disks. Where the disks and the van ARE is runtime — posed like a
+#  reading, never authored here; the pegs' cells are the world's.
+
+:world a orexis:World ; orexis:currentVersion :version_1 ;
+    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole orexis:Sovereign ] .
+:version_1 a orexis:WorldVersion ; orexis:versionNumber 1 .
+
+:mover a orexis:Agent ;
+    orexis:localId "mover" ;
+    rdfs:comment "The mover: a mind with hanoi's one move and the courier's three, planning inside another. It acts for nothing, senses nothing and owes nobody." .
+
+:van a courier:Van ; rdfs:label "the van" .
+:disk_1 a hanoi:Disk ; hanoi:size 1 ; rdfs:label "the small disk" .
+:disk_2 a hanoi:Disk ; hanoi:size 2 ; rdfs:label "the middle disk" .
+:disk_3 a hanoi:Disk ; hanoi:size 3 ; rdfs:label "the large disk" .
+
+:c0_0 a courier:Cell ; courier:x 0 ; courier:y 0 .
+:c0_1 a courier:Cell ; courier:x 0 ; courier:y 1 .
+:c0_2 a courier:Cell ; courier:x 0 ; courier:y 2 .
+:c1_0 a courier:Cell ; courier:x 1 ; courier:y 0 .
+:c1_1 a courier:Cell ; courier:x 1 ; courier:y 1 .
+:c1_2 a courier:Cell ; courier:x 1 ; courier:y 2 .
+:c2_0 a courier:Cell ; courier:x 2 ; courier:y 0 .
+:c2_1 a courier:Cell ; courier:x 2 ; courier:y 1 .
+:c2_2 a courier:Cell ; courier:x 2 ; courier:y 2 .
+
+hanoi:PegA courier:at :c0_0 .
+hanoi:PegB courier:at :c2_0 .
+hanoi:PegC courier:at :c1_2 .

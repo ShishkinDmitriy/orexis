@@ -558,6 +558,9 @@ fails if pyshacl ever entails something the closure does not. See
   rendered as the terms they are, and a token nobody bound REFUSES. A chain of `.replace`
   left `$about` in the dosing rule to parse as a free variable, and the prediction matched
   an observation of any property (#500).
+- **A pattern under `FILTER NOT EXISTS` is left untranslated by rdflib's algebra** — it sits
+  in the parse tree as a triples block, not a BGP, so a walk that reads BGPs alone reads
+  nothing from a want that says "unmet while this fact is absent"; `relevance.py` reads both.
 - **A `BIND` inside a `UNION` branch cannot see a variable bound outside the union.** The
   branches are evaluated on their own and joined with the surrounding pattern afterwards, so
   the tidy form — state the preamble once, then `{ … } UNION { … }` — leaves every outer

@@ -73,6 +73,18 @@ world chooses between the butt and the venue at a single level.
   in the graph, and the bridge is a package's declaration; two levels, three or one are all
   the same mechanism.
 
+# What was built, the day after
+
+The promise road, exactly as above, with one simplification the code found: a promise is an
+ordinary want. The keeper writes the translated fact as an `orexis:Desire` the agent holds
+(its promises graph, projected into the desire modality), the ordinary road lifts and plans
+it, and the abstract step waits on the same fact; the verdict withdraws the want and writes
+the coarse fact. Nothing is spliced — the sub-plan is an intention of its own for the promise
+want, and `orexis:promisedBy` links the two. The tower world runs seven Moves planned once
+above and seven drives-plans below (`tests/test_tower.py`). Found on the way: relevance read
+nothing from a select whose only pattern sits under `FILTER NOT EXISTS`, since rdflib leaves
+that pattern untranslated; it reads it now.
+
 # Seams left open
 
 - **The outer level's costs abstract the level below.** Move costs one whether the van is next
