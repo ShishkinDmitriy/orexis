@@ -53,7 +53,10 @@ opened. A plan handed down whole holds each step's readiness on the previous ste
 each step's prediction — the met verdict on one step is the only license the next has, and no
 search runs while a plan is in progress. An unmet verdict stops the plan where it is: the
 intention resolves, the tail is abandoned, and deliberation is told to plan again. "Only the
-head is committed" was the rule before feedback could carry a plan; it is superseded.
+head is committed" was the rule before feedback could carry a plan; it is superseded. A step
+of an action that declares a [method](/domain/method.md) is expanded at adoption into the
+method's steps (#523), and each of those may wait — before it is taken, or after — on what its
+action declares.
 
 Two roads adopt one. A plan's head, chosen by the search, is the ordinary road; an event
 adopts the other — the market's Presenting, an [action](/domain/action.md) stating neither a

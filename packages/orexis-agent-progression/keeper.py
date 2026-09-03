@@ -36,13 +36,13 @@ import threading
 
 from rdflib import URIRef
 import uuid
-from dataclasses import dataclass
-from datetime import datetime, timezone
+from dataclasses import dataclass, replace as _replace
+from datetime import datetime, timedelta, timezone
 
 from assembly.contribute import answer as contribution, contributes
 from . import ledger
-from .act import Step, predicts_from_json, predicts_json
-from .store import bindings
+from .act import Step, method_of, predicts_from_json, predicts_json
+from .store import bind, bindings
 
 from .graphs import intentions_graph
 from .ontology import ANSWER, OREXIS, PLAN_FAILED, PLAN_FINISHED, REPORTS, WITNESS
@@ -198,6 +198,8 @@ class OpenExpectation:
     deadline: datetime
     baseline: float | None = None        # where the property stood, where the step is about one
     baseline_at: datetime | None = None
+    about_world: bool = True             # a step that predicted the world (`orexis:predicts`), not
+                                         # one held on its action's doneWhen (#523)
 
 
 class Keeper:
@@ -247,6 +249,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
         self._reconsidering = False
         self._claim_lock = threading.Lock()
         self._claimed: set = set()
+        self._released: set[str] = set()   # readiness waits released or lapsed, to take once
         self._holding = True               # ask once; `reconsider` learns whether any stands
         agent.beliefs.on_write(self._on_written)
 
@@ -348,7 +351,8 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{kernel("by")}> ?s . FILTER NOT EXISTS {{ 
         stem = uuid.uuid4().hex[:8]
         uri = f"{OREXIS}intent_{self.agent.id}_{stem}"
         xsd = "http://www.w3.org/2001/XMLSchema#"
-        plan = steps if steps is not None else [act]
+        plan = self._expanded(steps if steps is not None else [act])
+        action = plan[0].action
         step_uris = [f"{OREXIS}step_{self.agent.id}_{stem}" + ("" if n == 0 else f"_{n}")
                      for n in range(len(plan))]
         blocks = []
@@ -390,6 +394,123 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         return uri
 
     # --- an intention held until a condition (#512, #514) --------------------------------
+
+    def _expanded(self, plan: list) -> list:
+        """The plan with every step of an action that declares a METHOD (#523) replaced by
+        the method's steps in order — same lever, same want — the last inheriting the
+        parent's prediction and predicted urgency, since the end the search planned on is
+        reached when the method is done. One level: a method's own steps are taken as they
+        are, and a method naming an action with a method of its own is a seam."""
+        out = []
+        for step in plan:
+            members = self._method_of(step.action)
+            if not members:
+                out.append(step)
+                continue
+            for n, action in enumerate(members):
+                last = n == len(members) - 1
+                out.append(_replace(step, action=action,
+                                    predicts=step.predicts if last else None,
+                                    urgency_after=step.urgency_after if last else None))
+        return out
+
+    def _method_of(self, action: str) -> list[str]:
+        return method_of(self.agent.beliefs.query, action)
+
+    def _template_of(self, action: str, term: str) -> str | None:
+        rows = bindings(self.agent.beliefs.query(f"SELECT ?t WHERE {{ <{action}> <{kernel(term)}> ?t }}"))
+        return rows[0]["t"] if rows else None
+
+    def _tokens(self, intention_uri: str, step) -> dict:
+        """What a wait template may say instead of an instance: the rule's own tokens."""
+        from .ontology import beliefs_graph
+        from .store import Raw
+        adopted = next((s.adopted_at for s in self.standing() if s.uri == intention_uri), None)
+        since = (adopted or datetime.now(timezone.utc)).isoformat()
+        return {"me": self.me.uri, "via": step.via or "urn:nothing",
+                "about": self._about(intention_uri) or "urn:nothing",
+                "subject": self.me.acts_for or "urn:nobody", "want": step.want or "urn:nothing",
+                "beliefs": beliefs_graph(self.agent.id),
+                "since": Raw(f'"{since}"^^xsd:dateTime')}      # when this intention was adopted
+
+    def _lapses_at(self, action: str, tokens: dict) -> datetime | None:
+        """When a wait on a step of this action is over, asked of the action's own
+        `orexis:lapsesAt` — a dateTime, or seconds from now; None is the patience."""
+        text = self._template_of(action, "lapsesAt")
+        if not text:
+            return None
+        try:
+            rows = bindings(self.agent.beliefs.query_over(
+                bind(text, **tokens), *self.agent.beliefs.public_graphs(),
+                *self.agent.beliefs.recorded_graphs()))
+        except Exception as exc:                                    # noqa: BLE001
+            self.log.error("%s's lapsesAt will not run: %s", action.rsplit("#", 1)[-1], exc)
+            return None
+        if not rows:
+            return None
+        if rows[0].get("at"):
+            return datetime.fromisoformat(rows[0]["at"])
+        if rows[0].get("seconds"):
+            return datetime.now(timezone.utc) + timedelta(seconds=float(rows[0]["seconds"]))
+        return None
+
+    def _holds_now(self, shape) -> bool:
+        import rdflib
+        from . import violation
+        root = next(s for s in shape.subjects(rdflib.RDF.type, _SH_NODE_SHAPE)
+                    if isinstance(s, rdflib.URIRef))
+        select = violation.entered_select(shape, root)
+        return bool(bindings(self.agent.beliefs.query_over(
+            select, *self.agent.beliefs.public_graphs(), *self.agent.beliefs.recorded_graphs())))
+
+    def ready(self, intention_uri: str) -> bool:
+        """May the step this intention stands at be taken now? True where its action states no
+        `orexis:readyWhen`, or states one that holds; otherwise the step is HELD on it
+        (`orexis:until`, taken when it lapses) and this answers False — `carry_out`'s question
+        before it asks any actor (#523), and the same question after a release, when the
+        condition holds and the answer is yes."""
+        if intention_uri in self._released:
+            self._released.discard(intention_uri)
+            return True
+        standing = next((s for s in self.standing() if s.uri == intention_uri), None)
+        if standing is None:
+            return True
+        text = self._template_of(standing.action, "readyWhen")
+        if not text:
+            return True
+        tokens = self._tokens(intention_uri, standing.step)
+        shape = condition_shape(f"urn:orexis:ready:{uuid.uuid4().hex[:8]}", self.me.uri,
+                                bind(text, **tokens))
+        if self._holds_now(shape):
+            return True
+        if any(h.uri == intention_uri for h, _, _ in self.held()):
+            return False                          # already waiting on it
+        deadline = self._lapses_at(standing.action, tokens) or datetime.fromtimestamp(
+            datetime.now(timezone.utc).timestamp() + float(self.beliefs.patience_s), tz=timezone.utc)
+        self.log.info("holding %s until its action's condition holds (by %s)",
+                      standing.action.rsplit("#", 1)[-1], deadline.isoformat(timespec="seconds"))
+        self.hold(intention_uri, until=shape, not_after=deadline, when_lapsed="take")
+        return False
+
+    def after_take(self, intention_uri: str) -> None:
+        """The step was taken: where its action states `orexis:doneWhen`, hold the step on it
+        as its completion (`orexis:answeredWhen`) — met advances the plan, lapsing is an unmet
+        verdict that drops the tail (#523)."""
+        standing = next((s for s in self.standing() if s.uri == intention_uri), None)
+        if standing is None:
+            return
+        text = self._template_of(standing.action, "doneWhen")
+        if not text:
+            return
+        tokens = self._tokens(intention_uri, standing.step)
+        shape = condition_shape(f"urn:orexis:done:{uuid.uuid4().hex[:8]}", self.me.uri,
+                                bind(text, **tokens))
+        deadline = self._lapses_at(standing.action, tokens) or datetime.fromtimestamp(
+            datetime.now(timezone.utc).timestamp() + float(self.beliefs.patience_s), tz=timezone.utc)
+        self.window(intention_uri, deadline)
+        self.log.info("expecting %s to be done by %s: its action's condition",
+                      standing.action.rsplit("#", 1)[-1], deadline.isoformat(timespec="seconds"))
+        self._hold_step(intention_uri, kernel("answeredWhen"), shape, deadline, "unmet")
 
     def hold(self, intention_uri: str, until=None, until_not=None,
              not_after: datetime | None = None, when_lapsed: str = "take") -> None:
@@ -473,7 +594,7 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
   FILTER(?p IN (<{kernel("until")}>, <{kernel("untilNot")}>, <{kernel("answeredWhen")}>))
   FILTER NOT EXISTS {{ ?act <{END_MET}> ?m }} }} }}"""))
         standing = {s.uri: s for s in self.standing()}
-        watches = {w.uri: w for w in self.open_expectations()}
+        watches = {w.uri: w for w in self.open_expectations(every=True)}
         out = []
         for r in rows:
             if r["p"] == kernel("answeredWhen"):
@@ -600,6 +721,9 @@ SELECT ?when WHERE {{ GRAPH <{self.graph}> {{
 
     def _release(self, standing: Standing, because: str) -> None:
         from .execution import carry_out
+        #  RELEASED IS TAKEN: a readiness wait that lapsed is taken anyway (a held claim
+        #  redeems blind rather than never), so `ready` is not asked again on this road.
+        self._released.add(standing.uri)
 
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{BECAUSE_OF}> {_literal(because)} . }} }}""")
@@ -858,27 +982,34 @@ INSERT {{ GRAPH <{self.graph}> {{ ?act <{kernel("notAfter")}> "{not_after.isofor
 WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act .
                                   OPTIONAL {{ ?act <{kernel("notAfter")}> ?was }} }} }}""")
 
-    def open_expectations(self, want: str | None = None) -> list[OpenExpectation]:
+    def open_expectations(self, want: str | None = None, *, every: bool = False) -> list[OpenExpectation]:
         """Every watch still on: expectation adopted, end not yet verified — for one want, or
-        for all of them."""
+        for all of them. A watch on the WORLD — a step that predicted a reading, baselined —
+        is what callers mean by "my dose has not answered": a step held on its action's
+        `orexis:doneWhen` (#523) is the same wait inside the keeper and not that, so it is
+        left out unless `every` is asked."""
         prop = f"FILTER(?want = <{want}>)" if want else ""
+        world = "" if every else "FILTER(BOUND(?predicts))"
         rows = bindings(self.agent.intentions.query(f"""
-SELECT ?i ?step ?action ?want ?baseline ?baselineAt ?deadline WHERE {{
+SELECT ?i ?step ?action ?want ?baseline ?baselineAt ?deadline ?predicts WHERE {{
   GRAPH <{self.graph}> {{
     ?i <{kernel("by")}> ?step ;
        <{kernel("pursues")}> ?want .
     ?step <{kernel("fills")}> ?action ;
           <{kernel("notAfter")}> ?deadline ;
           <{kernel("answeredWhen")}> ?shape .
+    OPTIONAL {{ ?step <{PREDICTS}> ?predicts }}
     OPTIONAL {{ ?step <{BASELINE_VALUE}> ?baseline ; <{BASELINE_AT}> ?baselineAt }}
     FILTER NOT EXISTS {{ ?step <{END_MET}> ?met }}
+    {world}
     {prop}
   }} }}"""))
         return [OpenExpectation(
             uri=r["i"], step=r["step"], action=r["action"], want=r["want"],
             deadline=datetime.fromisoformat(r["deadline"]),
             baseline=float(r["baseline"]) if r.get("baseline") else None,
-            baseline_at=datetime.fromisoformat(r["baselineAt"]) if r.get("baselineAt") else None)
+            baseline_at=datetime.fromisoformat(r["baselineAt"]) if r.get("baselineAt") else None,
+            about_world=bool(r.get("predicts")))
             for r in rows]
 
     #  `judge(want, value)` WAS HERE — every open watch on a want compared against a number
@@ -900,9 +1031,21 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                  <{END_VERIFIED_AT}> "{now}"^^xsd:dateTime .
   <{watch.uri}> <{BECAUSE_OF}> {_literal(because)} .{residual}
 }} }}""")
-        (self.log.info if met else self.log.warning)(
-            "end %s for %s: %s", "met" if met else "UNMET", _short(watch.want), because)
-        self._tell("end-met" if met else "end-unmet", watch.action, watch.want, because)
+        #  A WATCH ON THE WORLD — a step that predicted something of it — is an end the
+        #  graph promised, and its verdict is what the reports count and the suspicion reads.
+        #  A step held on its action's `orexis:doneWhen` (#523) is the same wait inside the
+        #  keeper and a different thing outside: a bid answered by a claim, or not. It
+        #  advances or drops the plan, and says so in its own words.
+        world = watch.about_world
+        if world:
+            (self.log.info if met else self.log.warning)(
+                "end %s for %s: %s", "met" if met else "UNMET", _short(watch.want), because)
+            self._tell("end-met" if met else "end-unmet", watch.action, watch.want, because)
+        else:
+            (self.log.info if met else self.log.warning)(
+                "%s %s for %s: %s", watch.action.rsplit("#", 1)[-1], "done" if met else "LAPSED",
+                _short(watch.want), because)
+            self._tell("done" if met else "lapsed", watch.action, watch.want, because)
         if met and self._advance(watch):
             #  THE PLAN GOES ON (#510): this step's prediction was confirmed by the world,
             #  which is the only license the next step has — no search, no re-decision. The
@@ -926,7 +1069,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             if s.uri == watch.uri:
                 self._resolve(s, "satisfied",
                               f"the world answered — end {'met' if met else 'unmet'}")
-        if not met and self._is_suspect(watch.action, watch.want):
+        if world and not met and self._is_suspect(watch.action, watch.want):
             self.log.warning(
                 "AFFORDANCE SUSPECT: %s toward %s has not paid %d times running — the graph "
                 "claims a movement the world keeps refusing",
@@ -955,6 +1098,10 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{kernel("by")}> ?was }} }}""")
         desire = next((d for d in self.agent.pursuing() if d.uri == watch.want), None)
         carry_out(self.agent, standing.step, desire, watch.uri)
         return True
+
+    def current(self, intention_uri: str):
+        """The step this intention stands at, as the ledger has it — what there is to take."""
+        return next((s.step for s in self.standing() if s.uri == intention_uri), None)
 
     def in_progress(self, want: str):
         """A standing intention for this want whose plan has a step still to come, and
@@ -1080,7 +1227,7 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
         # `affordances_suspect` above zero is the flag itself.
         rows = bindings(self.agent.intentions.query(f"""
 SELECT ?met (COUNT(?s) AS ?n) WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{kernel("step")}> ?s . ?s <{END_MET}> ?met }} }} GROUP BY ?met"""))
+  ?i <{kernel("step")}> ?s . ?s <{END_MET}> ?met ; <{PREDICTS}> ?world }} }} GROUP BY ?met"""))
         counts = {r["met"]: int(r["n"]) for r in rows}
         out["expectations_open"] = len(self.open_expectations())
         out["expectations_met"] = counts.get("true", 0)

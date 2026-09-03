@@ -141,6 +141,9 @@ it is a record wearing a bullet.
 - **A want is authored positive and the kernel writes the negation** — rows are
   existential and a want is universal, so somebody turns the shape inside out, and a compiler
   held to the judge by parity does it once where every author would do it differently.
+- **A method is walked, never searched** — the steps an abstract action comes to are the
+  package's protocol, not a choice, so the keeper expands them at adoption and each step says
+  what it waits for; simulating them would spend the budget on worlds the measure cannot tell apart.
 - **An action is a point its taker contributes to** — `@contributes(<action>)` on a module says who
   and how in one place, a triple restating who was retired as a duplicate, and a gate in the
   repo, at onboarding and at boot holds a family to its actions, because a taker missing at

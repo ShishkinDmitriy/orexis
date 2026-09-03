@@ -76,7 +76,14 @@ def _take(agent, act: Step, desire, intention: str) -> bool:
         log.error("nothing takes %s — no module of mine contributes it, so this intention "
                   "stands with nobody to carry it out", act.action.rsplit("#", 1)[-1])
         return False
+    #  READINESS IS THE KEEPER'S (#523): a step whose action says what it waits for is held
+    #  rather than handed out, and comes back here when the wait is over.
+    keeper = getattr(agent, "keeper", None)
+    if keeper is not None and not keeper.ready(intention):
+        return False
     took = any(bool(answer) for answer in agent.ask(act.action, act, desire, intention))
+    if took and keeper is not None:
+        keeper.after_take(intention)
     if not took:
         log.info("%s through %s: no actor could take it now — standing",
                  act.action.rsplit("#", 1)[-1], (act.via or "?").rsplit("#", 1)[-1])

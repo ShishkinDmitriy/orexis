@@ -83,8 +83,10 @@ def test_a_claim_travels_sealed_and_only_its_winner_opens_it(keyed, make):
 
     fern = make("fern", keyed)
     fern.deliver(f"{market_of(fern).claim_topic}/fern", on_wire)
-    assert fern.bidding().holding is not None
-    assert fern.bidding().holding["jti"]     # the sealed content reached the holder intact
+    from orexis_agent_progression.store import bindings
+    claims = bindings(fern.beliefs.query_union(
+        f"SELECT ?id WHERE {{ <{fern.me.uri}> market:holdsClaim ?c . ?c market:claimId ?id }}"))
+    assert claims and claims[0]["id"], "the sealed content reached the holder intact — as a fact in its graph (#523)"
 
 
 def test_a_winner_without_a_published_sealing_key_gets_plaintext(make, monkeypatch, tmp_path):

@@ -20,11 +20,13 @@
 #  The ratios are cast to xsd:double first: a ZERO decimal numerator divided by a decimal binds
 #  nothing in this engine (measured, pinned in tests/test_desires.py), and a residual of exactly
 #  zero is the ordinary case of a dose landing where it was promised.
+#  The residual is on whichever step of Acquiring's method carried the prediction (#523).
 SELECT ?term ?value WHERE {
   {
     { SELECT (AVG(?o - ?b) AS ?moved) (AVG(?p - ?b) AS ?promised) (COUNT(?r) AS ?n) WHERE {
-        GRAPH <$evidence> { ?r a review:Residual ; review:ofAction market:Acquiring ;
-                               review:predicted ?p ; review:observed ?o ; review:baseline ?b } } }
+        GRAPH <$evidence> { ?r a review:Residual ; review:ofAction ?step ;
+                               review:predicted ?p ; review:observed ?o ; review:baseline ?b .
+        VALUES ?step { market:Acquiring market:Tendering market:Presenting } } } }
     GRAPH ?g { review:ReviewCapability review:residualWindow ?window }
     $me market:bidsIn ?m . ?m market:marketFor ?src . ?src market:supplies ?good .
     ?term market:ofGood ?good ; market:aboutProperty ?about .
@@ -40,8 +42,9 @@ SELECT ?term ?value WHERE {
     BIND(IF(?fixed < ?floor, ?floor, IF(?fixed > ?ceiling, ?ceiling, ?fixed)) AS ?value)
   } UNION {
     { SELECT (MAX(xsd:double(ABS(?o - ?p)) / ABS(?p - ?b)) AS ?spread) (COUNT(?r) AS ?n) WHERE {
-        GRAPH <$evidence> { ?r a review:Residual ; review:ofAction market:Acquiring ;
-                               review:predicted ?p ; review:observed ?o ; review:baseline ?b }
+        GRAPH <$evidence> { ?r a review:Residual ; review:ofAction ?step ;
+                               review:predicted ?p ; review:observed ?o ; review:baseline ?b .
+        VALUES ?step { market:Acquiring market:Tendering market:Presenting } }
         FILTER(?p != ?b) } }
     GRAPH ?g { review:ReviewCapability review:residualWindow ?window }
     OPTIONAL { GRAPH <$beliefs> { $me market:tolerance ?mine } }

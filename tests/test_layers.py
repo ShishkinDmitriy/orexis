@@ -10,7 +10,7 @@ from dataclasses import replace
 
 import pytest
 
-from orexis_capability_market.terms import ACQUIRING
+from orexis_capability_market.terms import ACQUIRING, TENDERING
 from orexis_agent_progression.ontology import PLAN_FAILED, PLAN_FINISHED, STEP_DONE
 from orexis_agent_reactive.loop import loop
 
@@ -33,7 +33,7 @@ def test_an_unmet_expectation_is_told_upward_and_marks_the_want(thirsty):
     about a plan that failed is deliberation's, and it hears it as an event rather than the
     ledger importing the search."""
     keeper, want = thirsty.keeper, stake_of(thirsty).uri
-    uri = keeper.adopt(ACQUIRING, want, "a dose that will not land")
+    uri = keeper.adopt(TENDERING, want, "a dose that will not land")
     before = dict(failed=thirsty.deliberator._plans_failed,
                   finished=thirsty.deliberator._plans_finished)
     assert keeper.expect(uri, "watching", baseline=reading_of(thirsty, MOISTURE),
@@ -49,7 +49,7 @@ def test_an_unmet_expectation_is_told_upward_and_marks_the_want(thirsty):
 
 def test_a_met_expectation_is_counted_and_not_re_planned(thirsty):
     keeper, want = thirsty.keeper, stake_of(thirsty).uri
-    uri = keeper.adopt(ACQUIRING, want, "a dose that lands")
+    uri = keeper.adopt(TENDERING, want, "a dose that lands")
     assert keeper.expect(uri, "watching", baseline=reading_of(thirsty, MOISTURE),
                          predicts=predicted_reading(thirsty.me.acts_for, MOISTURE, 0.31))
     write_reading(thirsty, 0.31, MOISTURE)

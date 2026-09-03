@@ -122,7 +122,9 @@ a thing worth naming. See [settlement-speaks-rea](/decisions/settlement-speaks-r
 
 Winning is not actuating: the claim is held until the bidder's watch is live, or until one
 full cycle of the cadence in force has passed, and then presented — blind, in the second
-case, because a dose delayed forever is worse than a dose unobserved. Since #512 the wait is
-the [keeper](/domain/intention.md)'s: the bidder adopts Presenting held until
-`sensing:watchLive` is true on the sensor monitoring its subject, with the bound as deadline,
-and provides only the presenting when released.
+case, because a dose delayed forever is worse than a dose unobserved. The wait is the
+[keeper](/domain/intention.md)'s, and since #523 it is declared rather than built: the claim
+arriving is a fact in the bidder's own graph (`market:Claim`, with when it was claimed and
+when it was presented), Presenting is the second step of Acquiring's [method](/domain/method.md),
+and its `orexis:readyWhen` says the watch must be live — or the host must have redeemed the
+claim already — with the sensor's horizon as `orexis:lapsesAt`.

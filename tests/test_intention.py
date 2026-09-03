@@ -19,7 +19,7 @@ import pytest
 
 from agent.world import load_self
 from orexis_agent_progression.graphs import intentions_graph
-from orexis_capability_market.terms import ACQUIRING
+from orexis_capability_market.terms import ACQUIRING, TENDERING
 from orexis_capability_sensing.terms import OBSERVING
 
 from conftest import sensing_of, stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading
@@ -92,7 +92,7 @@ def test_waiting_on_a_sensor_is_a_recorded_commitment(make):
 
     fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.10})
     assert keeper.standing(action=OBSERVING) == []       # the look came back
-    assert len(keeper.standing(action=ACQUIRING)) == 1   # and the bid it fed is now committed
+    assert len(keeper.standing(action=TENDERING)) == 1   # and the bid it fed is now committed
 
 
 def test_a_wait_the_auction_outlives_keeps_the_look_and_lets_the_round_go(make):
@@ -118,10 +118,10 @@ def test_a_claim_satisfies_the_acquisition(make):
     market = market_of(fern)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     keeper = keeper_of(fern)
-    assert len(keeper.standing(action=ACQUIRING)) == 1
+    assert len(keeper.standing(action=TENDERING)) == 1
 
     fern.deliver(f"{market.claim_topic}/fern", {"amount_l": 0.5, "debit": 0.2})
-    assert keeper.standing(action=ACQUIRING) == []
+    assert keeper.standing(action=TENDERING) == []
 
 
 def _reading(value):
@@ -140,7 +140,7 @@ def test_within_its_patience_a_second_impulse_is_absorbed(make):
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     fern.deliver(market.offer_topic, {"auction_id": "r2", "closes_in_s": 30})
     keeper = keeper_of(fern)
-    assert len(keeper.standing(action=ACQUIRING)) == 1
+    assert len(keeper.standing(action=TENDERING)) == 1
     # both bids still flew — in phase 3 the ledger records and never gates
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 2
 
@@ -151,10 +151,10 @@ def test_past_its_patience_a_new_adoption_supersedes(make):
     fern = make("fern", _reading(0.10))
     keeper = keeper_of(fern)
     keeper.beliefs = replace(keeper.beliefs, patience_s=0)  # everything is instantly stale
-    first = keeper.adopt(ACQUIRING, stake_of(fern).uri, "first")
-    second = keeper.adopt(ACQUIRING, stake_of(fern).uri, "second")
+    first = keeper.adopt(TENDERING, stake_of(fern).uri, "first")
+    second = keeper.adopt(TENDERING, stake_of(fern).uri, "second")
     assert first and second and first != second
-    standing = keeper.standing(action=ACQUIRING)
+    standing = keeper.standing(action=TENDERING)
     assert [s.uri for s in standing] == [second]
 
     from orexis_agent_progression.store import bindings
@@ -206,12 +206,12 @@ def test_every_transition_is_told_to_the_metrics_with_its_reason(make):
     keeper = keeper_of(fern)
     fern.metrics.take_events()
     stake = stake_of(fern).uri
-    uri = keeper.adopt(ACQUIRING, stake, "bid 0.4L to close my deficit")
-    keeper.satisfy(ACQUIRING, stake, "claim for 0.4L at a debit of 0.29")
+    uri = keeper.adopt(TENDERING, stake, "bid 0.4L to close my deficit")
+    keeper.satisfy(TENDERING, stake, "claim for 0.4L at a debit of 0.29")
     events = fern.metrics.take_events()
     assert [(kind, tags) for _, kind, _, tags in events] == [
-        ("adopted", {"means": "Acquiring", "want": "desire.fern.SoilMoisture"}),
-        ("satisfied", {"means": "Acquiring", "want": "desire.fern.SoilMoisture"})]
+        ("adopted", {"means": "Tendering", "want": "desire.fern.SoilMoisture"}),
+        ("satisfied", {"means": "Tendering", "want": "desire.fern.SoilMoisture"})]
     assert [text for _, _, text, _ in events] == [
         "bid 0.4L to close my deficit", "claim for 0.4L at a debit of 0.29"]
 
@@ -386,11 +386,11 @@ def test_the_ledger_holds_the_act_sized_and_windowed(make):
     fern = make("fern")
     keeper = keeper_of(fern)
     closes = datetime(2026, 9, 1, 12, 0, tzinfo=timezone.utc)
-    act = Step(action=ACQUIRING, via="urn:venue", quantity=0.4, not_after=closes)
+    act = Step(action=TENDERING, via="urn:venue", quantity=0.4, not_after=closes)
     keeper.adopt(act, stake_of(fern).uri, "bid 0.4L, not after the round closes")
-    standing = keeper.standing(action=ACQUIRING)[0]
+    standing = keeper.standing(action=TENDERING)[0]
     assert (standing.step.action, standing.step.via, standing.step.quantity,
-            standing.step.not_after) == (ACQUIRING, "urn:venue", 0.4, closes)
+            standing.step.not_after) == (TENDERING, "urn:venue", 0.4, closes)
 
 
 # --- an intention held until a condition (#512) ------------------------------------------

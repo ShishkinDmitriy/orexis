@@ -30,6 +30,8 @@ bid means here). Rules: capabilities/market/shapes.ttl, domain/water/shapes.ttl.
 
 from __future__ import annotations
 
+import uuid
+
 from datetime import datetime, timedelta, timezone
 
 from agent import signing
@@ -40,31 +42,15 @@ from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, SWEEP
 
 SENSING_URGENCY = "http://example.org/orexis/sensing#urgency"       # sensing's hook, spelled as every cross-package reference is
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"
-#  What a held claim waits for (#512, #514): the sensor monitoring my subject for my property
-#  says its watch is live — sensing's fact, in sensing's words, written beside the horizon.
-#  A SHAPE, since the rule of thumb puts a test over one focus node in SHACL: the keeper
-#  compiles it to the select it runs, and the ledger keeps the shape as what was waited for.
-def _live_watch_shape(sensor_uri: str, claim_jti: str):
-    import rdflib
-    SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
-    g = rdflib.Graph()
-    root = rdflib.URIRef(f"urn:orexis:hold:{claim_jti}:watch-live")
-    prop = rdflib.BNode()
-    g.add((root, rdflib.RDF.type, SH.NodeShape))
-    g.add((root, SH.targetNode, rdflib.URIRef(sensor_uri)))
-    g.add((root, SH.property, prop))
-    g.add((prop, SH.path, rdflib.URIRef("http://example.org/orexis/sensing#watchLive")))
-    g.add((prop, SH.hasValue, rdflib.Literal(True)))
-    return g
-from orexis_agent_progression.ontology import ONTOLOGY_GRAPH
+from orexis_agent_progression.ontology import ONTOLOGY_GRAPH, beliefs_graph
 from orexis_agent_progression.store import bindings
 from assembly.contribute import contributes
 
 from . import rounds, wallet
 from .wiring import bidding_markets_of
 from .beliefs import BIDDING_PICKS
-from .terms import (ACQUIRING, BIDDING, PRESENTING,
-                    SENSING, TOLERANCE)
+from .terms import (BIDDING, CLAIM, CLAIMED_AT, CLAIM_DEBIT, CLAIM_ID, CLAIM_L, HOLDS_CLAIM, NS,
+                    ON_VENUE, PRESENTED_AT, PRESENTING, SENSING, TENDERING, TOLERANCE)
 
 # What my bids are priced in, found THROUGH MY VENUE AND MY STAKE (#198) rather than by
 # naming any term: the market I bid in is for a source, the source states its good (entailed
@@ -147,7 +133,6 @@ class BiddingModule(Module):
         # One at a time, like the pending auction — the keeper's patience absorbs a second
         # acquisition while one stands, so a second unpresented claim cannot normally arise;
         # if the market misbehaves and one does, the newer claim replaces the older, logged.
-        self.holding: dict | None = None
         self.about, self._valuation_term = self._what_my_bids_are_priced_in()
         self.conversion = self._my_conversion()
 
@@ -403,13 +388,7 @@ SELECT ?t ?mine WHERE {{
         #  usually gets, and starting a round with yesterday's rows still standing would read
         #  oddly in a trace. What GUARANTEES they go is the housekeeping tick's `sweep` —
         #  an agent that stops bidding stops getting this event (#398).
-        rounds.sweep_expired(self.agent)
-        #  AN ACQUIRING FROM A ROUND THAT ENDED WITHOUT A CLAIM is a commitment the world
-        #  answered by silence — I lost, and nobody tells a loser. The row is gone by the
-        #  clock; the intention it headed is dropped here, with the reason, so the search
-        #  starts this round with nothing standing and its own fresh decision (#358).
-        if (keeper := self._keeper()) is not None and not rounds.rounds_of(self.agent, market.uri):
-            keeper.drop(ACQUIRING, self._stake_uri(), "the round I bid in closed without a claim")
+        rounds.sweep_expired(self.agent)   # a round I bid in that closed with no claim lapsed its tender (#523)
         from datetime import timedelta
 
         rounds.open_round(self.agent, market.uri, auction_id,
@@ -501,7 +480,7 @@ SELECT ?t ?mine WHERE {{
             #  The look stays wanted and stays committed — a reading is still owed, round or
             #  no round — so only the Acquire is dropped; sensing resolves the look when it lands.
             if keeper := self._keeper():
-                keeper.drop(ACQUIRING, self._stake_uri(), f"the auction closed first: {why}")
+                keeper.drop(TENDERING, self._stake_uri(), f"the auction closed first: {why}")
             self.pending = None
 
     def _why_blind(self) -> str:
@@ -545,7 +524,7 @@ SELECT ?t ?mine WHERE {{
             self._deadline.stop()
         keeper = self._keeper()
         stake = self._stake()
-        standing = (keeper.standing(ACQUIRING, stake.uri)
+        standing = (keeper.standing(TENDERING, stake.uri)
                     if keeper is not None and stake is not None else [])
         if standing and stake is not None:
             execution.take_standing(self.agent, standing[0], stake)
@@ -588,23 +567,56 @@ SELECT ?t ?mine WHERE {{
 
     @contributes(PRESENTING)
     def present(self, act, desire, intention: str) -> bool:
-        """A released Presenting: the keeper held the claim until my watch was live or the
-        bound passed (#512), and hands it here to present."""
-        if self.holding is None:
+        """The second step of Acquiring's method (#523): present the claim I hold on this
+        venue and open the watch on the end. Reached only when the keeper released the step
+        — my watch is live, or the sensor's horizon passed and a dose delayed forever is
+        worse than a dose unobserved — since the step's readiness is the action's to declare
+        and the keeper's to hold."""
+        claim = self._claim_on(act.via)
+        if claim is None:
             return False
-        self._present("released by the keeper — my watch is live, or the bound passed and "
-                      "a dose delayed forever is worse than a dose unobserved")
+        market = next((m for m in self.markets if m.uri == act.via), None)
+        if claim["presented"]:
+            self.log.info("claim %s was redeemed by the host — nothing to present, a watch to open",
+                          claim["id"])
+        else:
+            self.log.info("presenting claim %s: released by the keeper — my watch is live, or "
+                          "the bound passed", claim["id"])
+            if market is not None and market.redeem_topic:
+                self.publish(f"{market.redeem_topic}/{self.me.agent_id}",
+                             self._signed({"jti": claim["id"], "sub": self.me.agent_id}))
+            self.agent.beliefs.update(f"""
+INSERT DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
+  <{claim["uri"]}> <{PRESENTED_AT}> "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime }} }}""")
+        if keeper := self._keeper():
+            keeper.expect(intention,
+                          f"presented {claim['id']} for {claim['litres']}L — the graph says "
+                          f"this moves what I am short of, so show me",
+                          baseline=self._baseline(), tolerance=self.tolerance(),
+                          seeing_s=self._seeing_s())
+        if (sensing := self.agent.provider(SENSING)) is not None:
+            sensing.sense_now()
         return True
 
-    @contributes(ACQUIRING)
-    def acquire(self, act, desire, intention: str) -> bool:
-        """Carry out a committed Acquire: bid in the round that is open, if one is.
+    def _claim_on(self, venue_uri: str | None) -> dict | None:
+        """The newest claim I hold on this venue, and whether it is presented already."""
+        rows = bindings(self.agent.beliefs.query(f"""
+SELECT ?c ?id ?l ?at ?p WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
+  <{self.me.uri}> <{HOLDS_CLAIM}> ?c . ?c <{CLAIM_ID}> ?id ; <{CLAIM_L}> ?l ; <{ON_VENUE}> <{venue_uri}> ;
+     <{CLAIMED_AT}> ?at . OPTIONAL {{ ?c <{PRESENTED_AT}> ?p }} }} }} ORDER BY DESC(?at) LIMIT 1"""))
+        if not rows:
+            return None
+        return {"uri": rows[0]["c"], "id": rows[0]["id"], "litres": float(rows[0]["l"]),
+                "presented": bool(rows[0].get("p"))}
 
-        The actor for `market:Acquiring` (knowledge/domain/actor.md). No round pending is "not
-        now": the intention stands, and the next offer runs `submit`, which finds it standing
-        and comes back here — a bid adopted on the keeper's tick is answered by the market's
-        knock without a second search. The reading is the one in hand: `on_offer` looked
-        first, and a stale one is never bid on.
+    @contributes(TENDERING)
+    def tender(self, act, desire, intention: str) -> bool:
+        """The first step of Acquiring's method (#523): bid into the round that is open, if
+        one is. No round open is "not now": the intention stands, and the next offer runs
+        `submit`, which finds the tender standing and comes back here — a bid adopted on the
+        keeper's tick is answered by the market's knock without a second search. The reading
+        is the one in hand: `on_offer` looked first, and a stale one is never bid on. Done
+        when a claim arrives (`orexis:doneWhen`), lapsed at the round's close.
         """
         if act.about != self.about:
             return False
@@ -677,6 +689,12 @@ SELECT ?t ?mine WHERE {{
     # --- what came back ---
 
     def on_claim(self, market, claim: dict) -> None:
+        """A round cleared to me: pay, and WRITE THE CLAIM as a fact in my own graph (#523).
+        Nothing is adopted here — the tender standing on this venue is done when the fact
+        appears (`market:Tendering`'s `orexis:doneWhen`), the keeper advances to Presenting
+        and holds it until my watch is live, and `present` takes it. A market with no redeem
+        channel has already redeemed; the claim is written all the same, so the same road
+        presents nothing and opens the watch."""
         if claim.get("auction_id"):
             rounds.close_round(self.agent, claim["auction_id"])   # over for me: I won
         amount = float(claim.get("amount_l", 0.0))
@@ -684,83 +702,17 @@ SELECT ?t ?mine WHERE {{
         left = wallet.debit(self.agent, debit)
         self.won_l += amount
         self.log.info("won %.3f L for €%.2f — balance €%.2f", amount, debit, left)
-
-        keeper = self._keeper()
-        acquire_uris = (keeper.satisfy(ACQUIRING, self._stake_uri(),
-                                       f"claim for {amount}L at a debit of {debit}")
-                        if keeper is not None else [])
-
-        # A market authored without a redeem channel keeps the old arrangement — the host
-        # redeemed on issue, the dose is already flying — so the expectation opens NOW, on the
-        # acquire's row, exactly as before #132.
-        if not market.redeem_topic or not claim.get("jti"):
-            for uri in acquire_uris:
-                keeper.expect(uri,
-                              f"paid {debit} for {amount}L on a market with no redeem channel "
-                              f"— the host has already redeemed, so show me",
-                              baseline=self._baseline(), tolerance=self.tolerance(),
-                              seeing_s=self._seeing_s())
-            if (sensing := self.agent.provider(SENSING)) is not None:
-                sensing.sense_now()   # the freshest before on record
-            return
-
-        # HOLD (#132): winning is not actuating. The claim stands until my watch is live —
-        # a reading acknowledged at my fast cadence (#135), proof the board heard the
-        # tightening — or until the bounded wait says redeem blind rather than never. The
-        # keeper's standing Apply is what tightens the cadence: a held claim IS urgency.
-        if self.holding is not None:
-            self.log.warning("a second claim arrived while %s was held — presenting the newer",
-                             self.holding.get("jti"))
-        self.holding = {"jti": claim["jti"], "market": market,
-                        "amount_l": amount, "debit": debit, "acquired": acquire_uris}
         if (sensing := self.agent.provider(SENSING)) is not None:
-            sensing.sense_now()
-            bound = sensing.stale_after_s(self.me.acts_for, self.about)
-        else:
-            bound = 60.0
-        # The bound: one full cycle of the rhythm currently in force, after which a watch that
-        # could not be confirmed is not going to be — old firmware that never acks, a listening
-        # rig, a board mid-sleep on a long cadence. Redeem blind and say so, because a dose
-        # delayed forever is worse than a dose unobserved.
-        #
-        # THE WAIT IS THE KEEPER'S (#512): the claim adopts Presenting held UNTIL my watch is
-        # live — `sensing:watchLive true` on the sensor that monitors my subject, a select the
-        # keeper re-asks whenever a belief lands — and NOT AFTER the bound, when it is taken
-        # as lapsed. This module used to keep a timer of its own and check the watch on every
-        # reading; now it says what it waits for and provides the taking (`take`, below).
-        sensor = sensing.sensor_for(self.me.acts_for, self.about) if sensing is not None else None
-        if keeper is not None and (stake := self._stake_uri()) is not None and sensor is not None:
-            keeper.adopt(PRESENTING, stake,
-                         f"holding claim {claim['jti']} ({amount}L) until my watch is "
-                         f"live — never spend a dose you cannot watch land",
-                         until=_live_watch_shape(sensor.uri, claim["jti"]),
-                         not_after=datetime.now(timezone.utc) + timedelta(seconds=float(bound)),
-                         when_lapsed="take")
-
-    def _present(self, why: str) -> None:
-        held, self.holding = self.holding, None
-        if held is None:
-            return
-        market = held["market"]
-        self.log.info("presenting claim %s: %s", held["jti"], why)
-        self.publish(f"{market.redeem_topic}/{self.me.agent_id}",
-                     self._signed({"jti": held["jti"], "sub": self.me.agent_id}))
-        if keeper := self._keeper():
-            # The dose is imminent NOW — this is when the end becomes expectable, not at the
-            # claim: a baseline taken at the win would have aged the whole hold, and the
-            # sense_now inside expect() lands on a board that is provably (or at least
-            # plausibly) awake and fast. The watch hangs on the Apply row, because applying is
-            # the act whose end the movement is.
-            keeper.satisfy(PRESENTING, self._stake_uri(),
-                           f"claim {held['jti']} presented: {why}")
-            #  THE END EXPECTED IS ACQUIRING'S (#510): presenting predicts nothing of the
-            #  world — the reading the lot should bring is what the Acquiring step the search
-            #  made predicted, so the watch opens on that intention, resolved though it is.
-            for uri in held.get("acquired", ()):
-                keeper.expect(uri,
-                              f"presented {held['jti']} for {held['amount_l']}L — the graph "
-                              f"says this moves what I am short of, so show me",
-                              baseline=self._baseline(), tolerance=self.tolerance(),
-                              seeing_s=self._seeing_s())
-            if (sensing := self.agent.provider(SENSING)) is not None:
-                sensing.sense_now()
+            sensing.sense_now()   # the freshest before on record — and the watch it makes live
+        now = datetime.now(timezone.utc).isoformat()
+        jti = claim.get("jti") or f"unredeemable-{uuid.uuid4().hex[:8]}"
+        #  A VENUE WITH NO REDEEM CHANNEL, or a claim with no id, is one the host redeemed
+        #  for me: written as presented, so Presenting has nothing to send and opens the watch.
+        redeemed = (f'\n      <{PRESENTED_AT}> "{now}"^^xsd:dateTime ;'
+                    if not market.redeem_topic or not claim.get("jti") else "")
+        self.agent.beliefs.update(f"""
+INSERT DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
+  <{self.me.uri}> <{HOLDS_CLAIM}> <{NS}claim_{jti}> .
+  <{NS}claim_{jti}> a <{CLAIM}> ; <{CLAIM_ID}> "{jti}" ; <{CLAIMED_AT}> "{now}"^^xsd:dateTime ;{redeemed}
+      <{CLAIM_L}> "{amount}"^^xsd:decimal ; <{CLAIM_DEBIT}> "{debit}"^^xsd:decimal ;
+      <{ON_VENUE}> <{market.uri}> . }} }}""")
