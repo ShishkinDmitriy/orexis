@@ -1,7 +1,9 @@
 @prefix : <http://example.org/orexis/world/tower#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix progression: <http://example.org/orexis/progression#> .
 @prefix reporting: <http://example.org/orexis/reporting#> .
 
-:mover orexis:patienceS 60 .
-:mover orexis:budgetWorlds 128 .
+:mover progression:patienceS 60 .
+:mover deliberation:budgetWorlds 128 .
 :mover reporting:metricsIntervalS 60 .

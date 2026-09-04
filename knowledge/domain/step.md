@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Step
-term: http://example.org/orexis#Step
+term: http://example.org/orexis/progression#Step
 description: >-
   A planned instance of an action, not yet done: the lever, the quantity, the window, what the
   search predicted taking it would reach, what it waits for, what follows. A plan is steps, an
@@ -11,7 +11,7 @@ description: >-
 
 # What it is
 
-`orexis:Step`. One [action](/domain/action.md) filled in and planned — which template, the lever
+`progression:Step`. One [action](/domain/action.md) filled in and planned — which template, the lever
 it goes through, the want it serves and what that want is about, how much, for whom where it is
 an obligation's, and its window — with what the search predicted it would reach. Nothing has
 happened yet, and that is the whole reason for the word: a plan is not executed, so its
@@ -20,20 +20,20 @@ elements are not [acts](/domain/act.md). The sovereign's ruling, 2026-09-02.
 # Where it appears
 
 - a plan is a sequence of them, each with the urgency the want would have in the world it reaches
-- an [intention](/domain/intention.md) commits to them — `orexis:step` to each, `orexis:by` to the
-  one it stands at, `orexis:then` between them in order
+- an [intention](/domain/intention.md) commits to them — `progression:step` to each, `progression:by` to the
+  one it stands at, `progression:then` between them in order
 - a [claim](/domain/claim.md) promises one: the host's Serving step, so many litres, not after the
   window closes
-- the step is what WAITS: its readiness (`orexis:until`, `orexis:untilNot`), its completion
-  (`orexis:answeredWhen`), and what the keeper does if a wait lapses (`orexis:whenLapsed`)
-- it carries what it PREDICTED (`orexis:predicts`): the facts the search said taking it makes
+- the step is what WAITS: its readiness (`progression:until`, `progression:untilNot`), its completion
+  (`progression:answeredWhen`), and what the keeper does if a wait lapses (`progression:whenLapsed`)
+- it carries what it PREDICTED (`progression:predicts`): the facts the search said taking it makes
   true and false, in the plan's own canonical form — which is what the world is held to once it
   is taken, within the actor's [tolerance](/domain/tolerance.md), and why no actor sizes an
   expectation of its own
 - where it was expanded from a [method](/domain/method.md), the filling it is part of
-  (`orexis:partOf`)
+  (`progression:partOf`)
 - once answered, the number it predicted and the number the world showed
-  (`orexis:predictedValue`, `orexis:observedValue`) — the residual [review](/domain/review.md)
+  (`progression:predictedValue`, `progression:observedValue`) — the residual [review](/domain/review.md)
   reads, met or unmet alike
 
 # What it is not

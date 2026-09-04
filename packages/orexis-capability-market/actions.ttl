@@ -1,6 +1,7 @@
 @prefix sh:        <http://www.w3.org/ns/shacl#> .
 @prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix orexis:        <http://example.org/orexis#> .
+@prefix progression: <http://example.org/orexis/progression#> .
 @prefix sosa:      <http://www.w3.org/ns/sosa/> .
 @prefix market:    <http://example.org/orexis/market#> .
 @prefix actuation: <http://example.org/orexis/actuation#> .
@@ -292,7 +293,7 @@ market:Offering
 #  The buyer's own act with a won claim: hold it until the watch is live, then present it on
 #  the redeem channel. No precondition and no effect here, because no plan chooses it — the
 #  claim arriving IS the adoption, and the watch going live is the trigger (#132). It is a
-#  node so the hold can be a commitment (`orexis:by market:Presenting`) and an urgency (a held
+#  node so the hold can be a commitment (`progression:by market:Presenting`) and an urgency (a held
 #  claim tightens the cadence), now that an intention commits to an action and nothing else.
 
 #################  The steps Acquiring comes to  #################

@@ -16,7 +16,7 @@ from __future__ import annotations
 import pytest
 
 from agent import genesis, vocabulary
-from orexis_agent_progression.ontology import OREXIS, beliefs_graph
+from orexis_agent_progression.ontology import OREXIS, beliefs_graph, PROGRESSION
 from orexis_agent_progression.store import Store, bindings
 
 from conftest import WORLDS_ROOT, genesis_store
@@ -260,7 +260,7 @@ def test_a_term_that_changed_namespace_and_name_still_migrates(tmp_path):
     found = vocabulary.stale(st)
     successors = found[beliefs_graph("fern")]
     assert successors["http://example.org/orexis/desire#desires"] == OREXIS + "holds"
-    assert successors["http://example.org/orexis/intention#outcome"] == OREXIS + "outcome"
+    assert successors["http://example.org/orexis/intention#outcome"] == PROGRESSION + "outcome"
 
 
 def test_a_graph_nothing_declares_any_more_is_dropped(tmp_path, monkeypatch):

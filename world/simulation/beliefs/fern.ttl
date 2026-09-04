@@ -8,6 +8,7 @@
 @prefix water: <http://example.org/orexis/water#> .
 @prefix reporting: <http://example.org/orexis/reporting#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix progression: <http://example.org/orexis/progression#> .
 @prefix market: <http://example.org/orexis/market#> .
 
 #  Fern's agent's PRIVATE beliefs — the parameters for the capabilities it composed.
@@ -67,4 +68,4 @@
 #   adoption may supersede it. The ledger records what this agent does either way; the patience
 #   is what makes "already doing something about it" a fact with teeth. Two minutes: several
 #   auction rounds, and far past any one bid window.
-:fern_agent orexis:patienceS 120 .
+:fern_agent progression:patienceS 120 .

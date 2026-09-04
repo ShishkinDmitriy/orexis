@@ -232,6 +232,13 @@ it is a record wearing a bullet.
    [a-layer-is-a-package-and-need-loads-it](knowledge/decisions/a-layer-is-a-package-and-need-loads-it.md)).
    The order is spelled once, `LAYERS` in `tests/test_projects.py`, and `tests/test_layering.py`
    holds every arrow, finding each layer by its family.
+   **A layer with words of its own owns a namespace** (#529) — `progression:` for the ledger,
+   `deliberation:` for the trace and the budget, each declared in the layer package's own
+   `ontology.ttl`; the reactive layer has no vocabulary — and a term one layer reads and writes
+   carries its prefix, so a query says which layer it speaks for. What every layer and every
+   package writes in — `orexis:Agent`, `orexis:Action`, a want's grammar, the choir's extension
+   points — stays `orexis:`, and a file naming a HIGHER layer's prefix fails
+   `tests/test_layering.py` as an upward import would.
    A transport is also a capability the fact of its bus grants — how the agent reaches its
    society, connection, delivery loop and watchdog in the transport's module, reached through
    the choir (`subscriptions`, `handle`, `send`) — and the kernel has no mailbox (see

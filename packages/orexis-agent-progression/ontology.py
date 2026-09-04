@@ -48,6 +48,9 @@ See knowledge/decisions/capability-packages.md.
 from __future__ import annotations
 
 OREXIS = "http://example.org/orexis#"
+#  THE LAYERS' OWN NAMESPACES (#529): a term one layer reads and writes carries its prefix, so
+#  a query says which layer it speaks for; what every layer and package writes in stays `orexis:`.
+PROGRESSION = "http://example.org/orexis/progression#"
 # **The kernel's namespace, and the kernel is `agent/`.** `orexis:` is the base every package layers
 # on: what an agent IS, what a graph is, and — since the mind came home — what a mind CONTAINS.
 # A package names its own terms through its own `terms.py`; `market:`, `sensing:` and the
@@ -81,10 +84,64 @@ OREXIS = "http://example.org/orexis#"
 PROV = "http://www.w3.org/ns/prov#"
 
 
+#  WHICH NAMESPACE A KERNEL WORD LIVES IN, by local name (#529): the ledger's words and the
+#  points answered on the progression and reactive rows carry those layers' prefixes; a name
+#  not listed is `orexis:`, the vocabulary every layer and package writes in. The deliberation
+#  layer's words are its own module's (`orexis_agent_deliberation.ontology`), never named here,
+#  since a lower layer may not spell a higher one's vocabulary.
+LAYER_OF = {
+    "Act": PROGRESSION,
+    "Intention": PROGRESSION,
+    "IntentionGraph": PROGRESSION,
+    "PromisesGraph": PROGRESSION,
+    "Step": PROGRESSION,
+    "adoptedAt": PROGRESSION,
+    "answeredWhen": PROGRESSION,
+    "baselineAt": PROGRESSION,
+    "baselineValue": PROGRESSION,
+    "becauseOf": PROGRESSION,
+    "by": PROGRESSION,
+    "deadlineAt": PROGRESSION,
+    "endMet": PROGRESSION,
+    "endVerifiedAt": PROGRESSION,
+    "fills": PROGRESSION,
+    "forAgent": PROGRESSION,
+    "maxPatienceS": PROGRESSION,
+    "minPatienceS": PROGRESSION,
+    "notAfter": PROGRESSION,
+    "notBefore": PROGRESSION,
+    "observedValue": PROGRESSION,
+    "of": PROGRESSION,
+    "outcome": PROGRESSION,
+    "partOf": PROGRESSION,
+    "patienceS": PROGRESSION,
+    "predictedUrgency": PROGRESSION,
+    "predictedValue": PROGRESSION,
+    "predicts": PROGRESSION,
+    "promisedBy": PROGRESSION,
+    "pursues": PROGRESSION,
+    "quantity": PROGRESSION,
+    "resolvedAt": PROGRESSION,
+    "step": PROGRESSION,
+    "suspectAfter": PROGRESSION,
+    "taken": PROGRESSION,
+    "takenAt": PROGRESSION,
+    "then": PROGRESSION,
+    "through": PROGRESSION,
+    "until": PROGRESSION,
+    "untilNot": PROGRESSION,
+    "whenLapsed": PROGRESSION,
+}
+_DELIBERATIONS = {"Candidate", "Deliberation", "DeliberationGraph", "asOf", "atDepth", "blind", "budgetWorlds", "chose", "considered", "deliberatedOn", "standsAt", "tookSeconds", "verdict", "wouldReach", "wouldTake"}
+
+
 def term(name: str) -> str:
-    """A T-Box term by name. This is how a package names the capability it implements, and
-    how one package refers to another's family without importing its Python."""
-    return OREXIS + name
+    """A T-Box term by name — in the namespace the kernel's own layering gives it (#529). This
+    is how a package names the capability it implements, and how one package refers to
+    another's family without importing its Python."""
+    if name in _DELIBERATIONS:
+        raise ValueError(f"{name} is the deliberation layer's word — name it from its own module")
+    return LAYER_OF.get(name, OREXIS) + name
 
 
 # --- the kernel's own terms ----------------------------------------------------------------
@@ -92,24 +149,24 @@ CAPABILITY = term("Capability")  # the root every capability term is a kind of
 
 # --- the choir's questions, as terms (a-hook-is-a-term) ------------------------------------
 HOOK = term("Hook")
-DESIRES = term("desires")
-DESIRE_URGENCY = term("desireUrgency")
-ANSWER = term("answer")          # the shape of an observation that answers an act (#516)
-WITNESS = term("witness")        # what the world shows for a predicted fact now — the residual (#518)
-SIZE = term("size")
-REPORTS = term("reports")
-SERIES = term("series")
-QUIET = term("quiet")
-SWEEP = term("sweep")
-BELIEF_REVISED = term("beliefRevised")
+ANSWER = OREXIS + "answer"          # the shape of an observation that answers an act (#516)
+WITNESS = OREXIS + "witness"        # what the world shows for a predicted fact now — the residual (#518)
+DESIRES = OREXIS + "desires"
+DESIRE_URGENCY = OREXIS + "desireUrgency"
+SIZE = OREXIS + "size"
+REPORTS = OREXIS + "reports"
+SERIES = OREXIS + "series"
+QUIET = OREXIS + "quiet"
+SWEEP = OREXIS + "sweep"
+BELIEF_REVISED = OREXIS + "beliefRevised"
 #  What progression TELLS upward (#452): a lower layer never imports a higher one, so what it
 #  has to say — a step taken, an expectation met or unmet — is an event through the choir.
-STEP_DONE = term("stepDone")
-PLAN_FINISHED = term("planFinished")
-PLAN_FAILED = term("planFailed")
-SUBSCRIPTIONS = term("subscriptions")
-HANDLE = term("handle")
-SEND = term("send")
+STEP_DONE = OREXIS + "stepDone"
+PLAN_FINISHED = OREXIS + "planFinished"
+PLAN_FAILED = OREXIS + "planFailed"
+SUBSCRIPTIONS = OREXIS + "subscriptions"
+HANDLE = OREXIS + "handle"
+SEND = OREXIS + "send"
 
 # --- named graphs ---------------------------------------------------------------------------
 #
@@ -159,7 +216,7 @@ ACTIONS_GRAPH = _GRAPH + "actions"
 #  What the planner considered on its last pass, per desire — the record's one sanctioned
 #  materialisation of a possible world, for the reader who cannot re-run the search from
 #  outside because the belief base is locked by the process holding it. Private, replaced per
-#  pass, never read back by the planner itself. See orexis:DeliberationGraph.
+#  pass, never read back by the planner itself. See the deliberation layer's DeliberationGraph.
 DELIBERATION_GRAPH = _GRAPH + "deliberation"
 PROVENANCE_GRAPH = _GRAPH + "provenance"
 #  What this agent's own graphs ARE, said by the agent at boot: public, because a

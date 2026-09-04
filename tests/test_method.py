@@ -32,8 +32,8 @@ def test_adopting_an_action_with_a_method_expands_it_and_the_last_step_inherits_
                 predicts=predicted_reading(fern.me.acts_for, MOISTURE, 0.55))
     uri = keeper.adopt(head, want, "buy the water")
     rows = bindings(fern.intentions.query_union(f"""
-SELECT ?a ?next ?p WHERE {{ <{uri}> orexis:step ?s . ?s orexis:fills ?a .
-  OPTIONAL {{ ?s orexis:then ?next }} OPTIONAL {{ ?s orexis:predicts ?p }} }}"""))
+SELECT ?a ?next ?p WHERE {{ <{uri}> progression:step ?s . ?s progression:fills ?a .
+  OPTIONAL {{ ?s progression:then ?next }} OPTIONAL {{ ?s progression:predicts ?p }} }}"""))
     by_action = {r["a"]: r for r in rows}
     assert set(by_action) == {TENDERING, PRESENTING}
     assert by_action[TENDERING].get("next") and not by_action[TENDERING].get("p"), \
@@ -92,10 +92,10 @@ def test_a_method_of_methods_expands_flat_and_every_step_knows_its_filling(monke
                        want, "run the errand")
     rows = bindings(fern.intentions.query_union(f"""
 SELECT ?a ?next ?pa ?ga ?p WHERE {{
-  <{uri}> orexis:step ?s . ?s orexis:fills ?a .
-  OPTIONAL {{ ?s orexis:then ?next }} OPTIONAL {{ ?s orexis:predicts ?p }}
-  OPTIONAL {{ ?s orexis:partOf ?parent . ?parent orexis:fills ?pa .
-             OPTIONAL {{ ?parent orexis:partOf ?grand . ?grand orexis:fills ?ga }} }} }}"""))
+  <{uri}> progression:step ?s . ?s progression:fills ?a .
+  OPTIONAL {{ ?s progression:then ?next }} OPTIONAL {{ ?s progression:predicts ?p }}
+  OPTIONAL {{ ?s progression:partOf ?parent . ?parent progression:fills ?pa .
+             OPTIONAL {{ ?parent progression:partOf ?grand . ?grand progression:fills ?ga }} }} }}"""))
     by = {r["a"].rsplit("#", 1)[-1]: r for r in rows}
     assert set(by) == {"Go", "Grab", "Return"}, "flat: the walked steps, and only them"
     assert by["Go"]["pa"].endswith("Fetch") and by["Go"]["ga"].endswith("Errand"), \

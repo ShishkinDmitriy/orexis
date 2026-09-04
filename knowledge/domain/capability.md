@@ -58,7 +58,7 @@ When you add one, ask what makes *yours* meaningful rather than which of these i
 
 **Two premises left this table and the reason is worth keeping.** A **stake** granted
 `desire:Deducing`, and a **stake AND a lever** granted `intention:Keeping` and
-`deliberation:Reflex`. All three were the mind — wanting, committing, deciding — and a mind is not
+the retired deliberation package's `Reflex`. All three were the mind — wanting, committing, deciding — and a mind is not
 plug-in-able: the stores those modules read were built for every agent unconditionally while the
 code that reads them was a grant, and a modality nobody may write is not a modality. They are the
 kernel's now, granted by nothing.

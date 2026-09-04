@@ -27,7 +27,7 @@ database "Beliefs · repository" as BEL {
   folder "orexis:StateGraph" as S
   folder "orexis:PickRecordGraph" as P
   folder "orexis:ObligationsGraph" as O
-  folder "orexis:DeliberationGraph" as D
+  folder "deliberation:DeliberationGraph" as D
 }
 
 database "Desires · repository" as DES {

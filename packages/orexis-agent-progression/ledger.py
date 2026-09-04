@@ -36,7 +36,7 @@ def migrate_ledger(intentions, graph: str, about_of: dict[str, str]) -> int:
     rows = bindings(intentions.query(f"""
         SELECT ?i ?property WHERE {{ GRAPH <{graph}> {{
             ?i <{_LEDGER_PROPERTY}> ?property .
-            FILTER NOT EXISTS {{ ?i orexis:pursues ?want }} }} }}"""))
+            FILTER NOT EXISTS {{ ?i progression:pursues ?want }} }} }}"""))
     given = 0
     for row in rows:
         if (want := want_of.get(row["property"])) is None:
@@ -45,7 +45,7 @@ def migrate_ledger(intentions, graph: str, about_of: dict[str, str]) -> int:
                         row["property"])
             continue
         intentions.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
-            <{row['i']}> orexis:pursues <{want}> }} }}""")
+            <{row['i']}> progression:pursues <{want}> }} }}""")
         given += 1
     intentions.update(f"""
         DELETE {{ GRAPH <{graph}> {{ ?i <{_LEDGER_PROPERTY}> ?p }} }}
@@ -54,33 +54,33 @@ def migrate_ledger(intentions, graph: str, about_of: dict[str, str]) -> int:
 
 
 def migrate_ledger_acts(intentions, graph: str) -> int:
-    """Bring an intention that names an ACTION under `orexis:by` to one that names an ACT.
+    """Bring an intention that names an ACTION under `progression:by` to one that names an ACT.
 
-    Before an-act-is-a-filled-action, `orexis:by` pointed at the action node and `orexis:through` sat on
-    the intention. Such a row is rebuilt: an act node is minted, `orexis:fills` the action,
-    `orexis:through` moved onto it, and `orexis:by` repointed. Told apart by structure — a `by` object
-    that is not `a orexis:Act` in the ledger — so the migration is idempotent. Returns how many.
+    Before an-act-is-a-filled-action, `progression:by` pointed at the action node and `progression:through` sat on
+    the intention. Such a row is rebuilt: an act node is minted, `progression:fills` the action,
+    `progression:through` moved onto it, and `progression:by` repointed. Told apart by structure — a `by` object
+    that is not `a progression:Act` in the ledger — so the migration is idempotent. Returns how many.
     """
     rows = bindings(intentions.query(f"""
         SELECT ?i ?action ?through WHERE {{ GRAPH <{graph}> {{
-            ?i orexis:by ?action .
-            OPTIONAL {{ ?i orexis:through ?through }}
-            FILTER NOT EXISTS {{ ?action a orexis:Act }} }} }}"""))
+            ?i progression:by ?action .
+            OPTIONAL {{ ?i progression:through ?through }}
+            FILTER NOT EXISTS {{ ?action a progression:Act }} }} }}"""))
     for row in rows:
         act = row["i"].replace("intent_", "act_", 1) if "intent_" in row["i"] else row["i"] + ".act"
-        through = f'<{act}> orexis:through <{row["through"]}> .' if row.get("through") else ""
+        through = f'<{act}> progression:through <{row["through"]}> .' if row.get("through") else ""
         intentions.update(f"""
-            DELETE {{ GRAPH <{graph}> {{ <{row['i']}> orexis:by <{row['action']}> ;
-                                                    orexis:through ?t }} }}
-            INSERT {{ GRAPH <{graph}> {{ <{row['i']}> orexis:by <{act}> .
-                                        <{act}> a orexis:Act ; orexis:fills <{row['action']}> .
+            DELETE {{ GRAPH <{graph}> {{ <{row['i']}> progression:by <{row['action']}> ;
+                                                    progression:through ?t }} }}
+            INSERT {{ GRAPH <{graph}> {{ <{row['i']}> progression:by <{act}> .
+                                        <{act}> a progression:Act ; progression:fills <{row['action']}> .
                                         {through} }} }}
-            WHERE  {{ GRAPH <{graph}> {{ <{row['i']}> orexis:by <{row['action']}> .
-                                        OPTIONAL {{ <{row['i']}> orexis:through ?t }} }} }}""")
-    #  And the watch's deadline, which sat on the intention as `orexis:deadlineAt` before the
-    #  window was the act's: moved onto the act as `orexis:notAfter`.
+            WHERE  {{ GRAPH <{graph}> {{ <{row['i']}> progression:by <{row['action']}> .
+                                        OPTIONAL {{ <{row['i']}> progression:through ?t }} }} }}""")
+    #  And the watch's deadline, which sat on the intention as `progression:deadlineAt` before the
+    #  window was the act's: moved onto the act as `progression:notAfter`.
     intentions.update(f"""
-        DELETE {{ GRAPH <{graph}> {{ ?i orexis:deadlineAt ?d }} }}
-        INSERT {{ GRAPH <{graph}> {{ ?act orexis:notAfter ?d }} }}
-        WHERE  {{ GRAPH <{graph}> {{ ?i orexis:deadlineAt ?d ; orexis:by ?act }} }}""")
+        DELETE {{ GRAPH <{graph}> {{ ?i progression:deadlineAt ?d }} }}
+        INSERT {{ GRAPH <{graph}> {{ ?act progression:notAfter ?d }} }}
+        WHERE  {{ GRAPH <{graph}> {{ ?i progression:deadlineAt ?d ; progression:by ?act }} }}""")
     return len(rows)

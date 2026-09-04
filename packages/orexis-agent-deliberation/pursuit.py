@@ -10,8 +10,8 @@ says — was dropped between the planner and the ledger.
 Now every trigger arrives here and none of them decides. `pursue(agent, desire)`:
 
 1. PLAN — `deliberator.decide(desire)`, the search, answering with rows;
-2. COMMIT — every step to the keeper, the head stood at, `orexis:through` the lever,
-   `orexis:pursues` the desire. Absorbed within patience means nothing to carry out;
+2. COMMIT — every step to the keeper, the head stood at, `progression:through` the lever,
+   `progression:pursues` the desire. Absorbed within patience means nothing to carry out;
 3. TAKE — handed DOWN to progression's `carry_out`, which asks the T-Box who takes the action
    and runs the take on the reactive loop. False from every actor is "not now": the intention
    stands and the next trigger finds it.

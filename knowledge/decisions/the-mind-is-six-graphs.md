@@ -191,7 +191,7 @@ patience, what this society tolerates before it stops trusting a claim). Rule
 already settled the mirror case: universality never promoted a term, and here non-universality
 never demoted one.
 
-It also ends a split brain the axes had just created: `orexis:IntentionGraph` holding
+It also ends a split brain the axes had just created: `progression:IntentionGraph` holding
 `intention:Intention` instances, the container kernel and the content not.
 
 The general test, stated once: **not whether a term is universal, but whether the HOW could
@@ -225,7 +225,7 @@ rename, so writes moved while reads stayed — caught by tests, not by a scan.
    carry `prov:wasDerivedFrom` the subject whose ranges produced them; an obligation carries
    the claim that raised it. A blank node is a thing nothing can reference, and an intention
    must be able to say which end it serves.
-3. **`orexis:pursues`** — DONE, before it could go live. Intentions keyed on `(means, property)`
+3. **`progression:pursues`** — DONE, before it could go live. Intentions keyed on `(means, property)`
    alone, so two obligations about one property were indistinguishable: satisfying one
    satisfied both and the patience absorbed the second impulse as the first — the shape of the
    observation-keyed-by-subject bug, caught while obligations still do not drive acts. The

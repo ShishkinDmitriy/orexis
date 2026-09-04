@@ -84,7 +84,7 @@ def test_seven_moves_are_planned_once_above_and_each_is_planned_as_drives_below(
     outer = pursuit.pursue(agent, next(g for g in agent.pursuing() if g.uri == WANT))
     assert outer is not None and searches == [WANT], "one search at hanoi's level"
     outer_steps = bindings(agent.intentions.query_union(
-        f"SELECT ?s WHERE {{ <{outer}> orexis:step ?s }}"))
+        f"SELECT ?s WHERE {{ <{outer}> progression:step ?s }}"))
     assert len(outer_steps) == 7, "seven Moves, and not one drive among them"
 
     moves_kept, drives = 0, []

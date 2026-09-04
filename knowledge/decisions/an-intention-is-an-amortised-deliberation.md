@@ -94,7 +94,7 @@ default; this repo refuses fabricated beliefs everywhere else and an aim is not 
 ## 3. Intention is named, by reifying what already exists
 
 No new behaviour. The three proto-intentions get one name and one lifecycle:
-`orexis:Intention` is a commitment to reduce a named gap by a named means — *observe* (a
+`progression:Intention` is a commitment to reduce a named gap by a named means — *observe* (a
 cadence command), *acquire* (a bid, satisfied by a claim), *apply* (a redemption) — with
 states adopted → active → satisfied | dropped and a `becauseOf`, the same PROV-flavoured shape
 `review:Revision` already has.

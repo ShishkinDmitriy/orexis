@@ -8,7 +8,7 @@ credit leg and, on the wire, the signatures); a self-dose (#190) is one with nob
 KERNEL, and the reason is the independence contract: actuation fulfils commitments and may not
 import the market's Python, the market issues them and may not import actuation's, so the
 shape both hold is the kernel's — BDI's structure holds an intention (the agent's own
-commitment, `orexis:Intention`) and REA's holds this one. Two words for two things, as
+commitment, `progression:Intention`) and REA's holds this one. Two words for two things, as
 a-mandate-is-not-a-commitment ruled. See knowledge/domain/commitment.md.
 """
 

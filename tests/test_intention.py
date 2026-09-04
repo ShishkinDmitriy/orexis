@@ -13,6 +13,8 @@ the bidder's handlers and a ledger nobody writes to proves nothing.
 
 from __future__ import annotations
 
+from orexis_agent_progression.ontology import PROGRESSION
+
 from dataclasses import replace
 
 import pytest
@@ -65,11 +67,11 @@ def test_every_agent_keeps_a_ledger_and_the_stake_is_what_needs_a_patience(make)
     #  The shape still bites where it always did: a stake with a patience outside the bounds
     #  is refused, which is the piece a beliefs file can actually get wrong.
     fern.beliefs.update(f"""DELETE {{ GRAPH <{fern.beliefs.graph}> {{
-        <{fern.me.uri}> <http://example.org/orexis#patienceS> ?p }} }}
+        <{fern.me.uri}> <http://example.org/orexis/progression#patienceS> ?p }} }}
       INSERT {{ GRAPH <{fern.beliefs.graph}> {{
-        <{fern.me.uri}> <http://example.org/orexis#patienceS> 2 }} }}
+        <{fern.me.uri}> <http://example.org/orexis/progression#patienceS> 2 }} }}
       WHERE  {{ GRAPH <{fern.beliefs.graph}> {{
-        <{fern.me.uri}> <http://example.org/orexis#patienceS> ?p }} }}""")
+        <{fern.me.uri}> <http://example.org/orexis/progression#patienceS> ?p }} }}""")
     fern.desires.rebuild()
     with pytest.raises(Exception):
         validate_agent(fern.beliefs, "fern", fern.me.uri, fern.me.capabilities,
@@ -159,8 +161,8 @@ def test_past_its_patience_a_new_adoption_supersedes(make):
 
     from orexis_agent_progression.store import bindings
     rows = bindings(fern.beliefs.query(
-        "SELECT ?why WHERE { GRAPH <%s> { <%s> orexis:outcome \"dropped\" ; "
-        "orexis:becauseOf ?why } }" % (intentions_graph("fern"), first)))
+        "SELECT ?why WHERE { GRAPH <%s> { <%s> progression:outcome \"dropped\" ; "
+        "progression:becauseOf ?why } }" % (intentions_graph("fern"), first)))
     assert any("outwaited" in r["why"] for r in rows)
 
 
@@ -178,7 +180,7 @@ def test_intentions_are_nobody_elses_to_read(make):
     assert intentions_graph("fern") not in fern.beliefs.public_graphs()
     from orexis_agent_progression.store import bindings
     assert bindings(fern.beliefs.query(
-        "SELECT ?i WHERE { ?i a orexis:Intention }")) == []
+        "SELECT ?i WHERE { ?i a progression:Intention }")) == []
 
 
 def test_the_agent_reports_what_stands_and_how_old(make):
@@ -353,9 +355,9 @@ def test_a_commitment_is_keyed_by_its_want_and_absorbed_by_it(make):
 
 
 def test_an_old_row_naming_an_action_is_rebuilt_as_an_act(make):
-    """A ledger written before an-act-is-a-filled-action pointed `orexis:by` at the ACTION node and
-    kept `orexis:through` on the intention. At the keeper's construction such a row is rebuilt: an
-    act node fills the action, the lever moves onto it, and `orexis:by` names the act — so a reader
+    """A ledger written before an-act-is-a-filled-action pointed `progression:by` at the ACTION node and
+    kept `progression:through` on the intention. At the keeper's construction such a row is rebuilt: an
+    act node fills the action, the lever moves onto it, and `progression:by` names the act — so a reader
     of the ledger sees one shape whatever the volume's age, and the migration finds nothing
     to do the second time."""
     from orexis_agent_progression import ledger
@@ -364,11 +366,11 @@ def test_an_old_row_naming_an_action_is_rebuilt_as_an_act(make):
     fern = make("fern")
     keeper = keeper_of(fern)
     keeper.agent.intentions.update(f"""INSERT DATA {{ GRAPH <{keeper.graph}> {{
-        <{OREXIS}intent_fern_old1> a <{OREXIS}Intention> ;
-            <{OREXIS}pursues> <{stake_of(fern).uri}> ;
-            <{OREXIS}by> <{ACQUIRING}> ;
-            <{OREXIS}through> <urn:old-venue> ;
-            <{OREXIS}adoptedAt> "2026-08-01T00:00:00+00:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
+        <{OREXIS}intent_fern_old1> a <{PROGRESSION}Intention> ;
+            <{PROGRESSION}pursues> <{stake_of(fern).uri}> ;
+            <{PROGRESSION}by> <{ACQUIRING}> ;
+            <{PROGRESSION}through> <urn:old-venue> ;
+            <{PROGRESSION}adoptedAt> "2026-08-01T00:00:00+00:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
     assert ledger.migrate_ledger_acts(keeper.agent.intentions, keeper.graph) == 1
     old = next(s for s in keeper.standing(action=ACQUIRING) if s.uri.endswith("old1"))
     assert old.step.action == ACQUIRING and old.step.via == "urn:old-venue"
@@ -473,7 +475,7 @@ def test_a_hold_may_be_a_shape_and_may_release_when_a_condition_stops(make):
     assert [s.uri for s, *_ in held] == [shaped]
     assert "FILTER EXISTS" in held[0][1], "compiled to the conformance select"
     stored = bindings(fern.intentions.query_union(f"""SELECT ?n WHERE {{ GRAPH <{keeper.graph}> {{
-        <{shaped}> orexis:by ?step . ?step a orexis:Step ; orexis:until ?n . ?n a sh:NodeShape }} }}"""))
+        <{shaped}> progression:by ?step . ?step a progression:Step ; progression:until ?n . ?n a sh:NodeShape }} }}"""))
     assert stored and stored[0]["n"] == str(root), \
         "the ledger keeps the shape as what the STEP waits for — planned, not yet done"
 
@@ -510,7 +512,7 @@ def test_a_plan_is_committed_whole_advances_on_a_met_step_and_stops_on_an_unmet_
                  for n in (1, 2, 3))
     uri = keeper.adopt(plan, want, "three steps, handed down whole")
     rows = bindings(fern.intentions.query_union(f"""SELECT ?head ?n (COUNT(?s) AS ?steps) WHERE {{
-        GRAPH <{keeper.graph}> {{ <{uri}> orexis:by ?head ; orexis:step ?s . ?head orexis:then ?n }} }}
+        GRAPH <{keeper.graph}> {{ <{uri}> progression:by ?head ; progression:step ?s . ?head progression:then ?n }} }}
         GROUP BY ?head ?n"""))
     assert len(rows) == 1 and int(rows[0]["steps"]) == 3, "three steps, one head, chained"
     assert keeper.standing(action="urn:toy#Go1", want=want) and keeper.in_progress(want) is not None

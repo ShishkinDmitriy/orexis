@@ -28,6 +28,9 @@ records ask for next are each a change to this file alone:
 
 from __future__ import annotations
 
+from orexis_agent_deliberation.ontology import DELIBERATION
+
+
 import logging
 import threading
 

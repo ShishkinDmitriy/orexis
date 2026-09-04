@@ -14,7 +14,9 @@ import pytest
 from assembly import loader
 from assembly.contribute import contributions_of
 from agent.module import Module
-from orexis_agent_progression.ontology import OREXIS, DESIRES, HANDLE, REPORTS, SEND
+from orexis_agent_progression.ontology import OREXIS, HANDLE, REPORTS, SEND
+from orexis_agent_deliberation.ontology import DELIBERATION
+from orexis_agent_progression.ontology import DESIRES
 from conftest import build_agent, wired_sensors
 
 

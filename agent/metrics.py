@@ -74,7 +74,7 @@ class Metrics:
         Told by whoever the transition happens to, exactly as the counters are — the kernel
         keeps the account, the reporting capability decides where it goes. The text is prose
         for a human reading a dashboard and must never be parsed; the same contract as
-        `orexis:becauseOf`, whose projection the first caller is.
+        `progression:becauseOf`, whose projection the first caller is.
         """
         self._events.append((datetime.now(timezone.utc), kind, text, tags))
 

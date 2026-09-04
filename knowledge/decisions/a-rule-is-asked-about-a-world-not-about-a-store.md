@@ -107,7 +107,7 @@ affordance rows applied to reach it, and a child is `parent.taken + (row,)`. The
 pointers and none are wanted: the frontier is one depth's worth of nodes, expansion produces the
 next, and the path is the only ancestry anything asks about. What this design adds is a NAME per
 node, and the path is what names it — deterministic, and it reads back in the trace beside the
-`orexis:through` a candidate already records.
+`progression:through` a candidate already records.
 
 **Fork, do not replay.** A node's graph is made by copying its parent's and applying the step's
 diff — 0.19 ms, against a hypothesis of five triples. The alternative is to keep only paths and
@@ -145,7 +145,7 @@ still one entry in `seen`.
 Both hold things that have not happened, which is enough of a resemblance to be worth refusing
 in writing before someone tidies them together.
 
-An **intention** is a commitment: `orexis:IntentionGraph`, per agent, with an adoption, a resolution
+An **intention** is a commitment: `progression:IntentionGraph`, per agent, with an adoption, a resolution
 and a reason, and it MUST survive a restart — a keeper that forgot what it had committed to
 would re-adopt what already stands, and the patience that makes an intention an amortised
 deliberation would amortise nothing. A **possible world** is `orexis:PossibleGraph`, and it must

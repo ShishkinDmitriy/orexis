@@ -166,10 +166,10 @@ next pass:
 ```sparql
 SELECT ?desire ?verdict ?standsAt ?means ?via ?wouldReach ?why WHERE {
   GRAPH <http://example.org/orexis/graph/deliberation> {
-    ?d a orexis:Deliberation ; orexis:deliberatedOn ?desire ; orexis:verdict ?verdict ;
-       orexis:standsAt ?standsAt ; orexis:considered ?c .
-    ?c orexis:wouldTake ?means ; orexis:through ?via ; orexis:verdict ?why .
-    OPTIONAL { ?c orexis:wouldReach ?wouldReach } } }
+    ?d a deliberation:Deliberation ; deliberation:deliberatedOn ?desire ; deliberation:verdict ?verdict ;
+       deliberation:standsAt ?standsAt ; deliberation:considered ?c .
+    ?c deliberation:wouldTake ?means ; progression:through ?via ; deliberation:verdict ?why .
+    OPTIONAL { ?c deliberation:wouldReach ?wouldReach } } }
 ```
 
 Asked of the loner's gardener, wet at 0.42:
@@ -187,7 +187,7 @@ verdict on trust.
 **It is the record's one exception and not an exemption from the rule.** Possible worlds are
 computed and dropped, except where a reader outside the process needs one — and then: its own
 graph class, cleared at the start of every pass, PROV to what generated it, never public and
-never in belief. All four hold. `orexis:through` is the PROV: a trace that said only `Actuate` would
+never in belief. All four hold. `progression:through` is the PROV: a trace that said only `Actuate` would
 not answer *through which valve*, which stops being rhetorical the moment an agent holds two.
 
 Three things it must not become:
@@ -218,7 +218,7 @@ that slowed the thing it observes would be a poor trade.
 # What a pass cost, and what it could not see
 
 `agent_planning` carries the other half of the same trace: how long the pass took
-(`orexis:tookSeconds`, the one figure the trace could not already answer), how many worlds it built,
+(`deliberation:tookSeconds`, the one figure the trace could not already answer), how many worlds it built,
 how deep it reached, and what it did with each lever — `met`, `better`, `worse`, `cycles`,
 `unsimulated`, and `blind` for the desires where some lever had no stated effect at all. Read back
 out of the trace rather than counted a second time, so the pass being measured is the pass that
@@ -290,9 +290,9 @@ thing is the reason the seam exists and the T-Box should say so. What a reserved
 NOT be allowed to do is fixed before it exists, which is the point of declaring early.
 
 What the two retired terms carried, for a reader meeting the words in an older record.
-`deliberation:Reflex` was *cannot see → look; a gap on the side a lever moves → pursue;
+the retired deliberation package's `Reflex` was *cannot see → look; a gap on the side a lever moves → pursue;
 otherwise nothing*, with WHICH side read off `market:direction` (#127) rather than hardcoded.
-`deliberation:Planning` was the same one level up (#205) — the search, granted by the DEALER
+its `Planning` was the same one level up (#205) — the search, granted by the DEALER
 premise, plus one deduced desire past the region: the hosted lot must be serveable. Both are
 gone; what survives of the second is the search itself, which every agent now runs. Its
 two-step exposition `plan.rq` survived a while longer as a narrative for a reader, and went

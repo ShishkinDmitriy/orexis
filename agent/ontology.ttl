@@ -1,4 +1,6 @@
 @prefix orexis:   <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix progression: <http://example.org/orexis/progression#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
@@ -64,40 +66,7 @@ orexis:row a owl:ObjectProperty ; rdfs:domain assembly:Extension ; rdfs:range or
 #  to is a fact about this project's layering, and an assembly-time point has none.
 
 
-orexis:desires a assembly:Extension ;
-    assembly:signature "(now=…) -> list['Desire']" ; orexis:row orexis:Deliberative ; rdfs:label "desires" ; rdfs:comment "What do you contribute to what this agent pursues? Answers are ranked together, one want per node." .
-orexis:desireUrgency a assembly:Extension ;
-    assembly:signature "(desire, query, state, value=…) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
-orexis:answer a assembly:Extension ;
-    assembly:signature "(keyed_class, key, carried, since, baseline, tolerance) -> Graph | None" ; orexis:row orexis:Progression ; rdfs:label "answer" ; rdfs:comment "What would an observation that ANSWERS this predicted fact look like? Asked for each KEYED fact a step predicts (a class some package declared `orexis:keyedBy`): the class, its key values and what it carries, as the step's prediction states them. A sh:NodeShape on the subject, conforming when a reading of the property later than `since` lies within `tolerance` of the predicted movement from the baseline — sensing's, because what a reading is is sensing's (#516, #518). The keeper holds the step on it; None is no opinion, and the first opinion wins." .
-orexis:witness a assembly:Extension ;
-    assembly:signature "(keyed_class, key) -> float | None" ; orexis:row orexis:Progression ; rdfs:label "witness" ; rdfs:comment "What value does the world show NOW for this keyed fact — the reading a step predicted, as it stands at the verdict? Asked once per verdict for the residual (observed against predicted) the reviewer reads; sensing's, because what a reading is is sensing's (#518). None is no opinion." .
-orexis:size a assembly:Extension ;
-    assembly:signature "(query, graph, row) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "size" ; rdfs:comment "How big would the act this row commits to be? Asked of the row's taker before it is simulated." .
-orexis:reports a assembly:Extension ;
-    assembly:signature "() -> dict" ; orexis:row orexis:Reactive ; rdfs:label "reports" ; rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." .
-orexis:series a assembly:Extension ;
-    assembly:signature "() -> list[tuple[str, dict, dict]]" ; orexis:row orexis:Reactive ; rdfs:label "series" ; rdfs:comment "Which tagged rows go into this agent's own bucket? Concatenated by the sink." .
-orexis:sweep a assembly:Extension ;
-    assembly:signature "() -> int" ; orexis:row orexis:Progression ; rdfs:label "sweep" ;
-    rdfs:comment "The clock has moved: retract whatever you hold that has stopped being true by it. Asked of every module on the agent's own housekeeping tick, because a fact that expires by the clock must not wait for an event some agent may stop receiving. Only the OWNER of a fact knows which treatment it deserves — retract it, keep and mark it, or keep it and let a want go cold (absence-is-not-retraction) — so the kernel asks and never sweeps." .
 
-orexis:quiet a assembly:Extension ;
-    assembly:signature "() -> list[str]" ; orexis:row orexis:Reactive ; rdfs:label "quiet" ; rdfs:comment "What did you expect to hear and have stopped hearing? Log lines, said once on entry and once on recovery." .
-orexis:stepDone a assembly:Extension ;
-    assembly:signature "(act, intention, took) -> None" ; orexis:row orexis:Reactive ; rdfs:label "step done" ; rdfs:comment "Progression handed a committed act to its actors and this is the answer: took, or not now. Told on the executing thread, to whoever above cares — a lower layer says this upward as an event, never as an import (#452)." .
-orexis:planFinished a assembly:Extension ;
-    assembly:signature "(intention, action, want) -> None" ; orexis:row orexis:Reactive ; rdfs:label "plan finished" ; rdfs:comment "The world answered as the act promised: the expectation on this intention was met. Told by the keeper; deliberation fills it to reconsider the want." .
-orexis:planFailed a assembly:Extension ;
-    assembly:signature "(intention, action, want) -> None" ; orexis:row orexis:Reactive ; rdfs:label "plan failed" ; rdfs:comment "The deadline passed and the world did not answer as the act promised: the expectation on this intention is unmet. Told by the keeper; deliberation fills it to re-plan the want." .
-orexis:beliefRevised a assembly:Extension ;
-    assembly:signature "(belief_term, value) -> None" ; orexis:row orexis:Progression ; rdfs:label "belief revised" ; rdfs:comment "One of this agent's beliefs has been re-picked — take it up, if it is one of yours." .
-orexis:subscriptions a assembly:Extension ;
-    assembly:signature "() -> list[str]" ; orexis:row orexis:Reactive ; rdfs:label "subscriptions" ; rdfs:comment "Which channels do you need? Asked by whoever holds the connection, once the session is up. The QUESTION is the kernel's; what a channel is carried over is the transport's." .
-orexis:handle a assembly:Extension ;
-    assembly:signature "(topic, payload) -> bool" ; orexis:row orexis:Reactive ; rdfs:label "handle" ; rdfs:comment "Something arrived on this channel — take it if it is yours. Offered to every module; nobody taking it is logged." .
-orexis:send a assembly:Extension ;
-    assembly:signature "(channel, payload, retain=…, not_after=…) -> bool" ; orexis:row orexis:Reactive ; rdfs:label "send" ; rdfs:comment "Carry this to the society, and say whether it left. True where it reached a live session, False where it did not — a message with a DEADLINE is refused rather than queued when there is none, because a queue would deliver it after the moment it meant anything (publishing-is-a-goal-and-the-protocol-is-a-primitive). Told by Module.publish; answered by whichever module holds the connection." .
 
 orexis:hasCapability a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range orexis:Capability ;
     rdfs:label "has capability" ;
@@ -252,23 +221,18 @@ orexis:ObligationsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label 
 #  whether a row is the agent's own or a duty is whether its `orexis:available` query bound
 #  `?for_agent`, and a second term for a fact one column already states was a second owner.
 
-orexis:PromisesGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Promises graph" ;
-    orexis:graphPrefix "http://example.org/orexis/graph/promises/" ;
-    rdfs:comment "ONE agent's promises (#523, a-level-is-a-vocabulary-and-a-bridge): when the keeper reaches a step of an action nobody takes, the step's predicted fact is translated through the bridge into the vocabulary beneath and written here as an `orexis:Desire` the agent holds — `orexis:promisedBy` the step — with the bridge's estimate, so the ordinary road plans it over the actions that ARE taken. The step waits on the same fact; when its verdict lands the promise is withdrawn. A record, projected into the desire modality like the debts." .
+
+orexis:PossibleGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Possible graph" ;
+    rdfs:comment """What WOULD be, if the agent did. The seventh modality, and the one a-plan-is-a-path-of-graph-diffs reserved when it said possible worlds are computed and dropped: belief is *is*, the menu is *could do*, and this is *would be, if I did*.
+
+Nothing here is believed, wanted, committed to or done, which is why it could not sit under any of the six. A reader who mistook it for belief would think an agent had observed a reading no instrument took.""" .
 
 orexis:MenuGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Menu graph" ;
     rdfs:comment """What the agent COULD do: the affordance rows, what others may demand of it, and what taking any of it would MAKE TRUE.
 
 A ROW is derived and never authored — it is a conclusion whose premises are stored, so an authored row could outlive its premise, and that is the one hazard this modality must never reintroduce. A RULE about a means is asserted, from the file of the package that owns the lever, and is in no danger of outliving anything because it is a schema rather than a conclusion. Both are the same modality and they differ in ARRIVAL, which is what `orexis:arrivedBy` is for: the two axes were separated precisely so a class would not have to encode how its facts got there.""" .
 
-orexis:IntentionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Intention graph" ;
-    orexis:graphPrefix "http://example.org/orexis/graph/intentions/" ;
-    rdfs:comment "What the agent is DOING: commitments adopted and not yet resolved. Small and live, because what is finished belongs to history." .
 
-orexis:PossibleGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Possible graph" ;
-    rdfs:comment """What WOULD be, if the agent did. The seventh modality, and the one a-plan-is-a-path-of-graph-diffs reserved when it said possible worlds are computed and dropped: belief is *is*, the menu is *could do*, and this is *would be, if I did*.
-
-Nothing here is believed, wanted, committed to or done, which is why it could not sit under any of the six. A reader who mistook it for belief would think an agent had observed a reading no instrument took.""" .
 
 orexis:HistoryGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "History graph" ;
     rdfs:comment "What the agent DID: resolved commitments, discharged obligations, doses delivered, amendments woken into. A bounded ring with the series store behind it — nothing points INTO history, because whatever must outlive the window copies what it needs at commit time, which is how an expectation already carries its own baseline." .
@@ -314,16 +278,6 @@ orexis:ActionGraph a owl:Class ; rdfs:subClassOf orexis:PublicGraph , orexis:Men
 
 PUBLIC and not belief. A rule here is a SCHEMA — what applying a lever WOULD do, stated once by the package that owns the lever — and schemas have always lived in the store: that is what the ontology graph is. It is not a belief, because nobody holds it and no agent may revise it; and it is not the menu, which is INSTANCES (this valve, this venue) and stays computed for the reason affordances are never stored — a stored row can outlive the plumbing it was concluded from, and a schema cannot.""" .
 
-orexis:DeliberationGraph a owl:Class ; rdfs:subClassOf orexis:PossibleGraph ; rdfs:label "Deliberation graph" ;
-    rdfs:comment """What the planner considered on its last pass, per goal: the levers it simulated, the urgency each world would have reached, which one it took and why the others lost.
-
-THIS IS THE RECORD'S ONE EXCEPTION, TAKEN DELIBERATELY AND NOT AN EXEMPTION FROM THE RULE. Possible worlds are computed and dropped, because a stored conclusion can outlive the premise it came from — except where a reader outside the process needs one, and then it is materialised into a graph of its own class, cleared at the start of every pass, carrying PROV to what generated it, never public and never in belief. All four hold here. See a-plan-is-a-path-of-graph-diffs, "Possible worlds are computed, not kept".
-
-The reader who needs it cannot get it any other way: pyoxigraph holds an exclusive lock on the belief base, so nothing outside the process can re-run the search to see what it saw. That is the same fact `orexis-ask` exists for.
-
-NOT PUBLIC, and the reason is not tidiness. Which levers an agent weighed and rejected is a disclosure nobody decided to make, and a rival reading it would learn what its neighbour can nearly do.
-
-And nothing may read it BACK: cycle detection lives in the search where it can be reasoned about, not in a graph the agent consults about its own past thinking. A trace that becomes memory is a conclusion feeding a conclusion, which is the failure the computed-not-stored rule exists to prevent.""" .
 
 #################  What the planner considered  #################
 #
@@ -336,61 +290,19 @@ And nothing may read it BACK: cycle detection lives in the search where it can b
 #  agent looked at and declined. Spelling the two alike would make "considered" and "adopted"
 #  indistinguishable to a query, which is exactly the distinction a trace is for.
 
-orexis:Deliberation a owl:Class ; rdfs:label "Deliberation" ;
-    rdfs:comment "One pass of the planner, about one goal. Replaced whenever that goal is planned again — the graph holds the last pass and never two, because a trace that outlives its pass is a conclusion sitting beside beliefs it can contradict." .
 
-orexis:Candidate a owl:Class ; rdfs:label "Candidate" ;
-    rdfs:comment "One lever, simulated. Carries the world it would have reached as a number and the reason it was or was not taken — the same lever may appear twice in one pass at different depths, because what a dose is worth depends on where it is taken from." .
 
-orexis:deliberatedOn a owl:ObjectProperty ; rdfs:domain orexis:Deliberation ;
-    rdfs:label "deliberated on" ;
-    rdfs:comment "The goal this pass was about — the shape itself, so a reader can join the trace to the want and see what was being pursued rather than a label for it." .
 
-orexis:considered a owl:ObjectProperty ; rdfs:domain orexis:Deliberation ; rdfs:range orexis:Candidate ;
-    rdfs:label "considered" .
 
-orexis:chose a owl:ObjectProperty ; rdfs:domain orexis:Deliberation ; rdfs:range orexis:Candidate ;
-    rdfs:label "chose" ;
-    rdfs:comment "The candidate whose world the plan commits to reaching. Absent when the pass took nothing, which is most of them and is an answer rather than a gap: `orexis:verdict` then says which of the silences it was." .
 
-#  NO DOMAIN, and deliberately: a verdict is said of a PASS (why it ended) and of a CANDIDATE
-#  (why it lost), and they are the same idea at two scales. Declaring a domain would make the
-#  closure type every candidate a Deliberation, which is worse than saying nothing.
-orexis:verdict a owl:DatatypeProperty ; rdfs:range xsd:string ;
-    rdfs:label "verdict" ;
-    rdfs:comment "Why it ended as it did. On a pass: satisfied, improved, no candidate, exhausted, not better, refused — six answers where a planner returning a move or None could give two. On a candidate: whether it met the goal, improved on standing still, was worse, or landed in a world already seen." .
 
-orexis:wouldReach a owl:DatatypeProperty ; rdfs:domain orexis:Candidate ; rdfs:range xsd:decimal ;
-    rdfs:label "would reach" ;
-    rdfs:comment "The urgency of the world this lever would have made. The comparison the whole search turns on: a candidate is worth taking only if this is lower than where the agent already stands." .
 
-orexis:standsAt a owl:DatatypeProperty ; rdfs:domain orexis:Deliberation ; rdfs:range xsd:decimal ;
-    rdfs:label "stands at" ;
-    rdfs:comment "The urgency of the world the agent is actually in — what every candidate is measured against, kept so a reader need not recompute it to understand the verdicts." .
 
-orexis:wouldTake a owl:ObjectProperty ; rdfs:domain orexis:Candidate ; rdfs:range orexis:Action ;
-    rdfs:label "would take" ;
-    rdfs:comment "The action this candidate would take. NOT `orexis:by`, whose domain is `orexis:Intention` — spelling a weighed lever with the word for a carried-out one would have the closure type every candidate a commitment, which is the exact distinction a trace exists to keep." .
 
-orexis:through a owl:ObjectProperty ;
-    rdfs:label "through" ;
-    rdfs:comment "The lever a step goes through. On a candidate, the lever it WOULD act through; on an act, the lever the plan's head chose — the same `via` column of the same affordance row, so the ledger says which valve or venue and not merely what kind of move. No domain, because it is stated of both and the closure would otherwise type one as the other. On a candidate: the lever the candidate would act through — the affordance row's own `via`, which is the PROV the record asks for: a trace says which thing in the world would have done this, not merely what kind of move it was." .
 
-orexis:atDepth a owl:DatatypeProperty ; rdfs:domain orexis:Candidate ; rdfs:range xsd:integer ;
-    rdfs:label "at depth" ;
-    rdfs:comment "How many steps into the plan this candidate sits. Kept because a lever rejected at depth 0 and the same lever rejected at depth 1 are different findings — the second says a chain was tried." .
 
-orexis:tookSeconds a owl:DatatypeProperty ; rdfs:domain orexis:Deliberation ; rdfs:range xsd:decimal ;
-    rdfs:label "took seconds" ;
-    rdfs:comment "How long the pass took. The one figure a trace could not already answer, and the one most likely to change this design: a pass validates a shape per candidate, and `series()` re-plans EVERY goal on every reporting tick, so an agent's dominant cost may turn out to be the instrumentation asking it what it wants. Recorded from inside the pass rather than timed by a caller, because a caller would be timing the trace write as well and reporting the observer's cost as the observed's." .
 
-orexis:asOf a owl:DatatypeProperty ; rdfs:domain orexis:Deliberation ; rdfs:range xsd:dateTime ;
-    rdfs:label "as of" ;
-    rdfs:comment "When the pass ran. A trace is about a moment — the readings it weighed were the ones held then — and a reader who cannot tell how old it is cannot tell whether it explains what the agent is doing now or what it was doing before the last reading arrived." .
 
-orexis:blind a owl:DatatypeProperty ; rdfs:domain orexis:Deliberation ; rdfs:range xsd:boolean ;
-    rdfs:label "blind" ;
-    rdfs:comment "Whether some lever was passed over for want of a stated effect, leaving the pass unable to claim it looked at everything. A verdict of `no candidate` beside this being true means the search saw part of the menu — which is why the deliberator defers to the reflex rather than reporting that nothing helps." .
 
 orexis:ProvenanceGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Provenance graph" ;
     rdfs:comment "What the other graphs ARE, in PROV-O. NOT public, and the reason is use versus mention: these are statements ABOUT graphs, so merging them into the default graph would make an ordinary `?device a ?class` start returning activities." .
@@ -415,7 +327,7 @@ orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range or
 <http://example.org/orexis/graph/actions>            a orexis:ActionGraph ;  orexis:arrivedBy orexis:Asserted .
 <http://example.org/orexis/graph/provenance>        a orexis:ProvenanceGraph .
 ##  One pass per goal and no more: written at the start of each, replacing what was there.
-<http://example.org/orexis/graph/deliberation>      a orexis:DeliberationGraph ; orexis:arrivedBy orexis:Derived .
+<http://example.org/orexis/graph/deliberation>      a deliberation:DeliberationGraph ; orexis:arrivedBy orexis:Derived .
 
 ##  Where an agent says what its OWN graphs are. A per-agent graph cannot be declared in a
 ##  T-Box — it does not exist until its agent does — so the agent classifies its own at boot,
@@ -564,7 +476,7 @@ orexis:holds a owl:ObjectProperty ; rdfs:domain orexis:Agent ;
 #  What a mind CONTAINS — desires, obligations, intentions and the means they name — declared
 #  in the kernel because they are the lingua franca: four capability packages already had to
 #  name them (market's bidding and hosting, deliberation, actuation), and a term many packages
-#  must name is nobody's package-private word. `orexis:IntentionGraph` holding `intention:Intention`
+#  must name is nobody's package-private word. `progression:IntentionGraph` holding `intention:Intention`
 #  was a split brain the graph axes exposed.
 #
 #  WHAT STAYS IN THE PACKAGES is the HOW: `desire:Deducing` and `desire:Consulting` are two ways
@@ -717,22 +629,8 @@ orexis:dischargedAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:ra
 
 #################  What an intention IS  #################
 
-orexis:Intention a owl:Class ; rdfs:label "Intention" ;
-    rdfs:comment """One commitment: one want pursued by one action, adopted at a moment, resolved at another or still standing. `ssn:forProperty` names the property — the same term a region, a condition and an aim already use, so the gap an intention is about is joinable to the desire it serves by the vocabulary everything else speaks.
 
 
-
-The lifecycle is two timestamps and an outcome, not a state machine: standing is `adoptedAt` without `resolvedAt`, and how it ended is `outcome` — the same shape review:Revision has, for the same reason. A dropped intention keeps its `becauseOf`, because a commitment abandoned without a reason is indistinguishable from one forgotten.""" .
-
-orexis:pursues a owl:ObjectProperty ; rdfs:domain orexis:Intention ;
-    rdfs:label "pursues" ;
-    rdfs:comment """WHICH goal this commitment serves — the bounds an agent is held to, or the obligation a claim raised. A commitment keyed by (means, property) alone cannot tell two obligations about one property apart: a dealer owing water to fern and to tomato holds two Apply commitments that look identical, so satisfying one satisfies both and the patience absorbs the second impulse as if it were the first. That is the shape of the observation-keyed-by-subject bug (#one-agent-many-sensors), found before it went live rather than after — obligations do not yet drive acts, and this lands first so they never can while it is open.
-
-Optional, because the first three means predate goals having names: an intention with no goal is keyed as it always was, and every old row in a ledger stays readable.""" .
-
-orexis:by a owl:ObjectProperty ; rdfs:domain orexis:Intention ; rdfs:range orexis:Step ;
-    rdfs:label "by" ;
-    rdfs:comment "The ACT committed to — the filled action: which action (orexis:fills), through which lever (orexis:through), how much (orexis:quantity), for whom, and when. It named the action node itself from the-action-is-the-kind until an-act-is-a-filled-action gave the filled one a node of its own. Not a plan: the how stays with whichever capability takes it." .
 
 #################  An UPSERTED belief, for the planner's signature  #################
 
@@ -745,6 +643,55 @@ orexis:carries a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range <http:/
     rdfs:comment "The predicate a keyed node STATES — the value that makes two worlds different. Everything else on the node (an instant, who made it) is not where a plan stands: a look that predicts the value it already holds nets to nothing, which is what keeps looking from being a new world every time." .
 
 #################  What an action IS  #################
+
+orexis:answer a assembly:Extension ;
+    assembly:signature "(keyed_class, key, carried, since, baseline, tolerance) -> Graph | None" ; orexis:row orexis:Progression ; rdfs:label "answer" ; rdfs:comment "What would an observation that ANSWERS this predicted fact look like? Asked for each KEYED fact a step predicts (a class some package declared `orexis:keyedBy`): the class, its key values and what it carries, as the step's prediction states them. A sh:NodeShape on the subject, conforming when a reading of the property later than `since` lies within `tolerance` of the predicted movement from the baseline — sensing's, because what a reading is is sensing's (#516, #518). The keeper holds the step on it; None is no opinion, and the first opinion wins." .
+
+orexis:witness a assembly:Extension ;
+    assembly:signature "(keyed_class, key) -> float | None" ; orexis:row orexis:Progression ; rdfs:label "witness" ; rdfs:comment "What value does the world show NOW for this keyed fact — the reading a step predicted, as it stands at the verdict? Asked once per verdict for the residual (observed against predicted) the reviewer reads; sensing's, because what a reading is is sensing's (#518). None is no opinion." .
+
+orexis:sweep a assembly:Extension ;
+    assembly:signature "() -> int" ; orexis:row orexis:Progression ; rdfs:label "sweep" ;
+    rdfs:comment "The clock has moved: retract whatever you hold that has stopped being true by it. Asked of every module on the agent's own housekeeping tick, because a fact that expires by the clock must not wait for an event some agent may stop receiving. Only the OWNER of a fact knows which treatment it deserves — retract it, keep and mark it, or keep it and let a want go cold (absence-is-not-retraction) — so the kernel asks and never sweeps." .
+
+orexis:beliefRevised a assembly:Extension ;
+    assembly:signature "(belief_term, value) -> None" ; orexis:row orexis:Progression ; rdfs:label "belief revised" ; rdfs:comment "One of this agent's beliefs has been re-picked — take it up, if it is one of yours." .
+
+orexis:desires a assembly:Extension ;
+    assembly:signature "(now=…) -> list['Desire']" ; orexis:row orexis:Deliberative ; rdfs:label "desires" ; rdfs:comment "What do you contribute to what this agent pursues? Answers are ranked together, one want per node." .
+
+orexis:desireUrgency a assembly:Extension ;
+    assembly:signature "(desire, query, state, value=…) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
+
+orexis:size a assembly:Extension ;
+    assembly:signature "(query, graph, row) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "size" ; rdfs:comment "How big would the act this row commits to be? Asked of the row's taker before it is simulated." .
+
+orexis:reports a assembly:Extension ;
+    assembly:signature "() -> dict" ; orexis:row orexis:Reactive ; rdfs:label "reports" ; rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." .
+
+orexis:series a assembly:Extension ;
+    assembly:signature "() -> list[tuple[str, dict, dict]]" ; orexis:row orexis:Reactive ; rdfs:label "series" ; rdfs:comment "Which tagged rows go into this agent's own bucket? Concatenated by the sink." .
+
+orexis:quiet a assembly:Extension ;
+    assembly:signature "() -> list[str]" ; orexis:row orexis:Reactive ; rdfs:label "quiet" ; rdfs:comment "What did you expect to hear and have stopped hearing? Log lines, said once on entry and once on recovery." .
+
+orexis:stepDone a assembly:Extension ;
+    assembly:signature "(act, intention, took) -> None" ; orexis:row orexis:Reactive ; rdfs:label "step done" ; rdfs:comment "Progression handed a committed act to its actors and this is the answer: took, or not now. Told on the executing thread, to whoever above cares — a lower layer says this upward as an event, never as an import (#452)." .
+
+orexis:planFinished a assembly:Extension ;
+    assembly:signature "(intention, action, want) -> None" ; orexis:row orexis:Reactive ; rdfs:label "plan finished" ; rdfs:comment "The world answered as the act promised: the expectation on this intention was met. Told by the keeper; deliberation fills it to reconsider the want." .
+
+orexis:planFailed a assembly:Extension ;
+    assembly:signature "(intention, action, want) -> None" ; orexis:row orexis:Reactive ; rdfs:label "plan failed" ; rdfs:comment "The deadline passed and the world did not answer as the act promised: the expectation on this intention is unmet. Told by the keeper; deliberation fills it to re-plan the want." .
+
+orexis:subscriptions a assembly:Extension ;
+    assembly:signature "() -> list[str]" ; orexis:row orexis:Reactive ; rdfs:label "subscriptions" ; rdfs:comment "Which channels do you need? Asked by whoever holds the connection, once the session is up. The QUESTION is the kernel's; what a channel is carried over is the transport's." .
+
+orexis:handle a assembly:Extension ;
+    assembly:signature "(topic, payload) -> bool" ; orexis:row orexis:Reactive ; rdfs:label "handle" ; rdfs:comment "Something arrived on this channel — take it if it is yours. Offered to every module; nobody taking it is logged." .
+
+orexis:send a assembly:Extension ;
+    assembly:signature "(channel, payload, retain=…, not_after=…) -> bool" ; orexis:row orexis:Reactive ; rdfs:label "send" ; rdfs:comment "Carry this to the society, and say whether it left. True where it reached a live session, False where it did not — a message with a DEADLINE is refused rather than queued when there is none, because a queue would deliver it after the moment it meant anything (publishing-is-a-goal-and-the-protocol-is-a-primitive). Told by Module.publish; answered by whichever module holds the connection." .
 
 orexis:Action a owl:Class ; rdfs:label "Action" ;
     #  EVERY ACTION IS AN EXTENSION POINT (#523): the method that carries one out is
@@ -763,7 +710,7 @@ orexis:Action a owl:Class ; rdfs:label "Action" ;
 #  is the only road to a lever since the reflex was absorbed, and a lever the search cannot
 #  simulate is one nothing can take. One an EVENT adopts states neither: no plan chooses it,
 #  the event is its adoption and a trigger its taking, the afforder never asks it, and it
-#  exists as a node so a commitment can name it (`orexis:by`) and a hold can carry an
+#  exists as a node so a commitment can name it (`progression:by`) and a hold can carry an
 #  urgency — the market's Presenting. The kind is read off the texts, not declared: the
 #  sovereign weighed a class for the second kind and dropped it, since its whole content was
 #  that "neither" be said on purpose, and a term nobody reads is annotation.
@@ -775,42 +722,16 @@ orexis:available a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range
 #################  An act: an action filled in  #################
 #
 #  An action is a template. What is committed, taken and promised is a FILLED one — the lever
-#  it goes through (`orexis:through`), the want it serves and what that is about (`orexis:about`),
+#  it goes through (`progression:through`), the want it serves and what that is about (`orexis:about`),
 #  how much, for whom, and when. Execution's word; planning's is the STEP, an act at its place
 #  in a plan, which is never written anywhere. `agent/act.py` carries it, and the keeper writes
 #  the node beside every intention (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
 
-orexis:Step a owl:Class ; rdfs:label "Step" ;
-    rdfs:comment "One orexis:Action filled in and PLANNED — not yet done (the sovereign's ruling, 2026-09-02: a plan is not executed, so its elements are not acts). The lever it goes through, the want it serves, how much, for whom where it is a duty's, its window, what the search predicted taking it would reach, what it waits for (orexis:until, orexis:untilNot), what counts as the world having answered it (orexis:answeredWhen), what follows (orexis:then). A plan is steps; an intention commits to them (orexis:step) and stands at one (orexis:by); a claim promises one. Minted per adoption, so it is also the place it fills." .
-orexis:Act a owl:Class ; rdfs:label "Act" ;
-    rdfs:comment "The RECORD that a step was taken: which step (orexis:of), when (orexis:takenAt), whether anyone took it (orexis:taken) — history, and only history. Written by execution the moment the actors have been asked; one step may be attempted more than once, and each attempt is an act. What the world made of it — the verdict — is the intention's today and lands here as the ledger grows." .
-orexis:of a owl:ObjectProperty ; rdfs:domain orexis:Act ; rdfs:range orexis:Step ;
-    rdfs:label "of" .
-orexis:takenAt a owl:DatatypeProperty ; rdfs:domain orexis:Act ; rdfs:range xsd:dateTime ;
-    rdfs:label "taken at" .
-orexis:taken a owl:DatatypeProperty ; rdfs:domain orexis:Act ; rdfs:range xsd:boolean ;
-    rdfs:label "taken" ;
-    rdfs:comment "Whether an actor took it; false is an attempt no actor could carry out now, the step standing for the next." .
 
-orexis:fills a owl:ObjectProperty ; rdfs:domain orexis:Step ; rdfs:range orexis:Action ;
-    rdfs:label "fills" ;
-    rdfs:comment "Which action this act is an instance of — the template it fills. The one hop from a commitment to the precondition, the effect and the taker." .
 
-orexis:forAgent a owl:ObjectProperty ; rdfs:domain orexis:Step ; rdfs:range orexis:Agent ;
-    rdfs:label "for agent" ;
-    rdfs:comment "Whom the act serves, where it is a duty's — the counterparty a Serving act is owed to. Absent on an act of the agent's own." .
 
-orexis:quantity a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
-    rdfs:label "quantity" ;
-    rdfs:comment "How much the act moves, in the good's unit — sized by whoever would take it (Module.size), never by the planner. Absent on an act that moves nothing: a look." .
 
-orexis:notBefore a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:dateTime ;
-    rdfs:label "not before" ;
-    rdfs:comment "The window's opening. Declared and unwritten: a held claim spent later — futures — is the first thing that would write it, and that is the market's decision." .
 
-orexis:notAfter a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:dateTime ;
-    rdfs:label "not after" ;
-    rdfs:comment "The window's close — what every hand-kept timer was saying: a bid not after the round closes, a serve not after the claim's expiry, a look not after the round that wanted it closes." .
 
 
 
@@ -820,8 +741,8 @@ orexis:notAfter a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xs
 #  JOINT between three surfaces (an affordance row, an effect rule, an intention), and
 #  an-action-is-one-node made those surfaces one node; a name whose only job was to point at
 #  that node one-to-one was a second owner of it (the-action-is-the-kind). The ACTION is the
-#  kind now: a row carries it, an intention commits to it (`orexis:by`), a trace weighs it
-#  (`orexis:wouldTake`), and the kernel's ontology keeps `orexis:Action` and no individual of anything.
+#  kind now: a row carries it, an intention commits to it (`progression:by`), a trace weighs it
+#  (`deliberation:wouldTake`), and the kernel's ontology keeps `orexis:Action` and no individual of anything.
 
 #  EVERY MEANS WAS HERE and every one is its package's word now — `sensing:Observe`,
 #  `actuation:Actuate`, `market:Acquire`, `market:Apply`, `market:Offer` — each declared beside
@@ -831,52 +752,8 @@ orexis:notAfter a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xs
 #  its taker; the bidder answers its own held-claim urgency; the deliberator's tests import a
 #  package word from the package.
 
-orexis:adoptedAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:dateTime ;
-    rdfs:label "adopted at" .
-orexis:resolvedAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:dateTime ;
-    rdfs:label "resolved at" ;
-    rdfs:comment "Absent while the intention stands. Its absence IS the standing state — no flag to keep in step." .
-orexis:outcome a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:string ;
-    rdfs:label "outcome" ;
-    rdfs:comment "How it ended: satisfied or dropped. A string rather than a class per outcome, exactly as review:outcome is." .
-#  A STEP HELD UNTIL A CONDITION (#512, #514, #516): progression's primitive. ON THE STEP — a
-#  planned thing is what waits; the intention is the commitment (which want, why, when
-#  adopted, when resolved); the act is the record of a taking, written when one happens. A
-#  plan committing to a sequence (#510) links its steps (`orexis:step`, `orexis:then`) and
-#  gives each its own condition. The keeper adopts a step with a SHAPE over the agent's
-#  beliefs and a deadline; it re-asks the shape whenever a belief lands and keeps the deadline
-#  on its scheduler; when the shape conforms the step is handed to whoever takes it, and when
-#  the deadline passes first it is taken as lapsed or dropped, as the adopter said. The
-#  market's held claim was this road, written inside the bidder with a private timer and a
-#  per-reading check; a plan's next step is this road with the previous step's prediction as
-#  the condition (#510). The condition is DATA, so a sovereign asking the ledger sees what a
-#  step waits for.
-orexis:step a owl:ObjectProperty ; rdfs:domain orexis:Intention ; rdfs:range orexis:Step ;
-    rdfs:label "step" ;
-    rdfs:comment "Every step of the plan this intention commits to. `orexis:by` names the one it stands at now; `orexis:then` orders the rest." .
-orexis:then a owl:ObjectProperty ; rdfs:domain orexis:Step ; rdfs:range orexis:Step ;
-    rdfs:label "then" ;
-    rdfs:comment "The step that follows this one in the plan committed to (#510). Written when the plan is handed down whole; the keeper moves `orexis:by` along it when a step's expectation is met, taking the next with no search, and stops when one is unmet — the tail is then abandoned with the intention." .
-orexis:predictedUrgency a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
-    rdfs:label "predicted urgency" ;
-    rdfs:comment "What the search predicted the want's urgency would be in the world this step reaches — planning's figure, carried onto the committed step so the ledger says what each step was expected to buy." .
 
-orexis:until a owl:ObjectProperty ; rdfs:domain orexis:Step ;
-    rdfs:label "held until" ;
-    rdfs:comment "The condition a step is held for, released when it HOLDS: a sh:NodeShape, released when its focus node conforms — compiled by the kernel into the select it runs (#514). Always a shape: a condition that is naturally a query is a shape carrying a sh:sparql constraint, the form SHACL already has, so the ledger holds one kind of node for one kind of thing. One of orexis:until / orexis:untilNot per hold, never both. Removed when the hold ends, so a taken act is an ordinary standing intention." .
-orexis:answeredWhen a owl:ObjectProperty ; rdfs:domain orexis:Step ;
-    rdfs:label "answered when" ;
-    rdfs:comment "The step's COMPLETION condition (#516): a sh:NodeShape that conforms when the world has answered the act — an observation past the baseline, in sensing's words — as against `orexis:until`, its READINESS condition. Conformance is the verdict met; the deadline passing first is the verdict unmet, the false-knowledge datum. A plan handed down whole (#510) holds each step's readiness on the previous step's answer." .
-orexis:untilNot a owl:ObjectProperty ; rdfs:domain orexis:Step ;
-    rdfs:label "held until it stops holding" ;
-    rdfs:comment "The negative twin (#514): a sh:NodeShape, released when its focus node VIOLATES — hold while the round is open, hold while the board sleeps. The mirror of orexis:until exactly as orexis:unmetWhen mirrors orexis:metWhen, and one form for the same reason." .
-orexis:whenLapsed a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:string ;
-    rdfs:label "when the deadline passes first" ;
-    rdfs:comment "`take` — the act is taken anyway, as lapsed (a held claim redeems blind rather than never) — or `drop`, the intention resolved as dropped." .
 
-orexis:becauseOf a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:string ;
-    rdfs:label "because of" ;
-    rdfs:comment "Why it was adopted, and — appended on resolution — why it ended. Prose for the operator reading a ledger, never parsed." .
 
 #################  The expectation — the END, judged apart from the means  #################
 #
@@ -907,13 +784,11 @@ orexis:becauseOf a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:ra
 #  is thereby a plan the ledger shows, and losing a round is a step lapsing, which drops the
 #  tail and asks deliberation again.
 orexis:method a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "method" ;
-    rdfs:comment "The steps taking this action comes to, in order — an rdf:List of actions, each a step of the parent's lever and subject. Declared by the package that owns the action, and only where the steps are a PROTOCOL the search could not deduce: the market's tender and present have no effects a want reads. Physics is planned, not declared — a step of an action nobody takes at its own level is achieved by planning its prediction with the actions that are taken. A step of an action with a method is expanded by the keeper at adoption — recursively, a member with a method of its own expanding in turn — into one step per member, chained with `orexis:then`, each `orexis:partOf` the parent step, which stays in the ledger as the filling they came from; the last inherits the parent's `orexis:predicts`, since the end the search planned on is reached when the method is done. An action with no method is its own one step." .
-orexis:partOf a owl:ObjectProperty ; rdfs:domain orexis:Step ; rdfs:range orexis:Step ; rdfs:label "part of" ;
-    rdfs:comment "The step this one is a filling of: a member of a method expanded from it. The parent stays in the ledger, off the `orexis:then` chain, so a reader can recover the tree the flat walk came from." .
+    rdfs:comment "The steps taking this action comes to, in order — an rdf:List of actions, each a step of the parent's lever and subject. Declared by the package that owns the action, and only where the steps are a PROTOCOL the search could not deduce: the market's tender and present have no effects a want reads. Physics is planned, not declared — a step of an action nobody takes at its own level is achieved by planning its prediction with the actions that are taken. A step of an action with a method is expanded by the keeper at adoption — recursively, a member with a method of its own expanding in turn — into one step per member, chained with `progression:then`, each `progression:partOf` the parent step, which stays in the ledger as the filling they came from; the last inherits the parent's `progression:predicts`, since the end the search planned on is reached when the method is done. An action with no method is its own one step." .
 orexis:readyWhen a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ; rdfs:label "ready when" ;
-    rdfs:comment "A SELECT template that binds when a step of this action may be taken — a claim held, a watch live. Bound with the step's tokens when the step becomes current and held as its `orexis:until`; a step whose condition already holds is taken at once. Lapsing takes the step anyway (`whenLapsed` take), as a held claim redeems blind rather than never." .
+    rdfs:comment "A SELECT template that binds when a step of this action may be taken — a claim held, a watch live. Bound with the step's tokens when the step becomes current and held as its `progression:until`; a step whose condition already holds is taken at once. Lapsing takes the step anyway (`whenLapsed` take), as a held claim redeems blind rather than never." .
 orexis:doneWhen a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ; rdfs:label "done when" ;
-    rdfs:comment "A SELECT template that binds when a taken step of this action has done what it was for — a bid answered by a claim. Bound when the step is taken and held as its `orexis:answeredWhen`, so the keeper advances to the next step on it; lapsing is an unmet verdict, which drops the tail and asks deliberation again. An action predicting a reading needs none of this: its end is its `orexis:predicts`." .
+    rdfs:comment "A SELECT template that binds when a taken step of this action has done what it was for — a bid answered by a claim. Bound when the step is taken and held as its `progression:answeredWhen`, so the keeper advances to the next step on it; lapsing is an unmet verdict, which drops the tail and asks deliberation again. An action predicting a reading needs none of this: its end is its `progression:predicts`." .
 orexis:lapsesAt a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ; rdfs:label "lapses at" ;
     rdfs:comment "A SELECT template answering when a wait on a step of this action is over — `?at`, a dateTime such as the round's close, or `?seconds` from now, such as the sensor's horizon. Absent, or binding nothing, the wait is the patience." .
 
@@ -929,33 +804,9 @@ orexis:lapsesAt a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range 
 orexis:Bridge a owl:Class ; rdfs:label "Bridge" ;
     rdfs:comment "Joins an abstract action to the vocabulary beneath it: `orexis:refines` the action; `sh:construct` translates the action's predicted facts, bound as $via and $about with the world at $state, into the lower vocabulary's facts; `orexis:estimates` names the lower package's estimate for the want those facts make. A taker-less action with no bridge is a promise nobody could keep (#532)." .
 orexis:refines a owl:ObjectProperty ; rdfs:domain orexis:Bridge ; rdfs:range orexis:Action ; rdfs:label "refines" .
-orexis:promisedBy a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range orexis:Step ; rdfs:label "promised by" ;
-    rdfs:comment "The step whose promise this want is — a step of a taker-less action, waiting on the fact the want brings about. Withdrawn with the step's verdict." .
-
-orexis:predicts a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:string ;
-    rdfs:label "predicts" ;
-    rdfs:comment "The change the search predicted this step makes: what its world holds that the one before did not, and what it lost — the same canonical facts the plan's signature is made of, as one JSON literal of two lists (`adds`, `retracts`). One declaration (#510): the effect the search planned on is the effect the world is held to, and the answering shape is generated from this rather than sized by the actor. A step the search did not make — adopted by an event, a look — predicts nothing, and nothing is expected of it." .
-orexis:baselineValue a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
-    rdfs:label "baseline value" ;
-    rdfs:comment "Where the property stood when the expectation was adopted. Copied into the row, deliberately: the sensed graph upserts — one current observation per property — so the BEFORE of any before/after survives nowhere but here. The ledger is the memory of commitments, and this is the commitment's opening position." .
-orexis:predictedValue a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
-    rdfs:label "predicted value" ;
-    rdfs:comment "The one number the step's prediction carried — the reading it said the world would show — written beside the verdict so the residual survives the sensed graph's upsert. Only where the prediction carries exactly one number; a plain-fact step writes none." .
-orexis:observedValue a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:decimal ;
-    rdfs:label "observed value" ;
-    rdfs:comment "What the world showed for that fact when the verdict was reached — asked of whoever owns the fact's kind through `orexis:witness` — met or unmet alike, since a shortfall at the deadline is as much evidence about the conversion as an answer. The reviewer publishes observed against predicted as residual evidence (review:Residual) and re-picks the conversion when they lean and the tolerance when they scatter (#518)." .
-orexis:baselineAt a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:dateTime ;
-    rdfs:label "baseline at" .
-orexis:deadlineAt a owl:DatatypeProperty ; rdfs:domain orexis:Intention ; rdfs:range xsd:dateTime ;
-    rdfs:label "deadline at" ;
-    rdfs:comment "By when the movement should have shown. The patience serves as the horizon until something derives a better one from the dose and the physics — a recorded seam of #131, not an oversight." .
 
 
-orexis:endMet a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:boolean ;
-    rdfs:label "end met" ;
-    rdfs:comment "Whether the world answered as the step predicted: the shape held as `orexis:answeredWhen` — generated from `orexis:predicts`, an observation within the actor's tolerance of the predicted reading, a plain fact present and a retracted one gone — conformed before the deadline. False is the deadline passing first, the datum an affordance is suspected on." .
-orexis:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:range xsd:dateTime ;
-    rdfs:label "end verified at" .
+
 
 
 #################  What this society tolerates of a commitment  #################
@@ -968,32 +819,10 @@ orexis:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain orexis:Step ; rdfs:ran
 #  actor's tolerance on its own prediction now — a package's pick, not a kernel figure.)
 
 
-orexis:suspectAfter a owl:DatatypeProperty ; rdfs:range xsd:integer ;
-    rdfs:label "suspect after" ;
-    rdfs:comment "How many consecutive unmet expectations for one (means, property) pair make the affordance suspect. A fact about what this society tolerates before it stops trusting a claim, not about how the code is written." .
 
-orexis:patienceS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
-    rdfs:label "patience seconds" ;
-    rdfs:comment "How long a standing intention blocks re-adoption of the same one. Within it, a second impulse to do the same thing is ABSORBED — that is the amortisation, and with a consulted deliberator it is the cost model. Past it, a new adoption supersedes the old, which is recorded as dropped with the reason. An OPINION, so it is each agent's own belief and review may move it; the bounds beside it are constitutional." .
 
-#  HOW MUCH ONE PASS MAY IMAGINE, in worlds — the ceiling on what a deliberation spends, stated
-#  in the unit the search actually spends: a fork in the imaginarium, whose cost per world the
-#  runbook measures against the mutable slice. It was a DEPTH, a constant in the planner, and
-#  under a breadth-first search depth was a ceiling on compute; best-first (#492) it bounds
-#  only how far ahead a plan reaches, which nothing needs — a plan is re-derived every pass
-#  and only its head is acted on. A pick like the patience: authored per world, never moved
-#  by the agent unless a mandate says so, and the engine's own default where none is stated.
-#  See decisions/a-pass-is-budgeted-in-worlds.md.
-orexis:budgetWorlds a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
-    rdfs:label "budget, in worlds" ;
-    rdfs:comment "How many possible worlds one deliberation may fork before it answers with the best it has found. The search is anytime — it holds the best world seen and stops here — so a spent budget answers with progress, never with nothing. NOT a depth: a world's cost is what its mutable slice makes it, measured, and a sovereign states this in that unit. An OPINION of the sovereign's about this agent, authored in its beliefs; the agent does not move it." .
 
-orexis:minPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
-    rdfs:label "minimum patience" .
-orexis:maxPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
-    rdfs:label "maximum patience" .
 
-orexis:Intention orexis:suspectAfter 3 ; orexis:minPatienceS 10 ; orexis:maxPatienceS 86400 .
 
 #  HOW FAR THIS WANT STILL IS, in the unit its actions cost. The desire's term, beside the
 #  action's `orexis:costs` — the sovereign's two-stage cut says urgency is the want's and cost

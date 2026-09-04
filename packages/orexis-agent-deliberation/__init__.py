@@ -29,3 +29,13 @@ decision for then — inside this package or beside it — rather than a sibling
 
 Not a capability: nothing grants it and there is no `provides()` here.
 """
+
+from pathlib import Path
+
+from assembly import contributes, VOCABULARY
+
+
+@contributes(VOCABULARY)
+def vocabulary(package: Path) -> list[Path]:
+    """the layer's own words (#529)."""
+    return [package / "ontology.ttl"]

@@ -39,7 +39,8 @@ from agent import config, genesis
 from assembly import loader
 from orexis_agent_deliberation.beliefs import BeliefError, Beliefs
 from assembly.inject import attribute_for, opened
-from orexis_agent_progression.ontology import DESIRES, DESIRE_URGENCY, STATE_GRAPH
+from orexis_agent_progression.ontology import STATE_GRAPH
+from orexis_agent_progression.ontology import DESIRES, DESIRE_URGENCY
 
 #  The avoided-pattern wants the kernel lifts into pursuit itself (#468) — see `pursuing`.
 #  The select is OPTIONAL here because the node a want points at may be the DOMAIN's — declared

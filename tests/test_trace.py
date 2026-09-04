@@ -21,6 +21,8 @@ from conftest import build_agent, genesis_store
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 KERNEL = "http://example.org/orexis#"
+LEDGER_NS = "http://example.org/orexis/progression#"   # the ledger's words (#529)
+TRACE_NS = "http://example.org/orexis/deliberation#"   # the trace's words (#529)
 #  zz states 0.1–0.3 and survives 0.02–0.45; the gardener aims at the centre.
 WET, DRY = 0.42, 0.04
 
@@ -54,10 +56,10 @@ def test_the_sovereign_can_ask_what_it_considered_and_why_it_declined(monkeypatc
 
     rows = bindings(agent.beliefs.query_union(f"""
 SELECT ?verdict ?means ?wouldReach ?standsAt WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
-  ?d a <{KERNEL}Deliberation> ; <{KERNEL}standsAt> ?standsAt ;
-     <{KERNEL}considered> ?c .
-  ?c <{KERNEL}wouldTake> ?means ; <{KERNEL}verdict> ?verdict .
-  OPTIONAL {{ ?c <{KERNEL}wouldReach> ?wouldReach }} }} }}"""))
+  ?d a <{TRACE_NS}Deliberation> ; <{TRACE_NS}standsAt> ?standsAt ;
+     <{TRACE_NS}considered> ?c .
+  ?c <{TRACE_NS}wouldTake> ?means ; <{TRACE_NS}verdict> ?verdict .
+  OPTIONAL {{ ?c <{TRACE_NS}wouldReach> ?wouldReach }} }} }}"""))
 
     assert rows, "a pass that decided something must be readable"
     #  BOTH levers appear, which is the debugging value rather than an accident of the fixture:
@@ -83,9 +85,9 @@ def test_a_lever_taken_says_so_and_names_the_thing_that_would_act(monkeypatch):
 
     rows = bindings(agent.beliefs.query_union(f"""
 SELECT ?means ?via ?depth ?verdict WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
-  ?d <{KERNEL}chose> ?c .
-  ?c <{KERNEL}wouldTake> ?means ; <{KERNEL}through> ?via ;
-     <{KERNEL}atDepth> ?depth ; <{KERNEL}verdict> ?verdict }} }}"""))
+  ?d <{TRACE_NS}chose> ?c .
+  ?c <{TRACE_NS}wouldTake> ?means ; <{LEDGER_NS}through> ?via ;
+     <{TRACE_NS}atDepth> ?depth ; <{TRACE_NS}verdict> ?verdict }} }}"""))
     assert len(rows) == 1, "one chosen candidate, named once"
     assert rows[0]["means"].endswith("Dosing")
     assert rows[0]["via"].endswith("pump"), "the lever itself, not just the kind of move"
@@ -108,7 +110,7 @@ def test_the_graph_holds_one_pass_and_not_two(monkeypatch):
     planner.plan(desire)
     after_two = _trace(agent)
 
-    passes = [r for r in after_two if r["o"] == f"{KERNEL}Deliberation"]
+    passes = [r for r in after_two if r["o"] == f"{TRACE_NS}Deliberation"]
     assert len(passes) == 1, "a second pass replaced the first"
     assert len(after_two) == len(after_one), \
         "and took its candidates with it — an orphan is a trace outliving its pass"
@@ -145,7 +147,7 @@ def test_what_it_weighed_is_private(monkeypatch):
 
     assert DELIBERATION_GRAPH not in agent.beliefs.public_graphs()
     assert bindings(agent.beliefs.query(
-        f"SELECT ?s WHERE {{ ?s a <{KERNEL}Deliberation> }}")) == [], \
+        f"SELECT ?s WHERE {{ ?s a <{TRACE_NS}Deliberation> }}")) == [], \
         "a public query must not reach what an agent thought about doing"
     assert _trace(agent, agent.beliefs.query_union), \
         "and the sovereign, who asks over the union, must"

@@ -27,7 +27,7 @@ merging every module's `desires()`.
 They are the same thing, and the difference is grammatical rather than conceptual: **desire is
 the kind** — the type `Desire`, the term `orexis:Desire`, the modality, the store — and **a want is
 one of them**, identified by its node. That is what `?want` binds, what an
-[intention](/domain/intention.md) `orexis:pursues`, and what the ledger is keyed on beside the
+[intention](/domain/intention.md) `progression:pursues`, and what the ledger is keyed on beside the
 [act](/domain/act.md).
 
 So *the desire modality* holds *the wants this agent has*, a package contributes wants through

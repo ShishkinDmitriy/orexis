@@ -139,7 +139,7 @@ one pass at the default budget: **0.41 s with the judge per node, 0.21 s compile
 the courier are unchanged, since their patterns were selects already — now derived rather than
 written. The judge is reached once per pass, for the winner's legality.
 
-**The ceiling is a budget of worlds** (#494): `orexis:budgetWorlds` on the agent, 32 by the
+**The ceiling is a budget of worlds** (#494): `deliberation:budgetWorlds` on the agent, 32 by the
 engine's default, 64 in `world/hanoi` and 128 in `world/courier`. Multiply by the fork cost for
 the mutable slice above to size one in seconds. A spent budget answers with the best so far.
 

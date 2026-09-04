@@ -1,7 +1,7 @@
 """What an agent is trying to bring about, in the one shape a deliberator ranges over.
 
 Here and not in a package because a desire is a MENTAL STATE, and those are the kernel's — the
-same reason the obligation's premises and `orexis:Intention` moved into the orexis namespace when the mind
+same reason the obligation's premises and `progression:Intention` moved into the orexis namespace when the mind
 was named (the-mind-is-six-graphs). Two packages need this type and neither may import the
 other: `desire` produces desires, `deliberation` consumes them, and the only thing they are
 allowed to share is a kernel word.

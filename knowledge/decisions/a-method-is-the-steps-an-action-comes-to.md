@@ -52,5 +52,5 @@ what a step can wait on. See [method](/domain/method.md).
 - **The residual rides on the method's last step.** The market's review rule reads residuals
   off Acquiring, Tendering and Presenting alike, since the prediction moved to the step that
   carries it.
-- **A world watch and a step wait are one primitive.** Both are `orexis:answeredWhen` holds;
+- **A world watch and a step wait are one primitive.** Both are `progression:answeredWhen` holds;
   the keeper tells them apart by the baseline, and the reports count only the world's.

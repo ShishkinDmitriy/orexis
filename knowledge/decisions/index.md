@@ -96,7 +96,7 @@ The search itself, and the two places a language model is allowed near it.
 * [a-habit-is-a-compiled-deliberation](/decisions/a-habit-is-a-compiled-deliberation.md) - A stable environment lets deliberation compile into if-then policy, minted and retired by review on evidence.
 * [a-step-declares-its-cost](/decisions/a-step-declares-its-cost.md) - An action declares `orexis:costs` beside its timing; the search sums it and breaks urgency ties cheaper, never trading wellbeing for money.
 * [relevance-is-read-off-the-actions-and-closed-backward](/decisions/relevance-is-read-off-the-actions-and-closed-backward.md) - A pass simulates only levers whose effects reach what the want reads, closed backward; declared touches and reasoning-as-actions refused.
-* [a-pass-is-budgeted-in-worlds](/decisions/a-pass-is-budgeted-in-worlds.md) - The search's ceiling is `orexis:budgetWorlds`, a sovereign-stated count of forks the pass answers within; depth bounded nothing once best-first.
+* [a-pass-is-budgeted-in-worlds](/decisions/a-pass-is-budgeted-in-worlds.md) - The search's ceiling is `deliberation:budgetWorlds`, a sovereign-stated count of forks the pass answers within; depth bounded nothing once best-first.
 * [a-node-holds-one-world](/decisions/a-node-holds-one-world.md) - The flat rdflib copy per search node is gone; a union of deltas cannot express retraction.
 * [the-judge-speaks-rust](/decisions/the-judge-speaks-rust.md) - The SHACL judge is rudof behind one door, its two gaps closed on our side; pySHACL stays only as a gate.
 * [the-domain-is-a-plug-in-and-hanoi-is-the-proof](/decisions/the-domain-is-a-plug-in-and-hanoi-is-the-proof.md) - Tower of Hanoi: an ontology, one move action, no Python — the optimal solution is the cheapest achiever.

@@ -1,5 +1,7 @@
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix orexis:   <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix progression: <http://example.org/orexis/progression#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -99,7 +101,7 @@ What that costs: an agent with a stake and no lever is required to state a patie
                                           <http://example.org/orexis#Stale> }
             }
         """ ] ;
-    sh:property [ sh:path orexis:patienceS ;
+    sh:property [ sh:path progression:patienceS ;
                   sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ;
                   sh:minInclusive 10 ; sh:maxInclusive 86400 ;
                   sh:message "an agent with a stake must state its patience, within the constitutional bounds the kernel declares" ] .
@@ -109,8 +111,8 @@ orexis:BudgetShape a sh:NodeShape ;
     rdfs:comment """An agent that states how much a pass may imagine states it once, as a count of worlds inside the constitutional bounds. Below one it may not think at all — a budget of zero is a search that forks nothing and answers NOTHING for every want, which is a misconfigured agent that looks calm. Above the ceiling a pass on a large world runs for minutes, which is the afternoon-planning-while-the-plant-dies the old depth constant refused, and nothing here should let a beliefs file re-open it.
 
 TARGETED ON THE STATEMENT, not on the stake: a budget is optional, and an agent that states none gets the engine's own default (`Planner.BUDGET`). This is deliberately weaker than `orexis:KeeperShape`, which demands a patience of every stake, because a missing patience makes a commitment meaningless while a missing budget merely leaves the ceiling where the kernel put it. See decisions/a-pass-is-budgeted-in-worlds.md.""" ;
-    sh:targetSubjectsOf orexis:budgetWorlds ;
-    sh:property [ sh:path orexis:budgetWorlds ;
+    sh:targetSubjectsOf deliberation:budgetWorlds ;
+    sh:property [ sh:path deliberation:budgetWorlds ;
                   sh:maxCount 1 ; sh:datatype xsd:integer ;
                   sh:minInclusive 1 ; sh:maxInclusive 1024 ;
                   sh:message "a budget of worlds is stated once, within the constitutional bounds the kernel declares" ] .

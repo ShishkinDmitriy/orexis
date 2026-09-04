@@ -24,7 +24,7 @@ tokens, bound once into a node of the promise's own.
 
 When the keeper reaches a step of a taker-less action, it asks for the action's bridge, runs
 the translation, and writes the result as an `orexis:Desire` this agent holds — in its
-promises graph, `orexis:promisedBy` the step, projected into the desire modality — so the
+promises graph, `progression:promisedBy` the step, projected into the desire modality — so the
 ordinary road lifts it, plans it over the actions that ARE taken, and walks the plan. The
 step itself waits on the same translated fact as its completion. When the fact arrives the
 promise is withdrawn, whatever stood for it is resolved, and the step's own predicted facts

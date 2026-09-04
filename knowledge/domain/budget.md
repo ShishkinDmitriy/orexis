@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Budget
-term: http://example.org/orexis#budgetWorlds
+term: http://example.org/orexis/deliberation#budgetWorlds
 description: >-
   How much one pass of the search may imagine, counted in possible worlds — the ceiling on
   what a deliberation spends, stated in the unit it spends. A pick the sovereign authors in
@@ -12,7 +12,7 @@ description: >-
 
 # What it is
 
-`orexis:budgetWorlds`, an integer on the agent in its own beliefs, authored in
+`deliberation:budgetWorlds`, an integer on the agent in its own beliefs, authored in
 `world/<world>/beliefs/` beside the patience. One pass of the [planner](/domain/planner.md)
 forks at most that many worlds in the [imaginarium](/domain/imaginarium.md) and then answers
 with the best it holds: the cheapest achiever found, or the world nearest the want by the

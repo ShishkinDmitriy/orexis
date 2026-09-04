@@ -32,3 +32,13 @@ package, a decision for then, not a sibling waiting for a slot.
 Not a capability: nothing grants it and there is no `provides()` here. It imports the
 reactive layer and the floor, and `tests/test_layering.py` holds it to that.
 """
+
+from pathlib import Path
+
+from assembly import contributes, VOCABULARY
+
+
+@contributes(VOCABULARY)
+def vocabulary(package: Path) -> list[Path]:
+    """the layer's own words (#529)."""
+    return [package / "ontology.ttl"]

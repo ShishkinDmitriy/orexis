@@ -46,6 +46,7 @@ from .afforder import affordances_of, wants_of
 from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import Raw, bind, bindings
+from .ontology import DELIBERATION
 from orexis_agent_progression.ontology import (promises_graph, DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
 from orexis_agent_deliberation.conformance import conforms, graph_from
@@ -1155,9 +1156,9 @@ class PlanningBeliefs:
 #  Read the way the keeper's patience is (`KEEPING_PICKS`), with the one difference that this
 #  block may be wholly absent: `read_optional`, and the engine's ceiling stands in.
 PLANNING_PICKS = Picks(
-    capability=_AG_IRI + "Deliberation",
+    capability=DELIBERATION + "Deliberation",
     cls=PlanningBeliefs,
-    terms={"budget_worlds": _AG_IRI + "budgetWorlds"},
+    terms={"budget_worlds": DELIBERATION + "budgetWorlds"},
 )
 
 

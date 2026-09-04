@@ -102,7 +102,7 @@ a BDI notion; which property it is stays sensing's.
   `ObservedWant` — the kernel's `Desire` plus the property — is what sensing contributes, so a
   package that needs the property of a want asks sensing (`want_about`, `stake_about`,
   `wants_about`) or reads the field off the object sensing handed over;
-- an **intention** is `orexis:pursues` the want and `orexis:by` the act, and the ledger's
+- an **intention** is `progression:pursues` the want and `progression:by` the act, and the ledger's
   `ssn:forProperty` is gone; `adopt`, `satisfy`, `drop`, `standing`, `expect`,
   `open_expectations` and suspicion key on (act, want). The ledger migrates at the keeper's
   construction (`vocabulary.migrate_ledger`): a row with a property and no want is given the

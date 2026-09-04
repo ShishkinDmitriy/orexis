@@ -42,7 +42,7 @@ happened to be holding the trigger. The planner's rows already said *through whi
 
 **An intention is the head of a plan, committed to.** `Deliberator.decide(desire)` returns the
 [plan](/domain/deliberator.md) itself — rows, not a means — and what the keeper writes is the
-first row whole: `orexis:by` the means, `orexis:through` the lever, `orexis:pursues` the desire. Only the
+first row whole: `progression:by` the means, `progression:through` the lever, `progression:pursues` the desire. Only the
 head, and that is not a shortcut: the plan is re-derived every pass because the world moves, so
 a committed tail would be a promise about a future nobody has seen. The tail is in the trace for
 a reader; the head is in the ledger for the agent.

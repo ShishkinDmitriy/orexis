@@ -129,7 +129,7 @@ a thing to rely on"*. A thing outside the tree cannot be sorted wrong.
 
 # A guard that greps cannot see a declaration
 
-Found by writing the bug. Five terms were inserted into the middle of `orexis:Intention`'s
+Found by writing the bug. Five terms were inserted into the middle of `progression:Intention`'s
 `rdfs:comment` — the anchor took the first blank line after the class, and that line falls inside
 the literal. Turtle nested in a literal parses fine and adds nothing: 23 triples were prose.
 

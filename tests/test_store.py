@@ -248,7 +248,7 @@ def _kernel_terms() -> set[str]:
     This read `^orexis:(\w+)` off the file's TEXT, so a block of Turtle sitting INSIDE an
     `rdfs:comment` literal counted as declarations: the lines begin at column zero and look
     exactly right. That is not hypothetical — five terms were inserted into the middle of
-    `orexis:Intention`'s comment, the file parsed, the suite went green, and the terms were prose.
+    `progression:Intention`'s comment, the file parsed, the suite went green, and the terms were prose.
     A reader that greps cannot tell a declaration from a description of one, which is the same
     objection AGENTS.md already records against the vendored OKF check.
     """

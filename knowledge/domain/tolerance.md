@@ -12,14 +12,14 @@ description: >-
 # What it is
 
 `actuation:tolerance`, and its twin `market:tolerance` for a bought lot. Once the expectation
-after a step is generated from the step's own prediction (`orexis:predicts`,
+after a step is generated from the step's own prediction (`progression:predicts`,
 [step](/domain/step.md)), the only thing left for an actor to say is how close a number must
 land to be "the same effect". That is not a fact about water or soil; it is a fact about how
 good the model is — the conversion a package predicts through — and so it is a
 [pick](/domain/pick.md): an agent's own value inside `minTolerance`/`maxTolerance`, which the
-package's ontology declares and its shape holds the pick to, exactly as `orexis:patienceS` is
+package's ontology declares and its shape holds the pick to, exactly as `progression:patienceS` is
 held. An agent that states none gets the capability's default (0.5 of the movement), the way
-`orexis:Intention` carries `suspectAfter`.
+`progression:Intention` carries `suspectAfter`.
 
 A FRACTION of the predicted movement rather than an absolute in the property's unit, so it is
 scale-free across properties. The band is predicted ± tolerance × |predicted − baseline|: an

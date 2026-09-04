@@ -129,7 +129,7 @@ knowing, because each is the rule showing its teeth:
   pursued; the claim simply stays held, which is what happened anyway, and the ledger is the
   evidence rather than a log line.
 - **The window moved to where the act is taken.** `on_offer` used to write the bid's
-  `orexis:notAfter` onto the intention it had just adopted; the actor writes it in `take`, from the
+  `progression:notAfter` onto the intention it had just adopted; the actor writes it in `take`, from the
   round row it reads there — which is where the act record said it belonged.
 - ~~**The keeper's tick still searches synchronously**, deliberately: it is the mind's own clock
   rather than a callback, so marking there would only queue work for the thread already

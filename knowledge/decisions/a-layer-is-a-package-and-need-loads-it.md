@@ -167,7 +167,7 @@ job is to carry that across the gap cannot be the layer that forgets it.
   `tests/test_projects.py` knows a layer by family `agent` and a member in the one spelling of
   the order, `LAYERS`.
 - **Progression still reads the T-Box through the belief store's query surface** — (until #523 `orexis:takenBy`
-  for who takes an action) `orexis:suspectAfter` for the verdict's figure —
+  for who takes an action) `progression:suspectAfter` for the verdict's figure —
   by attribute on the container, never by import. Those are vocabulary facts and not beliefs,
   but the surface they arrive through is the belief base's, and a reader who wants "never
   reads a belief" to be structural rather than a discipline would hand progression its own
@@ -179,3 +179,13 @@ job is to carry that across the gap cannot be the layer that forgets it.
 The trigger for revisiting is the same as its predecessor's, sharpened: a contract module that
 grows logic, or a hard dependency declared to smuggle a load the grants do not imply. The day
 either appears, the boundary has moved and this record is due a rereading.
+
+> **Amended 2026-09-04 (#529).** The vocabulary follows the code: each layer package declares
+> its own namespace where it has words of its own — `progression:` for the ledger, and
+> `deliberation:` for the trace and the budget; the reactive layer has none — and a term one
+> layer reads and writes carries that prefix, so a reader of any query can tell the layer of a
+> kernel term by its spelling. What stays `orexis:` is what every layer and package writes in —
+> the principals, the graph classes, the grammar of actions and wants, and the choir's
+> extension points, which the container asks and every package answers (moving those by their
+> row was tried and undone the same day: it made every agent import the deliberation layer). Existing volumes cross by the moved-terms table, which now chains a move
+> through an earlier one. `tests/test_layering.py` refuses a file naming a higher layer's prefix.

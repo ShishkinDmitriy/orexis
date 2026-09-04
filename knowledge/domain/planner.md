@@ -30,7 +30,7 @@ written in the trace as touching nothing the want reads.
 
 ![planner — what it reads and writes](../diagrams/service-planner.svg)
 
-**One service, one output modality.** `orexis:DeliberationGraph` is a subclass of
+**One service, one output modality.** `deliberation:DeliberationGraph` is a subclass of
 `orexis:PossibleGraph`, so both writes are possible-modality: the worlds that die with the pass, and
 the trace that survives because the health series read it.
 

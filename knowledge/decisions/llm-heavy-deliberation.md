@@ -46,7 +46,7 @@ the ontology and constitution rather than removing them. See
 
 [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md)
 narrows "produces a stance" without reversing it. Prose remains how the model reasons; what it
-*commits* is a typed `orexis:Intention` the shapes can refuse — chosen from a menu of
+*commits* is a typed `progression:Intention` the shapes can refuse — chosen from a menu of
 affordances, never free text-to-action. The model is also not consulted per sensing: an
 intention persists until satisfied, impossible or reconsidered, which is what makes an
 LLM-heavy agent affordable at all. The consequence above is unchanged and is exactly the
