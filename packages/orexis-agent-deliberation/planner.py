@@ -63,6 +63,7 @@ NOTHING = "no candidate"     # no lever this agent holds points at this want
 EXHAUSTED = "exhausted"      # levers exist; none reaches the desire within the budget allowed
 NOT_BETTER = "not better"    # every world reachable is as bad as this one, or worse
 REFUSED = "refused"          # the world it would reach is one the society would not accept
+REMEMBERED = "remembered"    # a plan that worked here before, adopted without a search (#469)
 
 
 @dataclass(frozen=True)
@@ -77,6 +78,7 @@ class Plan:
     steps: tuple = ()                 # of `act.Step`: each with what it was predicted to reach
     urgency_now: float | None = None
     urgency_after: float | None = None
+    cost: float | None = None         # what the plan was scored to spend — a remembered plan's measure (#469)
 
     @property
     def first(self) -> str | None:
@@ -653,8 +655,7 @@ class Planner:
                         #  anything.
                         return self._record(
                             desire,
-                            self._offer(Plan(SATISFIED, step.taken, here.urgency,
-                                             step.urgency),
+                            self._offer(Plan(SATISFIED, step.taken, here.urgency, step.urgency, cost=step.cost),
                                         desire, step),
                             here.urgency)
                     #  ACHIEVERS ARE COLLECTED, never returned on sight — the
@@ -712,7 +713,7 @@ class Planner:
             won = min(achieved, key=lambda s: (s.cost, s.urgency))
             return self._record(
                 desire,
-                self._offer(Plan(SATISFIED, won.taken, here.urgency, won.urgency),
+                self._offer(Plan(SATISFIED, won.taken, here.urgency, won.urgency, cost=won.cost),
                             desire, won),
                 here.urgency)
 
@@ -730,7 +731,7 @@ class Planner:
                                            (), here.urgency, after), here.urgency)
         return self._record(desire, self._offer(
             Plan(EXHAUSTED if not self._met_in(best, desire) else SATISFIED,
-                 best.taken, here.urgency, best.urgency), desire, best), here.urgency)
+                 best.taken, here.urgency, best.urgency, cost=best.cost), desire, best), here.urgency)
 
     def _record(self, desire, plan, stands_at):
         """Write the pass down and hand back the plan unchanged.
