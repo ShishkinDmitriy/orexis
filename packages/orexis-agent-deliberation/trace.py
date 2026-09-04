@@ -24,6 +24,8 @@ import logging
 from datetime import datetime, timezone
 from urllib.parse import quote
 
+import pyoxigraph as ox
+
 from orexis_agent_progression.ontology import DELIBERATION_GRAPH
 
 log = logging.getLogger("trace")
@@ -45,6 +47,17 @@ COSTLY = "costs more than a plan already found"
 SPENT = "the budget was spent before this was simulated"
 IRRELEVANT = "touches nothing this want reads"
 REFUSED = "refused below lately — the level beneath found no way to keep its promise"
+
+#  HOW A WANT WAS JUDGED in every world the pass weighed (#502) — the road, always said, and
+#  the text where the road is a text. The compiled select lives nowhere else: computed once per
+#  pass by the rule that what the interpreter already knows is never asserted, which is right
+#  for the store and wrong for the person asking "why did this want read as unmet" — so the
+#  trace, the record's one sanctioned exception, shows it.
+COMPILED = "the select compiled from its shape"
+AUTHORED = "the pattern it authors"
+RECORD = "the record of what was discharged"
+MEASURE = "a module's measure"
+UNJUDGED = "nothing — a remembered plan was adopted on the world's signature"
 
 #  What each verdict is called in the series, declared HERE beside the verdict it names so the
 #  two cannot drift — the same one-definition-two-readers argument `gap.rq` and `urgency` make.
@@ -98,7 +111,7 @@ def clear(store, agent_id: str, desire_uri: str) -> None:
 
 
 def write(store, agent_id: str, desire, plan, considered, stands_at: float,
-          took_s: float = 0.0) -> None:
+          took_s: float = 0.0, judged: tuple[str, str | None] = (UNJUDGED, None)) -> None:
     """Record one pass: what was weighed, what each would have reached, and what was taken.
 
     Never raises. A planner that fell over because its debugging aid did would be a poor trade
@@ -106,13 +119,13 @@ def write(store, agent_id: str, desire, plan, considered, stands_at: float,
     the same posture `reporting` takes towards the series store.
     """
     try:
-        _write(store, agent_id, desire, plan, considered, stands_at, took_s)
+        _write(store, agent_id, desire, plan, considered, stands_at, took_s, judged)
     except Exception as exc:                      # noqa: BLE001 - see the docstring
         log.warning("could not record what was considered: %s", exc)
 
 
 def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
-           took_s: float) -> None:
+           took_s: float, judged: tuple[str, str | None]) -> None:
     node = _uri(agent_id, desire.uri)
     chosen = plan.steps[0].action if plan.steps else None
     rows = []
@@ -137,11 +150,18 @@ def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
             if row.action == chosen:
                 took = f'        deliberation:chose <{node}.{i}> ;\n'
                 break
+    #  The select as a LITERAL, escaped by the engine's own writer: a compiled text carries
+    #  quotes, backslashes and newlines, and a hand-quoted f-string would be the injection the
+    #  binder exists to refuse (#500).
+    road, text = judged
+    by = "" if text is None else \
+        f'        deliberation:judgedBy {ox.Literal(text)} ;\n'
     store.update(f"""INSERT DATA {{ GRAPH <{DELIBERATION_GRAPH}> {{
     <{node}> a deliberation:Deliberation ;
         deliberation:deliberatedOn <{desire.uri}> ;
         deliberation:verdict "{plan.outcome}" ;
-        deliberation:standsAt {stands_at:.6f} ;
+        deliberation:judgedThrough {ox.Literal(road)} ;
+{by}        deliberation:standsAt {stands_at:.6f} ;
         deliberation:tookSeconds {took_s:.6f} ;
 {took}        deliberation:asOf "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime .
 {"".join(rows)}}} }}""")

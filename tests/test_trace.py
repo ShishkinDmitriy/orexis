@@ -172,3 +172,67 @@ def test_the_verdicts_reach_the_series_so_a_dashboard_can_watch(monkeypatch):
                            "exhausted", "not_better", "refused"}
     assert fields["not_better"] == 1.0, "the drowning plant's verdict, counted"
     assert sum(fields.values()) >= 1.0
+
+
+# --- the select a want was judged by is shown, never stored (#502) ----------------------------
+
+def _judged(agent):
+    """(road, text) off the one deliberation node — text None where the road is not a text."""
+    rows = bindings(agent.beliefs.query_union(f"""
+SELECT ?road ?text WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
+  ?d a <{TRACE_NS}Deliberation> ; <{TRACE_NS}judgedThrough> ?road .
+  OPTIONAL {{ ?d <{TRACE_NS}judgedBy> ?text }} }} }}"""))
+    assert len(rows) == 1, "one pass, one road"
+    return rows[0]["road"], rows[0].get("text")
+
+
+def test_a_shape_want_shows_the_select_it_was_judged_by_and_the_shape_stays_clean(monkeypatch):
+    """The courier's want is a shape the kernel compiles (#497); the text lived nowhere. Now
+    the trace shows the very select the pass ran — equal to what the compiler says of the
+    shape today, so a reader can re-run it — while the shape itself carries no `sh:sparql`:
+    written there it would be a second constraint the judge conjoins and reports twice."""
+    from rdflib import URIRef
+    from test_courier import _driver, _goal
+    from orexis_agent_deliberation.conformance import graph_from
+    from orexis_agent_progression.violation import unmet_select
+
+    agent = _driver(monkeypatch, "b1", "a1")
+    want = _goal(agent)
+    Planner(agent, agent.me).plan(want)
+
+    road, text = _judged(agent)
+    assert road == trace.COMPILED
+    public = graph_from(agent.beliefs, *agent.beliefs.public_graphs())
+    shape = public.value(URIRef(want.uri), URIRef(f"{KERNEL}metWhen"))
+    assert text == unmet_select(public.cbd(shape), shape), \
+        "the trace must show the select the pass actually ran, not a paraphrase of it"
+    assert "SELECT" in text
+    #  Never written INTO the shape, in any store the agent holds.
+    for query in (agent.beliefs.query_union, agent.desires.query_union):
+        assert not bindings(query(
+            f"SELECT ?c WHERE {{ <{shape}> sh:sparql ?c }}")), \
+            "the compiled select is an explanation in the trace, never a constraint on the shape"
+
+
+def test_a_derived_want_is_judged_by_its_compiled_shape_and_measured_apart(monkeypatch):
+    """Two questions, two roads, and the trace names the one it answers. The gardener's
+    moisture want is a shape the deduction emits, so whether a world MEETS it is the compiled
+    select — shown here — while how FAR a world is from it is sensing's measure, which is
+    `deliberation:wouldReach` on every candidate and no text at all."""
+    agent, planner, desire = _gardener(monkeypatch, WET)
+    planner.plan(desire)
+    road, text = _judged(agent)
+    assert road == trace.COMPILED and text is not None and "SELECT" in text
+
+
+def test_an_authored_pattern_is_shown_as_the_pattern(tmp_path, monkeypatch):
+    """An aversion authored as a pattern (#468) is judged by that pattern, and the trace shows
+    the text the author wrote and names the road."""
+    from test_avoidance import MARKER, STATE_GRAPH, _avoidance_row, _gardener as _avoider
+
+    agent, st = _avoider(tmp_path, monkeypatch)
+    st.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ {MARKER} }} }}")
+    Planner(agent, agent.me).plan(_avoidance_row(agent))
+    road, text = _judged(agent)
+    assert road == trace.AUTHORED
+    assert text is not None and MARKER.split()[0] in text
