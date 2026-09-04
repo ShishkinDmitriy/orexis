@@ -29,15 +29,16 @@ An initial value used to be held to 0..1, on the reasoning that it is a fraction
                   sh:minExclusive 0 ] ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "an initial value must lie inside the range this model states — 45 where 0.45 was meant would clamp and read as a permanently soaking pot" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/orexis/sim#initialValue> ?initial .
-                OPTIONAL { $this <http://example.org/orexis/sim#minValue> ?min }
-                OPTIONAL { $this <http://example.org/orexis/sim#maxValue> ?max }
+                $this sim:initialValue ?initial .
+                OPTIONAL { $this sim:minValue ?min }
+                OPTIONAL { $this sim:maxValue ?max }
                 OPTIONAL {
-                    ?d <http://example.org/orexis/sim#simulatedBy> $this ;
-                       <http://example.org/orexis/sensing#monitors> ?subject .
-                    ?subject <http://example.org/orexis/sim#maxValue> ?subjectMax
+                    ?d sim:simulatedBy $this ;
+                       sensing:monitors ?subject .
+                    ?subject sim:maxValue ?subjectMax
                 }
                 BIND(COALESCE(?max, ?subjectMax, 1.0) AS ?high)
                 BIND(COALESCE(?min, 0.0) AS ?low)
@@ -58,13 +59,14 @@ What makes it reachable is no longer only its own credential. A KY-015 reports t
     sh:targetSubjectsOf sim:simulatedBy ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "a simulated device must be reachable: on a bus of its own, or sharing the reading topic of a device that is — otherwise nothing would ever publish for it" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                FILTER NOT EXISTS { $this <http://example.org/orexis/mqtt#onBus> ?bus }
+                FILTER NOT EXISTS { $this mqtt:onBus ?bus }
                 FILTER NOT EXISTS {
-                    $this <http://example.org/orexis/mqtt#readingTopic> ?topic .
-                    ?peer <http://example.org/orexis/mqtt#readingTopic> ?topic ;
-                          <http://example.org/orexis/mqtt#onBus> ?peerBus .
+                    $this mqtt:readingTopic ?topic .
+                    ?peer mqtt:readingTopic ?topic ;
+                          mqtt:onBus ?peerBus .
                 }
             }""" ] .
 
@@ -79,8 +81,9 @@ sim:StandInReportsShape a sh:NodeShape ;
     sh:property [ sh:path mqtt:statusTopic ; sh:maxCount 1 ] ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "a simulated actuator must state mqtt:statusTopic — its stand-in reports there, and a simulated sensor waters only on what it reports" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/orexis/sim#simulatedBy> ?model .
-                FILTER NOT EXISTS { $this <http://example.org/orexis/mqtt#statusTopic> ?t }
+                $this sim:simulatedBy ?model .
+                FILTER NOT EXISTS { $this mqtt:statusTopic ?t }
             }""" ] .

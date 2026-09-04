@@ -24,6 +24,7 @@ import rdflib
 from assembly import loader
 
 from orexis_agent_deliberation.judge import crossed, judge
+from orexis_agent_progression.store import DECLARATION
 
 from orexis_agent_progression.store import Store
 
@@ -46,6 +47,11 @@ def _shapes_and_vocabulary() -> tuple[rdflib.Graph, rdflib.Graph]:
         ontology.parse(str(path), format="turtle")
     for path in loader.shapes_files():
         shapes.parse(str(path), format="turtle")
+    #  Both graphs carry the store's dictionary as SHACL declares it (#508): a `sh:select`
+    #  in prefixed names resolves through `sh:prefixes orexis:`, and pySHACL — still the
+    #  engine of two tests — looks the declaration up in whichever graph it was handed.
+    for graph in (ontology, shapes):
+        graph.parse(data=DECLARATION, format="turtle")
     return ontology, shapes
 
 

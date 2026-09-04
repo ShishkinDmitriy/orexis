@@ -93,12 +93,13 @@ AND THERE IS A SECOND REASON, stronger because it would forbid the lever half ev
 
 What that costs: an agent with a stake and no lever is required to state a patience it never spends. No world has one — the case is hypothetical in the record that drew the premise — and if one appears it carries a number it does not use. Cheap, because `agent/keeper.py` reads the patience lazily: an agent with nothing to commit about never asks for it, and one that reaches a commitment without it raises and names the term. What this shape buys over that backstop is the MOMENT — `orexis-validate` refuses the world, instead of an agent raising at its first commitment in production.""" ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/orexis#holds> ?want .
-                ?want a <http://example.org/orexis#Desire> .
-                FILTER NOT EXISTS { ?want <http://example.org/orexis#violationIs>
-                                          <http://example.org/orexis#Stale> }
+                ?this orexis:holds ?want .
+                ?want a orexis:Desire .
+                FILTER NOT EXISTS { ?want orexis:violationIs
+                                          orexis:Stale }
             }
         """ ] ;
     sh:property [ sh:path progression:patienceS ;
@@ -127,13 +128,14 @@ Every figure here was computed, so this is arithmetic rather than authorship —
     #  desire in the old bare form — is still held directly. A target that knew only the second
     #  would have gone quietly blind to every deduced want the day the hop landed.
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                { ?agent <http://example.org/orexis#holds> ?held .
-                  ?held <http://example.org/orexis#metWhen> ?this }
+                { ?agent orexis:holds ?held .
+                  ?held orexis:metWhen ?this }
                 UNION
-                { ?agent <http://example.org/orexis#holds> ?this .
-                  ?this a <http://www.w3.org/ns/shacl#NodeShape> . }
+                { ?agent orexis:holds ?this .
+                  ?this a sh:NodeShape . }
             }
         """ ] ;
     #  BY NODE, BY CLASS, OR BY A PREDICATE'S ENDS (#497): a deduced shape names the one agent
@@ -144,12 +146,13 @@ Every figure here was computed, so this is arithmetic rather than authorship —
                   sh:message "a deduced shape is about one agent, named" ] ;
     sh:sparql [
         sh:message "a held shape must say whose state it is about — a target node, a class, or the subjects or objects of a predicate" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                FILTER NOT EXISTS { $this <http://www.w3.org/ns/shacl#targetNode> ?n }
-                FILTER NOT EXISTS { $this <http://www.w3.org/ns/shacl#targetClass> ?c }
-                FILTER NOT EXISTS { $this <http://www.w3.org/ns/shacl#targetSubjectsOf> ?s }
-                FILTER NOT EXISTS { $this <http://www.w3.org/ns/shacl#targetObjectsOf> ?o }
+                FILTER NOT EXISTS { $this sh:targetNode ?n }
+                FILTER NOT EXISTS { $this sh:targetClass ?c }
+                FILTER NOT EXISTS { $this sh:targetSubjectsOf ?s }
+                FILTER NOT EXISTS { $this sh:targetObjectsOf ?o }
             }""" ] ;
     #  WHERE THE ENGINE WILL READ IT, which differs by constraint kind and was measured both
     #  ways round on pySHACL 0.40.1. A core `sh:property` constraint takes its severity from
@@ -167,16 +170,17 @@ Every figure here was computed, so this is arithmetic rather than authorship —
     #  as a want retired with the era when a desire WAS a bare shape.
     sh:sparql [
         sh:message "a held shape that will be validated must carry its FORCE on the constraint that produces the result — with none, every result arrives at pySHACL's default severity and a warning-worthy rig refuses to boot" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                ?agent <http://example.org/orexis#holds> $this .
-                FILTER NOT EXISTS { ?want <http://example.org/orexis#metWhen> $this }
+                ?agent orexis:holds $this .
+                FILTER NOT EXISTS { ?want orexis:metWhen $this }
                 FILTER NOT EXISTS {
-                    { $this <http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#severity> ?s }
+                    { $this sh:property/sh:severity ?s }
                     UNION
-                    { $this <http://www.w3.org/ns/shacl#sparql>/<http://www.w3.org/ns/shacl#severity> ?s }
+                    { $this sh:sparql/sh:severity ?s }
                     UNION
-                    { $this <http://www.w3.org/ns/shacl#severity> ?s }
+                    { $this sh:severity ?s }
                 }
             }""" ] .
 
@@ -202,9 +206,10 @@ orexis:MetTestShape a sh:NodeShape ;
                   sh:message "one avoided pattern per want" ] ;
     sh:sparql [
         sh:message "a want carries orexis:metWhen or orexis:unmetWhen, never both" ;
+        sh:prefixes orexis: ;
         sh:select """SELECT $this WHERE {
-            $this <http://example.org/orexis#metWhen> ?met .
-            $this <http://example.org/orexis#unmetWhen> ?avoided .
+            $this orexis:metWhen ?met .
+            $this orexis:unmetWhen ?avoided .
         }""" ] .
 
 orexis:AvoidedPatternShape a sh:NodeShape ;
@@ -215,10 +220,11 @@ orexis:AvoidedPatternShape a sh:NodeShape ;
                   sh:message "an avoided state carries at most one sh:select" ] ;
     sh:sparql [
         sh:message "an avoided state is a sh:select or a sh:NodeShape — never neither" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                FILTER NOT EXISTS { $this <http://www.w3.org/ns/shacl#select> ?q }
-                FILTER NOT EXISTS { $this a <http://www.w3.org/ns/shacl#NodeShape> }
+                FILTER NOT EXISTS { $this sh:select ?q }
+                FILTER NOT EXISTS { $this a sh:NodeShape }
             }""" ] .
 
 # The first consumer of the gap, and deliberately a WARNING. An observation outside the

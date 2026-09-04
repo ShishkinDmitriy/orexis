@@ -14,6 +14,18 @@
 
 What is NOT here any more is everything physical. `packages/orexis-part-microcontroller` holds boards, peripherals, pins and wires; a concrete part is its own package beside it. The two subjects were sharing a file and growing at different rates: adding a sensor should not touch what a society IS.""" .
 
+#  THE DICTIONARY, as a node (#508). A shape's `sh:select` uses the store's prefixes like any
+#  other query, and SHACL resolves a prefixed name only through `sh:prefixes <node>` and that
+#  node's `sh:declare` triples — so every constraint in the tree says `sh:prefixes orexis:`,
+#  and what stands on this node is `store.DECLARATION`: one `sh:declare` per prefix the store
+#  knows, ASSEMBLED from every loaded ontology's own `@prefix` and never authored, because a
+#  kernel ontology listing every package's prefix would be the kernel knowing the packages.
+#  Declared here so the linker knows the node is somebody's; its content arrives with the
+#  shapes at every crossing.
+orexis: a owl:Ontology ;
+    rdfs:label "the store's dictionary" ;
+    rdfs:comment "The node a shape's sh:prefixes points at. Its sh:declare triples are assembled by the store from the loaded ontologies (store.DECLARATION), one per prefix, and travel with every shapes graph either engine is handed." .
+
 #################  Agents and capabilities (composition, not hierarchy)  #################
 
 orexis:Agent a owl:Class ; rdfs:label "Agent" ;

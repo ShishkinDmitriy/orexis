@@ -10,11 +10,12 @@
 water:WaterBidderShape a sh:NodeShape ;
     rdfs:comment "A bidder for water values it by its deficit below an aim, so it needs a pot size, a ceiling price, and an aim in the property those are denominated in. WHERE the aim may sit is not checked here: an aim inside its region is desire's arithmetic, true of any domain, and sensing:AimShape holds every aim to it. What only this domain can know is that a BID needs one — a bidder with no aim in the priced property has no deficit to value." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/orexis#hasCapability> <http://example.org/orexis/market#Bidding> .
-                ?this <http://example.org/orexis#actsFor>       ?plant .
-                ?plant a <http://example.org/orexis/water#Plant> .
+                ?this orexis:hasCapability market:Bidding .
+                ?this orexis:actsFor       ?plant .
+                ?plant a water:Plant .
             }
         """ ] ;
     sh:property [ sh:path water:litresPerFraction ; sh:minCount 1 ; sh:maxCount 1 ;
@@ -31,13 +32,14 @@ water:WaterBidderShape a sh:NodeShape ;
     # authored. Nothing else ever sees the number.
     sh:sparql [
         sh:message "a bidder holds no aim in the property its bids are priced in — without one there is no deficit, and a bid computed from nothing is not a bid" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                <http://example.org/orexis/water#litresPerFraction>
-                      <http://example.org/orexis/market#aboutProperty> ?property .
+                water:litresPerFraction
+                      market:aboutProperty ?property .
                 FILTER NOT EXISTS {
-                    $this <http://example.org/orexis/sensing#aims> ?aim .
-                    ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
+                    $this sensing:aims ?aim .
+                    ?aim ssn:forProperty ?property .
                 }
             }""" ] .
 
@@ -51,11 +53,12 @@ water:WaterBidderShape a sh:NodeShape ;
 water:RefillBidderShape a sh:NodeShape ;
     rdfs:comment "A bidder whose stake is a water source values refill litres by its stock's deficit below an aim, so it needs a conversion, a ceiling price, and an aim in the property those are denominated in." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/orexis#hasCapability> <http://example.org/orexis/market#Bidding> .
-                ?this <http://example.org/orexis#actsFor>       ?src .
-                ?src a <http://example.org/orexis/water#WaterSource> .
+                ?this orexis:hasCapability market:Bidding .
+                ?this orexis:actsFor       ?src .
+                ?src a water:WaterSource .
             }
         """ ] ;
     sh:property [ sh:path water:litresPerStoredLitre ; sh:minCount 1 ; sh:maxCount 1 ;
@@ -64,13 +67,14 @@ water:RefillBidderShape a sh:NodeShape ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] ;
     sh:sparql [
         sh:message "a refill bidder holds no aim in the property its bids are priced in — without one there is no deficit, and a bid computed from nothing is not a bid" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                <http://example.org/orexis/water#litresPerStoredLitre>
-                      <http://example.org/orexis/market#aboutProperty> ?property .
+                water:litresPerStoredLitre
+                      market:aboutProperty ?property .
                 FILTER NOT EXISTS {
-                    $this <http://example.org/orexis/sensing#aims> ?aim .
-                    ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
+                    $this sensing:aims ?aim .
+                    ?aim ssn:forProperty ?property .
                 }
             }""" ] .
 
@@ -111,16 +115,17 @@ water:RangesAgreeShape a sh:NodeShape ;
     sh:targetClass water:Plant ;
     sh:sparql [
         sh:message "an operating range for a property lies outside the survival range for that same property — a plant cannot thrive where it would not survive" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this ?low ?high WHERE {
-                $this <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?operating ;
-                      <http://www.w3.org/ns/ssn/systems/hasSurvivalRange>  ?survival .
-                ?operating <http://www.w3.org/ns/ssn/systems/inCondition> ?wants .
-                ?survival  <http://www.w3.org/ns/ssn/systems/inCondition> ?tolerates .
-                ?wants     <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                $this ssn-system:hasOperatingRange ?operating ;
+                      ssn-system:hasSurvivalRange  ?survival .
+                ?operating ssn-system:inCondition ?wants .
+                ?survival  ssn-system:inCondition ?tolerates .
+                ?wants     ssn:forProperty ?property ;
                            <https://schema.org/minValue> ?low ;
                            <https://schema.org/maxValue> ?high .
-                ?tolerates <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                ?tolerates ssn:forProperty ?property ;
                            <https://schema.org/minValue> ?floor ;
                            <https://schema.org/maxValue> ?ceiling .
                 FILTER(?low < ?floor || ?high > ?ceiling)

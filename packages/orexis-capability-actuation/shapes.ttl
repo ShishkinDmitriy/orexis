@@ -10,9 +10,10 @@
 actuation:ActuatingAgentShape a sh:NodeShape ;
     rdfs:comment "An agent that actuates must own the hardware it drives. Winning a claim is not this capability — redeeming one is." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
-            SELECT ?this WHERE { ?this <http://example.org/orexis#hasCapability>
-                                       <http://example.org/orexis/actuation#Actuation> }
+            SELECT ?this WHERE { ?this orexis:hasCapability
+                                       actuation:Actuation }
         """ ] ;
     sh:property [ sh:path actuation:hasActuator ; sh:minCount 1 ; sh:class sosa:Actuator ;
                   sh:message "an agent that actuates must own at least one actuator" ] ;

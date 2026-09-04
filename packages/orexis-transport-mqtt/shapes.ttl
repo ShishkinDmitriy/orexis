@@ -20,10 +20,11 @@ mqtt:MessageBusShape a sh:NodeShape ;
 mqtt:MqttSensorShape a sh:NodeShape ;
     rdfs:comment "A sensor that declares itself on a bus must say where it publishes; nothing derives a topic from a name. Keyed on mqtt:onBus rather than on having a topic, or the rule would evaporate exactly when the topic is missing — which is the case worth catching." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/orexis/mqtt#onBus> ?bus ;
-                      <http://example.org/orexis/sensing#monitors> ?subject .
+                ?this mqtt:onBus ?bus ;
+                      sensing:monitors ?subject .
             }
         """ ] ;
     sh:property [ sh:path mqtt:readingTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
@@ -37,10 +38,11 @@ mqtt:SenseModeBearerShape a sh:NodeShape ;
 mqtt:SpeakingDeviceShape a sh:NodeShape ;
     rdfs:comment "Every device that publishes readings states exactly one sense mode — the capability its agents derive follows from it, and a speaking device with no stated clock leaves them silently capability-less (#103's other half). Targets what connects AND reads; a valve connects and reports status but reads nothing, and correctly states no mode." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/orexis/mqtt#onBus> ?bus ;
-                      <http://example.org/orexis/mqtt#readingTopic> ?stream .
+                ?this mqtt:onBus ?bus ;
+                      mqtt:readingTopic ?stream .
             }
         """ ] ;
     sh:property [ sh:path sensing:senseMode ; sh:minCount 1 ; sh:maxCount 1 ; sh:class sensing:SenseMode ;
@@ -49,12 +51,13 @@ mqtt:SpeakingDeviceShape a sh:NodeShape ;
 mqtt:InstructableSensorShape a sh:NodeShape ;
     rdfs:comment "Only a device that accepts instruction has a command channel. Stating one for a self-clocked board would be a lie about the hardware — and stating none for a board that DOES take instruction makes it undrivable, so its agent would silently get no capability at all. Both instructable modes are covered: sensing:PolledProcedure takes a request, sensing:ScheduledProcedure takes an interval, and neither can be reached without a channel to say it on. Since #96 the mode sits ONLY on connecting devices, so the peripheral that used to escape this check (#103's measured table) cannot exist: a sensing element cannot claim to accept an interval at all, and its board cannot claim one without the channel demanded here." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                VALUES ?mode { <http://example.org/orexis/sensing#PolledProcedure>
-                               <http://example.org/orexis/sensing#ScheduledProcedure> }
-                ?this <http://example.org/orexis/sensing#senseMode> ?mode ;
-                      <http://example.org/orexis/mqtt#onBus> ?bus .
+                VALUES ?mode { sensing:PolledProcedure
+                               sensing:ScheduledProcedure }
+                ?this sensing:senseMode ?mode ;
+                      mqtt:onBus ?bus .
             }
         """ ] ;
     sh:property [ sh:path mqtt:commandTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
@@ -63,10 +66,11 @@ mqtt:InstructableSensorShape a sh:NodeShape ;
 mqtt:MqttActuatorShape a sh:NodeShape ;
     rdfs:comment "An actuator reached over MQTT must say where it takes its commands. THE only statement of this since #404: actuation's own shape made it too, of every actuator and not only of one on a bus, which is a capability deciding how its subject must be spoken to. Keyed on mqtt:onBus rather than on having a topic, like the sensor shape above and for the same reason — the rule must not evaporate exactly when the topic is missing." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/orexis/mqtt#onBus> ?bus ;
-                      <http://example.org/orexis/actuation#actuates> ?subject .
+                ?this mqtt:onBus ?bus ;
+                      actuation:actuates ?subject .
             }
         """ ] ;
     sh:property [ sh:path mqtt:commandTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
@@ -74,29 +78,31 @@ mqtt:MqttActuatorShape a sh:NodeShape ;
 mqtt:AlarmChannelShape a sh:NodeShape ;
     rdfs:comment "A watched channel (#151) must be one whose band can EXIST: either its sensor rides a Scheduled device with a command channel — the governed node, whose bands arrive retained beside the cadence — or it rides a Push device, the SENTINEL, whose band is compiled in at flash time from the world's own operating range because a board that takes no orders can still keep a promise the world wrote. What is refused is the gap between: a scheduled device without the channel its bands would arrive on." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://www.w3.org/ns/ssn/implements>
-                      <http://example.org/orexis/sensing#AlarmProcedure> .
+                ?this ssn:implements
+                      sensing:AlarmProcedure .
             }
         """ ] ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "a watched channel must ride either a Scheduled device with the command channel its bands arrive on, or a Push device whose band is compiled in — nothing here is either" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/orexis/mqtt#readingTopic> ?stream .
+                $this mqtt:readingTopic ?stream .
                 FILTER NOT EXISTS {
-                    ?device <http://example.org/orexis/mqtt#readingTopic> ?stream ;
-                            <http://example.org/orexis/mqtt#onBus> ?bus ;
-                            <http://example.org/orexis/sensing#senseMode>
-                              <http://example.org/orexis/sensing#ScheduledProcedure> ;
-                            <http://example.org/orexis/mqtt#commandTopic> ?cmd .
+                    ?device mqtt:readingTopic ?stream ;
+                            mqtt:onBus ?bus ;
+                            sensing:senseMode
+                              sensing:ScheduledProcedure ;
+                            mqtt:commandTopic ?cmd .
                 }
                 FILTER NOT EXISTS {
-                    ?pushDevice <http://example.org/orexis/mqtt#readingTopic> ?stream ;
-                                <http://example.org/orexis/mqtt#onBus> ?pushBus ;
-                                <http://example.org/orexis/sensing#senseMode>
-                                  <http://example.org/orexis/sensing#PushProcedure> .
+                    ?pushDevice mqtt:readingTopic ?stream ;
+                                mqtt:onBus ?pushBus ;
+                                sensing:senseMode
+                                  sensing:PushProcedure .
                 }
             }
         """ ] .

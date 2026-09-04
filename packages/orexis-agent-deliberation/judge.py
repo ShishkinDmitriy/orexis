@@ -33,6 +33,8 @@ import functools
 
 import pyoxigraph as ox
 import rdflib
+
+from orexis_agent_progression.store import DECLARATION, NAMESPACES
 from pyrudof import (RDFFormat, ResultShaclValidationFormat, Rudof, RudofConfig, ShaclFormat,
                      ShaclValidationMode)
 
@@ -163,10 +165,10 @@ def _resolved_ttl(shapes: rdflib.Graph, data_ttl: str) -> tuple[str, rdflib.Grap
 
     The select runs against the DATA — that is what a SPARQL-based target means — on a
     pyoxigraph store of its own, which is the engine every other query here already answers
-    to. The original `sh:target` node stays in the text: rudof ignores it, and removing it
-    would make the crossing lie about what the author wrote. The selects these packages hold
-    spell every IRI in full (no `sh:prefixes` anywhere in the tree, and the prefix discipline
-    in `tests/test_store.py` keeps it that way), so the text runs as written.
+    to — handed the store's dictionary, exactly as `Store.query` hands it (#500, #508), so a
+    select written in prefixed names runs here as it runs there. The original `sh:target`
+    node stays in the text: rudof ignores it, and removing it would make the crossing lie
+    about what the author wrote.
 
     The split matters because the shape text is world-independent: a planner judging many
     candidate worlds against one shapes graph re-pays only the target selects and a string
@@ -182,7 +184,7 @@ def _resolved_ttl(shapes: rdflib.Graph, data_ttl: str) -> tuple[str, rdflib.Grap
     store.load(data_ttl.encode(), format=ox.RdfFormat.N_TRIPLES)   # what `crossed` writes
     additions = []
     for shape, select in targets:
-        for row in store.query(select):
+        for row in store.query(select, prefixes=NAMESPACES):
             node = row["this"]
             if isinstance(node, ox.NamedNode):        # a blank target could not survive the
                 additions.append(                     # border crossing; nothing here mints one
@@ -212,4 +214,9 @@ def _prepared(shapes: rdflib.Graph) -> tuple[str, tuple[tuple[str, str], ...]]:
             if select is None:
                 continue
             targets.append((str(shape), str(select)))
-    return shapes.serialize(format="turtle"), tuple(targets), shapes
+    #  THE DICTIONARY TRAVELS WITH THE SHAPES. A constraint's `sh:prefixes orexis:` resolves
+    #  only through `sh:declare` triples in the graph rudof is handed, and no shapes file
+    #  carries them (store.DECLARATION says why) — so every crossing appends the one
+    #  assembled declaration, whether the shapes came from files, from a carved belief or
+    #  from a world's own law.
+    return shapes.serialize(format="turtle") + "\n" + DECLARATION, tuple(targets), shapes

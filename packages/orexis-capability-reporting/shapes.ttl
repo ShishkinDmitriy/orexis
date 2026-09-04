@@ -23,10 +23,11 @@ Absence used to mean an agent reporting nothing. No world ever wrote that — al
 
 Targeted through the capability rather than at orexis:Agent directly, so the shape says what it means: this is required OF SOMETHING THAT REPORTS. That the two coincide today is the derivation's doing, not this shape's assumption.""" ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/orexis#hasCapability> ?cap .
-                ?cap a <http://example.org/orexis/reporting#ReportingCapability> .
+                ?this orexis:hasCapability ?cap .
+                ?cap a reporting:ReportingCapability .
             }
         """ ] ;
     sh:property [ sh:path reporting:metricsIntervalS ; sh:minCount 1 ; sh:maxCount 1 ;

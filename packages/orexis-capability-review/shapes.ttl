@@ -8,10 +8,11 @@
 review:ReviewingAgentShape a sh:NodeShape ;
     rdfs:comment "An agent that may re-pick must say how often it is willing to look. This is now an ordinary required parameter, exactly as sensing:fastSleepS is for one that subscribes — where it used to be OPTIONAL and its absence was the activation signal. Absence meaning 'never review' was a side channel dressed as a decision by omission: nothing could check it, and it put the question 'does this agent reflect' in a private file where no shape and no peer could read the answer. What says whether an agent reviews is now whether the world gave it any room, and that is checked by the rule that grants the capability rather than by the silence of a beliefs file. A floor of 60s because an arising re-validates the whole agent against every shape." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/orexis#hasCapability> ?cap .
-                ?cap a <http://example.org/orexis/review#ReviewCapability> .
+                ?this orexis:hasCapability ?cap .
+                ?cap a review:ReviewCapability .
             }
         """ ] ;
     sh:property [ sh:path review:reviewIntervalS ; sh:minCount 1 ; sh:maxCount 1 ;
@@ -28,10 +29,11 @@ review:MandateShape a sh:NodeShape ;
     sh:property [ sh:path review:notAbove ; sh:maxCount 1 ] ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "a mandate must name at least one bound — a mandate with neither is not a range, and an agent would be told it has room without being told how much" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                FILTER NOT EXISTS { $this <http://example.org/orexis/review#notBelow> ?lo }
-                FILTER NOT EXISTS { $this <http://example.org/orexis/review#notAbove> ?hi }
+                FILTER NOT EXISTS { $this review:notBelow ?lo }
+                FILTER NOT EXISTS { $this review:notAbove ?hi }
             }
         """ ] .
 
@@ -40,16 +42,17 @@ review:MandateWithinTheConstitutionShape a sh:NodeShape ;
     sh:targetObjectsOf review:commits ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "this mandate reaches outside what the society allows for that term — a world may narrow the constitution, never widen it" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/orexis/review#onTerm> ?term .
-                ?term <http://example.org/orexis/review#revisableToward> ?bound .
+                $this review:onTerm ?term .
+                ?term review:revisableToward ?bound .
                 ?family ?bound ?limit .
-                { $this <http://example.org/orexis/review#notBelow> ?v } UNION
-                { $this <http://example.org/orexis/review#notAbove> ?v }
+                { $this review:notBelow ?v } UNION
+                { $this review:notAbove ?v }
                 {
                     SELECT ?term (MIN(?l) AS ?lo) (MAX(?l) AS ?hi) WHERE {
-                        ?term <http://example.org/orexis/review#revisableToward> ?b .
+                        ?term review:revisableToward ?b .
                         ?f ?b ?l .
                     } GROUP BY ?term
                 }
@@ -62,15 +65,16 @@ review:MandateWithinWhatTheEquipmentCanHonourShape a sh:NodeShape ;
     sh:targetObjectsOf review:commits ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "this mandate reaches past what the agent's own equipment can honour — a board states the smallest gap it will keep, and a world may not commit an agent to less" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                ?agent <http://example.org/orexis/review#commits> $this .
-                $this <http://example.org/orexis/review#onTerm> ?term .
-                { $this <http://example.org/orexis/review#notBelow> ?v } UNION
-                { $this <http://example.org/orexis/review#notAbove> ?v }
-                ?agent <http://example.org/orexis/review#limitedTo> ?limit .
-                ?limit <http://example.org/orexis/review#onTerm> ?term ;
-                       <http://example.org/orexis/review#notBelow> ?floor .
+                ?agent review:commits $this .
+                $this review:onTerm ?term .
+                { $this review:notBelow ?v } UNION
+                { $this review:notAbove ?v }
+                ?agent review:limitedTo ?limit .
+                ?limit review:onTerm ?term ;
+                       review:notBelow ?floor .
                 FILTER(?v < ?floor)
             }
         """ ] .

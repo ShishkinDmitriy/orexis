@@ -10,9 +10,10 @@
 market:BiddingAgentShape a sh:NodeShape ;
     rdfs:comment "An agent that bids must have a venue to bid in and a wallet to bid with. What it will PAY is domain-specific and checked by the domain's shapes." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
-            SELECT ?this WHERE { ?this <http://example.org/orexis#hasCapability>
-                                       <http://example.org/orexis/market#Bidding> }
+            SELECT ?this WHERE { ?this orexis:hasCapability
+                                       market:Bidding }
         """ ] ;
     sh:property [ sh:path market:bidsIn ; sh:minCount 1 ; sh:class market:Market ;
                   sh:message "a bidder must participate in a market" ] ;
@@ -26,9 +27,10 @@ market:BiddingAgentShape a sh:NodeShape ;
 market:HostingAgentShape a sh:NodeShape ;
     rdfs:comment "A host must run a venue and state its terms: what it puts up, the floor it will not sell below, how long it waits for bids, and how often it will open a round at all." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
-            SELECT ?this WHERE { ?this <http://example.org/orexis#hasCapability>
-                                       <http://example.org/orexis/market#Hosting> }
+            SELECT ?this WHERE { ?this orexis:hasCapability
+                                       market:Hosting }
         """ ] ;
     sh:property [ sh:path market:hosts ; sh:minCount 1 ; sh:class market:Market ] ;
     sh:property [ sh:path market:offerQuantityL ; sh:minCount 1 ; sh:maxCount 1 ;
