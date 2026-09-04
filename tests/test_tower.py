@@ -104,3 +104,41 @@ def test_seven_moves_are_planned_once_above_and_each_is_planned_as_drives_below(
     assert searches.count(WANT) == 1 and len([s for s in searches if s.startswith(PROMISE)]) == 7, \
         "one search above, one below per Move"
     assert all(2 <= len(d) <= 12 for d in drives), drives
+
+
+def test_a_move_the_courier_cannot_make_is_refused_below_and_the_outer_level_stops_choosing_it(monkeypatch):
+    """#533: cut the grid so peg C's cell is unreachable. The outer search still plans seven
+    Moves — it sees no cells — and the first Move's promise finds no drives. When the step
+    lapses, the refusal is written on it, and the next outer pass passes every Move to peg C
+    over, records why, and answers that nothing helps rather than choosing the same move
+    again. Two levels that would have looped now stop, with the reason in the trace."""
+    from orexis_agent_deliberation import planner, pursuit, trace
+    from orexis_agent_progression.ontology import WORLD_GRAPH
+
+    agent = _mover(monkeypatch, ["disk_1", "disk_2", "disk_3"])
+    # peg C sits at c1_2; remove the cells around it so no drive reaches it
+    for cell in ("c0_2", "c2_2", "c1_1"):
+        agent.beliefs.update(f"DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{ <{W}{cell}> ?p ?o }} }}")
+    agent.beliefs.update(f"DELETE WHERE {{ GRAPH <{STATE_GRAPH}> {{ <{W}van> <{C}at> ?c }} }}")
+    agent.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <{W}van> <{C}at> <{W}c1_0> }} }}")
+    keeper = agent.keeper
+    outer = pursuit.pursue(agent, next(g for g in agent.pursuing() if g.uri == WANT))
+    assert outer is not None, "the outer level plans without seeing a cell"
+    promises = [d for d in agent.pursuing() if d.uri.startswith(PROMISE)]
+    assert len(promises) == 1
+    failed = agent.deliberator._plans_failed
+    assert pursuit.pursue(agent, promises[0]) is None, "the courier finds no way to peg C"
+    assert agent.deliberator._plans_failed == failed + 1, "the refusal lapses the step at once"
+    refused = bindings(agent.intentions.query_union(
+        f"SELECT ?s ?a WHERE {{ ?s progression:refusedBelow ?at ; orexis:about ?a }}"))
+    assert len(refused) == 1 and refused[0]["a"] == H + "PegC", "the refusal is on the step, naming the peg"
+    again = pursuit.pursue(agent, next(g for g in agent.pursuing() if g.uri == WANT))
+    assert again is not None and again != outer, "the outer level decides again, around the refusal"
+    head = keeper.current(again)
+    assert not (head.via == W + "disk_1" and head.about == H + "PegC"), \
+        "the refused move is not chosen again while the refusal is younger than the patience"
+    from orexis_agent_progression.ontology import DELIBERATION_GRAPH
+    refusals = bindings(agent.beliefs.query(f"""
+SELECT ?c WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
+  ?c deliberation:verdict "{trace.REFUSED}" ; progression:through <{W}disk_1> }} }}"""))
+    assert refusals, "and the trace says why it was passed over"

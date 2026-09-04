@@ -140,6 +140,8 @@ progression:becauseOf a owl:DatatypeProperty ; rdfs:domain progression:Intention
 progression:partOf a owl:ObjectProperty ; rdfs:domain progression:Step ; rdfs:range progression:Step ; rdfs:label "part of" ;
     rdfs:comment "The step this one is a filling of: a member of a method expanded from it. The parent stays in the ledger, off the `progression:then` chain, so a reader can recover the tree the flat walk came from." .
 
+progression:refusedBelow a owl:DatatypeProperty ; rdfs:domain progression:Step ; rdfs:range xsd:dateTime ; rdfs:label "refused below" ;
+    rdfs:comment "When the level beneath found NO way to keep this step's promise — the promise lapsed with no plan ever adopted for it (#533). What teaches the level above: a candidate of the same action, lever and subject is passed over while a refusal is younger than the patience, so two levels cannot loop on a move the courier cannot carry out; when the patience has passed the move is tried again, since the world may have changed. The same shape as suspicion, one level down." .
 progression:promisedBy a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range progression:Step ; rdfs:label "promised by" ;
     rdfs:comment "The step whose promise this want is — a step of a taker-less action, waiting on the fact the want brings about. Withdrawn with the step's verdict." .
 

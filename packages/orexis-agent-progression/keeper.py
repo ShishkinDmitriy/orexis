@@ -577,6 +577,50 @@ WHERE  {{ GRAPH <{promises_graph(self.agent.id)}> {{
                         STATE_GRAPH, " ".join(f"{s} {p} {o} ." for s, p, o in come)))
         self.log.info("promise %s withdrawn: %s", _short(want), "kept" if kept else "not kept")
 
+    def refuse_below(self, want: str, because: str) -> None:
+        """The level beneath found no way to keep a promise (#533): deliberation says so, once
+        it has searched. The refusal is written on the promising step — `refusedBelow`, what
+        the level above passes the move over by while it is younger than the patience — and
+        the step lapses at once rather than waiting out its patience: the answer is in."""
+        rows = bindings(self.agent.desires.query_union(
+            f"SELECT ?step WHERE {{ <{want}> <{kernel('promisedBy')}> ?step }}"))
+        if not rows:
+            return
+        step_uri = rows[0]["step"]
+        self.agent.intentions.update(f"""
+INSERT DATA {{ GRAPH <{self.graph}> {{
+  <{step_uri}> <{kernel("refusedBelow")}> "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime }} }}""")
+        self.log.warning("refused below: the level beneath found no way to keep %s's promise — %s",
+                         _short(step_uri), because)
+        for standing in self.standing():
+            if standing.step is not None and self.current(standing.uri) is not None and \
+                    bindings(self.agent.intentions.query_union(
+                        f"SELECT ?s WHERE {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{kernel('by')}> <{step_uri}> }} }}")):
+                self.lapse(standing.uri)
+
+    def refused_below(self, action: str, via: str | None, about: str | None) -> bool:
+        """Was a step of this action, through this lever, about this subject, refused by the
+        level beneath within the patience (#533)? The search's question before it weighs the
+        candidate: a move the courier could not carry out a minute ago is passed over, and
+        tried again once the patience has passed, since the world may have changed."""
+        try:
+            patience = float(self.beliefs.patience_s)
+        except Exception:                                           # noqa: BLE001
+            return False      # an agent that states no patience keeps no refusal: nothing to pass over
+        since = datetime.now(timezone.utc) - timedelta(seconds=patience)
+        def iri(x):
+            return isinstance(x, str) and ":" in x and " " not in x and not x.startswith("urn:nothing")
+        lever = f'?s <{kernel("through")}> <{via}> .' if iri(via) else ""
+        subject = f'?s <{kernel("about")}> <{about}> .' if iri(about) else ""
+        try:
+            return bool(bindings(self.agent.intentions.query_union(f"""
+SELECT ?s WHERE {{ GRAPH <{self.graph}> {{
+  ?s <{kernel("fills")}> <{action}> ; <{kernel("refusedBelow")}> ?at . {lever} {subject}
+  FILTER(?at > "{since.isoformat()}"^^xsd:dateTime) }} }} LIMIT 1""")))
+        except Exception as exc:                                    # noqa: BLE001
+            self.log.error("could not ask whether %s was refused below: %s", action.rsplit("#", 1)[-1], exc)
+            return False
+
     def _lapses_at(self, action: str, tokens: dict) -> datetime | None:
         """When a wait on a step of this action is over, asked of the action's own
         `orexis:lapsesAt` — a dateTime, or seconds from now; None is the patience."""

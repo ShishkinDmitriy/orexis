@@ -90,10 +90,14 @@ that pattern untranslated; it reads it now.
 - **The outer level's costs abstract the level below.** Move costs one whether the van is next
   to the peg or across the grid; a level's cost may one day read the level below's estimate
   the way a want reads a package's select. Left until the tower shows a wrong choice for it.
-- **A promise refused below should teach the outer level** (an issue): a step lapsing at its
-  refinement replans the outer level from the world as it is, and if every outer plan fails at
-  the same refinement the two levels loop. The refused Move should cost more, or be barred,
-  on the next pass — the same shape as suspicion.
+- **A promise refused below teaches the outer level** — settled (#533): when the search
+  below answers a promise with no plan, or a plan that does not reach it, deliberation says so
+  to the keeper, which writes `progression:refusedBelow` on the promising step and lapses it at
+  once rather than waiting out its patience. The level above then passes over a candidate of
+  the same action, lever and subject while the refusal is younger than the patience — recorded
+  in the trace as passed over, not weighed — and tries it again after, since the world may
+  have changed. Each distinct move is refused once per patience, so two levels cannot loop,
+  and a tower with peg C cut off plans around the cut until nothing helps.
 - **A promise nobody could ever keep is a misconfigured world** — settled (#532): a bridge into
   facts no declared action writes is refused at onboarding and at boot. Narrower than first
   filed, and rightly: a taker-less action with no bridge at all is knowledge-only and admitted,
