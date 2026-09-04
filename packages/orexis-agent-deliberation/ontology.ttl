@@ -93,6 +93,14 @@ deliberation:blind a owl:DatatypeProperty ; rdfs:domain deliberation:Deliberatio
     rdfs:label "blind" ;
     rdfs:comment "Whether some lever was passed over for want of a stated effect, leaving the pass unable to claim it looked at everything. A verdict of `no candidate` beside this being true means the search saw part of the menu — which is why the deliberator defers to the reflex rather than reporting that nothing helps." .
 
+deliberation:judgedThrough a owl:DatatypeProperty ; rdfs:domain deliberation:Deliberation ; rdfs:range xsd:string ;
+    rdfs:label "judged through" ;
+    rdfs:comment "Which road decided whether the want was met in each world weighed (#502): the select compiled from its shape, the pattern it authors, the record of what was discharged, or a module's measure — or none, where a remembered plan was adopted without a pass. Said on every pass rather than left to be inferred from what else the trace carries, because a kind said by absence is a kind two readers disagree about." .
+
+deliberation:judgedBy a owl:DatatypeProperty ; rdfs:domain deliberation:Deliberation ; rdfs:range xsd:string ;
+    rdfs:label "judged by" ;
+    rdfs:comment "The SELECT text the pass judged every candidate world by, where the road was a text: the select the kernel compiled from the want's shape (#497, #499), or the pattern the want authors. An EXPLANATION of what a pass ran, never a property of the shape — a shape's sh:sparql slot is a constraint the judge would conjoin and report twice, and a stored copy would outlive the shape it was compiled from. Absent where the road is the record or a measure." .
+
 #  HOW MUCH ONE PASS MAY IMAGINE, in worlds — the ceiling on what a deliberation spends, stated
 #  in the unit the search actually spends: a fork in the imaginarium, whose cost per world the
 #  runbook measures against the mutable slice. It was a DEPTH, a constant in the planner, and

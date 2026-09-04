@@ -441,7 +441,8 @@ class Deliberator:
         if kept is not None:
             uri, steps, cost = kept
             plan = planner.Plan(planner.REMEMBERED, tuple(steps), desire.urgency, None, cost=cost)
-            trace.write(self.agent.beliefs, self.agent.id, desire, plan, [], desire.urgency, 0.0)
+            trace.write(self.agent.beliefs, self.agent.id, desire, plan, [], desire.urgency, 0.0,
+                        (trace.UNJUDGED, None))
             self._decided[desire.uri] = (world, plan, uri)
             self.log.info("%s: remembered — %d step(s) that worked in this world before",
                           _short(desire.uri), len(steps))

@@ -201,6 +201,16 @@ Three things it must not become:
 - **Nothing reads it back.** Cycle detection lives in the search, in a set that lasts as long as
   the pass. A trace that became memory would be a conclusion feeding a conclusion.
 
+And one thing it shows that lives nowhere else (#502): **how the want was judged.** Every pass
+says `deliberation:judgedThrough` — the select compiled from its shape, the pattern it authors,
+the record of what was discharged, or a module's measure; or nothing, where a remembered plan
+was adopted — and where the road is a text, `deliberation:judgedBy` carries the SELECT the pass
+ran at every world it weighed. The compiled select is computed once per pass and never asserted,
+which is right for the store and wrong for the person asking why a want read as unmet; the trace
+is where that person looks, through `orexis-ask` on the beliefs modality like the rest of it. It
+is an explanation of what a pass ran, never a property of the shape: written into the shape's
+`sh:sparql` slot it would be a second constraint the judge conjoins and reports twice.
+
 Not public, and the reason is not tidiness: which levers an agent weighed and rejected is a
 disclosure nobody decided to make, and a rival reading it would learn what its neighbour can
 nearly do. It is reachable the way an intention ledger is — the sovereign asks.

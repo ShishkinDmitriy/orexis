@@ -743,8 +743,27 @@ class Planner:
         """
         trace.write(self.agent.beliefs, self.agent.id, desire, plan,
                     getattr(self, "_weighed", []), stands_at,
-                    time.monotonic() - self._started)
+                    time.monotonic() - self._started, self._judged(desire))
         return plan
+
+    def _judged(self, desire: Desire) -> tuple[str, str | None]:
+        """Which road `_met_in` took for this want, and the text where the road is one (#502).
+
+        The SAME order as `_met_in`, and only that order: an authored pattern first, then the
+        select compiled in `_begin` — a shape want's violation select, or an avoided state's
+        conformance select — then the record for an obligation, and a module's measure for
+        everything else. Asked after the pass rather than remembered during it so the trace
+        says what the judge would have said of this want in ANY world, not what it happened
+        to say of the last.
+        """
+        pattern = self._avoided_pattern(desire)
+        if pattern is not None:
+            return trace.AUTHORED, pattern
+        if getattr(self, "_unmet", None) is not None:
+            return trace.COMPILED, self._unmet
+        if desire.is_obligation:
+            return trace.RECORD, None
+        return trace.MEASURE, None
 
     def _offer(self, plan: Plan, desire: Desire, node) -> Plan:
         """A plan, once it has been checked for legality — and only the winner is checked.

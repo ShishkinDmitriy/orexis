@@ -295,7 +295,8 @@ is positive and universal — every parcel at its destination — and rows are e
 judging a shape by rows means turning it inside out; the search does that once per pass, in
 `packages/orexis-agent-progression/violation.py`, compiling the shape's constraints into the one select whose rows are the focus
 nodes that violate it, and runs that on the store's own engine at every candidate world for a
-millisecond where the judge's reader floors at tens. Computed, never stored. The two puzzle
+millisecond where the judge's reader floors at tens. Computed, never stored — and shown, per
+pass, as `deliberation:judgedBy` in the [trace](/domain/deliberator.md) (#502). The two puzzle
 worlds author their goals positively — `courier:delivered`, `hanoi:solved` — and nobody writes
 "a parcel astray" by hand. Coverage is the fragment the derivations emit and a shape outside it
 refuses, named, never compiling to something quiet; `tests/test_violation.py` holds every
