@@ -29,6 +29,8 @@ knowledge/decisions/an-intention-is-a-plan-committed-to.md.
 
 from __future__ import annotations
 
+from .planner import SATISFIED
+
 from orexis_agent_progression.execution import carry_out
 from orexis_agent_reactive.loop import loop
 
@@ -47,6 +49,14 @@ def pursue(agent, desire) -> str | None:
         #  back here. A search now would re-decide what nothing has contradicted.
         return going.uri
     plan = agent.deliberator.decide(desire)
+    #  A PROMISE THE SEARCH CANNOT MEET IS REFUSED BELOW (#533): a want some step raised for
+    #  this level, answered with no plan, or with a plan that does not reach it, is a promise
+    #  the level beneath cannot keep — said to the keeper, which writes the refusal on the
+    #  step and lapses it at once, so the level above passes the move over and decides again.
+    if keeper is not None and _promised(agent, desire.uri) and \
+            (plan is None or plan.outcome != SATISFIED):
+        keeper.refuse_below(desire.uri, plan.outcome if plan is not None else "nothing to do")
+        return None
     if plan is None or not plan.steps:
         return None
     act = plan.steps[0]
@@ -105,3 +115,10 @@ def _because(plan, desire) -> str:
         return f"{plan.outcome} for {what}"
     return (f"{plan.outcome} for {what}: urgency {plan.urgency_now:.2f} -> "
             f"{plan.urgency_after:.2f} over {len(plan.steps)} step(s)")
+
+
+def _promised(agent, want: str) -> bool:
+    """Is this want a promise some step raised for this level (`progression:promisedBy`)?"""
+    from orexis_agent_progression.store import bindings
+    return bool(bindings(agent.desires.query_union(
+        f"SELECT ?s WHERE {{ <{want}> progression:promisedBy ?s }} LIMIT 1")))

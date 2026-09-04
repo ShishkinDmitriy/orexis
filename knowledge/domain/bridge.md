@@ -33,6 +33,11 @@ promised are one thing described twice, and materialising it upward is the keepe
 saturation rule exists. Then the next abstract step becomes current and is planned in turn,
 from wherever the world now stands.
 
+**And a promise the level beneath cannot keep is said, not waited out.** When the search
+below finds no way, the keeper writes `progression:refusedBelow` on the step and lapses it at
+once; the search above passes that move over while the refusal is younger than the patience
+(#533), the same shape as suspicion one level down.
+
 # What it is not
 
 **Not a method.** A [method](/domain/method.md) is declared, for a protocol; a bridge declares

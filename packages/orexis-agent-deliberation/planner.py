@@ -502,6 +502,13 @@ class Planner:
                 break
             depth = len(node.taken)
             for row in self._candidates(node, desire):
+                keeper = getattr(self.agent, "keeper", None)
+                if keeper is not None and keeper.refused_below(row.action, row.via, row.about):
+                    #  REFUSED BELOW (#533): the level beneath found no way to keep this very
+                    #  move's promise within the patience. Passed over, recorded, and tried
+                    #  again when the patience has passed — the world may have changed.
+                    self._weighed.append((depth, row, None, trace.REFUSED))
+                    continue
                 if self._relevant is not None and row.action not in self._relevant:
                     #  A lever that touches nothing this want reads, by its own effect and
                     #  by nothing it could enable (#488). Recorded, never simulated, and not
