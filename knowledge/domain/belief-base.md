@@ -194,15 +194,22 @@ the wiring once.
 graph is classified wherever it can be: a package declares its own in its ontology — sensing's
 instruments graph, whose name the kernel does not know — and a per-agent graph is typed by the
 agent itself at boot, into the classification graph, because it does not exist until its agent
-does.
+does. Boot ASKS which classes to type (#448): every class stating where its instances live
+(`orexis:graphPrefix`) and how they arrive (`orexis:arrivesBy`) is a per-agent graph class,
+whichever package declared it — the kernel's records, the layers' ledgers, review's scratch —
+and this agent's instance is the prefix and its id. A class with a prefix and no arrival
+refuses the boot.
 
-Three things are left out, and each was a real answer the query gave before it was narrowed:
+Four things are left out, and each was a real answer the query gave before it was narrowed:
 
 - **public graphs**, because the world declares every agent's belief graph BY NAME — one agent's
   store can see that another's exists. A name is not content, but carrying it would be carrying
   somebody else's;
 - **the deliberation trace**, because a record of a pass is not a fact about the world, and a
   hypothesis has no place in a hypothesis;
+- **a working graph** (`orexis:WorkingGraph`) — review's summaries, evidence and revisions —
+  because it is the agent's and nothing outside its package reads it: classified so a volume
+  knows it from litter, and not a fact about the world a shape is written against;
 - **nothing on grounds of not existing yet.** `sensed` has no graph until the first reading, and
   a validation that stopped naming it lost the state its shapes are written against. A graph
   that is not there contributes nothing, so the tolerant list is the correct one.

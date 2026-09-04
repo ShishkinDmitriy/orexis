@@ -18,7 +18,7 @@
 
 
 deliberation:RememberedGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Remembered graph" ;
-    orexis:graphPrefix "http://example.org/orexis/graph/remembered/" ;
+    orexis:graphPrefix "http://example.org/orexis/graph/remembered/" ; orexis:arrivesBy orexis:Recorded ;
     rdfs:comment "ONE agent's remembered plans (#469): each a plan that reached its end, lifted filled — its steps as they were walked, with their predictions — and hung on the want it served with the signature of the world it was adopted in. A pursuit of that want in a world of the same signature adopts it with no search; in a world of another signature it is walked as one candidate on the menu; a remembered plan that fails a step is forgotten. A recorded graph, disclosed like the ledger; never a possible world." .
 deliberation:RememberedPlan a owl:Class ; rdfs:label "Remembered plan" ;
     rdfs:comment "A method on a want, lifted from a plan that worked (a-remembered-plan-is-a-method-on-the-want): `deliberation:forWant` the want, `deliberation:inWorld` the signature of the world it was adopted in, `deliberation:lifted` its steps in order, `deliberation:measuredCost` what the search said it would spend. Filled, not yet lifted to variables: the same world adopts it outright, another world weighs it as one candidate — its steps walked in the imaginarium, each on the menu of the world the one before reached — and the world corrects it step by step once taken." .
