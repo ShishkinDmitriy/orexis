@@ -1288,6 +1288,27 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{PROGRESSION + "by"}> ?was }} }
         carry_out(self.agent, standing.step, desire, watch.uri)
         return True
 
+    def walked(self, intention_uri: str) -> list:
+        """An intention's steps in `then` order, resolved or not — what a plan that reached its
+        end was, for whoever lifts it (#469)."""
+        rows = bindings(self.agent.intentions.query_union(f"""
+SELECT ?s ?next ?action ?via ?about ?quantity ?predicts WHERE {{ GRAPH <{self.graph}> {{
+  <{intention_uri}> <{kernel("step")}> ?s . ?s <{kernel("fills")}> ?action .
+  OPTIONAL {{ ?s <{kernel("then")}> ?next }} OPTIONAL {{ ?s <{kernel("through")}> ?via }}
+  OPTIONAL {{ ?s <{kernel("about")}> ?about }} OPTIONAL {{ ?s <{kernel("quantity")}> ?quantity }}
+  OPTIONAL {{ ?s <{kernel("predicts")}> ?predicts }} }} }}"""))
+        by = {r["s"]: r for r in rows}
+        nexts = {r.get("next") for r in rows if r.get("next")}
+        head = next((s for s in by if s not in nexts), None)
+        out, node = [], head
+        while node in by:
+            r = by[node]
+            out.append(Step(action=r["action"], via=r.get("via") or "", about=r.get("about"),
+                            quantity=float(r["quantity"]) if r.get("quantity") else None,
+                            predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None))
+            node = r.get("next")
+        return out
+
     def current(self, intention_uri: str):
         """The step this intention stands at, as the ledger has it — what there is to take."""
         return next((s.step for s in self.standing() if s.uri == intention_uri), None)

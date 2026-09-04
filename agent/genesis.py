@@ -405,7 +405,8 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
     function of the vocabulary, so a graph whose modality is refined by an amendment says the
     new thing on the next boot without a migration.
     """
-    from orexis_agent_progression.ontology import OREXIS, CLASSIFICATION_GRAPH, obligations_graph, promises_graph
+    from orexis_agent_progression.ontology import OREXIS, PROGRESSION, CLASSIFICATION_GRAPH, obligations_graph, promises_graph
+    from orexis_agent_deliberation.ontology import DELIBERATION, remembered_graph
 
     from orexis_agent_progression.graphs import intentions_graph
 
@@ -413,13 +414,16 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
     # walk a subclass path (one-graph-both-engines-read), and the closure cannot help here:
     # these triples are written at runtime, long after it ran.
     mine = [
-        (beliefs_graph(agent_id), ("PickRecordGraph",), "Asserted"),
-        (intentions_graph(agent_id), ("IntentionGraph",), "Recorded"),
-        (obligations_graph(agent_id), ("ObligationsGraph",), "Received"),
-        (promises_graph(agent_id), ("PromisesGraph",), "Recorded"),
+        (beliefs_graph(agent_id), (OREXIS + "PickRecordGraph",), "Asserted"),
+        (intentions_graph(agent_id), (PROGRESSION + "IntentionGraph",), "Recorded"),
+        (obligations_graph(agent_id), (OREXIS + "ObligationsGraph",), "Received"),
+        (promises_graph(agent_id), (PROGRESSION + "PromisesGraph",), "Recorded"),
+        (remembered_graph(agent_id), (DELIBERATION + "RememberedGraph",), "Recorded"),
     ]
+    #  FULL IRIs, since #529: a per-agent graph's class is its layer's word, and spelling every
+    #  class `orexis:` classified the promises graph as nothing the store recognises.
     triples = " ".join(
-        f"<{iri}> a {' , '.join(f'orexis:{c}' for c in classes)} ; "
+        f"<{iri}> a {' , '.join(f'<{c}>' for c in classes)} ; "
         f"orexis:arrivedBy orexis:{arrival} ."
         for iri, classes, arrival in mine)
     st.clear_graph(CLASSIFICATION_GRAPH)

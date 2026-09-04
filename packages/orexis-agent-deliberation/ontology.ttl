@@ -17,6 +17,19 @@
 
 
 
+deliberation:RememberedGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Remembered graph" ;
+    orexis:graphPrefix "http://example.org/orexis/graph/remembered/" ;
+    rdfs:comment "ONE agent's remembered plans (#469): each a plan that reached its end, lifted filled — its steps as they were walked, with their predictions — and hung on the want it served with the signature of the world it was adopted in. A pursuit of that want in a world of the same signature adopts it with no search; a remembered plan that fails a step is forgotten. A recorded graph, disclosed like the ledger; never a possible world." .
+deliberation:RememberedPlan a owl:Class ; rdfs:label "Remembered plan" ;
+    rdfs:comment "A method on a want, lifted from a plan that worked (a-remembered-plan-is-a-method-on-the-want): `deliberation:forWant` the want, `deliberation:inWorld` the signature of the world it was adopted in, `deliberation:lifted` its steps in order, `deliberation:measuredCost` what the search said it would spend. Filled, not yet lifted to variables: it applies where the same world recurs, and the world corrects it step by step where it does not." .
+deliberation:forWant a owl:ObjectProperty ; rdfs:domain deliberation:RememberedPlan ; rdfs:label "for want" .
+deliberation:inWorld a owl:DatatypeProperty ; rdfs:domain deliberation:RememberedPlan ; rdfs:range xsd:string ; rdfs:label "in world" ;
+    rdfs:comment "The signature of the world the plan was decided in — the canonical facts of the state, hashed — which is what a pursuit compares before adopting the plan again." .
+deliberation:lifted a owl:ObjectProperty ; rdfs:domain deliberation:RememberedPlan ; rdfs:label "lifted" ;
+    rdfs:comment "An rdf:List of the walked steps, each a node with the ledger's own words for a step: what it fills, through what, about what, how much, and what it predicts." .
+deliberation:measuredCost a owl:DatatypeProperty ; rdfs:domain deliberation:RememberedPlan ; rdfs:range xsd:decimal ; rdfs:label "measured cost" .
+deliberation:rememberedAt a owl:DatatypeProperty ; rdfs:domain deliberation:RememberedPlan ; rdfs:range xsd:dateTime ; rdfs:label "remembered at" .
+
 deliberation:DeliberationGraph a owl:Class ; rdfs:subClassOf orexis:PossibleGraph ; rdfs:label "Deliberation graph" ;
     rdfs:comment """What the planner considered on its last pass, per goal: the levers it simulated, the urgency each world would have reached, which one it took and why the others lost.
 
