@@ -226,6 +226,12 @@ class Deliberator:
         if decided is not None and decided[2] is not None:
             remembered.forget(self.agent, decided[2], "a step of it failed")
             self._decided.pop(want, None)
+        elif decided is not None and decided[1] is not None and decided[1].steps:
+            #  A plan the search found may BE a remembered route — walked as a candidate
+            #  where the world differed (#469, second form) and chosen — so what failed is
+            #  forgotten by its steps, whichever road adopted it.
+            remembered.forget_matching(self.agent, want, decided[1].steps, "a step of it failed")
+            self._decided.pop(want, None)
         self.agent.reviser.note(want)
 
     @contributes(SERIES)

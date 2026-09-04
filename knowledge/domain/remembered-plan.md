@@ -5,8 +5,9 @@ term: http://example.org/orexis/deliberation#RememberedPlan
 description: >-
   A plan that reached its end, lifted into the agent's own graph and hung on the want it
   served with the signature of the world it was decided in. A pursuit of that want in a world
-  of the same signature adopts it with no search; a different world searches; one that fails a
-  step is forgotten. A method on the want, filled — not yet lifted to variables.
+  of the same signature adopts it with no search; in a world of another signature it is
+  walked as one candidate on the menu, weighed against the primitives and seeding the bound;
+  one that fails a step is forgotten. A method on the want, filled — not yet lifted to variables.
 ---
 
 # What it is
@@ -31,6 +32,15 @@ the stored plan against the world beforehand — the world checks it, one step a
 adopted from memory that fails a step is forgotten, the promotion rule's converse. A remembered
 plan finishing again is not remembered twice.
 
+Where the world's signature is not one the want was remembered in, the pass searches — and the
+[planner](/domain/planner.md) puts every plan remembered for the want on the menu first, as ONE
+candidate: its steps re-simulated in order, each taken only where the menu of the world the
+previous step reached offers that very row, and the world reached settled like any step's. An
+achiever's cost is the bound before any primitive is looked at, ties among achievers fall to the
+route already walked, and the trace names it as taken and as chosen by its own node. A step off
+the menu is the verdict `a remembered step is not on the menu here`. A route that fails when
+walked is forgotten by its steps, whichever road adopted it.
+
 # What it is not
 
 **Not a habit as the habit record means it.** A [habit](/decisions/a-habit-is-a-compiled-deliberation.md)
@@ -42,8 +52,8 @@ failure. The two may meet when review takes over the forgetting.
 built; the imaginarium stays required to be lost, and #527 — resuming a search from a kept
 frontier — is a different, parked thing.
 
-**Not general yet.** Filled, it applies where the same world recurs. Lifting to variables (the
-same instance across steps becoming one variable), the applicability regressed through the
-effects, and the composed effect that would let the search weigh it as one action are the seams
-after this, in that order. The tower is where they will pay: the same seven moves every time the
-stack stands on peg A.
+**Not general yet.** Filled, it applies where its steps are on the menu in order — the same
+lever, the same subject — which is the same world or one differing in what no step reads.
+Lifting to variables (the same instance across steps becoming one variable) and the applicability
+regressed through the effects are the seams after this, in that order. The tower is where they
+will pay: the same seven moves every time the stack stands on peg A.
