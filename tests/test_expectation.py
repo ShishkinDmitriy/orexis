@@ -441,3 +441,39 @@ SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{PROGRESSION}by> ?act . ?a
 
 
 
+
+
+# --- an overshoot finishes the plan (#521) -------------------------------------------------
+
+def test_a_step_the_world_overshoots_finishes_the_plan_when_the_want_is_met(monkeypatch):
+    """A two-dose plan stands. The first dose's reading comes back inside the step's
+    tolerance but past the aim, and the want is met. The intention resolves SATISFIED with
+    the tail finished — not advanced to a second dose an actor would size to nothing and
+    leave standing until the patience ran out."""
+    from orexis_agent_progression.act import Step
+
+    gardener = build_agent("gardener", genesis_store({("zz", MOISTURE): 0.10}, world="loner"),
+                           monkeypatch)
+    keeper = keeper_of(gardener)
+    want = stake_of(gardener).uri
+    pump = bindings(gardener.beliefs.query(
+        f"SELECT ?p WHERE {{ <{gardener.me.uri}> actuation:hasActuator ?p }}"))[0]["p"]
+    dose = Step(action=_ACTUATE, via=pump, want=want, about=MOISTURE, quantity=0.2)
+    uri = keeper.adopt([dose, dose], want, "two doses, the search's plan")
+    assert uri is not None
+    assert keeper.expect(uri, "the first dose", baseline=reading_of(gardener, MOISTURE),
+                         tolerance=2.0,
+                         predicts=predicted_reading(gardener.me.acts_for, MOISTURE, 0.14))
+    finished = []
+    monkeypatch.setattr(gardener, "tell",
+                        lambda point, *a: finished.append(point) if point.endswith("planFinished") else None)
+    write_reading(gardener, 0.20, MOISTURE)            # past the aim (0.18), inside the region
+    keeper.reconsider()
+    assert keeper.standing() == [], "nothing stands: the plan is finished, not waiting on a second dose"
+    assert keeper.reports()["expectations_met"] == 1
+    outcome = bindings(gardener.intentions.query_union(f"""
+SELECT ?o ?why WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{PROGRESSION}outcome> ?o ; <{PROGRESSION}becauseOf> ?why }} }}"""))
+    assert {r["o"] for r in outcome} == {"satisfied"}
+    assert any("tail is finished" in r["why"] for r in outcome)
+    assert len(keeper.walked(uri)) == 1, "one dose was taken, no second"
+    assert finished, "and deliberation heard the plan finish"

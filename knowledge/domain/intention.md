@@ -52,7 +52,11 @@ opened. A plan handed down whole holds each step's readiness on the previous ste
 `progression:step` to each, stands at the head, and moves along `progression:then` as the world confirms
 each step's prediction — the met verdict on one step is the only license the next has, and no
 search runs while a plan is in progress. An unmet verdict stops the plan where it is: the
-intention resolves, the tail is abandoned, and deliberation is told to plan again. "Only the
+intention resolves, the tail is abandoned, and deliberation is told to plan again. A met verdict
+on a step whose want is ALREADY MET finishes the plan there (#521): the world did more than the
+step promised, the intention resolves satisfied with the tail finished rather than taken, and
+what was walked is the steps to that one — advancing would hand the next step to an actor that
+sizes it to nothing and leave the intention standing at a step nobody will take. "Only the
 head is committed" was the rule before feedback could carry a plan; it is superseded. A step
 of an action that declares a [method](/domain/method.md) is expanded at adoption into the
 method's steps (#523), and each of those may wait — before it is taken, or after — on what its
