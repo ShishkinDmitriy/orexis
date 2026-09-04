@@ -1235,6 +1235,20 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 "%s %s for %s: %s", watch.action.rsplit("#", 1)[-1], "done" if met else "LAPSED",
                 _short(watch.want), because)
             self._tell("done" if met else "lapsed", watch.action, watch.want, because)
+        if met and self._next_of(watch.uri) is not None and self._want_met(watch.want):
+            #  AN OVERSHOOT IS NOT A FAILURE OF THE STEP (#521): the world did MORE than the
+            #  step promised and the want the plan serves is met already. The tail is
+            #  finished, not taken — advancing would hand the next step to an actor that
+            #  sizes it to nothing and reads that as "not now", leaving the intention standing
+            #  at a step nobody will ever take until the patience ran out.
+            because = ("the world did more than the step promised — the want is met, "
+                       "and the tail is finished rather than taken")
+            self.log.info("%s for %s: %s", watch.action.rsplit("#", 1)[-1], _short(watch.want), because)
+            self.agent.tell(PLAN_FINISHED, watch.uri, watch.action, watch.want)
+            for s in self.standing(action=watch.action, want=watch.want):
+                if s.uri == watch.uri:
+                    self._resolve(s, "satisfied", because)
+            return
         if met and self._advance(watch):
             #  THE PLAN GOES ON (#510): this step's prediction was confirmed by the world,
             #  which is the only license the next step has — no search, no re-decision. The
@@ -1289,8 +1303,13 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{PROGRESSION + "by"}> ?was }} }
         return True
 
     def walked(self, intention_uri: str) -> list:
-        """An intention's steps in `then` order, resolved or not — what a plan that reached its
-        end was, for whoever lifts it (#469)."""
+        """An intention's steps in `then` order, from the head THROUGH THE STEP IT STANDS AT —
+        what a plan that reached its end was, for whoever lifts it (#469). A plan the world
+        finished early (#521) stands at the step the world overshot, and what was walked is
+        the steps to there: the tail that was never taken is not what worked."""
+        at = bindings(self.agent.intentions.query_union(f"""
+SELECT ?cur WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?cur }} }}"""))
+        current = at[0]["cur"] if at else None
         rows = bindings(self.agent.intentions.query_union(f"""
 SELECT ?s ?next ?action ?via ?about ?quantity ?predicts WHERE {{ GRAPH <{self.graph}> {{
   <{intention_uri}> <{kernel("step")}> ?s . ?s <{kernel("fills")}> ?action .
@@ -1306,6 +1325,8 @@ SELECT ?s ?next ?action ?via ?about ?quantity ?predicts WHERE {{ GRAPH <{self.gr
             out.append(Step(action=r["action"], via=r.get("via") or "", about=r.get("about"),
                             quantity=float(r["quantity"]) if r.get("quantity") else None,
                             predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None))
+            if node == current:
+                break
             node = r.get("next")
         return out
 
@@ -1329,6 +1350,13 @@ SELECT ?s ?next ?action ?via ?about ?quantity ?predicts WHERE {{ GRAPH <{self.gr
             if self._next_of(standing.uri) is not None:
                 return standing
         return None
+
+    def _want_met(self, want: str) -> bool:
+        """Whether the want this intention pursues reads MET now, by whoever holds it — the
+        same question `pursuing()` answers the deliberator, asked of the container and never
+        of a store: what met means is the want's own (a shape, a measure, a pattern), and the
+        ledger knows none of it."""
+        return any(d.state == "met" for d in self.agent.pursuing() if d.uri == want)
 
     def _next_of(self, intention_uri: str) -> str | None:
         rows = bindings(self.agent.intentions.query_union(f"""
