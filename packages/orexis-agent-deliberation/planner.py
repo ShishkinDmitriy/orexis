@@ -1270,14 +1270,43 @@ class Planner:
         return float(litres) if litres and litres > 0 else 0.0
 
     def _beliefs(self):
-        #  Everything this agent owns, asked (#444). The instruments are why completeness
-        #  matters: a freshness want's met-test reads the horizon this agent published, and a
-        #  shape whose pattern reaches a graph nobody copied does not fail — it finds nothing,
-        #  reports nothing, and the want reads as met for ever. The debts are why it must
-        #  include the received ones (#255): an obligation's met-test is a pattern over the record,
-        #  and the world Apply's effect discharges an obligation in must hold it to discharge.
-        return graph_from(self.agent.beliefs, *self.agent.beliefs.public_graphs(),
-                          *self.agent.beliefs.recorded_graphs())
+        """The DATA-BORNE world as an rdflib graph — what the pass carves shapes from.
+
+        Everything this agent owns, asked (#444). The instruments are why completeness
+        matters: a freshness want's met-test reads the horizon this agent published, and a
+        shape whose pattern reaches a graph nobody copied does not fail — it finds nothing,
+        reports nothing, and the want reads as met for ever. The debts are why it must
+        include the received ones (#255): an obligation's met-test is a pattern over the
+        record, and the world Apply's effect discharges an obligation in must hold it to
+        discharge.
+
+        WITHOUT THE T-BOX, EXCEPT ITS SHAPES (#484). What is carved from this graph is
+        shapes — the law a plan may not pass through, a want's avoided state, a met-shape
+        and its root — and a law is ratified, arriving as data in the world or the desires;
+        but a PACKAGE may declare a want's shape beside its actions (the courier's
+        `delivered`, hanoi's `solved`), and that lives in the vocabulary. So the two
+        ontology graphs — 82% of the flatten, 2,312 of 2,828 triples and 253 ms of every
+        pass on `world/simulation` — contribute their node shapes and nothing else: the
+        shape, and what hangs off it through blank nodes. `tests/test_planning.py` holds a
+        vocabulary to carrying no LAW, since a law there would be carved from a subgraph
+        that keeps no severity it does not state. Asked by what a graph IS, never by name.
+        """
+        store = self.agent.beliefs
+        vocabulary = {r["g"] for r in bindings(store.query(
+            "SELECT ?g WHERE { ?g a orexis:OntologyGraph }"))}
+        base = graph_from(store, *(g for g in store.public_graphs() if g not in vocabulary),
+                          *store.recorded_graphs())
+        #  The vocabulary's shapes, as subgraphs: every triple of a node shape, and of every
+        #  blank node reachable from it — a property shape, a qualified value shape, a list.
+        #  The path walks through IRIs too, and the filter keeps only what is the shape's
+        #  own, so a class an `sh:class` names is not dragged in with its whole axiom set.
+        for triple in effects.applied((), store.construct("""
+CONSTRUCT { ?x ?p ?o } WHERE {
+  ?g a orexis:OntologyGraph .
+  GRAPH ?g { ?s a sh:NodeShape . ?s (!<urn:none>)* ?x . ?x ?p ?o }
+  FILTER(?x = ?s || isBlank(?x)) }"""), ()):
+            base.add(triple)
+        return base
 
 
 _AG_IRI = "http://example.org/orexis#"

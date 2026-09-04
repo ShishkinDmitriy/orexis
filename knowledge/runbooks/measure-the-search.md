@@ -38,6 +38,7 @@ row — a number without its machine is an impression.
 | 2026-09-01 | `the-judge-speaks-rust` | **5.52 s** | 2.17 s | the border speaks N-Triples — rdflib's Turtle WRITER was a third of the judge's cost |
 | 2026-09-01 | `a-node-holds-one-world` | **2.03 s** | 1.67 s | the per-node rdflib copy is gone (#481) — 198,144 `Graph.add` calls became 23,282 |
 | 2026-09-01 | `best-first-by-what-is-left-to-spend` | 1.77 s | 1.51 s | best-first on `cost + estimate` (#492): hanoi 56 forks to 50, the courier's corner delivery 198 to 78 |
+| 2026-09-05 | `the-law-carve-reads-the-data-alone` | 2.32 s (main 2.17 s, same run) | — | the pass's flatten leaves the T-Box out except its node shapes (#484): `_beliefs()` 140 ms / 3,172 triples to 45 ms / 591 on `world/simulation`, `_begin` 237 to 115 ms; hanoi's one pass moves inside noise, a plant's tick pays the whole saving |
 
 # Where the time goes (profiled at `13876fc`)
 
