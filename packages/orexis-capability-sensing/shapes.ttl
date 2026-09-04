@@ -20,10 +20,11 @@
 sensing:PerceivingAgentShape a sh:NodeShape ;
     rdfs:comment "Anything that perceives must be wired to something to perceive with, and must say how stale a reading may be before it stops trusting it. That judgment is about belief, not control, so it is required of every perceiver — including one that cannot drive its device at all." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/orexis#hasCapability> ?cap .
-                ?cap a <http://example.org/orexis/sensing#SensingCapability> .
+                ?this orexis:hasCapability ?cap .
+                ?cap a sensing:SensingCapability .
             }
         """ ] ;
     sh:property [ sh:path sensing:polls ; sh:minCount 1 ; sh:class sosa:Sensor ;
@@ -45,16 +46,17 @@ sensing:DoubleCoveredPropertyShape a sh:NodeShape ;
     sh:severity sh:Warning ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "another sensor already reads this property of this feature — they will share one observation and the last writer wins. If they are really in different soil, say so: a sosa:Sample each (sensing:samples), and each keeps its own record." ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/orexis/sensing#monitors> ?subject ;
-                      <http://www.w3.org/ns/sosa/observes> ?property .
-                ?other a <http://www.w3.org/ns/sosa/Sensor> ;
-                       <http://example.org/orexis/sensing#monitors> ?subject ;
-                       <http://www.w3.org/ns/sosa/observes> ?property .
+                $this sensing:monitors ?subject ;
+                      sosa:observes ?property .
+                ?other a sosa:Sensor ;
+                       sensing:monitors ?subject ;
+                       sosa:observes ?property .
                 FILTER (?other != $this)
-                OPTIONAL { $this <http://example.org/orexis/sensing#samples> ?mine }
-                OPTIONAL { ?other <http://example.org/orexis/sensing#samples> ?theirs }
+                OPTIONAL { $this sensing:samples ?mine }
+                OPTIONAL { ?other sensing:samples ?theirs }
                 BIND(COALESCE(?mine, ?subject) AS ?myFeature)
                 BIND(COALESCE(?theirs, ?subject) AS ?theirFeature)
                 FILTER (?myFeature = ?theirFeature)
@@ -66,13 +68,14 @@ sensing:SampledPatchShape a sh:NodeShape ;
     sh:targetClass sosa:Sensor ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "the patch this sensor claims is not a sample of the subject it monitors — its readings would answer for the wrong pot, or for none" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/orexis/sensing#samples> ?patch ;
-                      <http://example.org/orexis/sensing#monitors> ?subject .
+                $this sensing:samples ?patch ;
+                      sensing:monitors ?subject .
                 FILTER NOT EXISTS {
-                    ?patch a <http://www.w3.org/ns/sosa/Sample> ;
-                           <http://www.w3.org/ns/sosa/isSampleOf> ?subject .
+                    ?patch a sosa:Sample ;
+                           sosa:isSampleOf ?subject .
                 }
             }
         """ ] .
@@ -111,9 +114,10 @@ sensing:ObservationShape a sh:NodeShape ;
 sensing:SubscribingAgentShape a sh:NodeShape ;
     rdfs:comment "Stating an interval is what makes these figures meaningful, so only this capability demands them. It must watch more closely when in trouble than when comfortable, and neither figure may leave the constitutional bounds — which are stated in this package's ontology.ttl, clamped again by the agent, and clamped a third time by the firmware. A polling agent would need the same two, since they are its own timer rather than the device's; a listening one can hold neither." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
-            SELECT ?this WHERE { ?this <http://example.org/orexis#hasCapability>
-                                       <http://example.org/orexis/sensing#Subscribing> }
+            SELECT ?this WHERE { ?this orexis:hasCapability
+                                       sensing:Subscribing }
         """ ] ;
     sh:property [ sh:path sensing:fastSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minInclusive 10 ; sh:maxInclusive 900 ;
@@ -129,12 +133,13 @@ sensing:SubscribingAgentShape a sh:NodeShape ;
 sensing:ListeningAgentShape a sh:NodeShape ;
     rdfs:comment "An agent that ONLY listens must not hold an interval: requiring a policy it cannot enforce would be theatre, and stating one would misdescribe the hardware. The exclusion matters — an agent may hold a scheduled sensor and a push one, and then it needs both blocks. Written as 'listens and does not subscribe' rather than 'listens', because the earlier form made the two shapes contradict each other on such an agent: one demanded an interval and the other forbade it, so a perfectly ordinary rig — a plant with a scheduled moisture probe and a push thermometer — could not be validated at all." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/orexis#hasCapability>
-                      <http://example.org/orexis/sensing#Listening> .
-                FILTER NOT EXISTS { ?this <http://example.org/orexis#hasCapability>
-                                          <http://example.org/orexis/sensing#Subscribing> }
+                ?this orexis:hasCapability
+                      sensing:Listening .
+                FILTER NOT EXISTS { ?this orexis:hasCapability
+                                          sensing:Subscribing }
             }
         """ ] ;
     sh:property [ sh:path sensing:fastSleepS ; sh:maxCount 0 ;
@@ -193,19 +198,20 @@ given, so validate_agent never targets this — the same scoping as the wiring s
     sh:targetClass <http://www.w3.org/ns/ssn/Deployment> ;
     sh:sparql [
         sh:message "this deployment's site envelope leaves the stated range of a deployed sensor — the instrument cannot witness the place it is installed" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://www.w3.org/ns/ssn/deployedSystem> ?deployed .
-                ?deployed (<http://www.w3.org/ns/ssn/hasSubSystem>)* ?sensor .
-                ?sensor <http://www.w3.org/ns/sosa/observes> ?p .
-                $this <http://www.w3.org/ns/ssn/systems/inCondition> ?k .
-                ?k <http://www.w3.org/ns/ssn/forProperty> ?p ;
+                $this ssn:deployedSystem ?deployed .
+                ?deployed (ssn:hasSubSystem)* ?sensor .
+                ?sensor sosa:observes ?p .
+                $this ssn-system:inCondition ?k .
+                ?k ssn:forProperty ?p ;
                    <https://schema.org/minValue> ?kmin ;
                    <https://schema.org/maxValue> ?kmax ;
                    <https://schema.org/unitCode> ?u .
-                ?sensor <http://www.w3.org/ns/ssn/systems/hasSystemCapability> ?c .
-                ?c <http://www.w3.org/ns/ssn/systems/hasSystemProperty> ?r .
-                ?r a <http://www.w3.org/ns/ssn/systems/MeasurementRange> ;
+                ?sensor ssn-system:hasSystemCapability ?c .
+                ?c ssn-system:hasSystemProperty ?r .
+                ?r a ssn-system:MeasurementRange ;
                    <https://schema.org/minValue> ?rmin ;
                    <https://schema.org/maxValue> ?rmax ;
                    <https://schema.org/unitCode> ?u .
@@ -226,11 +232,12 @@ sensing:DesirerShape a sh:NodeShape ;
 
 That failure is the one this whole design is most exposed to, because its symptom is silence: no band on any announcement, the slow cadence forever, and a market that never hears that anyone is in trouble. Refusing to start is loud, and the report names the agent.""" ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/orexis#actsFor> ?subject .
-                ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange>/<http://www.w3.org/ns/ssn/systems/inCondition> ?condition .
-                ?condition <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                ?this orexis:actsFor ?subject .
+                ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
+                ?condition ssn:forProperty ?property ;
                            <https://schema.org/minValue> ?min ;
                            <https://schema.org/maxValue> ?max .
             }
@@ -244,11 +251,12 @@ sensing:UnwatchedRegionShape a sh:NodeShape ;
 WAS `sensing:BeyondSurvivalShape`, and before that the kernel's. It was named for a hand-written "the last reading lies outside what the subject survives" check that is gone: the deduction emits that shape now, targeting the subject and saying the same sentence in the language the checker already speaks (|gap| = 1 in `gap.rq` is the same fact as a number). Removing the check was right and the NAME was left behind, so a warning about a blind region arrived under a heading about survival. Whoever wrote `domain/desire.md` reached for `desire:UnwatchedDesireShape`, a term that never existed anywhere — the clearest evidence available that the old name described nothing this shape does (#275).""" ;
     sh:severity sh:Warning ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/orexis#actsFor> ?subject .
-                ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange>/<http://www.w3.org/ns/ssn/systems/inCondition> ?condition .
-                ?condition <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                ?this orexis:actsFor ?subject .
+                ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
+                ?condition ssn:forProperty ?property ;
                            <https://schema.org/minValue> ?min ;
                            <https://schema.org/maxValue> ?max .
             }
@@ -256,15 +264,16 @@ WAS `sensing:BeyondSurvivalShape`, and before that the kernel's. It was named fo
     sh:sparql [
         sh:severity sh:Warning ;
         sh:message "a desire in a property this agent polls no sensor for — the region is real, and the agent will never see a reading to hold it to" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this ?property WHERE {
-                $this <http://example.org/orexis#actsFor> ?subject ;
-                      <http://example.org/orexis#holds> ?region .
-                ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
+                $this orexis:actsFor ?subject ;
+                      orexis:holds ?region .
+                ?region ssn:forProperty ?property .
                 FILTER NOT EXISTS {
-                    $this <http://example.org/orexis/sensing#polls> ?sensor .
-                    ?sensor <http://example.org/orexis/sensing#monitors> ?subject ;
-                            <http://www.w3.org/ns/sosa/observes> ?property .
+                    $this sensing:polls ?sensor .
+                    ?sensor sensing:monitors ?subject ;
+                            sosa:observes ?property .
                 }
             }""" ] .
 
@@ -288,39 +297,42 @@ sensing:AimShape a sh:NodeShape ;
                   sh:message "an aim must carry one decimal value" ] ;
     sh:sparql [
         sh:message "an aim names a property this agent holds no region in — a pick with nothing to pick inside is a number with nothing behind it" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this ?property WHERE {
-                $this <http://example.org/orexis/sensing#aims> ?aim .
-                ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
+                $this sensing:aims ?aim .
+                ?aim ssn:forProperty ?property .
                 FILTER NOT EXISTS {
-                    $this <http://example.org/orexis#holds> ?shape .
-                    ?shape <http://www.w3.org/ns/ssn/forProperty> ?property .
+                    $this orexis:holds ?shape .
+                    ?shape ssn:forProperty ?property .
                 }
             }""" ] ;
     sh:sparql [
         sh:message "the aim sits outside the region this agent deduced for that property — a desire is a pick within a range, not a number of its own" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/orexis/sensing#aims> ?aim .
-                ?aim <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                $this sensing:aims ?aim .
+                ?aim ssn:forProperty ?property ;
                      <https://schema.org/value> ?value .
-                $this <http://example.org/orexis#holds> ?desire .
-                ?desire <http://www.w3.org/ns/ssn/forProperty> ?property ;
-                        <http://example.org/orexis#metWhen> ?shape .
-                ?shape <http://www.w3.org/ns/shacl#property> ?below , ?above .
-                ?below <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
-                       <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?low .
-                ?above <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
-                       <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?high .
+                $this orexis:holds ?desire .
+                ?desire ssn:forProperty ?property ;
+                        orexis:metWhen ?shape .
+                ?shape sh:property ?below , ?above .
+                ?below orexis:violationIs orexis:Below ;
+                       sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
+                ?above orexis:violationIs orexis:Above ;
+                       sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
                 FILTER(?value < ?low || ?value > ?high)
             }""" ] ;
     sh:sparql [
         sh:message "two aims for one property — an agent steering one property toward two points is not steering" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this ?property WHERE {
-                $this <http://example.org/orexis/sensing#aims> ?one , ?other .
-                ?one   <http://www.w3.org/ns/ssn/forProperty> ?property .
-                ?other <http://www.w3.org/ns/ssn/forProperty> ?property .
+                $this sensing:aims ?one , ?other .
+                ?one   ssn:forProperty ?property .
+                ?other ssn:forProperty ?property .
                 FILTER(?one != ?other)
             }""" ] .
 
@@ -328,18 +340,19 @@ sensing:AimShape a sh:NodeShape ;
 sensing:DeducedRegionShape a sh:NodeShape ;
     rdfs:comment "What a deduced region or envelope must be to be readable by the code that will divide by its width — the property-shaped half of what was `orexis:DesireShape`, whose kernel half still checks whose state a met-test is about and with what force. Every figure here was computed, so this is arithmetic rather than authorship; a check over derived data is worth exactly as much as one over authored data when the reader is code." ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                { ?agent <http://example.org/orexis#holds> ?held .
-                  ?held <http://example.org/orexis#metWhen> ?this }
+                { ?agent orexis:holds ?held .
+                  ?held orexis:metWhen ?this }
                 UNION
-                { ?agent <http://example.org/orexis#holds> ?this .
-                  ?this a <http://www.w3.org/ns/shacl#NodeShape> . }
+                { ?agent orexis:holds ?this .
+                  ?this a sh:NodeShape . }
                 #  A DEDUCED shape is about one agent's state and says so with sh:targetNode.
                 #  A domain package's shape — the courier's "delivered", on every parcel —
                 #  targets a class and is about no property; it is a want the kernel compiles
                 #  (#497), not a region, and this gate has nothing to say about it.
-                ?this <http://www.w3.org/ns/shacl#targetNode> ?about .
+                ?this sh:targetNode ?about .
             }
         """ ] ;
     sh:property [ sh:path <http://www.w3.org/ns/ssn/forProperty> ;
@@ -366,27 +379,28 @@ sensing:DeducedRegionShape a sh:NodeShape ;
     # below it is the violation — so the arithmetic below is untouched by the split.
     sh:sparql [
         sh:message "a region lies outside the envelope it is supposed to sit inside — the survival range stated for this property is narrower than the operating range, once every source is intersected" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this ?low ?high WHERE {
-                $this <http://www.w3.org/ns/ssn/forProperty> ?property ;
-                      <http://www.w3.org/ns/shacl#property> ?below , ?above .
-                ?below <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
-                       <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?low .
-                ?above <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
-                       <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?high .
+                $this ssn:forProperty ?property ;
+                      sh:property ?below , ?above .
+                ?below orexis:violationIs orexis:Below ;
+                       sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
+                ?above orexis:violationIs orexis:Above ;
+                       sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
                 OPTIONAL {
-                    ?agent <http://example.org/orexis#holds> ?desire , ?envelope .
-                    ?desire <http://example.org/orexis#metWhen> $this .
-                    ?envelope <http://www.w3.org/ns/ssn/forProperty> ?property ;
-                              <http://www.w3.org/ns/shacl#property> ?underFloor , ?overCeiling .
-                    ?underFloor <http://www.w3.org/ns/shacl#severity>
-                                <http://www.w3.org/ns/shacl#Warning> ;
-                                <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
-                                <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?floor .
-                    ?overCeiling <http://www.w3.org/ns/shacl#severity>
-                                 <http://www.w3.org/ns/shacl#Warning> ;
-                                 <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
-                                 <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?ceiling }
+                    ?agent orexis:holds ?desire , ?envelope .
+                    ?desire orexis:metWhen $this .
+                    ?envelope ssn:forProperty ?property ;
+                              sh:property ?underFloor , ?overCeiling .
+                    ?underFloor sh:severity
+                                sh:Warning ;
+                                orexis:violationIs orexis:Below ;
+                                sh:qualifiedValueShape/sh:property/sh:maxExclusive ?floor .
+                    ?overCeiling sh:severity
+                                 sh:Warning ;
+                                 orexis:violationIs orexis:Above ;
+                                 sh:qualifiedValueShape/sh:property/sh:minExclusive ?ceiling }
                 FILTER(   ?low > ?high
                        || (BOUND(?floor)   && ?low  < ?floor)
                        || (BOUND(?ceiling) && ?high > ?ceiling))

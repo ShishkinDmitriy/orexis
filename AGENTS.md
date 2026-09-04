@@ -542,11 +542,15 @@ fails if pyshacl ever entails something the closure does not. See
   its agent does cannot be declared in a T-Box. Naming one is still legitimate to SUBTRACT it
   (`validate_agent` takes the pick record out where the desires modality already carries it),
   which is saying which road a fact came by rather than enumerating what to read.
-- **SPARQL prefixes.** Only what `store.PREFIXES` declares may be used. rdflib silently
+- **SPARQL prefixes.** Only what `store.NAMESPACES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in
   production. `tests/test_store.py` checks this by scanning the source text — and asserts each
   source tree is still *found*, because moving files has twice emptied one of its globs and taken
-  cases off the guard without failing anything.
+  cases off the guard without failing anything. **A `sh:select` inside a shape is the same
+  query** (#508): it uses the same names, says `sh:prefixes orexis:` on the node that carries
+  it, and the store's `DECLARATION` — the dictionary in SHACL's words, assembled and never
+  authored — travels with every shapes graph either engine is handed. A select spelling an
+  IRI in full that the store has a name for fails the same test.
 - **A test that asserts inside a loop can assert nothing.** An empty result set is not an error,
   so the body never runs and the test is green. The repo-root `conftest.py` traces the at-risk
   tests — an `assert` inside a loop over something that could be empty — and fails the run if a

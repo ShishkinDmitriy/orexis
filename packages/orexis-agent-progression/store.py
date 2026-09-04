@@ -119,6 +119,9 @@ for _label, _iri in loader.external_prefixes().items():
 
 NAMESPACES = {**loader.external_prefixes(), **_KERNEL, **loader.prefixes()}
 
+_XSD = "http://www.w3.org/2001/XMLSchema#"
+_XSD_ANY_URI = _XSD + "anyURI"
+
 #  The header as TEXT, for the readers that parse rather than run: rdflib in `relevance.py`,
 #  and any tool that wants a query to stand alone. The store itself hands the engine
 #  `NAMESPACES` as a dictionary (#500), so no query text carries a header it did not write.
@@ -128,7 +131,20 @@ PREFIXES = "\n" + "\n".join(
 
 DECLARED = frozenset(NAMESPACES)
 
-_XSD = "http://www.w3.org/2001/XMLSchema#"
+#  THE SAME DICTIONARY AS SHACL SPELLS IT (#508). A `sh:select` inside a shape may use a
+#  prefixed name only if the constraint says `sh:prefixes <node>` and that node carries one
+#  `sh:declare` per prefix — so every shape in the tree points at ONE node, `orexis:` itself,
+#  and this is what stands there. ASSEMBLED, like `NAMESPACES`, never authored: a kernel
+#  ontology listing every package's prefix would be the kernel knowing the packages. The judge
+#  appends it to every shapes text it crosses to rudof, and the assembled shapes graph carries
+#  it for pySHACL; neither engine is handed a shape whose dictionary is missing.
+DECLARATION = "\n".join(
+    [f"<{NAMESPACES['orexis']}> <{NAMESPACES['sh']}declare> ["
+     f" <{NAMESPACES['sh']}prefix> \"{label}\" ;"
+     f" <{NAMESPACES['sh']}namespace> \"{iri}\"^^<{_XSD_ANY_URI}> ] ."
+     for label, iri in sorted(NAMESPACES.items())]
+) + "\n"
+
 
 
 def _terms(values: dict | None) -> dict | None:

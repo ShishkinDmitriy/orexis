@@ -54,8 +54,8 @@ to carry its board's name to stay unambiguous — `ag:Esp32Gpio34` — and with 
 **It can afford this because no runtime code names these terms.** An agent never queries a pin.
 `packages/orexis-agent-progression/ontology.py`'s `term()` mints `AG + name` and every capability's `terms.py` depends on
 that, so moving the *society* vocabulary would be a large and risky change for no benefit —
-but the hardware vocabulary is read only by `onboarding/firmware.py` and by the shapes, which
-spell IRIs in full anyway. Three files, none of them the runtime.
+but the hardware vocabulary is read only by `onboarding/firmware.py` and by the shapes, whose
+selects take their prefixes from the store's dictionary (#508). Three files, none of them the runtime.
 
 The society kernel, the capabilities and the domain stay in `orexis:`. Two conventions in one
 bundle is a cost, and the line between them is exactly the line the code already draws.

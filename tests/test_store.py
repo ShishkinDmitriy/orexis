@@ -81,7 +81,55 @@ def test_queries_use_only_declared_prefixes(path):
         )
 
 
-def test_a_review_rule_leans_on_the_stores_prefixes_like_any_other_query():
+_SHAPES = sorted(loader.REPO_ROOT.glob("agent/shapes.ttl")) + \
+    sorted(loader.REPO_ROOT.glob("packages/*/shapes.ttl"))
+_FULL_IRI = re.compile(r"<(http://[^>\s]+)>")
+
+
+def test_the_shapes_files_are_still_found():
+    assert len(_SHAPES) >= 10, "the shapes glob has gone stale and the select guard below checks nothing"
+
+
+@pytest.mark.parametrize("path", _SHAPES, ids=lambda p: p.parent.name)
+def test_a_shape_select_uses_the_stores_prefixes_and_says_so(path):
+    """The shapes' half of #500 (#508). A `sh:select` inside a shape is a query like any
+    other, so it uses the prefixes the store declares — and, because SHACL resolves a
+    prefixed name only through `sh:prefixes`, every node carrying a select points at the one
+    assembled declaration, `orexis:`. Two ways to be wrong, both caught here: a prefix the
+    store does not know (the engine cannot expand it), and a select that spells in full a
+    namespace the store has a name for (the discipline eroding one IRI at a time)."""
+    import rdflib
+    sh = rdflib.Namespace(store.NAMESPACES["sh"])
+    graph = rdflib.Graph()
+    graph.parse(str(path), format="turtle")
+    selects = list(graph.subject_objects(sh.select))
+    if not selects:
+        pytest.skip(f"{path.parent.name} carries no sh:select")
+    known = set(store.NAMESPACES.values())
+    for carrier, select in selects:
+        text = str(select)
+        assert (carrier, sh.prefixes, rdflib.URIRef(store.NAMESPACES["orexis"])) in graph, (
+            f"{path}: a select without `sh:prefixes orexis:` cannot use a prefixed name:\n{text}")
+        used = {m.group(1) for m in _PREFIXED.finditer(text)}
+        undeclared = used - store.DECLARED - {"http", "https", "urn"}
+        assert not undeclared, f"{path}: select uses {sorted(undeclared)}, undeclared by the store"
+        spelled = [iri for iri in _FULL_IRI.findall(text)
+                   if any(iri.startswith(ns) for ns in known)]
+        assert not spelled, f"{path}: select spells in full what the store has a prefix for: {spelled}"
+
+
+def test_the_declaration_is_the_dictionary():
+    """`store.DECLARATION` is `store.NAMESPACES` in SHACL's words, one `sh:declare` per prefix
+    on the `orexis:` node, and nothing else — held here so the two cannot drift."""
+    import rdflib
+    g = rdflib.Graph()
+    g.parse(data=store.DECLARATION, format="turtle")
+    sh = rdflib.Namespace(store.NAMESPACES["sh"])
+    declared = {str(g.value(d, sh.prefix)): str(g.value(d, sh.namespace))
+                for d in g.objects(rdflib.URIRef(store.NAMESPACES["orexis"]), sh.declare)}
+    assert declared == dict(store.NAMESPACES)
+
+
     """The opposite rule to the one below, and the difference is who sends it.
 
     A derivation rule is a standalone update applied to the store, so it carries its own

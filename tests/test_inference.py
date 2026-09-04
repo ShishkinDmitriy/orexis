@@ -199,11 +199,12 @@ def test_pyshacl_agrees_with_the_materialised_closure(world):
         if ttl.strip():
             data.parse(data=ttl, format="turtle")
 
-    ontology, shapes = rdflib.Graph(), rdflib.Graph()
-    for path in loader.ontology_files():
-        ontology.parse(str(path), format="turtle")
-    for path in loader.shapes_files():
-        shapes.parse(str(path), format="turtle")
+    #  The ASSEMBLED graphs, not the files re-parsed here: a shape's select is written in the
+    #  store's prefixes and resolves through the declaration the assembly adds (#508), so a
+    #  graph built from the files alone hands pySHACL selects it cannot expand.
+    from orexis_agent_deliberation.conformance import _shapes_and_vocabulary
+
+    ontology, shapes = _shapes_and_vocabulary()
 
     verdicts = {}
     for mode in ("none", "rdfs"):

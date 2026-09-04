@@ -14,9 +14,10 @@ orexis:CapacitiveMoistureProbeShape a sh:NodeShape ;
                   sh:message "a capacitive probe is read with an ADC — one leg must be mc:AnalogInPinRole" ] ;
     sh:sparql [
         sh:message "this probe reads higher wet than dry, which inverts the scale — check rawDry and rawWet are not swapped" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/orexis/moisture-probe#rawDry> ?dry ;
-                      <http://example.org/orexis/moisture-probe#rawWet> ?value .
+                $this probe:rawDry ?dry ;
+                      probe:rawWet ?value .
                 FILTER(?value >= ?dry)
             }""" ] .

@@ -35,9 +35,10 @@ orexis:BoardPinShape a sh:NodeShape ;
     sh:targetClass mc:Pin ;
     sh:sparql [
         sh:message "GPIO 6-11 are wired to the SPI flash; driving one prevents the board booting at all" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/orexis/microcontroller#gpio> ?value .
+                $this mc:gpio ?value .
                 FILTER(?value >= 6 && ?value <= 11)
             }""" ] .
 
@@ -46,21 +47,23 @@ orexis:WiredPinShape a sh:NodeShape ;
     sh:targetClass mc:Wire ;
     sh:sparql [
         sh:message "an analog input on an ADC2 line (0,2,4,12-15,25-27) reads rubbish whenever WiFi is up — and returns plausible numbers rather than an error. Use ADC1: 32,33,34,35,36,39" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/orexis/microcontroller#joins> ?leg, ?line .
-                ?leg  <http://example.org/orexis/microcontroller#pinRole> <http://example.org/orexis/microcontroller#AnalogInPinRole> .
-                ?line <http://example.org/orexis/microcontroller#gpio> ?value .
+                $this mc:joins ?leg, ?line .
+                ?leg  mc:pinRole mc:AnalogInPinRole .
+                ?line mc:gpio ?value .
                 FILTER(?value IN (0, 2, 4, 12, 13, 14, 15, 25, 26, 27))
             }""" ] ;
     sh:sparql [
         sh:message "GPIO 34-39 are input-only on this family and cannot drive anything" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/orexis/microcontroller#joins> ?leg, ?line .
-                ?leg  <http://example.org/orexis/microcontroller#pinRole> ?role .
-                ?role a <http://example.org/orexis/microcontroller#OutputRole> .
-                ?line <http://example.org/orexis/microcontroller#gpio> ?value .
+                $this mc:joins ?leg, ?line .
+                ?leg  mc:pinRole ?role .
+                ?role a mc:OutputRole .
+                ?line mc:gpio ?value .
                 FILTER(?value >= 34)
             }""" ] .
 
@@ -69,15 +72,16 @@ orexis:OneGpioOneLegShape a sh:NodeShape ;
     sh:targetClass mc:Pin ;
     sh:sparql [
         sh:message "two legs are wired to the same GPIO line" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/orexis/microcontroller#gpio> ?line .
-                ?wa <http://example.org/orexis/microcontroller#joins> $this, ?a .
-                ?wb <http://example.org/orexis/microcontroller#joins> $this, ?b .
-                ?a <http://example.org/orexis/microcontroller#pinRole> ?ra .
-                ?b <http://example.org/orexis/microcontroller#pinRole> ?rb .
-                FILTER(?ra != <http://example.org/orexis/microcontroller#PowerPinRole>)
-                FILTER(?ra != <http://example.org/orexis/microcontroller#GroundPinRole>)
+                $this mc:gpio ?line .
+                ?wa mc:joins $this, ?a .
+                ?wb mc:joins $this, ?b .
+                ?a mc:pinRole ?ra .
+                ?b mc:pinRole ?rb .
+                FILTER(?ra != mc:PowerPinRole)
+                FILTER(?ra != mc:GroundPinRole)
                 FILTER(?a != $this && ?b != $this && STR(?a) < STR(?b))
             }""" ] .
 
@@ -86,21 +90,22 @@ orexis:PoweredPeripheralShape a sh:NodeShape ;
     sh:targetClass mc:Peripheral ;
     sh:sparql [
         sh:message "this device's power leg is on a rail that does not match the logic voltage of the board it signals into — its pull-up will idle the data line above what that input tolerates" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/orexis/microcontroller#hasPin> ?vcc, ?signal .
-                ?vcc <http://example.org/orexis/microcontroller#pinRole> <http://example.org/orexis/microcontroller#PowerPinRole> .
-                ?signal <http://example.org/orexis/microcontroller#pinRole> ?role .
-                ?role a <http://example.org/orexis/microcontroller#PinRole> .
-                FILTER(?role != <http://example.org/orexis/microcontroller#PowerPinRole>)
-                FILTER(?role != <http://example.org/orexis/microcontroller#GroundPinRole>)
+                $this mc:hasPin ?vcc, ?signal .
+                ?vcc mc:pinRole mc:PowerPinRole .
+                ?signal mc:pinRole ?role .
+                ?role a mc:PinRole .
+                FILTER(?role != mc:PowerPinRole)
+                FILTER(?role != mc:GroundPinRole)
 
-                ?pw <http://example.org/orexis/microcontroller#joins> ?vcc, ?rail .
-                ?rail <http://example.org/orexis/microcontroller#railVolts> ?value .
+                ?pw mc:joins ?vcc, ?rail .
+                ?rail mc:railVolts ?value .
 
-                ?sw <http://example.org/orexis/microcontroller#joins> ?signal, ?line .
-                ?board <http://example.org/orexis/microcontroller#hasPin> ?line ;
-                       <http://example.org/orexis/microcontroller#logicVolts> ?logic .
+                ?sw mc:joins ?signal, ?line .
+                ?board mc:hasPin ?line ;
+                       mc:logicVolts ?logic .
                 FILTER(?rail != ?vcc && ?line != ?signal)
                 FILTER(?value != ?logic)
             }""" ] .
@@ -110,13 +115,14 @@ orexis:MountedPeripheralShape a sh:NodeShape ;
     sh:targetClass mc:Peripheral ;
     sh:sparql [
         sh:message "this peripheral has a leg that no wire reaches" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/orexis/microcontroller#hasPin> ?value .
-                FILTER NOT EXISTS { ?w <http://example.org/orexis/microcontroller#joins> ?value }
-                FILTER NOT EXISTS { ?value <http://example.org/orexis/microcontroller#pinRole>
-                    <http://example.org/orexis/microcontroller#NotConnectedPinRole> }
-                FILTER NOT EXISTS { ?value <http://example.org/orexis/microcontroller#unused>
+                $this mc:hasPin ?value .
+                FILTER NOT EXISTS { ?w mc:joins ?value }
+                FILTER NOT EXISTS { ?value mc:pinRole
+                    mc:NotConnectedPinRole }
+                FILTER NOT EXISTS { ?value mc:unused
                     true }
             }""" ] .
 
@@ -141,11 +147,12 @@ orexis:CarriedPeripheralShape a sh:NodeShape ;
     sh:targetClass mc:Peripheral ;
     sh:sparql [
         sh:message "this peripheral has legs but no board carries it — check the identifier matches the one the world uses" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/orexis/microcontroller#hasPin> ?pin .
+                $this mc:hasPin ?pin .
                 FILTER NOT EXISTS {
-                    ?board <http://www.w3.org/ns/sosa/hosts> $this
+                    ?board sosa:hosts $this
                 }
             }""" ] .
 
@@ -167,28 +174,30 @@ an agent is never given the wiring, so neither is ever targeted. The promise its
 governed node's arrives from its firmware class — and the shape reads the conclusion either
 way, because validation runs against the materialised store.""" ;
     sh:target [ a sh:SPARQLTarget ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://www.w3.org/ns/ssn/implements>
-                      <http://example.org/orexis/sensing#AlarmProcedure> .
-                { ?this <http://example.org/orexis/microcontroller#hasPin> ?leg }
+                ?this ssn:implements
+                      sensing:AlarmProcedure .
+                { ?this mc:hasPin ?leg }
                 UNION
-                { ?part <http://www.w3.org/ns/ssn/hasSubSystem> ?this ;
-                        <http://example.org/orexis/microcontroller#hasPin> ?leg }
+                { ?part ssn:hasSubSystem ?this ;
+                        mc:hasPin ?leg }
             }""" ] ;
     sh:sparql [
         sh:message "this channel promises announce-on-crossing, but no sleep-watcher on the board it is wired to reaches its signal pin's role — the promise would be kept by nothing" ;
+        sh:prefixes orexis: ;
         sh:select """
             SELECT $this WHERE {
                 FILTER NOT EXISTS {
-                    { $this <http://example.org/orexis/microcontroller#hasPin> ?leg }
+                    { $this mc:hasPin ?leg }
                     UNION
-                    { ?part <http://www.w3.org/ns/ssn/hasSubSystem> $this ;
-                            <http://example.org/orexis/microcontroller#hasPin> ?leg }
-                    ?leg <http://example.org/orexis/microcontroller#pinRole> ?role .
-                    ?wire <http://example.org/orexis/microcontroller#joins> ?leg , ?pin .
+                    { ?part ssn:hasSubSystem $this ;
+                            mc:hasPin ?leg }
+                    ?leg mc:pinRole ?role .
+                    ?wire mc:joins ?leg , ?pin .
                     FILTER(?pin != ?leg)
-                    ?board <http://example.org/orexis/microcontroller#hasPin> ?pin ;
-                           <http://example.org/orexis/microcontroller#watcherReachesRole> ?role .
+                    ?board mc:hasPin ?pin ;
+                           mc:watcherReachesRole ?role .
                 }
             }""" ] .
