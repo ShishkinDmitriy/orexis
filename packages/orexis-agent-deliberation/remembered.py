@@ -3,9 +3,16 @@
 The first honest form: a plan that reached its end is lifted FILLED — its steps as they were
 walked, with their predictions — into the agent's own graph, hung on the want it served with
 the signature of the world it was decided in. A pursuit of that want in a world of the same
-signature adopts it with no search, and the trace says so. A different world searches. A
-remembered plan that fails a step is forgotten: the promotion rule's converse. Lifting to
-variables, the regressed applicability and the composed effect are the seams after this.
+signature adopts it with no search, and the trace says so. A remembered plan that fails a
+step is forgotten: the promotion rule's converse.
+
+The second form (the composed-effect seam, closed): in a world of ANOTHER signature every plan
+remembered for the want is a candidate on the menu — walked in the imaginarium at the root as
+one step, each of its steps re-simulated in order and each on the menu of the world the one
+before reached, and settled like any step: dear, late, forbidden, seen or met. Its composed
+effect is the world the walk reaches, its applicability is that every step was on its menu,
+and where it achieves the want its cost seeds the bound the rest of the pass is refused by.
+Lifting to variables and the regressed applicability are the seams after this.
 
 What is kept is never a possible world — only the steps to re-try — and every use is verified
 by the road #510 built: a step whose prediction fails drops the tail and the search takes over.
@@ -51,8 +58,25 @@ def _literal(text: str) -> str:
     return '"%s"' % text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
 
 
+def shape_of(steps) -> tuple:
+    """A plan's steps as what is compared between plans: which action, through which lever,
+    about what — in order. Quantity and prediction are how a step was FILLED here, not what
+    the plan is, so two walks of one route through different readings are one plan."""
+    return tuple((s.action, s.via or "", s.about or "") for s in steps)
+
+
 def lift(agent, want: str, steps: list, world: str, cost: float | None) -> str:
-    """Lift a walked plan into the agent's graph, for this want in this world."""
+    """Lift a walked plan into the agent's graph, for this want in this world.
+
+    ONCE: a route already remembered for this want — the same steps in the same order — is
+    not lifted again, whichever world it was first lifted in and whichever road found it
+    this time, the search or the walk of the remembered plan itself. The one already kept is
+    answered, so a caller may hold it as the plan's memory."""
+    for uri, kept, _, _ in remembered_for(agent, want):
+        if shape_of(kept) == shape_of(steps):
+            log.info("%s: the plan for %s is already remembered as %s", agent.id,
+                     want.rsplit("#", 1)[-1], uri.rsplit("#", 1)[-1])
+            return uri
     graph = remembered_graph(agent.id)
     uri = f"{OREXIS}remembered_{agent.id}_{uuid.uuid4().hex[:8]}"
     nodes = [f"{uri}_{n}" for n in range(len(steps))]
@@ -83,16 +107,35 @@ INSERT DATA {{ GRAPH <{graph}> {{
 
 
 def remembered(agent, want: str, world: str):
-    """A plan remembered for this want in a world of this signature: `(uri, steps, cost)`,
-    or None. Newest first, where several were remembered."""
+    """A plan remembered for this want in a world of THIS signature: `(uri, steps, cost)`,
+    or None. Newest first, where several were remembered. The exact hit — adopted with no
+    search, since the pass that lifted it already searched this very world."""
+    for uri, steps, cost, kept_in in remembered_for(agent, want):
+        if kept_in == world:
+            return uri, steps, cost
+    return None
+
+
+def remembered_for(agent, want: str) -> list:
+    """Every plan remembered for this want, newest first: `(uri, steps, cost, world)` — the
+    world being the signature it was lifted in. What the search weighs as candidates where
+    the world it stands in is none of those."""
     graph = remembered_graph(agent.id)
     rows = bindings(agent.beliefs.query(f"""
-SELECT ?r ?cost ?at WHERE {{ GRAPH <{graph}> {{
-  ?r a <{REMEMBERED_PLAN}> ; <{FOR_WANT}> <{want}> ; <{IN_WORLD}> "{world}" ; <{REMEMBERED_AT}> ?at .
-  OPTIONAL {{ ?r <{MEASURED_COST}> ?cost }} }} }} ORDER BY DESC(?at) LIMIT 1"""))
-    if not rows:
-        return None
-    uri = rows[0]["r"]
+SELECT ?r ?cost ?at ?world WHERE {{ GRAPH <{graph}> {{
+  ?r a <{REMEMBERED_PLAN}> ; <{FOR_WANT}> <{want}> ; <{IN_WORLD}> ?world ; <{REMEMBERED_AT}> ?at .
+  OPTIONAL {{ ?r <{MEASURED_COST}> ?cost }} }} }} ORDER BY DESC(?at)"""))
+    out = []
+    for row in rows:
+        steps = _steps_of(agent, row["r"], want)
+        if steps:
+            out.append((row["r"], steps, float(row["cost"]) if row.get("cost") else None,
+                        row["world"]))
+    return out
+
+
+def _steps_of(agent, uri: str, want: str) -> list:
+    graph = remembered_graph(agent.id)
     steps = bindings(agent.beliefs.query(f"""
 SELECT ?node ?first ?rest ?action ?via ?about ?quantity ?predicts WHERE {{ GRAPH <{graph}> {{
   <{uri}> <{LIFTED}> ?head . ?head <{_RDF}rest>* ?node . ?node <{_RDF}first> ?first ; <{_RDF}rest> ?rest .
@@ -110,8 +153,7 @@ SELECT ?node ?first ?rest ?action ?via ?about ?quantity ?predicts WHERE {{ GRAPH
                         quantity=float(r["quantity"]) if r.get("quantity") else None,
                         predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None))
         node = r["rest"]
-    cost = float(rows[0]["cost"]) if rows[0].get("cost") else None
-    return (uri, out, cost) if out else None
+    return out
 
 
 def forget(agent, uri: str, because: str) -> None:
@@ -124,3 +166,15 @@ WHERE  {{ GRAPH <{graph}> {{
   UNION {{ <{uri}> <{LIFTED}> ?head . ?head <{_RDF}rest>* ?s . ?s ?p ?o }}
   UNION {{ <{uri}> <{LIFTED}> ?head . ?head <{_RDF}rest>* ?n . ?n <{_RDF}first> ?s . ?s ?p ?o }} }} }}""")
     log.info("%s: forgot %s — %s", agent.id, uri.rsplit("#", 1)[-1], because)
+
+
+def forget_matching(agent, want: str, steps, because: str) -> list:
+    """Forget every plan remembered for this want that IS this route — the same steps in the
+    same order — whichever road adopted it: the exact hit, or the walk that weighed it as a
+    candidate and won. Answers what was forgotten."""
+    gone = []
+    for uri, kept, _, _ in remembered_for(agent, want):
+        if shape_of(kept) == shape_of(steps):
+            forget(agent, uri, because)
+            gone.append(uri)
+    return gone

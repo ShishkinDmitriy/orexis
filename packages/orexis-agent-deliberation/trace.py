@@ -47,6 +47,7 @@ COSTLY = "costs more than a plan already found"
 SPENT = "the budget was spent before this was simulated"
 IRRELEVANT = "touches nothing this want reads"
 REFUSED = "refused below lately — the level beneath found no way to keep its promise"
+UNAVAILABLE = "a remembered step is not on the menu here"
 
 #  HOW A WANT WAS JUDGED in every world the pass weighed (#502) — the road, always said, and
 #  the text where the road is a text. The compiled select lives nowhere else: computed once per
@@ -75,6 +76,7 @@ FIELD = {
     SPENT: "spent",
     IRRELEVANT: "irrelevant",
     REFUSED: "refused",
+    UNAVAILABLE: "unavailable",
 }
 
 
@@ -127,7 +129,9 @@ def write(store, agent_id: str, desire, plan, considered, stands_at: float,
 def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
            took_s: float, judged: tuple[str, str | None]) -> None:
     node = _uri(agent_id, desire.uri)
-    chosen = plan.steps[0].action if plan.steps else None
+    #  The candidate the plan came THROUGH — a remembered route walked as one candidate is
+    #  named as the route, not as the first of its steps (#469).
+    chosen = getattr(plan, "origin", None) or (plan.steps[0].action if plan.steps else None)
     rows = []
     for i, (depth, row, urgency, verdict) in enumerate(considered):
         candidate = f"{node}.{i}"
