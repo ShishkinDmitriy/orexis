@@ -80,6 +80,13 @@ SELECT DISTINCT ?g WHERE {{
   #  is dropped.
   FILTER NOT EXISTS {{ ?g a ?any . ?any rdfs:subClassOf* <{PUBLIC_GRAPH}> }}
   FILTER NOT EXISTS {{ ?g a ?hyp . ?hyp rdfs:subClassOf* orexis:PossibleGraph }}
+  #  A WORKING GRAPH is the agent's and not carried (#448): a reviewer's scratch, a summary, a
+  #  record of decisions — classified so a volume knows it from litter, left out of what a
+  #  plan imagines from and a validation reads beside the state. A filter of its own, and
+  #  not a VALUES over both classes inside one: measured at 600 ms against 2 ms for the two
+  #  filters — the engine evaluates a VALUES-bound path end for every candidate rather than
+  #  once, and this query runs at the start of every pass.
+  FILTER NOT EXISTS {{ ?g a ?work . ?work rdfs:subClassOf* orexis:WorkingGraph }}
 }}"""
 
 # Sent with every query. This is the ONLY set a query may use — some engines silently pre-bind

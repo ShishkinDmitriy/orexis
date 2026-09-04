@@ -11,7 +11,7 @@ import pytest
 from agent import genesis
 
 from assembly import loader
-from orexis_agent_progression.ontology import OREXIS, PROVENANCE_GRAPH, beliefs_graph
+from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, OREXIS, PROVENANCE_GRAPH, beliefs_graph
 from orexis_agent_progression.store import bindings
 
 from conftest import genesis_store
@@ -105,3 +105,94 @@ def test_the_modality_vocabulary_is_closed():
     arrivals = {r["a"].rsplit("#", 1)[-1] for r in bindings(st.query(
         f"SELECT ?a WHERE {{ ?a a <{OREXIS}Arrival> }}"))}
     assert arrivals == ARRIVALS
+
+
+# --- a package owns its per-agent graph (#448) ------------------------------------------------
+
+def _per_agent_classes(st) -> dict[str, tuple[str, str | None]]:
+    """class -> (prefix, arrival) for every class that states where its instances live."""
+    return {r["class"]: (r["prefix"], r.get("arrival")) for r in bindings(st.query(
+        "SELECT ?class ?prefix ?arrival WHERE { ?class orexis:graphPrefix ?prefix . "
+        "OPTIONAL { ?class orexis:arrivesBy ?arrival } }"))}
+
+
+def test_every_per_agent_graph_class_says_how_its_instances_arrive():
+    """Both halves or neither: a class with a prefix and no arrival is what review's three were
+    for as long as the kernel listed its own, and boot now refuses it."""
+    classes = _per_agent_classes(genesis_store())
+    assert len(classes) >= 8, "the per-agent graph classes stopped being found"
+    assert all(arrival for _, arrival in classes.values()), \
+        {c for c, (_, a) in classes.items() if not a}
+
+
+def test_the_agents_graphs_are_classified_by_asking_and_review_s_three_are_among_them():
+    """One road for the kernel's records, the layers' ledgers and a capability's scratch: boot
+    asks which classes state a prefix and an arrival and types this agent's instance of each.
+    Review's three — untyped for as long as the kernel listed its own — are typed now."""
+    from orexis_capability_review.graphs import evidence_graph, revisions_graph, summaries_graph
+
+    st = genesis_store()
+    genesis.classify_own_graphs(st, "fern")
+    for graph, cls in ((summaries_graph("fern"), "SummariesGraph"),
+                       (evidence_graph("fern"), "EvidenceGraph"),
+                       (revisions_graph("fern"), "RevisionsGraph")):
+        assert cls in types_of(st, graph), f"{cls} is a per-agent class and its instance is typed"
+        assert arrival_of(st, graph) == {"Recorded"}
+    classes = _per_agent_classes(st)
+    typed = {r["g"] for r in bindings(st.query_union(
+        f"SELECT ?g WHERE {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?c }} }}"))}
+    assert typed == {prefix + "fern" for prefix, _ in classes.values()}, \
+        "exactly one instance per declared class, and nothing the vocabulary does not declare"
+
+
+def test_a_working_graph_is_the_agents_and_not_carried():
+    """Review's three are classified so a volume knows them from litter, and left out of what
+    a plan carries and a validation reads — `orexis:WorkingGraph` says which."""
+    from orexis_capability_review.graphs import evidence_graph, revisions_graph, summaries_graph
+    from orexis_agent_progression.graphs import intentions_graph
+    from orexis_agent_progression.ontology import obligations_graph, promises_graph
+    from orexis_agent_deliberation.ontology import remembered_graph
+
+    st = genesis_store()
+    genesis.classify_own_graphs(st, "fern")
+    carried = set(st.recorded_graphs())
+    for g in (beliefs_graph("fern"), intentions_graph("fern"), obligations_graph("fern"),
+              promises_graph("fern"), remembered_graph("fern")):
+        assert g in carried
+    for g in (summaries_graph("fern"), evidence_graph("fern"), revisions_graph("fern")):
+        assert g not in carried, "a working graph is mine, and not that"
+
+
+def test_every_graph_builder_spells_what_its_class_declares():
+    """The Python that mints a per-agent graph's name and the class that declares its prefix
+    are two spellings of one fact, held together here."""
+    from orexis_capability_review.graphs import evidence_graph, revisions_graph, summaries_graph
+    from orexis_agent_progression.graphs import intentions_graph
+    from orexis_agent_progression.ontology import obligations_graph, promises_graph
+    from orexis_agent_deliberation.ontology import remembered_graph
+
+    classes = _per_agent_classes(genesis_store())
+    builders = {
+        f"{OREXIS}PickRecordGraph": beliefs_graph,
+        f"{OREXIS}ObligationsGraph": obligations_graph,
+        "http://example.org/orexis/progression#IntentionGraph": intentions_graph,
+        "http://example.org/orexis/progression#PromisesGraph": promises_graph,
+        "http://example.org/orexis/deliberation#RememberedGraph": remembered_graph,
+        "http://example.org/orexis/review#SummariesGraph": summaries_graph,
+        "http://example.org/orexis/review#EvidenceGraph": evidence_graph,
+        "http://example.org/orexis/review#RevisionsGraph": revisions_graph,
+    }
+    assert set(builders) == set(classes), "a class declared with no builder here, or the reverse"
+    for cls, build in builders.items():
+        assert build("x") == classes[cls][0] + "x", cls
+
+
+def test_a_prefix_without_an_arrival_refuses_the_boot():
+    from orexis_agent_progression.ontology import ONTOLOGY_GRAPH
+
+    st = genesis_store()
+    st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
+        <urn:test#HalfGraph> a owl:Class ; rdfs:subClassOf orexis:Graph ;
+            orexis:graphPrefix "http://example.org/orexis/graph/half/" }} }}""")
+    with pytest.raises(RuntimeError, match="HalfGraph"):
+        genesis.classify_own_graphs(st, "fern")

@@ -401,31 +401,35 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
     provenance graph — which already exists to hold statements ABOUT graphs, and is kept out
     of the default graph for exactly that reason: these are mentions, not uses.
 
+    ASKED, NEVER LISTED (#448): every class that states where its instances live
+    (`orexis:graphPrefix`) and how they arrive (`orexis:arrivesBy`) is a per-agent graph
+    class, whichever package declared it — the kernel's own records, the layers' ledgers, a
+    capability's scratch — and this agent's instance is the prefix and its id. The kernel
+    used to list its own five here and review's three went unclassified for as long as it
+    did, invisible to the sweep that knows litter from property and to every reader that
+    asks what the agent owns. A class with a prefix and no arrival REFUSES the boot rather
+    than being classified as something quieter.
+
     Written on every start rather than once at birth, and cheap: the classification is a
     function of the vocabulary, so a graph whose modality is refined by an amendment says the
     new thing on the next boot without a migration.
     """
-    from orexis_agent_progression.ontology import OREXIS, PROGRESSION, CLASSIFICATION_GRAPH, obligations_graph, promises_graph
-    from orexis_agent_deliberation.ontology import DELIBERATION, remembered_graph
+    from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH
 
-    from orexis_agent_progression.graphs import intentions_graph
-
-    # Both classes where they differ, because a reader must ASK what a graph is rather than
-    # walk a subclass path (one-graph-both-engines-read), and the closure cannot help here:
-    # these triples are written at runtime, long after it ran.
-    mine = [
-        (beliefs_graph(agent_id), (OREXIS + "PickRecordGraph",), "Asserted"),
-        (intentions_graph(agent_id), (PROGRESSION + "IntentionGraph",), "Recorded"),
-        (obligations_graph(agent_id), (OREXIS + "ObligationsGraph",), "Received"),
-        (promises_graph(agent_id), (PROGRESSION + "PromisesGraph",), "Recorded"),
-        (remembered_graph(agent_id), (DELIBERATION + "RememberedGraph",), "Recorded"),
-    ]
+    declared = bindings(st.query(
+        "SELECT ?class ?prefix ?arrival WHERE { ?class orexis:graphPrefix ?prefix . "
+        "OPTIONAL { ?class orexis:arrivesBy ?arrival } }"))
+    unarrived = sorted(r["class"] for r in declared if not r.get("arrival"))
+    if unarrived:
+        raise RuntimeError(
+            f"{agent_id} will not start: {', '.join(c.rsplit('#', 1)[-1] for c in unarrived)} "
+            "states where its graphs live and not how they arrive — a per-agent graph class "
+            "declares both (orexis:graphPrefix and orexis:arrivesBy), or the graph is nothing")
     #  FULL IRIs, since #529: a per-agent graph's class is its layer's word, and spelling every
     #  class `orexis:` classified the promises graph as nothing the store recognises.
     triples = " ".join(
-        f"<{iri}> a {' , '.join(f'<{c}>' for c in classes)} ; "
-        f"orexis:arrivedBy orexis:{arrival} ."
-        for iri, classes, arrival in mine)
+        f"<{r['prefix']}{agent_id}> a <{r['class']}> ; orexis:arrivedBy <{r['arrival']}> ."
+        for r in sorted(declared, key=lambda r: r["class"]))
     st.clear_graph(CLASSIFICATION_GRAPH)
     st.update(f"INSERT DATA {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ {triples} }} }}")
 

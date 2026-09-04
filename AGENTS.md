@@ -541,7 +541,10 @@ fails if pyshacl ever entails something the closure does not. See
   **A PER-AGENT graph is asked for the same way**: `store.recorded_graphs()` answers with every
   graph this agent owns — its picks, its debts, whatever a package records — by reading the
   classification the agent wrote about itself at boot, since a graph that does not exist until
-  its agent does cannot be declared in a T-Box. Naming one is still legitimate to SUBTRACT it
+  its agent does cannot be declared in a T-Box. What boot types is ASKED of the vocabulary
+  (#448): a class saying `orexis:graphPrefix` and `orexis:arrivesBy` is a per-agent graph class
+  whichever package declares it, and `orexis:WorkingGraph` is how a package says its graph is
+  its own and not carried. Naming one is still legitimate to SUBTRACT it
   (`validate_agent` takes the pick record out where the desires modality already carries it),
   which is saying which road a fact came by rather than enumerating what to read.
 - **SPARQL prefixes.** Only what `store.NAMESPACES` declares may be used. rdflib silently
@@ -574,6 +577,10 @@ fails if pyshacl ever entails something the closure does not. See
   rendered as the terms they are, and a token nobody bound REFUSES. A chain of `.replace`
   left `$about` in the dosing rule to parse as a free variable, and the prediction matched
   an observation of any property (#500).
+- **A property path whose end is bound by a `VALUES` inside a `FILTER NOT EXISTS` is
+  evaluated per candidate, not once** — folding a second excluded class into the own-graphs
+  query that way took it from 2 ms to 600 ms at the start of every pass, and two plain
+  filters cost what one did. Measure a query you reshape, not only one you write.
 - **A pattern under `FILTER NOT EXISTS` is left untranslated by rdflib's algebra** — it sits
   in the parse tree as a triples block, not a BGP, so a walk that reads BGPs alone reads
   nothing from a want that says "unmet while this fact is absent"; `relevance.py` reads both.

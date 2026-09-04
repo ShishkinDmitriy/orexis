@@ -222,11 +222,11 @@ orexis:BeliefGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Beli
 
 
 orexis:PickRecordGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Pick record graph" ;
-    orexis:graphPrefix "http://example.org/orexis/graph/beliefs/" ;
+    orexis:graphPrefix "http://example.org/orexis/graph/beliefs/" ; orexis:arrivesBy orexis:Asserted ;
     rdfs:comment "ONE agent's record of picking: what birth authored and review has since re-picked, one value per term, plus the belief-proper terms (conversions, the wallet) the #297 sort left beside them. A RECORD class, not a modality — the desire modality derives its wants and projects this record in as a premise-and-content, so what used to need a modality typing to be copied is now read by name, the one construction from an agent's own id the rules allow. The write boundary is orexis:beliefsOf, unchanged." .
 
 orexis:ObligationsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Obligations record graph" ;
-    orexis:graphPrefix "http://example.org/orexis/graph/obligations/" ;
+    orexis:graphPrefix "http://example.org/orexis/graph/obligations/" ; orexis:arrivesBy orexis:Received ;
     rdfs:comment "ONE agent's record of debts: claims won against it, presented or not, discharged rows kept because a debt paid and a debt forgotten must not look alike. A RECORD class — the duty-wants the desire modality serves are this record projected, and the prefix moved here when orexis:ConstraintGraph retired (#312)." .
 
 #  `orexis:Mode`, `orexis:Chosen` and `orexis:Honoured` WERE HERE and are retired (an-action-is-one-node):
@@ -271,6 +271,13 @@ orexis:arrivedBy a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range or
 orexis:graphPrefix a owl:DatatypeProperty ; rdfs:domain orexis:Graph ; rdfs:range xsd:string ;
     rdfs:label "graph prefix" ;
     rdfs:comment "Where graphs of this class live, for the ones that cannot be declared: a per-agent graph does not exist until its agent does, so the vocabulary states the PREFIX and the instances are found under it. What this exists for is knowing litter from property — a graph nothing declares and no prefix claims is a ghost from an amendment, and dropping it is how a volume stops holding facts in a spelling nothing speaks. Declared by whichever package mints the graphs, which is why the sweep needs no list: it asks." .
+
+orexis:arrivesBy a owl:ObjectProperty ; rdfs:range orexis:Arrival ;
+    rdfs:label "arrives by" ;
+    rdfs:comment "How every graph of a per-agent class arrives — said of the CLASS, beside its prefix, where `orexis:arrivedBy` is said of a graph. A per-agent graph cannot be declared, so its class declares both halves of what its instances are, and boot classifies each agent's instance from the two (#448): the kernel's own record classes, the layers' and any package's, by one road and no list. A class with a prefix and no arrival is refused at boot — a graph nobody says how it arrives is a graph nothing classifies, which is the situation review's three stood in for as long as the kernel listed its own." .
+
+orexis:WorkingGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Working graph" ;
+    rdfs:comment "ONE agent's own graph that nothing outside its package reads: a reviewer's scratch, a running summary, a record of decisions. Classified like any per-agent graph, so a volume knows it from litter — and left out of what a plan carries into a possible world and what a validation reads beside the state, since none of it is a fact about the world a shape is written against. What is carried is asked of `store.recorded_graphs()`; this class is how a package says: mine, and not that." .
 
 orexis:PublicGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Public graph" ;
     rdfs:comment "Knowledge every agent in a world may read: the vocabulary, the topology, and what the rules and the RDFS closure made of them. This is the class `store.query` looks for — the default graph of every query is whatever is an instance of THIS, discovered rather than listed, so adding one is a vocabulary edit and touches no code. Membership is deliberately by declaration and not by exclusion: a graph nobody typed is invisible, which is the safe direction to fail — the other way round, a new private graph nobody remembered to exclude would leak into every query." .
