@@ -21,6 +21,7 @@ import rdflib
 
 from orexis_agent_deliberation import effects
 from orexis_agent_progression.ontology import DELIBERATION_GRAPH, STATE_GRAPH
+from orexis_agent_progression.store import bindings
 from orexis_agent_deliberation import planner as search, trace
 from orexis_agent_deliberation.planner import Planner
 
@@ -599,3 +600,19 @@ def test_two_mintings_of_the_same_claim_are_the_same_place():
                 ox.Triple(c, litres, ox.Literal("2.0", datatype=double))]
 
     assert signature.facts(minted()) == signature.facts(minted())
+
+
+def test_no_ontology_graph_carries_a_law_so_the_carve_may_leave_the_vocabulary_out():
+    """#484: the planner's flatten reads the data-borne graphs and, of the T-Box, its node
+    shapes alone — a package may declare a want's shape in its vocabulary (the courier's
+    `delivered`, hanoi's `solved`), and those are carried as subgraphs. A LAW is ratified and
+    arrives as data, and this is what holds that half: the ontology graphs exist, and none
+    carries a violation-severity node shape. The day one does, the narrowing fails here
+    rather than judging a plan legal against a law it never read."""
+    st = genesis_store()
+    vocabulary = {r["g"] for r in bindings(st.query("SELECT ?g WHERE { ?g a orexis:OntologyGraph }"))}
+    assert len(vocabulary) >= 2, "the ontology graphs stopped being typed — this checks nothing"
+    laws = bindings(st.query_union("""
+SELECT ?g ?s WHERE { GRAPH ?g { ?s a sh:NodeShape ; sh:severity sh:Violation } }"""))
+    assert not [r for r in laws if r["g"] in vocabulary], \
+        "a law in the vocabulary: the planner's carve would never find it"
