@@ -224,7 +224,9 @@ along with the T-Box. Copy the lean set and the CONSTRUCT binds nothing at all: 
 error, no test going red — a planner that quietly finds every lever useless.
 
 So the imaginarium copies **every public graph**, asked rather than listed, plus the private
-graphs it is named: this agent's beliefs and its readings. That is 2,646 quads and 10.4 ms on
+graphs it is named: this agent's beliefs and its readings — and, since #547, its wants, copied in
+from the desire modality's own store so a shape's target over a want resolves where the world
+is. That is 2,646 quads and 10.4 ms on
 `world/loner` rather than 486 and 1.45. It is also the rule the rest of the repo already
 follows — `store.public_graphs()` asks the vocabulary which graphs are public, and enumerating
 four of them by hand is the same move [who-put-the-fact-there](/decisions/who-put-the-fact-there.md)

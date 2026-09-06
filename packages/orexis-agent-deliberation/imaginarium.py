@@ -73,6 +73,20 @@ class Imaginarium(Store):
                 self._store.add(quad)
         self._public = None
 
+    def copy_in(self, source, *graphs: str) -> None:
+        """Graphs from ANOTHER store, copied in under their own names — the wants (#547).
+
+        The desire modality owns a store of its own, in memory and derived from the beliefs,
+        so what this agent pursues is not among the graphs the constructor copies. The judge
+        has always read the wants beside the world, because the packages' shapes target them
+        (`orexis:DesireShape`, the keeper's, a region's) — they rode into the border as text.
+        Copied in here, a target is resolved at a node by the store that holds the world, and
+        the border is written by one dump. Read-only like everything else in here.
+        """
+        for iri in graphs:
+            for quad in source.quads(iri):
+                self._store.add(quad)
+
     def reached(self, parent: str, path, added, retracted) -> str:
         """The world one step past `parent`: its readings, less what the step retracts, plus what
         it adds. Returns the new graph's name, which is what a rule's `$state` is bound to.

@@ -30,7 +30,10 @@ pre-filter made equal anyway and without pySHACL's measured wrong answers for
 from __future__ import annotations
 
 import functools
+import io
+import json
 import re
+from typing import NamedTuple
 
 import pyoxigraph as ox
 import rdflib
@@ -45,6 +48,19 @@ _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 #  Where a blank node goes at the border. `urn:` because these names are private to one
 #  crossing and must never be mistaken for anything a world declares.
 _SKOLEM = "urn:orexis:blank:"
+
+#  What a verdict says, as strings — the four things any hot caller reads off a result and
+#  nothing a person would. `value` is the lexical form, or "" where the result states none.
+VIOLATION = str(_SH.Violation)
+
+
+class Verdict(NamedTuple):
+    severity: str
+    focus: str
+    source: str
+    value: str
+
+
 
 
 def crossed(data: rdflib.Graph) -> str:
@@ -180,16 +196,81 @@ def judge(data: rdflib.Graph | str, shapes: rdflib.Graph) -> tuple[rdflib.Graph,
     return results, f"Conforms: {conforms}\n" + results.serialize(format="turtle")
 
 
+def verdicts(data: str, *shapes: rdflib.Graph) -> list[frozenset]:
+    """One world at the border, judged by several shapes graphs, each answered as a set of
+    `Verdict`s — and no rdflib graph on the way. Built as the search's door (#547); since
+    #548 the search reads compiled selects instead, and this is the ORACLE those selects
+    are held to by parity (`tests/test_legality.py`), the way the inference closure is held
+    to pyshacl. It stays exactly what the gates compute, so the parity means something.
+
+    READ ONCE. rudof's `read_data` costs a fixed ~75 ms before it has looked at a triple
+    (measured on two triples and on 3,500 alike), and it keeps its data across `reset_shacl`,
+    so a caller with two shapes graphs to hold the same world to pays that floor once instead
+    of twice. It drops its shapes on `reset_data`, so the other way round — one shapes graph
+    held over many worlds — is not available, and each world is a fresh read.
+
+    THE REPORT IS READ BY THE STORE'S OWN PARSER, as N-Triples: a result is a dozen triples
+    and the four a caller keys on are read straight off them. `judge` below still returns
+    the full report as a graph and as text, with the author's prose restored, because the
+    gates print it for a person; nothing on the search path reads a message.
+
+    An empty shapes graph answers an empty set without troubling the engine, which refuses
+    to validate with no shapes loaded.
+    """
+    r = Rudof(RudofConfig())
+    r.read_data(data, format=RDFFormat.NTriples)
+    out = []
+    for i, graph in enumerate(shapes):
+        if not graph:
+            out.append(frozenset())
+            continue
+        shapes_ttl, _ = _resolved_ttl(graph, data)
+        if i:
+            r.reset_shacl()
+            r.reset_validation_results()
+        r.read_shacl(shapes_ttl, format=ShaclFormat.Turtle)
+        r.validate_shacl(mode=ShaclValidationMode.Native)
+        report = r.serialize_shacl_validation_results(format=ResultShaclValidationFormat.NTriples)
+        out.append(_verdicts_in(report))
+    return out
+
+
+_RESULT = str(_SH.ValidationResult)
+_FIELDS = {str(_SH.resultSeverity): "severity", str(_SH.focusNode): "focus",
+           str(_SH.sourceShape): "source", str(_SH.value): "value"}
+
+
+def _verdicts_in(report_nt: str) -> frozenset:
+    """The `Verdict`s a report states, read off its N-Triples by pyoxigraph."""
+    rows: dict = {}
+    results = set()
+    for quad in ox.parse(report_nt.encode(), ox.RdfFormat.N_TRIPLES):
+        key = quad.subject.value
+        if quad.predicate.value == _RDF_TYPE and quad.object.value == _RESULT:
+            results.add(key)
+        elif (field := _FIELDS.get(quad.predicate.value)) is not None:
+            rows.setdefault(key, {})[field] = quad.object.value
+    return frozenset(Verdict(row.get("severity", ""), row.get("focus", ""),
+                             row.get("source", ""), row.get("value", ""))
+                     for key, row in rows.items() if key in results)
+
+
+_RDF_TYPE = str(rdflib.RDF.type)
+
+
 def _resolved_ttl(shapes: rdflib.Graph, data_ttl: str) -> tuple[str, rdflib.Graph]:
     """The shapes at the border with every `sh:SPARQLTarget` made explicit — as Turtle, the
     shape text serialized ONCE per shapes graph and the resolved targets appended per world.
 
     The select runs against the DATA — that is what a SPARQL-based target means — on a
-    pyoxigraph store of its own, which is the engine every other query here already answers
-    to — handed the store's dictionary, exactly as `Store.query` hands it (#500, #508), so a
-    select written in prefixed names runs here as it runs there. The original `sh:target`
-    node stays in the text: rudof ignores it, and removing it would make the crossing lie
-    about what the author wrote.
+    pyoxigraph store of its own loaded from the text, which is the engine every other query
+    here already answers to — handed the store's dictionary, exactly as `Store.query` hands
+    it (#500, #508), so a select written in prefixed names runs here as it runs there. Only a
+    NAMED target is kept: a blank one could not survive the border crossing, and nothing
+    here mints one. The original `sh:target` node stays in the text: rudof ignores it, and
+    removing it would make the crossing lie about what the author wrote. (A resolver over
+    the imaginarium sat here between #547 and #548; the search now compiles the target into
+    its own select and nothing else held a world to resolve against.)
 
     The split matters because the shape text is world-independent: a planner judging many
     candidate worlds against one shapes graph re-pays only the target selects and a string
@@ -201,16 +282,27 @@ def _resolved_ttl(shapes: rdflib.Graph, data_ttl: str) -> tuple[str, rdflib.Grap
     base_ttl, targets, named = _prepared(shapes)   # skolemized there, as the data was
     if not targets:
         return base_ttl, named
-    store = ox.Store()
-    store.load(data_ttl.encode(), format=ox.RdfFormat.N_TRIPLES)   # what `crossed` writes
+    query = _over_text(data_ttl)
     additions = []
     for shape, select in targets:
-        for row in store.query(select, prefixes=NAMESPACES):
-            node = row["this"]
-            if isinstance(node, ox.NamedNode):        # a blank target could not survive the
-                additions.append(                     # border crossing; nothing here mints one
-                    f"<{shape}> <{_SH.targetNode}> <{node.value}> .")
+        for row in query(select).get("results", {}).get("bindings", []):
+            node = row.get("this", {})
+            if node.get("type") == "uri":
+                additions.append(f"<{shape}> <{_SH.targetNode}> <{node['value']}> .")
     return base_ttl + "\n" + "\n".join(additions), named
+
+
+def _over_text(data_ttl: str):
+    """A resolver over the text alone: the world loaded once into a store of its own."""
+    store = ox.Store()
+    store.load(data_ttl.encode(), format=ox.RdfFormat.N_TRIPLES)   # what `crossed` writes
+
+    def query(select: str) -> dict:
+        out = io.BytesIO()
+        store.query(select, prefixes=NAMESPACES).serialize(
+            output=out, format=ox.QueryResultsFormat.JSON)
+        return json.loads(out.getvalue())
+    return query
 
 
 @functools.lru_cache(maxsize=8)

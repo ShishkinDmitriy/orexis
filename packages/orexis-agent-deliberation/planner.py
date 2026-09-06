@@ -49,9 +49,8 @@ from orexis_agent_progression.store import Raw, bind, bindings
 from .ontology import DELIBERATION
 from orexis_agent_progression.ontology import (promises_graph, DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
-from orexis_agent_deliberation.conformance import conforms_at, graph_from
+from orexis_agent_deliberation.conformance import graph_from, held_shapes, legality_selects
 from orexis_agent_deliberation.judge import crossed_text
-from orexis_agent_deliberation.judge import judge
 
 log = logging.getLogger("search")
 
@@ -289,8 +288,12 @@ class Planner:
             if answer is not None:
                 return answer <= 0.0
             return desire.is_met
-        results, _ = judge(self._border(node), shape)
-        return not list(results.subjects(RDF.type, _SH.ValidationResult))
+        #  A shape want the pass did not compile in `_begin` — another desire than the
+        #  pass's — is compiled here, by the same compiler and to the same select (#548);
+        #  the judge is not asked inside the search any more.
+        select = violation.unmet_select(shape, self._shape_root(desire))
+        return not bindings(self.imaginarium.query_over(
+            select, *self._invariant_graphs, node.graph))
 
     def _holds(self, node, subject: str, predicate: str) -> bool:
         """Whether this node's world states anything about `subject` under `predicate`.
@@ -844,13 +847,14 @@ class Planner:
         """
         if not plan.steps:
             return plan
-        #  THE TEXT THE JUDGE ALREADY READS, and no graph in between (#485): the world went
-        #  pyoxigraph to text to rdflib and back to text — the parse alone 150 ms on
-        #  `world/simulation`, more than the verdict it fed. The shapes this agent holds are
-        #  carved out of the small data-borne base the law is carved from, which is the one
-        #  rdflib walk left, and it is over a few hundred triples rather than the world.
-        ok, _ = conforms_at(self._border(node), self._base, focus=self.me.uri)
-        if ok:
+        #  ASKED OF THE IMAGINARIUM, and the world never leaves the store (#548): every
+        #  package shape about this agent and every shape it holds, compiled once to a
+        #  select whose rows are its violations (`violation.report_selects`), run at this
+        #  node's graph. What used to happen here — the world dumped to text, crossed into
+        #  rudof, its report parsed back — cost 230 ms a pass on `world/simulation` after two
+        #  rounds of trimming (#485, #547); the selects cost 60, and the judge stays at the
+        #  gates, where the authored report prose is for a person.
+        if not self._illegal(node, self._legal):
             return plan
         log.warning("the world this plan would reach is one the society refuses — not taken")
         return Plan(REFUSED, (), plan.urgency_now, plan.urgency_after)
@@ -882,16 +886,22 @@ class Planner:
         Severity is filtered again on the RESULT, because one shape may mix forces.
         """
         #  The law graph is Violation-only by construction (`_violation_shapes` keeps only
-        #  declared-Violation cbds), so judge.py's severity gap cannot reach the keys. A law
-        #  shape MIXING forces within itself would need the split conformance._judged does —
-        #  none exists today, and the result filter below is where it would show.
-        results, _ = judge(self._border(node), self._law)
-        return frozenset(
-            (str(results.value(r, _SH.sourceShape)),
-             str(results.value(r, _SH.focusNode)),
-             str(results.value(r, _SH.value)))
-            for r in results.subjects(rdflib.RDF.type, _SH.ValidationResult)
-            if results.value(r, _SH.resultSeverity) == _SH.Violation)
+        #  declared-Violation cbds), and the compiled report keeps only what a shape states
+        #  at `sh:Violation` besides, so a law shape mixing forces within itself would be
+        #  read the way the judge reads it. Compiled once per pass, asked per candidate
+        #  at its own graph (#548): a rudof verdict here had a fixed floor of ~75 ms per
+        #  candidate, paid at every expansion in a world that ratifies a law.
+        return frozenset(self._illegal(node, self._law_selects))
+
+    def _illegal(self, node, selects: dict) -> list[tuple]:
+        """The violations `selects` find in this node's world — (shape, focus, which
+        constraint, the offending value or None) per row — asked of the imaginarium with the
+        view the border text holds: public knowledge, the records, the wants, this node's
+        readings. Empty is legal."""
+        graphs = (*self._invariant_graphs, *self._want_graphs, node.graph)
+        return [(str(shape), row["this"], row.get("_constraint"), row.get("_offending"))
+                for shape, select in selects.items()
+                for row in bindings(self.imaginarium.query_over(select, *graphs))]
 
     def _remembered_rows(self, desire: Desire) -> list:
         """The plans remembered for this want, as rows — asked once per pass."""
@@ -1014,16 +1024,21 @@ class Planner:
             #  a graph nobody had copied. Read-only like everything else copied in: no
             #  effect touches it, and a plan cannot re-command a cadence.
             *self.agent.beliefs.recorded_graphs())
-        #  What this agent PURSUES, snapshotted for the pass: the desire modality's triples as
-        #  one rdflib graph, because pySHACL wants rdflib and a cbd walks blank nodes. Small —
-        #  a few hundred triples — and per pass for the same reason the imaginarium is.
-        #  The WANT graphs alone — derived and asserted — never the record projections: the
+        #  What this agent PURSUES, snapshotted for the pass. The WANT graphs alone — derived,
+        #  asserted, and the promises a bridge raised — never the record projections: the
         #  flat world below already carries the pick record through the belief flatten, and a
         #  second copy with fresh blank nodes splits every aim in two, which AimShape rightly
-        #  refuses as not steering.
+        #  refuses as not steering. They come from the desire modality's OWN store, and go
+        #  two ways: into the imaginarium under their own names (#547), so a shape's target
+        #  over a want is resolved where the world is and the border is one dump; and as one
+        #  rdflib graph, because a cbd walks blank nodes and the carves below want one —
+        #  small, a few hundred triples, and per pass for the same reason the imaginarium is.
+        self._want_graphs = (DESIRE_DERIVED_GRAPH, DESIRE_ASSERTED_GRAPH,
+                             promises_graph(self.agent.id))
+        self.imaginarium.copy_in(self.agent.desires, *self._want_graphs)
         self._shapes = effects.applied((), self.agent.desires.construct(
             f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ "
-            f"VALUES ?g {{ <{DESIRE_DERIVED_GRAPH}> <{DESIRE_ASSERTED_GRAPH}> <{promises_graph(self.agent.id)}> }} "
+            f"VALUES ?g {{ {' '.join(f'<{g}>' for g in self._want_graphs)} }} "
             f"GRAPH ?g {{ ?s ?p ?o }} }}"), ())
         base = self._beliefs()
         self._base = base
@@ -1033,6 +1048,10 @@ class Planner:
         #  reason no lever caused (#312).
         for triple in self._shapes:
             base.add(triple)
+        #  THE SHAPES THIS AGENT HOLDS, carved once (#547): the base does not change inside a
+        #  pass, so the walk `_offer` used to repeat per winner answers the same graph every
+        #  time. Carved AFTER the wants join the base, because a held want is one of them.
+        self._held = held_shapes(base, self.me.uri)
         #  The base's canonical facts, once per pass: `advance` needs them to tell a fact
         #  restored from a fact introduced, which is what lets a path that returns to the base
         #  world return to the EMPTY diff instead of accumulating noise. Read as the store's
@@ -1056,6 +1075,16 @@ class Planner:
         #  the gates, met from the planner's side. Empty in a world that ratifies no such
         #  shape, and then this costs nothing per node.
         self._law = self._violation_shapes(base)
+        #  COMPILED, ONCE PER PASS (#548): the law's selects, and the legality check's — the
+        #  packages' shapes about this agent, compiled once per process and cached by
+        #  focus, beside the shapes this agent holds, carved and compiled here. A shape the
+        #  compiler cannot say REFUSES here, loudly, the way a want's does: a legality
+        #  check that quietly judged less than the gates do would let the search reach a
+        #  world boot refuses.
+        self._law_selects = (violation.report_selects(self._law)
+                             if self._law is not None else {})
+        self._legal = {**legality_selects(self.me.uri),
+                       **violation.report_selects(self._held)}
         #  THE INVARIANT HALF OF EVERY WORLD THIS PASS WILL JUDGE, written once by the store's
         #  own engine (#481). Every graph the imaginarium copied EXCEPT the readings — those
         #  are what a step changes, and each node carries its own — plus the wants, which the
@@ -1067,8 +1096,7 @@ class Planner:
         #  SKOLEMIZED AT THE BORDER (#485), by the scheme `judge.crossed` uses for a graph: a
         #  blank focus node is then legal in rudof's VALUES pre-binding, and the legality
         #  check below reads this text as it is, with no rdflib graph in between.
-        self._invariant = crossed_text(self.imaginarium.dump_nt(*self._invariant_graphs)
-                                       + self._shapes.serialize(format="nt"))
+        self._invariant_text = None      # written on the first `_border`, and most passes never ask
         #  THE WANT'S VIOLATION SELECT, compiled once for the pass (#497) — None where the
         #  want is not a shape (a pattern want, an obligation, a call). A shape this compiler
         #  cannot say REFUSES here, loudly, rather than judging by something quieter: a want
@@ -1113,8 +1141,20 @@ class Planner:
         here.urgency = self._urgency_in(here, desire)
         return here
 
+    @property
+    def _invariant(self) -> str:
+        """The invariant half of every world this pass would judge, as skolemized N-Triples,
+        written by the store's own engine on the first ask and kept for the pass."""
+        if self._invariant_text is None:
+            self._invariant_text = crossed_text(
+                self.imaginarium.dump_nt(*self._invariant_graphs, *self._want_graphs))
+        return self._invariant_text
+
     def _border(self, node) -> str:
-        """This node's whole world as one N-Triples text, for the judge.
+        """This node's whole world as one N-Triples text, for the judge — which, since #548,
+        nothing in the search asks: the parity tests do, holding the compiled selects the
+        search reads to the judge's verdict on the same world, and that road stays open at
+        no cost to a pass that never takes it.
 
         The invariant half is every graph a judged world holds that no step can change —
         public knowledge, this agent's beliefs, whatever it records — plus the wants, which

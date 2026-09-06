@@ -15,10 +15,12 @@ that a `FILTER` inside it can see `?this` (a BIND or a FILTER inside a UNION bra
 a variable bound outside it — AGENTS.md carries the trap). Rows are the focus nodes that
 violate, which is exactly what the kernel already reads as UNMET.
 
-COVERAGE IS EXACTLY WHAT THE SHIPPED WANTS USE, and anything else REFUSES rather than
-compiling to something quiet: a shape compiled to an empty pattern would read as met for
-ever, which is this repository's signature way of being wrong. Held to the judge by parity
-in `tests/test_violation.py`, the way the inference closure is held to pySHACL — two engines
+COVERAGE IS EXACTLY WHAT THE SHIPPED SHAPES USE — the wants' fragment, and since #548 the
+packages' shapes about an agent and the law a world ratifies (`report_select`,
+`report_selects`) — and anything else REFUSES rather than compiling to something quiet: a
+shape compiled to an empty pattern would read as met for ever, which is this repository's
+signature way of being wrong. Held to the judge by parity in `tests/test_violation.py` and
+`tests/test_legality.py`, the way the inference closure is held to pySHACL — two engines
 reading one declaration is a disagreement this repository has closed once already.
 
 The compiled text is COMPUTED and never stored (model-it-only-if-a-plan-would-branch-on-it:
@@ -57,8 +59,24 @@ SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 _PROPERTY_ANNOTATIONS = {SH.path, SH.message, SH.severity, SH.name, SH.description, SH.order,
                          SH.group}
 _NODE_ANNOTATIONS = {SH.targetNode, SH.targetClass, SH.targetSubjectsOf, SH.targetObjectsOf,
-                     SH.property, SH.sparql, SH["not"],
-                     SH.message, SH.severity, SH.name, SH.description, SH.deactivated}
+                     SH.target, SH.property, SH.sparql, SH["not"], SH["or"], SH.xone,
+                     SH.message, SH.severity, SH.name, SH.description, SH.deactivated,
+                     SH["class"], SH.datatype, SH.nodeKind, SH["in"], SH.hasValue,
+                     SH.minExclusive, SH.maxExclusive, SH.minInclusive, SH.maxInclusive}
+
+#  What a `sh:nodeKind` refuses, as the filter that finds the offending value — AT THE
+#  BORDER'S SEMANTICS, not the specification's. A blank node crosses into the judge as an
+#  IRI (`judge.crossed` skolemizes every one), so the gates never tell the two apart and
+#  `sh:IRI` there means "not a literal". The compiled form agrees with the gates rather than
+#  with the letter of SHACL, because agreeing with the gates is what makes a world the search
+#  accepts a world boot accepts; the two kinds the border makes meaningless are refused.
+_NODE_KIND_VIOLATED = {
+    SH.IRI: "isLiteral({v})", SH.BlankNodeOrIRI: "isLiteral({v})",
+    SH.Literal: "!isLiteral({v})", SH.BlankNodeOrLiteral: "isIRI({v}) || isBlank({v})",
+}
+#  Value constraints a NODE shape may carry about its focus itself, beside its properties.
+_NODE_VALUE_CONSTRAINTS = {SH["class"], SH.datatype, SH.nodeKind, SH["in"], SH.hasValue,
+                           SH.minExclusive, SH.maxExclusive, SH.minInclusive, SH.maxInclusive}
 
 
 def _is_shacl(p) -> bool:
@@ -89,6 +107,37 @@ def unmet_select(shapes: rdflib.Graph, shape) -> str:
     return _Compiler(shapes).select(shape)
 
 
+def report_select(shapes: rdflib.Graph, shape, focus_node=None) -> str | None:
+    """The select whose rows are `shape`'s VIOLATIONS — `?this`, the constraint's index
+    `?_constraint` within the shape, and the `?_offending` value where the constraint has
+    one — restricted
+    to `focus_node` when given (#548). This is the judge's report as rows: what the search
+    reads off a world instead of crossing it into rudof. Only what the shape states at
+    `sh:Violation` is compiled, a shape's default; a warning shows and refuses nothing, so a
+    shape stating only warnings answers None, as does a deactivated one."""
+    return _Compiler(shapes).report(shape, focus_node)
+
+
+def report_selects(shapes: rdflib.Graph, focus_node=None) -> dict:
+    """Every TARGETED shape in `shapes` that states something at `sh:Violation`, each as its
+    own report select — {shape: select} — so a world is held to a whole shapes graph by one
+    query per shape (#548). A shape with no target is not judged, as the judge does not
+    judge it. ONE SELECT PER SHAPE, measured: the same branches as a single UNION of every
+    shape cost 843 ms on `world/simulation` where the selects asked one by one cost 65, so
+    the engine is handed small questions.
+    """
+    c = _Compiler(shapes)
+    out = {}
+    for shape in set(shapes.subjects(RDF.type, SH.NodeShape)):
+        if not c.targeted(shape):
+            continue
+        branches = c.report_branches(shape, focus_node)
+        if branches:
+            out[shape] = ("SELECT DISTINCT ?this ?_constraint ?_offending WHERE { "
+                          + " UNION ".join(branches) + " }")
+    return out
+
+
 def entered_select(shapes: rdflib.Graph, shape) -> str:
     """The select whose rows are the focus nodes that CONFORM to `shape` — the negative twin
     (#499). An aversion under `orexis:unmetWhen` is authored as the avoided state itself, so
@@ -107,6 +156,38 @@ class _Compiler:
 
     # --- the whole ----------------------------------------------------------------------------
 
+    def report(self, shape, focus_node=None) -> str | None:
+        branches = self.report_branches(shape, focus_node)
+        if not branches:
+            return None
+        return "SELECT DISTINCT ?this ?_constraint ?_offending WHERE { " + " UNION ".join(branches) + " }"
+
+    def targeted(self, shape) -> bool:
+        return any((shape, t, None) in self.g for t in (
+            SH.targetNode, SH.targetClass, SH.targetSubjectsOf, SH.targetObjectsOf, SH.target))
+
+    def report_branches(self, shape, focus_node=None) -> list[str]:
+        """One UNION branch per violation alternative of `shape` at `sh:Violation`, each
+        carrying the target, the constraint's index and the offending value."""
+        if self.g.value(shape, SH.deactivated) == Literal(True):
+            return []
+        target = self.target(shape)
+        if focus_node is not None:
+            target = f"VALUES ?this {{ {self.term(focus_node)} }} " + target
+        severity = self.g.value(shape, SH.severity) or SH.Violation
+        branches = []
+        for k, (text, value) in enumerate(self.alternatives(shape, "?this", severity, SH.Violation)):
+            #  Projected under UNDERSCORED names, reserved for the report — an authored body
+            #  says `?shape`, and one that says `?_shape` is refused: a BIND onto a variable
+            #  the branch already binds is a parse error the engine reports, never a quiet
+            #  wrong row.
+            for projected in ("?_constraint", "?_offending"):
+                if projected in text or projected in target:
+                    raise Unsupported(f"{shape}: a select body binds {projected}, which the report projects")
+            bound = f" BIND({value} AS ?_offending)" if value else ""
+            branches.append(f"{{ {target} {text} BIND({k} AS ?_constraint){bound} }}")
+        return branches
+
     def select(self, shape, entered: bool = False) -> str:
         target = self.target(shape)
         alternatives = self.violations(shape, "?this")
@@ -123,11 +204,16 @@ class _Compiler:
         classes = list(self.g.objects(shape, SH.targetClass))
         subjects_of = list(self.g.objects(shape, SH.targetSubjectsOf))
         objects_of = list(self.g.objects(shape, SH.targetObjectsOf))
-        if (shape, SH.target, None) in self.g:
-            raise Unsupported(f"{shape}: sh:target (a SPARQL target) is not compiled")
-        if not (nodes or classes or subjects_of or objects_of):
+        sparql = []
+        for t in self.g.objects(shape, SH.target):
+            if (t, RDF.type, SH.SPARQLTarget) not in self.g:
+                raise Unsupported(f"{shape}: a sh:target that is not a sh:SPARQLTarget")
+            #  The target select's body, inlined as a group so its patterns and its filters
+            #  see one another; `?this` is what it projects and what the branch binds.
+            sparql.append("{ " + self.body_of(self.g.value(t, SH.select), t, "?this") + " }")
+        if not (nodes or classes or subjects_of or objects_of or sparql):
             raise Unsupported(f"{shape} targets nothing — whose state is it about?")
-        parts = []
+        parts = sparql
         if nodes:
             parts.append("VALUES ?this { " + " ".join(self.term(n) for n in nodes) + " }")
         for cls in classes:
@@ -141,18 +227,88 @@ class _Compiler:
     # --- a node shape's violations, each an alternative --------------------------------------
 
     def violations(self, shape, focus: str) -> list[str]:
+        return [text for text, _ in self.alternatives(shape, focus)]
+
+    def alternatives(self, shape, focus: str, severity=None, only=None) -> list[tuple[str, str | None]]:
+        """Each way `focus` can violate `shape`, as (pattern, the offending value's variable
+        or None). With `only`, an alternative whose severity is not `only` is left out; a
+        conformance check passes neither.
+
+        WHOSE SEVERITY, measured against the judge (#548) rather than read off the
+        specification: a property shape's is its own, defaulting to `sh:Violation`, and the
+        node shape's never reaches it; a `sh:sparql` constraint's is the NODE shape's, and
+        one stated on the constraint itself is ignored; `sh:or`, `sh:not`, `sh:xone` and a
+        value constraint on the node itself are the node shape's. The shipped shapes state
+        it that way already — down on the property for a declarative constraint, up on the
+        node for a SPARQL one — and the one that states it on a constraint node also
+        states it on the node, so nothing shipped reads differently under either rule.
+        """
+        if (shape, SH.path, None) in self.g:
+            #  A PROPERTY shape where a node shape was expected — a member of `sh:or`, which
+            #  SHACL allows and the public-graph shape uses. Its constraints are its own.
+            return self.property_violations(shape, focus)
         for p in self.g.predicates(shape):
             if _is_shacl(p) and p not in _NODE_ANNOTATIONS:
                 raise Unsupported(f"{shape}: {p.n3()} on a node shape is not compiled")
         out = []
+        own = only is None or severity == only
         for prop in self.g.objects(shape, SH.property):
-            out.extend(self.property_violations(prop, focus))
-        for constraint in self.g.objects(shape, SH.sparql):
-            out.append(self.sparql_body(constraint, focus))
-        for negated in self.g.objects(shape, SH["not"]):
-            #  Violated exactly where the negated shape is CONFORMED to.
-            out.append(self.conforms(negated, focus))
+            if only is None or (self.g.value(prop, SH.severity) or SH.Violation) == only:
+                out.extend(self.property_violations(prop, focus))
+        if own:
+            for constraint in self.g.objects(shape, SH.sparql):
+                out.append((self.sparql_body(constraint, focus), None))
+            out.extend(self.value_violations(shape, focus))
+            for negated in self.g.objects(shape, SH["not"]):
+                #  Violated exactly where the negated shape is CONFORMED to.
+                out.append((self.conforms(negated, focus), None))
+            for members in self.g.objects(shape, SH["or"]):
+                #  Violated where NO member is conformed to: every member violated.
+                out.append((" ".join(f"FILTER({self.violated(m, focus)})"
+                                     for m in Collection(self.g, members)), None))
+            for members in self.g.objects(shape, SH.xone):
+                shapes = list(Collection(self.g, members))
+                if len(shapes) != 2:
+                    raise Unsupported(f"{shape}: sh:xone over {len(shapes)} shapes — only two")
+                a, b = (self.violated(m, focus) for m in shapes)
+                #  Violated where both or neither conform: exactly one is what xone means.
+                out.append((f"FILTER(({a} && {b}) || (!({a}) && !({b})))", None))
         return out
+
+    def value_violations(self, shape, focus: str) -> list[tuple[str, str | None]]:
+        """The constraints a node shape states about its focus itself — a qualified value
+        shape's inner `[ sh:class X ]` is the shipped form — as filters on `focus`."""
+        out = []
+        for p, o in self.g.predicate_objects(shape):
+            if p not in _NODE_VALUE_CONSTRAINTS:
+                continue
+            if p == SH["class"]:
+                out.append((f"FILTER NOT EXISTS {{ {focus} a {self.term(o)} }}", None))
+            elif p == SH.datatype:
+                out.append((f"FILTER(!isLiteral({focus}) || datatype({focus}) != {self.term(o)})", None))
+            elif p == SH.nodeKind:
+                if o not in _NODE_KIND_VIOLATED:
+                    raise Unsupported(f"{shape}: sh:nodeKind {o} means nothing at the border")
+                out.append((f"FILTER({_NODE_KIND_VIOLATED[o].format(v=focus)})", None))
+            elif p == SH["in"]:
+                allowed = ", ".join(self.term(m) for m in Collection(self.g, o))
+                out.append((f"FILTER({focus} NOT IN ({allowed}))", None))
+            elif p == SH.hasValue:
+                out.append((f"FILTER({focus} != {self.term(o)})", None))
+            else:
+                op = {SH.minExclusive: ">", SH.maxExclusive: "<",
+                      SH.minInclusive: ">=", SH.maxInclusive: "<="}[p]
+                out.append((f"FILTER(!({focus} {op} {self.term(o)}))", None))
+        return out
+
+    def violated(self, shape, focus: str) -> str:
+        """`focus` violates `shape`, as one boolean expression — some alternative holds.
+        EXISTS inside a FILTER is evaluated with the current solution substituted, so it
+        sees `focus` where a UNION branch would not (AGENTS.md carries that trap)."""
+        alternatives = self.violations(shape, focus)
+        if not alternatives:
+            raise Unsupported(f"{shape} states no constraint this compiler knows")
+        return "(" + " || ".join(f"EXISTS {{ {alt} }}" for alt in alternatives) + ")"
 
     def conforms(self, shape, focus: str) -> str:
         """`focus` conforms to `shape`: every violation alternative absent, as filters."""
@@ -164,7 +320,7 @@ class _Compiler:
                 clauses.append(f"FILTER NOT EXISTS {{ {alt} }}")
         return " ".join(clauses)
 
-    def property_violations(self, prop, focus: str) -> list[str]:
+    def property_violations(self, prop, focus: str) -> list[tuple[str, str | None]]:
         path = self.path(self.g.value(prop, SH.path))
         out = []
         for p, o in self.g.predicate_objects(prop):
@@ -172,37 +328,50 @@ class _Compiler:
             if p in _PROPERTY_ANNOTATIONS or not _is_shacl(p):
                 continue
             elif p == SH.hasValue:
-                out.append(f"FILTER NOT EXISTS {{ {focus} {path} {self.term(o)} }}")
+                out.append((f"FILTER NOT EXISTS {{ {focus} {path} {self.term(o)} }}", None))
             elif p == SH.minCount:
-                if int(o) != 1:
-                    raise Unsupported(f"{prop}: sh:minCount {o} — only 1 is compiled")
-                out.append(f"FILTER NOT EXISTS {{ {focus} {path} {v} }}")
+                #  Fewer than n values: no n distinct ones exist. A count has no offending value.
+                out.append((f"FILTER NOT EXISTS {{ {self.distinct(focus, path, int(o))} }}", None))
             elif p == SH.maxCount:
-                if int(o) != 0:
-                    raise Unsupported(f"{prop}: sh:maxCount {o} — only 0 is compiled")
-                out.append(f"{focus} {path} {v} .")
+                out.append((self.distinct(focus, path, int(o) + 1), None))
             elif p == SH["class"]:
-                out.append(f"{focus} {path} {v} . FILTER NOT EXISTS {{ {v} a {self.term(o)} }}")
+                out.append((f"{focus} {path} {v} . FILTER NOT EXISTS {{ {v} a {self.term(o)} }}", v))
+            elif p == SH.datatype:
+                out.append((f"{focus} {path} {v} . "
+                            f"FILTER(!isLiteral({v}) || datatype({v}) != {self.term(o)})", v))
+            elif p == SH.nodeKind:
+                if o not in _NODE_KIND_VIOLATED:
+                    raise Unsupported(f"{prop}: sh:nodeKind {o} means nothing at the border")
+                out.append((f"{focus} {path} {v} . FILTER({_NODE_KIND_VIOLATED[o].format(v=v)})", v))
+            elif p == SH["in"]:
+                allowed = ", ".join(self.term(m) for m in Collection(self.g, o))
+                out.append((f"{focus} {path} {v} . FILTER({v} NOT IN ({allowed}))", v))
+            elif p == SH.node:
+                #  A value that does not conform to the node shape.
+                out.append((f"{focus} {path} {v} . FILTER({self.violated(o, v)})", v))
             elif p == SH.equals:
                 other = self.path(o)
-                out.append(f"{focus} {path} {v} . FILTER NOT EXISTS {{ {focus} {other} {v} }}")
-                out.append(f"{focus} {other} {v} . FILTER NOT EXISTS {{ {focus} {path} {v} }}")
+                out.append((f"{focus} {path} {v} . FILTER NOT EXISTS {{ {focus} {other} {v} }}", v))
+                out.append((f"{focus} {other} {v} . FILTER NOT EXISTS {{ {focus} {path} {v} }}", v))
+            elif p in (SH.lessThan, SH.lessThanOrEquals):
+                w, op = self.fresh(), {SH.lessThan: "<", SH.lessThanOrEquals: "<="}[p]
+                out.append((f"{focus} {path} {v} . {focus} {self.path(o)} {w} . "
+                            f"FILTER(!({v} {op} {w}))", v))
             elif p in (SH.minExclusive, SH.maxExclusive, SH.minInclusive, SH.maxInclusive):
                 op = {SH.minExclusive: ">", SH.maxExclusive: "<",
                       SH.minInclusive: ">=", SH.maxInclusive: "<="}[p]
-                out.append(f"{focus} {path} {v} . FILTER(!({v} {op} {self.term(o)}))")
+                out.append((f"{focus} {path} {v} . FILTER(!({v} {op} {self.term(o)}))", v))
             elif p == SH.qualifiedValueShape:
                 n_min = self.g.value(prop, SH.qualifiedMinCount)
                 n_max = self.g.value(prop, SH.qualifiedMaxCount)
-                inner = self.conforms(o, v)
                 if n_min is not None:
-                    if int(n_min) != 1:
-                        raise Unsupported(f"{prop}: sh:qualifiedMinCount {n_min} — only 1")
-                    out.append(f"FILTER NOT EXISTS {{ {focus} {path} {v} . {inner} }}")
+                    #  Fewer than n conforming values: no n distinct ones each conform.
+                    out.append((f"FILTER NOT EXISTS {{ "
+                                f"{self.distinct(focus, path, int(n_min), conforming=o)} }}", None))
                 if n_max is not None:
                     if int(n_max) != 0:
                         raise Unsupported(f"{prop}: sh:qualifiedMaxCount {n_max} — only 0")
-                    out.append(f"{focus} {path} {v} . {inner}")
+                    out.append((f"{focus} {path} {v} . {self.conforms(o, v)}", v))
                 if n_min is None and n_max is None:
                     raise Unsupported(f"{prop}: a qualified value shape with no count")
             elif p in (SH.qualifiedMinCount, SH.qualifiedMaxCount):
@@ -211,6 +380,18 @@ class _Compiler:
                 raise Unsupported(f"{prop}: {p.n3()} is not a constraint this compiles")
         return out
 
+    def distinct(self, focus: str, path: str, n: int, conforming=None) -> str:
+        """`n` pairwise-distinct values of `path` at `focus`, each conforming to
+        `conforming` when one is given — the pattern a count constraint is made of."""
+        if n < 1:
+            raise Unsupported(f"a count of {n} values is not a constraint")
+        vs = [self.fresh() for _ in range(n)]
+        parts = [f"{focus} {path} {v} ." for v in vs]
+        if conforming is not None:
+            parts += [self.conforms(conforming, v) for v in vs]
+        parts += [f"FILTER({a} != {b})" for a, b in itertools.combinations(vs, 2)]
+        return " ".join(parts)
+
     def sparql_body(self, constraint, focus: str) -> str:
         """A `sh:sparql` constraint's WHERE body, inlined so its filters see the focus.
 
@@ -218,15 +399,20 @@ class _Compiler:
         constraint that only FILTERs — the freshness want is one — would leave `$this`
         unbound inside it and bind nothing. The body joins the target in the same group.
         """
-        text = str(self.g.value(constraint, SH.select) or "")
+        return self.body_of(self.g.value(constraint, SH.select), constraint, focus)
+
+    def body_of(self, text, node, focus: str) -> str:
+        """The WHERE body of a `SELECT … WHERE { … }` text, `$this` and `?this` both bound to
+        `focus` — a constraint's or a target's, which project it either way."""
+        text = str(text or "")
         head, brace, rest = text.partition("{")
         if "SELECT" not in head.upper() or "WHERE" not in head.upper() or not brace:
-            raise Unsupported(f"{constraint}: a sh:sparql constraint must be SELECT … WHERE {{ … }}")
+            raise Unsupported(f"{node}: a select must be SELECT … WHERE {{ … }}")
         body = rest[:rest.rfind("}")]
         for forbidden in ("$PATH", "$value", "$currentShape", "$shapesGraph"):
             if forbidden in body:
-                raise Unsupported(f"{constraint}: {forbidden} is not compiled")
-        return bind(body, this=Raw(focus)).strip()
+                raise Unsupported(f"{node}: {forbidden} is not compiled")
+        return re.sub(r"\?this\b", focus, bind(body, this=Raw(focus))).strip()
 
     # --- terms and paths ----------------------------------------------------------------------
 

@@ -12,6 +12,8 @@ so its Actuate has an effect rule and there is something to simulate. Every plan
 
 from __future__ import annotations
 
+import re
+
 from orexis_agent_progression.ontology import DELIBERATION_GRAPH
 from orexis_agent_progression.store import bindings
 from orexis_agent_deliberation import planner as search, trace
@@ -204,7 +206,13 @@ def test_a_shape_want_shows_the_select_it_was_judged_by_and_the_shape_stays_clea
     assert road == trace.COMPILED
     public = graph_from(agent.beliefs, *agent.beliefs.public_graphs())
     shape = public.value(URIRef(want.uri), URIRef(f"{KERNEL}metWhen"))
-    assert text == unmet_select(public.cbd(shape), shape), \
+    #  MODULO VARIABLE NUMBERING. The compiler names variables in the order it meets the
+    #  shape's blank nodes, and rdflib hands a cbd's blank nodes in an order that differs
+    #  from graph to graph and run to run — the pass's `?v0` was the recompile's `?v1`, one
+    #  run in three under `-n0` and every run under xdist, with the text otherwise identical.
+    #  What the claim needs is the same select, not the same spelling of its variables.
+    same = lambda select: re.sub(r"\?v\d+", lambda m: "?v", select)
+    assert same(text) == same(unmet_select(public.cbd(shape), shape)), \
         "the trace must show the select the pass actually ran, not a paraphrase of it"
     assert "SELECT" in text
     #  Never written INTO the shape, in any store the agent holds.

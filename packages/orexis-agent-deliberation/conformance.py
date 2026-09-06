@@ -24,6 +24,7 @@ import rdflib
 from assembly import loader
 
 from orexis_agent_deliberation.judge import crossed, judge
+from orexis_agent_progression import violation
 from orexis_agent_progression.store import DECLARATION
 
 from orexis_agent_progression.store import Store
@@ -94,16 +95,17 @@ def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
     return _conforms(crossed(data), data, focus)   # once, however many verdicts share it
 
 
-def conforms_at(border: str, carve_from: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
-    """The same verdict for a world ALREADY AT THE BORDER as text (#485): `border` is what
-    the judge reads — every graph a judged world holds, the vocabulary among them, as
-    N-Triples with its blank nodes skolemized (`judge.crossed_text`) — and `carve_from` is
-    the small data-borne graph the shapes an agent holds are carved out of, which is an
-    rdflib walk and the one reason a graph is still needed at all. The planner passes the
-    border it already hands the law and the base it already carves the law from; the two
-    callers that hold a graph and no text keep `conforms` and behave as before.
+@functools.lru_cache(maxsize=8)
+def legality_selects(focus: str) -> dict:
+    """The packages' shapes about ONE agent, each compiled to the select whose rows are its
+    violations (#548) — what the search holds a candidate world to, in the imaginarium, in
+    place of the judge. Cached by focus: the files cannot change inside a process, and a
+    planner is built per pass. The shapes the agent HOLDS are not here; they arrive in the
+    data, are carved per pass by `held_shapes` and compiled beside these by the planner.
+    A shape the compiler cannot say refuses at the first pass, never at the gates alone.
     """
-    return _conforms(border, carve_from, focus)
+    _, shapes = _shapes_and_vocabulary()
+    return violation.report_selects(shapes, focus_node=rdflib.URIRef(focus))
 
 
 def _conforms(border: str, data: rdflib.Graph, focus: str | None) -> tuple[bool, str]:
@@ -143,7 +145,7 @@ def _conforms(border: str, data: rdflib.Graph, focus: str | None) -> tuple[bool,
     #  filter was supposed to give and, for these shapes, did not under pySHACL (the
     #  qualifiedValueShape wrong answers the comment above records). The judge takes no focus
     #  at all, so the pass survives as a guarantee of aboutness rather than a bug shelter.
-    if focus and (mine := _shapes_held_by(data, focus)):
+    if focus and (mine := held_shapes(data, focus)):
         own_violated, own_report = _judged(border, mine)
         violated = violated or own_violated
         report = report.strip() + "\n" + own_report.strip()
@@ -173,7 +175,7 @@ def _judged(data: str, shapes: rdflib.Graph, focus: str | None = None) -> tuple[
     return violated, report
 
 
-def _shapes_held_by(data: rdflib.Graph, agent_uri: str) -> rdflib.Graph:
+def held_shapes(data: rdflib.Graph, agent_uri: str) -> rdflib.Graph:
     """The shapes this agent holds, with everything hanging off them.
 
     Ownership is `orexis:holds`, so this asks the graph rather than trusting a filter: a shape an

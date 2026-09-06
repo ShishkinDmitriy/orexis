@@ -22,8 +22,11 @@ then refuses the rest — and siblings are alive at once, which is why a world i
 than a mutable state. It was breadth-first by layer until #492, and measured that way the
 estimate pruned nothing: the first achiever arrived in the last layer. A shape-authored want
 is judged at every node by the select the kernel compiled from its shape (#497), on the store's
-own engine, and the trace shows that select and names the road (#502); the judge is reached once
-per pass, for the winner's legality. Only rows whose
+own engine, and the trace shows that select and names the road (#502). The law a world ratifies
+and the winner's legality — every package shape about this agent, and every shape it holds —
+are compiled the same way and asked of the imaginarium at the node (#548), so no verdict the
+search reads leaves the store; the judge stays at the gates, and the compiled rows are held to
+its report by parity. Only rows whose
 action is [relevant](/domain/relevance.md) to the want are simulated (#488); the rest are
 written in the trace as touching nothing the want reads.
 
