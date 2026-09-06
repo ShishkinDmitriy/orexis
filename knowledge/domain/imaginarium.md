@@ -52,6 +52,7 @@ were pointed at*. Being bound to the store was an accident of what the caller pa
 | every **public** graph | asked via `store.public_graphs()`, never listed |
 | the agent's **beliefs** | where a prediction's conversion comes from |
 | the agent's **readings** | the root node's own graph |
+| the agent's **wants** | copied in from the desire modality's own store (#547), because a package's shape may TARGET a want, and a target is resolved where the world is |
 | one graph per **node** | `…/graph/possible/<path>`, forked from its parent |
 
 **Every public graph, and the reason is a measurement.** The design record budgeted for four —
