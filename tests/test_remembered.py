@@ -1,7 +1,9 @@
-"""A remembered plan is a method on the want, lifted from a plan that worked (#469). The
-courier's delivery: searched once, walked to its end, remembered for its want in the world it
-was decided in; the same pose again adopts it with no search and the trace says so; another
-pose searches; a remembered plan that fails a step is forgotten."""
+"""A remembered plan is a method on the want, lifted from a plan that worked (#469), keyed by
+its regressed precondition (#551). The courier's delivery: searched once, walked to its end,
+remembered for its want; the same pose again adopts it with no search and the trace says so,
+and so does the same pose with a stray fact beside it, since the plan never read that fact; a
+pose where a fact the plan read is absent refuses it, and the trace names the fact; a
+remembered plan that fails a step is forgotten."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -83,7 +85,8 @@ def test_a_remembered_plan_that_fails_a_step_is_forgotten(monkeypatch):
         "forgotten: a plan that failed a step is not remembered"
 
 
-# --- the second form (#469): weighed as one candidate where the world differs ----------------
+# --- keyed by the regressed precondition (#551) ----------------------------------------------
+
 
 def _remembered_uri(agent):
     rows = bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan ; deliberation:forWant <{WANT}> }} }}"))
@@ -94,59 +97,98 @@ def _remembered_uri(agent):
 def _candidates(agent):
     from orexis_agent_progression.ontology import DELIBERATION_GRAPH
     return bindings(agent.beliefs.query(f"""
-SELECT ?take ?verdict ?chosen WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
+SELECT ?take ?verdict ?chosen ?missing WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
   ?d a deliberation:Deliberation ; deliberation:considered ?c .
   ?c deliberation:wouldTake ?take ; deliberation:verdict ?verdict .
+  OPTIONAL {{ ?c deliberation:missing ?missing }}
   OPTIONAL {{ ?d deliberation:chose ?chosen }} }} }}"""))
 
 
-def test_in_another_world_a_remembered_plan_is_walked_as_one_candidate_and_wins_its_ties(monkeypatch):
-    """The world differs in a fact no rule reads, so the exact hit misses and the pass
-    searches — and the remembered route is on the menu as ONE candidate, walked step by step
-    in the imaginarium, found to achieve the want, and chosen: the trace names it as what
-    would be taken and as what was chosen, and the plan adopted is its steps."""
-    from orexis_agent_deliberation import trace
+def test_a_stray_fact_no_longer_forces_a_search(monkeypatch):
+    """The world differs in a fact no rule of the plan read. The whole-world hash keyed the
+    plan to that fact and searched again; the regressed precondition does not read it, so
+    the plan is adopted with no search — the measure #551 asked for."""
     agent = _driver(monkeypatch, "c0_0", "c1_2")
     first = pursuit.pursue(agent, _goal(agent))
     walked = agent.keeper.walked(first)
     _walk(agent, first)
-    uri = _remembered_uri(agent)
     _repose(agent, "c0_0", "c1_2")
     agent.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <urn:stray> <urn:p> <urn:o> . }} }}")
     searches = []
     real = planner.Planner.plan
     monkeypatch.setattr(planner.Planner, "plan", lambda self, d: (searches.append(d.uri), real(self, d))[1])
     again = pursuit.pursue(agent, _goal(agent))
-    assert again is not None and len(searches) == 1, "another signature: the pass searches"
-    rows = {r["take"]: r for r in _candidates(agent)}
-    assert uri in rows, "the remembered plan was weighed as a candidate of its own"
-    assert rows[uri]["verdict"] == trace.MET
-    chosen = next(r["chosen"] for r in rows.values() if r.get("chosen"))
-    took = bindings(agent.beliefs.query_union(f"SELECT ?t WHERE {{ <{chosen}> deliberation:wouldTake ?t }}"))
-    assert took and took[0]["t"] == uri, "an achiever tying on cost falls to the route already walked"
+    assert again is not None and searches == [], "a stray fact is not a fact the plan read"
     assert [s.action for s in agent.keeper.walked(again)] == [s.action for s in walked]
-    _walk(agent, again)
-    assert len(bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}"))) == 1, \
-        "the same route finishing by the search's road is not remembered twice"
 
 
-def test_a_remembered_plan_whose_step_is_not_on_the_menu_is_passed_over_and_says_so(monkeypatch):
-    """The van stands somewhere the remembered first move cannot be made from. The walk finds
-    that step off the menu, the trace says which verdict, and the search finds its own way."""
+def test_a_missing_premise_refuses_the_plan_and_the_trace_names_the_fact(monkeypatch):
+    """The van stands somewhere the remembered plan did not start from. The plan's first
+    drive read `van at c0_0`; that fact is absent, so the plan does not apply, the pass
+    searches, and its trace says which fact was missing rather than only that one was."""
     from orexis_agent_deliberation import trace
     agent = _driver(monkeypatch, "c0_0", "c1_2")
     first = pursuit.pursue(agent, _goal(agent))
     _walk(agent, first)
     uri = _remembered_uri(agent)
     _repose(agent, "c3_3", "c1_2")
+    searches = []
+    real = planner.Planner.plan
+    monkeypatch.setattr(planner.Planner, "plan", lambda self, d: (searches.append(d.uri), real(self, d))[1])
     again = pursuit.pursue(agent, _goal(agent))
-    assert again is not None
+    assert again is not None and len(searches) == 1, "a fact the plan read is absent: the pass searches"
     rows = {r["take"]: r for r in _candidates(agent)}
-    assert rows[uri]["verdict"] == trace.UNAVAILABLE
+    assert rows[uri]["verdict"] == trace.INAPPLICABLE
+    assert f"{W}van" in rows[uri]["missing"] and f"{C}at" in rows[uri]["missing"] and "c0_0" in rows[uri]["missing"], \
+        rows[uri]["missing"]
     assert agent.keeper.walked(again), "and the search still found a delivery"
+    assert _remembered_uri(agent) == uri, "inapplicable here is not forgotten — it applies elsewhere"
 
 
-def test_a_remembered_route_chosen_by_the_search_that_fails_is_forgotten(monkeypatch):
+def test_where_it_applies_a_remembered_plan_is_still_walked_as_one_candidate_by_a_bare_search(monkeypatch):
+    """The walk road (#469, second form) survives for a search entered without the
+    adoption in front of it: the remembered route is weighed as ONE candidate, walked in
+    the imaginarium, found to achieve the want and chosen — the trace names it as what
+    would be taken and as what was chosen."""
+    from orexis_agent_deliberation import trace
+    agent = _driver(monkeypatch, "c0_0", "c1_2")
+    first = pursuit.pursue(agent, _goal(agent))
+    _walk(agent, first)
+    uri = _remembered_uri(agent)
+    _repose(agent, "c0_0", "c1_2")
+    plan = planner.Planner(agent, agent.me).plan(_goal(agent))
+    rows = {r["take"]: r for r in _candidates(agent)}
+    assert uri in rows and rows[uri]["verdict"] == trace.MET
+    chosen = next(r["chosen"] for r in rows.values() if r.get("chosen"))
+    took = bindings(agent.beliefs.query_union(f"SELECT ?t WHERE {{ <{chosen}> deliberation:wouldTake ?t }}"))
+    assert took and took[0]["t"] == uri, "an achiever tying on cost falls to the route already walked"
+    kept = remembered.remembered_for(agent, WANT)[0][1]
+    assert [s.action for s in plan.steps] == [s.action for s in kept], "the plan adopted is the route's steps"
+
+
+def test_a_plan_lifted_without_premises_is_forgotten_since_nothing_says_when_it_applies(monkeypatch):
+    from dataclasses import replace
+    agent = _driver(monkeypatch, "c0_0", "c1_2")
+    first = pursuit.pursue(agent, _goal(agent))
+    walked = agent.keeper.walked(first)
+    _walk(agent, first)
+    remembered.forget(agent, _remembered_uri(agent), "make room for one lifted the old way")
+    remembered.lift(agent, WANT, [replace(s, premises=None) for s in walked], None)
+    assert len(remembered.remembered_for(agent, WANT)) == 1
+    _repose(agent, "c0_0", "c1_2")
+    searches = []
+    real = planner.Planner.plan
+    monkeypatch.setattr(planner.Planner, "plan", lambda self, d: (searches.append(d.uri), real(self, d))[1])
+    again = pursuit.pursue(agent, _goal(agent))
+    assert again is not None and len(searches) == 1, "nothing says when it applies, so it is not adopted"
+    assert remembered.remembered_for(agent, WANT) == [], "and it is forgotten on the spot"
+    _walk(agent, again)
+    kept = remembered.remembered_for(agent, WANT)
+    assert len(kept) == 1 and all(s.premises is not None for s in kept[0][1]), \
+        "the search's plan, lifted with premises, takes its place"
+
+
+def test_a_remembered_route_adopted_on_its_precondition_that_fails_is_forgotten(monkeypatch):
     agent = _driver(monkeypatch, "c0_0", "c1_2")
     first = pursuit.pursue(agent, _goal(agent))
     _walk(agent, first)
@@ -156,4 +198,21 @@ def test_a_remembered_route_chosen_by_the_search_that_fails_is_forgotten(monkeyp
     agent.keeper.expect(again, "show me", not_after=datetime.now(timezone.utc) + timedelta(hours=1))
     agent.keeper.lapse(again)
     assert not bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}")), \
-        "forgotten by its steps, whichever road adopted it"
+        "forgotten, whichever road adopted it"
+
+
+def test_the_regression_subtracts_what_the_chain_produces():
+    """Step two's premises include the reading step one predicts; that fact is the chain's
+    own, not the world's, so it is not asked of the present. A keyed fact is asked by class
+    and key, never by value."""
+    from orexis_agent_progression.act import Step
+    cls, key = "urn:Obs", (("urn:k", "urn:v"),)
+    first = Step(action="urn:a", via="urn:x", premises=frozenset({("urn:s", "urn:p", "urn:o"), ("keyed", cls, key, "urn:c", 0.1)}),
+                 predicts=(frozenset({("keyed", cls, key, "urn:c", 0.5)}), frozenset()))
+    second = Step(action="urn:b", via="urn:x", premises=frozenset({("keyed", cls, key, "urn:c", 0.5), ("urn:t", "urn:q", "urn:u")}),
+                  predicts=(frozenset(), frozenset()))
+    facts = remembered.regressed([first, second])
+    assert facts == frozenset({("urn:s", "urn:p", "urn:o"), ("keyed", cls, key, "urn:c", 0.1), ("urn:t", "urn:q", "urn:u")})
+    assert remembered.regressed([first, Step(action="urn:b", via="urn:x")]) is None
+    select = remembered._pattern_select(facts)
+    assert "<urn:s> <urn:p> <urn:o>" in select and "a <urn:Obs>" in select and "0.1" not in select, select

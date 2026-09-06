@@ -19,14 +19,12 @@
 
 deliberation:RememberedGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Remembered graph" ;
     orexis:graphPrefix "http://example.org/orexis/graph/remembered/" ; orexis:arrivesBy orexis:Recorded ;
-    rdfs:comment "ONE agent's remembered plans (#469): each a plan that reached its end, lifted filled — its steps as they were walked, with their predictions — and hung on the want it served with the signature of the world it was adopted in. A pursuit of that want in a world of the same signature adopts it with no search; in a world of another signature it is walked as one candidate on the menu; a remembered plan that fails a step is forgotten. A recorded graph, disclosed like the ledger; never a possible world." .
+    rdfs:comment "ONE agent's remembered plans (#469): each a plan that reached its end, lifted filled — its steps as they were walked, with their predictions — and hung on the want it served. Keyed by its regressed precondition (#551) — what its steps' rules read that the chain did not itself produce, computed from the steps and never stored: a pursuit of that want where those facts hold and the first step is on the menu adopts it with no search; where a fact is absent the trace names it; a remembered plan that fails a step is forgotten. A recorded graph, disclosed like the ledger; never a possible world." .
 deliberation:RememberedPlan a owl:Class ; rdfs:label "Remembered plan" ;
-    rdfs:comment "A method on a want, lifted from a plan that worked (a-remembered-plan-is-a-method-on-the-want): `deliberation:forWant` the want, `deliberation:inWorld` the signature of the world it was adopted in, `deliberation:lifted` its steps in order, `deliberation:measuredCost` what the search said it would spend. Filled, not yet lifted to variables: the same world adopts it outright, another world weighs it as one candidate — its steps walked in the imaginarium, each on the menu of the world the one before reached — and the world corrects it step by step once taken." .
+    rdfs:comment "A method on a want, lifted from a plan that worked (a-remembered-plan-is-a-method-on-the-want): `deliberation:forWant` the want, `deliberation:lifted` its steps in order with their predictions and premises, `deliberation:measuredCost` what the search said it would spend. Its applicability is COMPUTED from the steps — the regressed precondition (#551) — and never stored. Filled, not yet lifted to variables: a world where the precondition holds adopts it outright, and the world corrects it step by step once taken." .
 deliberation:forWant a owl:ObjectProperty ; rdfs:domain deliberation:RememberedPlan ; rdfs:label "for want" .
-deliberation:inWorld a owl:DatatypeProperty ; rdfs:domain deliberation:RememberedPlan ; rdfs:range xsd:string ; rdfs:label "in world" ;
-    rdfs:comment "The signature of the world the plan was decided in — the canonical facts of the state, hashed — which is what a pursuit compares before adopting the plan again." .
 deliberation:lifted a owl:ObjectProperty ; rdfs:domain deliberation:RememberedPlan ; rdfs:label "lifted" ;
-    rdfs:comment "An rdf:List of the walked steps, each a node with the ledger's own words for a step: what it fills, through what, about what, how much, and what it predicts." .
+    rdfs:comment "An rdf:List of the walked steps, each a node with the ledger's own words for a step: what it fills, through what, about what, how much, what it predicts and what it read (its premises)." .
 deliberation:measuredCost a owl:DatatypeProperty ; rdfs:domain deliberation:RememberedPlan ; rdfs:range xsd:decimal ; rdfs:label "measured cost" .
 deliberation:rememberedAt a owl:DatatypeProperty ; rdfs:domain deliberation:RememberedPlan ; rdfs:range xsd:dateTime ; rdfs:label "remembered at" .
 
@@ -64,6 +62,8 @@ deliberation:chose a owl:ObjectProperty ; rdfs:domain deliberation:Deliberation 
 deliberation:verdict a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "verdict" ;
     rdfs:comment "Why it ended as it did. On a pass: satisfied, improved, no candidate, exhausted, not better, refused — six answers where a planner returning a move or None could give two. On a candidate: whether it met the goal, improved on standing still, was worse, or landed in a world already seen." .
+deliberation:missing a owl:DatatypeProperty ; rdfs:domain deliberation:Candidate ; rdfs:range xsd:string ; rdfs:label "missing" ;
+    rdfs:comment "The fact whose absence in the present made a remembered plan inapplicable here (#551), stated as the signature states it — so the trace says which fact, not only that one was." .
 
 deliberation:wouldReach a owl:DatatypeProperty ; rdfs:domain deliberation:Candidate ; rdfs:range xsd:decimal ;
     rdfs:label "would reach" ;

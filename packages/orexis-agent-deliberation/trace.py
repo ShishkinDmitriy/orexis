@@ -48,6 +48,7 @@ SPENT = "the budget was spent before this was simulated"
 IRRELEVANT = "touches nothing this want reads"
 REFUSED = "refused below lately — the level beneath found no way to keep its promise"
 UNAVAILABLE = "a remembered step is not on the menu here"
+INAPPLICABLE = "a remembered plan's precondition does not hold here"
 
 #  HOW A WANT WAS JUDGED in every world the pass weighed (#502) — the road, always said, and
 #  the text where the road is a text. The compiled select lives nowhere else: computed once per
@@ -58,7 +59,7 @@ COMPILED = "the select compiled from its shape"
 AUTHORED = "the pattern it authors"
 RECORD = "the record of what was discharged"
 MEASURE = "a module's measure"
-UNJUDGED = "nothing — a remembered plan was adopted on the world's signature"
+UNJUDGED = "nothing — a remembered plan was adopted on its precondition"
 
 #  What each verdict is called in the series, declared HERE beside the verdict it names so the
 #  two cannot drift — the same one-definition-two-readers argument `gap.rq` and `urgency` make.
@@ -77,7 +78,12 @@ FIELD = {
     IRRELEVANT: "irrelevant",
     REFUSED: "refused",
     UNAVAILABLE: "unavailable",
+    INAPPLICABLE: "inapplicable",
 }
+
+
+def _quoted(text: str) -> str:
+    return '"%s"' % text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
 
 
 def _uri(agent_id: str, desire_uri: str) -> str:
@@ -133,25 +139,32 @@ def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
     #  named as the route, not as the first of its steps (#469).
     chosen = getattr(plan, "origin", None) or (plan.steps[0].action if plan.steps else None)
     rows = []
-    for i, (depth, row, urgency, verdict) in enumerate(considered):
+    for i, entry in enumerate(considered):
+        depth, row, urgency, verdict = entry[:4]
+        #  WHAT WAS MISSING, where the verdict is that a remembered plan's precondition does
+        #  not hold (#551): the fact, as the signature states it, so the reader is told
+        #  which fact and not only that one was.
+        missing = entry[4] if len(entry) > 4 and entry[4] is not None else None
         candidate = f"{node}.{i}"
         reached = "" if urgency is None else \
             f'        deliberation:wouldReach {urgency:.6f} ;\n'
+        absent = "" if missing is None else \
+            f'        deliberation:missing {_quoted(repr(missing))} ;\n'
         rows.append(
             f'    <{node}> deliberation:considered <{candidate}> .\n'
             f'    <{candidate}> a deliberation:Candidate ;\n'
             f'        deliberation:wouldTake <{row.action}> ;\n'
             f'        progression:through <{row.via}> ;\n'
             f'        deliberation:atDepth {depth} ;\n'
-            f'{reached}'
+            f'{reached}{absent}'
             f'        deliberation:verdict "{verdict}" .\n')
     #  The chosen candidate is named rather than duplicated: a reader joining `deliberation:chose` to the
     #  candidate gets its depth, its lever and the world it would reach, and the trace never
     #  says the same number twice in two places where they could drift apart.
     took = ""
     if chosen is not None:
-        for i, (_, row, _, _) in enumerate(considered):
-            if row.action == chosen:
+        for i, entry in enumerate(considered):
+            if entry[1].action == chosen:
                 took = f'        deliberation:chose <{node}.{i}> ;\n'
                 break
     #  The select as a LITERAL, escaped by the engine's own writer: a compiled text carries

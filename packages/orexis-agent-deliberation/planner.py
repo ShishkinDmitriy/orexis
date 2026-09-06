@@ -719,6 +719,14 @@ class Planner:
                 #  it searched this very world already.
                 for kept in self._remembered_rows(desire):
                     saw_candidate = True
+                    #  ITS PRECONDITION FIRST (#551): the facts the chain read that it did not
+                    #  produce, asked of the root world as one query. A fact absent is the plan
+                    #  not applying here, said with the fact rather than found by forking the
+                    #  steps before the one that would have fallen off the menu.
+                    absent = self._absent(kept)
+                    if absent:
+                        self._weighed.append((0, kept, None, trace.INAPPLICABLE, absent[0]))
+                        continue
                     step, spent = self._walk(here, kept, desire, bound, self.budget - forked)
                     forked += spent
                     if isinstance(step, str):
@@ -933,8 +941,16 @@ class Planner:
             self._kept = [
                 _Remembered(action=uri, via=(steps[0].via or uri), want=desire.uri,
                             steps=tuple(steps), about=steps[0].about)
-                for uri, steps, _, _ in remembered.remembered_for(self.agent, desire.uri)]
+                for uri, steps, _ in remembered.remembered_for(self.agent, desire.uri)]
         return self._kept
+
+    def _absent(self, kept: _Remembered) -> list:
+        """The facts of this plan's regressed precondition absent from the present — empty
+        where it holds. A plan whose steps carry no premises has none to ask, and is walked
+        as before."""
+        from . import remembered
+        facts = remembered.regressed(kept.steps)
+        return [] if facts is None else remembered.missing(self.agent, facts)
 
     def _walk(self, node, kept: _Remembered, desire: Desire, bound, budget_left: int):
         """A remembered plan walked from `node` as one candidate: the world its steps reach,
@@ -945,9 +961,9 @@ class Planner:
         action through the same lever about the same thing. A step not on the menu is the
         plan not applying here, said as a verdict rather than guessed around; a step refused
         below, dear, unsimulable or landing in a forbidden state stops the walk by the same
-        verdicts a primitive earns. Its composed effect is the world reached, and its
-        applicability is that every step was on its menu — both by simulation, which is what
-        stands in for the regressed precondition until that seam closes.
+        verdicts a primitive earns. Its composed effect is the world reached; its
+        applicability was asked first, as the regressed precondition (#551), and the walk
+        re-checks it step by step on the menu of each world reached.
         """
         cur, forks = node, 0
         keeper = getattr(self.agent, "keeper", None)

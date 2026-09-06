@@ -142,10 +142,9 @@ it is a record wearing a bullet.
   existential and a want is universal, so somebody turns the shape inside out, and a compiler
   held to the judge by parity does it once where every author would do it differently.
 - **A plan that worked is kept, and the world verifies it, not a search** — a remembered plan is
-  adopted on the world's signature alone, since every step is checked when it is taken and a
-  failed step drops the tail; re-simulating it first would be a search per reuse. Where the
-  world differs it is one candidate on the menu, walked a fork per step and settled like any
-  step, so whether a thing is an action or a method does not matter to the search.
+  adopted where the facts its steps read still hold, since every step is checked when it is
+  taken and a failed step drops the tail; re-simulating it first would be a search per reuse,
+  and hashing the whole world keyed it to facts it never read.
 - **A level is a vocabulary, and a taker-less action is a promise the level beneath keeps** —
   a search never leaves the vocabulary its want is written in; the bridge translates a step's
   promised fact downward when the step is reached, and the verdict back, never the world.

@@ -111,7 +111,7 @@ class Deliberator:
         self._steps_done = 0        # what progression told me, for `series`
         self._steps_declined = 0
         self._plans_finished = 0
-        self._decided: dict = {}       # want -> (world signature, plan, remembered plan or None) (#469)
+        self._decided: dict = {}       # want -> (plan, remembered plan or None) (#469)
         self._plans_failed = 0
 
     def pursued(self) -> list[tuple[Desire, str | None]]:
@@ -208,10 +208,10 @@ class Deliberator:
         #  not lifted twice.
         from . import remembered
         decided = self._decided.get(want)
-        if decided is not None and decided[2] is None and decided[1] is not None and decided[1].steps:
+        if decided is not None and decided[1] is None and decided[0] is not None and decided[0].steps:
             steps = self.agent.keeper.walked(intention) if self.agent.keeper is not None else []
             if steps:
-                remembered.lift(self.agent, want, steps, decided[0], decided[1].cost)
+                remembered.lift(self.agent, want, steps, decided[0].cost)
 
     @contributes(PLAN_FAILED)
     def on_plan_failed(self, intention: str, action: str, want: str) -> None:
@@ -223,14 +223,14 @@ class Deliberator:
         #  FORGET WHAT FAILED (#469): a remembered plan that failed a step is not remembered.
         from . import remembered
         decided = self._decided.get(want)
-        if decided is not None and decided[2] is not None:
-            remembered.forget(self.agent, decided[2], "a step of it failed")
+        if decided is not None and decided[1] is not None:
+            remembered.forget(self.agent, decided[1], "a step of it failed")
             self._decided.pop(want, None)
-        elif decided is not None and decided[1] is not None and decided[1].steps:
+        elif decided is not None and decided[0] is not None and decided[0].steps:
             #  A plan the search found may BE a remembered route — walked as a candidate
             #  where the world differed (#469, second form) and chosen — so what failed is
             #  forgotten by its steps, whichever road adopted it.
-            remembered.forget_matching(self.agent, want, decided[1].steps, "a step of it failed")
+            remembered.forget_matching(self.agent, want, decided[0].steps, "a step of it failed")
             self._decided.pop(want, None)
         self.agent.reviser.note(want)
 
@@ -439,22 +439,22 @@ class Deliberator:
                 "I could reach scores alike, so I am about to conclude that nothing helps from "
                 "a comparison that means nothing. `orexis-validate` refuses this world.",
                 _short(desire.uri))
-        #  A PLAN THAT WORKED HERE BEFORE is adopted without a search (#469): the same want, a
-        #  world of the same signature. The trace says so; the world verifies it step by step.
+        #  A PLAN THAT WORKED HERE BEFORE is adopted without a search (#469, #551): the same
+        #  want, a world where the plan's regressed precondition holds and its first step is
+        #  on the menu. The trace says so; the world verifies it step by step.
         from . import remembered, trace
-        world = remembered.world_signature(self.agent)
-        kept = remembered.remembered(self.agent, desire.uri, world)
+        kept = remembered.applicable(self.agent, desire.uri, self.agent.desires.query_union)
         if kept is not None:
             uri, steps, cost = kept
             plan = planner.Plan(planner.REMEMBERED, tuple(steps), desire.urgency, None, cost=cost)
             trace.write(self.agent.beliefs, self.agent.id, desire, plan, [], desire.urgency, 0.0,
                         (trace.UNJUDGED, None))
-            self._decided[desire.uri] = (world, plan, uri)
-            self.log.info("%s: remembered — %d step(s) that worked in this world before",
+            self._decided[desire.uri] = (plan, uri)
+            self.log.info("%s: remembered — %d step(s) whose precondition holds here",
                           _short(desire.uri), len(steps))
             return plan
         plan = Planner(self.agent, self.me).plan(desire)
-        self._decided[desire.uri] = (world, plan, None)
+        self._decided[desire.uri] = (plan, None)
         if plan.steps:
             self.log.info("%s: %s (urgency %.2f -> %.2f)",
                           _short(desire.uri), plan.outcome, plan.urgency_now, plan.urgency_after)

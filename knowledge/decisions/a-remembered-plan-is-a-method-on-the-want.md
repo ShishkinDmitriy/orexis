@@ -33,7 +33,7 @@ trace says `remembered`, and the keeper walks it as any plan. See
   world and re-running the rules to check a remembered plan still satisfices. That is a search
   per reuse. Since #510 every step is verified by the world when it is taken, and a step whose
   prediction fails drops the tail and the search takes over — so a remembered plan is adopted
-  on its signature alone and corrected by feedback, which is cheaper and no less safe.
+  on its precondition alone and corrected by feedback, which is cheaper and no less safe.
 - **Keying the world on everything.** A signature over every graph the agent holds never
   saw the same world twice: the ledger, the trace and the remembered graph itself change with
   every pass. What a plan depends on is what its rules read — the topology and the readings —
@@ -71,11 +71,35 @@ step, which is not a search, and the budget bounds what is looked at after.
 Feedback would correct it step by step, but a step that fails is a patience spent, and the
 imaginarium can say for a fork per step what the world would say for a patience per step.
 
+# Amended 2026-09-06: keyed by the regressed precondition, not by a signature
+
+The hash is gone (#551). A remembered plan is keyed by what its steps' rules READ — each step's
+[premises](/domain/precondition.md), carried since #550 — regressed through the chain: step n's
+premises less what steps 1 to n−1 add. That set is asked of the present as one query, a keyed
+reading by class and key and never by its value, and the first step must be on the menu now.
+Nothing is stored about when a plan applies; it is computed from the steps each time.
+
+**Why the hash had to go.** It keyed a plan to every canonical fact of four graphs, so a
+reading on an unrelated sensor changed the key and the plan was never seen again — the test
+that pinned this pinned the over-strictness as a feature — and a miss could say nothing. Now a
+miss names the absent fact in the trace (`deliberation:missing`) before any step costs a fork.
+
+**Weighed and refused: keying on the availability rows alone.** Ask only whether each step's
+row is on the present's menu, and skip the premises. Cheaper to state, and wrong past the first
+step: the second step's row is on the menu of the world the FIRST step reaches, not of the
+present, so the present's menu can say nothing about it — which is exactly what the walk found
+out by forking. The regression is what lets deeper steps be asked of the present at all: what a
+later step reads that an earlier step produced is not the world's to answer.
+
+**The value of a reading is deliberately not asked.** Asking it would make every plant plan
+apply at one moisture only, as strict as the hash for that fact; the actor re-sizes the dose
+against the live reading at execution and the world verifies the step, which is this record's
+own argument for adopting without re-simulation. What a fact set cannot carry — the direction a
+dose must go — the availability select's filters carry, and the first step is held to them.
+
 # Seams left open
 
 - **Lifting to variables**, the same instance across steps becoming one variable, so a plan
-  applies in a world of the same shape rather than the same signature.
-- **Applicability regressed through the effects**, so a plan that cannot apply is seen to be
-  inapplicable without being walked — today a step off the menu costs the forks before it.
+  applies in a world of the same shape rather than the same instances.
 - **Review as the forgetter**, the habit record's road: a remembered plan that stops working
   should be retired on evidence, the way a tolerance is re-picked.

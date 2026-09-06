@@ -1,62 +1,177 @@
 """A remembered plan is a method on the want, lifted from a plan that worked (#469).
 
 The first honest form: a plan that reached its end is lifted FILLED — its steps as they were
-walked, with their predictions — into the agent's own graph, hung on the want it served with
-the signature of the world it was decided in. A pursuit of that want in a world of the same
-signature adopts it with no search, and the trace says so. A remembered plan that fails a
-step is forgotten: the promotion rule's converse.
+walked, with their predictions and their premises — into the agent's own graph, hung on the
+want it served. KEYED BY ITS REGRESSED PRECONDITION since #551: what the chain's rules read
+that the chain did not itself produce — step n's premises less what steps 1 to n−1 add — asked
+of the present as one query, never stored and never hashed. A pursuit of that want in a world
+where those facts hold, and where the first step is on the menu now, adopts it with no search,
+and the trace says so; where a fact is absent the trace names it. A remembered plan that fails
+a step is forgotten: the promotion rule's converse.
 
-The second form (the composed-effect seam, closed): in a world of ANOTHER signature every plan
-remembered for the want is a candidate on the menu — walked in the imaginarium at the root as
-one step, each of its steps re-simulated in order and each on the menu of the world the one
-before reached, and settled like any step: dear, late, forbidden, seen or met. Its composed
-effect is the world the walk reaches, its applicability is that every step was on its menu,
-and where it achieves the want its cost seeds the bound the rest of the pass is refused by.
-Lifting to variables and the regressed applicability are the seams after this.
+What replaced the whole-world hash, and why: the hash keyed a plan to every canonical fact of
+four graphs, so a reading on an unrelated sensor changed the key and the plan was never seen
+again, and a miss could say nothing. The regressed precondition keys a plan to what its rules
+read, which is what a plan depends on; a keyed reading is asked by class and key and never by
+its value, since the value is what the actor re-sizes against at execution and what the world
+verifies step by step — the same discipline that lets a plan be adopted on the world's word.
+
+The second form (the composed-effect seam, closed): a remembered plan whose precondition holds
+but was not adopted outright — a search entered by another road — is a candidate on the menu,
+walked in the imaginarium at the root as one step and settled like any step. Lifting to
+variables is the seam after this.
 
 What is kept is never a possible world — only the steps to re-try — and every use is verified
 by the road #510 built: a step whose prediction fails drops the tail and the search takes over.
 """
 from __future__ import annotations
 
-import hashlib
-import json
 import logging
+import re
 import uuid
 from datetime import datetime, timezone
 
 from orexis_agent_progression.act import (Step, predicts_from_json, predicts_json, premises_from_json,
                                           premises_json)
-from orexis_agent_progression.ontology import OREXIS, PROGRESSION
+from orexis_agent_progression.ontology import OREXIS, PROGRESSION, STATE_GRAPH, beliefs_graph
 from orexis_agent_progression.store import bindings
 
-from . import signature
-from .ontology import (FOR_WANT, IN_WORLD, LIFTED, MEASURED_COST, REMEMBERED_AT,
-                       REMEMBERED_PLAN, remembered_graph)
+from .afforder import affordances_of
+from .ontology import (FOR_WANT, LIFTED, MEASURED_COST, REMEMBERED_AT, REMEMBERED_PLAN,
+                       remembered_graph)
 
 log = logging.getLogger("remembered")
 _RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 _XSD = "http://www.w3.org/2001/XMLSchema#"
 
 
-def world_signature(agent) -> str:
-    """The world the agent stands in, as the same canonical facts the search's signature is
-    made of, hashed — what a remembered plan is keyed by."""
-    #  THE WORLD AND THE STATE, and nothing the agent writes about itself: the ledger, the
-    #  trace and this very graph change with every pass, and a signature over them would never
-    #  see the same world twice. What a plan depends on is what its rules read — the topology
-    #  and the readings — and that is what is hashed.
-    from orexis_agent_progression.ontology import (STATE_GRAPH, WORLD_DERIVED_GRAPH,
-                                                    WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
-    store = agent.beliefs
-    keys = signature.keys_of(store.query)
-    facts = signature.facts((q for iri in (WORLD_GRAPH, WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH, STATE_GRAPH)
-                             for q in store.quads(iri)), keys)
-    return hashlib.sha256(json.dumps(sorted(map(repr, facts))).encode()).hexdigest()[:24]
-
-
 def _literal(text: str) -> str:
     return '"%s"' % text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
+
+
+def regressed(steps) -> frozenset | None:
+    """The chain's precondition: every step's premises less what the steps before it add —
+    the facts the chain reads of the world and does not itself produce. None where a step
+    carries no premises (lifted before #550), which is a plan whose applicability nobody
+    can say."""
+    out, produced = set(), set()
+    for step in steps:
+        if step.premises is None:
+            return None
+        out |= set(step.premises) - produced
+        if step.predicts is not None:
+            adds, _ = step.predicts
+            produced |= set(adds)
+    return frozenset(out)
+
+
+def missing(agent, facts) -> list:
+    """The facts among `facts` that do NOT hold in the present — empty where the pattern
+    holds. Asked of the belief base as ONE query first (the whole pattern, LIMIT 1), and
+    only on a miss fact by fact, so the report names what is absent and the common case
+    costs one select. A keyed fact — a reading — is asked by class and key, never by value."""
+    graphs = (*agent.beliefs.public_graphs(), *agent.beliefs.recorded_graphs())
+
+    def holds(subset) -> bool:
+        text = _pattern_select(subset)
+        return text is None or bool(bindings(agent.beliefs.query_over(text, *graphs)))
+    if holds(facts):
+        return []
+    return [f for f in sorted(facts, key=repr) if not holds([f])]
+
+
+def applicable(agent, want: str, desires) -> tuple | None:
+    """The newest plan remembered for `want` whose regressed precondition holds in the present
+    AND whose first step is on the menu now — `(uri, steps, cost)`, or None. The menu check
+    is what the walk made at its first step and what carries what a fact set cannot: the
+    availability's own filters, a direction among them. A plan lifted before premises were
+    carried is forgotten here, since nothing can say when it applies."""
+    for uri, steps, cost in remembered_for(agent, want):
+        facts = regressed(steps)
+        if facts is None:
+            forget(agent, uri, "lifted before its steps carried premises — nothing says when it applies")
+            continue
+        if missing(agent, facts):
+            continue
+        if not on_menu_now(agent, steps[0], desires):
+            continue
+        return uri, steps, cost
+    return None
+
+
+def on_menu_now(agent, step, desires) -> bool:
+    """Whether the present's menu offers this very step: the action through the lever about
+    the thing — the availability select's own answer, filters and all."""
+    return any(
+        r.is_own and r.via == step.via and (r.about or None) == (step.about or None)
+        for r in affordances_of(agent.beliefs.query, agent.me.uri, desires, beliefs_graph(agent.id),
+                                STATE_GRAPH, only=frozenset({step.action})))
+
+
+_SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
+
+
+class _Patterns:
+    """Canonical facts as the triple patterns that hold exactly where they are true — an
+    IRI is itself, a number is asked within the signature's rounding, a string by its text,
+    a blank node by its content, a reading by its class and key."""
+
+    def __init__(self):
+        self.parts, self.vars = [], {}
+
+    def var(self, label) -> str:
+        key = repr(label)
+        if key not in self.vars:
+            self.vars[key] = f"?n{len(self.vars)}"
+            v = self.vars[key]
+            if label[0] == "obs":
+                self.parts.append(f"{v} a <{label[1]}> .")
+                self.parts += [f"{v} <{p}> {self.term(o)} ." for p, o in label[2]]
+            elif label[0] == "bnode":
+                self.parts += [f"{v} <{p}> {self.term(o)} ." for p, o in label[1]]
+                self.parts += [f"{self.term(s)} <{p}> {v} ." for s, p in label[2]]
+        return self.vars[key]
+
+    def term(self, x) -> str:
+        if isinstance(x, tuple):
+            return self.var(x) if x[0] in ("obs", "bnode") else self.literal(repr(x))
+        if isinstance(x, bool) or not isinstance(x, (int, float, str)):
+            return self.literal(str(x))
+        if isinstance(x, (int, float)):
+            v = f"?l{len(self.parts)}"
+            self.parts.append(f"FILTER(ABS({v} - {x!r}) < 0.000001)")
+            return v
+        return f"<{x}>" if _SCHEME.match(x) and " " not in x else self.literal(x)
+
+    def literal(self, text: str) -> str:
+        v = f"?l{len(self.parts)}"
+        self.parts.append(f"FILTER(STR({v}) = {_literal(text)})")
+        return v
+
+    def fact(self, f) -> None:
+        if f[0] == "keyed":
+            _, cls, key, _, _ = f
+            self.var(("obs", cls, key))
+            return
+        s, p, o = f
+        #  The object is rendered first where it is a literal, so its FILTER follows the
+        #  pattern that binds it.
+        subject, obj = self.term(s), None
+        parts_before = len(self.parts)
+        obj = self.term(o)
+        pattern = f"{subject} <{p}> {obj} ."
+        self.parts.insert(parts_before, pattern)
+
+
+def _pattern_select(facts) -> str | None:
+    """One select that binds exactly where every fact holds, or None for no facts."""
+    facts = list(facts)
+    if not facts:
+        return None
+    ps = _Patterns()
+    for f in facts:
+        ps.fact(f)
+    return "SELECT * WHERE { " + " ".join(ps.parts) + " } LIMIT 1"
 
 
 def shape_of(steps) -> tuple:
@@ -66,14 +181,14 @@ def shape_of(steps) -> tuple:
     return tuple((s.action, s.via or "", s.about or "") for s in steps)
 
 
-def lift(agent, want: str, steps: list, world: str, cost: float | None) -> str:
+def lift(agent, want: str, steps: list, cost: float | None) -> str:
     """Lift a walked plan into the agent's graph, for this want in this world.
 
     ONCE: a route already remembered for this want — the same steps in the same order — is
     not lifted again, whichever world it was first lifted in and whichever road found it
     this time, the search or the walk of the remembered plan itself. The one already kept is
     answered, so a caller may hold it as the plan's memory."""
-    for uri, kept, _, _ in remembered_for(agent, want):
+    for uri, kept, _ in remembered_for(agent, want):
         if shape_of(kept) == shape_of(steps):
             log.info("%s: the plan for %s is already remembered as %s", agent.id,
                      want.rsplit("#", 1)[-1], uri.rsplit("#", 1)[-1])
@@ -99,41 +214,30 @@ def lift(agent, want: str, steps: list, world: str, cost: float | None) -> str:
     measured = f' ; <{MEASURED_COST}> "{cost}"^^<{_XSD}decimal>' if cost is not None else ""
     agent.beliefs.update(f"""
 INSERT DATA {{ GRAPH <{graph}> {{
-  <{uri}> a <{REMEMBERED_PLAN}> ; <{FOR_WANT}> <{want}> ; <{IN_WORLD}> "{world}" ;
+  <{uri}> a <{REMEMBERED_PLAN}> ; <{FOR_WANT}> <{want}> ;
       <{LIFTED}> {listed} ;
       <{REMEMBERED_AT}> "{datetime.now(timezone.utc).isoformat()}"^^<{_XSD}dateTime>{measured} .
 {chr(10).join(blocks)}
 }} }}""")
-    log.info("%s: remembered a plan of %d step(s) for %s in world %s", agent.id, len(steps),
-             want.rsplit("#", 1)[-1], world[:8])
+    log.info("%s: remembered a plan of %d step(s) for %s", agent.id, len(steps),
+             want.rsplit("#", 1)[-1])
     return uri
 
 
-def remembered(agent, want: str, world: str):
-    """A plan remembered for this want in a world of THIS signature: `(uri, steps, cost)`,
-    or None. Newest first, where several were remembered. The exact hit — adopted with no
-    search, since the pass that lifted it already searched this very world."""
-    for uri, steps, cost, kept_in in remembered_for(agent, want):
-        if kept_in == world:
-            return uri, steps, cost
-    return None
-
-
 def remembered_for(agent, want: str) -> list:
-    """Every plan remembered for this want, newest first: `(uri, steps, cost, world)` — the
-    world being the signature it was lifted in. What the search weighs as candidates where
-    the world it stands in is none of those."""
+    """Every plan remembered for this want, newest first: `(uri, steps, cost)`, the steps
+    carrying their predictions and premises. What `applicable` keys by and what the search
+    weighs as candidates."""
     graph = remembered_graph(agent.id)
     rows = bindings(agent.beliefs.query(f"""
-SELECT ?r ?cost ?at ?world WHERE {{ GRAPH <{graph}> {{
-  ?r a <{REMEMBERED_PLAN}> ; <{FOR_WANT}> <{want}> ; <{IN_WORLD}> ?world ; <{REMEMBERED_AT}> ?at .
+SELECT ?r ?cost ?at WHERE {{ GRAPH <{graph}> {{
+  ?r a <{REMEMBERED_PLAN}> ; <{FOR_WANT}> <{want}> ; <{REMEMBERED_AT}> ?at .
   OPTIONAL {{ ?r <{MEASURED_COST}> ?cost }} }} }} ORDER BY DESC(?at)"""))
     out = []
     for row in rows:
         steps = _steps_of(agent, row["r"], want)
         if steps:
-            out.append((row["r"], steps, float(row["cost"]) if row.get("cost") else None,
-                        row["world"]))
+            out.append((row["r"], steps, float(row["cost"]) if row.get("cost") else None))
     return out
 
 
@@ -178,7 +282,7 @@ def forget_matching(agent, want: str, steps, because: str) -> list:
     same order — whichever road adopted it: the exact hit, or the walk that weighed it as a
     candidate and won. Answers what was forgotten."""
     gone = []
-    for uri, kept, _, _ in remembered_for(agent, want):
+    for uri, kept, _ in remembered_for(agent, want):
         if shape_of(kept) == shape_of(steps):
             forget(agent, uri, because)
             gone.append(uri)

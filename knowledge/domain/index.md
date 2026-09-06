@@ -69,7 +69,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [lever](/domain/lever.md) - The INSTRUMENT an act goes through, always an instance. Its absence is what removes a row, with nothing edited.
 * [transport](/domain/transport.md) - How an agent reaches its society: a capability the bus grants, holding the connection and three choir hooks. Not a driver.
 
-* [remembered plan](/domain/remembered-plan.md) - A plan that worked, lifted and hung on its want with the world's signature: adopted again there with no search, forgotten when it fails.
+* [remembered plan](/domain/remembered-plan.md) - A plan that worked, kept on its want and keyed by what its steps read: adopted where that holds, forgotten when it fails.
 * [bridge](/domain/bridge.md) - Joins an abstract action to the vocabulary beneath: translates its promised facts down and its verdict back, with the lower level's estimate. Never a method.
 * [method](/domain/method.md) - The steps an action comes to, declared by its package: expanded at adoption, walked on feedback, never searched; each step says what it waits for.
 * [effect](/domain/effect.md) - What taking an action would make true: a package's SHACL rule, with its timing and the route by which anyone would learn it landed.
