@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: There is no BDI ontology, and the mind does not need one
-status: accepted
+status: superseded-in-part
+superseded-by: the-future-is-a-cone-and-the-present-is-identified-in-it
 timestamp: 2026-08-22T00:00:00Z
 description: >-
   The survey settlement-speaks-rea ran for the market, run for the mind. Nobody owns Belief,
@@ -17,6 +18,13 @@ description: >-
   IRIs are home-made, and IRIs matter only to consumers, of which the design guarantees there
   are none.
 ---
+
+> **Superseded in part** by
+> [the-future-is-a-cone-and-the-present-is-identified-in-it](/decisions/the-future-is-a-cone-and-the-present-is-identified-in-it.md)
+> (2026-09-06), in one premise only: "our plan is required to be lost" narrows to *a plan the
+> world has moved away from is lost*; a plan whose worlds the present still matches is kept and
+> re-rooted. The conclusion stands untouched — no import, because a mind crosses no trust
+> boundary — and nothing in the cone makes a plan an entity anything cites.
 
 # Context
 
