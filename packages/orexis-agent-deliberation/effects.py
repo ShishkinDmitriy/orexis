@@ -23,13 +23,20 @@ Which of them a rule is answering about is `store`, and nothing else here.
 
 from __future__ import annotations
 
+import functools
 import logging
+import re
 
 import pyoxigraph as ox
 import rdflib
+from rdflib import URIRef, Variable
+from rdflib.plugins.sparql.algebra import translateQuery
+from rdflib.plugins.sparql.parser import parseQuery
+from rdflib.plugins.sparql.parserutils import CompValue
 
 from orexis_agent_progression.ontology import STATE_GRAPH
-from orexis_agent_progression.store import bindings, bind as bind_text
+from orexis_agent_progression.store import PREFIXES, Raw, bindings, bind as bind_text
+from .relevance import _TOKEN, parseable
 
 log = logging.getLogger("effects")
 
@@ -39,8 +46,9 @@ log = logging.getLogger("effects")
 #  SUBSTITUTION (#500), the engine's own parameter, projected. An action with no construct
 #  states no effect and is not returned.
 _RULE_Q = """
-SELECT ?rule ?construct ?retracts ?lands ?costs WHERE {
+SELECT ?rule ?construct ?available ?retracts ?lands ?costs WHERE {
   ?rule a orexis:Action ; sh:construct ?construct .
+  OPTIONAL { ?rule orexis:available ?available }
   OPTIONAL { ?rule orexis:retracts ?retracts }
   OPTIONAL { ?rule orexis:landsAfter ?lands }
   OPTIONAL { ?rule orexis:costs ?costs }
@@ -225,6 +233,148 @@ def cost_of(store, action: str, **bind) -> float | None:
     if not rows or rows[0]["cost"] is None:
         return None
     return float(rows[0]["cost"].value)
+
+
+def premises(store, action: str, keyed=(), **bind) -> list:
+    """The facts a step's rules READ, as triples (#550): the positive patterns of the effect
+    construct's WHERE and of the action's availability select, instantiated by the engine
+    for this binding — `$me`, `$via`, `$about`, `$state` and the rest, exactly as `apply`
+    takes them. What comes back is the step's PRECONDITION in the world it was asked about:
+    the facts whose presence is what made the diff what it is. One declaration: nothing
+    here is authored beside the rule, and a rule that will not run yields nothing, loudly
+    in the log and quietly here, as `apply` does.
+
+    THE ENGINE INSTANTIATES. A CONSTRUCT whose template is the WHERE's own triple patterns
+    hands back, per solution, the triples those patterns matched — the same road the effect
+    itself takes, no bindings read through JSON, no terms rebuilt. Patterns under
+    OPTIONAL and UNION are in the template and simply drop where unbound; a pattern under
+    FILTER NOT EXISTS is an ABSENCE and is left to the regression (#551), and a subtracted
+    MINUS pattern is not read at all. A pattern whose predicate is a property path is
+    skipped: it reads a chain, not one fact.
+
+    The availability select is asked FOR THIS ROW — its `?via`, `?about` and `?want` held to
+    the step's — so the facts are the ones that put this step on the menu, not every row
+    the action could offer.
+
+    `keyed` names the classes whose instances the signature states by KEY rather than by
+    identity (`orexis:keyedBy` — an observation, keyed by feature and property). A rule
+    reads such a node by its properties and never its type, and a fact about it stated
+    without the type would not be the fact the prediction states; so where a pattern's
+    node turns out to be one, its type is read beside it, and the signature can say it the
+    way it says every other reading.
+    """
+    rule = rule_for(store, action)
+    if rule is None:
+        return []
+    bind.setdefault("state", STATE_GRAPH)
+    read = []
+    text = _premises_template(rule["construct"], tuple(keyed), ())
+    if text:
+        read += _run(store, text, bind)
+    if rule.get("available"):
+        text = _premises_template(rule["available"], tuple(keyed), ("via", "about", "want"))
+        if text:
+            read += _run(store, text, {
+                "me": bind["me"], "beliefs": bind["beliefs"], "state": bind["state"],
+                "wants": Raw(f"(<{bind.get('want', 'urn:nothing')}> "
+                             f"<{bind.get('about', 'urn:nothing')}>)"),
+                "via": bind.get("via") or "urn:nothing", "about": bind.get("about") or "urn:nothing",
+                "want": bind.get("want") or "urn:nothing"})
+    return read
+
+
+@functools.lru_cache(maxsize=256)
+def _premises_template(text: str, keyed: tuple, restrict: tuple) -> str | None:
+    """A rule text — a CONSTRUCT or a SELECT, its `$tokens` still in it — rewritten as the
+    CONSTRUCT that answers the facts its WHERE read, tokens kept so the caller binds it as
+    it binds the rule; None where it states no positive pattern.
+
+    PARSED ONCE PER TEXT. rdflib's SPARQL parser is what the premises cost — 216 ms of 276
+    for a two-step plan, measured — and a rule's text is the same for every step that takes
+    the action, so the parse is cached on the text and only the binding is per step. The
+    parse reads the text made parseable the way `relevance` reads it, every token a
+    variable; a variable that was a token goes back into the template AS the token.
+    `restrict` names the projected variables held to the step's terms, as `$` tokens too.
+    """
+    tokens = set(_TOKEN.findall(text))
+    try:
+        alg = translateQuery(parseQuery(PREFIXES + parseable(text))).algebra
+    except Exception as exc:                            # noqa: BLE001 — a rule that will not parse
+        log.error("a rule's premises could not be read: %s", exc)
+        return None
+    patterns = _positive_patterns(alg.get("p", alg))
+    body = _where_body(text)
+    if not patterns or body is None:
+        return None
+
+    def term(t) -> str:
+        return f"${t}" if isinstance(t, Variable) and str(t) in tokens else t.n3()
+
+    projected = {str(v) for v in (alg.get("PV") or [])}
+    filters = " ".join(f"FILTER(?{name} = ${name})" for name in restrict if name in projected)
+    template = [f"{term(s)} {term(p)} {term(o)} ." for s, p, o in patterns]
+    types = []
+    if keyed:
+        classes = " ".join(f"<{c}>" for c in keyed)
+        nodes = {t for s, _, o in patterns for t in (s, o)
+                 if isinstance(t, Variable) and str(t) not in tokens}
+        for n, v in enumerate(sorted(nodes, key=str)):
+            template.append(f"{v.n3()} a ?_t{n} .")
+            #  Where the rule could have read the node's type: the default graph, or the
+            #  world's own readings graph — `$state`, the one graph a possible world holds
+            #  apart. Never `GRAPH ?g`: in an imaginarium that is every sibling world at once.
+            types.append(f"OPTIONAL {{ VALUES ?_t{n} {{ {classes} }} "
+                         f"{{ {v.n3()} a ?_t{n} }} UNION {{ GRAPH $state {{ {v.n3()} a ?_t{n} }} }} }}")
+    return (f"CONSTRUCT {{ {' '.join(template)} }} "
+            f"WHERE {{ {{ {body} }} {' '.join(types)} {filters} }}")
+
+
+def _positive_patterns(node) -> list:
+    """Every triple pattern of a WHERE that is READ — the BGPs, less what a MINUS subtracts
+    and less any pattern whose predicate is a path."""
+    out: list = []
+
+    def walk(n):
+        if isinstance(n, CompValue):
+            if n.name == "BGP":
+                out.extend((s, p, o) for s, p, o in n["triples"]
+                           if isinstance(p, (URIRef, Variable)))
+                return
+            for key, value in n.items():
+                if n.name == "Minus" and key == "p2":
+                    continue
+                walk(value)
+        elif isinstance(n, (list, tuple)):
+            for item in n:
+                walk(item)
+    walk(node)
+    return out
+
+
+def _where_body(text: str) -> str | None:
+    """The inside of the query's WHERE group, as written — braces matched, strings skipped."""
+    m = re.search(r"\bWHERE\s*\{", text, re.IGNORECASE)
+    if not m:
+        return None
+    start = m.end() - 1
+    depth, quote, i = 0, None, start
+    while i < len(text):
+        c = text[i]
+        if quote:
+            if c == "\\":
+                i += 1
+            elif c == quote:
+                quote = None
+        elif c in "\"'":
+            quote = c
+        elif c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start + 1:i]
+        i += 1
+    return None
 
 
 def _select(store, text: str, bind: dict) -> list:

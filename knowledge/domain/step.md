@@ -17,6 +17,10 @@ an obligation's, and its window — with what the search predicted it would reac
 happened yet, and that is the whole reason for the word: a plan is not executed, so its
 elements are not [acts](/domain/act.md). The sovereign's ruling, 2026-09-02.
 
+Since #550 a step also carries its **premises** — the facts its rules read in the world
+it was planned from, its [precondition](/domain/precondition.md) there — beside the
+prediction, in the same canonical form and on the same ledger row.
+
 # Where it appears
 
 - a plan is a sequence of them, each with the urgency the want would have in the world it reaches
