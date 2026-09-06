@@ -63,8 +63,13 @@ def rule_for(store, action: str) -> dict | None:
     precondition states an effect, or the gate (`deliberable`, in `onboarding/validate.py`)
     refuses the world before an agent runs (#506).
     """
-    rows = bindings(store.query(_RULE_Q, {"rule": action}))
-    return rows[0] if rows else None
+    #  REMEMBERED PER STORE (#552): the text is public knowledge and only a write can change
+    #  it, yet it was fetched on every fork by `apply`, `cost_of` and `lands_after` each —
+    #  three of the seven store calls a fork cost, answering the same thing every time.
+    def fetch():
+        rows = bindings(store.query(_RULE_Q, {"rule": action}))
+        return rows[0] if rows else None
+    return store.remember(("rule", action), fetch)
 
 
 def apply(store, action: str, **bind) -> tuple[list, list]:

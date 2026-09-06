@@ -286,6 +286,8 @@ class Store:
         self.path = str(path) if path else None
         self._store = ox.Store(self.path) if self.path else ox.Store()
         self._public: list | None = None  # discovered on demand; see public_graphs()
+        self._recorded: list | None = None  # likewise; see recorded_graphs()
+        self._memo: dict = {}             # what only a write can change; see remember()
 
     # --- what counts as public, according to the store itself ---
 
@@ -303,7 +305,9 @@ class Store:
         The intention ledger is named here and held in a store of its own; asking this store
         for it yields nothing, for the same reason.
         """
-        return sorted(row["g"] for row in bindings(self.query(_OWN)))
+        if self._recorded is None:
+            self._recorded = sorted(row["g"] for row in bindings(self.query(_OWN)))
+        return self._recorded
 
     def public_graphs(self) -> list[str]:
         """Every graph the vocabulary types as an `orexis:PublicGraph`.
@@ -455,9 +459,30 @@ class Store:
 
     def update(self, sparql: str) -> None:
         self._store.update(sparql, prefixes=NAMESPACES)
-        self._public = None
+        self._forget()
         for listener in list(self.__dict__.get("_listeners", ())):
             listener()
+
+    def _forget(self) -> None:
+        """Every write drops what was learned by asking: which graphs are public, which are
+        the agent's own, and whatever `remember` holds. Dropping rather than working out
+        whether the write mattered, because a stale answer here is an empty result rather
+        than an error — the failure this design keeps having to guard against."""
+        self._public = None
+        self._recorded = None
+        self._memo.clear()
+
+    def remember(self, key, compute):
+        """A per-store memo of something only a write can change — a rule text read off
+        public knowledge, say — computed once and handed back until the next write through
+        this store (#552: the effect door was fetching the same rule text on every fork, for
+        three callers, and asking which graphs are the agent's own on every construct — half
+        of a hanoi solve's store calls, and none of them could have answered differently).
+        A caller that writes around the store (`_store.add` at construction) writes before
+        anything is remembered, and the imaginarium's forks are graphs nothing here lists."""
+        if key not in self._memo:
+            self._memo[key] = compute()
+        return self._memo[key]
 
     def on_write(self, listener) -> None:
         """Be told after every update — the one event the store itself emits (#512).
@@ -501,7 +526,7 @@ class Store:
         else:
             self._store.remove_graph(graph)
             self._store.load(ttl, format=ox.RdfFormat.TURTLE, to_graph=graph)
-        self._public = None
+        self._forget()
 
     def endow_graph(self, graph_iri: str, ttl: str) -> list[str]:
         """Add whatever the Turtle authors that the graph has NEVER held. Touch nothing held.
@@ -546,7 +571,7 @@ class Store:
                 seen_bnodes.add(t.object)
                 queue.extend(by_subject.get(t.object, []))
         if added:
-            self._public = None
+            self._forget()
         return sorted(set(added))
 
     def graph_names(self) -> list[str]:
@@ -557,13 +582,13 @@ class Store:
         """Empty one graph. For the computed ones, which are written by update rather than
         loaded from a file and so have no `put_graph` to replace them wholesale."""
         self._store.remove_graph(ox.NamedNode(graph_iri))
-        self._public = None
+        self._forget()
 
     def load_file(self, path: str | Path, graph_iri: str) -> None:
         """Read a ratified file straight into a graph, without going through a string."""
         self._store.load(path=str(path), format=ox.RdfFormat.TURTLE,
                          to_graph=ox.NamedNode(graph_iri))
-        self._public = None
+        self._forget()
 
     def optimize(self) -> None:
         """Compact the store. Blocking, and worth it only when something says it is needed.
