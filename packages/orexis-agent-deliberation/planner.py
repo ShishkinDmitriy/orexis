@@ -49,9 +49,8 @@ from orexis_agent_progression.store import Raw, bind, bindings
 from .ontology import DELIBERATION
 from orexis_agent_progression.ontology import (promises_graph, DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
-from orexis_agent_deliberation.conformance import conforms_at, graph_from
-from orexis_agent_deliberation.judge import crossed_text
-from orexis_agent_deliberation.judge import judge
+from orexis_agent_deliberation.conformance import conforms_at, graph_from, held_shapes
+from orexis_agent_deliberation.judge import VIOLATION, crossed_text, verdicts
 
 log = logging.getLogger("search")
 
@@ -289,8 +288,7 @@ class Planner:
             if answer is not None:
                 return answer <= 0.0
             return desire.is_met
-        results, _ = judge(self._border(node), shape)
-        return not list(results.subjects(RDF.type, _SH.ValidationResult))
+        return not verdicts(self._border(node), shape, query=self._resolver(node))[0]
 
     def _holds(self, node, subject: str, predicate: str) -> bool:
         """Whether this node's world states anything about `subject` under `predicate`.
@@ -846,10 +844,11 @@ class Planner:
             return plan
         #  THE TEXT THE JUDGE ALREADY READS, and no graph in between (#485): the world went
         #  pyoxigraph to text to rdflib and back to text — the parse alone 150 ms on
-        #  `world/simulation`, more than the verdict it fed. The shapes this agent holds are
-        #  carved out of the small data-borne base the law is carved from, which is the one
-        #  rdflib walk left, and it is over a few hundred triples rather than the world.
-        ok, _ = conforms_at(self._border(node), self._base, focus=self.me.uri)
+        #  `world/simulation`, more than the verdict it fed. The shapes this agent holds were
+        #  carved once in `_begin`, the targets are resolved at this node in the imaginarium,
+        #  and the data crosses into rudof once for both shapes graphs (#547).
+        ok, _ = conforms_at(self._border(node), self._held, self.me.uri,
+                            query=self._resolver(node))
         if ok:
             return plan
         log.warning("the world this plan would reach is one the society refuses — not taken")
@@ -885,13 +884,8 @@ class Planner:
         #  declared-Violation cbds), so judge.py's severity gap cannot reach the keys. A law
         #  shape MIXING forces within itself would need the split conformance._judged does —
         #  none exists today, and the result filter below is where it would show.
-        results, _ = judge(self._border(node), self._law)
-        return frozenset(
-            (str(results.value(r, _SH.sourceShape)),
-             str(results.value(r, _SH.focusNode)),
-             str(results.value(r, _SH.value)))
-            for r in results.subjects(rdflib.RDF.type, _SH.ValidationResult)
-            if results.value(r, _SH.resultSeverity) == _SH.Violation)
+        found, = verdicts(self._border(node), self._law, query=self._resolver(node))
+        return frozenset((v.source, v.focus, v.value) for v in found if v.severity == VIOLATION)
 
     def _remembered_rows(self, desire: Desire) -> list:
         """The plans remembered for this want, as rows — asked once per pass."""
@@ -1014,16 +1008,21 @@ class Planner:
             #  a graph nobody had copied. Read-only like everything else copied in: no
             #  effect touches it, and a plan cannot re-command a cadence.
             *self.agent.beliefs.recorded_graphs())
-        #  What this agent PURSUES, snapshotted for the pass: the desire modality's triples as
-        #  one rdflib graph, because pySHACL wants rdflib and a cbd walks blank nodes. Small —
-        #  a few hundred triples — and per pass for the same reason the imaginarium is.
-        #  The WANT graphs alone — derived and asserted — never the record projections: the
+        #  What this agent PURSUES, snapshotted for the pass. The WANT graphs alone — derived,
+        #  asserted, and the promises a bridge raised — never the record projections: the
         #  flat world below already carries the pick record through the belief flatten, and a
         #  second copy with fresh blank nodes splits every aim in two, which AimShape rightly
-        #  refuses as not steering.
+        #  refuses as not steering. They come from the desire modality's OWN store, and go
+        #  two ways: into the imaginarium under their own names (#547), so a shape's target
+        #  over a want is resolved where the world is and the border is one dump; and as one
+        #  rdflib graph, because a cbd walks blank nodes and the carves below want one —
+        #  small, a few hundred triples, and per pass for the same reason the imaginarium is.
+        self._want_graphs = (DESIRE_DERIVED_GRAPH, DESIRE_ASSERTED_GRAPH,
+                             promises_graph(self.agent.id))
+        self.imaginarium.copy_in(self.agent.desires, *self._want_graphs)
         self._shapes = effects.applied((), self.agent.desires.construct(
             f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ "
-            f"VALUES ?g {{ <{DESIRE_DERIVED_GRAPH}> <{DESIRE_ASSERTED_GRAPH}> <{promises_graph(self.agent.id)}> }} "
+            f"VALUES ?g {{ {' '.join(f'<{g}>' for g in self._want_graphs)} }} "
             f"GRAPH ?g {{ ?s ?p ?o }} }}"), ())
         base = self._beliefs()
         self._base = base
@@ -1033,6 +1032,10 @@ class Planner:
         #  reason no lever caused (#312).
         for triple in self._shapes:
             base.add(triple)
+        #  THE SHAPES THIS AGENT HOLDS, carved once (#547): the base does not change inside a
+        #  pass, so the walk `_offer` used to repeat per winner answers the same graph every
+        #  time. Carved AFTER the wants join the base, because a held want is one of them.
+        self._held = held_shapes(base, self.me.uri)
         #  The base's canonical facts, once per pass: `advance` needs them to tell a fact
         #  restored from a fact introduced, which is what lets a path that returns to the base
         #  world return to the EMPTY diff instead of accumulating noise. Read as the store's
@@ -1067,8 +1070,8 @@ class Planner:
         #  SKOLEMIZED AT THE BORDER (#485), by the scheme `judge.crossed` uses for a graph: a
         #  blank focus node is then legal in rudof's VALUES pre-binding, and the legality
         #  check below reads this text as it is, with no rdflib graph in between.
-        self._invariant = crossed_text(self.imaginarium.dump_nt(*self._invariant_graphs)
-                                       + self._shapes.serialize(format="nt"))
+        self._invariant = crossed_text(
+            self.imaginarium.dump_nt(*self._invariant_graphs, *self._want_graphs))
         #  THE WANT'S VIOLATION SELECT, compiled once for the pass (#497) — None where the
         #  want is not a shape (a pattern want, an obligation, a call). A shape this compiler
         #  cannot say REFUSES here, loudly, rather than judging by something quieter: a want
@@ -1112,6 +1115,19 @@ class Planner:
                                 if self._law is not None else frozenset())
         here.urgency = self._urgency_in(here, desire)
         return here
+
+    def _resolver(self, node):
+        """A shape's SPARQL target, asked of the imaginarium at this node (#547).
+
+        The judge used to load the border text into a store of its own to run the target
+        selects — the world parsed a second time per verdict, for a question the store that
+        wrote the text could have answered. The view is exactly what the border text holds:
+        public knowledge, this agent's records, the wants (a desire shape, the keeper's and
+        a region's all TARGET a want, which is why they are copied in) and this node's
+        readings. `tests/test_judge.py` holds the two roads to one answer.
+        """
+        return lambda select: self.imaginarium.query_over(
+            select, *self._invariant_graphs, *self._want_graphs, node.graph)
 
     def _border(self, node) -> str:
         """This node's whole world as one N-Triples text, for the judge.

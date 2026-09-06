@@ -107,15 +107,16 @@ another one.
 
 # Seams left open
 
-- **The data still crosses the border through rdflib, and rudof's reader has a floor.**
-  `crossed` serializes the flat rdflib world per `conforms` — cheaply now, in N-Triples — and
-  `read_data` then costs ~67 ms before it has looked at anything, measured on two triples.
-  Together they put the two judges' crossover around 5,000 triples, just above where our
-  worlds sit; the same content already lives in the imaginarium's pyoxigraph store, whose Rust
-  writer would remove our half of it. The floor is rudof's to fix and is unreported upstream. Taking that road means the planner stops
-  building rdflib worlds per node — the O(world)-per-candidate copy
-  [measure-the-search](/runbooks/measure-the-search.md) measured at seventy percent of a
-  solve. That is a debt with a definition of done, filed rather than restated here.
+- **rudof's reader has a floor, and it is per read.** The data no longer crosses through
+  rdflib — the search hands rudof the imaginarium's own dump (#485, #547) — but `read_data`
+  costs ~75 ms before it has looked at anything, on two triples and on 3,500 alike, and the
+  floor is paid on every read rather than once per instance (measured 2026-09-06: a second
+  read after `reset_data` costs the same). What the binding does allow is keeping the data
+  across a shapes swap (`reset_shacl`), so the search reads once for however many shapes
+  graphs it holds one world to; the other way round, one shapes graph over many worlds, drops
+  the shapes with the data. The floor is rudof's to fix and is unreported upstream; the road
+  that stops paying it is #548, where the shapes the search judges by compile to SPARQL and
+  a verdict never leaves the store.
 - **The two gaps are of different kinds, and rudof's own roadmap says which.**
   [#94](https://github.com/rudof-project/rudof/issues/94) covers the SHACL Recommendation and
   lists `sh:message` and `sh:severity` as supported; SPARQL-based TARGETS appear nowhere in it,

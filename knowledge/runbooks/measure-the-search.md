@@ -39,6 +39,7 @@ row — a number without its machine is an impression.
 | 2026-09-01 | `a-node-holds-one-world` | **2.03 s** | 1.67 s | the per-node rdflib copy is gone (#481) — 198,144 `Graph.add` calls became 23,282 |
 | 2026-09-01 | `best-first-by-what-is-left-to-spend` | 1.77 s | 1.51 s | best-first on `cost + estimate` (#492): hanoi 56 forks to 50, the courier's corner delivery 198 to 78 |
 | 2026-09-05 | `the-law-carve-reads-the-data-alone` | 2.32 s (main 2.17 s, same run) | — | the pass's flatten leaves the T-Box out except its node shapes (#484): `_beliefs()` 140 ms / 3,172 triples to 45 ms / 591 on `world/simulation`, `_begin` 237 to 115 ms; hanoi's one pass moves inside noise, a plant's tick pays the whole saving |
+| 2026-09-06 | `leave-the-fork-loop-free-of-rdflib` | — | — | the fork loop touches no rdflib graph (#547): the held shapes carved once per pass, a shape's target resolved in the imaginarium (the wants copied in beside the beliefs — a desire shape TARGETS a want), rudof's report read as N-Triples by pyoxigraph, and the data read into rudof once per verdict pair; `conforms_at` 380–430 ms became 230–240 ms on `world/simulation`, `_begin` 126 to 142 ms median (the carve moved in, once). Per verdict the floor is now rudof's own: `read_data` ~90 ms, `read_shacl` ~50 ms, validate ~60 ms |
 | 2026-09-05 | `the-legality-check-reads-the-border-text` | — | — | the winner's legality is judged on the border text the law already reads (#485): parse 150 ms + `conforms` 510–970 ms became `conforms_at` 380–430 ms on `world/simulation`, the rdflib round trip gone; what is left is two rudof verdicts over 3,855 triples |
 
 # Where the time goes (profiled at `13876fc`)
@@ -79,7 +80,7 @@ that is genuinely quicker at the thing it does. Measured per verdict on 2,400 tr
 | | |
 |---|---|
 | rudof's validation proper | **16 ms** — against pySHACL's ~100 ms for the same work |
-| rudof's `read_data` | **67 ms for TWO triples**, a fixed floor paid on every call |
+| rudof's `read_data` | **67 ms for TWO triples**, a fixed floor paid on every call — per READ, not per instance: re-measured 2026-09-06 at 73–89 ms whether the world is two triples or 3,500, and the same again after `reset_data` |
 | rdflib writing Turtle at the border | 86 ms — its writer groups by subject and hunts prefixes |
 | rdflib writing N-Triples instead | **12 ms**, four times the bytes and nobody reads them |
 
