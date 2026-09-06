@@ -30,6 +30,7 @@ pre-filter made equal anyway and without pySHACL's measured wrong answers for
 from __future__ import annotations
 
 import functools
+import re
 
 import pyoxigraph as ox
 import rdflib
@@ -71,6 +72,26 @@ def crossed(data: rdflib.Graph) -> str:
     #  for prefixes), while rudof's reader costs the same either way. The text is four times
     #  larger and nobody reads it.
     return _skolemized(data).serialize(format="nt")
+
+
+#  A blank node stands at the start of a line (subject) or right after the predicate's `>`
+#  (object) and nowhere else in N-Triples, which is what keeps a `_:` inside a literal as text.
+_BLANK = re.compile(r"(?m)(?:^|(?<=> ))_:([A-Za-z0-9_.-]+)")
+
+
+def crossed_text(nt: str) -> str:
+    """A world already at the border as N-Triples — the store's own dump — skolemized the way
+    `crossed` skolemizes a graph, by the same scheme and without a graph in between (#485).
+
+    The planner holds every candidate world as text since #481, and the legality check used
+    to parse it into rdflib to hand it to `conforms`, which serialised it straight back — a
+    full circle costing more than the verdict. A blank node's label in the store's dump is
+    its identity, so naming it after that label is deterministic within one crossing, which
+    is all the judge needs: a blank focus node is legal in rudof's VALUES pre-binding, and
+    no shape carries a data blank node by identity. Only a subject or object position is
+    rewritten; a `_:` inside a literal is left as the text it is.
+    """
+    return _BLANK.sub(lambda m: f"<{_SKOLEM}{m.group(1)}>", nt)
 
 
 def _carriers_named(shapes: rdflib.Graph) -> rdflib.Graph:

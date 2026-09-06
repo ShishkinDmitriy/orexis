@@ -91,6 +91,23 @@ def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
     """
     ontology, shapes = _shapes_and_vocabulary()
     data += ontology
+    return _conforms(crossed(data), data, focus)   # once, however many verdicts share it
+
+
+def conforms_at(border: str, carve_from: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
+    """The same verdict for a world ALREADY AT THE BORDER as text (#485): `border` is what
+    the judge reads — every graph a judged world holds, the vocabulary among them, as
+    N-Triples with its blank nodes skolemized (`judge.crossed_text`) — and `carve_from` is
+    the small data-borne graph the shapes an agent holds are carved out of, which is an
+    rdflib walk and the one reason a graph is still needed at all. The planner passes the
+    border it already hands the law and the base it already carves the law from; the two
+    callers that hold a graph and no text keep `conforms` and behave as before.
+    """
+    return _conforms(border, carve_from, focus)
+
+
+def _conforms(border: str, data: rdflib.Graph, focus: str | None) -> tuple[bool, str]:
+    _, shapes = _shapes_and_vocabulary()
     #  The shapes an agent HOLDS are shapes too (a-desire-is-a-shape). They arrive in the data
     #  because a derivation writes them there, and a validator reading only the files would see
     #  them as inert triples — so anything in the data typed `sh:NodeShape` joins the shapes
@@ -120,7 +137,6 @@ def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
     #  skolemized before the carve stops at the first property shape and drops its authored
     #  message — the verdict right, the report gutted. The two sides still agree because
     #  `judge` names a blank node after its own id on both.
-    border = crossed(data)                    # once, however many verdicts share it
     violated, report = _judged(border, shapes, focus=focus)
     #  The shapes that agent holds, unfocused, over no others: ownership is `orexis:holds`, so
     #  every result is about the asker by construction — which is the guarantee the focus
