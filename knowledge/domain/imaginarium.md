@@ -2,15 +2,16 @@
 type: Repository
 title: Imaginarium
 description: >-
-  The store a plan thinks in — a second pyoxigraph store, in memory for the life of one plan,
-  holding the graphs a rule may read plus one named graph per node of the search. It exists
-  because a SPARQL query reads ONE store, so "what would be true here" is answerable only if
-  there is a store in which *here* is what is true; without it a step's retraction re-asked
-  the belief base, found the observation still on disk, and depth beyond one was nominal. A
-  world is a VALUE — one graph per node, written once, never mutated — because the search
-  holds a whole open list of siblings at once, so branching rather than backtracking is the
-  hard case. Nothing in it ever reaches the belief base, and it is discarded whole when the
-  pass ends: it is the one thing in this design REQUIRED to be lost.
+  The store a plan thinks in — a second pyoxigraph store, in memory, holding the graphs a rule
+  may read plus one named graph per node of the search. It exists because a SPARQL query reads
+  ONE store, so "what would be true here" is answerable only if there is a store in which
+  *here* is what is true; without it a step's retraction re-asked the belief base, found the
+  observation still on disk, and depth beyond one was nominal. A world is a VALUE — one graph
+  per node, written once, never mutated — because the search holds a whole open list of
+  siblings at once, so branching rather than backtracking is the hard case. Nothing in it ever
+  reaches the belief base. Since #553 it outlives the pass as a tree of diffs: graphs dropped
+  when a pass ends and re-made when read, the next pass re-rooted where the present is a kept
+  world, the whole forgotten where it is not.
 ---
 
 # What it is
@@ -87,20 +88,30 @@ reach; it does not replay now, because the node that won is already holding that
 **Nothing is cleaned up per node.** The store is dropped whole when the pass ends — in a
 `finally`, so a pass that raises leaves nothing behind either.
 
-# It is not the intention ledger, and they must not converge
+# It outlives the pass, as diffs, and is never the intention ledger
 
-Both hold things that have not happened, which is enough of a resemblance to be worth refusing in
-writing before someone tidies them together.
+Since #553 the imaginarium is not discarded when a pass ends. Every node of the search is
+kept as its parent plus the two lists its step's rules answered — what it adds and what it
+retracts, raw triples with their identity — and its graph is a cache: dropped when the pass
+ends, re-made from the nearest kept graph when a rule next has to run against the node. The
+next pass for the same want first signs the invariant half — public knowledge, the records,
+the wants — and forgets the cone whole if that moved; then looks the present up among the kept
+worlds by its diff against the old base. The node it names becomes the root, its readings
+refreshed from the belief base, every node beneath it re-based on the present by set algebra
+on absolute worlds, its siblings dropped, and the frontier beneath it is the pass's open list.
+The trace says how many worlds the pass began with. Where no kept world is the present, the
+pass starts from nothing, as every pass did before. A retract of a keyed fact — a reading —
+matches by key rather than by the value the rule named, so a world re-made on a present that
+drifted holds one reading per node. The match is exact for now: a reading by its value, which
+is right where nothing moves but the agent and is why a plant resumes nothing yet;
+[identification](/domain/identification.md) by [interval](/domain/interval.md) is what loosens it.
 
-An [intention](/domain/intention.md) is a commitment, and it MUST survive a restart — a keeper
-that forgot what it had committed to would re-adopt what already stands. A possible world must
-survive **nothing**: it is a conclusion drawn from beliefs plus an effect, so keeping one would be
-keeping something that can outlive what it was concluded from.
-
-They are opposites on the axis that matters. The intention ledger is the most durable thing an
-agent writes; the imaginarium is the only thing in the design *required* to be lost. That is why
-it is a store rather than a graph in the agent's own: **a graph can be forgotten to be dropped,
-and a store that was never on disk cannot be.**
+What it still must not be is the [intention](/domain/intention.md) ledger. Both hold things
+that have not happened. An intention is a commitment that MUST survive a restart, in a
+persistent store of its own; an imagined world is a conclusion drawn from beliefs plus an
+effect, kept in memory only while its premises stand, never written back, and gone with the
+process. They stay opposites on the axis that matters, and the imaginarium stays a store of
+its own so that a crashed pass leaves nothing behind.
 
 # What it costs
 

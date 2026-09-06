@@ -20,7 +20,7 @@ import rdflib
 from conftest import build_agent, genesis_store
 from orexis_agent_deliberation import judge as J
 from orexis_agent_deliberation.conformance import _shapes_and_vocabulary, legality_selects
-from orexis_agent_deliberation.planner import Planner
+from orexis_agent_deliberation.planner import Planner, _Node
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import NAMESPACES, bindings
 from orexis_agent_progression.violation import Unsupported, report_select, report_selects
@@ -144,7 +144,7 @@ def _carriers(*graphs) -> dict:
 
 def _both(planner, agent, graph) -> tuple[set, set]:
     """(compiled, judged): the (shape, focus) pairs each engine refuses at `graph`."""
-    node = type("N", (), {"graph": graph, "readings": None})()
+    node = _Node(graph=graph)
     compiled = {(shape, focus) for shape, focus, _, _ in planner._illegal(node, planner._legal)}
     _, shapes = _shapes_and_vocabulary()
     package, own = J.verdicts(planner._border(node), shapes, planner._held)

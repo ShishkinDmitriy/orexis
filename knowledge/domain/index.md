@@ -76,7 +76,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [gap](/domain/gap.md) - The signed, normalised distance from what is sensed to what is wanted. A verdict, computed always and stored never; no reading yields no row.
 
-* [imaginarium](/domain/imaginarium.md) - The store a plan thinks in: in memory for one plan, a graph per search node, required to be lost.
+* [imaginarium](/domain/imaginarium.md) - The store a plan thinks in: a graph per search node, kept as diffs across passes, re-rooted where the present is a kept world.
 * [identification](/domain/identification.md) - Which child of the root the present is in; the match becomes the root and its siblings die. Never asserting a prediction.
 
 * [executor](/domain/executor.md) - Plan, commit the head as an intention, hand it to its actor. One road for every trigger; a standing step is taken, not re-decided.

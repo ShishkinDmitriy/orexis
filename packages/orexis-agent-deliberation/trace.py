@@ -119,7 +119,8 @@ def clear(store, agent_id: str, desire_uri: str) -> None:
 
 
 def write(store, agent_id: str, desire, plan, considered, stands_at: float,
-          took_s: float = 0.0, judged: tuple[str, str | None] = (UNJUDGED, None)) -> None:
+          took_s: float = 0.0, judged: tuple[str, str | None] = (UNJUDGED, None),
+          kept: int = 0) -> None:
     """Record one pass: what was weighed, what each would have reached, and what was taken.
 
     Never raises. A planner that fell over because its debugging aid did would be a poor trade
@@ -127,13 +128,13 @@ def write(store, agent_id: str, desire, plan, considered, stands_at: float,
     the same posture `reporting` takes towards the series store.
     """
     try:
-        _write(store, agent_id, desire, plan, considered, stands_at, took_s, judged)
+        _write(store, agent_id, desire, plan, considered, stands_at, took_s, judged, kept)
     except Exception as exc:                      # noqa: BLE001 - see the docstring
         log.warning("could not record what was considered: %s", exc)
 
 
 def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
-           took_s: float, judged: tuple[str, str | None]) -> None:
+           took_s: float, judged: tuple[str, str | None], kept: int = 0) -> None:
     node = _uri(agent_id, desire.uri)
     #  The candidate the plan came THROUGH — a remembered route walked as one candidate is
     #  named as the route, not as the first of its steps (#469).
@@ -180,6 +181,7 @@ def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
         deliberation:judgedThrough {ox.Literal(road)} ;
 {by}        deliberation:standsAt {stands_at:.6f} ;
         deliberation:tookSeconds {took_s:.6f} ;
+        deliberation:keptWorlds {kept} ;
 {took}        deliberation:asOf "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime .
 {"".join(rows)}}} }}""")
 

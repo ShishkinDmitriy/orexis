@@ -114,8 +114,14 @@ def test_the_graph_holds_one_pass_and_not_two(monkeypatch):
 
     passes = [r for r in after_two if r["o"] == f"{TRACE_NS}Deliberation"]
     assert len(passes) == 1, "a second pass replaced the first"
-    assert len(after_two) == len(after_one), \
-        "and took its candidates with it — an orphan is a trace outliving its pass"
+    #  Since #553 the second pass RESUMES the first's frontier and weighs new worlds, so the
+    #  two traces need not be the same size; what must hold is that nothing of the first
+    #  outlives it: every candidate in the graph hangs off the one pass that is there.
+    considered = {r["o"] for r in after_two if r["p"] == f"{TRACE_NS}considered"}
+    candidates = {r["s"] for r in after_two if r["o"] == f"{TRACE_NS}Candidate"}
+    assert candidates and candidates <= considered, \
+        "an orphan is a trace outliving its pass"
+    assert after_one, "the first pass wrote a trace to be replaced"
 
 
 def test_a_restart_does_not_inherit_the_last_process_s_thinking(monkeypatch):

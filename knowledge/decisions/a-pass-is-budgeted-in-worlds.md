@@ -62,6 +62,15 @@ ceiling where the kernel put it, sized for a plant. Every plant world would have
 state a number it has no opinion about. The shape bounds what is stated and demands
 nothing.
 
+# Amended 2026-09-06: a resumed pass is charged for new worlds only
+
+Since #553 a pass may begin with worlds kept from the pass before, re-rooted on the present.
+The budget counts what THIS pass forks; the kept worlds cost nothing again, since the store
+already imagined them and the trace says how many there were (`deliberation:keptWorlds`).
+The ceiling is unchanged and still one number: a second ceiling on the cone's size was
+weighed and refused for the reason this record refused depth — it would bound a thing
+nobody needs bounded, since a cone is dropped whole the moment the present leaves it.
+
 # Seams left open
 
 - **A plateau spends a deeper budget.** A pass that answers NOT_BETTER inside its budget has

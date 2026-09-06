@@ -33,7 +33,7 @@ from urllib.parse import quote
 
 import pyoxigraph as ox
 
-from orexis_agent_progression.ontology import GRAPH_PREFIX
+from orexis_agent_progression.ontology import GRAPH_PREFIX, STATE_GRAPH
 from orexis_agent_progression.store import Store
 
 #  Where a node's readings sit. Under the same root as every other graph, because a graph IRI is
@@ -72,6 +72,16 @@ class Imaginarium(Store):
             for quad in store.quads(iri):
                 self._store.add(quad)
         self._public = None
+        #  WHICH PREDICATES A KEYED NODE CARRIES (#553): a retraction of one of these matches
+        #  by KEY — every value the node carries under that predicate — never by the exact
+        #  value the rule named. Within one pass the two agree, since the value the rule
+        #  read is the value the world holds; across a re-root they do not, because the
+        #  present is observed and the prediction was not, and an exact retract that misses
+        #  leaves two readings on one node, which is the failure `orexis:retracts` exists to
+        #  prevent. One rule, everywhere, is easier to keep true than two.
+        from . import signature
+        self._carried = frozenset(
+            pred for _, carried in signature.keys_of(self.query).values() for pred in carried)
 
     def copy_in(self, source, *graphs: str) -> None:
         """Graphs from ANOTHER store, copied in under their own names — the wants (#547).
@@ -117,10 +127,26 @@ class Imaginarium(Store):
         #  road `effects._triple` already got wrong once in the other direction. The lists are
         #  a handful of triples, so a loop here costs nothing.
         for triple in retracted:
-            self._store.remove(ox.Quad(triple.subject, triple.predicate, triple.object, node))
+            if triple.predicate.value in self._carried:
+                for quad in list(self._store.quads_for_pattern(triple.subject, triple.predicate,
+                                                               None, node)):
+                    self._store.remove(quad)
+            else:
+                self._store.remove(ox.Quad(triple.subject, triple.predicate, triple.object, node))
         for triple in added:
             self._store.add(ox.Quad(triple.subject, triple.predicate, triple.object, node))
         return name
+
+    def drop(self, name: str) -> None:
+        """Forget one imagined world's graph (#553, #487). The node that named it keeps its
+        two lists, and `Planner._graph` re-makes the graph from the nearest kept ancestor when
+        a rule next has to run against it. The root's readings are never dropped here."""
+        if name != STATE_GRAPH:
+            self._store.remove_graph(ox.NamedNode(name))
+
+    def holds(self, name: str) -> bool:
+        """Whether this world's graph is materialised now."""
+        return self._store.contains_named_graph(ox.NamedNode(name))
 
 
 def name_of(path) -> str:
