@@ -171,6 +171,12 @@ it is a record wearing a bullet.
 - **A verdict the search reads is a query, and the judge stays at the gates** — a shape
   compiled to the select whose rows are its violations costs a millisecond where the judge's
   reader floors at tens, and holding the two to one answer by parity is what makes that safe.
+- **The present is identified among the root's children, never asserted from one** — a child is
+  a prediction and the present is observed, so what execution decides is which imagined world
+  the real one landed in, and the cone under the match survives while its siblings die.
+- **A predicted number is an interval, and a plan that cannot be certainly met has a look in it** —
+  a point with a tolerance applied at verification can neither find the look that narrows the
+  width nor refuse the step whose uncertainty crosses the law.
 
 ## The rules the code lives by
 

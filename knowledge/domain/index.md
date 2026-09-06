@@ -58,8 +58,10 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [action](/domain/action.md) - One way of acting as one node — and the kind of act itself: precondition, effect, taker. A package adds one node and one `take()`.
 * [step](/domain/step.md) - A planned instance of an action: lever, quantity, window, prediction, what it waits for. A plan is steps; not yet done.
+* [precondition](/domain/precondition.md) - The facts a step's rule read, instantiated; a chain's is their regression; checked by asking the present, never by re-running the rule.
 * [tolerance](/domain/tolerance.md) - How close the world must land to a step's predicted value: a fraction of the movement, a bounded revisable pick, never a kernel constant.
 * [act](/domain/act.md) - The record that a step was taken: which step, when, whether anyone took it. History, and only history.
+* [history](/domain/history.md) - The chain of presents left behind, each an act and the diff that happened, kept as diffs, bounded as a ring.
 
 * [relevance](/domain/relevance.md) - Which levers could serve a want: read off the actions, closed backward through preconditions, never declared; unreadable keeps every lever.
 * [affordance](/domain/affordance.md) - One row of what an agent could do now — an action whose precondition holds. Derived and never stored; whom it serves is a column.
@@ -75,6 +77,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [gap](/domain/gap.md) - The signed, normalised distance from what is sensed to what is wanted. A verdict, computed always and stored never; no reading yields no row.
 
 * [imaginarium](/domain/imaginarium.md) - The store a plan thinks in: in memory for one plan, a graph per search node, required to be lost.
+* [identification](/domain/identification.md) - Which child of the root the present is in; the match becomes the root and its siblings die. Never asserting a prediction.
 
 * [executor](/domain/executor.md) - Plan, commit the head as an intention, hand it to its actor. One road for every trigger; a standing step is taken, not re-decided.
 
@@ -95,6 +98,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [observation](/domain/observation.md) - The node recording one act of observing. One per subject and property, and it replaces rather than accumulates.
 
 * [reading](/domain/reading.md) - The value an observation carries, and the only fact in a belief base that is somebody else's word. It ages; it never expires.
+* [interval](/domain/interval.md) - A number in a possible world has two ends; met is the whole interval inside the region; a dose is an interval of litres.
 
 * [channel](/domain/channel.md) - One named message flow on a bus, as a node — derived per distinct topic, discovered never authored, and the bearer of the encoding.
 * [sensing](/domain/sensing.md) - Split by WHO HOLDS THE CLOCK: Polling, Subscribing, Listening. Either way the agent owns the freshness rule.

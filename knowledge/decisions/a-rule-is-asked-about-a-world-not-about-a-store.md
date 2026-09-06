@@ -11,9 +11,20 @@ description: >-
   second, and building it corrected two of the numbers below. An rdflib version of this was
   written first and refused by measurement: 163x slower per query, which would have tripled a
   pass on the Pi to save twenty thousand triples of memory.
-status: accepted
+status: superseded-in-part
+superseded-by: the-future-is-a-cone-and-the-present-is-identified-in-it
 timestamp: 2026-08-21T12:00:00Z
 ---
+
+> **Superseded in part** by
+> [the-future-is-a-cone-and-the-present-is-identified-in-it](/decisions/the-future-is-a-cone-and-the-present-is-identified-in-it.md)
+> (2026-09-06). What no longer holds is the LIFETIME: "in memory for the life of one plan" and
+> "the only thing in the design that is required to be lost". The imaginarium outlives the pass
+> as a tree of diffs, re-rooted on the present where the present matches one of its nodes, and
+> dropped where it matches none. Everything else here stands — a rule is asked about a world,
+> one named graph per node, the fork rather than the replay, and the isolation from the ledger,
+> which is stronger now, not weaker: the Future is still a store of its own and still never
+> written back.
 
 # The contradiction
 
