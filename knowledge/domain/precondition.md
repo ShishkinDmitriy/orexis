@@ -1,11 +1,12 @@
 ---
 type: Domain Concept
 title: Precondition
+term: http://example.org/orexis/progression#premises
 description: >-
   What must be true of a world for a step's diff to apply — the instantiated facts the step's
   effect rule read when it produced the diff. A chain's precondition is the regression of its
   steps'. Checked by asking the present, never by re-running the rule. Named by the record
-  the-future-is-a-cone and not yet carried on a step (#550).
+  the-future-is-a-cone; carried on the step as its premises (#550).
 ---
 
 # What it is
@@ -32,9 +33,19 @@ present says, and it is the first half of a [method](/domain/method.md).
 - **Lifted at promotion.** The terms the action's availability query bound become variables;
   the rest stays constant.
 
+# What carries it
+
+A [step](/domain/step.md) carries its premises beside its prediction: the positive patterns
+of its effect's WHERE and of its availability query, instantiated by the store's own engine
+for the step's binding in the world it was planned from, and stated as the same canonical
+facts the prediction is made of. The planner fills them once along the winning path, while
+the imaginarium still holds each step's parent world; the keeper writes them to the ledger
+and hands them back with the path a plan walked; a [remembered plan](/domain/remembered-plan.md)
+keeps them per step. An absence a rule requires is not among them — it is the regression's
+to state.
+
 # Not built yet
 
-Nothing carries a precondition today. The effect reader returns the constructed triples and
-discards the bindings, and a remembered plan is keyed by a hash of the whole world. The issues
-are [#550](https://github.com/ShishkinDmitriy/orexis/issues/550) for the step and
-[#551](https://github.com/ShishkinDmitriy/orexis/issues/551) for the chain.
+The chain's regressed precondition, and the ASK that keys a remembered plan by it, are
+[#551](https://github.com/ShishkinDmitriy/orexis/issues/551). Nothing reads a step's
+premises yet except the tests that pin them.

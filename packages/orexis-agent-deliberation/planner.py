@@ -43,7 +43,7 @@ from .beliefs import Picks
 from orexis_agent_progression.act import Step
 from orexis_agent_deliberation.desire import Desire
 from .afforder import affordances_of, wants_of
-from .imaginarium import Imaginarium
+from .imaginarium import Imaginarium, name_of
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import Raw, bind, bindings
 from .ontology import DELIBERATION
@@ -847,6 +847,10 @@ class Planner:
         """
         if not plan.steps:
             return plan
+        #  THE PRECONDITION OF EVERY STEP, once, along the winning path (#550): what each
+        #  step's rules read in the world it was planned from, asked of that world while
+        #  the imaginarium still holds it — depth queries, never per fork.
+        plan = replace(plan, steps=self._with_premises(plan.steps, desire))
         #  ASKED OF THE IMAGINARIUM, and the world never leaves the store (#548): every
         #  package shape about this agent and every shape it holds, compiled once to a
         #  select whose rows are its violations (`violation.report_selects`), run at this
@@ -892,6 +896,25 @@ class Planner:
         #  at its own graph (#548): a rudof verdict here had a fixed floor of ~75 ms per
         #  candidate, paid at every expansion in a world that ratifies a law.
         return frozenset(self._illegal(node, self._law_selects))
+
+    def _with_premises(self, steps: tuple, desire: Desire) -> tuple:
+        """The steps with each one's premises filled: the facts its rules read at its parent
+        world, canonical, as `predicts` is. A step whose rules will not say is carried with
+        None — the plan is not worse for it, and the log has the reason."""
+        out, parent = [], STATE_GRAPH
+        for i, step in enumerate(steps):
+            bind = self._bind(desire, node=_Node(graph=parent), row=step,
+                              litres=step.quantity or 0.0)
+            try:
+                read = effects.premises(self.imaginarium, step.action,
+                                        keyed=tuple(self._keys), **bind)
+                found = signature.facts(read, self._keys)
+            except Exception as exc:               # noqa: BLE001 — a package's rule, not the pass
+                log.error("could not read the premises of %s: %s", step.action, exc)
+                found = None
+            out.append(replace(step, premises=found))
+            parent = name_of(steps[:i + 1])
+        return tuple(out)
 
     def _illegal(self, node, selects: dict) -> list[tuple]:
         """The violations `selects` find in this node's world — (shape, focus, which
@@ -1215,7 +1238,7 @@ class Planner:
         step.taken = node.taken + (replace(act, urgency_after=step.urgency, predicts=(adds, retracts)),)
         return step
 
-    def _bind(self, desire: Desire | None, node=None, row=None) -> dict:
+    def _bind(self, desire: Desire | None, node=None, row=None, litres: float | None = None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.
 
         `bound` is what the cheapest plan found so far spends, or None while none has been.
@@ -1271,7 +1294,10 @@ class Planner:
             "via": row.via if row is not None else "urn:nothing",
             "beliefs": beliefs_graph(self.agent.id),
             "state": graph,
-            "litres": self._dose(row, graph) if desire and row is not None else 0.0,
+            #  Sized by whoever would take it — or, walking a plan back to read its premises,
+            #  the quantity the step already carries: the size it was planned with (#550).
+            "litres": litres if litres is not None else (
+                self._dose(row, graph) if desire and row is not None else 0.0),
         }
 
     def _dose(self, row, graph: str) -> float:

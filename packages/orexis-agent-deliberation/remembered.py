@@ -25,7 +25,8 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from orexis_agent_progression.act import Step, predicts_from_json, predicts_json
+from orexis_agent_progression.act import (Step, predicts_from_json, predicts_json, premises_from_json,
+                                          premises_json)
 from orexis_agent_progression.ontology import OREXIS, PROGRESSION
 from orexis_agent_progression.store import bindings
 
@@ -91,6 +92,8 @@ def lift(agent, want: str, steps: list, world: str, cost: float | None) -> str:
             facts.append(f'<{PROGRESSION}quantity> "{step.quantity}"^^<{_XSD}decimal>')
         if step.predicts is not None:
             facts.append(f'<{PROGRESSION}predicts> {_literal(predicts_json(step.predicts))}')
+        if step.premises is not None:
+            facts.append(f'<{PROGRESSION}premises> {_literal(premises_json(step.premises))}')
         blocks.append(f"  <{node}> {' ; '.join(facts)} .")
     listed = "( " + " ".join(f"<{n}>" for n in nodes) + " )"
     measured = f' ; <{MEASURED_COST}> "{cost}"^^<{_XSD}decimal>' if cost is not None else ""
@@ -137,13 +140,14 @@ SELECT ?r ?cost ?at ?world WHERE {{ GRAPH <{graph}> {{
 def _steps_of(agent, uri: str, want: str) -> list:
     graph = remembered_graph(agent.id)
     steps = bindings(agent.beliefs.query(f"""
-SELECT ?node ?first ?rest ?action ?via ?about ?quantity ?predicts WHERE {{ GRAPH <{graph}> {{
+SELECT ?node ?first ?rest ?action ?via ?about ?quantity ?predicts ?premises WHERE {{ GRAPH <{graph}> {{
   <{uri}> <{LIFTED}> ?head . ?head <{_RDF}rest>* ?node . ?node <{_RDF}first> ?first ; <{_RDF}rest> ?rest .
   ?first <{PROGRESSION}fills> ?action .
   OPTIONAL {{ ?first <{PROGRESSION}through> ?via }}
   OPTIONAL {{ ?first <{OREXIS}about> ?about }}
   OPTIONAL {{ ?first <{PROGRESSION}quantity> ?quantity }}
-  OPTIONAL {{ ?first <{PROGRESSION}predicts> ?predicts }} }} }}"""))
+  OPTIONAL {{ ?first <{PROGRESSION}predicts> ?predicts }}
+  OPTIONAL {{ ?first <{PROGRESSION}premises> ?premises }} }} }}"""))
     by_node = {r["node"]: r for r in steps}
     head = bindings(agent.beliefs.query(f"SELECT ?h WHERE {{ GRAPH <{graph}> {{ <{uri}> <{LIFTED}> ?h }} }}"))
     out, node = [], head[0]["h"] if head else None
@@ -151,7 +155,8 @@ SELECT ?node ?first ?rest ?action ?via ?about ?quantity ?predicts WHERE {{ GRAPH
         r = by_node[node]
         out.append(Step(action=r["action"], via=r.get("via") or "", want=want, about=r.get("about"),
                         quantity=float(r["quantity"]) if r.get("quantity") else None,
-                        predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None))
+                        predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None,
+                        premises=premises_from_json(r["premises"]) if r.get("premises") else None))
         node = r["rest"]
     return out
 

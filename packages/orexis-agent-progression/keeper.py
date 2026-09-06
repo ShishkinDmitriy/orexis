@@ -41,7 +41,7 @@ from datetime import datetime, timedelta, timezone
 
 from assembly.contribute import answer as contribution, contributes
 from . import ledger
-from .act import Step, method_of, predicts_from_json, predicts_json
+from .act import Step, method_of, predicts_from_json, predicts_json, premises_from_json, premises_json
 from .store import bind, bindings
 
 from .graphs import intentions_graph
@@ -103,6 +103,7 @@ PATIENCE_S = PROGRESSION + "patienceS"
 
 # The expectation — the END, judged apart from the action.
 PREDICTS = PROGRESSION + "predicts"
+PREMISES = PROGRESSION + "premises"
 PREDICTED_VALUE = PROGRESSION + "predictedValue"
 OBSERVED_VALUE = PROGRESSION + "observedValue"
 BASELINE_VALUE = PROGRESSION + "baselineValue"
@@ -373,6 +374,8 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{PROGRESSION + "by"}> ?s . FILTER NOT EXIS
                 facts.append(f'<{PROGRESSION + "predictedUrgency"}> "{step.urgency_after:.6f}"^^<{xsd}decimal>')
             if step.predicts is not None:
                 facts.append(f'<{PREDICTS}> {_literal(predicts_json(step.predicts))}')
+            if step.premises is not None:
+                facts.append(f'<{PREMISES}> {_literal(premises_json(step.premises))}')
             if step.about:
                 facts.append(f'<{kernel("about")}> <{step.about}>')
             if step.part_of is not None:
@@ -388,6 +391,8 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{PROGRESSION + "by"}> ?s . FILTER NOT EXIS
                         pfacts.append(f'<{kernel("about")}> <{p.about}>')
                     if p.predicts is not None:
                         pfacts.append(f'<{PREDICTS}> {_literal(predicts_json(p.predicts))}')
+                    if p.premises is not None:
+                        pfacts.append(f'<{PREMISES}> {_literal(premises_json(p.premises))}')
                     if p.part_of is not None:
                         grand = parents.setdefault(id(p.part_of), f"{OREXIS}step_{self.agent.id}_{stem}_of{len(parents)}")
                         pfacts.append(f'<{PROGRESSION + "partOf"}> <{grand}>')
@@ -434,8 +439,12 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         out = []
         for n, action in enumerate(members):
             last = n == len(members) - 1
+            #  The FIRST member inherits the premises, as the last inherits the prediction:
+            #  what made the abstract step applicable is what must hold when its first
+            #  member is taken (#550).
             child = _replace(step, action=action,
                              predicts=step.predicts if last else None,
+                             premises=step.premises if n == 0 else None,
                              urgency_after=step.urgency_after if last else None,
                              part_of=step)
             out.extend(self._members_of(child, depth + 1))
@@ -1311,11 +1320,11 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{PROGRESSION + "by"}> ?was }} }
 SELECT ?cur WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?cur }} }}"""))
         current = at[0]["cur"] if at else None
         rows = bindings(self.agent.intentions.query_union(f"""
-SELECT ?s ?next ?action ?via ?about ?quantity ?predicts WHERE {{ GRAPH <{self.graph}> {{
+SELECT ?s ?next ?action ?via ?about ?quantity ?predicts ?premises WHERE {{ GRAPH <{self.graph}> {{
   <{intention_uri}> <{kernel("step")}> ?s . ?s <{kernel("fills")}> ?action .
   OPTIONAL {{ ?s <{kernel("then")}> ?next }} OPTIONAL {{ ?s <{kernel("through")}> ?via }}
   OPTIONAL {{ ?s <{kernel("about")}> ?about }} OPTIONAL {{ ?s <{kernel("quantity")}> ?quantity }}
-  OPTIONAL {{ ?s <{kernel("predicts")}> ?predicts }} }} }}"""))
+  OPTIONAL {{ ?s <{kernel("predicts")}> ?predicts }} OPTIONAL {{ ?s <{PREMISES}> ?premises }} }} }}"""))
         by = {r["s"]: r for r in rows}
         nexts = {r.get("next") for r in rows if r.get("next")}
         head = next((s for s in by if s not in nexts), None)
@@ -1324,7 +1333,8 @@ SELECT ?s ?next ?action ?via ?about ?quantity ?predicts WHERE {{ GRAPH <{self.gr
             r = by[node]
             out.append(Step(action=r["action"], via=r.get("via") or "", about=r.get("about"),
                             quantity=float(r["quantity"]) if r.get("quantity") else None,
-                            predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None))
+                            predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None,
+                            premises=premises_from_json(r["premises"]) if r.get("premises") else None))
             if node == current:
                 break
             node = r.get("next")
