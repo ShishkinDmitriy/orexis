@@ -105,18 +105,31 @@ another one.
   share. Naming a blank node after its id makes the two agree without anything being passed
   between them.
 
+# Amended 2026-09-06: the search no longer crosses the border
+
+The verdicts the search reads — a want's, the law's at every expansion, the winner's legality
+— are compiled to SPARQL by the same compiler that says a want (#497, #548) and asked of the
+imaginarium at the node's graph. The judge decides at the gates, where the authored report
+is for a person, and is the oracle the compiled rows are held to. Two of its behaviours were
+measured into the compiler rather than argued: a blank node crosses this border as an IRI, so
+`sh:nodeKind sh:IRI` at the gates means "not a literal" and the compiled form says the same;
+and a node shape's severity reaches its `sh:sparql`, `sh:or`, `sh:not` and its own value
+constraints but never its property shapes, and a severity stated on a constraint node is
+ignored. A single UNION over every package shape was tried and refused by measurement — 843
+ms on `world/simulation` against 65 for the same branches asked one shape at a time — so the
+engine is handed small questions.
+
 # Seams left open
 
-- **rudof's reader has a floor, and it is per read.** The data no longer crosses through
-  rdflib — the search hands rudof the imaginarium's own dump (#485, #547) — but `read_data`
-  costs ~75 ms before it has looked at anything, on two triples and on 3,500 alike, and the
-  floor is paid on every read rather than once per instance (measured 2026-09-06: a second
-  read after `reset_data` costs the same). What the binding does allow is keeping the data
-  across a shapes swap (`reset_shacl`), so the search reads once for however many shapes
-  graphs it holds one world to; the other way round, one shapes graph over many worlds, drops
-  the shapes with the data. The floor is rudof's to fix and is unreported upstream; the road
-  that stops paying it is #548, where the shapes the search judges by compile to SPARQL and
-  a verdict never leaves the store.
+- **rudof's reader has a floor, and it is per read — paid at the gates only, since #548.**
+  `read_data` costs ~75 ms before it has looked at anything, on two triples and on 3,500 alike,
+  and the floor is paid on every read rather than once per instance (measured 2026-09-06: a
+  second read after `reset_data` costs the same). The binding keeps the data across a shapes
+  swap (`reset_shacl`) and drops the shapes on a data swap. The search stopped paying it: the
+  shapes it judges by compile to selects (`violation.report_selects`) asked of the imaginarium,
+  and this judge is what those selects are held to by parity, feature by feature and on a
+  shipped world (`tests/test_legality.py`). The floor is rudof's to fix and is unreported
+  upstream; boot and onboarding pay it once each, for a report a person reads.
 - **The two gaps are of different kinds, and rudof's own roadmap says which.**
   [#94](https://github.com/rudof-project/rudof/issues/94) covers the SHACL Recommendation and
   lists `sh:message` and `sh:severity` as supported; SPARQL-based TARGETS appear nowhere in it,

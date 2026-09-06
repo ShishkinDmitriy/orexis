@@ -388,8 +388,13 @@ def test_legality_is_judged_on_the_world_the_plan_would_actually_reach(monkeypat
     """
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     judged = []
-    monkeypatch.setattr(search, "conforms_at",
-                        lambda border, held, focus, query=None: judged.append(border) or (True, ""))
+
+    def spy(self, node, selects):
+        #  The world the check is asked about, taken from the imaginarium the moment it is
+        #  asked — the store is dropped when the pass ends.
+        judged.append(self.imaginarium.dump_nt(node.graph))
+        return []
+    monkeypatch.setattr(search.Planner, "_illegal", spy)
 
     plan = planner.plan(desire)
 

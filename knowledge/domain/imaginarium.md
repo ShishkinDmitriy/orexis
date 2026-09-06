@@ -114,18 +114,20 @@ Measured on the Pi, per plan:
 | **its whole share of a plan** | **≈ 11 ms** | ≈ 14 ms |
 | a whole deliberation pass, holding it | ≈ 1,100 ms | ≈ 1,100 ms |
 
-About one percent of a pass, which is dominated by pySHACL. An rdflib version was written first
+About one percent of a pass, which was dominated by pySHACL when this was measured. An rdflib version was written first
 and refused by measurement — 43.59 ms per CONSTRUCT against pyoxigraph's 0.27, 163× — which would
 have tripled a pass on a four-core Pi to save twenty thousand triples of memory.
 
-# The seam it does not close
+# The seam it closed
 
-A node's world is read by two things that want different shapes, and now two engines. Rules want
-named graphs in the imaginarium; the desire check runs pySHACL and wants one flat rdflib graph. So a
-node is a **pair** — the shared invariant snapshot and its own readings — and the flat view is
-materialised from that pair. That materialisation is the piece of work this design does not
-remove, and it is where the rdflib cost reappears, bounded: pySHACL was always going to run on
-rdflib.
+A node's world used to be read by two things that wanted different shapes, and two engines.
+Rules wanted named graphs in the imaginarium; the desire check ran pySHACL, then rudof, and
+wanted one flat text. So a node was a **pair** — the shared invariant snapshot and its own
+readings — and the flat view was materialised from that pair per verdict, first as an rdflib
+graph (#481 removed that), then as a text dump crossed into rudof (#485, #547 trimmed it). Since
+#548 there is one reader: every shape the search judges by — the want's, the law's, the
+legality check's — is compiled to a select and asked of this store at the node's graph, and the
+flat text is written only when a parity test asks for the judge's opinion of the same world.
 
 # Related
 

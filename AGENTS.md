@@ -168,6 +168,9 @@ it is a record wearing a bullet.
 - **A base class is an import and an annotation is not** — a layer contract named in a
   signature costs nothing at assembly; subclassed, it loads the layer, which is why sensing's
   row types live behind the touch (#455).
+- **A verdict the search reads is a query, and the judge stays at the gates** — a shape
+  compiled to the select whose rows are its violations costs a millisecond where the judge's
+  reader floors at tens, and holding the two to one answer by parity is what makes that safe.
 
 ## The rules the code lives by
 

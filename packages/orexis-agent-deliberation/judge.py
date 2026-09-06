@@ -33,7 +33,7 @@ import functools
 import io
 import json
 import re
-from typing import Callable, NamedTuple
+from typing import NamedTuple
 
 import pyoxigraph as ox
 import rdflib
@@ -61,10 +61,6 @@ class Verdict(NamedTuple):
     value: str
 
 
-#  A resolver for a shape's SPARQL target: the select text in, the store's SPARQL-JSON
-#  result out — `Store.query_over` bound to one world is one, and the text path below is the
-#  other, so the target is asked of whichever engine already holds the world.
-Resolver = Callable[[str], dict]
 
 
 def crossed(data: rdflib.Graph) -> str:
@@ -200,9 +196,12 @@ def judge(data: rdflib.Graph | str, shapes: rdflib.Graph) -> tuple[rdflib.Graph,
     return results, f"Conforms: {conforms}\n" + results.serialize(format="turtle")
 
 
-def verdicts(data: str, *shapes: rdflib.Graph, query: Resolver | None = None) -> list[frozenset]:
-    """The search's door (#547): one world at the border, judged by several shapes graphs,
-    each answered as a set of `Verdict`s — and no rdflib graph on the way.
+def verdicts(data: str, *shapes: rdflib.Graph) -> list[frozenset]:
+    """One world at the border, judged by several shapes graphs, each answered as a set of
+    `Verdict`s — and no rdflib graph on the way. Built as the search's door (#547); since
+    #548 the search reads compiled selects instead, and this is the ORACLE those selects
+    are held to by parity (`tests/test_legality.py`), the way the inference closure is held
+    to pyshacl. It stays exactly what the gates compute, so the parity means something.
 
     READ ONCE. rudof's `read_data` costs a fixed ~75 ms before it has looked at a triple
     (measured on two triples and on 3,500 alike), and it keeps its data across `reset_shacl`,
@@ -215,10 +214,8 @@ def verdicts(data: str, *shapes: rdflib.Graph, query: Resolver | None = None) ->
     the full report as a graph and as text, with the author's prose restored, because the
     gates print it for a person; nothing on the search path reads a message.
 
-    `query` resolves each shape's SPARQL target against the world the caller already holds
-    (the imaginarium, at one node); without it the target is resolved over the text, which
-    loads the world a second time. An empty shapes graph answers an empty set without
-    troubling the engine, which refuses to validate with no shapes loaded.
+    An empty shapes graph answers an empty set without troubling the engine, which refuses
+    to validate with no shapes loaded.
     """
     r = Rudof(RudofConfig())
     r.read_data(data, format=RDFFormat.NTriples)
@@ -227,7 +224,7 @@ def verdicts(data: str, *shapes: rdflib.Graph, query: Resolver | None = None) ->
         if not graph:
             out.append(frozenset())
             continue
-        shapes_ttl, _ = _resolved_ttl(graph, data, query)
+        shapes_ttl, _ = _resolved_ttl(graph, data)
         if i:
             r.reset_shacl()
             r.reset_validation_results()
@@ -261,20 +258,19 @@ def _verdicts_in(report_nt: str) -> frozenset:
 _RDF_TYPE = str(rdflib.RDF.type)
 
 
-def _resolved_ttl(shapes: rdflib.Graph, data_ttl: str,
-                  query: Resolver | None = None) -> tuple[str, rdflib.Graph]:
+def _resolved_ttl(shapes: rdflib.Graph, data_ttl: str) -> tuple[str, rdflib.Graph]:
     """The shapes at the border with every `sh:SPARQLTarget` made explicit — as Turtle, the
     shape text serialized ONCE per shapes graph and the resolved targets appended per world.
 
-    The select runs against the DATA — that is what a SPARQL-based target means — through
-    `query` where the caller holds the world in a store already (the imaginarium, at one of
-    its nodes: #547), and otherwise on a pyoxigraph store of its own loaded from the text,
-    which is the engine every other query here already answers to — handed the store's
-    dictionary, exactly as `Store.query` hands it (#500, #508), so a select written in
-    prefixed names runs here as it runs there. Both roads answer in the store's SPARQL-JSON
-    and keep only a NAMED target: a blank one could not survive the border crossing, and
-    nothing here mints one. The original `sh:target` node stays in the text: rudof ignores
-    it, and removing it would make the crossing lie about what the author wrote.
+    The select runs against the DATA — that is what a SPARQL-based target means — on a
+    pyoxigraph store of its own loaded from the text, which is the engine every other query
+    here already answers to — handed the store's dictionary, exactly as `Store.query` hands
+    it (#500, #508), so a select written in prefixed names runs here as it runs there. Only a
+    NAMED target is kept: a blank one could not survive the border crossing, and nothing
+    here mints one. The original `sh:target` node stays in the text: rudof ignores it, and
+    removing it would make the crossing lie about what the author wrote. (A resolver over
+    the imaginarium sat here between #547 and #548; the search now compiles the target into
+    its own select and nothing else held a world to resolve against.)
 
     The split matters because the shape text is world-independent: a planner judging many
     candidate worlds against one shapes graph re-pays only the target selects and a string
@@ -286,8 +282,7 @@ def _resolved_ttl(shapes: rdflib.Graph, data_ttl: str,
     base_ttl, targets, named = _prepared(shapes)   # skolemized there, as the data was
     if not targets:
         return base_ttl, named
-    if query is None:
-        query = _over_text(data_ttl)
+    query = _over_text(data_ttl)
     additions = []
     for shape, select in targets:
         for row in query(select).get("results", {}).get("bindings", []):
@@ -297,7 +292,7 @@ def _resolved_ttl(shapes: rdflib.Graph, data_ttl: str,
     return base_ttl + "\n" + "\n".join(additions), named
 
 
-def _over_text(data_ttl: str) -> Resolver:
+def _over_text(data_ttl: str):
     """A resolver over the text alone: the world loaded once into a store of its own."""
     store = ox.Store()
     store.load(data_ttl.encode(), format=ox.RdfFormat.N_TRIPLES)   # what `crossed` writes
