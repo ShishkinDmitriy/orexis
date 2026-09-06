@@ -53,9 +53,10 @@ is compiled by review into a lookup that answers before the search and is retire
 remembered plan is lifted by the deliberator from what worked and forgotten by the same on
 failure. The two may meet when review takes over the forgetting.
 
-**Not a possible world.** What is kept is the steps to re-try, never the worlds the search
-built; the imaginarium stays required to be lost, and #527 — resuming a search from a kept
-frontier — is a different, parked thing.
+**Not a possible world.** What is kept here is the steps to re-try, never the worlds the
+search built. The worlds are the [imaginarium](/domain/imaginarium.md)'s to keep, as diffs,
+across passes (#553) — a different thing, kept for a different reason: a remembered plan
+survives a restart in the agent's own graph, a kept world lives only while its premises stand.
 
 **Not general yet.** Filled, it applies wherever the facts its steps read hold — the same
 lever, the same subject, the same standing facts, whatever else the world says. Lifting to

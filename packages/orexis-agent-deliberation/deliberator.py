@@ -112,6 +112,9 @@ class Deliberator:
         self._steps_declined = 0
         self._plans_finished = 0
         self._decided: dict = {}       # want -> (plan, remembered plan or None) (#469)
+        #  ONE PLANNER PER WANT (#553): the cone a pass leaves is the next pass's to resume,
+        #  so the planner that holds it lives as long as the want is pursued.
+        self._planners: dict = {}
         self._plans_failed = 0
 
     def pursued(self) -> list[tuple[Desire, str | None]]:
@@ -453,7 +456,10 @@ class Deliberator:
             self.log.info("%s: remembered — %d step(s) whose precondition holds here",
                           _short(desire.uri), len(steps))
             return plan
-        plan = Planner(self.agent, self.me).plan(desire)
+        search = self._planners.get(desire.uri)
+        if search is None:
+            search = self._planners[desire.uri] = Planner(self.agent, self.me)
+        plan = search.plan(desire)
         self._decided[desire.uri] = (plan, None)
         if plan.steps:
             self.log.info("%s: %s (urgency %.2f -> %.2f)",

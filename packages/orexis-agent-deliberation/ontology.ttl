@@ -84,6 +84,8 @@ deliberation:atDepth a owl:DatatypeProperty ; rdfs:domain deliberation:Candidate
 deliberation:tookSeconds a owl:DatatypeProperty ; rdfs:domain deliberation:Deliberation ; rdfs:range xsd:decimal ;
     rdfs:label "took seconds" ;
     rdfs:comment "How long the pass took. The one figure a trace could not already answer, and the one most likely to change this design: a pass validates a shape per candidate, and `series()` re-plans EVERY goal on every reporting tick, so an agent's dominant cost may turn out to be the instrumentation asking it what it wants. Recorded from inside the pass rather than timed by a caller, because a caller would be timing the trace write as well and reporting the observer's cost as the observed's." .
+deliberation:keptWorlds a owl:DatatypeProperty ; rdfs:domain deliberation:Deliberation ; rdfs:range xsd:integer ; rdfs:label "kept worlds" ;
+    rdfs:comment "How many imagined worlds this pass began with, kept from the pass before and re-rooted on the present (#553) — zero for a pass that began from nothing, which is every pass whose present matched no kept world or whose invariant half had moved." .
 
 deliberation:asOf a owl:DatatypeProperty ; rdfs:domain deliberation:Deliberation ; rdfs:range xsd:dateTime ;
     rdfs:label "as of" ;

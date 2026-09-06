@@ -43,7 +43,7 @@ from .beliefs import Picks
 from orexis_agent_progression.act import Step
 from orexis_agent_deliberation.desire import Desire
 from .afforder import affordances_of, wants_of
-from .imaginarium import Imaginarium, name_of
+from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import Raw, bind, bindings
 from .ontology import DELIBERATION
@@ -149,6 +149,19 @@ class _Node:
     cost: float = 0.0
     #  The root-level candidate this path came through — see `Plan.origin`.
     origin: str | None = None
+    #  THE CONE (#553): a node is its parent plus its two lists, and the graph is a cache.
+    #  `added`/`retracted` are the raw triples the step's rules answered — identity and
+    #  datatypes intact, which is what re-making the graph needs and what the canonical
+    #  `diff` deliberately drops. `materialised` says whether `graph` exists in the store
+    #  now; `expanded` whether the search has taken every row from here; `met` whether this
+    #  world met the want when it was settled.
+    parent: object = None
+    added: list = field(default_factory=list)
+    retracted: list = field(default_factory=list)
+    materialised: bool = True
+    expanded: bool = False
+    met: bool = False
+    legal: bool | None = None            # the society's verdict on this world, once asked
 
 
 class Planner:
@@ -183,7 +196,7 @@ class Planner:
         #  Alive only during a pass. Between passes there is no imaginarium, which is the point:
         #  a hypothesis explored against a world that has moved is not a hypothesis, so the
         #  snapshot is per plan and nothing carries over.
-        self.imaginarium = None
+        self.reset()                     # no cone yet (#553)
 
     # --- what a world is worth ---------------------------------------------------------------
 
@@ -212,7 +225,7 @@ class Planner:
         an obligation, met-or-not over the record — and those ask the imaginarium now too (#481).
         Anything else unmeasured scores 1.0, the not-knowing answer.
         """
-        answer = self.agent.desire_urgency(desire, self.imaginarium.query, node.graph)
+        answer = self.agent.desire_urgency(desire, self.imaginarium.query, self._graph(node))
         if answer is not None:
             return answer
         #  An avoided-pattern want is binary by its own contract — met 0, unmet 1 — and the
@@ -221,7 +234,7 @@ class Planner:
         #  wants nothing whenever the pattern is held.
         pattern = self._avoided_pattern(desire)
         if pattern is not None:
-            return 1.0 if self._pattern_binds(pattern, node.graph) else 0.0
+            return 1.0 if self._pattern_binds(pattern, self._graph(node)) else 0.0
         if self._unmet is not None:
             #  A compiled want nobody measures — the puzzles', an aversion authored as a
             #  shape — is binary by the same contract as a pattern want: unmet 1, met 0.
@@ -263,7 +276,7 @@ class Planner:
         #  force never opens.
         pattern = self._avoided_pattern(desire)
         if pattern is not None:
-            return not self._pattern_binds(pattern, node.graph)
+            return not self._pattern_binds(pattern, self._graph(node))
         if self._unmet is not None:
             #  A SHAPE-AUTHORED WANT, judged by its compiled violation select (#497): the
             #  shape is positive and universal, the select is its negation as rows, the
@@ -273,7 +286,7 @@ class Planner:
             #  About a millisecond where the judge's reader floors at tens; held to the judge
             #  by parity in tests/test_violation.py.
             return not bindings(self.imaginarium.query_over(
-                self._unmet, *self._invariant_graphs, node.graph))
+                self._unmet, *self._invariant_graphs, self._graph(node)))
         shape = self._shape_of(desire)
         if shape is None:
             #  A obligation's goal state is a PATTERN over the record, not a distance (#255): this
@@ -284,7 +297,7 @@ class Planner:
             #  A want with no shape and no property — a CALL (#359) — is met exactly where
             #  whoever measures it says it is: zero urgency in the world being judged. Asked
             #  of the imaginarium at the node's graph, as `_urgency_in` asks.
-            answer = self.agent.desire_urgency(desire, self.imaginarium.query, node.graph)
+            answer = self.agent.desire_urgency(desire, self.imaginarium.query, self._graph(node))
             if answer is not None:
                 return answer <= 0.0
             return desire.is_met
@@ -293,7 +306,7 @@ class Planner:
         #  the judge is not asked inside the search any more.
         select = violation.unmet_select(shape, self._shape_root(desire))
         return not bindings(self.imaginarium.query_over(
-            select, *self._invariant_graphs, node.graph))
+            select, *self._invariant_graphs, self._graph(node)))
 
     def _holds(self, node, subject: str, predicate: str) -> bool:
         """Whether this node's world states anything about `subject` under `predicate`.
@@ -303,7 +316,7 @@ class Planner:
         read every SIBLING world in the store too, so the graphs are named — this node's
         readings and the invariant ones, which is exactly what `_border` writes.
         """
-        graphs = " ".join(f"<{iri}>" for iri in self._invariant_graphs + (node.graph,))
+        graphs = " ".join(f"<{iri}>" for iri in self._invariant_graphs + (self._graph(node),))
         return bool(bindings(self.imaginarium.query(
             f"SELECT ?x WHERE {{ VALUES ?g {{ {graphs} }} "
             f"GRAPH ?g {{ <{subject}> <{predicate}> ?x }} }} LIMIT 1")))
@@ -328,7 +341,7 @@ class Planner:
             return None
         try:
             rows = bindings(self.imaginarium.query(
-                bind(str(text), this=self.me.uri, state=node.graph)))
+                bind(str(text), this=self.me.uri, state=self._graph(node))))
         except Exception as exc:
             log.error("estimate failed to run for %s: %s", desire.uri, exc)
             return None
@@ -445,189 +458,101 @@ class Planner:
         nothing outside can reconstruct it, because the belief base is locked by the process
         holding it. `trace` explains why that is the record's one sanctioned exception.
 
-        THE IMAGINARIUM IS DISCARDED WHOLE when the pass ends, which is the property that makes
-        a possible world safe to materialise at all: an intention must survive a restart and a
-        hypothesis must survive nothing, and these are opposites on the axis that matters. In a
-        `finally`, so it holds for the pass that raises as well as the one that answers — and no
-        node's graph has a lifecycle of its own, because there is nothing left to have one in.
+        THE CONE IS KEPT (#553). The imaginarium and every node of the search outlive the
+        pass, as diffs: each node is its parent plus the two lists its step's rules answered,
+        and its graph is dropped once the node is expanded and again when the pass ends, to
+        be re-made from the nearest kept graph when a rule next runs against it. The next
+        pass looks for the present among the kept worlds — the invariant half unchanged, and
+        a node whose world IS the present — and re-roots there, its siblings dropped, the
+        search resumed with the remaining frontier; where no node matches, the cone is dead
+        and the pass starts from nothing, as every pass used to. What is never kept is a
+        world in the belief base: the imaginarium is still a store of its own, and a pass
+        that raises forgets it whole.
         """
         try:
             return self._search(desire)
-        finally:
-            self.imaginarium = None
+        except BaseException:
+            self.reset()
+            raise
+
+    def reset(self) -> None:
+        """Forget the cone: the imaginarium and every node. A raising pass does this, a
+        changed invariant half does, and so does a caller done with the planner."""
+        self.imaginarium = None
+        self._root = None
+        self._nodes = []
+        self._open = []
+        self._by_diff = {}
+        self._kept_worlds = 0
 
     def _search(self, desire: Desire) -> Plan:
-        """The pass itself. Separate only so `plan` can guarantee the discard above."""
+        """The pass itself. Separate only so `plan` can guarantee the forgetting above."""
         #  Timed from HERE, which is inside the pass and outside the trace write below: a
         #  caller timing `plan()` would be timing the recording as well, and reporting the
-        #  observer's cost as the observed's.
+        #  cost of reporting is the kind of number a runbook should not carry.
         self._started = time.monotonic()
         self._kept = None
-        here = self._begin(desire)
-        #  CLEARED AT THE START, which is the difference between a graph that holds one pass
-        #  and one that holds two. It also means a pass that raises leaves no trace claiming
-        #  to describe a decision nobody reached.
+        #  THE PRESENT AMONG THE KEPT WORLDS (#553), else from nothing.
+        resumed = self._resume(desire)
+        if not resumed:
+            here = self._begin(desire)
+            self._root, self._nodes, self._by_diff = here, [here], {here.diff: here}
+            self._seen, self._achieved, self._best, self._bound = {here.diff: here.cost}, [], here, None
+            self._pending, self._kept_worlds = [], 0
+            self._signature = self._invariant_signature()
+        here = self._root
         trace.clear(self.agent.beliefs, self.agent.id, desire.uri)
-        #  MET NO LONGER ENDS THE PASS — a-desire-states-its-own-measure removed the root
-        #  short-circuit that returned SATISFIED without searching whenever the shape held.
-        #  The shape governs the outcome LABEL; the measure governs whether a step is worth
-        #  taking, and since the measure is anchored at the AIM a met desire may still carry
-        #  urgency: inside the region and off the pick is a true situation. Only a desire
-        #  whose measure reads zero has nothing a step could improve, so only that one skips
-        #  the search — which also keeps the per-tick cost of a calm society what it was.
         met_now = self._met_in(here, desire)
         if met_now and here.urgency <= 0.0:
             return self._record(desire, Plan(SATISFIED, (), here.urgency, here.urgency),
                                 here.urgency)
-
-        #  THE ROOM, for a want scoped `orexis:Within` (#472): seconds left before it expires.
-        #  The scope the ledger writes restates the deadline the record carries, and the
-        #  deadline is what this branches on — so a legacy row from before the scope word
-        #  behaves identically, which is the volume guarantee. None where nothing expires,
-        #  and every stake is that.
+        #  Within-scope wants have ROOM: seconds until the want expires (#472). A candidate
+        #  whose last change lands past it is LATE, weighed and refused like a dear one.
         room = (max(0.0, (desire.expires - datetime.now(timezone.utc)).total_seconds())
                 if desire.expires is not None else None)
-        best, saw_candidate = here, False
-        achieved = []
-        #  THE BOUND: what the cheapest achiever found so far spends. None until one is found,
-        #  and from then on a candidate spending MORE than it is discarded unexamined — see
-        #  `_bind` below for why that is sound rather than a heuristic.
-        bound = None
+        saw_candidate = bool(self._pending)
         self._weighed = [(0, row, None, trace.IRRELEVANT) for row in self._passed_over]
-        #  Every world reached, with the least this pass has found it to cost. A world reached
-        #  again NO CHEAPER is somewhere already stood in; reached strictly cheaper, it is
-        #  reopened — see the novelty test below for why best-first needs that where
-        #  breadth-first did not.
-        seen = {here.diff: here.cost}
-        #  THE OPEN LIST, and it is one heap rather than one layer at a time (#492). The
-        #  search used to expand breadth-first: every world at depth d before any at d+1, so
-        #  the first achiever arrived in the LAST layer, and a bound that arrives last has
-        #  nothing left to refuse. Measured before the change, `cost + estimate` pruned no
-        #  node in either domain that declares an estimate — 198 forks on the courier's
-        #  corner delivery with the heuristic and 198 without. Ordered by what a path has
-        #  spent plus what its want says is left, the search follows the estimate to an
-        #  achiever early, and the bound it sets then refuses the rest — which is the whole
-        #  of A*, and the only reason a want's estimate is worth declaring. `_priority` says
-        #  what the key is and why a met want keeps the old order.
-        opened = [(_priority(here, met_now), 0, here)]
-        minted = 1                       # heap entries so far: the tie-break, so nodes never compare
-        forked = 0                       # worlds this pass has imagined, against `self.budget`
+        #  THE OPEN LIST: on a fresh pass the root alone; on a resumed one the kept frontier
+        #  under the new root, re-keyed — a priority reads the want's state, so it is minted
+        #  here rather than at the re-root.
+        self._open = [(_priority(here, met_now), 0, here)] if not resumed else \
+            [(_priority(n, met_now), k, n) for k, n in enumerate(self._pending)]
+        heapq.heapify(self._open)
+        self._minted = len(self._open)   # heap entries so far: the tie-break, so nodes never compare
+        forked = 0                       # worlds THIS pass has imagined, against `self.budget`
+
         def settle(row, step, depth):
             """One simulated world weighed: forbidden, dear, late, seen, met, or a place to
             search on from. The same for a primitive's world and for the world a remembered
             plan's walk reaches — which is what makes the remembered plan one candidate
             among the rest rather than a road of its own. Answers a Plan only where the
             pass ends here: a steering keeper on an already-met want."""
-            nonlocal best, bound, minted
             if self._law is not None:
-                #  EVERY STATE of a plan is checked, not the end alone — the
-                #  sovereign's ruling (#468): a valid plan contains no state that
-                #  NEWLY matches a violation-severity shape, so a 4 to -10 to 5
-                #  walk dies at -10 however well it ends. Discarded before the
-                #  met-test can crown it and never expanded — and the next legal
-                #  candidate wins by construction, which retires the no-fallback
-                #  seam rather than implementing it.
                 newly = self._forbidden_keys(step) - self._base_forbidden
                 if newly:
                     self._weighed.append((depth, row, step.urgency, trace.FORBIDDEN))
                     return None
-            if bound is not None and step.cost + _near(step) > bound:
-                #  A* PRUNING, and it is the estimate's whole reason for existing in
-                #  the search rather than only in the ranking. `orexis:estimates` never
-                #  overstates what is left, so `cost + estimate` is a floor under what
-                #  any plan THROUGH this world would finally spend: past the bound, no
-                #  completion of it can beat the plan already in hand. The candidate
-                #  before the bound existed had to be simulated to be dismissed; this
-                #  one is dismissed after its own world is known and before its
-                #  children are, which is where the subtree goes.
-                #
-                #  A want declaring no estimate reads 0.0 and this is the plain cost
-                #  bound above, exactly as before the term existed.
+            if self._bound is not None and step.cost + _near(step) > self._bound:
                 self._weighed.append((depth, row, step.urgency, trace.COSTLY))
                 return None
             if room is not None and step.landing > room:
-                #  A world reached after the want has lapsed is not an answer to it
-                #  (#472, `orexis:Within`): discarded BEFORE the met-test can crown
-                #  it, so a serve landing past the claim's expiry never becomes
-                #  SATISFIED — and never expands, since what it reaches it reaches
-                #  too late.
                 self._weighed.append((depth, row, step.urgency, trace.LATE))
                 return None
-            #  CYCLE DETECTION, and it compares WORLDS rather than action. The first
-            #  draft refused to apply the same means twice, which is not what a cycle
-            #  is: two doses in a row reach somewhere new, and forbidding them would
-            #  have made every dose too small to finish the job unplannable. What must
-            #  not be explored twice is a world already seen — +3 then −3 lands back
-            #  where it started, and expanding it again would spend the depth budget
-            #  going nowhere.
-            #
-            #  KEYED ON THE WORLD AND NEVER ON THE GRAPH NAME, which is the one thing
-            #  naming a graph per node could quietly have broken. `seen` is global
-            #  across the search, so two paths arriving at the same world collide and
-            #  the second is pruned — two names, one world, still one entry.
-            #
-            #  REOPENED WHEN REACHED STRICTLY CHEAPER, and best-first is why (#492).
-            #  Breadth-first reached every world by a shortest path first, so the path
-            #  that claimed a world was never dearer than any later one. A heap ordered
-            #  by `cost + estimate` expands a deep node before a shallow one whenever
-            #  the estimate says to, so a world can be claimed first by a dearer path
-            #  and the cheaper one arrive later — and a search that discarded it as
-            #  seen would crown an eight-move hanoi where seven exist, since every
-            #  achiever below that world would inherit the dear prefix. Reached no
-            #  cheaper is still somewhere already stood in, which keeps +3 then -3
-            #  pruned and a free action's return to the base world with it.
-            #
-            #  NO SHIPPED DOMAIN CAN WITNESS IT, measured: zero reopens on hanoi and on
-            #  eight courier poses at depth 9. Both move by unit cost and both estimates
-            #  move by at most one per step, so two paths to one world carry equal f and
-            #  the cheaper pops first by the key's own tie-break. It is kept for the
-            #  domain whose costs are real numbers — a dose priced in litres — where the
-            #  argument fails and the loss would be silent. The test goes beside the
-            #  courier's the day a domain can show it.
             where = step.diff
-            novel = where not in seen or step.cost < seen[where]
+            novel = where not in self._seen or step.cost < self._seen[where]
+            #  KEPT WHETHER OR NOT NOVEL (#553): a world already reached is not searched on
+            #  from, but it may be an achiever — a look that changes nothing canonical is one —
+            #  and a resumed pass must find it among the kept nodes. `_by_diff` keeps the
+            #  cheapest node per world; `_nodes` keeps every settled one.
+            self._nodes.append(step)
             if novel:
-                seen[where] = step.cost
-                #  LEXICOGRAPHIC, urgency first (#466): cost speaks only where urgency
-                #  cannot separate two candidates — same urgency, cheaper wins — and
-                #  never outranks it, because a society that traded a plant's
-                #  wellbeing for money would have that ranking ratified nowhere. The
-                #  satisficing floor below is untouched: a plan no better than
-                #  standing still stays refused however cheap it is.
-                #  NEARER COUNTS AS BETTER when the want can say how near. A want
-                #  that only knows met from unmet leaves `estimate` None, and this is
-                #  the old comparison exactly; a want that declares one lets a world
-                #  three moves from done beat a world five moves from done, which is
-                #  what makes a search shallower than the solution worth running at
-                #  all. Cost still breaks a tie, and urgency still outranks both.
+                self._seen[where] = step.cost
+                self._by_diff[where] = step
                 if (step.urgency, _near(step), step.cost) < (
-                        best.urgency, _near(best), best.cost):
-                    best = step
-            #  MET IS ASKED BEFORE THE PRUNE, and only for a want that is not met
-            #  ALREADY. Cycle detection is about EXPANSION — do not spend the depth
-            #  budget on a world you have stood in — and a step that repairs the want
-            #  is not a place to expand from, it is the answer. Pruning it first
-            #  answered a question nobody asked.
-            #
-            #  It matters because of what the signature deliberately leaves out. An
-            #  observation canonicalises to its upsert key and its VALUE, never its
-            #  `sosa:resultTime`, so a look nets to nothing and the world it reaches
-            #  carries its parent's signature — which is exactly right for "look, then
-            #  water" and exactly wrong for a want whose whole content is that
-            #  something was read RECENTLY. The one lever that repairs freshness was
-            #  being discarded as somewhere already reached before anything asked
-            #  whether it repaired anything. The record that built the signature named
-            #  this as the day the question comes back; it came back from the other
-            #  side, and the fix is here rather than in the canonical form, because
-            #  putting the timestamp in would make every look a new world and "look,
-            #  then look, then look" a three-step plan.
-            #
-            #  `met_now` guards it, and the guard is not caution: with the want
-            #  already met, a look leaves it met, so without this every calm agent
-            #  would answer "look" on every tick — a step that changes nothing
-            #  reported as achieving something. Met and still urgent is steering
-            #  toward the pick, and steering is what `best` below is for.
+                        self._best.urgency, _near(self._best), self._best.cost):
+                    self._best = step
             if (novel or not met_now) and self._met_in(step, desire):
+                step.met = True
                 self._weighed.append((depth, row, step.urgency, trace.MET))
                 if met_now:
                     #  Already met and still steering: the first novel step that
@@ -639,16 +564,8 @@ class Planner:
                         self._offer(Plan(SATISFIED, step.taken, here.urgency, step.urgency, cost=step.cost, origin=step.origin),
                                     desire, step),
                         here.urgency)
-                #  ACHIEVERS ARE COLLECTED, never returned on sight — the
-                #  sovereign's two-stage cut (#466): urgency is the DESIRE's term
-                #  and cost is the ACTION's. Urgency already picked which want this
-                #  pass serves, so among plans that ACHIEVE it, cost alone decides
-                #  — and returning the first met step was the one-axis shortcut,
-                #  crowning whichever achiever the menu happened to yield first.
-                #  An achiever still never extends the frontier: a step that
-                #  answers the question is not a place to search onward from.
-                achieved.append(step)
-                bound = step.cost if bound is None else min(bound, step.cost)
+                self._achieved.append(step)
+                self._bound = step.cost if self._bound is None else min(self._bound, step.cost)
                 return None
             if not novel:
                 self._weighed.append((depth, row, step.urgency, trace.SEEN))
@@ -656,67 +573,21 @@ class Planner:
             self._weighed.append(
                 (depth, row, step.urgency,
                  trace.BETTER if step.urgency < here.urgency else trace.WORSE))
-            #  EVERY step that survived the cycle check extends the frontier, and a
-            #  SENSING action still ends a plan — by the same road every other "this
-            #  does not help" arrives by, rather than by a rule of its own.
-            #
-            #  There WAS a rule of its own, and it is the reason depth was 1. It asked
-            #  `orexis:confirmedBy orexis:ByObservation`, which every effect here answers — a
-            #  dose and a bid included, since only a later reading says either arrived
-            #  — so the guard matched every lever, `nxt` came back empty at every
-            #  depth, and the search never took a second step whatever MAX_DEPTH said.
-            #  Replacing it with a truer term was the first fix and the wrong one: what
-            #  a look does is already stated by its EFFECT, which predicts the value it
-            #  found, so the world it reaches has the parent's signature and `seen`
-            #  discards it. Measured with no guard at all, on three worlds including a
-            #  first look with nothing sensed: Observe is pruned as a world already
-            #  reached, every time. A second statement of a fact the effect settles is
-            #  a fact that can disagree with it.
-            #
-            #  WHAT THIS RESTS ON, so the next person can see it break: the signature
-            #  is the world's net diff in CANONICAL facts (#258), and in canonical form
-            #  a look nets to nothing — an observation is its upsert key and its value,
-            #  never its `sosa:resultTime`, so predicting the value you already hold is
-            #  standing still, and a first look's valueless reading states no fact at
-            #  all. The day a fresher timestamp counts as somewhere new, "look, then
-            #  look" becomes a new world every time; chaining past a look becomes a
-            #  real question again exactly there, and nowhere earlier. See
-            #  `signature.py`.
-            #  No depth bounds the push (#494): what bounds the pass is the budget above,
-            #  and a world is a place to search on from however long the path to it.
-            heapq.heappush(opened, (_priority(step, met_now), minted, step))
-            minted += 1
+            heapq.heappush(self._open, (_priority(step, met_now), self._minted, step))
+            self._minted += 1
+            return None
 
-
-        while opened:
-            _, _, node = heapq.heappop(opened)
+        while self._open:
+            _, _, node = heapq.heappop(self._open)
             if forked >= self.budget:
-                #  THE BUDGET IS SPENT, and the pass answers with what it has (#494): the
-                #  cheapest achiever found if any, else the nearest world, exactly as an
-                #  emptied open list answers below. The search is anytime by construction —
-                #  `best` and `achieved` are kept as it goes — so stopping here loses
-                #  nothing already found and forgoes only what was never looked at.
+                #  Out of budget with the frontier open: the node goes back for the next pass.
+                heapq.heappush(self._open, (_priority(node, met_now), self._minted, node))
+                self._minted += 1
                 break
-            if bound is not None and node.cost + _near(node) > bound:
-                #  EARLY TERMINATION, and it is the same floor the per-candidate prune below
-                #  stands on: this node's `cost + estimate` is under everything a plan through
-                #  it would finally spend, so it cannot beat the plan in hand — and the heap
-                #  is ordered by exactly that sum, so neither can anything behind it. Strictly
-                #  dearer, like the prune: a world tying the bound may still yield an achiever
-                #  that ties on cost and wins on urgency. Never fires for a met want, whose
-                #  pass returns on its first keeper and sets no bound.
+            if self._bound is not None and node.cost + _near(node) > self._bound:
                 break
             depth = len(node.taken)
             if node is here:
-                #  WHAT WORKED BEFORE, weighed first (#469, second form): every plan
-                #  remembered for this want is walked from here as ONE candidate — each of
-                #  its steps re-simulated on the menu of the world the one before reached —
-                #  and settled exactly as a primitive's world is. First, so that where it
-                #  still achieves the want its cost is the bound before any primitive is
-                #  looked at; and ties among achievers fall to it, the road already walked.
-                #  The exact world it was lifted in never reaches this line: the
-                #  deliberator adopts that hit with no search, since the pass that lifted
-                #  it searched this very world already.
                 for kept in self._remembered_rows(desire):
                     saw_candidate = True
                     #  ITS PRECONDITION FIRST (#551): the facts the chain read that it did not
@@ -727,7 +598,7 @@ class Planner:
                     if absent:
                         self._weighed.append((0, kept, None, trace.INAPPLICABLE, absent[0]))
                         continue
-                    step, spent = self._walk(here, kept, desire, bound, self.budget - forked)
+                    step, spent = self._walk(here, kept, desire, self._bound, self.budget - forked)
                     forked += spent
                     if isinstance(step, str):
                         self._weighed.append((0, kept, None, step))
@@ -752,18 +623,10 @@ class Planner:
                     continue
                 saw_candidate = True
                 if forked >= self.budget:
-                    #  The budget ran out while this node was being expanded. Its remaining
-                    #  levers are recorded as never looked at rather than silently dropped,
-                    #  so a trace reads "this was there and the pass could not afford it"
-                    #  and not "this was weighed and lost".
                     self._weighed.append((depth, row, None, trace.SPENT))
                     continue
-                #  Steps are ROWS, not means: a plan is a path through the affordance
-                #  graph, and which lever a step goes through is half of what it says.
-                step = self._step_from(node, row, desire, bound)
+                step = self._step_from(node, row, desire, self._bound)
                 if step is TOO_DEAR:
-                    #  Never simulated, so there is no urgency to report: what the trace
-                    #  records is that the search refused to spend on it, and why.
                     self._weighed.append((depth, row, None, trace.COSTLY))
                     continue
                 if step is None:
@@ -773,12 +636,17 @@ class Planner:
                 ended = settle(row, step, depth)
                 if ended is not None:
                     return ended
+            #  EXPANDED: every row from here has been taken. The graph stays until the pass
+            #  ends — a pass counts the worlds it imagines, and re-making one it already made
+            #  would count twice — and `_record` drops every graph then (#487, #553); the next
+            #  pass re-makes what it reads from the nearest kept graph.
+            node.expanded = True
 
-        if achieved:
+        if self._achieved:
             #  Achievement is absolute — the desire's demand — and cost orders the
             #  achievers; the desire's own measure breaks a cost tie (nearer the aim wins),
             #  so the answer is deterministic whatever order the menu yielded them in.
-            won = min(achieved, key=lambda s: (s.cost, s.urgency))
+            won = min(self._achieved, key=lambda s: (s.cost, s.urgency))
             return self._record(
                 desire,
                 self._offer(Plan(SATISFIED, won.taken, here.urgency, won.urgency, cost=won.cost, origin=won.origin),
@@ -790,6 +658,7 @@ class Planner:
         #  SATISFIED — it is met, and near the pick every dose sizes to nothing, which is the
         #  deadband satisficing gives for free — where an unmet one in the same position is
         #  NOT_BETTER (my doses are too coarse) or NOTHING (equip me), and those must not blur.
+        best = self._best
         if not saw_candidate:
             return self._record(desire, Plan(SATISFIED if met_now else NOTHING,
                                            (), here.urgency, here.urgency), here.urgency)
@@ -801,6 +670,116 @@ class Planner:
             Plan(EXHAUSTED if not self._met_in(best, desire) else SATISFIED,
                  best.taken, here.urgency, best.urgency, cost=best.cost, origin=best.origin), desire, best), here.urgency)
 
+    # --- the cone across passes (#553) ---------------------------------------------------------
+
+    def _resume(self, desire: Desire) -> bool:
+        """Re-root the kept cone on the present, or say there is nothing to resume.
+
+        Two questions, in the order that makes the second cheap. Has the INVARIANT half
+        moved — public knowledge, the records, the wants, everything a node's world holds
+        besides its readings? Then every kept diff was computed against a world that is gone,
+        and the cone is forgotten whole. Is the present one of the kept worlds? The present's
+        diff against the old base is looked up among the nodes; the one it names becomes the
+        root, its siblings and their subtrees are dropped, and the frontier beneath it is the
+        next pass's open list. Nothing matching is the cone dead: a fresh pass, as before.
+
+        EXACT, for now: a kept world is the present when their canonical facts agree, a
+        reading by its value. That is right for a world nothing moves but the agent, and it
+        is why a plant, whose readings drift, resumes nothing yet — identification by
+        interval (#554, #556) is what loosens it.
+        """
+        if self.imaginarium is None or self._root is None:
+            return False
+        if self._invariant_signature() != self._signature:
+            self.reset()
+            return False
+        present = self._facts_now()
+        base = self._base_facts
+        node = self._by_diff.get((frozenset(present - base), frozenset(base - present)))
+        if node is None:
+            self.reset()
+            return False
+        self._reroot(node, present)
+        return True
+
+    def _reroot(self, node, present: frozenset) -> None:
+        """`node` becomes the root: every node beneath it re-based on the present, everything
+        else dropped. Diffs are re-based by set algebra on absolute worlds — a kept world is
+        the old base less its minus set plus its plus set, and its new diff is what that
+        world holds beyond the present and what the present holds beyond it — so a path
+        that returns to the new root returns to the empty diff, as `advance` promises."""
+        base = self._base_facts
+        keep = [m for m in self._nodes if self._descends(m, node)]
+        for m in self._nodes:
+            self._release(m)
+        #  THE PRESENT'S READINGS ARE THE ROOT'S GRAPH, observed: the imaginarium's copy is
+        #  refreshed from the belief base rather than re-made from the old root plus the
+        #  matched diff — the two agree exactly here, and the observed one is the one that
+        #  says what the present is.
+        self.imaginarium.clear_graph(STATE_GRAPH)
+        self.imaginarium.copy_in(self.agent.beliefs, STATE_GRAPH)
+        depth, cost0, landing0 = len(node.taken), node.cost, node.landing
+        for m in keep:
+            dplus, dminus = m.diff
+            world = (base - dminus) | dplus
+            m.diff = (frozenset(world - present), frozenset(present - world))
+            m.taken = m.taken[depth:]
+            m.cost -= cost0
+            m.landing -= landing0
+            m.origin = m.taken[0].action if m.taken else None
+        node.parent, node.graph, node.materialised = None, STATE_GRAPH, True
+        self._root, self._nodes, self._base_facts = node, keep, present
+        self._by_diff = {m.diff: m for m in keep}
+        self._seen = {m.diff: m.cost for m in keep}
+        self._pending = [m for m in keep if m is not node and not m.expanded]
+        self._achieved = [m for m in keep if m.met and m is not node]
+        self._bound = min((m.cost for m in self._achieved), default=None)
+        self._best = min(keep, key=lambda m: (m.urgency, _near(m), m.cost))
+        self._kept_worlds = len(keep) - 1
+        #  What `_begin` computes AT the root, for the new one.
+        self._at_root(node)
+
+    @staticmethod
+    def _descends(m, node) -> bool:
+        while m is not None:
+            if m is node:
+                return True
+            m = m.parent
+        return False
+
+    def _release(self, node) -> None:
+        """Drop this world's graph, keeping the node; the root's readings are never dropped."""
+        if node is not self._root and node.materialised:
+            self.imaginarium.drop(node.graph)
+            node.materialised = False
+            node.readings = None
+
+    def _graph(self, node) -> str:
+        """This node's graph in the imaginarium, re-made from the nearest kept ancestor's if it
+        was dropped — the parent's graph, forked, the node's two lists applied. A world is
+        its parent plus its diff, and the graph is a cache of that (#553)."""
+        if node is self._root or node.materialised:
+            return node.graph
+        parent = self._graph(node.parent)
+        node.graph = self.imaginarium.reached(parent, node.taken, node.added, node.retracted)
+        node.materialised = True
+        return node.graph
+
+    def _facts_now(self) -> frozenset:
+        """The whole base as the store holds it now, in canonical facts."""
+        store = self.agent.beliefs
+        return signature.facts((quad for iri in [*store.public_graphs(), *store.recorded_graphs()]
+                                for quad in store.quads(iri)), self._keys)
+
+    def _invariant_signature(self) -> frozenset:
+        """Everything a node's world holds besides its readings, as canonical facts: public
+        knowledge, the records, the wants. A kept cone is valid exactly while this is what
+        it was computed against."""
+        store = self.agent.beliefs
+        quads = [quad for iri in self._invariant_graphs for quad in store.quads(iri)]
+        quads += [quad for iri in self._want_graphs for quad in self.agent.desires.quads(iri)]
+        return signature.facts(quads, self._keys)
+
     def _record(self, desire, plan, stands_at):
         """Write the pass down and hand back the plan unchanged.
 
@@ -811,7 +790,11 @@ class Planner:
         """
         trace.write(self.agent.beliefs, self.agent.id, desire, plan,
                     getattr(self, "_weighed", []), stands_at,
-                    time.monotonic() - self._started, self._judged(desire))
+                    time.monotonic() - self._started, self._judged(desire),
+                    kept=getattr(self, "_kept_worlds", 0))
+        #  THE PASS IS OVER: every imagined graph is dropped (#487, #553), the nodes stay.
+        for node in getattr(self, "_nodes", ()):
+            self._release(node)
         return plan
 
     def _judged(self, desire: Desire) -> tuple[str, str | None]:
@@ -857,8 +840,13 @@ class Planner:
             return plan
         #  THE PRECONDITION OF EVERY STEP, once, along the winning path (#550): what each
         #  step's rules read in the world it was planned from, asked of that world while
-        #  the imaginarium still holds it — depth queries, never per fork.
-        plan = replace(plan, steps=self._with_premises(plan.steps, desire))
+        #  the imaginarium still holds it — depth queries, never per fork. ONCE per node
+        #  (#553): a kept node offered again by a resumed pass carries them already.
+        if any(step.premises is None for step in node.taken):
+            node.taken = self._with_premises(node.taken, desire, node)
+        plan = replace(plan, steps=node.taken)
+        if node.legal is not None:
+            return plan if node.legal else Plan(REFUSED, (), plan.urgency_now, plan.urgency_after)
         #  ASKED OF THE IMAGINARIUM, and the world never leaves the store (#548): every
         #  package shape about this agent and every shape it holds, compiled once to a
         #  select whose rows are its violations (`violation.report_selects`), run at this
@@ -866,7 +854,8 @@ class Planner:
         #  rudof, its report parsed back — cost 230 ms a pass on `world/simulation` after two
         #  rounds of trimming (#485, #547); the selects cost 60, and the judge stays at the
         #  gates, where the authored report prose is for a person.
-        if not self._illegal(node, self._legal):
+        node.legal = not self._illegal(node, self._legal)
+        if node.legal:
             return plan
         log.warning("the world this plan would reach is one the society refuses — not taken")
         return Plan(REFUSED, (), plan.urgency_now, plan.urgency_after)
@@ -905,14 +894,19 @@ class Planner:
         #  candidate, paid at every expansion in a world that ratifies a law.
         return frozenset(self._illegal(node, self._law_selects))
 
-    def _with_premises(self, steps: tuple, desire: Desire) -> tuple:
+    def _with_premises(self, steps: tuple, desire: Desire, node) -> tuple:
         """The steps with each one's premises filled: the facts its rules read at its parent
         world, canonical, as `predicts` is. A step whose rules will not say is carried with
-        None — the plan is not worse for it, and the log has the reason."""
-        out, parent = [], STATE_GRAPH
+        None — the plan is not worse for it, and the log has the reason. `node` is the world
+        the last step reached; its ancestry is the parent world of each step."""
+        chain, m = [], node
+        while m is not None:
+            chain.append(m)
+            m = m.parent
+        chain.reverse()                      # the root first; chain[i] is step i's parent world
+        out = []
         for i, step in enumerate(steps):
-            bind = self._bind(desire, node=_Node(graph=parent), row=step,
-                              litres=step.quantity or 0.0)
+            bind = self._bind(desire, node=chain[i], row=step, litres=step.quantity or 0.0)
             try:
                 read = effects.premises(self.imaginarium, step.action,
                                         keyed=tuple(self._keys), **bind)
@@ -921,7 +915,6 @@ class Planner:
                 log.error("could not read the premises of %s: %s", step.action, exc)
                 found = None
             out.append(replace(step, premises=found))
-            parent = name_of(steps[:i + 1])
         return tuple(out)
 
     def _illegal(self, node, selects: dict) -> list[tuple]:
@@ -929,7 +922,7 @@ class Planner:
         constraint, the offending value or None) per row — asked of the imaginarium with the
         view the border text holds: public knowledge, the records, the wants, this node's
         readings. Empty is legal."""
-        graphs = (*self._invariant_graphs, *self._want_graphs, node.graph)
+        graphs = (*self._invariant_graphs, *self._want_graphs, self._graph(node))
         return [(str(shape), row["this"], row.get("_constraint"), row.get("_offending"))
                 for shape, select in selects.items()
                 for row in bindings(self.imaginarium.query_over(select, *graphs))]
@@ -974,7 +967,7 @@ class Planner:
                 return trace.REFUSED, forks
             row = next((r for r in affordances_of(
                 self.imaginarium.query, self.me.uri, self.agent.desires.query_union,
-                beliefs_graph(self.agent.id), cur.graph, only=frozenset({wanted.action}))
+                beliefs_graph(self.agent.id), self._graph(cur), only=frozenset({wanted.action}))
                 if r.is_own and r.via == wanted.via and (r.about or None) == (wanted.about or None)),
                 None)
             if row is None:
@@ -1019,7 +1012,7 @@ class Planner:
         #  shows the second. The root node's graph is the agent's own readings, so at depth 0
         #  this is the ordinary menu, exactly as before.
         for row in affordances_of(self.imaginarium.query, self.me.uri, self.agent.desires.query_union,
-                           beliefs_graph(self.agent.id), node.graph, only=self._asked):
+                           beliefs_graph(self.agent.id), self._graph(node), only=self._asked):
             if desire.is_obligation:
                 #  A obligation may be served by its counterparty's honoured row, or approached
                 #  through this agent's own levers — refilling the vessel is an Acquire on its
@@ -1169,16 +1162,28 @@ class Planner:
         #  named every irrelevant action in the vocabulary would name Move in a plant world
         #  with no disk in it. One query per foreign action per pass is what a truthful
         #  trace costs, against one per node before this.
+        here = _Node(graph=STATE_GRAPH)
+        here.estimate = self._estimate_in(here, desire)
+        here.urgency = self._urgency_in(here, desire)
+        self._root = here
+        self._at_root(here)
+        return here
+
+    def _at_root(self, here) -> None:
+        """What a pass computes AT its root, for a fresh root and a re-rooted one alike
+        (#553): the levers passed over, and the forbidden states the root already stands
+        in, which never-newly-enter subtracts."""
+        #  THE LEVERS PASSED OVER, asked ONCE per pass at the root rather than at every node,
+        #  and written as passed over only where they had a row to pass over: a trace that
+        #  named every irrelevant action in the vocabulary would name Move in a plant world
+        #  with no disk in it. One query per foreign action per pass is what a truthful
+        #  trace costs, against one per node before this.
         self._passed_over = [] if self._relevant is None else affordances_of(
             self.imaginarium.query, self.me.uri, self.agent.desires.query_union,
             beliefs_graph(self.agent.id), STATE_GRAPH,
             only=frozenset(relevance.actions_of(self.agent.beliefs.query)) - self._relevant)
-        here = _Node(graph=STATE_GRAPH)
-        here.estimate = self._estimate_in(here, desire)
         self._base_forbidden = (self._forbidden_keys(here)
                                 if self._law is not None else frozenset())
-        here.urgency = self._urgency_in(here, desire)
-        return here
 
     @property
     def _invariant(self) -> str:
@@ -1203,10 +1208,10 @@ class Planner:
 
         WRITING THE VARIANT HALF IS DEFERRED TO HERE, and cached on the node once written. A
         pass forks far more worlds than it judges — 76 against 1 on a 3-disk solve — because
-        scoring a want met by a pattern asks the store at `node.graph` and never needs text.
+        scoring a want met by a pattern asks the store at `self._graph(node)` and never needs text.
         """
         if node.readings is None:
-            node.readings = crossed_text(self.imaginarium.dump_nt(node.graph))
+            node.readings = crossed_text(self.imaginarium.dump_nt(self._graph(node)))
         return self._invariant + node.readings
 
     def _step_from(self, node, row, desire: Desire, bound: float | None = None):
@@ -1239,14 +1244,15 @@ class Planner:
         path = node.taken + (act,)
         adds, retracts = signature.facts(added, self._keys), signature.facts(retracted, self._keys)
         diff = signature.advance(node.diff, adds, retracts, self._base_facts)
-        graph = self.imaginarium.reached(node.graph, path, added, retracted)
+        graph = self.imaginarium.reached(self._graph(node), path, added, retracted)
         #  When this path's last change completes: the step's own `orexis:landsAfter`, asked of
         #  the rule exactly as the keeper asks it, summed along the path (#472). None — no
         #  stated timing — adds nothing, which is the keeper's own contract for it.
         lands = effects.lands_after(self.imaginarium, row.action, **bind)
         landing = node.landing + (lands or 0.0)
         step = _Node(graph=graph, diff=diff, landing=landing, cost=cost,
-                     origin=node.origin if node.origin is not None else row.action)
+                     origin=node.origin if node.origin is not None else row.action,
+                     parent=node, added=list(added), retracted=list(retracted))
         step.urgency = self._urgency_in(step, desire)
         step.estimate = self._estimate_in(step, desire)
         #  THE STEP CARRIES WHAT IT PREDICTED (#510): the same canonical facts the signature
@@ -1292,7 +1298,7 @@ class Planner:
         #  VALUES, NOT TEXT (#500): each is the IRI, the number or the literal it is, and
         #  `store.bind` renders it as the term where the rule's `$token` stands — whole token,
         #  never a prefix of a longer one, and a token nobody bound refuses.
-        graph = node.graph if node is not None else STATE_GRAPH
+        graph = self._graph(node) if node is not None else STATE_GRAPH
         return {
             "me": self.me.uri,
             "claim": Raw(f'"{desire.claim}"') if desire and desire.claim else Raw('"urn:nobody"'),
