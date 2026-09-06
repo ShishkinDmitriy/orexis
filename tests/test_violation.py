@@ -132,13 +132,13 @@ def test_a_shape_the_compiler_cannot_say_refuses():
         ex:S a sh:NodeShape ; sh:targetClass ex:Thing ; sh:closed true ;
             sh:property [ sh:path ex:p ; sh:hasValue ex:v ] .
         ex:T a sh:NodeShape ; sh:targetClass ex:Thing ;
-            sh:property [ sh:path ex:p ; sh:minCount 3 ] .
+            sh:property [ sh:path ex:p ; sh:pattern "^x" ] .
         ex:U a sh:NodeShape ; sh:property [ sh:path ex:p ; sh:hasValue ex:v ] .
     """, format="turtle")
     ex = rdflib.Namespace("http://example.org/x#")
     with pytest.raises(Unsupported, match="closed"):
         unmet_select(g, ex.S)
-    with pytest.raises(Unsupported, match="minCount"):
+    with pytest.raises(Unsupported, match="pattern"):
         unmet_select(g, ex.T)
     with pytest.raises(Unsupported, match="targets nothing"):
         unmet_select(g, ex.U)

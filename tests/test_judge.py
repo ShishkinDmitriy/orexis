@@ -51,10 +51,10 @@ def _border_and_planner(monkeypatch):
 
 
 def test_verdicts_agree_with_the_full_report_and_read_the_data_once(monkeypatch):
-    """The search's door (#547) and the gates' door are one judge: the same world held to the
-    same shapes answers the same (severity, focus, source) triples, whether the report is
-    read as N-Triples by the store's parser or as Turtle by rdflib — and the world crosses
-    into rudof once for however many shapes graphs are asked."""
+    """The parity oracle and the gates' door are one judge: the same world held to the same
+    shapes answers the same (severity, focus, source) triples, whether the report is read
+    as N-Triples by the store's parser or as Turtle by rdflib — and the world crosses into
+    rudof once for however many shapes graphs are asked."""
     from orexis_agent_deliberation import judge as J
     from orexis_agent_deliberation.conformance import _shapes_and_vocabulary
     agent, planner, here, border = _border_and_planner(monkeypatch)
@@ -73,24 +73,6 @@ def test_verdicts_agree_with_the_full_report_and_read_the_data_once(monkeypatch)
                         for r in results.subjects(rdflib.RDF.type, J._SH.ValidationResult)}
             assert {(v.severity, v.focus, v.source) for v in found} == expected
         assert package, "the packages' shapes report something about a fresh world, or this test proves nothing"
-    finally:
-        planner.imaginarium = None
-
-
-def test_a_target_resolved_in_the_imaginarium_is_the_target_resolved_over_the_text(monkeypatch):
-    """A shape's SPARQL target asked of the store that holds the world (#547) names the same
-    nodes as the same select loaded from the border text — the wants ride only in the text,
-    and no target reads one."""
-    from orexis_agent_deliberation import judge as J
-    from orexis_agent_deliberation.conformance import _shapes_and_vocabulary
-    agent, planner, here, border = _border_and_planner(monkeypatch)
-    try:
-        _, shapes = _shapes_and_vocabulary()
-        over_text, _ = J._resolved_ttl(shapes, border)
-        in_store, _ = J._resolved_ttl(shapes, border, query=planner._resolver(here))
-        target = lambda text: {line for line in text.splitlines() if f"<{J._SH.targetNode}>" in line}
-        assert target(in_store) == target(over_text) and target(over_text), \
-            "the same targets, and some — an empty set would agree about nothing"
     finally:
         planner.imaginarium = None
 

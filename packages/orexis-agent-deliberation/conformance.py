@@ -23,7 +23,8 @@ import rdflib
 
 from assembly import loader
 
-from orexis_agent_deliberation.judge import VIOLATION, Resolver, crossed, judge, verdicts
+from orexis_agent_deliberation.judge import crossed, judge
+from orexis_agent_progression import violation
 from orexis_agent_progression.store import DECLARATION
 
 from orexis_agent_progression.store import Store
@@ -94,30 +95,17 @@ def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
     return _conforms(crossed(data), data, focus)   # once, however many verdicts share it
 
 
-def conforms_at(border: str, held: rdflib.Graph, focus: str,
-                query: Resolver | None = None) -> tuple[bool, str]:
-    """The search's legality check: a world already at the border, held to the packages'
-    shapes about `focus` and to the shapes `focus` holds — one verdict, no graph in between.
-
-    `border` is the world as N-Triples with its blank nodes skolemized (`judge.crossed_text`,
-    #485). `held` is the shapes this agent holds, carved ONCE per pass by `held_shapes` (#547)
-    — the base they are carved from does not change inside a pass, so carving per winner was
-    the same walk repeated. `query` resolves each shape's SPARQL target against the world the
-    caller holds, so the text is not loaded a second time to ask it. The two shapes graphs
-    are judged by one reading of the data (`judge.verdicts`), and the split is the one
-    `_conforms` below makes for the gates: the packages' shapes filtered to results ABOUT
-    the asker, the held shapes unfiltered because ownership already makes every result about
-    the asker (the second-pass comment there says why a focus filter is not trusted for them).
-
-    The report is a line per violation, for the log; nothing on this path prints prose.
+@functools.lru_cache(maxsize=8)
+def legality_selects(focus: str) -> dict:
+    """The packages' shapes about ONE agent, each compiled to the select whose rows are its
+    violations (#548) — what the search holds a candidate world to, in the imaginarium, in
+    place of the judge. Cached by focus: the files cannot change inside a process, and a
+    planner is built per pass. The shapes the agent HOLDS are not here; they arrive in the
+    data, are carved per pass by `held_shapes` and compiled beside these by the planner.
+    A shape the compiler cannot say refuses at the first pass, never at the gates alone.
     """
     _, shapes = _shapes_and_vocabulary()
-    package, own = verdicts(border, shapes, held, query=query)
-    violated = ([v for v in package if v.severity == VIOLATION and v.focus == focus]
-                + [v for v in own if v.severity == VIOLATION])
-    return not violated, "\n".join(
-        f"{v.focus} violates {v.source}" + (f" with {v.value}" if v.value else "")
-        for v in sorted(violated))
+    return violation.report_selects(shapes, focus_node=rdflib.URIRef(focus))
 
 
 def _conforms(border: str, data: rdflib.Graph, focus: str | None) -> tuple[bool, str]:
