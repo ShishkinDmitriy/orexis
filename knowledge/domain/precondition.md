@@ -44,8 +44,10 @@ and hands them back with the path a plan walked; a [remembered plan](/domain/rem
 keeps them per step. An absence a rule requires is not among them — it is the regression's
 to state.
 
-# Not built yet
+# The chain
 
-The chain's regressed precondition, and the ASK that keys a remembered plan by it, are
-[#551](https://github.com/ShishkinDmitriy/orexis/issues/551). Nothing reads a step's
-premises yet except the tests that pin them.
+A [remembered plan](/domain/remembered-plan.md) is keyed by the regression of its steps'
+premises (#551): step n's less what steps 1 to n−1 add, asked of the present as one query, a
+keyed reading by class and key and never by its value. What is not yet in it is an absence a
+rule requires — a `FILTER NOT EXISTS` in an availability select — which the first-step menu
+check covers for the first step alone. Lifting to variables is the seam after this.

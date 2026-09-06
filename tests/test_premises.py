@@ -81,7 +81,7 @@ def test_the_ledger_keeps_the_premises_and_hands_them_back(monkeypatch):
 def test_a_remembered_plan_keeps_each_steps_premises(monkeypatch):
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     plan = planner.plan(desire)
-    remembered.lift(agent, desire.uri, list(plan.steps), "some-world", None)
+    remembered.lift(agent, desire.uri, list(plan.steps), None)
     kept = remembered.remembered_for(agent, desire.uri)[0][1]
     assert [s.premises for s in kept] == [s.premises for s in plan.steps]
     assert all(s.premises for s in kept)
