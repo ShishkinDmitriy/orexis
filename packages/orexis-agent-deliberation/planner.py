@@ -49,7 +49,8 @@ from orexis_agent_progression.store import Raw, bind, bindings
 from .ontology import DELIBERATION
 from orexis_agent_progression.ontology import (promises_graph, DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
-from orexis_agent_deliberation.conformance import conforms, graph_from
+from orexis_agent_deliberation.conformance import conforms_at, graph_from
+from orexis_agent_deliberation.judge import crossed_text
 from orexis_agent_deliberation.judge import judge
 
 log = logging.getLogger("search")
@@ -843,13 +844,12 @@ class Planner:
         """
         if not plan.steps:
             return plan
-        #  THE ONE PLACE A WORLD IS STILL FLATTENED INTO RDFLIB, and it is affordable because
-        #  it happens once per pass rather than once per node: `conforms` carves the shapes an
-        #  agent holds out of its own data with `cbd`, which is an rdflib walk. Parsed from
-        #  the same text every other verdict this pass was given.
-        world = rdflib.Graph()
-        world.parse(data=self._border(node), format="nt")
-        ok, _ = conforms(world, focus=self.me.uri)
+        #  THE TEXT THE JUDGE ALREADY READS, and no graph in between (#485): the world went
+        #  pyoxigraph to text to rdflib and back to text — the parse alone 150 ms on
+        #  `world/simulation`, more than the verdict it fed. The shapes this agent holds are
+        #  carved out of the small data-borne base the law is carved from, which is the one
+        #  rdflib walk left, and it is over a few hundred triples rather than the world.
+        ok, _ = conforms_at(self._border(node), self._base, focus=self.me.uri)
         if ok:
             return plan
         log.warning("the world this plan would reach is one the society refuses — not taken")
@@ -1064,8 +1064,11 @@ class Planner:
         self._invariant_graphs = tuple(
             iri for iri in list(self.agent.beliefs.public_graphs())
             + list(self.agent.beliefs.recorded_graphs()) if iri != STATE_GRAPH)
-        self._invariant = (self.imaginarium.dump_nt(*self._invariant_graphs)
-                           + self._shapes.serialize(format="nt"))
+        #  SKOLEMIZED AT THE BORDER (#485), by the scheme `judge.crossed` uses for a graph: a
+        #  blank focus node is then legal in rudof's VALUES pre-binding, and the legality
+        #  check below reads this text as it is, with no rdflib graph in between.
+        self._invariant = crossed_text(self.imaginarium.dump_nt(*self._invariant_graphs)
+                                       + self._shapes.serialize(format="nt"))
         #  THE WANT'S VIOLATION SELECT, compiled once for the pass (#497) — None where the
         #  want is not a shape (a pattern want, an obligation, a call). A shape this compiler
         #  cannot say REFUSES here, loudly, rather than judging by something quieter: a want
@@ -1124,7 +1127,7 @@ class Planner:
         scoring a want met by a pattern asks the store at `node.graph` and never needs text.
         """
         if node.readings is None:
-            node.readings = self.imaginarium.dump_nt(node.graph)
+            node.readings = crossed_text(self.imaginarium.dump_nt(node.graph))
         return self._invariant + node.readings
 
     def _step_from(self, node, row, desire: Desire, bound: float | None = None):

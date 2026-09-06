@@ -382,18 +382,21 @@ def test_legality_is_judged_on_the_world_the_plan_would_actually_reach(monkeypat
     check that must be about the world the agent actually intends. It is not replayed at all
     now: the node that won already holds that world, so it is passed to the check.
 
-    Caught by looking at what `conforms` is handed, because a legality check that is quietly
-    about the wrong world passes exactly as loudly as one about the right world.
+    Caught by looking at what the legality check is handed — the border text since #485,
+    parsed here to read it — because a legality check that is quietly about the wrong world
+    passes exactly as loudly as one about the right world.
     """
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     judged = []
-    monkeypatch.setattr(search, "conforms",
-                        lambda world, focus=None: judged.append(world) or (True, ""))
+    monkeypatch.setattr(search, "conforms_at",
+                        lambda border, carve_from, focus=None: judged.append(border) or (True, ""))
 
     plan = planner.plan(desire)
 
     assert len(plan.steps) == 2 and len(judged) == 1, "the winner is checked, once"
-    readings = _readings_of(judged[0], agent.me.acts_for, MOISTURE)
+    world = rdflib.Graph()
+    world.parse(data=judged[0], format="nt")
+    readings = _readings_of(world, agent.me.acts_for, MOISTURE)
     assert len(readings) == 1 and readings[0] == pytest.approx(_last_predicted(planner, desire,
                                                                               plan)), \
         "the society judged a world the plan would not have reached"
