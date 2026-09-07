@@ -16,7 +16,8 @@ from orexis_agent_deliberation.effects import _where_body
 from orexis_agent_deliberation.planner import Planner, _Node
 from orexis_agent_progression.act import Step, premises_from_json, premises_json
 from orexis_agent_progression.ontology import STATE_GRAPH
-from test_planning import _thirsty_with_a_nearly_empty_butt
+from orexis_agent_progression.store import bindings
+from test_planning import _thirsty_with_a_nearly_empty_butt, MOISTURE
 from test_violation import CASES, _agent
 
 ACTUATION = "http://example.org/orexis/actuation#"
@@ -106,3 +107,43 @@ def test_the_where_body_is_found_past_nested_braces_and_strings():
     text = 'CONSTRUCT { ?s <p> "a } brace" } WHERE { GRAPH <g> { ?s <p> ?o } FILTER(?o != "}") }'
     assert _where_body(text) == ' GRAPH <g> { ?s <p> ?o } FILTER(?o != "}") '
     assert _where_body("SELECT ?x { ?x <p> ?y }") is None, "no WHERE keyword, no body"
+
+
+def test_an_optional_the_world_leaves_unbound_states_no_premise(monkeypatch):
+    """A rule's OPTIONAL the world does not satisfy reads nothing, and the premises say nothing
+    of it. The type lookup that follows the body used to bind such a variable FREELY: with no
+    moisture reading in the world, `?was` was unbound after the body, `OPTIONAL { ?was a ?t }`
+    bound it to any observation there was — the water butt's — and the premises of a dose
+    said the butt's reading was read. The lookup asks about a stand-in now, the node where
+    bound and nothing where not."""
+    from orexis_agent_deliberation import signature
+    from orexis_agent_progression.ontology import beliefs_graph
+    agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
+    agent.beliefs.update(f"""DELETE {{ GRAPH <{STATE_GRAPH}> {{ ?obs ?p ?o }} }}
+        WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?obs <{SOSA}observedProperty> <{MOISTURE}> ; ?p ?o }} }}""")
+    keys = signature.keys_of(agent.beliefs.query)
+    pump = bindings(agent.beliefs.query(
+        f"SELECT ?p WHERE {{ <{agent.me.uri}> actuation:hasActuator ?p }}"))[0]["p"]
+    read = effects.premises(agent.beliefs, ACTUATION + "Dosing", keyed=tuple(keys),
+                            me=agent.me.uri, subject=agent.me.acts_for, about=MOISTURE,
+                            state=STATE_GRAPH, beliefs=beliefs_graph("gardener"), litres=0.1,
+                            via=pump, want=desire.uri)
+    assert read, "the rule's chain is read"
+    typed = [t for t in read if t.predicate.value.endswith("#type")
+             and t.object.value == SOSA + "Observation"]
+    assert not typed, "no moisture reading stands, so no observation is a premise of the dose"
+
+
+def test_a_comment_in_a_rule_is_prose_and_not_a_string():
+    """The WHERE-body matcher skips strings so a brace inside one does not count; it did not
+    skip `#` comments, so an apostrophe in a rule's prose — "the engine's decimal" — opened a
+    string that never closed, and the body was None: no premises, silently, for every step of
+    that action, the moment a rule's comments held an odd number of them."""
+    text = """CONSTRUCT { ?s ?p ?o } WHERE {
+        #  a comment with an apostrophe: the engine's decimal, and a brace { that is prose
+        ?s ?p ?o .
+        OPTIONAL { ?s <urn:q> ?q }   # and a closing brace in prose: }
+    }"""
+    body = _where_body(text)
+    assert body is not None and "OPTIONAL { ?s <urn:q> ?q }" in body
+    assert _where_body("SELECT * WHERE { ?s ?p 'a { brace in a string' }") == " ?s ?p 'a { brace in a string' "
