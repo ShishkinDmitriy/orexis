@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: A predicted number is an interval, and a plan that cannot be certainly met has a look in it
-status: accepted
+status: superseded
+superseded-by: a-qualitative-state-is-a-class-the-domain-declares
 timestamp: 2026-09-06T12:00:00Z
 description: >-
   The numeric half of the-future-is-a-cone. A reading is a point with a width — widened by
@@ -13,6 +14,15 @@ description: >-
   tolerance owner separate from the effect and from freshness. The plan it finds that a point
   search cannot is dose, look, dose.
 ---
+
+> **Superseded** by
+> [a-qualitative-state-is-a-class-the-domain-declares](/decisions/a-qualitative-state-is-a-class-the-domain-declares.md)
+> (2026-09-07). Built as PR #575 and refused by the sovereign on reading it: a range or an
+> interval is not a concept of the core. What this record was right about — the search plans on
+> templates, and a point prediction with a tolerance applied at verification is wrong — stands;
+> the template is a class the domain declares, not an interval the core carries, and the numbers
+> are progression's. Its dose-look-dose plan survives as a seam there, an effect with two
+> possible outcome classes. Its three refusals hold by absence.
 
 # The claim
 

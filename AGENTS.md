@@ -173,9 +173,10 @@ it is a record wearing a bullet.
 - **The present is identified among the root's children, never asserted from one** — a child is
   a prediction and the present is observed, so what execution decides is which imagined world
   the real one landed in, and the cone under the match survives while its siblings die.
-- **A predicted number is an interval, and a plan that cannot be certainly met has a look in it** —
-  a point with a tolerance applied at verification can neither find the look that narrows the
-  width nor refuse the step whose uncertainty crosses the law.
+- **A number is the package's and a class is the core's** — the domain declares what a reading
+  can BE, a step's precondition and effect are class triples, and progression sizes the act that
+  gets there when it is taken; a partition and an interval were both built into the core and
+  refused on reading, because a concept only the kernel can name is a concept nobody can state.
 
 ## The rules the code lives by
 

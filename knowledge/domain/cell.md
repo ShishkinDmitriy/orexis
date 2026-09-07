@@ -29,6 +29,15 @@ number, stays point-valued, and that is the discipline relevance keeps applied t
 boundary the parser cannot see would collapse two worlds a rule tells apart, quietly. The
 butt's level, compared against the litres a serve needs, is such a property today.
 
+# Refused as a concept of the core
+
+The sovereign's ruling of 2026-09-07: a range or a cell is not the core's — the domain declares
+what a reading can BE as classes with datatype restrictions, minted per want by the derivation
+that mints the want, and a reading is classified by entailment. What this page describes is the
+code as it stands until [#576](https://github.com/ShishkinDmitriy/orexis/issues/576) lands, and
+what the class keeps of it is the identity: two readings no rule tells apart are one fact. See
+[a-qualitative-state-is-a-class-the-domain-declares](/decisions/a-qualitative-state-is-a-class-the-domain-declares.md).
+
 # Where it is used, and where it is not
 
 A [reading](/domain/reading.md) is matched by its cell where a present is looked up among the

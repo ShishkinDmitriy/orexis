@@ -151,6 +151,11 @@ Each row is one pull request with the suite green, and each closes when its issu
 | 8 | met, law, estimate and cost read the ends; a dose is an interval | [#557](https://github.com/ShishkinDmitriy/orexis/issues/557) | |
 | 9 | staleness widens a reading | [#558](https://github.com/ShishkinDmitriy/orexis/issues/558) | |
 
+Items 7 to 9 are superseded (2026-09-07): a range is not a concept of the core, so the numeric
+half went to
+[a-qualitative-state-is-a-class-the-domain-declares](/decisions/a-qualitative-state-is-a-class-the-domain-declares.md)
+and its issues #576 and #579, and #556 to #558 are closed. Item 6 stands, deprioritised.
+
 The order is dependency first and value second. The precondition is the seam the rest hangs on
 and is small. The compiled law comes before a re-scored cone because a per-candidate judge
 verdict has a fixed floor that re-scoring would multiply. The cone comes before intervals because

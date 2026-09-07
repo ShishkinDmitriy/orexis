@@ -106,7 +106,8 @@ The search itself, and the two places a language model is allowed near it.
 * [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) - Thin BDI: the LLM drives deliberation, so the formal layer becomes load-bearing rather than optional.
 * [there-is-no-bdi-ontology](/decisions/there-is-no-bdi-ontology.md) - FIPA, DOLCE, prov:Plan, WoT TD and hmas surveyed and refused: the mind crosses no trust boundary, and BDI's words are already ours.
 * [the-future-is-a-cone-and-the-present-is-identified-in-it](/decisions/the-future-is-a-cone-and-the-present-is-identified-in-it.md) - The future is a tree of diffs under the observed present; execution identifies which child the present is in, never asserts one.
-* [a-predicted-number-is-an-interval](/decisions/a-predicted-number-is-an-interval.md) - A number in a possible world has two ends; met is the interval inside the region, and a chain too wide has a look in it.
+* [a-predicted-number-is-an-interval](/decisions/a-predicted-number-is-an-interval.md) - SUPERSEDED. A number in a possible world has two ends; met is the interval inside the region. Built as PR #575 and refused.
+* [a-qualitative-state-is-a-class-the-domain-declares](/decisions/a-qualitative-state-is-a-class-the-domain-declares.md) - A range is not the core's: the domain declares classes, a reading is classified by entailment, the core plans on class triples, progression sizes the act.
 
 # The market
 
