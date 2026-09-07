@@ -5,7 +5,7 @@ term: http://example.org/orexis/deliberation#RememberedPlan
 description: >-
   A plan that reached its end, lifted into the agent's own graph and hung on the want it
   served, its steps carrying their predictions and premises. Keyed by its regressed
-  precondition — what its rules read that the chain did not produce, computed from the steps
+  precondition — what its rules read that the plan did not produce, computed from the steps
   and never stored: a pursuit of that want where those facts hold and the first step is on the
   menu adopts it with no search; where a fact is absent the trace names it; one that fails a
   step is forgotten. A method on the want, filled — not yet lifted to variables.
@@ -25,8 +25,8 @@ applies is written: that is computed from the steps each time it is asked.
 # How it is used
 
 Before searching for a want, the deliberator asks each plan remembered for it whether it
-applies here: the chain's **regressed precondition** — step n's premises less what steps 1 to
-n−1 add, the facts the chain read of the world and did not itself produce — held to the present
+applies here: the plan's **regressed precondition** — step n's premises less what steps 1 to
+n−1 add, the facts the plan read of the world and did not itself produce — held to the present
 as one query, a keyed reading asked by class and key and never by its value; and the first
 step on the menu now, which is the availability's own answer and carries what a fact set
 cannot, a direction among them. One that applies is adopted as the plan, its outcome

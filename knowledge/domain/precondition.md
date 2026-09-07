@@ -4,7 +4,7 @@ title: Precondition
 term: http://example.org/orexis/progression#premises
 description: >-
   What must be true of a world for a step's diff to apply — the instantiated facts the step's
-  effect rule read when it produced the diff. A chain's precondition is the regression of its
+  effect rule read when it produced the diff. A plan's precondition is the regression of its
   steps'. Checked by asking the present, never by re-running the rule. Named by the record
   the-future-is-a-cone; carried on the step as its premises (#550).
 ---
@@ -17,9 +17,9 @@ the world in which the diff is what the rule says. An [action](/domain/action.md
 applicability as a query, and that query is the template; the precondition is one binding of it,
 taken at the moment the step was planned.
 
-A chain of steps has a precondition too, and it is not the union. Step two's premises include
-what step one produced, and those are not asked of the present because the chain supplies them.
-The chain's precondition is the **regression**: each step's facts minus what the steps before it
+A plan has a precondition too, and it is not the union. Step two's premises include
+what step one produced, and those are not asked of the present because the plan supplies them.
+The plan's precondition is the **regression**: each step's facts minus what the steps before it
 add, plus the absences those steps create that a later step needs. That regressed set is what
 makes a [remembered plan](/domain/remembered-plan.md) apply wherever it holds, whatever else the
 present says, and it is the first half of a [method](/domain/method.md).
@@ -46,7 +46,7 @@ and hands them back with the path a plan walked; a [remembered plan](/domain/rem
 keeps them per step. An absence a rule requires is not among them — it is the regression's
 to state.
 
-# The chain
+# The plan
 
 A [remembered plan](/domain/remembered-plan.md) is keyed by the regression of its steps'
 premises (#551): step n's less what steps 1 to n−1 add, asked of the present as one query, a

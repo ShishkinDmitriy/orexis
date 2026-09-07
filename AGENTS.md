@@ -63,6 +63,18 @@ definitions never meet. This is the discipline
 `tests/test_knowledge.py::test_no_two_domain_pages_state_the_same_claim` already enforces between
 pages — one claim, one owner — applied to the vocabulary itself.
 
+**A concept is defined once and then used by its name — ubiquitous language.** A page grounds a
+word in prose, and that prose is where the meaning lives; every later use — a page, a commit
+message, a docstring, an issue, an answer to the sovereign — uses THE WORD, never a synonym and
+never a paraphrase. A plan is steps, so a plan is not a "chain" and a step is not a "move" or a
+"link"; a precondition is not "what the rule read" once its page has said that is what it is. A
+synonym is how one concept becomes two: a reader meets both words, looks for the difference, and
+the definitions drift apart from there. The one legitimate second name is the term's — the page
+says which IRI it is bound to, and code speaks the term where prose speaks the word — and where
+a page and its term disagree (`precondition.md` is bound to `progression:premises`) that is a
+debt to settle, not a licence to alternate. A synonym found in a page is fixed in the page, not
+tolerated by the reader.
+
 **One concept, one article.** If a page turns out to define a second thing, that thing gets an
 article and the two link — ownership is then structural, and there is nothing to keep in step.
 Three clauses make that workable, and each was learned by getting it wrong:
