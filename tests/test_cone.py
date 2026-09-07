@@ -216,3 +216,93 @@ def test_a_reading_the_want_is_not_about_may_drift_and_the_moisture_cone_survive
     desire = next(g for g in agent.pursuing() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     planner.plan(desire)
     assert _kept_worlds(agent) == 0, "a moisture reading off the prediction is not the kept world — exact, until intervals"
+
+
+# --- a surprise is classified (#570) --------------------------------------------------------
+
+def _surprise(agent) -> str | None:
+    rows = bindings(agent.beliefs.query_union(f"""
+SELECT ?s WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?d a deliberation:Deliberation . OPTIONAL {{ ?d deliberation:surprise ?s }} }} }}"""))
+    assert len(rows) == 1
+    return rows[0].get("s")
+
+
+def test_a_move_the_budget_withheld_is_completed_and_the_surprise_is_read_as_withheld(monkeypatch):
+    """A budget of eight worlds stops the search with children un-expanded: worlds it
+    reached and never took a row from. The van drives to one of them and then takes a drive
+    that child never forked. The next pass finds no kept world, completes what the last pass
+    left — the withheld rows, and every row of an un-expanded node — finds the present among
+    the new worlds, and says the surprise was a world it chose not to imagine."""
+    agent = _driver(monkeypatch, "c0_0", "c1_2")
+    planner = Planner(agent, agent.me)
+    planner.budget = 8
+    first = planner.plan(_goal(agent))
+    assert first.steps and _surprise(agent) is None
+    imagined = {f[2] for n in planner._nodes for f in n.diff[0] if f[1] == C + "at"} | {W + "c0_0"}
+    node, row = None, None
+    for n in planner._nodes:
+        if not n.taken or n.expanded or n.verdict is not None:
+            continue
+        #  A drive from this un-expanded world to a cell NO kept world holds the van at —
+        #  a cell another path reached is a kept world, and the present would simply be it.
+        row = next((r for r in planner._candidates(n, _goal(agent))
+                    if r.action == C + "Drive" and r.about not in imagined), None)
+        if row is not None:
+            node = n
+            break
+    assert node is not None, "a budget of eight leaves a reached world un-expanded, with a drive nobody imagined"
+    for step in node.taken:
+        _take(agent, step)                            # the van drives to that child's world
+    here = node.taken[-1].about
+    agent.beliefs.update(f"DELETE DATA {{ GRAPH <{STATE_GRAPH}> {{ <{W}van> <{C}at> <{here}> . }} }}")
+    agent.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <{W}van> <{C}at> <{row.about}> . }} }}")
+    again = planner.plan(_goal(agent))
+    said = _surprise(agent)
+    assert said is not None and said.startswith("withheld:"), said
+    assert _kept_worlds(agent) >= 1, "found among the completed worlds and resumed there"
+    assert again.steps, "and the delivery goes on from there"
+
+
+def test_a_change_no_lever_makes_is_read_as_exogenous(monkeypatch):
+    agent = _driver(monkeypatch, "c0_0", "c1_2")
+    planner = Planner(agent, agent.me)
+    first = planner.plan(_goal(agent))
+    _take(agent, first.steps[0])
+    agent.beliefs.update(f"DELETE DATA {{ GRAPH <{STATE_GRAPH}> {{ <{W}parcel> <{C}at> <{W}c1_2> . }} }}")
+    agent.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <{W}parcel> <{C}at> <{W}c2_2> . }} }}")
+    planner.plan(_goal(agent))
+    said = _surprise(agent)
+    assert said is not None and said.startswith("exogenous:") and "parcel" in said, said
+    assert _kept_worlds(agent) == 0
+
+
+def test_a_world_the_law_refused_is_kept_and_the_exit_is_planned_from_it(tmp_path, monkeypatch):
+    """The tempting lever plants the marker the law forbids; the search forks that world,
+    refuses it, and keeps it with its verdict. The world then enters it anyway. The next pass
+    identifies the present in the refused world, re-roots there, and plans the exit."""
+    from conftest import write_reading
+    from test_avoidance import MARKER, _avoidance_row, _lawful_gardener, _toy_pair
+    from test_planning import MOISTURE
+    exit_toy = '''
+toy:Exit a orexis:Action ;
+    orexis:available """SELECT ?want ?via WHERE { VALUES (?want ?about) { $wants } BIND($me AS ?via) }""" ;
+    orexis:retracts """CONSTRUCT { <urn:naughty> ?p ?o } WHERE {
+            GRAPH $state { <urn:naughty> ?p ?o } }""" ;
+    sh:construct "CONSTRUCT {} WHERE {}" .
+'''
+    agent, st = _lawful_gardener(tmp_path, monkeypatch, _toy_pair() + exit_toy)
+    moisture = next(g for g in agent.pursuing() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
+    planner = Planner(agent, agent.me)
+    first = planner.plan(moisture)
+    refused = [n for n in planner._nodes if n.verdict == search.trace.FORBIDDEN]
+    assert refused, "the tempting world was forked, refused, and kept"
+    tempting = refused[0]
+    adds, _ = tempting.taken[0].predicts
+    landed = next(f[4] for f in adds if f[0] == "keyed")
+    write_reading(agent, landed, MOISTURE)
+    st.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ {MARKER} }} }}")
+    moisture = next(g for g in agent.pursuing() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
+    planner.plan(moisture)
+    assert _kept_worlds(agent) >= 1 and _surprise(agent) is None, "the present was the refused world, kept"
+    plan = Planner(agent, agent.me).plan(_avoidance_row(agent))
+    assert plan.steps and plan.steps[0].action == "urn:toy#Exit", "and the exit is plannable from inside it"
