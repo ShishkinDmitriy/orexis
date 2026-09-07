@@ -26,6 +26,9 @@ PREFIX review: <http://example.org/orexis/review#>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX orexis:   <http://example.org/orexis#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX ssn: <http://www.w3.org/ns/ssn/>
 
 #  Both rules ask what a thing IS, literally — no `rdfs:subClassOf*` walk, because the
 #  vocabulary's entailments are asserted before any rule runs (orexis/inference.py). What they
@@ -109,4 +112,97 @@ WHERE  {
         ?cap ssn-system:hasSystemProperty ?freq .
         ?freq a ssn-system:Frequency ; schema:value ?s ; schema:unitCode unit:SEC .
       } GROUP BY ?agent }
+} ;
+
+#  WHAT A READING CAN BE, per (subject, property) that states a range (#576). The three bands
+#  of the operating region as member classes of `sensing:BelowRegion`, `sensing:InRegion` and
+#  `sensing:AboveRegion`, each defined in OWL — an intersection of the observation class, the
+#  subject and the property by `owl:hasValue`, and the result by a datatype restriction — so
+#  that a reader with an OWL reasoner sees exactly what `Store.entail` asserts. The region is
+#  the same intersection `desires.ru` computes for the want: the highest floor and the lowest
+#  ceiling any range applying to the subject states, its own or an instrument's. Two rules
+#  reading one premise, the range; the class says what a reading IS, the want's shape what
+#  must hold. Minted at GENESIS and public rather than in the desire modality's rebuild
+#  because the sensed writer classifies a reading in the belief base, where the desire
+#  modality's graphs are not. `onDatatype` documents the reading's type; the entailment
+#  compares numerically, so a double reading is classified like a decimal one.
+INSERT { GRAPH $derived {
+    ?below a owl:Class ; rdfs:subClassOf sensing:BelowRegion ; rdfs:label ?belowLabel ;
+        owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation
+            [ a owl:Restriction ; owl:onProperty sosa:hasFeatureOfInterest ; owl:hasValue ?subject ]
+            [ a owl:Restriction ; owl:onProperty sosa:observedProperty ; owl:hasValue ?property ]
+            [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ;
+              owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ;
+                                   owl:withRestrictions ( [ xsd:maxExclusive ?low ] ) ] ] ) ] .
+    ?inside a owl:Class ; rdfs:subClassOf sensing:InRegion ; rdfs:label ?insideLabel ;
+        owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation
+            [ a owl:Restriction ; owl:onProperty sosa:hasFeatureOfInterest ; owl:hasValue ?subject ]
+            [ a owl:Restriction ; owl:onProperty sosa:observedProperty ; owl:hasValue ?property ]
+            [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ;
+              owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ;
+                                   owl:withRestrictions ( [ xsd:minInclusive ?low ] [ xsd:maxInclusive ?high ] ) ] ] ) ] .
+    ?above a owl:Class ; rdfs:subClassOf sensing:AboveRegion ; rdfs:label ?aboveLabel ;
+        owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation
+            [ a owl:Restriction ; owl:onProperty sosa:hasFeatureOfInterest ; owl:hasValue ?subject ]
+            [ a owl:Restriction ; owl:onProperty sosa:observedProperty ; owl:hasValue ?property ]
+            [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ;
+              owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ;
+                                   owl:withRestrictions ( [ xsd:minExclusive ?high ] ) ] ] ) ] . } }
+$given
+WHERE {
+    { SELECT ?property ?subject (MAX(?min) AS ?low) (MIN(?max) AS ?high) WHERE {
+        ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?need .
+        ?need ssn:forProperty ?property .
+        { ?subject ssn-system:hasOperatingRange ?range }
+        UNION
+        { ?instrument sensing:monitors ?subject ; ssn-system:hasOperatingRange ?range }
+        ?range ssn-system:inCondition ?condition .
+        ?condition ssn:forProperty ?property ; schema:minValue ?min ; schema:maxValue ?max .
+      } GROUP BY ?property ?subject }
+    FILTER(?low <= ?high)
+    BIND(CONCAT("http://example.org/orexis#band.", ENCODE_FOR_URI(STRAFTER(STR(?subject), "#")), ".",
+                ENCODE_FOR_URI(STRAFTER(STR(?property), "#"))) AS ?stem)
+    BIND(IRI(CONCAT(?stem, ".below")) AS ?below)
+    BIND(IRI(CONCAT(?stem, ".inside")) AS ?inside)
+    BIND(IRI(CONCAT(?stem, ".above")) AS ?above)
+    BIND(CONCAT(STRAFTER(STR(?property), "#"), " of ", STRAFTER(STR(?subject), "#"), " below ", STR(?low)) AS ?belowLabel)
+    BIND(CONCAT(STRAFTER(STR(?property), "#"), " of ", STRAFTER(STR(?subject), "#"), " inside ", STR(?low), "-", STR(?high)) AS ?insideLabel)
+    BIND(CONCAT(STRAFTER(STR(?property), "#"), " of ", STRAFTER(STR(?subject), "#"), " above ", STR(?high)) AS ?aboveLabel)
+} ;
+
+#  And past the ENVELOPE: below the survival floor, above the survival ceiling — each also a
+#  member of the region band it lies in, by the families' own subclass axioms.
+INSERT { GRAPH $derived {
+    ?belowFloor a owl:Class ; rdfs:subClassOf sensing:BelowFloor ; rdfs:label ?floorLabel ;
+        owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation
+            [ a owl:Restriction ; owl:onProperty sosa:hasFeatureOfInterest ; owl:hasValue ?subject ]
+            [ a owl:Restriction ; owl:onProperty sosa:observedProperty ; owl:hasValue ?property ]
+            [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ;
+              owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ;
+                                   owl:withRestrictions ( [ xsd:maxExclusive ?floor ] ) ] ] ) ] .
+    ?aboveCeiling a owl:Class ; rdfs:subClassOf sensing:AboveCeiling ; rdfs:label ?ceilingLabel ;
+        owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation
+            [ a owl:Restriction ; owl:onProperty sosa:hasFeatureOfInterest ; owl:hasValue ?subject ]
+            [ a owl:Restriction ; owl:onProperty sosa:observedProperty ; owl:hasValue ?property ]
+            [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ;
+              owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ;
+                                   owl:withRestrictions ( [ xsd:minExclusive ?ceiling ] ) ] ] ) ] . } }
+$given
+WHERE {
+    { SELECT ?property ?subject (MAX(?least) AS ?floor) (MIN(?most) AS ?ceiling) WHERE {
+        ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?need .
+        ?need ssn:forProperty ?property .
+        { ?subject ssn-system:hasSurvivalRange ?envelope }
+        UNION
+        { ?instrument sensing:monitors ?subject ; ssn-system:hasSurvivalRange ?envelope }
+        ?envelope ssn-system:inCondition ?tolerated .
+        ?tolerated ssn:forProperty ?property ; schema:minValue ?least ; schema:maxValue ?most .
+      } GROUP BY ?property ?subject }
+    BIND(CONCAT("http://example.org/orexis#band.", ENCODE_FOR_URI(STRAFTER(STR(?subject), "#")), ".",
+                ENCODE_FOR_URI(STRAFTER(STR(?property), "#"))) AS ?stem)
+    BIND(IRI(CONCAT(?stem, ".belowFloor")) AS ?belowFloor)
+    BIND(IRI(CONCAT(?stem, ".aboveCeiling")) AS ?aboveCeiling)
+    BIND(CONCAT(STRAFTER(STR(?property), "#"), " of ", STRAFTER(STR(?subject), "#"), " below the floor ", STR(?floor)) AS ?floorLabel)
+    BIND(CONCAT(STRAFTER(STR(?property), "#"), " of ", STRAFTER(STR(?subject), "#"), " above the ceiling ", STR(?ceiling)) AS ?ceilingLabel)
 }
+

@@ -44,17 +44,19 @@ places on every literal, goes with the build, and a rule writes the number it me
 
 **The plant domain chooses classes over its ranges.** `orexis-plant-water` declares what a
 reading of its properties can be — dry, in region, wet, and the butt's empty, low, full — as OWL
-classes with datatype restrictions on the value they classify. Dry is relative to the plant, and
-a restriction takes a fixed literal, so the MEMBER classes are minted per want by the derivation
-that mints the region want from the range the world states (`desires.ru`, on the desire
-modality's rebuild, so a class keyed to a pick moves when the pick does). The shape says what
-must hold and the class says what a reading is, both from one range, so there is one owner. The
-domain already had the word: `water:Band` with `LOW` and `OK`, the alarm band a board keeps,
-stated as instances. A reading is classified by entailment, the way the closure already turns
+classes with datatype restrictions on the value they classify — the [bands](/domain/band.md),
+which the domain already had as a word. Dry is relative to the plant, and a restriction takes a
+fixed literal, so the MEMBER classes are minted per (subject, property) that states a range, at
+GENESIS by sensing's `rules.ru` from the same intersection of ranges `desires.ru` computes for
+the want — at genesis and public rather than in the desire modality's rebuild, because the
+sensed writer classifies a reading in the belief base, where the modality's graphs are not; a
+band keyed to a pick, when one is wanted, would be the rebuild's. The shape says what must hold
+and the class says what a reading is, both from one range, so there is one owner. A reading is
+classified by ENTAILMENT (`Store.entail`, #576), the way the closure already turns
 `owl:hasValue` into ground triples (`agent/inference.py`, rule 5): a datatype restriction over a
-number is the second OWL construct a materialising closure can honour, computed for a reading
-and never asserted, since the interpreter already knows the number. This is the plant domain's
-decision, and another domain may decide otherwise without the core noticing.
+number is the second OWL construct materialised here, asserted on the reading's node when it is
+written, when a possible world forks, and when a volume boots, and gone with the node. This is
+the plant domain's decision, and another domain may decide otherwise without the core noticing.
 
 **Progression computes the numbers.** The effect rule stays SPARQL in the package and describes
 what a dose reaches in the domain's vocabulary; the actuator sizes the dose and the bidder the
@@ -97,9 +99,8 @@ one world.
 
 # Seams left open
 
-- **Where the plant domain's membership is computed** — at the signature, reading the T-Box's
-  restrictions, or materialised into a possible world at the fork. Measured in #576. Either way
-  it is the domain's derivation the core runs, not a number the core reads.
+- **A band keyed to a pick** — the aim, revisable — would have to be minted on the desire
+  modality's rebuild rather than at genesis, and classified from there; not wanted yet.
 - **An effect with two possible outcome classes**, and the look that tells them apart — the
   dose-look-dose plan the interval record wanted, restated as a disjunctive effect. Not built.
 - **The interval as the package's own tool** for sizing under a learned tolerance, inside
@@ -111,7 +112,7 @@ one world.
 
 # The build
 
-The plant domain's choice, built:
+The plant domain's choice, built in two parts:
 
 [#576](https://github.com/ShishkinDmitriy/orexis/issues/576) mints the classes and classifies a
 reading, and retires the kernel partition; [#579](https://github.com/ShishkinDmitriy/orexis/issues/579)

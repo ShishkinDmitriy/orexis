@@ -3,14 +3,16 @@ type: Domain Concept
 title: Band
 term: http://example.org/orexis/water#Band
 description: >-
-  One of the three zones a region divides a property into — LOW, OK, HIGH — and the agent's
-  verdict about its own subject rather than a fact about the number. Desire-relative by
-  construction: the same 0.30 is LOW for a fern and OK for a succulent, because their subjects
-  need different things. NEVER STORED, always recomputed from the region and the reading, so
-  there is no second copy to fall out of step. What retired is `ag:bandLow` and `ag:bandHigh` —
-  two hand-picked decimals in an agent's beliefs — and not the word: a band is still what it
-  always was, and it is on the wire, in the firmware, and read by a host deciding whether to
-  convene.
+  One of the zones a region divides a property into — LOW, OK, HIGH, and past the envelope —
+  and the agent's verdict about its own subject rather than a fact about the number.
+  Desire-relative by construction: the same 0.30 is LOW for a fern and OK for a succulent,
+  because their subjects need different things. Since #576 a band is a CLASS of readings the
+  domain declares, minted per (subject, property) at genesis from the range the world states
+  and asserted on a reading by entailment when it is written or imagined — never a second
+  copy of the number, a conclusion the vocabulary draws and drops with the node. What retired
+  is `ag:bandLow` and `ag:bandHigh`, two hand-picked decimals in an agent's beliefs, and not
+  the word: a band is on the wire, in the firmware, read by a host deciding whether to convene,
+  and now what a plan's precondition says a reading IS.
 ---
 
 # What it is
@@ -23,8 +25,36 @@ said; the band is what this agent makes of it. So the same 0.30 is LOW for a fer
 succulent — which is what the word always meant here, except that the difference is now stated
 publicly by the subjects rather than implicitly by numbers nobody could check.
 
-**Never stored, always recomputed** from the region and the current reading. There is no second
-copy that could disagree with the two facts it comes from.
+**Never a second copy of the number.** The verdict is a conclusion the vocabulary draws from the
+region and the reading, and since #576 it is drawn by ENTAILMENT and asserted on the reading's
+node — when the sensed writer writes one, when a possible world forks one, when a volume boots —
+and gone with the node at the next upsert. It cannot disagree with the two facts it comes from,
+because it is not kept apart from them.
+
+# As classes, since #576
+
+Deliberation is on triples and a number is not special
+([deliberation-is-on-triples-and-a-number-is-not-special](/decisions/deliberation-is-on-triples-and-a-number-is-not-special.md)),
+and what a reading can be is decided inside the domain. Sensing declares the FAMILIES as classes
+of observations: `sensing:BelowRegion`, `sensing:InRegion`, `sensing:AboveRegion`, and past the
+envelope `sensing:BelowFloor` and `sensing:AboveCeiling`, each also below or above the region. A
+MEMBER is minted per (subject, property) that states a range, at genesis by sensing's `rules.ru`,
+defined in OWL — an intersection of the observation class, the subject and the property by
+`owl:hasValue`, and the result by a datatype restriction with the range's own bounds — so an
+outside reasoner reads exactly what the store asserts. The store's entailment door
+(`Store.entail`) is the second OWL construct materialised here, beside the closure's
+`owl:hasValue`.
+
+What the search does with it: a present is matched to a kept world by the bands its readings are
+in ([identification](/domain/identification.md)); a step's [precondition](/domain/precondition.md)
+states the standing reading by its band, one triple; a [remembered plan](/domain/remembered-plan.md)
+is keyed by that; and a predicted reading carries its band beside its number in the step's
+prediction. What the search does NOT yet do with it is plan on it alone: the number still moves
+a possible world, until [#579](https://github.com/ShishkinDmitriy/orexis/issues/579) takes the
+number out of the effect.
+
+The cell of #573 — a partition the kernel read off the readers' constants — was this concept
+without its owner, and is gone.
 
 # Whose verdict it is
 

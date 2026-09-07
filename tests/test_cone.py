@@ -35,9 +35,35 @@ def _take(agent, step):
             agent.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <{f[0]}> <{f[1]}> <{f[2]}> . }} }}")
 
 
-def signature_cells(planner, facts):
-    from orexis_agent_deliberation import signature
-    return signature.to_cells(frozenset(facts), planner._cells)
+RESULT = "http://www.w3.org/ns/sosa/hasSimpleResult"
+TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+
+
+def predicted_number(step) -> float:
+    adds, _ = step.predicts
+    return next(f[4] for f in adds if f[0] == "keyed" and f[3] == RESULT)
+
+
+def predicted_band(step) -> str:
+    adds, _ = step.predicts
+    return next(f[4] for f in adds if f[0] == "keyed" and f[3] == TYPE)
+
+
+def band_bounds(agent, cls: str) -> tuple:
+    """The facets of a minted band's OWL definition (#576): its low and high bound, either
+    None where the band is open on that side."""
+    rows = bindings(agent.beliefs.query(f"""
+SELECT ?minI ?minE ?maxI ?maxE WHERE {{
+  <{cls}> owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
+  ?r owl:onProperty sosa:hasSimpleResult ; owl:someValuesFrom/owl:withRestrictions ?facets .
+  OPTIONAL {{ ?facets rdf:rest*/rdf:first/xsd:minInclusive ?minI }}
+  OPTIONAL {{ ?facets rdf:rest*/rdf:first/xsd:minExclusive ?minE }}
+  OPTIONAL {{ ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?maxI }}
+  OPTIONAL {{ ?facets rdf:rest*/rdf:first/xsd:maxExclusive ?maxE }} }}"""))
+    r = rows[0]
+    lo = r.get("minI") or r.get("minE")
+    hi = r.get("maxI") or r.get("maxE")
+    return (float(lo) if lo is not None else None, float(hi) if hi is not None else None)
 
 
 def _kept_worlds(agent) -> int:
@@ -197,9 +223,10 @@ def test_a_reading_the_want_is_not_about_may_drift_and_the_moisture_cone_survive
     """A dry gardener plans a dose. The dose lands NEAR what was predicted, and the water
     butt's level moves meanwhile. A butt reading carries the same predicates a moisture
     reading does, so the view tells them apart by the property the want is about; and a
-    moisture reading off the prediction within the same CELL is the kept world (#573), since
-    no rule tells the two apart. The cone resumes and the pass finds the want where the dose
-    left it. A reading across a threshold is another world, and that is asserted too."""
+    moisture reading off the prediction within the same BAND is the kept world (#576) —
+    the domain says what a reading is, and two readings it calls the same are one fact. The
+    cone resumes and the pass finds the want where the dose left it. A reading in another
+    band is another world, and that is asserted too."""
     from conftest import write_reading
     from test_planning import MOISTURE, STORED
     monkeypatch.setenv("OREXIS_WORLD", "loner")
@@ -209,21 +236,21 @@ def test_a_reading_the_want_is_not_about_may_drift_and_the_moisture_cone_survive
     planner = Planner(agent, agent.me)
     plan = planner.plan(desire)
     assert plan.steps, "a dry gardener doses"
-    adds, _ = plan.steps[0].predicts
-    predicted = next(f[4] for f in adds if f[0] == "keyed")
-    lo, hi = next((f[4][1], f[4][2]) for f in planner._project(
-        signature_cells(planner, adds)) if f[0] == "keyed")
-    assert lo is not None and lo <= predicted < hi, "the predicted reading has a cell with both bounds"
-    write_reading(agent, predicted + 0.01, MOISTURE)  # lands near the prediction, inside its cell
+    predicted = predicted_number(plan.steps[0])
+    band = predicted_band(plan.steps[0])
+    assert band.startswith("http://example.org/orexis#band."), "the prediction says what the reading will be"
+    lo, hi = band_bounds(agent, band)
+    assert lo is not None and hi is not None and lo <= predicted <= hi, "the band the dose reaches has both bounds"
+    write_reading(agent, predicted + 0.01, MOISTURE)  # lands near the prediction, inside its band
     write_reading(agent, 2.5, STORED)                 # the butt's level moves meanwhile
     desire = next(g for g in agent.pursuing() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     again = planner.plan(desire)
     assert _kept_worlds(agent) > 0, "the butt drifted and the pot landed a hundredth off: the moisture cone stands"
     assert [s.action for s in again.steps] == [s.action for s in plan.steps[1:]], "the tail is what is left"
-    write_reading(agent, hi + 0.01, MOISTURE)         # across the threshold: another world
+    write_reading(agent, hi + 0.01, MOISTURE)         # into another band: another world
     desire = next(g for g in agent.pursuing() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     planner.plan(desire)
-    assert _kept_worlds(agent) == 0, "a reading across a threshold is not the kept world"
+    assert _kept_worlds(agent) == 0, "a reading in another band is not the kept world"
 
 
 # --- a surprise is classified (#570) --------------------------------------------------------
@@ -306,7 +333,7 @@ toy:Exit a orexis:Action ;
     assert refused, "the tempting world was forked, refused, and kept"
     tempting = refused[0]
     adds, _ = tempting.taken[0].predicts
-    landed = next(f[4] for f in adds if f[0] == "keyed")
+    landed = next(f[4] for f in adds if f[0] == "keyed" and f[3] == RESULT)
     write_reading(agent, landed, MOISTURE)
     st.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ {MARKER} }} }}")
     moisture = next(g for g in agent.pursuing() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)

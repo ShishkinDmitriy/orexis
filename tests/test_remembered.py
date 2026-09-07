@@ -216,3 +216,6 @@ def test_the_regression_subtracts_what_the_chain_produces():
     assert remembered.regressed([first, Step(action="urn:b", via="urn:x")]) is None
     select = remembered._pattern_select(facts)
     assert "<urn:s> <urn:p> <urn:o>" in select and "a <urn:Obs>" in select and "0.1" not in select, select
+    #  A reading by what it IS (#576): the band fact renders as one triple on the node.
+    banded = remembered._pattern_select(frozenset({("keyed", cls, key, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "urn:band:below")}))
+    assert "a <urn:Obs>" in banded and "a <urn:band:below>" in banded, banded

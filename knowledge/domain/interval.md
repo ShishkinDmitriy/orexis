@@ -16,7 +16,7 @@ some hours old — has two ends rather than one value. The record
 carrying that width through the core: an effect declaring two bounds, the keeper holding the
 world to them, identification asking whether the present lay inside. It was built as PR #575
 and refused on reading: the core plans on triples in the domain's own description of a reading
-— for the plant a [class](/domain/cell.md) over its range — and interprets no number, so it
+— for the plant a [band](/domain/band.md) over its range — and interprets no number, so it
 holds no width either
 ([deliberation-is-on-triples-and-a-number-is-not-special](/decisions/deliberation-is-on-triples-and-a-number-is-not-special.md)).
 

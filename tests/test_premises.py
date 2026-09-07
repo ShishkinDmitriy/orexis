@@ -39,7 +39,13 @@ def test_a_dose_reads_its_chain_its_conversion_and_the_standing_reading(monkeypa
     assert dose.premises, "a planned dose carries what its rule read"
     read = _predicates(dose.premises)
     assert {ACTUATION + "hasActuator", ACTUATION + "actuates", ACTUATION + "drawsFrom",
-            SOSA + "hasSimpleResult"} <= read, sorted(read)
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"} <= read, sorted(read)
+    #  The standing reading is a premise by WHAT IT IS (#576) — the band the domain asserted
+    #  on it, a plain triple — and never by its number.
+    readings = [f for f in dose.premises if f[0] == "keyed"]
+    assert readings and all(f[3].endswith("#type") and str(f[4]).startswith("http://example.org/orexis#band.")
+                            for f in readings), readings
+    assert SOSA + "hasSimpleResult" not in read
     assert any(f[0] == "keyed" for f in dose.premises), \
         "the standing reading is read as the keyed fact the signature knows it by"
     #  Re-asked of the world the first step was planned from — the belief base itself —
@@ -47,8 +53,8 @@ def test_a_dose_reads_its_chain_its_conversion_and_the_standing_reading(monkeypa
     first = plan.steps[0]
     bind = planner._bind(desire, node=_Node(graph=STATE_GRAPH), row=first, litres=first.quantity or 0.0)
     from orexis_agent_deliberation import signature
-    again = signature.facts(effects.premises(agent.beliefs, first.action, keyed=tuple(planner._keys), **bind),
-                            planner._keys, planner._cells)
+    again = signature.by_class(signature.facts(
+        effects.premises(agent.beliefs, first.action, keyed=tuple(planner._keys), **bind), planner._keys))
     assert again == first.premises
 
 

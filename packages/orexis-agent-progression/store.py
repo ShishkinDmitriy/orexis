@@ -206,6 +206,33 @@ class Unbound(ValueError):
     parameter or the caller can bind it; never left for the engine to read as a variable."""
 
 
+#  Membership under an OWL class defined as an intersection (#576): the node is of every named
+#  class in the list, has every `owl:hasValue`, and for every datatype restriction has a value
+#  no facet refuses. Three "for all" clauses, each a NOT EXISTS of a member the node fails,
+#  and the four facets four flat clauses so each test reads on its own. The node graph is
+#  named, the definitions come from the default graph the caller assembles — measured
+#  first without either in scope, which binds nothing and errors nowhere.
+_RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+_MEMBERS_Q = """
+SELECT DISTINCT ?x ?cls WHERE {
+  $of
+  ?cls owl:equivalentClass/owl:intersectionOf ?list .
+  ?list rdf:rest*/rdf:first ?base . FILTER(isIRI(?base))
+  GRAPH $graph { ?x a ?base }
+  FILTER NOT EXISTS { ?list rdf:rest*/rdf:first ?o . FILTER(isIRI(?o))
+                      FILTER NOT EXISTS { GRAPH $graph { ?x a ?o } } }
+  FILTER NOT EXISTS { ?list rdf:rest*/rdf:first ?r . ?r owl:onProperty ?p ; owl:hasValue ?v .
+                      FILTER NOT EXISTS { GRAPH $graph { ?x ?p ?v } } }
+  FILTER NOT EXISTS { ?list rdf:rest*/rdf:first ?r2 . ?r2 owl:onProperty ?p2 ;
+                          owl:someValuesFrom/owl:withRestrictions ?facets .
+      FILTER NOT EXISTS { GRAPH $graph { ?x ?p2 ?val }
+         FILTER NOT EXISTS { ?facets rdf:rest*/rdf:first/xsd:maxExclusive ?b1 . FILTER(?val >= ?b1) }
+         FILTER NOT EXISTS { ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?b2 . FILTER(?val > ?b2) }
+         FILTER NOT EXISTS { ?facets rdf:rest*/rdf:first/xsd:minExclusive ?b3 . FILTER(?val <= ?b3) }
+         FILTER NOT EXISTS { ?facets rdf:rest*/rdf:first/xsd:minInclusive ?b4 . FILTER(?val < ?b4) } } }
+}"""
+
+
 def render(value) -> str:
     """One value as the SPARQL text of the term it is."""
     if isinstance(value, Raw):
@@ -456,6 +483,40 @@ class Store:
         return any(self._store.quads_for_pattern(None, None, None, ox.NamedNode(graph_iri)))
 
     # --- writing ---
+
+    def entail(self, graph_iri: str, of=()) -> list:
+        """Assert in `graph_iri` what the vocabulary entails of the nodes there: membership
+        under every class defined as an `owl:intersectionOf` a named class, `owl:hasValue`
+        restrictions and a datatype restriction with `owl:withRestrictions` facets — the
+        second OWL construct this store honours by materialising it, beside the closure's
+        `owl:hasValue` (agent/inference.py, rule 5). Deliberation is on triples, and a number
+        is not special: what a reading IS is decided inside the domain as classes and
+        asserted here, where a step's precondition can then say it as a triple (#576).
+
+        `of` narrows the question to some NAMED nodes — the reading just written — as
+        rendered terms; empty asks about every node in the graph, which is how a forked
+        world is asked, since the observation a rule minted is a blank node no `VALUES` can
+        name. Returns the memberships asserted, as `(node, class)` pairs of engine terms.
+        The definitions are read from public knowledge; the nodes from `graph_iri` alone,
+        named, so a pattern never widens into every graph at once. Asserted through the
+        term API rather than an INSERT, for the same reason: a blank node written back as
+        text is a new blank node.
+        """
+        values = (f"VALUES ?x {{ {' '.join(render(x) for x in of)} }}" if of else "")
+        found = self._members(graph_iri, values)
+        graph = ox.NamedNode(graph_iri)
+        for node, cls in found:
+            self._store.add(ox.Quad(node, _RDF_TYPE, cls, graph))
+        if found:
+            self._forget()
+        return found
+
+    def _members(self, graph_iri: str, values: str) -> list:
+        text = bind(_MEMBERS_Q, graph=graph_iri, of=Raw(values))
+        public = [ox.NamedNode(g) for g in self.public_graphs()]
+        res = self._store.query(text, prefixes=NAMESPACES, default_graph=public,
+                                named_graphs=[ox.NamedNode(graph_iri)])
+        return [(r["x"], r["cls"]) for r in res]
 
     def update(self, sparql: str) -> None:
         self._store.update(sparql, prefixes=NAMESPACES)

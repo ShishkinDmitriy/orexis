@@ -49,12 +49,13 @@ def _literal(text: str) -> str:
     return '"%s"' % text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
 
 
-def regressed(steps, cells: dict | None = None) -> frozenset | None:
-    """The chain's precondition: every step's premises less what the steps before it add —
-    the facts the chain reads of the world and does not itself produce. None where a step
+def regressed(steps) -> frozenset | None:
+    """The plan's precondition: every step's premises less what the steps before it add —
+    the facts the plan reads of the world and does not itself produce. None where a step
     carries no premises (lifted before #550), which is a plan whose applicability nobody
-    can say. A premise states a reading by its cell (#573) and a prediction by its number,
-    so what a step adds is restated by cell before it is subtracted."""
+    can say. A premise states a reading by what it IS (#576) and a prediction carries the
+    number beside the class, so what a step adds is restated by class before it is
+    subtracted."""
     from . import signature
     out, produced = set(), set()
     for step in steps:
@@ -63,7 +64,7 @@ def regressed(steps, cells: dict | None = None) -> frozenset | None:
         out |= set(step.premises) - produced
         if step.predicts is not None:
             adds, _ = step.predicts
-            produced |= set(signature.to_cells(frozenset(adds), cells))
+            produced |= set(signature.by_class(frozenset(adds)))
     return frozenset(out)
 
 
@@ -82,14 +83,14 @@ def missing(agent, facts) -> list:
     return [f for f in sorted(facts, key=repr) if not holds([f])]
 
 
-def applicable(agent, want: str, desires, cells: dict | None = None) -> tuple | None:
+def applicable(agent, want: str, desires) -> tuple | None:
     """The newest plan remembered for `want` whose regressed precondition holds in the present
     AND whose first step is on the menu now — `(uri, steps, cost)`, or None. The menu check
     is what the walk made at its first step and what carries what a fact set cannot: the
     availability's own filters, a direction among them. A plan lifted before premises were
     carried is forgotten here, since nothing can say when it applies."""
     for uri, steps, cost in remembered_for(agent, want):
-        facts = regressed(steps, cells)
+        facts = regressed(steps)
         if facts is None:
             forget(agent, uri, "lifted before its steps carried premises — nothing says when it applies")
             continue
@@ -154,16 +155,11 @@ class _Patterns:
         if f[0] == "keyed":
             _, cls, key, carried, value = f
             v = self.var(("obs", cls, key))
-            if isinstance(value, tuple) and value and value[0] == "cell":
-                #  A reading by its CELL (#573): what the node carries lies between the
-                #  cell's bounds, the low one inclusive and the high one exclusive.
-                _, lo, hi = value
-                r = f"?c{len(self.parts)}"
-                self.parts.append(f"{v} <{carried}> {r} .")
-                if lo is not None:
-                    self.parts.append(f"FILTER({r} >= {lo!r})")
-                if hi is not None:
-                    self.parts.append(f"FILTER({r} < {hi!r})")
+            if carried == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type":
+                #  A reading by what it IS (#576): the band the domain asserted on it, one
+                #  triple — the precondition says "moisture below the region", statable and
+                #  queryable, never a number.
+                self.parts.append(f"{v} a <{value}> .")
             return
         s, p, o = f
         #  The object is rendered first where it is a literal, so its FILTER follows the
