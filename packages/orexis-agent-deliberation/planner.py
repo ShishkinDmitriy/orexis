@@ -162,6 +162,13 @@ class _Node:
     expanded: bool = False
     met: bool = False
     legal: bool | None = None            # the society's verdict on this world, once asked
+    #  A SURPRISE IS READ BY WHAT WAS NOT IMAGINED (#570): `verdict` is why this world, once
+    #  forked, was refused a place on the frontier — forbidden, late, dearer than the bound —
+    #  and None for a world the search kept; `withheld` is the rows this node never forked,
+    #  with why — the budget spent, or dearer than the bound before simulation. A node is
+    #  FULL when it is expanded and withheld nothing.
+    verdict: str | None = None
+    withheld: list = field(default_factory=list)
 
 
 class Planner:
@@ -494,6 +501,7 @@ class Planner:
         self._started = time.monotonic()
         self._kept = None
         self._desire_uri = desire.uri
+        self._surprise = None
         #  THE PRESENT AMONG THE KEPT WORLDS (#553), else from nothing.
         resumed = self._resume(desire)
         if not resumed:
@@ -530,17 +538,22 @@ class Planner:
             plan's walk reaches — which is what makes the remembered plan one candidate
             among the rest rather than a road of its own. Answers a Plan only where the
             pass ends here: a steering keeper on an already-met want."""
+            def refused(verdict):
+                #  KEPT, with the verdict: a world the search refused to plan through is
+                #  still a world the present may land in (#570), and the plan from inside
+                #  a forbidden state is exactly the recovery never-newly-enter keeps.
+                step.verdict = verdict
+                self._nodes.append(step)
+                self._weighed.append((depth, row, step.urgency, verdict))
+                return None
             if self._law is not None:
                 newly = self._forbidden_keys(step) - self._base_forbidden
                 if newly:
-                    self._weighed.append((depth, row, step.urgency, trace.FORBIDDEN))
-                    return None
+                    return refused(trace.FORBIDDEN)
             if self._bound is not None and step.cost + _near(step) > self._bound:
-                self._weighed.append((depth, row, step.urgency, trace.COSTLY))
-                return None
+                return refused(trace.COSTLY)
             if room is not None and step.landing > room:
-                self._weighed.append((depth, row, step.urgency, trace.LATE))
-                return None
+                return refused(trace.LATE)
             where = step.diff
             novel = where not in self._seen or step.cost < self._seen[where]
             #  KEPT WHETHER OR NOT NOVEL (#553): a world already reached is not searched on
@@ -627,10 +640,12 @@ class Planner:
                 saw_candidate = True
                 if forked >= self.budget:
                     self._weighed.append((depth, row, None, trace.SPENT))
+                    node.withheld.append((row, trace.SPENT))
                     continue
                 step = self._step_from(node, row, desire, self._bound)
                 if step is TOO_DEAR:
                     self._weighed.append((depth, row, None, trace.COSTLY))
+                    node.withheld.append((row, trace.COSTLY))
                     continue
                 if step is None:
                     self._weighed.append((depth, row, None, trace.UNSIMULATED))
@@ -705,7 +720,34 @@ class Planner:
         #  the kept nodes are scanned by their projected diff, a hundred at most.
         wanted = (self._project(present - base), self._project(base - present))
         node = next((m for m in self._nodes if self._key(m.diff) == wanted), None)
+        if node is None and any(m.withheld or not m.expanded for m in self._nodes):
+            #  COMPLETE BEFORE GIVING UP (#570): what the last pass did not fork is forked
+            #  now — the rows a node withheld for budget or cost, and every row of a node
+            #  the budget stopped before it was expanded — at every kept node, since the
+            #  present may be more than one step from the old root — and the present is
+            #  looked for among the new worlds. A match here is a world we chose not to
+            #  imagine. Bounded by the frontier and what was withheld, both by the budget.
+            for m in list(self._nodes):
+                if m.verdict is not None:
+                    continue
+                rows = [row for row, _ in m.withheld] if m.expanded else [
+                    row for row in self._candidates(m, desire)
+                    if self._relevant is None or row.action in self._relevant]
+                for row in rows:
+                    step = self._step_from(m, row, desire, None)
+                    if step is not None and step is not TOO_DEAR:
+                        self._nodes.append(step)
+                        if step.diff not in self._seen:
+                            self._seen[step.diff] = step.cost
+                            self._by_diff[step.diff] = step
+                m.withheld, m.expanded = [], True
+            node = next((m for m in self._nodes if self._key(m.diff) == wanted), None)
+            if node is not None:
+                self._surprise = (SURPRISE_WITHHELD, _said(wanted))
         if node is None:
+            #  No lever of ours reaches this world: another agent acted, the environment
+            #  moved, or our action has an outcome we do not declare (#522).
+            self._surprise = (SURPRISE_EXOGENOUS, _said(wanted))
             self.reset()
             return False
         self._reroot(node, present)
@@ -740,9 +782,18 @@ class Planner:
             m.origin = m.taken[0].action if m.taken else None
         node.parent, node.graph, node.materialised = None, STATE_GRAPH, True
         self._root, self._nodes, self._base_facts = node, keep, present
-        self._by_diff = {m.diff: m for m in keep}
-        self._seen = {m.diff: m.cost for m in keep}
-        self._pending = [m for m in keep if m is not node and not m.expanded]
+        self._by_diff = {m.diff: m for m in keep if m.verdict is None}
+        self._seen = {m.diff: m.cost for m in keep if m.verdict is None}
+        #  A world refused as dear is dear against a bound that went with the old root, and
+        #  may be worth a look now; one refused as forbidden or late stays off the frontier.
+        #  The new root too, where the last pass never took a row from it — a world reached
+        #  at the budget's edge, or one completed on a miss (#570): the resumed pass expands
+        #  it as a fresh pass expands its root.
+        self._pending = [m for m in keep if not m.expanded
+                         and m.verdict in (None, trace.COSTLY)]
+        for m in self._pending:
+            m.verdict = None
+        node.verdict = None
         self._achieved = [m for m in keep if m.met and m is not node]
         self._bound = min((m.cost for m in self._achieved), default=None)
         self._best = min(keep, key=lambda m: (m.urgency, _near(m), m.cost))
@@ -838,7 +889,8 @@ class Planner:
         trace.write(self.agent.beliefs, self.agent.id, desire, plan,
                     getattr(self, "_weighed", []), stands_at,
                     time.monotonic() - self._started, self._judged(desire),
-                    kept=getattr(self, "_kept_worlds", 0))
+                    kept=getattr(self, "_kept_worlds", 0),
+                    surprise=getattr(self, "_surprise", None))
         #  THE PASS IS OVER: every imagined graph is dropped (#487, #553), the nodes stay.
         for node in getattr(self, "_nodes", ()):
             self._release(node)
@@ -1494,6 +1546,24 @@ def _priority(node, met_now: bool) -> tuple:
     if met_now:
         return (len(node.taken),)
     return (node.cost + _near(node), node.urgency, node.cost)
+
+
+#  What a miss meant (#570): a world we withheld for budget or cost, or one no lever of ours
+#  produces. Written on the pass as `deliberation:surprise`.
+SURPRISE_WITHHELD = "withheld"
+SURPRISE_EXOGENOUS = "exogenous"
+
+
+def _said(diff: tuple) -> str:
+    """A projected diff as one line a person can read: what the present holds beyond every
+    imagined world and what it lacks, terms shortened."""
+    def short(f):
+        if f[0] == "keyed":
+            key = ",".join(str(v).rsplit("#", 1)[-1].rsplit("/", 1)[-1] for _, v in f[2])
+            return f"{key}={f[4]}"
+        return " ".join(str(t).rsplit("#", 1)[-1].rsplit("/", 1)[-1] for t in f)
+    plus, minus = diff
+    return "+[" + "; ".join(sorted(map(short, plus))) + "] -[" + "; ".join(sorted(map(short, minus))) + "]"
 
 
 def _near(node) -> float:

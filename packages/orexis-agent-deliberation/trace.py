@@ -120,7 +120,7 @@ def clear(store, agent_id: str, desire_uri: str) -> None:
 
 def write(store, agent_id: str, desire, plan, considered, stands_at: float,
           took_s: float = 0.0, judged: tuple[str, str | None] = (UNJUDGED, None),
-          kept: int = 0) -> None:
+          kept: int = 0, surprise: tuple | None = None) -> None:
     """Record one pass: what was weighed, what each would have reached, and what was taken.
 
     Never raises. A planner that fell over because its debugging aid did would be a poor trade
@@ -128,13 +128,14 @@ def write(store, agent_id: str, desire, plan, considered, stands_at: float,
     the same posture `reporting` takes towards the series store.
     """
     try:
-        _write(store, agent_id, desire, plan, considered, stands_at, took_s, judged, kept)
+        _write(store, agent_id, desire, plan, considered, stands_at, took_s, judged, kept, surprise)
     except Exception as exc:                      # noqa: BLE001 - see the docstring
         log.warning("could not record what was considered: %s", exc)
 
 
 def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
-           took_s: float, judged: tuple[str, str | None], kept: int = 0) -> None:
+           took_s: float, judged: tuple[str, str | None], kept: int = 0,
+           surprise: tuple | None = None) -> None:
     node = _uri(agent_id, desire.uri)
     #  The candidate the plan came THROUGH — a remembered route walked as one candidate is
     #  named as the route, not as the first of its steps (#469).
@@ -172,6 +173,8 @@ def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
     #  quotes, backslashes and newlines, and a hand-quoted f-string would be the injection the
     #  binder exists to refuse (#500).
     road, text = judged
+    surprised = "" if surprise is None else \
+        f'        deliberation:surprise {_quoted(surprise[0] + ": " + surprise[1])} ;\n'
     by = "" if text is None else \
         f'        deliberation:judgedBy {ox.Literal(text)} ;\n'
     store.update(f"""INSERT DATA {{ GRAPH <{DELIBERATION_GRAPH}> {{
@@ -182,7 +185,7 @@ def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
 {by}        deliberation:standsAt {stands_at:.6f} ;
         deliberation:tookSeconds {took_s:.6f} ;
         deliberation:keptWorlds {kept} ;
-{took}        deliberation:asOf "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime .
+{surprised}{took}        deliberation:asOf "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime .
 {"".join(rows)}}} }}""")
 
 

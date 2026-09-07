@@ -38,6 +38,27 @@ cone stands. The match is exact within the view, a reading by its value, which i
 nothing moves but the agent and is why a plant cone dies at the first reading that lands a
 little off its prediction; [interval](/domain/interval.md) matching (#556) is what loosens it.
 
+# A surprise is read by what was not imagined
+
+A present that matches no kept world is evidence about what was imagined, never about what
+the world could do, and the search knows what it did not imagine (#570). A node keeps the
+rows it never forked and why — the budget spent, a row dearer than the bound before it was
+simulated — and a world that was forked and refused, forbidden, late or dearer after
+simulation, is kept as a node with its verdict rather than discarded: a world the search
+refused to plan through is still one the present may land in, and the plan from inside a
+forbidden state is the recovery never-newly-enter was written to keep. A node is FULL when
+it is expanded and withheld nothing.
+
+On a miss, the pass completes before it gives up: at every kept node it forks the withheld
+rows, and every row of a node the budget stopped before it was expanded, then looks again.
+A match now is `withheld`, a world we chose not to imagine for cost, and the pass resumes
+there. No match after that is `exogenous`: no lever of ours produces this world — another
+agent acted, the environment moved, or an action has an outcome it does not declare — and
+the pass starts from nothing. Either way the trace says which, as `deliberation:surprise`,
+with the facts within the view the present holds beyond every imagined world and lacks.
+Rows withheld as irrelevant are never completed: by the closure, they cannot be the cause of
+a change inside the view.
+
 # What it is not
 
 - It is not the [keeper](/domain/keeper.md)'s verdict, which holds the committed step to its
