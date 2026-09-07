@@ -72,3 +72,9 @@ What happened before is in the series store, which is a different question asked
 - [gap](/domain/gap.md) — what the absence of one means, and what its distance from a region is
   worth.
 - [belief-base](/domain/belief-base.md) — why it lives in a graph of its own.
+
+# Its identity when compared
+
+When a present is matched to a kept world, or a step states what it read, a reading is
+stated by its [cell](/domain/cell.md) — the gap between the thresholds its readers compare it
+against — and not by its number; two readings no rule tells apart are one fact (#573).

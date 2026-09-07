@@ -35,6 +35,11 @@ def _take(agent, step):
             agent.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <{f[0]}> <{f[1]}> <{f[2]}> . }} }}")
 
 
+def signature_cells(planner, facts):
+    from orexis_agent_deliberation import signature
+    return signature.to_cells(frozenset(facts), planner._cells)
+
+
 def _kept_worlds(agent) -> int:
     rows = bindings(agent.beliefs.query_union(f"""
 SELECT ?k WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?d a deliberation:Deliberation ; deliberation:keptWorlds ?k }} }}"""))
@@ -189,12 +194,12 @@ def test_a_world_that_landed_in_an_explored_sibling_continues_from_it(monkeypatc
 
 
 def test_a_reading_the_want_is_not_about_may_drift_and_the_moisture_cone_survives(monkeypatch):
-    """A dry gardener plans a dose. The dose lands exactly as predicted, and the water butt's
-    level moves meanwhile. A butt reading carries the same predicates a moisture reading does,
-    so the view tells them apart by the property the want is about: the cone resumes, and the
-    pass finds the want where the dose left it. A moisture reading off the prediction, by
-    however little, is not the kept world — exact until intervals (#556) — and that is asserted
-    too, as the honest boundary."""
+    """A dry gardener plans a dose. The dose lands NEAR what was predicted, and the water
+    butt's level moves meanwhile. A butt reading carries the same predicates a moisture
+    reading does, so the view tells them apart by the property the want is about; and a
+    moisture reading off the prediction within the same CELL is the kept world (#573), since
+    no rule tells the two apart. The cone resumes and the pass finds the want where the dose
+    left it. A reading across a threshold is another world, and that is asserted too."""
     from conftest import write_reading
     from test_planning import MOISTURE, STORED
     monkeypatch.setenv("OREXIS_WORLD", "loner")
@@ -204,18 +209,21 @@ def test_a_reading_the_want_is_not_about_may_drift_and_the_moisture_cone_survive
     planner = Planner(agent, agent.me)
     plan = planner.plan(desire)
     assert plan.steps, "a dry gardener doses"
-    _take(agent, plan.steps[0])                       # the dose lands exactly as predicted
+    adds, _ = plan.steps[0].predicts
+    predicted = next(f[4] for f in adds if f[0] == "keyed")
+    lo, hi = next((f[4][1], f[4][2]) for f in planner._project(
+        signature_cells(planner, adds)) if f[0] == "keyed")
+    assert lo is not None and lo <= predicted < hi, "the predicted reading has a cell with both bounds"
+    write_reading(agent, predicted + 0.01, MOISTURE)  # lands near the prediction, inside its cell
     write_reading(agent, 2.5, STORED)                 # the butt's level moves meanwhile
     desire = next(g for g in agent.pursuing() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     again = planner.plan(desire)
-    assert _kept_worlds(agent) > 0, "the butt drifted, the moisture cone stands"
+    assert _kept_worlds(agent) > 0, "the butt drifted and the pot landed a hundredth off: the moisture cone stands"
     assert [s.action for s in again.steps] == [s.action for s in plan.steps[1:]], "the tail is what is left"
-    adds, _ = plan.steps[0].predicts
-    landed = next(f[4] for f in adds if f[0] == "keyed")
-    write_reading(agent, landed + 0.01, MOISTURE)
+    write_reading(agent, hi + 0.01, MOISTURE)         # across the threshold: another world
     desire = next(g for g in agent.pursuing() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     planner.plan(desire)
-    assert _kept_worlds(agent) == 0, "a moisture reading off the prediction is not the kept world — exact, until intervals"
+    assert _kept_worlds(agent) == 0, "a reading across a threshold is not the kept world"
 
 
 # --- a surprise is classified (#570) --------------------------------------------------------

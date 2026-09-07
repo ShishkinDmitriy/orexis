@@ -47,7 +47,7 @@ def test_a_dose_reads_its_chain_its_conversion_and_the_standing_reading(monkeypa
     bind = planner._bind(desire, node=_Node(graph=STATE_GRAPH), row=first, litres=first.quantity or 0.0)
     from orexis_agent_deliberation import signature
     again = signature.facts(effects.premises(agent.beliefs, first.action, keyed=tuple(planner._keys), **bind),
-                            planner._keys)
+                            planner._keys, planner._cells)
     assert again == first.premises
 
 

@@ -446,7 +446,15 @@ class Deliberator:
         #  want, a world where the plan's regressed precondition holds and its first step is
         #  on the menu. The trace says so; the world verifies it step by step.
         from . import remembered, trace
-        kept = remembered.applicable(self.agent, desire.uri, self.agent.desires.query_union)
+        search = self._planners.get(desire.uri)
+        if search is None:
+            search = self._planners[desire.uri] = Planner(self.agent, self.me)
+        kept = None
+        if remembered.remembered_for(self.agent, desire.uri):
+            #  KEYED BY CELL (#573): a remembered plan's premises state readings by cell,
+            #  so its applicability is asked with the partition this want's readers imply.
+            kept = remembered.applicable(self.agent, desire.uri, self.agent.desires.query_union,
+                                         cells=search.partition(desire))
         if kept is not None:
             uri, steps, cost = kept
             plan = planner.Plan(planner.REMEMBERED, tuple(steps), desire.urgency, None, cost=cost)
@@ -456,9 +464,6 @@ class Deliberator:
             self.log.info("%s: remembered — %d step(s) whose precondition holds here",
                           _short(desire.uri), len(steps))
             return plan
-        search = self._planners.get(desire.uri)
-        if search is None:
-            search = self._planners[desire.uri] = Planner(self.agent, self.me)
         plan = search.plan(desire)
         self._decided[desire.uri] = (plan, None)
         if plan.steps:
