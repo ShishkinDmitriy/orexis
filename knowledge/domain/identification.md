@@ -34,9 +34,11 @@ kept world the present is; identification is not run on the reactive loop agains
 worker may be reading. The match is made WITHIN THE VIEW: the predicates the want's closure
 names, and for a reading the property the want is about, so a fact the want never reads may
 drift — the butt's level under a moisture plan, a stray fact in a courier's world — and the
-cone stands. The match is exact within the view, a reading by its value, which is right where
-nothing moves but the agent and is why a plant cone dies at the first reading that lands a
-little off its prediction; [interval](/domain/interval.md) matching (#556) is what loosens it.
+cone stands. A reading is matched by its [cell](/domain/cell.md) (#573): a pot that landed a
+hundredth off its prediction is the kept world, a pot across a threshold is another. A match
+by cell that is not exact re-roots at the node, scores it from the present, and drops what was
+imagined beneath it, since those worlds were computed from the number the node predicted; an
+exact match keeps the subtree whole.
 
 # A surprise is read by what was not imagined
 
@@ -74,4 +76,4 @@ A reading of another property that a relevant lever reads — the butt's level, 
 acquiring reads — is outside the view today, since relevance names predicates and every
 reading carries the same ones; a plan resumed across such a drift is caught at execution by
 the keeper's readiness, and would be caught at the re-root by the next step's
-[premises](/domain/precondition.md) once they are asked there. Interval matching is #556.
+[premises](/domain/precondition.md) once they are asked there.

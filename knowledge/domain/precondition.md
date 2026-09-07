@@ -35,7 +35,9 @@ present says, and it is the first half of a [method](/domain/method.md).
 
 # What carries it
 
-A [step](/domain/step.md) carries its premises beside its prediction: the positive patterns
+A [step](/domain/step.md) carries its premises beside its prediction — a reading among them
+stated by its [cell](/domain/cell.md), so the premise is "moisture dry" and not "moisture
+0.23" (#573): the positive patterns
 of its effect's WHERE and of its availability query, instantiated by the store's own engine
 for the step's binding in the world it was planned from, and stated as the same canonical
 facts the prediction is made of. The planner fills them once along the winning path, while

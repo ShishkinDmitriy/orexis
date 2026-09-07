@@ -73,7 +73,7 @@ _ROUND = 6
 EMPTY = (frozenset(), frozenset())
 
 
-def facts(triples, keys: dict | None = None) -> frozenset:
+def facts(triples, keys: dict | None = None, cells: dict | None = None) -> frozenset:
     """The canonical facts a set of triples states — what of it counts as 'where I am'.
 
     `triples` is anything with `.subject`, `.predicate` and `.object` — a step's diff as
@@ -83,6 +83,9 @@ def facts(triples, keys: dict | None = None) -> frozenset:
     its key values and what it carries — never its identity, and never anything else on it
     (an instant, who made it), which is what keeps a look from being a new world every time.
     `keys` is `keys_of(query)`; with none given, nothing is keyed and every triple counts.
+    `cells` is the partition (`partition.cells_of`): where a keyed node's key names a property
+    it partitions, the carried value is stated as its CELL rather than its number (#573), so
+    two readings no rule tells apart are one fact. With none given, the number.
     """
     keys = keys or {}
     triples = [(t.subject, t.predicate, t.object) for t in triples]
@@ -107,9 +110,38 @@ def facts(triples, keys: dict | None = None) -> frozenset:
         if s in keyed:
             cls, key = keyed[s]
             if p.value in keys[cls][1]:
-                out.add(("keyed", cls, key, p.value, _literal(o)))
+                out.add(("keyed", cls, key, p.value, _carried(o, key, cells)))
             continue
         out.add((world.term(s), p.value, world.term(o)))
+    return frozenset(out)
+
+
+def _carried(o, key: tuple, cells: dict | None):
+    """What a keyed node carries, as the signature states it: its cell where the partition
+    names the property in its key, else its rounded number."""
+    value = _literal(o)
+    if cells:
+        from .partition import cell_of
+        for _, prop in key:
+            if prop in cells:
+                return cell_of(value, cells[prop])
+    return value
+
+
+def to_cells(facts: frozenset, cells: dict | None) -> frozenset:
+    """Facts stated by number, restated by cell — what the regression subtracts a step's
+    predicted readings as, since a premise is a cell (#573)."""
+    if not cells:
+        return frozenset(facts)
+    from .partition import cell_of
+    out = set()
+    for f in facts:
+        if f[0] == "keyed" and not (isinstance(f[4], tuple) and f[4] and f[4][0] == "cell"):
+            prop = next((v for _, v in f[2] if v in cells), None)
+            if prop is not None:
+                out.add(("keyed", f[1], f[2], f[3], cell_of(f[4], cells[prop])))
+                continue
+        out.add(f)
     return frozenset(out)
 
 

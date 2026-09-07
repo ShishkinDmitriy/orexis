@@ -204,6 +204,7 @@ class Planner:
         #  a hypothesis explored against a world that has moved is not a hypothesis, so the
         #  snapshot is per plan and nothing carries over.
         self.reset()                     # no cone yet (#553)
+        self._cells = {}
 
     # --- what a world is worth ---------------------------------------------------------------
 
@@ -718,7 +719,7 @@ class Planner:
         #  the want's closure reads; a fact outside it may have drifted. Keys stay whole —
         #  inside a pass two worlds differing in any fact a lever wrote are two worlds — so
         #  the kept nodes are scanned by their projected diff, a hundred at most.
-        wanted = (self._project(present - base), self._project(base - present))
+        wanted = self._key((present - base, base - present))
         node = next((m for m in self._nodes if self._key(m.diff) == wanted), None)
         if node is None and any(m.withheld or not m.expanded for m in self._nodes):
             #  COMPLETE BEFORE GIVING UP (#570): what the last pass did not fork is forked
@@ -750,17 +751,28 @@ class Planner:
             self._surprise = (SURPRISE_EXOGENOUS, _said(wanted))
             self.reset()
             return False
-        self._reroot(node, present)
+        #  BY CELL OR EXACTLY (#573). A match by cell identifies the world — the plan's step
+        #  landed where it said, near enough that no rule tells the difference — but the
+        #  worlds beneath the node were computed from the number it predicted, not the
+        #  number the present holds, and a dose from 0.54 is not a dose from 0.50. So a
+        #  match that is not exact keeps the node as the root and drops what was imagined
+        #  beneath it, to be imagined again from the present's own numbers; an exact match
+        #  keeps the subtree whole, as a puzzle world's always is.
+        exact = (self._project(present - base), self._project(base - present)) == \
+            (self._project(node.diff[0]), self._project(node.diff[1]))
+        self._reroot(node, present, subtree=exact, desire=desire)
         return True
 
-    def _reroot(self, node, present: frozenset) -> None:
+    def _reroot(self, node, present: frozenset, subtree: bool = True, desire=None) -> None:
         """`node` becomes the root: every node beneath it re-based on the present, everything
         else dropped. Diffs are re-based by set algebra on absolute worlds — a kept world is
         the old base less its minus set plus its plus set, and its new diff is what that
         world holds beyond the present and what the present holds beyond it — so a path
         that returns to the new root returns to the empty diff, as `advance` promises."""
         base = self._base_facts
-        keep = [m for m in self._nodes if self._descends(m, node)]
+        keep = [m for m in self._nodes if self._descends(m, node)] if subtree else [node]
+        if not subtree:
+            node.expanded, node.withheld, node.met, node.legal = False, [], False, None
         for m in self._nodes:
             self._release(m)
         #  THE PRESENT'S READINGS ARE THE ROOT'S GRAPH, observed: the imaginarium's copy is
@@ -781,7 +793,16 @@ class Planner:
             m.landing -= landing0
             m.origin = m.taken[0].action if m.taken else None
         node.parent, node.graph, node.materialised = None, STATE_GRAPH, True
+        #  The root stands nowhere but the present. Re-based by set algebra it would carry
+        #  the number it predicted against the number the present holds; by cell they are
+        #  one world, and that is what made it the root.
+        node.diff = signature.EMPTY
         self._root, self._nodes, self._base_facts = node, keep, present
+        if not subtree and desire is not None:
+            #  Scored from the present, not from the number it was predicted to hold: a pot
+            #  a hundredth below its aim is not a met want.
+            node.urgency = self._urgency_in(node, desire)
+            node.estimate = self._estimate_in(node, desire)
         self._by_diff = {m.diff: m for m in keep if m.verdict is None}
         self._seen = {m.diff: m.cost for m in keep if m.verdict is None}
         #  A world refused as dear is dear against a bound that went with the old root, and
@@ -844,8 +865,10 @@ class Planner:
         return frozenset(str(x) for x in view)
 
     def _key(self, diff: tuple) -> tuple:
-        """A diff as the key two worlds are the same by: both halves within the view."""
-        return (self._project(diff[0]), self._project(diff[1]))
+        """A diff as the key the present is matched to a kept world by: both halves within
+        the view, a reading by its cell (#573)."""
+        return (self._project(signature.to_cells(diff[0], self._cells)),
+                self._project(signature.to_cells(diff[1], self._cells)))
 
     def _project(self, facts) -> frozenset:
         """The facts within the view. A plain fact is in it by its predicate; a keyed fact —
@@ -868,6 +891,38 @@ class Planner:
         store = self.agent.beliefs
         return signature.facts((quad for iri in [*store.public_graphs(), *store.recorded_graphs()]
                                 for quad in store.quads(iri)), self._keys)
+
+    def _partition(self, desire: Desire, base) -> dict:
+        """The partition this pass states readings by (`partition.cells_of`): thresholds off
+        the wants, the shapes the agent holds, the law, the packages' shapes, and every
+        select that reads a reading — the actions' availability texts and the want's own
+        pattern — with `$about` read as what the want is about."""
+        from . import partition
+        from .conformance import _shapes_and_vocabulary
+        texts = [row.get("available") for row in bindings(self.agent.beliefs.query(_AVAILABLE_Q))]
+        pattern = self._avoided_pattern(desire)
+        if pattern is not None:
+            texts.append(pattern)
+        if self._law is not None:
+            texts += [str(t) for t in self._law.objects(None, _SH.select)]
+        return partition.cells_of(
+            (self._shapes, self._held, self._law, _shapes_and_vocabulary()[1]), texts,
+            about=self._about_of.get(desire.uri))
+
+    def partition(self, desire: Desire) -> dict:
+        """The partition for a want, for a caller with no pass in hand — the deliberator
+        keying a remembered plan (#551, #573). The same sources `_begin` reads, at the same
+        cost as its first third."""
+        self._about_of = wants_of(self.agent.desires.query_union, self.me.uri)
+        graphs = " ".join(f"<{g}>" for g in (DESIRE_DERIVED_GRAPH, DESIRE_ASSERTED_GRAPH, promises_graph(self.agent.id)))
+        self._shapes = effects.applied((), self.agent.desires.construct(
+            f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ VALUES ?g {{ {graphs} }} GRAPH ?g {{ ?s ?p ?o }} }}"), ())
+        base = self._beliefs()
+        for triple in self._shapes:
+            base.add(triple)
+        self._held = held_shapes(base, self.me.uri)
+        self._law = self._violation_shapes(base)
+        return self._partition(desire, base)
 
     def _invariant_signature(self) -> frozenset:
         """Everything a node's world holds besides its readings, as canonical facts: public
@@ -1009,7 +1064,7 @@ class Planner:
             try:
                 read = effects.premises(self.imaginarium, step.action,
                                         keyed=tuple(self._keys), **bind)
-                found = signature.facts(read, self._keys)
+                found = signature.facts(read, self._keys, self._cells)
             except Exception as exc:               # noqa: BLE001 — a package's rule, not the pass
                 log.error("could not read the premises of %s: %s", step.action, exc)
                 found = None
@@ -1194,9 +1249,6 @@ class Planner:
         #  canonicalises a reading without this file knowing what one looks like.
         self._about_of = wants_of(self.agent.desires.query_union, self.me.uri)
         self._keys = signature.keys_of(store.query)
-        self._base_facts = signature.facts((
-            quad for iri in [*store.public_graphs(), *store.recorded_graphs()]
-            for quad in store.quads(iri)), self._keys)
         #  THE LAW THIS PASS PRUNES BY (#468): the violation-severity shapes the DATA
         #  carries — a world-authored MUST NOT over a runtime state — collected once, held
         #  against every candidate at expansion rather than against the winner alone. The
@@ -1206,6 +1258,17 @@ class Planner:
         #  the gates, met from the planner's side. Empty in a world that ratifies no such
         #  shape, and then this costs nothing per node.
         self._law = self._violation_shapes(base)
+        #  THE PARTITION (#573): the cells a reading is matched by — the gaps between the
+        #  thresholds some reader of the property compares it against, read off the wants,
+        #  the held shapes, the law, the packages' shapes and the selects, never authored.
+        #  For MATCHING, not for the search's own progress: a present is a kept world when
+        #  they agree by cell, and a premise states a reading by cell; but a dose that moves
+        #  the pot within its cell is progress toward the boundary, and steering to the aim
+        #  inside the region is work, so the cone's diffs stay by number.
+        self._cells = self._partition(desire, base)
+        self._base_facts = signature.facts((
+            quad for iri in [*store.public_graphs(), *store.recorded_graphs()]
+            for quad in store.quads(iri)), self._keys)
         #  COMPILED, ONCE PER PASS (#548): the law's selects, and the legality check's — the
         #  packages' shapes about this agent, compiled once per process and cached by
         #  focus, beside the shapes this agent holds, carved and compiled here. A shape the
@@ -1582,6 +1645,7 @@ def _near(node) -> float:
 TOO_DEAR = object()
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
+_AVAILABLE_Q = """SELECT ?available WHERE { ?action a orexis:Action ; orexis:available ?available }"""
 _AG = rdflib.Namespace(_AG_IRI)
 #  No means or family is named here any more: sizing is `Module.size`, asked of the row's
 #  taker by the action's own contribution exactly as execution finds it.
