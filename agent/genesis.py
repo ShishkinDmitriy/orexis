@@ -35,7 +35,7 @@ from agent import config, inference, provenance, vocabulary
 
 from assembly import loader
 from .config import REPO_ROOT
-from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, GRAPH_PREFIX, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
+from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, GRAPH_PREFIX, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, STATE_GRAPH,
                        WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, beliefs_graph)
 from orexis_agent_progression.store import NAMESPACES, Raw, Store, bind, bindings
@@ -476,6 +476,10 @@ def open_belief_base(world: Path, agent_id: str, path: str | None = None,
     born = birth(st, world, agent_id, rebirth)
     if born:
         log.info("%s born — opening beliefs written", agent_id)
+    #  What the readings on record ARE, by the bands this boot's vocabulary declares (#576):
+    #  a volume older than the classes holds readings nobody classified, and the next
+    #  reading would classify only itself.
+    st.entail(STATE_GRAPH)
     classify_own_graphs(st, agent_id)
     # Before the vocabulary check, deliberately: a ghost graph holds terms this code no
     # longer speaks, and refusing to boot over facts nobody declares any more would be

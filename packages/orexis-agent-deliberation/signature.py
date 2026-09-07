@@ -73,19 +73,18 @@ _ROUND = 6
 EMPTY = (frozenset(), frozenset())
 
 
-def facts(triples, keys: dict | None = None, cells: dict | None = None) -> frozenset:
+def facts(triples, keys: dict | None = None) -> frozenset:
     """The canonical facts a set of triples states — what of it counts as 'where I am'.
 
     `triples` is anything with `.subject`, `.predicate` and `.object` — a step's diff as
     `effects.apply` returns it, or the base as the store's own quads — and is read twice:
     once to learn which nodes are KEYED (typed with a class some package declared `orexis:keyedBy`)
     and what hangs off each blank node, once to emit. A keyed node canonicalises to its class,
-    its key values and what it carries — never its identity, and never anything else on it
-    (an instant, who made it), which is what keeps a look from being a new world every time.
-    `keys` is `keys_of(query)`; with none given, nothing is keyed and every triple counts.
-    `cells` is the partition (`partition.cells_of`): where a keyed node's key names a property
-    it partitions, the carried value is stated as its CELL rather than its number (#573), so
-    two readings no rule tells apart are one fact. With none given, the number.
+    its key values, what it carries and WHAT IT IS — every class it is typed with beyond its
+    keyed one, the bands the domain's entailment asserted on it (#576) — never its identity,
+    and never anything else on it (an instant, who made it), which is what keeps a look from
+    being a new world every time. `keys` is `keys_of(query)`; with none given, nothing is
+    keyed and every triple counts.
     """
     keys = keys or {}
     triples = [(t.subject, t.predicate, t.object) for t in triples]
@@ -109,40 +108,30 @@ def facts(triples, keys: dict | None = None, cells: dict | None = None) -> froze
     for s, p, o in triples:
         if s in keyed:
             cls, key = keyed[s]
-            if p.value in keys[cls][1]:
-                out.add(("keyed", cls, key, p.value, _carried(o, key, cells)))
+            if p == _RDF_TYPE:
+                if isinstance(o, ox.NamedNode) and o.value != cls:
+                    out.add(("keyed", cls, key, _RDF_TYPE.value, o.value))
+            elif p.value in keys[cls][1]:
+                out.add(("keyed", cls, key, p.value, _literal(o)))
             continue
         out.add((world.term(s), p.value, world.term(o)))
     return frozenset(out)
 
 
-def _carried(o, key: tuple, cells: dict | None):
-    """What a keyed node carries, as the signature states it: its cell where the partition
-    names the property in its key, else its rounded number."""
-    value = _literal(o)
-    if cells:
-        from .partition import cell_of
-        for _, prop in key:
-            if prop in cells:
-                return cell_of(value, cells[prop])
-    return value
+TYPE = _RDF_TYPE.value
 
 
-def to_cells(facts: frozenset, cells: dict | None) -> frozenset:
-    """Facts stated by number, restated by cell — what the regression subtracts a step's
-    predicted readings as, since a premise is a cell (#573)."""
-    if not cells:
-        return frozenset(facts)
-    from .partition import cell_of
-    out = set()
-    for f in facts:
-        if f[0] == "keyed" and not (isinstance(f[4], tuple) and f[4] and f[4][0] == "cell"):
-            prop = next((v for _, v in f[2] if v in cells), None)
-            if prop is not None:
-                out.add(("keyed", f[1], f[2], f[3], cell_of(f[4], cells[prop])))
-                continue
-        out.add(f)
-    return frozenset(out)
+def by_class(facts: frozenset) -> frozenset:
+    """Facts with every keyed node stated by what it IS and not by what it carries: where a
+    node states a class beyond its keyed one — a band the domain's entailment asserted — its
+    carried values are dropped and the class facts stand for it, so two readings the domain
+    tells no difference between are one fact (#576). A keyed node stating no class keeps
+    its values, as a property no domain describes must. What a present is matched to a kept
+    world by, and what a premise and a regression state a reading as; NOT the search's own
+    progress, where the number still moves a world (until #579 takes the number out)."""
+    classed = {(f[1], f[2]) for f in facts if f[0] == "keyed" and f[3] == TYPE}
+    return frozenset(f for f in facts
+                     if not (f[0] == "keyed" and f[3] != TYPE and (f[1], f[2]) in classed))
 
 
 def _term_value(o):

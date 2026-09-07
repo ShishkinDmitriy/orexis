@@ -204,7 +204,6 @@ class Planner:
         #  a hypothesis explored against a world that has moved is not a hypothesis, so the
         #  snapshot is per plan and nothing carries over.
         self.reset()                     # no cone yet (#553)
-        self._cells = {}
 
     # --- what a world is worth ---------------------------------------------------------------
 
@@ -744,11 +743,11 @@ class Planner:
                 m.withheld, m.expanded = [], True
             node = next((m for m in self._nodes if self._key(m.diff) == wanted), None)
             if node is not None:
-                self._surprise = (SURPRISE_WITHHELD, _said(wanted))
+                self._surprise = (SURPRISE_WITHHELD, _said((present - base, base - present)))
         if node is None:
             #  No lever of ours reaches this world: another agent acted, the environment
             #  moved, or our action has an outcome we do not declare (#522).
-            self._surprise = (SURPRISE_EXOGENOUS, _said(wanted))
+            self._surprise = (SURPRISE_EXOGENOUS, _said((present - base, base - present)))
             self.reset()
             return False
         #  BY CELL OR EXACTLY (#573). A match by cell identifies the world — the plan's step
@@ -864,11 +863,15 @@ class Planner:
         #  predicate as text — an rdflib IRI is not equal to the same text.
         return frozenset(str(x) for x in view)
 
-    def _key(self, diff: tuple) -> tuple:
-        """A diff as the key the present is matched to a kept world by: both halves within
-        the view, a reading by its cell (#573)."""
-        return (self._project(signature.to_cells(diff[0], self._cells)),
-                self._project(signature.to_cells(diff[1], self._cells)))
+    def _key(self, diff: tuple) -> frozenset:
+        """The key the present is matched to a kept world by: the WORLD the diff reaches,
+        within the view, a reading by what it IS — the bands the domain asserted on it
+        (#576). The world and not the diff's halves, because a class the base already held
+        cancels out of a diff and leaves the number standing alone: a dose from inside the
+        region to inside the region changes the number and no class, and by class it is the
+        same world as the present that landed a hundredth off."""
+        base = self._base_facts
+        return self._project(signature.by_class((base - diff[1]) | diff[0]))
 
     def _project(self, facts) -> frozenset:
         """The facts within the view. A plain fact is in it by its predicate; a keyed fact —
@@ -891,38 +894,6 @@ class Planner:
         store = self.agent.beliefs
         return signature.facts((quad for iri in [*store.public_graphs(), *store.recorded_graphs()]
                                 for quad in store.quads(iri)), self._keys)
-
-    def _partition(self, desire: Desire, base) -> dict:
-        """The partition this pass states readings by (`partition.cells_of`): thresholds off
-        the wants, the shapes the agent holds, the law, the packages' shapes, and every
-        select that reads a reading — the actions' availability texts and the want's own
-        pattern — with `$about` read as what the want is about."""
-        from . import partition
-        from .conformance import _shapes_and_vocabulary
-        texts = [row.get("available") for row in bindings(self.agent.beliefs.query(_AVAILABLE_Q))]
-        pattern = self._avoided_pattern(desire)
-        if pattern is not None:
-            texts.append(pattern)
-        if self._law is not None:
-            texts += [str(t) for t in self._law.objects(None, _SH.select)]
-        return partition.cells_of(
-            (self._shapes, self._held, self._law, _shapes_and_vocabulary()[1]), texts,
-            about=self._about_of.get(desire.uri))
-
-    def partition(self, desire: Desire) -> dict:
-        """The partition for a want, for a caller with no pass in hand — the deliberator
-        keying a remembered plan (#551, #573). The same sources `_begin` reads, at the same
-        cost as its first third."""
-        self._about_of = wants_of(self.agent.desires.query_union, self.me.uri)
-        graphs = " ".join(f"<{g}>" for g in (DESIRE_DERIVED_GRAPH, DESIRE_ASSERTED_GRAPH, promises_graph(self.agent.id)))
-        self._shapes = effects.applied((), self.agent.desires.construct(
-            f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ VALUES ?g {{ {graphs} }} GRAPH ?g {{ ?s ?p ?o }} }}"), ())
-        base = self._beliefs()
-        for triple in self._shapes:
-            base.add(triple)
-        self._held = held_shapes(base, self.me.uri)
-        self._law = self._violation_shapes(base)
-        return self._partition(desire, base)
 
     def _invariant_signature(self) -> frozenset:
         """Everything a node's world holds besides its readings, as canonical facts: public
@@ -1064,7 +1035,7 @@ class Planner:
             try:
                 read = effects.premises(self.imaginarium, step.action,
                                         keyed=tuple(self._keys), **bind)
-                found = signature.facts(read, self._keys, self._cells)
+                found = signature.by_class(signature.facts(read, self._keys))
             except Exception as exc:               # noqa: BLE001 — a package's rule, not the pass
                 log.error("could not read the premises of %s: %s", step.action, exc)
                 found = None
@@ -1258,14 +1229,6 @@ class Planner:
         #  the gates, met from the planner's side. Empty in a world that ratifies no such
         #  shape, and then this costs nothing per node.
         self._law = self._violation_shapes(base)
-        #  THE PARTITION (#573): the cells a reading is matched by — the gaps between the
-        #  thresholds some reader of the property compares it against, read off the wants,
-        #  the held shapes, the law, the packages' shapes and the selects, never authored.
-        #  For MATCHING, not for the search's own progress: a present is a kept world when
-        #  they agree by cell, and a premise states a reading by cell; but a dose that moves
-        #  the pot within its cell is progress toward the boundary, and steering to the aim
-        #  inside the region is work, so the cone's diffs stay by number.
-        self._cells = self._partition(desire, base)
         self._base_facts = signature.facts((
             quad for iri in [*store.public_graphs(), *store.recorded_graphs()]
             for quad in store.quads(iri)), self._keys)
@@ -1409,9 +1372,13 @@ class Planner:
         #  is scored. An act carries no window yet: nothing in a search knows when.
         act = Step.from_row(row, quantity=bind["litres"] or None)
         path = node.taken + (act,)
+        graph = self.imaginarium.reached(self._graph(node), path, added, retracted)
+        #  WHAT THE PREDICTED READING IS (#576): the bands the domain's entailment asserts on
+        #  the node the rule added, asked of the forked world and carried in the diff beside
+        #  the number, so a kept world and a step's prediction say the reading's class too.
+        added = list(added) + self.imaginarium.entailed(graph, added, self._keys)
         adds, retracts = signature.facts(added, self._keys), signature.facts(retracted, self._keys)
         diff = signature.advance(node.diff, adds, retracts, self._base_facts)
-        graph = self.imaginarium.reached(self._graph(node), path, added, retracted)
         #  When this path's last change completes: the step's own `orexis:landsAfter`, asked of
         #  the rule exactly as the keeper asks it, summed along the path (#472). None — no
         #  stated timing — adds nothing, which is the keeper's own contract for it.

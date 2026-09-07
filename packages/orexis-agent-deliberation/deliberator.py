@@ -451,10 +451,9 @@ class Deliberator:
             search = self._planners[desire.uri] = Planner(self.agent, self.me)
         kept = None
         if remembered.remembered_for(self.agent, desire.uri):
-            #  KEYED BY CELL (#573): a remembered plan's premises state readings by cell,
-            #  so its applicability is asked with the partition this want's readers imply.
-            kept = remembered.applicable(self.agent, desire.uri, self.agent.desires.query_union,
-                                         cells=search.partition(desire))
+            #  KEYED BY WHAT A READING IS (#576): a remembered plan's premises state readings
+            #  by the bands the domain asserted, plain triples asked of the present.
+            kept = remembered.applicable(self.agent, desire.uri, self.agent.desires.query_union)
         if kept is not None:
             uri, steps, cost = kept
             plan = planner.Plan(planner.REMEMBERED, tuple(steps), desire.urgency, None, cost=cost)

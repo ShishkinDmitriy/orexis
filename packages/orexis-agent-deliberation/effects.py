@@ -325,6 +325,10 @@ def _premises_template(text: str, keyed: tuple, restrict: tuple) -> str | None:
                  if isinstance(t, Variable) and str(t) not in tokens}
         for n, v in enumerate(sorted(nodes, key=str)):
             template.append(f"{v.n3()} a ?_t{n} .")
+            #  AND WHAT ELSE IT IS (#576): every class the world's own graph types a keyed
+            #  node with — the bands the domain asserted — so a premise can state the
+            #  reading by what it is rather than by its number.
+            template.append(f"{v.n3()} a ?_u{n} .")
             #  Where the rule could have read the node's type: the default graph, or the
             #  world's own readings graph — `$state`, the one graph a possible world holds
             #  apart. Never `GRAPH ?g`: in an imaginarium that is every sibling world at once.
@@ -336,7 +340,8 @@ def _premises_template(text: str, keyed: tuple, restrict: tuple) -> str | None:
             #  the node where bound and nothing where not.
             types.append(f"BIND(COALESCE({v.n3()}, <urn:orexis:unbound>) AS ?_v{n}) "
                          f"OPTIONAL {{ VALUES ?_t{n} {{ {classes} }} "
-                         f"{{ ?_v{n} a ?_t{n} }} UNION {{ GRAPH $state {{ ?_v{n} a ?_t{n} }} }} }}")
+                         f"{{ ?_v{n} a ?_t{n} }} UNION {{ GRAPH $state {{ ?_v{n} a ?_t{n} }} }} }} "
+                         f"OPTIONAL {{ GRAPH $state {{ ?_v{n} a ?_u{n} }} FILTER(BOUND(?_t{n})) }}")
     return (f"CONSTRUCT {{ {' '.join(template)} }} "
             f"WHERE {{ {{ {body} }} {' '.join(types)} {filters} }}")
 

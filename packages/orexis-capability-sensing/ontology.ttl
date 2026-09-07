@@ -423,6 +423,38 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 sosa:Observation orexis:keyedBy sosa:hasFeatureOfInterest , sosa:observedProperty ;
                  orexis:carries sosa:hasSimpleResult .
 
+#################  What a reading CAN BE: the bands, as classes  #################
+#
+#  Deliberation is on triples, and a number is not special (#576, the record of that name):
+#  what a reading of a property can be is decided inside the domain, and this domain says it
+#  as CLASSES of observations — the three zones a region divides a property into, and the two
+#  the survival envelope adds outside them. A reading below the region its subject states is a
+#  `sensing:BelowRegion`; one inside is `sensing:InRegion`; one above, `sensing:AboveRegion`;
+#  and past the envelope, `sensing:BelowFloor` or `sensing:AboveCeiling`, each also below or
+#  above the region. These are the FAMILIES. Dry is relative to the plant and an OWL
+#  restriction takes a fixed literal, so the MEMBER classes — one per (subject, property) that
+#  states a range — are minted at genesis by `rules.ru` from the ranges the world states, each
+#  an `owl:intersectionOf` the observation class, the subject and the property by
+#  `owl:hasValue`, and the value by a datatype restriction; and a reading is classified by
+#  ENTAILMENT (`Store.entail`, the second OWL construct the closure honours beside
+#  `owl:hasValue`), when it is written and when a possible world forks. The band page in the
+#  bundle is the concept; `water:LOW`/`OK`/`HIGH` are its names on the wire.
+:BelowRegion a owl:Class ; rdfs:subClassOf sosa:Observation ;
+    rdfs:label "reading below the region" ;
+    rdfs:comment "An observation whose result lies below the operating range its subject states for the property — the LOW band. A member class per (subject, property) is minted at genesis with the range's own floor." .
+:InRegion a owl:Class ; rdfs:subClassOf sosa:Observation ;
+    rdfs:label "reading in the region" ;
+    rdfs:comment "An observation whose result lies inside the operating range its subject states for the property, both ends inclusive — the OK band." .
+:AboveRegion a owl:Class ; rdfs:subClassOf sosa:Observation ;
+    rdfs:label "reading above the region" ;
+    rdfs:comment "An observation whose result lies above the operating range its subject states for the property — the HIGH band." .
+:BelowFloor a owl:Class ; rdfs:subClassOf :BelowRegion ;
+    rdfs:label "reading below the floor" ;
+    rdfs:comment "An observation whose result lies below the survival range its subject states — past the envelope, where the subject does not merely sit badly but ends. Also below the region." .
+:AboveCeiling a owl:Class ; rdfs:subClassOf :AboveRegion ;
+    rdfs:label "reading above the ceiling" ;
+    rdfs:comment "An observation whose result lies above the survival range its subject states. Also above the region." .
+
 #  Was the kernel's (`orexis:Aim`, `orexis:aims`); the region it sits in is this package's, and so is
 #  the aim (the-stake-is-sensings-want).
 #################

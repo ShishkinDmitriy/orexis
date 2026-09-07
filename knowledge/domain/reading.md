@@ -76,5 +76,5 @@ What happened before is in the series store, which is a different question asked
 # Its identity when compared
 
 When a present is matched to a kept world, or a step states what it read, a reading is
-stated by its [cell](/domain/cell.md) — the gap between the thresholds its readers compare it
-against — and not by its number; two readings no rule tells apart are one fact (#573).
+stated by its [band](/domain/band.md) — the class the domain asserted on it — and not by its
+number; two readings the domain calls the same are one fact (#576).

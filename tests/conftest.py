@@ -105,6 +105,7 @@ def genesis_store(readings: dict[str, float] | None = None,
                     sosa:hasSimpleResult "{value}"^^xsd:decimal ;
                     sosa:resultTime "{ts}"^^xsd:dateTime ."""
             for (pid, prop), value in _by_subject_and_property(readings).items())))
+        st.entail(STATE_GRAPH)        # what the seeded readings ARE, as a boot would say (#576)
     return st
 
 

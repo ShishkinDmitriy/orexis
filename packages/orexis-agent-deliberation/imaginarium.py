@@ -40,6 +40,7 @@ from orexis_agent_progression.store import Store
 #  a graph IRI — but in a store nothing else can open, which is what keeps `orexis:PossibleGraph`'s
 #  promise that nothing here survives anything.
 _POSSIBLE = GRAPH_PREFIX + "possible/"
+_RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 
 class Imaginarium(Store):
@@ -136,6 +137,22 @@ class Imaginarium(Store):
         for triple in added:
             self._store.add(ox.Quad(triple.subject, triple.predicate, triple.object, node))
         return name
+
+    def entailed(self, name: str, added, keys) -> list:
+        """The class memberships the vocabulary entails of the KEYED nodes `added` put in
+        world `name` — a predicted reading's bands (#576) — asserted there and handed back
+        as triples for the diff. Asked only about the nodes the step typed with a keyed
+        class, so a fork costs one narrow question."""
+        subjects = {t.subject for t in added
+                    if t.predicate == _RDF_TYPE and isinstance(t.object, ox.NamedNode)
+                    and t.object.value in keys}
+        if not subjects:
+            return []
+        #  The whole world, not the nodes: a rule mints its observation as a blank node,
+        #  and a blank node cannot be named to a query. A forked world holds a handful of
+        #  readings, so the wider question costs what the narrow one would.
+        return [ox.Triple(node, _RDF_TYPE, cls) for node, cls in self.entail(name)
+                if node in subjects]
 
     def drop(self, name: str) -> None:
         """Forget one imagined world's graph (#553, #487). The node that named it keeps its

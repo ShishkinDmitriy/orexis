@@ -127,11 +127,14 @@ CLOSURE = (
     #    Rule 1 has already run, so a restriction on a SUPERCLASS is reached too: `?class
     #    rdfs:subClassOf ?restriction` reads the transitive closure and not one step.
     #
-    #    Deliberately just this one. `owl:someValuesFrom` says a value exists without naming it,
-    #    which materialises nothing; `owl:allValuesFrom` constrains values rather than asserting
-    #    them; cardinality is a shape's job here and pyshacl already does it. `hasValue` is the
-    #    only OWL class expression that turns into ground triples, which is why it is the only one
-    #    a materialising closure can honour at all.
+    #    Deliberately just this one HERE. `owl:someValuesFrom` over a class says a value exists
+    #    without naming it, which materialises nothing; `owl:allValuesFrom` constrains values
+    #    rather than asserting them; cardinality is a shape's job here and pyshacl already does
+    #    it. `hasValue` turns into ground triples, which is why a closure can honour it. The
+    #    second construct materialised in this repo is MEMBERSHIP under an intersection of
+    #    `hasValue` restrictions and a datatype restriction with facets — `Store.entail` (#576),
+    #    run on a reading when it is written or imagined rather than here, since a reading is
+    #    not the world's to hold at genesis.
     f"""INSERT {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?x ?p ?v }} }}
         {_T_BOX}
         USING NAMED <{WORLD_GRAPH}>

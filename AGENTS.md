@@ -556,6 +556,11 @@ fails if pyshacl ever entails something the closure does not. See
   a graph *class* is a T-Box term and genesis resolves it, so **no rule names a graph**.
   `tests/test_provenance.py` refuses a narrowed SELECT. See
   [who-put-the-fact-there](knowledge/decisions/who-put-the-fact-there.md).
+- **An update's WHERE reads the unnamed default graph unless `USING` says otherwise**, and the
+  engine's `query` the same unless `default_graph` is passed — so a rule text run raw against
+  the engine binds nothing, silently, though every graph it names is there. The store's doors
+  (`query`, `construct`, `entail`) assemble the public graphs as the default; a rule run any
+  other way says which graphs it reads.
 - **A graph IRI is an instance, so rule 1 applies to it.** `orexis:WorldGraph` is the term code may
   name; `…/graph/world` is not, any more than a world's `:fern_agent` is. Ask `store.public_graphs()`.
   Two things are still named and both are writes or the bootstrap root, never a reader

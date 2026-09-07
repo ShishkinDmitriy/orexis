@@ -106,3 +106,7 @@ INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{
 {wv}    prov:wasGeneratedBy <{author_uri}> .
 }} }}
 """)
+        #  WHAT IT IS, entailed beside what it says (#576): the bands the domain declares
+        #  this reading a member of, asserted on the node and gone with it at the next
+        #  upsert — never a second copy of the number, a conclusion the vocabulary draws.
+        self.store.entail(STATE_GRAPH, of=[obs])
