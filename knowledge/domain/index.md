@@ -99,7 +99,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [observation](/domain/observation.md) - The node recording one act of observing. One per subject and property, and it replaces rather than accumulates.
 
 * [reading](/domain/reading.md) - The value an observation carries, and the only fact in a belief base that is somebody else's word. It ages; it never expires.
-* [cell](/domain/cell.md) - The gap between two thresholds some rule compares a property against: a reading's identity when matched. Refused as the core's; a class the domain declares.
+* [cell](/domain/cell.md) - The gap between two thresholds a rule compares a property against, a reading's identity when matched. Refused as the core's: the domain describes readings.
 * [interval](/domain/interval.md) - A number with two ends. Not the core's: built into it as PR #575 and refused; a package's own tool for sizing, inside progression.
 
 * [channel](/domain/channel.md) - One named message flow on a bus, as a node — derived per distinct topic, discovered never authored, and the bearer of the encoding.

@@ -173,10 +173,11 @@ it is a record wearing a bullet.
 - **The present is identified among the root's children, never asserted from one** — a child is
   a prediction and the present is observed, so what execution decides is which imagined world
   the real one landed in, and the cone under the match survives while its siblings die.
-- **A number is the package's and a class is the core's** — the domain declares what a reading
-  can BE, a step's precondition and effect are class triples, and progression sizes the act that
-  gets there when it is taken; a partition and an interval were both built into the core and
-  refused on reading, because a concept only the kernel can name is a concept nobody can state.
+- **Deliberation is on triples, and a number is not special** — how a domain describes its
+  world, exact numbers, ranges or classes, is decided inside the domain, and its actions'
+  preconditions and effects are described the same way; the core compares triples and
+  interprets no literal, and progression sizes the act when it is taken. A partition and an
+  interval were both built into the core and refused on reading.
 
 ## The rules the code lives by
 
