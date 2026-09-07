@@ -102,9 +102,8 @@ on absolute worlds, its siblings dropped, and the frontier beneath it is the pas
 The trace says how many worlds the pass began with. Where no kept world is the present, the
 pass starts from nothing, as every pass did before. A retract of a keyed fact — a reading —
 matches by key rather than by the value the rule named, so a world re-made on a present that
-drifted holds one reading per node. The match is exact for now: a reading by its value, which
-is right where nothing moves but the agent and is why a plant resumes nothing yet;
-[identification](/domain/identification.md) by [interval](/domain/interval.md) is what loosens it.
+drifted holds one reading per node. How the present is matched to a kept world, and how
+exactly, is [identification](/domain/identification.md)'s to say.
 
 What it still must not be is the [intention](/domain/intention.md) ledger. Both hold things
 that have not happened. An intention is a commitment that MUST survive a restart, in a

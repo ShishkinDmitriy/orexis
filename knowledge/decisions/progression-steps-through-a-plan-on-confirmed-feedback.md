@@ -61,6 +61,17 @@ expectation was answered; simulating it again would ask the same question with a
 worth of setup — an imaginarium, the wants snapshot, the compiled select — for a fork and a
 rule run. A world that has moved shows up as a failed match, which is the case that re-plans.
 
+# Amended 2026-09-07: what matches means is identification
+
+The seam below that asked what "matches" means closed with #554. The keeper's verdict still
+holds one committed step to its prediction, and the tail still drops on a surprise; what
+changed is what happens to the search's worlds afterwards. They are kept (#553), and the next
+pass identifies the present among them within the want's view
+([identification](/domain/identification.md)): a step that landed as predicted resumes the
+cone at the child it reached, a step that landed in a sibling the search explored resumes
+there, and a present no kept world matches starts a pass from nothing. Matching is exact
+within the view until intervals (#556) give a prediction a width.
+
 # Seams left open
 
 - **What "matches" means** — settled in the build: the step's canonical diff is held to the
