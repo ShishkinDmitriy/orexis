@@ -124,7 +124,9 @@ market:Acquiring
                  sosa:hasFeatureOfInterest $subject ;
                  sosa:observedProperty $about ;
                  sosa:resultTime ?now ;
-                 sosa:hasSimpleResult ?predicted .
+                 sosa:hasSimpleResult ?predicted ;
+                 sensing:atLeast ?low ;
+                 sensing:atMost ?high .
         } WHERE {
             $me orexis:actsFor $subject ; market:bidsIn ?via .
             ?via market:marketFor ?source .
@@ -134,6 +136,11 @@ market:Acquiring
             ?term market:ofGood ?good ; market:aboutProperty $about .
             GRAPH $beliefs { $me ?term ?conversion }
             FILTER(?conversion > 0)
+            #  HOW WIDE (#556): my tolerance, or the capability's default — the pick review
+            #  moves on the residuals of lots that landed, read where the arithmetic is.
+            OPTIONAL { GRAPH $beliefs { $me market:tolerance ?mine } }
+            market:Bidding market:tolerance ?default .
+            BIND(COALESCE(?mine, ?default) AS ?tolerance)
             #  AN ACT OF ZERO SIZE MAKES NOTHING TRUE, and the filter is load-bearing rather
             #  than defensive. `value_bid` cedes at or above the aim, so a content agent sizes
             #  its bid at nothing — and without this the rule would still CONSTRUCT a reading
@@ -149,8 +156,19 @@ market:Acquiring
             #  looks like, and a rule that reads $state already does. Nothing read yet is zero.
             OPTIONAL { GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
                                        sosa:observedProperty $about ;
-                                       sosa:hasSimpleResult ?was } }
-            BIND(COALESCE(?was, 0) + ($litres / ?conversion) AS ?predicted)
+                                       sosa:hasSimpleResult ?was .
+                                       OPTIONAL { ?standing sensing:atLeast ?wasLow ;
+                                                            sensing:atMost ?wasHigh } } }
+            #  ROUNDED TO SIX PLACES, and the rounding is load-bearing: the engine's decimal
+            #  holds eighteen fractional digits, a litre over a conversion of 0.375 repeats
+            #  past them, and a PRODUCT of that with the tolerance overflows — a BIND whose
+            #  expression fails binds nothing, no error, and the ends silently vanish while
+            #  the number stays. Six is what the store writes every derived number with.
+            #  PARENTHESISED, because the engine reads `a / b * c` as `a / (b * c)`.
+            BIND(ROUND(($litres / ?conversion) * 1000000) / 1000000 AS ?movement)
+            BIND(COALESCE(?was, 0) + ?movement AS ?predicted)
+            BIND(COALESCE(?wasLow, ?was, 0) + ?movement - ?tolerance * ?movement AS ?low)
+            BIND(COALESCE(?wasHigh, ?was, 0) + ?movement + ?tolerance * ?movement AS ?high)
             BIND(BNODE() AS ?obs)
             BIND(NOW() AS ?now)
         }""" ;
@@ -386,7 +404,9 @@ market:Serving
                  sosa:hasFeatureOfInterest ?vessel ;
                  sosa:observedProperty ?levelProp ;
                  sosa:resultTime ?now ;
-                 sosa:hasSimpleResult ?left .
+                 sosa:hasSimpleResult ?left ;
+                 sensing:atLeast ?low ;
+                 sensing:atMost ?high .
         } WHERE {
             ?obl orexis:forClaim $claim ; orexis:amountL ?litres .
             FILTER NOT EXISTS { ?obl orexis:dischargedAt ?done }
@@ -395,9 +415,20 @@ market:Serving
             ?vessel ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?levelProp .
             GRAPH $state { ?cur sosa:hasFeatureOfInterest ?vessel ;
                                  sosa:observedProperty ?levelProp ;
-                                 sosa:hasSimpleResult ?level }
+                                 sosa:hasSimpleResult ?level .
+                           OPTIONAL { ?cur sensing:atLeast ?curLow ; sensing:atMost ?curHigh } }
             FILTER(?level >= ?litres)
-            BIND(?level - ?litres AS ?left)
+            #  HOW WIDE (#556): the host's tolerance on what its pump meters, or Hosting's
+            #  default; a level predicted with a width is read with its ends.
+            OPTIONAL { GRAPH $beliefs { $me market:tolerance ?mine } }
+            market:Hosting market:tolerance ?default .
+            BIND(COALESCE(?mine, ?default) AS ?tolerance)
+            #  Six places, as the dose's movement is: a product past the engine's eighteen
+            #  fractional digits binds nothing and the ends would silently vanish.
+            BIND(ROUND(?litres * 1000000) / 1000000 AS ?poured)
+            BIND(?level - ?poured AS ?left)
+            BIND(COALESCE(?curLow, ?level) - ?poured - ?tolerance * ?poured AS ?low)
+            BIND(COALESCE(?curHigh, ?level) - ?poured + ?tolerance * ?poured AS ?high)
             BIND(BNODE() AS ?obs)
             BIND(NOW() AS ?now)
         }""" ;

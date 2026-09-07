@@ -29,7 +29,15 @@
 #  false UNMET verdicts, which is the false-knowledge bug arriving from the planning side, and
 #  it would look like a device lying rather than like arithmetic disagreeing with itself. So the
 #  actuator computes no expectation at all (#510): the reading this rule predicts rides on the
-#  step, and the keeper holds the world to it within `actuation:tolerance` of the movement.
+#  step, and the keeper holds the world to it.
+#
+#  AND THE NUMBER IS AN INTERVAL (#556, a-predicted-number-is-an-interval). Beside the reading
+#  it expects, the rule states what the reading is AT LEAST and AT MOST: the predicted movement
+#  widened by `actuation:tolerance` — this agent's own pick, or the capability's default where
+#  it states none — read HERE, from the beliefs, rather than passed by the actor at execution.
+#  The search sees the width; the keeper holds the world to these two ends and nothing an actor
+#  adds; and a standing interval's own ends are carried forward, so the width grows along a
+#  chain of doses and a chain too wide to be certainly met is a chain with a look in it (#557).
 #
 #  The conversion is the agent's OWN belief, keyed by the term the venue tie names — the copy an
 #  agent that learned would revise, and the copy it would lose money by being wrong about. The
@@ -68,7 +76,9 @@ actuation:Dosing
                  sosa:hasFeatureOfInterest $subject ;
                  sosa:observedProperty $about ;
                  sosa:resultTime ?now ;
-                 sosa:hasSimpleResult ?predicted .
+                 sosa:hasSimpleResult ?predicted ;
+                 sensing:atLeast ?low ;
+                 sensing:atMost ?high .
         } WHERE {
             $me orexis:actsFor $subject ; actuation:hasActuator ?lever .
             ?lever actuation:actuates $subject ; actuation:drawsFrom ?source .
@@ -76,13 +86,31 @@ actuation:Dosing
             ?term market:ofGood ?good ; market:aboutProperty $about .
             GRAPH $beliefs { $me ?term ?conversion }
             FILTER(?conversion > 0)
+            #  HOW WIDE: my tolerance, or the capability's default where I state none — the
+            #  pick review moves on residuals, read where the arithmetic is (#556).
+            OPTIONAL { GRAPH $beliefs { $me actuation:tolerance ?mine } }
+            actuation:Actuation actuation:tolerance ?default .
+            BIND(COALESCE(?mine, ?default) AS ?tolerance)
             #  WHERE THE PROPERTY STANDS, read by this rule from the world it is asked about
             #  rather than handed in by the planner: the kernel no longer knows what a reading
             #  looks like, and a rule that reads $state already does. Nothing read yet is zero.
+            #  A standing reading predicted with a width — an earlier dose's — is read with
+            #  its ends, so the width compounds along a chain.
             OPTIONAL { GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
                                        sosa:observedProperty $about ;
-                                       sosa:hasSimpleResult ?was } }
-            BIND(COALESCE(?was, 0) + ($litres / ?conversion) AS ?predicted)
+                                       sosa:hasSimpleResult ?was .
+                                       OPTIONAL { ?standing sensing:atLeast ?wasLow ;
+                                                            sensing:atMost ?wasHigh } } }
+            #  ROUNDED TO SIX PLACES, and the rounding is load-bearing: the engine's decimal
+            #  holds eighteen fractional digits, a litre over a conversion of 0.375 repeats
+            #  past them, and a PRODUCT of that with the tolerance overflows — a BIND whose
+            #  expression fails binds nothing, no error, and the ends silently vanish while
+            #  the number stays. Six is what the store writes every derived number with.
+            #  PARENTHESISED, because the engine reads `a / b * c` as `a / (b * c)`.
+            BIND(ROUND(($litres / ?conversion) * 1000000) / 1000000 AS ?movement)
+            BIND(COALESCE(?was, 0) + ?movement AS ?predicted)
+            BIND(COALESCE(?wasLow, ?was, 0) + ?movement - ?tolerance * ?movement AS ?low)
+            BIND(COALESCE(?wasHigh, ?was, 0) + ?movement + ?tolerance * ?movement AS ?high)
             BIND(BNODE() AS ?obs)
             BIND(NOW() AS ?now)
         }""" ;

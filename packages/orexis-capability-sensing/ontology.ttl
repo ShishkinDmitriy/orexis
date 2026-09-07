@@ -423,6 +423,25 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 sosa:Observation orexis:keyedBy sosa:hasFeatureOfInterest , sosa:observedProperty ;
                  orexis:carries sosa:hasSimpleResult .
 
+#  A PREDICTED reading has two ends (#556). An effect rule that predicts a reading — a dose, a
+#  bought lot, a served level — binds `sosa:hasSimpleResult` to the number it expects and
+#  states beside it what the number is at least and at most, the width being the tolerance the
+#  rule read from the agent's own beliefs times the movement it predicts, and a standing
+#  interval's own ends carried forward, so the width grows along a chain. Two predicates rather
+#  than a midpoint and a width because every reader of a reading reads a predicate. Sensing's
+#  words, because a reading is sensing's; an OBSERVED reading states neither, being a point the
+#  instrument reported. Neither is `orexis:carries`: the kernel's `orexis:lowEndOf` and
+#  `orexis:highEndOf` say which carried value they bound, and the signature states the three
+#  as one fact.
+:atLeast a owl:DatatypeProperty ; rdfs:domain sosa:Observation ; rdfs:range xsd:decimal ;
+    orexis:lowEndOf sosa:hasSimpleResult ;
+    rdfs:label "at least" ;
+    rdfs:comment "The low end, inclusive, of the interval a predicted observation's result is expected to lie in. Written by effect rules, never by an instrument." .
+:atMost a owl:DatatypeProperty ; rdfs:domain sosa:Observation ; rdfs:range xsd:decimal ;
+    orexis:highEndOf sosa:hasSimpleResult ;
+    rdfs:label "at most" ;
+    rdfs:comment "The high end, inclusive, of the interval a predicted observation's result is expected to lie in. Written by effect rules, never by an instrument." .
+
 #  Was the kernel's (`orexis:Aim`, `orexis:aims`); the region it sits in is this package's, and so is
 #  the aim (the-stake-is-sensings-want).
 #################

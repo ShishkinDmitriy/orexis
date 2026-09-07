@@ -328,8 +328,15 @@ def _premises_template(text: str, keyed: tuple, restrict: tuple) -> str | None:
             #  Where the rule could have read the node's type: the default graph, or the
             #  world's own readings graph — `$state`, the one graph a possible world holds
             #  apart. Never `GRAPH ?g`: in an imaginarium that is every sibling world at once.
-            types.append(f"OPTIONAL {{ VALUES ?_t{n} {{ {classes} }} "
-                         f"{{ {v.n3()} a ?_t{n} }} UNION {{ GRAPH $state {{ {v.n3()} a ?_t{n} }} }} }}")
+            #  ONLY FOR A NODE THE RULE BOUND (#556): a variable an OPTIONAL left unbound —
+            #  no standing reading, no pick, no ends — is FREE in a pattern that follows, and
+            #  an `OPTIONAL { ?v a ?t }` then binds it to any node of the class; the template
+            #  read that back as the rule having read it, and a missing `sensing:atLeast`
+            #  came back as the observation node itself. So the lookup asks about a stand-in
+            #  that is the node where bound and nothing where not.
+            types.append(f"BIND(COALESCE({v.n3()}, <urn:orexis:unbound>) AS ?_v{n}) "
+                         f"OPTIONAL {{ VALUES ?_t{n} {{ {classes} }} "
+                         f"{{ ?_v{n} a ?_t{n} }} UNION {{ GRAPH $state {{ ?_v{n} a ?_t{n} }} }} }}")
     return (f"CONSTRUCT {{ {' '.join(template)} }} "
             f"WHERE {{ {{ {body} }} {' '.join(types)} {filters} }}")
 
@@ -357,7 +364,11 @@ def _positive_patterns(node) -> list:
 
 
 def _where_body(text: str) -> str | None:
-    """The inside of the query's WHERE group, as written — braces matched, strings skipped."""
+    """The inside of the query's WHERE group, as written — braces matched, strings skipped,
+    and a `#` comment skipped to its line's end as the grammar skips it: a rule's comments
+    are prose, and an apostrophe in one is not a string's opening quote. Read as one until
+    #556 put a third apostrophe into the dosing rule's comments, and every premise of a
+    dose silently vanished."""
     m = re.search(r"\bWHERE\s*\{", text, re.IGNORECASE)
     if not m:
         return None
@@ -370,6 +381,10 @@ def _where_body(text: str) -> str | None:
                 i += 1
             elif c == quote:
                 quote = None
+        elif c == "#":
+            i = text.find("\n", i)
+            if i < 0:
+                return None
         elif c in "\"'":
             quote = c
         elif c == "{":

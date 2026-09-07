@@ -402,6 +402,12 @@ the search discarded its own answer as somewhere already reached, before anythin
 it repaired the want. The paragraph was right that this is where the question comes back; it was
 looking at the signature, and the answer is in the loop.
 
+**Amended 2026-09-07 (#556): an observation's value may be a PAIR.** A reading an effect
+predicted carries two ends beside its number, and it canonicalises to its upsert key and the
+pair — so a narrower interval at the same midpoint is a new world, which is what a look is
+for once #558 says how far it narrows, and a look that carries a standing width through
+still nets to nothing. An observed reading has no ends and canonicalises as it always did.
+
 **Cycle detection is about EXPANSION, not about refusing an answer**, and the fix says only that:
 a step is asked whether it MEETS an unmet want before `seen` decides whether to expand from it. A
 step that answers the question is not a place to search onward from. Everything above survives

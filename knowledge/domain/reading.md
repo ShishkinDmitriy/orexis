@@ -77,4 +77,6 @@ What happened before is in the series store, which is a different question asked
 
 When a present is matched to a kept world, or a step states what it read, a reading is
 stated by its [cell](/domain/cell.md) — the gap between the thresholds its readers compare it
-against — and not by its number; two readings no rule tells apart are one fact (#573).
+against — and not by its number; two readings no rule tells apart are one fact (#573). A
+reading an effect PREDICTED has two ends besides (#556): it is an [interval](/domain/interval.md),
+and a present that lands inside it is the reading the step promised.

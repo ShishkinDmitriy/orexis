@@ -62,6 +62,32 @@ class Act:
     took: bool                        # some actor took it, or none could now — standing
 
 
+def is_number(value) -> bool:
+    """Is this carried value a number the world can be held to — a reading, or the interval
+    an effect predicted one in? Never a bool, and never a cell, which names a range no
+    reading states (#573)."""
+    if isinstance(value, tuple):
+        return bool(value) and value[0] == "interval"
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def ends(value) -> tuple[float, float]:
+    """A carried value's two ends, low and high: a predicted interval's own — the canonical
+    form `("interval", low, high)` the signature states a reading with a width in (#556) —
+    and a point's twice over. Read here, in the layer that keeps the ledger, so the keeper
+    holds the world to a step's own interval with no search in sight."""
+    if isinstance(value, tuple) and value and value[0] == "interval":
+        return float(value[1]), float(value[2])
+    return float(value), float(value)
+
+
+def midpoint(value) -> float:
+    """The one number an interval stands for — what the residual records as the prediction,
+    so the review rules over residuals read what they always read."""
+    low, high = ends(value)
+    return (low + high) / 2
+
+
 def predicts_json(predicts) -> str:
     """The step's predicted diff as one literal for the ledger: two lists of canonical facts,
     exactly as `signature.facts` states them, so a step read back from the ledger can be

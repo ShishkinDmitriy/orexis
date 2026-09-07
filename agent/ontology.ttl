@@ -661,10 +661,26 @@ orexis:carries a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range <http:/
     rdfs:label "carries" ;
     rdfs:comment "The predicate a keyed node STATES — the value that makes two worlds different. Everything else on the node (an instant, who made it) is not where a plan stands: a look that predicts the value it already holds nets to nothing, which is what keeps looking from being a new world every time." .
 
+#  A PREDICTED NUMBER IS AN INTERVAL (#556, a-predicted-number-is-an-interval). An effect rule
+#  that predicts a reading states two ends beside it — what the value is at least and at most,
+#  widened by the tolerance the rule read from the agent's own beliefs — and the two predicates
+#  that carry them say WHICH carried value they bound. The signature states the three as ONE
+#  fact whose value is the pair, so a narrower interval at the same midpoint is a new world and
+#  a look is what narrows it; the keeper holds the world to the pair, and an actor passes
+#  nothing. An observed reading carries no ends: it is a point, until staleness widens it
+#  (#558). Declared on the PREDICATE, class-free, because which predicate bounds which is a
+#  fact about the vocabulary and not about any one node.
+orexis:lowEndOf a owl:ObjectProperty ; rdfs:domain <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ; rdfs:range <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ;
+    rdfs:label "low end of" ;
+    rdfs:comment "The subject predicate carries the LOW end of the interval the object predicate's value is predicted to lie in — inclusive. Stated by the package whose effect rules write it (sensing: `sensing:atLeast orexis:lowEndOf sosa:hasSimpleResult`), read by the signature, which folds the pair into the carried value, and by the keeper, which holds the world to it." .
+orexis:highEndOf a owl:ObjectProperty ; rdfs:domain <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ; rdfs:range <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ;
+    rdfs:label "high end of" ;
+    rdfs:comment "The subject predicate carries the HIGH end of the interval the object predicate's value is predicted to lie in — inclusive. The twin of `orexis:lowEndOf`; a node stating one end without the other states a point." .
+
 #################  What an action IS  #################
 
 orexis:answer a assembly:Extension ;
-    assembly:signature "(keyed_class, key, carried, since, baseline, tolerance) -> Graph | None" ; orexis:row orexis:Progression ; rdfs:label "answer" ; rdfs:comment "What would an observation that ANSWERS this predicted fact look like? Asked for each KEYED fact a step predicts (a class some package declared `orexis:keyedBy`): the class, its key values and what it carries, as the step's prediction states them. A sh:NodeShape on the subject, conforming when a reading of the property later than `since` lies within `tolerance` of the predicted movement from the baseline — sensing's, because what a reading is is sensing's (#516, #518). The keeper holds the step on it; None is no opinion, and the first opinion wins." .
+    assembly:signature "(keyed_class, key, carried, since) -> Graph | None" ; orexis:row orexis:Progression ; rdfs:label "answer" ; rdfs:comment "What would an observation that ANSWERS this predicted fact look like? Asked for each KEYED fact a step predicts (a class some package declared `orexis:keyedBy`): the class, its key values and what it carries, as the step's prediction states them. A sh:NodeShape on the subject, conforming when a reading of the property later than `since` lies within `tolerance` of the predicted movement from the baseline — sensing's, because what a reading is is sensing's (#516, #518). The keeper holds the step on it; None is no opinion, and the first opinion wins." .
 
 orexis:witness a assembly:Extension ;
     assembly:signature "(keyed_class, key) -> float | None" ; orexis:row orexis:Progression ; rdfs:label "witness" ; rdfs:comment "What value does the world show NOW for this keyed fact — the reading a step predicted, as it stands at the verdict? Asked once per verdict for the residual (observed against predicted) the reviewer reads; sensing's, because what a reading is is sensing's (#518). None is no opinion." .
@@ -835,7 +851,8 @@ orexis:refines a owl:ObjectProperty ; rdfs:domain orexis:Bridge ; rdfs:range ore
 #  ledger, so keeping is not one way of having an ability — and they hang on the class itself,
 #  which is what they were always about: how many refusals make a claim suspect, and how long
 #  a commitment may absorb a repeat impulse. (What counts as the world answering is the
-#  actor's tolerance on its own prediction now — a package's pick, not a kernel figure.)
+#  interval the step's own effect rule predicted — its ends widened by a package's pick, the
+#  tolerance, which the rule reads; not a kernel figure, and not the actor's to state.)
 
 
 

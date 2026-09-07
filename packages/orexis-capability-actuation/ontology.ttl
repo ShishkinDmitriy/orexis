@@ -80,6 +80,9 @@
 #  pass, which is why the ceiling is there. No domain is stated, deliberately: an agent holds
 #  its pick and the CAPABILITY holds the default an agent that states none gets, as
 #  `progression:Intention` holds `suspectAfter`. The sensing grain as a floor is a seam (#518).
+#  READ BY THE EFFECT RULE (#556): the dosing construct in `actions.ttl` binds the predicted
+#  reading's two ends from this pick, so the width is the search's to see and the keeper's to
+#  hold the world to; the actor passes nothing at execution.
 :tolerance a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:label "tolerance" ;
     rdfs:comment "How far, as a fraction of the movement a step predicted, an observed value may land from the predicted one and still count as the effect the search planned on. An agent's pick within :minTolerance and :maxTolerance; the capability carries the default." .

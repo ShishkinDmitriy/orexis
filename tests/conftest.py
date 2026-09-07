@@ -422,18 +422,21 @@ def write_reading(agent, value: float, observed_property: str | None = None, age
         ts=(datetime.now(timezone.utc) - timedelta(seconds=age_s)).isoformat())
 
 
-def predicted_reading(subject_uri: str, observed_property: str, value: float) -> tuple:
+def predicted_reading(subject_uri: str, observed_property: str, value: float,
+                      low: float | None = None, high: float | None = None) -> tuple:
     """A step's prediction of one reading, in the canonical fact form the search states it in
     (`signature.facts`) — what `progression:predicts` holds for a dose. For tests that adopt a step
-    by hand and still want a watch on its end (#510): (adds, retracts)."""
+    by hand and still want a watch on its end (#510): (adds, retracts). With `low` and `high`
+    the reading is predicted as an INTERVAL (#556), as an effect rule states one; without
+    them a point, which the world must show exactly."""
     SOSA = "http://www.w3.org/ns/sosa/"
     key = ((SOSA + "hasFeatureOfInterest", subject_uri), (SOSA + "observedProperty", observed_property))
-    return (frozenset({("keyed", SOSA + "Observation", key, SOSA + "hasSimpleResult", value)}),
+    stated = ("interval", low, high) if low is not None and high is not None else value
+    return (frozenset({("keyed", SOSA + "Observation", key, SOSA + "hasSimpleResult", stated)}),
             frozenset())
 
 
-def predicted_readings(agent, step_uri: str) -> list[float]:
-    """The readings a ledger step predicts — the values under `progression:predicts`."""
+def _predicted(agent, step_uri: str) -> list:
     from orexis_agent_progression.act import predicts_from_json
     from orexis_agent_progression.store import bindings
     rows = bindings(agent.intentions.query_union(
@@ -441,4 +444,17 @@ def predicted_readings(agent, step_uri: str) -> list[float]:
     if not rows:
         return []
     adds, _ = predicts_from_json(rows[0]["p"])
-    return [float(f[4]) for f in adds if f[0] == "keyed" and f[3].endswith("hasSimpleResult")]
+    return [f[4] for f in adds if f[0] == "keyed" and f[3].endswith("hasSimpleResult")]
+
+
+def predicted_readings(agent, step_uri: str) -> list[float]:
+    """The readings a ledger step predicts — the values under `progression:predicts`, an
+    interval by its midpoint."""
+    from orexis_agent_progression.act import midpoint
+    return [midpoint(v) for v in _predicted(agent, step_uri)]
+
+
+def predicted_intervals(agent, step_uri: str) -> list[tuple[float, float]]:
+    """The two ends of every reading a ledger step predicts (#556) — a point twice over."""
+    from orexis_agent_progression.act import ends
+    return [ends(v) for v in _predicted(agent, step_uri)]

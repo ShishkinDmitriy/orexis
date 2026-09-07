@@ -271,3 +271,8 @@ Must comfortably exceed the longest a holder may wait before presenting, which i
 :maxTolerance a owl:DatatypeProperty ; rdfs:domain orexis:Capability ; rdfs:range xsd:decimal ; rdfs:label "max tolerance" .
 :tolerance a review:RevisableBelief ; review:revisableToward :minTolerance , :maxTolerance .
 :Bidding :tolerance 0.5 ; :minTolerance 0.05 ; :maxTolerance 1.0 .
+#  READ BY THE EFFECT RULES (#556): Acquiring's construct widens the reading a lot predicts by
+#  the bidder's pick, Serving's the level a serve leaves by the host's — one term, since an
+#  agent's tolerance is a belief about its own model of the water it moves, whichever side of
+#  the venue it stands on — and the host's default is the same figure, carried on Hosting.
+:Hosting :tolerance 0.5 ; :minTolerance 0.05 ; :maxTolerance 1.0 .

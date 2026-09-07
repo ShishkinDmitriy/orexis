@@ -35,10 +35,13 @@ worker may be reading. The match is made WITHIN THE VIEW: the predicates the wan
 names, and for a reading the property the want is about, so a fact the want never reads may
 drift — the butt's level under a moisture plan, a stray fact in a courier's world — and the
 cone stands. A reading is matched by its [cell](/domain/cell.md) (#573): a pot that landed a
-hundredth off its prediction is the kept world, a pot across a threshold is another. A match
-by cell that is not exact re-roots at the node, scores it from the present, and drops what was
-imagined beneath it, since those worlds were computed from the number the node predicted; an
-exact match keeps the subtree whole.
+hundredth off its prediction is the kept world, a pot across a threshold is another. Within the
+cell, the match is EXACT when every reading the node predicted with a width holds the present
+inside its [interval](/domain/interval.md) (#556) — the keeper's own verdict on the step — and
+the subtree stands whole, since the worlds beneath were computed from that width. A present in
+the cell but outside the interval re-roots at the node, scores it from the present, and drops
+what was imagined beneath it, to be imagined again from the present's own numbers. The root is
+scored from the present either way.
 
 # A surprise is read by what was not imagined
 

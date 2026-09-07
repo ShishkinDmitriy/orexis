@@ -50,7 +50,7 @@ from . import rounds, wallet
 from .wiring import bidding_markets_of
 from .beliefs import BIDDING_PICKS
 from .terms import (BIDDING, CLAIM, CLAIMED_AT, CLAIM_DEBIT, CLAIM_ID, CLAIM_L, HOLDS_CLAIM, NS,
-                    ON_VENUE, PRESENTED_AT, PRESENTING, SENSING, TENDERING, TOLERANCE)
+                    ON_VENUE, PRESENTED_AT, PRESENTING, SENSING, TENDERING)
 
 # What my bids are priced in, found THROUGH MY VENUE AND MY STAKE (#198) rather than by
 # naming any term: the market I bid in is for a source, the source states its good (entailed
@@ -296,16 +296,6 @@ class BiddingModule(Module):
         except FileNotFoundError:
             return payload
         return {**payload, "sig": signing.sign(key, signing.canonical(payload))}
-
-    def tolerance(self) -> float:
-        """How close the world must land to the reading a bought lot predicts — my pick, or
-        the capability's default where I state none (#518)."""
-        rows = bindings(self.agent.desires.query_union(f"""
-SELECT ?t ?mine WHERE {{
-  {{ <{self.me.uri}> <{TOLERANCE}> ?t . BIND(true AS ?mine) }}
-  UNION {{ <{BIDDING}> <{TOLERANCE}> ?t . BIND(false AS ?mine) }} }}"""))
-        rows.sort(key=lambda r: r["mine"] != "true")
-        return float(rows[0]["t"]) if rows else 0.5
 
     def _keeper(self):
         """Whoever keeps my commitments, or None — and None is a complete answer.
@@ -589,11 +579,12 @@ SELECT ?t ?mine WHERE {{
 INSERT DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
   <{claim["uri"]}> <{PRESENTED_AT}> "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime }} }}""")
         if keeper := self._keeper():
+            #  Held to the step's own prediction — the interval Acquiring's rule declared,
+            #  its width my tolerance as the rule read it (#556); nothing of mine passed.
             keeper.expect(intention,
                           f"presented {claim['id']} for {claim['litres']}L — the graph says "
                           f"this moves what I am short of, so show me",
-                          baseline=self._baseline(), tolerance=self.tolerance(),
-                          seeing_s=self._seeing_s())
+                          baseline=self._baseline(), seeing_s=self._seeing_s())
         if (sensing := self.agent.provider(SENSING)) is not None:
             sensing.sense_now()
         return True

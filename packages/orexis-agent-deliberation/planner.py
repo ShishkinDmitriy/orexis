@@ -703,10 +703,11 @@ class Planner:
         root, its siblings and their subtrees are dropped, and the frontier beneath it is the
         next pass's open list. Nothing matching is the cone dead: a fresh pass, as before.
 
-        EXACT, for now: a kept world is the present when their canonical facts agree, a
-        reading by its value. That is right for a world nothing moves but the agent, and it
-        is why a plant, whose readings drift, resumes nothing yet — identification by
-        interval (#554, #556) is what loosens it.
+        BY CELL, then by INTERVAL. A kept world is the present when they agree within the
+        view on what the want reads, a reading by its cell (#573); and the match is EXACT —
+        the subtree beneath it stands — when every fact agrees and every reading the node
+        predicted with a width holds the present's inside it (#556), which is the keeper's
+        own verdict on the step. A puzzle world, all plain facts, is exact or nothing.
         """
         if self.imaginarium is None or self._root is None:
             return False
@@ -751,15 +752,18 @@ class Planner:
             self._surprise = (SURPRISE_EXOGENOUS, _said(wanted))
             self.reset()
             return False
-        #  BY CELL OR EXACTLY (#573). A match by cell identifies the world — the plan's step
-        #  landed where it said, near enough that no rule tells the difference — but the
-        #  worlds beneath the node were computed from the number it predicted, not the
-        #  number the present holds, and a dose from 0.54 is not a dose from 0.50. So a
-        #  match that is not exact keeps the node as the root and drops what was imagined
-        #  beneath it, to be imagined again from the present's own numbers; an exact match
-        #  keeps the subtree whole, as a puzzle world's always is.
-        exact = (self._project(present - base), self._project(base - present)) == \
-            (self._project(node.diff[0]), self._project(node.diff[1]))
+        #  BY CELL, THEN BY INTERVAL (#573, #556). A match by cell identifies the world — the
+        #  plan's step landed where it said, near enough that no rule tells the difference —
+        #  but the worlds beneath the node were computed from what it predicted, and a dose
+        #  from 0.54 is not a dose from 0.50 unless 0.54 is what the prediction MEANT: a
+        #  reading predicted with a width states every reading inside it, and the worlds
+        #  beneath were computed from that width, each carrying its own. So a present inside
+        #  the node's interval is exact and keeps the subtree whole, as a puzzle world's
+        #  always is; a present in the cell but outside the interval keeps the node as the
+        #  root and drops what was imagined beneath it, to be imagined again from the
+        #  present's own numbers.
+        exact = (signature.covers(self._project(node.diff[0]), self._project(present - base))
+                 and self._project(node.diff[1]) == self._project(base - present))
         self._reroot(node, present, subtree=exact, desire=desire)
         return True
 
@@ -798,9 +802,10 @@ class Planner:
         #  one world, and that is what made it the root.
         node.diff = signature.EMPTY
         self._root, self._nodes, self._base_facts = node, keep, present
-        if not subtree and desire is not None:
+        if desire is not None:
             #  Scored from the present, not from the number it was predicted to hold: a pot
-            #  a hundredth below its aim is not a met want.
+            #  a hundredth below its aim is not a met want — whether the subtree stands (the
+            #  present inside the interval, #556) or not (a cell apart, #573).
             node.urgency = self._urgency_in(node, desire)
             node.estimate = self._estimate_in(node, desire)
         self._by_diff = {m.diff: m for m in keep if m.verdict is None}
@@ -1623,7 +1628,10 @@ def _said(diff: tuple) -> str:
     def short(f):
         if f[0] == "keyed":
             key = ",".join(str(v).rsplit("#", 1)[-1].rsplit("/", 1)[-1] for _, v in f[2])
-            return f"{key}={f[4]}"
+            value = f[4]
+            if isinstance(value, tuple) and value and value[0] == "interval":
+                value = f"{value[1]}..{value[2]}"
+            return f"{key}={value}"
         return " ".join(str(t).rsplit("#", 1)[-1].rsplit("/", 1)[-1] for t in f)
     plus, minus = diff
     return "+[" + "; ".join(sorted(map(short, plus))) + "] -[" + "; ".join(sorted(map(short, minus))) + "]"

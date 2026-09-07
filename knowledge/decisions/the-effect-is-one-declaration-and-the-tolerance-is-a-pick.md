@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: The effect is one declaration, and the tolerance is a pick
-status: accepted
+status: superseded-in-part
+superseded-by: a-predicted-number-is-an-interval
 timestamp: 2026-09-02
 description: >-
   What the search plans on and what the world is held to are the same declaration, the
@@ -12,6 +13,16 @@ description: >-
   (metFraction, one-sided and unrevisable); verification by re-simulation (an imaginarium
   at every step where a shape suffices).
 ---
+
+> **Superseded in part** by
+> [a-predicted-number-is-an-interval](/decisions/a-predicted-number-is-an-interval.md)
+> (2026-09-07, #556). What no longer holds is WHO READS THE PICK: "the actor passes its
+> tolerance and nothing else" — the effect rule reads the tolerance from the agent's beliefs
+> and declares the predicted reading's two ends beside the number, the step carries the pair,
+> and the actor passes nothing. Everything refused below stays refused: the actor sizes no
+> expectation, there is no kernel constant for how close, and no step is verified by
+> re-simulation. The pick itself, its bounds and the review that re-picks it on residuals
+> are untouched; what moved is where it is read and when.
 
 # The effect is one declaration, and the tolerance is a pick
 

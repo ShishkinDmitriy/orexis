@@ -155,9 +155,10 @@ it is a record wearing a bullet.
   and how in one place, a triple restating who was retired as a duplicate, and a gate in the
   repo, at onboarding and at boot holds a family to its actions, because a taker missing at
   runtime looked exactly like an actor that was busy.
-- **An effect is one declaration** — the diff the search planned on rides on the step and is
-  what the world is held to, so no actor sizes an expectation of its own; the one thing an
-  actor adds is how close, and that is a bounded pick rather than a kernel constant.
+- **An effect is one declaration, and its width is part of it** — the diff the search planned
+  on rides on the step and is what the world is held to, so no actor sizes an expectation of
+  its own; how close is a bounded pick the RULE reads, never a kernel constant, and never a
+  figure an actor passes at execution.
 - **The desire owns the term and the package owns the measure** — a want says `unmetWhen`
   and `estimates`; what the pattern means and that the estimate never overstates are promises
   about the package's own actions and costs, which a world file cannot keep.
@@ -600,8 +601,12 @@ fails if pyshacl ever entails something the closure does not. See
   Repeat the preamble inside each branch.
 - **An operation this engine lacks binds NOTHING — it does not fail.** `duration / duration`
   and `duration * number` return unbound in pyoxigraph, and so does a decimal division whose
-  dividend is an exact zero (`0.0 / 0.25`; cast the dividend to `xsd:double`), so a column
-  computed that way reads empty for every row and no query errors, no test goes red. It is the same family as the
+  dividend is an exact zero (`0.0 / 0.25`; cast the dividend to `xsd:double`), and so does a
+  decimal PRODUCT past the engine's eighteen fractional digits (`0.5 * (0.02 / 0.375)`; round
+  the repeating operand to six places first, as every derived number here is written), so a
+  column computed that way reads empty for every row and no query errors, no test goes red.
+  And `a / b * c` is evaluated as `a / (b * c)` — measured, `0.02 / 0.375 * 1000000` gave
+  five hundred-millionths — so parenthesise every chain of two operators. It is the same family as the
   empty-result trap above, arriving through arithmetic: measure an unfamiliar operation on a
   literal before building a column on it, and pin what you measured — `tests/test_desires.py`
   does, so the day the engine grows the operation the guard says so.

@@ -21,6 +21,9 @@ DOSING = "http://example.org/orexis/actuation#Dosing"
 _AG = "http://example.org/orexis#"
 RESULT = "http://www.w3.org/ns/sosa/hasSimpleResult"
 RESULT_TIME = "http://www.w3.org/ns/sosa/resultTime"
+AT_LEAST = "http://example.org/orexis/sensing#atLeast"
+AT_MOST = "http://example.org/orexis/sensing#atMost"
+TOLERANCE = "http://example.org/orexis/actuation#tolerance"
 
 
 def _loner(readings):
@@ -179,6 +182,88 @@ def test_the_prediction_is_a_function_of_value_litres_and_the_agents_own_belief(
     assert delta(0.10, 0.24) == pytest.approx(2 * delta(0.10, 0.12)), \
         "and twice the water moves it twice as far — the conversion is a ratio"
     assert delta(0.10, 0.12) > 0, "a dose of water raises moisture, which the belief states"
+
+
+# --- the number is an interval (#556) -----------------------------------------
+
+def _dose(gardener, litres: float):
+    actuation = next(m for m in gardener.modules if m.name == "actuation")
+    predicted, _ = effects.apply(
+        gardener.beliefs, DOSING, me=f"<{actuation.me.uri}>",
+        subject=f"<{actuation.me.acts_for}>", about=f"<{MOISTURE}>",
+        state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>",
+        litres=repr(litres))
+    (mid,), (low,), (high,) = (_values(predicted), _values(predicted, AT_LEAST),
+                               _values(predicted, AT_MOST))
+    return float(mid), float(low), float(high)
+
+
+def test_the_dose_declares_two_ends_from_the_agents_own_tolerance(monkeypatch):
+    """A PREDICTED NUMBER IS AN INTERVAL (#556). Beside the reading it expects, the rule
+    states what the reading is at least and at most: the movement widened by
+    `actuation:tolerance` — the capability's default of 0.5 where the agent states none,
+    the agent's own pick where it does — read by the RULE from the beliefs, so the search
+    sees the width and the actor passes nothing at execution. Pinned on the engine, since an
+    operation it lacks binds nothing: every end is a number, on either side of the midpoint."""
+    from conftest import write_reading
+    gardener = build_agent("gardener", _loner({("zz", MOISTURE): 0.10}), monkeypatch)
+    write_reading(gardener, 0.10, MOISTURE)
+    mid, low, high = _dose(gardener, 0.12)
+    movement = mid - 0.10
+    assert movement > 0
+    assert (low, high) == (pytest.approx(mid - 0.5 * movement), pytest.approx(mid + 0.5 * movement)), \
+        "the default tolerance: half the movement either way"
+    gardener.beliefs.update(f"""INSERT DATA {{ GRAPH <{beliefs_graph('gardener')}> {{
+        <{gardener.me.uri}> <{TOLERANCE}> 0.1 }} }}""")
+    mid2, low2, high2 = _dose(gardener, 0.12)
+    assert mid2 == pytest.approx(mid), "the pick moves the width and not the number"
+    assert (low2, high2) == (pytest.approx(mid - 0.1 * movement), pytest.approx(mid + 0.1 * movement)), \
+        "my own pick, where I state one"
+
+
+def test_a_movement_that_repeats_still_binds_its_ends(monkeypatch):
+    """The engine trap, pinned where it bit: 0.02 L through the loner's 0.375 L-per-fraction
+    is 0.0533… repeating, the engine's decimal holds eighteen fractional digits, and the
+    PRODUCT of that with the tolerance overflowed — a BIND whose expression fails binds
+    nothing, no error, so the number stayed and the ends silently vanished, and the step
+    was held to a point. The rule rounds the movement to six places, as the store writes
+    every derived number; the ends must be numbers on either side of the midpoint."""
+    from conftest import write_reading
+    gardener = build_agent("gardener", _loner({("zz", MOISTURE): 0.10}), monkeypatch)
+    write_reading(gardener, 0.10, MOISTURE)
+    mid, low, high = _dose(gardener, 0.02)
+    assert 0.10 < mid and low < mid < high, "a repeating movement has ends"
+    assert (low, high) == (pytest.approx(mid - 0.5 * (mid - 0.10), abs=1e-6),
+                           pytest.approx(mid + 0.5 * (mid - 0.10), abs=1e-6))
+
+
+def test_the_width_compounds_along_a_chain_and_a_look_carries_it_through(monkeypatch):
+    """A standing reading predicted with a width — an earlier dose's — is read WITH its ends,
+    so the second dose's interval is the first's shifted and widened again: a long chain
+    without a look stops being certainly met, which is the correct behaviour rather than a
+    defect. A look carries the standing width through unchanged: what it narrows to is the
+    instrument's grain, which is #558's to say, so a look after a dose still nets to nothing."""
+    from conftest import write_reading
+    gardener = build_agent("gardener", _loner({("zz", MOISTURE): 0.10}), monkeypatch)
+    write_reading(gardener, 0.30, MOISTURE)
+    _, low0, high0 = _dose(gardener, 0.12)
+    width0 = high0 - low0
+    gardener.beliefs.update(f"""INSERT {{ GRAPH <{STATE_GRAPH}> {{ ?obs <{AT_LEAST}> 0.25 ; <{AT_MOST}> 0.35 }} }}
+        WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?obs <http://www.w3.org/ns/sosa/hasFeatureOfInterest> <{gardener.me.acts_for}> ;
+                                          <http://www.w3.org/ns/sosa/observedProperty> <{MOISTURE}> }} }}""")
+    mid, low, high = _dose(gardener, 0.12)
+    movement = mid - 0.30
+    assert (low, high) == (pytest.approx(0.25 + movement - 0.5 * movement),
+                           pytest.approx(0.35 + movement + 0.5 * movement)), \
+        "the standing ends shifted by the movement and widened by the tolerance"
+    assert high - low == pytest.approx(width0 + 0.10), "the widths add"
+    actuation = next(m for m in gardener.modules if m.name == "actuation")
+    looked, _ = effects.apply(
+        gardener.beliefs, OBSERVING, me=f"<{actuation.me.uri}>",
+        subject=f"<{actuation.me.acts_for}>", about=f"<{MOISTURE}>",
+        state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>", litres="0.0")
+    assert (_values(looked), _values(looked, AT_LEAST), _values(looked, AT_MOST)) == \
+        (["0.3"], ["0.25"], ["0.35"]), "a look states the value and the width it found"
 
 
 # --- when it lands, and how you would know (#247) ----------------------------

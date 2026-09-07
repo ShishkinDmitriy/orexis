@@ -35,8 +35,11 @@ def test_what_the_shipped_actions_read_and_write():
     #  graph's upsert — and so writes what the construct writes (#554): read as ANYTHING it
     #  made every reading-replacing lever relevant to every want, and every want's view the
     #  whole world.
+    #  And the two ENDS the rule declares beside the number (#556), which are what the
+    #  view is widened by for a want about the reading.
     assert {x.rsplit("/", 1)[-1].rsplit("#", 1)[-1] for x in acts["http://example.org/orexis/actuation#Dosing"][1]} == {
-        "type", "hasFeatureOfInterest", "observedProperty", "resultTime", "hasSimpleResult"}
+        "type", "hasFeatureOfInterest", "observedProperty", "resultTime", "hasSimpleResult",
+        "atLeast", "atMost"}
 
 
 def test_what_the_shipped_wants_read_and_which_levers_reach_them():

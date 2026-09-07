@@ -41,7 +41,10 @@ market:HostingAgentShape a sh:NodeShape ;
                   sh:datatype xsd:integer ; sh:minExclusive 0 ;
                   sh:message "a host must say how long it waits for bids, or a round never closes" ] ;
     sh:property [ sh:path market:roundCooldownS ; sh:minCount 1 ; sh:maxCount 1 ;
-                  sh:datatype xsd:integer ; sh:minInclusive 0 ] .
+                  sh:datatype xsd:integer ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path market:tolerance ; sh:maxCount 1 ;
+                  sh:datatype xsd:decimal ; sh:minInclusive 0.05 ; sh:maxInclusive 1.0 ;
+                  sh:message "a tolerance on a served level is a pick within the constitutional bounds, as a bidder's is. Optional: a host that states none gets Hosting's default" ] .
 
 market:MarketShape a sh:NodeShape ;
     rdfs:comment "A market states all FOUR of its channels — offer, bid, claim, redeem; a venue you cannot answer on is not a venue. It said three until #275's sweep: the redeem channel arrived with the presentation and the count did not follow, which is a comment describing a shape one constraint smaller than the one underneath it." ;

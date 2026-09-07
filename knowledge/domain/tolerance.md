@@ -3,28 +3,32 @@ type: Domain Concept
 title: Tolerance
 term: http://example.org/orexis/actuation#tolerance
 description: >-
-  How close an observed value must land to the one a step predicted to count as the effect the
-  search planned on — a fraction of the predicted movement. Not physics but a belief about how
-  good the package's conversion is, held like every belief: a pick inside constitutional
-  bounds, revisable on evidence, defaulted by the capability where an agent states none.
+  How wide the interval an effect predicts is — a fraction of the predicted movement either
+  side of the number, read by the effect rule from the agent's beliefs. Not physics but a
+  belief about how good the package's conversion is, held like every belief: a pick inside
+  constitutional bounds, revisable on evidence, defaulted by the capability where an agent
+  states none.
 ---
 
 # What it is
 
-`actuation:tolerance`, and its twin `market:tolerance` for a bought lot. Once the expectation
-after a step is generated from the step's own prediction (`progression:predicts`,
-[step](/domain/step.md)), the only thing left for an actor to say is how close a number must
-land to be "the same effect". That is not a fact about water or soil; it is a fact about how
-good the model is — the conversion a package predicts through — and so it is a
-[pick](/domain/pick.md): an agent's own value inside `minTolerance`/`maxTolerance`, which the
-package's ontology declares and its shape holds the pick to, exactly as `progression:patienceS` is
-held. An agent that states none gets the capability's default (0.5 of the movement), the way
-`progression:Intention` carries `suspectAfter`.
+`actuation:tolerance`, and its twin `market:tolerance` for a bought lot and a served level.
+What a step is held to is its own prediction (`progression:predicts`, [step](/domain/step.md)),
+and since #556 that prediction is an [interval](/domain/interval.md) whose width is this term:
+the effect rule reads it from the agent's beliefs and binds the two ends beside the number.
+That is not a fact about water or soil; it is a fact about how good the model is — the
+conversion a package predicts through — and so it is a [pick](/domain/pick.md): an agent's own
+value inside `minTolerance`/`maxTolerance`, which the package's ontology declares and its shape
+holds the pick to, exactly as `progression:patienceS` is held. An agent that states none gets
+the capability's default (0.5 of the movement), the way `progression:Intention` carries
+`suspectAfter`.
 
 A FRACTION of the predicted movement rather than an absolute in the property's unit, so it is
-scale-free across properties. The band is predicted ± tolerance × |predicted − baseline|: an
-overshoot is as much a surprise as a shortfall, because both say the conversion is wrong, and
-the review is where that evidence goes.
+scale-free across properties. The ends are predicted ∓ tolerance × movement: an overshoot is as
+much a surprise as a shortfall, because both say the conversion is wrong, and the review is
+where that evidence goes. Who reads it moved (#556): the actor used to pass its pick to the
+keeper at execution, which drew the band around a point; now the rule reads the pick where the
+arithmetic is, the search sees the width, and the actor passes nothing.
 
 # Why the bounds are where they are
 

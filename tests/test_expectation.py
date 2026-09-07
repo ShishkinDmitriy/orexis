@@ -21,7 +21,7 @@ from orexis_capability_actuation.terms import DOSING as _ACTUATE
 from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import OREXIS, PROGRESSION
 
-from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading, predicted_readings
+from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading, predicted_readings, predicted_intervals
 
 
 @pytest.fixture
@@ -292,9 +292,10 @@ def test_a_breath_of_grain_past_the_baseline_is_not_the_world_answering(thirsty)
     """The live incident, replayed: a watch was closed by +0.001 of instrument grain two
     seconds before its dose landed, and the closed watch let the same gap be bought twice
     (#167). A movement counts only when it is the one the step PREDICTED (#510): 0.5 L
-    through 2.0 L-per-fraction from 0.30 is a reading of 0.55, and the bidder's tolerance
-    (0.5 of the movement, the capability's default) admits 0.425–0.675. Grain clears
-    nothing, and so does a reading short of the band."""
+    through 2.0 L-per-fraction from 0.30 is a reading of 0.55, and Acquiring's rule widens
+    it by the bidder's tolerance (0.5 of the movement, the capability's default) into the
+    interval 0.425–0.675 the step carries (#556). Grain clears nothing, and so does a
+    reading short of the band."""
     win(thirsty)
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.301})
     keeper = keeper_of(thirsty)
@@ -315,6 +316,17 @@ def test_the_step_carries_the_reading_the_rule_predicted(thirsty):
     assert predicted_readings(thirsty, watch.step) == [pytest.approx(0.55, abs=1e-3)]
 
 
+def test_the_step_carries_the_interval_the_rule_declared(thirsty):
+    """AND THE READING IS AN INTERVAL (#556): the rule states what the reading is at least
+    and at most — the movement widened by the bidder's tolerance, 0.5 of 0.25 either way —
+    and the step carries the pair; the actor passes nothing at execution. The watch is the
+    same band the old actor-passed tolerance drew, now declared where the arithmetic is."""
+    win(thirsty, amount=0.5)
+    watch = keeper_of(thirsty).open_expectations(stake_of(thirsty).uri)[0]
+    (low, high), = predicted_intervals(thirsty, watch.step)
+    assert (low, high) == (pytest.approx(0.425, abs=1e-3), pytest.approx(0.675, abs=1e-3))
+
+
 def test_a_step_that_predicts_nothing_opens_no_watch(thirsty):
     """A step the search did not make — adopted by hand, by an event — predicts nothing, and
     an expectation that cannot be judged is refused rather than left to sit unverified."""
@@ -324,9 +336,10 @@ def test_a_step_that_predicts_nothing_opens_no_watch(thirsty):
     assert keeper.open_expectations() == []
 
 
-def test_no_tolerance_holds_the_world_to_the_exact_reading(thirsty):
-    """A caller that states no tolerance gets the reading itself: grain past the baseline is
-    not it, the predicted value is."""
+def test_a_point_prediction_holds_the_world_to_the_exact_reading(thirsty):
+    """A step predicting a reading with no width — a point, as a caller states one by hand
+    — holds the world to the reading itself: grain past the baseline is not it, the
+    predicted value is. Nothing widens a prediction but the rule that made it (#556)."""
     keeper = keeper_of(thirsty)
     uri = keeper.adopt(TENDERING, stake_of(thirsty).uri, "an act predicting 0.35")
     assert keeper.expect(uri, "exactly 0.35", baseline=reading_of(thirsty, MOISTURE),
@@ -447,7 +460,7 @@ SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{PROGRESSION}by> ?act . ?a
 
 def test_a_step_the_world_overshoots_finishes_the_plan_when_the_want_is_met(monkeypatch):
     """A two-dose plan stands. The first dose's reading comes back inside the step's
-    tolerance but past the aim, and the want is met. The intention resolves SATISFIED with
+    interval but past the aim, and the want is met. The intention resolves SATISFIED with
     the tail finished — not advanced to a second dose an actor would size to nothing and
     leave standing until the patience ran out."""
     from orexis_agent_progression.act import Step
@@ -462,8 +475,8 @@ def test_a_step_the_world_overshoots_finishes_the_plan_when_the_want_is_met(monk
     uri = keeper.adopt([dose, dose], want, "two doses, the search's plan")
     assert uri is not None
     assert keeper.expect(uri, "the first dose", baseline=reading_of(gardener, MOISTURE),
-                         tolerance=2.0,
-                         predicts=predicted_reading(gardener.me.acts_for, MOISTURE, 0.14))
+                         predicts=predicted_reading(gardener.me.acts_for, MOISTURE, 0.14,
+                                                    low=0.06, high=0.22))
     finished = []
     monkeypatch.setattr(gardener, "tell",
                         lambda point, *a: finished.append(point) if point.endswith("planFinished") else None)

@@ -81,6 +81,29 @@ compiled select and the judge must agree on the worst end, and the engine's arit
 new literals must be measured before a column is built on it, because an operation the engine
 lacks binds nothing.
 
+# What is built, and two things building it taught
+
+The effect's half landed as [#556](https://github.com/ShishkinDmitriy/orexis/issues/556)
+(2026-09-07): the three rules that predict a reading bind its two ends from the tolerance they
+read in the agent's beliefs, a standing width compounds along a chain, sensing declares
+`sensing:atLeast` and `sensing:atMost` and the kernel's `orexis:lowEndOf`/`orexis:highEndOf` say
+which value they bound, the signature folds the pair into one fact, the step carries it, the
+keeper draws the answering shape from the two ends and takes no tolerance from any actor, and
+the residual records the midpoint. See [interval](/domain/interval.md) for what stands and what
+waits on #557 and #558.
+
+- **A present inside the interval is exact, and the subtree stands.** #573 had made a match by
+  cell that was not exact drop the worlds beneath the node, since they were computed from the
+  number it predicted. With a width, a present inside it is what the prediction MEANT, and the
+  worlds beneath carry their own compounded widths — so the subtree survives, and a present in
+  the cell but outside the interval is the case that still drops it.
+- **A rule's OPTIONAL the world leaves unbound must state no premise**, and the premises
+  template could not say so: a variable unbound after the body was FREE in the type lookup
+  that followed, which bound it to any node of the keyed class, and a missing `sensing:atLeast`
+  came back as the observation node itself. The lookup now asks about a stand-in that is the
+  node where bound and nothing where not — a trap that had been quietly typing a missing
+  reading as an observation since #550, fatal only once an end could be read.
+
 # Seams left open
 
 - **Representation** — two carried predicates on the predicted observation, so the sensing

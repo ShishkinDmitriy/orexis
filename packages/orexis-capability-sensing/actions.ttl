@@ -87,7 +87,9 @@ sensing:Observing
                  sosa:observedProperty ?property ;
                  sosa:madeBySensor ?sensor ;
                  sosa:resultTime ?now ;
-                 sosa:hasSimpleResult ?value .
+                 sosa:hasSimpleResult ?value ;
+                 sensing:atLeast ?low ;
+                 sensing:atMost ?high .
         } WHERE {
             $me sensing:mayAsk ?sensor .
             ?sensor sensing:monitors $subject ;
@@ -97,6 +99,10 @@ sensing:Observing
                 ?seen sosa:hasFeatureOfInterest $subject ;
                       sosa:observedProperty ?property .
                 OPTIONAL { ?seen sosa:hasSimpleResult ?value }
+                #  A standing WIDTH is carried through unchanged (#556): what a look narrows
+                #  it to is the instrument's grain, and that is #558's to say. Until then a
+                #  look after a dose nets to nothing, as a look always has.
+                OPTIONAL { ?seen sensing:atLeast ?low ; sensing:atMost ?high }
             } }
             BIND(COALESCE(?seen, BNODE()) AS ?obs)
             BIND(NOW() AS ?now)

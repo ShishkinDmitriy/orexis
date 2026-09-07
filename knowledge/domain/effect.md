@@ -59,9 +59,12 @@ uncertainty lives in re-planning and monitoring, which is where this project alr
 `litres / conversion` was already written twice in Python — the bidder sizing its expectation, the
 actuator sizing its self-dose — before anything asked what a dose would do. Since #510 the actuator
 computes nothing at all: the reading the rule predicted rides on the [step](/domain/step.md) as
-`progression:predicts`, and the keeper holds the world to it within the actor's
-[tolerance](/domain/tolerance.md), so the number a planner uses to decide whether dosing helps
-IS the number the world is later held to, by construction rather than by discipline.
+`progression:predicts`, and the keeper holds the world to it, so the number a planner uses to
+decide whether dosing helps IS the number the world is later held to, by construction rather
+than by discipline. Since #556 the rule also declares how WIDE: an [interval](/domain/interval.md),
+the movement either side of the number by the [tolerance](/domain/tolerance.md) the rule reads
+from the agent's beliefs, which the step carries and the keeper holds the world to. The actor
+passes nothing at execution.
 
 Two numbers would mean an agent planning against one future and verifying against another, and
 the failure would look like a device lying rather than like arithmetic disagreeing with itself.

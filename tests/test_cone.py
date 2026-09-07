@@ -11,7 +11,7 @@ import pyoxigraph as ox
 import pytest
 
 from conftest import build_agent, genesis_store
-from orexis_agent_deliberation import planner as search, pursuit
+from orexis_agent_deliberation import planner as search, pursuit, signature
 from orexis_agent_deliberation.imaginarium import Imaginarium
 from orexis_agent_deliberation.planner import Planner
 from orexis_agent_progression.ontology import DELIBERATION_GRAPH, STATE_GRAPH
@@ -198,8 +198,9 @@ def test_a_reading_the_want_is_not_about_may_drift_and_the_moisture_cone_survive
     butt's level moves meanwhile. A butt reading carries the same predicates a moisture
     reading does, so the view tells them apart by the property the want is about; and a
     moisture reading off the prediction within the same CELL is the kept world (#573), since
-    no rule tells the two apart. The cone resumes and the pass finds the want where the dose
-    left it. A reading across a threshold is another world, and that is asserted too."""
+    no rule tells the two apart — inside the INTERVAL the dose predicted it is the world
+    exactly, subtree and all (#556). The cone resumes and the pass finds the want where the
+    dose left it. A reading across a threshold is another world, and that is asserted too."""
     from conftest import write_reading
     from test_planning import MOISTURE, STORED
     monkeypatch.setenv("OREXIS_WORLD", "loner")
@@ -210,11 +211,15 @@ def test_a_reading_the_want_is_not_about_may_drift_and_the_moisture_cone_survive
     plan = planner.plan(desire)
     assert plan.steps, "a dry gardener doses"
     adds, _ = plan.steps[0].predicts
-    predicted = next(f[4] for f in adds if f[0] == "keyed")
+    stated = next(f[4] for f in adds if f[0] == "keyed")
+    at_least, at_most = signature.ends(stated)
+    predicted = signature.point(stated)
+    assert at_least < predicted < at_most, "the dose predicts an interval, not a point (#556)"
     lo, hi = next((f[4][1], f[4][2]) for f in planner._project(
         signature_cells(planner, adds)) if f[0] == "keyed")
     assert lo is not None and lo <= predicted < hi, "the predicted reading has a cell with both bounds"
-    write_reading(agent, predicted + 0.01, MOISTURE)  # lands near the prediction, inside its cell
+    assert at_least <= predicted + 0.01 <= at_most
+    write_reading(agent, predicted + 0.01, MOISTURE)  # lands near the prediction, inside its interval
     write_reading(agent, 2.5, STORED)                 # the butt's level moves meanwhile
     desire = next(g for g in agent.pursuing() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     again = planner.plan(desire)

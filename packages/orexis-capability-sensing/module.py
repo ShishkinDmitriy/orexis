@@ -671,18 +671,18 @@ class SensingModule(Module):
         return (region.low, region.high) if region else None
 
     @contributes(ANSWER)
-    def answering_shape(self, keyed_class: str, key: dict, carried: dict, since,
-                        baseline: float | None, tolerance: float | None):
+    def answering_shape(self, keyed_class: str, key: dict, carried: dict, since):
         """What an observation answering a PREDICTED one looks like — the keeper's question
-        for each keyed fact a step predicts (#510, #516, #518). Only a `sosa:Observation` is
-        sensing's to answer: the key names the subject and the property, what it carries is
-        the predicted result. The shape: on the subject, at least one observation of the
-        property later than `since` whose value lies within `tolerance` of the predicted
-        MOVEMENT from the baseline — predicted ± tolerance × |predicted − baseline| — so an
+        for each keyed fact a step predicts (#510, #516, #518, #556). Only a
+        `sosa:Observation` is sensing's to answer: the key names the subject and the
+        property, what it carries is the predicted result as its two ENDS — the interval the
+        effect rule declared, already widened by the tolerance it read, or a point twice over
+        for a prediction with no width. The shape: on the subject, at least one observation of
+        the property later than `since` whose value lies between the ends, inclusive — so an
         overshoot is as much a surprise as a shortfall, and both are the conversion's to
-        answer for at review. With no baseline or no tolerance the value must be the
-        predicted one exactly, which is what a plain fact gets too. The numbers are baked
-        in: they do not change for the expectation's lifetime, unlike a horizon."""
+        answer for at review. Nothing is widened here: the band is the rule's, and this
+        draws it. The numbers are baked in: they do not change for the expectation's
+        lifetime, unlike a horizon."""
         import rdflib
         SOSA = "http://www.w3.org/ns/sosa/"
         if keyed_class != SOSA + "Observation":
@@ -692,7 +692,8 @@ class SensingModule(Module):
         predicted = carried.get(SOSA + "hasSimpleResult")
         if subject_uri is None or observed_property is None or predicted is None:
             return None
-        predicted = float(predicted)
+        low, high = predicted if isinstance(predicted, tuple) else (predicted, predicted)
+        low, high = float(low), float(high)
         SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
         XSD = rdflib.Namespace("http://www.w3.org/2001/XMLSchema#")
         g = rdflib.Graph()
@@ -713,10 +714,8 @@ class SensingModule(Module):
         g.add((on_time, SH.minExclusive, rdflib.Literal(since.isoformat(), datatype=XSD.dateTime)))
         g.add((inner, SH.property, on_value))
         g.add((on_value, SH.path, rdflib.URIRef(SOSA + "hasSimpleResult")))
-        band = (abs(tolerance) * abs(predicted - baseline)
-                if tolerance is not None and baseline is not None else 0.0)
-        g.add((on_value, SH.minInclusive, rdflib.Literal(round(predicted - band, 6), datatype=XSD.decimal)))
-        g.add((on_value, SH.maxInclusive, rdflib.Literal(round(predicted + band, 6), datatype=XSD.decimal)))
+        g.add((on_value, SH.minInclusive, rdflib.Literal(round(low, 6), datatype=XSD.decimal)))
+        g.add((on_value, SH.maxInclusive, rdflib.Literal(round(high, 6), datatype=XSD.decimal)))
         return g
 
     @contributes(WITNESS)

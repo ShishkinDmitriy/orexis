@@ -80,8 +80,11 @@ class Imaginarium(Store):
         #  leaves two readings on one node, which is the failure `orexis:retracts` exists to
         #  prevent. One rule, everywhere, is easier to keep true than two.
         from . import signature
-        self._carried = frozenset(
-            pred for _, carried in signature.keys_of(self.query).values() for pred in carried)
+        keys = signature.keys_of(self.query)
+        #  The ENDS a predicted reading carries go with the value they bound (#556): a rule
+        #  that replaces a reading replaces its width too.
+        self._carried = (frozenset(pred for _, carried in keys.values() for pred in carried)
+                         | frozenset(pred for pair in keys.ends.values() for pred in pair))
 
     def copy_in(self, source, *graphs: str) -> None:
         """Graphs from ANOTHER store, copied in under their own names — the wants (#547).

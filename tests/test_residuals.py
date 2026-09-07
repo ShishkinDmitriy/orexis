@@ -27,8 +27,11 @@ def answered(agent, observed: float, predicted: float = PREDICTED) -> str:
     keeper, want = agent.keeper, stake_of(agent).uri
     write_reading(agent, BASELINE, MOISTURE)
     uri = keeper.adopt(TENDERING, want, "a lot on its way")
-    assert keeper.expect(uri, "show me", baseline=reading_of(agent, MOISTURE), tolerance=0.5,
-                         predicts=predicted_reading(agent.me.acts_for, MOISTURE, predicted))
+    #  The band a rule would declare at the default tolerance: half the movement either way.
+    band = 0.5 * abs(predicted - BASELINE)
+    assert keeper.expect(uri, "show me", baseline=reading_of(agent, MOISTURE),
+                         predicts=predicted_reading(agent.me.acts_for, MOISTURE, predicted,
+                                                    low=predicted - band, high=predicted + band))
     write_reading(agent, observed, MOISTURE)
     if keeper.open_expectations(want):
         keeper.lapse(uri)

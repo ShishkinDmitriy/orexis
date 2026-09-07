@@ -106,3 +106,38 @@ def test_the_where_body_is_found_past_nested_braces_and_strings():
     text = 'CONSTRUCT { ?s <p> "a } brace" } WHERE { GRAPH <g> { ?s <p> ?o } FILTER(?o != "}") }'
     assert _where_body(text) == ' GRAPH <g> { ?s <p> ?o } FILTER(?o != "}") '
     assert _where_body("SELECT ?x { ?x <p> ?y }") is None, "no WHERE keyword, no body"
+
+
+def test_an_optional_the_world_leaves_unbound_states_no_premise(monkeypatch):
+    """A rule's OPTIONAL the world does not satisfy — the agent states no tolerance pick, the
+    standing reading carries no ends — reads nothing, and the premises say nothing of it.
+    The type lookup that follows the body used to bind such a variable FREELY to any node of
+    the keyed class, so a missing `sensing:atLeast` came back as the observation node itself
+    and the step's premises could not be stated at all (#556)."""
+    agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
+    plan = planner.plan(desire)
+    dose = next(s for s in plan.steps if s.action == ACTUATION + "Dosing")
+    assert dose.premises, "a planned dose carries what its rule read"
+    plain = [f for f in dose.premises if f[0] != "keyed"]
+    assert not [f for f in plain if f[1] == ACTUATION + "tolerance" and f[0] == agent.me.uri], \
+        "no pick stated, no pick read"
+    assert [f for f in plain if f[1] == ACTUATION + "tolerance"], "the capability's default was read"
+    readings = [f for f in dose.premises if f[0] == "keyed"]
+    assert readings, "the standing reading is a premise"
+    assert all(isinstance(f[4], tuple) and f[4][0] == "cell" for f in readings), \
+        "an observed reading has no ends: its cell, never an interval, never a node"
+
+
+def test_a_comment_in_a_rule_is_prose_and_not_a_string():
+    """The WHERE-body matcher skips strings so a brace inside one does not count; it did not
+    skip `#` comments, so an apostrophe in a rule's prose — "the engine's decimal" — opened a
+    string that never closed, and the body was None: no premises, silently, for every step of
+    that action. The shipped dosing rule carries an odd number of them now (#556)."""
+    text = """CONSTRUCT { ?s ?p ?o } WHERE {
+        #  a comment with an apostrophe: the engine's decimal, and a brace { that is prose
+        ?s ?p ?o .
+        OPTIONAL { ?s <urn:q> ?q }   # and another: it's optional }
+    }"""
+    body = _where_body(text)
+    assert body is not None and "OPTIONAL { ?s <urn:q> ?q }" in body
+    assert _where_body("SELECT * WHERE { ?s ?p 'a { brace in a string' }") == " ?s ?p 'a { brace in a string' "
