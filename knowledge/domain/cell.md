@@ -29,6 +29,16 @@ number, stays point-valued, and that is the discipline relevance keeps applied t
 boundary the parser cannot see would collapse two worlds a rule tells apart, quietly. The
 butt's level, compared against the litres a serve needs, is such a property today.
 
+# Refused as a concept of the core
+
+The sovereign's ruling of 2026-09-07: a range or a cell is not the core's — deliberation is on
+triples and a number is not special, and how a reading is described is the domain's decision.
+The plant domain describes its readings as classes with datatype restrictions, minted per want
+by the derivation that mints the want, and a reading is classified by entailment. What this page describes is the
+code as it stands until [#576](https://github.com/ShishkinDmitriy/orexis/issues/576) lands, and
+what the class keeps of it is the identity: two readings no rule tells apart are one fact. See
+[deliberation-is-on-triples-and-a-number-is-not-special](/decisions/deliberation-is-on-triples-and-a-number-is-not-special.md).
+
 # Where it is used, and where it is not
 
 A [reading](/domain/reading.md) is matched by its cell where a present is looked up among the
