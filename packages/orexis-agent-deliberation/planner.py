@@ -427,6 +427,7 @@ class Planner:
                 reads = relevance.reads_of_shape(source.cbd(avoided), avoided)
             else:
                 reads = relevance.ANYTHING          # an obligation, a call: anything
+        self._reads = reads
         if reads is relevance.ANYTHING:
             return None
         return relevance.relevant(reads, relevance.actions_of(self.agent.beliefs.query),
@@ -492,6 +493,7 @@ class Planner:
         #  cost of reporting is the kind of number a runbook should not carry.
         self._started = time.monotonic()
         self._kept = None
+        self._desire_uri = desire.uri
         #  THE PRESENT AMONG THE KEPT WORLDS (#553), else from nothing.
         resumed = self._resume(desire)
         if not resumed:
@@ -520,6 +522,7 @@ class Planner:
         heapq.heapify(self._open)
         self._minted = len(self._open)   # heap entries so far: the tie-break, so nodes never compare
         forked = 0                       # worlds THIS pass has imagined, against `self.budget`
+        self._forked = 0
 
         def settle(row, step, depth):
             """One simulated world weighed: forbidden, dear, late, seen, met, or a place to
@@ -636,6 +639,7 @@ class Planner:
                 ended = settle(row, step, depth)
                 if ended is not None:
                     return ended
+            self._forked = forked
             #  EXPANDED: every row from here has been taken. The graph stays until the pass
             #  ends — a pass counts the worlds it imagines, and re-making one it already made
             #  would count twice — and `_record` drops every graph then (#487, #553); the next
@@ -695,7 +699,12 @@ class Planner:
             return False
         present = self._facts_now()
         base = self._base_facts
-        node = self._by_diff.get((frozenset(present - base), frozenset(base - present)))
+        #  WITHIN THE VIEW (#554, #565): the present is a kept world when they agree on what
+        #  the want's closure reads; a fact outside it may have drifted. Keys stay whole —
+        #  inside a pass two worlds differing in any fact a lever wrote are two worlds — so
+        #  the kept nodes are scanned by their projected diff, a hundred at most.
+        wanted = (self._project(present - base), self._project(base - present))
+        node = next((m for m in self._nodes if self._key(m.diff) == wanted), None)
         if node is None:
             self.reset()
             return False
@@ -722,7 +731,9 @@ class Planner:
         for m in keep:
             dplus, dminus = m.diff
             world = (base - dminus) | dplus
-            m.diff = (frozenset(world - present), frozenset(present - world))
+            #  WITHIN THE VIEW: a fact outside it that drifted between the passes is the
+            #  present's, not the world's to predict, and is not carried into the diff.
+            m.diff = (self._project(world - present), self._project(present - world))
             m.taken = m.taken[depth:]
             m.cost -= cost0
             m.landing -= landing0
@@ -735,7 +746,7 @@ class Planner:
         self._achieved = [m for m in keep if m.met and m is not node]
         self._bound = min((m.cost for m in self._achieved), default=None)
         self._best = min(keep, key=lambda m: (m.urgency, _near(m), m.cost))
-        self._kept_worlds = len(keep) - 1
+        self._kept_worlds = len(keep)          # the present among them: one is a leaf resumed
         #  What `_begin` computes AT the root, for the new one.
         self._at_root(node)
 
@@ -764,6 +775,42 @@ class Planner:
         node.graph = self.imaginarium.reached(parent, node.taken, node.added, node.retracted)
         node.materialised = True
         return node.graph
+
+    def _view_of(self, desire: Desire) -> frozenset | None:
+        """The predicates this pass's worlds may differ in, or None for all of them."""
+        reads = getattr(self, "_reads", relevance.ANYTHING)
+        if reads is relevance.ANYTHING or self._relevant is None:
+            return None
+        view = set(reads)
+        table = relevance.actions_of(self.agent.beliefs.query)
+        for action in self._relevant:
+            r, w = table.get(action, (frozenset(), frozenset()))
+            if r is relevance.ANYTHING or w is relevance.ANYTHING:
+                return None
+            view |= set(r) | set(w)
+        #  As strings: relevance answers rdflib terms, and a canonical fact names its
+        #  predicate as text — an rdflib IRI is not equal to the same text.
+        return frozenset(str(x) for x in view)
+
+    def _key(self, diff: tuple) -> tuple:
+        """A diff as the key two worlds are the same by: both halves within the view."""
+        return (self._project(diff[0]), self._project(diff[1]))
+
+    def _project(self, facts) -> frozenset:
+        """The facts within the view. A plain fact is in it by its predicate; a keyed fact —
+        a reading — by the property the want is about, since every reading carries the same
+        predicates and only its key says which property it is of."""
+        if self._view is None:
+            return frozenset(facts)
+        about = self._about_of.get(getattr(self, "_desire_uri", None))
+        out = set()
+        for f in facts:
+            if f[0] == "keyed":
+                if about is None or any(v == about for _, v in f[2]):
+                    out.add(f)
+            elif f[1] in self._view:
+                out.add(f)
+        return frozenset(out)
 
     def _facts_now(self) -> frozenset:
         """The whole base as the store holds it now, in canonical facts."""
@@ -1153,6 +1200,11 @@ class Planner:
         #  the only defence that sees it. None where the want reads anything a parser cannot
         #  name, and then every row is weighed exactly as before: over-approximation is safe.
         self._relevant = self._relevant_actions(desire, shape)
+        #  THE WANT'S VIEW (#554, #565): the predicates its closure names — what it reads,
+        #  and what the relevant levers read and write — and, for a reading, the property
+        #  the want is about. A present is matched to a kept world WITHIN the view, so a fact
+        #  the want never reads may drift without killing the cone; None is every fact.
+        self._view = self._view_of(desire)
         #  WHAT THE MENU IS ASKED FOR, per node (#504): the relevant levers. Every action on a
         #  menu states an effect — the gate holds a choosable action to both texts (#506) —
         #  so there is no lever to keep on the menu for the sake of saying it was passed over.

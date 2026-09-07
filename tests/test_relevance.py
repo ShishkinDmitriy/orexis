@@ -25,14 +25,18 @@ def _short(s):
 def test_what_the_shipped_actions_read_and_write():
     """Off the texts themselves: Drive writes where the van is and nothing else, Move writes
     what a disk rests on, and a plant lever whose retraction template carries a variable
-    predicate writes ANYTHING — the sound reading of "removes every fact of this node"."""
+    predicate writes what its construct writes — the node it removes is the one it replaces."""
     acts = R.actions_of(genesis_store(world="courier").query)
     reads, writes = acts[C + "Drive"]
     assert _short(writes) == {"at"} and _short(reads) == {"at", "x", "y", "type"}
     assert _short(acts[C + "Pick"][1]) == {"at", "carriedBy"}
     assert _short(acts[H + "Move"][1]) == {"on"}
-    assert acts["http://example.org/orexis/actuation#Dosing"][1] is R.ANYTHING, \
-        "a retraction of `?obs ?p ?o` could remove anything, and says so"
+    #  A retraction of `?obs ?p ?o` removes the node the construct replaces — the readings
+    #  graph's upsert — and so writes what the construct writes (#554): read as ANYTHING it
+    #  made every reading-replacing lever relevant to every want, and every want's view the
+    #  whole world.
+    assert {x.rsplit("/", 1)[-1].rsplit("#", 1)[-1] for x in acts["http://example.org/orexis/actuation#Dosing"][1]} == {
+        "type", "hasFeatureOfInterest", "observedProperty", "resultTime", "hasSimpleResult"}
 
 
 def test_what_the_shipped_wants_read_and_which_levers_reach_them():

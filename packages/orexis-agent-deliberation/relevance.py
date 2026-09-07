@@ -275,16 +275,21 @@ def actions_of(query) -> dict[str, tuple]:
         #  No precondition text is a lever with nothing to widen the want by — the afforder
         #  yields it no rows, but a construct it does carry says what it would write.
         reads = reads_of_select(row["available"]) if row.get("available") else frozenset()
-        writes: set | None = set()
-        for text in (row["construct"], row.get("retracts")):
-            if not text:
-                continue
-            part = writes_of_construct(text)
-            if part is None:
+        writes = writes_of_construct(row["construct"])
+        if writes is not ANYTHING and row.get("retracts"):
+            part = writes_of_construct(row["retracts"])
+            if part is not ANYTHING:
+                writes = frozenset(writes | part)
+            elif not writes:
+                #  A retract with a variable predicate and NO construct beside it removes
+                #  something the text does not name: unreadable, and said so.
                 writes = ANYTHING
-                break
-            writes |= part
-        out[row["action"]] = (reads, frozenset(writes) if writes is not ANYTHING else ANYTHING)
+            #  else: A RETRACT WITH A VARIABLE PREDICATE beside a construct — `?standing ?p
+            #  ?o`, every shipped reading-replacing lever — removes the node the construct
+            #  replaces, the readings graph's upsert, and so writes what the construct
+            #  writes. Read as ANYTHING it made every such lever relevant to every want, and
+            #  every want's view the whole world (#554, #565).
+        out[row["action"]] = (reads, writes)
     return out
 
 

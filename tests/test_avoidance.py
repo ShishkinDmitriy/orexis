@@ -128,19 +128,20 @@ toy:{name} a orexis:Action ;
 @pytest.mark.parametrize("shaped", [False, True], ids=["select", "shape"])
 def test_an_avoided_state_nothing_can_exit_stays_hot_and_says_so(tmp_path, monkeypatch, shaped):
     """Soft means soft: nothing on the menu clears the marker, the search proposes nothing,
-    and the want stays entered at full heat, visible to the ask. The outcome is NOT_BETTER
-    and not NOTHING, deliberately: an avoidance states no `orexis:about`, so it ranges over
-    the WHOLE menu the way a call does — any lever might exit a state — and with real levers
-    weighed and none helping, "my levers do not reach it" is the honest answer where "equip
-    me" would be false."""
+    and the want stays entered at full heat, visible to the ask. The outcome is NOTHING —
+    equip me: no lever the gardener holds writes what the aversion reads, so none is
+    simulated, and "my levers do not reach it" is what NOTHING says. (This read NOT_BETTER
+    while relevance took every reading-replacing lever for writing anything and weighed the
+    pump against a marker it could never touch; #554 made relevance read the retract as what
+    it is, and the answer sharpened with it.)"""
     from orexis_agent_deliberation.planner import Planner
 
     agent, st = _gardener(tmp_path, monkeypatch, shaped=shaped)
     st.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ {MARKER} }} }}")
 
     plan = Planner(agent, agent.me).plan(_avoidance_row(agent))
-    assert plan.outcome == "not better" and not plan.steps, \
-        "levers were weighed and none exits the state — said as what it is"
+    assert plan.outcome == "no candidate" and not plan.steps, \
+        "no lever writes what the aversion reads — said as what it is"
     assert _avoidance_row(agent).urgency == 1.0, "and the want stays hot, never shrugged off"
 
 
