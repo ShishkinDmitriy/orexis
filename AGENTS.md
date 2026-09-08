@@ -71,8 +71,12 @@ never a paraphrase. A plan is steps, so a plan is not a "chain" and a step is no
 synonym is how one concept becomes two: a reader meets both words, looks for the difference, and
 the definitions drift apart from there. The one legitimate second name is the term's — the page
 says which IRI it is bound to, and code speaks the term where prose speaks the word — and where
-a page and its term disagree (`precondition.md` is bound to `progression:premises`) that is a
-debt to settle, not a licence to alternate. A synonym found in a page is fixed in the page, not
+a page and its term disagree that is a debt to settle, not a licence to alternate. One was
+settled by that rule: the precondition page was bound to a term of another name, so a step's own
+facts had two names in one repo, and #580 renamed the term and every identifier that read it —
+leaving no dangling spelling, which `tests/test_layout.py` holds these documents to.
+A word with a SECOND meaning is not that debt: a rule's premises and a capability's premise are
+their own concept and keep the word. A synonym found in a page is fixed in the page, not
 tolerated by the reader.
 
 **One concept, one article.** If a page turns out to define a second thing, that thing gets an

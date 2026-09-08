@@ -47,7 +47,7 @@ reading of its properties can be — dry, in region, wet, and the butt's empty, 
 classes with datatype restrictions on the value they classify — the [bands](/domain/band.md),
 which the domain already had as a word. Dry is relative to the plant, and a restriction takes a
 fixed literal, so the MEMBER classes are minted per (subject, property) that states a range, at
-GENESIS by sensing's `rules.ru` from the same intersection of ranges `desires.ru` computes for
+GENESIS by sensing's `rules.ru` from the same narrowing of ranges `desires.ru` computes for
 the want — at genesis and public rather than in the desire modality's rebuild, because the
 sensed writer classifies a reading in the belief base, where the modality's graphs are not; a
 band keyed to a pick, when one is wanted, would be the rebuild's. The shape says what must hold

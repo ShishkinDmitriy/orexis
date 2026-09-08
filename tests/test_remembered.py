@@ -173,7 +173,7 @@ def test_a_plan_lifted_without_premises_is_forgotten_since_nothing_says_when_it_
     walked = agent.keeper.walked(first)
     _walk(agent, first)
     remembered.forget(agent, _remembered_uri(agent), "make room for one lifted the old way")
-    remembered.lift(agent, WANT, [replace(s, premises=None) for s in walked], None)
+    remembered.lift(agent, WANT, [replace(s, precondition=None) for s in walked], None)
     assert len(remembered.remembered_for(agent, WANT)) == 1
     _repose(agent, "c0_0", "c1_2")
     searches = []
@@ -184,7 +184,7 @@ def test_a_plan_lifted_without_premises_is_forgotten_since_nothing_says_when_it_
     assert remembered.remembered_for(agent, WANT) == [], "and it is forgotten on the spot"
     _walk(agent, again)
     kept = remembered.remembered_for(agent, WANT)
-    assert len(kept) == 1 and all(s.premises is not None for s in kept[0][1]), \
+    assert len(kept) == 1 and all(s.precondition is not None for s in kept[0][1]), \
         "the search's plan, lifted with premises, takes its place"
 
 
@@ -207,9 +207,9 @@ def test_the_regression_subtracts_what_the_chain_produces():
     and key, never by value."""
     from orexis_agent_progression.act import Step
     cls, key = "urn:Obs", (("urn:k", "urn:v"),)
-    first = Step(action="urn:a", via="urn:x", premises=frozenset({("urn:s", "urn:p", "urn:o"), ("keyed", cls, key, "urn:c", 0.1)}),
+    first = Step(action="urn:a", via="urn:x", precondition=frozenset({("urn:s", "urn:p", "urn:o"), ("keyed", cls, key, "urn:c", 0.1)}),
                  predicts=(frozenset({("keyed", cls, key, "urn:c", 0.5)}), frozenset()))
-    second = Step(action="urn:b", via="urn:x", premises=frozenset({("keyed", cls, key, "urn:c", 0.5), ("urn:t", "urn:q", "urn:u")}),
+    second = Step(action="urn:b", via="urn:x", precondition=frozenset({("keyed", cls, key, "urn:c", 0.5), ("urn:t", "urn:q", "urn:u")}),
                   predicts=(frozenset(), frozenset()))
     facts = remembered.regressed([first, second])
     assert facts == frozenset({("urn:s", "urn:p", "urn:o"), ("keyed", cls, key, "urn:c", 0.1), ("urn:t", "urn:q", "urn:u")})

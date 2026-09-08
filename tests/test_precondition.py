@@ -1,6 +1,6 @@
 """A step carries its precondition: the facts its rules read (#550).
 
-What a diff's rule READ in the world it was planned from is the step's premises — the
+What a diff's rule READ in the world it was planned from is the step's precondition — the
 positive patterns of the effect's WHERE and of the availability select, instantiated by the
 engine for that binding and stated as the same canonical facts the prediction is made of.
 Filled once along the winning path, persisted by the keeper, kept by a remembered plan.
@@ -14,7 +14,7 @@ from conftest import build_agent, genesis_store
 from orexis_agent_deliberation import effects, remembered
 from orexis_agent_deliberation.effects import _where_body
 from orexis_agent_deliberation.planner import Planner, _Node
-from orexis_agent_progression.act import Step, premises_from_json, premises_json
+from orexis_agent_progression.act import Step, precondition_from_json, precondition_json
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import bindings
 from test_planning import _thirsty_with_a_nearly_empty_butt, MOISTURE
@@ -36,17 +36,17 @@ def test_a_dose_reads_its_chain_its_conversion_and_the_standing_reading(monkeypa
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     plan = planner.plan(desire)
     dose = next(s for s in plan.steps if s.action == ACTUATION + "Dosing")
-    assert dose.premises, "a planned dose carries what its rule read"
-    read = _predicates(dose.premises)
+    assert dose.precondition, "a planned dose carries what its rule read"
+    read = _predicates(dose.precondition)
     assert {ACTUATION + "hasActuator", ACTUATION + "actuates", ACTUATION + "drawsFrom",
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"} <= read, sorted(read)
     #  The standing reading is a premise by WHAT IT IS (#576) — the band the domain asserted
     #  on it, a plain triple — and never by its number.
-    readings = [f for f in dose.premises if f[0] == "keyed"]
+    readings = [f for f in dose.precondition if f[0] == "keyed"]
     assert readings and all(f[3].endswith("#type") for f in readings), readings
     assert any(str(f[4]).startswith("http://example.org/orexis#band.") for f in readings), "the member band"
     assert SOSA + "hasSimpleResult" not in read
-    assert any(f[0] == "keyed" for f in dose.premises), \
+    assert any(f[0] == "keyed" for f in dose.precondition), \
         "the standing reading is read as the keyed fact the signature knows it by"
     #  Re-asked of the world the first step was planned from — the belief base itself —
     #  with the size the step was planned with: the same facts, exactly.
@@ -54,47 +54,47 @@ def test_a_dose_reads_its_chain_its_conversion_and_the_standing_reading(monkeypa
     bind = planner._bind(desire, node=_Node(graph=STATE_GRAPH), row=first, litres=first.quantity or 0.0)
     from orexis_agent_deliberation import signature
     again = signature.by_class(signature.facts(
-        effects.premises(agent.beliefs, first.action, keyed=tuple(planner._keys), **bind), planner._keys))
-    assert again == first.premises
+        effects.precondition(agent.beliefs, first.action, keyed=tuple(planner._keys), **bind), planner._keys))
+    assert again == first.precondition
 
 
 def test_a_move_reads_what_put_it_on_the_menu(monkeypatch):
     """Hanoi's Move states its precondition in its availability select and almost nothing in
-    its effect's WHERE, so the premises come from the row: the disk on its support, its size,
+    its effect's WHERE, so the precondition comes from the row: the disk on its support, its size,
     the target being a peg. The absences (nothing on the disk, no smaller disk on the peg)
     are the regression's, and are not here."""
     agent = _agent(monkeypatch, *CASES["hanoi, one disk astray"])
     want = next(d for d in agent.pursuing())
     plan = Planner(agent, agent.me).plan(want)
     move = next(s for s in plan.steps if s.action == HANOI + "Move")
-    assert move.premises, "a planned move carries what put it on the menu"
-    read = _predicates(move.premises)
+    assert move.precondition, "a planned move carries what put it on the menu"
+    read = _predicates(move.precondition)
     assert {HANOI + "on", HANOI + "size", "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"} <= read, sorted(read)
-    assert any(f[0] == move.via and f[1] == HANOI + "on" for f in move.premises), \
+    assert any(f[0] == move.via and f[1] == HANOI + "on" for f in move.precondition), \
         "the moved disk's own support is a premise"
 
 
-def test_the_ledger_keeps_the_premises_and_hands_them_back(monkeypatch):
+def test_the_ledger_keeps_the_precondition_and_hands_it_back(monkeypatch):
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     plan = planner.plan(desire)
-    assert plan.steps and plan.steps[0].premises
+    assert plan.steps and plan.steps[0].precondition
     keeper = next(m for m in agent.modules if m.name == "intention")
-    uri = keeper.adopt(plan.steps, desire.uri, "to pin the premises")
+    uri = keeper.adopt(plan.steps, desire.uri, "to pin the precondition")
     walked = keeper.walked(uri)
-    assert walked and walked[0].premises == plan.steps[0].premises
-    assert premises_from_json(premises_json(plan.steps[0].premises)) == plan.steps[0].premises
+    assert walked and walked[0].precondition == plan.steps[0].precondition
+    assert precondition_from_json(precondition_json(plan.steps[0].precondition)) == plan.steps[0].precondition
 
 
-def test_a_remembered_plan_keeps_each_steps_premises(monkeypatch):
+def test_a_remembered_plan_keeps_each_steps_precondition(monkeypatch):
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     plan = planner.plan(desire)
     remembered.lift(agent, desire.uri, list(plan.steps), None)
     kept = remembered.remembered_for(agent, desire.uri)[0][1]
-    assert [s.premises for s in kept] == [s.premises for s in plan.steps]
-    assert all(s.premises for s in kept)
+    assert [s.precondition for s in kept] == [s.precondition for s in plan.steps]
+    assert all(s.precondition for s in kept)
 
 
-def test_a_methods_first_member_inherits_the_premises(monkeypatch):
+def test_a_methods_first_member_inherits_the_precondition(monkeypatch):
     """As the last member inherits the prediction: what made the abstract step applicable
     is what must hold when its first member is taken."""
     agent = build_agent("fern", genesis_store({"fern": 0.30}), monkeypatch)
@@ -102,10 +102,10 @@ def test_a_methods_first_member_inherits_the_premises(monkeypatch):
     acquiring = "http://example.org/orexis/market#Acquiring"
     assert keeper._method_of(acquiring), "the market's protocol is the shipped method"
     facts = frozenset({("urn:a", "urn:b", "urn:c")})
-    members = keeper._expanded([Step(action=acquiring, via="urn:venue", premises=facts,
+    members = keeper._expanded([Step(action=acquiring, via="urn:venue", precondition=facts,
                                      predicts=(frozenset(), frozenset()))])
     assert len(members) >= 2
-    assert members[0].premises == facts and all(m.premises is None for m in members[1:])
+    assert members[0].precondition == facts and all(m.precondition is None for m in members[1:])
     assert members[-1].predicts is not None and all(m.predicts is None for m in members[:-1])
 
 
@@ -116,10 +116,10 @@ def test_the_where_body_is_found_past_nested_braces_and_strings():
 
 
 def test_an_optional_the_world_leaves_unbound_states_no_premise(monkeypatch):
-    """A rule's OPTIONAL the world does not satisfy reads nothing, and the premises say nothing
+    """A rule's OPTIONAL the world does not satisfy reads nothing, and the precondition says nothing
     of it. The type lookup that follows the body used to bind such a variable FREELY: with no
     moisture reading in the world, `?was` was unbound after the body, `OPTIONAL { ?was a ?t }`
-    bound it to any observation there was — the water butt's — and the premises of a dose
+    bound it to any observation there was — the water butt's — and the precondition of a dose
     said the butt's reading was read. The lookup asks about a stand-in now, the node where
     bound and nothing where not."""
     from orexis_agent_deliberation import signature
@@ -130,7 +130,7 @@ def test_an_optional_the_world_leaves_unbound_states_no_premise(monkeypatch):
     keys = signature.keys_of(agent.beliefs.query)
     pump = bindings(agent.beliefs.query(
         f"SELECT ?p WHERE {{ <{agent.me.uri}> actuation:hasActuator ?p }}"))[0]["p"]
-    read = effects.premises(agent.beliefs, ACTUATION + "Dosing", keyed=tuple(keys),
+    read = effects.precondition(agent.beliefs, ACTUATION + "Dosing", keyed=tuple(keys),
                             me=agent.me.uri, subject=agent.me.acts_for, about=MOISTURE,
                             state=STATE_GRAPH, beliefs=beliefs_graph("gardener"), litres=0.1,
                             via=pump, want=desire.uri)
@@ -143,7 +143,7 @@ def test_an_optional_the_world_leaves_unbound_states_no_premise(monkeypatch):
 def test_a_comment_in_a_rule_is_prose_and_not_a_string():
     """The WHERE-body matcher skips strings so a brace inside one does not count; it did not
     skip `#` comments, so an apostrophe in a rule's prose — "the engine's decimal" — opened a
-    string that never closed, and the body was None: no premises, silently, for every step of
+    string that never closed, and the body was None: no precondition, silently, for every step of
     that action, the moment a rule's comments held an odd number of them."""
     text = """CONSTRUCT { ?s ?p ?o } WHERE {
         #  a comment with an apostrophe: the engine's decimal, and a brace { that is prose

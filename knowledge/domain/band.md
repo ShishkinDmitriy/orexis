@@ -39,9 +39,10 @@ and what a reading can be is decided inside the domain. Sensing declares THREE f
 classes of observations, and three is the whole of what a range can say: `sensing:InRegion`,
 and outside it `sensing:BelowRegion` and `sensing:AboveRegion`. A MEMBER is minted per
 (subject, property) that states a range, at genesis by sensing's `rules.ru`, defined in OWL —
-an intersection of the observation class, the subject and the property by `owl:hasValue`, and
-the result by a datatype restriction with the range's own bounds — so an outside reasoner reads
-exactly what the store asserts. The store's entailment door (`Store.entail`) is the second OWL
+four conditions that must all hold: it is an observation, it is of this subject, it is of
+this property, and its value lies between the range's own bounds. `owl:intersectionOf` is the
+construct that says so, and it conjoins CONDITIONS rather than bands — a band is never combined
+with another. An outside reasoner reads exactly what the store asserts. The store's entailment door (`Store.entail`) is the second OWL
 construct materialised here, beside the closure's `owl:hasValue`.
 
 **Three, and none of them combined.** The survival envelope used to mint two more, beneath the
