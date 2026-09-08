@@ -50,9 +50,9 @@ class Desire:
 
     #  When the want stops being satisfiable — `orexis:expiresAt`, carried onto the Desire so
     #  the planner can hold a candidate plan's landing time to the room left. #472: the
-    #  obligation's scope is `orexis:Within`, and this is the deadline that scope reads — a
-    #  legacy record from before the scope word behaves identically, because the deadline is
-    #  the fact and the scope restates it. None for a stake, and None for a debt whose market
+    #  obligation's binding is `orexis:Within`, and this is the deadline that binding reads —
+    #  a legacy record from before the word behaves identically, because the deadline is the
+    #  fact and the binding restates it. None for a stake, and None for a debt whose market
     #  stated no window: such a debt has no landing to miss.
     expires: datetime | None = None
 

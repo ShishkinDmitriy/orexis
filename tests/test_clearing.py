@@ -162,7 +162,7 @@ def test_clear_issues_grants_for_valid_trade():
     tomato = next(g for g in claims if g.sub == "tomato")
     assert tomato.amount_l == 4.0
     assert tomato.debit == pytest.approx(1.60)  # 4.0 * 0.40
-    assert tomato.scope == "actuate:valve/tomato"
+    assert tomato.permits == "actuate:valve/tomato"
     assert len({g.jti for g in claims}) == 2  # unique anti-replay ids
 
 

@@ -7,7 +7,7 @@
 #  A positive want: every disk's chain bottoms out on peg C, by the SHAPE the hanoi package
 #  declares (`hanoi:solved`) and the kernel compiles, approached by its count of disks astray
 #  (`hanoi:disksAstray`). The world says what it wants; the package says what that means and
-#  how far it is. Scope is orexis:AtEnd — the first honest writer of the achievement scope:
+#  how far it is. It binds orexis:AtEnd — the first honest writer of the achievement binding:
 #  nothing erodes while the puzzle sits, the plan's end is the whole of what is asked. Binary
 #  urgency, judged by the kernel from the pattern; the optimal solution is the cheapest
 #  achiever, by no code of this world's.

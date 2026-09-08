@@ -15,7 +15,7 @@ The **promised flow**. [settlement-speaks-rea](/decisions/settlement-speaks-rea.
 market to ValueFlows and found the correction that names this page: what you win in an auction
 is a `vf:Commitment` — *a planned economic flow* — and the valve opening is the
 `vf:EconomicEvent` that fulfils it. `commitment.py` there is that shape and nothing more: `sub`,
-`scope`, `amount_l`, `auction_id`, `jti`, `exp` — and `act`: which
+`permits`, `amount_l`, `auction_id`, `jti`, `exp` — and `act`: which
 [act](/domain/act.md) the flow is a promise of (that page lists what a claim's and a self-dose's
 are). `exp` is that act's `not_after` in the wire's unit; a commitment that arrived over the
 wire carries only `exp`, the act staying with whoever issued it.

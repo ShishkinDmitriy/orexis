@@ -293,15 +293,16 @@ def actions_of(query) -> dict[str, tuple]:
     return out
 
 
-def compartments(actions: dict[str, tuple], rules: tuple = ()) -> tuple[frozenset, ...]:
-    """The COMPARTMENTS of a vocabulary: predicates joined wherever one action or one
-    derivation reads or writes both, and separate where nothing does (#565).
+def scopes(actions: dict[str, tuple], rules: tuple = ()) -> tuple[frozenset, ...]:
+    """The SCOPES of a vocabulary: predicates joined wherever one action or one derivation
+    reads or writes both, and separate where nothing does (#565).
 
-    A hull's word, and the sovereign's: flooding one compartment does not flood the next. Not
-    "component", which is what this repo calls a package, and not "scope", which already names
-    what a commitment's token permits and the axis an `orexis:Always` want sits on.
+    How far anything an agent does can reach. A hull's compartments are the picture — flooding
+    one does not flood the next — and the sovereign ruled the word: a core concept outranks a
+    niche one, so a commitment's token says what it `permits` and a want sits on the binding
+    axis. Not "component", which is what this repo calls a package.
 
-    Two wants in different compartments cannot contradict, because no action of one writes a fact
+    Two wants in different scopes cannot contradict, because no action of one writes a fact
     the other reads — which is what makes it safe to plan them apart, one cone each, and to
     concatenate their plans. Independence is PROVEN this way and never read off namespaces: a
     greenhouse's water and climate words look like two vocabularies until a heater dries the
@@ -312,12 +313,12 @@ def compartments(actions: dict[str, tuple], rules: tuple = ()) -> tuple[frozense
     than what anyone declared. An action whose reads or writes are unreadable joins everything:
     a lever that might touch any predicate cannot be proven not to.
 
-    **A compartment here is a set of PREDICATES, and that is the limit worth naming.** Two vans
-    are two compartments only over VARIABLES — a subject and a predicate together — and this sees
+    **A scope here is a set of PREDICATES, and that is the limit worth naming.** Two vans are
+    two scopes only over VARIABLES — a subject and a predicate together — and this sees
     predicates alone, so it separates a vocabulary and never two instances of one. Measured on
-    every shipped world, it separates nothing at all: 90 predicates, one compartment, whether the
+    every shipped world, it separates nothing at all: 90 predicates, one scope, whether the
     derivations are counted or the actions taken alone. That is the honest state of the claim,
-    and it is why one cone per compartment has nothing yet to split.
+    and it is why one cone per scope has nothing yet to split.
     """
     edges = list(actions.values()) + list(rules)
     known = {str(p) for reads, writes in edges
@@ -352,7 +353,7 @@ def compartments(actions: dict[str, tuple], rules: tuple = ()) -> tuple[frozense
 
 
 def spans(view, parts: tuple[frozenset, ...]) -> int:
-    """How many compartments a view falls across — 1 where the want may be planned as one cone,
+    """How many scopes a view falls across — 1 where the want may be planned as one cone,
     more where its plan would be several concatenated. ANYTHING spans everything there is."""
     if view is ANYTHING:
         return len(parts)

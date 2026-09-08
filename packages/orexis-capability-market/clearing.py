@@ -115,7 +115,7 @@ def issue_claims(trade: Trade, auction_id: str,
     return [
         Claim(
             sub=line.agent,
-            scope=f"actuate:valve/{line.agent}",
+            permits=f"actuate:valve/{line.agent}",
             amount_l=line.qty_l,
             debit=line.cost,
             auction_id=auction_id,

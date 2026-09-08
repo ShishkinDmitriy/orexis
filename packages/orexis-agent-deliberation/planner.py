@@ -516,7 +516,7 @@ class Planner:
         if met_now and here.urgency <= 0.0:
             return self._record(desire, Plan(SATISFIED, (), here.urgency, here.urgency),
                                 here.urgency)
-        #  Within-scope wants have ROOM: seconds until the want expires (#472). A candidate
+        #  Within-binding wants have ROOM: seconds until the want expires (#472). A candidate
         #  whose last change lands past it is LATE, weighed and refused like a dear one.
         room = (max(0.0, (desire.expires - datetime.now(timezone.utc)).total_seconds())
                 if desire.expires is not None else None)

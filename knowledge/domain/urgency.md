@@ -33,10 +33,10 @@ That is the whole job: **a common currency, so the hottest want wins.**
 The sources differ; the meaning does not. A 0.8 from a deadline and a 0.8 from a dry pot are the
 same claim on the agent's attention, and that equivalence is deliberate rather than a convenience.
 
-Since the scope axis landed
+Since the binding axis landed
 ([shall-must-and-may-are-not-strengths-of-one-scale](/decisions/shall-must-and-may-are-not-strengths-of-one-scale.md),
 #472), the table's pattern has a name: **urgency is the fraction of the want's ROOM consumed,
-and the scope names which room.** An `orexis:Always` want's room is STATE — the survival
+and the binding names which room.** An `orexis:Always` want's room is STATE — the survival
 envelope, so its urgency is the instantaneous degree of being off, a state function that moves
 only when the world moves. An `orexis:Within` want's room is TIME — the redeem window, so its
 urgency rises in a frozen world, which is why lapsing is judged by the reader's clock. And not

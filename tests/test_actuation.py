@@ -85,7 +85,7 @@ def module(agent=None):
 
 
 def claim(jti="j1", sub="fern", amount_l=0.64):
-    return Claim(sub=sub, scope=f"actuate:valve/{sub}", amount_l=amount_l,
+    return Claim(sub=sub, permits=f"actuate:valve/{sub}", amount_l=amount_l,
                    debit=0.3, auction_id="R-1", jti=jti)
 
 

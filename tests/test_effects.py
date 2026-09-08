@@ -193,7 +193,7 @@ def test_the_deadline_and_the_command_cannot_be_two_different_durations(monkeypa
 
     for litres in (0.05, 0.1, 0.37, 0.5, 2.0, 9.0):
         cmd, _ = actuation.command_for(
-            Claim(sub="gardener", scope="actuate:self", amount_l=litres, debit=0.0,
+            Claim(sub="gardener", permits="actuate:self", amount_l=litres, debit=0.0,
                   auction_id="a", jti=f"j{litres}"))
         stated = _lands(agent.beliefs, litres, agent.me.uri, subject)
         assert stated is not None, "a device with a calibration can always be timed"
@@ -249,7 +249,7 @@ def test_a_served_claim_is_timed_by_the_rule_and_not_by_the_wire(monkeypatch, ca
 
     with caplog.at_level(logging.ERROR, logger="effects"):
         before = time.monotonic()
-        cmd = actuation.redeem(Claim(sub="fern", scope="water", amount_l=0.3, debit=0.1,
+        cmd = actuation.redeem(Claim(sub="fern", permits="water", amount_l=0.3, debit=0.1,
                                      auction_id="a1", jti="served-1"))
     assert "would not run" not in caplog.text, "the timing query must parse on the served path"
     stated = _lands(agent.beliefs, 0.3, agent.me.uri, fern)

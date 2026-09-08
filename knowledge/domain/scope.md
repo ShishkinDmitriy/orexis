@@ -1,30 +1,32 @@
 ---
 type: Domain Concept
-title: Compartment
+title: Scope
 description: >-
   A set of predicates joined wherever one action or one derivation reads or writes both, and
   separate where nothing does — a bulkhead in the vocabulary. Two wants in different
-  compartments cannot contradict, because no action of one writes a fact the other reads, which
+  scopes cannot contradict, because no action of one writes a fact the other reads, which
   is what would make it safe to plan them apart and concatenate their plans. Computed from what
   the shipped rules do, never read off namespaces. Measured on every shipped world: one
-  compartment, so nothing yet splits.
+  scope, so nothing yet splits.
 ---
 
 # What it is
 
 Take every [action](/domain/action.md) and every derivation, and join the predicates each one
-reads or writes. What falls out is a partition of the vocabulary: within a compartment, some
-lever couples the words; across compartments, nothing does. The word is a hull's: flooding one
-compartment does not flood the next, because nothing passes between them.
+reads or writes. What falls out is a partition of the vocabulary: within a scope, some lever
+couples the words; across scopes, nothing does. A hull's compartments are the picture — flooding
+one does not flood the next, because nothing passes between them — and SCOPE is the word,
+because what this names is how far anything an agent does can reach.
 
-**Not "component", and not "scope".** Component is what this repo calls a package, and the graph
-theory it comes from is not the reader's. Scope is taken twice already — what a commitment's
-token permits, and the axis an `orexis:Always` want sits on — and a third meaning is how one
-concept becomes three.
+**Not "component", which is what this repo calls a package**, and whose graph theory is not the
+reader's. The word was taken twice and both uses yielded, by the sovereign's ruling that a core
+concept outranks a niche one: a commitment's token now says what it `permits`, in its own words
+rather than JWT's, and what a want sits on is the BINDING axis, which is what
+`orexis:bindsWhen` always said.
 
 The consequence is about [wants](/domain/desire.md). A want's view is what it reads plus what
 the actions [relevant](/domain/relevance.md) to it read and write. Two wants whose views lie in
-different compartments **cannot contradict**: no action serving one writes a fact the other reads,
+different scopes **cannot contradict**: no action serving one writes a fact the other reads,
 so pursuing one can never move the other. That is what would let an agent plan them apart, one
 [cone](/domain/identification.md) each, and simply concatenate the plans.
 
@@ -34,26 +36,26 @@ Independence is computed from what the rules actually do. It is not read off nam
 two cases that look obvious are the reason:
 
 - A greenhouse's water words and climate words look like two vocabularies until a heater dries
-  the soil. One lever across both makes one compartment.
+  the soil. One lever across both makes one scope.
 - Two vans in one courier vocabulary look like one until you notice nothing they do touches the
   same van.
 
-The second names the limit. A compartment here is a set of PREDICATES, so it separates a
-vocabulary and never two instances of one. Two vans are two compartments only over VARIABLES, a
+The second names the limit. A scope here is a set of PREDICATES, so it separates a
+vocabulary and never two instances of one. Two vans are two scopes only over VARIABLES, a
 subject and a predicate together, which is what a mechanism that split a plan would need.
 
 An action whose reads or writes cannot be read from its text joins everything. A lever that
-might touch any predicate cannot be proven not to, and a compartment wrongly split would let two
+might touch any predicate cannot be proven not to, and a scope wrongly split would let two
 plans contradict each other.
 
 # What it measures today: nothing splits
 
-Every shipped world is ONE compartment, around ninety predicates, whether the derivations are
+Every shipped world is ONE scope, around ninety predicates, whether the derivations are
 counted or the actions taken alone. The actions alone already join the market's plumbing to
 sensing's readings, because every effect this project ships predicts a reading of the same
-shape. Every want every shipped agent holds falls inside that one compartment.
+shape. Every want every shipped agent holds falls inside that one scope.
 
-So the mechanism this concept exists for — one cone per compartment, plans concatenated — has
+So the mechanism this concept exists for — one cone per scope, plans concatenated — has
 nothing to split, and is not built. The measurement is the point: it is what says so, and the
 first world that breaks it is the first one worth planning as several cones. See
 [#565](https://github.com/ShishkinDmitriy/orexis/issues/565).

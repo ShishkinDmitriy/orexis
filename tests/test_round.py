@@ -639,7 +639,7 @@ def test_a_winner_named_unlike_its_subject_still_gets_its_dose(make, tmp_path, m
     city = make("city")
     actuation = next(m for m in city.modules if m.name == "actuation")
     cmd, device = actuation.command_for(
-        Claim(jti="j1", sub="supplier", amount_l=2.0, debit=0.3, scope="water", auction_id="a1"))
+        Claim(jti="j1", sub="supplier", amount_l=2.0, debit=0.3, permits="water", auction_id="a1"))
     assert device.local_id == "city_valve", (
         "the winner's subject, found through actsFor — never the winner's own name")
     assert cmd.ml == 2000.0

@@ -131,7 +131,7 @@ So the pump is a **guarded** MQTT subscriber, with four properties the sensor ed
 
 # Responsibilities (per grant)
 
-1. **Validate the grant** — issued by clearing, scope matches the valve, passed the
+1. **Validate the grant** — issued by clearing, what it permits matches the valve, passed the
    [constitution](/domain/constitution.md) check. In v1 the grant is a plaintext typed
    object (in-process); the JWS-signed form is a v2 transport change, not a logic change.
 2. **Enforce single-use** — track `jti` (bounded, per auction) and check `auction_id`, or the same
