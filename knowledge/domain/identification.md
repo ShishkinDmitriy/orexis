@@ -77,4 +77,4 @@ A reading of another property that a relevant lever reads — the butt's level, 
 acquiring reads — is outside the view today, since relevance names predicates and every
 reading carries the same ones; a plan resumed across such a drift is caught at execution by
 the keeper's readiness, and would be caught at the re-root by the next step's
-[premises](/domain/precondition.md) once they are asked there.
+[precondition](/domain/precondition.md) once it is asked there.

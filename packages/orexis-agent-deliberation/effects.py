@@ -240,7 +240,7 @@ def cost_of(store, action: str, **bind) -> float | None:
     return float(rows[0]["cost"].value)
 
 
-def premises(store, action: str, keyed=(), **bind) -> list:
+def precondition(store, action: str, keyed=(), **bind) -> list:
     """The facts a step's rules READ, as triples (#550): the positive patterns of the effect
     construct's WHERE and of the action's availability select, instantiated by the engine
     for this binding — `$me`, `$via`, `$about`, `$state` and the rest, exactly as `apply`
@@ -273,11 +273,11 @@ def premises(store, action: str, keyed=(), **bind) -> list:
         return []
     bind.setdefault("state", STATE_GRAPH)
     read = []
-    text = _premises_template(rule["construct"], tuple(keyed), ())
+    text = _precondition_template(rule["construct"], tuple(keyed), ())
     if text:
         read += _run(store, text, bind)
     if rule.get("available"):
-        text = _premises_template(rule["available"], tuple(keyed), ("via", "about", "want"))
+        text = _precondition_template(rule["available"], tuple(keyed), ("via", "about", "want"))
         if text:
             read += _run(store, text, {
                 "me": bind["me"], "beliefs": bind["beliefs"], "state": bind["state"],
@@ -289,12 +289,12 @@ def premises(store, action: str, keyed=(), **bind) -> list:
 
 
 @functools.lru_cache(maxsize=256)
-def _premises_template(text: str, keyed: tuple, restrict: tuple) -> str | None:
+def _precondition_template(text: str, keyed: tuple, restrict: tuple) -> str | None:
     """A rule text — a CONSTRUCT or a SELECT, its `$tokens` still in it — rewritten as the
     CONSTRUCT that answers the facts its WHERE read, tokens kept so the caller binds it as
     it binds the rule; None where it states no positive pattern.
 
-    PARSED ONCE PER TEXT. rdflib's SPARQL parser is what the premises cost — 216 ms of 276
+    PARSED ONCE PER TEXT. rdflib's SPARQL parser is what the precondition costs — 216 ms of 276
     for a two-step plan, measured — and a rule's text is the same for every step that takes
     the action, so the parse is cached on the text and only the binding is per step. The
     parse reads the text made parseable the way `relevance` reads it, every token a

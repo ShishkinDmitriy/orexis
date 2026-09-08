@@ -1,9 +1,9 @@
 """A remembered plan is a method on the want, lifted from a plan that worked (#469).
 
 The first honest form: a plan that reached its end is lifted FILLED — its steps as they were
-walked, with their predictions and their premises — into the agent's own graph, hung on the
+walked, with their predictions and their preconditions — into the agent's own graph, hung on the
 want it served. KEYED BY ITS REGRESSED PRECONDITION since #551: what the chain's rules read
-that the chain did not itself produce — step n's premises less what steps 1 to n−1 add — asked
+that the plan did not itself produce — step n's precondition less what steps 1 to n−1 add — asked
 of the present as one query, never stored and never hashed. A pursuit of that want in a world
 where those facts hold, and where the first step is on the menu now, adopts it with no search,
 and the trace says so; where a fact is absent the trace names it. A remembered plan that fails
@@ -31,8 +31,8 @@ import re
 import uuid
 from datetime import datetime, timezone
 
-from orexis_agent_progression.act import (Step, predicts_from_json, predicts_json, premises_from_json,
-                                          premises_json)
+from orexis_agent_progression.act import (Step, predicts_from_json, predicts_json, precondition_from_json,
+                                          precondition_json)
 from orexis_agent_progression.ontology import OREXIS, PROGRESSION, STATE_GRAPH, beliefs_graph
 from orexis_agent_progression.store import bindings
 
@@ -50,18 +50,18 @@ def _literal(text: str) -> str:
 
 
 def regressed(steps) -> frozenset | None:
-    """The plan's precondition: every step's premises less what the steps before it add —
+    """The plan's precondition: every step's own less what the steps before it add —
     the facts the plan reads of the world and does not itself produce. None where a step
-    carries no premises (lifted before #550), which is a plan whose applicability nobody
+    carries no precondition (lifted before #550), which is a plan whose applicability nobody
     can say. A premise states a reading by what it IS (#576) and a prediction carries the
     number beside the class, so what a step adds is restated by class before it is
     subtracted."""
     from . import signature
     out, produced = set(), set()
     for step in steps:
-        if step.premises is None:
+        if step.precondition is None:
             return None
-        out |= set(step.premises) - produced
+        out |= set(step.precondition) - produced
         if step.predicts is not None:
             adds, _ = step.predicts
             produced |= set(signature.by_class(frozenset(adds)))
@@ -87,12 +87,12 @@ def applicable(agent, want: str, desires) -> tuple | None:
     """The newest plan remembered for `want` whose regressed precondition holds in the present
     AND whose first step is on the menu now — `(uri, steps, cost)`, or None. The menu check
     is what the walk made at its first step and what carries what a fact set cannot: the
-    availability's own filters, a direction among them. A plan lifted before premises were
+    availability's own filters, a direction among them. A plan lifted before a precondition was
     carried is forgotten here, since nothing can say when it applies."""
     for uri, steps, cost in remembered_for(agent, want):
         facts = regressed(steps)
         if facts is None:
-            forget(agent, uri, "lifted before its steps carried premises — nothing says when it applies")
+            forget(agent, uri, "lifted before its steps carried a precondition — nothing says when it applies")
             continue
         if missing(agent, facts):
             continue
@@ -215,8 +215,8 @@ def lift(agent, want: str, steps: list, cost: float | None) -> str:
             facts.append(f'<{PROGRESSION}quantity> "{step.quantity}"^^<{_XSD}decimal>')
         if step.predicts is not None:
             facts.append(f'<{PROGRESSION}predicts> {_literal(predicts_json(step.predicts))}')
-        if step.premises is not None:
-            facts.append(f'<{PROGRESSION}premises> {_literal(premises_json(step.premises))}')
+        if step.precondition is not None:
+            facts.append(f'<{PROGRESSION}precondition> {_literal(precondition_json(step.precondition))}')
         blocks.append(f"  <{node}> {' ; '.join(facts)} .")
     listed = "( " + " ".join(f"<{n}>" for n in nodes) + " )"
     measured = f' ; <{MEASURED_COST}> "{cost}"^^<{_XSD}decimal>' if cost is not None else ""
@@ -234,7 +234,7 @@ INSERT DATA {{ GRAPH <{graph}> {{
 
 def remembered_for(agent, want: str) -> list:
     """Every plan remembered for this want, newest first: `(uri, steps, cost)`, the steps
-    carrying their predictions and premises. What `applicable` keys by and what the search
+    carrying their predictions and preconditions. What `applicable` keys by and what the search
     weighs as candidates."""
     graph = remembered_graph(agent.id)
     rows = bindings(agent.beliefs.query(f"""
@@ -252,14 +252,14 @@ SELECT ?r ?cost ?at WHERE {{ GRAPH <{graph}> {{
 def _steps_of(agent, uri: str, want: str) -> list:
     graph = remembered_graph(agent.id)
     steps = bindings(agent.beliefs.query(f"""
-SELECT ?node ?first ?rest ?action ?via ?about ?quantity ?predicts ?premises WHERE {{ GRAPH <{graph}> {{
+SELECT ?node ?first ?rest ?action ?via ?about ?quantity ?predicts ?precondition WHERE {{ GRAPH <{graph}> {{
   <{uri}> <{LIFTED}> ?head . ?head <{_RDF}rest>* ?node . ?node <{_RDF}first> ?first ; <{_RDF}rest> ?rest .
   ?first <{PROGRESSION}fills> ?action .
   OPTIONAL {{ ?first <{PROGRESSION}through> ?via }}
   OPTIONAL {{ ?first <{OREXIS}about> ?about }}
   OPTIONAL {{ ?first <{PROGRESSION}quantity> ?quantity }}
   OPTIONAL {{ ?first <{PROGRESSION}predicts> ?predicts }}
-  OPTIONAL {{ ?first <{PROGRESSION}premises> ?premises }} }} }}"""))
+  OPTIONAL {{ ?first <{PROGRESSION}precondition> ?precondition }} }} }}"""))
     by_node = {r["node"]: r for r in steps}
     head = bindings(agent.beliefs.query(f"SELECT ?h WHERE {{ GRAPH <{graph}> {{ <{uri}> <{LIFTED}> ?h }} }}"))
     out, node = [], head[0]["h"] if head else None
@@ -268,7 +268,7 @@ SELECT ?node ?first ?rest ?action ?via ?about ?quantity ?predicts ?premises WHER
         out.append(Step(action=r["action"], via=r.get("via") or "", want=want, about=r.get("about"),
                         quantity=float(r["quantity"]) if r.get("quantity") else None,
                         predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None,
-                        premises=premises_from_json(r["premises"]) if r.get("premises") else None))
+                        precondition=precondition_from_json(r["precondition"]) if r.get("precondition") else None))
         node = r["rest"]
     return out
 

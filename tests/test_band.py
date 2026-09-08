@@ -140,7 +140,7 @@ def test_a_predicted_reading_carries_its_band_and_a_premise_states_the_standing_
     keyed = [f for f in adds if f[0] == "keyed"]
     assert {f[3] for f in keyed} == {TYPE}, "a prediction says what the reading IS and no number"
     assert {f[4] for f in keyed} == {BAND + "zz.SoilMoisture.inside", SENSING + "InRegion"}
-    premise = [f for f in plan.steps[0].premises if f[0] == "keyed"]
+    premise = [f for f in plan.steps[0].precondition if f[0] == "keyed"]
     assert premise and {f[3] for f in premise} == {TYPE}
     assert {f[4] for f in premise} == {BAND + "zz.SoilMoisture.below", SENSING + "BelowRegion"}, premise
 

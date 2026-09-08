@@ -1,12 +1,12 @@
 ---
 type: Domain Concept
 title: Precondition
-term: http://example.org/orexis/progression#premises
+term: http://example.org/orexis/progression#precondition
 description: >-
   What must be true of a world for a step's diff to apply — the instantiated facts the step's
   effect rule read when it produced the diff. A plan's precondition is the regression of its
   steps'. Checked by asking the present, never by re-running the rule. Named by the record
-  the-future-is-a-cone; carried on the step as its premises (#550).
+  the-future-is-a-cone; carried on the step, one name for the concept and its term (#550, #580).
 ---
 
 # What it is
@@ -17,7 +17,7 @@ the world in which the diff is what the rule says. An [action](/domain/action.md
 applicability as a query, and that query is the template; the precondition is one binding of it,
 taken at the moment the step was planned.
 
-A plan has a precondition too, and it is not the union. Step two's premises include
+A plan has a precondition too, and it is not the union. Step two's precondition includes
 what step one produced, and those are not asked of the present because the plan supplies them.
 The plan's precondition is the **regression**: each step's facts minus what the steps before it
 add, plus the absences those steps create that a later step needs. That regressed set is what
@@ -35,7 +35,7 @@ present says, and it is the first half of a [method](/domain/method.md).
 
 # What carries it
 
-A [step](/domain/step.md) carries its premises beside its prediction — a reading among them
+A [step](/domain/step.md) carries its precondition beside its prediction — a reading among them
 stated by its [band](/domain/band.md), so the premise is "moisture below the region" and not
 "moisture 0.23" (#576), and since #579 the prediction is a band too: the positive patterns
 of its effect's WHERE and of its availability query, instantiated by the store's own engine
@@ -49,7 +49,7 @@ to state.
 # The plan
 
 A [remembered plan](/domain/remembered-plan.md) is keyed by the regression of its steps'
-premises (#551): step n's less what steps 1 to n−1 add, asked of the present as one query, a
+preconditions (#551): step n's less what steps 1 to n−1 add, asked of the present as one query, a
 keyed reading by class and key and never by its value. What is not yet in it is an absence a
 rule requires — a `FILTER NOT EXISTS` in an availability select — which the first-step menu
 check covers for the first step alone. Lifting to variables is the seam after this.

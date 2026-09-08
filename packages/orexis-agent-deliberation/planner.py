@@ -964,8 +964,8 @@ class Planner:
         #  step's rules read in the world it was planned from, asked of that world while
         #  the imaginarium still holds it — depth queries, never per fork. ONCE per node
         #  (#553): a kept node offered again by a resumed pass carries them already.
-        if any(step.premises is None for step in node.taken):
-            node.taken = self._with_premises(node.taken, desire, node)
+        if any(step.precondition is None for step in node.taken):
+            node.taken = self._with_precondition(node.taken, desire, node)
         plan = replace(plan, steps=node.taken)
         if node.legal is not None:
             return plan if node.legal else Plan(REFUSED, (), plan.urgency_now, plan.urgency_after)
@@ -1016,8 +1016,8 @@ class Planner:
         #  candidate, paid at every expansion in a world that ratifies a law.
         return frozenset(self._illegal(node, self._law_selects))
 
-    def _with_premises(self, steps: tuple, desire: Desire, node) -> tuple:
-        """The steps with each one's premises filled: the facts its rules read at its parent
+    def _with_precondition(self, steps: tuple, desire: Desire, node) -> tuple:
+        """The steps with each one's precondition filled: the facts its rules read at its parent
         world, canonical, as `predicts` is. A step whose rules will not say is carried with
         None — the plan is not worse for it, and the log has the reason. `node` is the world
         the last step reached; its ancestry is the parent world of each step."""
@@ -1030,13 +1030,13 @@ class Planner:
         for i, step in enumerate(steps):
             bind = self._bind(desire, node=chain[i], row=step, litres=step.quantity or 0.0)
             try:
-                read = effects.premises(self.imaginarium, step.action,
+                read = effects.precondition(self.imaginarium, step.action,
                                         keyed=tuple(self._keys), **bind)
                 found = signature.by_class(signature.facts(read, self._keys))
             except Exception as exc:               # noqa: BLE001 — a package's rule, not the pass
-                log.error("could not read the premises of %s: %s", step.action, exc)
+                log.error("could not read the precondition of %s: %s", step.action, exc)
                 found = None
-            out.append(replace(step, premises=found))
+            out.append(replace(step, precondition=found))
         return tuple(out)
 
     def _illegal(self, node, selects: dict) -> list[tuple]:
@@ -1061,7 +1061,7 @@ class Planner:
 
     def _absent(self, kept: _Remembered) -> list:
         """The facts of this plan's regressed precondition absent from the present — empty
-        where it holds. A plan whose steps carry no premises has none to ask, and is walked
+        where it holds. A plan whose steps carry no precondition has none to ask, and is walked
         as before."""
         from . import remembered
         facts = remembered.regressed(kept.steps)

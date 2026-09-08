@@ -36,8 +36,8 @@ class Step:
     urgency_after: float | None = None  # the want's urgency in the world this step was predicted to reach
     predicts: tuple | None = None     # (adds, retracts): the canonical facts the search said this
                                       # step makes true and false — what the world is held to (#510)
-    premises: frozenset | None = None  # the canonical facts its rules READ in the world it was
-                                       # planned from — its precondition there (#550)
+    precondition: frozenset | None = None  # the canonical facts its rules READ in the world it
+                                           # was planned from (#550)
     part_of: object = None            # the step this one was expanded from (#523): a Step while
                                       # planned, the ledger's step IRI once read back
 
@@ -72,14 +72,14 @@ def predicts_json(predicts) -> str:
                        "retracts": sorted(map(list, retracts), key=repr)})
 
 
-def premises_json(premises) -> str:
+def precondition_json(facts) -> str:
     """A step's precondition as one literal for the ledger: the canonical facts its rules
     read, stated as `signature.facts` states them, sorted so two writes of one set agree."""
     import json
-    return json.dumps(sorted(map(list, premises), key=repr))
+    return json.dumps(sorted(map(list, facts), key=repr))
 
 
-def premises_from_json(text: str) -> frozenset:
+def precondition_from_json(text: str) -> frozenset:
     import json
 
     def tup(x):
