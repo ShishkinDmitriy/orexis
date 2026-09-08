@@ -186,7 +186,7 @@ class SensingModule(Module):
         #  question about them is a question about a reading, so they are mine now
         #  (the-stake-is-sensings-want). Every sensing module the agent composes reads the
         #  same ones, and `Agent.pursuing` folds a want seen twice into one by its node.
-        self.regions: dict[str, Region] = regions_of(self.agent.desires.query_union, self.me.uri)
+        self.regions: dict[str, Region] = regions_of(self.agent.beliefs.query, self.me.uri)
         #  And the AIM inside each — the agent's own pick, a belief, which a review may move.
         self._aims: dict[str, float] = aims_of(self.agent.desires.query_union, self.agent.id,
                                                self.me.uri)
@@ -265,7 +265,12 @@ class SensingModule(Module):
                 .replace("$property", f"<{about}>")
                 .replace("$state", f"<{state}>")
                 .replace("$beliefs", f"<{beliefs_graph(self.agent.id)}>")
-                .replace("$value", repr(float(value)) if value is not None else "?reading")
+                #  A WORLD IS JUDGED BY BAND (#579): with no number handed in, the reading's
+                #  own number is not read — `?unread` binds nothing, the numeric branch falls
+                #  through, and the band says how urgent — so the world the agent is in and a
+                #  world a rule imagined are scored on one scale. A caller with a number in
+                #  hand (the wire's annotation, a want's row) still gets the distance.
+                .replace("$value", repr(float(value)) if value is not None else "?unread")
                 .replace("$centre", repr(float(region.centre)))
                 .replace("$outerLow", repr(float(outer_low)))
                 .replace("$outerHigh", repr(float(outer_high)))
@@ -671,28 +676,27 @@ class SensingModule(Module):
         return (region.low, region.high) if region else None
 
     @contributes(ANSWER)
-    def answering_shape(self, keyed_class: str, key: dict, carried: dict, since,
-                        baseline: float | None, tolerance: float | None):
+    def answering_shape(self, keyed_class: str, key: dict, carried: dict, since):
         """What an observation answering a PREDICTED one looks like — the keeper's question
-        for each keyed fact a step predicts (#510, #516, #518). Only a `sosa:Observation` is
-        sensing's to answer: the key names the subject and the property, what it carries is
-        the predicted result. The shape: on the subject, at least one observation of the
-        property later than `since` whose value lies within `tolerance` of the predicted
-        MOVEMENT from the baseline — predicted ± tolerance × |predicted − baseline| — so an
-        overshoot is as much a surprise as a shortfall, and both are the conversion's to
-        answer for at review. With no baseline or no tolerance the value must be the
-        predicted one exactly, which is what a plain fact gets too. The numbers are baked
-        in: they do not change for the expectation's lifetime, unlike a horizon."""
+        for each keyed fact a step predicts (#510, #516, #579). Only a `sosa:Observation` is
+        sensing's to answer: the key names the subject and the property; what it carries is
+        the BAND the reading is predicted to be (`rdf:type`, the class an effect rule
+        declared), or a number a caller stated by hand. The shape: on the subject, at least
+        one observation of the property later than `since` that IS the band — `sh:class`,
+        which the reading carries because the writer entailed it — or, for a number, whose
+        value is that number exactly. Nothing is widened here and no actor says how close:
+        the band's edges are the domain's, in its definition."""
         import rdflib
         SOSA = "http://www.w3.org/ns/sosa/"
+        RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
         if keyed_class != SOSA + "Observation":
             return None
         subject_uri = key.get(SOSA + "hasFeatureOfInterest")
         observed_property = key.get(SOSA + "observedProperty")
+        band = carried.get(RDF_TYPE)
         predicted = carried.get(SOSA + "hasSimpleResult")
-        if subject_uri is None or observed_property is None or predicted is None:
+        if subject_uri is None or observed_property is None or (band is None and predicted is None):
             return None
-        predicted = float(predicted)
         SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
         XSD = rdflib.Namespace("http://www.w3.org/2001/XMLSchema#")
         g = rdflib.Graph()
@@ -711,12 +715,14 @@ class SensingModule(Module):
         g.add((inner, SH.property, on_time))
         g.add((on_time, SH.path, rdflib.URIRef(SOSA + "resultTime")))
         g.add((on_time, SH.minExclusive, rdflib.Literal(since.isoformat(), datatype=XSD.dateTime)))
-        g.add((inner, SH.property, on_value))
-        g.add((on_value, SH.path, rdflib.URIRef(SOSA + "hasSimpleResult")))
-        band = (abs(tolerance) * abs(predicted - baseline)
-                if tolerance is not None and baseline is not None else 0.0)
-        g.add((on_value, SH.minInclusive, rdflib.Literal(round(predicted - band, 6), datatype=XSD.decimal)))
-        g.add((on_value, SH.maxInclusive, rdflib.Literal(round(predicted + band, 6), datatype=XSD.decimal)))
+        if band is not None:
+            g.add((inner, SH["class"], rdflib.URIRef(str(band))))
+        else:
+            predicted = float(predicted)
+            g.add((inner, SH.property, on_value))
+            g.add((on_value, SH.path, rdflib.URIRef(SOSA + "hasSimpleResult")))
+            g.add((on_value, SH.minInclusive, rdflib.Literal(round(predicted, 6), datatype=XSD.decimal)))
+            g.add((on_value, SH.maxInclusive, rdflib.Literal(round(predicted, 6), datatype=XSD.decimal)))
         return g
 
     @contributes(WITNESS)

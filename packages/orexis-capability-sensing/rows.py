@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 from orexis_agent_deliberation.desire import Desire
 
-from .regions import _desired, _known, _measured_urgency, _region_of, _subjects_of
+from .regions import _desired, _known, _measured_urgency, regions_of, _subjects_of
 
 
 @dataclass(frozen=True)
@@ -45,6 +45,7 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Desire]:
     """
     subjects = _subjects_of(beliefs, agent_uri)
     known, by_instrument = _known(beliefs)
+    regions = regions_of(beliefs, agent_uri)     # the bands' edges, off the belief base (#579)
     out = []
     for row in _desired(desires, agent_uri):
         if row["kind"] == "freshness":
@@ -77,7 +78,9 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Desire]:
             state = "met" if urgency < 1.0 else \
                 ("unmeasured" if value is None else "stale")
         else:
-            region = _region_of(row)
+            region = regions.get(row["property"])
+            if region is None:
+                continue
             if value is None:
                 urgency, state = 1.0, "unmeasured"
             else:

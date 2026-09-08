@@ -17,7 +17,7 @@ See knowledge/decisions/capability-packages.md.
 from __future__ import annotations
 
 from orexis_agent_progression.ontology import BELIEF_REVISED, QUIET, REPORTS, SEND, SERIES, SWEEP
-from orexis_agent_progression.ontology import DESIRES, DESIRE_URGENCY, SIZE
+from orexis_agent_progression.ontology import DESIRES, DESIRE_URGENCY
 
 from datetime import datetime
 
@@ -137,38 +137,6 @@ class Module:
         this agent was never granted that ability, rather than that it has had nothing to say.
         """
         return {}
-
-    @contributes(SIZE)
-    def size(self, query, graph: str, row) -> float | None:
-        """How big the act this row commits to would be, in the world `query` answers about at
-        `graph` — one act's size. `row` is the affordance: the action, the want it serves and
-        what that want is about, which is how an actor finds the property it sizes against.
-
-        Asked by the planner before it simulates a step, and answered by whoever would TAKE
-        the step: a bidder sizes a bid by its deficit and its wallet, an actuator a dose by
-        the deficit and its vessel. The planner used to dispatch this by means — Acquire to
-        the bidding family, Actuate to the actuation family — which was a means->family table
-        in the kernel and the last thing keeping `Actuate` a kernel word. None: I take nothing
-        that has a size, or cannot size this one; a look is sized at nothing.
-        """
-        return None
-
-    def take(self, act, desire, intention: str) -> bool:
-        """Carry out one committed step, if I am the one who can. True if I did.
-
-        The choir's doing hook (knowledge/domain/actor.md): execution has planned, written the
-        head row to the ledger as `intention`, and now hands it to every module the means'
-        the action's contribution names. `row` is the affordance the step is — means, property, lever and,
-        for an obligation, whom it is owed to; `desire` is the want it serves. What to DO with them is
-        this module's own, and the sizing stays where it always was — `value_bid`, `dose_for`,
-        `redeem` — because an actor takes a step and never decides one.
-
-        **False means "not now", never "no."** A bid with no round open, a dose with no fresh
-        reading, a serve with no claim in hand: decline, and the intention stands for the
-        trigger that changes the answer, which runs execution again and finds it standing.
-        Most modules take nothing and answer False to everything.
-        """
-        return False
 
     @contributes(DESIRES)
     def desires(self, now: "datetime | None" = None) -> list["Desire"]:

@@ -37,9 +37,9 @@ drift — the butt's level under a moisture plan, a stray fact in a courier's wo
 cone stands. A reading is matched by its [band](/domain/band.md) (#576) — the class the
 domain asserted on it, so the match is triple equality over the worlds within the view: a pot
 that landed a hundredth off its prediction is the kept world, a pot in another band is another
-world. A match by band that is not exact re-roots at the node, scores it from the present, and
-drops what was imagined beneath it, since those worlds were computed from the number the node
-predicted; an exact match keeps the subtree whole.
+world. A match by band is EXACT and the subtree stands (#579): a kept world states its readings
+by what they are and never by a number, so there is nothing left for the present's own number to
+make wrong.
 
 # A surprise is read by what was not imagined
 

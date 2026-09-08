@@ -100,22 +100,31 @@ SELECT ?subject ?property ?value ?at ?instrument WHERE {
 #  the Above shape refuses to see one over (`sh:minExclusive`). That is one hop further than
 #  reading a min and a max off a single node, and it buys a violation that says WHICH WAY it
 #  went — which watering repairs and a fan does not. See orexis:violationIs.
+#  READ OFF THE BANDS (#579). The region's edges used to be read off the want's met-shape,
+#  which stated them as `sh:maxExclusive`/`sh:minExclusive` facets on a reading's result;
+#  the met-shape asks by band now (`sh:class sensing:BelowRegion`), and the numbers have one
+#  owner — the band's OWL definition, minted at genesis by `rules.ru` from the range the
+#  subject states: the in-region band's `xsd:minInclusive`/`xsd:maxInclusive`, the envelope's
+#  `xsd:maxExclusive` below the floor and `xsd:minExclusive` above the ceiling. Asked of the
+#  belief base, where the bands are public, for the subject this agent acts for.
 _REGIONS_Q = """
 SELECT ?property ?low ?high ?floor ?ceiling WHERE {
-  <%s> orexis:holds ?desire .
-  ?desire ssn:forProperty ?property ; orexis:metWhen ?shape .
-  ?shape sh:property ?below , ?above .
-  ?below orexis:violationIs orexis:Below ;
-         sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
-  ?above orexis:violationIs orexis:Above ;
-         sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
-  OPTIONAL {
-    <%s> orexis:holds ?envelope .
-    ?envelope ssn:forProperty ?property ; sh:property ?underFloor , ?overCeiling .
-    ?underFloor sh:severity sh:Warning ; orexis:violationIs orexis:Below ;
-                sh:qualifiedValueShape/sh:property/sh:maxExclusive ?floor .
-    ?overCeiling sh:severity sh:Warning ; orexis:violationIs orexis:Above ;
-                 sh:qualifiedValueShape/sh:property/sh:minExclusive ?ceiling }
+  <%s> orexis:actsFor ?subject .
+  ?inside rdfs:subClassOf sensing:InRegion ; sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
+          owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
+  ?r owl:onProperty sosa:hasSimpleResult ; owl:someValuesFrom/owl:withRestrictions ?facets .
+  ?facets rdf:rest*/rdf:first/xsd:minInclusive ?low .
+  ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?high .
+  OPTIONAL { ?belowFloor rdfs:subClassOf sensing:BelowFloor ;
+                         sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
+                         owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?rf .
+             ?rf owl:onProperty sosa:hasSimpleResult ;
+                 owl:someValuesFrom/owl:withRestrictions/rdf:rest*/rdf:first/xsd:maxExclusive ?floor }
+  OPTIONAL { ?aboveCeiling rdfs:subClassOf sensing:AboveCeiling ;
+                           sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
+                           owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?rc .
+             ?rc owl:onProperty sosa:hasSimpleResult ;
+                 owl:someValuesFrom/owl:withRestrictions/rdf:rest*/rdf:first/xsd:minExclusive ?ceiling }
 } ORDER BY ?property"""
 
 
@@ -249,6 +258,7 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str, measure=None) -> di
     subjects = _subjects_of(beliefs, agent_uri)
     known, _ = _known(beliefs)
     aims = aims_of(desires, agent_id, agent_uri)
+    regions = regions_of(beliefs, agent_uri)
     out: dict[str, Gap] = {}
     for row in _desired(desires, agent_uri):
         if row["kind"] != "stake":
@@ -257,7 +267,9 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str, measure=None) -> di
         item = known.get((subject, row["property"])) if subject else None
         if item is None or item.value is None:
             continue
-        region = _region_of(row)
+        region = regions.get(row["property"])
+        if region is None:
+            continue
         urgency = _measured_urgency(measure, row, item.value)
         #  The SIGN is judged against the same point the measure judges distance from: the
         #  aim, or the centre while none is picked. Signed against the centre it disagreed
@@ -348,24 +360,16 @@ def _subjects_of(beliefs, agent_uri: str) -> list[str]:
         f"SELECT ?s WHERE {{ <{agent_uri}> orexis:actsFor ?s }}"))]
 
 
-def _region_of(row: dict) -> Region:
-    floor, ceiling = row.get("floor"), row.get("ceiling")
-    return Region(observed_property=row["property"],
-                  low=float(row["low"]), high=float(row["high"]),
-                  floor=float(floor) if floor is not None else None,
-                  ceiling=float(ceiling) if ceiling is not None else None)
-
-
 def regions_of(query, agent_uri: str) -> dict[str, Region]:
     """Every region one agent holds, property -> region. Read, never computed here.
 
     A free function because it is the whole of what this module does with a store, and a test
     about what a world implies should not have to build an agent to ask. The arithmetic that
-    produced these numbers is `desires.ru`, run on every rebuild of the desire modality; this
-    only reads the answer.
+    produced these numbers is sensing's `rules.ru`, minting the bands at genesis from the
+    ranges the world states; this only reads the answer, off the belief base.
     """
     out: dict[str, Region] = {}
-    for row in bindings(query(_REGIONS_Q % (agent_uri, agent_uri))):
+    for row in bindings(query(_REGIONS_Q % agent_uri)):
         floor, ceiling = row.get("floor"), row.get("ceiling")
         out[row["property"]] = Region(
             observed_property=row["property"],

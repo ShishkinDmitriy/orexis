@@ -101,30 +101,32 @@ market:Acquiring
             ?valuation market:ofGood ?good ;
                        market:aboutProperty $about .
             GRAPH $beliefs { $me <http://example.org/orexis/water#maxValuePerL> ?ceiling }
-            FILTER($litres > 0)
-            BIND($litres * ?ceiling AS ?cost)
+            #  WHAT ONE ACT SPENDS, at the ceiling this agent set (#579). It was the ceiling
+            #  times the litres the search had sized, and the search sizes nothing now: a lot
+            #  costs what a lot costs, and how many litres are bought is settled when the
+            #  bidder tenders. What the ranking needs of this is unchanged — a bought lot is
+            #  dearer than a dose from a vessel already held, which is why a plant with a
+            #  valve doses rather than buys.
+            BIND(?ceiling AS ?cost)
         }""" ;
 
     rdfs:label "what winning a bid makes true" ;
 
-    #  THE SAME ARITHMETIC AS A DOSE, and that is the point rather than a coincidence. Water
-    #  bought and water poured raise the same property by the same amount; what differs is who
-    #  owns the valve and whether anyone had to be paid. So the prediction is `value + litres /
-    #  conversion` — the one function `actuation:ActuateEffect` exists to keep in a single
-    #  place — reached along the plumbing walk `affordances.rq` already deduces the row from:
-    #  a venue I bid in, whose source supplies a good, whose host holds a lever plumbed to MY
-    #  subject. An agent bidding in a market no valve connects to its pot gets no row and no
-    #  effect, because a delivery that cannot reach you is, for you, no lever at all.
-    #
-    #  The conversion is the agent's OWN belief, keyed by the term the venue tie names — the
-    #  copy it would lose money by being wrong about, and the copy a review would revise.
+    #  THE SAME EFFECT AS A DOSE, and that is the point rather than a coincidence. Water
+    #  bought and water poured bring the same property into its region; what differs is who
+    #  owns the valve and whether anyone had to be paid. So the prediction is the same band a
+    #  dose reaches (#579) — reached along the plumbing walk `affordances.rq` already deduces
+    #  the row from: a venue I bid in, whose source supplies a good, whose host holds a lever
+    #  plumbed to MY subject. An agent bidding in a market no valve connects to its pot gets
+    #  no row and no effect, because a delivery that cannot reach you is, for you, no lever
+    #  at all. The conversion is walked so the rule states its premise — a valuation this
+    #  agent holds — and read for its number by the bidder when it tenders.
     sh:construct """
         CONSTRUCT {
-            ?obs a sosa:Observation ;
+            ?obs a sosa:Observation , ?band ;
                  sosa:hasFeatureOfInterest $subject ;
                  sosa:observedProperty $about ;
-                 sosa:resultTime ?now ;
-                 sosa:hasSimpleResult ?predicted .
+                 sosa:resultTime ?now .
         } WHERE {
             $me orexis:actsFor $subject ; market:bidsIn ?via .
             ?via market:marketFor ?source .
@@ -134,23 +136,30 @@ market:Acquiring
             ?term market:ofGood ?good ; market:aboutProperty $about .
             GRAPH $beliefs { $me ?term ?conversion }
             FILTER(?conversion > 0)
-            #  AN ACT OF ZERO SIZE MAKES NOTHING TRUE, and the filter is load-bearing rather
-            #  than defensive. `value_bid` cedes at or above the aim, so a content agent sizes
-            #  its bid at nothing — and without this the rule would still CONSTRUCT a reading
-            #  equal to the value it started from. In a world that holds no reading yet, that
-            #  fabricates one: the search then scores the step as an improvement, because
-            #  ending ignorance IS an improvement (#137), and a content plant would buy water
-            #  to find out how wet it is. Yielding nothing instead leaves the world untouched,
-            #  the signature unchanged, and the step discarded as somewhere already seen —
-            #  which is the same road every other "this does not help" arrives by.
-            FILTER($litres > 0)
-            #  WHERE THE PROPERTY STANDS, read by this rule from the world it is asked about
-            #  rather than handed in by the planner: the kernel no longer knows what a reading
-            #  looks like, and a rule that reads $state already does. Nothing read yet is zero.
-            OPTIONAL { GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
-                                       sosa:observedProperty $about ;
-                                       sosa:hasSimpleResult ?was } }
-            BIND(COALESCE(?was, 0) + ($litres / ?conversion) AS ?predicted)
+            #  THE BAND A BOUGHT LOT REACHES: in the region, of this subject's property — the member genesis
+            #  minted from the range the subject states — from below it or from inside it.
+            #  From ABOVE it, more water helps nothing: the reading stays in the family it is
+            #  in, which is the same world as before and pruned as one. Where the property
+            #  stands is read by this rule from the world it is asked about, so the step's
+            #  precondition carries it — the band the reading is in, never a number; optional,
+            #  since a lot may be planned before any reading exists.
+            #  The wetness test sits INSIDE the standing reading's pattern: outside it, an
+            #  unbound ?standing would join freely with any reading above its region.
+            #  A READING MUST STAND, and the requirement is load-bearing rather than
+            #  defensive. Where the property has never been read, this rule yielding a
+            #  reading would FABRICATE one — and a world that knows where the pot is scores
+            #  better than one that does not, so a content plant would buy water to find out
+            #  how wet it is (#137, the guard the zero-size filter used to carry). Requiring
+            #  the reading leaves such a world untouched and the step discarded as somewhere
+            #  already seen, which is the road every other "this does not help" arrives by;
+            #  a look comes first, as it always did.
+            GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
+                             sosa:observedProperty $about .
+                           OPTIONAL { ?standing a ?tooWet .
+                                      FILTER(?tooWet = sensing:AboveRegion) } }
+            BIND(IF(BOUND(?tooWet), sensing:AboveRegion, sensing:InRegion) AS ?family)
+            ?band rdfs:subClassOf ?family ;
+                  sensing:ofSubject $subject ; sensing:ofProperty $about .
             BIND(BNODE() AS ?obs)
             BIND(NOW() AS ?now)
         }""" ;
@@ -197,6 +206,11 @@ market:Acquiring
     #  Retracts NOTHING when it adds nothing, for the same reason and by the same guard: a
     #  zero-size act that removed the standing reading would leave the world blinder than it
     #  found it, which is the opposite of the error above and just as wrong.
+    #  The reading it replaces, unconditionally (#579). It was gated on `$litres > 0`, so a
+    #  bid sized to nothing left the standing reading alone and changed no world; there is no
+    #  size here now, and the gate is the required standing reading in the construct — with
+    #  the filter left in place and litres bound at nothing, NOTHING was retracted and the
+    #  world came back holding both readings, the old one still below the region.
     orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
             GRAPH $state {
@@ -204,7 +218,6 @@ market:Acquiring
                      sosa:observedProperty $about ;
                      ?p ?o
             }
-            FILTER($litres > 0)
         }""" .
 
 #################  What OFFERING makes true  #################
@@ -379,14 +392,22 @@ market:Serving
 
     rdfs:label "what serving a presented claim makes true" ;
 
+    #  WHAT IT MAKES TRUE is the DISCHARGE, and nothing about the level (#579). It used to
+    #  predict the level a serve leaves — `?level - ?litres`, a number — and to fire only where
+    #  the number covered the claim. Neither survives the ruling: an imagined world states what
+    #  a reading IS, so there is no number in it to subtract from, and a rule reading one after
+    #  another rule had written a band bound nothing at all, which broke the refill chain
+    #  silently — acquire then serve, the one chain this domain has.
+    #
+    #  Both are restated in the domain's own words. WHETHER the vessel can serve is whether its
+    #  level sits in the region the vessel states — the operating range keeps a litre in reserve,
+    #  which is exactly "enough to sell" — so a barrel below its region serves nothing and the
+    #  host must refill first. WHAT the serve does to the level is left unsaid: the water leaves,
+    #  and the next reading says which band it lands in. Saying less is the honest declaration,
+    #  and it is what lets the level's own want notice the drop.
     sh:construct """
         CONSTRUCT {
             ?obl orexis:dischargedAt ?now .
-            ?obs a sosa:Observation ;
-                 sosa:hasFeatureOfInterest ?vessel ;
-                 sosa:observedProperty ?levelProp ;
-                 sosa:resultTime ?now ;
-                 sosa:hasSimpleResult ?left .
         } WHERE {
             ?obl orexis:forClaim $claim ; orexis:amountL ?litres .
             FILTER NOT EXISTS { ?obl orexis:dischargedAt ?done }
@@ -395,10 +416,7 @@ market:Serving
             ?vessel ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?levelProp .
             GRAPH $state { ?cur sosa:hasFeatureOfInterest ?vessel ;
                                  sosa:observedProperty ?levelProp ;
-                                 sosa:hasSimpleResult ?level }
-            FILTER(?level >= ?litres)
-            BIND(?level - ?litres AS ?left)
-            BIND(BNODE() AS ?obs)
+                                 a sensing:InRegion }
             BIND(NOW() AS ?now)
         }""" ;
 
@@ -414,24 +432,14 @@ market:Serving
             FILTER(?rate > 0)
             BIND(IF(?litres * 1000 < ?cap, ?litres * 1000, ?cap) AS ?ml)
             BIND(?ml / ?rate AS ?seconds)
-        }""" ;
+        }""" .
 
     #  BY OBSERVATION, from the host's own side: the valve reports that it opened, but what
     #  this rule PREDICTS is the vessel's level, and only the next reading of it says the
     #  water left. The buyer's side confirms itself on the buyer's own arc, exactly as
     #  AcquireEffect argues from the other end of the same pipe.
 
-    #  The vessel reading it replaces — and ONLY when the premise held, by the same guard:
-    #  a dry vessel must not lose its standing reading to a serve that never happened.
-    orexis:retracts """
-        CONSTRUCT { ?obs ?p ?o } WHERE {
-            ?obl orexis:forClaim $claim ; orexis:amountL ?litres .
-            FILTER NOT EXISTS { ?obl orexis:dischargedAt ?done }
-            $me market:hosts ?venue ; actuation:hasActuator ?lever .
-            ?lever actuation:drawsFrom ?vessel .
-            ?vessel ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?levelProp .
-            GRAPH $state { ?obs sosa:hasFeatureOfInterest ?vessel ;
-                                 sosa:observedProperty ?levelProp ; ?p ?o .
-                            ?obs sosa:hasSimpleResult ?level }
-            FILTER(?level >= ?litres)
-        }""" .
+    #  NOTHING IS RETRACTED (#579). It used to take the vessel's standing reading out, because
+    #  the construct wrote a new one in its place; the construct predicts no reading now, and
+    #  retracting the standing one would leave the world knowing nothing about the level —
+    #  which reads as maximal ignorance and would make serving look like a way to forget.

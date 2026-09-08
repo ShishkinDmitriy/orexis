@@ -126,9 +126,9 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing():
         return [r for r in affordances_of(st.query, uri(who), desires_build(st, who).query_union, beliefs_graph(who))
                 if not r.is_own]
 
-    assert not regions_of(desires_build(st, "city").query_union, uri("city")), \
+    assert not regions_of(st.query, uri("city")), \
         "a mains states no ranges — the city wants nothing for itself"
-    assert regions_of(desires_build(st, "fern").query_union, uri("fern")), \
+    assert regions_of(st.query, uri("fern")), \
         "a plant states ranges, so it holds regions of its own"
 
     assert honoured("city"), "the city hosts a venue and holds the valve that serves it"

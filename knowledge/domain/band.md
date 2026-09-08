@@ -45,13 +45,17 @@ outside reasoner reads exactly what the store asserts. The store's entailment do
 (`Store.entail`) is the second OWL construct materialised here, beside the closure's
 `owl:hasValue`.
 
-What the search does with it: a present is matched to a kept world by the bands its readings are
-in ([identification](/domain/identification.md)); a step's [precondition](/domain/precondition.md)
-states the standing reading by its band, one triple; a [remembered plan](/domain/remembered-plan.md)
-is keyed by that; and a predicted reading carries its band beside its number in the step's
-prediction. What the search does NOT yet do with it is plan on it alone: the number still moves
-a possible world, until [#579](https://github.com/ShishkinDmitriy/orexis/issues/579) takes the
-number out of the effect.
+What the search does with it, since #579: it plans on it and on nothing else. An
+[effect](/domain/effect.md) declares the band its reading becomes and states no arithmetic; a
+possible world differs from another by the bands its readings are in; a present is matched to a
+kept world by them ([identification](/domain/identification.md)); a step's
+[precondition](/domain/precondition.md) states the standing reading by its band, one triple, and a
+[remembered plan](/domain/remembered-plan.md) is keyed by that; the region want's met-test asks
+`sh:class sensing:BelowRegion` rather than comparing a number to an edge; and sensing's measure
+scores a world by the band its reading is in — inside the region nothing is wanted, outside it
+three quarters, past the envelope maximal. The numbers are progression's: the actuator sizes its
+dose and the bidder its lot from the reading in hand when the step is taken, and the region's
+edges are read off the bands' own definitions.
 
 The cell of #573 — a partition the kernel read off the readers' constants — was this concept
 without its owner, and is gone.

@@ -16,7 +16,7 @@ from orexis_capability_sensing.terms import OBSERVING
 
 from orexis_agent_progression.ontology import beliefs_graph
 from orexis_capability_sensing.regions import ObservedDesire
-from conftest import sensing_of, stake_of, build_agent, genesis_store, desires_build, open_round_for, write_reading, predicted_readings
+from conftest import sensing_of, stake_of, build_agent, genesis_store, desires_build, open_round_for, write_reading, predicted_bands
 
 MOIST = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
@@ -109,10 +109,12 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
     deliberator = gardener.deliberator
     #  The world holds the value; the want does not. Written OLD, so the freshness want the
     #  tail of this test asks about is still unmet — a stake judges the number it has.
-    write_reading(gardener, 0.10, MOIST, age_s=10_000)
+    #  BELOW the region (#579), since 0.10 is the loner region's inclusive floor and a
+    #  reading on it is in region, met, and wants nothing.
+    write_reading(gardener, 0.05, MOIST, age_s=10_000)
     assert deliberator.propose_for(
         ObservedDesire(uri=stake_of(gardener, MOIST).uri, urgency=0.6, observed_property=MOIST,
-                     value=0.10)) == DOSING
+                     value=0.05)) == DOSING
     write_reading(gardener, 0.30, MOIST, age_s=10_000)
     assert deliberator.propose_for(
         ObservedDesire(uri=stake_of(gardener, MOIST).uri, urgency=0.1, observed_property=MOIST,
@@ -143,11 +145,11 @@ def test_a_self_dose_is_commanded_co_signed_and_ledgered(gardener):
     expectation open for the effect — an unconfirmed self-dose is not a delivered one."""
     from agent.signing import verify_command
 
-    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
+    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.05})
     sent = gardener.sent.to("actuators/pump/command")
     assert len(sent) == 1
     cmd = sent[0]
-    assert cmd["ml"] == 120.0, "deficit 0.08 x 1.5 L per fraction = 120 ml"
+    assert cmd["ml"] == 195.0, "deficit 0.13 x 1.5 L per fraction = 195 ml"
     actuation = next(m for m in gardener.modules if m.name == "actuation")
     assert verify_command(cmd, actuation.host_key.public_key(),
                           actuation.clearing_key.public_key())
@@ -155,16 +157,17 @@ def test_a_self_dose_is_commanded_co_signed_and_ledgered(gardener):
     keeper = next(m for m in gardener.modules if m.name == "intention")
     watches = keeper.open_expectations(stake_of(gardener, MOIST).uri)
     assert len(watches) == 1
-    assert predicted_readings(gardener, watches[0].step) == [pytest.approx(0.18, abs=1e-3)], \
-        "the step carries the reading the rule predicted: 0.10 plus 0.08 (#510)"
+    #  The step carries the BAND its rule declared (#579): a dose reaches the region.
+    assert [b.rsplit(".", 1)[-1] for b in predicted_bands(gardener, watches[0].step)
+            if "band." in b] == ["inside"]
 
 
 def test_an_unanswered_self_dose_blocks_the_next(gardener):
     """The #167 guard on rung 2: while my own dose has not answered, no reading I hold can
     prove the pot was not already watered — so a second low look inside the watch commands
     nothing. One impulse, one dose, however often the probe reports the same thirst."""
-    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
-    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.11})
+    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.05})
+    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.06})
     assert len(gardener.sent.to("actuators/pump/command")) == 1
 
 
@@ -193,10 +196,10 @@ def test_a_dose_in_flight_absorbs_the_next_impulse(gardener, monkeypatch):
     from the command until the watch is judged, and while it stands `adopt` absorbs the next
     impulse by the ordinary rule — no hook, no second read of the ledger."""
     keeper = next(m for m in gardener.modules if m.name == "intention")
-    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
+    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.05})
     assert len(gardener.sent.to("actuators/pump/command")) == 1
     monkeypatch.setattr(keeper, "open_expectations", lambda p: [])  # the watch out of the way
-    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
+    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.05})
     assert len(gardener.sent.to("actuators/pump/command")) == 1, \
         "the dose in flight is a commitment, and a commitment absorbs the same impulse"
     assert keeper.standing(action="http://example.org/orexis/actuation#Dosing",
@@ -205,9 +208,9 @@ def test_a_dose_in_flight_absorbs_the_next_impulse(gardener, monkeypatch):
 
 def test_the_dose_is_capped_by_what_the_vessel_holds(gardener):
     """The witness meters rung 2 as it meters the host's rounds: the sized dose wants
-    120 ml, the butt holds 50 ml, the pump gets 50."""
+    195 ml, the butt holds 50 ml, the pump gets 50."""
     gardener.deliver("sensors/butt_level/reading", {"value": 0.05})
-    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
+    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.05})
     sent = gardener.sent.to("actuators/pump/command")
     assert len(sent) == 1 and sent[0]["ml"] == 50.0
 
@@ -220,6 +223,6 @@ def test_a_spent_vessel_refuses_the_dose_and_says_so(gardener, caplog):
 
     gardener.deliver("sensors/butt_level/reading", {"value": 0.0})
     with caplog.at_level(logging.WARNING):
-        gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
+        gardener.deliver("sensors/moisture_probe/reading", {"value": 0.05})
     assert gardener.sent.to("actuators/pump/command") == []
     assert "the vessel is spent" in caplog.text

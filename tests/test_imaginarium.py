@@ -22,7 +22,7 @@ from conftest import MOISTURE, genesis_store
 GARDENER = "http://example.org/orexis/world/loner#gardener"
 ZZ = "http://example.org/orexis/world/loner#zz"
 DOSING = "http://example.org/orexis/actuation#Dosing"
-RESULT = "http://www.w3.org/ns/sosa/hasSimpleResult"
+RESULT = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"   # a dose predicts a BAND (#579)
 
 
 def _imaginarium(value=0.04):
@@ -34,6 +34,20 @@ def _dose(im, sensed, litres=0.05, value=0.04):
     return effects.apply(im, DOSING, me=f"<{GARDENER}>", subject=f"<{ZZ}>",
                          about=f"<{MOISTURE}>", beliefs=f"<{beliefs_graph('gardener')}>",
                          state=f"<{sensed}>", litres=repr(litres), value=repr(value))
+
+
+def _bands_in(im, graph):
+    """The bands a world's reading of the pot's moisture is in (#579)."""
+    from orexis_agent_progression.store import bindings
+    return sorted(r["c"] for r in bindings(im.query(f"""
+SELECT ?c WHERE {{ GRAPH <{graph}> {{ ?o sosa:hasFeatureOfInterest <{ZZ}> ;
+  sosa:observedProperty <{MOISTURE}> ; a ?c }} FILTER(CONTAINS(STR(?c), "band.")) }}""")))
+
+
+def _bands(triples):
+    """What a dose says the reading BECOMES: the band its rule declared, never a number."""
+    return sorted(t.object.value for t in triples
+                  if t.predicate.value == RESULT and "band." in t.object.value)
 
 
 def test_a_rule_asked_of_the_imaginarium_answers_what_it_answers_of_the_store():
@@ -49,10 +63,8 @@ def test_a_rule_asked_of_the_imaginarium_answers_what_it_answers_of_the_store():
     """
     st, im = _imaginarium()
 
-    from_store = sorted(t.object.value for t in _dose(st, STATE_GRAPH)[0]
-                        if t.predicate.value == RESULT)
-    from_imaginarium = sorted(t.object.value for t in _dose(im, STATE_GRAPH)[0]
-                              if t.predicate.value == RESULT)
+    from_store = _bands(_dose(st, STATE_GRAPH)[0])
+    from_imaginarium = _bands(_dose(im, STATE_GRAPH)[0])
 
     assert from_store, "the rule binds against the belief base, or this test compares nothing"
     assert from_imaginarium == from_store
@@ -73,10 +85,10 @@ def test_a_node_forks_its_parents_readings_and_leaves_them_alone():
     child = im.reached(STATE_GRAPH, (_Row(),), added, retracted)
 
     assert child != STATE_GRAPH, "a node's readings are its own graph"
-    assert _values_in(im, STATE_GRAPH) == ["0.04"], "the parent is not disturbed by a child"
-    assert _values_in(im, child) == sorted(t.object.value for t in added
-                                           if t.predicate.value == RESULT)
-    assert len(_values_in(im, child)) == 1, \
+    assert [b.rsplit(".", 1)[-1] for b in _values_in(im, STATE_GRAPH)] == ["below"], \
+        "the parent is not disturbed by a child"
+    assert _bands_in(im, child) == _bands(added)
+    assert len(_bands_in(im, child)) == 1, \
         "one reading per node, because the step retracted the one it replaces"
 
 
@@ -94,7 +106,8 @@ def test_nothing_imagined_reaches_the_store_it_was_imagined_from():
     im.reached(STATE_GRAPH, (_Row(),), added, retracted)
 
     assert set(st.graph_names()) == before, "a possible world escaped into the belief base"
-    assert _values_in(st, STATE_GRAPH) == ["0.04"], "the agent's readings are its own"
+    assert [b.rsplit(".", 1)[-1] for b in _values_in(st, STATE_GRAPH)] == ["below"], \
+        "the agent's readings are its own"
 
 
 def test_the_snapshot_is_public_knowledge_and_the_named_private_graphs_and_nothing_else():
@@ -118,6 +131,7 @@ def test_the_snapshot_is_public_knowledge_and_the_named_private_graphs_and_nothi
 
 
 def _values_in(store, graph: str) -> list[str]:
-    """The readings sitting in one graph, as the store holds them."""
+    """The readings sitting in one graph, as the store holds them — by the band each is in
+    (#579), since a reading in a possible world is what the domain says it is."""
     return sorted(str(q.object.value) for q in store.quads(graph)
-                  if q.predicate == ox.NamedNode(RESULT))
+                  if q.predicate == ox.NamedNode(RESULT) and "band." in q.object.value)

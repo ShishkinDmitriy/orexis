@@ -423,14 +423,30 @@ def write_reading(agent, value: float, observed_property: str | None = None, age
         ts=(datetime.now(timezone.utc) - timedelta(seconds=age_s)).isoformat())
 
 
-def predicted_reading(subject_uri: str, observed_property: str, value: float) -> tuple:
+def predicted_reading(subject_uri: str, observed_property: str, value: float = None,
+                      band: str = None) -> tuple:
     """A step's prediction of one reading, in the canonical fact form the search states it in
-    (`signature.facts`) — what `progression:predicts` holds for a dose. For tests that adopt a step
-    by hand and still want a watch on its end (#510): (adds, retracts)."""
+    (`signature.facts`) — what `progression:predicts` holds for a dose. For tests that adopt a
+    step by hand and still want a watch on its end (#510): (adds, retracts). A shipped rule
+    predicts the BAND the reading becomes (#579), which `band` states; a `value` is a number a
+    caller states by hand, and the world is held to it exactly."""
     SOSA = "http://www.w3.org/ns/sosa/"
+    TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
     key = ((SOSA + "hasFeatureOfInterest", subject_uri), (SOSA + "observedProperty", observed_property))
-    return (frozenset({("keyed", SOSA + "Observation", key, SOSA + "hasSimpleResult", value)}),
-            frozenset())
+    carried = (TYPE, band) if band is not None else (SOSA + "hasSimpleResult", value)
+    return (frozenset({("keyed", SOSA + "Observation", key) + carried}), frozenset())
+
+
+def predicted_bands(agent, step_uri: str) -> list[str]:
+    """The classes a ledger step predicts its reading to be (#579) — the band and its families."""
+    from orexis_agent_progression.act import predicts_from_json
+    from orexis_agent_progression.store import bindings
+    rows = bindings(agent.intentions.query_union(
+        f"SELECT ?p WHERE {{ <{step_uri}> <http://example.org/orexis/progression#predicts> ?p }}"))
+    if not rows:
+        return []
+    adds, _ = predicts_from_json(rows[0]["p"])
+    return sorted(str(f[4]) for f in adds if f[0] == "keyed" and f[3].endswith("#type"))
 
 
 def predicted_readings(agent, step_uri: str) -> list[float]:

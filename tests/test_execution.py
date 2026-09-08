@@ -193,33 +193,30 @@ def test_an_impulse_within_patience_writes_no_row(monkeypatch):
     assert int(everything[0]["n"]) == n, "no dropped rows either"
 
 
-def test_a_two_step_plan_is_taken_step_by_step_with_one_search(monkeypatch):
-    """The loner's gardener with a nearly empty butt plans two doses. `pursue` searches ONCE,
-    commits both steps, and takes the first; a second `pursue` while the plan is in progress
-    searches nothing; the reading that answers the first dose takes the second with no search
-    at all (#510)."""
-    from conftest import write_reading
-    from orexis_agent_deliberation import planner, pursuit
-    from test_planning import _thirsty_with_a_nearly_empty_butt, MOISTURE
+def test_a_plan_is_searched_once_committed_and_taken(monkeypatch):
+    """The loner's gardener with a nearly empty butt plans a dose. `pursue` searches ONCE,
+    commits the plan and takes its first step; a second `pursue` while the plan is in progress
+    searches nothing (#510).
 
-    agent, _, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
+ASKED OF HANOI, whose plans are still many steps. It used to be the loner's two doses,
+    and a plant's plan is one step since #579: an effect declares the band it reaches, so two
+    doses each too small to cross a boundary are one world and the second is found by
+    re-planning after the first lands. A world of plain facts is where a plan of several steps
+    still lives, and the claim under test was never about water."""
+    from orexis_agent_deliberation import planner, pursuit
+    from test_hanoi import _mover, _goal
+
+    agent = _mover(monkeypatch, ["disk_1", "disk_2", "disk_3"])
     searches = []
     real = planner.Planner.plan
     monkeypatch.setattr(planner.Planner, "plan", lambda self, d: (searches.append(1), real(self, d))[1])
     keeper = agent.keeper
+    desire = _goal(agent)
 
     uri = pursuit.pursue(agent, desire)
     assert uri and len(searches) == 1
-    standing = keeper.standing(want=desire.uri)
-    assert len(standing) == 1 and keeper.in_progress(desire.uri) is not None, "two steps stand as one plan"
-    commands = len(agent.sent.to("actuators/pump/command"))
-    assert commands >= 1, "the first dose was commanded"
+    assert len(keeper.standing(want=desire.uri)) == 1, "the plan stands as one commitment"
+    assert keeper.in_progress(desire.uri) is not None, "several steps stand as one plan"
 
     assert pursuit.pursue(agent, desire) == uri and len(searches) == 1, \
         "a plan in progress is not searched over again"
-
-    from conftest import predicted_readings
-    landed = predicted_readings(agent, keeper.open_expectations(desire.uri)[0].step)[0]
-    write_reading(agent, landed, MOISTURE)   # the first dose landed exactly as its step predicted
-    assert len(searches) == 1, "the second step was taken by feedback, not by a search"
-    assert len(agent.sent.to("actuators/pump/command")) > commands, "and the pump was commanded again"

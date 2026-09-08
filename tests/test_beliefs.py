@@ -22,7 +22,7 @@ from conftest import MOISTURE, TEMPERATURE, desires_build, genesis_store
 def regions(agent_id, agent_uri):
     """What one agent wants, read the way its own module reads it: from the desire modality,
     which derives them — deduced, not believed, and since #312 not in the belief base at all."""
-    return regions_of(desires_build(genesis_store(), agent_id).query_union, agent_uri)
+    return regions_of(genesis_store().query, agent_uri)
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
 FERN_URI = "http://example.org/orexis/world/simulation#fern"  # the plant, not the agent that acts for it

@@ -154,7 +154,6 @@ ANSWER = OREXIS + "answer"          # the shape of an observation that answers a
 WITNESS = OREXIS + "witness"        # what the world shows for a predicted fact now — the residual (#518)
 DESIRES = OREXIS + "desires"
 DESIRE_URGENCY = OREXIS + "desireUrgency"
-SIZE = OREXIS + "size"
 REPORTS = OREXIS + "reports"
 SERIES = OREXIS + "series"
 QUIET = OREXIS + "quiet"

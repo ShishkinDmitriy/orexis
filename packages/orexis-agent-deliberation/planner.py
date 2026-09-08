@@ -750,16 +750,13 @@ class Planner:
             self._surprise = (SURPRISE_EXOGENOUS, _said((present - base, base - present)))
             self.reset()
             return False
-        #  BY CELL OR EXACTLY (#573). A match by cell identifies the world — the plan's step
-        #  landed where it said, near enough that no rule tells the difference — but the
-        #  worlds beneath the node were computed from the number it predicted, not the
-        #  number the present holds, and a dose from 0.54 is not a dose from 0.50. So a
-        #  match that is not exact keeps the node as the root and drops what was imagined
-        #  beneath it, to be imagined again from the present's own numbers; an exact match
-        #  keeps the subtree whole, as a puzzle world's always is.
-        exact = (self._project(present - base), self._project(base - present)) == \
-            (self._project(node.diff[0]), self._project(node.diff[1]))
-        self._reroot(node, present, subtree=exact, desire=desire)
+        #  BY BAND, AND THAT IS EXACT (#579). A kept world states its readings by what they
+        #  ARE and never by a number; the present, observed, carries a number beside its band,
+        #  and the number is nothing a kept world predicted. A match by band is therefore the
+        #  whole of the identity, and the worlds beneath the node — computed from bands, each
+        #  carrying its own — stand. The cell-only re-root of #573, which dropped a subtree
+        #  computed from a number the present did not hold, has nothing left to drop.
+        self._reroot(node, present, subtree=True, desire=desire)
         return True
 
     def _reroot(self, node, present: frozenset, subtree: bool = True, desire=None) -> None:
@@ -1450,49 +1447,14 @@ class Planner:
             "via": row.via if row is not None else "urn:nothing",
             "beliefs": beliefs_graph(self.agent.id),
             "state": graph,
-            #  Sized by whoever would take it — or, walking a plan back to read its premises,
-            #  the quantity the step already carries: the size it was planned with (#550).
-            "litres": litres if litres is not None else (
-                self._dose(row, graph) if desire and row is not None else 0.0),
+            #  NOT SIZED (#579). The search plans on what a reading IS, and an effect declares
+            #  the band it reaches; how much to pour or bid is progression's, computed from
+            #  the reading in hand when the step is taken. The token stays bound at nothing
+            #  for the timing and cost selects that still carry it, which then say nothing —
+            #  a landing of zero, a cost unstated — and a caller walking a plan back may pass
+            #  the quantity a step was taken with.
+            "litres": litres if litres is not None else 0.0,
         }
-
-    def _dose(self, row, graph: str) -> float:
-        """How much this act would move — ASKED OF WHOEVER WOULD TAKE IT, never computed here.
-
-        Each lever's owner sizes its own act, and the two owners size differently: an actuator
-        pours what closes the deficit capped by what its vessel holds, a bidder asks for what
-        closes the deficit capped by what its WALLET can pay for. A planner that computed either
-        for itself would simulate an act nobody was going to take, predict a world nobody would
-        reach, and be wrong in the direction that looks like a device lying — the single-source
-        argument #238 made for an effect's magnitude and #247 for its timing.
-
-        ASKED OF THE TAKER, found the way execution finds it — whichever module contributes the action
-        — and asked ABOUT A WORLD: the imaginarium at this node's graph, so a second dose is
-        sized from where the first one left the property (#254). The taker reads the value
-        there through sensing; nothing here knows what a reading looks like.
-
-        Zero for a means nobody sizes. A zero dose predicts the value it started from, and a
-        world no better than the one you are in is refused by the satisficing test one line
-        later — so an unsized lever arrives at "this does not help" by the same road as every
-        other, rather than by an exception.
-        """
-        if row is None or row.about is None:
-            return 0.0
-        from orexis_agent_progression.act import takers_of
-        litres = None
-        for actor in takers_of(self.agent, row.action):
-            litres = actor.size(self.imaginarium.query, graph, row)
-            if litres is not None:
-                break
-        #  NEVER NEGATIVE, and this is the guard that matters most in the whole file. Sizing is
-        #  `(aim - value) * conversion`, so a property ABOVE its aim asks for a negative pour —
-        #  and the effect rule, asked politely, predicts exactly what a negative dose would do:
-        #  it reports the plant arriving neatly back at its aim. The planner then proposes
-        #  watering a drowning plant, with a simulation agreeing.
-        #
-        #  The actor has always refused this (`litres <= EPS`), and the refusal has to live on
-        #  both sides: a planner that simulates an act the actor would decline is not planning.
-        return float(litres) if litres and litres > 0 else 0.0
 
     def _beliefs(self):
         """The DATA-BORNE world as an rdflib graph — what the pass carves shapes from.

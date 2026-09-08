@@ -106,16 +106,32 @@ sensing:AimDistanceMeasure
         SELECT ?urgency WHERE {
             OPTIONAL { GRAPH $state {
                 ?obs sosa:hasFeatureOfInterest $subject ;
-                     sosa:observedProperty $property ;
-                     sosa:hasSimpleResult ?reading } }
+                     sosa:observedProperty $property .
+                #  The bands INSIDE the reading's own pattern: outside it, an unbound ?obs
+                #  would join freely with any reading of any property in any band.
+                OPTIONAL { ?obs a sensing:BelowFloor . BIND(1.0 AS ?u1) }
+                OPTIONAL { ?obs a sensing:AboveCeiling . BIND(1.0 AS ?u2) }
+                OPTIONAL { ?obs a sensing:BelowRegion . BIND(0.75 AS ?u3) }
+                OPTIONAL { ?obs a sensing:AboveRegion . BIND(0.75 AS ?u4) }
+                OPTIONAL { ?obs a sensing:InRegion . BIND(0.0 AS ?u5) } } }
             OPTIONAL { GRAPH $beliefs {
                 $me sensing:aims ?aim .
                 ?aim ssn:forProperty $property ;
                      schema:value ?picked } }
-            BIND(COALESCE($value, ?reading) AS ?v)
+            #  THE NUMBER ONLY WHERE A CALLER HANDS ONE IN (#579): a world is judged by the
+            #  band its reading is in, the one the agent stands in and one a rule imagined
+            #  alike, so the two are on one scale; the reading's own number is not read here.
+            BIND($value AS ?v)
             BIND(COALESCE(?picked, $centre) AS ?target)
             BIND(IF(?v < ?target, ?target - $outerLow, $outerHigh - ?target) AS ?room)
             BIND(IF(?v < ?target, ?target - ?v, ?v - ?target) AS ?distance)
+            #  BY THE BAND where the reading has no number (#579): a reading an effect
+            #  predicted is what it IS and nothing more, and this package says how urgent
+            #  each band is — past the envelope maximal, outside the region three quarters,
+            #  inside it nothing. Coarser than the distance, which is the ruling's point:
+            #  a pot at 25 and a pot at 27 are one world. The number, where there is one,
+            #  still says how far.
             BIND(COALESCE(IF(?distance <= 0, 0.0, IF(?room <= 0, 1.0,
-                 IF(?distance / ?room < 1.0, ?distance / ?room, 1.0))), 1.0) AS ?urgency)
+                 IF(?distance / ?room < 1.0, ?distance / ?room, 1.0))),
+                 ?u1, ?u2, ?u3, ?u4, ?u5, 1.0) AS ?urgency)
         }""" .

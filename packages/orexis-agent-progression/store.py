@@ -206,31 +206,69 @@ class Unbound(ValueError):
     parameter or the caller can bind it; never left for the engine to read as a variable."""
 
 
-#  Membership under an OWL class defined as an intersection (#576): the node is of every named
-#  class in the list, has every `owl:hasValue`, and for every datatype restriction has a value
-#  no facet refuses. Three "for all" clauses, each a NOT EXISTS of a member the node fails,
-#  and the four facets four flat clauses so each test reads on its own. The node graph is
-#  named, the definitions come from the default graph the caller assembles — measured
-#  first without either in scope, which binds nothing and errors nowhere.
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
-_MEMBERS_Q = """
-SELECT DISTINCT ?x ?cls WHERE {
-  $of
-  ?cls owl:equivalentClass/owl:intersectionOf ?list .
-  ?list rdf:rest*/rdf:first ?base . FILTER(isIRI(?base))
-  GRAPH $graph { ?x a ?base }
-  FILTER NOT EXISTS { ?list rdf:rest*/rdf:first ?o . FILTER(isIRI(?o))
-                      FILTER NOT EXISTS { GRAPH $graph { ?x a ?o } } }
-  FILTER NOT EXISTS { ?list rdf:rest*/rdf:first ?r . ?r owl:onProperty ?p ; owl:hasValue ?v .
-                      FILTER NOT EXISTS { GRAPH $graph { ?x ?p ?v } } }
-  FILTER NOT EXISTS { ?list rdf:rest*/rdf:first ?r2 . ?r2 owl:onProperty ?p2 ;
-                          owl:someValuesFrom/owl:withRestrictions ?facets .
-      FILTER NOT EXISTS { GRAPH $graph { ?x ?p2 ?val }
-         FILTER NOT EXISTS { ?facets rdf:rest*/rdf:first/xsd:maxExclusive ?b1 . FILTER(?val >= ?b1) }
-         FILTER NOT EXISTS { ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?b2 . FILTER(?val > ?b2) }
-         FILTER NOT EXISTS { ?facets rdf:rest*/rdf:first/xsd:minExclusive ?b3 . FILTER(?val <= ?b3) }
-         FILTER NOT EXISTS { ?facets rdf:rest*/rdf:first/xsd:minInclusive ?b4 . FILTER(?val < ?b4) } } }
+
+#  A class defined as an INTERSECTION (#576), read flat: per class, the named classes it
+#  intersects, the values it pins by `owl:hasValue`, and the facets of a datatype restriction
+#  it holds a property's value to. One row per part; `entail` assembles them. Read once per
+#  store, because a definition changes only when genesis or an amendment writes one.
+#  THE PREAMBLE REPEATED IN EVERY BRANCH, which is the engine's rule and not tidiness: a
+#  FILTER or a BIND inside a UNION branch does not see a variable the surrounding pattern
+#  bound (AGENTS.md's trap). Stated once with `{ FILTER(isIRI(?part)) BIND(?part AS ?base) }`
+#  as the first branch, `?base` came back unbound for every class — so every definition
+#  intersected NO named class, and a node of any type satisfied that vacuously.
+_DEFINITIONS_Q = """
+SELECT ?cls ?base ?pinP ?pinV ?pinVt ?rangeP ?facet ?bound WHERE {
+  { ?cls owl:equivalentClass/owl:intersectionOf ?list .
+    ?list rdf:rest*/rdf:first ?base . FILTER(isIRI(?base)) }
+  UNION
+  { ?cls owl:equivalentClass/owl:intersectionOf ?list .
+    ?list rdf:rest*/rdf:first ?part .
+    ?part owl:onProperty ?pinP ; owl:hasValue ?pin .
+    BIND(IF(isIRI(?pin), STR(?pin), "") AS ?pinV)
+    BIND(IF(isIRI(?pin), "", STR(?pin)) AS ?pinVt) }
+  UNION
+  { ?cls owl:equivalentClass/owl:intersectionOf ?list .
+    ?list rdf:rest*/rdf:first ?part .
+    ?part owl:onProperty ?rangeP ; owl:someValuesFrom/owl:withRestrictions ?facets .
+    ?facets rdf:rest*/rdf:first ?f . ?f ?facet ?bound . FILTER(?facet != rdf:type) }
 }"""
+
+
+def _named(text: str) -> ox.NamedNode:
+    """One node as a term, from what a caller writes: `<iri>`, a bare IRI, or a PREFIXED name
+    in the store's own dictionary — which sensing's writer hands over, and which the engine
+    used to expand when this was a query. Unexpanded it is a node nothing is written about,
+    silently: a reading kept the band it was written with."""
+    text = text.strip("<>")
+    if "://" not in text and ":" in text:
+        prefix, _, local = text.partition(":")
+        if prefix in NAMESPACES:
+            return ox.NamedNode(NAMESPACES[prefix] + local)
+    return ox.NamedNode(text)
+
+
+def _term_of(row: dict, iri_key: str, text_key: str):
+    """A pinned value as the engine's term: an IRI where the definition names one, else the
+    literal it wrote — read back as the lexical form the row carries."""
+    if row.get(iri_key):
+        return ox.NamedNode(row[iri_key])
+    return ox.Literal(row.get(text_key, ""))
+
+
+def _within(values, facets) -> bool:
+    """Does some value satisfy every facet of a datatype restriction? Numeric, as XSD reads
+    them; a value that is not a number satisfies nothing, and no value at all is not within."""
+    for v in values:
+        try:
+            n = float(v.value)
+        except (AttributeError, TypeError, ValueError):
+            continue
+        if all((n < b if f == "maxExclusive" else n <= b if f == "maxInclusive" else
+                n > b if f == "minExclusive" else n >= b if f == "minInclusive" else True)
+               for f, b in facets):
+            return True
+    return False
 
 
 def render(value) -> str:
@@ -484,7 +522,7 @@ class Store:
 
     # --- writing ---
 
-    def entail(self, graph_iri: str, of=()) -> list:
+    def entail(self, graph_iri: str, of=(), among: str = "") -> list:
         """Assert in `graph_iri` what the vocabulary entails of the nodes there: membership
         under every class defined as an `owl:intersectionOf` a named class, `owl:hasValue`
         restrictions and a datatype restriction with `owl:withRestrictions` facets — the
@@ -493,30 +531,103 @@ class Store:
         is not special: what a reading IS is decided inside the domain as classes and
         asserted here, where a step's precondition can then say it as a triple (#576).
 
-        `of` narrows the question to some NAMED nodes — the reading just written — as
-        rendered terms; empty asks about every node in the graph, which is how a forked
-        world is asked, since the observation a rule minted is a blank node no `VALUES` can
-        name. Returns the memberships asserted, as `(node, class)` pairs of engine terms.
-        The definitions are read from public knowledge; the nodes from `graph_iri` alone,
-        named, so a pattern never widens into every graph at once. Asserted through the
-        term API rather than an INSERT, for the same reason: a blank node written back as
-        text is a new blank node.
-        """
-        values = (f"VALUES ?x {{ {' '.join(render(x) for x in of)} }}" if of else "")
-        found = self._members(graph_iri, values)
-        graph = ox.NamedNode(graph_iri)
-        for node, cls in found:
-            self._store.add(ox.Quad(node, _RDF_TYPE, cls, graph))
-        if found:
-            self._forget()
-        return found
+        THE DEFINITIONS ARE READ AS DATA AND EVALUATED HERE, which is the compiler's bargain
+        one layer over (`violation.py`): the domain owns the declaration, the kernel owns how
+        it is answered. As one SPARQL question — every class, then three "for all" clauses
+        walking its list by property path per candidate — it cost 300 ms a call however
+        narrowed, and a pass forks tens of worlds. Read once per store and evaluated against a
+        node's own triples, a fork's question is a dictionary lookup. What is asserted is
+        exactly what the OWL says, and an outside reasoner would say the same.
 
-    def _members(self, graph_iri: str, values: str) -> list:
-        text = bind(_MEMBERS_Q, graph=graph_iri, of=Raw(values))
-        public = [ox.NamedNode(g) for g in self.public_graphs()]
-        res = self._store.query(text, prefixes=NAMESPACES, default_graph=public,
-                                named_graphs=[ox.NamedNode(graph_iri)])
-        return [(r["x"], r["cls"]) for r in res]
+        `of` narrows the question to some NAMED nodes — the reading just written — as rendered
+        terms; `among` to the nodes a pattern picks out inside the graph, which is how a fork's
+        observation is named, being a blank node no `VALUES` can reach. Neither given, every
+        node in the graph is asked. Returns the memberships asserted, as `(node, class)` pairs
+        of engine terms, and asserts through the term API rather than an INSERT: a blank node
+        written back as text is a new blank node.
+        """
+        graph = ox.NamedNode(graph_iri)
+        nodes = self._nodes_in(graph_iri, of, among)
+        defs, supers, keyed = self._definitions()
+        out = []
+        for node in nodes:
+            held = {q.predicate: set() for q in ()}
+            values, types = {}, set()
+            for q in self._store.quads_for_pattern(node, None, None, graph):
+                if q.predicate == _RDF_TYPE:
+                    types.add(q.object)
+                values.setdefault(q.predicate, set()).add(q.object)
+            for cls, (bases, pinned, ranges) in defs.items():
+                if cls in types or not bases <= types:
+                    continue
+                if any(v not in values.get(p, ()) for p, v in pinned):
+                    continue
+                if all(_within(values.get(p, ()), facets) for p, facets in ranges):
+                    out.append((node, cls))
+                    types.add(cls)
+            #  AND THE FAMILIES (#579): every class the node is now typed with, closed upward
+            #  by `rdfs:subClassOf`, so a shape's `sh:class sensing:BelowRegion` and a
+            #  measure's `?obs a sensing:InRegion` read what a reading IS without walking a
+            #  subclass path, which is the closure's one rule. STOPPING AT A KEYED CLASS: a
+            #  reading gains its bands' families and never what sits above `sosa:Observation`,
+            #  which every reading has alike and which the signature would read as a fact.
+            stop = {s for k in types & keyed for s in supers.get(k, ())} | (types & keyed)
+            for cls in list(types):
+                for sup in supers.get(cls, ()):
+                    if sup not in types and sup not in stop:
+                        out.append((node, sup))
+                        types.add(sup)
+        for node, cls in out:
+            self._store.add(ox.Quad(node, _RDF_TYPE, cls, graph))
+        #  NOTHING IS FORGOTTEN. Every other write drops what was learned by asking, because
+        #  it may have moved it; this one asserts a class on a node in one graph and can move
+        #  none of it — which graphs are public, which the agent's own, a rule's text, the
+        #  definitions themselves. Forgetting here re-read the definitions once per fork, 140
+        #  ms each, and a pass forks tens of worlds.
+        return out
+
+    def _nodes_in(self, graph_iri: str, of, among: str) -> list:
+        """The nodes to ask about: those named, those a pattern picks out, or all of them."""
+        if of and not among:
+            return [_named(x) if isinstance(x, str) else x for x in of]
+        if among:
+            text = f"SELECT DISTINCT ?x WHERE {{ GRAPH <{graph_iri}> {{ {among} }} }}"
+            return [r["x"] for r in self._store.query(
+                text, prefixes=NAMESPACES, named_graphs=[ox.NamedNode(graph_iri)])]
+        seen, graph = [], ox.NamedNode(graph_iri)
+        for q in self._store.quads_for_pattern(None, _RDF_TYPE, None, graph):
+            if q.subject not in seen:
+                seen.append(q.subject)
+        return seen
+
+    def _definitions(self):
+        """The domain's class definitions, read once per store: class -> (named classes it
+        intersects, the values it pins, the ranges it holds a value to); the subclass closure;
+        and which classes some package declared `orexis:keyedBy`. Dropped on every write with
+        the rest of `remember`, since a genesis or an amendment may mint more."""
+        return self.remember(("definitions",), self._read_definitions)
+
+    def _read_definitions(self):
+        rows = bindings(self.query(_DEFINITIONS_Q))
+        defs: dict = {}
+        for r in rows:
+            cls = ox.NamedNode(r["cls"])
+            bases, pinned, ranges = defs.setdefault(cls, (set(), set(), {}))
+            if r.get("base"):
+                bases.add(ox.NamedNode(r["base"]))
+            if r.get("pinP"):
+                pinned.add((ox.NamedNode(r["pinP"]), _term_of(r, "pinV", "pinVt")))
+            if r.get("rangeP") and r.get("facet"):
+                ranges.setdefault(ox.NamedNode(r["rangeP"]), []).append(
+                    (r["facet"].rsplit("#", 1)[-1], float(r["bound"])))
+        defs = {c: (b, p, tuple(r.items())) for c, (b, p, r) in defs.items()}
+        supers: dict = {}
+        for r in bindings(self.query(
+                "SELECT ?c ?s WHERE { ?c rdfs:subClassOf+ ?s . FILTER(isIRI(?s) && isIRI(?c)) }")):
+            supers.setdefault(ox.NamedNode(r["c"]), set()).add(ox.NamedNode(r["s"]))
+        keyed = {ox.NamedNode(r["c"]) for r in bindings(self.query(
+            "SELECT DISTINCT ?c WHERE { ?c <http://example.org/orexis#keyedBy> ?p }"))}
+        return defs, supers, keyed
 
     def update(self, sparql: str) -> None:
         self._store.update(sparql, prefixes=NAMESPACES)

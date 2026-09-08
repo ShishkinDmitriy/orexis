@@ -454,6 +454,16 @@ sosa:Observation orexis:keyedBy sosa:hasFeatureOfInterest , sosa:observedPropert
 :AboveCeiling a owl:Class ; rdfs:subClassOf :AboveRegion ;
     rdfs:label "reading above the ceiling" ;
     rdfs:comment "An observation whose result lies above the survival range its subject states. Also above the region." .
+#  WHOSE band a member is — the two `owl:hasValue` restrictions of its definition, restated as
+#  two triples on the member so an effect rule finds "the in-region band of this subject's
+#  property" in one join rather than a walk through the restriction list. Minted beside the
+#  definition by the same rule; the definition is the meaning, these are its index.
+:ofSubject a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range sosa:FeatureOfInterest ;
+    rdfs:label "band of subject" ;
+    rdfs:comment "The subject whose readings this band classifies — what its definition's `sosa:hasFeatureOfInterest` restriction has as value." .
+:ofProperty a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range sosa:ObservableProperty ;
+    rdfs:label "band of property" ;
+    rdfs:comment "The property whose readings this band classifies — what its definition's `sosa:observedProperty` restriction has as value." .
 
 #  Was the kernel's (`orexis:Aim`, `orexis:aims`); the region it sits in is this package's, and so is
 #  the aim (the-stake-is-sensings-want).

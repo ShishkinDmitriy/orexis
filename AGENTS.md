@@ -241,7 +241,7 @@ it is a record wearing a bullet.
    providing its key into the load set, needs after needs, while a soft one (`X | None`)
    injects only what is already there and loads nothing (#455). Adding one is adding a directory. Packages never
    import each other's Python ACROSS a layer: ask `agent.provider(family)` or contribute via
-   the choir's extension points (`desires`, `size`, every ACTION, `notices`, `series`, `quiet` — and, in sensing's
+   the choir's extension points (`desires`, every ACTION, `notices`, `series`, `quiet` — and, in sensing's
    words through `agent.ask`, `annotate`, `urgency`, `bounds`).
    The one ordinary import is DOWNWARD, of the contract of the layer beneath: a family's plug-ins
    import the family's contract — `packages/orexis-codec-*`, `packages/orexis-scaling-*` and

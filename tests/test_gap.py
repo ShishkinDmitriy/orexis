@@ -46,7 +46,7 @@ def test_the_query_and_the_module_are_one_definition(query_with_readings, monkey
     declared query is held to at exactly that fallback."""
     st = genesis_store({("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0})
     gaps = _gaps(st, FERN, monkeypatch=monkeypatch)
-    regions = regions_of(desires_build(st, "fern").query_union, FERN)
+    regions = regions_of(st.query, FERN)
     assert set(gaps) == {MOISTURE, TEMPERATURE}
     for prop, gap in gaps.items():
         assert abs(gap.gap) == round(regions[prop].urgency(gap.value), 6) or \

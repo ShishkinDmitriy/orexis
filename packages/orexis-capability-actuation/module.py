@@ -44,7 +44,7 @@ from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import bindings
 
 from .beliefs import ACTUATION_PICKS
-from .terms import ACTUATION, DOSING, TOLERANCE
+from .terms import ACTUATION, DOSING
 from .wiring import actuator_for, actuators_of
 
 SENSING = "http://example.org/orexis/sensing#SensingCapability"  # whoever can look, asked by family
@@ -191,14 +191,6 @@ class ActuationModule(Module):
         if want is not None:
             reviser.wake(self.agent, want.uri)
 
-    def size(self, query, graph: str, row) -> float | None:
-        """The planner's question, answered by the one who would pour: `dose_for`, from where
-        the property stands in the world being asked about — read through sensing at that
-        world's graph, because what a reading looks like is sensing's."""
-        sensing = self.agent.provider(SENSING)
-        value = sensing.value_in(query, graph, self.me.acts_for, row.about) if sensing else None
-        return self.dose_for(row.about, value) if value is not None else None
-
     @contributes(DOSING)
     def dose(self, act, desire, intention: str) -> bool:
         """Carry out a committed self-dose: size it from the reading in hand and command it.
@@ -253,12 +245,14 @@ class ActuationModule(Module):
             #  resolved at once: a row that could never be judged must not stand for ever.
             #  A dose RAISES what it doses — this package's own effect rule — so the watch is
             #  told so here.
+            #  Held to the band the step predicted (#579); what I add is the number I aimed
+            #  the dose at, for the residual review to read against what the world shows.
             opened = keeper.expect(
                 intention,
                 f"self-dosed {litres}L ({cmd.ml:.0f} ml commanded) — the graph says this "
                 f"raises what I am short of, so show me",
-                baseline=reading, tolerance=self.tolerance(), seeing_s=seeing,
-                lands_after_s=lands, not_after=not_after)
+                baseline=reading, sized=sensing.aim(observed_property) if sensing else None,
+                seeing_s=seeing, lands_after_s=lands, not_after=not_after)
             if opened and sensing is not None:
                 sensing.sense_now()   # the freshest before on record
             if not opened:
@@ -320,16 +314,6 @@ SELECT ?source ?p WHERE {{
         sensing = self.agent.provider(SENSING)
         reading = sensing.current_reading(rows[0]["source"], rows[0]["p"]) if sensing else None
         return reading.value if reading is not None else None
-
-    def tolerance(self) -> float:
-        """How close the world must land to the reading a dose predicts — my pick, or the
-        capability's default where I state none (#518). A fraction of the predicted movement."""
-        rows = bindings(self.agent.desires.query_union(f"""
-SELECT ?t ?mine WHERE {{
-  {{ <{self.me.uri}> <{TOLERANCE}> ?t . BIND(true AS ?mine) }}
-  UNION {{ <{ACTUATION}> <{TOLERANCE}> ?t . BIND(false AS ?mine) }} }}"""))
-        rows.sort(key=lambda r: r["mine"] != "true")
-        return float(rows[0]["t"]) if rows else 0.5
 
     def _conversion_for(self, observed_property: str) -> float | None:
         rows = bindings(self.agent.beliefs.query(_CONVERSION_Q % (

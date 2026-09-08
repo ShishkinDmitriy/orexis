@@ -128,6 +128,7 @@ WHERE  {
 #  compares numerically, so a double reading is classified like a decimal one.
 INSERT { GRAPH $derived {
     ?below a owl:Class ; rdfs:subClassOf sensing:BelowRegion ; rdfs:label ?belowLabel ;
+        sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
         owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation
             [ a owl:Restriction ; owl:onProperty sosa:hasFeatureOfInterest ; owl:hasValue ?subject ]
             [ a owl:Restriction ; owl:onProperty sosa:observedProperty ; owl:hasValue ?property ]
@@ -135,6 +136,7 @@ INSERT { GRAPH $derived {
               owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ;
                                    owl:withRestrictions ( [ xsd:maxExclusive ?low ] ) ] ] ) ] .
     ?inside a owl:Class ; rdfs:subClassOf sensing:InRegion ; rdfs:label ?insideLabel ;
+        sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
         owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation
             [ a owl:Restriction ; owl:onProperty sosa:hasFeatureOfInterest ; owl:hasValue ?subject ]
             [ a owl:Restriction ; owl:onProperty sosa:observedProperty ; owl:hasValue ?property ]
@@ -142,6 +144,7 @@ INSERT { GRAPH $derived {
               owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ;
                                    owl:withRestrictions ( [ xsd:minInclusive ?low ] [ xsd:maxInclusive ?high ] ) ] ] ) ] .
     ?above a owl:Class ; rdfs:subClassOf sensing:AboveRegion ; rdfs:label ?aboveLabel ;
+        sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
         owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation
             [ a owl:Restriction ; owl:onProperty sosa:hasFeatureOfInterest ; owl:hasValue ?subject ]
             [ a owl:Restriction ; owl:onProperty sosa:observedProperty ; owl:hasValue ?property ]
@@ -174,6 +177,7 @@ WHERE {
 #  member of the region band it lies in, by the families' own subclass axioms.
 INSERT { GRAPH $derived {
     ?belowFloor a owl:Class ; rdfs:subClassOf sensing:BelowFloor ; rdfs:label ?floorLabel ;
+        sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
         owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation
             [ a owl:Restriction ; owl:onProperty sosa:hasFeatureOfInterest ; owl:hasValue ?subject ]
             [ a owl:Restriction ; owl:onProperty sosa:observedProperty ; owl:hasValue ?property ]
@@ -181,6 +185,7 @@ INSERT { GRAPH $derived {
               owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ;
                                    owl:withRestrictions ( [ xsd:maxExclusive ?floor ] ) ] ] ) ] .
     ?aboveCeiling a owl:Class ; rdfs:subClassOf sensing:AboveCeiling ; rdfs:label ?ceilingLabel ;
+        sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
         owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation
             [ a owl:Restriction ; owl:onProperty sosa:hasFeatureOfInterest ; owl:hasValue ?subject ]
             [ a owl:Restriction ; owl:onProperty sosa:observedProperty ; owl:hasValue ?property ]

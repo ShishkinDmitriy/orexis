@@ -34,7 +34,7 @@ from urllib.parse import quote
 import pyoxigraph as ox
 
 from orexis_agent_progression.ontology import GRAPH_PREFIX, STATE_GRAPH
-from orexis_agent_progression.store import Store
+from orexis_agent_progression.store import render, Store
 
 #  Where a node's readings sit. Under the same root as every other graph, because a graph IRI is
 #  a graph IRI — but in a store nothing else can open, which is what keeps `orexis:PossibleGraph`'s
@@ -143,16 +143,26 @@ class Imaginarium(Store):
         world `name` — a predicted reading's bands (#576) — asserted there and handed back
         as triples for the diff. Asked only about the nodes the step typed with a keyed
         class, so a fork costs one narrow question."""
-        subjects = {t.subject for t in added
+        subjects = {t.subject: t.object.value for t in added
                     if t.predicate == _RDF_TYPE and isinstance(t.object, ox.NamedNode)
                     and t.object.value in keys}
         if not subjects:
             return []
-        #  The whole world, not the nodes: a rule mints its observation as a blank node,
-        #  and a blank node cannot be named to a query. A forked world holds a handful of
-        #  readings, so the wider question costs what the narrow one would.
-        return [ox.Triple(node, _RDF_TYPE, cls) for node, cls in self.entail(name)
-                if node in subjects]
+        #  BY KEY, not by name: a rule mints its observation as a blank node, and a blank node
+        #  cannot be named to a query — but a keyed node is its key, and the key is on the
+        #  triples the step added. Asked about the whole forked world instead, the question
+        #  cost a second and a half per fork, measured.
+        out = []
+        for node, cls in subjects.items():
+            key_preds = keys[cls][0]
+            key = [(t.predicate, t.object) for t in added
+                   if t.subject == node and t.predicate.value in key_preds]
+            if len(key) != len(key_preds):
+                continue
+            among = " ".join(f"?x <{p.value}> {render(o)} ." for p, o in key)
+            out += [ox.Triple(n, _RDF_TYPE, c) for n, c in self.entail(name, among=among)
+                    if n == node]
+        return out
 
     def drop(self, name: str) -> None:
         """Forget one imagined world's graph (#553, #487). The node that named it keeps its

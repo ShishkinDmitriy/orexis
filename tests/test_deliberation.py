@@ -140,12 +140,16 @@ def test_below_the_aim_means_pursue_and_above_means_nothing(make):
     decider = decider_of(fern)
     #  The WORLD holds the value, not the want: a reading is sensing's, and the rule sizing
     #  a purchase reads where the property stands from the sensed graph.
-    for value in (0.10, 0.54):
+    #  BY BAND (#579): a pot below its region buys; a pot inside it — below its aim or not —
+    #  is content, since the search plans on what the reading IS and steering to the aim
+    #  inside the region is the actor's, when it sizes the act it takes. A pot above buys
+    #  nothing either: a lot reaches the region from below, and from above it helps nothing.
+    for value in (0.10, 0.39):
         write_reading(fern, value, MOISTURE)
         stake = ObservedDesire(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
                              value=value)
         assert decider.propose_for(stake) == ACQUIRING, f"thirsty at {value} and not buying"
-    for value in (0.55, 0.80):
+    for value in (0.54, 0.55, 0.80):
         write_reading(fern, value, MOISTURE)
         stake = ObservedDesire(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
                              value=value)
@@ -249,16 +253,15 @@ def test_the_sign_is_the_packages_statement_and_not_this_codes(make):
     This is #127's claim, asked where the claim now lives. It used to be asked of
     `market:direction`, a one-bit fact the chain compared against the gap's sign: flip Raises
     to Lowers and the reflex pursued on the other side of the aim. The search never reads that
-    bit. What it reads is the EFFECT — the market's own `sh:construct`, which predicts
-    `value + litres/conversion` — so the sign is stated by the package that owns the lever,
-    in RDF, and stated more expressively than one bit ever could: an effect says how far, not
-    merely which way.
+    bit. What it reads is the EFFECT — the market's own `sh:construct`, which declares what the
+    reading BECOMES (#579) — so the sign is stated by the package that owns the lever, in RDF,
+    and in the domain's own description of its world rather than as one bit.
 
-    So the fixture flips the arithmetic in the shipped rule rather than the direction term.
-    A plant at 0.10 buys because the world it would reach is wetter; told that buying dries
-    its soil, the same plant finds that world worse than standing still and declines. The bit
-    itself is untouched here, which is the point — it steers nothing now, and its retirement
-    rides with repair-matching rather than with this test.
+    So the fixture flips what the shipped rule says a bought lot reaches: the region, or below
+    it. A plant at 0.10 buys because the world it would reach is one where its moisture sits in
+    its region; told that buying leaves it below the region, the same plant finds that world no
+    better than standing still and declines. The bit itself is untouched here, which is the
+    point — it steers nothing now, and its retirement rides with repair-matching.
     """
     from orexis_agent_deliberation.desire import Desire
     from orexis_agent_progression.ontology import ACTIONS_GRAPH
@@ -268,7 +271,7 @@ def test_the_sign_is_the_packages_statement_and_not_this_codes(make):
         DELETE {{ GRAPH <{ACTIONS_GRAPH}> {{ market:Acquiring sh:construct ?text }} }}
         INSERT {{ GRAPH <{ACTIONS_GRAPH}> {{ market:Acquiring sh:construct ?flipped }} }}
         WHERE  {{ GRAPH <{ACTIONS_GRAPH}> {{ market:Acquiring sh:construct ?text }}
-                  BIND(REPLACE(?text, "(\\\\$value) \\\\+ ", "$1 - ") AS ?flipped) }}""")
+                  BIND(REPLACE(?text, "sensing:InRegion", "sensing:BelowRegion") AS ?flipped) }}""")
     fern = make("fern", ds)
     open_round_for(fern, "fern")
     decider = decider_of(fern)
@@ -717,8 +720,8 @@ def test_of_two_worlds_the_same_urgency_apart_the_cheaper_is_the_plan(make, tmp_
                                                                       monkeypatch):
     """#466's done-when: the ranking gains its second axis, and only for ties.
 
-    Two toy levers repair the same stake identically — the same predicted reading, so every
-    candidate world scores the same urgency — and differ in exactly one declared figure:
+    Two toy levers repair the same stake identically — the same predicted reading, which
+    lands in fern's region, so every candidate world scores the same urgency — and differ in exactly one declared figure:
     `orexis:costs`, five against three. Distinct marker triples keep the two worlds distinct,
     or cycle detection would discard the second as somewhere already seen before the ranking
     ever compared them. Whatever order the menu yields them in, the plan must be the cheaper
@@ -738,7 +741,7 @@ toy:{name} a orexis:Action ;
                  <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ;
                  <http://www.w3.org/ns/sosa/observedProperty> $about ;
                  <http://www.w3.org/ns/sosa/resultTime> ?now ;
-                 <http://www.w3.org/ns/sosa/hasSimpleResult> 0.40 .
+                 <http://www.w3.org/ns/sosa/hasSimpleResult> 0.50 .
             <urn:mark:{mark}> <urn:took> <urn:it> .
         }} WHERE {{ BIND(BNODE() AS ?obs) BIND(NOW() AS ?now) }}\"\"\" .
 """

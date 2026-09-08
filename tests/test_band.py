@@ -34,9 +34,19 @@ SELECT ?c ?f WHERE {{ ?c a owl:Class ; rdfs:subClassOf ?f . FILTER(STRSTARTS(STR
 
 
 def _classes_of(store, observed_property: str) -> set[str]:
+    """The band MEMBERS a reading is typed with; its families ride beside them (#579) and
+    are asserted too, but the member says which band."""
     rows = bindings(store.query(f"""
-SELECT ?c WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:observedProperty <{observed_property}> ; a ?c }} FILTER(?c != sosa:Observation) }}"""))
+SELECT ?c WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:observedProperty <{observed_property}> ; a ?c }}
+  FILTER(STRSTARTS(STR(?c), "{BAND}")) }}"""))
     return {r["c"].rsplit(".", 1)[-1] for r in rows}
+
+
+def _families_of(store, observed_property: str) -> set[str]:
+    rows = bindings(store.query(f"""
+SELECT ?c WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:observedProperty <{observed_property}> ; a ?c }}
+  FILTER(STRSTARTS(STR(?c), "{SENSING}")) }}"""))
+    return {r["c"].rsplit("#", 1)[-1] for r in rows}
 
 
 def test_genesis_mints_a_band_per_range_the_world_states_defined_in_owl(monkeypatch):
@@ -76,6 +86,8 @@ def test_a_reading_is_classified_when_it_is_written_and_reclassified_when_it_mov
     assert _classes_of(agent.beliefs, MOISTURE) == {"below"}
     write_reading(agent, 0.01, MOISTURE)
     assert _classes_of(agent.beliefs, MOISTURE) == {"below", "belowFloor"}
+    assert _families_of(agent.beliefs, MOISTURE) == {"BelowRegion", "BelowFloor"}, \
+        "and the families are asserted with the member, so a shape reads sh:class sensing:BelowRegion"
     write_reading(agent, 0.25, MOISTURE)
     assert _classes_of(agent.beliefs, MOISTURE) == {"inside"}
     assert _classes_of(agent.beliefs, STORED) == set(), "no range stated, no band"
@@ -109,9 +121,10 @@ def test_the_entailment_door_honours_an_intersection_of_values_and_facets():
 
 
 def test_a_predicted_reading_carries_its_band_and_a_premise_states_the_standing_one(monkeypatch):
-    """A dry gardener's dose predicts a number and, beside it, what the reading will BE — the
-    fork is entailed, and the band rides the step's prediction. Its premise states the
-    standing reading by its band alone: a triple the present can be asked, never a number."""
+    """A dry gardener's dose predicts what the reading will BE and nothing else (#579): the
+    band its rule declared, with the family the fork's entailment closes it up to, and no
+    number. Its premise states the standing reading by its band alone: a triple the present
+    can be asked, never a number."""
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     agent = build_agent("gardener", genesis_store({("zz", MOISTURE): 0.05, ("water_butt", STORED): 3.0},
                                                   world="loner"), monkeypatch)
@@ -119,11 +132,12 @@ def test_a_predicted_reading_carries_its_band_and_a_premise_states_the_standing_
     plan = Planner(agent, agent.me).plan(desire)
     assert plan.steps, "a dry gardener doses"
     adds, _ = plan.steps[0].predicts
-    keyed = {f[3].rsplit("/", 1)[-1].rsplit("#", 1)[-1]: f[4] for f in adds if f[0] == "keyed"}
-    assert keyed["type"].startswith(BAND + "zz.SoilMoisture."), keyed
-    assert isinstance(keyed["hasSimpleResult"], float)
+    keyed = [f for f in adds if f[0] == "keyed"]
+    assert {f[3] for f in keyed} == {TYPE}, "a prediction says what the reading IS and no number"
+    assert {f[4] for f in keyed} == {BAND + "zz.SoilMoisture.inside", SENSING + "InRegion"}
     premise = [f for f in plan.steps[0].premises if f[0] == "keyed"]
-    assert premise and all(f[3] == TYPE and f[4] == BAND + "zz.SoilMoisture.below" for f in premise), premise
+    assert premise and {f[3] for f in premise} == {TYPE}
+    assert {f[4] for f in premise} == {BAND + "zz.SoilMoisture.below", SENSING + "BelowRegion"}, premise
 
 
 def test_facts_by_class_drop_a_classed_readings_number_and_keep_an_unclassed_one():

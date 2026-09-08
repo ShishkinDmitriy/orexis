@@ -664,7 +664,7 @@ orexis:carries a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range <http:/
 #################  What an action IS  #################
 
 orexis:answer a assembly:Extension ;
-    assembly:signature "(keyed_class, key, carried, since, baseline, tolerance) -> Graph | None" ; orexis:row orexis:Progression ; rdfs:label "answer" ; rdfs:comment "What would an observation that ANSWERS this predicted fact look like? Asked for each KEYED fact a step predicts (a class some package declared `orexis:keyedBy`): the class, its key values and what it carries, as the step's prediction states them. A sh:NodeShape on the subject, conforming when a reading of the property later than `since` lies within `tolerance` of the predicted movement from the baseline — sensing's, because what a reading is is sensing's (#516, #518). The keeper holds the step on it; None is no opinion, and the first opinion wins." .
+    assembly:signature "(keyed_class, key, carried, since) -> Graph | None" ; orexis:row orexis:Progression ; rdfs:label "answer" ; rdfs:comment "What would an observation that ANSWERS this predicted fact look like? Asked for each KEYED fact a step predicts (a class some package declared `orexis:keyedBy`): the class, its key values and what it carries, as the step's prediction states them. A sh:NodeShape on the subject, conforming when a reading of the property later than `since` lies within `tolerance` of the predicted movement from the baseline — sensing's, because what a reading is is sensing's (#516, #518). The keeper holds the step on it; None is no opinion, and the first opinion wins." .
 
 orexis:witness a assembly:Extension ;
     assembly:signature "(keyed_class, key) -> float | None" ; orexis:row orexis:Progression ; rdfs:label "witness" ; rdfs:comment "What value does the world show NOW for this keyed fact — the reading a step predicted, as it stands at the verdict? Asked once per verdict for the residual (observed against predicted) the reviewer reads; sensing's, because what a reading is is sensing's (#518). None is no opinion." .
@@ -681,9 +681,6 @@ orexis:desires a assembly:Extension ;
 
 orexis:desireUrgency a assembly:Extension ;
     assembly:signature "(desire, query, state, value=…) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
-
-orexis:size a assembly:Extension ;
-    assembly:signature "(query, graph, row) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "size" ; rdfs:comment "How big would the act this row commits to be? Asked of the row's taker before it is simulated." .
 
 orexis:reports a assembly:Extension ;
     assembly:signature "() -> dict" ; orexis:row orexis:Reactive ; rdfs:label "reports" ; rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." .
