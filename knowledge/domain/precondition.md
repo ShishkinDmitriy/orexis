@@ -37,7 +37,7 @@ present says, and it is the first half of a [method](/domain/method.md).
 
 A [step](/domain/step.md) carries its premises beside its prediction — a reading among them
 stated by its [band](/domain/band.md), so the premise is "moisture below the region" and not
-"moisture 0.23" (#576): the positive patterns
+"moisture 0.23" (#576), and since #579 the prediction is a band too: the positive patterns
 of its effect's WHERE and of its availability query, instantiated by the store's own engine
 for the step's binding in the world it was planned from, and stated as the same canonical
 facts the prediction is made of. The planner fills them once along the winning path, while

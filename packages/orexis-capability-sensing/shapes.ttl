@@ -315,14 +315,18 @@ sensing:AimShape a sh:NodeShape ;
                 $this sensing:aims ?aim .
                 ?aim ssn:forProperty ?property ;
                      <https://schema.org/value> ?value .
-                $this orexis:holds ?desire .
-                ?desire ssn:forProperty ?property ;
-                        orexis:metWhen ?shape .
-                ?shape sh:property ?below , ?above .
-                ?below orexis:violationIs orexis:Below ;
-                       sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
-                ?above orexis:violationIs orexis:Above ;
-                       sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
+                $this orexis:actsFor ?subject .
+                #  THE REGION'S EDGES ARE THE BANDS' (#579): the in-region band minted for
+                #  this subject and property states them as the facets of its own definition,
+                #  which is where the range the subject stated ended up. Read off the met
+                #  shape's `sh:maxExclusive` until the shape began asking by class.
+                ?inside rdfs:subClassOf sensing:InRegion ;
+                        sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
+                        owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
+                ?r owl:onProperty sosa:hasSimpleResult ;
+                   owl:someValuesFrom/owl:withRestrictions ?facets .
+                ?facets rdf:rest*/rdf:first/xsd:minInclusive ?low .
+                ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?high .
                 FILTER(?value < ?low || ?value > ?high)
             }""" ] ;
     sh:sparql [
@@ -382,25 +386,26 @@ sensing:DeducedRegionShape a sh:NodeShape ;
         sh:prefixes orexis: ;
         sh:select """
             SELECT $this ?low ?high WHERE {
-                $this ssn:forProperty ?property ;
-                      sh:property ?below , ?above .
-                ?below orexis:violationIs orexis:Below ;
-                       sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
-                ?above orexis:violationIs orexis:Above ;
-                       sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
+                #  BOTH RANGES READ OFF THEIR BANDS (#579), which is where the numbers the
+                #  subject stated now live: the in-region band's two facets are the region,
+                #  the below-floor band's high facet is the floor and the above-ceiling
+                #  band's low facet is the ceiling.
+                $this ssn:forProperty ?property ; prov:wasDerivedFrom ?subject .
+                ?inside rdfs:subClassOf sensing:InRegion ;
+                        sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
+                        owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
+                ?r owl:onProperty sosa:hasSimpleResult ;
+                   owl:someValuesFrom/owl:withRestrictions ?facets .
+                ?facets rdf:rest*/rdf:first/xsd:minInclusive ?low .
+                ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?high .
+                #  The envelope straight off the subject, since it mints no band.
                 OPTIONAL {
-                    ?agent orexis:holds ?desire , ?envelope .
-                    ?desire orexis:metWhen $this .
-                    ?envelope ssn:forProperty ?property ;
-                              sh:property ?underFloor , ?overCeiling .
-                    ?underFloor sh:severity
-                                sh:Warning ;
-                                orexis:violationIs orexis:Below ;
-                                sh:qualifiedValueShape/sh:property/sh:maxExclusive ?floor .
-                    ?overCeiling sh:severity
-                                 sh:Warning ;
-                                 orexis:violationIs orexis:Above ;
-                                 sh:qualifiedValueShape/sh:property/sh:minExclusive ?ceiling }
+                    { ?subject ssn-system:hasSurvivalRange ?envelope }
+                    UNION { ?instrument sensing:monitors ?subject ; ssn-system:hasSurvivalRange ?envelope }
+                    ?envelope ssn-system:inCondition ?tolerated .
+                    ?tolerated ssn:forProperty ?property ;
+                               <https://schema.org/minValue> ?floor ;
+                               <https://schema.org/maxValue> ?ceiling }
                 FILTER(   ?low > ?high
                        || (BOUND(?floor)   && ?low  < ?floor)
                        || (BOUND(?ceiling) && ?high > ?ceiling))

@@ -39,14 +39,11 @@ RESULT = "http://www.w3.org/ns/sosa/hasSimpleResult"
 TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 
-def predicted_number(step) -> float:
-    adds, _ = step.predicts
-    return next(f[4] for f in adds if f[0] == "keyed" and f[3] == RESULT)
-
-
 def predicted_band(step) -> str:
+    """The member band a step predicts its reading to be — not the family beside it."""
     adds, _ = step.predicts
-    return next(f[4] for f in adds if f[0] == "keyed" and f[3] == TYPE)
+    return next(f[4] for f in adds if f[0] == "keyed" and f[3] == TYPE
+                and str(f[4]).startswith("http://example.org/orexis#band."))
 
 
 def band_bounds(agent, cls: str) -> tuple:
@@ -230,18 +227,17 @@ def test_a_reading_the_want_is_not_about_may_drift_and_the_moisture_cone_survive
     from conftest import write_reading
     from test_planning import MOISTURE, STORED
     monkeypatch.setenv("OREXIS_WORLD", "loner")
-    st = genesis_store({("zz", MOISTURE): 0.10, ("water_butt", STORED): 3.0}, world="loner")
+    st = genesis_store({("zz", MOISTURE): 0.05, ("water_butt", STORED): 3.0}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     desire = next(g for g in agent.pursuing() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     planner = Planner(agent, agent.me)
     plan = planner.plan(desire)
     assert plan.steps, "a dry gardener doses"
-    predicted = predicted_number(plan.steps[0])
     band = predicted_band(plan.steps[0])
     assert band.startswith("http://example.org/orexis#band."), "the prediction says what the reading will be"
     lo, hi = band_bounds(agent, band)
-    assert lo is not None and hi is not None and lo <= predicted <= hi, "the band the dose reaches has both bounds"
-    write_reading(agent, predicted + 0.01, MOISTURE)  # lands near the prediction, inside its band
+    assert lo is not None and hi is not None, "the band the dose reaches has both bounds"
+    write_reading(agent, (lo + hi) / 2, MOISTURE)     # lands inside the band the dose predicted
     write_reading(agent, 2.5, STORED)                 # the butt's level moves meanwhile
     desire = next(g for g in agent.pursuing() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     again = planner.plan(desire)
@@ -325,7 +321,10 @@ toy:Exit a orexis:Action ;
             GRAPH $state { <urn:naughty> ?p ?o } }""" ;
     sh:construct "CONSTRUCT {} WHERE {}" .
 '''
-    agent, st = _lawful_gardener(tmp_path, monkeypatch, _toy_pair() + exit_toy)
+    #  The toys at no cost (#579): the real dose is free and reaches the region, so a
+    #  tempting lever dearer than it is dropped before it is simulated, and a world never
+    #  forked is never refused. Free, it is forked, refused and kept.
+    agent, st = _lawful_gardener(tmp_path, monkeypatch, _toy_pair(0.0, 0.0) + exit_toy)
     moisture = next(g for g in agent.pursuing() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     planner = Planner(agent, agent.me)
     first = planner.plan(moisture)

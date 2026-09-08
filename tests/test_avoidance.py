@@ -112,7 +112,12 @@ toy:{name} a orexis:Action ;
                     "@prefix toy: <urn:toy#> .\n"
                     "@prefix sh: <http://www.w3.org/ns/shacl#> .\n"
                     + toy("Scour", 5.0) + toy("Cleanse", 3.0))
-    real = loader.action_files()
+    #  WITHOUT THE DOSE (#579): the real dose is free and declares the region reached, so
+    #  beside it no toy is ever the cheapest achiever — a tempting lever dearer than a free
+    #  one is dropped before it is simulated, and a world never forked is never refused. The
+    #  law is the thing under test and the toys are its levers; the other actions stay, since
+    #  the world's bridges promise facts of theirs.
+    real = tuple(p for p in loader.action_files() if "actuation" not in str(p))
     monkeypatch.setattr(loader, "action_files", lambda: real + (toys,))
 
     agent, st = _gardener(tmp_path, monkeypatch, shaped=shaped)
@@ -213,7 +218,7 @@ LAW = f'''
 '''
 
 
-def _toy_pair():
+def _toy_pair(tempting_cost: float = 1.0, honest_cost: float = 2.0):
     """The tempting lever predicts the aim exactly AND plants the marker; the honest one
     predicts a touch worse and stays clean — and is dearer, so without the law the tempting
     one wins on BOTH ranking axes. Only the pruning can explain an honest plan."""
@@ -235,7 +240,7 @@ toy:{name} a orexis:Action ;
     return ("@prefix orexis: <http://example.org/orexis#> .\n"
             "@prefix toy: <urn:toy#> .\n"
             "@prefix sh: <http://www.w3.org/ns/shacl#> .\n"
-            + toy("Tempting", 1.0, 0.18, True) + toy("Honest", 2.0, 0.16, False))
+            + toy("Tempting", tempting_cost, 0.18, True) + toy("Honest", honest_cost, 0.16, False))
 
 
 def _lawful_gardener(tmp_path, monkeypatch, toys_text):
@@ -245,7 +250,9 @@ def _lawful_gardener(tmp_path, monkeypatch, toys_text):
 
     toys = tmp_path / "actions.ttl"
     toys.write_text(toys_text)
-    real = loader.action_files()
+    #  WITHOUT THE DOSE (#579), as the other fixture: the real dose is free and declares the
+    #  region reached, so beside it no toy is the cheapest achiever.
+    real = tuple(p for p in loader.action_files() if "actuation" not in str(p))
     monkeypatch.setattr(loader, "action_files", lambda: real + (toys,))
 
     dst = _avoiding_world(tmp_path)

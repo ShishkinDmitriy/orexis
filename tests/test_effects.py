@@ -14,12 +14,14 @@ from orexis_agent_deliberation import effects
 from orexis_agent_progression.ontology import ACTIONS_GRAPH, STATE_GRAPH, beliefs_graph
 from orexis_agent_progression.store import bindings
 
-from conftest import stake_of, MOISTURE, build_agent, genesis_store, predicted_readings
+from conftest import stake_of, MOISTURE, build_agent, genesis_store, predicted_bands
 
 OBSERVING = "http://example.org/orexis/sensing#Observing"
 DOSING = "http://example.org/orexis/actuation#Dosing"
 _AG = "http://example.org/orexis#"
 RESULT = "http://www.w3.org/ns/sosa/hasSimpleResult"
+SOSA = "http://www.w3.org/ns/sosa/"
+TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 RESULT_TIME = "http://www.w3.org/ns/sosa/resultTime"
 
 
@@ -115,70 +117,52 @@ def test_a_means_no_package_described_simply_has_no_effect():
 
 # --- the number that must not fork ---------------------------------------------------------
 
-def test_the_dose_the_actuator_expects_is_the_dose_its_rule_predicts(monkeypatch):
-    """THE constraint of #238, and the reason the rule exists rather than a third helper.
-
-    `litres / conversion` was already written twice in Python — the bidder sizing its
-    expectation, the actuator sizing its self-dose — before anything asked what a dose would DO.
-    A copy inside the effect would have been the worst of the three: an agent that plans against
-    one future and verifies against another reports false UNMET verdicts, and the failure looks
-    like a device lying rather than like arithmetic disagreeing with itself.
-
-    So the ledger's number is compared against the RULE's, computed here from the shipped text
-    with no arithmetic of this test's own. Rewrite the rule's expression and this test moves
-    with it; reintroduce a Python copy that disagrees and it fails.
-    """
-    gardener = build_agent("gardener", _loner({("zz", MOISTURE): 0.10}), monkeypatch)
+def test_the_dose_the_actuator_expects_is_the_band_its_rule_declares(monkeypatch):
+    """THE constraint of #238, in the domain's own description (#579). The effect used to
+    predict a number — `litres / conversion`, kept in one place so the actor's expectation
+    and the search's prediction could not disagree. It declares a BAND now: a dose reaches
+    the region, and the step the keeper holds the world to carries exactly the class the
+    shipped rule constructs, with no arithmetic of this test's own. Rewrite the rule and
+    this test moves with it."""
+    gardener = build_agent("gardener", _loner({("zz", MOISTURE): 0.05}), monkeypatch)
     actuation = next(m for m in gardener.modules if m.name == "actuation")
 
-    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
+    #  BELOW the region, not on its inclusive floor: a dose is what a reading below the
+    #  region wants, and 0.10 IS the loner's floor (#579).
+    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.05})
     keeper = next(m for m in gardener.modules if m.name == "intention")
     watches = keeper.open_expectations(stake_of(gardener, MOISTURE).uri)
     assert len(watches) == 1, "a self-dose went out and opened exactly one expectation"
 
-    litres = float(gardener.sent.to("actuators/pump/command")[0]["ml"]) / 1000.0
     predicted, _ = effects.apply(
         gardener.beliefs, DOSING, me=f"<{actuation.me.uri}>",
         subject=f"<{actuation.me.acts_for}>", about=f"<{MOISTURE}>",
-        state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>",
-        litres=repr(litres), value="0.1")
-    from_rule = float(_values(predicted)[0])
+        state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>", litres="0.0")
+    from_rule = {t.object.value for t in predicted if t.predicate.value == TYPE} - {SOSA + "Observation"}
+    assert from_rule and all(b.startswith("http://example.org/orexis#band.") for b in from_rule)
+    assert _values(predicted) == [], "the rule states no number"
+    assert set(predicted_bands(gardener, watches[0].step)) >= from_rule, \
+        "the band the keeper holds the world to must be the band the rule declared"
 
-    assert predicted_readings(gardener, watches[0].step) == [pytest.approx(from_rule, abs=1e-3)], \
-        "the number the keeper holds the world to must be the number the rule predicted"
 
-
-def test_the_prediction_is_a_function_of_value_litres_and_the_agents_own_belief(monkeypatch):
-    """Three arguments and nothing else, which is what lets a planner ask the same question
-    about a world that does not exist yet.
-
-    The base is GIVEN rather than read, and that was a correction the runtime forced: an
-    actuator decides on the reading it has just been handed, which is not in the sensed graph
-    at the moment it decides — a rule reading the store for its base predicted from the
-    PREVIOUS reading, or from nothing at all on the first one. Asked here at two bases and two
-    doses, because a function of three arguments is not pinned by one case.
-    """
+def test_the_effect_declares_the_region_wherever_the_reading_stands(monkeypatch):
+    """A dose reaches the region from anywhere below it (#579): the rule's answer does not
+    depend on where the reading stands or on how much is poured — those are progression's,
+    sized when the step is taken. Asked at two readings, because a constant is not pinned
+    by one case; and where the property stands is read as a premise, by band."""
+    from conftest import write_reading
     gardener = build_agent("gardener", _loner({("zz", MOISTURE): 0.10}), monkeypatch)
     actuation = next(m for m in gardener.modules if m.name == "actuation")
 
-    def delta(value, litres):
-        """The movement the rule predicts from where the sensed graph says the property
-        stands — `value` is written there first, since the rule reads its base from the
-        world it is asked about (the planner's imagined one, or this one)."""
-        from conftest import write_reading
+    def reaches(value):
         write_reading(gardener, value, MOISTURE)
         predicted, _ = effects.apply(
             gardener.beliefs, DOSING, me=f"<{actuation.me.uri}>",
             subject=f"<{actuation.me.acts_for}>", about=f"<{MOISTURE}>",
-            state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>",
-            litres=repr(litres))
-        return float(_values(predicted)[0]) - value
+            state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>", litres="0.0")
+        return {t.object.value for t in predicted if t.predicate.value == TYPE} - {SOSA + "Observation"}
 
-    assert delta(0.10, 0.12) == pytest.approx(delta(0.90, 0.12)), \
-        "the same dose moves the property the same distance wherever it started"
-    assert delta(0.10, 0.24) == pytest.approx(2 * delta(0.10, 0.12)), \
-        "and twice the water moves it twice as far — the conversion is a ratio"
-    assert delta(0.10, 0.12) > 0, "a dose of water raises moisture, which the belief states"
+    assert reaches(0.05) == reaches(0.09) == {"http://example.org/orexis#band.zz.SoilMoisture.inside"}
 
 
 # --- when it lands, and how you would know (#247) ----------------------------

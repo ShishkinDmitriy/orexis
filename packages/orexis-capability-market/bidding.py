@@ -50,7 +50,7 @@ from . import rounds, wallet
 from .wiring import bidding_markets_of
 from .beliefs import BIDDING_PICKS
 from .terms import (BIDDING, CLAIM, CLAIMED_AT, CLAIM_DEBIT, CLAIM_ID, CLAIM_L, HOLDS_CLAIM, NS,
-                    ON_VENUE, PRESENTED_AT, PRESENTING, SENSING, TENDERING, TOLERANCE)
+                    ON_VENUE, PRESENTED_AT, PRESENTING, SENSING, TENDERING)
 
 # What my bids are priced in, found THROUGH MY VENUE AND MY STAKE (#198) rather than by
 # naming any term: the market I bid in is for a source, the source states its good (entailed
@@ -296,16 +296,6 @@ class BiddingModule(Module):
         except FileNotFoundError:
             return payload
         return {**payload, "sig": signing.sign(key, signing.canonical(payload))}
-
-    def tolerance(self) -> float:
-        """How close the world must land to the reading a bought lot predicts — my pick, or
-        the capability's default where I state none (#518)."""
-        rows = bindings(self.agent.desires.query_union(f"""
-SELECT ?t ?mine WHERE {{
-  {{ <{self.me.uri}> <{TOLERANCE}> ?t . BIND(true AS ?mine) }}
-  UNION {{ <{BIDDING}> <{TOLERANCE}> ?t . BIND(false AS ?mine) }} }}"""))
-        rows.sort(key=lambda r: r["mine"] != "true")
-        return float(rows[0]["t"]) if rows else 0.5
 
     def _keeper(self):
         """Whoever keeps my commitments, or None — and None is a complete answer.
@@ -557,14 +547,6 @@ SELECT ?t ?mine WHERE {{
             return 1.0
         return None
 
-    def size(self, query, graph: str, row) -> float | None:
-        """The planner's question, answered by the one who would bid: `qty_for`, from where the
-        property the row's want is about stands in the world being asked about — read through
-        sensing at that graph."""
-        sensing = self.agent.provider(SENSING)
-        value = sensing.value_in(query, graph, self.me.acts_for, row.about) if sensing else None
-        return self.qty_for(row.about, value) if value is not None else None
-
     @contributes(PRESENTING)
     def present(self, act, desire, intention: str) -> bool:
         """The second step of Acquiring's method (#523): present the claim I hold on this
@@ -589,10 +571,14 @@ SELECT ?t ?mine WHERE {{
 INSERT DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
   <{claim["uri"]}> <{PRESENTED_AT}> "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime }} }}""")
         if keeper := self._keeper():
+            #  Held to the band the step predicted (#579); what I add is the number I aimed
+            #  the lot at, for the residual review to read against what the world shows.
+            sensing = self.agent.provider(SENSING)
             keeper.expect(intention,
                           f"presented {claim['id']} for {claim['litres']}L — the graph says "
                           f"this moves what I am short of, so show me",
-                          baseline=self._baseline(), tolerance=self.tolerance(),
+                          baseline=self._baseline(),
+                          sized=sensing.aim(self.about) if sensing is not None else None,
                           seeing_s=self._seeing_s())
         if (sensing := self.agent.provider(SENSING)) is not None:
             sensing.sense_now()

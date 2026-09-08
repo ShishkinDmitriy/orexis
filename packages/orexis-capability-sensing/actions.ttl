@@ -82,7 +82,7 @@ sensing:Observing
     #  already (one-agent-many-sensors) and no shipped world has it.
     sh:construct """
         CONSTRUCT {
-            ?obs a sosa:Observation ;
+            ?obs a sosa:Observation , ?band ;
                  sosa:hasFeatureOfInterest $subject ;
                  sosa:observedProperty ?property ;
                  sosa:madeBySensor ?sensor ;
@@ -97,6 +97,10 @@ sensing:Observing
                 ?seen sosa:hasFeatureOfInterest $subject ;
                       sosa:observedProperty ?property .
                 OPTIONAL { ?seen sosa:hasSimpleResult ?value }
+                #  And what the reading IS, carried through (#579): a look changes what you
+                #  know, never the band the reading is in, and a predicted reading has no
+                #  number to be classified from again.
+                OPTIONAL { ?seen a ?band . FILTER(?band != sosa:Observation) }
             } }
             BIND(COALESCE(?seen, BNODE()) AS ?obs)
             BIND(NOW() AS ?now)

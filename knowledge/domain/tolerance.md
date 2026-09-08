@@ -11,10 +11,15 @@ description: >-
 
 # What it is
 
-`actuation:tolerance`, and its twin `market:tolerance` for a bought lot. Once the expectation
-after a step is generated from the step's own prediction (`progression:predicts`,
-[step](/domain/step.md)), the only thing left for an actor to say is how close a number must
-land to be "the same effect". That is not a fact about water or soil; it is a fact about how
+`actuation:tolerance`, and its twin `market:tolerance` for a bought lot. **Not on the core's road
+since #579**: a step predicts the [band](/domain/band.md) its reading will be in, and the world
+either shows a reading that is one or does not, so nothing is widened at verification and the
+keeper takes no tolerance from any actor. What the term still governs is a package's own
+arithmetic where it sizes an act and reads its residuals. The paragraphs below describe that.
+
+Once the expectation after a step is generated from the step's own prediction
+(`progression:predicts`, [step](/domain/step.md)), the only thing left for an actor to say is how
+close a number must land to be "the same effect". That is not a fact about water or soil; it is a fact about how
 good the model is — the conversion a package predicts through — and so it is a
 [pick](/domain/pick.md): an agent's own value inside `minTolerance`/`maxTolerance`, which the
 package's ontology declares and its shape holds the pick to, exactly as `progression:patienceS` is

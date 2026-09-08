@@ -5,30 +5,21 @@
 # here is exactly the two kinds whose met-shape is a sentence about an observation
 # (the-stake-is-sensings-want).
 #
-# The edges are read off the SIDE shapes the deduction emits (#242): the region's floor is what
-# its Below shape refuses to see a reading under, its ceiling what the Above shape refuses to see
+# The edges are NOT read here since #579: they are the bands' (`regions_of`, off the belief
+# base). What this query still says is WHICH wants are sensing's, and their property.
 # one over; the envelope's the same at `sh:Warning`. `$me` is the one agent asking.
 #
 # NOT narrowed to a graph: a want contributed by something other than this package's deduction
 # is simply seen, which is what `orexis:DesireGraph` being a CLASS is for.
-SELECT ?kind ?desire ?property ?low ?high ?floor ?ceiling ?instrument WHERE {
+SELECT ?kind ?desire ?property ?instrument WHERE {
   {
-    #  The desire is a NODE and the met-shape hangs off it (a-desire-states-its-own-measure) —
-    #  the region's numbers are read through `orexis:metWhen`. No measure rides out: how badly a
-    #  want is unmet is a capability's answer, asked through the choir, not a column here.
+    #  The desire is a NODE and the met-shape hangs off it (a-desire-states-its-own-measure).
+    #  No number rides out (#579): the region's edges are the band definitions' now, read off
+    #  the belief base by `regions_of`; and no measure either — how badly a want is unmet is
+    #  a capability's answer, asked through the choir, not a column here.
     $me orexis:holds ?desire .
     ?desire ssn:forProperty ?property ; orexis:metWhen ?met .
-    ?met sh:property ?below , ?above .
-    ?below orexis:violationIs orexis:Below ;
-           sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
-    ?above orexis:violationIs orexis:Above ;
-           sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
-    OPTIONAL { $me orexis:holds ?envelope .
-               ?envelope ssn:forProperty ?property ; sh:property ?underFloor , ?overCeiling .
-               ?underFloor sh:severity sh:Warning ; orexis:violationIs orexis:Below ;
-                           sh:qualifiedValueShape/sh:property/sh:maxExclusive ?floor .
-               ?overCeiling sh:severity sh:Warning ; orexis:violationIs orexis:Above ;
-                            sh:qualifiedValueShape/sh:property/sh:minExclusive ?ceiling }
+    ?met sh:property/orexis:violationIs orexis:Below .
     BIND("stake" AS ?kind)
   }
   UNION

@@ -149,8 +149,19 @@ WHERE  {
 #
 #  TWO NODE SHAPES per property, told apart by the FORCE they carry: the region, a violation of
 #  which is a gap, and the envelope, a violation of which is the subject ending. Within each the
-#  edges live on the SIDE shapes, one number apiece (#242), so a violation says WHICH WAY it
-#  went — see orexis:violationIs.
+#  edges live on the SIDE shapes, so a violation says WHICH WAY it went — see
+#  orexis:violationIs. BY BAND since #579: a side shape asks whether a reading of the property
+#  is a `sensing:BelowRegion` or an `AboveRegion` — the class the domain asserts on a reading,
+#  a real one from its number and a predicted one from its effect — and not whether a number
+#  sits past an edge. One number apiece used to live here (#242); the region's numbers live in
+#  the bands' definitions now, minted from the same range.
+#
+#  THE ENVELOPE STILL ASKS BY NUMBER, and that is the sovereign's three-band ruling arriving
+#  here: the survival range mints no band, so past-the-envelope is not something a reading IS.
+#  It is a warning about a reading the world actually holds, asked at the gates where a number
+#  is there to ask about; an imagined world states what a reading is and no number, so this
+#  shape is silent there — correctly, since what a plan may not pass through is the law, and a
+#  warning is not one.
 INSERT { GRAPH $derived {
     $me orexis:holds ?desire , ?envelope .
     ?desire a orexis:Desire ;
@@ -173,7 +184,11 @@ INSERT { GRAPH $derived {
             orexis:violationIs orexis:Unmeasured ;
             sh:qualifiedMinCount 1 ;
             sh:qualifiedValueShape [
-                sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ] ;
+                sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
+                #  A reading that IS some band (#579): one a look imagined with nothing in it
+                #  is no evidence, and counted it as measured a look would meet every want.
+                sh:or ( [ sh:class sensing:BelowRegion ] [ sh:class sensing:InRegion ]
+                        [ sh:class sensing:AboveRegion ] ) ] ;
             sh:message ?unseen ] ;
         #  BELOW, and ABOVE, as two shapes rather than one range test inside a qualified shape.
         #  The old form violated `QualifiedMinCount` — "no conforming reading exists" — which
@@ -186,7 +201,7 @@ INSERT { GRAPH $derived {
             sh:qualifiedMaxCount 0 ;
             sh:qualifiedValueShape [
                 sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
-                sh:property [ sh:path sosa:hasSimpleResult ; sh:maxExclusive ?low ] ] ;
+                sh:class sensing:BelowRegion ] ;
             sh:message ?tooLow ] ;
         sh:property [
             sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
@@ -194,7 +209,7 @@ INSERT { GRAPH $derived {
             sh:qualifiedMaxCount 0 ;
             sh:qualifiedValueShape [
                 sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
-                sh:property [ sh:path sosa:hasSimpleResult ; sh:minExclusive ?high ] ] ;
+                sh:class sensing:AboveRegion ] ;
             sh:message ?tooHigh ] .
     ?envelope a sh:NodeShape ;
         sh:targetNode $me ;

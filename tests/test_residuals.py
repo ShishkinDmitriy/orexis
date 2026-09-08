@@ -27,7 +27,10 @@ def answered(agent, observed: float, predicted: float = PREDICTED) -> str:
     keeper, want = agent.keeper, stake_of(agent).uri
     write_reading(agent, BASELINE, MOISTURE)
     uri = keeper.adopt(TENDERING, want, "a lot on its way")
-    assert keeper.expect(uri, "show me", baseline=reading_of(agent, MOISTURE), tolerance=0.5,
+    #  A NUMBER HANDED IN BY HAND (#579): a shipped rule predicts a band, and the keeper holds
+    #  the world to it; a caller may still state a number, which is held to exactly — and that
+    #  is what a residual is measured against here.
+    assert keeper.expect(uri, "show me", baseline=reading_of(agent, MOISTURE),
                          predicts=predicted_reading(agent.me.acts_for, MOISTURE, predicted))
     write_reading(agent, observed, MOISTURE)
     if keeper.open_expectations(want):

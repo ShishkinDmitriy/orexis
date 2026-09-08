@@ -81,7 +81,9 @@ def test_the_sovereign_asks_a_modality_and_the_desires_answer(fern):
     """The third ruling of a-store-is-a-modality, on the wire: the ask names a modality, and
     the desire modality answers about wants — here, the region deduced from fern's plant —
     through the same read-only channel."""
-    _ask(fern, """SELECT ?low WHERE {
+    #  BY BAND (#579): the want's met-shape names the class a reading must not be, and the
+    #  numbers those classes stand for are the bands', public and not the modality's.
+    _ask(fern, """SELECT ?band WHERE {
         <http://example.org/orexis/world/simulation#fern_agent>
             <http://example.org/orexis#holds> ?desire .
         ?desire <http://www.w3.org/ns/ssn/forProperty>
@@ -89,10 +91,10 @@ def test_the_sovereign_asks_a_modality_and_the_desires_answer(fern):
                 <http://example.org/orexis#metWhen> ?region .
         ?region <http://www.w3.org/ns/shacl#property> ?below .
         ?below <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
-               <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?low
+               <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#class> ?band
     }""", modality="desires")
     answer = _answer(fern)
-    assert answer["rows"] and float(answer["rows"][0]["low"]) == 0.45, \
+    assert answer["rows"] and str(answer["rows"][0]["band"]).endswith("#BelowRegion"), \
         "the want fern's plant implies, asked of the store that owns wants"
 
 

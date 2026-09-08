@@ -208,7 +208,11 @@ def deliberable(st, desires: dict) -> bool:
                                             list(answering), reach):
             faults += 1
             log.error("%s: %s", agent_id, fault)
-        for observed_property in sorted(regions_of(wants.query_union, me.uri)):
+        #  ASKED OF THE WORLD, not of the wants (#579): a region's edges are its bands' now,
+        #  and the bands are public — asked of the desire modality this answered with nothing
+        #  and the measure check below silently stopped running for every agent, which is the
+        #  empty-loop failure this repo's own conftest exists to catch.
+        for observed_property in sorted(regions_of(st.query, me.uri)):
             if any(getattr(cls, "measures", None) is not None
                    and cls.measures(st.query, observed_property) for cls in answering):
                 continue

@@ -113,8 +113,26 @@ one world.
 # The build
 
 The plant domain's choice, built in two parts:
+[#576](https://github.com/ShishkinDmitriy/orexis/issues/576) minted the classes and classified a
+reading, retiring the kernel partition; [#579](https://github.com/ShishkinDmitriy/orexis/issues/579)
+made the effect declare its band and moved sizing to execution. #556, #557 and #558 are closed as
+superseded; PR #575's branch stays as the numeric road refused.
 
-[#576](https://github.com/ShishkinDmitriy/orexis/issues/576) mints the classes and classifies a
-reading, and retires the kernel partition; [#579](https://github.com/ShishkinDmitriy/orexis/issues/579)
-makes the effect declare its class and moves sizing to execution. #556, #557 and #558 are closed
-as superseded; PR #575's branch stays as the numeric road refused.
+# What building it taught
+
+- **The number goes out of the core in one move or not at all.** While an effect predicted a
+  number and the search matched by band, both were true of a world and the two disagreed: a want
+  inside its region was met by band and urgent by number, and the measure answered whichever the
+  caller had asked with. What settled it is that a WORLD is judged by band and a ROW — a want the
+  agent holds, with the reading in hand — is measured with the number, so the aim still ranks
+  what an agent wants and no longer steers what the search plans.
+- **The domain's declaration is read as data and evaluated by the kernel.** Membership as one
+  SPARQL question cost 300 ms a call however narrowed, and a pass forks tens of worlds; read
+  once per store and evaluated against a node's triples, a fork's question is a dictionary
+  lookup. That is the compiler's bargain one layer over: the domain owns the declaration, the
+  kernel owns how it is answered.
+- **A guard written as arithmetic has to be rewritten as a fact.** Two of them: a bid sized to
+  nothing changed no world, and its retraction was gated on the size — with no size, the gate
+  held and the old reading survived beside the new one. And a lever that fabricates a reading
+  where none stands looks like progress, since knowing where the pot is scores better than not:
+  the rules require a standing reading now, and a look comes first.

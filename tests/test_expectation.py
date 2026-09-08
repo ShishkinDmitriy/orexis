@@ -21,7 +21,7 @@ from orexis_capability_actuation.terms import DOSING as _ACTUATE
 from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import OREXIS, PROGRESSION
 
-from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading, predicted_readings
+from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading, predicted_bands
 
 
 @pytest.fixture
@@ -312,7 +312,8 @@ def test_the_step_carries_the_reading_the_rule_predicted(thirsty):
     and that is what the watch holds the world to."""
     win(thirsty, amount=0.5)
     watch = keeper_of(thirsty).open_expectations(stake_of(thirsty).uri)[0]
-    assert predicted_readings(thirsty, watch.step) == [pytest.approx(0.55, abs=1e-3)]
+    assert [b.rsplit(".", 1)[-1] for b in predicted_bands(thirsty, watch.step)
+            if "band." in b] == ["inside"], "a bought lot brings the reading into the region"
 
 
 def test_a_step_that_predicts_nothing_opens_no_watch(thirsty):
@@ -353,7 +354,13 @@ def test_no_new_purchase_while_my_own_dose_is_unanswered(thirsty, caplog):
         "a phantom deficit was priced while my own dose was unanswered"
     assert "my own dose has not answered yet" in caplog.text
 
-    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.43})   # the world answers, inside the band
+    #  THE WORLD ANSWERS by bringing the reading into the region — which is what the step
+    #  predicted (#579) — so the watch closes and the guard has nothing to refuse. The plant
+    #  is content at that reading and buys nothing; it is the next thirst that buys, which is
+    #  what this half is about: the refusal was the open watch, not a rule against bidding.
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.50})
+    assert keeper_of(thirsty).open_expectations(stake_of(thirsty).uri) == []
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.30})   # thirsty again
     thirsty.deliver(market.offer_topic, {"auction_id": "r3", "closes_in_s": 30})
     assert len(thirsty.sent.to(f"{market.bid_topic}/fern")) == bids + 1
 
@@ -462,8 +469,9 @@ def test_a_step_the_world_overshoots_finishes_the_plan_when_the_want_is_met(monk
     uri = keeper.adopt([dose, dose], want, "two doses, the search's plan")
     assert uri is not None
     assert keeper.expect(uri, "the first dose", baseline=reading_of(gardener, MOISTURE),
-                         tolerance=2.0,
-                         predicts=predicted_reading(gardener.me.acts_for, MOISTURE, 0.14))
+                         predicts=predicted_reading(
+                             gardener.me.acts_for, MOISTURE,
+                             band="http://example.org/orexis/sensing#InRegion"))
     finished = []
     monkeypatch.setattr(gardener, "tell",
                         lambda point, *a: finished.append(point) if point.endswith("planFinished") else None)

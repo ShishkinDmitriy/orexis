@@ -46,19 +46,23 @@ def test_a_region_is_readable_from_the_desires_store_alone(monkeypatch):
     belief base in the room — the shapes half of every split #296 measured."""
     agent = build_agent("gardener", genesis_store(world="loner"), monkeypatch)
 
+    #  BY BAND (#579): the met-shape asks whether a reading of the property IS a
+    #  `sensing:BelowRegion` or an `AboveRegion`, and the edges those classes stand for are
+    #  the bands' own, minted at genesis and public. What must be in the DESIRES store is the
+    #  want, its scope and its met-shape — which is what this asks for.
     rows = bindings(agent.desires.query_union(f"""
-        SELECT ?low ?high WHERE {{
+        SELECT ?below ?above WHERE {{
           ?desire orexis:metWhen ?region ; orexis:bindsWhen orexis:Always .
           ?region ssn:forProperty <{MOISTURE}> ; sh:property ?below , ?above .
           ?below orexis:violationIs orexis:Below ;
-                 sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
+                 sh:qualifiedValueShape/sh:class sensing:BelowRegion .
           ?above orexis:violationIs orexis:Above ;
-                 sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
+                 sh:qualifiedValueShape/sh:class sensing:AboveRegion .
         }}"""))
     assert rows, ("the gardener's moisture region must be in the desires store — and the want "
                   "must state its scope (#472): the pattern walks orexis:bindsWhen on purpose, so "
                   "a derivation that stops writing one goes red here")
-    assert float(rows[0]["low"]) < float(rows[0]["high"])
+    assert rows[0]["below"] != rows[0]["above"], "two side shapes, one per way out of the region"
 
 
 def test_nothing_an_agent_runs_can_write_into_it(monkeypatch):

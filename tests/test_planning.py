@@ -101,19 +101,21 @@ def test_met_is_the_label_and_the_aim_is_the_target_with_a_deadband_at_the_pick(
     unsatisficed. Now the SEARCH steers to the pick: a dose is proposed, sized and simulated,
     and the outcome label stays SATISFIED because met is the shape's verdict, not the search's.
 
-    At the pick the deadband arrives from satisficing rather than from a tolerance anybody
-    chose: the dose sizes to ~0, the actor's litres<=EPS refusal makes the effect predict no
-    change, the candidate is pruned as the world already stood in — no move, as a DECISION the
-    deliberator answers (None) rather than a hand-off to the reflex.
+    SINCE #579 THE SEARCH DOES NOT STEER TO THE PICK, and that is the ruling's cost taken
+    knowingly: deliberation is on triples, a reading is the band it is in, and inside the
+    region a pot at 0.12 and a pot at 0.18 are one world. The aim did not retire with it — it
+    is what the ACTOR sizes its dose against when it takes a step, and what the measure reads
+    where a caller hands a number in. What changed is who reads it and when: steering inside
+    the region is progression's, and the search plans the band.
     """
     agent, plan, desire = _gardener(monkeypatch, 0.12)
     assert desire.state == "met" and desire.urgency > 0, \
-        "met and urgent must be expressible at once — that is what the measure bought"
+        "met and urgent at once, still: the ROW is measured with the reading in hand, so the " \
+        "aim ranks a want the agent holds — what stops steering is the search, which asks " \
+        "about worlds and gets the band"
     assert plan.outcome == search.SATISFIED
-    assert [s.action for s in plan.steps] == [DOSING], \
-        "inside the region and off the pick, a dose is proposed"
-    assert plan.urgency_after < plan.urgency_now
-    assert agent.deliberator.propose_for(desire) == DOSING
+    assert plan.steps == (), "inside the region and off the pick, no move is planned"
+    assert agent.deliberator.propose_for(desire) is None
 
     at_pick, plan2, desire2 = _gardener(monkeypatch, AT_PICK)
     assert desire2.urgency == 0.0
@@ -200,12 +202,14 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
 
     #  What a property reads in a candidate world is SENSING's answer, asked at the node's
     #  graph (the-stake-is-sensings-want) — the planner no longer walks sosa for it.
-    sensing = agent.provider("http://example.org/orexis/sensing#SensingCapability")
-    value_at = lambda node: sensing.value_in(planner.imaginarium.query, node.graph,
-                                             agent.me.acts_for, MOISTURE)
-    assert value_at(here) == DRY
-    moved = value_at(step)
-    assert moved > DRY, "the dose moved the world it was simulated into"
+    from orexis_agent_progression.store import bindings
+    def band_at(node):
+        rows = bindings(planner.imaginarium.query(f"""
+SELECT ?c WHERE {{ GRAPH <{node.graph}> {{ ?o sosa:hasFeatureOfInterest <{agent.me.acts_for}> ;
+  sosa:observedProperty <{MOISTURE}> ; a ?c }} FILTER(STRSTARTS(STR(?c), "http://example.org/orexis#band.")) }}"""))
+        return {r["c"].rsplit(".", 1)[-1] for r in rows}
+    assert band_at(here) == {"below"}
+    assert band_at(step) == {"inside"}, "the dose moved the world it was simulated into (#579)"
 
     #  The ROW is passed because sizing dispatches on its taker (#268) — an actuator sizes a
     #  dose, a bidder sizes a bid — and because an obligation borrows the row's property when it has
@@ -215,11 +219,15 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
         desire, here, row)["state"], \
         "a step taken from here must ASK about here — a rule reads the readings its own node reached"
 
+    #  AND NOTHING IS SIZED (#579). The binding used to ask the step's taker how much it
+    #  would pour, so a rule could predict a number; the search plans on the band a dose
+    #  reaches, and how much to pour is settled by the actuator from the reading in hand when
+    #  the step is taken. The taker is not asked here at all.
     asked = []
     monkeypatch.setattr(agent.provider("http://example.org/orexis/actuation#Actuation"),
                         "dose_for", lambda prop, value: asked.append(value) or 0.06)
-    planner._bind(desire, step, row)
-    assert asked == [moved], "the dose is sized from the world the step starts in"
+    assert planner._bind(desire, step, row)["litres"] == 0.0
+    assert asked == [], "the search sizes nothing"
 
 
 def test_a_plant_that_buys_its_water_can_see_the_lever_that_waters_it(monkeypatch):
@@ -310,13 +318,15 @@ def _thirsty_with_a_nearly_empty_butt(monkeypatch):
 
 
 def _readings_of(world, subject, prop):
-    """Every value sitting on `prop` for `subject` in this world. A LIST, because the bug this
-    is about is a second one appearing beside the first."""
+    """Every reading of `prop` for `subject` in this world, as the band it is in (#579). A
+    LIST, because the bug this is about is a second one appearing beside the first."""
     sosa = rdflib.Namespace("http://www.w3.org/ns/sosa/")
-    return [float(value)
+    rdf = rdflib.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+    return [str(cls)
             for obs in world.subjects(sosa.observedProperty, rdflib.URIRef(prop))
             if (obs, sosa.hasFeatureOfInterest, rdflib.URIRef(subject)) in world
-            for value in world.objects(obs, sosa.hasSimpleResult)]
+            for cls in world.objects(obs, rdf.type)
+            if str(cls).startswith("http://example.org/orexis#band.")]
 
 
 def test_a_second_dose_is_predicted_from_what_the_first_one_left(monkeypatch):
@@ -333,13 +343,23 @@ def test_a_second_dose_is_predicted_from_what_the_first_one_left(monkeypatch):
     The butt is nearly empty, so no single dose closes the gap — which is the only arrangement
     in which a second step's baseline is observable at all.
     """
+    from conftest import write_reading
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     plan = planner.plan(desire)
 
-    assert [s.action for s in plan.steps] == [DOSING, DOSING], \
-        "two doses, because one cannot pour more than the butt holds"
+    #  ONE DOSE, and a second found by RE-PLANNING (#579, the ruling's stated cost). The
+    #  effect declares the band a dose reaches, not a number, so two doses each too small to
+    #  cross a boundary are one world and the second is not searched for: progression pours
+    #  what the butt holds, the world answers "still below the region", and the next pass
+    #  plans the next dose. That is the world verifying a plan rather than a search.
+    assert [s.action for s in plan.steps] == [DOSING], "a dose reaches the region"
     assert plan.outcome == search.SATISFIED
     assert plan.urgency_after < plan.urgency_now
+    write_reading(agent, DRY + 0.01, MOISTURE)       # the butt held too little: still below
+    desire = next(g for g in agent.pursuing()
+                  if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
+    again = Planner(agent, agent.me).plan(desire)
+    assert [s.action for s in again.steps] == [DOSING], "and the next pass plans the next dose"
 
 
 def test_the_world_a_plan_reaches_holds_ONE_reading_per_subject_and_property(monkeypatch):
@@ -357,8 +377,7 @@ def test_the_world_a_plan_reaches_holds_ONE_reading_per_subject_and_property(mon
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     plan = planner.plan(desire)
 
-    assert len(plan.steps) == 2, \
-        "a one-step plan cannot show this — the second step is where the two readings met"
+    assert plan.steps, "a dry gardener doses"
     node = planner._begin(desire)
     for step in plan.steps:
         node = planner._step_from(node, step, desire)
@@ -371,7 +390,8 @@ def test_the_world_a_plan_reaches_holds_ONE_reading_per_subject_and_property(mon
     readings = _readings_of(world, agent.me.acts_for, MOISTURE)
     assert len(readings) == 1, \
         f"the plan's world holds {readings} — a step landed beside its predecessor"
-    assert readings[0] > DRY, "and it is the reading the last step predicted, not the stored one"
+    assert readings[0].endswith(".inside"), \
+        "and it is the band the last step predicted, not the one the store holds"
 
 
 def test_legality_is_judged_on_the_world_the_plan_would_actually_reach(monkeypatch):
@@ -398,23 +418,25 @@ def test_legality_is_judged_on_the_world_the_plan_would_actually_reach(monkeypat
 
     plan = planner.plan(desire)
 
-    assert len(plan.steps) == 2 and len(judged) == 1, "the winner is checked, once"
+    assert plan.steps and len(judged) == 1, "the winner is checked, once"
     world = rdflib.Graph()
     world.parse(data=judged[0], format="nt")
     readings = _readings_of(world, agent.me.acts_for, MOISTURE)
-    assert len(readings) == 1 and readings[0] == pytest.approx(_last_predicted(planner, desire,
-                                                                              plan)), \
+    assert len(readings) == 1 and readings[0] == _last_predicted(planner, desire, plan), \
         "the society judged a world the plan would not have reached"
 
 
-def _last_predicted(planner, desire, plan) -> float:
-    """What the plan's final step predicts, replayed step by step from the root."""
+def _last_predicted(planner, desire, plan) -> str | None:
+    """The band the plan's final step predicts, replayed step by step from the root (#579)."""
+    from orexis_agent_progression.store import bindings
     node = planner._begin(desire)
     for step in plan.steps:
         node = planner._step_from(node, step, desire)
-    sensing = planner.agent.provider("http://example.org/orexis/sensing#SensingCapability")
-    return sensing.value_in(planner.imaginarium.query, node.graph, planner.me.acts_for,
-                            desire.observed_property)   # an ObservedDesire: sensing's field
+    rows = bindings(planner.imaginarium.query(f"""
+SELECT ?c WHERE {{ GRAPH <{node.graph}> {{ ?o sosa:hasFeatureOfInterest <{planner.me.acts_for}> ;
+  sosa:observedProperty <{desire.observed_property}> ; a ?c }}
+  FILTER(STRSTARTS(STR(?c), "http://example.org/orexis#band.")) }}"""))
+    return rows[0]["c"] if rows else None
 
 
 def test_a_whole_search_writes_nothing_to_the_belief_base(monkeypatch):
@@ -433,7 +455,7 @@ def test_a_whole_search_writes_nothing_to_the_belief_base(monkeypatch):
 
     plan = planner.plan(desire)
 
-    assert len(plan.steps) == 2, "a search that never went deep would assert nothing here"
+    assert plan.steps, "a search that found nothing would assert nothing here"
     assert agent.beliefs.get_graph(STATE_GRAPH) == before, "readings the agent never took"
     assert set(agent.beliefs.graph_names()) - names <= {DELIBERATION_GRAPH}, \
         "a possible world escaped into the store that keeps things"

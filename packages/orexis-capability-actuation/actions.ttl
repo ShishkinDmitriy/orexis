@@ -18,24 +18,21 @@
 #
 #  The lever that justified a CONSTRUCT over add/delete patterns, and it is worth being exact
 #  about why. Opening a valve ADDS NO TRIPLE. Nothing in the graph becomes true the moment the
-#  water leaves; what changes is a number that a LATER observation reports. A template of
-#  concrete triples cannot say that without predicting the number, and predicting the number is
-#  precisely what a CONSTRUCT can do.
+#  water leaves; what changes is a reading a LATER observation reports.
 #
-#  THE NUMBER HAS ONE SOURCE, and this file is it. `litres / conversion` was computed in Python
-#  in two places already — the bidder sizing its expectation and the actuator sizing its own
-#  self-dose — before anything asked what a dose would DO. A third copy here would have been the
-#  worst of it: an agent that plans against one future and verifies against another reports
-#  false UNMET verdicts, which is the false-knowledge bug arriving from the planning side, and
-#  it would look like a device lying rather than like arithmetic disagreeing with itself. So the
-#  actuator computes no expectation at all (#510): the reading this rule predicts rides on the
-#  step, and the keeper holds the world to it within `actuation:tolerance` of the movement.
+#  WHAT IT REPORTS IS A BAND (#579, deliberation-is-on-triples-and-a-number-is-not-special).
+#  This rule used to predict the NUMBER — `litres / conversion` from where the property stood —
+#  which put a sizing on the search's path and a number in every possible world. A dose reaches
+#  the region: the reading is then a `sensing:InRegion` of this subject's property, and that is
+#  the whole of what the search plans on and the keeper holds the world to. How much to pour to
+#  get there is progression's, sized by `dose_for` from the reading in hand when the step is
+#  taken — the conversion is read there, and revised there on the residuals. A dose that could
+#  not reach the region (a vessel nearly empty) reaches it anyway as far as this rule can say;
+#  the world answers otherwise, and the next pass plans the next dose.
 #
-#  The conversion is the agent's OWN belief, keyed by the term the venue tie names — the copy an
-#  agent that learned would revise, and the copy it would lose money by being wrong about. The
-#  premise walk below is the one `_conversion_for` walks, and it belongs here for the same
-#  reason the arithmetic does: a rule states its own premises, which is what makes it a rule
-#  rather than a fragment somebody has to assemble.
+#  The chain is still walked, and it belongs here for the same reason it always did: a rule
+#  states its own premises, which is what makes it a rule rather than a fragment somebody has
+#  to assemble.
 
 actuation:Dosing
     a orexis:Action ;
@@ -64,11 +61,10 @@ actuation:Dosing
 
     sh:construct """
         CONSTRUCT {
-            ?obs a sosa:Observation ;
+            ?obs a sosa:Observation , ?band ;
                  sosa:hasFeatureOfInterest $subject ;
                  sosa:observedProperty $about ;
-                 sosa:resultTime ?now ;
-                 sosa:hasSimpleResult ?predicted .
+                 sosa:resultTime ?now .
         } WHERE {
             $me orexis:actsFor $subject ; actuation:hasActuator ?lever .
             ?lever actuation:actuates $subject ; actuation:drawsFrom ?source .
@@ -76,13 +72,30 @@ actuation:Dosing
             ?term market:ofGood ?good ; market:aboutProperty $about .
             GRAPH $beliefs { $me ?term ?conversion }
             FILTER(?conversion > 0)
-            #  WHERE THE PROPERTY STANDS, read by this rule from the world it is asked about
-            #  rather than handed in by the planner: the kernel no longer knows what a reading
-            #  looks like, and a rule that reads $state already does. Nothing read yet is zero.
-            OPTIONAL { GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
-                                       sosa:observedProperty $about ;
-                                       sosa:hasSimpleResult ?was } }
-            BIND(COALESCE(?was, 0) + ($litres / ?conversion) AS ?predicted)
+            #  THE BAND A DOSE REACHES: in the region, of this subject's property — the member genesis
+            #  minted from the range the subject states — from below it or from inside it.
+            #  From ABOVE it, more water helps nothing: the reading stays in the family it is
+            #  in, which is the same world as before and pruned as one. Where the property
+            #  stands is read by this rule from the world it is asked about, so the step's
+            #  precondition carries it — the band the reading is in, never a number; optional,
+            #  since a dose may be planned before any reading exists.
+            #  The wetness test sits INSIDE the standing reading's pattern: outside it, an
+            #  unbound ?standing would join freely with any reading above its region.
+            #  A READING MUST STAND, and the requirement is load-bearing rather than
+            #  defensive. Where the property has never been read, this rule yielding a
+            #  reading would FABRICATE one — and a world that knows where the pot is scores
+            #  better than one that does not, so a content plant would buy water to find out
+            #  how wet it is (#137, the guard the zero-size filter used to carry). Requiring
+            #  the reading leaves such a world untouched and the step discarded as somewhere
+            #  already seen, which is the road every other "this does not help" arrives by;
+            #  a look comes first, as it always did.
+            GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
+                             sosa:observedProperty $about .
+                           OPTIONAL { ?standing a ?tooWet .
+                                      FILTER(?tooWet = sensing:AboveRegion) } }
+            BIND(IF(BOUND(?tooWet), sensing:AboveRegion, sensing:InRegion) AS ?family)
+            ?band rdfs:subClassOf ?family ;
+                  sensing:ofSubject $subject ; sensing:ofProperty $about .
             BIND(BNODE() AS ?obs)
             BIND(NOW() AS ?now)
         }""" ;
@@ -119,10 +132,10 @@ actuation:Dosing
     #  its own predicted triple knowable, and only a later reading can do that.
 
     #  The reading it replaces. Not optional: `sensed_writer` upserts one node per (subject,
-    #  property), so a predicted reading that left the old one standing would put two results on
-    #  one node — and a shape asking whether ANY reading sits past an edge would answer about
-    #  the one the dose just superseded, which is how a planner comes to reject the plan that
-    #  works.
+    #  property), so a predicted reading that left the old one standing would put two readings
+    #  on one node — and a shape asking whether ANY reading of the property is below the region
+    #  would answer about the one the dose just superseded, which is how a planner comes to
+    #  reject the plan that works.
     orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
             GRAPH $state {

@@ -43,8 +43,8 @@ def test_a_dose_reads_its_chain_its_conversion_and_the_standing_reading(monkeypa
     #  The standing reading is a premise by WHAT IT IS (#576) — the band the domain asserted
     #  on it, a plain triple — and never by its number.
     readings = [f for f in dose.premises if f[0] == "keyed"]
-    assert readings and all(f[3].endswith("#type") and str(f[4]).startswith("http://example.org/orexis#band.")
-                            for f in readings), readings
+    assert readings and all(f[3].endswith("#type") for f in readings), readings
+    assert any(str(f[4]).startswith("http://example.org/orexis#band.") for f in readings), "the member band"
     assert SOSA + "hasSimpleResult" not in read
     assert any(f[0] == "keyed" for f in dose.premises), \
         "the standing reading is read as the keyed fact the signature knows it by"

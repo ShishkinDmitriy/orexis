@@ -518,7 +518,7 @@ def test_a_plan_is_committed_whole_advances_on_a_met_step_and_stops_on_an_unmet_
     assert keeper.standing(action="urn:toy#Go1", want=want) and keeper.in_progress(want) is not None
 
     before = fern.deliberator._plans_finished
-    assert keeper.expect(uri, "watching the first step", tolerance=0.5,
+    assert keeper.expect(uri, "watching the first step",
                          predicts=predicted_reading(fern.me.acts_for, MOISTURE, 0.9),
                          baseline=reading_of(fern, MOISTURE),
                          not_after=datetime.now(timezone.utc) + timedelta(hours=1))
@@ -529,7 +529,7 @@ def test_a_plan_is_committed_whole_advances_on_a_met_step_and_stops_on_an_unmet_
     assert keeper.in_progress(want) is not None, "still a step to come after the second"
 
     failed = fern.deliberator._plans_failed
-    assert keeper.expect(uri, "watching the second step", tolerance=0.5,
+    assert keeper.expect(uri, "watching the second step",
                          predicts=predicted_reading(fern.me.acts_for, MOISTURE, 0.9),
                          baseline=reading_of(fern, MOISTURE),
                          not_after=datetime.now(timezone.utc) + timedelta(hours=1))

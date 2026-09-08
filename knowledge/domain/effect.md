@@ -58,13 +58,25 @@ uncertainty lives in re-planning and monitoring, which is where this project alr
 
 `litres / conversion` was already written twice in Python — the bidder sizing its expectation, the
 actuator sizing its self-dose — before anything asked what a dose would do. Since #510 the actuator
-computes nothing at all: the reading the rule predicted rides on the [step](/domain/step.md) as
-`progression:predicts`, and the keeper holds the world to it within the actor's
-[tolerance](/domain/tolerance.md), so the number a planner uses to decide whether dosing helps
-IS the number the world is later held to, by construction rather than by discipline.
+computes nothing at all: what the rule predicted rides on the [step](/domain/step.md) as
+`progression:predicts`, and the keeper holds the world to that, so what a planner uses to decide
+whether dosing helps IS what the world is later held to, by construction rather than by discipline.
 
-Two numbers would mean an agent planning against one future and verifying against another, and
+Two predictions would mean an agent planning against one future and verifying against another, and
 the failure would look like a device lying rather than like arithmetic disagreeing with itself.
+
+**And what it predicts is a [band](/domain/band.md), not a number (#579).** A dose reaches the
+region; a bought lot reaches the region; the rule says which class the reading becomes and states
+no arithmetic at all. How much to pour or to bid for is computed when the step is TAKEN, by the
+actuator or the bidder from the reading in hand — which is where the conversion is read and where
+[review](/domain/review.md) revises it. The search is never asked how big an act would be.
+
+Two things follow, and both are the ruling's cost taken knowingly. A dose reaches the region from
+below it or from inside it; **from above, more water helps nothing**, so the rule declares the
+band the reading is already in and the step is pruned as a world already seen. And a **reading
+must stand** for either rule to fire: with none, a rule yielding a reading would fabricate one,
+and a world that knows where the pot is scores better than one that does not — so a content plant
+would buy water to find out how wet it is. A look comes first, as it always did.
 
 # When it lands, and how you would know
 

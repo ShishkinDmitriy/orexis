@@ -996,19 +996,21 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
     def expect(self, intention_uri: str, because: str,
                baseline=None,
-               tolerance: float | None = None,
+               sized: float | None = None,
                lands_after_s: float | None = None,
                seeing_s: float | None = None,
                not_after: datetime | None = None,
                predicts: tuple | None = None) -> bool:
         """Open the watch: the step was taken, now the world owes the change it predicted.
 
-        ONE DECLARATION (#510, #518). What the world is held to is `progression:predicts` on the
-        step the intention stands at — the facts the search said this step makes true and
-        false, the same facts its signature is made of — and nothing the actor sizes: the
-        actor that used to say a delta and a direction now says only how CLOSE the world must
-        land, `tolerance`, a fraction of the predicted movement, which is its own revisable
-        pick. A caller may hand `predicts` in for a step the search did not make.
+        ONE DECLARATION (#510, #518, #579). What the world is held to is `progression:predicts`
+        on the step the intention stands at — the facts the search said this step makes true
+        and false, the same facts its signature is made of. A predicted reading is the BAND
+        its effect rule declared, and the world answers with a reading that is one; the actor
+        sizes nothing of the expectation and says nothing of how close. What it may say is
+        `sized`: the number it aimed the act at, written as the step's predicted value so the
+        residual review reads a number where the prediction carries none. A caller may hand
+        `predicts` in for a step the search did not make — a number, held to exactly.
 
         The answering shape is generated here (`_answering_shape`): a KEYED fact — an
         observation, some package's `orexis:keyedBy` class — is put to that package through
@@ -1056,11 +1058,13 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         #  on: the ledger, not the caller, is what the verdict and the reviewer read.
         stated = (f"""
   <{step}> <{PREDICTS}> {_literal(predicts_json(predicts))} .""" if persisted is None else "")
+        aimed = (f"""
+  <{step}> <{PREDICTED_VALUE}> "{float(sized)}"^^xsd:decimal .""" if sized is not None else "")
         self.agent.intentions.update(f"""
-INSERT DATA {{ GRAPH <{self.graph}> {{{based}{stated}
+INSERT DATA {{ GRAPH <{self.graph}> {{{based}{stated}{aimed}
   <{intention_uri}> <{BECAUSE_OF}> {_literal(because)} . }} }}""")
         self.window(intention_uri, deadline_dt)
-        shape = self._answering_shape(predicts, since, value, tolerance)
+        shape = self._answering_shape(predicts, since)
         if shape is None:
             self.log.warning("nothing says what a world answering %s would look like "
                              "— the watch can only lapse", _short(intention_uri))
@@ -1072,21 +1076,30 @@ INSERT DATA {{ GRAPH <{self.graph}> {{{based}{stated}
         return True
 
     def _residual_of(self, step_uri: str) -> tuple[float | None, float | None]:
-        """The one number a step predicted, and what the world shows for it now — None, None
-        where the prediction carries no number or more than one (a plain-fact step, a step
-        predicting two readings), or where nobody will witness it."""
+        """The one number a step aimed at, and what the world shows for it now — None, None
+        where nothing says a number (a plain-fact step) or nobody will witness it. The number
+        is the actor's `sized` where the step's prediction is a band (#579), else the one
+        number the prediction carries; a prediction carrying two says nothing."""
         rows = bindings(self.agent.intentions.query_union(f"""
-SELECT ?predicts WHERE {{ GRAPH <{self.graph}> {{ <{step_uri}> <{PREDICTS}> ?predicts }} }}"""))
+SELECT ?predicts ?aimed WHERE {{ GRAPH <{self.graph}> {{ <{step_uri}> <{PREDICTS}> ?predicts .
+  OPTIONAL {{ <{step_uri}> <{PREDICTED_VALUE}> ?aimed }} }} }}"""))
         if not rows:
             return None, None
         adds, _ = predicts_from_json(rows[0]["predicts"])
+        readings = {(f[1], f[2]) for f in adds if f and f[0] == "keyed"}
         numbers = [f for f in adds if f and f[0] == "keyed"
                    and isinstance(f[4], (int, float)) and not isinstance(f[4], bool)]
-        if len(numbers) != 1:
+        if len(readings) != 1:
             return None, None
-        _, cls, key, _, predicted = numbers[0]
+        (cls, key), = readings
+        if len(numbers) == 1:
+            predicted = float(numbers[0][4])
+        elif rows[0].get("aimed") is not None and not numbers:
+            predicted = float(rows[0]["aimed"])
+        else:
+            return None, None
         observed = next((v for v in self.agent.ask(WITNESS, cls, dict(key)) if v is not None), None)
-        return float(predicted), (float(observed) if observed is not None else None)
+        return predicted, (float(observed) if observed is not None else None)
 
     def _step_of(self, intention_uri: str) -> tuple[str | None, tuple | None]:
         """The step an intention stands at, and what it predicts — None where it predicts
@@ -1100,14 +1113,14 @@ SELECT ?step ?predicts WHERE {{ GRAPH <{self.graph}> {{
         text = rows[0].get("predicts")
         return rows[0]["step"], (predicts_from_json(text) if text else None)
 
-    def _answering_shape(self, predicts: tuple, since, baseline: float | None,
-                         tolerance: float | None):
+    def _answering_shape(self, predicts: tuple, since):
         """The shape a world answering this prediction conforms to, from the step's facts.
 
         A KEYED fact (`("keyed", class, key, predicate, value)` — a node some package
         declared `orexis:keyedBy`, an observation) is the package's to answer for: the
-        `orexis:answer` extension is asked with the class, its key and what it carries, and
-        the first opinion wins. A PLAIN fact `(s, p, o)` is the kernel's: every addition
+        `orexis:answer` extension is asked with the class, its key and what it carries — the
+        band it is predicted to be, under `rdf:type`, or a number a caller stated — and the
+        first opinion wins. A PLAIN fact `(s, p, o)` is the kernel's: every addition
         present and every retraction gone, as one query under a shape (`condition_shape`),
         so the ledger reads as the step meant it. A fact that cannot be stated as a triple
         — a blank node the search labelled by content — is passed over and said so.
@@ -1141,8 +1154,8 @@ SELECT ?step ?predicts WHERE {{ GRAPH <{self.graph}> {{
                              "not held to them", passed)
         shapes = []
         for (cls, key), carried in keyed.items():
-            g = next((g for g in self.agent.ask(ANSWER, cls, dict(key), carried, since,
-                                                baseline, tolerance) if g is not None), None)
+            g = next((g for g in self.agent.ask(ANSWER, cls, dict(key), carried, since)
+                      if g is not None), None)
             if g is None:
                 self.log.warning("nothing says what answers a predicted %s", cls.rsplit("#", 1)[-1])
                 return None
@@ -1222,6 +1235,8 @@ SELECT ?i ?step ?action ?want ?baseline ?baselineAt ?deadline ?predicts WHERE {{
         residual = "".join(f'\n  <{watch.step}> <{p}> "{v}"^^xsd:decimal .'
                            for p, v in ((PREDICTED_VALUE, predicted), (OBSERVED_VALUE, observed))
                            if v is not None)
+        #  A predicted value the actor stated at `expect` is already on the step (#579): the
+        #  same number written twice is one triple, so writing it again is harmless.
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{watch.step}> <{END_MET}> "{'true' if met else 'false'}"^^xsd:boolean ;
