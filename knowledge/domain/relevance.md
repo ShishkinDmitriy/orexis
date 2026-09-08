@@ -53,3 +53,8 @@ and every row serves the want. It bites where a world composes two domains, or w
 package adds a free action the want never reads — measured in
 [measure-the-search](/runbooks/measure-the-search.md), where since the budget replaced depth
 such a lever does not slow a solve but spends the budget and leaves the puzzle unsolved.
+
+# What it is asked for beyond one pass
+
+The same tables answer which predicates are joined at all — a
+[causal component](/domain/causal-component.md) — and so whether two wants could contradict.
