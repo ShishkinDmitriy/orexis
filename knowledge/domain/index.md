@@ -65,7 +65,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [history](/domain/history.md) - The chain of presents left behind, each an act and the diff that happened, kept as diffs, bounded as a ring.
 
 * [relevance](/domain/relevance.md) - Which levers could serve a want: read off the actions, closed backward through preconditions, never declared; unreadable keeps every lever.
-* [causal component](/domain/causal-component.md) - Predicates joined wherever one action or derivation touches both; wants in different components cannot contradict.
+* [compartment](/domain/compartment.md) - Predicates joined wherever one action or derivation touches both; wants in different compartments cannot contradict.
 * [affordance](/domain/affordance.md) - One row of what an agent could do now — an action whose precondition holds. Derived and never stored; whom it serves is a column.
 
 * [lever](/domain/lever.md) - The INSTRUMENT an act goes through, always an instance. Its absence is what removes a row, with nothing edited.

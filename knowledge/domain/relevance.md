@@ -57,4 +57,4 @@ such a lever does not slow a solve but spends the budget and leaves the puzzle u
 # What it is asked for beyond one pass
 
 The same tables answer which predicates are joined at all — a
-[causal component](/domain/causal-component.md) — and so whether two wants could contradict.
+[compartment](/domain/compartment.md) — and so whether two wants could contradict.
