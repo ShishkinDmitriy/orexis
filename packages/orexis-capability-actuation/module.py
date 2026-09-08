@@ -83,7 +83,7 @@ EPS = 1e-9
 class Command:
     jti: str
     plant: str
-    scope: str
+    permits: str
     ml: float
     seconds: float
     auction_id: str
@@ -152,7 +152,7 @@ class ActuationModule(Module):
             raise ValueError(f"I own no actuator that serves {claim.sub!r}")
         ml = min(claim.amount_l * 1000.0, device.max_dose_ml)  # the device's own cap
         return Command(
-            jti=claim.jti, plant=claim.sub, scope=claim.scope,
+            jti=claim.jti, plant=claim.sub, permits=claim.permits,
             ml=round(ml, 1), seconds=round(ml / device.ml_per_second, 2),
             auction_id=claim.auction_id,
         ), device
@@ -234,7 +234,7 @@ class ActuationModule(Module):
         not_after = (datetime.now(timezone.utc) + timedelta(seconds=lands + (seeing or 0.0))
                      if lands is not None else None)
         promised = replace(act, quantity=litres, want=desire.uri, not_after=not_after)
-        cmd = self.redeem(Commitment(sub=self.me.agent_id, scope="actuate:self",
+        cmd = self.redeem(Commitment(sub=self.me.agent_id, permits="actuate:self",
                                      amount_l=litres, auction_id=f"self-{jti[:8]}", jti=jti,
                                      step=promised))
         if keeper is not None:

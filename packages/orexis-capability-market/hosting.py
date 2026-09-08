@@ -633,7 +633,7 @@ SELECT ?r WHERE {{
         plaintext: the pre-#145 era, legal, exactly as the missing signing key is for #144.
         """
         payload = {"auction_id": auction_id, "jti": claim.jti, "sub": claim.sub,
-                   "scope": claim.scope, "amount_l": claim.amount_l,
+                   "permits": claim.permits, "amount_l": claim.amount_l,
                    "debit": claim.debit}
         rows = bindings(self.agent.beliefs.query(_KEY_Q % (claim.sub, "sealingKey")))
         if rows:

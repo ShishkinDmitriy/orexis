@@ -45,7 +45,7 @@ def keys():
 
 
 def _command(host_key=None, clearing_key=None, **over):
-    payload = {"jti": "j1", "plant": "fern", "scope": "water",
+    payload = {"jti": "j1", "plant": "fern", "permits": "water",
                "ml": 500.0, "seconds": 50.0, "auction_id": "r1"}
     payload.update(over)
     data = signing.canonical(payload)

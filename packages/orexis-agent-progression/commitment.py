@@ -24,7 +24,11 @@ class Commitment:
     """A promised flow: who it is for, what it permits, how much, from which round, once."""
 
     sub: str          # whose subject the flow reaches — the buyer, or the self-dosing agent
-    scope: str        # what the token permits — a valve, or "actuate:self"
+    #  WHAT THE TOKEN PERMITS — a valve, or "actuate:self". It was `scope`, JWT's word beside
+    #  `sub`, `jti` and `exp`, until the sovereign ruled that a core concept outranks a niche
+    #  one for a name: what a lever can reach across a whole vocabulary is a SCOPE now
+    #  (knowledge/domain/scope.md), and this says what it always meant in our own words.
+    permits: str
     amount_l: float   # the flow, in the good's unit (litres here; the domain is a plug-in)
     auction_id: str   # the round it was won in, or a self-minted id — never a bidding pass
     jti: str          # anti-replay id
