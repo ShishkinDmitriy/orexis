@@ -115,16 +115,18 @@ SELECT ?property ?low ?high ?floor ?ceiling WHERE {
   ?r owl:onProperty sosa:hasSimpleResult ; owl:someValuesFrom/owl:withRestrictions ?facets .
   ?facets rdf:rest*/rdf:first/xsd:minInclusive ?low .
   ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?high .
-  OPTIONAL { ?belowFloor rdfs:subClassOf sensing:BelowFloor ;
-                         sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
-                         owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?rf .
-             ?rf owl:onProperty sosa:hasSimpleResult ;
-                 owl:someValuesFrom/owl:withRestrictions/rdf:rest*/rdf:first/xsd:maxExclusive ?floor }
-  OPTIONAL { ?aboveCeiling rdfs:subClassOf sensing:AboveCeiling ;
-                           sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
-                           owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?rc .
-             ?rc owl:onProperty sosa:hasSimpleResult ;
-                 owl:someValuesFrom/owl:withRestrictions/rdf:rest*/rdf:first/xsd:minExclusive ?ceiling }
+  #  THE ENVELOPE IS NOT A BAND (the three-band ruling): it is a range the subject states, or
+  #  an instrument monitoring it does, and it is read straight from the world — the same
+  #  intersection `desires.ru` takes for the shape, narrowest floor and ceiling. THE SUBJECT IS
+  #  PROJECTED and joined outside: a subquery is evaluated on its own, so grouping by the
+  #  property alone took the narrowest envelope any subject in the world states — which gave a
+  #  fern the water butt's ceiling, and an urgency that read maximal a fifth of the way out.
+  OPTIONAL { SELECT ?subject ?property (MAX(?least) AS ?floor) (MIN(?most) AS ?ceiling) WHERE {
+      { ?subject ssn-system:hasSurvivalRange ?envelope }
+      UNION { ?instrument sensing:monitors ?subject ; ssn-system:hasSurvivalRange ?envelope }
+      ?envelope ssn-system:inCondition ?tolerated .
+      ?tolerated ssn:forProperty ?property ; schema:minValue ?least ; schema:maxValue ?most .
+    } GROUP BY ?subject ?property }
 } ORDER BY ?property"""
 
 

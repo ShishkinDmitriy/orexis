@@ -50,15 +50,19 @@ SELECT ?c WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:observedProperty <{observed_
 
 
 def test_genesis_mints_a_band_per_range_the_world_states_defined_in_owl(monkeypatch):
-    """The loner's pot states an operating range for its moisture and a survival range around
-    it, so five members are minted — below, inside, above, and past the floor and the ceiling
-    — each a subclass of sensing's family, each an OWL intersection an outside reasoner could
-    read: the observation class, the subject and the property by value, the result by facets."""
+    """The loner's pot states an operating range for its moisture, so THREE members are minted
+    — below it, inside it, above it — each a subclass of sensing's family, each an OWL
+    intersection an outside reasoner could read: the observation class, the subject and the
+    property by value, the result by facets.
+
+    Three and no combinations, by the sovereign's ruling of 2026-09-08: the survival envelope
+    used to mint two more beneath the region's, so a dying reading was typed with two bands at
+    once. It mints none now — it is a range the subject states, read as a number by whoever
+    scales urgency — and a domain that wants a fourth state declares its own."""
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): 0.10}, world="loner")
     assert _bands_of(st, "zz", "SoilMoisture") == {
-        "below": "BelowRegion", "inside": "InRegion", "above": "AboveRegion",
-        "belowFloor": "BelowFloor", "aboveCeiling": "AboveCeiling"}
+        "below": "BelowRegion", "inside": "InRegion", "above": "AboveRegion"}
     rows = bindings(st.query(f"""
 SELECT ?p ?v ?facet ?bound WHERE {{
   <{BAND}zz.SoilMoisture.inside> owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
@@ -74,10 +78,10 @@ SELECT ?p ?v ?facet ?bound WHERE {{
 
 
 def test_a_reading_is_classified_when_it_is_written_and_reclassified_when_it_moves(monkeypatch):
-    """The sensed writer entails what it wrote: 0.05 is below the region and above the floor;
-    0.01 is below the floor too, and the family axiom makes that also below the region; 0.25
-    is inside; the upsert takes the old class with the old node. The butt's level, whose
-    subject states no range, is nothing but an observation."""
+    """The sensed writer entails what it wrote: 0.05 and 0.01 are both below the region, which
+    is all sensing's three bands say about either; 0.25 is inside; the upsert takes the old
+    class with the old node. The butt's level, whose subject states no range, is nothing but
+    an observation."""
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     agent = build_agent("gardener", genesis_store({("zz", MOISTURE): 0.10, ("water_butt", STORED): 3.0},
                                                   world="loner"), monkeypatch)
@@ -85,9 +89,10 @@ def test_a_reading_is_classified_when_it_is_written_and_reclassified_when_it_mov
     write_reading(agent, 0.05, MOISTURE)
     assert _classes_of(agent.beliefs, MOISTURE) == {"below"}
     write_reading(agent, 0.01, MOISTURE)
-    assert _classes_of(agent.beliefs, MOISTURE) == {"below", "belowFloor"}
-    assert _families_of(agent.beliefs, MOISTURE) == {"BelowRegion", "BelowFloor"}, \
-        "and the families are asserted with the member, so a shape reads sh:class sensing:BelowRegion"
+    assert _classes_of(agent.beliefs, MOISTURE) == {"below"}, \
+        "past the survival floor is still below the region and nothing more: three bands"
+    assert _families_of(agent.beliefs, MOISTURE) == {"BelowRegion"}, \
+        "and the family is asserted with the member, so a shape reads sh:class sensing:BelowRegion"
     write_reading(agent, 0.25, MOISTURE)
     assert _classes_of(agent.beliefs, MOISTURE) == {"inside"}
     assert _classes_of(agent.beliefs, STORED) == set(), "no range stated, no band"

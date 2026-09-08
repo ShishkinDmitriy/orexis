@@ -3,8 +3,8 @@ type: Domain Concept
 title: Band
 term: http://example.org/orexis/water#Band
 description: >-
-  One of the zones a region divides a property into — LOW, OK, HIGH, and past the envelope —
-  and the agent's verdict about its own subject rather than a fact about the number.
+  One of the three zones a region divides a property into — LOW, OK, HIGH — and the agent's
+  verdict about its own subject rather than a fact about the number.
   Desire-relative by construction: the same 0.30 is LOW for a fern and OK for a succulent,
   because their subjects need different things. Since #576 a band is a CLASS of readings the
   domain declares, minted per (subject, property) at genesis from the range the world states
@@ -17,8 +17,8 @@ description: >-
 
 # What it is
 
-A **band** is one of three zones a [region](/domain/region.md) divides a property into: `LOW`
-below it, `OK` inside, `HIGH` above.
+A **band** is one of the three zones a [region](/domain/region.md) divides a property into:
+`LOW` below it, `OK` inside, `HIGH` above.
 
 It is a **verdict, not a measurement**. The [reading](/domain/reading.md) is what an instrument
 said; the band is what this agent makes of it. So the same 0.30 is LOW for a fern and OK for a
@@ -35,15 +35,25 @@ because it is not kept apart from them.
 
 Deliberation is on triples and a number is not special
 ([deliberation-is-on-triples-and-a-number-is-not-special](/decisions/deliberation-is-on-triples-and-a-number-is-not-special.md)),
-and what a reading can be is decided inside the domain. Sensing declares the FAMILIES as classes
-of observations: `sensing:BelowRegion`, `sensing:InRegion`, `sensing:AboveRegion`, and past the
-envelope `sensing:BelowFloor` and `sensing:AboveCeiling`, each also below or above the region. A
-MEMBER is minted per (subject, property) that states a range, at genesis by sensing's `rules.ru`,
-defined in OWL — an intersection of the observation class, the subject and the property by
-`owl:hasValue`, and the result by a datatype restriction with the range's own bounds — so an
-outside reasoner reads exactly what the store asserts. The store's entailment door
-(`Store.entail`) is the second OWL construct materialised here, beside the closure's
-`owl:hasValue`.
+and what a reading can be is decided inside the domain. Sensing declares THREE families as
+classes of observations, and three is the whole of what a range can say: `sensing:InRegion`,
+and outside it `sensing:BelowRegion` and `sensing:AboveRegion`. A MEMBER is minted per
+(subject, property) that states a range, at genesis by sensing's `rules.ru`, defined in OWL —
+an intersection of the observation class, the subject and the property by `owl:hasValue`, and
+the result by a datatype restriction with the range's own bounds — so an outside reasoner reads
+exactly what the store asserts. The store's entailment door (`Store.entail`) is the second OWL
+construct materialised here, beside the closure's `owl:hasValue`.
+
+**Three, and none of them combined.** The survival envelope used to mint two more, beneath the
+region's two, so a reading past the floor was typed with both and every reader had to know which
+outranked which. The sovereign's ruling of 2026-09-08 ended that: sensing says inside or
+outside, outside split by which way, and nothing else. The envelope is a range the subject
+states again, read as a number by whoever scales urgency by the room left before the thing ends
+— which is the desire row, where a reading is in hand. **A domain that needs a fourth state
+declares its own band**: a plant blooming wants more attention than the same plant resting, and
+that is its ontology's knowledge, not a zone a range could have implied. Such a band is that
+ontology's to declare, to mint and to measure by; the kernel's entailment honours it without
+being told, because it honours any class defined that way.
 
 What the search does with it, since #579: it plans on it and on nothing else. An
 [effect](/domain/effect.md) declares the band its reading becomes and states no arithmetic; a

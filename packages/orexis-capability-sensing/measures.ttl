@@ -108,9 +108,11 @@ sensing:AimDistanceMeasure
                 ?obs sosa:hasFeatureOfInterest $subject ;
                      sosa:observedProperty $property .
                 #  The bands INSIDE the reading's own pattern: outside it, an unbound ?obs
-                #  would join freely with any reading of any property in any band.
-                OPTIONAL { ?obs a sensing:BelowFloor . BIND(1.0 AS ?u1) }
-                OPTIONAL { ?obs a sensing:AboveCeiling . BIND(1.0 AS ?u2) }
+                #  would join freely with any reading of any property in any band. THREE, by
+                #  the sovereign's ruling: outside the region is outside it, whichever way,
+                #  and how much worse a dying reading is than an uncomfortable one is said by
+                #  the survival room the numeric branch above scales by — asked where a number
+                #  is in hand, which is where the difference can be seen.
                 OPTIONAL { ?obs a sensing:BelowRegion . BIND(0.75 AS ?u3) }
                 OPTIONAL { ?obs a sensing:AboveRegion . BIND(0.75 AS ?u4) }
                 OPTIONAL { ?obs a sensing:InRegion . BIND(0.0 AS ?u5) } } }
@@ -126,12 +128,11 @@ sensing:AimDistanceMeasure
             BIND(IF(?v < ?target, ?target - $outerLow, $outerHigh - ?target) AS ?room)
             BIND(IF(?v < ?target, ?target - ?v, ?v - ?target) AS ?distance)
             #  BY THE BAND where the reading has no number (#579): a reading an effect
-            #  predicted is what it IS and nothing more, and this package says how urgent
-            #  each band is — past the envelope maximal, outside the region three quarters,
-            #  inside it nothing. Coarser than the distance, which is the ruling's point:
-            #  a pot at 25 and a pot at 27 are one world. The number, where there is one,
-            #  still says how far.
+            #  predicted is what it IS and nothing more, and this package says how urgent each
+            #  band is — outside the region three quarters, inside it nothing. Coarser than the
+            #  distance, which is the ruling's point: a pot at 25 and a pot at 27 are one world.
+            #  The number, where there is one, still says how far.
             BIND(COALESCE(IF(?distance <= 0, 0.0, IF(?room <= 0, 1.0,
                  IF(?distance / ?room < 1.0, ?distance / ?room, 1.0))),
-                 ?u1, ?u2, ?u3, ?u4, ?u5, 1.0) AS ?urgency)
+                 ?u3, ?u4, ?u5, 1.0) AS ?urgency)
         }""" .

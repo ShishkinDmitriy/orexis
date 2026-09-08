@@ -151,10 +151,17 @@ WHERE  {
 #  which is a gap, and the envelope, a violation of which is the subject ending. Within each the
 #  edges live on the SIDE shapes, so a violation says WHICH WAY it went — see
 #  orexis:violationIs. BY BAND since #579: a side shape asks whether a reading of the property
-#  is a `sensing:BelowRegion` (`AboveRegion`, `BelowFloor`, `AboveCeiling`) — the class the
-#  domain asserts on a reading, a real one from its number and a predicted one from its
-#  effect — and not whether a number sits past an edge. One number apiece used to live here
-#  (#242); the numbers live in the bands' definitions now, minted from the same range.
+#  is a `sensing:BelowRegion` or an `AboveRegion` — the class the domain asserts on a reading,
+#  a real one from its number and a predicted one from its effect — and not whether a number
+#  sits past an edge. One number apiece used to live here (#242); the region's numbers live in
+#  the bands' definitions now, minted from the same range.
+#
+#  THE ENVELOPE STILL ASKS BY NUMBER, and that is the sovereign's three-band ruling arriving
+#  here: the survival range mints no band, so past-the-envelope is not something a reading IS.
+#  It is a warning about a reading the world actually holds, asked at the gates where a number
+#  is there to ask about; an imagined world states what a reading is and no number, so this
+#  shape is silent there — correctly, since what a plan may not pass through is the law, and a
+#  warning is not one.
 INSERT { GRAPH $derived {
     $me orexis:holds ?desire , ?envelope .
     ?desire a orexis:Desire ;
@@ -227,7 +234,7 @@ INSERT { GRAPH $derived {
             sh:qualifiedMaxCount 0 ;
             sh:qualifiedValueShape [
                 sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
-                sh:class sensing:BelowFloor ] ;
+                sh:property [ sh:path sosa:hasSimpleResult ; sh:maxExclusive ?floor ] ] ;
             sh:message ?underFloor ] ;
         sh:property [
             sh:severity sh:Warning ;
@@ -236,7 +243,7 @@ INSERT { GRAPH $derived {
             sh:qualifiedMaxCount 0 ;
             sh:qualifiedValueShape [
                 sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
-                sh:class sensing:AboveCeiling ] ;
+                sh:property [ sh:path sosa:hasSimpleResult ; sh:minExclusive ?ceiling ] ] ;
             sh:message ?overCeiling ] } }
 $given
 WHERE  {

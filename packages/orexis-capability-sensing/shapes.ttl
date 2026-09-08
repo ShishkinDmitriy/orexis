@@ -398,18 +398,14 @@ sensing:DeducedRegionShape a sh:NodeShape ;
                    owl:someValuesFrom/owl:withRestrictions ?facets .
                 ?facets rdf:rest*/rdf:first/xsd:minInclusive ?low .
                 ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?high .
+                #  The envelope straight off the subject, since it mints no band.
                 OPTIONAL {
-                    ?belowFloor rdfs:subClassOf sensing:BelowFloor ;
-                                sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
-                                owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?rf .
-                    ?rf owl:onProperty sosa:hasSimpleResult ;
-                        owl:someValuesFrom/owl:withRestrictions/rdf:rest*/rdf:first/xsd:maxExclusive ?floor }
-                OPTIONAL {
-                    ?aboveCeiling rdfs:subClassOf sensing:AboveCeiling ;
-                                  sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
-                                  owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?rc .
-                    ?rc owl:onProperty sosa:hasSimpleResult ;
-                        owl:someValuesFrom/owl:withRestrictions/rdf:rest*/rdf:first/xsd:minExclusive ?ceiling }
+                    { ?subject ssn-system:hasSurvivalRange ?envelope }
+                    UNION { ?instrument sensing:monitors ?subject ; ssn-system:hasSurvivalRange ?envelope }
+                    ?envelope ssn-system:inCondition ?tolerated .
+                    ?tolerated ssn:forProperty ?property ;
+                               <https://schema.org/minValue> ?floor ;
+                               <https://schema.org/maxValue> ?ceiling }
                 FILTER(   ?low > ?high
                        || (BOUND(?floor)   && ?low  < ?floor)
                        || (BOUND(?ceiling) && ?high > ?ceiling))

@@ -427,18 +427,28 @@ sosa:Observation orexis:keyedBy sosa:hasFeatureOfInterest , sosa:observedPropert
 #
 #  Deliberation is on triples, and a number is not special (#576, the record of that name):
 #  what a reading of a property can be is decided inside the domain, and this domain says it
-#  as CLASSES of observations — the three zones a region divides a property into, and the two
-#  the survival envelope adds outside them. A reading below the region its subject states is a
-#  `sensing:BelowRegion`; one inside is `sensing:InRegion`; one above, `sensing:AboveRegion`;
-#  and past the envelope, `sensing:BelowFloor` or `sensing:AboveCeiling`, each also below or
-#  above the region. These are the FAMILIES. Dry is relative to the plant and an OWL
-#  restriction takes a fixed literal, so the MEMBER classes — one per (subject, property) that
-#  states a range — are minted at genesis by `rules.ru` from the ranges the world states, each
-#  an `owl:intersectionOf` the observation class, the subject and the property by
+#  as CLASSES of observations — the three zones a region divides a property into. A reading
+#  below the region its subject states is a `sensing:BelowRegion`; one inside is
+#  `sensing:InRegion`; one above, `sensing:AboveRegion`. Dry is relative to the plant and an
+#  OWL restriction takes a fixed literal, so the MEMBER classes — one per (subject, property)
+#  that states a range — are minted at genesis by `rules.ru` from the range the world states,
+#  each an `owl:intersectionOf` the observation class, the subject and the property by
 #  `owl:hasValue`, and the value by a datatype restriction; and a reading is classified by
 #  ENTAILMENT (`Store.entail`, the second OWL construct the closure honours beside
 #  `owl:hasValue`), when it is written and when a possible world forks. The band page in the
 #  bundle is the concept; `water:LOW`/`OK`/`HIGH` are its names on the wire.
+#
+#  THREE, AND NOTHING COMBINED (the sovereign's ruling, 2026-09-08). There were five: the
+#  survival envelope minted `BelowFloor` and `AboveCeiling` as subclasses of the region's two,
+#  so a dying reading was typed with two bands at once and every reader had to know which
+#  outranked which. Inside and outside, outside split by which way, is the whole of what
+#  SENSING can say from a range — and it is deliberately not the whole of what a reading can
+#  be. A domain ontology brings its own bands where its own knowledge says a state deserves
+#  attention: a blooming plant wanting more water than the same plant resting, a vessel a
+#  supplier calls low. Such a band is that ontology's to declare, mint and measure by; nothing
+#  here has to grow a fourth zone for it, and the kernel's entailment already honours it.
+#  What the envelope is, now that it is not a band: a range the SUBJECT states, read as a
+#  number by whoever scales urgency by how much room is left before the thing ends.
 :BelowRegion a owl:Class ; rdfs:subClassOf sosa:Observation ;
     rdfs:label "reading below the region" ;
     rdfs:comment "An observation whose result lies below the operating range its subject states for the property — the LOW band. A member class per (subject, property) is minted at genesis with the range's own floor." .
@@ -448,12 +458,6 @@ sosa:Observation orexis:keyedBy sosa:hasFeatureOfInterest , sosa:observedPropert
 :AboveRegion a owl:Class ; rdfs:subClassOf sosa:Observation ;
     rdfs:label "reading above the region" ;
     rdfs:comment "An observation whose result lies above the operating range its subject states for the property — the HIGH band." .
-:BelowFloor a owl:Class ; rdfs:subClassOf :BelowRegion ;
-    rdfs:label "reading below the floor" ;
-    rdfs:comment "An observation whose result lies below the survival range its subject states — past the envelope, where the subject does not merely sit badly but ends. Also below the region." .
-:AboveCeiling a owl:Class ; rdfs:subClassOf :AboveRegion ;
-    rdfs:label "reading above the ceiling" ;
-    rdfs:comment "An observation whose result lies above the survival range its subject states. Also above the region." .
 #  WHOSE band a member is — the two `owl:hasValue` restrictions of its definition, restated as
 #  two triples on the member so an effect rule finds "the in-region band of this subject's
 #  property" in one join rather than a walk through the restriction list. Minted beside the

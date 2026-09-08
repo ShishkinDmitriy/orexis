@@ -171,43 +171,4 @@ WHERE {
     BIND(CONCAT(STRAFTER(STR(?property), "#"), " of ", STRAFTER(STR(?subject), "#"), " below ", STR(?low)) AS ?belowLabel)
     BIND(CONCAT(STRAFTER(STR(?property), "#"), " of ", STRAFTER(STR(?subject), "#"), " inside ", STR(?low), "-", STR(?high)) AS ?insideLabel)
     BIND(CONCAT(STRAFTER(STR(?property), "#"), " of ", STRAFTER(STR(?subject), "#"), " above ", STR(?high)) AS ?aboveLabel)
-} ;
-
-#  And past the ENVELOPE: below the survival floor, above the survival ceiling — each also a
-#  member of the region band it lies in, by the families' own subclass axioms.
-INSERT { GRAPH $derived {
-    ?belowFloor a owl:Class ; rdfs:subClassOf sensing:BelowFloor ; rdfs:label ?floorLabel ;
-        sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
-        owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation
-            [ a owl:Restriction ; owl:onProperty sosa:hasFeatureOfInterest ; owl:hasValue ?subject ]
-            [ a owl:Restriction ; owl:onProperty sosa:observedProperty ; owl:hasValue ?property ]
-            [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ;
-              owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ;
-                                   owl:withRestrictions ( [ xsd:maxExclusive ?floor ] ) ] ] ) ] .
-    ?aboveCeiling a owl:Class ; rdfs:subClassOf sensing:AboveCeiling ; rdfs:label ?ceilingLabel ;
-        sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
-        owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation
-            [ a owl:Restriction ; owl:onProperty sosa:hasFeatureOfInterest ; owl:hasValue ?subject ]
-            [ a owl:Restriction ; owl:onProperty sosa:observedProperty ; owl:hasValue ?property ]
-            [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ;
-              owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ;
-                                   owl:withRestrictions ( [ xsd:minExclusive ?ceiling ] ) ] ] ) ] . } }
-$given
-WHERE {
-    { SELECT ?property ?subject (MAX(?least) AS ?floor) (MIN(?most) AS ?ceiling) WHERE {
-        ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?need .
-        ?need ssn:forProperty ?property .
-        { ?subject ssn-system:hasSurvivalRange ?envelope }
-        UNION
-        { ?instrument sensing:monitors ?subject ; ssn-system:hasSurvivalRange ?envelope }
-        ?envelope ssn-system:inCondition ?tolerated .
-        ?tolerated ssn:forProperty ?property ; schema:minValue ?least ; schema:maxValue ?most .
-      } GROUP BY ?property ?subject }
-    BIND(CONCAT("http://example.org/orexis#band.", ENCODE_FOR_URI(STRAFTER(STR(?subject), "#")), ".",
-                ENCODE_FOR_URI(STRAFTER(STR(?property), "#"))) AS ?stem)
-    BIND(IRI(CONCAT(?stem, ".belowFloor")) AS ?belowFloor)
-    BIND(IRI(CONCAT(?stem, ".aboveCeiling")) AS ?aboveCeiling)
-    BIND(CONCAT(STRAFTER(STR(?property), "#"), " of ", STRAFTER(STR(?subject), "#"), " below the floor ", STR(?floor)) AS ?floorLabel)
-    BIND(CONCAT(STRAFTER(STR(?property), "#"), " of ", STRAFTER(STR(?subject), "#"), " above the ceiling ", STR(?ceiling)) AS ?ceilingLabel)
 }
-
