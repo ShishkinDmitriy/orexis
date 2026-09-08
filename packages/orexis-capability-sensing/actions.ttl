@@ -45,7 +45,7 @@ sensing:Observing
     #  (a-lever-an-agent-cannot-pull-is-not-a-lever). DISTINCT because a region carries three
     #  property shapes and all three are wants. Reads the whole default graph: wiring is public.
     orexis:available """
-        SELECT DISTINCT ?want ?via ?direction WHERE {
+        SELECT DISTINCT ?want ?about ?via ?direction WHERE {
           VALUES (?want ?about) { $wants }
           $me sensing:mayAsk ?via .
           ?via sensing:monitors ?subject ; sosa:observes ?property .

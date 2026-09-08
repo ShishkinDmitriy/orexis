@@ -1,0 +1,55 @@
+@prefix : <http://example.org/orexis/greenhouse#> .
+@prefix greenhouse: <http://example.org/orexis/greenhouse#> .
+@prefix orexis:    <http://example.org/orexis#> .
+@prefix owl:       <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:       <http://www.w3.org/2001/XMLSchema#> .
+@prefix sosa:      <http://www.w3.org/ns/sosa/> .
+
+greenhouse: a owl:Ontology ;
+    rdfs:label "the heated bed" ;
+    rdfs:comment """A bed with two properties and two levers, and one want across both.
+
+Every world before this one holds wants about a single property: a pot is dry, a butt is low,
+a van is somewhere. A bed is comfortable when its SOIL is in its region and its AIR is too,
+which is one want two different levers serve — the pump for the first, a heater for the second
+— and it is the first shipped want whose plan needs a step from each.
+
+That makes this world the case for two things the records argue about and no world could
+measure. A want's plan across two halves that do not touch: what it costs to search them
+together rather than apart. And a lever that reaches from one half into the other — a heater
+that dries the soil — which is the knob below, and which turns two halves into one.
+
+The heater is KNOWLEDGE-ONLY: nothing takes it, so it is planned and never executed, as
+hanoi's Move is. What is measured here is the search.""" .
+
+#################  The heater  #################
+
+#  NOT a `sosa:Actuator`: actuation's shapes hold every actuator to being a valve — what it
+#  actuates, what it draws from, its cap in millilitres — and a heater has none of those. It
+#  is a lever of its own kind, wired by this package's own two predicates.
+:Heater a owl:Class ;
+    rdfs:label "heater" ;
+    rdfs:comment "A lever that warms what it is pointed at. A world states which subject and which property, because a heater over a bed and a heater in a room warm different things and the action must join through the world rather than assume." .
+
+:hasHeater a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range :Heater ;
+    rdfs:label "has heater" ;
+    rdfs:comment "The heaters an agent may switch on — its half of the wiring, as `actuation:hasActuator` is for a valve." .
+
+:warms a owl:ObjectProperty ; rdfs:domain :Heater ; rdfs:range sosa:FeatureOfInterest ;
+    rdfs:label "warms" ;
+    rdfs:comment "What this heater is pointed at: the bed whose air it moves. The other half of the wiring, and what makes the action available to whoever acts for that subject." .
+
+:warmsProperty a owl:ObjectProperty ; rdfs:domain :Heater ; rdfs:range sosa:ObservableProperty ;
+    rdfs:label "warms property" ;
+    rdfs:comment "WHICH property this heater moves, stated by the world rather than assumed by the action: a heater warms air here, and a rule that named the property itself would be a package naming a domain's word." .
+
+#################  The knob  #################
+
+:driesTheSoil a owl:DatatypeProperty ; rdfs:domain :Heater ; rdfs:range xsd:boolean ;
+    rdfs:label "dries the soil" ;
+    rdfs:comment "Whether running this heater also dries what it warms — evaporation, as a world fact. It is the knob this domain exists for: OFF, warming touches nothing the watering want reads and the two halves of `the bed is comfortable` are independent; ON, the heater's effect writes a reading the dosing rule reads, and a plan that warmed after watering has undone its own work. The two regimes are the same world with one triple changed, which is what makes the comparison honest." .
+
+:driesProperty a owl:ObjectProperty ; rdfs:domain :Heater ; rdfs:range sosa:ObservableProperty ;
+    rdfs:label "dries property" ;
+    rdfs:comment "Which property drying moves, where `greenhouse:driesTheSoil` is true — the soil's moisture here, stated by the world for the same reason `warmsProperty` is." .

@@ -359,9 +359,14 @@ sensing:DeducedRegionShape a sh:NodeShape ;
                 ?this sh:targetNode ?about .
             }
         """ ] ;
+    #  ONE OR MORE, not exactly one (#566): a deduced region shape is about one property, and
+    #  a world may ratify a shape about SEVERAL — a greenhouse bed is comfortable when its soil
+    #  and its air are both in their ranges, which is one want two levers serve. What the gate
+    #  is for survives unchanged: a shape about an agent's state must say what it is about, and
+    #  one that says nothing is the failure this catches.
     sh:property [ sh:path <http://www.w3.org/ns/ssn/forProperty> ;
-                  sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
-                  sh:message "a deduced shape must say which property it is about" ] ;
+                  sh:minCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "a shape about an agent's state must say which property or properties it is about" ] ;
     # The envelope has to be OUTSIDE the region, on both sides, or the arithmetic that scales
     # urgency by it produces a negative denominator and an agent that is most relaxed exactly
     # where it is closest to dying. Nothing authored can cause this directly — both figures are

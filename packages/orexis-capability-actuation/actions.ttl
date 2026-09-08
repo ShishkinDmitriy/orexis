@@ -43,7 +43,7 @@ actuation:Dosing
     #  NOT EXISTS is the rule that keeps the rung honest: the market is about the resource, not
     #  the lever, so a pot-local pump on the shared barrel yields Acquire and only Acquire.
     orexis:available """
-        SELECT DISTINCT ?want ?via ?direction WHERE {
+        SELECT DISTINCT ?want ?about ?via ?direction WHERE {
           VALUES (?want ?about) { $wants }
           $me orexis:actsFor ?subject .
           $me actuation:hasActuator ?via .

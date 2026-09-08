@@ -876,11 +876,14 @@ class Planner:
         predicates and only its key says which property it is of."""
         if self._view is None:
             return frozenset(facts)
-        about = self._about_of.get(getattr(self, "_desire_uri", None))
+        #  WHATEVER THE WANT IS ABOUT, and a want may be about several things (#566): a
+        #  reading is in the view when its key names any of them, so a bed's comfort keeps
+        #  both its soil and its air and still drops a neighbour's.
+        about = self._about_of.get(getattr(self, "_desire_uri", None)) or ()
         out = set()
         for f in facts:
             if f[0] == "keyed":
-                if about is None or any(v == about for _, v in f[2]):
+                if not about or any(v in about for _, v in f[2]):
                     out.add(f)
             elif f[1] in self._view:
                 out.add(f)

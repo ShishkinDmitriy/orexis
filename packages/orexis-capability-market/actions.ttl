@@ -66,7 +66,7 @@ market:Acquiring
     #  the domain, because it is physics. The valuation joins through the venue's good (#198):
     #  property alone put both directions on both rows the day two venues priced one property.
     orexis:available """
-        SELECT DISTINCT ?want ?via ?direction WHERE {
+        SELECT DISTINCT ?want ?about ?via ?direction WHERE {
           VALUES (?want ?about) { $wants }
           $me orexis:actsFor ?subject .
           $me market:bidsIn ?via .
