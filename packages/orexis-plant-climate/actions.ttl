@@ -1,0 +1,196 @@
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix orexis:     <http://example.org/orexis#> .
+@prefix sosa:       <http://www.w3.org/ns/sosa/> .
+@prefix sensing:    <http://example.org/orexis/sensing#> .
+@prefix climate: <http://example.org/orexis/climate#> .
+
+#################  What HEATING makes true  #################
+#
+#  The second lever of a bed's comfort, and the first action in this repository that exists to
+#  be planned beside another rather than instead of it. Watering brings the soil into its
+#  region; this brings the air into its. One want asks for both, so a plan is a dose and a
+#  heating, and neither serves the other's half.
+#
+#  WHAT IT DECLARES is the band, as every effect does since #579: the air reading becomes an
+#  InRegion one of this bed's air property. How long the heater runs to get there is nobody's
+#  business here — there is no taker, and if there were, it would size the run from the reading
+#  in hand, as the actuator sizes a dose.
+#
+#  WHICH PROPERTY is the WORLD's to say (`climate:warmsProperty`). A rule naming the air
+#  temperature itself would be a package spelling a domain's word, which rule 1 forbids and
+#  which would make this heater useless over anything but a plant world's air.
+
+climate:Heating
+    a orexis:Action ;
+
+    rdfs:label "what warming makes true" ;
+
+    #  AVAILABLE where I act for the subject a heater of mine warms, and the want in hand is
+    #  about the property that heater moves. A want about two properties offers a row per
+    #  property (#566); this matches the air one and actuation's Dosing matches the soil one,
+    #  which is the whole of how one want reaches two levers.
+    orexis:available """
+        SELECT DISTINCT ?want ?about ?via WHERE {
+          VALUES (?want ?about) { $wants }
+          $me orexis:actsFor ?subject .
+          $me climate:hasHeater ?via .
+          ?via climate:warms ?subject ;
+               climate:warmsProperty ?about .
+        }""" ;
+
+    #  THE BAND IT REACHES, and — where the world says this heater dries what it warms — the
+    #  band the SOIL falls into while it does. That second half is the knob
+    #  (`climate:driesTheSoil`): with it absent, warming writes one reading and touches
+    #  nothing the watering half of the want reads; with it present, warming writes a reading
+    #  the dosing rule reads, and a plan that heats after dosing has undone its own dose.
+    #
+    #  A READING MUST STAND for either half, as it must for a dose (#579): a rule that yields a
+    #  reading where none exists fabricates one, and a world that knows where the bed is scores
+    #  better than one that does not — so warming would look like a way to find out how warm it
+    #  is. A look comes first.
+    sh:construct """
+        CONSTRUCT {
+            ?obs a sosa:Observation , ?warm ;
+                 sosa:hasFeatureOfInterest $subject ;
+                 sosa:observedProperty $about ;
+                 sosa:resultTime ?now .
+            ?dry a sosa:Observation , ?parched ;
+                 sosa:hasFeatureOfInterest $subject ;
+                 sosa:observedProperty ?soil ;
+                 sosa:resultTime ?now .
+        } WHERE {
+            $me orexis:actsFor $subject ; climate:hasHeater ?heater .
+            ?heater climate:warms $subject ; climate:warmsProperty $about .
+            GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
+                                     sosa:observedProperty $about }
+            ?warm rdfs:subClassOf sensing:InRegion ;
+                  sensing:ofSubject $subject ; sensing:ofProperty $about .
+            OPTIONAL {
+                ?heater climate:driesTheSoil true ;
+                        climate:driesProperty ?soil .
+                GRAPH $state { ?wet sosa:hasFeatureOfInterest $subject ;
+                                    sosa:observedProperty ?soil }
+                ?parched rdfs:subClassOf sensing:BelowRegion ;
+                         sensing:ofSubject $subject ; sensing:ofProperty ?soil .
+                BIND(BNODE() AS ?dry)
+            }
+            BIND(BNODE() AS ?obs)
+            BIND(NOW() AS ?now)
+        }""" ;
+
+    #  WHEN IT LANDS: instantly, as far as this domain can say. A heater with a taker would
+    #  state the minutes its run takes, from the same premises its size comes from; there is
+    #  no taker, and a number invented here would be a claim about a device nobody has.
+    orexis:landsAfter """
+        SELECT (0 AS ?seconds) WHERE { }""" ;
+
+    #  The readings it replaces — the air's always, the soil's only where the knob is on, by
+    #  the same guard the construct uses: a bed that is not dried must not lose its moisture
+    #  reading to a heating that never touched it.
+    orexis:retracts """
+        CONSTRUCT { ?obs ?p ?o } WHERE {
+            $me orexis:actsFor $subject ; climate:hasHeater ?heater .
+            ?heater climate:warms $subject .
+            {
+                ?heater climate:warmsProperty ?moved .
+            } UNION {
+                ?heater climate:driesTheSoil true ; climate:driesProperty ?moved .
+            }
+            GRAPH $state {
+                ?obs sosa:hasFeatureOfInterest $subject ;
+                     sosa:observedProperty ?moved ;
+                     ?p ?o
+            }
+        }""" .
+
+#################  What VENTING makes true  #################
+#
+#  THE FIRST EFFECT WHOSE OUTCOME IS THE WORLD'S TO DECIDE. A heater warms, always; opening a
+#  window does whatever the other side is doing. Open onto a warm afternoon and the bed's air
+#  rises into its region; open onto a cold night and it falls below it. The act is the same and
+#  the outcome is not, so the rule reads what is outside and says which of the bed's own bands
+#  the bed would land in.
+#
+#  WHY IT MAY READ A NUMBER, when a possible world states what a reading IS and not what it
+#  measures (#579). What the rule reads is the OUTSIDE's reading, and no lever of this agent
+#  moves it: it is the same number at the root of a cone and at every leaf, so reading it is
+#  reading a constant of the plan rather than a value a step might have changed. What the plan
+#  CAN change — the bed's own air — this rule reads as the band it is, and never as a number.
+#
+#  WHICH BAND: the one whose facets the outside reading satisfies. The bands are the BED's, so
+#  this asks "where would the bed be, if it were as warm as out there" — which is the whole
+#  meaning of opening a window, in the domain's own words.
+#
+#  WHAT IT DOES NOT MODEL, and the seam is worth naming rather than papering over: the outside
+#  at the moment the vent is OPENED, which is not the moment the plan is made. A plan that
+#  opens a vent six hours out is simulated against the outside as it is now, and if the sun has
+#  set by then the world answers otherwise and the keeper's verdict says so. That is the world
+#  verifying a plan rather than a search predicting one; what it costs is a wasted step, and
+#  what would close it is a rule that can read the clock its step lands at.
+
+climate:Venting
+    a orexis:Action ;
+
+    rdfs:label "what opening a vent makes true" ;
+
+    orexis:available """
+        SELECT DISTINCT ?want ?about ?via WHERE {
+          VALUES (?want ?about) { $wants }
+          $me orexis:actsFor ?subject .
+          $me climate:hasVent ?via .
+          ?via climate:ventilates ?subject ;
+               climate:ventilatesProperty ?about .
+        }""" ;
+
+    sh:construct """
+        CONSTRUCT {
+            ?obs a sosa:Observation , ?band ;
+                 sosa:hasFeatureOfInterest $subject ;
+                 sosa:observedProperty $about ;
+                 sosa:resultTime ?now .
+        } WHERE {
+            $me orexis:actsFor $subject ; climate:hasVent ?vent .
+            ?vent climate:ventilates $subject ;
+                  climate:ventilatesProperty $about ;
+                  climate:opensOnto ?outside .
+            #  A READING MUST STAND on both sides: the bed's, so the vent does not fabricate
+            #  one where the property was never read (#579), and the outside's, since without
+            #  it nothing says which way opening would move things — and guessing is what an
+            #  agent must not do about a world it can see.
+            GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
+                                     sosa:observedProperty $about .
+                           ?out sosa:hasFeatureOfInterest ?outside ;
+                                sosa:observedProperty $about ;
+                                sosa:hasSimpleResult ?there }
+            #  THE BAND THE OUTSIDE FALLS IN, by the SUBJECT's own ranges: where the bed would
+            #  be if it were as warm as out there. Its facets are the band's definition, which
+            #  genesis minted from the range the bed states.
+            ?band sensing:ofSubject $subject ; sensing:ofProperty $about ;
+                  owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
+            ?r owl:onProperty sosa:hasSimpleResult ;
+               owl:someValuesFrom/owl:withRestrictions ?facets .
+            FILTER NOT EXISTS { ?facets rdf:rest*/rdf:first/xsd:minInclusive ?lo  . FILTER(?there <  ?lo) }
+            FILTER NOT EXISTS { ?facets rdf:rest*/rdf:first/xsd:minExclusive ?lo2 . FILTER(?there <= ?lo2) }
+            FILTER NOT EXISTS { ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?hi  . FILTER(?there >  ?hi) }
+            FILTER NOT EXISTS { ?facets rdf:rest*/rdf:first/xsd:maxExclusive ?hi2 . FILTER(?there >= ?hi2) }
+            BIND(BNODE() AS ?obs)
+            BIND(NOW() AS ?now)
+        }""" ;
+
+    #  Instantly, as far as this domain can say — the same honesty the heater's landing has,
+    #  and for the same reason: there is no device, so a number here would be a claim about
+    #  hardware nobody has built.
+    orexis:landsAfter """
+        SELECT (0 AS ?seconds) WHERE { }""" ;
+
+    orexis:retracts """
+        CONSTRUCT { ?obs ?p ?o } WHERE {
+            $me orexis:actsFor $subject ; climate:hasVent ?vent .
+            ?vent climate:ventilates $subject ; climate:ventilatesProperty ?moved .
+            GRAPH $state {
+                ?obs sosa:hasFeatureOfInterest $subject ;
+                     sosa:observedProperty ?moved ;
+                     ?p ?o
+            }
+        }""" .

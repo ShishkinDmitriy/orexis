@@ -4,7 +4,7 @@ Every world before this holds wants about a single property. A bed is comfortabl
 soil is in the range the bed states AND its air is, which is ONE want two different levers
 serve — the pump for the soil, a heater for the air — so its plan takes a step from each.
 
-The knob is `heating:driesTheSoil`, one triple on the heater. Off, warming touches nothing
+The knob is `climate:driesTheSoil`, one triple on the heater. Off, warming touches nothing
 the watering half of the want reads. On, warming writes a reading the dosing rule reads, and
 the two halves stop being independent — which the search discovers on its own, by planning
 them the other way round.
@@ -22,24 +22,31 @@ from orexis_agent_deliberation.planner import Planner
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 AIR = "http://example.org/orexis/water#AirTemperature"
 STORED = "http://example.org/orexis/water#StoredLitres"
-HEATING_NS = "http://example.org/orexis/heating#"
+CLIMATE = "http://example.org/orexis/climate#"
 WORLD = "http://example.org/orexis/world/greenhouse#"
 DOSING = "http://example.org/orexis/actuation#Dosing"
-HEATING = HEATING_NS + "Heating"
+HEATING = CLIMATE + "Heating"
+VENTING = CLIMATE + "Venting"
 COMFORT = WORLD + "the_bed_is_comfortable"
 
 
-def _grower(monkeypatch, dries=False, moisture=0.20, air=12.0):
+def _grower(monkeypatch, dries=False, moisture=0.20, air=12.0, outside=8.0, heater=True):
     """A cold, dry bed, and whether its heater dries what it warms. The two regimes are the
-    same world one triple apart, which is what makes comparing them honest."""
+    same world one triple apart, which is what makes comparing them honest. `outside` is the
+    air on the other side of the vent — a fact no lever of this agent moves — and `heater`
+    takes the heater away, which leaves the vent as the only lever the air has."""
     monkeypatch.setenv("OREXIS_WORLD", "greenhouse")
     monkeypatch.setenv("INFLUX_BUCKET", "test-greenhouse")
     monkeypatch.setenv("INFLUX_TOKEN", "test-token-greenhouse")
     st = genesis_store({("bed", MOISTURE): moisture, ("bed", AIR): air,
+                        ("outside", AIR): outside,
                         ("water_butt", STORED): 15.0}, world="greenhouse")
+    if not heater:
+        st.update(f"""DELETE DATA {{ GRAPH <http://example.org/orexis/graph/world> {{
+            <{WORLD}grower> <{CLIMATE}hasHeater> <{WORLD}heater> }} }}""")
     if dries:
         st.update(f"""INSERT DATA {{ GRAPH <http://example.org/orexis/graph/world> {{
-            <{WORLD}heater> <{HEATING_NS}driesTheSoil> true }} }}""")
+            <{WORLD}heater> <{CLIMATE}driesTheSoil> true }} }}""")
     genesis.classify_own_graphs(st, "grower")
     return runtime.Agent("grower", st=st), st
 
@@ -120,3 +127,58 @@ def test_the_warm_half_alone_is_planned_when_only_the_air_is_cold(monkeypatch):
     agent, _ = _grower(monkeypatch, moisture=0.45, air=12.0)
     plan = Planner(agent, agent.me).plan(_comfort(agent))
     assert [s.action for s in plan.steps] == [HEATING]
+
+
+# --- the vent: one act, and the world decides what it does ---------------------
+
+def test_the_same_venting_reaches_a_different_band_for_each_outside(monkeypatch):
+    """THE FIRST EFFECT WHOSE OUTCOME IS THE WORLD'S. A heater warms, always. Opening a vent
+    does whatever the other side is doing, so the same act declares a different band per
+    outside reading: warm out and the bed lands in its region, cold out and it lands below,
+    hot out and above. Nothing about the act changed between these three.
+
+    Asked of the RULE rather than of a plan, because what is under test is the declaration."""
+    from orexis_agent_deliberation import effects
+    from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
+    reached = {}
+    for outside in (21.0, 5.0, 30.0):
+        agent, _ = _grower(monkeypatch, air=12.0, outside=outside)
+        added, retracted = effects.apply(
+            agent.beliefs, VENTING, me=f"<{agent.me.uri}>", subject=f"<{agent.me.acts_for}>",
+            about=f"<{AIR}>", state=f"<{STATE_GRAPH}>",
+            beliefs=f"<{beliefs_graph('grower')}>", litres="0.0")
+        reached[outside] = sorted(t.object.value.rsplit(".", 1)[-1] for t in added
+                                  if t.predicate.value.endswith("#type") and "band." in t.object.value)
+        assert retracted, "and it replaces the reading it moves, as every reading-mover does"
+    assert reached == {21.0: ["inside"], 5.0: ["below"], 30.0: ["above"]}, reached
+
+
+def test_a_vent_is_planned_onto_a_warm_afternoon_and_not_onto_a_cold_night(monkeypatch):
+    """The same claim where it decides something: with the heater gone, the vent is the only
+    lever the bed's air has. Onto a warm afternoon it is the plan. Onto a cold night it makes
+    the bed colder, so it reaches no better world and the search answers that nothing helps —
+    which is the honest answer rather than a shrug, and is what an agent that cannot warm
+    itself in February should say."""
+    warm, _ = _grower(monkeypatch, moisture=0.45, air=12.0, outside=21.0, heater=False)
+    assert [s.action for s in Planner(warm, warm.me).plan(_comfort(warm)).steps] == [VENTING]
+    cold, _ = _grower(monkeypatch, moisture=0.45, air=12.0, outside=5.0, heater=False)
+    plan = Planner(cold, cold.me).plan(_comfort(cold))
+    assert plan.steps == (), "opening onto a colder night is not a way to get warm"
+
+
+def test_the_outside_is_read_as_a_number_because_no_lever_moves_it(monkeypatch):
+    """Why the rule may read a number at all, in a repository whose worlds state what a reading
+    IS (#579). The outside states no range, so it mints no band and keeps its number; and no
+    lever of this agent writes it, so that number is the same at the root of a cone and at
+    every leaf. It is a constant of the plan rather than a value a step might have changed."""
+    from orexis_agent_progression.store import bindings
+    from orexis_agent_progression.ontology import STATE_GRAPH
+    agent, st = _grower(monkeypatch, outside=8.0)
+    rows = bindings(st.query(f"""
+SELECT ?c WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:hasFeatureOfInterest <{WORLD}outside> ; a ?c }}
+  FILTER(CONTAINS(STR(?c), "band.")) }}"""))
+    assert rows == [], "the outside is nobody's want, so it is in no band"
+    values = bindings(st.query(f"""
+SELECT ?v WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:hasFeatureOfInterest <{WORLD}outside> ;
+  sosa:hasSimpleResult ?v }} }}"""))
+    assert [float(r["v"]) for r in values] == [8.0], "and it keeps the number the instrument gave"

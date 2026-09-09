@@ -1,5 +1,5 @@
 @prefix :           <http://example.org/orexis/world/greenhouse#> .
-@prefix heating:    <http://example.org/orexis/heating#> .
+@prefix climate:    <http://example.org/orexis/climate#> .
 @prefix water:      <http://example.org/orexis/water#> .
 @prefix sensing:    <http://example.org/orexis/sensing#> .
 @prefix actuation:  <http://example.org/orexis/actuation#> .
@@ -78,9 +78,10 @@
 :grower a orexis:Agent ;
     orexis:localId "grower" ;
     orexis:actsFor :bed ;
-    sensing:polls :moisture_probe , :thermometer , :butt_level ;
+    sensing:polls :moisture_probe , :thermometer , :butt_level , :outdoor_thermometer ;
     actuation:hasActuator :pump ;
-    heating:hasHeater :heater .
+    climate:hasHeater :heater ;
+    climate:hasVent :vent .
 
 :moisture_probe a sosa:Sensor ;
     orexis:localId "moisture_probe" ;
@@ -131,13 +132,42 @@
     mqtt:statusTopic "actuators/pump/status" ;
     actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 500.0 .
 
-#  THE HEATER, and THE KNOB. `heating:driesTheSoil` is absent here, so warming touches
+#  THE OUTSIDE, and the vent that opens onto it. The outside is a subject like any other and
+#  states no range: nothing wants it to be anything, so it mints no band and its reading stays
+#  a number — which is exactly what the venting rule needs, since no lever of this agent moves
+#  it and it is therefore the same number at every node of a cone.
+:outside a sosa:FeatureOfInterest ;
+    orexis:localId "outside" ;
+    rdfs:label "the air outside the greenhouse" .
+
+:outdoor_thermometer a sosa:Sensor ;
+    orexis:localId "outdoor_thermometer" ;
+    mqtt:onBus :local_bus ;
+    sensing:senseMode sensing:ScheduledProcedure ;
+    sensing:monitors :outside ;
+    sosa:observes water:AirTemperature ;
+    scaling:quantityUnit unit:DEG_C ;
+    mqtt:readingTopic "sensors/outdoor_thermometer/reading" ;
+    mqtt:commandTopic "sensors/outdoor_thermometer/command" ;
+    sim:simulatedBy [ a sim:Model ;
+        sim:minValue -20.0 ; sim:maxValue 45.0 ;
+        sim:initialValue 8.0 ;
+        sim:tickSeconds 3 ] .
+
+:vent a climate:Vent ;
+    orexis:localId "vent" ; mqtt:onBus :local_bus ;
+    climate:ventilates :bed ;
+    climate:ventilatesProperty water:AirTemperature ;
+    climate:opensOnto :outside ;
+    mqtt:commandTopic "actuators/vent/command" .
+
+#  THE HEATER, and THE KNOB. `climate:driesTheSoil` is absent here, so warming touches
 #  nothing the watering half of the want reads and the two halves are independent. A test
 #  adds the one triple to get the other regime, which is what makes the comparison honest:
 #  the same world, one fact apart.
-:heater a heating:Heater ;
+:heater a climate:Heater ;
     orexis:localId "heater" ; mqtt:onBus :local_bus ;
-    heating:warms :bed ;
-    heating:warmsProperty water:AirTemperature ;
-    heating:driesProperty water:SoilMoisture ;
+    climate:warms :bed ;
+    climate:warmsProperty water:AirTemperature ;
+    climate:driesProperty water:SoilMoisture ;
     mqtt:commandTopic "actuators/heater/command" .

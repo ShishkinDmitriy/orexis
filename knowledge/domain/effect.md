@@ -110,3 +110,22 @@ world in which such a means puts a row on some agent's menu. Most means never do
 
 What a search must NOT do is conclude from a partial menu. A plan that passed over any lever is
 marked partial and defers, because the lever it could not simulate may be the one that works.
+
+# An outcome the world decides
+
+A dose reaches the region because water wets soil. Opening a **vent** reaches whichever band the
+outside is in: the same act warms a bed on an afternoon and chills it on a night, so its rule
+reads what is on the other side and declares the band that implies (`world/greenhouse`).
+
+It is the first shipped effect whose declared outcome depends on a fact the agent cannot move,
+and that is exactly what makes it expressible. A rule may read the OUTSIDE as a number even
+though a possible world states what a reading IS rather than what it measures
+([band](/domain/band.md)): no lever of the agent's writes it, so it is the same number at the
+root of a cone and at every leaf — a constant of the plan rather than something a step might
+have changed. What the plan CAN change, the rule reads as the band it is.
+
+**The seam it leaves is time.** The outside at the moment a vent is opened is not the outside at
+the moment the plan was made, and a plan that opens a vent after dark is simulated against the
+afternoon. The world answers otherwise, the keeper's verdict says so, and the next pass replans
+— the cost is a wasted step. Closing it would mean a rule that can read the clock its own step
+lands at, which nothing gives it today.

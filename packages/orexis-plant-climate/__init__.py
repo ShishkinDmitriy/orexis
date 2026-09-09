@@ -5,7 +5,7 @@ its soil is in its region and its air is too — which is the first shipped want
 cannot serve. Watering is actuation's, unchanged; warming is this package's one action.
 
 KNOWLEDGE-ONLY, and the heater is deliberately un-taken: nothing contributes
-`heating:Heating`, so it is planned and never executed, exactly as hanoi's Move is. What
+`climate:Heating`, so it is planned and never executed, exactly as hanoi's Move is. What
 this world is for is the SEARCH — how a want across two properties is planned, what it costs,
 and what happens when one lever's effect reaches into the other property.
 """
