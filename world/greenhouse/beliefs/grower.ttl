@@ -1,5 +1,5 @@
 @prefix :            <http://example.org/orexis/world/greenhouse#> .
-@prefix greenhouse:  <http://example.org/orexis/greenhouse#> .
+@prefix heating:  <http://example.org/orexis/greenhouse#> .
 @prefix sensing:     <http://example.org/orexis/sensing#> .
 @prefix water:       <http://example.org/orexis/water#> .
 @prefix actuation:   <http://example.org/orexis/actuation#> .

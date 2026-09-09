@@ -533,8 +533,17 @@ class Agent:
 
 
 def main() -> None:
+    #  THE LEVEL IS THE OPERATOR'S, and INFO where they say nothing. Every subsystem has a
+    #  logger of its own — the search, the reviser, the ledger, the loop, and one per agent
+    #  and module — and until this they could only be turned up by editing code, which is not
+    #  something anyone does to a running society. `OREXIS_LOG_LEVEL=DEBUG` turns them all up;
+    #  a name the library does not know is refused loudly rather than silently ignored, since
+    #  a typo that quietly left an operator at INFO is the failure this repo keeps closing.
+    level = (config.env("OREXIS_LOG_LEVEL") or "INFO").upper()
+    if not isinstance(logging.getLevelName(level), int):
+        raise SystemExit(f"OREXIS_LOG_LEVEL={level!r} is not a level — try DEBUG, INFO or WARNING")
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s %(levelname)-7s %(name)s: %(message)s"
+        level=level, format="%(asctime)s %(levelname)-7s %(name)s: %(message)s"
     )
     agent_id = config.env("OREXIS_AGENT_ID")
     if not agent_id:

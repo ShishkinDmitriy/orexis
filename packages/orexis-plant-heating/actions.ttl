@@ -3,7 +3,7 @@
 @prefix orexis:     <http://example.org/orexis#> .
 @prefix sosa:       <http://www.w3.org/ns/sosa/> .
 @prefix sensing:    <http://example.org/orexis/sensing#> .
-@prefix greenhouse: <http://example.org/orexis/greenhouse#> .
+@prefix heating: <http://example.org/orexis/heating#> .
 
 #################  What HEATING makes true  #################
 #
@@ -17,11 +17,11 @@
 #  business here — there is no taker, and if there were, it would size the run from the reading
 #  in hand, as the actuator sizes a dose.
 #
-#  WHICH PROPERTY is the WORLD's to say (`greenhouse:warmsProperty`). A rule naming the air
+#  WHICH PROPERTY is the WORLD's to say (`heating:warmsProperty`). A rule naming the air
 #  temperature itself would be a package spelling a domain's word, which rule 1 forbids and
 #  which would make this heater useless over anything but a plant world's air.
 
-greenhouse:Heating
+heating:Heating
     a orexis:Action ;
 
     rdfs:label "what warming makes true" ;
@@ -34,14 +34,14 @@ greenhouse:Heating
         SELECT DISTINCT ?want ?about ?via WHERE {
           VALUES (?want ?about) { $wants }
           $me orexis:actsFor ?subject .
-          $me greenhouse:hasHeater ?via .
-          ?via greenhouse:warms ?subject ;
-               greenhouse:warmsProperty ?about .
+          $me heating:hasHeater ?via .
+          ?via heating:warms ?subject ;
+               heating:warmsProperty ?about .
         }""" ;
 
     #  THE BAND IT REACHES, and — where the world says this heater dries what it warms — the
     #  band the SOIL falls into while it does. That second half is the knob
-    #  (`greenhouse:driesTheSoil`): with it absent, warming writes one reading and touches
+    #  (`heating:driesTheSoil`): with it absent, warming writes one reading and touches
     #  nothing the watering half of the want reads; with it present, warming writes a reading
     #  the dosing rule reads, and a plan that heats after dosing has undone its own dose.
     #
@@ -60,15 +60,15 @@ greenhouse:Heating
                  sosa:observedProperty ?soil ;
                  sosa:resultTime ?now .
         } WHERE {
-            $me orexis:actsFor $subject ; greenhouse:hasHeater ?heater .
-            ?heater greenhouse:warms $subject ; greenhouse:warmsProperty $about .
+            $me orexis:actsFor $subject ; heating:hasHeater ?heater .
+            ?heater heating:warms $subject ; heating:warmsProperty $about .
             GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
                                      sosa:observedProperty $about }
             ?warm rdfs:subClassOf sensing:InRegion ;
                   sensing:ofSubject $subject ; sensing:ofProperty $about .
             OPTIONAL {
-                ?heater greenhouse:driesTheSoil true ;
-                        greenhouse:driesProperty ?soil .
+                ?heater heating:driesTheSoil true ;
+                        heating:driesProperty ?soil .
                 GRAPH $state { ?wet sosa:hasFeatureOfInterest $subject ;
                                     sosa:observedProperty ?soil }
                 ?parched rdfs:subClassOf sensing:BelowRegion ;
@@ -90,12 +90,12 @@ greenhouse:Heating
     #  reading to a heating that never touched it.
     orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
-            $me orexis:actsFor $subject ; greenhouse:hasHeater ?heater .
-            ?heater greenhouse:warms $subject .
+            $me orexis:actsFor $subject ; heating:hasHeater ?heater .
+            ?heater heating:warms $subject .
             {
-                ?heater greenhouse:warmsProperty ?moved .
+                ?heater heating:warmsProperty ?moved .
             } UNION {
-                ?heater greenhouse:driesTheSoil true ; greenhouse:driesProperty ?moved .
+                ?heater heating:driesTheSoil true ; heating:driesProperty ?moved .
             }
             GRAPH $state {
                 ?obs sosa:hasFeatureOfInterest $subject ;

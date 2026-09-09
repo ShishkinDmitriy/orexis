@@ -1,0 +1,25 @@
+# orexis-plant-heating
+#
+# A package is a PROJECT, and its DIRECTORY IS ITS NAME. The family is the second segment —
+# `plant` — stated here and nowhere else, beside `orexis-plant-water`: this domain's second
+# vocabulary, for the warmth a bed needs as water is for its soil. Knowledge-only, and its one
+# action is un-taken, so it is planned and never executed.
+[project]
+name = "orexis-plant-heating"
+version = "0.1.0"
+description = "Warmth: what a heater is, what it moves, and whether warming dries what it warms"
+requires-python = ">=3.10"
+dependencies = [
+    "orexis",  # assembly (the manifest)
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["orexis_plant_heating"]
+package-dir = {"orexis_plant_heating" = "."}
+
+[tool.setuptools.package-data]
+"orexis_plant_heating" = ["*.ttl", "*.ru", "*.rq"]

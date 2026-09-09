@@ -1,5 +1,5 @@
 @prefix :           <http://example.org/orexis/world/greenhouse#> .
-@prefix greenhouse: <http://example.org/orexis/greenhouse#> .
+@prefix heating:    <http://example.org/orexis/heating#> .
 @prefix water:      <http://example.org/orexis/water#> .
 @prefix sensing:    <http://example.org/orexis/sensing#> .
 @prefix actuation:  <http://example.org/orexis/actuation#> .
@@ -80,7 +80,7 @@
     orexis:actsFor :bed ;
     sensing:polls :moisture_probe , :thermometer , :butt_level ;
     actuation:hasActuator :pump ;
-    greenhouse:hasHeater :heater .
+    heating:hasHeater :heater .
 
 :moisture_probe a sosa:Sensor ;
     orexis:localId "moisture_probe" ;
@@ -131,13 +131,13 @@
     mqtt:statusTopic "actuators/pump/status" ;
     actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 500.0 .
 
-#  THE HEATER, and THE KNOB. `greenhouse:driesTheSoil` is absent here, so warming touches
+#  THE HEATER, and THE KNOB. `heating:driesTheSoil` is absent here, so warming touches
 #  nothing the watering half of the want reads and the two halves are independent. A test
 #  adds the one triple to get the other regime, which is what makes the comparison honest:
 #  the same world, one fact apart.
-:heater a greenhouse:Heater ;
+:heater a heating:Heater ;
     orexis:localId "heater" ; mqtt:onBus :local_bus ;
-    greenhouse:warms :bed ;
-    greenhouse:warmsProperty water:AirTemperature ;
-    greenhouse:driesProperty water:SoilMoisture ;
+    heating:warms :bed ;
+    heating:warmsProperty water:AirTemperature ;
+    heating:driesProperty water:SoilMoisture ;
     mqtt:commandTopic "actuators/heater/command" .

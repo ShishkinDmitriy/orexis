@@ -1,27 +1,27 @@
-@prefix : <http://example.org/orexis/greenhouse#> .
-@prefix greenhouse: <http://example.org/orexis/greenhouse#> .
+@prefix : <http://example.org/orexis/heating#> .
+@prefix heating: <http://example.org/orexis/heating#> .
 @prefix orexis:    <http://example.org/orexis#> .
 @prefix owl:       <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:       <http://www.w3.org/2001/XMLSchema#> .
 @prefix sosa:      <http://www.w3.org/ns/sosa/> .
 
-greenhouse: a owl:Ontology ;
-    rdfs:label "the heated bed" ;
-    rdfs:comment """A bed with two properties and two levers, and one want across both.
+heating: a owl:Ontology ;
+    rdfs:label "warmth" ;
+    rdfs:comment """What a heater is, what it moves, and whether warming dries what it warms.
 
-Every world before this one holds wants about a single property: a pot is dry, a butt is low,
-a van is somewhere. A bed is comfortable when its SOIL is in its region and its AIR is too,
-which is one want two different levers serve — the pump for the first, a heater for the second
-— and it is the first shipped want whose plan needs a step from each.
+This domain's SECOND vocabulary, beside `water:`. Water says what a plant's soil needs and what
+a litre does to it; this says the same for warmth — a lever that raises a temperature, the
+subject and the property it is pointed at, and the one thing warming may do besides warm.
 
-That makes this world the case for two things the records argue about and no world could
-measure. A want's plan across two halves that do not touch: what it costs to search them
-together rather than apart. And a lever that reaches from one half into the other — a heater
-that dries the soil — which is the knob below, and which turns two halves into one.
+Every term here is the world's to state. A heater over a bed and a heater in a room warm
+different things, so the action joins through `heating:warms` and `heating:warmsProperty`
+rather than assuming either; and whether running it dries what it warms is a fact about THAT
+heater in THAT world, not about heating.
 
-The heater is KNOWLEDGE-ONLY: nothing takes it, so it is planned and never executed, as
-hanoi's Move is. What is measured here is the search.""" .
+The one action is UN-TAKEN: nothing contributes it, so it is planned and never executed, as
+hanoi's Move is. A taker would size the run from the reading in hand, as an actuator sizes a
+dose, and there is no such device here yet.""" .
 
 #################  The heater  #################
 
@@ -52,4 +52,4 @@ hanoi's Move is. What is measured here is the search.""" .
 
 :driesProperty a owl:ObjectProperty ; rdfs:domain :Heater ; rdfs:range sosa:ObservableProperty ;
     rdfs:label "dries property" ;
-    rdfs:comment "Which property drying moves, where `greenhouse:driesTheSoil` is true — the soil's moisture here, stated by the world for the same reason `warmsProperty` is." .
+    rdfs:comment "Which property drying moves, where `heating:driesTheSoil` is true — the soil's moisture here, stated by the world for the same reason `warmsProperty` is." .

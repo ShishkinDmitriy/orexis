@@ -60,6 +60,13 @@ nothing to split, and is not built. The measurement is the point: it is what say
 first world that breaks it is the first one worth planning as several cones. See
 [#565](https://github.com/ShishkinDmitriy/orexis/issues/565).
 
+**The world built to break it did not, and that is the finding.** `world/greenhouse` holds one
+want about two properties, a pump that moves one and a heater that moves the other, and a world
+fact — `heating:driesTheSoil` — that makes the heater reach into the pump's property. The plan
+reorders when it is set, so the coupling is real and the search reads it. The scope count does
+not move: one, either way, because both readings carry the same predicates and differ only in a
+VALUE. That world is what will measure a scope over variables the day one is computed.
+
 # Related
 
 - [relevance](/domain/relevance.md) — the closure a want's view is built from.

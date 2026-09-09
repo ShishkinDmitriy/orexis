@@ -1,10 +1,10 @@
-"""The greenhouse: one want about two properties, and a knob that couples them (#566).
+"""world/greenhouse: one want about two properties, and a knob that couples them (#566).
 
 Every world before this holds wants about a single property. A bed is comfortable when its
 soil is in the range the bed states AND its air is, which is ONE want two different levers
 serve — the pump for the soil, a heater for the air — so its plan takes a step from each.
 
-The knob is `greenhouse:driesTheSoil`, one triple on the heater. Off, warming touches nothing
+The knob is `heating:driesTheSoil`, one triple on the heater. Off, warming touches nothing
 the watering half of the want reads. On, warming writes a reading the dosing rule reads, and
 the two halves stop being independent — which the search discovers on its own, by planning
 them the other way round.
@@ -22,10 +22,10 @@ from orexis_agent_deliberation.planner import Planner
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 AIR = "http://example.org/orexis/water#AirTemperature"
 STORED = "http://example.org/orexis/water#StoredLitres"
-GREENHOUSE = "http://example.org/orexis/greenhouse#"
+HEATING_NS = "http://example.org/orexis/heating#"
 WORLD = "http://example.org/orexis/world/greenhouse#"
 DOSING = "http://example.org/orexis/actuation#Dosing"
-HEATING = GREENHOUSE + "Heating"
+HEATING = HEATING_NS + "Heating"
 COMFORT = WORLD + "the_bed_is_comfortable"
 
 
@@ -39,7 +39,7 @@ def _grower(monkeypatch, dries=False, moisture=0.20, air=12.0):
                         ("water_butt", STORED): 15.0}, world="greenhouse")
     if dries:
         st.update(f"""INSERT DATA {{ GRAPH <http://example.org/orexis/graph/world> {{
-            <{WORLD}heater> <{GREENHOUSE}driesTheSoil> true }} }}""")
+            <{WORLD}heater> <{HEATING_NS}driesTheSoil> true }} }}""")
     genesis.classify_own_graphs(st, "grower")
     return runtime.Agent("grower", st=st), st
 

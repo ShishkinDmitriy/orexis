@@ -225,7 +225,10 @@ The roster is the ratified world, so a different world brings up a different soc
 edit anywhere — `orexis-onboard sensing` yields exactly one agent that only watches, and
 `orexis-onboard loner` a single gardener that owns both ends of its own problem.
 `OREXIS_AGENT_ID=fern orexis-agent` is still the primitive underneath; the container merely sets
-that variable.
+that variable. Turn an agent up with `OREXIS_LOG_LEVEL=DEBUG`: every subsystem keeps a logger of
+its own — the search, the reviser, the ledger, the reactive loop, and one per agent and module —
+and they follow that one setting. What the planner considered is not in the log at all: it is
+written as a trace and read back with `orexis-ask`.
 
 **One container per agent, and that is the point.** On one filesystem every agent could read
 every other agent's beliefs. Now each agent's belief base is a file in its own volume, locked
