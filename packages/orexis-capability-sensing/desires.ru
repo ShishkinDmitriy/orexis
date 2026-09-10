@@ -84,6 +84,13 @@ INSERT { GRAPH $derived {
         #  WAS a bare shape. The planner validates this shape directly and reads results at
         #  whatever severity the engine defaults to.
         sh:sparql [
+            #  THE DICTIONARY, in SHACL's own words (#508): a `sh:select` may use a prefixed
+            #  name only where the constraint points at a node carrying one `sh:declare` per
+            #  prefix, and every shape in this tree points at `orexis:` itself, which the
+            #  store assembles and travels with every shapes graph either engine is handed.
+            #  Without it the select below would have to spell every IRI in full, which is
+            #  what it did.
+            sh:prefixes orexis: ;
             sh:message ?tooOld ;
             sh:select ?staleQuery ] } }
 $given
@@ -128,11 +135,10 @@ WHERE  {
     #  NOW()` until then — the real clock, asked of every world a search imagines.
     BIND(CONCAT(
       "SELECT $this WHERE { FILTER NOT EXISTS { ",
-      "?obs <http://www.w3.org/ns/sosa/hasFeatureOfInterest> <", STR(?subject), "> ; ",
-      "<http://www.w3.org/ns/sosa/observedProperty> <", STR(?property), "> ; ",
-      "<http://www.w3.org/ns/sosa/madeBySensor> <", STR(?sensor), "> . ",
-      "FILTER NOT EXISTS { ?obs ",
-      "<http://example.org/orexis/sensing#staleSince> ?since } } }") AS ?staleQuery)
+      "?obs sosa:hasFeatureOfInterest <", STR(?subject), "> ; ",
+      "sosa:observedProperty <", STR(?property), "> ; ",
+      "sosa:madeBySensor <", STR(?sensor), "> . ",
+      "FILTER NOT EXISTS { ?obs sensing:staleSince ?since } } }") AS ?staleQuery)
 }
 ;
 

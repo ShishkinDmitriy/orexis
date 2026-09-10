@@ -66,12 +66,9 @@ from .regions import Gap, Region, aims_of, gaps_of, regions_of
 from .wiring import sensors_of
 from . import readings
 from .scaling import scaling_for
-from .terms import (INSTRUMENTS_GRAPH, ANNOTATE, BOUNDS, READING_RECORDED, URGENCY, FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S, STALE_SINCE, WATCH_LIVE,
+from .terms import (INSTRUMENTS_GRAPH, ANNOTATE, BOUNDS, READING_RECORDED, URGENCY, FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S, WATCH_LIVE,
                     SUBSCRIBING)
 from orexis_agent_progression.timer import Timer
-
-#  sosa, spelled once here for the two updates below that name it in text.
-SOSA = "http://www.w3.org/ns/sosa/"
 
 #  The measure this capability declares (a-desire-states-its-own-measure, completed): how
 #  badly an observation-backed want is unmet. OUR file, OUR namespace, OUR code — the kernel
@@ -461,12 +458,15 @@ class SensingModule(Module):
         from orexis_agent_deliberation import reviser
 
         self._staleness.pop((subject_uri, observed_property), None)
+        #  NOW() BELONGS HERE, and nowhere a search can reach it: this is the sense of time
+        #  itself, on the loop, writing down what it noticed. `tests/test_clockless.py` holds
+        #  the rules, measures and shapes deliberation evaluates to asking no clock at all.
         self.agent.beliefs.update(f"""
-INSERT {{ GRAPH <{STATE_GRAPH}> {{ ?obs <{STALE_SINCE}> ?now }} }}
+INSERT {{ GRAPH <{STATE_GRAPH}> {{ ?obs sensing:staleSince ?now }} }}
 WHERE {{ GRAPH <{STATE_GRAPH}> {{
-  ?obs <{SOSA}hasFeatureOfInterest> <{subject_uri}> ;
-       <{SOSA}observedProperty> <{observed_property}> .
-  FILTER NOT EXISTS {{ ?obs <{STALE_SINCE}> ?was }} }}
+  ?obs sosa:hasFeatureOfInterest <{subject_uri}> ;
+       sosa:observedProperty <{observed_property}> .
+  FILTER NOT EXISTS {{ ?obs sensing:staleSince ?was }} }}
   BIND(NOW() AS ?now) }}""")
         for want in self.wants_about(observed_property, subject_uri):
             if want.is_epistemic:

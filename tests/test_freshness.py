@@ -38,10 +38,9 @@ def _age_the_reading(st, hours=3, agent=None):
 
     old = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
     st.update(f"""
-        DELETE {{ GRAPH <{STATE_GRAPH}> {{ ?o <http://www.w3.org/ns/sosa/resultTime> ?t }} }}
-        INSERT {{ GRAPH <{STATE_GRAPH}> {{ ?o <http://www.w3.org/ns/sosa/resultTime>
-                 "{old}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
-        WHERE  {{ GRAPH <{STATE_GRAPH}> {{ ?o <http://www.w3.org/ns/sosa/resultTime> ?t }} }}""")
+        DELETE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:resultTime ?t }} }}
+        INSERT {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:resultTime "{old}"^^xsd:dateTime }} }}
+        WHERE  {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:resultTime ?t }} }}""")
     if agent is not None:
         #  The module re-arms from what stands, finds the horizon already gone and marks it.
         for module in agent.modules:
@@ -50,9 +49,8 @@ def _age_the_reading(st, hours=3, agent=None):
                     module.watch_staleness(sensor.subject, sensor.observes)
         return
     st.update(f"""
-        INSERT {{ GRAPH <{STATE_GRAPH}> {{
-            ?o <http://example.org/orexis/sensing#staleSince> "{old}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
-        WHERE  {{ GRAPH <{STATE_GRAPH}> {{ ?o <http://www.w3.org/ns/sosa/resultTime> ?t }} }}""")
+        INSERT {{ GRAPH <{STATE_GRAPH}> {{ ?o sensing:staleSince "{old}"^^xsd:dateTime }} }}
+        WHERE  {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:resultTime ?t }} }}""")
 
 
 def test_the_horizon_the_shape_reads_is_the_one_the_module_computes(monkeypatch):
@@ -208,10 +206,8 @@ def test_a_want_about_knowing_fires_on_a_world_that_has_read_nothing(monkeypatch
     from orexis_agent_deliberation import effects
 
     agent, st = _fern(monkeypatch, value=0.55)
-    st.update(f"DELETE WHERE {{ GRAPH <{STATE_GRAPH}> "
-              f"{{ ?o <http://www.w3.org/ns/sosa/hasSimpleResult> ?v }} }} ;"
-              f"DELETE WHERE {{ GRAPH <{STATE_GRAPH}> "
-              f"{{ ?o <http://www.w3.org/ns/sosa/madeBySensor> ?s }} }}")
+    st.update(f"DELETE WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:hasSimpleResult ?v }} }} ;"
+              f"DELETE WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:madeBySensor ?s }} }}")
 
     data = graph_from(st, *st.public_graphs(), STATE_GRAPH, INSTRUMENTS_GRAPH)
     for triple in desires_build(st, "fern").construct(
