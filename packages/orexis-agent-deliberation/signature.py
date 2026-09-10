@@ -164,6 +164,13 @@ def where(diff: tuple, ground: tuple) -> tuple:
     the PREDICTION does. See
     [planning-branches-on-action-forecasting-on-belief](knowledge/decisions/planning-branches-on-action-forecasting-on-belief.md).
 
+    **A possible world is the present, plus what the world moved, plus what the agent moved.**
+    The diff is the agent's half — `(base − D−) + D+`, advanced by `advance` a step at a time —
+    and the ground is the world's, which is why the two stay apart: the facts are their sum, and
+    a pot in the region because it rained holds what a pot in the region because it was dosed
+    holds. The ground keeps the BRANCH rather than its total, because two branches that have
+    moved the world the same distance need not move it the same way next.
+
     **The ground is which of the world's own branches this node sits under** — the happening
     edges taken to reach it, in order, where a step is a chosen one. Empty is the present,
     observed, and it is every node's ground until something predicts (#589): a pass has one

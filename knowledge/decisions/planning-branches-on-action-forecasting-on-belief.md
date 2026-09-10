@@ -38,6 +38,28 @@ them two is a second ground, which is item 1 below.
   it rains, whether the sun has set by the time a vent opens. Nobody prefers among these, so
   there is nothing on them to search.
 
+**So a possible world is the present, plus what the world moved, plus what the agent moved** —
+the sovereign's equation, and it is exact in the arithmetic already here. A node is held as its
+net diff against the observed present, `(base − D−) + D+`, advanced by set algebra a step at a
+time; a happening edge advances it by the same algebra, since a prediction is a claim about
+facts like any other. What changes is only WHO AUTHORED the movement, which is why the two
+summands must stay apart: the facts are their sum, and a world where the soil is in the region
+because it rained holds the same facts as one where it is in the region because the agent
+dosed.
+
+**The identity keeps the branch, not its total.** Two grounds that have moved the world the same
+distance so far need not move it the same way next — *it rained and stopped* and *it is still
+raining* agree about the soil and disagree about the hour to come — so a node carries which
+happening edges it stands under rather than their net. That is the one place the arithmetic does
+not suffice, and the reason is the same one the whole record turns on: a happening edge is a
+claim about what the world will keep doing, and the sum forgets it.
+
+**A peer is the world, from here.** Nothing another agent does is on this agent's menu, so its
+acts move the world regardless of what this one chooses: they arrive as happening edges, not as
+steps. That is [model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md)'s
+first-order rule read forward — what a peer DID is a fact, what a peer WILL do is a prediction —
+and it says where a society's mutual expectations will hang when anyone builds them.
+
 **The modality belongs to the EDGE, not to the node.** A chosen edge is intention-shaped — it is
 something to commit to; a happening one is belief-shaped — it is something to be right or wrong
 about. That is why the two cannot be scored alike: ranking is meaningful over what an agent
