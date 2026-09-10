@@ -133,12 +133,15 @@ class _Node:
     graph: str = STATE_GRAPH                     # this node's readings, in the imaginarium
     taken: tuple = field(default_factory=tuple)   # the STEPS taken to get here, in order
     urgency: float = 1.0
-    #  The net diff against the base world, in canonical facts — where this node IS, for cycle
-    #  detection. The root stands nowhere but the world itself, so its diff is empty.
+    #  The net diff against the base world, in canonical facts — HALF of where this node is,
+    #  the other half being `landing` (#587). The root stands nowhere but the world itself, so
+    #  its diff is empty.
     diff: tuple = signature.EMPTY
     #  Seconds after commitment this path's LAST world-change completes — each step's own
     #  `orexis:landsAfter`, summed, for holding a candidate to a Within want's room (#472).
-    #  The root has taken nothing and lands immediately.
+    #  The root has taken nothing and lands immediately. Since #587 it is also WHEN this node
+    #  is: every node of a pass counts from one root clock, so cycle detection keys on the
+    #  pair and two instants stop collapsing into one world — `signature.where`.
     landing: float = 0.0
     #  What this world still owes the want, by the want's own declaration (`orexis:estimates`),
     #  or None where it declares none. Never compared across desires — only between worlds of
@@ -506,8 +509,9 @@ class Planner:
         resumed = self._resume(desire)
         if not resumed:
             here = self._begin(desire)
-            self._root, self._nodes, self._by_diff = here, [here], {here.diff: here}
-            self._seen, self._achieved, self._best, self._bound = {here.diff: here.cost}, [], here, None
+            root_at = signature.where(here.diff, here.landing)
+            self._root, self._nodes, self._by_diff = here, [here], {root_at: here}
+            self._seen, self._achieved, self._best, self._bound = {root_at: here.cost}, [], here, None
             self._pending, self._kept_worlds = [], 0
             self._signature = self._invariant_signature()
         here = self._root
@@ -554,8 +558,21 @@ class Planner:
                 return refused(trace.COSTLY)
             if room is not None and step.landing > room:
                 return refused(trace.LATE)
-            where = step.diff
-            novel = where not in self._seen or step.cost < self._seen[where]
+            #  WORLD AND WHEN (#587): a world already reached AT THIS INSTANT. The same
+            #  facts a quarter of an hour later are somewhere else, because the world does
+            #  not hold still while the agent decides.
+            where = signature.where(step.diff, step.landing)
+            #  UNLESS THE STEP MOVED NOTHING, and then the clock is all that separates the two
+            #  — which is a difference only a world that changes on its own can make, and
+            #  nothing declares one yet (#592). A step whose diff is its parent's changed no
+            #  fact: a look predicting the value it found, a bid for nothing, a dry serve whose
+            #  premise cannot bind. Each of those is discarded as somewhere already reached,
+            #  and that is what a host owing water it does not hold leans on to plan the refill
+            #  instead. Self-retiring: once a drift declares what a reading becomes as time
+            #  passes, a step that takes an hour and moves nothing lands in a world whose
+            #  readings moved anyway, the diffs differ, and this reads False on its own.
+            unmoved = step.parent is not None and step.diff == step.parent.diff
+            novel = not unmoved and (where not in self._seen or step.cost < self._seen[where])
             #  KEPT WHETHER OR NOT NOVEL (#553): a world already reached is not searched on
             #  from, but it may be an achiever — a look that changes nothing canonical is one —
             #  and a resumed pass must find it among the kept nodes. `_by_diff` keeps the
@@ -706,6 +723,12 @@ class Planner:
         reading by its value. That is right for a world nothing moves but the agent, and it
         is why a plant, whose readings drift, resumes nothing yet — identification by
         interval (#554, #556) is what loosens it.
+
+        BY FACTS ALONE, and deliberately, though a node is a world AND an instant inside a
+        pass (#587): a kept world reached later than it was predicted to be is still that
+        world, because when the present arrived is not a fact the present holds. What the
+        instant separates is two worlds the SEARCH imagines; what identification asks is
+        which imagined world the real one landed in.
         """
         if self.imaginarium is None or self._root is None:
             return False
@@ -737,9 +760,10 @@ class Planner:
                     step = self._step_from(m, row, desire, None)
                     if step is not None and step is not TOO_DEAR:
                         self._nodes.append(step)
-                        if step.diff not in self._seen:
-                            self._seen[step.diff] = step.cost
-                            self._by_diff[step.diff] = step
+                        at = signature.where(step.diff, step.landing)
+                        if step.diff != m.diff and at not in self._seen:
+                            self._seen[at] = step.cost
+                            self._by_diff[at] = step
                 m.withheld, m.expanded = [], True
             node = next((m for m in self._nodes if self._key(m.diff) == wanted), None)
             if node is not None:
@@ -799,8 +823,10 @@ class Planner:
             #  a hundredth below its aim is not a met want.
             node.urgency = self._urgency_in(node, desire)
             node.estimate = self._estimate_in(node, desire)
-        self._by_diff = {m.diff: m for m in keep if m.verdict is None}
-        self._seen = {m.diff: m.cost for m in keep if m.verdict is None}
+        #  Re-keyed AFTER the landings are re-based above, so a kept world's instant is
+        #  counted from the new root exactly as its diff is measured from the new present.
+        self._by_diff = {signature.where(m.diff, m.landing): m for m in keep if m.verdict is None}
+        self._seen = {signature.where(m.diff, m.landing): m.cost for m in keep if m.verdict is None}
         #  A world refused as dear is dear against a bound that went with the old root, and
         #  may be worth a look now; one refused as forbidden or late stays off the frontier.
         #  The new root too, where the last pass never took a row from it — a world reached

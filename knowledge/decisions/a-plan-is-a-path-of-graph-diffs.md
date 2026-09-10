@@ -580,6 +580,46 @@ note that "valve X open for three seconds" is an ACT, and desires here are state
 answer it: the state is *this claim discharged*, which is a pattern over the ledger, and the act
 stays an affordance. That closes the last place where a want is not a shape.
 
+# Amended: where a plan stands is a world AND an instant (#587)
+
+The signature above answers *where am I* with the world reached — the net diff against the base,
+in canonical facts. That is half an answer, and it was the whole of one while every world the
+search could imagine held still between steps. Since #587 a node is its diff AND its instant,
+which is the path's own `orexis:landsAfter` summed — every node of a pass counts from one root,
+so seconds-after-the-root ARE the instant and nothing reads a wall clock. `signature.where`.
+
+The argument is
+[planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md):
+the world moves whether or not the agent does, so two nodes holding the same facts at different
+instants are two worlds and cycle detection may not collapse them.
+
+**A step that moved nothing is still nowhere new**, and the clock does not change that. A look
+predicting the value it found, a bid for nothing, a serve whose premise cannot bind: each has
+its parent's diff, and each is discarded as somewhere already reached, which is what a plan not
+chaining past a sensing act has always rested on. With the instant alone deciding, a market host
+owing water it does not hold served from a barrel too low instead of planning the refill — the
+dry serve had stopped colliding because it took a minute. So the search asks whether the step
+moved anything before it asks when it landed. The guard is self-retiring: once a drift says what
+a reading becomes as time passes (#592), a step that takes an hour and moves nothing lands in a
+world whose readings moved anyway, the diffs differ, and it reads False on its own.
+
+**What it costs is measured, and it is the grip cycle detection loses.** Every shipped world
+plans exactly as before — the same forks, the same steps, hanoi, the courier, the greenhouse and
+both plants — because doubling back inside a budget needs an action that both declares a landing
+and returns to a pose, and no shipped world has one. Give a hanoi move a minute and the puzzle
+acquires a clock: the pose you left is not the pose you return to, two disks go from 14 forks to
+17, and three go from 50 to the whole 128-world budget — still seven moves, and no longer solved
+at the world's own budget of 64, where the pass now answers `exhausted`. The row is in
+[measure-the-search](/runbooks/measure-the-search.md).
+
+**The seam that number opens is the GRAIN**, and it is deliberately not built. Two instants a
+minute apart are two worlds only if something in the world differs between them, and today
+nothing does: no rule reads the clock its step lands at (#588) and nothing declares what a
+reading becomes as time passes (#589). Until one of them does, a finer instant buys distinctions
+with no content, which is exactly what those 128 forks are. The bucket to state is therefore the
+one the world's own change moves a band in — a grain that follows from the drift rather than a
+knob beside it — so it is stated with the drift or not at all.
+
 # Seams left open
 
 - **Implemented at depth 2, when the trigger fired.** The city mains (#201) made the supplier

@@ -73,11 +73,27 @@ What was missing was a place for it to have consequences.
 
 # What follows, in the order it would be built
 
-1. **A node carries a TIME**, and identity becomes world-and-when ([#587](https://github.com/ShishkinDmitriy/orexis/issues/587)). The world moves whether or
-   not the agent does — soil dries at a declared rate nothing in planning reads, rain arrives,
-   night falls — so two nodes holding the same facts at different instants are genuinely
-   different worlds. Everything below waits on this, and it is the one change that touches
-   cycle detection, which compares worlds today with no notion of when.
+1. **A node carries a TIME**, and identity becomes world-and-when ([#587](https://github.com/ShishkinDmitriy/orexis/issues/587), landed). The world moves whether
+   or not the agent does — soil dries at a declared rate nothing in planning reads, rain
+   arrives, night falls — so two nodes holding the same facts at different instants are
+   genuinely different worlds. Everything below waits on this, and it is the one change that
+   touches cycle detection, which compared worlds with no notion of when.
+
+   Built as `signature.where`: the node's diff and the path's own `orexis:landsAfter` summed,
+   with every node of a pass counting from one root, so nothing reads a wall clock. Every
+   shipped world plans exactly as before — the same forks and the same steps — because
+   doubling back inside a budget needs an action that both declares a landing and returns to a
+   pose, and no shipped world has one. What it costs where one does is measured on hanoi with a
+   minute per move: three disks go from 50 forks to the whole 128-world budget, still seven
+   moves, and no longer solved at that world's own 64. So the GRAIN two instants are told apart
+   at is a seam, and it belongs to the drift below rather than beside it — see
+   [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md).
+
+   **What did not land with it is the drift** — the world moving between two instants — because
+   an imagined reading has no number to move. Since an effect declares the band it reaches and
+   no value, a drift cannot be arithmetic on the reading in hand; it is a statement that a
+   reading in one band becomes a reading in another after long enough, which is the declaration
+   item 3 exists for. It is [#592](https://github.com/ShishkinDmitriy/orexis/issues/592), and it waits on that.
 2. **A rule may read the clock its step lands at** ([#588](https://github.com/ShishkinDmitriy/orexis/issues/588)). The search already sums each step's
    `orexis:landsAfter`; the number exists and is never handed over. This is what makes a
    forecast readable at all, and it closes the seam the vent already has, where a plan that

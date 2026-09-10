@@ -151,6 +151,28 @@ def advance(diff: tuple, added: frozenset, retracted: frozenset, base: frozenset
             frozenset((dminus | (retracted & base)) - added))
 
 
+def where(diff: tuple, landing: float) -> tuple:
+    """WORLD AND WHEN (#587): where a node stands, and when it stands there.
+
+    A world used to be its diff alone, which said that two nodes holding the same facts are
+    the same node however far apart they are. That is true of a world nothing moves but the
+    agent — a puzzle, a grid — and false of every world that keeps going on its own: soil
+    dries, night falls, a forecast arrives. So the instant joins the diff, and cycle detection
+    stops collapsing two instants into one world. See
+    [planning-branches-on-action-forecasting-on-belief](knowledge/decisions/planning-branches-on-action-forecasting-on-belief.md).
+
+    **The instant is the path's, in seconds after the root's**, which is `node.landing` — each
+    step's own `orexis:landsAfter`, summed. Every node of a pass shares one root and one root
+    clock, so seconds-after-the-root ARE the instant, and nothing here reads a wall clock: a
+    pass that read one would fork on how long it had been running.
+
+    Rounded exactly as a literal is, and for the same reason at the other end of the scale: a
+    landing is a sum of declared seconds and the sum is float arithmetic, so two paths that
+    declare the same seconds must agree to the last place the signature trusts.
+    """
+    return (diff, round(landing, _ROUND))
+
+
 class _World:
     """One `facts` call's view of its triples: the observation keys, and each blank node's
     neighbourhood — what a term needs to canonicalise, held once rather than re-derived per
