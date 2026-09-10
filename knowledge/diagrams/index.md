@@ -13,7 +13,7 @@ beside it, and the pages embed the SVG.
 * [service-deducer](./service-deducer.puml) - What is pursued, and the one service living inside the repository it writes.
 * [service-inference](./service-inference.puml) - The closure, and the only case where a graph's type does not distinguish it from its source.
 * [service-reviser](./service-reviser.puml) - The seam: a service with no repository at all, because a mark is not a belief.
-* [time-two-cones](./time-two-cones.svg) - One tree of possible worlds on a time axis, and the two kinds of edge that run through it.
+* [time-two-cones](./time-two-cones.svg) - One tree of possible worlds on a time axis, the two kinds of edge, and the ground a node stands on.
 
 # One picture is drawn rather than rendered
 

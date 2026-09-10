@@ -26,8 +26,9 @@ them. What differs is not the nodes. It is WHO CHOOSES THE EDGE.
 
 The picture labels every node with the [bands](/domain/band.md) its readings are in, and every
 edge with what takes it: an action on a chosen one, a thing the world does on a happening one.
-Two paths reach a world where the want is met, and they are two worlds rather than one place
-reached twice, which is item 1 below.
+Two paths reach a world where the want is met, and on one ground that is one world — the search
+keeps the cheaper path and discards the other as somewhere already reached. What would make
+them two is a second ground, which is item 1 below.
 
 - **A CHOSEN edge is a step.** The agent takes it, so the world it leads to is one the agent may
   prefer among. This is the tree
@@ -73,27 +74,37 @@ What was missing was a place for it to have consequences.
 
 # What follows, in the order it would be built
 
-1. **A node carries a TIME**, and identity becomes world-and-when ([#587](https://github.com/ShishkinDmitriy/orexis/issues/587), landed). The world moves whether
-   or not the agent does — soil dries at a declared rate nothing in planning reads, rain
-   arrives, night falls — so two nodes holding the same facts at different instants are
-   genuinely different worlds. Everything below waits on this, and it is the one change that
-   touches cycle detection, which compared worlds with no notion of when.
+1. **A node is GROUNDED on a prediction**, and identity becomes world-and-ground
+   ([#587](https://github.com/ShishkinDmitriy/orexis/issues/587), landed). A node's ground is which of the world's own branches it sits
+   under — the happening edges taken to reach it, where a step is a chosen one. Two worlds
+   holding the same facts on different grounds are two worlds, because what happens next
+   differs: a bed vented onto a warm afternoon is not the same world as the same bed vented
+   onto a cold night, and neither its facts nor a clock separates them.
 
-   Built as `signature.where`: the node's diff and the path's own `orexis:landsAfter` summed,
-   with every node of a pass counting from one root, so nothing reads a wall clock. Every
-   shipped world plans exactly as before — the same forks and the same steps — because
-   doubling back inside a budget needs an action that both declares a landing and returns to a
-   pose, and no shipped world has one. What it costs where one does is measured on hanoi with a
-   minute per move: three disks go from 50 forks to the whole 128-world budget, still seven
-   moves, and no longer solved at that world's own 64. So the GRAIN two instants are told apart
-   at is a seam, and it belongs to the drift below rather than beside it — see
+   Built as `signature.where`, the node's diff and its ground, with a step inheriting its
+   parent's — taking a lever never changes which branch of the world you are in. Every pass has
+   ONE ground today, the present, observed, because nothing here predicts; so the pair is the
+   diff it always was, and every shipped world plans exactly as before. That is not a mechanism
+   idling: it is the shape the ground fills the day item 3 draws a happening edge, and what it
+   replaced had to be measured to be refused.
+
+   **It was a node's TIME for a day, and the measurement refused it.** Keying on the path's
+   summed `orexis:landsAfter` changed nothing on any shipped world, and where a landing was
+   declared it cost cycle detection its grip — hanoi with a minute per move went from 50 forks
+   to a whole 128-world budget on three disks and stopped solving at that world's own 64 — and
+   cost a shipped answer besides: a market host owing water it does not hold planned a serve
+   from a barrel too low instead of the refill, because a dry serve predicts nothing and a world
+   that predicts nothing had stopped colliding with the world it was predicted from. What makes
+   a later world a different world is not that it is later. It is that something the world does
+   has happened in between, which is a prediction. So no grain has to be guessed: a pass with
+   one ground is timeless by construction, and time reaches identity through the ground when a
+   forecast says what the world does between two instants. See
    [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md).
 
-   **What did not land with it is the drift** — the world moving between two instants — because
-   an imagined reading has no number to move. Since an effect declares the band it reaches and
-   no value, a drift cannot be arithmetic on the reading in hand; it is a statement that a
-   reading in one band becomes a reading in another after long enough, which is the declaration
-   item 3 exists for. It is [#592](https://github.com/ShishkinDmitriy/orexis/issues/592), and it waits on that.
+   **The drift is [#592](https://github.com/ShishkinDmitriy/orexis/issues/592)**, and it is a happening edge like any other: an imagined
+   reading has no number to move, since an effect declares the band it reaches and no value, so
+   a drift is the statement that a reading in one band becomes a reading in another after long
+   enough — the declaration item 3 exists for, on the clock item 2 hands a rule.
 2. **A rule may read the clock its step lands at** ([#588](https://github.com/ShishkinDmitriy/orexis/issues/588)). The search already sums each step's
    `orexis:landsAfter`; the number exists and is never handed over. This is what makes a
    forecast readable at all, and it closes the seam the vent already has, where a plan that
