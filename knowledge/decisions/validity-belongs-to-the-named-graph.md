@@ -10,8 +10,8 @@ description: >-
   ad-hoc today — a reading's staleness, a round's close, a venue's cooldown, and a possible
   world's instant — and a graph with an interval is one mechanism for all of them, plus the one
   that has no mechanism at all: a forecast is facts valid over a FUTURE interval. Refused —
-  timestamping triples, a validity filter inside rules, and a big-bang retrofit ahead of the
-  measurement.
+  timestamping triples, storing a graph's own description inside it, a validity filter inside
+  rules, and a big-bang retrofit ahead of the measurement.
 ---
 
 # The claim
@@ -69,6 +69,49 @@ root, and everything downstream is told.
 **And the memo needs a deadline.** What `public_graphs` remembers is dropped on every write; a
 validity that lapses is not a write, so the sense of time arms a timer for the next lapse and
 drops it then — the machinery that already exists, applied to the door.
+
+# Said OF the graph, not inside it
+
+The sovereign asked the obvious next question: if the interval belongs to the graph, why not
+store it — and the provenance beside it — IN the graph, where it is coupled to the data and
+goes when the data goes. The answer is the record's own argument, applied one level down.
+
+**A graph is a scope a reader is HANDED; a triple is something a reader must remember to
+filter.** That is why validity is not on triples. Put the graph's description inside the graph
+and every reader of the data inherits the description: an unqualified pattern unions the public
+graphs, so `?s ?p ?o` over the sensed graph would answer with `<graph/sensed> a
+sensing:SensedGraph` beside the readings. The repo has met this once already — the per-agent
+classifications sat in the provenance graph, which is deliberately outside the default union
+*to keep mentions of graphs from answering questions about devices*, and moving them to a public
+classification graph is what let a scoped query see them. Inside the data is the same hazard
+with nowhere left to move it to.
+
+**And a changing mention would churn world identity.** `_base_facts` reads every quad of the
+public and recorded graphs, so a self-description is a fact in every possible world — constant,
+and therefore cancelling in a diff, until the day it is not. A validity rewritten as a graph
+lapses would move the invariant signature, and a kept cone dies on an invariant that moved
+([the-future-is-a-cone-and-the-present-is-identified-in-it](/decisions/the-future-is-a-cone-and-the-present-is-identified-in-it.md)).
+A description held beside the data changes without touching what any world holds.
+
+**The coupling it aims at is already there, by replacement rather than by containment.** Neither
+meta-graph accumulates: the provenance graph is `put_graph`-replaced whole on every
+`refresh_public`, and the classification graph is cleared and rebuilt at every boot, because
+both are functions of what was loaded. Nothing orphans, and a sweep that drops a lapsed graph
+drops its statements in the same update — atomicity is two lines, not a design.
+
+**One more thing self-description would cost: saying anything about a graph you do not hold.**
+A world declares every agent's belief graph by name, which is how the city's store knows
+`beliefs/fern` exists without holding a triple of it. A graph that can only describe itself
+cannot be described by anyone else, and a society whose members can name each other's graphs is
+not a small feature to trade for tidiness.
+
+**Where it genuinely pays is the border.** A forecast arriving from a service is a unit: the
+facts and the interval they speak for come together, and a message that carried one without the
+other would be meaningless. So it arrives self-describing — that is what a document IS on the
+wire — and translation lifts the description into the store's own bookkeeping on the way in,
+exactly as a peer's message becomes a belief rather than being believed as bytes
+([the-agent-stack-is-a-second-axis](/decisions/the-agent-stack-is-a-second-axis.md)).
+Self-describing in transit, described beside on disk.
 
 # What is refused
 
