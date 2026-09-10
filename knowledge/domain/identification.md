@@ -79,9 +79,9 @@ reading carries the same ones; a plan resumed across such a drift is caught at e
 the keeper's readiness, and would be caught at the re-root by the next step's
 [precondition](/domain/precondition.md) once it is asked there.
 
-# Two jobs, once the second cone exists
+# Two jobs, once the second kind of edge exists
 
 Identification decides which child of the root the present is in. Under
 [planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md)
-that is two questions answered at once: which path of the agent's own cone it is on, and which
-branch of the world's cone happened. Acting extends the first; observing collapses the second.
+that is two questions answered at once, because two kinds of edge reach that child: which step
+was taken, and which of the world's branches was taken while it was.

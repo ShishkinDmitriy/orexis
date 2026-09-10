@@ -2,7 +2,7 @@
   <rect width="1200" height="700" fill="#ffffff"/>
 
   <text x="600" y="34" text-anchor="middle" font-size="19" font-weight="700" fill="#1a1a1a">The two cones: what I may do, and what may happen</text>
-  <text x="600" y="57" text-anchor="middle" font-size="13" fill="#666">time runs left to right, and the present is the only settled world</text>
+  <text x="600" y="57" text-anchor="middle" font-size="13" fill="#666">every node of both is a possible world at an instant — what differs is who chooses the edge</text>
 
   <!-- the agent's cone: branches on choice, widens rightward -->
   <polygon points="452,352 1150,88 1150,352" fill="#EAF5EA" stroke="#5E9E5E" stroke-width="1.2"/>
@@ -80,7 +80,7 @@
 
   <!-- what the picture adds -->
   <rect x="60" y="470" width="500" height="98" rx="5" fill="#FBF7E8" stroke="#C9B47A"/>
-  <text x="76" y="493" font-size="12" font-weight="700" fill="#5c4f28">What this picture adds: every node carries a TIME.</text>
+  <text x="76" y="493" font-size="12" font-weight="700" fill="#5c4f28">One tree, two kinds of edge — and every node carries a TIME.</text>
   <text x="76" y="515" font-size="11.5" fill="#5c4f28">Two worlds holding the same facts at different instants are</text>
   <text x="76" y="532" font-size="11.5" fill="#5c4f28">different worlds, because the world keeps moving whether or</text>
   <text x="76" y="549" font-size="11.5" fill="#5c4f28">not the agent does: soil dries, rain comes, night falls.</text>

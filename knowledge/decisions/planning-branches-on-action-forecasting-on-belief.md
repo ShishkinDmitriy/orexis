@@ -4,10 +4,10 @@ title: Planning branches on action, forecasting on belief, and a look is a step 
 status: accepted
 timestamp: 2026-09-10T09:00:00Z
 description: >-
-  The sovereign's model of time, agreed 2026-09-09 and recorded before it is built. Two cones
-  open from the present. The agent's branches on CHOICE and is searched; the world's branches on
-  BELIEF — what I will come to observe — and is folded into each node, because nothing chooses
-  the weather. Every node carries a TIME, so two worlds holding the same facts at different
+  The sovereign's model of time, agreed 2026-09-09 and recorded before it is built. ONE tree of
+  possible worlds and two kinds of edge: a CHOSEN one is a step the agent prefers among, a
+  HAPPENING one is the world's and is only to be right about. The chosen are searched; the
+  happening are folded into the node they belong to, because nothing chooses the weather. Every node carries a TIME, so two worlds holding the same facts at different
   instants are different worlds; a rule may read the clock its step lands at; exogenous
   uncertainty is a narrowing set of bands; and a LOOK, which changes no fact, is the step whose
   whole effect is in the second cone. Refused — searching the world's branches as if they were
@@ -17,28 +17,37 @@ description: >-
 
 # The claim
 
-Two cones open from the present, and they are not the same kind of thing.
+**One tree of possible worlds, and two kinds of edge.** Every node of both cones is a
+[possible world](/domain/imaginarium.md) at an instant, and that is the substance the two cones
+share: a prediction is about possible worlds, and what an agent's actions do is move it among
+them. What differs is not the nodes. It is WHO CHOOSES THE EDGE.
 
 ![the two cones](../diagrams/time-two-cones.svg)
 
-- **The agent's cone branches on CHOICE.** Each edge is a step it may take, each node a world
-  it would reach. This is the tree
+- **A CHOSEN edge is a step.** The agent takes it, so the world it leads to is one the agent may
+  prefer among. This is the tree
   [the-future-is-a-cone-and-the-present-is-identified-in-it](/decisions/the-future-is-a-cone-and-the-present-is-identified-in-it.md)
   already describes and #553 already built.
-- **The world's cone branches on BELIEF.** Its edges are readings not yet taken: what the soil
-  will show, whether it rains, whether the sun has set by the time a vent opens. What varies is
-  not what the agent does but what it will come to believe.
+- **A HAPPENING edge is the world's.** Readings not yet taken: what the soil will show, whether
+  it rains, whether the sun has set by the time a vent opens. Nobody prefers among these, so
+  there is nothing on them to search.
 
-**The distinction is a modality.** The first is intention-shaped: a branch is something to
-commit to. The second is belief-shaped: a branch is something to be right or wrong about. That
-is why they cannot be scored alike — ranking is meaningful over what an agent chooses, and there
-is no preferring one weather to another. Folding the world's cone into each node rather than
-expanding it as candidates is therefore the semantics rather than an optimisation.
+**The modality belongs to the EDGE, not to the node.** A chosen edge is intention-shaped — it is
+something to commit to; a happening one is belief-shaped — it is something to be right or wrong
+about. That is why the two cannot be scored alike: ranking is meaningful over what an agent
+chooses, and there is no preferring one weather to another. Folding the happening edges into the
+node they leave rather than expanding them as candidates is therefore the semantics rather than
+an optimisation.
 
-**Execution collapses one and extends the other.** Acting adds a step to the intention cone.
-Observing collapses a branch of the belief cone. The present is where both are settled, which
-is why [identification](/domain/identification.md) is doing two jobs at once: deciding which
-path the agent is on, and which branch of the world's cone happened.
+Two things follow for whoever builds it. **One structure and not two** — the imaginarium already
+holds this tree, and what item 3 below adds is a second kind of edge in it rather than a second
+store. And the second kind is not a new idea here: `SURPRISE_EXOGENOUS` in the planner already
+names a happening edge the search never drew, which is exactly what an exogenous surprise IS.
+
+**Execution walks one kind of edge and settles the other.** Acting takes a chosen edge.
+Observing settles which happening edge was taken while it was. The present is where both are
+known, which is why [identification](/domain/identification.md) is doing two jobs at once:
+deciding which path the agent is on, and which of the world's branches the real one landed in.
 
 # What it explains that we had been working around
 
@@ -48,10 +57,11 @@ looking has run into this, and the current answer is a special case: a step that
 not expanded from, so a look survives by not being a place to search onward from
 (a-lever-an-agent-cannot-pull-is-not-a-lever).
 
-Under this model the reason is plain and the workaround is unnecessary. A look has no effect in
-the intention cone at all. Its whole effect is in the belief cone, narrowing what the agent will
-believe without changing what is. The search cannot see it because the search has no belief
-dimension — and the fix is not a rule about looks, it is the second cone.
+Under this model the reason is plain and the workaround is unnecessary. A look takes a chosen
+edge to a possible world holding the same facts — which is why its diff is empty — and FEWER
+happening edges leaving it. It acts on the branching rather than on the world. The search cannot
+see that because the search has no branching to see, and the fix is not a rule about looks. It
+is the second kind of edge.
 
 Sensing has said the sentence for a long time: *looking changes what you KNOW, not what is*.
 What was missing was a place for it to have consequences.
@@ -73,7 +83,8 @@ What was missing was a place for it to have consequences.
    `sosa:phenomenonTime` is in the future, arriving `orexis:Received` from a service rather than
    an instrument, in a per-agent graph of its own — never the sensed graph, which upserts one
    reading per subject and property and means *now*.
-4. **A look is a step in the second cone** ([#590](https://github.com/ShishkinDmitriy/orexis/issues/590)), valued by the narrowing it buys rather than by a
+4. **A look is a chosen edge that narrows the happening ones**
+   ([#590](https://github.com/ShishkinDmitriy/orexis/issues/590)), valued by the narrowing it buys rather than by a
    fact it makes true. This is what makes *dose, look, dose* findable by a search rather than by
    re-planning after a surprise, and it retires the special case above.
 5. **Long-lived and overlapping actions** ([#591](https://github.com/ShishkinDmitriy/orexis/issues/591)), the largest and last. If a step spans an

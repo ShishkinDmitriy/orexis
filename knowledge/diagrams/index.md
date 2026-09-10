@@ -13,12 +13,12 @@ beside it, and the pages embed the SVG.
 * [service-deducer](./service-deducer.puml) - What is pursued, and the one service living inside the repository it writes.
 * [service-inference](./service-inference.puml) - The closure, and the only case where a graph's type does not distinguish it from its source.
 * [service-reviser](./service-reviser.puml) - The seam: a service with no repository at all, because a mark is not a belief.
-* [time-two-cones](./time-two-cones.svg) - The agent's cone of choices and the world's cone of uncertainty, meeting at the present.
+* [time-two-cones](./time-two-cones.svg) - One tree of possible worlds on a time axis, and the two kinds of edge that run through it.
 
 # One picture is drawn rather than rendered
 
 `time-two-cones.svg` has no `.puml` beside it and is not generated. Its geometry IS the idea —
-two cones opening from a point on a time axis — and a graph-layout tool draws a graph, not a
+two cones opening from one point on a time axis — and a graph-layout tool draws a graph, not a
 picture: asked for this, PlantUML produced boxes in a column. So the SVG is the source, hand
 authored, and there is nothing for it to drift from. The stamp below is for what a renderer
 made; the gate reads `.puml` files, so it neither checks this one nor needs to.
