@@ -76,7 +76,7 @@ things follow without a line of policy:
 `market:Hosting`, in the market's `actions.ttl` beside Acquiring and Serving:
 
 - *available* where `$me market:hosts ?via`, no `market:Round` stands on `?via` — held or
-  imagined — the cooldown since the last has elapsed (`market:mayConveneAt`, an instant written
+  imagined — the venue is not cooling (`market:coolingUntil`, a fact written
   at close into the host's own graph, so the private duration is never on a row), and the vessel
   holds *something* by the host's witness, or the host has none;
 - *effect*: a `market:Round` on `?via` appears; the stock is unchanged, because an offer moves
@@ -120,10 +120,16 @@ another agent DID rather than by arithmetic — which is what took `NOW()` out o
 above, and out of Offering's. The clock survives as the BACKSTOP, which is what it should have
 been: a message can be lost and a host can die, so `closesAt` is the horizon on a belief about
 another agent and `sweep_expired` is what covers silence. The general form is
-[#598](https://github.com/ShishkinDmitriy/orexis/issues/598) — time is another sense, writing facts at the belief-revision seam — and the
-cooldown is the one clock read left in this package, held back because
-`market:mayConveneAt` NAMES an instant: making its presence the fact needs a term whose name
-says what its presence means, which is a rename with a gate rather than a filter deleted.
+[#598](https://github.com/ShishkinDmitriy/orexis/issues/598) — time is another sense, writing facts at the belief-revision seam.
+
+**The cooldown went the same way, and the rename was the work.** `market:mayConveneAt` said
+when the cooldown runs out, which is TRUE the whole time the row is written — so its presence
+said nothing and every reader did the arithmetic. A row whose presence is meant to BE a fact
+has to be named for the state: `market:coolingUntil`, present while the venue is cooling,
+retracted by a deadline of its own landing on the loop, with the instant it carries serving as
+the horizon a sweep reads when a restart leaves a row behind and no timer. So the premise asks
+whether the row is there and compares nothing, and this package's rules read no clock at all —
+held to it by `tests/test_clockless.py`, which names the two that are left, both sensing's.
 
 # Order of work
 

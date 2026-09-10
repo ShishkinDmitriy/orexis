@@ -228,9 +228,13 @@ Must comfortably exceed the longest a holder may wait before presenting, which i
 :calledAt a owl:DatatypeProperty ; rdfs:domain :Call ; rdfs:range xsd:dateTime ;
     rdfs:label "called at" .
 
-:mayConveneAt a owl:DatatypeProperty ; rdfs:domain :Market ; rdfs:range xsd:dateTime ;
-    rdfs:label "may convene at" ;
-    rdfs:comment "When the host's cooldown on this venue runs out — written at close, from `roundCooldownS`, into the host's own graph. An instant rather than the duration, so the Offering action's precondition compares it to NOW() and the private cooldown itself is never on a row anyone else could read." .
+:coolingUntil a owl:DatatypeProperty ; rdfs:domain :Market ; rdfs:range xsd:dateTime ;
+    rdfs:label "cooling until" ;
+    rdfs:comment """THE VENUE IS COOLING, and this row's PRESENCE is that fact — written at close, from `roundCooldownS`, into the host's own graph, and retracted when the cooldown runs out. The Offering action's precondition asks whether the row is there and compares nothing (#598).
+
+It was `mayConveneAt` until then, and the name is why it had to change rather than the filter: a row saying "may convene at 12:05" is TRUE the whole time, so its presence said nothing and every reader had to do the arithmetic — `?may <= NOW()`, one of the six clock reads deliberation used to make. Presence had to mean the state, so the term had to name the state.
+
+The instant it carries is not for comparing. It is the HORIZON, exactly as a round's `closesAt` is: what a sweep reads to retract a row whose timer never landed, because a process restarts and a scheduler does not survive it. The private `roundCooldownS` is still never on a row anyone else could read.""" .
 
 #################  A claim I hold  #################
 #

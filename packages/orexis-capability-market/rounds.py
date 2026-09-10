@@ -28,7 +28,7 @@ from datetime import datetime, timedelta, timezone
 from orexis_agent_progression.ontology import beliefs_graph
 from orexis_agent_progression.store import bindings
 
-from .terms import (CLOSES_AT, HAS_ROUND, LOT_L, MAY_CONVENE_AT, NS, RESERVE_PER_L,
+from .terms import (CLOSES_AT, COOLING_UNTIL, HAS_ROUND, LOT_L, NS, RESERVE_PER_L,
                     ROUND, ROUND_ID)
 
 _XSD = "http://www.w3.org/2001/XMLSchema#"
@@ -89,6 +89,27 @@ def sweep_expired(agent, now: datetime | None = None) -> int:
     return len(gone)
 
 
+def cooled(agent, venue_uri: str) -> None:
+    """The cooldown ran out: this venue is not cooling any more."""
+    agent.beliefs.update(f"""
+DELETE {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{COOLING_UNTIL}> ?was }} }}
+WHERE  {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{COOLING_UNTIL}> ?was }} }}""")
+
+
+def sweep_cooled(agent, now: datetime | None = None) -> int:
+    """Retract every cooling row whose horizon has passed — the backstop, as `sweep_expired`
+    is for a round. A timer retracts the row when the cooldown runs out; a process that
+    restarted holds the row and no timer, and this is what covers that."""
+    at = now or datetime.now(timezone.utc)
+    rows = bindings(agent.beliefs.query(f"""
+SELECT ?v ?until WHERE {{ GRAPH <{beliefs_graph(agent.id)}> {{
+  ?v <{COOLING_UNTIL}> ?until }} }}"""))
+    gone = [r["v"] for r in rows if datetime.fromisoformat(r["until"]) <= at]
+    for venue in gone:
+        cooled(agent, venue)
+    return len(gone)
+
+
 def rounds_of(agent, venue_uri: str | None = None) -> list[Round]:
     """Every round this agent holds a row for, open or not — the caller asks `is_open`."""
     venue = f"FILTER(?v = <{venue_uri}>)" if venue_uri else ""
@@ -103,15 +124,17 @@ SELECT ?r ?v ?id ?lot ?reserve ?closes WHERE {{ GRAPH <{beliefs_graph(agent.id)}
 
 
 def convened(agent, venue_uri: str, cooldown_s: float, now: datetime | None = None) -> None:
-    """A round just closed on this venue: write when the host may convene the next one.
+    """A round just closed on this venue: the venue is COOLING until the cooldown runs out.
 
-    The cooldown is a private belief and stays one; what reaches the graph is the INSTANT it
-    runs out, so the Offering action's precondition can compare it to NOW() without the
-    duration ever sitting on a row. Replaced, never accumulated.
+    The cooldown is a private belief and stays one; what reaches the graph is the fact that
+    this venue is cooling, carrying the instant it stops as its horizon. The Offering action's
+    precondition asks whether the row is there and compares nothing (#598) — it read
+    `?may <= NOW()` while the term named the instant instead of the state. Replaced, never
+    accumulated.
     """
     until = (now or datetime.now(timezone.utc)) + timedelta(seconds=float(cooldown_s))
     agent.beliefs.update(f"""
-DELETE {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{MAY_CONVENE_AT}> ?was }} }}
-WHERE  {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{MAY_CONVENE_AT}> ?was }} }} ;
+DELETE {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{COOLING_UNTIL}> ?was }} }}
+WHERE  {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{COOLING_UNTIL}> ?was }} }} ;
 INSERT DATA {{ GRAPH <{beliefs_graph(agent.id)}> {{
-  <{venue_uri}> <{MAY_CONVENE_AT}> "{until.isoformat()}"^^<{_XSD}dateTime> }} }}""")
+  <{venue_uri}> <{COOLING_UNTIL}> "{until.isoformat()}"^^<{_XSD}dateTime> }} }}""")

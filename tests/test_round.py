@@ -1116,3 +1116,51 @@ def test_the_rows_presence_is_the_openness_and_no_rule_asks_the_clock(make):
 
     rounds.close_round(fern, "r8")
     assert not buying(), "and with the fact gone, so is the row"
+
+
+def test_the_venue_cools_by_a_fact_and_stops_by_a_timer(host):
+    """The last clock the market's rules read (#598), and the rename is the point.
+
+    `market:mayConveneAt` said when the cooldown runs out, which is TRUE the whole time it is
+    written — so its presence said nothing and every reader did the arithmetic. What the venue
+    needs to say is that it IS cooling, and then the row's presence is the fact: written at
+    close, retracted by a deadline of its own landing on the loop.
+    """
+    from orexis_capability_market import rounds
+    from orexis_capability_market.terms import COOLING_UNTIL
+    from orexis_agent_progression.ontology import beliefs_graph
+    from orexis_agent_progression.store import bindings
+
+    def cooling() -> list:
+        return bindings(host.beliefs.query(f"""SELECT ?until WHERE {{
+            GRAPH <{beliefs_graph(host.id)}> {{ ?v <{COOLING_UNTIL}> ?until }} }}"""))
+
+    open_auction(host)
+    assert cooling() == [], "a venue with a round open is not cooling"
+
+    host.hosting().close()
+
+    assert cooling(), "the round closed, so the venue is cooling"
+    timer = host.hosting()._cooling
+    assert timer is not None and not timer.repeat, \
+        "a deadline, spent once — a cadence would stop a cooldown it was never told about"
+    assert timer.interval_s == host.hosting().beliefs.cooldown_s
+
+    timer.stop()
+    rounds.cooled(host, market_of(host).uri)
+    assert cooling() == [], "and when it lands the fact goes, with nothing left to compare"
+
+
+def test_a_cooling_row_that_outlived_its_timer_is_swept(host):
+    """A timer does not survive a restart and a belief does, so the horizon is the backstop —
+    the same shape a round's `closesAt` has. Without this a host that restarted during a
+    cooldown would hold a row nothing retracts and never convene again."""
+    from datetime import datetime, timedelta, timezone
+
+    from orexis_capability_market import rounds
+
+    market = market_of(host)
+    rounds.convened(host, market.uri, cooldown_s=60.0,
+                    now=datetime.now(timezone.utc) - timedelta(seconds=61))
+    assert rounds.sweep_cooled(host) == 1, "the horizon passed while nothing was running"
+    assert rounds.sweep_cooled(host) == 0, "and there is nothing left to sweep"

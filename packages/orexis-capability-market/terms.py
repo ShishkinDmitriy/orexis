@@ -54,7 +54,7 @@ ROUND_ID = term("roundId")
 LOT_L = term("lotL")
 RESERVE_PER_L = term("reservePerL")
 CLOSES_AT = term("closesAt")
-MAY_CONVENE_AT = term("mayConveneAt")
+COOLING_UNTIL = term("coolingUntil")
 
 # A call: the want a participant's LOW sources on a host (knowledge/domain/call.md).
 CALL = term("Call")

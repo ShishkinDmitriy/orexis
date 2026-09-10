@@ -180,6 +180,11 @@ it is a record wearing a bullet.
 - **A ceiling on compute is stated in the unit the search spends** — depth was that unit
   under breadth-first and stopped being it under best-first, and a budget of worlds is what a
   sovereign can size from a measured cost per fork.
+- **A row whose presence is meant to BE a fact is named for the state, not for the instant it
+  ends** — a cooldown row saying when the host may convene again was true the whole time it was
+  written, so its presence said nothing and every reader did the arithmetic; `market:coolingUntil`
+  is present while the venue cools, and the instant it carries is the horizon a sweep reads
+  rather than a number to compare.
 - **A base class is an import and an annotation is not** — a layer contract named in a
   signature costs nothing at assembly; subclassed, it loads the layer, which is why sensing's
   row types live behind the touch (#455).

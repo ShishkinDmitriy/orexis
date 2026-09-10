@@ -147,11 +147,17 @@ SELECT ?p WHERE {{
             self.stock_property[market.uri] = rows[0]["p"] if rows else None
         #  `deferred` and `last_auction_at` WERE HERE. A LOW nobody could serve was held in a
         #  dict and reopened on the next reading; the cooldown was a monotonic clock. Both are
-        #  facts now — a `market:Call` and `market:mayConveneAt` in my own graph — and the
+        #  facts now — a `market:Call` and `market:coolingUntil` in my own graph — and the
         #  Offering action's precondition reads them, so a dry vessel is a plan the search
         #  finds (acquire upstream, then offer) rather than a handler (#359).
         self.open_auction: dict | None = None
         self._timer: Timer | None = None
+        #  THE COOLDOWN'S OWN DEADLINE (#598): a venue is cooling while the row is there, and
+        #  what retracts it is a timer landing on the loop — the same road a round's close
+        #  takes. A row that outlived the process holds no timer, so the sweep below is armed
+        #  at boot for exactly that.
+        self._cooling: Timer | None = None
+        rounds.sweep_cooled(self.agent)
         # Issued and not yet presented, by jti (#132). Winning stopped implying actuation: the
         # holder redeems when its watch is live, so the host keeps the claim until it is
         # presented — single-use, popped on redemption. In-memory, like the round itself: a
@@ -175,6 +181,8 @@ SELECT ?p WHERE {{
     def stop(self) -> None:
         if self._timer:
             self._timer.stop()
+        if self._cooling:
+            self._cooling.stop()
 
     # --- what opens an auction ---
 
@@ -398,6 +406,14 @@ SELECT ?r WHERE {{
         self.publish(market.offer_topic, {"auction_id": auction_id,
                                           "host": self.me.agent_id,
                                           "closed": True})
+        #  AND THE VENUE COOLS, until a deadline of its own lands and retracts the row. Spent
+        #  once, like the round's: a cadence here would say a venue stopped cooling on a clock
+        #  of its own rather than on the one cooldown it was told about.
+        if self._cooling:
+            self._cooling.stop()
+        self._cooling = Timer(float(self.beliefs.cooldown_s),
+                              lambda: rounds.cooled(self.agent, market.uri), repeat=False)
+        self._cooling.start()
 
         if not rnd["bids"]:
             self.log.info("auction %s closed with no bids", auction_id)
