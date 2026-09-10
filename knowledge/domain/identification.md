@@ -78,3 +78,10 @@ acquiring reads — is outside the view today, since relevance names predicates 
 reading carries the same ones; a plan resumed across such a drift is caught at execution by
 the keeper's readiness, and would be caught at the re-root by the next step's
 [precondition](/domain/precondition.md) once it is asked there.
+
+# Two jobs, once the second cone exists
+
+Identification decides which child of the root the present is in. Under
+[planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md)
+that is two questions answered at once: which path of the agent's own cone it is on, and which
+branch of the world's cone happened. Acting extends the first; observing collapses the second.
