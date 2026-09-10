@@ -22,7 +22,12 @@ description: >-
 share: a prediction is about possible worlds, and what an agent's actions do is move it among
 them. What differs is not the nodes. It is WHO CHOOSES THE EDGE.
 
-![the two cones](../diagrams/time-two-cones.svg)
+![one tree of possible worlds, its nodes labelled by the bands their readings are in, its chosen edges labelled with actions and its happening edges with what the world does](../diagrams/time-two-cones.svg)
+
+The picture labels every node with the [bands](/domain/band.md) its readings are in, and every
+edge with what takes it: an action on a chosen one, a thing the world does on a happening one.
+Two paths reach a world where the want is met, and they are two worlds rather than one place
+reached twice, which is item 1 below.
 
 - **A CHOSEN edge is a step.** The agent takes it, so the world it leads to is one the agent may
   prefer among. This is the tree
