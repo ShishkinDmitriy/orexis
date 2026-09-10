@@ -150,7 +150,11 @@ What was missing was a place for it to have consequences.
    It does NOT close the vent's seam, and that is the honest half: a rule can now ask what time
    its act happens at, and has nothing to read about what the outside will be then, because
    nothing states a future reading. That is item 3 ([effect](/domain/effect.md)).
-3. **Exogenous uncertainty is a narrowing set of [bands](/domain/band.md)** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)). Three days out a
+3. **Exogenous uncertainty is a narrowing set of [bands](/domain/band.md)** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)), and it is where
+   [validity-belongs-to-the-named-graph](/decisions/validity-belongs-to-the-named-graph.md) is
+   built first: a forecast is facts valid over a FUTURE interval, which is the one horizon in
+   this project with no mechanism at all, and a graph that says how long it speaks for is the
+   cheapest place to put it. Three days out a
    reading may be any band, tonight two, now exactly one. A forecast is an observation whose
    `sosa:phenomenonTime` is in the future, arriving `orexis:Received` from a service rather than
    an instrument, in a per-agent graph of its own — never the sensed graph, which upserts one
