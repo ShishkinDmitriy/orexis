@@ -147,3 +147,9 @@ plus the pour after it is placed, so binding one instant to both would make ever
 nothing, the round having closed by the time the water arrives. So a WHERE still asks `NOW()`,
 which is the real clock rather than the node's, and a rule that needs the instant it is taken
 at cannot have it yet.
+
+**The answer to that is not a better instant**, and it is [#598](https://github.com/ShishkinDmitriy/orexis/issues/598): what a WHERE asking `NOW()`
+wants is a FACT — that the round is open — and time is another sense, writing such facts at
+the belief-revision seam the way any other sensed change arrives. A rule reading a triple asks
+no clock, in a simulated world or a real one, which is the whole class of wrong-clock question
+gone rather than answered.
