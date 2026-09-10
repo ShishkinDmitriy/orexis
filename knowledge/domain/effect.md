@@ -135,9 +135,10 @@ states a future reading. That is the [forecast](/domain/reading.md), #589, and u
 the world answers otherwise, the keeper's verdict says so, and the next pass replans — the cost
 is a wasted step.
 
-**And it is one instant only until [#596](https://github.com/ShishkinDmitriy/orexis/issues/596)**, which makes an act's time the range its device
-implies rather than a point: a pour takes between nothing and the cap over the rate, and what a
-rule is told is then an interval it can stamp a predicted reading with.
+**And it is one instant only until [#596](https://github.com/ShishkinDmitriy/orexis/issues/596)**, which gives an act a DURATION rather than a
+landing alone and a possible world the interval it holds over — each a range where it is not
+known exactly, since a pour takes between nothing and the device's cap over its rate. What a
+rule is told is then an interval, and a predicted reading is stamped with one.
 
 **One instant is bound and the other is not**, and the market says why they are two. A rule's
 WHERE describes the conditions the act is TAKEN in — a bid's own premise is that the round is

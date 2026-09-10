@@ -136,10 +136,10 @@ What was missing was a place for it to have consequences.
    completes, so it is stamped then instead of at the moment the plan was made. That also
    found what #579 had left behind — the search cannot size an act, so a dose's `ml / rate`
    lands at nought seconds and only a bid's window survives as a real landing — and the
-   sovereign's answer to it is that an act's time was never a point:
-   [#596](https://github.com/ShishkinDmitriy/orexis/issues/596) makes it the RANGE the device's cap and rate imply, and a possible
-   world's time the sum of those ranges. What a rule is told will be an interval, and this
-   token is the place it arrives.
+   sovereign's answer to it is that an act was never a point:
+   [#596](https://github.com/ShishkinDmitriy/orexis/issues/596) gives an action a DURATION and a possible world the INTERVAL it holds
+   over, each stated as a range where it is not known exactly. What a rule is told is then an
+   interval, and this token is the place it arrives.
 
    **One instant, not two.** A rule's WHERE describes the conditions its act is TAKEN in, and
    its construct the world the act REACHES; the market proves they cannot be one token, since a
@@ -162,7 +162,10 @@ What was missing was a place for it to have consequences.
 5. **Long-lived and overlapping actions** ([#591](https://github.com/ShishkinDmitriy/orexis/issues/591)), the largest and last. If a step spans an
    interval rather than landing at a point, a plan stops being a sequence and becomes a partial
    order: dosing while the heater runs. `progression:then`, the ledger and the keeper's advance
-   all assume a chain.
+   all assume a chain. Its foundation is [#596](https://github.com/ShishkinDmitriy/orexis/issues/596) — an act with a DURATION rather than a
+   landing alone, and a world holding over the interval two acts would overlap IN. The
+   vocabulary already knows they are two things: `orexis:landsAfter` is delivery, when the
+   valve stops, and it says in its own comment that settling is a term nobody has written down.
 
 # What was refused
 
