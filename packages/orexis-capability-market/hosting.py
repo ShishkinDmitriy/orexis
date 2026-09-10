@@ -385,6 +385,19 @@ SELECT ?r WHERE {{
         market, auction_id = rnd["market"], rnd["auction_id"]
         rounds.close_round(self.agent, auction_id)   # over, whatever the bids say below
         rounds.convened(self.agent, market.uri, self.beliefs.cooldown_s)   # the next may open then
+        #  DECLARED, as the opening was (#599). A round exists because the host announced it,
+        #  and it ends the same way: on the topic every bidder already subscribes to, naming
+        #  the round that is over and nothing else about it. Before this, a bidder that lost
+        #  was told nothing and ended the round by its own arithmetic against `closesAt` —
+        #  which made a fact about the venue something each bidder computed privately, with
+        #  its own clock, and put a NOW() in the premise of every buy.
+        #
+        #  WHAT IT DOES NOT SAY is who won or what anything cleared at. That is the claim's,
+        #  sealed to its winner; this is the venue's own fact, public by construction and
+        #  already implied by the offer that opened it.
+        self.publish(market.offer_topic, {"auction_id": auction_id,
+                                          "host": self.me.agent_id,
+                                          "closed": True})
 
         if not rnd["bids"]:
             self.log.info("auction %s closed with no bids", auction_id)

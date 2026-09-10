@@ -81,9 +81,16 @@ market:Acquiring
           #  AND A ROUND IS OPEN (#358). The hop the walk was missing: without it the row said
           #  "I could buy here", and the keeper committed an Acquire that then waited for the
           #  market to knock. The round is what THIS agent was told, in its own graph, so the
-          #  hop names $beliefs — a bidder that lost is told nothing, and the clock ends it.
+          #  hop names $beliefs.
+          #
+          #  THE ROW'S PRESENCE IS THE OPENNESS (#599). This asked `?closes > NOW()` because a
+          #  bidder that lost was told nothing and had to end the round by its own arithmetic.
+          #  The host declares the close now, on the topic that carried the offer, and the row
+          #  is retracted when it arrives — so what is left to ask is whether the row is there.
+          #  A rule reading a triple asks no clock, in a simulated world or a real one, which
+          #  is what a WHERE asking NOW() could never do: the engine answers the real now, not
+          #  the instant the act would be taken at (#598).
           GRAPH $beliefs { ?via market:hasRound ?round . ?round market:closesAt ?closes }
-          FILTER(?closes > NOW())
         }""" ;
 
     #  WHAT IT SPENDS — the landing's twin (#466): the bidder's own CEILING, litres times
@@ -259,9 +266,10 @@ market:Offering
           OPTIONAL { $me sensing:polls ?witness .
                      ?witness sensing:monitors ?source ; sosa:observes ?stock }
           BIND(COALESCE(?stock, ?goodProperty) AS ?about)
+          #  AND NO ROUND OF MINE IS OPEN — the row again, and the host retracts its own at
+          #  close, so there is nothing to compare (#599).
           FILTER NOT EXISTS {
-            GRAPH $beliefs { ?via market:hasRound ?open . ?open market:closesAt ?c }
-            FILTER(?c > NOW()) }
+            GRAPH $beliefs { ?via market:hasRound ?open } }
           FILTER NOT EXISTS { GRAPH $state { ?via market:hasRound ?imagined } }
           OPTIONAL { GRAPH $beliefs { ?via market:mayConveneAt ?may } }
           FILTER(!BOUND(?may) || ?may <= NOW())
@@ -277,8 +285,9 @@ market:Offering
     #  THE EFFECT: a round on the venue — the same fact `announce` writes, predicted. It
     #  lands in the plan's own graph ($state, where every effect's triples go), which is why
     #  the precondition above looks there too and why a call's measure reads both graphs.
-    #  The stock is untouched: offering moves no water. NOW() plus my bid window, in the
-    #  duration arithmetic this engine does support — measured before it was leaned on.
+    #  The stock is untouched: offering moves no water. The round's close is `$lands` plus my
+    #  bid window, in the duration arithmetic this engine does support — measured before it was
+    #  leaned on — and `$lands` rather than NOW() since #588, an offering landing at once.
     sh:construct """
         CONSTRUCT {
             ?via market:hasRound ?round .

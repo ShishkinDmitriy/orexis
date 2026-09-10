@@ -3,8 +3,11 @@
 An open round used to be `open_auction` on the host and `pending` on the bidder: two dicts,
 gone with the process, invisible to `orexis-ask`, and unreadable by any rule — so the buying
 action's precondition could only say "I could buy here". A round is a belief now, and the
-walk `?venue market:hasRound ?r . ?r market:closesAt ?t FILTER(?t > NOW())` is the whole of
-"a round is open", on either side. See
+walk `?venue market:hasRound ?r` is the whole of "a round is open", on either side: THE ROW'S
+PRESENCE IS THE OPENNESS (#599). It carried `FILTER(?t > NOW())` until the host began
+declaring the close, because a bidder that lost was told nothing and had to end the round by
+its own arithmetic — which made a fact about the venue something each bidder computed
+privately, with its own clock, inside every rule that asked. See
 knowledge/decisions/a-round-is-a-fact-and-offering-is-an-action.md.
 
 WHAT IS NEVER WRITTEN: the host's `bidWindowS` and `roundCooldownS`. Those are private for a
@@ -75,8 +78,11 @@ WHERE  {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{uri}> ?p ?o . OPTIONAL {{ ?v <{
 
 
 def sweep_expired(agent, now: datetime | None = None) -> int:
-    """Retract every round past its closesAt — a bidder is never told a round closed, it is
-    told the outcome or nothing, so the clock is what ends the row. Returns how many went."""
+    """Retract every round past its closesAt — the horizon on a belief about another agent.
+
+    The host says when its round is over (#599) and that is what normally ends the row. This
+    is the backstop: a close that never arrived, a host that stopped, a row that outlived a
+    restart. Returns how many went."""
     gone = [r for r in rounds_of(agent) if not r.is_open(now)]
     for r in gone:
         close_round(agent, r.auction_id)

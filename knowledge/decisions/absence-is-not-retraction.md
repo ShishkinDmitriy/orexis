@@ -43,7 +43,7 @@ a style question.** Ask whether the fact's absence is itself evidence:
 
 | treatment | when | here |
 |---|---|---|
-| **retract** | the absence says nothing worth keeping | a round past its `closesAt` — a bidder is never told a round closed, so the clock ends the row (`rounds.sweep_expired`) |
+| **retract** | the absence says nothing worth keeping | a round the host has declared closed (#599) — and, where that word never came, one past its `closesAt`, the horizon on a belief about another agent (`rounds.sweep_expired`) |
 | **keep and mark** | the absence IS evidence | an [obligation](/domain/obligation.md) past `orexis:expiresAt` — a debt nobody presented is a fact about a counterparty, so it is `lapsed` and unpursuable, never deleted |
 | **keep and let a want go cold** | the fact is still the best evidence there is | a reading past its horizon — kept, with its instant, and the want about knowing goes unmet |
 

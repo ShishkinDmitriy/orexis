@@ -1041,3 +1041,78 @@ def test_a_host_holding_enough_serves_the_presented_claim_by_the_same_search(hos
 
     obligation = [g for g in host.pursuing() if g.is_obligation and g.claim == claim["jti"]]
     assert obligation == [], "and the discharged debt is history, not a desire"
+
+
+# --- a round ends because the host says so (#599) ----------------------------
+
+
+def test_the_host_declares_the_close_as_it_declared_the_open(host):
+    """A round exists because the host announced it, and it ends the same way.
+
+    Its opening is a speech act on `market:offerTopic` — nothing is waited for, nothing is read
+    back — and its close was arithmetic every bidder did privately against the `closesAt` it had
+    computed from the window. So the fact was published at one end and derived at the other,
+    which is what put a `NOW()` in the premise of every buy.
+    """
+    rid = open_auction(host)
+    market = market_of(host)
+
+    host.hosting().close()
+
+    said = host.sent.to(market.offer_topic)[-1]
+    assert said.get("closed") is True and said["auction_id"] == rid, said
+    assert "winner" not in said and "price_per_l" not in said, \
+        "the venue's own fact is public; who won is the claim's, sealed to its winner"
+
+
+def test_a_losing_bidder_ends_its_round_on_the_hosts_word(make):
+    """The case the clock was covering for: a bidder that bid and lost is told nothing about
+    the outcome, so its row used to stand until its own arithmetic — or a housekeeping sweep —
+    caught up with it. The close arrives as a message now, and the fact goes with it."""
+    from orexis_capability_market import rounds
+
+    fern = make("fern")
+    market = market_of(fern)
+    fern.deliver(market.offer_topic, {"auction_id": "r7", "quantity_l": 2.0,
+                                      "reserve_price_per_l": 0.4, "closes_in_s": 600})
+    assert [r.auction_id for r in rounds.rounds_of(fern)] == ["r7"], "the offer opened a round"
+    standing = rounds.rounds_of(fern)[0]
+    assert standing.is_open(), "and by its own clock it has ten minutes left"
+
+    fern.deliver(market.offer_topic, {"auction_id": "r7", "host": "supplier", "closed": True})
+
+    assert rounds.rounds_of(fern) == [], \
+        "the host said the round was over and the bidder went on believing its own clock"
+
+
+def test_the_rows_presence_is_the_openness_and_no_rule_asks_the_clock(make):
+    """What the premise reads is the ROW, not the hour.
+
+    A round row whose `closesAt` has passed is still a round to `market:Acquiring`, because
+    the fact is retracted by the host's word (or, failing that, by the sweep) rather than by a
+    filter inside the rule. That is the point: a rule asking `NOW()` inside a simulated world
+    asks the REAL now, never the instant its act would be taken at, so the comparison was
+    answering a question about a world nobody is in (#598).
+    """
+    from datetime import datetime, timedelta, timezone
+
+    from orexis_capability_market import rounds
+    from orexis_capability_market.terms import ACQUIRING
+
+    fern = make("fern")
+    market = market_of(fern)
+    rounds.open_round(fern, market.uri, "r8", 2.0, 0.4,
+                      datetime.now(timezone.utc) - timedelta(seconds=1))   # closed a second ago
+    assert not rounds.rounds_of(fern)[0].is_open(), "the clock says this round is over"
+
+    def buying() -> bool:
+        from orexis_agent_deliberation.afforder import affordances_of
+        from orexis_agent_progression.ontology import beliefs_graph
+        return any(row.action == ACQUIRING for row in affordances_of(
+            fern.beliefs.query, fern.me.uri, fern.desires.query_union, beliefs_graph(fern.id)))
+
+    assert buying(), \
+        "the row stands, so buying is on the menu: the rule reads the fact and not the hour"
+
+    rounds.close_round(fern, "r8")
+    assert not buying(), "and with the fact gone, so is the row"
