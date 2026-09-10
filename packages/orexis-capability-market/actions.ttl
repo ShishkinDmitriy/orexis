@@ -271,8 +271,11 @@ market:Offering
           FILTER NOT EXISTS {
             GRAPH $beliefs { ?via market:hasRound ?open } }
           FILTER NOT EXISTS { GRAPH $state { ?via market:hasRound ?imagined } }
-          OPTIONAL { GRAPH $beliefs { ?via market:mayConveneAt ?may } }
-          FILTER(!BOUND(?may) || ?may <= NOW())
+          #  AND THE VENUE IS NOT COOLING (#598): the row's presence is the fact, retracted
+          #  by a timer when the cooldown runs out and by a sweep where the timer did not
+          #  survive a restart. It asked `?may <= NOW()` while the term named the instant
+          #  rather than the state, which is the last clock this package's rules read.
+          FILTER NOT EXISTS { GRAPH $beliefs { ?via market:coolingUntil ?until } }
           OPTIONAL { GRAPH $state { ?reading sosa:hasFeatureOfInterest ?source ;
                                     sosa:observedProperty ?stock ;
                                     sosa:hasSimpleResult ?level } }
