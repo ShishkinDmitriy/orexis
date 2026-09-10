@@ -63,6 +63,13 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
   unimplemented, its constraints already fixed in the vocabulary. That member is the "only LLM
   part" v1 promises, made affordable by intentions persisting between calls.
 
+- **Planning in time** — the cone the agent builds is the shape the search already has, and the
+  direction now is to give it an axis and a twin:
+  [planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md),
+  five items from a node that carries a time to a plan that is a partial order. The first of
+  them is the one everything waits on, and the fourth retires the workaround that keeps looking
+  alive today.
+
 # Working principle
 
 Extract-from-concrete. Build watering concretely; keep the four seams visible (value model,

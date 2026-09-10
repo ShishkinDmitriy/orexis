@@ -18,6 +18,15 @@ description: >-
 
 # The claim
 
+**Amended 2026-09-10 by
+[planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md).**
+Nothing below becomes false; the tree gains an axis and a twin. Every node carries a TIME, so
+two nodes holding the same facts at different instants are different worlds — the world moves
+whether or not the agent does — and beside this cone, which branches on what the agent may DO,
+there is a second that branches on what it will come to BELIEVE. The second is not searched: it
+is folded into each node, because nothing chooses the weather. A LOOK belongs to it, which is
+why a look changes no fact here and survives only by a special case.
+
 World state has three regions in time, and the agent walks from one to the next through a
 tree it built itself.
 

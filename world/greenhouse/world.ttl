@@ -1,0 +1,173 @@
+@prefix :           <http://example.org/orexis/world/greenhouse#> .
+@prefix climate:    <http://example.org/orexis/climate#> .
+@prefix water:      <http://example.org/orexis/water#> .
+@prefix sensing:    <http://example.org/orexis/sensing#> .
+@prefix actuation:  <http://example.org/orexis/actuation#> .
+@prefix mqtt:       <http://example.org/orexis/mqtt#> .
+@prefix orexis:     <http://example.org/orexis#> .
+@prefix prov:       <http://www.w3.org/ns/prov#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sosa:       <http://www.w3.org/ns/sosa/> .
+@prefix ssn:        <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema:     <https://schema.org/> .
+@prefix scaling:    <http://example.org/orexis/scaling#> .
+@prefix unit:       <http://qudt.org/vocab/unit/> .
+@prefix sim:        <http://example.org/orexis/sim#> .
+
+#  ONE BED, TWO PROPERTIES, TWO LEVERS, ONE WANT.
+#
+#  Every world before this holds wants about a single property. Here the grower holds one want
+#  — the bed is comfortable — that is about the soil AND the air, and no single lever serves
+#  it: the pump moves the first, the heater the second. It is the smallest world in which a
+#  plan must take a step from each, and the world the records' argument about planning two
+#  halves apart has been waiting for.
+#
+#  The ranges are stated on the BED rather than on a species class, because the bed is not a
+#  plant: it is the thing whose comfort is wanted, and both of its ranges are the sovereign's
+#  to author here.
+
+:local_bus a mqtt:MessageBus ;
+    orexis:localId "local_bus" ;
+    mqtt:brokerHost "localhost" ;
+    mqtt:brokerPort 1889 ;
+    mqtt:brokerTlsPort 8889 .
+
+:world a orexis:World ; orexis:currentVersion :version_1 ;
+    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole orexis:Sovereign ] .
+:version_1 a orexis:WorldVersion ; orexis:versionNumber 1 .
+
+#  THE BED. Two operating ranges and two survival ranges, one pair per property: the soil is
+#  comfortable between 0.30 and 0.60 and survives between 0.10 and 0.85; the air is comfortable
+#  between 18 and 24 degrees and survives between 5 and 35. Three bands are minted per
+#  property from these — below, inside, above — and that is the whole of what the search sees
+#  of either number.
+:bed a sosa:FeatureOfInterest ;
+    orexis:localId "bed" ;
+    rdfs:label "the heated bed" ;
+    water:servedBy :water_butt ;
+    water:driesPerDay 0.04 ; water:litresPerFraction 2.0 ;
+    ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:SoilMoisture ;
+            schema:minValue 0.30 ; schema:maxValue 0.60 ; schema:unitCode unit:UNITLESS ] ,
+                               [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:AirTemperature ;
+            schema:minValue 18.0 ; schema:maxValue 24.0 ; schema:unitCode unit:DEG_C ] ] ;
+    ssn-system:hasSurvivalRange [ a ssn-system:SurvivalRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:SoilMoisture ;
+            schema:minValue 0.10 ; schema:maxValue 0.85 ; schema:unitCode unit:UNITLESS ] ,
+                               [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:AirTemperature ;
+            schema:minValue 5.0 ; schema:maxValue 35.0 ; schema:unitCode unit:DEG_C ] ] .
+
+:water_butt a water:WaterSource ;
+    orexis:localId "water_butt" ;
+    water:suppliedBy :grower ;
+    water:capacityL 20.0 ;
+    ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:StoredLitres ;
+            schema:minValue 1.0 ; schema:maxValue 20.0 ; schema:unitCode unit:L ] ] ;
+    ssn-system:hasSurvivalRange [ a ssn-system:SurvivalRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:StoredLitres ;
+            schema:minValue 0.0 ; schema:maxValue 20.0 ; schema:unitCode unit:L ] ] .
+
+:grower a orexis:Agent ;
+    orexis:localId "grower" ;
+    orexis:actsFor :bed ;
+    sensing:polls :moisture_probe , :thermometer , :butt_level , :outdoor_thermometer ;
+    actuation:hasActuator :pump ;
+    climate:hasHeater :heater ;
+    climate:hasVent :vent .
+
+:moisture_probe a sosa:Sensor ;
+    orexis:localId "moisture_probe" ;
+    mqtt:onBus :local_bus ;
+    sensing:senseMode sensing:ScheduledProcedure ;
+    sensing:monitors :bed ;
+    sosa:observes water:SoilMoisture ;
+    scaling:quantityUnit unit:UNITLESS ;
+    mqtt:readingTopic "sensors/moisture_probe/reading" ;
+    mqtt:commandTopic "sensors/moisture_probe/command" ;
+    sim:simulatedBy [ a sim:Model ;
+        sim:minValue 0.0 ; sim:maxValue 1.0 ;
+        sim:initialValue 0.40 ;
+        sim:tickSeconds 3 ] .
+
+:thermometer a sosa:Sensor ;
+    orexis:localId "thermometer" ;
+    mqtt:onBus :local_bus ;
+    sensing:senseMode sensing:ScheduledProcedure ;
+    sensing:monitors :bed ;
+    sosa:observes water:AirTemperature ;
+    scaling:quantityUnit unit:DEG_C ;
+    mqtt:readingTopic "sensors/thermometer/reading" ;
+    mqtt:commandTopic "sensors/thermometer/command" ;
+    sim:simulatedBy [ a sim:Model ;
+        sim:minValue -10.0 ; sim:maxValue 45.0 ;
+        sim:initialValue 21.0 ;
+        sim:tickSeconds 3 ] .
+
+:butt_level a sosa:Sensor ;
+    orexis:localId "butt_level" ;
+    mqtt:onBus :local_bus ;
+    sensing:senseMode sensing:PushProcedure ;
+    sensing:monitors :water_butt ;
+    sosa:observes water:StoredLitres ;
+    scaling:quantityUnit unit:L ;
+    mqtt:readingTopic "sensors/butt_level/reading" ;
+    sim:simulatedBy [ a sim:Model ;
+        sim:minValue 0.0 ;
+        sim:initialValue 15.0 ;
+        sim:tickSeconds 30 ] .
+
+:pump a actuation:Valve ;
+    orexis:localId "pump" ; mqtt:onBus :local_bus ;
+    actuation:actuates :bed ; actuation:drawsFrom :water_butt ;
+    sim:simulatedBy [ a sim:Model ] ;
+    mqtt:commandTopic "actuators/pump/command" ;
+    mqtt:statusTopic "actuators/pump/status" ;
+    actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 500.0 .
+
+#  THE OUTSIDE, and the vent that opens onto it. The outside is a subject like any other and
+#  states no range: nothing wants it to be anything, so it mints no band and its reading stays
+#  a number — which is exactly what the venting rule needs, since no lever of this agent moves
+#  it and it is therefore the same number at every node of a cone.
+:outside a sosa:FeatureOfInterest ;
+    orexis:localId "outside" ;
+    rdfs:label "the air outside the greenhouse" .
+
+:outdoor_thermometer a sosa:Sensor ;
+    orexis:localId "outdoor_thermometer" ;
+    mqtt:onBus :local_bus ;
+    sensing:senseMode sensing:ScheduledProcedure ;
+    sensing:monitors :outside ;
+    sosa:observes water:AirTemperature ;
+    scaling:quantityUnit unit:DEG_C ;
+    mqtt:readingTopic "sensors/outdoor_thermometer/reading" ;
+    mqtt:commandTopic "sensors/outdoor_thermometer/command" ;
+    sim:simulatedBy [ a sim:Model ;
+        sim:minValue -20.0 ; sim:maxValue 45.0 ;
+        sim:initialValue 8.0 ;
+        sim:tickSeconds 3 ] .
+
+:vent a climate:Vent ;
+    orexis:localId "vent" ; mqtt:onBus :local_bus ;
+    climate:ventilates :bed ;
+    climate:ventilatesProperty water:AirTemperature ;
+    climate:opensOnto :outside ;
+    mqtt:commandTopic "actuators/vent/command" .
+
+#  THE HEATER, and THE KNOB. `climate:driesTheSoil` is absent here, so warming touches
+#  nothing the watering half of the want reads and the two halves are independent. A test
+#  adds the one triple to get the other regime, which is what makes the comparison honest:
+#  the same world, one fact apart.
+:heater a climate:Heater ;
+    orexis:localId "heater" ; mqtt:onBus :local_bus ;
+    climate:warms :bed ;
+    climate:warmsProperty water:AirTemperature ;
+    climate:driesProperty water:SoilMoisture ;
+    mqtt:commandTopic "actuators/heater/command" .

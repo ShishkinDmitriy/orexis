@@ -72,11 +72,25 @@ _ACTIONS_Q = """SELECT ?action ?available WHERE {
   ?action a orexis:Action ; orexis:available ?available }"""
 
 
-def wants_of(desires, agent_uri: str) -> dict[str, str]:
-    """Every want this agent holds that is ABOUT something, want -> about. A want absent here
-    — a debt, a call — is about nothing an action query could join, and the planner lets it
-    range over any row of the agent's own."""
-    return {r["want"]: r["about"] for r in bindings(desires(_WANTS_Q, {"me": agent_uri}))}
+def wants_of(desires, agent_uri: str) -> dict[str, tuple[str, ...]]:
+    """Every want this agent holds that is ABOUT something, want -> what it is about. A want
+    absent here — a debt, a call — is about nothing an action query could join, and the planner
+    lets it range over any row of the agent's own.
+
+    SEVERAL, because a want may be (#566): a greenhouse bed is comfortable when its soil and
+    its air are both in their regions, and that is ONE want about two properties — the first
+    shipped want whose plan needs two different levers. Every want the plant worlds hold names
+    exactly one, and reads the same through the tuple."""
+    out: dict[str, list[str]] = {}
+    for r in bindings(desires(_WANTS_Q, {"me": agent_uri})):
+        out.setdefault(r["want"], []).append(r["about"])
+    return {w: tuple(sorted(a)) for w, a in out.items()}
+
+
+def _sole(abouts) -> str | None:
+    """The one thing a want is about, or None where it names none — or several, which only a
+    row's own binding can tell apart."""
+    return abouts[0] if abouts and len(abouts) == 1 else None
 
 
 def affordances_of(query, agent_uri: str, desires, beliefs: str, state: str = STATE_GRAPH,
@@ -107,7 +121,9 @@ def affordances_of(query, agent_uri: str, desires, beliefs: str, state: str = ST
     #  in a store of its own. An empty block is legal SPARQL and yields no rows — an agent
     #  with no desires has no menu.
     about_of = wants_of(desires, agent_uri)
-    wants = " ".join(f"(<{w}> <{a}>)" for w, a in sorted(about_of.items()))
+    #  ONE PAIR PER (want, about), so a want about two properties offers a row for each and
+    #  each action matches the half it serves (#566).
+    wants = " ".join(f"(<{w}> <{a}>)" for w, abouts in sorted(about_of.items()) for a in abouts)
     rows = []
     for action in bindings(query(_ACTIONS_Q)):
         if only is not None and action["action"] not in only:
@@ -122,8 +138,11 @@ def affordances_of(query, agent_uri: str, desires, beliefs: str, state: str = ST
         #  are IRIs the binder renders. A precondition carrying a token nobody binds refuses.
         q = bind(action["available"], me=agent_uri, wants=Raw(wants), beliefs=beliefs,
                  state=state)
+        #  THE ROW SAYS WHICH about IT MATCHED where its select projects one — every action
+        #  that filters on the want's about does now — and the want's own answers where it does
+        #  not, which is only legible while the want names exactly one (#566).
         rows += [Affordance(action=action["action"], via=r["via"], want=r.get("want"),
-                            about=about_of.get(r.get("want")) or r.get("about"),
+                            about=r.get("about") or _sole(about_of.get(r.get("want"))),
                             direction=r.get("direction"), for_agent=r.get("for_agent"))
                  for r in bindings(query(q))]
     return sorted(rows, key=lambda a: (a.want or "", a.action, a.for_agent or ""))

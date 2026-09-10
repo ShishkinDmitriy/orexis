@@ -1,0 +1,86 @@
+@prefix : <http://example.org/orexis/climate#> .
+@prefix climate: <http://example.org/orexis/climate#> .
+@prefix orexis:    <http://example.org/orexis#> .
+@prefix owl:       <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:       <http://www.w3.org/2001/XMLSchema#> .
+@prefix sosa:      <http://www.w3.org/ns/sosa/> .
+
+climate: a owl:Ontology ;
+    rdfs:label "climate" ;
+    rdfs:comment """The air a bed sits in: what moves it, and what moving it costs elsewhere.
+
+This domain's SECOND vocabulary, beside `water:`, and the sovereign asked whether the two should
+be one. They are not, and the line is a good one to know. WATER is a traded good: a litre is
+bought, priced and owed, and the market's valuation terms hang off it — merging it here would
+drag clearing into a vocabulary about warmth. CLIMATE is nobody's good; it is a condition, moved
+by levers an agent owns outright. What the two share is a bed, and a bed is the WORLD's.
+
+Two levers live here and they are opposite in an instructive way. A HEATER moves the air one
+way, always, and needs to know nothing but that it is on. A VENT moves the air toward whatever
+is outside — which may be warmer or colder, so the same act heats on one afternoon and chills on
+another, and the rule must read the world to say which. That is the first effect in this
+repository whose declared outcome depends on a fact no lever of the agent's can move.
+
+Both are UN-TAKEN: nothing contributes either action, so they are planned and never executed, as
+hanoi's Move is. A taker would size the run from the readings in hand, as an actuator sizes a
+dose, and there is no such device here yet.""" .
+
+#################  The heater  #################
+
+#  NOT a `sosa:Actuator`: actuation's shapes hold every actuator to being a valve — what it
+#  actuates, what it draws from, its cap in millilitres — and a heater has none of those. It
+#  is a lever of its own kind, wired by this package's own two predicates.
+:Heater a owl:Class ;
+    rdfs:label "heater" ;
+    rdfs:comment "A lever that warms what it is pointed at. A world states which subject and which property, because a heater over a bed and a heater in a room warm different things and the action must join through the world rather than assume." .
+
+:hasHeater a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range :Heater ;
+    rdfs:label "has heater" ;
+    rdfs:comment "The heaters an agent may switch on — its half of the wiring, as `actuation:hasActuator` is for a valve." .
+
+:warms a owl:ObjectProperty ; rdfs:domain :Heater ; rdfs:range sosa:FeatureOfInterest ;
+    rdfs:label "warms" ;
+    rdfs:comment "What this heater is pointed at: the bed whose air it moves. The other half of the wiring, and what makes the action available to whoever acts for that subject." .
+
+:warmsProperty a owl:ObjectProperty ; rdfs:domain :Heater ; rdfs:range sosa:ObservableProperty ;
+    rdfs:label "warms property" ;
+    rdfs:comment "WHICH property this heater moves, stated by the world rather than assumed by the action: a heater warms air here, and a rule that named the property itself would be a package naming a domain's word." .
+
+#################  The knob  #################
+
+:driesTheSoil a owl:DatatypeProperty ; rdfs:domain :Heater ; rdfs:range xsd:boolean ;
+    rdfs:label "dries the soil" ;
+    rdfs:comment "Whether running this heater also dries what it warms — evaporation, as a world fact. It is the knob this domain exists for: OFF, warming touches nothing the watering want reads and the two halves of `the bed is comfortable` are independent; ON, the heater's effect writes a reading the dosing rule reads, and a plan that warmed after watering has undone its own work. The two regimes are the same world with one triple changed, which is what makes the comparison honest." .
+
+:driesProperty a owl:ObjectProperty ; rdfs:domain :Heater ; rdfs:range sosa:ObservableProperty ;
+    rdfs:label "dries property" ;
+    rdfs:comment "Which property drying moves, where `climate:driesTheSoil` is true — the soil's moisture here, stated by the world for the same reason `warmsProperty` is." .
+
+#################  The vent  #################
+#
+#  A window, and the first lever whose effect the agent cannot predict from its own wiring
+#  alone. What opening it does to the bed depends on what is on the other side: open onto a
+#  warm afternoon and the air rises, open onto a cold night and it falls. The world says which
+#  subject is on the other side; the rule reads that subject's reading and works out which of
+#  the bed's own bands the bed would land in.
+
+:Vent a owl:Class ;
+    rdfs:label "vent" ;
+    rdfs:comment "A window, a louvre, a fan hatch: a lever that lets the outside in. What it does to the subject is the outside's to determine, which is why it states what it opens onto." .
+
+:hasVent a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range :Vent ;
+    rdfs:label "has vent" ;
+    rdfs:comment "The vents an agent may open — its half of the wiring, as `climate:hasHeater` is for a heater." .
+
+:ventilates a owl:ObjectProperty ; rdfs:domain :Vent ; rdfs:range sosa:FeatureOfInterest ;
+    rdfs:label "ventilates" ;
+    rdfs:comment "What this vent opens INTO: the bed whose air it moves." .
+
+:ventilatesProperty a owl:ObjectProperty ; rdfs:domain :Vent ; rdfs:range sosa:ObservableProperty ;
+    rdfs:label "ventilates property" ;
+    rdfs:comment "WHICH property opening it moves, stated by the world for the same reason a heater states one: a rule naming the air temperature itself would be a package spelling a domain's word." .
+
+:opensOnto a owl:ObjectProperty ; rdfs:domain :Vent ; rdfs:range sosa:FeatureOfInterest ;
+    rdfs:label "opens onto" ;
+    rdfs:comment "What is on the OTHER side — the outside air, a corridor, a second bed. Its reading is what the venting rule reads to say where the subject would land, and it is a fact no lever of this agent moves, which is exactly why the rule may read it as a NUMBER: a plan cannot change it, so it is the same number all the way down a cone. What a plan CAN change is read as the band it is (#579)." .

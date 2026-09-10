@@ -1,0 +1,50 @@
+@prefix :           <http://example.org/orexis/world/greenhouse#> .
+@prefix orexis:     <http://example.org/orexis#> .
+@prefix water:      <http://example.org/orexis/water#> .
+@prefix sensing:    <http://example.org/orexis/sensing#> .
+@prefix sosa:       <http://www.w3.org/ns/sosa/> .
+@prefix ssn:        <http://www.w3.org/ns/ssn/> .
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+
+#  THE WANT THIS WORLD EXISTS FOR: one desire about TWO properties, ratified here.
+#
+#  A bed is comfortable when neither of its readings sits below the region the bed states —
+#  the soil's or the air's. One want, two `orexis:about`, so the menu offers a row per
+#  property (#566) and the plan takes a step from each: a dose through the pump, a heating
+#  through the heater.
+#
+#  Asked BY BAND, as every met-test is since #579: the shape says no reading of the property
+#  is a `sensing:BelowRegion` one, and the numbers those classes stand for are the bands'
+#  own, minted at genesis from the ranges the bed states.
+GRAPH <http://example.org/orexis/graph/desire/asserted> {
+  :grower orexis:holds :the_bed_is_comfortable .
+  :the_bed_is_comfortable a orexis:Desire ;
+      orexis:bindsWhen orexis:Always ;
+      orexis:about water:SoilMoisture , water:AirTemperature ;
+      rdfs:label "the bed is comfortable — soil and air both in the ranges the bed states" ;
+      rdfs:comment "The first shipped want about two properties: no single lever serves it, so its plan is a dose and a heating." ;
+      orexis:metWhen :comfortable .
+
+  #  The shape says which properties it is about, as every shape about an agent's state
+  #  must — two of them, which is what this world is for.
+  :comfortable a sh:NodeShape ;
+      ssn:forProperty water:SoilMoisture , water:AirTemperature ;
+      sh:targetNode :grower ;
+      sh:property [
+          sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+          orexis:violationIs orexis:Below ;
+          sh:qualifiedMaxCount 0 ;
+          sh:qualifiedValueShape [
+              sh:property [ sh:path sosa:observedProperty ; sh:hasValue water:SoilMoisture ] ;
+              sh:class sensing:BelowRegion ] ;
+          sh:message "the bed's soil is below the range the bed states" ] ;
+      sh:property [
+          sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+          orexis:violationIs orexis:Below ;
+          sh:qualifiedMaxCount 0 ;
+          sh:qualifiedValueShape [
+              sh:property [ sh:path sosa:observedProperty ; sh:hasValue water:AirTemperature ] ;
+              sh:class sensing:BelowRegion ] ;
+          sh:message "the bed's air is below the range the bed states" ] .
+}
