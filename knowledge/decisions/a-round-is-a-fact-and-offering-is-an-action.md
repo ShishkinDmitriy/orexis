@@ -52,7 +52,7 @@ is the host's `bidWindowS` and `roundCooldownS`, which are private beliefs preci
 bidder cannot time its arrival; `closesAt` is what the offer already says.
 
 **2. `market:Acquiring` is available only while a round is open.** One hop joins the walk:
-`?via market:hasRound ?r . ?r market:closesAt ?t FILTER(?t > NOW())`. The row then has the
+`?via market:hasRound ?r`. The row then has the
 property every other row has — *a row whose premises cannot hold does not exist* — and three
 things follow without a line of policy:
 
@@ -110,10 +110,20 @@ host would *rather* sell — costs, a reserve, a season — remains
 [strategic-supplier](/decisions/strategic-supplier.md)'s seam, untouched: this makes Offer
 plannable, and a plannable act is not yet a wanted one.
 
-**Which side holds the clock.** A bidder's `closesAt` row expires by the filter alone; a host's
-round is closed by its own timer as today. A round that is a fact could be closed by a rule
-on a clock of its own, which is [who-holds-the-clock](/decisions/who-holds-the-clock.md)'s
-question and not this one.
+**Which side holds the clock.** ~~A bidder's `closesAt` row expires by the filter alone; a
+host's round is closed by its own timer as today.~~ AMENDED by #599, and the seam turned out to
+be the whole question. A fact about the venue was published at one end and DERIVED at the
+other: the host declared the opening and each bidder computed the closing, privately, against
+a `closesAt` it had worked out from the window with its own clock. So the host declares the
+close too, on the topic that carried the offer, and a bidder's row is retracted by something
+another agent DID rather than by arithmetic — which is what took `NOW()` out of the premise
+above, and out of Offering's. The clock survives as the BACKSTOP, which is what it should have
+been: a message can be lost and a host can die, so `closesAt` is the horizon on a belief about
+another agent and `sweep_expired` is what covers silence. The general form is
+[#598](https://github.com/ShishkinDmitriy/orexis/issues/598) — time is another sense, writing facts at the belief-revision seam — and the
+cooldown is the one clock read left in this package, held back because
+`market:mayConveneAt` NAMES an instant: making its presence the fact needs a term whose name
+says what its presence means, which is a rename with a gate rather than a filter deleted.
 
 # Order of work
 

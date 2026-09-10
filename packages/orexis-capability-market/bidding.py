@@ -328,8 +328,13 @@ class BiddingModule(Module):
 
     @contributes(SWEEP)
     def sweep(self) -> int:
-        """Rounds the clock has closed. A bidder is never told a round ended — it gets a claim
-        or nothing — so the row goes by its own `closesAt` and nothing else (#398)."""
+        """Rounds the clock has closed, and it is the BACKSTOP rather than the mechanism.
+
+        The host declares the close (#599), so a round normally ends on its word, arriving as
+        a message like anything else another agent did. This is what covers silence: a message
+        lost, a host that died mid-round, a row that outlived a restart. A bidder must not
+        believe a round open for ever, and its own `closesAt` is the horizon that says when
+        to stop (#398)."""
         return rounds.sweep_expired(self.agent)
 
     @contributes(SUBSCRIPTIONS)
@@ -371,6 +376,9 @@ class BiddingModule(Module):
         """Look first. The bid is submitted when the reading comes back, not before."""
         auction_id = offer.get("auction_id")
         if not auction_id or not self.me.acts_for:
+            return
+        if offer.get("closed"):
+            self.on_close(auction_id)
             return
 
         self.pending = {"auction_id": auction_id, "market": market}
@@ -459,6 +467,28 @@ class BiddingModule(Module):
         if observed_property != self.about:
             return
         self.submit(value)
+
+    def on_close(self, auction_id: str) -> None:
+        """The host says its round is over (#599), and that ends it for me.
+
+        A round is a fact THIS agent holds, written when the host announced it. What ends it
+        used to be arithmetic — my own clock against the `closesAt` I computed from the window
+        the offer stated — because a bidder that lost was told nothing. Now the venue says so,
+        and the fact is retracted by the same road it arrived on: something another agent DID,
+        through translation and the belief-revision seam.
+
+        The clock is not gone, it is the BACKSTOP: a message can be lost and a host can die,
+        so `sweep` still retracts a row whose close has passed, and the give-up timer still
+        lands for a round this bidder is waiting on. What changed is which of them is the
+        mechanism.
+        """
+        if self.pending and self.pending.get("auction_id") == auction_id:
+            #  Exactly what the deadline landing does, and earlier: the tender is dropped, the
+            #  look stays owed, and `pending` is cleared. Reused rather than repeated, so the
+            #  two roads out of a round cannot drift apart.
+            self.give_up()
+            return
+        rounds.close_round(self.agent, auction_id)
 
     def give_up(self) -> None:
         if self._deadline:
