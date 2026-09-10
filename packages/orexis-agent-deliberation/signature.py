@@ -151,6 +151,42 @@ def advance(diff: tuple, added: frozenset, retracted: frozenset, base: frozenset
             frozenset((dminus | (retracted & base)) - added))
 
 
+def where(diff: tuple, ground: tuple) -> tuple:
+    """WORLD AND GROUND (#587): the facts a node holds, and the prediction it holds them on.
+
+    A world used to be its diff alone, which said that two nodes holding the same facts are
+    the same node whatever else is true of them. That is right for a world nothing moves but
+    the agent — a puzzle, a grid — and it is right today, because the agent's own present is
+    the only thing any world here is grounded on. It stops being right the moment the world
+    predicts: two worlds holding the same facts under different predictions are two worlds,
+    because what happens next differs. A bed vented onto a warm afternoon and the same bed
+    vented onto a cold night is the case, and neither the facts nor a clock separates them —
+    the PREDICTION does. See
+    [planning-branches-on-action-forecasting-on-belief](knowledge/decisions/planning-branches-on-action-forecasting-on-belief.md).
+
+    **A possible world is the present, plus what the world moved, plus what the agent moved.**
+    The diff is the agent's half — `(base − D−) + D+`, advanced by `advance` a step at a time —
+    and the ground is the world's, which is why the two stay apart: the facts are their sum, and
+    a pot in the region because it rained holds what a pot in the region because it was dosed
+    holds. The ground keeps the BRANCH rather than its total, because two branches that have
+    moved the world the same distance need not move it the same way next.
+
+    **The ground is which of the world's own branches this node sits under** — the happening
+    edges taken to reach it, in order, where a step is a chosen one. Empty is the present,
+    observed, and it is every node's ground until something predicts (#589): a pass has one
+    ground, so this pair is the diff it always was, measured to be so on every shipped world.
+
+    NOT AN INSTANT, which is what this carried for a day and what the issue asked to measure.
+    Keying on the path's summed `orexis:landsAfter` changed nothing anywhere — no shipped world
+    declares a landing on an action that can return to a pose — and where one was declared it
+    cost cycle detection its grip: hanoi with a minute per move went from 50 forks to a whole
+    128-world budget and stopped solving at its own 64, buying distinctions with no content,
+    since nothing in that world changes while the clock runs. Time reaches identity through
+    the ground, when a prediction says what the world does between two instants, and not before.
+    """
+    return (diff, ground)
+
+
 class _World:
     """One `facts` call's view of its triples: the observation keys, and each blank node's
     neighbourhood — what a term needs to canonicalise, held once rather than re-derived per

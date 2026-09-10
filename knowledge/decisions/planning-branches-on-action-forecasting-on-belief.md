@@ -26,8 +26,9 @@ them. What differs is not the nodes. It is WHO CHOOSES THE EDGE.
 
 The picture labels every node with the [bands](/domain/band.md) its readings are in, and every
 edge with what takes it: an action on a chosen one, a thing the world does on a happening one.
-Two paths reach a world where the want is met, and they are two worlds rather than one place
-reached twice, which is item 1 below.
+Two paths reach a world where the want is met, and on one ground that is one world — the search
+keeps the cheaper path and discards the other as somewhere already reached. What would make
+them two is a second ground, which is item 1 below.
 
 - **A CHOSEN edge is a step.** The agent takes it, so the world it leads to is one the agent may
   prefer among. This is the tree
@@ -36,6 +37,28 @@ reached twice, which is item 1 below.
 - **A HAPPENING edge is the world's.** Readings not yet taken: what the soil will show, whether
   it rains, whether the sun has set by the time a vent opens. Nobody prefers among these, so
   there is nothing on them to search.
+
+**So a possible world is the present, plus what the world moved, plus what the agent moved** —
+the sovereign's equation, and it is exact in the arithmetic already here. A node is held as its
+net diff against the observed present, `(base − D−) + D+`, advanced by set algebra a step at a
+time; a happening edge advances it by the same algebra, since a prediction is a claim about
+facts like any other. What changes is only WHO AUTHORED the movement, which is why the two
+summands must stay apart: the facts are their sum, and a world where the soil is in the region
+because it rained holds the same facts as one where it is in the region because the agent
+dosed.
+
+**The identity keeps the branch, not its total.** Two grounds that have moved the world the same
+distance so far need not move it the same way next — *it rained and stopped* and *it is still
+raining* agree about the soil and disagree about the hour to come — so a node carries which
+happening edges it stands under rather than their net. That is the one place the arithmetic does
+not suffice, and the reason is the same one the whole record turns on: a happening edge is a
+claim about what the world will keep doing, and the sum forgets it.
+
+**A peer is the world, from here.** Nothing another agent does is on this agent's menu, so its
+acts move the world regardless of what this one chooses: they arrive as happening edges, not as
+steps. That is [model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md)'s
+first-order rule read forward — what a peer DID is a fact, what a peer WILL do is a prediction —
+and it says where a society's mutual expectations will hang when anyone builds them.
 
 **The modality belongs to the EDGE, not to the node.** A chosen edge is intention-shaped — it is
 something to commit to; a happening one is belief-shaped — it is something to be right or wrong
@@ -73,11 +96,37 @@ What was missing was a place for it to have consequences.
 
 # What follows, in the order it would be built
 
-1. **A node carries a TIME**, and identity becomes world-and-when ([#587](https://github.com/ShishkinDmitriy/orexis/issues/587)). The world moves whether or
-   not the agent does — soil dries at a declared rate nothing in planning reads, rain arrives,
-   night falls — so two nodes holding the same facts at different instants are genuinely
-   different worlds. Everything below waits on this, and it is the one change that touches
-   cycle detection, which compares worlds today with no notion of when.
+1. **A node is GROUNDED on a prediction**, and identity becomes world-and-ground
+   ([#587](https://github.com/ShishkinDmitriy/orexis/issues/587), landed). A node's ground is which of the world's own branches it sits
+   under — the happening edges taken to reach it, where a step is a chosen one. Two worlds
+   holding the same facts on different grounds are two worlds, because what happens next
+   differs: a bed vented onto a warm afternoon is not the same world as the same bed vented
+   onto a cold night, and neither its facts nor a clock separates them.
+
+   Built as `signature.where`, the node's diff and its ground, with a step inheriting its
+   parent's — taking a lever never changes which branch of the world you are in. Every pass has
+   ONE ground today, the present, observed, because nothing here predicts; so the pair is the
+   diff it always was, and every shipped world plans exactly as before. That is not a mechanism
+   idling: it is the shape the ground fills the day item 3 draws a happening edge, and what it
+   replaced had to be measured to be refused.
+
+   **It was a node's TIME for a day, and the measurement refused it.** Keying on the path's
+   summed `orexis:landsAfter` changed nothing on any shipped world, and where a landing was
+   declared it cost cycle detection its grip — hanoi with a minute per move went from 50 forks
+   to a whole 128-world budget on three disks and stopped solving at that world's own 64 — and
+   cost a shipped answer besides: a market host owing water it does not hold planned a serve
+   from a barrel too low instead of the refill, because a dry serve predicts nothing and a world
+   that predicts nothing had stopped colliding with the world it was predicted from. What makes
+   a later world a different world is not that it is later. It is that something the world does
+   has happened in between, which is a prediction. So no grain has to be guessed: a pass with
+   one ground is timeless by construction, and time reaches identity through the ground when a
+   forecast says what the world does between two instants. See
+   [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md).
+
+   **The drift is [#592](https://github.com/ShishkinDmitriy/orexis/issues/592)**, and it is a happening edge like any other: an imagined
+   reading has no number to move, since an effect declares the band it reaches and no value, so
+   a drift is the statement that a reading in one band becomes a reading in another after long
+   enough — the declaration item 3 exists for, on the clock item 2 hands a rule.
 2. **A rule may read the clock its step lands at** ([#588](https://github.com/ShishkinDmitriy/orexis/issues/588)). The search already sums each step's
    `orexis:landsAfter`; the number exists and is never handed over. This is what makes a
    forecast readable at all, and it closes the seam the vent already has, where a plan that

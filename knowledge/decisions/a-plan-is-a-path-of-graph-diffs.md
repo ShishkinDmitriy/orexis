@@ -580,6 +580,45 @@ note that "valve X open for three seconds" is an ACT, and desires here are state
 answer it: the state is *this claim discharged*, which is a pattern over the ledger, and the act
 stays an affordance. That closes the last place where a want is not a shape.
 
+# Amended: where a plan stands is a world AND the prediction it stands on (#587)
+
+The signature above answers *where am I* with the world reached — the net diff against the base,
+in canonical facts. That is the whole answer for as long as the agent's own present is the only
+thing any imagined world is grounded on, which is where this project still stands. It stops
+being the whole answer the moment the world predicts: two worlds holding the same facts under
+different predictions are two worlds, because what happens NEXT differs. A bed vented onto a
+warm afternoon and the same bed vented onto a cold night is the case, and it is the sovereign's.
+
+So a node carries its GROUND — which of the world's own branches it sits under, the happening
+edges taken to reach it, where a step is a chosen one — and `signature.where` is the pair. A
+step inherits its parent's ground, because taking a lever never changes which branch of the
+world you are in; extending a ground is a happening edge's to do, and nothing draws one yet. The
+model is
+[planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md).
+
+**Not an instant, which this carried for a day.** #587 asked for the node's TIME in the key —
+the path's own `orexis:landsAfter` summed — and asked for the granularity to be measured. It
+was, and the measurement refuses it. Keying on the instant changed nothing on any shipped world:
+the same forks and the same steps on hanoi, the courier, the greenhouse and both plants, because
+doubling back inside a budget needs an action that both declares a landing and returns to a
+pose, and no shipped world has one. Where one was declared it cost cycle detection its grip —
+hanoi with a minute per move went from 50 forks to a whole 128-world budget on three disks, and
+stopped solving at that world's own 64 — and it cost a shipped answer besides: with the instant
+alone deciding, a market host owing water it does not hold planned a serve from a barrel too low
+instead of the refill, because a dry serve predicts nothing, and a world that predicts nothing
+had stopped colliding with the world it was predicted from.
+
+**The correction is the sovereign's and it is sharper than the patch it replaces.** What makes a
+later world a different world is not that it is later; it is that something the world does has
+happened in between — and that is a prediction, not a clock. A pass with one ground is timeless
+by construction, exactly as every pass here is today, and no grain has to be guessed to make it
+so. Time reaches identity through the ground when a forecast says what the world does between
+two instants (#589), and the landing stays what it always was: when a plan's last change
+completes, which is what a Within want's room reads.
+
+The numbers are in [measure-the-search](/runbooks/measure-the-search.md), kept because they are
+the argument.
+
 # Seams left open
 
 - **Implemented at depth 2, when the trigger fired.** The city mains (#201) made the supplier
