@@ -42,10 +42,27 @@ for a search to run against.
 A reading does not become false at a moment. It becomes **less worth acting on**, and how much
 less is the agent's own judgement — a fast-drying pot outruns its reading sooner than a slow one.
 
-So **"stale" is a verdict a reader reaches, never a flag anybody sets.** Nothing sweeps the sensed
-graph marking readings dead; a consumer compares the instant against what it believes about the
-instrument that produced it. Which is also why the freshness rule belongs to the agent and not to
-the board: see [sensing](/domain/sensing.md), which owns the clock.
+So **"stale" is the agent's own verdict, and since #598 it is one it WRITES rather than one every
+reader recomputes.** The rule is unchanged and still the agent's — how long a reading of this
+instrument is evidence is `sensing:staleAfterS`, its own judgement, not the board's, and see
+[sensing](/domain/sensing.md), which owns the clock. What changed is where the answer lives:
+sensing arms a deadline when the reading arrives, and when it lands the reading carries
+`sensing:staleSince`. A reader asks for the fact.
+
+**Because the alternative was arithmetic in a search.** The freshness measure and the want
+derived from it both computed *this instant plus that horizon against now* — inside a planning
+pass, where `NOW()` is the real clock and never the instant the act being weighed would be taken
+at, so the answer was about a world nobody is in. A rule reading a triple asks no clock in a
+possible world or a real one. It is the same move a reading's VALUE made when it became a
+[band](/domain/band.md): deliberation compares triples and interprets no literal, and a datetime
+is a literal.
+
+Two things follow, and both are properties of the sensed graph rather than of the fact. **A
+fresh reading takes the mark with it**: the graph holds one node per subject and property and
+upserts it, so the reading that replaced a cold one carries no `staleSince` and needs no
+sweeping. And **a possible world inherits both** — which is what makes a look worth taking in
+one: the reading it predicts is evidence by construction, and the one it replaced is not there
+to be asked about.
 
 # Absent is not zero, and it is not satisfied
 

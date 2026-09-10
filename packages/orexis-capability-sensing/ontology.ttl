@@ -420,6 +420,14 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 #  by what it observes of what — the sensed writer's own upsert key — and what it CARRIES is
 #  the result; nothing else on the node (its identity, its instant, who made it) counts as
 #  "where a plan stands", which is what keeps a look from being a new world every time.
+:staleSince a owl:DatatypeProperty ; rdfs:domain sosa:Observation ; rdfs:range xsd:dateTime ;
+    rdfs:label "stale since" ;
+    rdfs:comment """THIS READING STOPPED BEING EVIDENCE ABOUT NOW, and the row's PRESENCE is that fact — written when the horizon this agent holds for the sensor runs out, by a deadline landing on the loop, and gone with the node at the next reading, since the sensed graph upserts. `orexis:Stale` is the SIDE a violation names; this is the fact on the reading that makes it so.
+
+It replaced arithmetic, which is the point (#598). The freshness measure and the want derived from it both computed `?at + horizon > NOW()` against every candidate world — asking the REAL now, inside a search, about a world nobody is in. A rule reading a triple asks no clock: in a possible world a look's predicted reading carries no `staleSince` and is evidence, and the reading it replaced went with the node.
+
+The instant it carries is not for comparing either. It says WHEN the reading went cold, which a trace can render and a reader can check the timer against; nothing reads it as a number. A reading whose horizon this agent cannot compute is stale at once, which is the shape #342 asked for — not knowing is maximal, and a sensor whose rhythm nobody can state is not one whose readings can be shown to be current.""" .
+
 sosa:Observation orexis:keyedBy sosa:hasFeatureOfInterest , sosa:observedProperty ;
                  orexis:carries sosa:hasSimpleResult .
 

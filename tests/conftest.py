@@ -421,6 +421,15 @@ def write_reading(agent, value: float, observed_property: str | None = None, age
         value=value, sensor_uri=sensor.uri, observed_property=sensor.observes,
         author_uri=agent.me.uri, used_procedure=sensor.sense_mode,
         ts=(datetime.now(timezone.utc) - timedelta(seconds=age_s)).isoformat())
+    #  AND WHETHER THE AGENT STILL TRUSTS IT (#598). A reading is stale because sensing said
+    #  so ON the reading, by a deadline landing on the loop — not because its timestamp is
+    #  old, which nothing reads as an age any more. `ingest` arms that deadline in production
+    #  and `start()` re-arms from what stands; a test writing through the writer alone gets
+    #  neither, so the module is asked here to look at what it now holds. An `age_s` past the
+    #  horizon is then marked at once, which is what a caller writing one OLD is asking for.
+    for module in agent.modules:
+        if hasattr(module, "watch_staleness"):
+            module.watch_staleness(sensor.subject, sensor.observes)
 
 
 def predicted_reading(subject_uri: str, observed_property: str, value: float = None,

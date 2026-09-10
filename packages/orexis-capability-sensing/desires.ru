@@ -122,15 +122,17 @@ WHERE  {
     #  who saw it. Watering does not tell you how wet the soil is, and a shape that cannot say
     #  so lets a thirsty plant answer a stale reading by buying water — which it did, once, in
     #  the pass that found this.
+    #  UNMET WHILE NO READING OF MINE IS EVIDENCE, and evidence is a FACT rather than an age
+    #  (#598): sensing writes `staleSince` on a reading when the horizon runs out, so this asks
+    #  for a reading by this instrument that does not carry it. It computed `?at + horizon >
+    #  NOW()` until then — the real clock, asked of every world a search imagines.
     BIND(CONCAT(
       "SELECT $this WHERE { FILTER NOT EXISTS { ",
       "?obs <http://www.w3.org/ns/sosa/hasFeatureOfInterest> <", STR(?subject), "> ; ",
       "<http://www.w3.org/ns/sosa/observedProperty> <", STR(?property), "> ; ",
-      "<http://www.w3.org/ns/sosa/madeBySensor> <", STR(?sensor), "> ; ",
-      "<http://www.w3.org/ns/sosa/resultTime> ?at . ",
-      "<", STR(?sensor), "> <http://example.org/orexis/sensing#staleAfterS> ?horizon . ",
-      "FILTER(?at + STRDT(CONCAT(\"PT\", STR(?horizon), \"S\"), ",
-      "<http://www.w3.org/2001/XMLSchema#dayTimeDuration>) > NOW()) } }") AS ?staleQuery)
+      "<http://www.w3.org/ns/sosa/madeBySensor> <", STR(?sensor), "> . ",
+      "FILTER NOT EXISTS { ?obs ",
+      "<http://example.org/orexis/sensing#staleSince> ?since } } }") AS ?staleQuery)
 }
 ;
 
