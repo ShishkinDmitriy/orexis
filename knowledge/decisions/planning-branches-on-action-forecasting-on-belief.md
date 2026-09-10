@@ -127,11 +127,29 @@ What was missing was a place for it to have consequences.
    reading has no number to move, since an effect declares the band it reaches and no value, so
    a drift is the statement that a reading in one band becomes a reading in another after long
    enough — the declaration item 3 exists for, on the clock item 2 hands a rule.
-2. **A rule may read the clock its step lands at** ([#588](https://github.com/ShishkinDmitriy/orexis/issues/588)). The search already sums each step's
-   `orexis:landsAfter`; the number exists and is never handed over. This is what makes a
-   forecast readable at all, and it closes the seam the vent already has, where a plan that
-   opens a window after dark is simulated against the afternoon
-   ([effect](/domain/effect.md)).
+2. **A rule may read the clock its step lands at** ([#588](https://github.com/ShishkinDmitriy/orexis/issues/588), landed). The search already summed each
+   step's `orexis:landsAfter` and never handed the number over. It does now: `$lands`, the
+   node's own instant — the pass's clock, read once at the root, plus the path's landings —
+   plus what this act's own timing adds, asked BEFORE the effect is run rather than after.
+
+   Its first consumer is every shipped construct: a reading a rule predicts exists when the act
+   completes, so it is stamped then instead of at the moment the plan was made. That also
+   found what #579 had left behind — the search cannot size an act, so a dose's `ml / rate`
+   lands at nought seconds and only a bid's window survives as a real landing — and the
+   sovereign's answer to it is that an act's time was never a point:
+   [#596](https://github.com/ShishkinDmitriy/orexis/issues/596) makes it the RANGE the device's cap and rate imply, and a possible
+   world's time the sum of those ranges. What a rule is told will be an interval, and this
+   token is the place it arrives.
+
+   **One instant, not two.** A rule's WHERE describes the conditions its act is TAKEN in, and
+   its construct the world the act REACHES; the market proves they cannot be one token, since a
+   bid's premise is that the round is still open and a bid lands the window plus the pour after
+   it is placed. So a WHERE still asks `NOW()`, and the instant an act is taken at is a seam
+   this leaves open.
+
+   It does NOT close the vent's seam, and that is the honest half: a rule can now ask what time
+   its act happens at, and has nothing to read about what the outside will be then, because
+   nothing states a future reading. That is item 3 ([effect](/domain/effect.md)).
 3. **Exogenous uncertainty is a narrowing set of [bands](/domain/band.md)** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)). Three days out a
    reading may be any band, tonight two, now exactly one. A forecast is an observation whose
    `sosa:phenomenonTime` is in the future, arriving `orexis:Received` from a service rather than

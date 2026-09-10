@@ -103,7 +103,10 @@ sensing:Observing
                 OPTIONAL { ?seen a ?band . FILTER(?band != sosa:Observation) }
             } }
             BIND(COALESCE(?seen, BNODE()) AS ?obs)
-            BIND(NOW() AS ?now)
+            #  STAMPED WHEN THIS ACT'S CHANGE COMPLETES (#588), not when the plan was made:
+            #  a reading this construct predicts exists at the instant the act lands, and
+            #  `$lands` is that instant — the node's own plus this act's `orexis:landsAfter`.
+            BIND($lands AS ?now)
         }""" ;
 
     #  ZERO, and it is not a shrug. Looking changes NOTHING about the world — the pot is exactly

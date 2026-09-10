@@ -18,6 +18,7 @@ from conftest import genesis_store
 from agent import genesis, runtime
 from orexis_agent_deliberation import relevance as R
 from orexis_agent_deliberation.planner import Planner
+from orexis_agent_progression.store import Raw
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 AIR = "http://example.org/orexis/water#AirTemperature"
@@ -28,6 +29,11 @@ DOSING = "http://example.org/orexis/actuation#Dosing"
 HEATING = CLIMATE + "Heating"
 VENTING = CLIMATE + "Venting"
 COMFORT = WORLD + "the_bed_is_comfortable"
+
+
+#  WHEN THE ACT THIS RULE DESCRIBES COMPLETES (#588): the planner binds the instant a
+#  step lands, and a caller running a rule by hand says so itself.
+LANDS_AT = Raw('"2026-09-10T12:00:00+00:00"^^xsd:dateTime')
 
 
 def _grower(monkeypatch, dries=False, moisture=0.20, air=12.0, outside=8.0, heater=True):
@@ -146,7 +152,7 @@ def test_the_same_venting_reaches_a_different_band_for_each_outside(monkeypatch)
         added, retracted = effects.apply(
             agent.beliefs, VENTING, me=f"<{agent.me.uri}>", subject=f"<{agent.me.acts_for}>",
             about=f"<{AIR}>", state=f"<{STATE_GRAPH}>",
-            beliefs=f"<{beliefs_graph('grower')}>", litres="0.0")
+            beliefs=f"<{beliefs_graph('grower')}>", litres="0.0", lands=LANDS_AT)
         reached[outside] = sorted(t.object.value.rsplit(".", 1)[-1] for t in added
                                   if t.predicate.value.endswith("#type") and "band." in t.object.value)
         assert retracted, "and it replaces the reading it moves, as every reading-mover does"
@@ -171,7 +177,7 @@ def test_the_outside_is_read_as_a_number_because_no_lever_moves_it(monkeypatch):
     IS (#579). The outside states no range, so it mints no band and keeps its number; and no
     lever of this agent writes it, so that number is the same at the root of a cone and at
     every leaf. It is a constant of the plan rather than a value a step might have changed."""
-    from orexis_agent_progression.store import bindings
+    from orexis_agent_progression.store import bindings, Raw
     from orexis_agent_progression.ontology import STATE_GRAPH
     agent, st = _grower(monkeypatch, outside=8.0)
     rows = bindings(st.query(f"""

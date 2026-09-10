@@ -124,8 +124,25 @@ though a possible world states what a reading IS rather than what it measures
 root of a cone and at every leaf — a constant of the plan rather than something a step might
 have changed. What the plan CAN change, the rule reads as the band it is.
 
-**The seam it leaves is time.** The outside at the moment a vent is opened is not the outside at
-the moment the plan was made, and a plan that opens a vent after dark is simulated against the
-afternoon. The world answers otherwise, the keeper's verdict says so, and the next pass replans
-— the cost is a wasted step. Closing it would mean a rule that can read the clock its own step
-lands at, which nothing gives it today.
+**The seam it leaves is time, and half of it is closed.** The outside at the moment a vent is
+opened is not the outside at the moment the plan was made, and a plan that opens a vent after
+dark is simulated against the afternoon. A rule can now be TOLD when its own act completes —
+`$lands`, bound by the search from the pass's clock and the path's landings (#588), which is
+also what stamps the reading a construct predicts, since that reading exists when the act
+lands and not when the plan was made. What is still missing is what the outside WILL BE then:
+a rule that can ask the question has nothing to read, because nothing in this agent's world
+states a future reading. That is the [forecast](/domain/reading.md), #589, and until it exists
+the world answers otherwise, the keeper's verdict says so, and the next pass replans — the cost
+is a wasted step.
+
+**And it is one instant only until [#596](https://github.com/ShishkinDmitriy/orexis/issues/596)**, which makes an act's time the range its device
+implies rather than a point: a pour takes between nothing and the cap over the rate, and what a
+rule is told is then an interval it can stamp a predicted reading with.
+
+**One instant is bound and the other is not**, and the market says why they are two. A rule's
+WHERE describes the conditions the act is TAKEN in — a bid's own premise is that the round is
+still open — while its construct describes the world the act REACHES. A bid lands the window
+plus the pour after it is placed, so binding one instant to both would make every bid predict
+nothing, the round having closed by the time the water arrives. So a WHERE still asks `NOW()`,
+which is the real clock rather than the node's, and a rule that needs the instant it is taken
+at cannot have it yet.

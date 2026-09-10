@@ -14,6 +14,7 @@ from __future__ import annotations
 import pyoxigraph as ox
 
 from orexis_agent_deliberation import effects
+from orexis_agent_progression.store import Raw
 from orexis_agent_deliberation.imaginarium import Imaginarium
 from orexis_agent_progression.ontology import (ONTOLOGY_GRAPH, STATE_GRAPH, WORLD_GRAPH, beliefs_graph)
 
@@ -24,6 +25,11 @@ ZZ = "http://example.org/orexis/world/loner#zz"
 DOSING = "http://example.org/orexis/actuation#Dosing"
 RESULT = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"   # a dose predicts a BAND (#579)
 
+#  WHEN THE ACT THIS RULE DESCRIBES COMPLETES (#588): the planner binds the instant a
+#  step lands, and a caller running a rule by hand says so itself.
+LANDS_AT = Raw('"2026-09-10T12:00:00+00:00"^^xsd:dateTime')
+
+
 
 def _imaginarium(value=0.04):
     st = genesis_store({("zz", MOISTURE): value}, world="loner")
@@ -33,12 +39,13 @@ def _imaginarium(value=0.04):
 def _dose(im, sensed, litres=0.05, value=0.04):
     return effects.apply(im, DOSING, me=f"<{GARDENER}>", subject=f"<{ZZ}>",
                          about=f"<{MOISTURE}>", beliefs=f"<{beliefs_graph('gardener')}>",
-                         state=f"<{sensed}>", litres=repr(litres), value=repr(value))
+                         state=f"<{sensed}>", litres=repr(litres), value=repr(value),
+                         lands=LANDS_AT)
 
 
 def _bands_in(im, graph):
     """The bands a world's reading of the pot's moisture is in (#579)."""
-    from orexis_agent_progression.store import bindings
+    from orexis_agent_progression.store import bindings, Raw
     return sorted(r["c"] for r in bindings(im.query(f"""
 SELECT ?c WHERE {{ GRAPH <{graph}> {{ ?o sosa:hasFeatureOfInterest <{ZZ}> ;
   sosa:observedProperty <{MOISTURE}> ; a ?c }} FILTER(CONTAINS(STR(?c), "band.")) }}""")))
