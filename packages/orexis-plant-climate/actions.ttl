@@ -76,7 +76,10 @@ climate:Heating
                 BIND(BNODE() AS ?dry)
             }
             BIND(BNODE() AS ?obs)
-            BIND(NOW() AS ?now)
+            #  STAMPED WHEN THIS ACT'S CHANGE COMPLETES (#588), not when the plan was made:
+            #  a reading this construct predicts exists at the instant the act lands, and
+            #  `$lands` is that instant — the node's own plus this act's `orexis:landsAfter`.
+            BIND($lands AS ?now)
         }""" ;
 
     #  WHEN IT LANDS: instantly, as far as this domain can say. A heater with a taker would
@@ -175,7 +178,10 @@ climate:Venting
             FILTER NOT EXISTS { ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?hi  . FILTER(?there >  ?hi) }
             FILTER NOT EXISTS { ?facets rdf:rest*/rdf:first/xsd:maxExclusive ?hi2 . FILTER(?there >= ?hi2) }
             BIND(BNODE() AS ?obs)
-            BIND(NOW() AS ?now)
+            #  STAMPED WHEN THIS ACT'S CHANGE COMPLETES (#588), not when the plan was made:
+            #  a reading this construct predicts exists at the instant the act lands, and
+            #  `$lands` is that instant — the node's own plus this act's `orexis:landsAfter`.
+            BIND($lands AS ?now)
         }""" ;
 
     #  Instantly, as far as this domain can say — the same honesty the heater's landing has,

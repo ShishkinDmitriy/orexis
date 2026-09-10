@@ -12,7 +12,7 @@ import pytest
 from agent import genesis
 from orexis_agent_deliberation import effects
 from orexis_agent_progression.ontology import ACTIONS_GRAPH, STATE_GRAPH, beliefs_graph
-from orexis_agent_progression.store import bindings
+from orexis_agent_progression.store import bindings, Raw
 
 from conftest import stake_of, MOISTURE, build_agent, genesis_store, predicted_bands
 
@@ -30,6 +30,12 @@ def _loner(readings):
     genesis.birth(st, genesis.world_dir("loner"), "gardener")
     return st
 
+
+
+#  WHEN THE ACT THESE RULES DESCRIBE COMPLETES (#588). The planner binds the instant a step
+#  lands, computed from the pass's clock and the path; a caller running a rule by hand says so
+#  itself, and a fixed instant is what makes an assertion about a stamped reading repeatable.
+LANDS_AT = Raw('"2026-09-10T12:00:00+00:00"^^xsd:dateTime')
 
 def _values(triples, predicate=RESULT):
     return [t.object.value for t in triples if t.predicate.value == predicate]
@@ -78,7 +84,7 @@ def test_looking_refreshes_the_reading_and_carries_its_value_unchanged():
     added, retracted = effects.apply(
         st, OBSERVING, me="<http://example.org/orexis/world/loner#gardener>",
         subject="<http://example.org/orexis/world/loner#zz>", about=f"<{MOISTURE}>",
-        state=f"<{STATE_GRAPH}>")
+        state=f"<{STATE_GRAPH}>", lands=LANDS_AT)
 
     assert _values(added) == ["0.1"], "looking tells you what IS, and changes nothing"
     assert _values(added, RESULT_TIME), "and it tells you so NOW — the freshness half"
@@ -96,7 +102,7 @@ def test_the_retraction_takes_the_whole_node_the_writer_would_replace():
     _, retracted = effects.apply(
         st, OBSERVING, me="<http://example.org/orexis/world/loner#gardener>",
         subject="<http://example.org/orexis/world/loner#zz>", about=f"<{MOISTURE}>",
-        state=f"<{STATE_GRAPH}>")
+        state=f"<{STATE_GRAPH}>", lands=LANDS_AT)
 
     held = {(t.subject.value, t.predicate.value) for t in retracted}
     assert len({s for s, _ in held}) == 1, "one node, which is what the writer keys on"
@@ -137,7 +143,8 @@ def test_the_dose_the_actuator_expects_is_the_band_its_rule_declares(monkeypatch
     predicted, _ = effects.apply(
         gardener.beliefs, DOSING, me=f"<{actuation.me.uri}>",
         subject=f"<{actuation.me.acts_for}>", about=f"<{MOISTURE}>",
-        state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>", litres="0.0")
+        state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>", litres="0.0",
+        lands=LANDS_AT)
     from_rule = {t.object.value for t in predicted if t.predicate.value == TYPE} - {SOSA + "Observation"}
     assert from_rule and all(b.startswith("http://example.org/orexis#band.") for b in from_rule)
     assert _values(predicted) == [], "the rule states no number"
@@ -159,7 +166,8 @@ def test_the_effect_declares_the_region_wherever_the_reading_stands(monkeypatch)
         predicted, _ = effects.apply(
             gardener.beliefs, DOSING, me=f"<{actuation.me.uri}>",
             subject=f"<{actuation.me.acts_for}>", about=f"<{MOISTURE}>",
-            state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>", litres="0.0")
+            state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>", litres="0.0",
+        lands=LANDS_AT)
         return {t.object.value for t in predicted if t.predicate.value == TYPE} - {SOSA + "Observation"}
 
     assert reaches(0.05) == reaches(0.09) == {"http://example.org/orexis#band.zz.SoilMoisture.inside"}
@@ -257,3 +265,60 @@ def test_a_served_claim_is_timed_by_the_rule_and_not_by_the_wire(monkeypatch, ca
     deadline, _, _ = actuation.pending[cmd.jti]
     assert abs((deadline - before) - (stated + actuation.grace_s)) < 0.5, \
         "the served claim is held to the rule's landing time, not the wire's"
+
+
+# --- when the world it describes exists (#588) --------------------------------
+
+
+def test_a_predicted_reading_is_stamped_when_its_step_lands(monkeypatch):
+    """A construct describes the world its act REACHES, so the reading it predicts exists when
+    the act completes — not at the moment the plan happened to be made.
+
+    The rule is told which instant that is: `$lands`, the node's own instant plus this act's
+    `orexis:landsAfter`, which the search asks BEFORE it runs the effect rather than after.
+    Stamping `NOW()` said a pot had been read before a drop left the valve.
+
+    The clock is the PASS's, read once at its root: a rule asked twice in one pass gets one
+    answer, and a search reading a wall clock per fork would describe two worlds differently
+    for having taken longer to imagine them.
+
+    ASKED TWICE, because the shipped dose lands at zero and that is not obvious. A dose's
+    timing is a function of how much is poured, and since #579 the search does not size an act
+    — `$litres` is bound at nothing — so `ml / rate` is nought seconds and the predicted
+    reading is stamped at the pass's own clock. Declare a landing and the stamp moves with it,
+    which is the whole of the claim.
+    """
+    from datetime import datetime
+
+    from orexis_agent_deliberation.planner import Planner
+
+    def stamp(seconds=None):
+        monkeypatch.setenv("OREXIS_WORLD", "loner")
+        st = _loner({("zz", MOISTURE): 0.04})
+        agent = build_agent("gardener", st, monkeypatch)
+        if seconds is not None:
+            agent.beliefs.update(f"""DELETE {{ GRAPH <{ACTIONS_GRAPH}> {{
+                    <{DOSING}> <http://example.org/orexis#landsAfter> ?text }} }}
+                INSERT {{ GRAPH <{ACTIONS_GRAPH}> {{
+                    <{DOSING}> <http://example.org/orexis#landsAfter>
+                        "SELECT ({seconds} AS ?seconds) WHERE {{ }}" }} }}
+                WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
+                    <{DOSING}> <http://example.org/orexis#landsAfter> ?text }} }}""")
+        desire = next(g for g in agent.pursuing()
+                      if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
+        planner = Planner(agent, agent.me)
+        plan = planner.plan(desire)
+        assert plan.outcome == "satisfied", plan.outcome
+        dosed = min((m for m in planner._nodes if m.met), key=lambda m: m.cost)
+        stamps = [x.object.value for x in dosed.added if x.predicate.value == RESULT_TIME]
+        assert len(stamps) == 1, f"one predicted reading, one instant: {stamps}"
+        return (datetime.fromisoformat(stamps[0]) - planner._clock).total_seconds(), dosed.landing
+
+    ahead, landing = stamp()
+    assert landing == 0.0 and ahead == pytest.approx(0.0, abs=0.01), \
+        "an act the search cannot size takes no time, so its reading is stamped at the root"
+
+    ahead, landing = stamp(300)
+    assert landing == pytest.approx(300.0), "the rule's own landing, summed along the path"
+    assert ahead == pytest.approx(300.0, abs=0.01), \
+        "the reading was stamped when the plan was made rather than when the dose lands"

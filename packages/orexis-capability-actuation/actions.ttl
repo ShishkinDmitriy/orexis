@@ -97,7 +97,10 @@ actuation:Dosing
             ?band rdfs:subClassOf ?family ;
                   sensing:ofSubject $subject ; sensing:ofProperty $about .
             BIND(BNODE() AS ?obs)
-            BIND(NOW() AS ?now)
+            #  STAMPED WHEN THIS ACT'S CHANGE COMPLETES (#588), not when the plan was made:
+            #  a reading this construct predicts exists at the instant the act lands, and
+            #  `$lands` is that instant — the node's own plus this act's `orexis:landsAfter`.
+            BIND($lands AS ?now)
         }""" ;
 
     #  WHEN IT LANDS, from the same premises and by the same argument as the magnitude above.

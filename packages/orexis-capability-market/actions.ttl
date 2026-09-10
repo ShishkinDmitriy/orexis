@@ -161,7 +161,10 @@ market:Acquiring
             ?band rdfs:subClassOf ?family ;
                   sensing:ofSubject $subject ; sensing:ofProperty $about .
             BIND(BNODE() AS ?obs)
-            BIND(NOW() AS ?now)
+            #  STAMPED WHEN THIS ACT'S CHANGE COMPLETES (#588), not when the plan was made:
+            #  a reading this construct predicts exists at the instant the act lands, and
+            #  `$lands` is that instant — the node's own plus this act's `orexis:landsAfter`.
+            BIND($lands AS ?now)
         }""" ;
 
     #  WHEN IT LANDS — and this is where buying and dosing genuinely differ, so the number is
@@ -290,7 +293,10 @@ market:Offering
                                  market:reservePricePerL ?reserve ;
                                  market:bidWindowS ?window }
             BIND(BNODE() AS ?round)
-            BIND(NOW() + xsd:dayTimeDuration(CONCAT("PT", STR(?window), "S")) AS ?closes)
+            #  FROM WHEN THE ROUND OPENS (#588), which is when this act's change completes —
+            #  at once, by construction, and `$lands` says so rather than the wall clock a
+            #  pass happens to be running at.
+            BIND($lands + xsd:dayTimeDuration(CONCAT("PT", STR(?window), "S")) AS ?closes)
         }""" ;
 
     #  AT ONCE, and BY CONSTRUCTION: saying so makes it so. The first effect here confirmed
@@ -417,7 +423,10 @@ market:Serving
             GRAPH $state { ?cur sosa:hasFeatureOfInterest ?vessel ;
                                  sosa:observedProperty ?levelProp ;
                                  a sensing:InRegion }
-            BIND(NOW() AS ?now)
+            #  STAMPED WHEN THIS ACT'S CHANGE COMPLETES (#588), not when the plan was made:
+            #  a reading this construct predicts exists at the instant the act lands, and
+            #  `$lands` is that instant — the node's own plus this act's `orexis:landsAfter`.
+            BIND($lands AS ?now)
         }""" ;
 
     #  WHEN IT LANDS: the valve's own open-seconds for the recorded amount, the identical

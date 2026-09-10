@@ -28,7 +28,7 @@ rather than refinements, and each is here because a question found the failure i
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import heapq
 import logging
@@ -205,6 +205,10 @@ class Planner:
     def __init__(self, agent, me):
         self.agent = agent
         self.me = me
+        #  THE PASS'S CLOCK, read once at the root of each pass and never inside the search
+        #  (#588). Here so a caller asking a planner for a rule's bindings before any pass has
+        #  a clock to be answered with.
+        self._clock = datetime.now(timezone.utc)
         #  The sovereign's pick, read the way every pick is — from the desire modality's copy,
         #  since the search is what reads a belief and nothing beneath it does — or the engine's
         #  own ceiling where the agent's beliefs say nothing. Optional on purpose, unlike the
@@ -517,6 +521,7 @@ class Planner:
         resumed = self._resume(desire)
         if not resumed:
             here = self._begin(desire)
+            self._clock = datetime.now(timezone.utc)
             root_at = signature.where(here.diff, here.ground)
             self._root, self._nodes, self._by_diff = here, [here], {root_at: here}
             self._seen, self._achieved, self._best, self._bound = {root_at: here.cost}, [], here, None
@@ -809,6 +814,9 @@ class Planner:
             m.cost -= cost0
             m.landing -= landing0
             m.origin = m.taken[0].action if m.taken else None
+        #  THE NEW ROOT IS THE PRESENT, so the pass's clock is now: a kept world's landing
+        #  is re-based below, and both halves of a node's instant move with the root (#588).
+        self._clock = datetime.now(timezone.utc)
         node.parent, node.graph, node.materialised = None, STATE_GRAPH, True
         #  The root stands nowhere but the present. Re-based by set algebra it would carry
         #  the number it predicted against the number the present holds; by cell they are
@@ -1055,7 +1063,9 @@ class Planner:
         chain.reverse()                      # the root first; chain[i] is step i's parent world
         out = []
         for i, step in enumerate(steps):
-            bind = self._bind(desire, node=chain[i], row=step, litres=step.quantity or 0.0)
+            reached = chain[i + 1] if i + 1 < len(chain) else chain[i]
+            bind = self._bind(desire, node=chain[i], row=step, litres=step.quantity or 0.0,
+                              lands=reached.landing - chain[i].landing)
             try:
                 read = effects.precondition(self.imaginarium, step.action,
                                         keyed=tuple(self._keys), **bind)
@@ -1377,7 +1387,12 @@ class Planner:
         observation still on disk, so the second dose lands beside the first instead of
         replacing it and is then discarded as a world already seen.
         """
-        bind = self._bind(desire, node, row)
+        #  WHEN THIS STEP'S CHANGE COMPLETES, asked BEFORE the effect rather than after it,
+        #  so the rule can be told (#588): `orexis:landsAfter` reads the world the act is taken
+        #  in, and the construct describes the world it reaches. Both are the same rule's, and
+        #  a rule that ignores `$lands` loses nothing, as one ignoring `$via` does.
+        lands = effects.lands_after(self.imaginarium, row.action, **self._bind(desire, node, row))
+        bind = self._bind(desire, node, row, lands=lands)
         #  WHAT IT SPENDS, ASKED FIRST — `orexis:costs`, the landing's twin (#466), and None is
         #  free. It is asked before the rule is run because that is what makes the bound worth
         #  having: a candidate already dearer than a plan in hand is dropped without simulating
@@ -1403,10 +1418,9 @@ class Planner:
         added = list(added) + self.imaginarium.entailed(graph, added, self._keys)
         adds, retracts = signature.facts(added, self._keys), signature.facts(retracted, self._keys)
         diff = signature.advance(node.diff, adds, retracts, self._base_facts)
-        #  When this path's last change completes: the step's own `orexis:landsAfter`, asked of
-        #  the rule exactly as the keeper asks it, summed along the path (#472). None — no
-        #  stated timing — adds nothing, which is the keeper's own contract for it.
-        lands = effects.lands_after(self.imaginarium, row.action, **bind)
+        #  When this path's last change completes: the step's own `orexis:landsAfter`, asked
+        #  above exactly as the keeper asks it, summed along the path (#472). None — no stated
+        #  timing — adds nothing, which is the keeper's own contract for it.
         landing = node.landing + (lands or 0.0)
         #  A STEP IS A CHOSEN EDGE, so it stands on whatever its parent stands on: taking a
         #  lever does not change which of the world's own branches you are in. Extending a
@@ -1421,7 +1435,8 @@ class Planner:
         step.taken = node.taken + (replace(act, urgency_after=step.urgency, predicts=(adds, retracts)),)
         return step
 
-    def _bind(self, desire: Desire | None, node=None, row=None, litres: float | None = None) -> dict:
+    def _bind(self, desire: Desire | None, node=None, row=None, litres: float | None = None,
+              lands: float | None = None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.
 
         `bound` is what the cheapest plan found so far spends, or None while none has been.
@@ -1484,7 +1499,31 @@ class Planner:
             #  a landing of zero, a cost unstated — and a caller walking a plan back may pass
             #  the quantity a step was taken with.
             "litres": litres if litres is not None else 0.0,
+            #  WHEN THIS STEP'S CHANGE COMPLETES (#588), as the instant it is: this node's own
+            #  instant — the pass's clock plus the path's landings — plus what this act's own
+            #  `orexis:landsAfter` adds. A construct describes the world its act REACHES, so
+            #  a reading it predicts exists then and is stamped then, rather than at the
+            #  moment the plan happened to be made.
+            #
+            #  NOT the instant the act is TAKEN, which is a second thing and not bound here.
+            #  The market proves they are two: a bid's own premise is that the round is still
+            #  open, which is true when the bid is placed and false by the time the water
+            #  arrives, since the bid's landing is the window PLUS the pour. A WHERE asking
+            #  `NOW()` therefore still asks the real clock, and that is the seam.
+            "lands": Raw(f'"{self._at(node, lands).isoformat()}"^^xsd:dateTime'),
         }
+
+    def _at(self, node, lands: float | None = None) -> datetime:
+        """The instant a node stands at, or the instant a step taken from it completes.
+
+        The pass's clock plus the path's summed `orexis:landsAfter`. The clock is read ONCE,
+        at the root, and never inside the search: a pass that read a wall clock per fork would
+        describe two worlds differently for having taken longer to imagine them. It is not
+        part of where a node IS — that is its facts and its ground (#587) — it is what a rule
+        is told when it asks what time its own step happens at.
+        """
+        base = node.landing if node is not None else 0.0
+        return self._clock + timedelta(seconds=base + (lands or 0.0))
 
     def _beliefs(self):
         """The DATA-BORNE world as an rdflib graph — what the pass carves shapes from.
