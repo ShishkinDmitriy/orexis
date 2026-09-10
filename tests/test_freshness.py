@@ -28,15 +28,29 @@ def _fern(monkeypatch, value=0.55):
     return agent, st
 
 
-def _age_the_reading(st, hours=3):
+def _age_the_reading(st, hours=3, agent=None):
+    """Let the horizon pass — the clock moved AND the agent noticed, which since #598 are two
+    things. A reading is stale because sensing says so on the reading, by a deadline landing on
+    the loop; the timestamp alone is what it was written with and nothing reads it as an age.
+    Where the caller has the agent, the module's own road is taken; where it has only the store,
+    the fact is written as that road would write it."""
     from orexis_agent_progression.ontology import STATE_GRAPH
 
     old = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
     st.update(f"""
-        DELETE {{ GRAPH <{STATE_GRAPH}> {{ ?o <http://www.w3.org/ns/sosa/resultTime> ?t }} }}
-        INSERT {{ GRAPH <{STATE_GRAPH}> {{ ?o <http://www.w3.org/ns/sosa/resultTime>
-                 "{old}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
-        WHERE  {{ GRAPH <{STATE_GRAPH}> {{ ?o <http://www.w3.org/ns/sosa/resultTime> ?t }} }}""")
+        DELETE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:resultTime ?t }} }}
+        INSERT {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:resultTime "{old}"^^xsd:dateTime }} }}
+        WHERE  {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:resultTime ?t }} }}""")
+    if agent is not None:
+        #  The module re-arms from what stands, finds the horizon already gone and marks it.
+        for module in agent.modules:
+            if hasattr(module, "watch_staleness"):
+                for sensor in module.sensors:
+                    module.watch_staleness(sensor.subject, sensor.observes)
+        return
+    st.update(f"""
+        INSERT {{ GRAPH <{STATE_GRAPH}> {{ ?o sensing:staleSince "{old}"^^xsd:dateTime }} }}
+        WHERE  {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:resultTime ?t }} }}""")
 
 
 def test_the_horizon_the_shape_reads_is_the_one_the_module_computes(monkeypatch):
@@ -149,9 +163,8 @@ def _fires(data) -> list:
     return stale
 
 
-def test_a_horizon_nobody_published_leaves_the_want_unmet_not_met(monkeypatch):
-    """The direction a shape about knowledge has to fail in (#342), pinned by taking the
-    horizon away.
+def test_a_horizon_the_agent_cannot_state_leaves_the_want_unmet_not_met(monkeypatch):
+    """The direction a shape about knowledge has to fail in (#342), pinned where it now lives.
 
     The met-test used to hunt for a reading whose `resultTime` plus the horizon had PASSED,
     and a shape that looks for a bad reading is satisfied by the absence of any reading — and
@@ -160,19 +173,41 @@ def test_a_horizon_nobody_published_leaves_the_want_unmet_not_met(monkeypatch):
     sensing module had not yet said what it treats as stale believed every reading current,
     for ever, with nothing red anywhere.
 
-    Saying what the agent WANTS instead of what would disappoint it fixes both at the root: a
-    fresh reading exists, or it does not. This asserts the case that used to lie — a reading
-    that is current by any reasonable reading of the clock, with no horizon stated at all.
+    Saying what the agent WANTS instead of what would disappoint it fixed that at the root,
+    and the shape still says it: a reading of mine that is still evidence exists, or it does
+    not. What moved (#598) is where the horizon is read. No shape reads it now — sensing
+    marks the reading itself when the horizon runs out — so taking the published triple away
+    no longer means the agent cannot say, it means nobody else can see what it says. The
+    hazard is a module that cannot state a horizon AT ALL, and the answer is the same one:
+    not knowing is maximal, so the reading is cold on arrival rather than fresh for ever.
     """
+    agent, st = _fern(monkeypatch, value=0.55)          # horizons published by `start()`
+    sensing = next(m for m in agent.modules if hasattr(m, "watch_staleness"))
+    fresh = lambda: next(d for d in agent.pursuing()
+                         if d.is_epistemic and d.observed_property == MOISTURE)
+    assert fresh().urgency == 0.0, "a reading just taken is evidence"
+
+    monkeypatch.setattr(type(sensing), "stale_after_s", lambda *a, **k: 0)
+    for sensor in sensing.sensors:
+        sensing.watch_staleness(sensor.subject, sensor.observes)
+
+    assert fresh().urgency == 1.0, \
+        "a sensor whose rhythm the agent cannot state is not one whose readings can be shown "
+    assert fresh().state == "stale"
+
+
+def test_a_want_about_knowing_fires_on_a_world_that_has_read_nothing(monkeypatch):
+    """The structural half of #342, which is what the met-test's SHAPE guarantees: it asks for
+    a reading that is still evidence, so no reading at all fires it. A shape asking for a BAD
+    reading was satisfied by an empty world, which is how "never looked" once read as met."""
     from orexis_capability_sensing.terms import INSTRUMENTS_GRAPH
     from orexis_agent_progression.ontology import STATE_GRAPH
     from agent.validate import graph_from
-    from orexis_capability_sensing.terms import STALE_AFTER_S
     from orexis_agent_deliberation import effects
 
-    agent, st = _fern(monkeypatch, value=0.55)          # horizons published by `start()`
-    st.update(f"DELETE WHERE {{ GRAPH <{INSTRUMENTS_GRAPH}> "
-              f"{{ ?s <{STALE_AFTER_S}> ?h }} }}")
+    agent, st = _fern(monkeypatch, value=0.55)
+    st.update(f"DELETE WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:hasSimpleResult ?v }} }} ;"
+              f"DELETE WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:madeBySensor ?s }} }}")
 
     data = graph_from(st, *st.public_graphs(), STATE_GRAPH, INSTRUMENTS_GRAPH)
     for triple in desires_build(st, "fern").construct(
@@ -180,8 +215,8 @@ def test_a_horizon_nobody_published_leaves_the_want_unmet_not_met(monkeypatch):
         data.add(effects._triple(triple))
 
     assert _fires(data), \
-        "with no horizon there is no recent-enough, so nothing is known to be current — a " \
-        "want that reads MET here is a want that can never be short"
+        "nothing of mine has read this, so nothing is known to be current — a want that " \
+        "reads MET here is a want that can never be short"
     assert next(d for d in agent.pursuing()
                 if d.is_epistemic and d.observed_property == MOISTURE).urgency == 1.0, \
         "and the measure fails the same way round, or the search would rank it as content"

@@ -38,6 +38,7 @@ PUSH = term("PushProcedure")            # keeps its own clock, takes no orders -
 #  out (#240). One definition and one direction: `stale_after_s` computes it, `publish_horizon`
 #  writes it, and everything else — including the freshness want — reads what was written.
 STALE_AFTER_S = term("staleAfterS")
+STALE_SINCE = term("staleSince")
 WATCH_LIVE = term("watchLive")
 
 #  The want this package derives, as a class: knowing what an instrument reads NOW. Named here

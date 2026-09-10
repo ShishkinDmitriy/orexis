@@ -10,10 +10,11 @@ cooling. Is this reading still evidence. A fact is written by whoever owns the c
 host declaring its close, a timer landing on the loop, time's own sense at the belief-revision
 seam — and read as a triple, which asks no clock in a simulated world or a real one.
 
-The two that are left are sensing's, and they are named here rather than tolerated silently:
-the freshness measure and the want derived from it both compute a reading's age. This test is
-a RATCHET — it fails on a new one anywhere, and it fails when a named one is fixed and not
-struck off, so the list cannot rot into permission.
+Nothing is left, which took three changes: a round ends because its host says so (#599), a
+venue is cooling or it is not (#598), and a reading carries `sensing:staleSince` when the
+horizon this agent holds for its sensor runs out. This test is a RATCHET — it fails on a new
+read anywhere, and `LEFT` fails when a named one is fixed and not struck off, so a list that
+is empty today cannot quietly refill.
 """
 
 from __future__ import annotations
@@ -31,11 +32,9 @@ EVALUATED = ("packages/*/actions.ttl", "packages/*/measures.ttl", "packages/*/sh
              "agent/shapes.ttl", "agent/ontology.ttl")
 
 #  The clock reads still standing, each with the issue that takes it out. A file here must
-#  carry EXACTLY this many, so fixing one without striking it off fails as loudly as adding one.
-LEFT = {
-    "packages/orexis-capability-sensing/measures.ttl": 1,   # #598: a reading's age, per candidate world
-    "packages/orexis-capability-sensing/desires.ru": 1,     # #598: the same, built into the derived want
-}
+#  carry EXACTLY this many, so fixing one without striking it off fails as loudly as adding
+#  one. IT IS EMPTY, and that is the point: nothing deliberation evaluates asks the wall clock.
+LEFT: dict = {}
 
 
 def _code(path: pathlib.Path) -> str:

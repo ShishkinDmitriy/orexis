@@ -82,13 +82,21 @@ sensing:FreshnessMeasure
                      #  halves have to carry it or the search finds by satisficing what the
                      #  met-test refuses: a dose's predicted reading would score this want at
                      #  0.0 and buying would look like a way to find something out.
-                     sosa:madeBySensor $sensor ;
-                     sosa:resultTime ?at } }
-            OPTIONAL { GRAPH $instruments {
-                $sensor sensing:staleAfterS ?horizon } }
-            BIND(COALESCE(IF(?at + STRDT(CONCAT("PT", STR(?horizon), "S"),
-                                         xsd:dayTimeDuration) > NOW(), 0.0, 1.0),
-                          1.0) AS ?urgency)
+                     sosa:madeBySensor $sensor .
+                     #  AND STILL EVIDENCE, which is a FACT and no longer arithmetic (#598).
+                     #  This asked `?at + horizon > NOW()`, of every candidate world, against
+                     #  the horizon the instruments graph carries — the real clock, inside a
+                     #  search, about a world nobody is in. Sensing writes `staleSince` when
+                     #  the horizon runs out and the reading it was written on goes with the
+                     #  node at the next upsert, so a look's predicted reading is evidence
+                     #  by construction and the one it replaced is not there to ask about.
+                     FILTER NOT EXISTS { ?obs sensing:staleSince ?since } } }
+            #  UNBOUND IS MAXIMAL, which is the whole error story and load-bearing twice:
+            #  nothing ever read this pair, or everything it read has gone cold. Both land on
+            #  1.0 — not knowing is maximal, as it is everywhere here (#342) — and a sensor
+            #  whose horizon this agent cannot state has its reading marked cold on arrival,
+            #  so that half of #342 is kept where it can be seen rather than in a COALESCE.
+            BIND(IF(BOUND(?obs), 0.0, 1.0) AS ?urgency)
         }""" .
 
 sensing:AimDistanceMeasure

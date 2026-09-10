@@ -68,6 +68,7 @@ from . import readings
 from .scaling import scaling_for
 from .terms import (INSTRUMENTS_GRAPH, ANNOTATE, BOUNDS, READING_RECORDED, URGENCY, FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S, WATCH_LIVE,
                     SUBSCRIBING)
+from orexis_agent_progression.timer import Timer
 
 #  The measure this capability declares (a-desire-states-its-own-measure, completed): how
 #  badly an observation-backed want is unmet. OUR file, OUR namespace, OUR code — the kernel
@@ -181,6 +182,8 @@ class SensingModule(Module):
 
         # Recording is one place for every capability that records — see observation.py.
         self.observations = Observations(agent, self.sensors)
+        #  One deadline per (subject, property): when this agent stops trusting that reading.
+        self._staleness: dict = {}
         #  THE REGIONS this agent holds — deduced by my own `desires.ru` from what its subject
         #  states it needs, read once here. They were the kernel's deducer's, and every
         #  question about them is a question about a reading, so they are mine now
@@ -391,9 +394,83 @@ class SensingModule(Module):
         constant and still has to be written down: a want that cannot find the number reads a
         reading of any age as fresh, which is the silent direction to fail."""
         self.publish_horizon()
+        #  AND WHICH OF MY READINGS ARE ALREADY COLD (#598). A timer does not survive a
+        #  restart and a belief does, so the horizon on every standing reading is re-armed
+        #  here — and one already past it is marked at once, rather than waiting a whole
+        #  horizon for a deadline that should have landed while the process was down.
+        for sensor in self.sensors:
+            self.watch_staleness(sensor.subject, sensor.observes)
 
     def stop(self) -> None:
+        for timer in self._staleness.values():
+            timer.stop()
+        self._staleness.clear()
         self.observations.close()
+
+    # --- a reading is stale, or it is not (#598) ---------------------------------------
+
+    def watch_staleness(self, subject_uri: str, observed_property: str) -> None:
+        """Arm the deadline that says this reading has stopped being evidence about now.
+
+        A reading's age used to be arithmetic: the freshness measure and the want derived from
+        it both asked `?at + horizon > NOW()` of every candidate world, which is the REAL now
+        inside a search and therefore an answer about a world nobody is in. The fact is
+        written instead, by this deadline landing on the loop, and every reader asks a triple.
+
+        One timer per (subject, property), replaced by each new reading — the sensed graph
+        upserts one node per pair, so a fresh reading takes the old node and its
+        `sensing:staleSince` with it, and the deadline that was counting for the old one has
+        nothing left to mark.
+        """
+        key = (subject_uri, observed_property)
+        if (running := self._staleness.pop(key, None)) is not None:
+            running.stop()
+        reading = readings.current_reading(self.agent.beliefs.query, subject_uri,
+                                           observed_property)
+        if reading is None or reading.result_time is None:
+            return                      # nothing to go cold; the want reads unmeasured
+        try:
+            horizon = float(self.stale_after_s(subject_uri, observed_property))
+        except Exception:               # noqa: BLE001 — a rhythm nobody can state
+            horizon = None
+        if not horizon:
+            #  NOT KNOWING IS MAXIMAL (#342): a sensor whose horizon this agent cannot state
+            #  is not one whose readings can be shown to be current, so the reading is cold
+            #  on arrival rather than fresh for ever.
+            self.went_stale(subject_uri, observed_property)
+            return
+        left = horizon - (reading.age_s() or 0.0)
+        if left <= 0:
+            self.went_stale(subject_uri, observed_property)
+            return
+        timer = Timer(left, lambda: self.went_stale(subject_uri, observed_property),
+                      repeat=False)
+        self._staleness[key] = timer
+        timer.start()
+
+    def went_stale(self, subject_uri: str, observed_property: str) -> None:
+        """The horizon ran out: write it on the reading, and say so upward.
+
+        Waking the seam is the half that makes this more than bookkeeping. A want about
+        knowing becomes unmet the moment its reading goes cold, and until now nothing noticed
+        until the agent happened to deliberate for another reason.
+        """
+        from orexis_agent_deliberation import reviser
+
+        self._staleness.pop((subject_uri, observed_property), None)
+        #  NOW() BELONGS HERE, and nowhere a search can reach it: this is the sense of time
+        #  itself, on the loop, writing down what it noticed. `tests/test_clockless.py` holds
+        #  the rules, measures and shapes deliberation evaluates to asking no clock at all.
+        self.agent.beliefs.update(f"""
+INSERT {{ GRAPH <{STATE_GRAPH}> {{ ?obs sensing:staleSince ?now }} }}
+WHERE {{ GRAPH <{STATE_GRAPH}> {{
+  ?obs sosa:hasFeatureOfInterest <{subject_uri}> ;
+       sosa:observedProperty <{observed_property}> .
+  FILTER NOT EXISTS {{ ?obs sensing:staleSince ?was }} }}
+  BIND(NOW() AS ?now) }}""")
+        for want in self.wants_about(observed_property, subject_uri):
+            if want.is_epistemic:
+                reviser.wake(self.agent, want.uri)
 
     @contributes(HANDLE)
     def handle(self, topic: str, payload: bytes) -> bool:
@@ -501,6 +578,10 @@ class SensingModule(Module):
         or a future path that synthesises a reading — has nothing better than now to offer.
         """
         self.observations.record(self.log, sensor, value, at)
+        #  AND WHEN I WILL STOP TRUSTING IT (#598): the reading is evidence until the horizon
+        #  runs out, and what says so is a fact this arms the deadline for. The upsert took the
+        #  previous node and its `staleSince` with it, so the reading standing here is fresh.
+        self.watch_staleness(sensor.subject, sensor.observes)
         self.on_reading(sensor, value, at)
 
     def on_reading(self, sensor, value: float, at=None) -> None:

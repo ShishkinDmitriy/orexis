@@ -119,6 +119,12 @@ def _read(agent, value, age_s=0):
         value=value, sensor_uri=sensor.uri, observed_property=sensor.observes,
         author_uri=agent.me.uri, used_procedure=sensor.sense_mode,
         ts=(datetime.now(timezone.utc) - timedelta(seconds=age_s)).isoformat())
+    #  AND THE AGENT NOTICES, which since #598 is a second thing: a reading is stale because
+    #  sensing said so on the reading, not because its timestamp is old. The module re-arms
+    #  from what stands and marks one whose horizon has already gone.
+    for module in agent.modules:
+        if hasattr(module, "watch_staleness"):
+            module.watch_staleness(sensor.subject, sensor.observes)
 
 
 def test_below_the_aim_means_pursue_and_above_means_nothing(make):

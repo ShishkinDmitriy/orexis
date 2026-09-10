@@ -124,6 +124,11 @@ def test_a_dead_sensors_last_reading_does_not_present_as_a_current_gap(monkeypat
     fern = build_agent("fern", genesis_store(
         {("fern", MOISTURE): 0.05}, result_time=long_dead), monkeypatch)
     desire = sensing_of(fern)
+    #  STARTED, as a booting agent starts it, because a reading is stale when sensing says so
+    #  ON the reading and no longer because its timestamp is old (#598): `start()` re-arms the
+    #  horizon on every standing reading and marks one already past it, which is exactly the
+    #  case a probe that died while the process was down leaves behind.
+    desire.start()
 
     # the diff still SAYS it: last I looked I was parched, and I cannot see any more
     assert desire.gaps()[MOISTURE].gap == -1.0
