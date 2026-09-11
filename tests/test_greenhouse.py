@@ -188,3 +188,110 @@ SELECT ?c WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:hasFeatureOfInterest <{WORLD
 SELECT ?v WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:hasFeatureOfInterest <{WORLD}outside> ;
   sosa:hasSimpleResult ?v }} }}"""))
     assert [float(r["v"]) for r in values] == [8.0], "and it keeps the number the instrument gave"
+
+
+# --- a forecast reaches the step that lands inside it (#589) ------------------
+
+
+def _forecast(agent, celsius: float, since, until) -> str:
+    """What the outside will be, stated as its own graph holding during a period.
+
+    A forecast is not a fact about now and must not answer as one, so it is said where its
+    own `dcterms:temporal` bounds it (a-graph-holds-during-a-stretch) — arriving `Received`,
+    from a service rather than an instrument, in a graph of the agent's own.
+    """
+    from orexis_agent_progression.ontology import PERIODS_GRAPH, beliefs_graph
+
+    graph = f"http://example.org/orexis/graph/forecast/{int(celsius)}"
+    agent.beliefs.update(f"""INSERT DATA {{
+        GRAPH <{graph}> {{
+            <{graph}#outside> a sosa:Observation ;
+                sosa:hasFeatureOfInterest <{WORLD}outside> ;
+                sosa:observedProperty <{AIR}> ;
+                sosa:hasSimpleResult "{celsius}"^^xsd:decimal ;
+                sosa:resultTime "{since.isoformat()}"^^xsd:dateTime }}
+        GRAPH <{PERIODS_GRAPH}> {{
+            <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;
+                orexis:start "{since.isoformat()}"^^xsd:dateTime ;
+                orexis:end "{until.isoformat()}"^^xsd:dateTime ] }}
+        GRAPH <http://example.org/orexis/graph/classification> {{
+            <{graph}> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Received }} }}""")
+    return graph
+
+
+def _vented_band(agent, when) -> set:
+    """The band venting reaches, asked of the rule at one instant."""
+    from orexis_agent_deliberation import effects
+    from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
+
+    added, _ = effects.apply(
+        agent.beliefs, VENTING, when=when, me=f"<{agent.me.uri}>",
+        subject=f"<{agent.me.acts_for}>", about=f"<{AIR}>", state=f"<{STATE_GRAPH}>",
+        beliefs=f"<{beliefs_graph('grower')}>", litres="0.0", lands=LANDS_AT)
+    return {t.object.value.rsplit(".", 1)[-1] for t in added
+            if t.predicate.value.endswith("#type") and "band." in t.object.value}
+
+
+def _outside_as_periods(agent, *readings) -> None:
+    """The outside, said as a SEQUENCE of graphs rather than one standing reading.
+
+    Which is the model itself: a reading holds until the next one, and a forecast holds over a
+    period the agent has not reached. Both are sayings with a period, so both are graphs with
+    one — and the door hands a rule whichever holds at the instant it is asked about. The
+    sensed reading goes, because two sayings about one subject holding at once is exactly the
+    ambiguity periods exist to remove, and the sensed graph cannot carry a period of its own
+    while it holds every other reading too (a-graph-holds-during-a-stretch, and the retrofit
+    it defers).
+    """
+    from orexis_agent_progression.ontology import STATE_GRAPH
+
+    agent.beliefs.update(f"""DELETE {{ GRAPH <{STATE_GRAPH}> {{ ?o ?p ?v }} }}
+        WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:hasFeatureOfInterest <{WORLD}outside> ; ?p ?v }} }}""")
+    for celsius, since, until in readings:
+        _forecast(agent, celsius, since, until)
+
+
+def test_a_vent_reaches_the_band_the_forecast_states_for_when_it_lands(monkeypatch):
+    """The seam `knowledge/domain/effect.md` has carried since the vent landed: the outside at
+    the moment a vent opens is not the outside at the moment the plan was made, so a plan that
+    opens a window after dark was simulated against the afternoon.
+
+    It closes without the rule learning what time it is. The outside is not read from `$state`
+    — a step changes the bed and never the weather — so what the rule sees is whatever graphs
+    HOLD at the instant it is asked about, and the search asks about the instant its act lands.
+    A forecast is a graph with a period; the door does the rest.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    agent, st = _grower(monkeypatch, air=12.0, outside=21.0)
+    now = datetime.now(timezone.utc)
+    dusk, dawn = now + timedelta(hours=4), now + timedelta(hours=14)
+    _outside_as_periods(agent, (21.0, now - timedelta(hours=1), dusk),   # warm until dusk
+                               (2.0, dusk, dawn))                       # cold after it
+
+    assert _vented_band(agent, now) == {"inside"}, \
+        "opened now, onto 21 degrees, the bed lands in its region"
+    assert _vented_band(agent, dusk + timedelta(hours=1)) == {"below"}, \
+        "the same act landing after dusk opens onto 2 degrees, and the rule never asked the time"
+
+
+def test_a_forecast_is_read_and_never_signed(monkeypatch):
+    """It must not enter the signature: nothing the agent does moves the weather, so a forecast
+    is a constant of the plan — and if it were part of where a plan stands, every kept world
+    would die the moment the forecast refreshed, on a change no lever caused."""
+    from datetime import datetime, timedelta, timezone
+
+    from orexis_agent_deliberation.planner import Planner
+
+    agent, st = _grower(monkeypatch, air=12.0, outside=21.0)
+    now = datetime.now(timezone.utc)
+    planner = Planner(agent, agent.me)
+    planner.plan(_comfort(agent))
+    before = planner._invariant_signature()
+
+    _forecast(agent, 2.0, now + timedelta(hours=4), now + timedelta(hours=14))
+
+    assert planner._invariant_signature() == before, \
+        "a forecast arriving moved the invariant half, and every kept world would die with it"
+    assert all(g not in planner._standing_in() for g in agent.beliefs.periods()), \
+        "a graph that holds during a period is read by rules and is not where a plan stands"

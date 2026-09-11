@@ -5,7 +5,7 @@ knowledge about instances is, so the stretch a saying is about belongs to the gr
 read at the door, where a reader is HANDED a scope, and never by a rule, which would be the
 `now()` this project has just spent three changes removing.
 
-The range is said in `graph/when`, outside the default union and beside the provenance
+The range is said in `graph/periods`, outside the default union and beside the provenance
 graph, because a period CHANGES: a statement in a merged graph is a fact in every possible
 world, so one that lapsed would move the invariant signature and kill a kept cone.
 """
@@ -17,7 +17,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from conftest import genesis_store
-from orexis_agent_progression.ontology import ACTIONS_GRAPH, WHEN_GRAPH, WORLD_GRAPH
+from orexis_agent_progression.ontology import ACTIONS_GRAPH, PERIODS_GRAPH, WORLD_GRAPH
 
 def _now() -> datetime:
     """Read per test, never once per module: an instant captured at import is a minute old by
@@ -38,7 +38,7 @@ def _say(st, graph: str, until=None, since=None) -> None:
         bounds.append(f'orexis:start "{since.isoformat()}"^^xsd:dateTime')
     if until is not None:
         bounds.append(f'orexis:end "{until.isoformat()}"^^xsd:dateTime')
-    st.update(f"""INSERT DATA {{ GRAPH <{WHEN_GRAPH}> {{
+    st.update(f"""INSERT DATA {{ GRAPH <{PERIODS_GRAPH}> {{
         <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ; {' ; '.join(bounds)} ] }} }}""")
 
 
@@ -114,7 +114,7 @@ def test_a_bound_nobody_can_read_does_not_drop_a_graph():
     """Not knowing is maximal everywhere here, and this is the same rule read the safe way
     round: a graph whose range is unreadable stays, rather than vanishing silently."""
     st = _store()
-    st.update(f"""INSERT DATA {{ GRAPH <{WHEN_GRAPH}> {{ <{ACTIONS_GRAPH}> dcterms:temporal
+    st.update(f"""INSERT DATA {{ GRAPH <{PERIODS_GRAPH}> {{ <{ACTIONS_GRAPH}> dcterms:temporal
         [ a dcterms:PeriodOfTime ; orexis:end "whenever"^^xsd:dateTime ] }} }}""")
 
     assert st.periods()[ACTIONS_GRAPH] == (None, None)
@@ -122,7 +122,7 @@ def test_a_bound_nobody_can_read_does_not_drop_a_graph():
 
 
 def test_a_range_on_a_graph_nobody_types_adds_nothing():
-    """`graph/when` says WHEN, never WHETHER: what is merged is still what the
+    """`graph/periods` says WHEN, never WHETHER: what is merged is still what the
     vocabulary types as public, and a range on something else is a statement about
     nothing this door has to answer for."""
     now = _now()

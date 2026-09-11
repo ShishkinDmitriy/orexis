@@ -356,6 +356,9 @@ PUBLIC and not belief. A rule here is a SCHEMA — what applying a lever WOULD d
 orexis:ProvenanceGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Provenance graph" ;
     rdfs:comment "What the other graphs ARE, in PROV-O. NOT public, and the reason is use versus mention: these are statements ABOUT graphs, so merging them into the default graph would make an ordinary `?device a ?class` start returning activities." .
 
+orexis:PeriodGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Period graph" ;
+    rdfs:comment """WHEN the other graphs hold, as `dcterms:temporal`. NOT public, and for the same use-versus-mention reason the provenance graph is not: these are statements ABOUT graphs, so merging them would make an ordinary pattern answer with periods. And not the agent's OWN either — declared with no `orexis:arrivedBy`, which is how `store._OWN` leaves the provenance graph out — because a period CHANGES, and a graph a plan imagines from is one whose facts are part of where that plan stands: a lapsing period would move the invariant signature and kill a kept cone.""" .
+
 orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range orexis:Agent ;
     rdfs:label "beliefs of" ;
     rdfs:comment "Which agent owns this graph — the write boundary, made explicit. The domain is orexis:Graph since orexis:BeliefsGraph retired (#299): the whole store is beliefs, so a class naming one graph inside it 'the beliefs graph' asserted nothing — what the graph at .../graph/beliefs/<id> actually holds is the PICK RECORD, typed orexis:PickRecordGraph for what it IS, and this property still says whose it is." .
@@ -398,8 +401,7 @@ orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range or
 ##  the same property and is the other place mentions of graphs live; not provenance itself,
 ##  because that graph is replaced WHOLE by every load and a runtime period is not a function
 ##  of the files. Read by the store's door, which is the bootstrap root asking what to merge.
-<http://example.org/orexis/graph/when>              a orexis:Graph ;
-    orexis:arrivedBy orexis:Recorded .
+<http://example.org/orexis/graph/periods>           a orexis:PeriodGraph .
 
 <http://example.org/orexis/graph/classification>    a orexis:PublicGraph , orexis:BeliefGraph ;
     orexis:arrivedBy orexis:Recorded .

@@ -162,10 +162,16 @@ climate:Venting
             #  it nothing says which way opening would move things — and guessing is what an
             #  agent must not do about a world it can see.
             GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
-                                     sosa:observedProperty $about .
-                           ?out sosa:hasFeatureOfInterest ?outside ;
-                                sosa:observedProperty $about ;
-                                sosa:hasSimpleResult ?there }
+                                     sosa:observedProperty $about }
+            #  THE OUTSIDE IS NOT READ FROM $state, and that is the correction (#589). A step
+            #  changes the bed and never the weather, so the outside is not this node's to
+            #  hold — it is whatever the graphs holding AT THIS INSTANT say, which the door
+            #  hands over when the search asks the rule about the world its act lands in. A
+            #  forecast then reaches a vent opening after dusk without this rule knowing what
+            #  time it is, and with the reading standing now it answers exactly as before.
+            ?out sosa:hasFeatureOfInterest ?outside ;
+                 sosa:observedProperty $about ;
+                 sosa:hasSimpleResult ?there .
             #  THE BAND THE OUTSIDE FALLS IN, by the SUBJECT's own ranges: where the bed would
             #  be if it were as warm as out there. Its facets are the band's definition, which
             #  genesis minted from the range the bed states.

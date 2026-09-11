@@ -206,7 +206,7 @@ Self-describing in transit, described beside on disk.
 # Order of work
 
 **The door first, and it is built** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)'s first half): a graph says `dcterms:temporal`, one
-`dcterms:PeriodOfTime` with an `orexis:start` and an `orexis:end`, in `graph/when`, and
+`dcterms:PeriodOfTime` with an `orexis:start` and an `orexis:end`, in `graph/periods`, and
 `store.public_graphs(at=…)` drops what is outside it. Absent bounds mean always, so a store
 that states none is the store it always was — every shipped world included. The cost is at the
 door and it is nothing: 0.9 µs a call with no period stated and 1.9 µs with one, against
@@ -220,14 +220,27 @@ carrying a datetime, two blank nodes and three hops per bound for a door that ru
 query, in a vocabulary nothing here speaks or vendors. The upgrade stays open for the consumer
 that needs Allen relations or a temporal position that is not a datetime.
 
-**The forecast next, because it is the only case with nothing to replace.**
+**The forecast, and it is built** (#589): a forecast is its own graph with its own period, the
+search asks each node's rule about the world holding at that node's instant, and a graph with a
+period is READ but never SIGNED — neither it nor the classification saying what it is, or a kept
+cone would die the moment a forecast refreshed, on a change no lever caused. The greenhouse
+shows it: the same vent reaches the region opened now onto twenty-one degrees and falls below it
+landing after a dusk the forecast states, with no rule anywhere asking what time it is.
+
+**What the forecast taught, and it is the retrofit this record deferred.** Two sayings about one
+subject holding at once is exactly the ambiguity a period exists to remove — the standing
+reading of the outside and a forecast of it answered together until the outside was stated as a
+SEQUENCE of graphs, each holding during its own period. That is the shape readings will take if
+they ever move, and the greenhouse now has one subject in it.
+
+**The measurement next, before anything else moves.**
 [#589](https://github.com/ShishkinDmitriy/orexis/issues/589) is reshaped around this: a forecast
 arrives as its own graph, `orexis:Received`, valid over the interval it speaks for, and a rule
 reading the world at a step's landing sees it exactly when the door says it is valid. No upsert
 invariant is at risk, nothing existing is retrofitted, and the mechanism either carries a real
 case or it does not.
 
-**Then the measurement, before anything else moves.** A reading a minute is 1,440 graphs a day
+A reading a minute is 1,440 graphs a day
 per pair, and the cost of a query tracks the number of VALID graphs plus whatever the engine
 charges per graph in a merge. `world/simulation`, the runbook's own bench, and the number that
 matters is what `_begin` and one fork cost with tens of valid graphs against nine.

@@ -72,7 +72,7 @@ def rule_for(store, action: str) -> dict | None:
     return store.remember(("rule", action), fetch)
 
 
-def apply(store, action: str, **bind) -> tuple[list, list]:
+def apply(store, action: str, when=None, **bind) -> tuple[list, list]:
     """Run one means' effect: `(added, retracted)`, as triples, against nothing.
 
     **`store` is whichever dataset the question is being asked ABOUT, and that is the whole of
@@ -109,8 +109,8 @@ def apply(store, action: str, **bind) -> tuple[list, list]:
     #  silently. The binder refuses a leftover now, so the caller that means "here" gets
     #  here, and only a planner names another world.
     bind.setdefault("state", STATE_GRAPH)
-    return (_run(store, rule.get("construct"), bind),
-            _run(store, rule.get("retracts"), bind))
+    return (_run(store, rule.get("construct"), bind, when),
+            _run(store, rule.get("retracts"), bind, when))
 
 
 def world_after(base, store, action: str, /, **bind):
@@ -197,7 +197,7 @@ def _term(x):
     return x
 
 
-def lands_after(store, action: str, **bind) -> float | None:
+def lands_after(store, action: str, when=None, **bind) -> float | None:
     """How long after this act the world change completes, in seconds — asked, never computed.
 
     The figure a waiter needs and the figure a planner needs, and they must be the same one.
@@ -215,13 +215,13 @@ def lands_after(store, action: str, **bind) -> float | None:
     rule = rule_for(store, action)
     if rule is None or not rule.get("lands"):
         return None
-    rows = _select(store, rule["lands"], bind)
+    rows = _select(store, rule["lands"], bind, when)
     if not rows or rows[0]["seconds"] is None:
         return None
     return float(rows[0]["seconds"].value)
 
 
-def cost_of(store, action: str, **bind) -> float | None:
+def cost_of(store, action: str, when=None, **bind) -> float | None:
     """What taking this act would spend, in the wallet's unit — asked, never computed.
 
     `orexis:landsAfter`'s twin (#466): the owning package declares the SELECT, the same
@@ -234,7 +234,7 @@ def cost_of(store, action: str, **bind) -> float | None:
     rule = rule_for(store, action)
     if rule is None or not rule.get("costs"):
         return None
-    rows = _select(store, rule["costs"], bind)
+    rows = _select(store, rule["costs"], bind, when)
     if not rows or rows[0]["cost"] is None:
         return None
     return float(rows[0]["cost"].value)
@@ -402,7 +402,7 @@ def _where_body(text: str) -> str | None:
     return None
 
 
-def _select(store, text: str, bind: dict) -> list:
+def _select(store, text: str, bind: dict, when=None) -> list:
     """A rule's query that answers with BINDINGS rather than a graph. Same substitution, same
     swallowing of a rule that will not run: a package's broken query must not take an agent
     down, and what is lost is precision about waiting rather than the ability to act.
@@ -414,17 +414,17 @@ def _select(store, text: str, bind: dict) -> list:
     serve landed "immediately", silently. The rows come back as engine solutions rather
     than JSON bindings; the one consumer reads its column accordingly."""
     try:
-        return store.construct(bind_text(text, **bind))
+        return store.construct(bind_text(text, **bind), at=when)
     except Exception as exc:
         log.error("timing query for this means would not run: %s", exc)
         return []
 
 
-def _run(store, text: str | None, bind: dict) -> list:
+def _run(store, text: str | None, bind: dict, when=None) -> list:
     if not text:
         return []
     try:
-        return list(store.construct(bind_text(text, **bind)))
+        return list(store.construct(bind_text(text, **bind), at=when))
     except Exception as exc:
         #  A rule that will not run is a package's bug and must not take an agent down: the
         #  lever still works, and what is lost is the ability to reason about it in advance.
