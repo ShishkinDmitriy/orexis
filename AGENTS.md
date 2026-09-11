@@ -180,6 +180,10 @@ it is a record wearing a bullet.
 - **A ceiling on compute is stated in the unit the search spends** — depth was that unit
   under breadth-first and stopped being it under best-first, and a budget of worlds is what a
   sovereign can size from a measured cost per fork.
+- **An interval is how this project says it does not know, and membership in one is CRISP** —
+  a band in value, a period in time, a narrowing set of bands further out; the continuous part
+  lives in the measure, which is why a reading is never 0.7 in its region and why expected
+  values were refused where a set of possibilities would do.
 - **A row whose presence is meant to BE a fact is named for the state, not for the instant it
   ends** — a cooldown row saying when the host may convene again was true the whole time it was
   written, so its presence said nothing and every reader did the arithmetic; `market:coolingUntil`
