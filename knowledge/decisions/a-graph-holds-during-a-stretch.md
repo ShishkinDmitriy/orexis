@@ -25,23 +25,34 @@ less true at four o'clock; the reading an agent holds does stop being worth acti
 place to say *which stretch this holds during* is the named graph the saying lives in — one
 range per graph, said of the graph and never of a triple.
 
-**And the word is `holdsDuring`, three others having been weighed and failed.** VALIDITY means
-correctness in this repo — `orexis-validate` holds a world to its shapes, `validate_agent`
-refuses a boot — and a graph outside its range is not wrong, it holds at another time.
-FRESHNESS means recency, sensing's word for a reading that is still evidence, and the case this
-exists for is a forecast, which is not recent but forthcoming. SPEAKS FOR reads as
-representation beside `orexis:actsFor`, an agent acting on a subject's behalf. What is left is
-the word temporal logic already uses: a thing holds during a stretch.
+**The words were the hard part, and three were weighed and dropped.** VALIDITY means correctness
+in this repo — `orexis-validate` holds a world to its shapes, `validate_agent` refuses a boot —
+and a graph outside its period is not wrong, it holds at another time. FRESHNESS means recency,
+sensing's word for a reading that is still evidence, and the case this exists for is a forecast,
+which is not recent but forthcoming. SPEAKS FOR reads as representation beside `orexis:actsFor`,
+an agent acting on a subject's behalf.
 
-`dcterms:temporal` was the standard to reach for and is refused for the reason OWL-Time was: its
-value is a `dcterms:PeriodOfTime`, ours is an `orexis:TimeRange`, and adopting a vocabulary's
-property while declining its class is the half-conformance this record already turned down
-once.
+**And then the right answer turned out to be nobody's invention.** `dcterms:temporal` is
+"temporal characteristics of the resource" and `dcterms:PeriodOfTime` is defined, in Dublin
+Core's own words, as *an interval of time that is named or defined by its start and end dates* —
+this concept exactly, already vendored, already bound. It was refused here for one commit on the
+argument that adopting a standard while declining its value class is half-conformance, which is
+why OWL-Time was refused. Reading DCMI settles it the other way: **DCMI defines no start and end
+properties**, so there is nothing to decline. The only alternatives to two properties of our own
+are its Period STRING — `start=…; end=…;`, a literal the core would have to parse — and this
+project does not interpret literals. So the class and the property are DCMI's, and
+`orexis:start` and `orexis:end` are ours because nobody else has any.
+
+**A DURATION IS NOT THIS, and that corrects the other half of the argument.** `orexis:TimeRange`
+was minted on the claim that the next two things need the same class. That was right about the
+stretch a possible world holds over and wrong about an act's duration, which is a length in
+seconds counted from when the act is taken rather than a period of dates.
+[#596](https://github.com/ShishkinDmitriy/orexis/issues/596) wants a shape of its own and cannot borrow this one.
 
 Half of it is already built, which is what makes the proposal cheap to reason about. The
 vocabulary graphs are timeless and every other graph is bounded in some ad-hoc way, and a graph
 already carries metadata about itself: its class, `orexis:arrivedBy`, and — for a per-agent class
-— its prefix. `orexis:holdsDuring`, pointing at one `orexis:TimeRange`, is the same kind of statement and
+— its prefix. `dcterms:temporal`, pointing at one `dcterms:PeriodOfTime`, is the same kind of statement and
 needs no new plumbing.
 
 # What it unifies
@@ -194,23 +205,20 @@ Self-describing in transit, described beside on disk.
 
 # Order of work
 
-**The door first, and it is built** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)'s first half): a graph says `orexis:holdsDuring`, one
-`orexis:TimeRange` with an `orexis:start` and an `orexis:end`, in `graph/when`, and
+**The door first, and it is built** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)'s first half): a graph says `dcterms:temporal`, one
+`dcterms:PeriodOfTime` with an `orexis:start` and an `orexis:end`, in `graph/when`, and
 `store.public_graphs(at=…)` drops what is outside it. Absent bounds mean always, so a store
 that states none is the store it always was — every shipped world included. The cost is at the
 door and it is nothing: 0.9 µs a call with no range stated and 1.9 µs with one, against
 milliseconds for the query it precedes. Naming a graph still reads it, because lapsing is not
 forgetting.
 
-**A CLASS rather than two properties on the graph**, and the reason is the two items that come
-next. An act's duration and the stretch a possible world holds over
-([#596](https://github.com/ShishkinDmitriy/orexis/issues/596)) are the same concept as a graph's validity, and a repo that spelled this
-one as a pair of properties would mint a second spelling for those — which is how one concept
-becomes two and the definitions drift. `orexis:TimeRange` is the one way this project says when
-something holds. Not OWL-Time, weighed: its conformant form is an interval pointing at two
-instant nodes each carrying a datetime, which is two blank nodes and three hops per bound for a
-door that runs before every query, and nothing here speaks it — the upgrade stays open for the
-consumer that needs Allen relations or a temporal position that is not a datetime.
+**A CLASS rather than two properties on the graph**, because a period is a thing to be named,
+compared and narrowed — the stretch a possible world holds over wants the same one. Not
+OWL-Time, weighed: its conformant form is an interval pointing at two instant nodes each
+carrying a datetime, two blank nodes and three hops per bound for a door that runs before every
+query, in a vocabulary nothing here speaks or vendors. The upgrade stays open for the consumer
+that needs Allen relations or a temporal position that is not a datetime.
 
 **The forecast next, because it is the only case with nothing to replace.**
 [#589](https://github.com/ShishkinDmitriy/orexis/issues/589) is reshaped around this: a forecast

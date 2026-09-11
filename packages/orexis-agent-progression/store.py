@@ -96,7 +96,7 @@ SELECT DISTINCT ?g WHERE {{
 #  graph meant before the term existed.
 _SPEAKS = f"""
 SELECT ?g ?start ?end WHERE {{ GRAPH <{WHEN_GRAPH}> {{
-  ?g orexis:holdsDuring ?range .
+  ?g dcterms:temporal ?range .
   OPTIONAL {{ ?range orexis:start ?start }}
   OPTIONAL {{ ?range orexis:end ?end }}
 }} }}"""
@@ -130,6 +130,11 @@ _KERNEL = {
     #  pursues is SHACL, so reading its numbers is an ordinary query over ordinary triples.
     "sh": "http://www.w3.org/ns/shacl#",
     "prov": "http://www.w3.org/ns/prov#",
+    #  The kernel says TEMPORAL COVERAGE in Dublin Core's words, as it says provenance in
+    #  PROV's: `dcterms:temporal` on a graph, pointing at a `dcterms:PeriodOfTime`. It was
+    #  bound already — a part's ontology declares it — and a kernel term that depended on a
+    #  DHT11 driver being installed is not bound at all.
+    "dcterms": "http://purl.org/dc/terms/",
 }
 
 for _label, _iri in loader.external_prefixes().items():

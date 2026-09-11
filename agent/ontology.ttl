@@ -6,6 +6,7 @@
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix assembly: <http://example.org/orexis/assembly#> .
 
 <http://example.org/orexis/core> a owl:Ontology ;
@@ -265,32 +266,34 @@ orexis:Recorded a orexis:Arrival ; rdfs:label "recorded" ;
 orexis:Received a orexis:Arrival ; rdfs:label "received" ;
     rdfs:comment "Another party's word: an instrument's reading, a peer's claim. The only arrival whose trustworthiness is a question — an assertion is the sovereign's by definition and a derivation is checkable arithmetic, but this either carries a signature or does not, which is why the graph classification and the trust story are one story." .
 
-orexis:TimeRange a owl:Class ; rdfs:label "Time range" ;
-    rdfs:comment """A stretch of time with a start and an end, either open — the one way this project says WHEN SOMETHING HOLDS, so that the next thing needing an interval does not mint a second spelling for it.
+#################  WHEN A GRAPH HOLDS  #################
+#
+#  `dcterms:temporal` on a graph, pointing at a `dcterms:PeriodOfTime`: Dublin Core's own
+#  "temporal characteristics of the resource", whose class is defined as "an interval of time
+#  that is named or defined by its start and end dates". That is this concept exactly, and it
+#  is already vendored under `tests/fixtures/vocabularies/`, so there is nothing to invent.
+#
+#  `orexis:TimeRange` WAS invented, for one commit, on the argument that adopting a standard
+#  while declining its value class is half-conformance — the reason OWL-Time was refused, whose
+#  conformant form is two instant nodes and three hops per bound. Reading DCMI settles it the
+#  other way: DCMI defines NO start and end properties, so there is nothing to decline. The
+#  choice is its class with our two properties, or its class with a DCMI Period STRING —
+#  `start=…; end=…;` — which is a literal the core would have to parse, and this project does
+#  not interpret literals. So: their class, their property, and the two below.
+#
+#  AND A DURATION IS NOT THIS. How long an act OCCUPIES is a length in seconds counted from
+#  when it is taken, not a stretch of dates, so #596 wants a shape of its own and cannot
+#  borrow this one. The argument that minted `orexis:TimeRange` — that the next two things
+#  need the same class — was right about a possible world's stretch and wrong about a
+#  duration.
 
-It exists because three are already asked for: how long a graph is worth believing (below), how long an act OCCUPIES and when its effect lands, and the stretch a possible world holds over. A word used before it is defined is a word everyone defines differently, and two spellings of one concept is how that happens in a vocabulary.
-
-NOT OWL-Time, weighed and refused for this: its conformant form is an interval pointing at two `time:Instant` nodes each carrying an `xsd:dateTimeStamp`, which is two blank nodes and three hops per bound for a door that runs before every query, and nothing else here speaks it. The upgrade is open — a consumer that needs Allen relations or a temporal position that is not a datetime has a standard waiting — and until one exists this is a pair of literals with a name.
-
-AN OPEN END IS NOT AN UNKNOWN ONE. A range with no `orexis:start` holds from always and one with no `orexis:end` holds until something retracts it, which is what every graph here meant before there was a term for it.""" .
-
-orexis:start a owl:DatatypeProperty ; rdfs:domain orexis:TimeRange ; rdfs:range xsd:dateTime ;
+orexis:start a owl:DatatypeProperty ; rdfs:domain dcterms:PeriodOfTime ; rdfs:range xsd:dateTime ;
     rdfs:label "start" ;
-    rdfs:comment "When the range opens. Absent means always, on that side." .
+    rdfs:comment "When the period opens. Absent means always, on that side. Ours because DCMI defines no such property: its period is a class with a prose definition and, in the wild, whatever properties its user hangs on it." .
 
-orexis:end a owl:DatatypeProperty ; rdfs:domain orexis:TimeRange ; rdfs:range xsd:dateTime ;
+orexis:end a owl:DatatypeProperty ; rdfs:domain dcterms:PeriodOfTime ; rdfs:range xsd:dateTime ;
     rdfs:label "end" ;
-    rdfs:comment "When the range closes, exclusive: an instant equal to this is outside. Absent means the range does not close on its own." .
-
-orexis:holdsDuring a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range orexis:TimeRange ;
-    rdfs:label "holds during" ;
-    rdfs:comment """The stretch of time what this graph says HOLDS — which is therefore when it is worth believing, and outside which it is about another time rather than wrong.
-
-THREE WORDS WERE WEIGHED AND ARE NOT THIS ONE. "Validity" means CORRECTNESS here — `orexis-validate` holds a world to its shapes and `validate_agent` refuses a boot — and a graph outside its range is not incorrect. "Freshness" means RECENCY, sensing's word for a reading that is still evidence, and the case this exists for is a forecast, which is not recent but forthcoming. "Speaks for" reads as representation beside `orexis:actsFor`, which is an agent acting on a subject's behalf. What is left is the one temporal logic already uses: a thing HOLDS during a stretch. Absent means always, which is what a vocabulary graph means and what every graph here meant before the term existed: a class is not temporal, and neither is a world file a sovereign ratified (a-graph-holds-during-a-stretch).
-
-SAID OF THE GRAPH AND READ AT THE DOOR. A graph is a scope a reader is HANDED, so `store.public_graphs(at=…)` drops a graph outside its range and every rule reads triples and asks nothing — which is the whole point, since a rule that asked the wall clock inside a search would ask the real now and never the instant its act would be taken at (`tests/test_clockless.py` holds it to that, by scanning for the call this sentence deliberately does not spell).
-
-AND SAID IN A GRAPH OF ITS OWN, outside the default union, because a range CHANGES: a statement in a merged graph is a fact in every possible world, so one that lapsed would move the invariant signature and kill a kept cone. `graph/when` is that place — a sibling of `graph/provenance`, which has the same property and is replaced whole by every load, which a runtime range must not be.""" .
+    rdfs:comment "When the period closes, exclusive: an instant equal to this is outside. Absent means the period does not close on its own." .
 
 orexis:arrivedBy a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range orexis:Arrival ;
     rdfs:label "arrived by" .
@@ -388,8 +391,8 @@ orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range or
 ##  public too. Putting the per-agent ones in `provenance` (which is deliberately outside the
 ##  default union, to keep mentions of graphs from answering questions about devices) was the
 ##  inconsistency, and it showed up the first time a scoped query could not see them.
-##  WHEN EACH GRAPH HOLDS — one `orexis:TimeRange` per graph, under `orexis:holdsDuring` —
-##  and deliberately NOT public: a range changes, and a
+##  WHEN EACH GRAPH HOLDS — one `dcterms:PeriodOfTime` per graph, under `dcterms:temporal` —
+##  and deliberately NOT public: a period changes, and a
 ##  statement inside the default union is a fact in every possible world — one that lapsed would
 ##  move the invariant signature and kill a kept cone. A sibling of `graph/provenance`, which has
 ##  the same property and is the other place mentions of graphs live; not provenance itself,

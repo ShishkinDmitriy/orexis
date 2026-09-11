@@ -31,15 +31,15 @@ def _store():
 
 def _say(st, graph: str, until=None, since=None) -> None:
     """What a graph says about itself, said where mentions of graphs live — one
-    `orexis:TimeRange`, either end open, which is the one way this project says when something
-    holds."""
+    `dcterms:PeriodOfTime`, either end open: Dublin Core's own class for an interval named by
+    its start and end dates, with the two properties DCMI never defined."""
     bounds = []
     if since is not None:
         bounds.append(f'orexis:start "{since.isoformat()}"^^xsd:dateTime')
     if until is not None:
         bounds.append(f'orexis:end "{until.isoformat()}"^^xsd:dateTime')
     st.update(f"""INSERT DATA {{ GRAPH <{WHEN_GRAPH}> {{
-        <{graph}> orexis:holdsDuring [ a orexis:TimeRange ; {' ; '.join(bounds)} ] }} }}""")
+        <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ; {' ; '.join(bounds)} ] }} }}""")
 
 
 def test_a_store_that_states_no_range_is_the_store_it_always_was():
@@ -114,8 +114,8 @@ def test_a_bound_nobody_can_read_does_not_drop_a_graph():
     """Not knowing is maximal everywhere here, and this is the same rule read the safe way
     round: a graph whose range is unreadable stays, rather than vanishing silently."""
     st = _store()
-    st.update(f"""INSERT DATA {{ GRAPH <{WHEN_GRAPH}> {{ <{ACTIONS_GRAPH}> orexis:holdsDuring
-        [ a orexis:TimeRange ; orexis:end "whenever"^^xsd:dateTime ] }} }}""")
+    st.update(f"""INSERT DATA {{ GRAPH <{WHEN_GRAPH}> {{ <{ACTIONS_GRAPH}> dcterms:temporal
+        [ a dcterms:PeriodOfTime ; orexis:end "whenever"^^xsd:dateTime ] }} }}""")
 
     assert st.ranges()[ACTIONS_GRAPH] == (None, None)
     assert ACTIONS_GRAPH in st.public_graphs()
