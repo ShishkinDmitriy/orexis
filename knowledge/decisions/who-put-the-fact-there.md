@@ -313,6 +313,17 @@ one graph because there was exactly one are now asked of the rules rather than r
 That last one closes the fourth seam below from one direction: a graph a **rule** writes is
 described automatically now, and a graph a **world file** declares still is not.
 
+# Amended: and the saying is not inside the said
+
+Every graph says who put it there, and where it SAYS it is beside the graph rather than in it —
+the ontology graph for a static one, `graph/classification` for a per-agent one written at boot,
+`graph/provenance` for the PROV account of a load. Asked whether the description should live in
+the graph it describes, and refused: a graph is a scope a reader is handed, so a description
+inside it is inherited by every reader of the data, which is the hazard the provenance graph is
+kept out of the default union to avoid. The argument is in
+[validity-belongs-to-the-named-graph](/decisions/validity-belongs-to-the-named-graph.md),
+which had to settle the same question for an interval.
+
 # Seams left open
 
 - **A `GRAPH` block in a world file is not cleared on refresh.** `put_graph` is told one graph
