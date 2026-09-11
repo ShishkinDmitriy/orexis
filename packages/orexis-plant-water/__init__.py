@@ -6,12 +6,22 @@ Knowledge only: it contributes vocabulary and no behaviour, which is why there i
 
 from pathlib import Path
 
-from assembly import contributes, DERIVATION, SHAPES, VOCABULARY
+from assembly import ACTIONS, contributes, DERIVATION, SHAPES, VOCABULARY
 
 @contributes(VOCABULARY)
 def vocabulary(package: Path) -> list[Path]:
     """the vocabulary — what its terms mean."""
     return [package / "ontology.ttl"]
+
+@contributes(ACTIONS)
+def actions(package: Path) -> list[Path]:
+    """what the world does to a pot while nobody waters it — a DRIFT and no action (#592).
+
+    The point is named ACTIONS and this file carries no `orexis:Action`, which is the honest
+    reading of it: what a package contributes here is what the store's action graph holds —
+    the rules a search runs — and a drift is one of those with nobody choosing it.
+    """
+    return [package / "actions.ttl"]
 
 @contributes(SHAPES)
 def shapes(package: Path) -> list[Path]:

@@ -55,6 +55,37 @@ SELECT ?rule ?construct ?available ?retracts ?lands ?costs WHERE {
 } LIMIT 1"""
 
 
+_DRIFTS_Q = """
+SELECT ?drift ?construct ?retracts WHERE {
+  ?drift a orexis:Drift ; sh:construct ?construct .
+  OPTIONAL { ?drift orexis:retracts ?retracts }
+}"""
+
+
+def drifts_of(store) -> list[dict]:
+    """Every drift the loaded packages declare — what the world does while nobody acts.
+
+    Read off public knowledge like an action's effect, and REMEMBERED per store for the same
+    reason: it is a schema only a write can change, and a pass asks it at every fork.
+    """
+    def fetch():
+        return bindings(store.query(_DRIFTS_Q))
+    return store.remember("drifts", fetch)
+
+
+def drift(store, rule: dict, elapsed: float, when=None, **bind) -> tuple[list, list]:
+    """What one drift makes true over `elapsed` seconds — `(added, retracted)`, as triples.
+
+    The same shape as `apply` and deliberately: a drift is an effect with nobody taking it, so
+    the machinery that computes what a lever would make true computes what the world makes true
+    unaided. What differs is the parameter — `$elapsed`, the seconds the world has had — and
+    that nothing here asks whether it is AVAILABLE, because nobody chooses for the world.
+    """
+    bind = {**bind, "elapsed": elapsed}
+    return (_run(store, rule.get("construct"), bind, when),
+            _run(store, rule.get("retracts"), bind, when))
+
+
 def rule_for(store, action: str) -> dict | None:
     """The effect rule an action carries, or None for an action an event adopts.
 

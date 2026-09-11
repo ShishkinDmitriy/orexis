@@ -751,6 +751,15 @@ orexis:handle a assembly:Extension ;
 orexis:send a assembly:Extension ;
     assembly:signature "(channel, payload, retain=…, not_after=…) -> bool" ; orexis:row orexis:Reactive ; rdfs:label "send" ; rdfs:comment "Carry this to the society, and say whether it left. True where it reached a live session, False where it did not — a message with a DEADLINE is refused rather than queued when there is none, because a queue would deliver it after the moment it meant anything (publishing-is-a-goal-and-the-protocol-is-a-primitive). Told by Module.publish; answered by whichever module holds the connection." .
 
+orexis:Drift a owl:Class ; rdfs:label "Drift" ;
+    rdfs:comment """WHAT THE WORLD DOES TO A READING WHILE NOBODY ACTS — a happening edge, declared by the package that owns the physics and taken by no one. Its grammar is an action's effect and nothing else: `sh:construct` for what becomes true and `orexis:retracts` for what it replaces, parameterised by `$state`, `$beliefs` and `$elapsed` — the seconds the world has had to itself.
+
+THE RATE IS EXOGENOUS AND THE RESULT IS NOT, which is why this is a rule at the node rather than a graph with a period. A pot dries whether or not the agent acts, so the rate is a plain world fact; but it dries FROM WHEREVER THE PLAN HAS LEFT IT, so the reading it reaches differs between worlds and is part of where a plan stands. A forecast of the weather is the other kind and must not be confused with this one: nothing an agent does changes it, so it is a graph holding during a period, read and never signed (planning-branches-on-action-forecasting-on-belief).
+
+NO PRECONDITION AND NO TAKER, and both absences are load-bearing. A drift is never on a menu — nobody chooses for the world — so it states no `orexis:available`, and the gate that holds an action to both texts does not apply. A taker-less ACTION means something else entirely here (a promise the level beneath keeps), which is why this is a class of its own rather than an action with nobody attached.
+
+WHAT IT MAY COMPUTE: the domain's own arithmetic on its own numbers. `orexis:size` left the effects because a SEARCH inventing a dose was a sizing nobody had authorised; a rate a world states is not that, and a rule that reads it is the domain interpreting its own literal, which is where every literal in this project is interpreted.""" .
+
 orexis:Action a owl:Class ; rdfs:label "Action" ;
     #  EVERY ACTION IS AN EXTENSION POINT (#523): the method that carries one out is
     #  `@contributes(<the action>)` on the module that takes it, and the signature and the row
