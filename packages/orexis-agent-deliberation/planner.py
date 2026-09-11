@@ -47,7 +47,8 @@ from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import Raw, bind, bindings
 from .ontology import DELIBERATION
-from orexis_agent_progression.ontology import (promises_graph, DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
+from orexis_agent_progression.ontology import (promises_graph, CLASSIFICATION_GRAPH,
+                            DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
 from orexis_agent_deliberation.conformance import graph_from, held_shapes, legality_selects
 from orexis_agent_deliberation.judge import crossed_text
@@ -892,6 +893,26 @@ class Planner:
         #  predicate as text — an rdflib IRI is not equal to the same text.
         return frozenset(str(x) for x in view)
 
+    def _standing_in(self) -> list:
+        """The graphs a world's FACTS come from — everything the agent holds, less whatever
+        holds during a period of its own (#589).
+
+        A time-bounded graph is read by rules and is not part of where a plan stands. A
+        forecast is the case: nothing the agent does moves what the weather will be, so it is
+        a constant of the plan exactly as the outside reading the vent already leans on — and
+        if it entered the signature, every kept world would die the moment the forecast
+        refreshed, differing in facts no lever touched.
+        """
+        store = self.agent.beliefs
+        #  AND THE CLASSIFICATION, SUBTRACTED BY NAME, which rule 1 allows for exactly this:
+        #  saying which road a fact came by rather than enumerating what to read. What a graph
+        #  IS is a mention, not a fact a plan stands on — and a forecast arriving at runtime
+        #  says what it is there, so a signed classification would kill every kept world on a
+        #  change no lever caused, which is the thing this exclusion exists to prevent.
+        out = set(store.periods()) | {CLASSIFICATION_GRAPH}
+        return [iri for iri in [*store.public_graphs(), *store.recorded_graphs()]
+                if iri not in out]
+
     def _key(self, diff: tuple) -> frozenset:
         """The key the present is matched to a kept world by: the WORLD the diff reaches,
         within the view, a reading by what it IS — the bands the domain asserted on it
@@ -924,15 +945,24 @@ class Planner:
     def _facts_now(self) -> frozenset:
         """The whole base as the store holds it now, in canonical facts."""
         store = self.agent.beliefs
-        return signature.facts((quad for iri in [*store.public_graphs(), *store.recorded_graphs()]
+        return signature.facts((quad for iri in self._standing_in()
                                 for quad in store.quads(iri)), self._keys)
 
     def _invariant_signature(self) -> frozenset:
         """Everything a node's world holds besides its readings, as canonical facts: public
         knowledge, the records, the wants. A kept cone is valid exactly while this is what
-        it was computed against."""
+        it was computed against.
+
+        LESS WHAT HOLDS DURING A PERIOD, AND LESS WHAT A GRAPH IS (#589). A forecast is in
+        the world a judged node is made of — no step changes it, so it belongs in the
+        invariant HALF — and neither it nor the classification saying what it is may be in
+        this signature, or a cone would die every time a forecast refreshed, on a change no
+        lever caused and no plan depends on.
+        """
         store = self.agent.beliefs
-        quads = [quad for iri in self._invariant_graphs for quad in store.quads(iri)]
+        out = set(store.periods()) | {CLASSIFICATION_GRAPH}
+        quads = [quad for iri in self._invariant_graphs if iri not in out
+                 for quad in store.quads(iri)]
         quads += [quad for iri in self._want_graphs for quad in self.agent.desires.quads(iri)]
         return signature.facts(quads, self._keys)
 
@@ -1264,7 +1294,7 @@ class Planner:
         #  shape, and then this costs nothing per node.
         self._law = self._violation_shapes(base)
         self._base_facts = signature.facts((
-            quad for iri in [*store.public_graphs(), *store.recorded_graphs()]
+            quad for iri in self._standing_in()
             for quad in store.quads(iri)), self._keys)
         #  COMPILED, ONCE PER PASS (#548): the law's selects, and the legality check's — the
         #  packages' shapes about this agent, compiled once per process and cached by
@@ -1391,18 +1421,27 @@ class Planner:
         #  so the rule can be told (#588): `orexis:landsAfter` reads the world the act is taken
         #  in, and the construct describes the world it reaches. Both are the same rule's, and
         #  a rule that ignores `$lands` loses nothing, as one ignoring `$via` does.
-        lands = effects.lands_after(self.imaginarium, row.action, **self._bind(desire, node, row))
+        #  ASKED AT THE INSTANT THE ACT IS TAKEN (#589): a rule reads the graphs that hold
+        #  THEN — a forecast among them, once a world states one — and knows nothing about
+        #  which those are. The clock is the pass's, read once at its root.
+        taken_at = self._at(node)
+        lands = effects.lands_after(self.imaginarium, row.action,
+                                    when=taken_at, **self._bind(desire, node, row))
         bind = self._bind(desire, node, row, lands=lands)
         #  WHAT IT SPENDS, ASKED FIRST — `orexis:costs`, the landing's twin (#466), and None is
         #  free. It is asked before the rule is run because that is what makes the bound worth
         #  having: a candidate already dearer than a plan in hand is dropped without simulating
         #  its effect or forking its world, which are the two expensive things a step does.
-        spent = effects.cost_of(self.imaginarium, row.action, **bind)
+        spent = effects.cost_of(self.imaginarium, row.action, when=taken_at, **bind)
         cost = node.cost + (spent or 0.0)
         if bound is not None and cost > bound:
             return TOO_DEAR
         try:
-            added, retracted = effects.apply(self.imaginarium, row.action, **bind)
+            #  AND THE EFFECT AT THE INSTANT IT LANDS, which is the world the construct
+            #  DESCRIBES: a vent opened now but completing after dusk is judged against the
+            #  dusk the forecast states, not against this afternoon.
+            added, retracted = effects.apply(self.imaginarium, row.action,
+                                             when=self._at(node, lands), **bind)
         except Exception as exc:                 # a package's rule is not an agent's problem
             log.error("could not simulate %s: %s", row.action, exc)
             return None

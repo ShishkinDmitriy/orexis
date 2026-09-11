@@ -30,7 +30,7 @@ from typing import Callable
 import pyoxigraph as ox
 
 from assembly import loader
-from .ontology import OREXIS, CLASSIFICATION_GRAPH, ONTOLOGY_GRAPH, PUBLIC_GRAPH, WHEN_GRAPH
+from .ontology import OREXIS, CLASSIFICATION_GRAPH, ONTOLOGY_GRAPH, PUBLIC_GRAPH, PERIODS_GRAPH
 
 # A SPARQL SELECT -> the SPARQL-JSON results dict. The seam every reader is written against,
 # unchanged from when this was an HTTP client, so nothing above here knows the difference.
@@ -95,7 +95,7 @@ SELECT DISTINCT ?g WHERE {{
 #  reader narrowing itself to a graph instance. Absent bounds mean always, which is what every
 #  graph meant before the term existed.
 _PERIODS = f"""
-SELECT ?g ?start ?end WHERE {{ GRAPH <{WHEN_GRAPH}> {{
+SELECT ?g ?start ?end WHERE {{ GRAPH <{PERIODS_GRAPH}> {{
   ?g dcterms:temporal ?period .
   OPTIONAL {{ ?period orexis:start ?start }}
   OPTIONAL {{ ?period orexis:end ?end }}
@@ -425,7 +425,7 @@ class Store:
     def periods(self) -> dict:
         """The period each graph holds during: IRI -> (start, end), either end None for open.
 
-        Read from `graph/when` and remembered until a write, like everything else here.
+        Read from `graph/periods` and remembered until a write, like everything else here.
         The TABLE is remembered rather than a filtered list, because the answer to *which
         graphs now* depends on when it is asked and the table does not: filtering a handful of
         bounds in Python costs nothing, and a memo keyed by an instant would miss on every call.
@@ -483,7 +483,8 @@ class Store:
         )
         return json.loads(out.getvalue())
 
-    def construct(self, sparql: str, substitutions: dict | None = None):
+    def construct(self, sparql: str, substitutions: dict | None = None,
+                  at: datetime | None = None):
         """Run a CONSTRUCT and hand back the triples, which are not written anywhere.
 
         The one thing `query` cannot do: it serialises results as JSON bindings, and a
@@ -502,7 +503,10 @@ class Store:
         anyone naming a graph — which is rule 1 for graph IRIs, applied to the one road that
         had been exempt.
         """
-        public = [ox.NamedNode(g) for g in (*self.public_graphs(), *self.recorded_graphs())]
+        #  AT WHICH INSTANT (#589): a rule asked about a world the agent has not reached is
+        #  asked about the graphs that hold THEN, not the ones holding now — which is how a
+        #  forecast reaches a step landing inside it and no rule has to know the time.
+        public = [ox.NamedNode(g) for g in (*self.public_graphs(at), *self.recorded_graphs(at))]
         return list(self._store.query(sparql, prefixes=NAMESPACES, default_graph=public,
                                       substitutions=_terms(substitutions)))
 

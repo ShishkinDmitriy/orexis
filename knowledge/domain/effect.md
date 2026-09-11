@@ -124,7 +124,19 @@ though a possible world states what a reading IS rather than what it measures
 root of a cone and at every leaf — a constant of the plan rather than something a step might
 have changed. What the plan CAN change, the rule reads as the band it is.
 
-**The seam it leaves is time, and half of it is closed.** The outside at the moment a vent is
+**The seam it left was time, and it is closed.** A rule is told when its act completes
+(`$lands`, #588) — and, since #589, it is ASKED about the world holding at that instant: the
+search hands the rule whatever graphs hold then, so a vent opening after dusk is judged against
+the dusk a forecast states rather than against this afternoon. The rule learned nothing about
+time to get there. What changed in it is one line: the outside is no longer read from `$state`,
+because a step changes the bed and never the weather, so the outside is not a node's to hold —
+it is whatever holds at the instant asked about, which is the sensed reading now and a forecast
+later. See [a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md).
+
+The paragraphs below are how it stood before, kept because the argument for `$lands` is the
+same one and the distinction between the two instants survives it.
+
+**The seam as it was, and half of it closed first.** The outside at the moment a vent is
 opened is not the outside at the moment the plan was made, and a plan that opens a vent after
 dark is simulated against the afternoon. A rule can now be TOLD when its own act completes —
 `$lands`, bound by the search from the pass's clock and the path's landings (#588), which is

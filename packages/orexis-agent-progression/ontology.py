@@ -221,7 +221,7 @@ DELIBERATION_GRAPH = _GRAPH + "deliberation"
 PROVENANCE_GRAPH = _GRAPH + "provenance"
 #  Which stretch each graph speaks for — said of the graph, outside the default union, and read
 #  by the door rather than by any rule (a-graph-holds-during-a-stretch).
-WHEN_GRAPH = _GRAPH + "when"
+PERIODS_GRAPH = _GRAPH + "periods"
 #  What this agent's own graphs ARE, said by the agent at boot: public, because a
 #  modality-scoped query must resolve `?d a orexis:DesireGraph` without naming an instance.
 CLASSIFICATION_GRAPH = _GRAPH + "classification"
