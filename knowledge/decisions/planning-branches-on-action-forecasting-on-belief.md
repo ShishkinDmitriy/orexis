@@ -60,6 +60,31 @@ steps. That is [model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-
 first-order rule read forward — what a peer DID is a fact, what a peer WILL do is a prediction —
 and it says where a society's mutual expectations will hang when anyone builds them.
 
+**And a prediction MY ACTS CAN MOVE is not a ground.** The weather is the clean case: nothing
+this agent does changes what the outside will be, so a forecast of it is the same fact in every
+world of the cone — a constant the rules read, held in a graph with a period, out of the
+signature ([a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md)). A
+prediction about the agent's OWN subject is not like that. *This pot is below its region at
+five* is true of a world where nothing was done and false of the one next to it where a dose
+landed, so holding it as a constant would let a plan contradict itself: the node where the pot
+was watered would go on saying the pot runs dry.
+
+So the test is one question — **can any act of mine change it?** — and it sorts predictions into
+two kinds that must not share a mechanism:
+
+- **No: it is exogenous, and it extends the GROUND.** Rain, dusk, a peer's claim arriving. A
+  graph with a period, read at the instant a node is asked about, never signed, the same in
+  every world.
+- **Yes: it is endogenous, and it is computed AT the node.** The pot's drying, whose RATE is
+  exogenous and whose result is not: it dries from wherever the plan has left it. That is a
+  rule run at each node over that node's world, which is what an effect already is — the same
+  machinery, with nobody taking it ([#592](https://github.com/ShishkinDmitriy/orexis/issues/592)) — and its result IS part of where the plan
+  stands, because it differs between worlds and that difference is the whole point.
+
+The two are easy to confuse because both are *what the world will do*, and the cost of confusing
+them is silent: an endogenous prediction held as a ground makes the search believe a future its
+own plan has already prevented.
+
 **The modality belongs to the EDGE, not to the node.** A chosen edge is intention-shaped — it is
 something to commit to; a happening one is belief-shaped — it is something to be right or wrong
 about. That is why the two cannot be scored alike: ranking is meaningful over what an agent
