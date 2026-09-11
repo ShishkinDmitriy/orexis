@@ -321,7 +321,7 @@ the ontology graph for a static one, `graph/classification` for a per-agent one 
 the graph it describes, and refused: a graph is a scope a reader is handed, so a description
 inside it is inherited by every reader of the data, which is the hazard the provenance graph is
 kept out of the default union to avoid. The argument is in
-[validity-belongs-to-the-named-graph](/decisions/validity-belongs-to-the-named-graph.md),
+[a-graph-says-what-it-speaks-for](/decisions/a-graph-says-what-it-speaks-for.md),
 which had to settle the same question for an interval.
 
 # Seams left open

@@ -30,7 +30,7 @@ from typing import Callable
 import pyoxigraph as ox
 
 from assembly import loader
-from .ontology import OREXIS, CLASSIFICATION_GRAPH, ONTOLOGY_GRAPH, PUBLIC_GRAPH, VALIDITY_GRAPH
+from .ontology import OREXIS, CLASSIFICATION_GRAPH, ONTOLOGY_GRAPH, PUBLIC_GRAPH, WHEN_GRAPH
 
 # A SPARQL SELECT -> the SPARQL-JSON results dict. The seam every reader is written against,
 # unchanged from when this was an HTTP client, so nothing above here knows the difference.
@@ -90,13 +90,13 @@ SELECT DISTINCT ?g WHERE {{
   FILTER NOT EXISTS {{ ?g a ?work . ?work rdfs:subClassOf* orexis:WorkingGraph }}
 }}"""
 
-#  WHEN A GRAPH IS WORTH BELIEVING — read from the one place that says so, which is named here
+#  WHICH STRETCH A GRAPH SPEAKS FOR — read from the one place that says so, which is named here
 #  for the same reason the two above are: this is the bootstrap root asking what to merge, not a
 #  reader narrowing itself to a graph instance. Absent bounds mean always, which is what every
 #  graph meant before the term existed.
-_VALID = f"""
-SELECT ?g ?start ?end WHERE {{ GRAPH <{VALIDITY_GRAPH}> {{
-  ?g orexis:validity ?range .
+_SPEAKS = f"""
+SELECT ?g ?start ?end WHERE {{ GRAPH <{WHEN_GRAPH}> {{
+  ?g orexis:speaksFor ?range .
   OPTIONAL {{ ?range orexis:start ?start }}
   OPTIONAL {{ ?range orexis:end ?end }}
 }} }}"""
@@ -377,7 +377,7 @@ class Store:
         self._store = ox.Store(self.path) if self.path else ox.Store()
         self._public: list | None = None  # discovered on demand; see public_graphs()
         self._recorded: list | None = None  # likewise; see recorded_graphs()
-        self._validity: dict | None = None  # graph -> (from, until); see validity()
+        self._spoken: dict | None = None  # graph -> (start, end); see speaks_for()
         self._memo: dict = {}             # what only a write can change; see remember()
 
     # --- what counts as public, according to the store itself ---
@@ -398,7 +398,7 @@ class Store:
         """
         if self._recorded is None:
             self._recorded = sorted(row["g"] for row in bindings(self.query(_OWN)))
-        return self._valid_at(self._recorded, at)
+        return self._speaking_at(self._recorded, at)
 
     def public_graphs(self, at: datetime | None = None) -> list[str]:
         """Every graph the vocabulary types as an `orexis:PublicGraph`, and still worth believing.
@@ -415,34 +415,34 @@ class Store:
         if self._public is None:
             rows = self._store.query(_DISCOVER, prefixes=NAMESPACES)
             self._public = sorted(str(row["g"].value) for row in rows)
-        return self._valid_at(self._public, at)
+        return self._speaking_at(self._public, at)
 
-    def validity(self) -> dict:
+    def speaks_for(self) -> dict:
         """What each graph says about when it is worth believing: IRI -> (from, until).
 
-        Read from `graph/validity` and remembered until a write, like everything else here.
+        Read from `graph/when` and remembered until a write, like everything else here.
         The TABLE is remembered rather than a filtered list, because the answer to *which
         graphs now* depends on when it is asked and the table does not: filtering a handful of
         bounds in Python costs nothing, and a memo keyed by an instant would miss on every call.
         """
-        if self._validity is None:
-            self._validity = {
+        if self._spoken is None:
+            self._spoken = {
                 str(row["g"].value): (_instant(row["start"] and row["start"].value),
                                       _instant(row["end"] and row["end"].value))
-                for row in self._store.query(_VALID, prefixes=NAMESPACES)}
-        return self._validity
+                for row in self._store.query(_SPEAKS, prefixes=NAMESPACES)}
+        return self._spoken
 
-    def _valid_at(self, graphs: list[str], at: datetime | None) -> list[str]:
+    def _speaking_at(self, graphs: list[str], at: datetime | None) -> list[str]:
         """`graphs`, less whatever is outside its own interval at `at`.
 
         THE CLOCK IS READ HERE AND NOWHERE A RULE CAN REACH IT (#598,
-        validity-belongs-to-the-named-graph): a graph is a scope a reader is handed, so the
+        a-graph-says-what-it-speaks-for): a graph is a scope a reader is handed, so the
         door drops what is not worth believing and every rule reads triples and asks nothing.
         `at` is None for *now*, and a caller with a clock of its own — a planning pass, which
         reads one clock at its root and would otherwise watch a graph expire between two forks
         — says which instant it means.
         """
-        bounds = self.validity()
+        bounds = self.speaks_for()
         if not bounds:
             return graphs           # nothing states an interval: the store it always was
         when = at or datetime.now(timezone.utc)
@@ -707,7 +707,7 @@ class Store:
         than an error — the failure this design keeps having to guard against."""
         self._public = None
         self._recorded = None
-        self._validity = None
+        self._spoken = None
         self._memo.clear()
 
     def remember(self, key, compute):

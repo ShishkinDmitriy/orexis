@@ -1,11 +1,11 @@
-"""A graph says when it is worth believing, and the door honours it.
+"""A graph says which stretch of time it speaks for, and the door honours it.
 
-`knowledge/decisions/validity-belongs-to-the-named-graph.md`: a class is not temporal and
-knowledge about instances is, so validity is a property of the named graph a thing is said in —
+`knowledge/decisions/a-graph-says-what-it-speaks-for.md`: a class is not temporal and
+knowledge about instances is, so the stretch a saying is about belongs to the graph it is said in —
 read at the door, where a reader is HANDED a scope, and never by a rule, which would be the
 `now()` this project has just spent three changes removing.
 
-The interval is said in `graph/validity`, outside the default union and beside the provenance
+The range is said in `graph/when`, outside the default union and beside the provenance
 graph, because an interval CHANGES: a statement in a merged graph is a fact in every possible
 world, so one that lapsed would move the invariant signature and kill a kept cone.
 """
@@ -17,7 +17,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from conftest import genesis_store
-from orexis_agent_progression.ontology import ACTIONS_GRAPH, VALIDITY_GRAPH, WORLD_GRAPH
+from orexis_agent_progression.ontology import ACTIONS_GRAPH, WHEN_GRAPH, WORLD_GRAPH
 
 def _now() -> datetime:
     """Read per test, never once per module: an instant captured at import is a minute old by
@@ -38,21 +38,21 @@ def _say(st, graph: str, until=None, since=None) -> None:
         bounds.append(f'orexis:start "{since.isoformat()}"^^xsd:dateTime')
     if until is not None:
         bounds.append(f'orexis:end "{until.isoformat()}"^^xsd:dateTime')
-    st.update(f"""INSERT DATA {{ GRAPH <{VALIDITY_GRAPH}> {{
-        <{graph}> orexis:validity [ a orexis:TimeRange ; {' ; '.join(bounds)} ] }} }}""")
+    st.update(f"""INSERT DATA {{ GRAPH <{WHEN_GRAPH}> {{
+        <{graph}> orexis:speaksFor [ a orexis:TimeRange ; {' ; '.join(bounds)} ] }} }}""")
 
 
-def test_a_store_that_states_no_interval_is_the_store_it_always_was():
+def test_a_store_that_states_no_range_is_the_store_it_always_was():
     """Absent means always, on both sides — which is what every graph meant before the term
     existed, and what a vocabulary graph means for ever. The fast path is the ordinary one."""
     now = _now()
     st = _store()
-    assert st.validity() == {}
+    assert st.speaks_for() == {}
     assert len(st.public_graphs()) == 8
     assert st.public_graphs() == st.public_graphs(at=now + timedelta(days=365))
 
 
-def test_a_graph_outside_its_interval_is_not_merged():
+def test_a_graph_outside_its_range_is_not_merged():
     """The door drops it, and nothing else changes: an unqualified pattern stops seeing what
     the graph holds, because what an unqualified pattern reads IS the merge."""
     now = _now()
@@ -64,7 +64,7 @@ def test_a_graph_outside_its_interval_is_not_merged():
 
     assert WORLD_GRAPH not in st.public_graphs()
     assert st.query("SELECT ?s WHERE { ?s a orexis:Agent }")["results"]["bindings"] == [], \
-        "a graph past its interval still answered an ordinary query"
+        "a graph past its range still answered an ordinary query"
     assert st.query(f"SELECT ?s WHERE {{ GRAPH <{WORLD_GRAPH}> {{ ?s a orexis:Agent }} }}"
                     )["results"]["bindings"], \
         "naming a graph still reads it — lapsing is not forgetting, and a sweep is a decision"
@@ -82,7 +82,7 @@ def test_the_instant_is_the_askers_and_a_pass_says_which():
     assert ACTIONS_GRAPH in st.public_graphs(at=now)
     assert ACTIONS_GRAPH not in st.public_graphs(at=now + timedelta(minutes=2))
     assert ACTIONS_GRAPH in st.public_graphs(at=now - timedelta(days=1)), \
-        "an open start means always, so yesterday is inside the interval too"
+        "an open start means always, so yesterday is inside the range too"
 
 
 def test_a_graph_not_yet_valid_is_not_merged_either():
@@ -103,27 +103,27 @@ def test_the_table_is_remembered_and_a_write_drops_it():
     now = _now()
     st = _store()
     _say(st, ACTIONS_GRAPH, until=now + timedelta(minutes=1))
-    assert st.validity() and st._validity is not None
+    assert st.speaks_for() and st._spoken is not None
 
     st.update("INSERT DATA { GRAPH <http://example.org/orexis/graph/sensed> { <urn:a> <urn:b> <urn:c> } }")
-    assert st._validity is None, "a write drops what was learned by asking"
-    assert ACTIONS_GRAPH in st.validity(), "and asking again learns it back"
+    assert st._spoken is None, "a write drops what was learned by asking"
+    assert ACTIONS_GRAPH in st.speaks_for(), "and asking again learns it back"
 
 
 def test_a_bound_nobody_can_read_does_not_drop_a_graph():
     """Not knowing is maximal everywhere here, and this is the same rule read the safe way
-    round: a graph whose interval is unreadable stays, rather than vanishing silently."""
+    round: a graph whose range is unreadable stays, rather than vanishing silently."""
     st = _store()
-    st.update(f"""INSERT DATA {{ GRAPH <{VALIDITY_GRAPH}> {{ <{ACTIONS_GRAPH}> orexis:validity
+    st.update(f"""INSERT DATA {{ GRAPH <{WHEN_GRAPH}> {{ <{ACTIONS_GRAPH}> orexis:speaksFor
         [ a orexis:TimeRange ; orexis:end "whenever"^^xsd:dateTime ] }} }}""")
 
-    assert st.validity()[ACTIONS_GRAPH] == (None, None)
+    assert st.speaks_for()[ACTIONS_GRAPH] == (None, None)
     assert ACTIONS_GRAPH in st.public_graphs()
 
 
-def test_an_interval_on_a_graph_nobody_types_adds_nothing():
-    """The validity graph says WHEN, never WHETHER: what is merged is still what the
-    vocabulary types as public, and an interval on something else is a statement about
+def test_a_range_on_a_graph_nobody_types_adds_nothing():
+    """`graph/when` says WHEN, never WHETHER: what is merged is still what the
+    vocabulary types as public, and a range on something else is a statement about
     nothing this door has to answer for."""
     now = _now()
     st = _store()

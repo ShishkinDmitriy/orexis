@@ -1,18 +1,20 @@
 ---
 type: Decision
-title: A class is timeless and a graph is not — validity belongs to the named graph
+title: A class is timeless and a graph is not — a graph says which stretch it speaks for
 status: accepted
 timestamp: 2026-09-10T18:00:00Z
 description: >-
   The sovereign's proposal, weighed and adopted in one place first. What a class IS does not
-  change; what changes is how long anything an agent SAYS is worth believing, so validity is a
-  property of the named graph a thing is said in and never of the triple. Four horizons are
+  change; what changes is which stretch of time anything an agent SAYS is about, so the range
+  belongs to the named graph a thing is said in and never to the triple. NOT "validity", which
+  here means correctness, and not "freshness", which means recency: a graph outside its range is
+  neither wrong nor stale. Four horizons are
   ad-hoc today — a reading's staleness, a round's close, a venue's cooldown, and a possible
   world's instant — and a graph with an interval is one mechanism for all of them, plus the one
   that has no mechanism at all: a forecast is facts valid over a FUTURE interval. Refused —
   timestamping triples, storing a graph's own description inside it or in the unnamed default
   graph, a validity filter inside rules, and a big-bang retrofit ahead of the measurement. Said
-  in a meta-graph outside the default union, where a lapsing interval cannot move what any
+  in a meta-graph outside the default union, where a lapsing range cannot move what any
   possible world holds.
 ---
 
@@ -20,14 +22,21 @@ description: >-
 
 **A class is not temporal. Knowledge about instances is.** `sosa:Observation` does not become
 less true at four o'clock; the reading an agent holds does stop being worth acting on. So the
-place to say *how long this is worth believing* is the named graph the saying lives in — one
-interval per graph, said of the graph and never of a triple.
+place to say *which stretch this is about* is the named graph the saying lives in — one range
+per graph, said of the graph and never of a triple.
+
+**And the word is `speaksFor`, because the two obvious ones are taken and wrong.** VALIDITY
+means correctness in this repo — `orexis-validate` holds a world to its shapes, `validate_agent`
+refuses a boot — and a graph outside its range is not wrong, it is about another time.
+FRESHNESS means recency, sensing's word for a reading that is still evidence, and the case this
+exists for is a forecast, which is not recent but forthcoming. What a saying has is a stretch it
+speaks for.
 
 Half of it is already built, which is what makes the proposal cheap to reason about. The
 vocabulary graphs are timeless and every other graph is bounded in some ad-hoc way, and a graph
 already carries metadata about itself: its class, `orexis:arrivedBy`, and — for a per-agent class
-— its prefix. `orexis:validFrom` and `orexis:validUntil` are the same kind of statement and need
-no new plumbing.
+— its prefix. `orexis:speaksFor`, pointing at one `orexis:TimeRange`, is the same kind of statement and
+needs no new plumbing.
 
 # What it unifies
 
@@ -72,14 +81,14 @@ root, and everything downstream is told.
 validity that lapses is not a write, so the sense of time arms a timer for the next lapse and
 drops it then — the machinery that already exists, applied to the door.
 
-# Where the interval is said: a meta-graph outside the default union
+# Where the range is said: a meta-graph outside the default union
 
 The sovereign's answer to the placements below, and it is the right one for a reason worth
 stating: `graph/provenance` is deliberately OUTSIDE the default union, and that is exactly the
 property a changing statement needs. Measured on a built store — eight graphs are merged as the
 query-time default and provenance is not among them, while `graph/classification` is. So an
 interval said in provenance never reaches `_base_facts`, never becomes a fact in a possible
-world, and never moves the invariant signature when it lapses; the same interval said in
+world, and never moves the invariant signature when it lapses; the same range said in
 classification would do all three. The objection to keeping a graph's own description inside it
 is answered by putting the description where mentions already live.
 
@@ -90,7 +99,7 @@ itself to a graph instance.
 
 **One contract has to give, and the build decides which.** `describe()` replaces the provenance
 graph WHOLE on every `refresh_public`, because it is a function of the files that were loaded.
-An interval written at runtime — a forecast arriving, a graph lapsing — is not a function of the
+A range written at runtime — a forecast arriving, a graph lapsing — is not a function of the
 files, so the next amendment would wipe it, and a forecast whose validity is gone reads as valid
 for ever, which is the silent direction. A graph is the unit of replacement here, so two authors
 sharing one graph means one wholesale write eats the other's facts. The cheap answer is a
@@ -179,8 +188,8 @@ Self-describing in transit, described beside on disk.
 
 # Order of work
 
-**The door first, and it is built** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)'s first half): a graph says `orexis:validity`, one
-`orexis:TimeRange` with an `orexis:start` and an `orexis:end`, in `graph/validity`, and
+**The door first, and it is built** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)'s first half): a graph says `orexis:speaksFor`, one
+`orexis:TimeRange` with an `orexis:start` and an `orexis:end`, in `graph/when`, and
 `store.public_graphs(at=…)` drops what is outside it. Absent bounds mean always, so a store
 that states none is the store it always was — every shipped world included. The cost is at the
 door and it is nothing: 0.9 µs a call with no range stated and 1.9 µs with one, against

@@ -282,13 +282,15 @@ orexis:end a owl:DatatypeProperty ; rdfs:domain orexis:TimeRange ; rdfs:range xs
     rdfs:label "end" ;
     rdfs:comment "When the range closes, exclusive: an instant equal to this is outside. Absent means the range does not close on its own." .
 
-orexis:validity a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range orexis:TimeRange ;
-    rdfs:label "validity" ;
-    rdfs:comment """When what this graph says is worth believing. Absent means always, which is what a vocabulary graph means and what every graph here meant before the term existed: a class is not temporal, and neither is a world file a sovereign ratified (validity-belongs-to-the-named-graph).
+orexis:speaksFor a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range orexis:TimeRange ;
+    rdfs:label "speaks for" ;
+    rdfs:comment """Which stretch of time what this graph says is ABOUT — and therefore when it is worth believing.
+
+NOT "validity", which in this repo means CORRECTNESS: `orexis-validate` holds a world to its shapes and `validate_agent` refuses a boot. A graph outside its range is not wrong, it is not about now. And not "freshness" either, which is RECENCY — sensing's word for a reading that is still evidence — because the case this exists for is a forecast, which is not recent but forthcoming. What a saying has is a stretch it speaks for. Absent means always, which is what a vocabulary graph means and what every graph here meant before the term existed: a class is not temporal, and neither is a world file a sovereign ratified (a-graph-says-what-it-speaks-for).
 
 SAID OF THE GRAPH AND READ AT THE DOOR. A graph is a scope a reader is HANDED, so `store.public_graphs(at=…)` drops a graph outside its range and every rule reads triples and asks nothing — which is the whole point, since a rule that asked the wall clock inside a search would ask the real now and never the instant its act would be taken at (`tests/test_clockless.py` holds it to that, by scanning for the call this sentence deliberately does not spell).
 
-AND SAID IN A GRAPH OF ITS OWN, outside the default union, because a range CHANGES: a statement in a merged graph is a fact in every possible world, so one that lapsed would move the invariant signature and kill a kept cone. `graph/validity` is that place — a sibling of `graph/provenance`, which has the same property and is replaced whole by every load, which a runtime range must not be.""" .
+AND SAID IN A GRAPH OF ITS OWN, outside the default union, because a range CHANGES: a statement in a merged graph is a fact in every possible world, so one that lapsed would move the invariant signature and kill a kept cone. `graph/when` is that place — a sibling of `graph/provenance`, which has the same property and is replaced whole by every load, which a runtime range must not be.""" .
 
 orexis:arrivedBy a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range orexis:Arrival ;
     rdfs:label "arrived by" .
@@ -386,14 +388,14 @@ orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range or
 ##  public too. Putting the per-agent ones in `provenance` (which is deliberately outside the
 ##  default union, to keep mentions of graphs from answering questions about devices) was the
 ##  inconsistency, and it showed up the first time a scoped query could not see them.
-##  WHEN EACH GRAPH IS WORTH BELIEVING — one `orexis:TimeRange` per graph, under
-##  `orexis:validity` — and deliberately NOT public: a range changes, and a
+##  WHICH STRETCH EACH GRAPH SPEAKS FOR — one `orexis:TimeRange` per graph, under
+##  `orexis:speaksFor` — and deliberately NOT public: a range changes, and a
 ##  statement inside the default union is a fact in every possible world — one that lapsed would
 ##  move the invariant signature and kill a kept cone. A sibling of `graph/provenance`, which has
 ##  the same property and is the other place mentions of graphs live; not provenance itself,
 ##  because that graph is replaced WHOLE by every load and a runtime interval is not a function
 ##  of the files. Read by the store's door, which is the bootstrap root asking what to merge.
-<http://example.org/orexis/graph/validity>          a orexis:Graph ;
+<http://example.org/orexis/graph/when>              a orexis:Graph ;
     orexis:arrivedBy orexis:Recorded .
 
 <http://example.org/orexis/graph/classification>    a orexis:PublicGraph , orexis:BeliefGraph ;

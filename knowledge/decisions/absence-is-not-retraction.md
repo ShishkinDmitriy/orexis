@@ -75,6 +75,11 @@ background refresh.
   deserves, stays with its owner. What the tick guarantees is BOUNDEDNESS rather than
   promptness — it is hourly, and a bidder still sweeps on an offer because a round beginning
   with yesterday's rows standing reads oddly in a trace.
+- **The word this record uses for a window is the older one.** *Validity* here means the stretch
+  a belief is about, which is what
+  [a-graph-says-what-it-speaks-for](/decisions/a-graph-says-what-it-speaks-for.md) now calls
+  `orexis:speaksFor` — because elsewhere in this repo validity means CORRECTNESS, and a belief
+  outside its window is not wrong. The claim below stands whichever word carries it.
 - **No belief carries its own validity in the kernel's words.** `progression:notAfter` exists for an
   ACT, and the same shape would fit a fact; nothing needs it yet, and inventing it before a
   third treatment appears would be the generalisation this record refuses.
