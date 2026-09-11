@@ -11,7 +11,9 @@ description: >-
   world's instant — and a graph with an interval is one mechanism for all of them, plus the one
   that has no mechanism at all: a forecast is facts valid over a FUTURE interval. Refused —
   timestamping triples, storing a graph's own description inside it or in the unnamed default
-  graph, a validity filter inside rules, and a big-bang retrofit ahead of the measurement.
+  graph, a validity filter inside rules, and a big-bang retrofit ahead of the measurement. Said
+  in a meta-graph outside the default union, where a lapsing interval cannot move what any
+  possible world holds.
 ---
 
 # The claim
@@ -69,6 +71,32 @@ root, and everything downstream is told.
 **And the memo needs a deadline.** What `public_graphs` remembers is dropped on every write; a
 validity that lapses is not a write, so the sense of time arms a timer for the next lapse and
 drops it then — the machinery that already exists, applied to the door.
+
+# Where the interval is said: a meta-graph outside the default union
+
+The sovereign's answer to the placements below, and it is the right one for a reason worth
+stating: `graph/provenance` is deliberately OUTSIDE the default union, and that is exactly the
+property a changing statement needs. Measured on a built store — eight graphs are merged as the
+query-time default and provenance is not among them, while `graph/classification` is. So an
+interval said in provenance never reaches `_base_facts`, never becomes a fact in a possible
+world, and never moves the invariant signature when it lapses; the same interval said in
+classification would do all three. The objection to keeping a graph's own description inside it
+is answered by putting the description where mentions already live.
+
+The door then reads it by naming that graph, which is the bootstrap-root exception rule 1
+already makes and which `_OWN` already uses for the classification graph: a reader asking WHICH
+graphs to merge has to start somewhere, and starting there is not the same as a query narrowing
+itself to a graph instance.
+
+**One contract has to give, and the build decides which.** `describe()` replaces the provenance
+graph WHOLE on every `refresh_public`, because it is a function of the files that were loaded.
+An interval written at runtime — a forecast arriving, a graph lapsing — is not a function of the
+files, so the next amendment would wipe it, and a forecast whose validity is gone reads as valid
+for ever, which is the silent direction. A graph is the unit of replacement here, so two authors
+sharing one graph means one wholesale write eats the other's facts. The cheap answer is a
+SIBLING: a meta-graph of its own, beside provenance and outside the union, written by the sense
+of time and swept rather than replaced. They merge the day `describe()` stops owning its graph
+whole, and not before.
 
 # Said OF the graph, not inside it
 
