@@ -179,12 +179,23 @@ Self-describing in transit, described beside on disk.
 
 # Order of work
 
-**The door first, and it is built** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)'s first half): a graph says `orexis:validFrom` and
-`orexis:validUntil` in `graph/validity`, and `store.public_graphs(at=…)` drops what is outside
-its interval. Absent bounds mean always, so a store that states none is the store it always
-was — every shipped world included. The cost is at the door and it is nothing: 0.9 µs a call
-with no interval stated and 1.9 µs with one, against milliseconds for the query it precedes.
-Naming a graph still reads it, because lapsing is not forgetting.
+**The door first, and it is built** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)'s first half): a graph says `orexis:validity`, one
+`orexis:TimeRange` with an `orexis:start` and an `orexis:end`, in `graph/validity`, and
+`store.public_graphs(at=…)` drops what is outside it. Absent bounds mean always, so a store
+that states none is the store it always was — every shipped world included. The cost is at the
+door and it is nothing: 0.9 µs a call with no range stated and 1.9 µs with one, against
+milliseconds for the query it precedes. Naming a graph still reads it, because lapsing is not
+forgetting.
+
+**A CLASS rather than two properties on the graph**, and the reason is the two items that come
+next. An act's duration and the stretch a possible world holds over
+([#596](https://github.com/ShishkinDmitriy/orexis/issues/596)) are the same concept as a graph's validity, and a repo that spelled this
+one as a pair of properties would mint a second spelling for those — which is how one concept
+becomes two and the definitions drift. `orexis:TimeRange` is the one way this project says when
+something holds. Not OWL-Time, weighed: its conformant form is an interval pointing at two
+instant nodes each carrying a datetime, which is two blank nodes and three hops per bound for a
+door that runs before every query, and nothing here speaks it — the upgrade stays open for the
+consumer that needs Allen relations or a temporal position that is not a datetime.
 
 **The forecast next, because it is the only case with nothing to replace.**
 [#589](https://github.com/ShishkinDmitriy/orexis/issues/589) is reshaped around this: a forecast

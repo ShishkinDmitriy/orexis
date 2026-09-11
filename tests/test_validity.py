@@ -30,13 +30,16 @@ def _store():
 
 
 def _say(st, graph: str, until=None, since=None) -> None:
-    """What a graph says about itself, said where mentions of graphs live."""
+    """What a graph says about itself, said where mentions of graphs live — one
+    `orexis:TimeRange`, either end open, which is the one way this project says when something
+    holds."""
     bounds = []
     if since is not None:
-        bounds.append(f'orexis:validFrom "{since.isoformat()}"^^xsd:dateTime')
+        bounds.append(f'orexis:start "{since.isoformat()}"^^xsd:dateTime')
     if until is not None:
-        bounds.append(f'orexis:validUntil "{until.isoformat()}"^^xsd:dateTime')
-    st.update(f"INSERT DATA {{ GRAPH <{VALIDITY_GRAPH}> {{ <{graph}> {' ; '.join(bounds)} }} }}")
+        bounds.append(f'orexis:end "{until.isoformat()}"^^xsd:dateTime')
+    st.update(f"""INSERT DATA {{ GRAPH <{VALIDITY_GRAPH}> {{
+        <{graph}> orexis:validity [ a orexis:TimeRange ; {' ; '.join(bounds)} ] }} }}""")
 
 
 def test_a_store_that_states_no_interval_is_the_store_it_always_was():
@@ -111,8 +114,8 @@ def test_a_bound_nobody_can_read_does_not_drop_a_graph():
     """Not knowing is maximal everywhere here, and this is the same rule read the safe way
     round: a graph whose interval is unreadable stays, rather than vanishing silently."""
     st = _store()
-    st.update(f'INSERT DATA {{ GRAPH <{VALIDITY_GRAPH}> {{ <{ACTIONS_GRAPH}> '
-              f'orexis:validUntil "whenever"^^xsd:dateTime }} }}')
+    st.update(f"""INSERT DATA {{ GRAPH <{VALIDITY_GRAPH}> {{ <{ACTIONS_GRAPH}> orexis:validity
+        [ a orexis:TimeRange ; orexis:end "whenever"^^xsd:dateTime ] }} }}""")
 
     assert st.validity()[ACTIONS_GRAPH] == (None, None)
     assert ACTIONS_GRAPH in st.public_graphs()

@@ -95,8 +95,10 @@ SELECT DISTINCT ?g WHERE {{
 #  reader narrowing itself to a graph instance. Absent bounds mean always, which is what every
 #  graph meant before the term existed.
 _VALID = f"""
-SELECT ?g ?p ?bound WHERE {{ GRAPH <{VALIDITY_GRAPH}> {{
-  ?g ?p ?bound . FILTER(?p IN (orexis:validFrom, orexis:validUntil))
+SELECT ?g ?start ?end WHERE {{ GRAPH <{VALIDITY_GRAPH}> {{
+  ?g orexis:validity ?range .
+  OPTIONAL {{ ?range orexis:start ?start }}
+  OPTIONAL {{ ?range orexis:end ?end }}
 }} }}"""
 
 
@@ -424,15 +426,10 @@ class Store:
         bounds in Python costs nothing, and a memo keyed by an instant would miss on every call.
         """
         if self._validity is None:
-            table: dict = {}
-            for row in self._store.query(_VALID, prefixes=NAMESPACES):
-                graph, bound = str(row["g"].value), _instant(row["bound"].value)
-                begins, ends = table.get(graph, (None, None))
-                if str(row["p"].value).endswith("validFrom"):
-                    table[graph] = (bound, ends)
-                else:
-                    table[graph] = (begins, bound)
-            self._validity = table
+            self._validity = {
+                str(row["g"].value): (_instant(row["start"] and row["start"].value),
+                                      _instant(row["end"] and row["end"].value))
+                for row in self._store.query(_VALID, prefixes=NAMESPACES)}
         return self._validity
 
     def _valid_at(self, graphs: list[str], at: datetime | None) -> list[str]:
