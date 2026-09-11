@@ -10,8 +10,8 @@ description: >-
   ad-hoc today — a reading's staleness, a round's close, a venue's cooldown, and a possible
   world's instant — and a graph with an interval is one mechanism for all of them, plus the one
   that has no mechanism at all: a forecast is facts valid over a FUTURE interval. Refused —
-  timestamping triples, storing a graph's own description inside it, a validity filter inside
-  rules, and a big-bang retrofit ahead of the measurement.
+  timestamping triples, storing a graph's own description inside it or in the unnamed default
+  graph, a validity filter inside rules, and a big-bang retrofit ahead of the measurement.
 ---
 
 # The claim
@@ -120,6 +120,19 @@ Self-describing in transit, described beside on disk.
   becomes responsible for filtering, so every rule carries a comparison, and a rule that forgets
   one reads facts nobody believes any more. A graph is a scope a reader is HANDED; a triple is
   something a reader matches, and the difference is exactly who has to remember.
+- **The unnamed default graph, which is where RDF would put it.** TriG's default block is the
+  idiomatic home for statements about a dataset's named graphs, and it would buy something real:
+  the discovery query would name no graph at all, which is rule 1 in its purest form. Measured
+  and refused on three counts. It is INVISIBLE TO EVERY READ DOOR — `query` and `construct`
+  override the default graph with the public union, so nothing there is readable through the
+  store's doors, and the per-agent classification was made public precisely so a scoped query
+  could see it. It is VISIBLE TO EVERY UPDATE'S WHERE, silently — an update reads the unnamed
+  graph unless `USING` says otherwise, which is why that trap manifests today as *binds
+  nothing*: the graph holds zero quads. Fill it and every unqualified pattern in an update gains
+  an invisible source of matches, and pyoxigraph's `update` takes no default-graph override, so
+  it cannot be closed at the door the way reads are. And it is THE ONE GRAPH THAT CANNOT SAY WHO
+  PUT IT THERE — no IRI, so no class, no `orexis:arrivedBy`, no place in its own account. Keeping
+  the statements about provenance in the only graph with none is a hole in the claim they make.
 - **A validity filter inside rules.** The same thing arriving as a convention rather than a
   mechanism: `?g orexis:validUntil ?t . FILTER(?t > NOW())` in a premise is the round's
   `?closes > NOW()` again, in a costume, and `tests/test_clockless.py` would refuse it.
