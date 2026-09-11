@@ -1,6 +1,6 @@
-"""A graph says which stretch of time it speaks for, and the door honours it.
+"""A graph says which stretch it HOLDS DURING, and the door honours it.
 
-`knowledge/decisions/a-graph-says-what-it-speaks-for.md`: a class is not temporal and
+`knowledge/decisions/a-graph-holds-during-a-stretch.md`: a class is not temporal and
 knowledge about instances is, so the stretch a saying is about belongs to the graph it is said in —
 read at the door, where a reader is HANDED a scope, and never by a rule, which would be the
 `now()` this project has just spent three changes removing.
@@ -39,7 +39,7 @@ def _say(st, graph: str, until=None, since=None) -> None:
     if until is not None:
         bounds.append(f'orexis:end "{until.isoformat()}"^^xsd:dateTime')
     st.update(f"""INSERT DATA {{ GRAPH <{WHEN_GRAPH}> {{
-        <{graph}> orexis:speaksFor [ a orexis:TimeRange ; {' ; '.join(bounds)} ] }} }}""")
+        <{graph}> orexis:holdsDuring [ a orexis:TimeRange ; {' ; '.join(bounds)} ] }} }}""")
 
 
 def test_a_store_that_states_no_range_is_the_store_it_always_was():
@@ -47,7 +47,7 @@ def test_a_store_that_states_no_range_is_the_store_it_always_was():
     existed, and what a vocabulary graph means for ever. The fast path is the ordinary one."""
     now = _now()
     st = _store()
-    assert st.speaks_for() == {}
+    assert st.ranges() == {}
     assert len(st.public_graphs()) == 8
     assert st.public_graphs() == st.public_graphs(at=now + timedelta(days=365))
 
@@ -103,21 +103,21 @@ def test_the_table_is_remembered_and_a_write_drops_it():
     now = _now()
     st = _store()
     _say(st, ACTIONS_GRAPH, until=now + timedelta(minutes=1))
-    assert st.speaks_for() and st._spoken is not None
+    assert st.ranges() and st._ranges is not None
 
     st.update("INSERT DATA { GRAPH <http://example.org/orexis/graph/sensed> { <urn:a> <urn:b> <urn:c> } }")
-    assert st._spoken is None, "a write drops what was learned by asking"
-    assert ACTIONS_GRAPH in st.speaks_for(), "and asking again learns it back"
+    assert st._ranges is None, "a write drops what was learned by asking"
+    assert ACTIONS_GRAPH in st.ranges(), "and asking again learns it back"
 
 
 def test_a_bound_nobody_can_read_does_not_drop_a_graph():
     """Not knowing is maximal everywhere here, and this is the same rule read the safe way
     round: a graph whose range is unreadable stays, rather than vanishing silently."""
     st = _store()
-    st.update(f"""INSERT DATA {{ GRAPH <{WHEN_GRAPH}> {{ <{ACTIONS_GRAPH}> orexis:speaksFor
+    st.update(f"""INSERT DATA {{ GRAPH <{WHEN_GRAPH}> {{ <{ACTIONS_GRAPH}> orexis:holdsDuring
         [ a orexis:TimeRange ; orexis:end "whenever"^^xsd:dateTime ] }} }}""")
 
-    assert st.speaks_for()[ACTIONS_GRAPH] == (None, None)
+    assert st.ranges()[ACTIONS_GRAPH] == (None, None)
     assert ACTIONS_GRAPH in st.public_graphs()
 
 

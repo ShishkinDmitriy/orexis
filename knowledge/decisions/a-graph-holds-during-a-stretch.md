@@ -1,6 +1,6 @@
 ---
 type: Decision
-title: A class is timeless and a graph is not — a graph says which stretch it speaks for
+title: A class is timeless and a graph is not — a graph holds during a stretch
 status: accepted
 timestamp: 2026-09-10T18:00:00Z
 description: >-
@@ -22,20 +22,26 @@ description: >-
 
 **A class is not temporal. Knowledge about instances is.** `sosa:Observation` does not become
 less true at four o'clock; the reading an agent holds does stop being worth acting on. So the
-place to say *which stretch this is about* is the named graph the saying lives in — one range
-per graph, said of the graph and never of a triple.
+place to say *which stretch this holds during* is the named graph the saying lives in — one
+range per graph, said of the graph and never of a triple.
 
-**And the word is `speaksFor`, because the two obvious ones are taken and wrong.** VALIDITY
-means correctness in this repo — `orexis-validate` holds a world to its shapes, `validate_agent`
-refuses a boot — and a graph outside its range is not wrong, it is about another time.
+**And the word is `holdsDuring`, three others having been weighed and failed.** VALIDITY means
+correctness in this repo — `orexis-validate` holds a world to its shapes, `validate_agent`
+refuses a boot — and a graph outside its range is not wrong, it holds at another time.
 FRESHNESS means recency, sensing's word for a reading that is still evidence, and the case this
-exists for is a forecast, which is not recent but forthcoming. What a saying has is a stretch it
-speaks for.
+exists for is a forecast, which is not recent but forthcoming. SPEAKS FOR reads as
+representation beside `orexis:actsFor`, an agent acting on a subject's behalf. What is left is
+the word temporal logic already uses: a thing holds during a stretch.
+
+`dcterms:temporal` was the standard to reach for and is refused for the reason OWL-Time was: its
+value is a `dcterms:PeriodOfTime`, ours is an `orexis:TimeRange`, and adopting a vocabulary's
+property while declining its class is the half-conformance this record already turned down
+once.
 
 Half of it is already built, which is what makes the proposal cheap to reason about. The
 vocabulary graphs are timeless and every other graph is bounded in some ad-hoc way, and a graph
 already carries metadata about itself: its class, `orexis:arrivedBy`, and — for a per-agent class
-— its prefix. `orexis:speaksFor`, pointing at one `orexis:TimeRange`, is the same kind of statement and
+— its prefix. `orexis:holdsDuring`, pointing at one `orexis:TimeRange`, is the same kind of statement and
 needs no new plumbing.
 
 # What it unifies
@@ -188,7 +194,7 @@ Self-describing in transit, described beside on disk.
 
 # Order of work
 
-**The door first, and it is built** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)'s first half): a graph says `orexis:speaksFor`, one
+**The door first, and it is built** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)'s first half): a graph says `orexis:holdsDuring`, one
 `orexis:TimeRange` with an `orexis:start` and an `orexis:end`, in `graph/when`, and
 `store.public_graphs(at=…)` drops what is outside it. Absent bounds mean always, so a store
 that states none is the store it always was — every shipped world included. The cost is at the
