@@ -104,6 +104,30 @@ stored beliefs is describing a design that ended; a page saying a board is told 
 describing what runs today. The first is stale, the second is correct, and telling them apart is
 the whole reason this page exists.
 
+# The gradient exists, and it is not membership
+
+Asked twice, so it is written down: could a band be a fuzzy set — nought at twelve degrees,
+rising to one at fifteen, flat to forty-five, falling to nought at fifty?
+
+**That function is already here, and it is the [measure](/domain/urgency.md) rather than the
+class.** A want declares its own, as a SELECT answering nought to one, so the trapezoid above is
+writable today with no kernel change — the kernel asks how urgent a want is and holds no opinion
+about the shape of the answer.
+
+**What must stay crisp is the CLASS**, and three things depend on it. A want is a shape, so
+`sh:class sensing:InRegion` conforms or does not — SHACL has no degrees, and a membership of
+0.7 is something neither engine could validate. The keeper holds the world to the band a step
+declared, and *met* or *unmet* is what a verdict is. And cycle detection compares facts, so a
+degree on every reading would make every hundredth of a degree a new world.
+
+**One meaning, two places.** What fuzzy logic puts in a single number this project splits: the
+class says WHERE the reading is, the measure says HOW MUCH IT MATTERS, and nothing has to
+choose a t-norm to combine them.
+
+**The one real problem a trapezoid would solve** is a reading flickering across a boundary, and
+the cheaper answer to that is hysteresis — a band that is harder to leave than to enter, which
+is a statement about bands rather than a change of logic.
+
 # Related
 
 - [region](/domain/region.md) — what divides a property into bands.
