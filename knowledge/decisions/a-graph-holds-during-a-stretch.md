@@ -124,6 +124,39 @@ SIBLING: a meta-graph of its own, beside provenance and outside the union, writt
 of time and swept rather than replaced. They merge the day `describe()` stops owning its graph
 whole, and not before.
 
+# What a period may scope, and what it may not
+
+A graph's period says *when what this graph says is worth believing*, and that is one temporal
+semantics of at least three. The sovereign named the other two: facts assumed true THROUGHOUT a
+stretch, and a stretch inside which something will happen ONCE — an agent arriving with a claim.
+A temperature for an hour is a third thing again, being an average over it.
+
+**The test is homogeneity.** Is it true of every instant inside?
+
+- **Yes — a fluent, and the graph's period is exactly its scope.** *The outside is below the
+  bed's region between dusk and dawn* is true at every instant of the night, so handing the
+  graph to a reader asking about any of them is right, which is what the door does.
+- **No — an occurrence, and the period belongs to the FACT rather than to the graph.** *Three
+  claims arrive in the next five minutes* is false at almost every instant inside those five
+  minutes, so a graph scoped by that period would answer a question about one instant with a
+  claim about the window. What is homogeneous there is the EXPECTATION — *an arrival is expected
+  in this window* is true at every instant of it — so the window becomes a subject the fact is
+  about, stated inside the graph, and the graph's own period says when that expectation is worth
+  believing. The two periods are then different things and usually different stretches: a
+  forecast of demand made at noon may be worth believing for an hour and be about five minutes
+  of it.
+
+**And the third case is why [bands](/domain/band.md) carry the weather honestly.** A number over
+an interval is an average, which is not true at any particular instant and therefore not a
+fluent; the BAND is. *Two degrees at three in the morning* is a summary; *below the bed's
+region, all night* holds at every instant inside. Stating the forecast as the band makes the
+graph's period mean what it says, and is another case of the same rule this project keeps
+finding: an interval is how it says it does not know, and the crisp thing is what holds.
+
+**Where this bites first** is [#606](https://github.com/ShishkinDmitriy/orexis/issues/606), a host predicting demand, which was filed as a graph
+holding during the window it predicts. That is the second kind wearing the first's clothes, and
+it would have answered *three claims arrive* to a question about a single instant.
+
 # Said OF the graph, not inside it
 
 The sovereign asked the obvious next question: if the interval belongs to the graph, why not
