@@ -270,6 +270,16 @@ def test_a_served_claim_is_timed_by_the_rule_and_not_by_the_wire(monkeypatch, ca
 # --- when the world it describes exists (#588) --------------------------------
 
 
+def _valve_ceiling_s() -> float:
+    """The longest the loner's valve can be open: its cap over its rate, read from the world
+    rather than pinned here, so a world that re-plumbs its pump does not fail this."""
+    st = _loner({("zz", MOISTURE): 0.04})
+    row = bindings(st.query("""SELECT ?cap ?rate WHERE {
+        ?lever <http://example.org/orexis/actuation#maxDoseMl> ?cap ;
+               <http://example.org/orexis/actuation#mlPerSecond> ?rate }"""))[0]
+    return float(row["cap"]) / float(row["rate"])
+
+
 def test_a_predicted_reading_is_stamped_when_its_step_lands(monkeypatch):
     """A construct describes the world its act REACHES, so the reading it predicts exists when
     the act completes — not at the moment the plan happened to be made.
@@ -282,11 +292,10 @@ def test_a_predicted_reading_is_stamped_when_its_step_lands(monkeypatch):
     answer, and a search reading a wall clock per fork would describe two worlds differently
     for having taken longer to imagine them.
 
-    ASKED TWICE, because the shipped dose lands at zero and that is not obvious. A dose's
-    timing is a function of how much is poured, and since #579 the search does not size an act
-    — `$litres` is bound at nothing — so `ml / rate` is nought seconds and the predicted
-    reading is stamped at the pass's own clock. Declare a landing and the stamp moves with it,
-    which is the whole of the claim.
+    ASKED TWICE, because a dose's timing is a function of how much is poured and the search
+    does not size an act (#579): `$litres` is bound at nothing, so the rule answers the CEILING
+    — the longest that valve can be open — which is the safe direction for a deadline (#595).
+    Declared otherwise, the stamp moves with what is declared, which is the whole of the claim.
     """
     from datetime import datetime
 
@@ -314,9 +323,12 @@ def test_a_predicted_reading_is_stamped_when_its_step_lands(monkeypatch):
         assert len(stamps) == 1, f"one predicted reading, one instant: {stamps}"
         return (datetime.fromisoformat(stamps[0]) - planner._clock).total_seconds(), dosed.landing
 
+    ceiling = _valve_ceiling_s()
     ahead, landing = stamp()
-    assert landing == 0.0 and ahead == pytest.approx(0.0, abs=0.01), \
-        "an act the search cannot size takes no time, so its reading is stamped at the root"
+    assert landing == pytest.approx(ceiling), \
+        "an act the search cannot size takes as long as the valve can be open"
+    assert ahead == pytest.approx(ceiling, abs=0.01), \
+        "and its predicted reading is stamped when that pour would finish"
 
     ahead, landing = stamp(300)
     assert landing == pytest.approx(300.0), "the rule's own landing, summed along the path"

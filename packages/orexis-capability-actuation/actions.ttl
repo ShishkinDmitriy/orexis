@@ -118,6 +118,20 @@ actuation:Dosing
     #  dosing a buyer's pot needs it exactly as much as an agent dosing its own. Written with
     #  the stake join first and caught on the bench: every market dose fell back, so the
     #  single source held only for self-doses, which is the half that needed it least.
+    #  ASKED WITH A SIZE AND ASKED WITHOUT ONE, and the difference is who is asking. The
+    #  KEEPER asks when the step is taken, with the litres the actor sized from the reading in
+    #  hand, and gets how long the valve will actually be open. The SEARCH asks about an act
+    #  nobody has sized — `$litres` is bound at nothing since #579, deliberately, because how
+    #  much to pour is progression's — and used to get nought seconds, so a dose landed
+    #  instantly in every imagined world and a Within want's room refused nothing (#595).
+    #
+    #  UNSIZED, IT ANSWERS THE CEILING: the longest this valve can be open, whatever the actor
+    #  decides to pour. An over-estimate is the SAFE direction for a deadline — it refuses a
+    #  plan that might be late, where an under-estimate accepts one that will be — and it is
+    #  the opposite of the direction an admissible cost estimate must take, which is why this
+    #  is stated here rather than assumed by the kernel. The honest full answer is a RANGE,
+    #  nothing to the ceiling ([#596](https://github.com/ShishkinDmitriy/orexis/issues/596)); the other end has no consumer yet and is not
+    #  invented here.
     orexis:landsAfter """
         SELECT ?seconds WHERE {
             $me actuation:hasActuator ?lever .
@@ -125,7 +139,8 @@ actuation:Dosing
                    actuation:maxDoseMl ?cap ;
                    actuation:mlPerSecond ?rate .
             FILTER(?rate > 0)
-            BIND(IF($litres * 1000 < ?cap, $litres * 1000, ?cap) AS ?ml)
+            BIND(IF($litres > 0, $litres * 1000, ?cap) AS ?asked)
+            BIND(IF(?asked < ?cap, ?asked, ?cap) AS ?ml)
             BIND(?ml / ?rate AS ?seconds)
         }""" ;
 

@@ -194,3 +194,30 @@ def test_a_look_that_takes_an_hour_is_somewhere_new(monkeypatch):
     verdicts = [v for _, row, _, v in timed._weighed if str(row.action) == OBSERVING]
     assert any(v != trace.SEEN for v in verdicts), \
         f"an hour passed inside every look and not one reached anywhere new: {set(verdicts)}"
+
+
+def test_a_dose_now_takes_the_time_its_valve_needs(monkeypatch):
+    """What #595 found and this closes: a dose landed at nought seconds in every imagined
+    world, because its timing is a function of how much is poured and the search does not size
+    an act (#579). Unsized, the rule answers the CEILING — the longest that valve can be open —
+    which is an over-estimate, and over-estimating is the safe direction for a deadline: it
+    refuses a plan that MIGHT be late where nought accepted one that would be.
+    """
+    from orexis_agent_deliberation.planner import Planner
+
+    agent = _gardener(monkeypatch, moisture=0.04)
+    row = bindings(agent.beliefs.query("""SELECT ?cap ?rate WHERE {
+        ?lever <http://example.org/orexis/actuation#maxDoseMl> ?cap ;
+               <http://example.org/orexis/actuation#mlPerSecond> ?rate }"""))[0]
+    ceiling = float(row["cap"]) / float(row["rate"])
+
+    desire = next(g for g in agent.pursuing()
+                  if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
+    planner = Planner(agent, agent.me)
+    plan = planner.plan(desire)
+
+    assert plan.outcome == "satisfied", plan.outcome
+    dosed = min((m for m in planner._nodes if m.met), key=lambda m: m.cost)
+    assert dosed.landing == pytest.approx(ceiling), \
+        f"a dose still lands instantly: {dosed.landing}"
+    assert ceiling > 0, "the loner's valve takes real seconds to empty"

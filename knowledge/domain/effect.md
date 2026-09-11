@@ -111,6 +111,22 @@ world in which such a means puts a row on some agent's menu. Most means never do
 What a search must NOT do is conclude from a partial menu. A plan that passed over any lever is
 marked partial and defers, because the lever it could not simulate may be the one that works.
 
+# How long it takes, asked by two readers
+
+`orexis:landsAfter` is asked with a size and asked without one, and the difference is who is
+asking. The KEEPER asks when the step is taken, with the litres the actor sized from the reading
+in hand, and gets how long the valve will actually be open. The SEARCH asks about an act nobody
+has sized — `$litres` is bound at nothing since an effect declared the band and not the number —
+and used to get NOUGHT seconds, so a dose landed instantly in every imagined world and a
+[Within](/domain/desire.md) want's room refused nothing.
+
+Unsized, the rule answers the CEILING: the longest that valve can be open, whatever the actor
+decides to pour. **Over-estimating is the safe direction for a deadline** — it refuses a plan
+that might be late, where an under-estimate accepts one that will be — and it is the opposite of
+the direction an admissible cost estimate must take, which is why the rule states it rather than
+the kernel assuming it. The honest full answer is a RANGE, nothing to the ceiling
+([#596](https://github.com/ShishkinDmitriy/orexis/issues/596)), and the other end waits for a consumer.
+
 # And what the world does unaided
 
 An effect is what a LEVER makes true. A [drift](/decisions/planning-branches-on-action-forecasting-on-belief.md)
