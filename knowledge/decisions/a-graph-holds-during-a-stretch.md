@@ -5,16 +5,16 @@ status: accepted
 timestamp: 2026-09-10T18:00:00Z
 description: >-
   The sovereign's proposal, weighed and adopted in one place first. What a class IS does not
-  change; what changes is which stretch of time anything an agent SAYS is about, so the range
+  change; what changes is which stretch of time anything an agent SAYS is about, so the period
   belongs to the named graph a thing is said in and never to the triple. NOT "validity", which
-  here means correctness, and not "freshness", which means recency: a graph outside its range is
+  here means correctness, and not "freshness", which means recency: a graph outside its period is
   neither wrong nor stale. Four horizons are
   ad-hoc today — a reading's staleness, a round's close, a venue's cooldown, and a possible
-  world's instant — and a graph with an interval is one mechanism for all of them, plus the one
-  that has no mechanism at all: a forecast is facts valid over a FUTURE interval. Refused —
+  world's instant — and a graph with a period is one mechanism for all of them, plus the one
+  that has no mechanism at all: a forecast is facts holding over a FUTURE period. Refused —
   timestamping triples, storing a graph's own description inside it or in the unnamed default
   graph, a validity filter inside rules, and a big-bang retrofit ahead of the measurement. Said
-  in a meta-graph outside the default union, where a lapsing range cannot move what any
+  in a meta-graph outside the default union, where a lapsing period cannot move what any
   possible world holds.
 ---
 
@@ -23,7 +23,7 @@ description: >-
 **A class is not temporal. Knowledge about instances is.** `sosa:Observation` does not become
 less true at four o'clock; the reading an agent holds does stop being worth acting on. So the
 place to say *which stretch this holds during* is the named graph the saying lives in — one
-range per graph, said of the graph and never of a triple.
+period per graph, said of the graph and never of a triple.
 
 **The words were the hard part, and three were weighed and dropped.** VALIDITY means correctness
 in this repo — `orexis-validate` holds a world to its shapes, `validate_agent` refuses a boot —
@@ -98,14 +98,14 @@ root, and everything downstream is told.
 validity that lapses is not a write, so the sense of time arms a timer for the next lapse and
 drops it then — the machinery that already exists, applied to the door.
 
-# Where the range is said: a meta-graph outside the default union
+# Where the period is said: a meta-graph outside the default union
 
 The sovereign's answer to the placements below, and it is the right one for a reason worth
 stating: `graph/provenance` is deliberately OUTSIDE the default union, and that is exactly the
 property a changing statement needs. Measured on a built store — eight graphs are merged as the
 query-time default and provenance is not among them, while `graph/classification` is. So an
 interval said in provenance never reaches `_base_facts`, never becomes a fact in a possible
-world, and never moves the invariant signature when it lapses; the same range said in
+world, and never moves the invariant signature when it lapses; the same period said in
 classification would do all three. The objection to keeping a graph's own description inside it
 is answered by putting the description where mentions already live.
 
@@ -116,7 +116,7 @@ itself to a graph instance.
 
 **One contract has to give, and the build decides which.** `describe()` replaces the provenance
 graph WHOLE on every `refresh_public`, because it is a function of the files that were loaded.
-A range written at runtime — a forecast arriving, a graph lapsing — is not a function of the
+A period written at runtime — a forecast arriving, a graph lapsing — is not a function of the
 files, so the next amendment would wipe it, and a forecast whose validity is gone reads as valid
 for ever, which is the silent direction. A graph is the unit of replacement here, so two authors
 sharing one graph means one wholesale write eats the other's facts. The cheap answer is a
@@ -209,7 +209,7 @@ Self-describing in transit, described beside on disk.
 `dcterms:PeriodOfTime` with an `orexis:start` and an `orexis:end`, in `graph/when`, and
 `store.public_graphs(at=…)` drops what is outside it. Absent bounds mean always, so a store
 that states none is the store it always was — every shipped world included. The cost is at the
-door and it is nothing: 0.9 µs a call with no range stated and 1.9 µs with one, against
+door and it is nothing: 0.9 µs a call with no period stated and 1.9 µs with one, against
 milliseconds for the query it precedes. Naming a graph still reads it, because lapsing is not
 forgetting.
 

@@ -90,15 +90,15 @@ SELECT DISTINCT ?g WHERE {{
   FILTER NOT EXISTS {{ ?g a ?work . ?work rdfs:subClassOf* orexis:WorkingGraph }}
 }}"""
 
-#  WHEN EACH GRAPH HOLDS — read from the one place that says so, which is named here
+#  THE PERIOD EACH GRAPH HOLDS DURING — read from the one place that says so, which is named here
 #  for the same reason the two above are: this is the bootstrap root asking what to merge, not a
 #  reader narrowing itself to a graph instance. Absent bounds mean always, which is what every
 #  graph meant before the term existed.
-_SPEAKS = f"""
+_PERIODS = f"""
 SELECT ?g ?start ?end WHERE {{ GRAPH <{WHEN_GRAPH}> {{
-  ?g dcterms:temporal ?range .
-  OPTIONAL {{ ?range orexis:start ?start }}
-  OPTIONAL {{ ?range orexis:end ?end }}
+  ?g dcterms:temporal ?period .
+  OPTIONAL {{ ?period orexis:start ?start }}
+  OPTIONAL {{ ?period orexis:end ?end }}
 }} }}"""
 
 
@@ -269,7 +269,7 @@ def _named(text: str) -> ox.NamedNode:
 def _instant(text: str | None) -> datetime | None:
     """A bound as the instant it is, or None where the graph states none — which means always,
     on that side. An unparseable bound is None for the same reason a missing horizon is
-    maximal: a graph whose interval nobody can read is not one to drop silently."""
+    maximal: a graph whose period nobody can read is not one to drop silently."""
     if not text:
         return None
     try:
@@ -382,7 +382,7 @@ class Store:
         self._store = ox.Store(self.path) if self.path else ox.Store()
         self._public: list | None = None  # discovered on demand; see public_graphs()
         self._recorded: list | None = None  # likewise; see recorded_graphs()
-        self._ranges: dict | None = None  # graph -> (start, end); see ranges()
+        self._periods: dict | None = None  # graph -> (start, end); see periods()
         self._memo: dict = {}             # what only a write can change; see remember()
 
     # --- what counts as public, according to the store itself ---
@@ -422,23 +422,23 @@ class Store:
             self._public = sorted(str(row["g"].value) for row in rows)
         return self._holding_at(self._public, at)
 
-    def ranges(self) -> dict:
-        """The stretch each graph holds during: IRI -> (start, end), either end None for open.
+    def periods(self) -> dict:
+        """The period each graph holds during: IRI -> (start, end), either end None for open.
 
         Read from `graph/when` and remembered until a write, like everything else here.
         The TABLE is remembered rather than a filtered list, because the answer to *which
         graphs now* depends on when it is asked and the table does not: filtering a handful of
         bounds in Python costs nothing, and a memo keyed by an instant would miss on every call.
         """
-        if self._ranges is None:
-            self._ranges = {
+        if self._periods is None:
+            self._periods = {
                 str(row["g"].value): (_instant(row["start"] and row["start"].value),
                                       _instant(row["end"] and row["end"].value))
-                for row in self._store.query(_SPEAKS, prefixes=NAMESPACES)}
-        return self._ranges
+                for row in self._store.query(_PERIODS, prefixes=NAMESPACES)}
+        return self._periods
 
     def _holding_at(self, graphs: list[str], at: datetime | None) -> list[str]:
-        """`graphs`, less whatever is outside its own interval at `at`.
+        """`graphs`, less whatever is outside its own period at `at`.
 
         THE CLOCK IS READ HERE AND NOWHERE A RULE CAN REACH IT (#598,
         a-graph-holds-during-a-stretch): a graph is a scope a reader is handed, so the
@@ -447,15 +447,15 @@ class Store:
         reads one clock at its root and would otherwise watch a graph expire between two forks
         — says which instant it means.
         """
-        bounds = self.ranges()
+        bounds = self.periods()
         if not bounds:
-            return graphs           # nothing states an interval: the store it always was
+            return graphs           # nothing states a period: the store it always was
         when = at or datetime.now(timezone.utc)
         kept = []
         for graph in graphs:
             begins, ends = bounds.get(graph, (None, None))
             if begins is not None and when < begins:
-                continue            # a forecast, before the stretch it holds during
+                continue            # a forecast, before the period it holds during
             if ends is not None and when >= ends:
                 continue            # said, and no longer holding
             kept.append(graph)
@@ -712,7 +712,7 @@ class Store:
         than an error — the failure this design keeps having to guard against."""
         self._public = None
         self._recorded = None
-        self._ranges = None
+        self._periods = None
         self._memo.clear()
 
     def remember(self, key, compute):

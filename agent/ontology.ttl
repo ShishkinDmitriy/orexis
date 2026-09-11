@@ -396,7 +396,7 @@ orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range or
 ##  statement inside the default union is a fact in every possible world — one that lapsed would
 ##  move the invariant signature and kill a kept cone. A sibling of `graph/provenance`, which has
 ##  the same property and is the other place mentions of graphs live; not provenance itself,
-##  because that graph is replaced WHOLE by every load and a runtime interval is not a function
+##  because that graph is replaced WHOLE by every load and a runtime period is not a function
 ##  of the files. Read by the store's door, which is the bootstrap root asking what to merge.
 <http://example.org/orexis/graph/when>              a orexis:Graph ;
     orexis:arrivedBy orexis:Recorded .

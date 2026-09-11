@@ -78,8 +78,8 @@ background refresh.
 - **The word this record uses for a window is the older one.** *Validity* here means the stretch
   a belief is about, which is what
   [a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md) now calls
-  `orexis:holdsDuring` — because elsewhere in this repo validity means CORRECTNESS, and a belief
-  outside its window is not wrong. The claim below stands whichever word carries it.
+  `dcterms:temporal`, Dublin Core's own — because elsewhere in this repo validity means
+  CORRECTNESS, and a belief outside its window is not wrong. The claim below stands whichever word carries it.
 - **No belief carries its own validity in the kernel's words.** `progression:notAfter` exists for an
   ACT, and the same shape would fit a fact; nothing needs it yet, and inventing it before a
   third treatment appears would be the generalisation this record refuses.

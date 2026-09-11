@@ -6,7 +6,7 @@ read at the door, where a reader is HANDED a scope, and never by a rule, which w
 `now()` this project has just spent three changes removing.
 
 The range is said in `graph/when`, outside the default union and beside the provenance
-graph, because an interval CHANGES: a statement in a merged graph is a fact in every possible
+graph, because a period CHANGES: a statement in a merged graph is a fact in every possible
 world, so one that lapsed would move the invariant signature and kill a kept cone.
 """
 
@@ -47,7 +47,7 @@ def test_a_store_that_states_no_range_is_the_store_it_always_was():
     existed, and what a vocabulary graph means for ever. The fast path is the ordinary one."""
     now = _now()
     st = _store()
-    assert st.ranges() == {}
+    assert st.periods() == {}
     assert len(st.public_graphs()) == 8
     assert st.public_graphs() == st.public_graphs(at=now + timedelta(days=365))
 
@@ -86,7 +86,7 @@ def test_the_instant_is_the_askers_and_a_pass_says_which():
 
 
 def test_a_graph_not_yet_valid_is_not_merged_either():
-    """A forecast is the case this exists for: facts valid over an interval the agent has not
+    """A forecast is the case this exists for: facts holding over a period the agent has not
     reached, which must not answer a question about now."""
     now = _now()
     st = _store()
@@ -103,11 +103,11 @@ def test_the_table_is_remembered_and_a_write_drops_it():
     now = _now()
     st = _store()
     _say(st, ACTIONS_GRAPH, until=now + timedelta(minutes=1))
-    assert st.ranges() and st._ranges is not None
+    assert st.periods() and st._periods is not None
 
     st.update("INSERT DATA { GRAPH <http://example.org/orexis/graph/sensed> { <urn:a> <urn:b> <urn:c> } }")
-    assert st._ranges is None, "a write drops what was learned by asking"
-    assert ACTIONS_GRAPH in st.ranges(), "and asking again learns it back"
+    assert st._periods is None, "a write drops what was learned by asking"
+    assert ACTIONS_GRAPH in st.periods(), "and asking again learns it back"
 
 
 def test_a_bound_nobody_can_read_does_not_drop_a_graph():
@@ -117,7 +117,7 @@ def test_a_bound_nobody_can_read_does_not_drop_a_graph():
     st.update(f"""INSERT DATA {{ GRAPH <{WHEN_GRAPH}> {{ <{ACTIONS_GRAPH}> dcterms:temporal
         [ a dcterms:PeriodOfTime ; orexis:end "whenever"^^xsd:dateTime ] }} }}""")
 
-    assert st.ranges()[ACTIONS_GRAPH] == (None, None)
+    assert st.periods()[ACTIONS_GRAPH] == (None, None)
     assert ACTIONS_GRAPH in st.public_graphs()
 
 
