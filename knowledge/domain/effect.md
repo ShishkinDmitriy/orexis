@@ -111,6 +111,32 @@ world in which such a means puts a row on some agent's menu. Most means never do
 What a search must NOT do is conclude from a partial menu. A plan that passed over any lever is
 marked partial and defers, because the lever it could not simulate may be the one that works.
 
+# And what the world does unaided
+
+An effect is what a LEVER makes true. A [drift](/decisions/planning-branches-on-action-forecasting-on-belief.md)
+is what the world makes true while nobody pulls one — `orexis:Drift`, declared by the package
+that owns the physics, in exactly this grammar: a construct, a retraction, and `$elapsed` in
+place of a taker. `water:Drying` is the first, and it reads `water:driesPerDay`, which every
+plant has stated since #164 and nothing in planning had ever read.
+
+**It is a rule at the node and not a graph with a period**, which is the distinction the
+two-cones record draws: the RATE is exogenous and the RESULT is not, because a pot dries from
+wherever the plan has left it. So a drift's answer is part of where the plan stands, where a
+forecast of the weather is the same fact in every world.
+
+**Its limit is the number.** A reading the agent observed carries one; a reading an effect
+predicted carries a band and no value, so there is nothing to subtract a rate from — a pot left
+alone dries in every imagined world that still holds an observed reading, and a pot already
+dosed keeps the band its dose declared until the world answers. Stating the drift as a
+band-to-band transition instead needs to know how far into its band a reading sits, which is the
+number again, one level down.
+
+**And a step that takes time makes a look somewhere new**, which is not a defect. A look's world
+used to be its parent's, so cycle detection discarded it; if an hour passes inside the step, the
+world moved while it ran and the look reaches somewhere genuinely different. Every shipped world
+is unaffected, `sensing:Observing` landing at once — and where a step does take time, that is
+what [#590](https://github.com/ShishkinDmitriy/orexis/issues/590) is for.
+
 # An outcome the world decides
 
 A dose reaches the region because water wets soil. Opening a **vent** reaches whichever band the

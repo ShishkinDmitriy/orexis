@@ -1451,6 +1451,12 @@ class Planner:
         act = Step.from_row(row, quantity=bind["litres"] or None)
         path = node.taken + (act,)
         graph = self.imaginarium.reached(self._graph(node), path, added, retracted)
+        #  AND WHAT THE WORLD DID WHILE THE STEP RAN (#592): every declared drift, over the
+        #  seconds this step gave it. A pot dries whether or not the agent acts, and the rate
+        #  is exogenous while the result is not — it dries from wherever the plan has left it
+        #  — so this is a rule at the node and its answer is part of where the plan stands,
+        #  unlike a forecast, which is the same fact in every world (#589).
+        added, retracted = self._drifted(graph, added, retracted, lands or 0.0, node, row, desire)
         #  WHAT THE PREDICTED READING IS (#576): the bands the domain's entailment asserts on
         #  the node the rule added, asked of the forked world and carried in the diff beside
         #  the number, so a kept world and a step's prediction say the reading's class too.
@@ -1473,6 +1479,36 @@ class Planner:
         #  is made of, so the keeper can hold the world to this step without an imaginarium.
         step.taken = node.taken + (replace(act, urgency_after=step.urgency, predicts=(adds, retracts)),)
         return step
+
+    def _drifted(self, graph, added, retracted, elapsed: float, node, row, desire):
+        """The step's diff, plus what every declared drift makes true over `elapsed` seconds.
+
+        Asked of the world the step REACHED — the graph the imaginarium just forked — so a
+        drift reads the reading the step left rather than the one it replaced, and a dose
+        followed by three hours dries from the dose. Nothing is asked where no drift is
+        declared, which is every shipped world but the plants.
+        """
+        rules = effects.drifts_of(self.agent.beliefs)
+        if not rules or elapsed <= 0:
+            return added, retracted
+        bind = {**self._bind(desire, node, row, lands=elapsed), "state": graph}
+        for rule in rules:
+            try:
+                more, gone = effects.drift(self.imaginarium, rule, elapsed,
+                                           when=self._at(node, elapsed), **bind)
+            except Exception as exc:                 # a package's rule, not the pass's problem
+                log.error("could not drift %s: %s", rule.get("drift"), exc)
+                continue
+            #  WHAT THE DRIFT TOOK, TAKEN FROM WHAT THE STEP ADDED. The drift is asked of
+            #  the world the step REACHED, so the reading it retracts may be one this very
+            #  step predicted — a look carries the value it found forward, and an hour of
+            #  drying replaces it. Left in, the step would add two readings for one key and
+            #  the world would hold both, which is the invariant the sensed graph's upsert
+            #  exists to prevent.
+            dropped = set(gone)
+            added = [x for x in added if x not in dropped] + list(more)
+            retracted = list(retracted) + [x for x in gone if x not in set(added)]
+        return added, retracted
 
     def _bind(self, desire: Desire | None, node=None, row=None, litres: float | None = None,
               lands: float | None = None) -> dict:

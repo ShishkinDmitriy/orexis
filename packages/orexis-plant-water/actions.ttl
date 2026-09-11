@@ -1,0 +1,86 @@
+@prefix water: <http://example.org/orexis/water#> .
+@prefix : <http://example.org/orexis/water#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################  What a pot does while nobody waters it  #################
+#
+#  THE FIRST DRIFT (#592), and the reason this file exists in a package that had no actions:
+#  a pot dries whether or not its agent acts, `water:driesPerDay` has been stated on every
+#  plant since #164, and nothing in planning has ever read it. So a plan could imagine three
+#  hours passing and find the pot exactly as wet as when it started.
+#
+#  A DRIFT IS NOT AN ACTION and this is not on any menu: nobody chooses for the world. What it
+#  shares with an effect is the grammar — a construct, a retraction, `$state` naming the world
+#  it is asked about — and what it adds is `$elapsed`, the seconds the world has had to itself
+#  between one node and the next.
+#
+#  IT NEEDS THE NUMBER, and that is the honest limit rather than an oversight. A reading the
+#  agent OBSERVED carries one; a reading an effect PREDICTED carries a band and no value
+#  (#579, deliberation-is-on-triples), so there is nothing to subtract a rate from. A pot left
+#  alone therefore dries in every imagined world that still holds an observed reading, and a
+#  pot already dosed keeps the band its dose declared. The alternative — a drift stated as a
+#  band-to-band transition — needs to know how far into its band a reading sits, which is the
+#  number again, one level down.
+
+water:Drying
+    a orexis:Drift ;
+
+    rdfs:label "what a pot loses while nobody waters it" ;
+
+    #  WHAT IT REPLACES: the reading it drifts, by the upsert key the sensed graph holds — one
+    #  node per (subject, property), the invariant every effect's retraction already leans on.
+    orexis:retracts """
+        CONSTRUCT { ?obs ?p ?o } WHERE {
+            GRAPH $state {
+                ?obs sosa:hasFeatureOfInterest ?pot ;
+                     sosa:observedProperty water:SoilMoisture ;
+                     sosa:hasSimpleResult ?was ;
+                     ?p ?o }
+            #  THE RATE IS PUBLIC KNOWLEDGE, unqualified: a pot's physics is how the WORLD
+            #  behaves and the world graph is public, so an ordinary pattern reads it. Scoped
+            #  to `$beliefs` it matched nothing, silently, and a pot that never dried is
+            #  exactly the empty result this project keeps having to guard against.
+            ?pot water:driesPerDay ?rate .
+            FILTER(?rate > 0 && $elapsed > 0)
+        }""" ;
+
+    #  AND WHAT IT LEAVES: the same reading, lower by what the pot loses in that time. The
+    #  arithmetic is the DOMAIN's, on the domain's own number — a rate the world states, in
+    #  fractions of saturation per day — which is where every literal in this project is
+    #  interpreted. The core stores triples and reads none of it.
+    #
+    #  PARENTHESISED, and both of them deliberately: `a / b * c` is evaluated as `a / (b * c)`
+    #  by this engine, and a decimal product past eighteen fractional digits binds NOTHING, so
+    #  the rate is rounded to six places before it is multiplied (AGENTS.md, the arithmetic
+    #  traps). A drift that bound nothing would read as a pot that never dries.
+    sh:construct """
+        CONSTRUCT {
+            ?obs a sosa:Observation ;
+                 sosa:hasFeatureOfInterest ?pot ;
+                 sosa:observedProperty water:SoilMoisture ;
+                 sosa:hasSimpleResult ?now ;
+                 sosa:resultTime ?at ;
+                 sosa:madeBySensor ?sensor ;
+                 sosa:usedProcedure ?how .
+        } WHERE {
+            GRAPH $state {
+                ?obs sosa:hasFeatureOfInterest ?pot ;
+                     sosa:observedProperty water:SoilMoisture ;
+                     sosa:hasSimpleResult ?was ;
+                     sosa:resultTime ?taken .
+                OPTIONAL { ?obs sosa:madeBySensor ?sensor }
+                OPTIONAL { ?obs sosa:usedProcedure ?how }
+            }
+            ?pot water:driesPerDay ?rate .
+            FILTER(?rate > 0 && $elapsed > 0)
+            BIND(ROUND(($elapsed / 86400.0) * 1000000) / 1000000 AS ?days)
+            BIND(?was - (?rate * ?days) AS ?fell)
+            #  A POT DOES NOT DRY PAST EMPTY, which is the one bound the domain knows without
+            #  asking anything: a fraction of saturation has a floor at nothing.
+            BIND(IF(?fell < 0.0, 0.0, ?fell) AS ?now)
+            BIND($lands AS ?at)
+        }""" .
