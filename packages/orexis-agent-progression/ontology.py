@@ -219,6 +219,9 @@ ACTIONS_GRAPH = _GRAPH + "actions"
 #  pass, never read back by the planner itself. See the deliberation layer's DeliberationGraph.
 DELIBERATION_GRAPH = _GRAPH + "deliberation"
 PROVENANCE_GRAPH = _GRAPH + "provenance"
+#  When each graph is worth believing — said of the graph, outside the default union, and
+#  read by the door rather than by any rule (validity-belongs-to-the-named-graph).
+VALIDITY_GRAPH = _GRAPH + "validity"
 #  What this agent's own graphs ARE, said by the agent at boot: public, because a
 #  modality-scoped query must resolve `?d a orexis:DesireGraph` without naming an instance.
 CLASSIFICATION_GRAPH = _GRAPH + "classification"

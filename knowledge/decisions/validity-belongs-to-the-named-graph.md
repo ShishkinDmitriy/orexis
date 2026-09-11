@@ -179,7 +179,14 @@ Self-describing in transit, described beside on disk.
 
 # Order of work
 
-**The forecast first, because it is the only case with nothing to replace.**
+**The door first, and it is built** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)'s first half): a graph says `orexis:validFrom` and
+`orexis:validUntil` in `graph/validity`, and `store.public_graphs(at=…)` drops what is outside
+its interval. Absent bounds mean always, so a store that states none is the store it always
+was — every shipped world included. The cost is at the door and it is nothing: 0.9 µs a call
+with no interval stated and 1.9 µs with one, against milliseconds for the query it precedes.
+Naming a graph still reads it, because lapsing is not forgetting.
+
+**The forecast next, because it is the only case with nothing to replace.**
 [#589](https://github.com/ShishkinDmitriy/orexis/issues/589) is reshaped around this: a forecast
 arrives as its own graph, `orexis:Received`, valid over the interval it speaks for, and a rule
 reading the world at a step's landing sees it exactly when the door says it is valid. No upsert

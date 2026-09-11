@@ -1,0 +1,129 @@
+"""A graph says when it is worth believing, and the door honours it.
+
+`knowledge/decisions/validity-belongs-to-the-named-graph.md`: a class is not temporal and
+knowledge about instances is, so validity is a property of the named graph a thing is said in —
+read at the door, where a reader is HANDED a scope, and never by a rule, which would be the
+`now()` this project has just spent three changes removing.
+
+The interval is said in `graph/validity`, outside the default union and beside the provenance
+graph, because an interval CHANGES: a statement in a merged graph is a fact in every possible
+world, so one that lapsed would move the invariant signature and kill a kept cone.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
+
+import pytest
+
+from conftest import genesis_store
+from orexis_agent_progression.ontology import ACTIONS_GRAPH, VALIDITY_GRAPH, WORLD_GRAPH
+
+def _now() -> datetime:
+    """Read per test, never once per module: an instant captured at import is a minute old by
+    the time a loaded suite reaches the body, and every window here is measured from it."""
+    return datetime.now(timezone.utc)
+
+
+def _store():
+    return genesis_store(world="loner")
+
+
+def _say(st, graph: str, until=None, since=None) -> None:
+    """What a graph says about itself, said where mentions of graphs live."""
+    bounds = []
+    if since is not None:
+        bounds.append(f'orexis:validFrom "{since.isoformat()}"^^xsd:dateTime')
+    if until is not None:
+        bounds.append(f'orexis:validUntil "{until.isoformat()}"^^xsd:dateTime')
+    st.update(f"INSERT DATA {{ GRAPH <{VALIDITY_GRAPH}> {{ <{graph}> {' ; '.join(bounds)} }} }}")
+
+
+def test_a_store_that_states_no_interval_is_the_store_it_always_was():
+    """Absent means always, on both sides — which is what every graph meant before the term
+    existed, and what a vocabulary graph means for ever. The fast path is the ordinary one."""
+    now = _now()
+    st = _store()
+    assert st.validity() == {}
+    assert len(st.public_graphs()) == 8
+    assert st.public_graphs() == st.public_graphs(at=now + timedelta(days=365))
+
+
+def test_a_graph_outside_its_interval_is_not_merged():
+    """The door drops it, and nothing else changes: an unqualified pattern stops seeing what
+    the graph holds, because what an unqualified pattern reads IS the merge."""
+    now = _now()
+    st = _store()
+    before = len(st.query("SELECT ?s WHERE { ?s a orexis:Agent }")["results"]["bindings"])
+    assert before, "the world names an agent while it is worth believing"
+
+    _say(st, WORLD_GRAPH, until=now - timedelta(seconds=1))
+
+    assert WORLD_GRAPH not in st.public_graphs()
+    assert st.query("SELECT ?s WHERE { ?s a orexis:Agent }")["results"]["bindings"] == [], \
+        "a graph past its interval still answered an ordinary query"
+    assert st.query(f"SELECT ?s WHERE {{ GRAPH <{WORLD_GRAPH}> {{ ?s a orexis:Agent }} }}"
+                    )["results"]["bindings"], \
+        "naming a graph still reads it — lapsing is not forgetting, and a sweep is a decision"
+
+
+def test_the_instant_is_the_askers_and_a_pass_says_which():
+    """`at` is the whole of what keeps this out of a search's way. A pass reads one clock at
+    its root; without saying so it would watch a graph expire between two forks, and two worlds
+    would differ by how long the agent had been thinking."""
+    now = _now()
+    st = _store()
+    _say(st, ACTIONS_GRAPH, until=now + timedelta(minutes=1))
+
+    assert ACTIONS_GRAPH in st.public_graphs()
+    assert ACTIONS_GRAPH in st.public_graphs(at=now)
+    assert ACTIONS_GRAPH not in st.public_graphs(at=now + timedelta(minutes=2))
+    assert ACTIONS_GRAPH in st.public_graphs(at=now - timedelta(days=1)), \
+        "an open start means always, so yesterday is inside the interval too"
+
+
+def test_a_graph_not_yet_valid_is_not_merged_either():
+    """A forecast is the case this exists for: facts valid over an interval the agent has not
+    reached, which must not answer a question about now."""
+    now = _now()
+    st = _store()
+    _say(st, ACTIONS_GRAPH, since=now + timedelta(hours=3), until=now + timedelta(hours=6))
+
+    assert ACTIONS_GRAPH not in st.public_graphs()
+    assert ACTIONS_GRAPH in st.public_graphs(at=now + timedelta(hours=4))
+    assert ACTIONS_GRAPH not in st.public_graphs(at=now + timedelta(hours=7))
+
+
+def test_the_table_is_remembered_and_a_write_drops_it():
+    """Remembered like everything else the store learns by asking, and the TABLE rather than a
+    filtered list: which graphs now depends on when it is asked, and the table does not."""
+    now = _now()
+    st = _store()
+    _say(st, ACTIONS_GRAPH, until=now + timedelta(minutes=1))
+    assert st.validity() and st._validity is not None
+
+    st.update("INSERT DATA { GRAPH <http://example.org/orexis/graph/sensed> { <urn:a> <urn:b> <urn:c> } }")
+    assert st._validity is None, "a write drops what was learned by asking"
+    assert ACTIONS_GRAPH in st.validity(), "and asking again learns it back"
+
+
+def test_a_bound_nobody_can_read_does_not_drop_a_graph():
+    """Not knowing is maximal everywhere here, and this is the same rule read the safe way
+    round: a graph whose interval is unreadable stays, rather than vanishing silently."""
+    st = _store()
+    st.update(f'INSERT DATA {{ GRAPH <{VALIDITY_GRAPH}> {{ <{ACTIONS_GRAPH}> '
+              f'orexis:validUntil "whenever"^^xsd:dateTime }} }}')
+
+    assert st.validity()[ACTIONS_GRAPH] == (None, None)
+    assert ACTIONS_GRAPH in st.public_graphs()
+
+
+def test_an_interval_on_a_graph_nobody_types_adds_nothing():
+    """The validity graph says WHEN, never WHETHER: what is merged is still what the
+    vocabulary types as public, and an interval on something else is a statement about
+    nothing this door has to answer for."""
+    now = _now()
+    st = _store()
+    _say(st, "http://example.org/orexis/graph/nowhere", until=now + timedelta(days=1))
+
+    assert len(st.public_graphs()) == 8
