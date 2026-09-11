@@ -151,7 +151,7 @@ What was missing was a place for it to have consequences.
    its act happens at, and has nothing to read about what the outside will be then, because
    nothing states a future reading. That is item 3 ([effect](/domain/effect.md)).
 3. **Exogenous uncertainty is a narrowing set of [bands](/domain/band.md)** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)), and it is where
-   [validity-belongs-to-the-named-graph](/decisions/validity-belongs-to-the-named-graph.md) is
+   [a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md) is
    built first: a forecast is facts valid over a FUTURE interval, which is the one horizon in
    this project with no mechanism at all, and a graph that says how long it speaks for is the
    cheapest place to put it. Three days out a

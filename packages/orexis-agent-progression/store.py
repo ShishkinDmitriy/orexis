@@ -23,13 +23,14 @@ from __future__ import annotations
 import io
 import re
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
 import pyoxigraph as ox
 
 from assembly import loader
-from .ontology import OREXIS, CLASSIFICATION_GRAPH, ONTOLOGY_GRAPH, PUBLIC_GRAPH
+from .ontology import OREXIS, CLASSIFICATION_GRAPH, ONTOLOGY_GRAPH, PUBLIC_GRAPH, WHEN_GRAPH
 
 # A SPARQL SELECT -> the SPARQL-JSON results dict. The seam every reader is written against,
 # unchanged from when this was an HTTP client, so nothing above here knows the difference.
@@ -89,6 +90,18 @@ SELECT DISTINCT ?g WHERE {{
   FILTER NOT EXISTS {{ ?g a ?work . ?work rdfs:subClassOf* orexis:WorkingGraph }}
 }}"""
 
+#  THE PERIOD EACH GRAPH HOLDS DURING — read from the one place that says so, which is named here
+#  for the same reason the two above are: this is the bootstrap root asking what to merge, not a
+#  reader narrowing itself to a graph instance. Absent bounds mean always, which is what every
+#  graph meant before the term existed.
+_PERIODS = f"""
+SELECT ?g ?start ?end WHERE {{ GRAPH <{WHEN_GRAPH}> {{
+  ?g dcterms:temporal ?period .
+  OPTIONAL {{ ?period orexis:start ?start }}
+  OPTIONAL {{ ?period orexis:end ?end }}
+}} }}"""
+
+
 # Sent with every query. This is the ONLY set a query may use — some engines silently pre-bind
 # common prefixes and others do not, so relying on that works in one and fails in another.
 # `test_store.py` holds the codebase to this list.
@@ -117,6 +130,11 @@ _KERNEL = {
     #  pursues is SHACL, so reading its numbers is an ordinary query over ordinary triples.
     "sh": "http://www.w3.org/ns/shacl#",
     "prov": "http://www.w3.org/ns/prov#",
+    #  The kernel says TEMPORAL COVERAGE in Dublin Core's words, as it says provenance in
+    #  PROV's: `dcterms:temporal` on a graph, pointing at a `dcterms:PeriodOfTime`. It was
+    #  bound already — a part's ontology declares it — and a kernel term that depended on a
+    #  DHT11 driver being installed is not bound at all.
+    "dcterms": "http://purl.org/dc/terms/",
 }
 
 for _label, _iri in loader.external_prefixes().items():
@@ -248,6 +266,18 @@ def _named(text: str) -> ox.NamedNode:
     return ox.NamedNode(text)
 
 
+def _instant(text: str | None) -> datetime | None:
+    """A bound as the instant it is, or None where the graph states none — which means always,
+    on that side. An unparseable bound is None for the same reason a missing horizon is
+    maximal: a graph whose period nobody can read is not one to drop silently."""
+    if not text:
+        return None
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        return None
+
+
 def _term_of(row: dict, iri_key: str, text_key: str):
     """A pinned value as the engine's term: an IRI where the definition names one, else the
     literal it wrote — read back as the lexical form the row carries."""
@@ -352,11 +382,12 @@ class Store:
         self._store = ox.Store(self.path) if self.path else ox.Store()
         self._public: list | None = None  # discovered on demand; see public_graphs()
         self._recorded: list | None = None  # likewise; see recorded_graphs()
+        self._periods: dict | None = None  # graph -> (start, end); see periods()
         self._memo: dict = {}             # what only a write can change; see remember()
 
     # --- what counts as public, according to the store itself ---
 
-    def recorded_graphs(self) -> list[str]:
+    def recorded_graphs(self, at: datetime | None = None) -> list[str]:
         """The agent's own graphs — what a plan carries into its imaginarium and a validation
         reads beside the state. Asked, never listed.
 
@@ -372,10 +403,10 @@ class Store:
         """
         if self._recorded is None:
             self._recorded = sorted(row["g"] for row in bindings(self.query(_OWN)))
-        return self._recorded
+        return self._holding_at(self._recorded, at)
 
-    def public_graphs(self) -> list[str]:
-        """Every graph the vocabulary types as an `orexis:PublicGraph`.
+    def public_graphs(self, at: datetime | None = None) -> list[str]:
+        """Every graph the vocabulary types as an `orexis:PublicGraph`, and still worth believing.
 
         Cached because it is asked before every query and the answer only moves when something
         is written. Any write drops the cache rather than trying to work out whether it mattered
@@ -389,7 +420,46 @@ class Store:
         if self._public is None:
             rows = self._store.query(_DISCOVER, prefixes=NAMESPACES)
             self._public = sorted(str(row["g"].value) for row in rows)
-        return self._public
+        return self._holding_at(self._public, at)
+
+    def periods(self) -> dict:
+        """The period each graph holds during: IRI -> (start, end), either end None for open.
+
+        Read from `graph/when` and remembered until a write, like everything else here.
+        The TABLE is remembered rather than a filtered list, because the answer to *which
+        graphs now* depends on when it is asked and the table does not: filtering a handful of
+        bounds in Python costs nothing, and a memo keyed by an instant would miss on every call.
+        """
+        if self._periods is None:
+            self._periods = {
+                str(row["g"].value): (_instant(row["start"] and row["start"].value),
+                                      _instant(row["end"] and row["end"].value))
+                for row in self._store.query(_PERIODS, prefixes=NAMESPACES)}
+        return self._periods
+
+    def _holding_at(self, graphs: list[str], at: datetime | None) -> list[str]:
+        """`graphs`, less whatever is outside its own period at `at`.
+
+        THE CLOCK IS READ HERE AND NOWHERE A RULE CAN REACH IT (#598,
+        a-graph-holds-during-a-stretch): a graph is a scope a reader is handed, so the
+        door drops what is not worth believing and every rule reads triples and asks nothing.
+        `at` is None for *now*, and a caller with a clock of its own — a planning pass, which
+        reads one clock at its root and would otherwise watch a graph expire between two forks
+        — says which instant it means.
+        """
+        bounds = self.periods()
+        if not bounds:
+            return graphs           # nothing states a period: the store it always was
+        when = at or datetime.now(timezone.utc)
+        kept = []
+        for graph in graphs:
+            begins, ends = bounds.get(graph, (None, None))
+            if begins is not None and when < begins:
+                continue            # a forecast, before the period it holds during
+            if ends is not None and when >= ends:
+                continue            # said, and no longer holding
+            kept.append(graph)
+        return kept
 
     # --- reading ---
 
@@ -642,6 +712,7 @@ class Store:
         than an error — the failure this design keeps having to guard against."""
         self._public = None
         self._recorded = None
+        self._periods = None
         self._memo.clear()
 
     def remember(self, key, compute):
