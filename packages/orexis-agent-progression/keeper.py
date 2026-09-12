@@ -342,7 +342,9 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{PROGRESSION + "by"}> ?s . FILTER NOT EXIS
         for standing in self.standing(want=want):
             if standing.action != action and (steps is None or self._next_of(standing.uri) is None):
                 continue                  # a different commitment about this want stands apart
-            if standing.age_s(now) <= self.beliefs.patience_s:
+            #  A step PLACED at an instant (#619) is not outwaited while it waits for it.
+            placed = standing.step.not_before is not None and now < standing.step.not_before
+            if placed or standing.age_s(now) <= self.beliefs.patience_s:
                 if standing.action == action:
                     return None
                 continue
@@ -672,6 +674,14 @@ SELECT ?s WHERE {{ GRAPH <{self.graph}> {{
         standing = next((s for s in self.standing() if s.uri == intention_uri), None)
         if standing is None:
             return True
+        #  NOT BEFORE ITS INSTANT (#619): a step placed at an instant — a want met AT a
+        #  predicted crossing, its plan's first step at the crossing less the plan's own
+        #  duration — waits on the clock alone: a deadline on the scheduler with nothing to
+        #  re-ask, taken when it lapses. The layer that waits does the waiting.
+        due = standing.step.not_before
+        if due is not None and datetime.now(timezone.utc) < due:
+            self._place(intention_uri, standing, due)
+            return False
         text = self._template_of(standing.action, "readyWhen")
         if not text:
             return True
@@ -688,6 +698,16 @@ SELECT ?s WHERE {{ GRAPH <{self.graph}> {{
                       standing.action.rsplit("#", 1)[-1], deadline.isoformat(timespec="seconds"))
         self.hold(intention_uri, until=shape, not_after=deadline, when_lapsed="take")
         return False
+
+    def _place(self, intention_uri: str, standing, due: datetime) -> None:
+        """Arm the scheduler at a placed step's instant, once; `lapse` takes it then."""
+        from .scheduler import scheduler
+        if intention_uri in self._deadlines:
+            return
+        delay = (due - datetime.now(timezone.utc)).total_seconds()
+        self.log.info("holding %s until %s, its placed instant",
+                      standing.action.rsplit("#", 1)[-1], due.isoformat(timespec="seconds"))
+        self._deadlines[intention_uri] = scheduler().at(max(0.0, delay), lambda: self.lapse(intention_uri))
 
     def after_take(self, intention_uri: str) -> None:
         """The step was taken: where its action states `orexis:doneWhen`, hold the step on it
@@ -903,8 +923,17 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
                 return
         #  NOT HELD: a plan standing at a step nobody took (#510) — its patience is its
         #  deadline, and passing it drops the tail and says so upward, so deliberation
-        #  decides afresh from the world as it is.
+        #  decides afresh from the world as it is. A step PLACED at an instant (#619) is the
+        #  exception: before its instant the patience does not run against it, and at its
+        #  instant it is taken.
         for standing in self.standing():
+            if standing.uri == intention_uri and standing.step.not_before is not None:
+                self._deadlines.pop(intention_uri, None)
+                if datetime.now(timezone.utc) < standing.step.not_before:
+                    self._place(intention_uri, standing, standing.step.not_before)
+                    return
+                self._release(standing, "its placed instant came — taken")
+                return
             if standing.uri == intention_uri:
                 self._resolve(standing, "dropped", "the step it stood at was not taken before "
                                                    "its patience ran out — the tail is dropped")
@@ -1370,7 +1399,8 @@ SELECT ?s ?next ?action ?via ?about ?quantity ?predicts ?precondition WHERE {{ G
             #  Stale at this step and not waiting on anything: a step nobody could take,
             #  standing past the patience, is not progress — pursuit decides afresh and
             #  `adopt` supersedes it. A held step has a deadline of its own.
-            if standing.uri not in held and standing.age_s(now) > self.beliefs.patience_s:
+            placed = standing.step.not_before is not None and now < standing.step.not_before
+            if standing.uri not in held and not placed and standing.age_s(now) > self.beliefs.patience_s:
                 continue
             if self._next_of(standing.uri) is not None:
                 return standing

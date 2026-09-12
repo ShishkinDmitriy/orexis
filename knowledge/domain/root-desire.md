@@ -40,6 +40,14 @@ lookup and a mark by either name meet the same want. It is withdrawn when its pl
 when it reads met with nothing standing for it; a root still unmet derives it again. A met root
 with nothing derived under it is nothing to pursue, and no pass runs for it.
 
+A root that reads met may still foresee: where it states `orexis:foresees` and a drift's
+crossing falls within that stretch, the want derived under it is bound `orexis:At` the crossing
+— met at the instant and the instant after, its room the stretch to it — and the search for it
+begins where the present's own drift stands at the instant less the longest landing on the
+menu, so the plan's first step is placed at the instant less the plan's own duration and held
+there. It reads met the moment the newest prediction crosses later than the instant, which is
+what a dose does, and is withdrawn like the other.
+
 Like the leaves below it, a root is derived, never hand-written; a world may additionally
 ratify one through its asserted desire block, and that is the sovereign speaking rather than
 the agent.

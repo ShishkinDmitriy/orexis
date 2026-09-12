@@ -176,6 +176,7 @@ INSERT { GRAPH $derived {
         orexis:bindsWhen orexis:Always ;
         ssn:forProperty ?property ;
         orexis:about ?property ;
+        orexis:foresees ?foresight ;
         prov:wasDerivedFrom ?subject ;
         rdfs:label ?label ;
         rdfs:comment ?describes ;
@@ -255,6 +256,9 @@ INSERT { GRAPH $derived {
             sh:message ?overCeiling ] } }
 $given
 WHERE  {
+    #  HOW FAR AHEAD this agent acts on a predicted crossing (#619): a belief the world may
+    #  state, carried onto the stake as `orexis:foresees`; unbound, the stake foresees nothing.
+    OPTIONAL { $me sensing:foresightS ?foresight }
     { SELECT ?property ?subject (MAX(?min) AS ?low) (MIN(?max) AS ?high) WHERE {
         $me a orexis:Agent ; orexis:actsFor ?subject .
         ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?need .

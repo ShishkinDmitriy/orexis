@@ -93,6 +93,19 @@ class Desire:
     #  here, so a mark or a lookup by either name meets the same want.
     derived_from: str | None = None
 
+    #  THE INSTANT AN `orexis:At` WANT HOLDS AT (#619), or None. A want derived under a root
+    #  from a predicted crossing: judged as the world will be THEN, late past it, and its
+    #  room is the stretch to it — which the container computes into `urgency` when it
+    #  presents the want, since a time room is the kernel's arithmetic as a debt's is.
+    holds_at: datetime | None = None
+
+    #  WHEN THE READING THIS ROW JUDGES WAS TAKEN, or None where nothing was read — filled by
+    #  whoever holds the reading (sensing). A pass for a want met at an instant reads its
+    #  clock from here (#619): the present is the world as it was OBSERVED, and a drift that
+    #  counts from the pass's own clock would leave the reading's age undrifted, since this
+    #  engine cannot turn the stretch between two instants into a number (AGENTS, the traps).
+    read_at: datetime | None = None
+
     #  NO measure field, deliberately, and one briefly existed: a desire does not carry how
     #  its badness is scored, because that is a capability's answer and not the mind's
     #  structure (a-desire-states-its-own-measure). Whoever needs the number asks the choir —

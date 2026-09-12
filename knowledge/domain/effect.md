@@ -152,6 +152,16 @@ known; a pot that falls sooner is a surprise, and the next pass plans from where
 A reading already below its region does not fall further — the band below is open at the bottom,
 so it has no width to cross and nothing under it to reach.
 
+**A drift may also say WHEN.** `orexis:crossesAfter`, a select beside the drift, answers for
+each reading in `$state` the seconds after its own instant until it leaves the band it is in —
+the same arithmetic asked as when rather than whether. Whoever derives a want from a prediction
+reads it at the belief base (#619); a drift declaring none predicts no crossing. One thing the
+search cannot do with it: drift the present's reading over its own AGE, because every drift in
+a pass counts `$elapsed` from the pass's clock and this engine turns the stretch between two
+instants into no number. A pass for a want met at an instant therefore takes the reading's own
+instant as its clock, and every other pass leaves that age undrifted — a seam, measured at
+minutes against a band that takes days.
+
 **And a plan is minutes where a band is days**, which says where this pays. The loner's region
 takes six and a half days to cross; no plan reaches that far, so inside a search the band drift
 fires only where a step is declared to take one. What wants the crossing time is the DERIVATION
