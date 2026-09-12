@@ -140,12 +140,23 @@ two-cones record draws: the RATE is exogenous and the RESULT is not, because a p
 wherever the plan has left it. So a drift's answer is part of where the plan stands, where a
 forecast of the weather is the same fact in every world.
 
-**Its limit is the number.** A reading the agent observed carries one; a reading an effect
-predicted carries a band and no value, so there is nothing to subtract a rate from — a pot left
-alone dries in every imagined world that still holds an observed reading, and a pot already
-dosed keeps the band its dose declared until the world answers. Stating the drift as a
-band-to-band transition instead needs to know how far into its band a reading sits, which is the
-number again, one level down.
+**Two drifts, because a reading is known two ways.** One subtracts a rate from a VALUE, which
+a reading the agent observed carries. The other crosses a BAND, which is all a reading an effect
+predicted says (#579) — and how long that takes is the band's own width, from the facets genesis
+minted it with, over the rate the world states. Nothing new is written down for it: a world that
+re-ranges its bed or re-states its physics changes the answer by changing what it already says.
+
+The band form is optimistic in the direction the world corrects. A pot known only to be IN its
+region is taken to have a full width's worth of drying left, because the band is all that is
+known; a pot that falls sooner is a surprise, and the next pass plans from where it actually is.
+A reading already below its region does not fall further — the band below is open at the bottom,
+so it has no width to cross and nothing under it to reach.
+
+**And a plan is minutes where a band is days**, which says where this pays. The loner's region
+takes six and a half days to cross; no plan reaches that far, so inside a search the band drift
+fires only where a step is declared to take one. What wants the crossing time is the MEASURE —
+*when will this leave its region* is the same number read from the other end
+([#607](https://github.com/ShishkinDmitriy/orexis/issues/607)), and it is what lets an agent act before the breach rather than at it.
 
 **And a step that takes time makes a look somewhere new**, which is not a defect. A look's world
 used to be its parent's, so cycle detection discarded it; if an hour passes inside the step, the

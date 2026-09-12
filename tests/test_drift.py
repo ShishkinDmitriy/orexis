@@ -38,7 +38,7 @@ def _gardener(monkeypatch, moisture=0.30):
 
 def _dried(agent, elapsed: float):
     """What the world's own rule says the pot reaches, left alone for `elapsed` seconds."""
-    rule = effects.drifts_of(agent.beliefs)[0]
+    rule = next(r for r in effects.drifts_of(agent.beliefs) if r["drift"].endswith("#Drying"))
     added, retracted = effects.drift(
         agent.beliefs, rule, elapsed=elapsed, when=datetime.now(timezone.utc),
         me=f"<{agent.me.uri}>", subject=f"<{agent.me.acts_for}>", about=f"<{MOISTURE}>",
@@ -221,3 +221,112 @@ def test_a_dose_now_takes_the_time_its_valve_needs(monkeypatch):
     assert dosed.landing == pytest.approx(ceiling), \
         f"a dose still lands instantly: {dosed.landing}"
     assert ceiling > 0, "the loner's valve takes real seconds to empty"
+
+
+# --- and what it does to a reading that carries no number (#612) --------------
+
+
+DOSING = "http://example.org/orexis/actuation#Dosing"
+
+
+def _band_only(agent):
+    """A reading known by its band and not by a value — what every effect leaves behind."""
+    agent.beliefs.update(f"""DELETE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:hasSimpleResult ?v }} }}
+        WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:observedProperty <{MOISTURE}> ;
+                                          sosa:hasSimpleResult ?v }} }}""")
+
+
+def _fell(agent, elapsed: float):
+    """The bands the band-drift says the reading reaches, left alone for `elapsed` seconds."""
+    rule = next(r for r in effects.drifts_of(agent.beliefs) if r["drift"].endswith("DryingABand"))
+    added, retracted = effects.drift(
+        agent.beliefs, rule, elapsed=elapsed, when=datetime.now(timezone.utc),
+        me=f"<{agent.me.uri}>", subject=f"<{agent.me.acts_for}>", about=f"<{MOISTURE}>",
+        state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>",
+        litres="0.0", lands=AT)
+    return ({t.object.value.rsplit(".", 1)[-1] for t in added
+             if t.predicate.value.endswith("#type") and "band." in t.object.value}, retracted)
+
+
+def _crossing_s(agent) -> float:
+    """How long the region takes to cross, from the world's own numbers: the band's width over
+    the rate the pot states. Read rather than pinned, so a world that re-ranges its plant or
+    re-states its physics does not fail this."""
+    row = bindings(agent.beliefs.query(f"""SELECT ?lo ?hi ?rate WHERE {{
+        ?band rdfs:subClassOf sensing:InRegion ; sensing:ofProperty <{MOISTURE}> ;
+              sensing:ofSubject ?pot ;
+              owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
+        ?r owl:onProperty sosa:hasSimpleResult ; owl:someValuesFrom/owl:withRestrictions ?f .
+        ?f rdf:rest*/rdf:first/xsd:minInclusive ?lo .
+        ?f rdf:rest*/rdf:first/xsd:maxInclusive ?hi .
+        ?pot water:driesPerDay ?rate }}"""))[0]
+    return (float(row["hi"]) - float(row["lo"])) / float(row["rate"]) * 86400.0
+
+
+def test_a_band_falls_when_its_own_crossing_time_has_passed(monkeypatch):
+    """The drift the numeric one could not do, and the reason there are two.
+
+    A reading an effect predicted carries a band and no value (#579), so there is nothing to
+    subtract a rate from — which left the first drift correct and inert in every shipped world,
+    since a plan's first step erases the only number it could work on. What is left to say
+    without a value is how long the BAND takes to cross: its own width, from the facets genesis
+    minted it with, over the rate the world states.
+    """
+    agent = _gardener(monkeypatch, moisture=0.30)
+    _band_only(agent)
+    crossing = _crossing_s(agent)
+
+    assert _fell(agent, crossing * 0.9)[0] == set(), "it has not had time to cross its band"
+    reached, retracted = _fell(agent, crossing * 1.1)
+    assert reached == {"below"}, "a full width's worth of drying takes it out of the region"
+    assert retracted, "and the reading it replaces goes, as every reading-mover's does"
+
+
+def test_the_crossing_time_is_the_bands_own_width_over_the_worlds_rate(monkeypatch):
+    """Nothing new is stated for this. The width comes from the facets a band was minted with
+    and the rate from the plant, so a world that re-ranges its bed or re-states its physics
+    changes the answer by changing what it already says."""
+    agent = _gardener(monkeypatch, moisture=0.30)
+    _band_only(agent)
+    crossing = _crossing_s(agent)
+
+    assert crossing == pytest.approx(0.2 / 0.03 * 86400.0), \
+        "the loner's region is 0.1-0.3 and its pot loses three hundredths a day"
+    assert _fell(agent, crossing - 1.0)[0] == set()
+    assert _fell(agent, crossing + 1.0)[0] == {"below"}
+
+
+def test_a_reading_already_below_does_not_fall_further(monkeypatch):
+    """The right answer rather than a gap: the below band is open at the bottom, so it has no
+    width to cross and there is no band under it to reach."""
+    agent = _gardener(monkeypatch, moisture=0.04)          # below the region already
+    _band_only(agent)
+
+    assert _fell(agent, 365 * 86400.0)[0] == set(), "a year below is still below"
+
+
+def test_a_step_long_enough_leaves_a_dosed_pot_below_again(monkeypatch):
+    """The search's side, asked of a dose given a week — the shortest way to put a band-only
+    reading and a long elapsed in one node, since a dose is what erases the number and every
+    shipped step is far too quick to cross a band. What it shows is the composition: the
+    effect declares the band its act reaches, and the world takes it away again.
+    """
+    from orexis_agent_deliberation.planner import Planner
+
+    agent = _gardener(monkeypatch, moisture=0.04)
+    week = int(_crossing_s(agent) * 1.5)
+    agent.beliefs.update(f"""DELETE {{ GRAPH <{ACTIONS_GRAPH}> {{ <{DOSING}> <{LANDS}> ?t }} }}
+        INSERT {{ GRAPH <{ACTIONS_GRAPH}> {{ <{DOSING}> <{LANDS}>
+            "SELECT ({week} AS ?seconds) WHERE {{ }}" }} }}
+        WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{ <{DOSING}> <{LANDS}> ?t }} }}""")
+    desire = next(g for g in agent.pursuing()
+                  if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
+    planner = Planner(agent, agent.me)
+    planner.plan(desire)
+
+    dosed = [m for m in planner._nodes if m.taken and str(m.taken[-1].action) == DOSING]
+    assert dosed, "a dry pot is dosed"
+    bands = {t.object.value.rsplit(".", 1)[-1] for m in dosed for t in m.added
+             if t.predicate.value.endswith("#type") and "band." in t.object.value}
+    assert bands == {"below"}, \
+        f"a dose that took a week left the pot in the region it cannot still be in: {bands}"
