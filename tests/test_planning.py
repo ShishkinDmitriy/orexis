@@ -555,6 +555,16 @@ def test_a_step_that_moves_something_else_is_not_mistaken_for_a_cycle(monkeypatc
         return real(store, means, **bind)
 
     monkeypatch.setattr(effects, "apply", hijacked)
+    #  AND LANDING AT ONCE: a real dose takes its valve's fifty seconds, and the pot dries
+    #  while it runs (#592) — so a second dose from the first's world really is somewhere
+    #  new, by a reading a hundred seconds drier. This test is about a step that moves
+    #  NOTHING, so the hijacked step is given no time either; the drift's own tests carry
+    #  the other truth. (It passed before by a defect: a step's drift never reached its own
+    #  fork, so the second drift re-dried the undried reading to the same value.)
+    real_lands = effects.lands_after
+    monkeypatch.setattr(effects, "lands_after",
+                        lambda store, action, when=None, **b: 0.0 if action == DOSING
+                        else real_lands(store, action, when=when, **b))
     planner.plan(desire)
 
     doses = {depth: verdict for depth, row, _, verdict in planner._weighed

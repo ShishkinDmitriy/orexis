@@ -405,7 +405,7 @@ class Store:
             self._recorded = sorted(row["g"] for row in bindings(self.query(_OWN)))
         return self._holding_at(self._recorded, at)
 
-    def public_graphs(self, at: datetime | None = None) -> list[str]:
+    def public_graphs(self, at: datetime | None = None, *, ever: bool = False) -> list[str]:
         """Every graph the vocabulary types as an `orexis:PublicGraph`, and still worth believing.
 
         Cached because it is asked before every query and the answer only moves when something
@@ -420,7 +420,10 @@ class Store:
         if self._public is None:
             rows = self._store.query(_DISCOVER, prefixes=NAMESPACES)
             self._public = sorted(str(row["g"].value) for row in rows)
-        return self._holding_at(self._public, at)
+        #  `ever`: every public graph whatever its period — for a copy that will be asked at
+        #  instants of its own (the imaginarium, #619), which must hold a forecast for a period
+        #  the copier has not reached, and filter by its own clock at each door.
+        return list(self._public) if ever else self._holding_at(self._public, at)
 
     def periods(self) -> dict:
         """The period each graph holds during: IRI -> (start, end), either end None for open.

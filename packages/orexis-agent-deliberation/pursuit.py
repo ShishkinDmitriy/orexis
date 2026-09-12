@@ -38,8 +38,7 @@ from .ontology import pursued_graph
 from .planner import SATISFIED
 
 from orexis_agent_progression.execution import carry_out
-from orexis_agent_progression.ontology import STATE_GRAPH
-from orexis_agent_progression.store import bind, bindings
+from orexis_agent_progression.store import bindings
 from orexis_agent_reactive.loop import loop
 
 log = logging.getLogger("pursuit")
@@ -99,6 +98,12 @@ def child_of(agent, root: str) -> str | None:
 
 
 def crossing_of(agent, root: str) -> datetime | None:
+    """The earliest predicted crossing for `root`, or None — see `crossing_row_of`."""
+    found = crossing_row_of(agent, root)
+    return found[0] if found else None
+
+
+def crossing_row_of(agent, root: str) -> tuple[datetime, datetime] | None:
     """When the reading a root is about is predicted to leave its band, or None: the
     earliest instant any declared drift's `orexis:crossesAfter` states for the subject this
     agent acts for and a property the root is about, read at the belief base. The drift's
@@ -110,23 +115,13 @@ def crossing_of(agent, root: str) -> datetime | None:
     if not abouts or subject is None:
         return None
     earliest = None
-    for rule in effects.drifts_of(agent.beliefs):
-        text = rule.get("crosses")
-        if not text:
+    for r in effects.crossings(agent.beliefs):
+        if r["subject"] != subject or r["property"] not in abouts:
             continue
-        try:
-            rows = bindings(agent.beliefs.query(bind(text, state=STATE_GRAPH)))
-        except Exception as exc:                        # a package's select, not the mind's problem
-            log.error("crossesAfter of %s will not run: %s", rule.get("drift"), exc)
-            continue
-        for r in rows:
-            if r.get("subject") != subject or r.get("property") not in abouts:
-                continue
-            if not r.get("at") or r.get("seconds") is None:
-                continue
-            when = datetime.fromisoformat(r["at"]) + timedelta(seconds=float(r["seconds"]))
-            if earliest is None or when < earliest:
-                earliest = when
+        at = datetime.fromisoformat(r["at"])
+        when = at + timedelta(seconds=float(r["seconds"]))
+        if earliest is None or when < earliest[0]:
+            earliest = (when, at)
     return earliest
 
 

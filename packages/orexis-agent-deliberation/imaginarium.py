@@ -69,7 +69,13 @@ class Imaginarium(Store):
         starts. Both are copies. Nothing in here is ever written back.
         """
         super().__init__()                       # no path: memory, and not the belief base
-        for iri in list(store.public_graphs()) + list(private):
+        #  EVERY public graph WHATEVER ITS PERIOD, and the table of periods with them (#619):
+        #  a pass asks its rules at instants of its own — a step's landing, a want's instant —
+        #  and a forecast holding then is a graph the present has not reached. Copied whole,
+        #  the imaginarium's own door filters by the instant it is asked at, as the belief
+        #  base's does; copied at now, a search could not see past the present's weather.
+        from orexis_agent_progression.ontology import PERIODS_GRAPH
+        for iri in list(store.public_graphs(ever=True)) + [PERIODS_GRAPH] + list(private):
             for quad in store.quads(iri):
                 self._store.add(quad)
         self._public = None
@@ -127,6 +133,14 @@ class Imaginarium(Store):
         #  DELETE DATA would have to re-serialise every literal with its datatype, which is the
         #  road `effects._triple` already got wrong once in the other direction. The lists are
         #  a handful of triples, so a loop here costs nothing.
+        self.amend(name, added, retracted)
+        return name
+
+    def amend(self, name: str, added, retracted) -> None:
+        """Apply a diff to a world already forked — what the world did while a step ran (#592),
+        written into the step's own fork after the step's effect. Retraction before addition,
+        by term, for the reasons `reached` gives."""
+        node = ox.NamedNode(name)
         for triple in retracted:
             if triple.predicate.value in self._carried:
                 for quad in list(self._store.quads_for_pattern(triple.subject, triple.predicate,
@@ -136,7 +150,6 @@ class Imaginarium(Store):
                 self._store.remove(ox.Quad(triple.subject, triple.predicate, triple.object, node))
         for triple in added:
             self._store.add(ox.Quad(triple.subject, triple.predicate, triple.object, node))
-        return name
 
     def entailed(self, name: str, added, keys) -> list:
         """The class memberships the vocabulary entails of the KEYED nodes `added` put in
