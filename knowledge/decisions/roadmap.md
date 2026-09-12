@@ -68,7 +68,10 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
   [planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md),
   five items from a node that carries a time to a plan that is a partial order. The first of
   them is the one everything waits on, and the fourth retires the workaround that keeps looking
-  alive today.
+  alive today. Where such a pass BEGINS is the sovereign's split of 2026-09-12:
+  [an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it](/decisions/an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it.md)
+  — an Always want is a root never pursued, what is pursued is derived from it, and its binding
+  roots the search at the present or at a predicted crossing — #618, #619, #620 in that order.
 
 # Working principle
 

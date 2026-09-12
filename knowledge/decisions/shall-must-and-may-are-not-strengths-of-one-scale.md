@@ -257,6 +257,10 @@ rest (`sometime`, `at-most-once`, `sometime-before`) need memory along the path 
 compiles them to automata tracked during search — which is machinery with no customer. A term
 nobody reads is annotation: an operator is adopted when a want needs it.
 
+**Made structural on 2026-09-12.** The loop's repeated at-end is a want derived under the
+Always root, which is never pursued itself, and a predicted crossing derives one bound to an
+instant — [an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it](/decisions/an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it.md).
+
 ## The shipped mind, in coordinates
 
 Asked by the sovereign: how would our desires look on the three axes? Projected rather than

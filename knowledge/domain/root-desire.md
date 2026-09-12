@@ -20,6 +20,11 @@ the freshness root, being able to incur obligations the debts root — so the wh
 **forest**, and an agent with no premises has no trees. A ratified root may instead name an
 instance from the start; its position, not its level, is what makes it a root.
 
+**A root is never pursued.** It is law for every search and the premise of what is: the
+wants a search is handed are derived under it — at-end when the root's shape is violated, at
+an instant when a prediction says it will be — and each is gone when met
+([an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it](/decisions/an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it.md)).
+
 Like the leaves below it, a root is derived, never hand-written; a world may additionally
 ratify one through its asserted desire block, and that is the sovereign speaking rather than
 the agent.

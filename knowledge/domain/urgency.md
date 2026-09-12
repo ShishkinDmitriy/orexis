@@ -46,7 +46,9 @@ projections — the stake and the debt formulas were never two ideas.
 The corollary explains an absence: an `orexis:AtEnd` want with no deadline has no room being
 consumed, so nothing makes it urgent — and a want with no urgency never wins attention. That is
 the quiet reason no derivation writes one; a real AtEnd customer must declare its heat or
-borrow a clock, at which point it is really a Within.
+borrow a clock, at which point it is really a Within. The customer that arrived is the want
+derived under a root when its shape is violated: it borrows the root's state room rather than
+declaring heat of its own ([an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it](/decisions/an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it.md)).
 
 # How much unmet, when the want is not a number
 

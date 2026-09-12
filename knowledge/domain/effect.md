@@ -154,9 +154,10 @@ so it has no width to cross and nothing under it to reach.
 
 **And a plan is minutes where a band is days**, which says where this pays. The loner's region
 takes six and a half days to cross; no plan reaches that far, so inside a search the band drift
-fires only where a step is declared to take one. What wants the crossing time is the MEASURE —
-*when will this leave its region* is the same number read from the other end
-([#607](https://github.com/ShishkinDmitriy/orexis/issues/607)), and it is what lets an agent act before the breach rather than at it.
+fires only where a step is declared to take one. What wants the crossing time is the DERIVATION
+of a want met at that instant — *when will this leave its region* is the same number read from
+the other end ([#619](https://github.com/ShishkinDmitriy/orexis/issues/619)), and it is what
+lets an agent act before the crossing rather than at it.
 
 **And a step that takes time makes a look somewhere new**, which is not a defect. A look's world
 used to be its parent's, so cycle detection discarded it; if an hour passes inside the step, the
