@@ -850,7 +850,7 @@ WHERE {{ GRAPH <{STATE_GRAPH}> {{
         """The choir road, asked of the LIVE belief base — through the agent rather than
         straight to `desire_urgency`, so a second module that measures the same want (none
         ships) would be heard, and so one question has one asker."""
-        return self.agent.desire_urgency(desire, self.agent.beliefs.query, STATE_GRAPH, value)
+        return self.agent.desire_urgency(desire, self.agent.beliefs.query_at, STATE_GRAPH, value)
 
     def gaps(self) -> dict[str, Gap]:
         """Where every property the agent wants stands against where it wants it — stale rows

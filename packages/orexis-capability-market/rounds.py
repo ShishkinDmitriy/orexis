@@ -15,9 +15,16 @@ reason — a venue that published its schedule would let a bidder time its arriv
 row carries `closesAt`, the instant the offer already states, never the window it came from.
 `tests/test_rounds.py` scans the row for both terms.
 
-The row lives in the agent's OWN graph (`beliefs_graph`), because it is what THIS agent was
-told or announced: a bidder's row and the host's row for one round are two facts held by two
-minds, and neither reads the other's.
+The row lives in a graph OF ITS OWN, one per round, classified as this agent's — what THIS
+agent was told or announced: a bidder's row and the host's row for one round are two facts
+held by two minds, and neither reads the other's — AND HOLDING DURING ITS PERIOD (#620,
+a-graph-holds-during-a-stretch): from the offer to `closesAt`, said of the graph in the periods
+table, so the door hands the round to a reader asking about an instant inside it and to nobody
+asking about one past it. A search standing at a future instant — a want met at a predicted
+crossing — therefore never plans a bid into a round that will have closed. The retrofit the
+period record deferred until measured; the measurement is on #620. What ends the row is still
+the host's word (`close_round` drops the graph); the sweep drops what outlived its period. The
+cooling row stays in the agent's own beliefs graph: it is a state, not a stretch.
 """
 
 from __future__ import annotations
@@ -25,7 +32,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from orexis_agent_progression.ontology import beliefs_graph
+from orexis_agent_progression.ontology import (CLASSIFICATION_GRAPH, GRAPH_PREFIX, PERIODS_GRAPH,
+                                               beliefs_graph)
 from orexis_agent_progression.store import bindings
 
 from .terms import (CLOSES_AT, COOLING_UNTIL, HAS_ROUND, LOT_L, NS, RESERVE_PER_L,
@@ -53,39 +61,70 @@ def _uri(auction_id: str) -> str:
     return f"{NS}round_{auction_id}"
 
 
+_ROUNDS = GRAPH_PREFIX + "round/"
+RECEIVED = "http://example.org/orexis#Received"
+RECORDED = "http://example.org/orexis#Recorded"
+
+
+def round_graph(agent_id: str, auction_id: str) -> str:
+    """ONE round's graph in ONE agent's store — the unit a period is said of."""
+    return f"{_ROUNDS}{agent_id}/{auction_id}"
+
+
 def open_round(agent, venue_uri: str, auction_id: str, lot_l: float,
-               reserve_per_l: float, closes_at: datetime) -> str:
-    """Write the fact that a round is open on this venue. Returns the row's IRI."""
+               reserve_per_l: float, closes_at: datetime, arrival: str = RECEIVED,
+               opened_at: datetime | None = None) -> str:
+    """Write the fact that a round is open on this venue: its own graph, classified as this
+    agent's — `arrival` says how it came, received from the host or recorded by it — and
+    holding from now to `closes_at`. Returns the row's IRI."""
     uri = _uri(auction_id)
+    graph = round_graph(agent.id, auction_id)
+    since = (opened_at or datetime.now(timezone.utc)).isoformat()
     agent.beliefs.update(f"""
-INSERT DATA {{ GRAPH <{beliefs_graph(agent.id)}> {{
-  <{venue_uri}> <{HAS_ROUND}> <{uri}> .
-  <{uri}> a <{ROUND}> ;
-    <{ROUND_ID}> "{auction_id}" ;
-    <{LOT_L}> "{float(lot_l)}"^^<{_XSD}decimal> ;
-    <{RESERVE_PER_L}> "{float(reserve_per_l)}"^^<{_XSD}decimal> ;
-    <{CLOSES_AT}> "{closes_at.isoformat()}"^^<{_XSD}dateTime> .
-}} }}""")
+INSERT DATA {{
+  GRAPH <{graph}> {{
+    <{venue_uri}> <{HAS_ROUND}> <{uri}> .
+    <{uri}> a <{ROUND}> ;
+      <{ROUND_ID}> "{auction_id}" ;
+      <{LOT_L}> "{float(lot_l)}"^^<{_XSD}decimal> ;
+      <{RESERVE_PER_L}> "{float(reserve_per_l)}"^^<{_XSD}decimal> ;
+      <{CLOSES_AT}> "{closes_at.isoformat()}"^^<{_XSD}dateTime> . }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{
+    <{graph}> a orexis:BeliefGraph ; orexis:arrivedBy <{arrival}> . }}
+  GRAPH <{PERIODS_GRAPH}> {{
+    <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;
+      orexis:start "{since}"^^<{_XSD}dateTime> ;
+      orexis:end "{closes_at.isoformat()}"^^<{_XSD}dateTime> ] . }}
+}}""")
     return uri
 
 
 def close_round(agent, auction_id: str) -> None:
-    """Retract the round — it is over for this agent, whatever the wire says next."""
-    uri = _uri(auction_id)
+    """Retract the round — it is over for this agent, whatever the wire says next: the graph,
+    its classification and its period all go."""
+    graph = round_graph(agent.id, auction_id)
     agent.beliefs.update(f"""
-DELETE {{ GRAPH <{beliefs_graph(agent.id)}> {{ ?v <{HAS_ROUND}> <{uri}> . <{uri}> ?p ?o }} }}
-WHERE  {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{uri}> ?p ?o . OPTIONAL {{ ?v <{HAS_ROUND}> <{uri}> }} }} }}""")
+DELETE {{
+  GRAPH <{graph}> {{ ?s ?p ?o }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> ?cp ?co }}
+  GRAPH <{PERIODS_GRAPH}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }}
+WHERE  {{
+  {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}
+  UNION {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> ?cp ?co }} }}
+  UNION {{ GRAPH <{PERIODS_GRAPH}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }} }}""")
 
 
 def sweep_expired(agent, now: datetime | None = None) -> int:
-    """Retract every round past its closesAt — the horizon on a belief about another agent.
-
-    The host says when its round is over (#599) and that is what normally ends the row. This
-    is the backstop: a close that never arrived, a host that stopped, a row that outlived a
-    restart. Returns how many went."""
-    gone = [r for r in rounds_of(agent) if not r.is_open(now)]
-    for r in gone:
-        close_round(agent, r.auction_id)
+    """Drop every round graph whose period has ended — the horizon on a belief about another
+    agent. The host says when its round is over (#599) and that is what normally ends the row;
+    the door already hands nobody a round past its period, so this is hygiene for a close that
+    never arrived, a host that stopped, a graph that outlived a restart. Returns how many went."""
+    at = now or datetime.now(timezone.utc)
+    mine = f"{_ROUNDS}{agent.id}/"
+    gone = [g for g, (_, end) in agent.beliefs.periods().items()
+            if g.startswith(mine) and end is not None and at >= end]
+    for graph in gone:
+        close_round(agent, graph[len(mine):])
     return len(gone)
 
 
@@ -110,14 +149,16 @@ SELECT ?v ?until WHERE {{ GRAPH <{beliefs_graph(agent.id)}> {{
     return len(gone)
 
 
-def rounds_of(agent, venue_uri: str | None = None) -> list[Round]:
-    """Every round this agent holds a row for, open or not — the caller asks `is_open`."""
+def rounds_of(agent, venue_uri: str | None = None, at: datetime | None = None) -> list[Round]:
+    """Every round this agent holds at `at` — now, by default: a round is a graph holding during
+    its period, and the door hands back only those. `is_open` still answers for a caller
+    holding a row from earlier."""
     venue = f"FILTER(?v = <{venue_uri}>)" if venue_uri else ""
-    rows = bindings(agent.beliefs.query(f"""
-SELECT ?r ?v ?id ?lot ?reserve ?closes WHERE {{ GRAPH <{beliefs_graph(agent.id)}> {{
+    rows = bindings(agent.beliefs.query_at(f"""
+SELECT ?r ?v ?id ?lot ?reserve ?closes WHERE {{
   ?v <{HAS_ROUND}> ?r .
   ?r <{ROUND_ID}> ?id ; <{LOT_L}> ?lot ; <{RESERVE_PER_L}> ?reserve ; <{CLOSES_AT}> ?closes .
-  {venue} }} }}"""))
+  {venue} }}""", at=at))
     return [Round(uri=r["r"], venue=r["v"], auction_id=r["id"], lot_l=float(r["lot"]),
                   reserve_per_l=float(r["reserve"]),
                   closes_at=datetime.fromisoformat(r["closes"])) for r in rows]

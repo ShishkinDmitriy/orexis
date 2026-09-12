@@ -107,7 +107,7 @@ def on_menu_now(agent, step, desires) -> bool:
     the thing — the availability select's own answer, filters and all."""
     return any(
         r.is_own and r.via == step.via and (r.about or None) == (step.about or None)
-        for r in affordances_of(agent.beliefs.query, agent.me.uri, desires, beliefs_graph(agent.id),
+        for r in affordances_of(agent.beliefs.query_at, agent.me.uri, desires, beliefs_graph(agent.id),
                                 STATE_GRAPH, only=frozenset({step.action})))
 
 

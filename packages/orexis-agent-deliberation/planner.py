@@ -28,6 +28,8 @@ rather than refinements, and each is here because a question found the failure i
 
 from __future__ import annotations
 
+from functools import partial
+
 from datetime import datetime, timedelta, timezone
 
 import heapq
@@ -250,7 +252,8 @@ class Planner:
         an obligation, met-or-not over the record — and those ask the imaginarium now too (#481).
         Anything else unmeasured scores 1.0, the not-knowing answer.
         """
-        answer = self.agent.desire_urgency(desire, self.imaginarium.query, self._judged_at(node, desire))
+        answer = self.agent.desire_urgency(desire, partial(self.imaginarium.query_at, at=self._at(node)),
+                                           self._judged_at(node, desire))
         if answer is not None:
             return answer
         #  An avoided-pattern want is binary by its own contract — met 0, unmet 1 — and the
@@ -353,7 +356,8 @@ class Planner:
             #  A want with no shape and no property — a CALL (#359) — is met exactly where
             #  whoever measures it says it is: zero urgency in the world being judged. Asked
             #  of the imaginarium at the node's graph, as `_urgency_in` asks.
-            answer = self.agent.desire_urgency(desire, self.imaginarium.query, self._judged_at(node, desire))
+            answer = self.agent.desire_urgency(desire, partial(self.imaginarium.query_at, at=self._at(node)),
+                                           self._judged_at(node, desire))
             if answer is not None:
                 return answer <= 0.0
             return desire.is_met
@@ -1206,7 +1210,7 @@ class Planner:
             if keeper is not None and keeper.refused_below(wanted.action, wanted.via, wanted.about):
                 return trace.REFUSED, forks
             row = next((r for r in affordances_of(
-                self.imaginarium.query, self.me.uri, self.agent.desires.query_union,
+                partial(self.imaginarium.query_at, at=self._at(cur)), self.me.uri, self.agent.desires.query_union,
                 beliefs_graph(self.agent.id), self._graph(cur), only=frozenset({wanted.action}))
                 if r.is_own and r.via == wanted.via and (r.about or None) == (wanted.about or None)),
                 None)
@@ -1251,7 +1255,8 @@ class Planner:
         #  "acquire, then offer" is a plan only if the menu of the world after the first step
         #  shows the second. The root node's graph is the agent's own readings, so at depth 0
         #  this is the ordinary menu, exactly as before.
-        for row in affordances_of(self.imaginarium.query, self.me.uri, self.agent.desires.query_union,
+        for row in affordances_of(partial(self.imaginarium.query_at, at=self._at(node)), self.me.uri,
+                           self.agent.desires.query_union,
                            beliefs_graph(self.agent.id), self._graph(node), only=self._asked):
             if desire.is_obligation:
                 #  A obligation may be served by its counterparty's honoured row, or approached
@@ -1457,7 +1462,7 @@ class Planner:
         #  with no disk in it. One query per foreign action per pass is what a truthful
         #  trace costs, against one per node before this.
         self._passed_over = [] if self._relevant is None else affordances_of(
-            self.imaginarium.query, self.me.uri, self.agent.desires.query_union,
+            partial(self.imaginarium.query_at, at=self._clock), self.me.uri, self.agent.desires.query_union,
             beliefs_graph(self.agent.id), STATE_GRAPH,
             only=frozenset(relevance.actions_of(self.agent.beliefs.query)) - self._relevant)
         self._base_forbidden = (self._forbidden_keys(here)

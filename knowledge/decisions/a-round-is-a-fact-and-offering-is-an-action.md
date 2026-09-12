@@ -110,6 +110,12 @@ host would *rather* sell — costs, a reserve, a season — remains
 [strategic-supplier](/decisions/strategic-supplier.md)'s seam, untouched: this makes Offer
 plannable, and a plannable act is not yet a wanted one.
 
+**Amended 2026-09-12 by [a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md):**
+the row lives in a graph of its own that holds during the round, so the door ends it for every
+reader at once — a root standing hours ahead never sees it — and the sweep is hygiene for a
+graph a restart left behind. The host's word still ends it first. Nothing below is false;
+the backstop stopped being the only thing between a lost close and a bid into the past.
+
 **Which side holds the clock.** ~~A bidder's `closesAt` row expires by the filter alone; a
 host's round is closed by its own timer as today.~~ AMENDED by #599, and the seam turned out to
 be the whole question. A fact about the venue was published at one end and DERIVED at the

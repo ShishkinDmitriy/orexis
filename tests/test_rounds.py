@@ -90,13 +90,18 @@ def test_the_bidder_holds_the_round_it_was_told_and_lets_it_go_on_the_claim(make
 
 
 def test_a_round_the_bidder_was_never_told_ended_is_swept_once_past_its_close(make):
-    """A bidder that lost hears nothing. The clock ends the row, and the sweep runs on the one
-    event that always comes — the next offer."""
+    """A bidder that lost hears nothing. The round is a graph holding during its period
+    (#620), so past its close the door hands it to nobody; the sweep drops the graph, and
+    runs on the one event that always comes — the next offer."""
     fern = make("fern", genesis_store({"fern": 0.10}))
     market = market_of(fern)
-    rounds.open_round(fern, market.uri, "old", 2.0, 0.4,
-                      datetime.now(timezone.utc) - timedelta(seconds=5))
-    assert len(rounds.rounds_of(fern)) == 1 and not rounds.rounds_of(fern)[0].is_open()
+    now = datetime.now(timezone.utc)
+    rounds.open_round(fern, market.uri, "old", 2.0, 0.4, now - timedelta(seconds=5),
+                      opened_at=now - timedelta(seconds=35))
+    assert rounds.rounds_of(fern) == [], "past its period, the round is handed to nobody"
+    assert [r.auction_id for r in rounds.rounds_of(fern, at=now - timedelta(seconds=10))] == ["old"], \
+        "asked about an instant inside its period, it is there — the door reads the clock, no rule does"
+    assert rounds.round_graph(fern.id, "old") in fern.beliefs.periods(), "the graph stands until swept"
     fern.deliver(market.offer_topic, {"auction_id": "r2", "quantity_l": 2.0,
                                       "reserve_price_per_l": 0.4, "closes_in_s": 30})
     ids = {r.auction_id for r in rounds.rounds_of(fern)}
@@ -128,7 +133,8 @@ def test_the_housekeeping_clock_retracts_what_the_round_clock_ended(make):
     held = len(fern.beliefs)
     rounds.open_round(fern, market.uri, "r10", 2.0, 0.4,
                       datetime.now(timezone.utc) - timedelta(seconds=1))
-    assert rounds.rounds_of(fern), "held, though already closed — nothing has swept yet"
+    assert rounds.round_graph(fern.id, "r10") in fern.beliefs.periods(), \
+        "held, though already closed — nothing has swept yet; the door merely hands it to nobody"
     assert len(fern.beliefs) > held, "the round is a fact, and facts are held"
 
     gone = fern.upkeep.sweep()
