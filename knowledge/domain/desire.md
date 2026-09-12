@@ -28,7 +28,9 @@ They are the same thing, and the difference is grammatical rather than conceptua
 the kind** — the type `Desire`, the term `orexis:Desire`, the modality, the store — and **a want is
 one of them**, identified by its node. That is what `?want` binds, what an
 [intention](/domain/intention.md) `progression:pursues`, and what the ledger is keyed on beside the
-[act](/domain/act.md).
+[act](/domain/act.md). The node the ledger names is the one the search was handed — for an
+`orexis:Always` want, the one derived under it ([root desire](/domain/root-desire.md)) — and the
+keeper answers a question put by either name.
 
 So *the desire modality* holds *the wants this agent has*, a package contributes wants through
 the `desires` hook, and a want is met, hot, stale or dropped. Nothing turns on the choice; what

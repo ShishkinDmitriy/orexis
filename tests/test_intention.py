@@ -244,7 +244,7 @@ def test_the_tick_puts_marketless_watching_in_the_ledger(make):
     keeper = next(m for m in fern.modules if m.name == "intention")
     keeper.agent.deliberator.deliberate_on_gaps()
     #  The ledger names the WANT; which property a want is about is sensing's to say.
-    about = {w.uri: w.observed_property for w in sensing_of(fern).desires()}
+    about = {w.uri: getattr(w, "observed_property", None) for w in fern.pursuing()}
     standing = {(s.action.rsplit("#", 1)[-1], about.get(s.want)) for s in keeper.standing()}
     assert ("Observing", TEMP) in standing, "the marketless property is watched ON THE RECORD"
     assert ("Observing", MOIST) in standing

@@ -29,10 +29,115 @@ knowledge/decisions/an-intention-is-a-plan-committed-to.md.
 
 from __future__ import annotations
 
+import json
+import logging
+from dataclasses import replace
+
+from .ontology import pursued_graph
 from .planner import SATISFIED
 
 from orexis_agent_progression.execution import carry_out
+from orexis_agent_progression.store import bindings
 from orexis_agent_reactive.loop import loop
+
+log = logging.getLogger("pursuit")
+
+
+# --- what the search is handed (#618) ------------------------------------------------------
+#
+#  AN `orexis:Always` WANT IS A ROOT AND IS NEVER PURSUED. It is the agent's for its whole
+#  life — the premise of what is — and what the search is handed is a
+#  want DERIVED under it with a binding of its own, a lifetime and a definition of done: bound
+#  `orexis:AtEnd`, `prov:wasDerivedFrom` the root, minted here the first time the root reads
+#  unmet and withdrawn when its plan finishes or it reads met with nothing standing for it
+#  (an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it). It POINTS at the root's
+#  met-test, avoided state and estimate — one owner each — and restates only the root's
+#  address, `orexis:about`, which is what the menu joins a want by. The container presents it
+#  in the root's place with the root's own measure (`Agent.pursuing`), so a keeper's verdict,
+#  a bidder's lookup and a mark by either name meet the same want.
+
+
+def handed(agent, desire):
+    """The want the search is handed for `desire`: itself, unless it is a ROOT — then the want
+    derived under it, minted if the root reads unmet and none stands; None for a met root
+    with nothing derived under it, which is nothing to pursue and runs no pass."""
+    if desire.derived_from is not None or desire.is_obligation or not _is_root(agent, desire.uri):
+        return desire
+    child = child_of(agent, desire.uri)
+    if child is None:
+        if desire.is_met:
+            return None
+        child = mint(agent, desire.uri)
+        if child is None:
+            return desire
+    return replace(desire, uri=child, derived_from=desire.uri)
+
+
+def _is_root(agent, want: str) -> bool:
+    return bool(bindings(agent.desires.query_union(
+        f"SELECT ?b WHERE {{ <{want}> orexis:bindsWhen orexis:Always }} LIMIT 1")))
+
+
+def child_of(agent, root: str) -> str | None:
+    """The want derived under `root` that stands now, or None."""
+    rows = bindings(agent.desires.query_union(
+        f"SELECT ?c WHERE {{ ?c prov:wasDerivedFrom <{root}> ; a orexis:Desire ; "
+        f"orexis:bindsWhen orexis:AtEnd }} LIMIT 1"))
+    return rows[0]["c"] if rows else None
+
+
+def root_of(agent, want: str) -> str | None:
+    """The root `want` is derived under, or None where it is not derived from a want."""
+    rows = bindings(agent.desires.query_union(
+        f"SELECT ?r WHERE {{ <{want}> prov:wasDerivedFrom ?r . ?r a orexis:Desire ; "
+        f"orexis:bindsWhen orexis:Always }} LIMIT 1"))
+    return rows[0]["r"] if rows else None
+
+
+def mint(agent, root: str) -> str | None:
+    """Derive the want pursued under `root` and write it to the pursued graph. Its name is the
+    root's, suffixed, so a second episode of the same root pursues the same node and everything
+    keyed by it — the planner, a remembered plan, the trace — finds what it kept. None, and the
+    root stays the goal, where the root states its met-test inline: a blank node has no name
+    another graph could point at, and copying it would make a second owner of the claim."""
+    child = root + ".pursued"
+    pointed = []
+    #  The raw SPARQL-JSON rows, because the TYPE of the object matters here and
+    #  `bindings` flattens it away: a blank node cannot be pointed at from another graph.
+    said = agent.desires.query_union(f"""
+SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
+  FILTER(?p IN (orexis:metWhen, orexis:unmetWhen, orexis:estimates, orexis:about)) }}""")
+    for sol in said.get("results", {}).get("bindings", []):
+        if sol["o"]["type"] == "bnode":
+            log.warning("%s states its %s inline; it is pursued itself", root.rsplit("#", 1)[-1],
+                        sol["p"]["value"].rsplit("#", 1)[-1])
+            return None
+        pointed.append(f"<{child}> <{sol['p']['value']}> <{sol['o']['value']}> .")
+    labels = bindings(agent.desires.query_union(
+        f"SELECT ?l WHERE {{ <{root}> rdfs:label ?l }} LIMIT 1"))
+    label = "pursued: " + (labels[0]["l"] if labels else root.rsplit("#", 1)[-1])
+    agent.beliefs.update(f"""
+INSERT DATA {{ GRAPH <{pursued_graph(agent.id)}> {{
+  <{agent.me.uri}> orexis:holds <{child}> .
+  <{child}> a orexis:Desire ; orexis:bindsWhen orexis:AtEnd ; prov:wasDerivedFrom <{root}> ;
+      rdfs:label {json.dumps(label)} .
+  {' '.join(pointed)}
+}} }}""")
+    agent.desires.rebuild()
+    log.info("%s reads unmet: pursuing %s", root.rsplit("#", 1)[-1], child.rsplit("#", 1)[-1])
+    return child
+
+
+def withdraw(agent, child: str) -> None:
+    """The want derived under a root is gone: its plan finished, or it reads met with nothing
+    standing for it. A root still unmet derives it again on the next pass, so a plan that fell
+    short re-plans through a fresh want rather than a stale one."""
+    graph = pursued_graph(agent.id)
+    agent.beliefs.update(f"""
+DELETE {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}
+WHERE  {{ GRAPH <{graph}> {{ ?s ?p ?o . FILTER(?s = <{child}> || ?o = <{child}>) }} }}""")
+    agent.desires.rebuild()
+    log.info("%s withdrawn", child.rsplit("#", 1)[-1])
 
 
 def pursue(agent, desire) -> str | None:
@@ -42,6 +147,10 @@ def pursue(agent, desire) -> str | None:
     None is a decision somebody else made: the search found no step (its trace says why).
     An absorbed impulse is NOT None — the commitment stands, and the caller is told which.
     """
+    #  A ROOT IS NEVER HANDED TO THE SEARCH (#618): what is pursued is the want derived under it.
+    desire = handed(agent, desire)
+    if desire is None:
+        return None
     keeper = agent.keeper
     if keeper is not None and (going := keeper.in_progress(desire.uri)) is not None:
         #  A PLAN IN PROGRESS IS NOT RE-DECIDED (#510): its next step is taken when the world
@@ -103,7 +212,8 @@ def pursue_for(agent, want: str) -> str | None:
     `want_about(property)` states the rule, an unmet epistemic want first and then the stake —
     and hands the NODE here. None where the agent is not pursuing that want at all.
     """
-    desire = next((d for d in agent.pursuing() if d.uri == want), None)
+    #  BY EITHER NAME (#618): a mark may name the root while the want derived under it stands.
+    desire = next((d for d in agent.pursuing() if d.uri == want or d.derived_from == want), None)
     return pursue(agent, desire) if desire is not None else None
 
 

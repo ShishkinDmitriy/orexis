@@ -5,7 +5,8 @@ status: accepted
 timestamp: 2026-09-12T12:00:00Z
 description: >-
   The sovereign's split of 2026-09-12, recorded before it is built. An Always want is a ROOT —
-  law for every search, the premise of what is pursued, and never pursued itself. What is
+  the premise of what is pursued, never pursued itself, and not the search's law either,
+  which was measured and refused. What is
   pursued is a want derived from it with a binding of its own, a lifetime and a definition of
   done — at-end when the root's shape is violated now, at an instant when a prediction says it
   will be — minted at runtime as a promise is and withdrawn when met. The binding roots the
@@ -20,11 +21,13 @@ description: >-
 # The claim
 
 **An `orexis:Always` want is a root, and it is never pursued.** It is the agent's for its whole
-life — every subject on the roster inside what it states it needs — and it does two jobs,
-neither of which is being searched for. It is LAW: every state of every candidate plan is held
-to it, which is what never-newly-enter already does with the Always wants an agent holds. And it
-is the PREMISE of what is pursued: a [root desire](/domain/root-desire.md) in the forest's
-sense, with the pursued wants derived under it.
+life — every subject on the roster inside what it states it needs — and it is the PREMISE of
+what is pursued: a [root desire](/domain/root-desire.md) in the forest's sense, with the
+pursued wants derived under it. **It is not the search's law**, and the first draft of this
+record said it was: the binding record gives an Always want the reading *judged at every
+state*, and what enforces that today is never-newly-enter over the shapes an agent holds at
+violation severity — the aversions — which a stake's region is not. Making it one was measured
+in #618 and refused, below.
 
 **What is pursued is derived from the root, with a binding of its own, a lifetime and a
 definition of done.** Two kinds, by what implies them:
@@ -84,6 +87,18 @@ forecast lands it below, and only the heater meets. Measured on main at `4d3700c
   observation carries its result into the canonical fact. That novelty is an accident of a
   band-only reading differing from a valued one; the projected root above is what makes the
   comparison honest, an early act weighed against where the pot WILL be rather than where it is.
+
+**And the root as law was measured and refused (#618).** Every shipped world with a root, planned
+with its met-shape added to the law at violation severity: the loner's dose from dry is
+FORBIDDEN — *newly enters a state the society refuses* — and so is the greenhouse's, both
+regimes, five forks where 128 found the plan. The reason is the key never-newly-enter subtracts
+by: (shape, focus, value), and a step that replaces a reading mints a NEW node for it, so a
+violation the base already stood in re-reads as newly entered the moment a lever touches the
+reading. The aversions survive this because their violations key on nodes no step replaces. A
+stake's region could join the law only with a key that survives a replaced reading — the
+reading's own key, subject and property, rather than its node — and that is a seam, not a
+build: nothing shipped asks for it, since the search already refuses a plan that leaves the
+region by its own met-test.
 
 # What it makes structural
 
@@ -145,3 +160,8 @@ RDF for a month, and naming that lets the literature be read against the issues 
   up.
 - **Two children under one root at once** — below now AND predicted to be dying. Hottest wins,
   as today; nothing here composes them.
+- **A stake's region as law**, keyed by the reading's subject and property rather than its node,
+  so never-newly-enter can tell a repair from a new entry. Measured above; no customer yet.
+- **A root that states its met-test inline.** A blank node has no name another graph can point
+  at, and copying it would make a second owner of the claim, so such a root is pursued itself,
+  logged. No shipped root does; the loner's, the greenhouse's and every derived stake's are IRIs.

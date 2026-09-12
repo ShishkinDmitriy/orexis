@@ -215,6 +215,10 @@ class Deliberator:
             steps = self.agent.keeper.walked(intention) if self.agent.keeper is not None else []
             if steps:
                 remembered.lift(self.agent, want, steps, decided[0].cost)
+        #  THE WANT DERIVED UNDER A ROOT IS WITHDRAWN WHEN ITS PLAN FINISHES (#618): a root
+        #  still unmet derives it again on the next pass, through a fresh want.
+        if pursuit.root_of(self.agent, want) is not None:
+            pursuit.withdraw(self.agent, want)
 
     @contributes(PLAN_FAILED)
     def on_plan_failed(self, intention: str, action: str, want: str) -> None:
@@ -283,8 +287,10 @@ class Deliberator:
         #  make the store's cardinality grow with its history — the cost of a dashboard nobody
         #  could then load. Whom I owe is a handful of agents and says the thing worth seeing.
         for desire, _ in pursued:
+            #  A want pursued under a root is reported as the ROOT (#618): one series per
+            #  want the agent holds, whichever node the pass is currently handed.
             about = (desire.owed_to.rsplit("#", 1)[-1] if desire.is_obligation
-                     else desire.uri.rsplit("#", 1)[-1])
+                     else (desire.derived_from or desire.uri).rsplit("#", 1)[-1])
             #  `agent_want` and its tag KEEP THE RETIRED WORD, deliberately. The noun "want"
             #  gave way to "desire" everywhere else when the vocabulary was ruled on
             #  (domain/desire.md), and a measurement name is the one place the rename costs more
@@ -361,6 +367,19 @@ class Deliberator:
         a desire that stays hot, stays owed, and shows up in the ledger unpaid, which is this
         project's posture towards everything it cannot prevent: leave evidence.
         """
+        #  A ROOT IS NEVER HANDED TO THE SEARCH (#618): an `orexis:Always` want is law and
+        #  premise, and what is decided is the want derived under it — minted the first time
+        #  the root reads unmet, withdrawn once it reads met with nothing standing for it. A
+        #  met root with nothing derived under it is nothing to pursue, and no pass runs.
+        handed = pursuit.handed(self.agent, desire)
+        if handed is None:
+            return None
+        desire = handed
+        keeper = getattr(self.agent, "keeper", None)
+        if (desire.derived_from is not None and desire.is_met
+                and (keeper is None or not keeper.standing(want=desire.uri))):
+            pursuit.withdraw(self.agent, desire.uri)
+            return None
         #  NOTHING IS ANSWERED BY HARDCODE HERE ANY MORE, and the line that was is the whole
         #  of what this change existed to remove.
         #

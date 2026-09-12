@@ -28,6 +28,8 @@ See knowledge/decisions/capability-packages.md.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import logging
 from datetime import datetime
 import signal
@@ -62,6 +64,14 @@ _SHAPED_Q = """
 SELECT ?me ?want ?shape WHERE {
   ?me orexis:holds ?want .
   ?want orexis:metWhen ?shape .
+}"""
+#  THE WANTS DERIVED UNDER A ROOT (#618): an `orexis:Always` want is never pursued itself, and
+#  while a want derived under it stands the container presents THAT, with the root's own measure.
+_CHILDREN_Q = """
+SELECT ?me ?root ?child WHERE {
+  ?me orexis:holds ?child .
+  ?child a orexis:Desire ; orexis:bindsWhen orexis:AtEnd ; prov:wasDerivedFrom ?root .
+  ?root a orexis:Desire ; orexis:bindsWhen orexis:Always .
 }"""
 from orexis_agent_deliberation.deliberator import KEEPING_PICKS, Deliberator
 from orexis_agent_deliberation.desire import Desire, Desires
@@ -333,9 +343,16 @@ class Agent:
         #  sensing modules and each reads every region the agent holds — and a want is its
         #  node, so the second sighting is the same want and not a second one.
         seen: dict[str, Desire] = {}
+        #  A ROOT IS PRESENTED AS THE WANT DERIVED UNDER IT (#618), where one stands: the
+        #  root's own row — its measure, its reading, its property — under the derived want's
+        #  name, naming the root beside it. The derived want is never lifted on its own.
+        children = {r["root"]: r["child"]
+                    for r in bindings(self.desires.query_union(_CHILDREN_Q, {"me": self.me.uri}))}
+        derived = set(children.values())
         for wants in self.ask(DESIRES, now):
             for desire in wants:
-                seen.setdefault(desire.uri, desire)
+                if desire.uri not in derived:
+                    seen.setdefault(desire.uri, desire)
         #  THE WANTS NO MODULE SPEAKS FOR (#468): a world may ratify a desire DIRECTLY — the
         #  asserted block — and wanting is the kernel's, so the kernel is who lifts such a
         #  want into pursuit rather than a capability minted to re-say it. Scoped to the
@@ -343,7 +360,7 @@ class Agent:
         #  binary, because between entered and held there is nothing to be nearer to. A
         #  pattern that fails to run reads as unmet — the loud direction.
         for row in bindings(self.desires.query_union(_AVOIDED_Q, {"me": self.me.uri})):
-            if row["want"] in seen:
+            if row["want"] in seen or row["want"] in derived:
                 continue
             #  THE DESIRE OWNS THE TERM AND THE PACKAGE OWNS THE MEASURE: a world may write
             #  the pattern inline beside its asserted want, or point at a node the domain
@@ -381,7 +398,7 @@ class Agent:
         #  and run on the store's own engine over the same view the judge would be handed.
         #  Binary, like the pattern wants above: met is no row.
         for row in bindings(self.desires.query_union(_SHAPED_Q, {"me": self.me.uri})):
-            if row["want"] in seen:
+            if row["want"] in seen or row["want"] in derived:
                 continue
             try:
                 text = self._unmet_select(row["want"], row["shape"])
@@ -393,6 +410,9 @@ class Agent:
             seen[row["want"]] = Desire(uri=row["want"],
                                        urgency=1.0 if violated else 0.0,
                                        state="unmet" if violated else "met")
+        for root, child in children.items():
+            if root in seen:
+                seen[root] = replace(seen[root], uri=child, derived_from=root)
         return sorted(seen.values(), key=lambda g: -g.urgency)
 
     def _unmet_select(self, want: str, shape: str, entered: bool = False) -> str:
