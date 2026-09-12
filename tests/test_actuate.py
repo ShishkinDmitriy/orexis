@@ -86,7 +86,7 @@ def test_a_pot_local_pump_on_the_shared_barrel_still_yields_acquire_only():
             <http://example.org/orexis/actuation#drawsFrom> <{ns}barrel1> .
     }} }}""")
     open_round_for(st, "fern")
-    rows = [r for r in affordances_of(st.query, ns + "fern_agent", desires_build(st, "fern").query_union, beliefs_graph("fern"))
+    rows = [r for r in affordances_of(st.query_at, ns + "fern_agent", desires_build(st, "fern").query_union, beliefs_graph("fern"))
             if r.about == MOIST]
     assert any(r.action == ACQUIRING for r in rows)
     assert not any(r.action == DOSING for r in rows), \

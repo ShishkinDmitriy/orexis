@@ -643,11 +643,15 @@ SELECT ?c ?id ?l ?at ?p WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         open_ = [r for r in rounds.rounds_of(self.agent, act.via) if r.is_open()]
         if not open_:
             return False
+        #  THE NEWEST OFFER where several stand — the one closing last — rather than the
+        #  first row the store lists: a claim that named no round leaves the old one
+        #  standing until its period ends, and a bid into it is a bid into the past.
+        newest = max(open_, key=lambda r: r.closes_at)
         #  THE WINDOW IS THE ACT'S, written where the act is TAKEN: a bid is worth nothing
         #  after the round closes, and the round row says when that is. It moved here from
         #  `on_offer` with #392, which no longer learns which intention was adopted.
         if (keeper := self._keeper()) is not None:
-            keeper.window(intention, open_[0].closes_at)
+            keeper.window(intention, newest.closes_at)
         sensing = self.agent.provider(SENSING)
         reading = (sensing.fresh_reading(self.me.acts_for, self.about)
                    if sensing is not None else None)
@@ -656,8 +660,8 @@ SELECT ?c ?id ?l ?at ?p WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         market = next((m for m in self.markets if m.uri == act.via), None)
         if market is None:
             return False
-        return self._bid(reading.value, market, open_[0].auction_id,
-                         not_after=open_[0].closes_at)
+        return self._bid(reading.value, market, newest.auction_id,
+                         not_after=newest.closes_at)
 
     def _bid(self, moisture: float, market, auction_id: str, not_after=None) -> bool:
         """Size and publish one bid into the round that is open. True if one left.

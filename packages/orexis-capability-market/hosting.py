@@ -263,8 +263,7 @@ SELECT ?p WHERE {{
         rows = bindings(query(f"""
 SELECT ?r WHERE {{
   GRAPH <{beliefs_graph(self.agent.id)}> {{ <{desire.uri}> market:calledOn ?via }}
-  {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ ?via market:hasRound ?r . ?r market:closesAt ?c }}
-    FILTER(?c > NOW()) }}
+  {{ ?via market:hasRound ?r . ?r market:closesAt ?c }}
   UNION {{ GRAPH <{state}> {{ ?via market:hasRound ?r }} }}
 }} LIMIT 1"""))
         return 0.0 if rows else 1.0
@@ -345,7 +344,8 @@ SELECT ?r WHERE {{
         rounds.open_round(self.agent, market.uri, auction_id, quantity_l,
                           self.beliefs.reserve_price_per_l,
                           datetime.now(timezone.utc)
-                          + timedelta(seconds=float(self.beliefs.bid_window_s)))
+                          + timedelta(seconds=float(self.beliefs.bid_window_s)),
+                          arrival=rounds.RECORDED)
         matcher = self.matcher()
         self.log.info("auction %s opened on %s (%s is LOW) — %.2f L, reserve €%.2f, %ss to bid",
                       auction_id, market.local_id, trigger, quantity_l,

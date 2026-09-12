@@ -1086,36 +1086,39 @@ def test_a_losing_bidder_ends_its_round_on_the_hosts_word(make):
 
 
 def test_the_rows_presence_is_the_openness_and_no_rule_asks_the_clock(make):
-    """What the premise reads is the ROW, not the hour.
+    """What the premise reads is the ROW, not the hour — and which rows a reader is handed is
+    the DOOR's to say, by the instant the reader asks about.
 
-    A round row whose `closesAt` has passed is still a round to `market:Acquiring`, because
-    the fact is retracted by the host's word (or, failing that, by the sweep) rather than by a
-    filter inside the rule. That is the point: a rule asking `NOW()` inside a simulated world
-    asks the REAL now, never the instant its act would be taken at, so the comparison was
-    answering a question about a world nobody is in (#598).
+    A round is a graph holding during its period (#620): a rule asking `NOW()` inside a
+    simulated world asks the REAL now, never the instant its act would be taken at (#598),
+    so no rule compares a `closesAt` to anything. The door drops the graph for a reader
+    asking about an instant past the period, and hands it to one asking about an instant
+    inside it — the same rule, two instants, and the rule never learned the time.
     """
     from datetime import datetime, timedelta, timezone
-
+    from functools import partial
     from orexis_capability_market import rounds
     from orexis_capability_market.terms import ACQUIRING
 
     fern = make("fern")
     market = market_of(fern)
-    rounds.open_round(fern, market.uri, "r8", 2.0, 0.4,
-                      datetime.now(timezone.utc) - timedelta(seconds=1))   # closed a second ago
-    assert not rounds.rounds_of(fern)[0].is_open(), "the clock says this round is over"
+    now = datetime.now(timezone.utc)
+    rounds.open_round(fern, market.uri, "r8", 2.0, 0.4, now - timedelta(seconds=1),
+                      opened_at=now - timedelta(seconds=31))   # closed a second ago
 
-    def buying() -> bool:
+    def buying(at=None) -> bool:
         from orexis_agent_deliberation.afforder import affordances_of
         from orexis_agent_progression.ontology import beliefs_graph
         return any(row.action == ACQUIRING for row in affordances_of(
-            fern.beliefs.query, fern.me.uri, fern.desires.query_union, beliefs_graph(fern.id)))
+            partial(fern.beliefs.query_at, at=at), fern.me.uri, fern.desires.query_union,
+            beliefs_graph(fern.id)))
 
-    assert buying(), \
-        "the row stands, so buying is on the menu: the rule reads the fact and not the hour"
+    assert not buying(), "past its period the round reaches no rule, and buying is off the menu"
+    assert buying(at=now - timedelta(seconds=10)), \
+        "asked about an instant inside the period, the same rule reads the row and buying is on"
 
     rounds.close_round(fern, "r8")
-    assert not buying(), "and with the fact gone, so is the row"
+    assert not buying(at=now - timedelta(seconds=10)), "and with the fact gone, so is the row at any instant"
 
 
 def test_the_venue_cools_by_a_fact_and_stops_by_a_timer(host):

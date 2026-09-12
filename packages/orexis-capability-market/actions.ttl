@@ -90,7 +90,7 @@ market:Acquiring
           #  A rule reading a triple asks no clock, in a simulated world or a real one, which
           #  is what a WHERE asking NOW() could never do: the engine answers the real now, not
           #  the instant the act would be taken at (#598).
-          GRAPH $beliefs { ?via market:hasRound ?round . ?round market:closesAt ?closes }
+          ?via market:hasRound ?round . ?round market:closesAt ?closes .
         }""" ;
 
     #  WHAT IT SPENDS — the landing's twin (#466): the bidder's own CEILING, litres times
@@ -268,8 +268,7 @@ market:Offering
           BIND(COALESCE(?stock, ?goodProperty) AS ?about)
           #  AND NO ROUND OF MINE IS OPEN — the row again, and the host retracts its own at
           #  close, so there is nothing to compare (#599).
-          FILTER NOT EXISTS {
-            GRAPH $beliefs { ?via market:hasRound ?open } }
+          FILTER NOT EXISTS { ?via market:hasRound ?open }
           FILTER NOT EXISTS { GRAPH $state { ?via market:hasRound ?imagined } }
           #  AND THE VENUE IS NOT COOLING (#598): the row's presence is the fact, retracted
           #  by a timer when the cooldown runs out and by a sweep where the timer did not
@@ -346,7 +345,7 @@ market:Tendering
     #  ... or not by the time the round closes: a bidder is told the outcome or nothing.
     orexis:lapsesAt """
         SELECT (MAX(?t) AS ?at) WHERE {
-          GRAPH $beliefs { $via market:hasRound ?round . ?round market:closesAt ?t } }""" .
+          $via market:hasRound ?round . ?round market:closesAt ?t }""" .
 
 market:Presenting
     a orexis:Action ;

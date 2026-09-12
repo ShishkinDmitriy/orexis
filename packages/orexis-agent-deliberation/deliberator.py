@@ -422,7 +422,7 @@ class Deliberator:
         #  honoured row for this counterparty, and the actuation boundary judges the vessel
         #  when it pours. Handed back as a one-row plan labelled OBLIGATION, which is not a
         #  search outcome and is not written to the trace: it is the row the obligation names.
-        for row in affordances_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union,
+        for row in affordances_of(self.agent.beliefs.query_at, self.me.uri, self.agent.desires.query_union,
                            beliefs_graph(self.agent.id)):
             if row.for_agent == desire.owed_to:
                 #  A obligation's row, unsized: the host sizes the serve from the claim it holds.
@@ -455,7 +455,7 @@ class Deliberator:
         #  apart by the kernel's own structure — the kernel holds no region to consult.
         if (not desire.is_obligation and not desire.is_epistemic
                 and self.agent.desire_urgency(
-                    desire, self.agent.beliefs.query, STATE_GRAPH) is None):
+                    desire, self.agent.beliefs.query_at, STATE_GRAPH) is None):
             self.log.error(
                 "%s: I hold a stake here and nothing I composed can measure it — every world "
                 "I could reach scores alike, so I am about to conclude that nothing helps from "

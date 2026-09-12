@@ -486,6 +486,23 @@ class Store:
         )
         return json.loads(out.getvalue())
 
+    def query_at(self, sparql: str, substitutions: dict | None = None, *,
+                 at: datetime | None = None) -> dict:
+        """Read as a RULE reads: public knowledge AND this agent's own graphs, at an instant.
+
+        `query` reads public alone, and a rule's SELECT has always been run through the
+        construct door instead (`effects._select`, #472) because a premise may be a record.
+        A round is now a graph of the agent's own holding during its period (#620), so what
+        an availability select or a measure asks about a venue depends on WHEN it asks: the
+        afforder and the urgency choir take this door with the instant a node stands at, and
+        a round that will have closed by then is not there. JSON bindings, as `query`."""
+        out = io.BytesIO()
+        graphs = [ox.NamedNode(g) for g in (*self.public_graphs(at), *self.recorded_graphs(at))]
+        self._store.query(sparql, prefixes=NAMESPACES, default_graph=graphs,
+                          substitutions=_terms(substitutions)).serialize(
+            output=out, format=ox.QueryResultsFormat.JSON)
+        return json.loads(out.getvalue())
+
     def construct(self, sparql: str, substitutions: dict | None = None,
                   at: datetime | None = None):
         """Run a CONSTRUCT and hand back the triples, which are not written anywhere.

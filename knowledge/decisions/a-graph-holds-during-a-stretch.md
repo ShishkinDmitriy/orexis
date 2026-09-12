@@ -278,6 +278,11 @@ per pair, and the cost of a query tracks the number of VALID graphs plus whateve
 charges per graph in a merge. `world/simulation`, the runbook's own bench, and the number that
 matters is what `_begin` and one fork cost with tens of valid graphs against nine.
 
+**The round moved on 2026-09-12** ([a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md)):
+measured first, on #620 — a round row with no period was still open to a search standing
+hours ahead, and a bid was placed into a round that had closed. A round is a graph holding
+from the offer to its close now; readings and the cooldown stay as they are.
+
 **Then, and only with those numbers, whether readings and rounds move.** If they do, three
 ad-hoc horizons collapse into one mechanism and this record gets its second half. If the numbers
 refuse it, the forecast keeps its own graph and the horizons stay where they are, which is a

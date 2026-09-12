@@ -218,6 +218,11 @@ def test_an_irrelevant_lever_is_never_even_asked(monkeypatch):
     query = imaginarium.Imaginarium.query
     monkeypatch.setattr(imaginarium.Imaginarium, "query",
                         lambda self, sparql, *a, **k: (asked.append(sparql), query(self, sparql, *a, **k))[1])
+    #  The afforder asks through the rules' door since a round became a graph with a period
+    #  (#620): counted the same, since what is counted is the precondition text being run.
+    query_at = imaginarium.Imaginarium.query_at
+    monkeypatch.setattr(imaginarium.Imaginarium, "query_at",
+                        lambda self, sparql, *a, **k: (asked.append(sparql), query_at(self, sparql, *a, **k))[1])
 
     def pass_with(disks):
         agent = _driver(monkeypatch, "c0_0", "c1_2")
