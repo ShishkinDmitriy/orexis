@@ -235,12 +235,13 @@ def pursue(agent, desire) -> str | None:
         return None
     if plan is None or not plan.steps:
         return None
-    #  PLACED, NOT IMMEDIATE (#619): a want met at an instant is served by a plan whose first
-    #  step is taken at the instant less the plan's own duration — the keeper holds it there.
-    if desire.holds_at is not None and plan.landing is not None:
-        start = desire.holds_at - timedelta(seconds=plan.landing)
-        if start > datetime.now(timezone.utc):
-            plan = replace(plan, steps=(replace(plan.steps[0], not_before=start),) + plan.steps[1:])
+    #  PLACED AT THE INSTANT THE PASS STOOD AT (#619, #625): a plan found where the present's
+    #  drift stands later than now has its first step held there — the keeper does the
+    #  waiting — and a plan found from the present is taken now, whatever instant the want
+    #  holds at; what waits for the instant then is the step the world places, a claim's
+    #  presenting. Never by subtraction from the deadline.
+    if plan.placed_at is not None and plan.placed_at > datetime.now(timezone.utc):
+        plan = replace(plan, steps=(replace(plan.steps[0], not_before=plan.placed_at),) + plan.steps[1:])
     act = plan.steps[0]
     if keeper is None:
         return None

@@ -350,6 +350,14 @@ market:Tendering
 market:Presenting
     a orexis:Action ;
     rdfs:label "presenting a held claim" ;
+    #  NOT BEFORE THE CLAIM IS USABLE (#625): the host granted a window from the instant the
+    #  bid asked for, and the keeper holds this step on the scheduler until then — a winner
+    #  receives water at a time, and this is the time. A claim with no window is usable now.
+    orexis:readyAt """
+        SELECT ?at WHERE {
+          GRAPH $beliefs { $me market:holdsClaim ?claim .
+                           ?claim market:onVenue $via ; market:claimedAt ?t ; market:usableFrom ?at .
+                           FILTER(?t > $since) } }""" ;
     #  READY when my watch on the property is provably live (#132, #135): the sensor
     #  monitoring my subject for what the lot moves says so, in sensing's words — or when
     #  the host already redeemed the claim for me (a venue with no redeem channel), and

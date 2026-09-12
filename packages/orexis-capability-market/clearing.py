@@ -94,10 +94,14 @@ class Claim(Commitment):
     """
 
     debit: float      # the credit leg
+    #  FROM WHEN it may be presented (#625): the instant the winner's bid asked for, or None
+    #  for a claim usable at once. `exp` is this plus the venue's window.
+    usable_from: float | None = None
 
 
 def issue_claims(trade: Trade, auction_id: str,
-                 redeem_window_s: float | None = None, act_for=None) -> list[Claim]:
+                 redeem_window_s: float | None = None, act_for=None,
+                 wanted_at: dict | None = None) -> list[Claim]:
     """Turn a *validated* trade into per-buyer settlement claims. Caller must have
     confirmed `validate(trade, state).ok` first.
 
@@ -111,9 +115,17 @@ def issue_claims(trade: Trade, auction_id: str,
     the host's lever, so it asks rather than inventing one; None leaves the act unset, which
     is what a matcher test with no venue gets.
     """
-    expires = time.time() + redeem_window_s if redeem_window_s is not None else None
-    return [
-        Claim(
+    #  A WINNER RECEIVES WATER AT A TIME (#625): where its bid asked for an instant, the
+    #  window runs from THAT instant — the claim is usable from it, expires the window after
+    #  it — and the shared expiry above is the case of nobody asking.
+    now = time.time()
+    wanted_at = wanted_at or {}
+    out = []
+    for line in trade.lines:
+        usable_from = wanted_at.get(line.agent)
+        opens = usable_from if usable_from is not None and usable_from > now else now
+        expires = opens + redeem_window_s if redeem_window_s is not None else None
+        out.append(Claim(
             sub=line.agent,
             permits=f"actuate:valve/{line.agent}",
             amount_l=line.qty_l,
@@ -121,10 +133,10 @@ def issue_claims(trade: Trade, auction_id: str,
             auction_id=auction_id,
             jti=uuid4().hex,
             exp=expires,
+            usable_from=usable_from if usable_from is not None and usable_from > now else None,
             step=act_for(line, expires) if act_for is not None else None,
-        )
-        for line in trade.lines
-    ]
+        ))
+    return out
 
 
 def clear(trade: Trade, state: MarketState, auction_id: str,

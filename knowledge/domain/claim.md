@@ -6,6 +6,11 @@ description: The token you win in the auction — a co-signed, single-use commit
 
 # What it is
 
+Since [a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md) a claim is
+water AT A TIME: the bid said when the water was wanted, the claim says from when it may be
+presented (`market:usableFrom`) and until when (`market:usableUntil`), and the presenting is
+what an instant-bound want places at its instant.
+
 The auction result as an object. A **claim** is what you *win*: "bearer is owed N litres of
 water from supplier S this auction." It is distinct from the **access grant** that statically
 binds an agent to a device — the access grant is *granted* (at genesis), the claim is *won*

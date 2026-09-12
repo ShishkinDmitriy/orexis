@@ -92,6 +92,8 @@ CLAIM_L = term("claimL")
 CLAIM_DEBIT = term("claimDebit")
 ON_VENUE = term("onVenue")
 PRESENTED_AT = term("presentedAt")
+USABLE_FROM = term("usableFrom")
+USABLE_UNTIL = term("usableUntil")
 CLAIMED_AT = term("claimedAt")   # the buyer holding, then presenting, a won claim (#132)
 OFFERING = term("Offering")       # the host opening a round
 

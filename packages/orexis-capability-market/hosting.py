@@ -464,9 +464,19 @@ SELECT ?r WHERE {{
                        not_after=(datetime.fromtimestamp(expires, tz=timezone.utc)
                                   if expires is not None else None))
 
+        #  WHEN each bidder wants its water (#625): the instant its bid asked for, as an
+        #  epoch second, handed to clearing so the claim's window runs from it.
+        wanted = {}
+        for a, b in rnd["bids"].items():
+            if b.get("wanted_at"):
+                try:
+                    wanted[a] = datetime.fromisoformat(b["wanted_at"]).timestamp()
+                except (TypeError, ValueError):
+                    self.log.warning("bid from %s carries an unreadable wanted_at %r — ignored", a, b["wanted_at"])
         result = run_auction(offer, bids, state, auction_id=auction_id,
                              match=matcher.propose_match,
-                             redeem_window_s=market.redeem_window_s, act_for=serving)
+                             redeem_window_s=market.redeem_window_s, act_for=serving,
+                             wanted_at=wanted)
         if not result.validation.ok:
             self.log.warning("auction %s RED — clearing rejected: %s",
                              auction_id, result.validation.violations)
@@ -544,6 +554,10 @@ SELECT ?r WHERE {{
         # debt nobody ever demanded.
         #  THE WINDOW IS THE ACT'S: `exp` is its `not_after` on the wire, and a claim that
         #  came back over the wire carries only that; the act it embodies is the one I issued.
+        if claim.usable_from is not None and time.time() < claim.usable_from:
+            self.log.warning("%s presented claim %s before its window opens — refused; the "
+                             "claim stands until then", presenter, jti)
+            return
         if claim.exp is not None and time.time() > claim.exp:
             del self.held[jti]
             self.log.warning("%s presented claim %s after its window closed — refused, and the "
@@ -664,6 +678,11 @@ SELECT ?r WHERE {{
         payload = {"auction_id": auction_id, "jti": claim.jti, "sub": claim.sub,
                    "permits": claim.permits, "amount_l": claim.amount_l,
                    "debit": claim.debit}
+        #  WATER AT A TIME (#625): from when the claim may be presented, and until when.
+        if claim.usable_from is not None:
+            payload["usable_from"] = datetime.fromtimestamp(claim.usable_from, tz=timezone.utc).isoformat()
+        if claim.exp is not None:
+            payload["usable_until"] = datetime.fromtimestamp(claim.exp, tz=timezone.utc).isoformat()
         rows = bindings(self.agent.beliefs.query(_KEY_Q % (claim.sub, "sealingKey")))
         if rows:
             sealed = signing.seal(signing.sealing_public_from_b64(rows[0]["key"]),
