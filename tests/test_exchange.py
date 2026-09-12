@@ -1,7 +1,8 @@
 """A bed's air drifts toward what surrounds it — one link and no physics (#617) — and a cold
 night foreseen derives a want the heater serves, the second half of #619.
 
-The greenhouse states `climate:surroundedBy :outside` and one degree an hour, and says nothing
+The greenhouse states one diffusion node — its air temperature toward the outside at one degree
+an hour — and says nothing
 else about heat. From that the climate package's drift moves the bed toward the outside, and
 says when the bed leaves its region; a grower that foresees six hours derives a want bound at
 the crossing, and the search, judged at that instant, plans the heater and refuses the vent

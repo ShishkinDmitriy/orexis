@@ -153,7 +153,8 @@ A reading already below its region does not fall further — the band below is o
 so it has no width to cross and nothing under it to reach.
 
 **A second package drifts the same way.** The climate package moves a bed's air toward what
-surrounds it — one link, `climate:surroundedBy`, and a rate the world states — in the water
+surrounds it — one `climate:Diffusion` node per property, naming what it follows and how
+fast — in the water
 package's two forms, reading the surroundings as the vent does, from whatever holds at the
 instant the world is asked about
 ([a-drift-toward-the-surroundings-is-one-link-and-no-physics](/decisions/a-drift-toward-the-surroundings-is-one-link-and-no-physics.md)).

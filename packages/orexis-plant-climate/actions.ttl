@@ -210,9 +210,10 @@ climate:Venting
 
 #################  What a bed's air does while nobody heats or vents  #################
 #
-#  THE TRANSFER LINK (#617): a sample exchanges heat with what surrounds it, and the world says
-#  only THAT — `climate:surroundedBy` — and how fast, `climate:degreesPerHour`. No physics: the
-#  bed moves toward the surroundings' reading at the stated rate and stops when it gets there,
+#  THE DIFFUSION LINK (#617): a sample's reading of a property diffuses toward the same property
+#  of what surrounds it, and the world says only THAT — one `climate:Diffusion` node naming the
+#  property, what it follows and how fast. No physics: the reading moves toward the
+#  surroundings' at the stated rate and stops when it gets there,
 #  which is the smallest thing that changes a decision. The direction is the sign of the gap,
 #  read from two readings; the surroundings are read as the vent reads them, from whatever
 #  holds at the instant the world is asked about — a forecast among them (#589).
@@ -225,7 +226,7 @@ climate:Venting
 
 climate:Exchanging
     a orexis:Drift ;
-    rdfs:label "what a bed's air does toward what surrounds it while nobody heats or vents" ;
+    rdfs:label "what a reading does toward the surroundings it diffuses to while nobody acts on it" ;
 
     orexis:crossesAfter """
         SELECT ?subject ?property ?at ?seconds WHERE {
@@ -234,8 +235,8 @@ climate:Exchanging
                      sosa:observedProperty ?property ;
                      sosa:hasSimpleResult ?was ;
                      sosa:resultTime ?at . }
-            FILTER(?property = water:AirTemperature)
-            ?subject climate:surroundedBy ?around ; climate:degreesPerHour ?rate .
+            ?subject climate:diffusion ?d .
+            ?d ssn:forProperty ?property ; climate:toward ?around ; climate:perHour ?rate .
             FILTER(?rate > 0)
             ?out sosa:hasFeatureOfInterest ?around ;
                  sosa:observedProperty ?property ;
@@ -257,12 +258,13 @@ climate:Exchanging
         CONSTRUCT { ?obs ?p ?o } WHERE {
             GRAPH $state {
                 ?obs sosa:hasFeatureOfInterest ?subject ;
-                     sosa:observedProperty water:AirTemperature ;
+                     sosa:observedProperty ?property ;
                      sosa:hasSimpleResult ?was ;
                      ?p ?o }
-            ?subject climate:surroundedBy ?around ; climate:degreesPerHour ?rate .
+            ?subject climate:diffusion ?d .
+            ?d ssn:forProperty ?property ; climate:toward ?around ; climate:perHour ?rate .
             ?out sosa:hasFeatureOfInterest ?around ;
-                 sosa:observedProperty water:AirTemperature ;
+                 sosa:observedProperty ?property ;
                  sosa:hasSimpleResult ?there .
             FILTER(?rate > 0 && $elapsed > 0 && ?there != ?was)
         }""" ;
@@ -273,7 +275,7 @@ climate:Exchanging
         CONSTRUCT {
             ?obs a sosa:Observation ;
                  sosa:hasFeatureOfInterest ?subject ;
-                 sosa:observedProperty water:AirTemperature ;
+                 sosa:observedProperty ?property ;
                  sosa:hasSimpleResult ?now ;
                  sosa:resultTime ?at ;
                  sosa:madeBySensor ?sensor ;
@@ -281,14 +283,15 @@ climate:Exchanging
         } WHERE {
             GRAPH $state {
                 ?obs sosa:hasFeatureOfInterest ?subject ;
-                     sosa:observedProperty water:AirTemperature ;
+                     sosa:observedProperty ?property ;
                      sosa:hasSimpleResult ?was .
                 OPTIONAL { ?obs sosa:madeBySensor ?sensor }
                 OPTIONAL { ?obs sosa:usedProcedure ?how }
             }
-            ?subject climate:surroundedBy ?around ; climate:degreesPerHour ?rate .
+            ?subject climate:diffusion ?d .
+            ?d ssn:forProperty ?property ; climate:toward ?around ; climate:perHour ?rate .
             ?out sosa:hasFeatureOfInterest ?around ;
-                 sosa:observedProperty water:AirTemperature ;
+                 sosa:observedProperty ?property ;
                  sosa:hasSimpleResult ?there .
             FILTER(?rate > 0 && $elapsed > 0 && ?there != ?was)
             BIND(ROUND(($elapsed / 3600.0) * 1000000) / 1000000 AS ?hours)
@@ -301,7 +304,7 @@ climate:Exchanging
 
 climate:ExchangingAcrossBands
     a orexis:Drift ;
-    rdfs:label "what a bed's air known only by its band does toward what surrounds it" ;
+    rdfs:label "what a reading known only by its band does toward the surroundings it diffuses to" ;
 
     #  A reading known only by its band — the world a heating or a venting reaches — leaves the
     #  region toward the surroundings after the region's own width over the rate: optimistic in
@@ -311,22 +314,23 @@ climate:ExchangingAcrossBands
         CONSTRUCT { ?obs ?p ?o } WHERE {
             GRAPH $state {
                 ?obs sosa:hasFeatureOfInterest ?subject ;
-                     sosa:observedProperty water:AirTemperature ;
+                     sosa:observedProperty ?property ;
                      a ?band ;
                      ?p ?o .
                 FILTER NOT EXISTS { ?obs sosa:hasSimpleResult ?any }
             }
             ?band rdfs:subClassOf sensing:InRegion ;
-                  sensing:ofSubject ?subject ; sensing:ofProperty water:AirTemperature ;
+                  sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
                   owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
             ?r owl:onProperty sosa:hasSimpleResult ;
                owl:someValuesFrom/owl:withRestrictions ?facets .
             ?facets rdf:rest*/rdf:first/xsd:minInclusive ?lo .
             ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?hi .
-            ?subject climate:surroundedBy ?around ; climate:degreesPerHour ?rate .
+            ?subject climate:diffusion ?d .
+            ?d ssn:forProperty ?property ; climate:toward ?around ; climate:perHour ?rate .
             FILTER(?rate > 0)
             ?out sosa:hasFeatureOfInterest ?around ;
-                 sosa:observedProperty water:AirTemperature ;
+                 sosa:observedProperty ?property ;
                  sosa:hasSimpleResult ?there .
             FILTER(?there < ?lo || ?there > ?hi)
             BIND((((?hi - ?lo) / ?rate) * 3600) AS ?crossing)
@@ -337,32 +341,33 @@ climate:ExchangingAcrossBands
         CONSTRUCT {
             ?obs a sosa:Observation , ?next ;
                  sosa:hasFeatureOfInterest ?subject ;
-                 sosa:observedProperty water:AirTemperature ;
+                 sosa:observedProperty ?property ;
                  sosa:resultTime ?at .
         } WHERE {
             GRAPH $state {
                 ?obs sosa:hasFeatureOfInterest ?subject ;
-                     sosa:observedProperty water:AirTemperature ;
+                     sosa:observedProperty ?property ;
                      a ?band .
                 FILTER NOT EXISTS { ?obs sosa:hasSimpleResult ?any }
             }
             ?band rdfs:subClassOf sensing:InRegion ;
-                  sensing:ofSubject ?subject ; sensing:ofProperty water:AirTemperature ;
+                  sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
                   owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
             ?r owl:onProperty sosa:hasSimpleResult ;
                owl:someValuesFrom/owl:withRestrictions ?facets .
             ?facets rdf:rest*/rdf:first/xsd:minInclusive ?lo .
             ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?hi .
-            ?subject climate:surroundedBy ?around ; climate:degreesPerHour ?rate .
+            ?subject climate:diffusion ?d .
+            ?d ssn:forProperty ?property ; climate:toward ?around ; climate:perHour ?rate .
             FILTER(?rate > 0)
             ?out sosa:hasFeatureOfInterest ?around ;
-                 sosa:observedProperty water:AirTemperature ;
+                 sosa:observedProperty ?property ;
                  sosa:hasSimpleResult ?there .
             FILTER(?there < ?lo || ?there > ?hi)
             BIND((((?hi - ?lo) / ?rate) * 3600) AS ?crossing)
             FILTER($elapsed >= ?crossing)
             BIND(IF(?there < ?lo, sensing:BelowRegion, sensing:AboveRegion) AS ?side)
             ?next rdfs:subClassOf ?side ;
-                  sensing:ofSubject ?subject ; sensing:ofProperty water:AirTemperature .
+                  sensing:ofSubject ?subject ; sensing:ofProperty ?property .
             BIND($lands AS ?at)
         }""" .

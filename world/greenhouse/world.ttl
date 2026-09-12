@@ -47,7 +47,8 @@
     rdfs:label "the heated bed" ;
     water:servedBy :water_butt ;
     water:driesPerDay 0.04 ; water:litresPerFraction 2.0 ;
-    climate:surroundedBy :outside ; climate:degreesPerHour 1.0 ;
+    climate:diffusion [ a climate:Diffusion ; ssn:forProperty water:AirTemperature ;
+                        climate:toward :outside ; climate:perHour 1.0 ] ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
             ssn:forProperty water:SoilMoisture ;

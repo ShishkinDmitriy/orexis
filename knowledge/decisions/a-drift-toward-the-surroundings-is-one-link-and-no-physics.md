@@ -5,7 +5,8 @@ status: accepted
 timestamp: 2026-09-12T18:00:00Z
 description: >-
   The sovereign's ruling on #617, built. A sample exchanges heat with what surrounds it, and
-  the world says only THAT — `climate:surroundedBy` — and how fast, `climate:degreesPerHour`.
+  the world says only THAT — one `climate:Diffusion` node naming the property, what it
+  follows and how fast.
   The direction is the sign of the gap between two readings, the speed the rate the domain
   states, and the sample stops at the surroundings' reading. The climate package's drifts do
   the rest, in the water package's two forms, and the value form says WHEN the sample leaves
@@ -17,15 +18,19 @@ description: >-
 
 # The claim
 
-**A sample exchanges heat with what surrounds it, and one link says so.** `:bed
-climate:surroundedBy :outside`, and `climate:degreesPerHour 1.0` beside it, is everything the
-greenhouse states about heat. From that the climate package's drift moves the bed's air toward
-the outside's reading at the stated rate while nobody heats or vents, and stops when it gets
-there — the direction is the sign of the gap, read from two readings; the surroundings are read
-as the vent reads them, from whatever holds at the instant the world is asked about, a forecast
-among them ([a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md)).
-No coupling constant, no gap arithmetic, no curve: a heater in another room stops mattering
-because the link is not there, which is a triple rather than a simulation.
+**A sample's reading diffuses toward the same property of what surrounds it, and one link
+per property says so.** `:bed climate:diffusion [ ssn:forProperty water:AirTemperature ;
+climate:toward :outside ; climate:perHour 1.0 ]` is everything the greenhouse states about
+heat — the range's own idiom, a node carrying `ssn:forProperty`, because the rate and the
+property belong together and humidity is then one more node and no new term. The sovereign
+named it: not *surrounded by*, which says containment, but diffusion, which says what moves.
+From that the climate package's drift moves the bed's air toward the outside's reading at the
+stated rate while nobody heats or vents, and stops when it gets there — the direction is the
+sign of the gap, read from two readings; the surroundings are read as the vent reads them, from
+whatever holds at the instant the world is asked about, a forecast among them
+([a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md)). No coupling
+constant, no gap arithmetic, no curve: a heater in another room stops mattering because no node
+points there, which is a triple rather than a simulation.
 
 **Two forms, because a reading is known two ways** — the water package's pattern
 ([effect](/domain/effect.md)). A reading the agent observed carries a value and moves by the
@@ -90,5 +95,5 @@ filters by the instant each rule is asked at.
 - **Two packages claiming one property.** A world installing the simple drift and a precise
   one would put two readings on one node, and nothing at genesis would notice; the gate the
   issue asks for is not built, since no second package exists.
-- **Humidity.** The link is one relation and the rate is temperature's; a second rate is a
-  second term when a world states one.
+- **Humidity.** One more diffusion node, `ssn:forProperty` the humidity, when a world states
+  one; the drifts are generic over the property the node names and need no change.
