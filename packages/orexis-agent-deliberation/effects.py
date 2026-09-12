@@ -87,6 +87,24 @@ def drift(store, rule: dict, elapsed: float, when=None, **bind) -> tuple[list, l
             _run(store, rule.get("retracts"), bind, when))
 
 
+def crossings(store, when=None) -> list[dict]:
+    """When each reading the agent holds leaves the band it is in, by every drift that says
+    (`orexis:crossesAfter`, #619): rows of subject, property, the reading's own instant and
+    the seconds after it. Through the rules' own door, as `lands_after` is — a drift toward the
+    surroundings reads the outside as the vent does, from whatever holds at the instant."""
+    out = []
+    for rule in drifts_of(store):
+        text = rule.get("crosses")
+        if not text:
+            continue
+        for sol in _select(store, text, {"state": STATE_GRAPH}, when):
+            row = {k: (sol[k].value if sol[k] is not None else None)
+                   for k in ("subject", "property", "at", "seconds")}
+            if row["at"] and row["seconds"] is not None:
+                out.append(row)
+    return out
+
+
 def rule_for(store, action: str) -> dict | None:
     """The effect rule an action carries, or None for an action an event adopts.
 

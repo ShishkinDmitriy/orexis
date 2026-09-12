@@ -46,7 +46,7 @@ from .afforder import affordances_of, wants_of
 from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import Raw, bind, bindings
-from .ontology import DELIBERATION
+from .ontology import DELIBERATION, pursued_graph
 from orexis_agent_progression.ontology import (promises_graph, CLASSIFICATION_GRAPH,
                             DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
@@ -304,7 +304,10 @@ class Planner:
         if not added and not retracted:
             node.judged = graph
             return graph
-        fork = self.imaginarium.reached(graph, node.taken + (_AT_INSTANT,), added, retracted)
+        #  NAMED BY THIS NODE'S OWN GRAPH, not its path: a step is scored before its path is
+        #  set, and two judged worlds under one name would be written into each other.
+        fork = self.imaginarium.reached(graph, (Step(action="urn:orexis:at-instant", via=graph),),
+                                        added, retracted)
         self.imaginarium.entailed(fork, added, self._keys)
         node.judged = fork
         return fork
@@ -1302,8 +1305,11 @@ class Planner:
         #  over a want is resolved where the world is and the border is one dump; and as one
         #  rdflib graph, because a cbd walks blank nodes and the carves below want one —
         #  small, a few hundred triples, and per pass for the same reason the imaginarium is.
+        #  And the wants pursued under a root (#618): a derived want POINTS at its root's
+        #  met-test, and a snapshot without the graph it points from has no shape to compile
+        #  for it — the loner masked that, its child judged by sensing's measure instead.
         self._want_graphs = (DESIRE_DERIVED_GRAPH, DESIRE_ASSERTED_GRAPH,
-                             promises_graph(self.agent.id))
+                             promises_graph(self.agent.id), pursued_graph(self.agent.id))
         self.imaginarium.copy_in(self.agent.desires, *self._want_graphs)
         self._shapes = effects.applied((), self.agent.desires.construct(
             f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ "
@@ -1534,7 +1540,8 @@ class Planner:
         #  is exogenous while the result is not — it dries from wherever the plan has left it
         #  — so this is a rule at the node and its answer is part of where the plan stands,
         #  unlike a forecast, which is the same fact in every world (#589).
-        added, retracted = self._drifted(graph, added, retracted, lands or 0.0, node, row, desire)
+        added, retracted = self._drifted(graph, added, retracted, lands or 0.0, node, row, desire,
+                                         apply=True)
         #  WHAT THE PREDICTED READING IS (#576): the bands the domain's entailment asserts on
         #  the node the rule added, asked of the forked world and carried in the diff beside
         #  the number, so a kept world and a step's prediction say the reading's class too.
@@ -1558,7 +1565,8 @@ class Planner:
         step.taken = node.taken + (replace(act, urgency_after=step.urgency, predicts=(adds, retracts)),)
         return step
 
-    def _drifted(self, graph, added, retracted, elapsed: float, node, row, desire):
+    def _drifted(self, graph, added, retracted, elapsed: float, node, row, desire,
+                 apply: bool = False):
         """The step's diff, plus what every declared drift makes true over `elapsed` seconds.
 
         Asked of the world the step REACHED — the graph the imaginarium just forked — so a
@@ -1585,7 +1593,16 @@ class Planner:
             #  exists to prevent.
             dropped = set(gone)
             added = [x for x in added if x not in dropped] + list(more)
-            retracted = list(retracted) + [x for x in gone if x not in set(added)]
+            #  THE WHOLE NODE IT TOOK, type and key included: a retraction is canonicalised
+            #  like an addition, by the node's class and key, and a reading retracted without
+            #  its type is two plain triples that cancel nothing — the old value stayed in the
+            #  diff beside the new one, a world claiming two readings for one key (#619).
+            retracted = list(retracted) + list(gone)
+            if apply:
+                #  INTO THE STEP'S OWN FORK, so the world the next rule reads is the world
+                #  the step's lists say it is; a fork re-made from the lists agreed with them
+                #  and the first materialisation did not.
+                self.imaginarium.amend(graph, more, gone)
         return added, retracted
 
     def _bind(self, desire: Desire | None, node=None, row=None, litres: float | None = None,
@@ -1795,10 +1812,10 @@ def _near(node) -> float:
 #  the other is the search declining work it has proved it does not need.
 TOO_DEAR = object()
 
-#  Two rows that are not on any menu, so the imaginarium can name the worlds they reach (#619):
-#  the present projected to an instant-bound want's start, and a node's world at the instant.
+#  A row that is on no menu, so the imaginarium can name the world it reaches (#619): the
+#  present projected to an instant-bound want's start. A node's world AT the instant is named
+#  by the node's own graph, in `_judged_at`.
 _PROJECTED = Step(action="urn:orexis:projected", via="")
-_AT_INSTANT = Step(action="urn:orexis:at-instant", via="")
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 _AVAILABLE_Q = """SELECT ?available WHERE { ?action a orexis:Action ; orexis:available ?available }"""

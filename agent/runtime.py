@@ -434,13 +434,18 @@ class Agent:
         if since is not None and holds_at > since:
             run = (now - since).total_seconds() / (holds_at - since).total_seconds()
             urgency = max(urgency, min(1.0, max(0.0, run)))
-        state = row.state
+        state, read_at = row.state, row.read_at
         if state == "met":
             #  The newest prediction, from the reading in hand: still crossing by the instant
             #  is unmet; a reading a dose has lifted predicts a later crossing, and that is met.
-            predicted = pursuit.crossing_of(self, root)
-            state = "unmet" if predicted is not None and predicted <= holds_at else "met"
-        return replace(row, holds_at=holds_at, urgency=urgency, state=state)
+            found = pursuit.crossing_row_of(self, root)
+            state = "unmet" if found is not None and found[0] <= holds_at else "met"
+            #  A want nobody's row dates — an asserted one the kernel lifts — takes the instant
+            #  of the reading the crossing was predicted from, which is what a pass for it
+            #  must be clocked from.
+            if read_at is None and found is not None:
+                read_at = found[1]
+        return replace(row, holds_at=holds_at, urgency=urgency, state=state, read_at=read_at)
 
     def _unmet_select(self, want: str, shape: str, entered: bool = False) -> str:
         """The compiled select of an asserted want's shape, once per process: an asserted
