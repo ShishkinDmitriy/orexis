@@ -201,6 +201,9 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 
 # Required only of an agent that can actually act on them: driving a device is what makes a
 # cadence meaningful, so the transport's rules decide whether these are demanded.
+:foresightS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:decimal ;
+    rdfs:label "foresight seconds" ;
+    rdfs:comment "How far ahead a predicted crossing derives a want under one of this agent's stakes (#619): the stake carries it as `orexis:foresees`. Stated by the world, or not at all — an agent saying nothing foresees nothing and plans exactly as before. Revisable by review once a residual says what a good lead is; a plain belief until then." .
 :fastSleepS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
     rdfs:label "fast sleep seconds" ;
     rdfs:comment "Cadence when the agent judges itself in trouble — how closely it watches when worried." .

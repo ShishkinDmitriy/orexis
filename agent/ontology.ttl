@@ -504,6 +504,9 @@ It is not optional, and the reason is arithmetic rather than taste. `sensed_writ
 #  plans against one timeline and verifies against another, and the disagreement surfaces as
 #  false UNMET verdicts — the same failure arriving through the clock instead of the arithmetic.
 
+orexis:crossesAfter a owl:DatatypeProperty ; rdfs:domain orexis:Drift ; rdfs:range xsd:string ;
+    rdfs:label "crosses after" ;
+    rdfs:comment "A SELECT the drift's package declares beside it: for each reading in `$state` this drift moves, `?subject ?property ?at ?seconds` — the reading's own instant and how many seconds after it the reading leaves the band it is in. The crossing, read from the other end (#616, #619): the same arithmetic the drift runs over `$elapsed`, asked as WHEN rather than whether. Read at the belief base by whoever derives a want from a prediction; a drift declaring none predicts no crossing." .
 orexis:landsAfter a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ;
     rdfs:label "lands after" ;
     rdfs:comment """A SELECT yielding `?seconds`: how long after the act until the WORLD CHANGE is complete. A query and not a number, because the duration is a function of the act rather than a property of the lever — a valve open for a two-litre dose is open longer than for a half-litre one, and `min(litres, cap) / calibration` is exactly the arithmetic the effect rule already performs. Its parameters are the effect's own, so one text answers for any act it could be asked about.
@@ -597,6 +600,8 @@ orexis:Always a orexis:Binding ; rdfs:label "always" ;
     rdfs:comment "Every state of the plan is asked, not the end alone — and every tick asks reality again: the loop is the half of always the planner cannot give. The region and the freshness wants are Always." .
 orexis:AtEnd a orexis:Binding ; rdfs:label "at end" ;
     rdfs:comment "The plan's end-world is asked and the road there is not. No shipped derivation writes it yet; it exists so the next achievement-shaped want does not land on Always by default." .
+orexis:At a orexis:Binding ; rdfs:label "at" ;
+    rdfs:comment "Met AT an instant (`orexis:holdsAt`), not by it: a candidate plan's end-world is judged as it will be THEN — every declared drift applied from the plan's last landing to the instant — and a candidate whose last change lands past the instant is late. The binding of a want derived under an Always root from a predicted crossing (#619, an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it): its room is TIME, from `prov:generatedAtTime` to the instant, and the search for it begins where the present's own drift stands at the instant minus the plan's duration. PDDL3's nearest word is hold-after; the root's Always is what holds after." .
 orexis:Within a orexis:Binding ; rdfs:label "within" ;
     rdfs:comment "Met before a deadline, or not met at all: a candidate plan's landing time is held to the room left (`orexis:expiresAt`, read with `orexis:owedAt`). The obligation's binding — a debt's room is time where a stake's is the envelope — and what closes the deadline-is-only-heat seam: a plan that would discharge after expiry is not a plan for this want." .
 
@@ -669,6 +674,12 @@ orexis:presented a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range
 
 orexis:owedAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ;
     rdfs:label "owed at" .
+orexis:holdsAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ;
+    rdfs:label "holds at" ;
+    rdfs:comment "The instant an `orexis:At` want must hold at — a predicted crossing, read from the reading in hand through the drift's own `orexis:crossesAfter`. The keeper holds the plan's first step `progression:notBefore` this instant less the plan's own duration, so acting early is placed rather than immediate (#619)." .
+orexis:foresees a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:decimal ;
+    rdfs:label "foresees" ;
+    rdfs:comment "How far ahead, in seconds, a predicted crossing derives a want under this root. A root stating none derives none from a prediction, so a world that says nothing plans exactly as before; sensing writes it on a stake from the agent's `sensing:foresightS` belief, and an asserted want may state it. The policy of how much lead is too much sits here, beside the want, and not in the kernel (#619)." .
 orexis:expiresAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ;
     rdfs:label "expires at" ;
     rdfs:comment """When the venue stops holding the claim this debt came from — the claim's own `exp`, kept as the debt's. Absent where the market stated no window, and such a debt never becomes urgent, which is right: nobody is waiting on it.

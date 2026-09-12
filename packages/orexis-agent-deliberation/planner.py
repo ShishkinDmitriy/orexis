@@ -80,6 +80,7 @@ class Plan:
     urgency_now: float | None = None
     urgency_after: float | None = None
     cost: float | None = None         # what the plan was scored to spend — a remembered plan's measure (#469)
+    landing: float | None = None      # seconds from the pass's root to its last landing (#619): its duration
     #  WHICH CANDIDATE of the root's menu this plan came through: its first step's action for
     #  a plan the search chained, the remembered plan's own node for a route walked as one
     #  candidate (#469) — what the trace's `deliberation:chose` names, so a reader sees the
@@ -132,6 +133,7 @@ class _Node:
     #  most worlds are scored, weighed and discarded without ever being written out.
     readings: str | None = None
     graph: str = STATE_GRAPH                     # this node's readings, in the imaginarium
+    judged: str | None = None                    # for a want met AT an instant: this world drifted to it (#619)
     taken: tuple = field(default_factory=tuple)   # the STEPS taken to get here, in order
     urgency: float = 1.0
     #  The net diff against the base world, in canonical facts — HALF of where this node is,
@@ -248,7 +250,7 @@ class Planner:
         an obligation, met-or-not over the record — and those ask the imaginarium now too (#481).
         Anything else unmeasured scores 1.0, the not-knowing answer.
         """
-        answer = self.agent.desire_urgency(desire, self.imaginarium.query, self._graph(node))
+        answer = self.agent.desire_urgency(desire, self.imaginarium.query, self._judged_at(node, desire))
         if answer is not None:
             return answer
         #  An avoided-pattern want is binary by its own contract — met 0, unmet 1 — and the
@@ -257,7 +259,7 @@ class Planner:
         #  wants nothing whenever the pattern is held.
         pattern = self._avoided_pattern(desire)
         if pattern is not None:
-            return 1.0 if self._pattern_binds(pattern, self._graph(node)) else 0.0
+            return 1.0 if self._pattern_binds(pattern, self._judged_at(node, desire)) else 0.0
         if self._unmet is not None:
             #  A compiled want nobody measures — the puzzles', an aversion authored as a
             #  shape — is binary by the same contract as a pattern want: unmet 1, met 0.
@@ -279,6 +281,34 @@ class Planner:
     #  where the property stands from `$state` itself, and an actor sizing a step asks
     #  sensing at the node's graph (`Module.size(query, graph, property)`).
 
+    def _judged_at(self, node, desire: Desire) -> str:
+        """The world this node is JUDGED in: its own, or — for a want met AT an instant
+        (#619) — its own drifted to that instant, forked once per node and dropped with the
+        pass. A dose that lands in the region and is dried out of it again by the instant
+        has not kept the want; the root's own reading, drifted, is what makes acting early
+        visible at all, since compared against the present an early dose changes nothing."""
+        if desire.holds_at is None:
+            return self._graph(node)
+        if node.judged is not None:
+            return node.judged
+        graph = self._graph(node)
+        #  THE INSTANT, AND THE INSTANT AFTER IT — hold-after, in PDDL3's word. A crossing is
+        #  the last instant a reading is inside its band (the floor is inclusive), and what
+        #  the want prevents is the first instant outside, so the world is judged one second
+        #  past the instant: a reading that reaches the floor exactly then has not held.
+        elapsed = (desire.holds_at - self._at(node)).total_seconds() + 1.0
+        if elapsed <= 0:
+            node.judged = graph
+            return graph
+        added, retracted = self._drifted(graph, [], [], elapsed, node, None, desire)
+        if not added and not retracted:
+            node.judged = graph
+            return graph
+        fork = self.imaginarium.reached(graph, node.taken + (_AT_INSTANT,), added, retracted)
+        self.imaginarium.entailed(fork, added, self._keys)
+        node.judged = fork
+        return fork
+
     def _met_in(self, node, desire: Desire) -> bool:
         """Whether the desire's OWN shape is satisfied in this world.
 
@@ -299,7 +329,7 @@ class Planner:
         #  force never opens.
         pattern = self._avoided_pattern(desire)
         if pattern is not None:
-            return not self._pattern_binds(pattern, self._graph(node))
+            return not self._pattern_binds(pattern, self._judged_at(node, desire))
         if self._unmet is not None:
             #  A SHAPE-AUTHORED WANT, judged by its compiled violation select (#497): the
             #  shape is positive and universal, the select is its negation as rows, the
@@ -309,7 +339,7 @@ class Planner:
             #  About a millisecond where the judge's reader floors at tens; held to the judge
             #  by parity in tests/test_violation.py.
             return not bindings(self.imaginarium.query_over(
-                self._unmet, *self._invariant_graphs, self._graph(node)))
+                self._unmet, *self._invariant_graphs, self._judged_at(node, desire)))
         shape = self._shape_of(desire)
         if shape is None:
             #  A obligation's goal state is a PATTERN over the record, not a distance (#255): this
@@ -320,7 +350,7 @@ class Planner:
             #  A want with no shape and no property — a CALL (#359) — is met exactly where
             #  whoever measures it says it is: zero urgency in the world being judged. Asked
             #  of the imaginarium at the node's graph, as `_urgency_in` asks.
-            answer = self.agent.desire_urgency(desire, self.imaginarium.query, self._graph(node))
+            answer = self.agent.desire_urgency(desire, self.imaginarium.query, self._judged_at(node, desire))
             if answer is not None:
                 return answer <= 0.0
             return desire.is_met
@@ -329,7 +359,7 @@ class Planner:
         #  the judge is not asked inside the search any more.
         select = violation.unmet_select(shape, self._shape_root(desire))
         return not bindings(self.imaginarium.query_over(
-            select, *self._invariant_graphs, self._graph(node)))
+            select, *self._invariant_graphs, self._judged_at(node, desire)))
 
     def _holds(self, node, subject: str, predicate: str) -> bool:
         """Whether this node's world states anything about `subject` under `predicate`.
@@ -519,10 +549,18 @@ class Planner:
         self._desire_uri = desire.uri
         self._surprise = None
         #  THE PRESENT AMONG THE KEPT WORLDS (#553), else from nothing.
-        resumed = self._resume(desire)
+        #  A WANT MET AT AN INSTANT RESUMES NOTHING (#619): its root is the present projected
+        #  to that instant less the plan's duration, a world that moves with the clock.
+        resumed = desire.holds_at is None and self._resume(desire)
         if not resumed:
+            #  THE CLOCK IS THE PRESENT'S OWN INSTANT for a want met at an instant (#619): the
+            #  reading the crossing was predicted from was taken THEN, and every drift in the
+            #  pass counts from the clock, so a pass clocked later would leave the reading's
+            #  age undrifted and judge the crossing inside. Read before the root, which may
+            #  stand later than the clock.
+            self._clock = (desire.read_at if desire.holds_at is not None and desire.read_at is not None
+                           else datetime.now(timezone.utc))
             here = self._begin(desire)
-            self._clock = datetime.now(timezone.utc)
             root_at = signature.where(here.diff, here.ground)
             self._root, self._nodes, self._by_diff = here, [here], {root_at: here}
             self._seen, self._achieved, self._best, self._bound = {root_at: here.cost}, [], here, None
@@ -536,8 +574,12 @@ class Planner:
                                 here.urgency)
         #  Within-binding wants have ROOM: seconds until the want expires (#472). A candidate
         #  whose last change lands past it is LATE, weighed and refused like a dear one.
-        room = (max(0.0, (desire.expires - datetime.now(timezone.utc)).total_seconds())
-                if desire.expires is not None else None)
+        #  Or AT an instant (#619): a candidate landing past the instant cannot hold at it.
+        deadline = desire.expires if desire.expires is not None else desire.holds_at
+        #  Measured from the PASS'S clock, which every landing in the pass is summed from: a
+        #  fresh read here made a plan placed exactly at its instant a few milliseconds late.
+        room = (max(0.0, (deadline - self._clock).total_seconds())
+                if deadline is not None else None)
         saw_candidate = bool(self._pending)
         self._weighed = [(0, row, None, trace.IRRELEVANT) for row in self._passed_over]
         #  THE OPEN LIST: on a fresh pass the root alone; on a resumed one the kept frontier
@@ -597,7 +639,8 @@ class Planner:
                     #  anything.
                     return self._record(
                         desire,
-                        self._offer(Plan(SATISFIED, step.taken, here.urgency, step.urgency, cost=step.cost, origin=step.origin),
+                        self._offer(Plan(SATISFIED, step.taken, here.urgency, step.urgency, cost=step.cost, origin=step.origin,
+                                         landing=step.landing - here.landing),
                                     desire, step),
                         here.urgency)
                 self._achieved.append(step)
@@ -688,7 +731,8 @@ class Planner:
             won = min(self._achieved, key=lambda s: (s.cost, s.urgency))
             return self._record(
                 desire,
-                self._offer(Plan(SATISFIED, won.taken, here.urgency, won.urgency, cost=won.cost, origin=won.origin),
+                self._offer(Plan(SATISFIED, won.taken, here.urgency, won.urgency, cost=won.cost, origin=won.origin,
+                                 landing=won.landing - here.landing),
                             desire, won),
                 here.urgency)
 
@@ -707,7 +751,8 @@ class Planner:
                                            (), here.urgency, after), here.urgency)
         return self._record(desire, self._offer(
             Plan(EXHAUSTED if not self._met_in(best, desire) else SATISFIED,
-                 best.taken, here.urgency, best.urgency, cost=best.cost, origin=best.origin), desire, best), here.urgency)
+                 best.taken, here.urgency, best.urgency, cost=best.cost, origin=best.origin,
+                 landing=best.landing - here.landing), desire, best), here.urgency)
 
     # --- the cone across passes (#553) ---------------------------------------------------------
 
@@ -861,6 +906,9 @@ class Planner:
 
     def _release(self, node) -> None:
         """Drop this world's graph, keeping the node; the root's readings are never dropped."""
+        if node.judged is not None and node.judged != node.graph:
+            self.imaginarium.drop(node.judged)
+        node.judged = None
         if node is not self._root and node.materialised:
             self.imaginarium.drop(node.graph)
             node.materialised = False
@@ -1357,11 +1405,41 @@ class Planner:
         #  with no disk in it. One query per foreign action per pass is what a truthful
         #  trace costs, against one per node before this.
         here = _Node(graph=STATE_GRAPH)
+        if desire.holds_at is not None:
+            here = self._projected(here, desire)
         here.estimate = self._estimate_in(here, desire)
         here.urgency = self._urgency_in(here, desire)
         self._root = here
         self._at_root(here)
         return here
+
+    def _projected(self, here, desire: Desire):
+        """The root of a pass for a want met AT an instant (#619): the present advanced by
+        every declared drift to the instant less the longest landing on the root's menu — the
+        latest the plan could begin — a node of the same tree reached by nobody choosing,
+        standing at that instant so every step's rule reads the world holding THEN. The
+        present itself where the instant is nearer than any lever's landing."""
+        longest = 0.0
+        for row in self._candidates(here, desire):
+            lands = effects.lands_after(self.imaginarium, row.action, when=self._clock,
+                                        **self._bind(desire, here, row))
+            longest = max(longest, lands or 0.0)
+        lead = (desire.holds_at - self._clock).total_seconds() - longest
+        if lead <= 0:
+            return here
+        added, retracted = self._drifted(STATE_GRAPH, [], [], lead, here, None, desire)
+        if not added and not retracted:
+            here.landing = lead
+            return here
+        fork = self.imaginarium.reached(STATE_GRAPH, (_PROJECTED,), added, retracted)
+        added = list(added) + self.imaginarium.entailed(fork, added, self._keys)
+        root = _Node(graph=fork)
+        root.materialised = True
+        root.landing = lead
+        root.added, root.retracted = list(added), list(retracted)
+        root.diff = signature.advance(signature.EMPTY, signature.facts(added, self._keys),
+                                      signature.facts(retracted, self._keys), self._base_facts)
+        return root
 
     def _at_root(self, here) -> None:
         """What a pass computes AT its root, for a fresh root and a re-rooted one alike
@@ -1716,6 +1794,11 @@ def _near(node) -> float:
 #  Distinct from None, which means the rule would not run: one is a defect worth reporting and
 #  the other is the search declining work it has proved it does not need.
 TOO_DEAR = object()
+
+#  Two rows that are not on any menu, so the imaginarium can name the worlds they reach (#619):
+#  the present projected to an instant-bound want's start, and a node's world at the instant.
+_PROJECTED = Step(action="urn:orexis:projected", via="")
+_AT_INSTANT = Step(action="urn:orexis:at-instant", via="")
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 _AVAILABLE_Q = """SELECT ?available WHERE { ?action a orexis:Action ; orexis:available ?available }"""

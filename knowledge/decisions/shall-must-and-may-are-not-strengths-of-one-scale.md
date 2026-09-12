@@ -383,7 +383,8 @@ which an explicit scope says better. So ruled, and filed as
 
 - **severity keeps TWO values** — `sh:Violation`, law, refused; `sh:Warning`, the operator's
   notice — both claims about *now*, on shapes;
-- **a desire carries `orexis:bindsWhen`** — `orexis:Always`, `orexis:AtEnd`, `orexis:Within` —
+- **a desire carries `orexis:bindsWhen`** — `orexis:Always`, `orexis:AtEnd`, `orexis:Within`,
+  and since #619 `orexis:At`, met at an instant and the instant after it, PDDL3's hold-after —
   (first shipped as `orexis:scope`; renamed in the same PR when the sovereign pressed the
   word: an axis is never a predicate's name here — force has no `orexis:force` — scope's
   everyday reading is what a thing covers rather than when it binds, and the property is

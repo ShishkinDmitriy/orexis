@@ -32,12 +32,14 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import replace
+from datetime import datetime, timedelta, timezone
 
 from .ontology import pursued_graph
 from .planner import SATISFIED
 
 from orexis_agent_progression.execution import carry_out
-from orexis_agent_progression.store import bindings
+from orexis_agent_progression.ontology import STATE_GRAPH
+from orexis_agent_progression.store import bind, bindings
 from orexis_agent_reactive.loop import loop
 
 log = logging.getLogger("pursuit")
@@ -66,11 +68,21 @@ def handed(agent, desire):
     child = child_of(agent, desire.uri)
     if child is None:
         if desire.is_met:
-            return None
-        child = mint(agent, desire.uri)
+            #  MET NOW, AND PREDICTED NOT TO BE (#619): a crossing the root foresees derives a
+            #  want that must hold AT that instant; nothing foreseen is nothing to pursue.
+            instant = foreseen(agent, desire.uri)
+            if instant is None:
+                return None
+            child = mint(agent, desire.uri, holds_at=instant)
+        else:
+            child = mint(agent, desire.uri)
         if child is None:
             return desire
-    return replace(desire, uri=child, derived_from=desire.uri)
+    #  AS THE CONTAINER PRESENTS IT: a want met at an instant carries its instant, its
+    #  time room and the state the newest prediction gives it (`Agent.pursuing`), none of
+    #  which the root's row knows; an at-end want is the root's row under the derived name.
+    presented = next((d for d in agent.pursuing() if d.uri == child and d.holds_at is not None), None)
+    return presented if presented is not None else replace(desire, uri=child, derived_from=desire.uri)
 
 
 def _is_root(agent, want: str) -> bool:
@@ -82,8 +94,61 @@ def child_of(agent, root: str) -> str | None:
     """The want derived under `root` that stands now, or None."""
     rows = bindings(agent.desires.query_union(
         f"SELECT ?c WHERE {{ ?c prov:wasDerivedFrom <{root}> ; a orexis:Desire ; "
-        f"orexis:bindsWhen orexis:AtEnd }} LIMIT 1"))
+        f"orexis:bindsWhen ?b . FILTER(?b IN (orexis:AtEnd, orexis:At)) }} LIMIT 1"))
     return rows[0]["c"] if rows else None
+
+
+def crossing_of(agent, root: str) -> datetime | None:
+    """When the reading a root is about is predicted to leave its band, or None: the
+    earliest instant any declared drift's `orexis:crossesAfter` states for the subject this
+    agent acts for and a property the root is about, read at the belief base. The drift's
+    package owns the arithmetic; this reads the rows."""
+    from . import effects
+    abouts = {r["a"] for r in bindings(agent.desires.query_union(
+        f"SELECT ?a WHERE {{ <{root}> orexis:about ?a }}"))}
+    subject = getattr(agent.me, "acts_for", None)
+    if not abouts or subject is None:
+        return None
+    earliest = None
+    for rule in effects.drifts_of(agent.beliefs):
+        text = rule.get("crosses")
+        if not text:
+            continue
+        try:
+            rows = bindings(agent.beliefs.query(bind(text, state=STATE_GRAPH)))
+        except Exception as exc:                        # a package's select, not the mind's problem
+            log.error("crossesAfter of %s will not run: %s", rule.get("drift"), exc)
+            continue
+        for r in rows:
+            if r.get("subject") != subject or r.get("property") not in abouts:
+                continue
+            if not r.get("at") or r.get("seconds") is None:
+                continue
+            when = datetime.fromisoformat(r["at"]) + timedelta(seconds=float(r["seconds"]))
+            if earliest is None or when < earliest:
+                earliest = when
+    return earliest
+
+
+def foresees_of(agent, root: str) -> float | None:
+    """How far ahead this root derives a want from a prediction, in seconds, or None."""
+    rows = bindings(agent.desires.query_union(
+        f"SELECT ?f WHERE {{ <{root}> orexis:foresees ?f }} LIMIT 1"))
+    return float(rows[0]["f"]) if rows else None
+
+
+def foreseen(agent, root: str) -> datetime | None:
+    """The instant a want derived under `root` must hold at, or None: the predicted
+    crossing, where the root foresees that far ahead."""
+    ahead = foresees_of(agent, root)
+    if ahead is None:
+        return None
+    crossing = crossing_of(agent, root)
+    if crossing is None:
+        return None
+    if (crossing - datetime.now(timezone.utc)).total_seconds() > ahead:
+        return None
+    return crossing
 
 
 def root_of(agent, want: str) -> str | None:
@@ -94,7 +159,7 @@ def root_of(agent, want: str) -> str | None:
     return rows[0]["r"] if rows else None
 
 
-def mint(agent, root: str) -> str | None:
+def mint(agent, root: str, holds_at: datetime | None = None) -> str | None:
     """Derive the want pursued under `root` and write it to the pursued graph. Its name is the
     root's, suffixed, so a second episode of the same root pursues the same node and everything
     keyed by it — the planner, a remembered plan, the trace — finds what it kept. None, and the
@@ -116,10 +181,17 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
     labels = bindings(agent.desires.query_union(
         f"SELECT ?l WHERE {{ <{root}> rdfs:label ?l }} LIMIT 1"))
     label = "pursued: " + (labels[0]["l"] if labels else root.rsplit("#", 1)[-1])
+    #  AT AN INSTANT (#619): bound `orexis:At`, holding at the crossing, its room opening now.
+    binding, timed = "orexis:AtEnd", ""
+    if holds_at is not None:
+        binding = "orexis:At"
+        timed = (f' ; orexis:holdsAt "{holds_at.isoformat()}"^^xsd:dateTime'
+                 f' ; prov:generatedAtTime "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime')
+        label = f"foreseen: {label[len('pursued: '):]} at {holds_at.isoformat(timespec='minutes')}"
     agent.beliefs.update(f"""
 INSERT DATA {{ GRAPH <{pursued_graph(agent.id)}> {{
   <{agent.me.uri}> orexis:holds <{child}> .
-  <{child}> a orexis:Desire ; orexis:bindsWhen orexis:AtEnd ; prov:wasDerivedFrom <{root}> ;
+  <{child}> a orexis:Desire ; orexis:bindsWhen {binding} ; prov:wasDerivedFrom <{root}>{timed} ;
       rdfs:label {json.dumps(label)} .
   {' '.join(pointed)}
 }} }}""")
@@ -168,6 +240,12 @@ def pursue(agent, desire) -> str | None:
         return None
     if plan is None or not plan.steps:
         return None
+    #  PLACED, NOT IMMEDIATE (#619): a want met at an instant is served by a plan whose first
+    #  step is taken at the instant less the plan's own duration — the keeper holds it there.
+    if desire.holds_at is not None and plan.landing is not None:
+        start = desire.holds_at - timedelta(seconds=plan.landing)
+        if start > datetime.now(timezone.utc):
+            plan = replace(plan, steps=(replace(plan.steps[0], not_before=start),) + plan.steps[1:])
     act = plan.steps[0]
     if keeper is None:
         return None

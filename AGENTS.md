@@ -635,7 +635,10 @@ fails if pyshacl ever entails something the closure does not. See
   returned 0 for every world, no error and no empty result, which reads as "already arrived".
   Repeat the preamble inside each branch.
 - **An operation this engine lacks binds NOTHING — it does not fail.** `duration / duration`
-  and `duration * number` return unbound in pyoxigraph, and so does a decimal division whose
+  and `duration * number` return unbound in pyoxigraph, and so does every cast of a duration
+  to a number (`xsd:decimal(?a - ?b)`, measured on 0.5.9: only a dateTime's `HOURS`, `MINUTES`
+  and `SECONDS` bind, so no rule can measure the stretch between two instants, which is why a
+  drift counts the `$elapsed` the kernel hands it), and so does a decimal division whose
   dividend is an exact zero (`0.0 / 0.25`; cast the dividend to `xsd:double`), and so does a
   decimal PRODUCT past the engine's eighteen fractional digits (`0.5 * (0.02 / 0.375)`; round
   the repeating operand to six places first, as every derived number here is written), so a

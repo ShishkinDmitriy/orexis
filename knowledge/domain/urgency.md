@@ -29,6 +29,7 @@ That is the whole job: **a common currency, so the hottest want wins.**
 | an obligation owed to a peer | the room left before its deadline |
 | a property never read | **1.0** — flat |
 | a commitment whose world has not answered yet | **1.0**, while the watch is open |
+| a want met AT an instant, derived from a predicted crossing | the fraction of the stretch from its derivation to the instant that has run — never less than its root's own measure |
 
 The sources differ; the meaning does not. A 0.8 from a deadline and a 0.8 from a dry pot are the
 same claim on the agent's attention, and that equivalence is deliberate rather than a convenience.
@@ -39,7 +40,9 @@ Since the binding axis landed
 and the binding names which room.** An `orexis:Always` want's room is STATE — the survival
 envelope, so its urgency is the instantaneous degree of being off, a state function that moves
 only when the world moves. An `orexis:Within` want's room is TIME — the redeem window, so its
-urgency rises in a frozen world, which is why lapsing is judged by the reader's clock. And not
+urgency rises in a frozen world, which is why lapsing is judged by the reader's clock. An
+`orexis:At` want's room is time too, the stretch to its instant, opened when the crossing was
+foreseen ([root desire](/domain/root-desire.md)). And not
 knowing consumes the whole of either, which is what maximal always meant. One meaning, two
 projections — the stake and the debt formulas were never two ideas.
 

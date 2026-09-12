@@ -66,8 +66,22 @@ convened by day for a dose at night — the walk regresses preconditions in time
 **An instant-bound want is met AT its instant, not by it.** A dose at noon that lands in region
 and drifts out by night has not prevented the night, so the end world of a candidate plan is
 judged with the drift applied from its last landing to the instant. `orexis:Within` means *by* a
-deadline and is refused for this. The value the axis needs is #619's first decision, and PDDL3's
-word for it is `hold-after`.
+deadline and is refused for this. **The value is `orexis:At`** (#619, built): met at the instant
+AND the instant after it, judged one second past `orexis:holdsAt`, because a crossing is the
+last instant a reading is inside an inclusive floor and what the want prevents is the first
+outside — PDDL3's `hold-after`, with the root's Always as what holds after that. Its room is
+the stretch from `prov:generatedAtTime` to the instant. The crossing is the drift's own to
+state, `orexis:crossesAfter` beside it, read from the reading in hand; how far ahead a root acts
+on one is `orexis:foresees`, beside the want, and a root stating none foresees nothing.
+
+**Two things the build found.** The pass for such a want is clocked from the reading's own
+instant, not from now: every drift counts `$elapsed` from the pass's clock, the engine turns
+the stretch between two instants into no number (measured — only `HOURS`, `MINUTES` and
+`SECONDS` of a dateTime bind), so a pass clocked later would leave the reading's age
+undrifted and judge the crossing inside. And a step placed at an instant waits on the clock
+alone — a deadline on the scheduler with nothing to re-ask, taken when it lapses — which is the
+keeper's `notBefore`, honoured for the first time; its patience does not run against a step
+that is waiting for its instant.
 
 # What the sovereign saw, and what was measured
 

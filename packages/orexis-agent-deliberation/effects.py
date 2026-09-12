@@ -56,9 +56,10 @@ SELECT ?rule ?construct ?available ?retracts ?lands ?costs WHERE {
 
 
 _DRIFTS_Q = """
-SELECT ?drift ?construct ?retracts WHERE {
+SELECT ?drift ?construct ?retracts ?crosses WHERE {
   ?drift a orexis:Drift ; sh:construct ?construct .
   OPTIONAL { ?drift orexis:retracts ?retracts }
+  OPTIONAL { ?drift orexis:crossesAfter ?crosses }
 }"""
 
 

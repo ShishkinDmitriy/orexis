@@ -100,6 +100,7 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Desire]:
                 state = "unmet" if value < region.low or value > region.high else "met"
         out.append(ObservedDesire(uri=row["desire"], urgency=urgency, state=state,
                         observed_property=row["property"], value=value,
+                        read_at=item.at if item else None,
                         #  Only a freshness row binds one, which is what makes it the
                         #  discriminator rather than a decoration.
                         instrument=row.get("instrument")))

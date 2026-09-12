@@ -31,7 +31,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 import signal
 
 from rdflib import URIRef
@@ -68,10 +68,12 @@ SELECT ?me ?want ?shape WHERE {
 #  THE WANTS DERIVED UNDER A ROOT (#618): an `orexis:Always` want is never pursued itself, and
 #  while a want derived under it stands the container presents THAT, with the root's own measure.
 _CHILDREN_Q = """
-SELECT ?me ?root ?child WHERE {
+SELECT ?me ?root ?child ?holdsAt ?since WHERE {
   ?me orexis:holds ?child .
-  ?child a orexis:Desire ; orexis:bindsWhen orexis:AtEnd ; prov:wasDerivedFrom ?root .
+  ?child a orexis:Desire ; orexis:bindsWhen ?binding ; prov:wasDerivedFrom ?root .
   ?root a orexis:Desire ; orexis:bindsWhen orexis:Always .
+  FILTER(?binding IN (orexis:AtEnd, orexis:At))
+  OPTIONAL { ?child orexis:holdsAt ?holdsAt ; prov:generatedAtTime ?since }
 }"""
 from orexis_agent_deliberation.deliberator import KEEPING_PICKS, Deliberator
 from orexis_agent_deliberation.desire import Desire, Desires
@@ -346,9 +348,9 @@ class Agent:
         #  A ROOT IS PRESENTED AS THE WANT DERIVED UNDER IT (#618), where one stands: the
         #  root's own row — its measure, its reading, its property — under the derived want's
         #  name, naming the root beside it. The derived want is never lifted on its own.
-        children = {r["root"]: r["child"]
+        children = {r["root"]: r
                     for r in bindings(self.desires.query_union(_CHILDREN_Q, {"me": self.me.uri}))}
-        derived = set(children.values())
+        derived = {r["child"] for r in children.values()}
         for wants in self.ask(DESIRES, now):
             for desire in wants:
                 if desire.uri not in derived:
@@ -410,10 +412,35 @@ class Agent:
             seen[row["want"]] = Desire(uri=row["want"],
                                        urgency=1.0 if violated else 0.0,
                                        state="unmet" if violated else "met")
-        for root, child in children.items():
-            if root in seen:
-                seen[root] = replace(seen[root], uri=child, derived_from=root)
+        for root, r in children.items():
+            if root not in seen:
+                continue
+            seen[root] = replace(seen[root], uri=r["child"], derived_from=root)
+            if r.get("holdsAt"):
+                seen[root] = self._at_instant(seen[root], root, datetime.fromisoformat(r["holdsAt"]),
+                                              datetime.fromisoformat(r["since"]) if r.get("since") else None,
+                                              now)
         return sorted(seen.values(), key=lambda g: -g.urgency)
+
+    def _at_instant(self, row: Desire, root: str, holds_at: datetime, since: datetime | None,
+                    now: datetime | None) -> Desire:
+        """A want met AT an instant, as presented (#619): its room is TIME — the stretch from
+        its derivation to the instant, the fraction run being its urgency, never less than
+        the root's own — and it reads met exactly where the newest prediction says the
+        reading still holds at the instant, unmet where it says it will have crossed."""
+        from orexis_agent_deliberation import pursuit
+        now = now or datetime.now(timezone.utc)
+        urgency = row.urgency
+        if since is not None and holds_at > since:
+            run = (now - since).total_seconds() / (holds_at - since).total_seconds()
+            urgency = max(urgency, min(1.0, max(0.0, run)))
+        state = row.state
+        if state == "met":
+            #  The newest prediction, from the reading in hand: still crossing by the instant
+            #  is unmet; a reading a dose has lifted predicts a later crossing, and that is met.
+            predicted = pursuit.crossing_of(self, root)
+            state = "unmet" if predicted is not None and predicted <= holds_at else "met"
+        return replace(row, holds_at=holds_at, urgency=urgency, state=state)
 
     def _unmet_select(self, want: str, shape: str, entered: bool = False) -> str:
         """The compiled select of an asserted want's shape, once per process: an asserted
