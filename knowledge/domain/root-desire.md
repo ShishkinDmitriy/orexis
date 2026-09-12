@@ -20,10 +20,25 @@ the freshness root, being able to incur obligations the debts root — so the wh
 **forest**, and an agent with no premises has no trees. A ratified root may instead name an
 instance from the start; its position, not its level, is what makes it a root.
 
-**A root is never pursued.** It is law for every search and the premise of what is: the
-wants a search is handed are derived under it — at-end when the root's shape is violated, at
-an instant when a prediction says it will be — and each is gone when met
+**A root is never pursued.** It is the premise of what is: the wants a search is handed are
+derived under it — at-end when the root's shape is violated, at an instant when a prediction
+says it will be — and each is gone when met
 ([an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it](/decisions/an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it.md)).
+
+# What is derived under it
+
+The want a search is handed for a root that reads unmet is a node of its own, bound
+`orexis:AtEnd`, `prov:wasDerivedFrom` the root, POINTING at the root's met-test, avoided state
+and estimate — one owner each — and restating only the root's address, what it is about, which
+is what the menu joins a want by. It is minted by the pursuit road the first time the root
+reads unmet, into the agent's own pursued graph (`deliberation:PursuedGraph`, projected into the
+desire modality like the promises), and named for the root with a suffix, so a second episode
+of the same root pursues the same node and everything keyed by it finds what it kept. While it
+stands the container presents IT in the root's place, carrying the root's own row — its
+measure, its reading, its property — and naming the root, so a keeper's verdict, a bidder's
+lookup and a mark by either name meet the same want. It is withdrawn when its plan finishes, or
+when it reads met with nothing standing for it; a root still unmet derives it again. A met root
+with nothing derived under it is nothing to pursue, and no pass runs for it.
 
 Like the leaves below it, a root is derived, never hand-written; a world may additionally
 ratify one through its asserted desire block, and that is the sovereign speaking rather than

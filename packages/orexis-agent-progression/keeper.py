@@ -1198,7 +1198,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "by"}> ?act 
         is what callers mean by "my dose has not answered": a step held on its action's
         `orexis:doneWhen` (#523) is the same wait inside the keeper and not that, so it is
         left out unless `every` is asked."""
-        prop = f"FILTER(?want = <{want}>)" if want else ""
+        prop = ("FILTER(?want IN (%s))" % ", ".join(f"<{n}>" for n in self._names(want))) if want else ""
         world = "" if every else "FILTER(BOUND(?predicts))"
         rows = bindings(self.agent.intentions.query(f"""
 SELECT ?i ?step ?action ?want ?baseline ?baselineAt ?deadline ?predicts WHERE {{
@@ -1381,7 +1381,8 @@ SELECT ?s ?next ?action ?via ?about ?quantity ?predicts ?precondition WHERE {{ G
         same question `pursuing()` answers the deliberator, asked of the container and never
         of a store: what met means is the want's own (a shape, a measure, a pattern), and the
         ledger knows none of it."""
-        return any(d.state == "met" for d in self.agent.pursuing() if d.uri == want)
+        return any(d.state == "met" for d in self.agent.pursuing()
+                   if d.uri == want or d.derived_from == want)
 
     def _next_of(self, intention_uri: str) -> str | None:
         rows = bindings(self.agent.intentions.query_union(f"""
@@ -1437,6 +1438,19 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
         now = datetime.now(timezone.utc)
         return any(now < w.deadline for w in self.open_expectations(want))
 
+    def _names(self, want: str) -> list[str]:
+        """`want` and every name the ledger may hold it under (#618): the want pursued under
+        it, where `want` is an `orexis:Always` root, or the root it is pursued under. The
+        ledger names the want the search was handed, and a reader — a bidder holding its
+        stake's name, a test, the sovereign — may hold either; both meet the same commitment.
+        Asked of the desire modality by vocabulary alone, since which want is derived under
+        which is deliberation's to say and progression may not import it."""
+        rows = bindings(self.agent.desires.query_union(f"""
+SELECT ?n WHERE {{
+  {{ ?n prov:wasDerivedFrom <{want}> ; orexis:bindsWhen orexis:AtEnd }}
+  UNION {{ <{want}> prov:wasDerivedFrom ?n . ?n orexis:bindsWhen orexis:Always }} }}"""))
+        return [want] + [r["n"] for r in rows if r["n"] != want]
+
     def standing(self, action: str | None = None, want: str | None = None) -> list[Standing]:
         """What stands: adopted and not resolved. The question a deliberator asks first."""
         clauses = [f"?i a <{kernel('Intention')}> ; <{kernel('by')}> ?act ; "
@@ -1447,7 +1461,7 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
         if action:
             clauses.append(f"FILTER(?action = <{action}>)")
         if want:
-            clauses.append(f"FILTER(?want = <{want}>)")
+            clauses.append("FILTER(?want IN (%s))" % ", ".join(f"<{n}>" for n in self._names(want)))
         for term in ("through", "quantity", "forAgent", "notBefore", "notAfter", "predicts",
                      "about", "partOf"):
             clauses.append(f'OPTIONAL {{ ?act <{kernel(term)}> ?{term} }}')

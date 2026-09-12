@@ -87,6 +87,12 @@ class Desire:
     #  governs the urgency, and they are different questions on the desire's own node.
     state: str | None = None
 
+    #  THE ROOT THIS WANT IS DERIVED UNDER (#618), or None for a root and for anything not
+    #  derived from a want. An `orexis:Always` want is never pursued itself: the row the
+    #  container presents in its place carries the root's own measure and names the root
+    #  here, so a mark or a lookup by either name meets the same want.
+    derived_from: str | None = None
+
     #  NO measure field, deliberately, and one briefly existed: a desire does not carry how
     #  its badness is scored, because that is a capability's answer and not the mind's
     #  structure (a-desire-states-its-own-measure). Whoever needs the number asks the choir —
@@ -153,10 +159,14 @@ class Deducer(Store):
 
     def __init__(self, beliefs):
         from orexis_agent_progression.ontology import obligations_graph, promises_graph
+        from .ontology import pursued_graph
 
         super().__init__()
         publics = list(beliefs.public_graphs())
-        records = [beliefs.graph, obligations_graph(beliefs.agent_id), promises_graph(beliefs.agent_id)]
+        #  The records projected in beside the derived wants: the picks, the debts, the
+        #  promises, and the wants pursued under a root (#618) — each a want by the same ruling.
+        records = [beliefs.graph, obligations_graph(beliefs.agent_id), promises_graph(beliefs.agent_id),
+                   pursued_graph(beliefs.agent_id)]
         for iri in publics + records:
             for quad in beliefs.quads(iri):
                 self._store.add(quad)

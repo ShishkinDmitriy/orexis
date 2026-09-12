@@ -151,7 +151,7 @@ def test_a_working_graph_is_the_agents_and_not_carried():
     from orexis_capability_review.graphs import evidence_graph, revisions_graph, summaries_graph
     from orexis_agent_progression.graphs import intentions_graph
     from orexis_agent_progression.ontology import obligations_graph, promises_graph
-    from orexis_agent_deliberation.ontology import remembered_graph
+    from orexis_agent_deliberation.ontology import pursued_graph, remembered_graph
 
     st = genesis_store()
     genesis.classify_own_graphs(st, "fern")
@@ -169,7 +169,7 @@ def test_every_graph_builder_spells_what_its_class_declares():
     from orexis_capability_review.graphs import evidence_graph, revisions_graph, summaries_graph
     from orexis_agent_progression.graphs import intentions_graph
     from orexis_agent_progression.ontology import obligations_graph, promises_graph
-    from orexis_agent_deliberation.ontology import remembered_graph
+    from orexis_agent_deliberation.ontology import pursued_graph, remembered_graph
 
     classes = _per_agent_classes(genesis_store())
     builders = {
@@ -178,6 +178,7 @@ def test_every_graph_builder_spells_what_its_class_declares():
         "http://example.org/orexis/progression#IntentionGraph": intentions_graph,
         "http://example.org/orexis/progression#PromisesGraph": promises_graph,
         "http://example.org/orexis/deliberation#RememberedGraph": remembered_graph,
+        "http://example.org/orexis/deliberation#PursuedGraph": pursued_graph,
         "http://example.org/orexis/review#SummariesGraph": summaries_graph,
         "http://example.org/orexis/review#EvidenceGraph": evidence_graph,
         "http://example.org/orexis/review#RevisionsGraph": revisions_graph,

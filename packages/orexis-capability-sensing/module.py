@@ -654,8 +654,12 @@ WHERE {{ GRAPH <{STATE_GRAPH}> {{
 
     def wants_about(self, observed_property: str, subject_uri: str | None = None) -> list:
         """Every want this agent holds about a property — its stake, if it acts for the
-        subject, and the freshness want of each instrument that reads it."""
-        return [w for w in self.desires()
+        subject, and the freshness want of each instrument that reads it.
+
+        AS THE CONTAINER PRESENTS THEM (#618): while a want derived under a root stands, the
+        agent is pursuing THAT, under its own name, and an actor holding a reading must key
+        its commitment, its watch and its mark on the name the ledger holds."""
+        return [w for w in self.agent.pursuing()
                 if getattr(w, "observed_property", None) == observed_property
                 and (w.is_epistemic or subject_uri in (None, self.me.acts_for))]
 

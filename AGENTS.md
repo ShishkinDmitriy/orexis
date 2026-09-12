@@ -198,6 +198,10 @@ it is a record wearing a bullet.
 - **The present is identified among the root's children, never asserted from one** — a child is
   a prediction and the present is observed, so what execution decides is which imagined world
   the real one landed in, and the cone under the match survives while its siblings die.
+- **An Always want is a root, and a search is never handed one** — what is pursued is derived
+  under it with a binding of its own; and the root is not the law, because a stake's region under
+  never-newly-enter refused the very dose that repairs it: a replaced reading is a new node, so
+  every standing violation re-read as newly entered (#618, measured before it was believed).
 - **Deliberation is on triples, and a number is not special** — how a domain describes its
   world, exact numbers, ranges or classes, is decided inside the domain, and its actions'
   preconditions and effects are described the same way; the core compares triples and

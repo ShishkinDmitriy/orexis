@@ -276,7 +276,9 @@ def test_an_instrument_pointed_at_something_i_do_not_act_for_is_still_wanted_cur
 
     keeper.agent.deliberator.deliberate_on_gaps()
 
-    about = {w.uri: w.observed_property for w in sensing_of(gardener).desires()}
+    #  The ledger names the want the search was handed — the one derived under the root
+    #  (#618) — and the container presents that one, with the property sensing gave it.
+    about = {w.uri: getattr(w, "observed_property", None) for w in gardener.pursuing()}
     watched = {about[s.want].rsplit("#", 1)[-1] for s in keeper.standing()
                if s.action.endswith("Observing")}
     assert "SoilMoisture" in watched, "the probe can be asked, so the look is committed to"
