@@ -90,7 +90,17 @@ market:Acquiring
           #  A rule reading a triple asks no clock, in a simulated world or a real one, which
           #  is what a WHERE asking NOW() could never do: the engine answers the real now, not
           #  the instant the act would be taken at (#598).
-          ?via market:hasRound ?round . ?round market:closesAt ?closes .
+          #  A ROUND OPEN, or a CLAIM HELD and not yet presented (#627): a foreseen need is
+          #  ASKED for on the reading after it is foreseen — the bidder announces it where it
+          #  announces being low — and a host whose stock covers it grants a claim, no round.
+          #  Holding one, buying is available at every instant the claim is: the tender is
+          #  done by it, and the presenting is placed by its window. A want met AT an
+          #  instant is NOT enough on its own: a pass standing at the latest start would
+          #  place the whole plan there, past the round the host may convene now instead.
+          { ?via market:hasRound ?round . ?round market:closesAt ?closes }
+          UNION
+          { $me market:holdsClaim ?claim . ?claim market:onVenue ?via .
+            FILTER NOT EXISTS { ?claim market:presentedAt ?p } }
         }""" ;
 
     #  WHAT IT SPENDS — the landing's twin (#466): the bidder's own CEILING, litres times
@@ -337,11 +347,15 @@ market:Tendering
     a orexis:Action ;
     rdfs:label "tendering a bid into the open round" ;
     #  DONE when a claim on this venue cleared to me since this intention was adopted —
-    #  never a claim left over from an earlier round.
+    #  never a claim left over from an earlier round — OR when I hold one not yet presented,
+    #  whenever it was claimed: the host granted it on my ask before any tender stood (#627).
+    #  A claim the host redeemed for me arrives presented, and is the first kind only.
     orexis:doneWhen """
         SELECT $this WHERE {
           GRAPH $beliefs { $me market:holdsClaim ?claim .
-                           ?claim market:onVenue $via ; market:claimedAt ?at . FILTER(?at > $since) } }""" ;
+                           ?claim market:onVenue $via ; market:claimedAt ?at .
+                           OPTIONAL { ?claim market:presentedAt ?p }
+                           FILTER(!BOUND(?p) || ?at > $since) } }""" ;
     #  ... or not by the time the round closes: a bidder is told the outcome or nothing.
     orexis:lapsesAt """
         SELECT (MAX(?t) AS ?at) WHERE {

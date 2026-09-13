@@ -52,7 +52,9 @@ is the host's `bidWindowS` and `roundCooldownS`, which are private beliefs preci
 bidder cannot time its arrival; `closesAt` is what the offer already says.
 
 **2. `market:Acquiring` is available only while a round is open.** One hop joins the walk:
-`?via market:hasRound ?r`. The row then has the
+`?via market:hasRound ?r` — or, since
+[a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md), a claim held on the
+venue and not yet presented, which a host may grant on an ask with no round. The row then has the
 property every other row has — *a row whose premises cannot hold does not exist* — and three
 things follow without a line of policy:
 

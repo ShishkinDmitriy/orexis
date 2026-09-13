@@ -14,7 +14,9 @@ what an instant-bound want places at its instant.
 The auction result as an object. A **claim** is what you *win*: "bearer is owed N litres of
 water from supplier S this auction." It is distinct from the **access grant** that statically
 binds an agent to a device — the access grant is *granted* (at genesis), the claim is *won*
-(each round). See [authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
+in a round, or issued on an ask the [host](/domain/host.md)'s stock covers with no round at all.
+Held and not yet presented, it is what makes buying available and a tender done. See
+[authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
 
 # Shape
 
@@ -24,7 +26,8 @@ the host's Serving [act](/domain/act.md): this venue, so many litres, for this b
 `exp` — issued with the claim, held by the host, and the act the buyer's presentation asks it
 to take. **The window is the act's**: `exp` is its `not_after` on the wire, the host's redeem
 check reads it, and the buyer's Acquiring act is windowed the same way at the round's close.
-`not_before` exists on the act and nothing writes it — see futures below.
+`not_before` on the act is the placed instant — the planner's, for a plan found from a future
+root — and the presenting is placed by the claim's own window (`orexis:readyAt`).
 
 `sub` (who won), the supplier, `amount_l`, `debit` (the price), `auction_id`, `jti` (single-use),
 `exp`. **Co-signed** by the **host** (`match_sig` — the seller offered it) and

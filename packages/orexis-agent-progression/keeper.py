@@ -1413,11 +1413,20 @@ SELECT ?s ?next ?action ?via ?about ?quantity ?predicts ?precondition WHERE {{ G
         for standing in self.standing(want=want):
             #  Stale at this step and not waiting on anything: a step nobody could take,
             #  standing past the patience, is not progress — pursuit decides afresh and
-            #  `adopt` supersedes it. A held step has a deadline of its own.
-            placed = standing.step.not_before is not None and now < standing.step.not_before
-            if standing.uri not in held and not placed and standing.age_s(now) > self.beliefs.patience_s:
+            #  `adopt` supersedes it. A held step has a deadline of its own, and so does
+            #  one placed at an instant — by the planner (`notBefore`) or by its action
+            #  from the world (`orexis:readyAt`), which is on the scheduler alone.
+            placed = (standing.step.not_before is not None and now < standing.step.not_before) \
+                or standing.uri in self._deadlines
+            waiting = standing.uri in held or placed
+            if not waiting and standing.age_s(now) > self.beliefs.patience_s:
                 continue
-            if self._next_of(standing.uri) is not None:
+            #  A step still to come — or the LAST step waiting on the world (#627): a plan
+            #  at its presenting, held until the watch is live or placed at the claim's
+            #  window, is progress the world has not contradicted, and a search now would
+            #  find buying available on the very claim it is about to present and adopt
+            #  the plan a second time.
+            if self._next_of(standing.uri) is not None or waiting:
                 return standing
         return None
 
