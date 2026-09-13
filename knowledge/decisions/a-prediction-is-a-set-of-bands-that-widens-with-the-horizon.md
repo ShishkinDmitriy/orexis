@@ -90,8 +90,9 @@ fact, and the second is what remains when no step is pending.
 # What follows, in the order it would be built
 
 The mechanism was groomed the same day, once item 1 stood beside the keeper's watch:
-[one-expectation-and-the-reading-is-held-to-it](/decisions/one-expectation-and-the-reading-is-held-to-it.md)
-makes the two one fact and one comparison, and items 2 and 3 are built under it.
+[the-search-reads-predictions-and-computes-none](/decisions/the-search-reads-predictions-and-computes-none.md)
+makes a prediction a graph the package writes and the search reads, the expected next
+observation its first, and items 2 and 3 are built under it (#642, #643, #639, #632).
 
 1. Sensing writes the expected next observation after every reading
    ([#631](https://github.com/ShishkinDmitriy/orexis/issues/631), built): the window from the
