@@ -111,8 +111,16 @@ are the old rendering's names and go with it.
    vocabulary and runner, the domain drifts declared against it and typing their prediction
    with every band it may be in, `orexis:PredictionGraph` and the door, one graph per horizon
    after every reading with the next window first; `orexis:spreadsBy`, sensing's arithmetic
-   and #631's `ExpectedObservation`, `mayBe` and `ExpectationsGraph` retire. The kernel still
-   runs its own drift at forks for this one step, so every world's plans are unchanged.
+   and #631's `ExpectedObservation`, `mayBe` and `ExpectationsGraph` retire, and so do the
+   staleness horizon and its timer — the first prediction's end is the horizon, and a window
+   closing with no reading writes `staleSince`
+   ([a-root-holds-always-and-an-outdated-graph-is-dropped](/decisions/a-root-holds-always-and-an-outdated-graph-is-dropped.md)).
+   The kernel still runs its own drift at forks for this one step, so every world's plans
+   are unchanged. Before it, the world's day
+   ([#646](https://github.com/ShishkinDmitriy/orexis/issues/646),
+   [the-world-states-the-length-of-its-day](/decisions/the-world-states-the-length-of-its-day.md))
+   and the roots authored at genesis ([#644](https://github.com/ShishkinDmitriy/orexis/issues/644)),
+   since every measurement after depends on the first and the child's derivation on the second.
 2. **The search reads predictions and computes none**
    ([#643](https://github.com/ShishkinDmitriy/orexis/issues/643)): the overlay at a node's
    instant, the kernel's drift, projected root and `orexis:Drift` retired, the crossing
@@ -121,7 +129,9 @@ are the old rendering's names and go with it.
    ([#639](https://github.com/ShishkinDmitriy/orexis/issues/639)).
 4. **The reviser wakes on a surprise and a missed window, and on nothing else**
    ([#632](https://github.com/ShishkinDmitriy/orexis/issues/632)).
-5. **The word** ([#640](https://github.com/ShishkinDmitriy/orexis/issues/640)).
+5. **Every want sourced at a time as a graph with a period, and one sweep**
+   ([#645](https://github.com/ShishkinDmitriy/orexis/issues/645)).
+6. **The word** ([#640](https://github.com/ShishkinDmitriy/orexis/issues/640)).
 
 # Seams left open
 

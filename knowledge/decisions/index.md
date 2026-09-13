@@ -105,16 +105,23 @@ The search itself, and the two places a language model is allowed near it.
 * [a-consulted-answer-is-a-premise](/decisions/a-consulted-answer-is-a-premise.md) - What comes back from a model must be premises rather than steps, so a model never authors an act.
 * [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) - Thin BDI: the LLM drives deliberation, so the formal layer becomes load-bearing rather than optional.
 * [there-is-no-bdi-ontology](/decisions/there-is-no-bdi-ontology.md) - FIPA, DOLCE, prov:Plan, WoT TD and hmas surveyed and refused: the mind crosses no trust boundary, and BDI's words are already ours.
+* [a-predicted-number-is-an-interval](/decisions/a-predicted-number-is-an-interval.md) - SUPERSEDED. A number in a possible world has two ends; met is the interval inside the region. Built as PR #575 and refused.
+* [deliberation-is-on-triples-and-a-number-is-not-special](/decisions/deliberation-is-on-triples-and-a-number-is-not-special.md) - The core compares triples and interprets no literal; numbers, ranges or classes are the domain's choice; progression sizes the act.
+
+# The mind — time and prediction
+
+Time in the search: an instant, a stretch, a graph holding during a period, a prediction, and the clock the world keeps.
+
 * [the-future-is-a-cone-and-the-present-is-identified-in-it](/decisions/the-future-is-a-cone-and-the-present-is-identified-in-it.md) - The future is a tree of diffs under the observed present; execution identifies which child the present is in, never asserts one.
 * [a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md) - A class is timeless; the stretch a saying holds during is the graph's, said once and read at the door. The forecast first.
 * [planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md) - One tree of possible worlds, two kinds of edge: chosen ones are searched, happening ones folded in; a look narrows the second.
+* [a-root-holds-always-and-an-outdated-graph-is-dropped](/decisions/a-root-holds-always-and-an-outdated-graph-is-dropped.md) - A root is authored at genesis into a graph with no period; everything sourced at a time has one, and one sweep drops the outdated.
+* [the-world-states-the-length-of-its-day](/decisions/the-world-states-the-length-of-its-day.md) - Two worlds run physics 144 times faster than the agent predicts; a rate per day is in the world's day, stated as a fact.
 * [the-drift-is-sensings-and-its-result-is-predictions](/decisions/the-drift-is-sensings-and-its-result-is-predictions.md) - Sensing runs every drift and writes predictions, graphs holding during windows typed with bands; the core reads them and runs no rule.
 * [a-prediction-is-a-set-of-bands-that-widens-with-the-horizon](/decisions/a-prediction-is-a-set-of-bands-that-widens-with-the-horizon.md) - A prediction is a set of bands widening with the horizon; a state is a graph with a period, an event a fact about its window.
 * [a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md) - A round holds during its period, a claim is water at a time, a host predicts its arrivals, and a plant asks ahead of its crossing.
 * [a-drift-toward-the-surroundings-is-one-link-and-no-physics](/decisions/a-drift-toward-the-surroundings-is-one-link-and-no-physics.md) - A sample exchanges heat with what surrounds it: one link, a stated rate, the sign of the gap, no physics; the drift says when it crosses.
 * [an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it](/decisions/an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it.md) - An Always want is a root and law, never pursued; what is pursued is derived from it, and its binding roots the search.
-* [a-predicted-number-is-an-interval](/decisions/a-predicted-number-is-an-interval.md) - SUPERSEDED. A number in a possible world has two ends; met is the interval inside the region. Built as PR #575 and refused.
-* [deliberation-is-on-triples-and-a-number-is-not-special](/decisions/deliberation-is-on-triples-and-a-number-is-not-special.md) - The core compares triples and interprets no literal; numbers, ranges or classes are the domain's choice; progression sizes the act.
 
 # The market
 

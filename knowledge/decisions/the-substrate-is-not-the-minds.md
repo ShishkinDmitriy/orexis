@@ -66,6 +66,11 @@ spellings `vocabulary.MOVED` carries for volumes older than each move — and no
 
 # Seams left open
 
+- **The length of the world's day.** `ag:timeScale` left with the scenario knobs, rightly; the
+  meaning of a rate stated per day did not, and
+  [the-world-states-the-length-of-its-day](/decisions/the-world-states-the-length-of-its-day.md)
+  makes it a fact of the world the mind reads, from which the stand-ins derive their scale.
+
 - **`device:` is a `part` family package that no part requires.** Every part names it, and it
   names none of them; a world with no hardware at all would still load it, harmlessly, because
   a knowledge-only package costs a merge and nothing else.

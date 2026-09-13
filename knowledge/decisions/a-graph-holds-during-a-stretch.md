@@ -302,6 +302,9 @@ perfectly good outcome and the reason to measure rather than to argue.
   be asked about itself.
 - **Retention.** How long a lapsed graph is kept before it is forgotten is a policy nobody has
   had to state, because nothing lapses today. It belongs beside the history ring's bound.
+  Answered for wants and predictions by
+  [a-root-holds-always-and-an-outdated-graph-is-dropped](/decisions/a-root-holds-always-and-an-outdated-graph-is-dropped.md):
+  they are not history, their verdict is, and one sweep drops them once their end has occurred.
 - **A graph valid in the past.** History is exactly that, and it is currently a ring of diffs
   rather than graphs. Whether the two are one thing is a question this record deliberately does
   not open.
