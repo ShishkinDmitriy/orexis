@@ -80,9 +80,9 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
   [the-drift-is-sensings-and-its-result-is-predictions](/decisions/the-drift-is-sensings-and-its-result-is-predictions.md)
   — the drift is sensing's and its result is predictions the core reads: graphs holding
   during windows, typed with bands, the search overlaying them at a node's instant and
-  running no rule — #646 (the world's day), #644 (roots authored), #642, #643, #639, #632, #645,
+  running no rule — #646 (one timeline, a clock that may run fast), #644 (roots authored), #642, #643, #639, #632, #645,
   #640 in that order, #633 inside #643:
-  [the-world-states-the-length-of-its-day](/decisions/the-world-states-the-length-of-its-day.md),
+  [the-agent-keeps-one-timeline-and-its-clock-may-run-fast](/decisions/the-agent-keeps-one-timeline-and-its-clock-may-run-fast.md),
   [a-root-holds-always-and-an-outdated-graph-is-dropped](/decisions/a-root-holds-always-and-an-outdated-graph-is-dropped.md).
 
 # Working principle

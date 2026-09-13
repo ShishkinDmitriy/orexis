@@ -66,10 +66,11 @@ spellings `vocabulary.MOVED` carries for volumes older than each move — and no
 
 # Seams left open
 
-- **The length of the world's day.** `ag:timeScale` left with the scenario knobs, rightly; the
-  meaning of a rate stated per day did not, and
-  [the-world-states-the-length-of-its-day](/decisions/the-world-states-the-length-of-its-day.md)
-  makes it a fact of the world the mind reads, from which the stand-ins derive their scale.
+- **The world's pace.** `ag:timeScale` left with the scenario knobs, rightly, and it stays a
+  substrate knob: since
+  [the-agent-keeps-one-timeline-and-its-clock-may-run-fast](/decisions/the-agent-keeps-one-timeline-and-its-clock-may-run-fast.md)
+  it paces the agents' clocks as it paces the stand-ins, handed as environment, and the mind
+  never reads it.
 
 - **`device:` is a `part` family package that no part requires.** Every part names it, and it
   names none of them; a world with no hardware at all would still load it, harmlessly, because
