@@ -89,6 +89,12 @@ fact, and the second is what remains when no step is pending.
 
 # What follows, in the order it would be built
 
+The mechanism was groomed the same day, once item 1 stood beside the keeper's watch:
+[the-drift-is-sensings-and-its-result-is-predictions](/decisions/the-drift-is-sensings-and-its-result-is-predictions.md)
+moves the drift into sensing and makes its result predictions the core reads — graphs
+holding during windows, typed with every band the reading may be in — and items 2 and 3
+are built under it (#642, #643, #639, #632).
+
 1. Sensing writes the expected next observation after every reading
    ([#631](https://github.com/ShishkinDmitriy/orexis/issues/631), built): the window from the
    cadence in force and the grace the freshness horizon already uses, the bands from the

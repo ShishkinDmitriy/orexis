@@ -217,6 +217,11 @@ is more urgent set how closely its board is watched. Nothing bids on air tempera
 
 # Seams left open
 
+- **When the root is written.** Deduced at genesis and re-derived at every rebuild was the
+  first form; since
+  [a-root-holds-always-and-an-outdated-graph-is-dropped](/decisions/a-root-holds-always-and-an-outdated-graph-is-dropped.md)
+  the root is authored once, at genesis, into a graph with no period, and the rebuild deduces
+  nothing — the argument here about who works out the region is untouched by that.
 - **A region is one regime.** The limit
   [the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md)
   recorded is unchanged: `ssn-system:inCondition` cannot say which of its conditions qualifies and
