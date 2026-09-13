@@ -77,11 +77,12 @@ surprise is a reading outside whichever the agent is on.
 
 # Related
 
-- [a-drift-says-bands-and-the-core-computes-no-number](/decisions/a-drift-says-bands-and-the-core-computes-no-number.md)
-  — the grooming: the drift stays and says bands, the width arithmetic leaves sensing for the
-  package's rule (#642), and the reading's arrival is compared with the set once, for the
-  keeper, the reviser and staleness alike. The width paragraph above is #631's rendering
-  until #642 lands.
+- [the-drift-is-sensings-and-its-result-is-predictions](/decisions/the-drift-is-sensings-and-its-result-is-predictions.md)
+  — the grooming: sensing runs every drift and writes predictions, one graph per horizon
+  holding during its window, the predicted reading typed with every band it may be in; the
+  core reads them at a node's instant and runs no rule, and the reading's arrival is
+  compared with the first once, for the keeper, the reviser and staleness alike. The words
+  above are #631's rendering until #642 lands.
 - [band](/domain/band.md) — the crisp thing a prediction is made of.
 - [interval](/domain/interval.md) — why the width lives in the domain's measure and never in
   the core.

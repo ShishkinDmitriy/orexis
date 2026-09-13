@@ -77,10 +77,10 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
   a prediction as a set of bands widening with the horizon, an observation as an event
   expected in a window, and the reviser waking on a surprise rather than on a reading —
   #631, #632, #633. Groomed once the first stood beside the keeper's watch:
-  [a-drift-says-bands-and-the-core-computes-no-number](/decisions/a-drift-says-bands-and-the-core-computes-no-number.md)
-  — the drift stays and says bands, no number crosses into the core, the expected next
-  observation is the drift's answer at the window and one comparison at arrival is every
-  verdict — #642, #639, #632, #640 in that order, #633 inside the first.
+  [the-drift-is-sensings-and-its-result-is-predictions](/decisions/the-drift-is-sensings-and-its-result-is-predictions.md)
+  — the drift is sensing's and its result is predictions the core reads: graphs holding
+  during windows, typed with bands, the search overlaying them at a node's instant and
+  running no rule — #642, #643, #639, #632, #640 in that order, #633 inside the second.
 
 # Working principle
 
