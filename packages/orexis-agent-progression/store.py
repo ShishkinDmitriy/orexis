@@ -24,6 +24,7 @@ import io
 import re
 import json
 from datetime import datetime, timezone
+from . import clock
 from pathlib import Path
 from typing import Callable
 
@@ -453,7 +454,7 @@ class Store:
         bounds = self.periods()
         if not bounds:
             return graphs           # nothing states a period: the store it always was
-        when = at or datetime.now(timezone.utc)
+        when = at or clock.now()
         kept = []
         for graph in graphs:
             begins, ends = bounds.get(graph, (None, None))

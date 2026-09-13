@@ -16,6 +16,7 @@ from orexis_agent_progression.ontology import beliefs_graph
 from orexis_agent_progression.store import bindings
 
 from .terms import CALL, CALLED_AT, CALLED_BY, CALLED_ON, NS
+from orexis_agent_progression import clock
 
 _XSD = "http://www.w3.org/2001/XMLSchema#"
 
@@ -37,7 +38,7 @@ def uri_for(venue_uri: str) -> str:
 def call(agent, venue_uri: str, by: str, now: datetime | None = None) -> str:
     """Write (or restate) the call on this venue. Returns its IRI."""
     uri = uri_for(venue_uri)
-    at = (now or datetime.now(timezone.utc)).isoformat()
+    at = (now or clock.now()).isoformat()
     agent.beliefs.update(f"""
 DELETE {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{uri}> ?p ?o }} }}
 WHERE  {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{uri}> ?p ?o }} }} ;

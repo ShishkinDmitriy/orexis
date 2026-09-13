@@ -38,6 +38,7 @@ import logging
 import time
 from collections import deque
 from datetime import datetime, timezone
+from orexis_agent_progression import clock
 
 
 log = logging.getLogger("metrics")
@@ -76,7 +77,7 @@ class Metrics:
         for a human reading a dashboard and must never be parsed; the same contract as
         `progression:becauseOf`, whose projection the first caller is.
         """
-        self._events.append((datetime.now(timezone.utc), kind, text, tags))
+        self._events.append((clock.now(), kind, text, tags))
 
     def take_events(self) -> list[tuple]:
         """Drain the buffer, oldest first. The caller owns what it takes: a reporter whose

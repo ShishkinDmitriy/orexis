@@ -46,6 +46,7 @@ from orexis_agent_progression.store import bindings
 from .beliefs import ACTUATION_PICKS
 from .terms import ACTUATION, DOSING
 from .wiring import actuator_for, actuators_of
+from orexis_agent_progression import clock
 
 SENSING = "http://example.org/orexis/sensing#SensingCapability"  # whoever can look, asked by family
 
@@ -209,7 +210,7 @@ class ActuationModule(Module):
         value = reading.value
         keeper = self.agent.keeper
         if keeper is not None:
-            now = datetime.now(timezone.utc)
+            now = clock.now()
             if any(now < w.deadline for w in keeper.open_expectations(desire.uri)):
                 return False  # my own dose has not answered yet — the #167 guard, rung 2
         litres = self.dose_for(observed_property, value)
@@ -231,7 +232,7 @@ class ActuationModule(Module):
             seeing = None
         lands = effects.lands_after(self.agent.beliefs, DOSING, me=f"<{self.me.uri}>",
                                     subject=f"<{self.me.acts_for}>", litres=repr(float(litres)))
-        not_after = (datetime.now(timezone.utc) + timedelta(seconds=lands + (seeing or 0.0))
+        not_after = (clock.now() + timedelta(seconds=lands + (seeing or 0.0))
                      if lands is not None else None)
         promised = replace(act, quantity=litres, want=desire.uri, not_after=not_after)
         cmd = self.redeem(Commitment(sub=self.me.agent_id, permits="actuate:self",
@@ -349,7 +350,7 @@ SELECT ?source ?p WHERE {{
                 self.agent.beliefs, DOSING, me=f"<{self.me.uri}>",
                 subject=f"<{subject}>", litres=repr(float(claim.amount_l))) if subject else None
             self.pending[cmd.jti] = (
-                time.monotonic() + (cmd.seconds if lands is None else lands) + self.grace_s,
+                clock.monotonic() + (cmd.seconds if lands is None else lands) + self.grace_s,
                 cmd.plant, cmd.ml)
         self.log.info("%s: open %.2fs (~%.0f ml) -> %s", cmd.plant, cmd.seconds, cmd.ml,
                       device.command_topic)
@@ -415,7 +416,7 @@ SELECT ?source ?p WHERE {{
         What this produces is a number, `doses_unconfirmed`, which is the honest thing an agent
         can offer: it does not know whether the water flowed, and it stops pretending it does.
         """
-        now = time.monotonic()
+        now = clock.monotonic()
         for jti in [j for j, (due, _, _) in self.pending.items() if due <= now]:
             _, plant, ml = self.pending.pop(jti)
             self.unconfirmed += 1

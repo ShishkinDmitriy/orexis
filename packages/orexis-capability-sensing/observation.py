@@ -28,6 +28,7 @@ import time
 from . import choir
 from .sensed_writer import SensedWriter
 from .wiring import event_topic_of
+from orexis_agent_progression import clock
 
 
 def _short(uri: str) -> str:
@@ -64,14 +65,14 @@ class Observations:
 
     def reading_recorded(self, sensor) -> None:
         self.readings[sensor.local_id] = self.readings.get(sensor.local_id, 0) + 1
-        self.last_reading_at[sensor.local_id] = time.monotonic()
+        self.last_reading_at[sensor.local_id] = clock.monotonic()
 
     def reading_age_s(self, local_id: str) -> float | None:
         """Seconds since this sensor last delivered. None until it has delivered once — an
         agent that has never heard from its board has a different problem from one whose
         board went quiet, and a number for both would hide the first."""
         at = self.last_reading_at.get(local_id)
-        return None if at is None else time.monotonic() - at
+        return None if at is None else clock.monotonic() - at
 
     def cadence_acked(self, local_id: str, acknowledged_s: int) -> None:
         """The board's own statement of its rhythm (#135), kept for the health series."""
@@ -138,7 +139,7 @@ class Observations:
         used to be stamped independently, seconds of code apart, and a query joining them
         compared two clocks that were only accidentally close.
         """
-        at = at or datetime.now(timezone.utc)
+        at = at or clock.now()
         # A reading is the agent's whole reason to be running, and until now taking one logged
         # NOTHING on the happy path — only a cadence CHANGE said anything, and only when it
         # changed. So an agent receiving a reading every ten seconds and an agent whose board

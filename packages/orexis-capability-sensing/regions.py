@@ -24,6 +24,7 @@ from pathlib import Path
 
 from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
 from orexis_agent_progression.store import bindings
+from orexis_agent_progression import clock
 
 log = logging.getLogger("sensing")
 
@@ -239,7 +240,7 @@ class Gap:
         """Seconds since the sensed side was true, or None for a reading with no timestamp."""
         if self.at is None:
             return None
-        return ((now or datetime.now(timezone.utc)) - self.at).total_seconds()
+        return ((now or clock.now()) - self.at).total_seconds()
 
 
 def gaps_of(desires, beliefs, agent_uri: str, agent_id: str, measure=None) -> dict[str, Gap]:

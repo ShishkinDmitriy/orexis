@@ -51,6 +51,7 @@ from .wiring import bidding_markets_of
 from .beliefs import BIDDING_PICKS
 from .terms import (BIDDING, CLAIM, CLAIMED_AT, CLAIM_DEBIT, CLAIM_ID, CLAIM_L, HOLDS_CLAIM, NS,
                     ON_VENUE, PRESENTED_AT, PRESENTING, SENSING, TENDERING, USABLE_FROM, USABLE_UNTIL)
+from orexis_agent_progression import clock
 
 # What my bids are priced in, found THROUGH MY VENUE AND MY STAKE (#198) rather than by
 # naming any term: the market I bid in is for a source, the source states its good (entailed
@@ -345,7 +346,7 @@ class BiddingModule(Module):
         presenting dropped, its host gone — would have every later tender done by it and
         the presenting placed in the past. The window is the claim's own (`usableUntil`);
         a claim with none is presented the moment it is held, and cannot be left over."""
-        now = datetime.now(timezone.utc).isoformat()
+        now = clock.now().isoformat()
         lapsed = bindings(self.agent.beliefs.query(f"""
 SELECT ?c WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
   <{self.me.uri}> <{HOLDS_CLAIM}> ?c . ?c <{USABLE_UNTIL}> ?until .
@@ -412,7 +413,7 @@ DELETE DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ <{self.me.uri}> <{HOLDS
         rounds.open_round(self.agent, market.uri, auction_id,
                           float(offer.get("quantity_l") or 0.0),
                           float(offer.get("reserve_price_per_l") or 0.0),
-                          datetime.now(timezone.utc)
+                          clock.now()
                           + timedelta(seconds=float(offer.get("closes_in_s") or 0) or 1.0))
         sensing = self.agent.provider(SENSING)
         if sensing is None:
@@ -432,7 +433,7 @@ DELETE DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ <{self.me.uri}> <{HOLDS
         # A stranger's water stays out of scope: no expectation records it, no clause can read
         # it, and #151 is the device-side answer to that half.
         if keeper := self._keeper():
-            now = datetime.now(timezone.utc)
+            now = clock.now()
             if any(now < w.deadline for w in keeper.open_expectations(self._stake_uri())):
                 self.log.info("auction %s: my own dose has not answered yet — ceding, and "
                               "asking for the look that would answer it", auction_id)
@@ -623,7 +624,7 @@ DELETE DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ <{self.me.uri}> <{HOLDS
         keeper = self._keeper()
         if keeper is None:
             return None
-        now = datetime.now(timezone.utc)
+        now = clock.now()
         if any(s.age_s(now) <= keeper.beliefs.patience_s
                for s in keeper.standing(action=PRESENTING, want=self._stake_uri())):
             return 1.0
@@ -651,7 +652,7 @@ DELETE DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ <{self.me.uri}> <{HOLDS
                              self._signed({"jti": claim["id"], "sub": self.me.agent_id}))
             self.agent.beliefs.update(f"""
 INSERT DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
-  <{claim["uri"]}> <{PRESENTED_AT}> "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime }} }}""")
+  <{claim["uri"]}> <{PRESENTED_AT}> "{clock.now().isoformat()}"^^xsd:dateTime }} }}""")
         if keeper := self._keeper():
             #  Held to the band the step predicted (#579); what I add is the number I aimed
             #  the lot at, for the residual review to read against what the world shows.
@@ -811,7 +812,7 @@ SELECT ?c ?id ?l ?at ?p WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         self.log.info("won %.3f L for €%.2f — balance €%.2f", amount, debit, left)
         if (sensing := self.agent.provider(SENSING)) is not None:
             sensing.sense_now()   # the freshest before on record — and the watch it makes live
-        now = datetime.now(timezone.utc).isoformat()
+        now = clock.now().isoformat()
         jti = claim.get("jti") or f"unredeemable-{uuid.uuid4().hex[:8]}"
         #  A VENUE WITH NO REDEEM CHANNEL, or a claim with no id, is one the host redeemed
         #  for me: written as presented, so Presenting has nothing to send and opens the watch.

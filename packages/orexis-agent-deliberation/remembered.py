@@ -39,6 +39,7 @@ from orexis_agent_progression.store import bindings
 from .afforder import affordances_of
 from .ontology import (FOR_WANT, LIFTED, MEASURED_COST, REMEMBERED_AT, REMEMBERED_PLAN,
                        remembered_graph)
+from orexis_agent_progression import clock
 
 log = logging.getLogger("remembered")
 _RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -224,7 +225,7 @@ def lift(agent, want: str, steps: list, cost: float | None) -> str:
 INSERT DATA {{ GRAPH <{graph}> {{
   <{uri}> a <{REMEMBERED_PLAN}> ; <{FOR_WANT}> <{want}> ;
       <{LIFTED}> {listed} ;
-      <{REMEMBERED_AT}> "{datetime.now(timezone.utc).isoformat()}"^^<{_XSD}dateTime>{measured} .
+      <{REMEMBERED_AT}> "{clock.now().isoformat()}"^^<{_XSD}dateTime>{measured} .
 {chr(10).join(blocks)}
 }} }}""")
     log.info("%s: remembered a plan of %d step(s) for %s", agent.id, len(steps),

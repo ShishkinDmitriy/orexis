@@ -56,6 +56,7 @@ from .beliefs import HOSTING_PICKS
 #  a package may not import another's Python.
 from .terms import (ACTUATION, SENSING, SERVING, HOSTING, BID_MATCHING,
                     OFFERING)
+from orexis_agent_progression import clock
 
 
 def _event_topics_q(market_uri: str) -> str:
@@ -427,7 +428,7 @@ SELECT ?r WHERE {{
 
         rounds.open_round(self.agent, market.uri, auction_id, quantity_l,
                           self.beliefs.reserve_price_per_l,
-                          datetime.now(timezone.utc)
+                          clock.now()
                           + timedelta(seconds=float(self.beliefs.bid_window_s)),
                           arrival=rounds.RECORDED)
         matcher = self.matcher()
@@ -639,11 +640,11 @@ SELECT ?r WHERE {{
         # debt nobody ever demanded.
         #  THE WINDOW IS THE ACT'S: `exp` is its `not_after` on the wire, and a claim that
         #  came back over the wire carries only that; the act it embodies is the one I issued.
-        if claim.usable_from is not None and time.time() < claim.usable_from:
+        if claim.usable_from is not None and clock.now().timestamp() < claim.usable_from:
             self.log.warning("%s presented claim %s before its window opens — refused; the "
                              "claim stands until then", presenter, jti)
             return
-        if claim.exp is not None and time.time() > claim.exp:
+        if claim.exp is not None and clock.now().timestamp() > claim.exp:
             del self.held[jti]
             self.log.warning("%s presented claim %s after its window closed — refused, and the "
                              "debt stands unserved", presenter, jti)

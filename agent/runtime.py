@@ -87,6 +87,7 @@ from orexis_agent_progression.scheduler import scheduler
 from orexis_agent_reactive.loop import loop
 from .validate import validate_agent
 from .world import Self, World, load_self, load_world
+from orexis_agent_progression import clock
 
 log = logging.getLogger("agent")
 
@@ -429,7 +430,7 @@ class Agent:
         the root's own — and it reads met exactly where the newest prediction says the
         reading still holds at the instant, unmet where it says it will have crossed."""
         from orexis_agent_deliberation import pursuit
-        now = now or datetime.now(timezone.utc)
+        now = now or clock.now()
         urgency = row.urgency
         if since is not None and holds_at > since:
             run = (now - since).total_seconds() / (holds_at - since).total_seconds()

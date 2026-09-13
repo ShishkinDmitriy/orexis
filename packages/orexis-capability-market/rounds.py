@@ -38,6 +38,7 @@ from orexis_agent_progression.store import bindings
 
 from .terms import (CLOSES_AT, COOLING_UNTIL, HAS_ROUND, LOT_L, NS, RESERVE_PER_L,
                     ROUND, ROUND_ID)
+from orexis_agent_progression import clock
 
 _XSD = "http://www.w3.org/2001/XMLSchema#"
 
@@ -52,7 +53,7 @@ class Round:
     closes_at: datetime
 
     def is_open(self, now: datetime | None = None) -> bool:
-        return (now or datetime.now(timezone.utc)) < self.closes_at
+        return (now or clock.now()) < self.closes_at
 
 
 def _uri(auction_id: str) -> str:
@@ -79,7 +80,7 @@ def open_round(agent, venue_uri: str, auction_id: str, lot_l: float,
     holding from now to `closes_at`. Returns the row's IRI."""
     uri = _uri(auction_id)
     graph = round_graph(agent.id, auction_id)
-    since = (opened_at or datetime.now(timezone.utc)).isoformat()
+    since = (opened_at or clock.now()).isoformat()
     agent.beliefs.update(f"""
 INSERT DATA {{
   GRAPH <{graph}> {{
@@ -119,7 +120,7 @@ def sweep_expired(agent, now: datetime | None = None) -> int:
     agent. The host says when its round is over (#599) and that is what normally ends the row;
     the door already hands nobody a round past its period, so this is hygiene for a close that
     never arrived, a host that stopped, a graph that outlived a restart. Returns how many went."""
-    at = now or datetime.now(timezone.utc)
+    at = now or clock.now()
     mine = f"{_ROUNDS}{agent.id}/"
     gone = [g for g, (_, end) in agent.beliefs.periods().items()
             if g.startswith(mine) and end is not None and at >= end]
@@ -139,7 +140,7 @@ def sweep_cooled(agent, now: datetime | None = None) -> int:
     """Retract every cooling row whose horizon has passed — the backstop, as `sweep_expired`
     is for a round. A timer retracts the row when the cooldown runs out; a process that
     restarted holds the row and no timer, and this is what covers that."""
-    at = now or datetime.now(timezone.utc)
+    at = now or clock.now()
     rows = bindings(agent.beliefs.query(f"""
 SELECT ?v ?until WHERE {{ GRAPH <{beliefs_graph(agent.id)}> {{
   ?v <{COOLING_UNTIL}> ?until }} }}"""))
@@ -173,7 +174,7 @@ def convened(agent, venue_uri: str, cooldown_s: float, now: datetime | None = No
     `?may <= NOW()` while the term named the instant instead of the state. Replaced, never
     accumulated.
     """
-    until = (now or datetime.now(timezone.utc)) + timedelta(seconds=float(cooldown_s))
+    until = (now or clock.now()) + timedelta(seconds=float(cooldown_s))
     agent.beliefs.update(f"""
 DELETE {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{COOLING_UNTIL}> ?was }} }}
 WHERE  {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{COOLING_UNTIL}> ?was }} }} ;

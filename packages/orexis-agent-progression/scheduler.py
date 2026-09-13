@@ -24,6 +24,7 @@ import heapq
 import itertools
 import logging
 import threading
+from . import clock
 import time
 
 from orexis_agent_reactive.loop import Loop, loop
@@ -61,7 +62,9 @@ class Scheduler:
 
     def at(self, delay_s: float, callback) -> Entry:
         """Enqueue `callback` onto the loop `delay_s` from now. Returns the entry, to cancel."""
-        entry = Entry(time.monotonic() + max(0.0, float(delay_s)), callback)
+        #  THE ONE CONVERSION (the-agent-keeps-one-timeline-and-its-clock-may-run-fast): a
+        #  delay is in the agent's seconds, and the sleep is real seconds over the pace.
+        entry = Entry(time.monotonic() + clock.real_delay(delay_s), callback)
         with self._cv:
             if self._stopped:
                 raise RuntimeError(f"{self.name}: stopped, and would never land this")

@@ -29,6 +29,7 @@ from agent.module import Module
 from orexis_agent_progression.ontology import OREXIS, obligations_graph
 from orexis_agent_progression.store import bindings
 from .terms import AMOUNT_L, DISCHARGED_AT, FOR_CLAIM, OWED_AT, OWED_FROM, OWED_TO, PRESENTED
+from orexis_agent_progression import clock
 
 #  What I owe, as rows — the obligation branch of what used to be one shipped `desires.rq` for every
 #  kind of want. The stakes and the freshness wants went to sensing with the region
@@ -147,7 +148,7 @@ class Ower(Module):
                 <{FOR_CLAIM}> "{claim_jti}" ;
                 <{PRESENTED}> false ;{amount}
                 <{OREXIS}unmetWhen> [ <{_SH_SELECT}> {json.dumps(_unmet(claim_jti))} ] ;
-                <{OWED_AT}> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{opens}{expiry} }} }}""")
+                <{OWED_AT}> "{clock.now().isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{opens}{expiry} }} }}""")
         #  A debt arriving at runtime is a want arriving at runtime: the record above is the
         #  belief base's, and the desire modality is RECOMPUTED to hold it — the same
         #  record-then-rebuild order a re-pick follows, because recomputation is the only way
@@ -177,7 +178,7 @@ class Ower(Module):
         stays in its ledger."""
         graph = obligations_graph(self.agent.id)
         self.agent.beliefs.update(f"""INSERT {{ GRAPH <{graph}> {{
-                ?o <{DISCHARGED_AT}> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
+                ?o <{DISCHARGED_AT}> "{clock.now().isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
             WHERE {{ GRAPH <{graph}> {{ ?o <{FOR_CLAIM}> "{claim_jti}" .
                      FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?done }} }} }}""")
         self.agent.desires.rebuild()   # a paid debt is history, and the want is no longer implied
@@ -239,7 +240,7 @@ SELECT ?o ?jti WHERE {{ GRAPH <{graph}> {{ ?o <{FOR_CLAIM}> ?jti .
         now, so a debt cannot be maximally hot and still count as open because two clocks
         disagreed.
         """
-        now = now or datetime.now(timezone.utc)
+        now = now or clock.now()
         out = []
         for row in bindings(self.agent.desires.query_union(
                 _DUTIES_Q % obligations_graph(self.agent.id))):

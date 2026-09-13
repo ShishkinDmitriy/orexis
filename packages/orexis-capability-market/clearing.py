@@ -20,6 +20,7 @@ from uuid import uuid4
 from orexis_agent_progression.commitment import Commitment
 
 from .trade import EPS, MarketState, Trade
+from orexis_agent_progression import clock
 
 
 @dataclass
@@ -118,7 +119,7 @@ def issue_claims(trade: Trade, auction_id: str,
     #  A WINNER RECEIVES WATER AT A TIME (#625): where its bid asked for an instant, the
     #  window runs from THAT instant — the claim is usable from it, expires the window after
     #  it — and the shared expiry above is the case of nobody asking.
-    now = time.time()
+    now = clock.now().timestamp()
     wanted_at = wanted_at or {}
     out = []
     for line in trade.lines:

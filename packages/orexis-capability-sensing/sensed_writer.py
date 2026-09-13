@@ -40,6 +40,7 @@ from datetime import datetime, timezone
 
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import Store
+from orexis_agent_progression import clock
 
 
 def _slug(uri: str) -> str:
@@ -82,7 +83,7 @@ class SensedWriter:
         # per MESSAGE and hands the same string to every value that message carried, so two
         # readings from one 40-bit frame share a `sosa:resultTime` instead of differing by
         # however long the loop took. The fallback is for a caller with no message in hand.
-        ts = ts or datetime.now(timezone.utc).isoformat()
+        ts = ts or clock.now().isoformat()
         # The feature this observation is OF (#98): the patch the probe sits in, where one is
         # stated — sosa:Sample is the word for a representative piece of something not fully
         # accessible, and a pot's soil is exactly that — or the subject itself, which is the

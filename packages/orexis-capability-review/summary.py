@@ -37,6 +37,7 @@ from datetime import datetime, timezone
 from orexis_agent_progression.store import Store, bindings, decimal
 
 from .graphs import summaries_graph
+from orexis_agent_progression import clock
 
 # How many completed windows an agent keeps behind the one it is filling. Constant, so the
 # belief base stays a fixed size — and more than one, so a rule can tell "steady since I last
@@ -124,7 +125,7 @@ class Summaries:
         extra round trip costs nothing measurable, and the arithmetic being visible in Python is
         worth more than a shorter query nobody can check by eye.
         """
-        at = ts or datetime.now(timezone.utc).isoformat()
+        at = ts or clock.now().isoformat()
         node = summary_uri(subject_uri, observed_property)
         held = self._read(node)
 
