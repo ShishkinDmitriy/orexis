@@ -60,6 +60,17 @@ at all — and why that does not let a host wriggle out of one — is
 What matters to the role is the direction of the obligation: the claim is against the host, so
 the host is the one who cannot treat delivery as optional.
 
+# It grants on an ask, and convenes under scarcity
+
+A participant that foresees its crossing asks for a dose AT an instant, and the host answers
+from its stock before it answers with a round: where what it holds, less what it already owes
+to holders whose windows open by then, covers the ask inside its vessel's region, it grants a
+[claim](/domain/claim.md) usable from that instant and owes it like any won one; where it does
+not, it convenes a [round](/domain/round.md), as a LOW convenes one. The round is the allocation
+under scarcity and not the only road to water
+([a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md)). State still opens
+rounds: an ask the stock cannot cover is state.
+
 # What it is not
 
 **Not the [venue](/domain/venue.md).** The venue is the standing structure; hosting is what an agent does with one.

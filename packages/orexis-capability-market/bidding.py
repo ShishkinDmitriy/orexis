@@ -123,6 +123,7 @@ class BiddingModule(Module):
     def __init__(self, agent):
         super().__init__(agent)
         self.markets = bidding_markets_of(agent.beliefs.query, self.me.uri)
+        self._asked: set = set()          # (want, instant) asked for ahead (#627)
         self.beliefs = agent.desires.read(BIDDING_PICKS)
         #  THE WALLET IS A BELIEF (#395): what is left lives in this agent's own graph, so a
         #  restart resumes with what it has rather than with what it was given.
@@ -335,7 +336,26 @@ class BiddingModule(Module):
         lost, a host that died mid-round, a row that outlived a restart. A bidder must not
         believe a round open for ever, and its own `closesAt` is the horizon that says when
         to stop (#398)."""
+        self._sweep_lapsed_claims()
         return rounds.sweep_expired(self.agent)
+
+    def _sweep_lapsed_claims(self) -> int:
+        """A claim whose window closed unpresented is no longer held (#627). Holding one is
+        what makes buying available and a tender done, so a claim left over — its
+        presenting dropped, its host gone — would have every later tender done by it and
+        the presenting placed in the past. The window is the claim's own (`usableUntil`);
+        a claim with none is presented the moment it is held, and cannot be left over."""
+        now = datetime.now(timezone.utc).isoformat()
+        lapsed = bindings(self.agent.beliefs.query(f"""
+SELECT ?c WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
+  <{self.me.uri}> <{HOLDS_CLAIM}> ?c . ?c <{USABLE_UNTIL}> ?until .
+  FILTER NOT EXISTS {{ ?c <{PRESENTED_AT}> ?p }}
+  FILTER(?until < "{now}"^^xsd:dateTime) }} }}"""))
+        for row in lapsed:
+            self.log.info("claim %s lapsed unpresented — no longer held", row["c"].rsplit("_", 1)[-1])
+            self.agent.beliefs.update(f"""
+DELETE DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ <{self.me.uri}> <{HOLDS_CLAIM}> <{row["c"]}> }} }}""")
+        return len(lapsed)
 
     @contributes(SUBSCRIPTIONS)
     def subscriptions(self) -> list[str]:
@@ -462,11 +482,43 @@ class BiddingModule(Module):
         Matching on the subject alone meant that on a pot with two sensors, whichever reported
         first won the race, and a temperature could be submitted as a bid on soil moisture.
         """
+        if subject_uri == self.me.acts_for and observed_property == self.about:
+            self._ask_ahead(value)
         if not self.pending or subject_uri != self.me.acts_for:
             return
         if observed_property != self.about:
             return
         self.submit(value)
+
+    def _ask_ahead(self, value: float) -> None:
+        """A crossing foreseen is a dose ASKED for at an instant (#627, a-claim-is-water-at-a-time):
+        where the want about my property is one met AT an instant — derived under my stake
+        from a predicted crossing — announce it where I announce being low, with the litres a
+        bid would be sized to and the instant I intend to present; once per want and instant.
+        The host answers with a claim where its stock covers the ask at that instant, or
+        convenes a round where it does not; either is what my tender is then done by."""
+        want = self._want()
+        holds_at = getattr(want, "holds_at", None)
+        if want is None or holds_at is None:
+            return
+        key = (want.uri, holds_at.isoformat(timespec="seconds"))
+        if key in self._asked:
+            return
+        litres = self.qty_for(self.about, value)
+        if not litres:
+            return
+        topic = next((r["t"] for r in bindings(self.agent.beliefs.query(
+            f"SELECT ?t WHERE {{ <{self.me.uri}> mqtt:eventTopic ?t }} LIMIT 1"))), None)
+        if not topic:
+            return
+        for market in self.markets:
+            wanted = self._presenting_instant(holds_at, market, litres)
+            self.log.info("asking for %.3f L at %s — foreseen for %s", litres,
+                          wanted.isoformat(timespec="seconds"), want.uri.rsplit("#", 1)[-1])
+            self.publish(topic, {"agent": self.me.agent_id, "subject": self.me.acts_for,
+                                 "property": self.about, "asks": litres,
+                                 "wanted_at": wanted.isoformat()})
+        self._asked.add(key)
 
     def on_close(self, auction_id: str) -> None:
         """The host says its round is over (#599), and that ends it for me.
@@ -656,6 +708,12 @@ SELECT ?c ?id ?l ?at ?p WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         """
         if act.about != self.about:
             return False
+        #  A CLAIM HELD on this venue and not yet presented (#627) — granted on my ask, with
+        #  no round — is what this tender is done by: there is nothing to bid, the step is
+        #  taken, and the keeper's hold on `doneWhen` answers at once from the fact.
+        if (held := self._claim_on(act.via)) is not None and not held["presented"]:
+            self.log.info("holding claim %s on this venue already — nothing to tender", held["id"])
+            return True
         #  THE ROUND IS THE FACT, read off the row's own lever (#358): the row exists only
         #  while one is open on that venue, so this is a lookup and never a wait. `pending`
         #  survives only as "I asked for a look for this round" — the actor's own bookkeeping,
@@ -771,3 +829,14 @@ INSERT DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
   <{NS}claim_{jti}> a <{CLAIM}> ; <{CLAIM_ID}> "{jti}" ; <{CLAIMED_AT}> "{now}"^^xsd:dateTime ;{redeemed}{window}
       <{CLAIM_L}> "{amount}"^^xsd:decimal ; <{CLAIM_DEBIT}> "{debit}"^^xsd:decimal ;
       <{ON_VENUE}> <{market.uri}> . }} }}""")
+        #  GRANTED ON MY ASK, with nothing standing for the want (#627): nothing is waiting on
+        #  this fact, so the mind is woken — buying is available while I hold a claim, and
+        #  the pass plans the presenting, placed by the claim's window. A plan standing is
+        #  left to the keeper, which advances its tender on the fact as it always has.
+        from orexis_agent_deliberation import reviser
+
+        keeper = self._keeper()
+        stake = self._stake()
+        if (not redeemed and stake is not None
+                and not (keeper is not None and keeper.standing(want=stake.uri))):
+            reviser.wake_for(self.agent, stake)

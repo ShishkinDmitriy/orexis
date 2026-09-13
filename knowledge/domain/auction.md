@@ -36,7 +36,9 @@ which they take turns.
 
 1. **It condenses.** A participant announces it is in trouble — a **band**, `LOW`, its own
    judgement about its own sensed state — and the host convenes. Scarcity is the trigger, not a
-   schedule and not an operator. A cooldown stops a flapping participant from spamming the
+   schedule and not an operator; and a participant that asks AHEAD, for a dose at an instant
+   its foreseen crossing names, is answered from stock first — the [host](/domain/host.md)
+   convenes only where the asks exceed what it will hold by then. A cooldown stops a flapping participant from spamming the
    market, and a host with an auction already open does not open a second.
 2. **It announces its terms.** The offer carries the [lot](/domain/lot.md), the reserve, the deadline and
    `matches_by`. Terms travel with the invitation rather than being discoverable, and

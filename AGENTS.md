@@ -217,6 +217,14 @@ it is a record wearing a bullet.
   under it with a binding of its own; and the root is not the law, because a stake's region under
   never-newly-enter refused the very dose that repairs it: a replaced reading is a new node, so
   every standing violation re-read as newly entered (#618, measured before it was believed).
+- **A round is the allocation under scarcity, and what makes buying available is a fact that
+  holds at the instant the search stands at** — a host whose stock covers an ask grants a
+  claim with no round, and a claim held, unlike a round, holds at every instant, so the plan
+  is placed at the latest start; Acquiring on a want's instant alone placed the plan past the
+  round a scarce host convenes now, and was refused.
+- **A plan waiting at its last step is in progress** — held or placed, the world has not
+  answered, and a search there found buying available on the very claim the plan was about
+  to present and adopted it twice; only the round's close had hidden that.
 - **Deliberation is on triples, and a number is not special** — how a domain describes its
   world, exact numbers, ranges or classes, is decided inside the domain, and its actions'
   preconditions and effects are described the same way; the core compares triples and

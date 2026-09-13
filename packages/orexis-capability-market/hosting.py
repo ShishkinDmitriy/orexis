@@ -43,7 +43,7 @@ from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
 from orexis_agent_progression.act import Step
-from orexis_agent_progression.ontology import WORLD_GRAPH
+from orexis_agent_progression.ontology import WORLD_GRAPH, obligations_graph
 from orexis_agent_progression.store import bindings
 from assembly.contribute import contributes
 
@@ -215,6 +215,9 @@ SELECT ?p WHERE {{
         The cooldown, the open round and the dry vessel are the Offering action's premises
         now, not checks here.
         """
+        if event.get("asks") is not None and event.get("wanted_at"):
+            self.on_ask(market, event)
+            return
         if event.get("band") != "LOW":
             return
         about = self.about.get(market.uri)
@@ -222,6 +225,81 @@ SELECT ?p WHERE {{
             return
         calls.call(self.agent, market.uri, event.get("agent", "?"))
         self._pursue_calls(market)
+
+    def on_ask(self, market, ask: dict) -> None:
+        """A participant asked for a dose AT an instant (#627): grant it where my stock covers
+        the ask at that instant — what I hold, less what I already owe to holders whose
+        windows open by then, less the ask, still inside my vessel's region — and convene a
+        round where it does not. The auction is the allocation under scarcity, not the only
+        road to water; a claim granted is water at a time, a debt in my ledger, and an
+        arrival my vessel's drift reads."""
+        who = ask.get("agent")
+        if who not in self.participants[market.uri]:
+            self.log.warning("ask from %s, who does not bid in this market — ignored", who)
+            return
+        about = self.about.get(market.uri)
+        if about and ask.get("property") not in about:
+            return
+        try:
+            litres = float(ask["asks"])
+            wanted_at = datetime.fromisoformat(ask["wanted_at"])
+        except (TypeError, ValueError, KeyError):
+            self.log.warning("ask from %s is unreadable: %r — ignored", who, ask)
+            return
+        if litres <= 0:
+            return
+        if self._covers(market, litres, wanted_at):
+            self._grant(market, who, litres, wanted_at)
+            return
+        self.log.info("%s asks %.3f L at %s and my stock will not cover it — a round",
+                      who, litres, wanted_at.isoformat(timespec="seconds"))
+        calls.call(self.agent, market.uri, who)
+        self._pursue_calls(market)
+
+    def _covers(self, market, litres: float, wanted_at: datetime) -> bool:
+        """Whether my vessel, less what I owe by `wanted_at`, less `litres`, stays inside its
+        region — the same arithmetic the vessel's drift runs, asked of the ledger now."""
+        stock = self._stock_of(market)
+        if stock is None:
+            return False
+        rows = bindings(self.agent.beliefs.query(f"""
+SELECT (SUM(?a) AS ?owed) WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
+  ?debt orexis:forClaim ?jti ; orexis:amountL ?a ; orexis:owedAt ?issued .
+  OPTIONAL {{ ?debt orexis:owedFrom ?from }}
+  FILTER NOT EXISTS {{ ?debt orexis:dischargedAt ?d }}
+  FILTER(COALESCE(?from, ?issued) <= \"{wanted_at.isoformat()}\"^^xsd:dateTime) }} }}"""))
+        owed = float(rows[0]["owed"]) if rows and rows[0].get("owed") else 0.0
+        floor = 0.0
+        sensing = self.agent.provider(SENSING)
+        prop = self.stock_property.get(market.uri)
+        region = sensing.regions.get(prop) if sensing is not None and prop else None
+        if region is not None and region.low is not None:
+            floor = float(region.low)
+        return stock - owed - litres >= floor - EPS
+
+    def _grant(self, market, who: str, litres: float, wanted_at: datetime) -> None:
+        """Issue a claim on an ask, no round: usable from the instant asked for, for the venue's
+        window, at the reserve price; held for presenting, owed in the ledger with its window."""
+        from .clearing import Claim
+        jti = uuid.uuid4().hex
+        opens = wanted_at.timestamp()
+        expires = opens + float(market.redeem_window_s) if market.redeem_window_s else None
+        claim = Claim(sub=who, permits=f"actuate:valve/{who}", amount_l=litres,
+                      debit=round(litres * float(self.beliefs.reserve_price_per_l), 4),
+                      auction_id=f"ask-{jti[:8]}", jti=jti, exp=expires, usable_from=opens,
+                      step=Step(action=SERVING, via=market.uri, quantity=litres,
+                                for_agent=node_of(self.agent.beliefs.query, who),
+                                not_after=(datetime.fromtimestamp(expires, tz=timezone.utc)
+                                           if expires is not None else None)))
+        self.log.info("granting %s %.3f L usable from %s on its ask — no round", who, litres,
+                      wanted_at.isoformat(timespec="seconds"))
+        self._issue(market, claim.auction_id, claim)
+        if market.redeem_topic:
+            self.held[jti] = claim
+        else:
+            self.redeem([claim])
+        if (ledger := self.ledger) is not None:
+            ledger.owe(who, jti, expires_at=claim.exp, amount_l=litres, usable_from=opens)
 
     def _pursue_calls(self, market=None) -> None:
         """Every call I hold — on one venue, or all — through execution."""
