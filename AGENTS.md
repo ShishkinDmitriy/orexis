@@ -198,6 +198,10 @@ it is a record wearing a bullet.
 - **The present is identified among the root's children, never asserted from one** — a child is
   a prediction and the present is observed, so what execution decides is which imagined world
   the real one landed in, and the cone under the match survives while its siblings die.
+- **A plan is placed at the instant of the root it was found from, never by subtraction from
+  a deadline** — a bid placed at the crossing less the plan's duration landed in a round that
+  had closed; the bid is taken while the round is open, and what waits for the instant is the
+  claim's presenting, which the claim's own window places (#625).
 - **What a search may see at a future instant is the door's to say** — a round row with no
   period was still open to a root standing hours ahead, and a bid was placed into a round that
   had closed; a round is a graph holding during its period now, and the rule never learned the

@@ -50,7 +50,7 @@ from . import rounds, wallet
 from .wiring import bidding_markets_of
 from .beliefs import BIDDING_PICKS
 from .terms import (BIDDING, CLAIM, CLAIMED_AT, CLAIM_DEBIT, CLAIM_ID, CLAIM_L, HOLDS_CLAIM, NS,
-                    ON_VENUE, PRESENTED_AT, PRESENTING, SENSING, TENDERING)
+                    ON_VENUE, PRESENTED_AT, PRESENTING, SENSING, TENDERING, USABLE_FROM, USABLE_UNTIL)
 
 # What my bids are priced in, found THROUGH MY VENUE AND MY STAKE (#198) rather than by
 # naming any term: the market I bid in is for a source, the source states its good (entailed
@@ -625,6 +625,26 @@ SELECT ?c ?id ?l ?at ?p WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         return {"uri": rows[0]["c"], "id": rows[0]["id"], "litres": float(rows[0]["l"]),
                 "presented": bool(rows[0].get("p"))}
 
+    def _presenting_instant(self, holds_at, market, litres: float):
+        """The instant to present so the water has landed by `holds_at`: the instant less the
+        pour — Acquiring's landing for these litres, less the venue's redeem window, which is
+        the part of that landing that is the valve's."""
+        from datetime import timedelta
+        from orexis_agent_deliberation import effects
+        from orexis_agent_progression.ontology import STATE_GRAPH
+        pour = 0.0
+        try:
+            lands = effects.lands_after(
+                self.agent.beliefs, ACQUIRING, me=f"<{self.me.uri}>",
+                subject=f"<{self.me.acts_for}>", about=f"<{self.about}>", via=f"<{market.uri}>",
+                litres=str(float(litres)), beliefs=f"<{beliefs_graph(self.agent.id)}>",
+                state=f"<{STATE_GRAPH}>")
+            if lands is not None:
+                pour = max(0.0, float(lands) - float(market.redeem_window_s or 0.0))
+        except Exception as exc:                        # a rule's refusal is not the bid's problem
+            self.log.warning("could not size the pour for the wanted instant: %s", exc)
+        return holds_at - timedelta(seconds=pour)
+
     @contributes(TENDERING)
     def tender(self, act, desire, intention: str) -> bool:
         """The first step of Acquiring's method (#523): bid into the round that is open, if
@@ -661,9 +681,11 @@ SELECT ?c ?id ?l ?at ?p WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         if market is None:
             return False
         return self._bid(reading.value, market, newest.auction_id,
-                         not_after=newest.closes_at)
+                         not_after=newest.closes_at,
+                         wanted_at=getattr(desire, "holds_at", None))
 
-    def _bid(self, moisture: float, market, auction_id: str, not_after=None) -> bool:
+    def _bid(self, moisture: float, market, auction_id: str, not_after=None,
+             wanted_at=None) -> bool:
         """Size and publish one bid into the round that is open. True if one left.
 
         `not_after` is the round's own close, where the caller knows it: a bid is worth
@@ -695,13 +717,20 @@ SELECT ?c ?id ?l ?at ?p WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
             return False
         self.log.info("auction %s: moisture %.3f -> bid %.3f L @ €%.3f",
                       auction_id, moisture, bid.max_qty_l, bid.max_price_per_l)
-        sent = self.publish(f"{market.bid_topic}/{self.me.agent_id}", {
+        payload = {
             "auction_id": auction_id,
             "agent": self.me.agent_id,
             "max_qty_l": bid.max_qty_l,
             "max_price_per_l": bid.max_price_per_l,
             "balance": round(self.balance, 4),
-        }, not_after=not_after)
+        }
+        #  WHEN I WANT IT (#625): the instant I intend to present, where the want I serve
+        #  holds at one — the instant less the pour the host's valve takes for these litres,
+        #  read off Acquiring's own landing so the two never fork (#238). A want unmet now
+        #  wants it now, and says nothing.
+        if wanted_at is not None:
+            payload["wanted_at"] = self._presenting_instant(wanted_at, market, bid.max_qty_l).isoformat()
+        sent = self.publish(f"{market.bid_topic}/{self.me.agent_id}", payload, not_after=not_after)
         if sent:
             done()
         return sent
@@ -730,9 +759,15 @@ SELECT ?c ?id ?l ?at ?p WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         #  for me: written as presented, so Presenting has nothing to send and opens the watch.
         redeemed = (f'\n      <{PRESENTED_AT}> "{now}"^^xsd:dateTime ;'
                     if not market.redeem_topic or not claim.get("jti") else "")
+        #  WATER AT A TIME (#625): the window the host granted rides onto the fact, and the
+        #  Presenting step is placed by it (`orexis:readyAt`).
+        window = "".join(
+            f'\n      <{term}> "{claim[key]}"^^xsd:dateTime ;'
+            for key, term in (("usable_from", USABLE_FROM), ("usable_until", USABLE_UNTIL))
+            if claim.get(key))
         self.agent.beliefs.update(f"""
 INSERT DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
   <{self.me.uri}> <{HOLDS_CLAIM}> <{NS}claim_{jti}> .
-  <{NS}claim_{jti}> a <{CLAIM}> ; <{CLAIM_ID}> "{jti}" ; <{CLAIMED_AT}> "{now}"^^xsd:dateTime ;{redeemed}
+  <{NS}claim_{jti}> a <{CLAIM}> ; <{CLAIM_ID}> "{jti}" ; <{CLAIMED_AT}> "{now}"^^xsd:dateTime ;{redeemed}{window}
       <{CLAIM_L}> "{amount}"^^xsd:decimal ; <{CLAIM_DEBIT}> "{debit}"^^xsd:decimal ;
       <{ON_VENUE}> <{market.uri}> . }} }}""")

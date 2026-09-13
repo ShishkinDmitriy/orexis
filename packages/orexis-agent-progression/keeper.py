@@ -635,7 +635,13 @@ SELECT ?s WHERE {{ GRAPH <{self.graph}> {{
     def _lapses_at(self, action: str, tokens: dict) -> datetime | None:
         """When a wait on a step of this action is over, asked of the action's own
         `orexis:lapsesAt` — a dateTime, or seconds from now; None is the patience."""
-        text = self._template_of(action, "lapsesAt")
+        return self._instant_of(action, tokens, "lapsesAt")
+
+    def _instant_of(self, action: str, tokens: dict, term: str) -> datetime | None:
+        """An instant the action states from the world — `orexis:lapsesAt`, `orexis:readyAt`:
+        a dateTime, or seconds from now; None where the action states none or it binds
+        nothing."""
+        text = self._template_of(action, term)
         if not text:
             return None
         try:
@@ -678,14 +684,17 @@ SELECT ?s WHERE {{ GRAPH <{self.graph}> {{
         #  predicted crossing, its plan's first step at the crossing less the plan's own
         #  duration — waits on the clock alone: a deadline on the scheduler with nothing to
         #  re-ask, taken when it lapses. The layer that waits does the waiting.
-        due = standing.step.not_before
+        tokens = self._tokens(intention_uri, standing.step)
+        #  Placed by the planner (`notBefore`), or by the ACTION from the world (`orexis:readyAt`,
+        #  #625) — a held claim's usable instant. Either way the step waits on the scheduler
+        #  alone until then, and the condition below is asked only once the instant has come.
+        due = standing.step.not_before or self._instant_of(standing.action, tokens, "readyAt")
         if due is not None and datetime.now(timezone.utc) < due:
             self._place(intention_uri, standing, due)
             return False
         text = self._template_of(standing.action, "readyWhen")
         if not text:
             return True
-        tokens = self._tokens(intention_uri, standing.step)
         shape = condition_shape(f"urn:orexis:ready:{uuid.uuid4().hex[:8]}", self.me.uri,
                                 bind(text, **tokens))
         if self._holds_now(shape):
@@ -932,7 +941,13 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
                 if datetime.now(timezone.utc) < standing.step.not_before:
                     self._place(intention_uri, standing, standing.step.not_before)
                     return
-                self._release(standing, "its placed instant came — taken")
+                #  TAKEN, and its condition asked again on the way: a placed step's instant is
+                #  the first gate, its `readyWhen` the second, so the take goes through `ready`
+                #  rather than around it — a claim presented at its instant still waits for
+                #  the watch to be live.
+                from .execution import carry_out
+                self.log.info("%s: its placed instant came", standing.action.rsplit("#", 1)[-1])
+                carry_out(self.agent, standing.step, None, standing.uri)
                 return
             if standing.uri == intention_uri:
                 self._resolve(standing, "dropped", "the step it stood at was not taken before "

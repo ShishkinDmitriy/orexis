@@ -83,6 +83,10 @@ class Plan:
     urgency_after: float | None = None
     cost: float | None = None         # what the plan was scored to spend — a remembered plan's measure (#469)
     landing: float | None = None      # seconds from the pass's root to its last landing (#619): its duration
+    #  THE INSTANT THE PASS STOOD AT when it found this plan (#625), where that was not now: a
+    #  plan is placed at the instant of the root it was found from, never by subtraction from a
+    #  deadline. None for a plan found from the present, which is taken now.
+    placed_at: datetime | None = None
     #  WHICH CANDIDATE of the root's menu this plan came through: its first step's action for
     #  a plan the search chained, the remembered plan's own node for a route walked as one
     #  candidate (#469) — what the trace's `deliberation:chose` names, so a reader sees the
@@ -531,7 +535,21 @@ class Planner:
         that raises forgets it whole.
         """
         try:
-            return self._search(desire)
+            plan = self._search(desire)
+            #  FROM THE LATEST START, THEN FROM NOW (#625): a want met at an instant is searched
+            #  first where the present's drift stands at the instant less the longest landing;
+            #  where that finds nothing — the lever it needs is on the menu now and not then, a
+            #  round open now — the pass is run again from the present, and a plan found there
+            #  is taken now. Two passes at most, and the second only where the first failed.
+            if (desire.holds_at is not None and not plan.steps and not self._from_now
+                    and self._root is not None and self._root.landing > 0):
+                self.reset()
+                self._from_now = True
+                try:
+                    plan = self._search(desire)
+                finally:
+                    self._from_now = False
+            return plan
         except BaseException:
             self.reset()
             raise
@@ -545,6 +563,7 @@ class Planner:
         self._open = []
         self._by_diff = {}
         self._kept_worlds = 0
+        self._from_now = False
 
     def _search(self, desire: Desire) -> Plan:
         """The pass itself. Separate only so `plan` can guarantee the forgetting above."""
@@ -560,13 +579,12 @@ class Planner:
         #  to that instant less the plan's duration, a world that moves with the clock.
         resumed = desire.holds_at is None and self._resume(desire)
         if not resumed:
-            #  THE CLOCK IS THE PRESENT'S OWN INSTANT for a want met at an instant (#619): the
-            #  reading the crossing was predicted from was taken THEN, and every drift in the
-            #  pass counts from the clock, so a pass clocked later would leave the reading's
-            #  age undrifted and judge the crossing inside. Read before the root, which may
-            #  stand later than the clock.
-            self._clock = (desire.read_at if desire.holds_at is not None and desire.read_at is not None
-                           else datetime.now(timezone.utc))
+            #  THE CLOCK IS NOW, for every want. A pass for a want met at an instant was clocked
+            #  from the reading's own instant for a day (#619), so the drift would count the
+            #  reading's age — and a round opened after the reading did not hold at that
+            #  instant, so the door hid it (#625). The age is drifted at the root instead
+            #  (`_projected`), and the door is asked about the instants the pass stands at.
+            self._clock = datetime.now(timezone.utc)
             here = self._begin(desire)
             root_at = signature.where(here.diff, here.ground)
             self._root, self._nodes, self._by_diff = here, [here], {root_at: here}
@@ -1029,6 +1047,10 @@ class Planner:
         answers a reader most wants and the two a wrapper would have missed. The same threading
         is why the clock is read here: every return passes through, so no exit is untimed.
         """
+        #  PLACED AT THE ROOT'S INSTANT (#625), where the pass stood later than now.
+        if (desire.holds_at is not None and plan.steps and self._root is not None
+                and self._root.landing > 0):
+            plan = replace(plan, placed_at=self._clock + timedelta(seconds=self._root.landing))
         trace.write(self.agent.beliefs, self.agent.id, desire, plan,
                     getattr(self, "_weighed", []), stands_at,
                     time.monotonic() - self._started, self._judged(desire),
@@ -1417,28 +1439,39 @@ class Planner:
         #  trace costs, against one per node before this.
         here = _Node(graph=STATE_GRAPH)
         if desire.holds_at is not None:
-            here = self._projected(here, desire)
+            here = self._projected(here, desire, latest=not self._from_now)
         here.estimate = self._estimate_in(here, desire)
         here.urgency = self._urgency_in(here, desire)
         self._root = here
         self._at_root(here)
         return here
 
-    def _projected(self, here, desire: Desire):
-        """The root of a pass for a want met AT an instant (#619): the present advanced by
-        every declared drift to the instant less the longest landing on the root's menu — the
-        latest the plan could begin — a node of the same tree reached by nobody choosing,
-        standing at that instant so every step's rule reads the world holding THEN. The
-        present itself where the instant is nearer than any lever's landing."""
-        longest = 0.0
-        for row in self._candidates(here, desire):
-            lands = effects.lands_after(self.imaginarium, row.action, when=self._clock,
-                                        **self._bind(desire, here, row))
-            longest = max(longest, lands or 0.0)
-        lead = (desire.holds_at - self._clock).total_seconds() - longest
-        if lead <= 0:
+    def _projected(self, here, desire: Desire, latest: bool = True):
+        """The root of a pass for a want met AT an instant (#619, #625): the present, drifted.
+
+        TWO STRETCHES, and both are the world's. The reading's AGE — the present was observed at
+        `read_at` and the pass stands at now, and a drift that counted from now would leave
+        those seconds undrifted; the engine cannot measure them inside a rule (AGENTS, the
+        traps), so the kernel hands them to the drift here, once, at the root. And the LEAD to
+        the latest start — the instant less the longest landing on the root's menu, the latest
+        a plan could begin — where `latest` asks for it: a node of the same tree reached by
+        nobody choosing, standing at that instant, so every step's rule reads the world holding
+        THEN. Without `latest` the root stands at now, aged and no more, which is the pass a
+        want falls back to when the latest start finds nothing on its menu.
+        """
+        lead = 0.0
+        if latest:
+            longest = 0.0
+            for row in self._candidates(here, desire):
+                lands = effects.lands_after(self.imaginarium, row.action, when=self._clock,
+                                            **self._bind(desire, here, row))
+                longest = max(longest, lands or 0.0)
+            lead = max(0.0, (desire.holds_at - self._clock).total_seconds() - longest)
+        age = (max(0.0, (self._clock - desire.read_at).total_seconds())
+               if desire.read_at is not None else 0.0)
+        if lead + age <= 0:
             return here
-        added, retracted = self._drifted(STATE_GRAPH, [], [], lead, here, None, desire)
+        added, retracted = self._drifted(STATE_GRAPH, [], [], lead + age, here, None, desire)
         if not added and not retracted:
             here.landing = lead
             return here

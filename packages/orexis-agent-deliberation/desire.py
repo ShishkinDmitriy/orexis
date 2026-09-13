@@ -100,9 +100,9 @@ class Desire:
     holds_at: datetime | None = None
 
     #  WHEN THE READING THIS ROW JUDGES WAS TAKEN, or None where nothing was read — filled by
-    #  whoever holds the reading (sensing). A pass for a want met at an instant reads its
-    #  clock from here (#619): the present is the world as it was OBSERVED, and a drift that
-    #  counts from the pass's own clock would leave the reading's age undrifted, since this
+    #  whoever holds the reading (sensing). A pass for a want met at an instant drifts the
+    #  reading's AGE at its root (#619, #625): the present is the world as it was OBSERVED, a
+    #  drift that counted from the pass's clock would leave those seconds undrifted, and this
     #  engine cannot turn the stretch between two instants into a number (AGENTS, the traps).
     read_at: datetime | None = None
 

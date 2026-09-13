@@ -74,11 +74,14 @@ the stretch from `prov:generatedAtTime` to the instant. The crossing is the drif
 state, `orexis:crossesAfter` beside it, read from the reading in hand; how far ahead a root acts
 on one is `orexis:foresees`, beside the want, and a root stating none foresees nothing.
 
-**Two things the build found.** The pass for such a want is clocked from the reading's own
-instant, not from now: every drift counts `$elapsed` from the pass's clock, the engine turns
-the stretch between two instants into no number (measured — only `HOURS`, `MINUTES` and
-`SECONDS` of a dateTime bind), so a pass clocked later would leave the reading's age
-undrifted and judge the crossing inside. And a step placed at an instant waits on the clock
+**Two things the build found.** The reading's AGE is the root's to drift: every drift counts
+`$elapsed` from the pass's clock, the engine turns the stretch between two instants into no
+number (measured — only `HOURS`, `MINUTES` and `SECONDS` of a dateTime bind), so a pass that
+drifted from now would leave the seconds since the reading undrifted and judge the crossing
+inside. For a day the pass was clocked from the reading's instant instead, and #625 found the
+cost: a round opened after the reading did not hold at that instant, and the door hid it. The
+clock is now, and the kernel hands the age to the drift once, at the root. And a step placed
+at an instant waits on the clock
 alone — a deadline on the scheduler with nothing to re-ask, taken when it lapses — which is the
 keeper's `notBefore`, honoured for the first time; its patience does not run against a step
 that is waiting for its instant.

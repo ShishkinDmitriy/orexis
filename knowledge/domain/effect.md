@@ -165,9 +165,9 @@ the same arithmetic asked as when rather than whether. Whoever derives a want fr
 reads it at the belief base (#619); a drift declaring none predicts no crossing. One thing the
 search cannot do with it: drift the present's reading over its own AGE, because every drift in
 a pass counts `$elapsed` from the pass's clock and this engine turns the stretch between two
-instants into no number. A pass for a want met at an instant therefore takes the reading's own
-instant as its clock, and every other pass leaves that age undrifted — a seam, measured at
-minutes against a band that takes days.
+instants into no number. A pass for a want met at an instant therefore hands the reading's
+age to the drift once, at its root, and every other pass leaves that age undrifted — a seam,
+measured at minutes against a band that takes days.
 
 **And a plan is minutes where a band is days**, which says where this pays. The loner's region
 takes six and a half days to cross; no plan reaches that far, so inside a search the band drift

@@ -252,6 +252,10 @@ The instant it carries is not for comparing. It is the HORIZON, exactly as a rou
 :onVenue a owl:ObjectProperty ; rdfs:domain :Claim ; rdfs:range :Market ; rdfs:label "on venue" .
 :claimedAt a owl:DatatypeProperty ; rdfs:domain :Claim ; rdfs:range xsd:dateTime ; rdfs:label "claimed at" ;
     rdfs:comment "When the round cleared to me — what a tender adopted before it is done by, and a stale claim from an earlier round is not." .
+:usableFrom a owl:DatatypeProperty ; rdfs:domain :Claim ; rdfs:range xsd:dateTime ; rdfs:label "usable from" ;
+    rdfs:comment "From when the claim may be presented — the instant the bid asked for (`wanted_at` on the wire), granted by the host with the claim (#625, a-claim-is-water-at-a-time). A winner receives water at a TIME, not water: the presenting is what an instant-bound want places, never the bid. Absent on a claim the host issued without a wanted instant, which is usable at once." .
+:usableUntil a owl:DatatypeProperty ; rdfs:domain :Claim ; rdfs:range xsd:dateTime ; rdfs:label "usable until" ;
+    rdfs:comment "Until when the claim may be presented — `usableFrom` plus the venue's redeem window, the claim's `exp` on the wire. After it the host refuses the presentation and the debt stands unserved, as before." .
 :presentedAt a owl:DatatypeProperty ; rdfs:domain :Claim ; rdfs:range xsd:dateTime ; rdfs:label "presented at" ;
     rdfs:comment "When I presented it — or when the host redeemed it for me, on a venue with no redeem channel, written with the claim so presenting has nothing left to do." .
 

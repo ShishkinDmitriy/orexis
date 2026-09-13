@@ -9,7 +9,7 @@ description: >-
   closed. Four claims. A round is a graph holding during its period, so a search standing at a
   future instant never sees a round that will have closed — built. A winner receives a CLAIM
   with the time it can be used, not water, so the presenting is what is placed at the instant
-  and never the bid. The host turns the claims it issued into predicted arrivals and plans its
+  and never the bid — built. The host turns the claims it issued into predicted arrivals and plans its
   supply on them. A plant asks for a dose at an instant, and a host opens a round only where
   the asks exceed its supply. Refused — placing a bid by subtraction from a deadline, a claim as
   immediate water, the backward walk over preconditions #620 sketched, and a round row that
@@ -36,7 +36,17 @@ water is wanted; the claim says from when it can be used; the water is served wh
 presented. So an agent may win now and use it in four hours, and what an instant-bound want
 places at the instant is the PRESENTING of a claim, never the bid — the bid is taken while a
 round is open, which is now or not at all
-([#625](https://github.com/ShishkinDmitriy/orexis/issues/625)).
+([#625](https://github.com/ShishkinDmitriy/orexis/issues/625), built). On the wire the bid
+carries `wanted_at`, the instant the bidder intends to present — the want's instant less the
+pour the host's valve takes, read off Acquiring's own landing — and the claim comes back with
+`usable_from` and `usable_until`, the venue's window running from the wanted instant; the
+claim fact carries them as `market:usableFrom` and `market:usableUntil`. The Presenting step
+is placed by the action itself, `orexis:readyAt` reading the claim's usable instant, and the
+keeper holds it on the scheduler until then and asks its `readyWhen` only after; the host
+refuses a presentation before the window opens and the claim stands. And the search for an
+instant-bound want stands at the latest start first and, finding nothing on that menu, at the
+present — where the round is — and a plan is placed at the instant of the root it was found
+from, never by subtraction: found from the present, it is taken now.
 
 **The host predicts the arrivals it promised.** A claim it issued with a usable window is an
 arrival expected inside that window — an occurrence, a fact ABOUT a window stated inside a graph
@@ -85,8 +95,9 @@ into the round closing last, the newest offer.
 
 # Seams left open
 
-- **The wire.** A bid carries no `wanted_at` and a claim no window yet; #625 is the whole of
-  that, and the three issues above are one protocol in three PRs.
+- **The pour the bidder subtracts** is Acquiring's landing for the litres it bid, less the
+  venue's window — the host's valve as the rule states it; a host whose valve differs from
+  the rule's serves late by the difference, and the keeper's verdict says so.
 - **A plant's own request.** Whether a foreseen crossing should announce at derivation or at
   some fraction of its room is the bidder's threshold reading the derived want's time room;
   #627 leaves the threshold to the package.
