@@ -20,7 +20,9 @@ orexis:AgentShape a sh:NodeShape ;
 orexis:WorldShape a sh:NodeShape ;
     rdfs:comment "The world is versioned, so every fact recorded under it can say which world it was recorded in." ;
     sh:targetClass orexis:World ;
-    sh:property [ sh:path orexis:currentVersion ; sh:minCount 1 ; sh:maxCount 1 ; sh:class orexis:WorldVersion ] .
+    sh:property [ sh:path orexis:currentVersion ; sh:minCount 1 ; sh:maxCount 1 ; sh:class orexis:WorldVersion ] ;
+    sh:property [ sh:path orexis:secondsPerDay ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "a world states the length of its day once, in seconds, and it is positive" ] .
 
 orexis:WorldVersionShape a sh:NodeShape ;
     rdfs:comment "A version is one whole number. It is what an observation stamps itself with, so a world whose version is missing or doubled makes every reading taken under it unattributable — and the number is the only content this node has." ;

@@ -180,6 +180,9 @@ orexis:World a owl:Class ; rdfs:label "World" ;
     rdfs:comment "The ratified world produced by genesis. Found by TYPE, never by a well-known IRI." .
 orexis:WorldVersion a owl:Class ; rdfs:label "World version" ;
     rdfs:comment "One ratified version of the world's topology; the chain is append-only." .
+orexis:secondsPerDay a owl:DatatypeProperty ; rdfs:domain orexis:World ; rdfs:range xsd:decimal ;
+    rdfs:label "seconds per day" ;
+    rdfs:comment "THE LENGTH OF THIS WORLD'S DAY, in the seconds the agent and its devices keep (the-world-states-the-length-of-its-day). A rate a world states PER DAY or PER HOUR — a pot's drying, a bed's diffusion, a meddler's mean — is in the world's day, and every rule that turns such a rate into a stretch reads this instead of a literal day; a stretch stated in seconds — a cadence, a grace, a pour, a patience, a foresight, a landing — is the agent's and is never scaled. Genesis derives a real day where a world states none, so a rule always finds one. It is not the mind knowing that a process stands in for a device: it is the unit its rates are stated in. The simulation and the loner say six hundred — ten bench minutes are a day — and their stand-ins derive their pace from it." .
 orexis:currentVersion a owl:ObjectProperty ; rdfs:domain orexis:World ; rdfs:range orexis:WorldVersion ;
     rdfs:label "current version" .
 orexis:versionNumber a owl:DatatypeProperty ; rdfs:domain orexis:WorldVersion ; rdfs:range xsd:integer ;

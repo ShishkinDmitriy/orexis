@@ -271,7 +271,11 @@ WHERE {{
   # of sim:maxValue) — one statement, the #164 pattern, read here like the drying is.
   OPTIONAL {{ ?subject <{SIM}maxValue> ?subjectMax }}
   OPTIONAL {{ ?subject <{SIM}doseEffect> ?doseEffect }}
-  OPTIONAL {{ ?w a <{OREXIS}World> ; <{SIM}timeScale> ?scale }}
+  #  THE WORLD'S PACE, from the length of its day (the-world-states-the-length-of-its-day): a
+  #  real day over the world's day, bound only where a world states a day that is not real —
+  #  the BIND errs on an unbound day and leaves the pace unbound, as it always was.
+  OPTIONAL {{ ?w a <{OREXIS}World> ; <{OREXIS}secondsPerDay> ?dayS . FILTER(?dayS != 86400) }}
+  BIND(86400 / ?dayS AS ?scale)
   OPTIONAL {{ ?subject <{SIM}rainTopic> ?rainTopic }}
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
  }}"""
@@ -322,7 +326,8 @@ _MEDDLER_Q = f"""
 SELECT DISTINCT ?rainTopic ?strayDays ?scale ?port WHERE {{
   ?w a <{OREXIS}World> ; <{SIM}strayDoseMeanDays> ?strayDays .
   ?subject <{SIM}rainTopic> ?rainTopic .
-  OPTIONAL {{ ?w <{SIM}timeScale> ?scale }}
+  OPTIONAL {{ ?w <{OREXIS}secondsPerDay> ?dayS . FILTER(?dayS != 86400) }}
+  BIND(86400 / ?dayS AS ?scale)
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
  }}"""
 
@@ -396,7 +401,7 @@ def _simulator(world: str, rows: list[dict]) -> str:
             ("SIM_DOSE_TOPIC", dose_topics),
             ("SIM_DRAIN_TOPIC", drain_topics),
             ("SIM_TICK_SECONDS", row.get("tick")),
-            # The world's clock (sim:timeScale), handed to every stand-in alike, because
+            # The world's pace, from the length of its day, handed to every stand-in alike, because
             # physics that age at different rates stop composing. And the rain channel
             # (sim:rainTopic) — where the meddler's water arrives, if this world has one.
             ("SIM_TIMESCALE", row.get("scale")),

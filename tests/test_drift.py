@@ -27,6 +27,7 @@ MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 OBSERVING = "http://example.org/orexis/sensing#Observing"
 LANDS = "http://example.org/orexis#landsAfter"
 AT = Raw('"2026-09-13T12:00:00+00:00"^^xsd:dateTime')
+DAY = 600.0    # the loner's day, ten bench minutes (`orexis:secondsPerDay`): a rate per day is in it
 
 
 def _gardener(monkeypatch, moisture=0.30):
@@ -54,8 +55,8 @@ def test_a_pot_dries_by_what_its_world_says_it_loses(monkeypatch):
     too — `water:driesPerDay` on the pot, which the loner world states at 0.03."""
     agent = _gardener(monkeypatch, moisture=0.30)
 
-    assert _dried(agent, 86400.0)[0] == pytest.approx(0.27), "a day at three hundredths"
-    assert _dried(agent, 43200.0)[0] == pytest.approx(0.285), "and half a day, half of it"
+    assert _dried(agent, DAY)[0] == pytest.approx(0.27), "a day at three hundredths"
+    assert _dried(agent, DAY / 2)[0] == pytest.approx(0.285), "and half a day, half of it"
 
 
 def test_the_reading_it_dries_is_the_one_it_replaces(monkeypatch):
@@ -64,7 +65,7 @@ def test_the_reading_it_dries_is_the_one_it_replaces(monkeypatch):
     effect's `orexis:retracts` leans on."""
     agent = _gardener(monkeypatch, moisture=0.30)
 
-    _, retracted = _dried(agent, 86400.0)
+    _, retracted = _dried(agent, DAY)
     assert retracted, "the reading it drifts from is retracted"
     assert any(t.predicate.value.endswith("hasSimpleResult") for t in retracted)
 
@@ -74,7 +75,7 @@ def test_a_pot_does_not_dry_past_empty(monkeypatch):
     floor at nothing, and a week of drying does not make a pot owe water."""
     agent = _gardener(monkeypatch, moisture=0.05)
 
-    assert _dried(agent, 7 * 86400.0)[0] == pytest.approx(0.0)
+    assert _dried(agent, 7 * DAY)[0] == pytest.approx(0.0)
 
 
 def test_nothing_drifts_where_no_time_passes(monkeypatch):
@@ -97,7 +98,7 @@ def test_a_dosed_pot_does_not_drift_because_it_has_no_number(monkeypatch):
         WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:observedProperty <{MOISTURE}> ;
                                           sosa:hasSimpleResult ?v }} }}""")
 
-    assert _dried(agent, 86400.0) == (None, []), \
+    assert _dried(agent, DAY) == (None, []), \
         "a band alone says where the reading is, not how far into it"
 
 
@@ -115,7 +116,7 @@ def test_a_step_that_takes_time_leaves_a_drier_pot(monkeypatch):
     agent = _gardener(monkeypatch, moisture=0.04)
     agent.beliefs.update(f"""DELETE {{ GRAPH <{ACTIONS_GRAPH}> {{ <{OBSERVING}> <{LANDS}> ?t }} }}
         INSERT {{ GRAPH <{ACTIONS_GRAPH}> {{ <{OBSERVING}> <{LANDS}>
-            "SELECT (3600 AS ?seconds) WHERE {{ }}" }} }}
+            "SELECT (25 AS ?seconds) WHERE {{ }}" }} }}
         WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{ <{OBSERVING}> <{LANDS}> ?t }} }}""")
     desire = next(g for g in agent.pursuing()
                   if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
@@ -147,7 +148,7 @@ def test_a_step_leaves_one_reading_per_key_even_when_it_drifts(monkeypatch):
     agent = _gardener(monkeypatch, moisture=0.04)
     agent.beliefs.update(f"""DELETE {{ GRAPH <{ACTIONS_GRAPH}> {{ <{OBSERVING}> <{LANDS}> ?t }} }}
         INSERT {{ GRAPH <{ACTIONS_GRAPH}> {{ <{OBSERVING}> <{LANDS}>
-            "SELECT (3600 AS ?seconds) WHERE {{ }}" }} }}
+            "SELECT (25 AS ?seconds) WHERE {{ }}" }} }}
         WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{ <{OBSERVING}> <{LANDS}> ?t }} }}""")
     desire = next(g for g in agent.pursuing()
                   if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
@@ -186,7 +187,7 @@ def test_a_look_that_takes_an_hour_is_somewhere_new(monkeypatch):
 
     agent.beliefs.update(f"""DELETE {{ GRAPH <{ACTIONS_GRAPH}> {{ <{OBSERVING}> <{LANDS}> ?t }} }}
         INSERT {{ GRAPH <{ACTIONS_GRAPH}> {{ <{OBSERVING}> <{LANDS}>
-            "SELECT (3600 AS ?seconds) WHERE {{ }}" }} }}
+            "SELECT (25 AS ?seconds) WHERE {{ }}" }} }}
         WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{ <{OBSERVING}> <{LANDS}> ?t }} }}""")
     timed = Planner(agent, agent.me)
     timed.plan(desire)
@@ -260,7 +261,7 @@ def _crossing_s(agent) -> float:
         ?f rdf:rest*/rdf:first/xsd:minInclusive ?lo .
         ?f rdf:rest*/rdf:first/xsd:maxInclusive ?hi .
         ?pot water:driesPerDay ?rate }}"""))[0]
-    return (float(row["hi"]) - float(row["lo"])) / float(row["rate"]) * 86400.0
+    return (float(row["hi"]) - float(row["lo"])) / float(row["rate"]) * DAY
 
 
 def test_a_band_falls_when_its_own_crossing_time_has_passed(monkeypatch):
@@ -290,7 +291,7 @@ def test_the_crossing_time_is_the_bands_own_width_over_the_worlds_rate(monkeypat
     _band_only(agent)
     crossing = _crossing_s(agent)
 
-    assert crossing == pytest.approx(0.2 / 0.03 * 86400.0), \
+    assert crossing == pytest.approx(0.2 / 0.03 * DAY), \
         "the loner's region is 0.1-0.3 and its pot loses three hundredths a day"
     assert _fell(agent, crossing - 1.0)[0] == set()
     assert _fell(agent, crossing + 1.0)[0] == {"below"}
@@ -302,7 +303,7 @@ def test_a_reading_already_below_does_not_fall_further(monkeypatch):
     agent = _gardener(monkeypatch, moisture=0.04)          # below the region already
     _band_only(agent)
 
-    assert _fell(agent, 365 * 86400.0)[0] == set(), "a year below is still below"
+    assert _fell(agent, 365 * DAY)[0] == set(), "a year below is still below"
 
 
 def test_a_step_long_enough_leaves_a_dosed_pot_below_again(monkeypatch):

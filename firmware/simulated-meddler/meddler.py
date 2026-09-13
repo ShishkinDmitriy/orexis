@@ -19,7 +19,7 @@ millilitres are millilitres to dirt. The simulated sensor takes rain and doses t
 is the entire point.
 
 Timing is exponential per pot, with a mean of `MEDDLER_MEAN_DAYS` SIMULATED days converted
-through the world's `MEDDLER_TIMESCALE` — under timeScale 24 and a mean of 2, each pot is
+through the world's `MEDDLER_TIMESCALE` — under a pace of 24 (a world whose day is an hour) and a mean of 2, each pot is
 visited about every other bench-hour. Pours are 150-500 ml, the size of a passing kindness
 rather than a proper watering.
 

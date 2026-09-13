@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from orexis_agent_deliberation import pursuit
-from orexis_agent_progression.ontology import PROGRESSION, beliefs_graph, obligations_graph
+from orexis_agent_progression.ontology import PROGRESSION, WORLD_GRAPH, beliefs_graph, obligations_graph
 from orexis_agent_progression.store import bindings
 from orexis_capability_market import rounds
 from orexis_capability_market.terms import ACQUIRING, PRESENTING, TENDERING
@@ -24,12 +24,24 @@ MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 STORED = "http://example.org/orexis/water#StoredLitres"
 FORESIGHT = "http://example.org/orexis/sensing#foresightS"
 OWED_FROM = "http://example.org/orexis/market#owedFrom"
-FALLING = 0.47          # 0.02 above the simulation fern's floor of 0.45, at 0.12 a day: four hours
+FALLING = 0.47          # 0.02 above the simulation fern's floor of 0.45, at 0.12 a day: four hours in a real day
 HOURS = 3600.0
+
+
+def _real_day(st) -> None:
+    """These tests are about placement at the latest start, which needs a purchase that can
+    land before the crossing. The simulation's own day is ten minutes, so a plant there
+    crosses in a hundred seconds and a purchase lands in nine hundred — a day and a half of
+    that world — and buying ahead is impossible (the-world-states-the-length-of-its-day).
+    They stand in a real day, where the fern's crossing is four hours."""
+    st.update(f"""DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?w orexis:secondsPerDay ?d }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?w orexis:secondsPerDay 86400 }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?w orexis:secondsPerDay ?d }} }}""")
 
 
 def _fern(monkeypatch, moisture=FALLING, foresight=6 * HOURS):
     st = genesis_store({("fern", MOISTURE): moisture})
+    _real_day(st)
     st.update(f"""INSERT DATA {{ GRAPH <{beliefs_graph("fern")}> {{
         <http://example.org/orexis/world/simulation#fern_agent> <{FORESIGHT}> {foresight} }} }}""")
     return build_agent("fern", st, monkeypatch)
@@ -147,6 +159,18 @@ def test_a_stranger_is_not_answered(monkeypatch):
 
 
 # --- the granted plant presents -------------------------------------------------------------
+
+
+def _placed_instant_comes(agent, intention_uri: str) -> None:
+    """The scheduler's road, without the wait: the step's placed instant rewritten as past,
+    and the deadline taken as the scheduler would take it."""
+    g = agent.keeper.graph
+    past = (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat()
+    agent.intentions.update(f"""
+DELETE {{ GRAPH <{g}> {{ ?act <{PROGRESSION}notBefore> ?was }} }}
+INSERT {{ GRAPH <{g}> {{ ?act <{PROGRESSION}notBefore> "{past}"^^xsd:dateTime }} }}
+WHERE  {{ GRAPH <{g}> {{ <{intention_uri}> <{PROGRESSION}by> ?act . ?act <{PROGRESSION}notBefore> ?was }} }}""")
+    agent.keeper.lapse(intention_uri)
 
 
 def _placed_instant_comes(agent, intention_uri: str) -> None:

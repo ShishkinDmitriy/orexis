@@ -56,7 +56,8 @@ water:Drying
                owl:someValuesFrom/owl:withRestrictions ?facets .
             ?facets rdf:rest*/rdf:first/xsd:minInclusive ?lo .
             FILTER(?was >= ?lo)
-            BIND((((xsd:double(?was) - ?lo) / ?rate) * 86400) AS ?seconds)
+            ?world a orexis:World ; orexis:secondsPerDay ?dayS .
+            BIND((((xsd:double(?was) - ?lo) / ?rate) * ?dayS) AS ?seconds)
         }""" ;
 
     #  HOW FAR OFF IT MAY BE (#631): the rate's uncertainty the world states beside the rate,
@@ -72,7 +73,8 @@ water:Drying
             FILTER(?property = water:SoilMoisture)
             ?subject water:driesPerDaySpread ?spread .
             FILTER(?spread > 0 && $elapsed > 0)
-            BIND(ROUND(($elapsed / 86400.0) * 1000000) / 1000000 AS ?days)
+            ?world a orexis:World ; orexis:secondsPerDay ?dayS .
+            BIND(ROUND(($elapsed / xsd:double(?dayS)) * 1000000) / 1000000 AS ?days)
             BIND(?spread * ?days AS ?width)
         }""" ;
 
@@ -96,7 +98,10 @@ water:Drying
     #  AND WHAT IT LEAVES: the same reading, lower by what the pot loses in that time. The
     #  arithmetic is the DOMAIN's, on the domain's own number — a rate the world states, in
     #  fractions of saturation per day — which is where every literal in this project is
-    #  interpreted. The core stores triples and reads none of it.
+    #  interpreted. The core stores triples and reads none of it. AND THE DAY IS THE WORLD'S
+    #  (the-world-states-the-length-of-its-day): a rate per day is in the world's day, and
+    #  the seconds this rule is handed are the agent's, so the stretch is divided by the day
+    #  the world states rather than by a literal one — the simulation's is ten minutes.
     #
     #  PARENTHESISED, and both of them deliberately: `a / b * c` is evaluated as `a / (b * c)`
     #  by this engine, and a decimal product past eighteen fractional digits binds NOTHING, so
@@ -122,7 +127,8 @@ water:Drying
             }
             ?pot water:driesPerDay ?rate .
             FILTER(?rate > 0 && $elapsed > 0)
-            BIND(ROUND(($elapsed / 86400.0) * 1000000) / 1000000 AS ?days)
+            ?world a orexis:World ; orexis:secondsPerDay ?dayS .
+            BIND(ROUND(($elapsed / xsd:double(?dayS)) * 1000000) / 1000000 AS ?days)
             BIND(?was - (?rate * ?days) AS ?fell)
             #  A POT DOES NOT DRY PAST EMPTY, which is the one bound the domain knows without
             #  asking anything: a fraction of saturation has a floor at nothing.
@@ -172,7 +178,8 @@ water:DryingABand
             ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?hi .
             ?pot water:driesPerDay ?rate .
             FILTER(?rate > 0)
-            BIND((((?hi - ?lo) / ?rate) * 86400) AS ?crossing)
+            ?world a orexis:World ; orexis:secondsPerDay ?dayS .
+            BIND((((?hi - ?lo) / ?rate) * ?dayS) AS ?crossing)
             FILTER($elapsed >= ?crossing)
         }""" ;
 
@@ -203,7 +210,8 @@ water:DryingABand
             ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?hi .
             ?pot water:driesPerDay ?rate .
             FILTER(?rate > 0)
-            BIND((((?hi - ?lo) / ?rate) * 86400) AS ?crossing)
+            ?world a orexis:World ; orexis:secondsPerDay ?dayS .
+            BIND((((?hi - ?lo) / ?rate) * ?dayS) AS ?crossing)
             FILTER($elapsed >= ?crossing)
             #  THE BAND BELOW, of this subject and this property: the member genesis minted
             #  from the same range, found by its family rather than by name.

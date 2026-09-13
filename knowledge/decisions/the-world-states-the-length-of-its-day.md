@@ -75,9 +75,19 @@ runbook records the world's day beside every crossing from here on.
 
 # What is built
 
-[#646](https://github.com/ShishkinDmitriy/orexis/issues/646): the term, the rules reading it,
-compose deriving the scale, the tests and the runbook re-cut to the world's day. First in the
-queue, because every measurement after it depends on it.
+[#646](https://github.com/ShishkinDmitriy/orexis/issues/646), built: `orexis:secondsPerDay` on
+the world node, a real day derived by genesis where none is stated; the water and climate
+rules read it where they wrote a literal day or hour; the stand-in's `sim:timeScale` retired
+and compose deriving the pace from the world's day; both compressed worlds stating six
+hundred; the tests re-cut, and the runbook's crossings restated in the world's day — the
+simulation fern at 0.47 crosses in a hundred seconds, the loner at 0.12 in four hundred,
+where the rule had said four and sixteen hours. One consequence measured on the way: with a
+day of ten minutes, a purchase that lands in nine hundred seconds lands a day and a half of
+that world after the crossing, so no plant in the simulation can buy ahead of one — the
+search refuses the late plan and only repair after an observed LOW runs there. That is the
+world's own arithmetic, for the sovereign to weigh: a day of an hour and a half or longer
+lets the fern at 0.47 buy ahead. The tests of placement at the latest start stand in a real
+day and say so.
 
 # Seams left open
 

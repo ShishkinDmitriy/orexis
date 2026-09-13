@@ -77,17 +77,18 @@ def test_the_loner_holds_one_expected_next_observation_with_a_window_and_a_band(
 
 
 def test_noise_and_the_rates_spread_widen_the_set(monkeypatch):
-    """The simulation fern at 0.47, two hundredths above its floor: the instrument's noise and
-    a spread beside the rate take the far end of the window under the floor, and the set holds
-    the in-region band and the one below."""
-    st = genesis_store({("fern", MOISTURE): 0.47})
+    """The simulation fern at 0.60, well inside its region: the window is a day of this world,
+    ten minutes, so the rate alone takes the centre to 0.47; the instrument's noise and a spread
+    beside the rate take the far end under the floor, and the set holds the in-region band and
+    the one below."""
+    st = genesis_store({("fern", MOISTURE): 0.60})
     fern = "http://example.org/orexis/world/simulation#fern"
     sensor = bindings(st.query(f"SELECT ?s WHERE {{ ?s sosa:observes <{MOISTURE}> ; a sosa:Sensor }} LIMIT 1"))
     st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
-        <{fern}> water:driesPerDaySpread 2.0 .
+        <{fern}> water:driesPerDaySpread 0.05 .
         <{sensor[0]["s"]}> sensing:noise 0.05 }} }}""")
     agent = build_agent("fern", st, monkeypatch)
-    write_reading(agent, 0.47)
+    write_reading(agent, 0.60)
     (row,) = _expected(agent)
     assert _kinds(agent, row["bands"]) == {IN, BELOW}, row["bands"]
 

@@ -251,7 +251,8 @@ climate:Exchanging
             FILTER(?was >= ?lo && ?was <= ?hi)
             FILTER(?there < ?lo || ?there > ?hi)
             BIND(IF(?there < ?lo, xsd:double(?was) - ?lo, ?hi - xsd:double(?was)) AS ?gap)
-            BIND(((?gap / ?rate) * 3600) AS ?seconds)
+            ?world a orexis:World ; orexis:secondsPerDay ?dayS .
+            BIND(((?gap / ?rate) * (?dayS / 24)) AS ?seconds)
         }""" ;
 
     orexis:retracts """
@@ -294,7 +295,8 @@ climate:Exchanging
                  sosa:observedProperty ?property ;
                  sosa:hasSimpleResult ?there .
             FILTER(?rate > 0 && $elapsed > 0 && ?there != ?was)
-            BIND(ROUND(($elapsed / 3600.0) * 1000000) / 1000000 AS ?hours)
+            ?world a orexis:World ; orexis:secondsPerDay ?dayS .
+            BIND(ROUND(($elapsed / (xsd:double(?dayS) / 24)) * 1000000) / 1000000 AS ?hours)
             BIND(?rate * ?hours AS ?moved)
             BIND(IF(?there > ?was,
                     IF(?was + ?moved > ?there, ?there, ?was + ?moved),
@@ -333,7 +335,8 @@ climate:ExchangingAcrossBands
                  sosa:observedProperty ?property ;
                  sosa:hasSimpleResult ?there .
             FILTER(?there < ?lo || ?there > ?hi)
-            BIND((((?hi - ?lo) / ?rate) * 3600) AS ?crossing)
+            ?world a orexis:World ; orexis:secondsPerDay ?dayS .
+            BIND((((?hi - ?lo) / ?rate) * (?dayS / 24)) AS ?crossing)
             FILTER($elapsed >= ?crossing)
         }""" ;
 
@@ -364,7 +367,8 @@ climate:ExchangingAcrossBands
                  sosa:observedProperty ?property ;
                  sosa:hasSimpleResult ?there .
             FILTER(?there < ?lo || ?there > ?hi)
-            BIND((((?hi - ?lo) / ?rate) * 3600) AS ?crossing)
+            ?world a orexis:World ; orexis:secondsPerDay ?dayS .
+            BIND((((?hi - ?lo) / ?rate) * (?dayS / 24)) AS ?crossing)
             FILTER($elapsed >= ?crossing)
             BIND(IF(?there < ?lo, sensing:BelowRegion, sensing:AboveRegion) AS ?side)
             ?next rdfs:subClassOf ?side ;

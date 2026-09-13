@@ -64,13 +64,14 @@
 #  Sovereign is the ROLE that user held HERE — stated, not assumed, because another user may
 #  operate what this one ratified, and a loader that inferred the capacity could never say so.
 :world a orexis:World ; orexis:currentVersion :version_1 ;
-    #  Ten bench minutes are one simulated day, so a week of drying, deciding and dosing
+    #  Ten bench minutes are one day of this world — stated as the length of its day, which
+    #  the agents' rules read and the stand-ins pace themselves by — so a week of drying, deciding and dosing
     #  fits in an evening — and every stand-in ages at this one rate, or a dose sized for a
     #  day's drying would land against an hour's. Faster was tried on paper and refused: at
     #  one minute per day the slow cadence spans ten days, the trend bound pins every agent
     #  to the constitutional floor, and the machinery this world exists to show has nothing
     #  left to choose between.
-    sim:timeScale 144 ;
+    orexis:secondsPerDay 600 ;
     #  And someone with a watering can wanders through about every other simulated day,
     #  per pot: the third-party impulse of #151, made routine rather than hypothetical.
     sim:strayDoseMeanDays 2 ;

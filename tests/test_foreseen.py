@@ -20,8 +20,8 @@ from conftest import build_agent, genesis_store, write_reading
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 DOSING = "http://example.org/orexis/actuation#Dosing"
 FORESIGHT = "http://example.org/orexis/sensing#foresightS"
-FALLING, CONTENT = 0.12, 0.20          # 0.12 crosses the loner's floor of 0.10 in 16 h at 0.03/day
-DAY = 86400.0
+FALLING, CONTENT = 0.12, 0.20          # 0.12 crosses the loner's floor of 0.10 in sixteen of the loner's hours at 0.03/day
+DAY = 600.0                            # the loner's day: ten bench minutes (`orexis:secondsPerDay`), so sixteen hours are four hundred seconds
 
 
 def _gardener(monkeypatch, moisture, foresight: float | None = None):
@@ -44,8 +44,9 @@ def _crossing_of(agent):
 
 
 def test_the_drift_says_when_the_reading_leaves_its_region(monkeypatch):
-    """`orexis:crossesAfter`, read from the belief base: (0.12 - 0.10) / 0.03 days — sixteen
-    hours after the reading's own instant, not after now."""
+    """`orexis:crossesAfter`, read from the belief base: (0.12 - 0.10) / 0.03 days of the WORLD'S
+    day — sixteen of its hours, four hundred seconds of the bench — after the reading's own
+    instant, not after now."""
     agent = _gardener(monkeypatch, FALLING)
     crossing = pursuit.crossing_of(agent, _stake(agent).uri)
     assert crossing is not None
@@ -89,8 +90,8 @@ def test_a_crossing_within_the_foresight_derives_a_want_met_at_that_instant(monk
 
 
 def test_a_crossing_beyond_the_foresight_derives_nothing(monkeypatch):
-    """Sixteen hours out, foreseeing six: not yet."""
-    agent = _gardener(monkeypatch, FALLING, foresight=6 * 3600.0)
+    """Sixteen of the world's hours out, foreseeing six of them: not yet."""
+    agent = _gardener(monkeypatch, FALLING, foresight=DAY / 4)
     root = _stake(agent)
     assert agent.deliberator.decide(root) is None
     assert pursuit.child_of(agent, root.uri) is None

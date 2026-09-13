@@ -175,6 +175,12 @@ instants into no number. A pass for a want met at an instant therefore hands the
 age to the drift once, at its root, and every other pass leaves that age undrifted — a seam,
 measured at minutes against a band that takes days.
 
+**A rate per day is in the world's day.** A drift's arithmetic turns a rate the world states
+per day or per hour into a stretch, and the day it divides by is the one the world states —
+`orexis:secondsPerDay`, a real day where the world says nothing — never a literal one; the
+seconds the drift is handed are the agent's
+([the-world-states-the-length-of-its-day](/decisions/the-world-states-the-length-of-its-day.md)).
+
 **And how far off it may be.** `orexis:spreadsBy`, a third select beside the drift, answers
 for each reading it moves the width, in the property's own unit, the reading it carries may
 be off after `$elapsed` — the rate's uncertainty the world states beside the rate, applied

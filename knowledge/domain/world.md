@@ -378,3 +378,12 @@ only an explicit re-birth discards them.
 - **World kind is not modelled.** A bench world and a production one want different operational
   beliefs, and nothing expresses that but the directory you seeded — so near-identical belief
   files are hand-copied between worlds, waiting to drift.
+
+# A world states the length of its day
+
+A world whose physics run faster than the clock its agents keep says so once, on its world
+node: `orexis:secondsPerDay`, the length of its day in the agents' seconds. A rate the world
+states per day or per hour is in that day, and every rule that turns one into a stretch reads
+it; a stretch in seconds is the agents' own. Genesis derives a real day where a world states
+none, and the stand-ins pace themselves by the same fact
+([the-world-states-the-length-of-its-day](/decisions/the-world-states-the-length-of-its-day.md)).

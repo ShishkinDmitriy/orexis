@@ -233,6 +233,10 @@ it is a record wearing a bullet.
   beside the instrument, a drift's `orexis:spreadsBy` beside its rate; sensing widens the
   set of bands the next reading may fall in and writes it where the sovereign can ask, and
   the search reads the set and never the number (#631).
+- **A rate per day is in the world's day** — two worlds ran their physics a hundred and
+  forty-four times faster than the agent predicted by, because the stand-ins scaled their
+  clock and the drift divided real seconds by a literal day; the world states the length of
+  its day, rules read it, and a stretch in seconds stays the agent's (#646).
 - **Deliberation is on triples, and a number is not special** — how a domain describes its
   world, exact numbers, ranges or classes, is decided inside the domain, and its actions'
   preconditions and effects are described the same way; the core compares triples and

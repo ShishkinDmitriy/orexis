@@ -37,7 +37,7 @@
     mqtt:brokerTlsPort 8887 .
 
 :world a orexis:World ; orexis:currentVersion :version_1 ;
-    sim:timeScale 144 ;
+    orexis:secondsPerDay 600 ;
     prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole orexis:Sovereign ] .
 :version_1 a orexis:WorldVersion ; orexis:versionNumber 1 .
 

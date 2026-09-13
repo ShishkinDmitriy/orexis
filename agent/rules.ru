@@ -21,4 +21,16 @@ $given
 WHERE  {
     ?agent a orexis:Agent ; orexis:localId ?id .
     BIND(IRI(CONCAT("http://example.org/orexis/graph/beliefs/", ?id)) AS ?graph)
+} ;
+
+# Derivation: the length of the world's day, where the world states none — a real day, so every
+# rule that reads a rate per day finds a day to read it against and no rule carries a literal
+# one (the-world-states-the-length-of-its-day). The one place the default is stated.
+
+INSERT { GRAPH $derived {
+    ?world orexis:secondsPerDay 86400 } }
+$given
+WHERE  {
+    ?world a orexis:World .
+    FILTER NOT EXISTS { ?world orexis:secondsPerDay ?stated }
 }

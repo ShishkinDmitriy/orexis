@@ -211,7 +211,7 @@ MOVED = {
                         ("modelInitialValue", "initialValue"), ("modelDoseEffect", "doseEffect"),
                         ("modelLosesPerDay", "losesPerDay"), ("modelDailySwing", "dailySwing"),
                         ("modelTickSeconds", "tickSeconds"), ("modelMinValue", "minValue"),
-                        ("modelMaxValue", "maxValue"), ("timeScale", "timeScale"),
+                        ("modelMaxValue", "maxValue"),
                         ("strayDoseMeanDays", "strayDoseMeanDays"), ("rainTopic", "rainTopic"))},
     "http://example.org/orexis#Aim": "http://example.org/orexis/sensing#Aim",
     "http://example.org/orexis#aims": "http://example.org/orexis/sensing#aims",

@@ -13,7 +13,7 @@ equipment or a mandate. See knowledge/decisions/the-mind-is-not-a-package.md.
 
 **Fourteen terms in the kernel's own `agent/ontology.ttl` still make that claim false, and they
 are named rather than implied**: the eleven of the simulated world — the device model plus its clock and its
-weather (`sim:timeScale`, `sim:strayDoseMeanDays`, `sim:rainTopic`) — which only `world/simulation`
+weather (`sim:strayDoseMeanDays`, `sim:rainTopic`; the world's day is the kernel's `secondsPerDay`) — which only `world/simulation`
 uses and which want a simulation package that does not exist; and `orexis:ComputeHost`, `orexis:runsOn`
 and `orexis:lanHost`, which only `world/sensing` states. See
 knowledge/decisions/every-term-in-its-own-house.md.

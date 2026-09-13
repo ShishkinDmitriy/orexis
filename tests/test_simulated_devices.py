@@ -207,8 +207,9 @@ def test_a_generated_stand_in_knows_what_a_litre_is_worth():
 
 
 def test_a_generated_stand_in_runs_at_the_worlds_pace():
-    """sim:timeScale rides into every stand-in's environment, and the physics arrive per
-    simulated day — the per-tick drift is gone from the spec entirely."""
+    """The world's pace — a real day over the day the world states, `orexis:secondsPerDay` —
+    rides into every stand-in's environment, and the physics arrive per day of the world;
+    the per-tick drift is gone from the spec entirely."""
     import json
 
     from agent import ratified
