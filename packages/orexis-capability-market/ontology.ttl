@@ -279,3 +279,35 @@ The instant it carries is not for comparing. It is the HORIZON, exactly as a rou
 :maxTolerance a owl:DatatypeProperty ; rdfs:domain orexis:Capability ; rdfs:range xsd:decimal ; rdfs:label "max tolerance" .
 :tolerance a review:RevisableBelief ; review:revisableToward :minTolerance , :maxTolerance .
 :Bidding :tolerance 0.5 ; :minTolerance 0.05 ; :maxTolerance 1.0 .
+
+#################  The ledger: what I owe  #################
+#
+#  The obligation vocabulary — a debt for a claim's litres, to a bidder, presentable in a
+#  window — is this package's (#635): it sat in the kernel's namespace because the ledger was
+#  the kernel's before it became the host's (`ower.py`), and the words never moved when the
+#  code did. A term one package reads and writes carries its prefix. An obligation is still
+#  an `orexis:Desire` — a want this agent did not source, BOID's O, bound `orexis:Within` its
+#  claim's window — and there is no Obligation class (#471): the properties below ARE the
+#  premises, readers match on them and never on a type. `orexis:expiresAt` stays the
+#  kernel's, being the deadline any Within want reads. The debt carries its own met-test
+#  (`orexis:unmetWhen`, a select whose rows are the debt undischarged), written by the ledger
+#  with the debt, so the kernel judges it as it judges every authored pattern and names no
+#  word of this section.
+:ObligationsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Obligations record graph" ;
+    orexis:graphPrefix "http://example.org/orexis/graph/obligations/" ; orexis:arrivesBy orexis:Received ;
+    rdfs:comment "ONE agent's record of debts: claims won against it, presented or not, discharged rows kept because a debt paid and a debt forgotten must not look alike. A RECORD class — the duty-wants the desire modality serves are this record projected. The prefix is built by the kernel's `obligations_graph`, which is how the desire modality projects the record without importing this package." .
+
+:owedTo a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range orexis:Agent ; rdfs:label "owed to" ;
+    rdfs:comment "The counterparty. Always an agent this world's wiring already connects to me — an obligation to a stranger is not a debt, it is a forgery, refused before it becomes a want." .
+:forClaim a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:string ; rdfs:label "for claim" ;
+    rdfs:comment "The jti of the claim that sourced it — single-use there, single-use here, so a discharged obligation cannot be raised twice by a replayed presentation." .
+:presented a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:boolean ; rdfs:label "presented" ;
+    rdfs:comment "Whether the holder has asked yet. An unpresented claim requires NOTHING of me — the holder is waiting for its own watch to be live — and a presented one requires acting now. It says whether a debt is PURSUABLE, and no longer how hot it is: heat is `orexis:expiresAt`'s job, so an unpresented claim near its deadline is a debt this agent can see coming and still may not act on." .
+:owedAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ; rdfs:label "owed at" ;
+    rdfs:comment "When the debt was incurred — the claim's issue. Read with `orexis:expiresAt`: urgency is the fraction of the window that has run, and an agent holding only the deadline would have to guess when the window opened." .
+:owedFrom a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ; rdfs:label "owed from" ;
+    rdfs:comment "From when the holder may present the claim this debt is for — the claim's usable instant (:usableFrom), granted at issue. Absent on a debt whose claim is usable at once. THE HOST'S PREDICTED ARRIVAL (#626, a-claim-is-water-at-a-time): a debt with a window is an occurrence about that window — the holder will come for these litres inside it — and the vessel's drift (:Draining) reads it, so a host foresees its stock leaving its region as the windows open and plans the refill ahead of them. The claims it issued ARE its demand." .
+:amountL a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:decimal ; rdfs:label "amount owed, litres" ;
+    rdfs:comment "How much the claim is for, where the good is measured. Written by the ledger when a claim is recorded and read by Serving's effect and the vessel's drift, which will not discharge or drain by an obligation whose amount they cannot see." .
+:dischargedAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ; rdfs:label "discharged at" ;
+    rdfs:comment "Absent while it stands. The same two-timestamps-and-a-reason shape an intention and a revision already have, because a debt paid and a debt forgotten must never look alike. Serving's effect writes it in the imagined world, which is how the debt's own met-test reads a served world as met." .

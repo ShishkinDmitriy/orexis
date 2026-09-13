@@ -174,7 +174,7 @@ def test_every_graph_builder_spells_what_its_class_declares():
     classes = _per_agent_classes(genesis_store())
     builders = {
         f"{OREXIS}PickRecordGraph": beliefs_graph,
-        f"{OREXIS}ObligationsGraph": obligations_graph,
+        "http://example.org/orexis/market#ObligationsGraph": obligations_graph,   # the ledger's (#635)
         "http://example.org/orexis/progression#IntentionGraph": intentions_graph,
         "http://example.org/orexis/progression#PromisesGraph": promises_graph,
         "http://example.org/orexis/deliberation#RememberedGraph": remembered_graph,

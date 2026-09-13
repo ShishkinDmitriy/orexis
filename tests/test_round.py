@@ -819,7 +819,7 @@ def test_paying_the_debt_discharges_it_and_the_ledger_keeps_the_record(host):
     from orexis_agent_progression.ontology import obligations_graph
     from orexis_agent_progression.store import bindings
     kept = bindings(host.beliefs.query(
-        "SELECT ?d WHERE { GRAPH <%s> { ?o <http://example.org/orexis#dischargedAt> ?d } }"
+        "SELECT ?d WHERE { GRAPH <%s> { ?o <http://example.org/orexis/market#dischargedAt> ?d } }"
         % obligations_graph("supplier")))
     assert kept, "and the record of having paid it stays"
 

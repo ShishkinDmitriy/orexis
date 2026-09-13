@@ -60,8 +60,9 @@ The sovereign dismantled it in review:
   `unmetWhen` carriers, whose judging is one select on the store's own engine.
 - **Met-or-not is the pattern-want's whole measure.** The planner judges an `unmetWhen` want
   by running its select against whichever world is asked — the node's own graph, so
-  `GRAPH $state` works and no flat-versus-named split opens — beside the obligation branch
-  that already scores met-or-not over the record. Binary, per the four-measures table:
+  `GRAPH $state` works and no flat-versus-named split opens — and since #635 an obligation
+  is one of them, its select written by the ledger, the branch that scored it over the record
+  inside the kernel gone. Binary, per the four-measures table:
   between entered and held there is nothing to be nearer to.
 - **No `orexis:about`, usually — and that is semantics, not omission**: an avoidance ranges
   over the whole menu the way a call does, because any lever might exit a state. With

@@ -201,6 +201,12 @@ SELECT ?p WHERE {{
                 return True
         return False
 
+    def start(self) -> None:
+        #  THE LEDGER IS MINE TO START (#635): a debt written before the record carried its
+        #  met-test is endowed with one, as an amendment endows what it grants.
+        if self.ledger is not None:
+            self.ledger.endow()
+
     def on_participant_event(self, market, event: dict) -> None:
         """A participant said it is in trouble. That makes a round WANTED — a call (#359).
 
@@ -264,9 +270,9 @@ SELECT ?p WHERE {{
             return False
         rows = bindings(self.agent.beliefs.query(f"""
 SELECT (SUM(?a) AS ?owed) WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
-  ?debt orexis:forClaim ?jti ; orexis:amountL ?a ; orexis:owedAt ?issued .
-  OPTIONAL {{ ?debt orexis:owedFrom ?from }}
-  FILTER NOT EXISTS {{ ?debt orexis:dischargedAt ?d }}
+  ?debt market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
+  OPTIONAL {{ ?debt market:owedFrom ?from }}
+  FILTER NOT EXISTS {{ ?debt market:dischargedAt ?d }}
   FILTER(COALESCE(?from, ?issued) <= \"{wanted_at.isoformat()}\"^^xsd:dateTime) }} }}"""))
         owed = float(rows[0]["owed"]) if rows and rows[0].get("owed") else 0.0
         floor = 0.0

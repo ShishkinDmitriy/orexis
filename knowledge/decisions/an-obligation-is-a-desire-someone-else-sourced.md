@@ -173,9 +173,10 @@ facts were sayable in authored and entailed terms (`market:matchesBy`, `market:o
   ratified band.
 - ~~**What a claim-sourced desire says exactly.**~~ CLOSED by
   [#255](https://github.com/ShishkinDmitriy/orexis/issues/255), the way the note said it had to
-  be: the state is *this claim discharged* — a pattern over the record the planner's met-test
-  asks of whatever world it judges — and the act stayed an affordance (`ag:Apply`, whose
-  effect rule now states what serving makes true, sized from the record's own `orexis:amountL`).
+  be: the state is *this claim discharged* — a pattern over the record, asked of whatever
+  world is judged; since #635 the ledger writes it as the debt's own `orexis:unmetWhen` and
+  the planner names no word of the ledger — and the act stayed an affordance (`ag:Apply`, whose
+  effect rule now states what serving makes true, sized from the record's own `market:amountL`).
 - **What becomes of the honoured row.** ANSWERED: disclosure survived, the filter did not, and
   the row gained a job nobody had planned for it — it is how an obligation finds the lever that serves
   its counterparty. A pass about a PROPERTY still passes over honoured rows, which is not a

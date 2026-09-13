@@ -466,7 +466,7 @@ def _select(store, text: str, bind: dict, when=None) -> list:
     THROUGH THE RULES' OWN DOOR (`store.construct`), and that is a correction (#472): a
     rule's SELECT must see exactly what its CONSTRUCT sees — public knowledge plus this
     agent's own records — and `store.query` reads public alone, so a landing time computed
-    from an obligation RECORD (`orexis:forClaim`, `orexis:amountL`) bound nothing and every
+    from an obligation RECORD (the ledger's claim and amount) bound nothing and every
     serve landed "immediately", silently. The rows come back as engine solutions rather
     than JSON bindings; the one consumer reads its column accordingly."""
     try:

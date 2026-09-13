@@ -23,7 +23,7 @@ from conftest import (build_agent, genesis_store, wired_event_topic, wired_hoste
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 STORED = "http://example.org/orexis/water#StoredLitres"
 FORESIGHT = "http://example.org/orexis/sensing#foresightS"
-OWED_FROM = "http://example.org/orexis#owedFrom"
+OWED_FROM = "http://example.org/orexis/market#owedFrom"
 FALLING = 0.47          # 0.02 above the simulation fern's floor of 0.45, at 0.12 a day: four hours
 HOURS = 3600.0
 
@@ -124,7 +124,7 @@ def test_a_host_whose_stock_covers_the_ask_grants_a_claim_with_no_round(monkeypa
     assert abs((datetime.fromisoformat(claim["usable_from"]) - wanted).total_seconds()) < 1.0
     assert rounds.rounds_of(host) == [], "covered from stock: no round convened"
     rows = bindings(host.beliefs.query(f"""SELECT ?from WHERE {{ GRAPH <{obligations_graph("supplier")}> {{
-        ?o <http://example.org/orexis#forClaim> "{claim['jti']}" ; <{OWED_FROM}> ?from }} }}"""))
+        ?o <http://example.org/orexis/market#forClaim> "{claim['jti']}" ; <{OWED_FROM}> ?from }} }}"""))
     assert rows and abs((datetime.fromisoformat(rows[0]["from"]) - wanted).total_seconds()) < 1.0
 
 

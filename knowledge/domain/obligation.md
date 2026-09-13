@@ -24,7 +24,7 @@ alike.
 # It is the host's predicted arrival
 
 Since [a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md) a debt says from
-when its holder may come — `orexis:owedFrom`, the claim's usable instant — and that makes it
+when its holder may come — `market:owedFrom`, the claim's usable instant — and that makes it
 an occurrence about a window: the holder will come for these litres inside it. The claims a
 host issued are its demand, and the vessel's drift reads the ledger to say when the stock
 leaves its region as the windows open, so a host foresees its refill as a plant foresees a

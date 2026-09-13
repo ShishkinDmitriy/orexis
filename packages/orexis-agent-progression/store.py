@@ -519,7 +519,7 @@ class Store:
         The agent's own were added when the obligations ledger stopped being the kernel's: a
         rule that must name `GRAPH $owed` to reach a record is a rule whose graph somebody
         outside the package has to know, and the planner was substituting it. Widening the
-        union lets a package's rule match its own record by the premises it wrote (`orexis:forClaim`) without
+        union lets a package's rule match its own record by the premises it wrote (its claim) without
         anyone naming a graph — which is rule 1 for graph IRIs, applied to the one road that
         had been exempt.
         """

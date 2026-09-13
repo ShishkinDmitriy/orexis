@@ -53,7 +53,7 @@ arrival expected inside that window — an occurrence, a fact ABOUT a window sta
 whose own period says how long it is worth believing — and its supply want reads those as
 demand, so the refill upstream is planned ahead of the presenting
 ([#626](https://github.com/ShishkinDmitriy/orexis/issues/626), built). The prediction was
-already there: every claim the host issues is a debt in its ledger, and `orexis:owedFrom`
+already there: every claim the host issues is a debt in its ledger, and `market:owedFrom`
 carries the claim's usable instant onto it. The market package's drift, `market:Draining`,
 reads the ledger where the water package reads a rate — the level at a future instant is what
 the vessel holds less what it owes to holders whose windows have opened by then, a discharged

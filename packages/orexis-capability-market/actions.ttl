@@ -402,7 +402,7 @@ market:Presenting
 #  chaining would be.
 #
 #  THE AMOUNT HAS ONE SOURCE: the obligation record, written when the claim was issued
-#  (`orexis:amountL`). An obligation recorded before the amount existed simply never binds here —
+#  (`market:amountL`). An obligation recorded before the amount existed simply never binds here —
 #  unplannable, still servable by the honoured row, which is the graceful arrival every
 #  widening in this repo is held to.
 
@@ -446,10 +446,10 @@ market:Serving
     #  and it is what lets the level's own want notice the drop.
     sh:construct """
         CONSTRUCT {
-            ?obl orexis:dischargedAt ?now .
+            ?obl market:dischargedAt ?now .
         } WHERE {
-            ?obl orexis:forClaim $claim ; orexis:amountL ?litres .
-            FILTER NOT EXISTS { ?obl orexis:dischargedAt ?done }
+            ?obl market:forClaim $claim ; market:amountL ?litres .
+            FILTER NOT EXISTS { ?obl market:dischargedAt ?done }
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:drawsFrom ?vessel .
             ?vessel ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?levelProp .
@@ -467,7 +467,7 @@ market:Serving
     #  computed anywhere else would be a second claim about when the world should answer.
     orexis:landsAfter """
         SELECT ?seconds WHERE {
-            ?obl orexis:forClaim $claim ; orexis:amountL ?litres .
+            ?obl market:forClaim $claim ; market:amountL ?litres .
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:maxDoseMl ?cap ;
                    actuation:mlPerSecond ?rate .
@@ -491,7 +491,7 @@ market:Serving
 #
 #  THE HOST'S PREDICTED ARRIVALS (#626, a-claim-is-water-at-a-time): every claim the host issued
 #  is a debt in its ledger, and since #625 a debt says FROM WHEN its holder may come
-#  (`orexis:owedFrom`). So the vessel's level at a future instant is what it holds now less
+#  (`market:owedFrom`). So the vessel's level at a future instant is what it holds now less
 #  what it owes to holders whose windows have opened by then — a drift, in the grammar the
 #  water and climate packages use, reading the ledger where they read a rate. Two forms, as
 #  theirs: a level with a value falls by the litres; one known only by its band falls below its
@@ -524,12 +524,12 @@ market:Draining
               SELECT ?crossing (SUM(?a) AS ?cum) WHERE {
                 {
                   SELECT DISTINCT ?crossing ?o2 ?a WHERE {
-                    ?o a orexis:Desire ; orexis:forClaim ?jti ; orexis:owedFrom ?crossing .
-                    FILTER NOT EXISTS { ?o orexis:dischargedAt ?d }
-                    ?o2 a orexis:Desire ; orexis:forClaim ?jti2 ; orexis:amountL ?a .
-                    OPTIONAL { ?o2 orexis:owedFrom ?from }
-                    ?o2 orexis:owedAt ?issued .
-                    FILTER NOT EXISTS { ?o2 orexis:dischargedAt ?d2 }
+                    ?o a orexis:Desire ; market:forClaim ?jti ; market:owedFrom ?crossing .
+                    FILTER NOT EXISTS { ?o market:dischargedAt ?d }
+                    ?o2 a orexis:Desire ; market:forClaim ?jti2 ; market:amountL ?a .
+                    OPTIONAL { ?o2 market:owedFrom ?from }
+                    ?o2 market:owedAt ?issued .
+                    FILTER NOT EXISTS { ?o2 market:dischargedAt ?d2 }
                     FILTER(COALESCE(?from, ?issued) <= ?crossing)
                   }
                 }
@@ -548,10 +548,10 @@ market:Draining
             $me market:hosts ?venue . ?venue market:marketFor ?subject .
             {
               SELECT (SUM(?a) AS ?owed) WHERE {
-                ?debt a orexis:Desire ; orexis:forClaim ?jti ; orexis:amountL ?a ; orexis:owedAt ?issued .
-                OPTIONAL { ?debt orexis:owedFrom ?from }
-                FILTER NOT EXISTS { ?debt orexis:dischargedAt ?d }
-                FILTER NOT EXISTS { GRAPH $state { ?debt orexis:dischargedAt ?d2 } }
+                ?debt a orexis:Desire ; market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
+                OPTIONAL { ?debt market:owedFrom ?from }
+                FILTER NOT EXISTS { ?debt market:dischargedAt ?d }
+                FILTER NOT EXISTS { GRAPH $state { ?debt market:dischargedAt ?d2 } }
                 FILTER(COALESCE(?from, ?issued) <= $lands)
               }
             }
@@ -578,10 +578,10 @@ market:Draining
             $me market:hosts ?venue . ?venue market:marketFor ?subject .
             {
               SELECT (SUM(?a) AS ?owed) WHERE {
-                ?debt a orexis:Desire ; orexis:forClaim ?jti ; orexis:amountL ?a ; orexis:owedAt ?issued .
-                OPTIONAL { ?debt orexis:owedFrom ?from }
-                FILTER NOT EXISTS { ?debt orexis:dischargedAt ?d }
-                FILTER NOT EXISTS { GRAPH $state { ?debt orexis:dischargedAt ?d2 } }
+                ?debt a orexis:Desire ; market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
+                OPTIONAL { ?debt market:owedFrom ?from }
+                FILTER NOT EXISTS { ?debt market:dischargedAt ?d }
+                FILTER NOT EXISTS { GRAPH $state { ?debt market:dischargedAt ?d2 } }
                 FILTER(COALESCE(?from, ?issued) <= $lands)
               }
             }
@@ -613,10 +613,10 @@ market:DrainingAcrossBands
             $me market:hosts ?venue . ?venue market:marketFor ?subject .
             {
               SELECT (SUM(?a) AS ?owed) WHERE {
-                ?debt a orexis:Desire ; orexis:forClaim ?jti ; orexis:amountL ?a ; orexis:owedAt ?issued .
-                OPTIONAL { ?debt orexis:owedFrom ?from }
-                FILTER NOT EXISTS { ?debt orexis:dischargedAt ?d }
-                FILTER NOT EXISTS { GRAPH $state { ?debt orexis:dischargedAt ?d2 } }
+                ?debt a orexis:Desire ; market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
+                OPTIONAL { ?debt market:owedFrom ?from }
+                FILTER NOT EXISTS { ?debt market:dischargedAt ?d }
+                FILTER NOT EXISTS { GRAPH $state { ?debt market:dischargedAt ?d2 } }
                 FILTER(COALESCE(?from, ?issued) <= $lands)
               }
             }
@@ -646,10 +646,10 @@ market:DrainingAcrossBands
             $me market:hosts ?venue . ?venue market:marketFor ?subject .
             {
               SELECT (SUM(?a) AS ?owed) WHERE {
-                ?debt a orexis:Desire ; orexis:forClaim ?jti ; orexis:amountL ?a ; orexis:owedAt ?issued .
-                OPTIONAL { ?debt orexis:owedFrom ?from }
-                FILTER NOT EXISTS { ?debt orexis:dischargedAt ?d }
-                FILTER NOT EXISTS { GRAPH $state { ?debt orexis:dischargedAt ?d2 } }
+                ?debt a orexis:Desire ; market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
+                OPTIONAL { ?debt market:owedFrom ?from }
+                FILTER NOT EXISTS { ?debt market:dischargedAt ?d }
+                FILTER NOT EXISTS { GRAPH $state { ?debt market:dischargedAt ?d2 } }
                 FILTER(COALESCE(?from, ?issued) <= $lands)
               }
             }
