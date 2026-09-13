@@ -32,6 +32,7 @@ from orexis_agent_progression.ontology import HANDLE, SEND, SUBSCRIPTIONS
 from orexis_agent_progression.store import bindings
 
 from .watchdog import BusWatchdog
+from orexis_agent_progression import clock
 
 log = logging.getLogger("mqtt")
 
@@ -74,7 +75,7 @@ class MqttModule(Module):
         #  whose session died, and must meet the same bound (#53).
         self.connected = False
         self.reconnects = -1     # the first connect is not a RE-connect
-        self.disconnected_at: float | None = time.monotonic()
+        self.disconnected_at: float | None = clock.monotonic()
         self.watchdog = BusWatchdog(self)
 
     # --- the session ---------------------------------------------------------------------
@@ -134,7 +135,7 @@ class MqttModule(Module):
         #  the reason — a drop with no matching "listening on" after it is the shape of the
         #  fault that cost two days (#53).
         if self.disconnected_at is None:
-            self.disconnected_at = time.monotonic()
+            self.disconnected_at = clock.monotonic()
         self.log.warning("disconnected from the bus (%s) — paho will retry", reason_code)
 
     def _on_message(self, topic: str, payload: bytes) -> None:
@@ -176,7 +177,7 @@ class MqttModule(Module):
     def disconnected_for_s(self) -> float | None:
         """How long the session has been down, or None while it is up. Flapping is a different
         fault, and `reconnects` is its counter."""
-        return None if self.disconnected_at is None else time.monotonic() - self.disconnected_at
+        return None if self.disconnected_at is None else clock.monotonic() - self.disconnected_at
 
     def alive(self) -> bool | None:
         """Paho's loop thread, if it has ever existed. `_thread` is paho's private attribute,

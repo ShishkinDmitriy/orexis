@@ -54,6 +54,7 @@ from orexis_agent_progression.ontology import (obligations_graph, promises_graph
                             STATE_GRAPH, beliefs_graph)
 from orexis_agent_deliberation.conformance import graph_from, held_shapes, legality_selects
 from orexis_agent_deliberation.judge import crossed_text
+from orexis_agent_progression import clock
 
 log = logging.getLogger("search")
 
@@ -217,7 +218,7 @@ class Planner:
         #  THE PASS'S CLOCK, read once at the root of each pass and never inside the search
         #  (#588). Here so a caller asking a planner for a rule's bindings before any pass has
         #  a clock to be answered with.
-        self._clock = datetime.now(timezone.utc)
+        self._clock = clock.now()
         #  The sovereign's pick, read the way every pick is — from the desire modality's copy,
         #  since the search is what reads a belief and nothing beneath it does — or the engine's
         #  own ceiling where the agent's beliefs say nothing. Optional on purpose, unlike the
@@ -573,7 +574,7 @@ class Planner:
             #  reading's age — and a round opened after the reading did not hold at that
             #  instant, so the door hid it (#625). The age is drifted at the root instead
             #  (`_projected`), and the door is asked about the instants the pass stands at.
-            self._clock = datetime.now(timezone.utc)
+            self._clock = clock.now()
             here = self._begin(desire)
             root_at = signature.where(here.diff, here.ground)
             self._root, self._nodes, self._by_diff = here, [here], {root_at: here}
@@ -876,7 +877,7 @@ class Planner:
             m.origin = m.taken[0].action if m.taken else None
         #  THE NEW ROOT IS THE PRESENT, so the pass's clock is now: a kept world's landing
         #  is re-based below, and both halves of a node's instant move with the root (#588).
-        self._clock = datetime.now(timezone.utc)
+        self._clock = clock.now()
         node.parent, node.graph, node.materialised = None, STATE_GRAPH, True
         #  The root stands nowhere but the present. Re-based by set algebra it would carry
         #  the number it predicted against the number the present holds; by cell they are

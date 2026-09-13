@@ -45,6 +45,7 @@ from .act import Step, method_of, predicts_from_json, predicts_json, preconditio
 from .store import bind, bindings
 
 from .graphs import intentions_graph
+from . import clock
 from .ontology import ANSWER, LAYER_OF, OREXIS, PLAN_FAILED, PLAN_FINISHED, REPORTS, WITNESS, PROGRESSION
 
 #  What an intention is made of — the mind's own words, and they were the kernel's already
@@ -186,7 +187,7 @@ class Standing:
         """How long it has stood AT THIS STEP — since adoption, or since the last advance:
         a plan progressing by feedback is not stale for being long (#510)."""
         since = max(self.adopted_at, self.advanced_at) if self.advanced_at else self.adopted_at
-        return ((now or datetime.now(timezone.utc)) - since).total_seconds()
+        return ((now or clock.now()) - since).total_seconds()
 
 
 @dataclass(frozen=True)
@@ -338,7 +339,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{PROGRESSION + "by"}> ?s . FILTER NOT EXIS
         if isinstance(act, str):
             act = Step(action=act, via=via or "")
         action = act.action
-        now = datetime.now(timezone.utc)
+        now = clock.now()
         for standing in self.standing(want=want):
             if standing.action != action and (steps is None or self._next_of(standing.uri) is None):
                 continue                  # a different commitment about this want stands apart
@@ -464,7 +465,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         from .ontology import beliefs_graph
         from .store import Raw
         adopted = next((s.adopted_at for s in self.standing() if s.uri == intention_uri), None)
-        since = (adopted or datetime.now(timezone.utc)).isoformat()
+        since = (adopted or clock.now()).isoformat()
         return {"me": self.me.uri, "via": step.via or "urn:nothing",
                 "about": self._about(intention_uri) or "urn:nothing",
                 "subject": self.me.acts_for or "urn:nobody", "want": step.want or "urn:nothing",
@@ -600,7 +601,7 @@ WHERE  {{ GRAPH <{promises_graph(self.agent.id)}> {{
         step_uri = rows[0]["step"]
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{step_uri}> <{kernel("refusedBelow")}> "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime }} }}""")
+  <{step_uri}> <{kernel("refusedBelow")}> "{clock.now().isoformat()}"^^xsd:dateTime }} }}""")
         self.log.warning("refused below: the level beneath found no way to keep %s's promise — %s",
                          _short(step_uri), because)
         for standing in self.standing():
@@ -618,7 +619,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             patience = float(self.beliefs.patience_s)
         except Exception:                                           # noqa: BLE001
             return False      # an agent that states no patience keeps no refusal: nothing to pass over
-        since = datetime.now(timezone.utc) - timedelta(seconds=patience)
+        since = clock.now() - timedelta(seconds=patience)
         def iri(x):
             return isinstance(x, str) and ":" in x and " " not in x and not x.startswith("urn:nothing")
         lever = f'?s <{kernel("through")}> <{via}> .' if iri(via) else ""
@@ -656,7 +657,7 @@ SELECT ?s WHERE {{ GRAPH <{self.graph}> {{
         if rows[0].get("at"):
             return datetime.fromisoformat(rows[0]["at"])
         if rows[0].get("seconds"):
-            return datetime.now(timezone.utc) + timedelta(seconds=float(rows[0]["seconds"]))
+            return clock.now() + timedelta(seconds=float(rows[0]["seconds"]))
         return None
 
     def _holds_now(self, shape) -> bool:
@@ -689,7 +690,7 @@ SELECT ?s WHERE {{ GRAPH <{self.graph}> {{
         #  #625) — a held claim's usable instant. Either way the step waits on the scheduler
         #  alone until then, and the condition below is asked only once the instant has come.
         due = standing.step.not_before or self._instant_of(standing.action, tokens, "readyAt")
-        if due is not None and datetime.now(timezone.utc) < due:
+        if due is not None and clock.now() < due:
             self._place(intention_uri, standing, due)
             return False
         text = self._template_of(standing.action, "readyWhen")
@@ -702,7 +703,7 @@ SELECT ?s WHERE {{ GRAPH <{self.graph}> {{
         if any(h.uri == intention_uri for h, _, _ in self.held()):
             return False                          # already waiting on it
         deadline = self._lapses_at(standing.action, tokens) or datetime.fromtimestamp(
-            datetime.now(timezone.utc).timestamp() + float(self.beliefs.patience_s), tz=timezone.utc)
+            clock.now().timestamp() + float(self.beliefs.patience_s), tz=timezone.utc)
         self.log.info("holding %s until its action's condition holds (by %s)",
                       standing.action.rsplit("#", 1)[-1], deadline.isoformat(timespec="seconds"))
         self.hold(intention_uri, until=shape, not_after=deadline, when_lapsed="take")
@@ -713,7 +714,7 @@ SELECT ?s WHERE {{ GRAPH <{self.graph}> {{
         from .scheduler import scheduler
         if intention_uri in self._deadlines:
             return
-        delay = (due - datetime.now(timezone.utc)).total_seconds()
+        delay = (due - clock.now()).total_seconds()
         self.log.info("holding %s until %s, its placed instant",
                       standing.action.rsplit("#", 1)[-1], due.isoformat(timespec="seconds"))
         self._deadlines[intention_uri] = scheduler().at(max(0.0, delay), lambda: self.lapse(intention_uri))
@@ -732,7 +733,7 @@ SELECT ?s WHERE {{ GRAPH <{self.graph}> {{
         shape = condition_shape(f"urn:orexis:done:{uuid.uuid4().hex[:8]}", self.me.uri,
                                 bind(text, **tokens))
         deadline = self._lapses_at(standing.action, tokens) or datetime.fromtimestamp(
-            datetime.now(timezone.utc).timestamp() + float(self.beliefs.patience_s), tz=timezone.utc)
+            clock.now().timestamp() + float(self.beliefs.patience_s), tz=timezone.utc)
         self.window(intention_uri, deadline)
         self.log.info("expecting %s to be done by %s: its action's condition",
                       standing.action.rsplit("#", 1)[-1], deadline.isoformat(timespec="seconds"))
@@ -784,7 +785,7 @@ INSERT {{ GRAPH <{self.graph}> {{
   {triples} }} }}
 WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "by"}> ?act }} }}""")
         if not_after is not None:
-            delay = (not_after - datetime.now(timezone.utc)).total_seconds()
+            delay = (not_after - clock.now()).total_seconds()
             from .scheduler import scheduler
             self._deadlines[intention_uri] = scheduler().at(
                 max(0.0, delay), lambda: self.lapse(intention_uri))
@@ -863,7 +864,7 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
         try:
             held = self.held()
             self._holding = bool(held)
-            now = datetime.now(timezone.utc)
+            now = clock.now()
             for holder, select, predicate in held:
                 try:
                     rows = bindings(self.agent.beliefs.query_over(
@@ -938,7 +939,7 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
         for standing in self.standing():
             if standing.uri == intention_uri and standing.step.not_before is not None:
                 self._deadlines.pop(intention_uri, None)
-                if datetime.now(timezone.utc) < standing.step.not_before:
+                if clock.now() < standing.step.not_before:
                     self._place(intention_uri, standing, standing.step.not_before)
                     return
                 #  TAKEN, and its condition asked again on the way: a placed step's instant is
@@ -1015,7 +1016,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "by"}> ?act 
             self._resolve(standing, "dropped", because)
 
     def _resolve(self, standing: Standing, outcome: str, because: str) -> None:
-        now = datetime.now(timezone.utc).isoformat()
+        now = clock.now().isoformat()
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{standing.uri}> <{PROGRESSION + "resolvedAt"}> "{now}"^^xsd:dateTime ;
@@ -1086,7 +1087,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             self.log.warning("cannot expect an end for %s — the step predicts nothing, so "
                              "there is nothing to hold the world to", _short(intention_uri))
             return False
-        now = datetime.now(timezone.utc)
+        now = clock.now()
         window = (lands_after_s + (seeing_s or 0.0) if lands_after_s is not None
                   else float(self.beliefs.patience_s))
         deadline_dt = not_after or datetime.fromtimestamp(now.timestamp() + window,
@@ -1271,7 +1272,7 @@ SELECT ?i ?step ?action ?want ?baseline ?baselineAt ?deadline ?predicts WHERE {{
     #  an answering observation now (#516), and the reading's write is what re-asks it.
 
     def _verdict(self, watch: OpenExpectation, met: bool, because: str) -> None:
-        now = datetime.now(timezone.utc).isoformat()
+        now = clock.now().isoformat()
         #  THE RESIDUAL (#518): what the step said the world would show, and what it shows at
         #  the verdict — met or unmet alike — written on the step for the reviewer, since the
         #  sensed graph keeps only the current witness and the ledger is what remembers.
@@ -1408,7 +1409,7 @@ SELECT ?s ?next ?action ?via ?about ?quantity ?predicts ?precondition WHERE {{ G
         which is younger than my patience — the case pursuit does not search over (#510):
         the plan goes on by feedback, and a search would re-decide what the world has not
         yet contradicted. None otherwise."""
-        now = datetime.now(timezone.utc)
+        now = clock.now()
         held = {h.uri for h, _, _ in self.held()} if self._holding else set()
         for standing in self.standing(want=want):
             #  Stale at this step and not waiting on anything: a step nobody could take,
@@ -1489,7 +1490,7 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
         ever. This was the keeper's answer to the reading choir, keyed by property; the want
         is the key now, and sensing asks per want it holds about the property it is pacing.
         """
-        now = datetime.now(timezone.utc)
+        now = clock.now()
         return any(now < w.deadline for w in self.open_expectations(want))
 
     def _names(self, want: str) -> list[str]:

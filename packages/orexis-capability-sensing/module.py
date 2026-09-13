@@ -72,6 +72,7 @@ from orexis_agent_progression.timer import Timer
 from .terms import NS as _SENSING, NOISE, expectations_graph
 from .sensed_writer import expectation_uri
 from .regions import band_classes_of
+from orexis_agent_progression import clock
 
 _SOSA = "http://www.w3.org/ns/sosa/"
 
@@ -595,7 +596,7 @@ WHERE  {{ GRAPH <{graph}> {{ {node} ?p ?o . OPTIONAL {{ {node} dcterms:temporal 
         timestamps its own readings, that is better and is `sosa:phenomenonTime` (#101).
         """
         mine = False
-        at = datetime.now(timezone.utc)
+        at = clock.now()
         acknowledged = None  # message-level, like the instant: one board, one rhythm
         doc = self.parse(payload)
         if doc is not None and isinstance(doc.get("sleep_s"), (int, float)):
@@ -1210,7 +1211,7 @@ class SubscribingModule(SensingModule):
     def _note_trend(self, subject_uri: str, observed_property: str,
                     value: float, at) -> None:
         """Two readings and the time between them: the slope, in units per second."""
-        at = at or datetime.now(timezone.utc)
+        at = at or clock.now()
         key = (subject_uri, observed_property)
         previous = self._last_seen.get(key)
         if previous is not None:

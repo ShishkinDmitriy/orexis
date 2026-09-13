@@ -65,13 +65,19 @@ agent on a fast clock and watch a day pass in a second.
 
 # What is built
 
-[#646](https://github.com/ShishkinDmitriy/orexis/issues/646), reframed: the clock in
-progression with its pace and epoch from the environment; every wall-clock read in the kernel
-and the packages replaced by it; the scheduler and the timers converting at the sleep;
-compose handing pace and epoch to every process of a world, agents included; the stand-ins
-converting their ticks and pours as they convert their physics; the runbook's crossings
-measured on the bench under the pace. First in the queue, since every measurement after
-depends on it.
+[#646](https://github.com/ShishkinDmitriy/orexis/issues/646), built: `orexis_agent_progression.clock`
+— `now()`, `pace()`, `real_delay()`, `monotonic()` — with its pace and epoch from the
+environment; every wall-clock read in the kernel and the packages replaced by it, fifty-odd
+sites, leaving real only what measures a resource (a pass's compute, a sweep's run, the
+process's uptime); the scheduler converting once, where it sleeps, so every timer and every
+placed step follows; compose handing pace and epoch to every agent of a world that states a
+pace, and the stand-in converting its ticks and waits as it converts its physics. Held to the
+code by `tests/test_clock.py`: a tenth of a real second is fourteen of the world's at the
+simulation's pace, a deadline of seventy-two of the world's seconds lands in half a real
+one, and the simulation fern at 0.47 foresees its crossing four of its own hours out — a
+hundred bench seconds — and places the purchase ahead of it, nothing in it knowing the pace.
+The bench figure, a stand-in and an agent paced alike over one day of the world, is still to
+be taken: it needs the images rebuilt and the society restarted.
 
 # Seams left open
 

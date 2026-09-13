@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import bindings
+from orexis_agent_progression import clock
 
 
 @dataclass(frozen=True)
@@ -27,7 +28,7 @@ class Reading:
     def age_s(self, now: datetime | None = None) -> float | None:
         if self.result_time is None:
             return None
-        return ((now or datetime.now(timezone.utc)) - self.result_time).total_seconds()
+        return ((now or clock.now()) - self.result_time).total_seconds()
 
     def is_fresh(self, max_age_s: float, now: datetime | None = None) -> bool:
         """Untimed readings are never fresh — an unstamped number can't be shown to be current."""

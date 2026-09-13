@@ -77,6 +77,7 @@ from .beliefs import REVIEW_PICKS
 from .graphs import evidence_graph, revisions_graph
 from .summary import Summaries
 from .terms import RECKONING
+from orexis_agent_progression import clock
 
 log = logging.getLogger("review")
 
@@ -262,7 +263,7 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         lets one rule serve a domain nobody has written yet.
         """
         graph = evidence_graph(self.agent.id)
-        now = datetime.now(timezone.utc)
+        now = clock.now()
         held = len(self.summaries.completed())
         lines = []
         for window in self.summaries.newest():
@@ -434,7 +435,7 @@ WHERE  {{ GRAPH <{graph}> {{ <{self.agent.me.uri}> <{belief_term}> ?old }} }}"""
         return max(float(self.interval_s), max(gaps) * max(counts))
 
     def _remember(self, belief_term: str, was, now, outcome: str, why: str) -> None:
-        at = datetime.now(timezone.utc)
+        at = clock.now()
         due = at + timedelta(seconds=self.horizon_s())
         self.agent.beliefs.update(f"""
 INSERT DATA {{ GRAPH <{revisions_graph(self.agent.id)}> {{
@@ -458,7 +459,7 @@ INSERT DATA {{ GRAPH <{revisions_graph(self.agent.id)}> {{
 
     def _due(self) -> set[str]:
         """Terms whose last decision is not yet worth revisiting."""
-        now = datetime.now(timezone.utc).isoformat()
+        now = clock.now().isoformat()
         return {r["term"] for r in bindings(self.agent.beliefs.query(f"""
 SELECT DISTINCT ?term WHERE {{ GRAPH <{revisions_graph(self.agent.id)}> {{
   ?r a review:Revision ; review:revisedTerm ?term ; review:dueAt ?due .
@@ -483,7 +484,7 @@ SELECT (MIN(?due) AS ?soonest) WHERE {{ GRAPH <{revisions_graph(self.agent.id)}>
             return float(self.interval_s)
         if at.tzinfo is None:
             at = at.replace(tzinfo=timezone.utc)
-        wait = (at - datetime.now(timezone.utc)).total_seconds()
+        wait = (at - clock.now()).total_seconds()
         return max(float(self.interval_s), wait)
 
     # --- lifecycle ---------------------------------------------------------------------------

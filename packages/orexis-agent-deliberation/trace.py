@@ -27,6 +27,7 @@ from urllib.parse import quote
 import pyoxigraph as ox
 
 from orexis_agent_progression.ontology import DELIBERATION_GRAPH
+from orexis_agent_progression import clock
 
 log = logging.getLogger("trace")
 
@@ -184,7 +185,7 @@ def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
 {by}        deliberation:standsAt {stands_at:.6f} ;
         deliberation:tookSeconds {took_s:.6f} ;
         deliberation:keptWorlds {kept} ;
-{surprised}{took}        deliberation:asOf "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime .
+{surprised}{took}        deliberation:asOf "{clock.now().isoformat()}"^^xsd:dateTime .
 {"".join(rows)}}} }}""")
 
 

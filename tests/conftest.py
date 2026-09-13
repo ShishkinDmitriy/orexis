@@ -21,6 +21,7 @@ from agent import genesis
 
 from assembly import loader
 from agent.genesis import agent_id_of
+from orexis_agent_progression import clock   # the agent's timeline, which a test helper speaks in
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_capability_sensing.sensed_writer import observation_uri
 from orexis_agent_progression.store import Store
@@ -96,7 +97,7 @@ def genesis_store(readings: dict[str, float] | None = None,
         # The subject lives in the WORLD's namespace since a world took its individuals out
         # of orexis: — a seeded reading must point where the world's fern actually is.
         ns = f"http://example.org/orexis/world/{world}#"
-        ts = (result_time or datetime.now(timezone.utc)).isoformat()
+        ts = (result_time or clock.now()).isoformat()
         st.update("INSERT DATA { GRAPH <%s> {\n%s\n} }" % (STATE_GRAPH, "\n".join(
             f"""  {observation_uri(pid, prop)} a sosa:Observation ;
                     sosa:hasFeatureOfInterest <{ns}{pid}> ;
@@ -309,7 +310,7 @@ def open_round_for(st_or_agent, agent_id: str, seconds: float = 60.0) -> list[st
     agent = st_or_agent if hasattr(st_or_agent, "beliefs") else SimpleNamespace(beliefs=st, id=agent_id)
     venues = [r["v"] for r in bindings(st.query(
         f'SELECT ?v WHERE {{ ?a orexis:localId "{agent_id}" ; market:bidsIn ?v }}'))]
-    closes = datetime.now(timezone.utc) + timedelta(seconds=seconds)
+    closes = clock.now() + timedelta(seconds=seconds)
     return [rounds.open_round(agent, v, f"test-{agent_id}-{i}", 2.0, 0.4, closes)
             for i, v in enumerate(venues)]
 
@@ -420,7 +421,7 @@ def write_reading(agent, value: float, observed_property: str | None = None, age
         subject_uri=sensor.subject, subject_id=sensor.subject.rsplit("#", 1)[-1],
         value=value, sensor_uri=sensor.uri, observed_property=sensor.observes,
         author_uri=agent.me.uri, used_procedure=sensor.sense_mode,
-        ts=(datetime.now(timezone.utc) - timedelta(seconds=age_s)).isoformat())
+        ts=(clock.now() - timedelta(seconds=age_s)).isoformat())
     #  AND WHETHER THE AGENT STILL TRUSTS IT (#598). A reading is stale because sensing said
     #  so ON the reading, by a deadline landing on the loop — not because its timestamp is
     #  old, which nothing reads as an age any more. `ingest` arms that deadline in production

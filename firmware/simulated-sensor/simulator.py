@@ -198,8 +198,11 @@ class SimulatedSensor:
         # capability follows from this, and neither branch knows that.
         self.mode = _env("SIM_SENSE_MODE", "scheduled").lower()
 
-        # The world's clock (`sim:timeScale`): simulated seconds per real second. Physics integrate
-        # real elapsed time times this, so one bench hour can hold one simulated day.
+        # The world's pace (`sim:timeScale`): the world's seconds per real second — ONE timeline
+        # for every process of the world (the-agent-keeps-one-timeline-and-its-clock-may-run-fast):
+        # the physics integrate real elapsed time times this, and every tick, sleep and cadence
+        # this stand-in keeps is in the world's seconds, converted only at the wait, exactly as
+        # the agents' own clocks convert. One bench hour can hold one day.
         self.timescale = _float("SIM_TIMESCALE", 1.0)
 
         # What this device reports, and where each one goes in its message. One entry for a
@@ -534,7 +537,7 @@ class SimulatedSensor:
                 slept = 0.0
                 while slept < self.tick_s and not self._stop.is_set():
                     step = min(self.alarm_period_s, self.tick_s - slept)
-                    self._stop.wait(step)
+                    self._stop.wait(step / self.timescale)   # the world's seconds, slept real
                     slept += step
                     self._advance()
                     if self._news():
@@ -551,7 +554,7 @@ class SimulatedSensor:
             # wake is memory, not permission.
             self._released.clear()
             self._publish()
-            if not self._released.wait(self.release_wait_s):
+            if not self._released.wait(self.release_wait_s / self.timescale):
                 log.warning("%s: no release after %ss — the agent is not answering",
                             self.sensor_id, self.release_wait_s)
             # The heartbeat sleep — WATCHED (#151), where a band is commanded: physics advance
@@ -560,7 +563,7 @@ class SimulatedSensor:
             slept = 0.0
             while slept < self.sleep_s and not self._stop.is_set():
                 step = min(self.alarm_period_s, self.sleep_s - slept)
-                self._stop.wait(step)
+                self._stop.wait(step / self.timescale)
                 slept += step
                 self._advance()
                 if self._news():

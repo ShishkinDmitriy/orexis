@@ -40,6 +40,7 @@ from .planner import SATISFIED
 from orexis_agent_progression.execution import carry_out
 from orexis_agent_progression.store import bindings
 from orexis_agent_reactive.loop import loop
+from orexis_agent_progression import clock
 
 log = logging.getLogger("pursuit")
 
@@ -142,7 +143,7 @@ def foreseen(agent, root: str) -> datetime | None:
     crossing = crossing_of(agent, root)
     if crossing is None:
         return None
-    if (crossing - datetime.now(timezone.utc)).total_seconds() > ahead:
+    if (crossing - clock.now()).total_seconds() > ahead:
         return None
     return crossing
 
@@ -182,7 +183,7 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
     if holds_at is not None:
         binding = "orexis:At"
         timed = (f' ; orexis:holdsAt "{holds_at.isoformat()}"^^xsd:dateTime'
-                 f' ; prov:generatedAtTime "{datetime.now(timezone.utc).isoformat()}"^^xsd:dateTime')
+                 f' ; prov:generatedAtTime "{clock.now().isoformat()}"^^xsd:dateTime')
         label = f"foreseen: {label[len('pursued: '):]} at {holds_at.isoformat(timespec='minutes')}"
     agent.beliefs.update(f"""
 INSERT DATA {{ GRAPH <{pursued_graph(agent.id)}> {{
@@ -241,7 +242,7 @@ def pursue(agent, desire) -> str | None:
     #  waiting — and a plan found from the present is taken now, whatever instant the want
     #  holds at; what waits for the instant then is the step the world places, a claim's
     #  presenting. Never by subtraction from the deadline.
-    if plan.placed_at is not None and plan.placed_at > datetime.now(timezone.utc):
+    if plan.placed_at is not None and plan.placed_at > clock.now():
         plan = replace(plan, steps=(replace(plan.steps[0], not_before=plan.placed_at),) + plan.steps[1:])
     act = plan.steps[0]
     if keeper is None:
