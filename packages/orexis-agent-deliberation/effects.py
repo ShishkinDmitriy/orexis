@@ -56,10 +56,11 @@ SELECT ?rule ?construct ?available ?retracts ?lands ?costs WHERE {
 
 
 _DRIFTS_Q = """
-SELECT ?drift ?construct ?retracts ?crosses WHERE {
+SELECT ?drift ?construct ?retracts ?crosses ?spreads WHERE {
   ?drift a orexis:Drift ; sh:construct ?construct .
   OPTIONAL { ?drift orexis:retracts ?retracts }
   OPTIONAL { ?drift orexis:crossesAfter ?crosses }
+  OPTIONAL { ?drift orexis:spreadsBy ?spreads }
 }"""
 
 
@@ -107,6 +108,25 @@ def crossings(store, me: str | None = None, when=None) -> list[dict]:
             #  a drift draining a vessel by dated debts knows the instant and no seconds,
             #  since this engine turns the stretch between two instants into no number.
             if row["at"] and (row["seconds"] is not None or row["crossing"]):
+                out.append(row)
+    return out
+
+
+def spreads(store, elapsed: float, when=None, **bind) -> list[dict]:
+    """How far each reading the agent holds may be off after `elapsed` seconds, by every drift
+    that says (`orexis:spreadsBy`, #631): rows of subject, property and width, in the
+    property's own unit. The rate's uncertainty over the stretch, in the domain's arithmetic;
+    sensing sums it with the instrument's noise and widens the bands the next reading may
+    fall in. Through the rules' own door, as `crossings` is."""
+    out = []
+    for rule in drifts_of(store):
+        text = rule.get("spreads")
+        if not text:
+            continue
+        for sol in _select(store, text, {"state": STATE_GRAPH, **bind, "elapsed": elapsed}, when):
+            row = {k: (sol[k].value if sol[k] is not None else None)
+                   for k in ("subject", "property", "width")}
+            if row["subject"] and row["property"] and row["width"] is not None:
                 out.append(row)
     return out
 

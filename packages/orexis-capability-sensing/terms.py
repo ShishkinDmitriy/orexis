@@ -38,6 +38,21 @@ PUSH = term("PushProcedure")            # keeps its own clock, takes no orders -
 #  out (#240). One definition and one direction: `stale_after_s` computes it, `publish_horizon`
 #  writes it, and everything else — including the freshness want — reads what was written.
 STALE_AFTER_S = term("staleAfterS")
+#  THE EXPECTED NEXT OBSERVATION (#631): the class, the set of bands it may be, the instrument's
+#  own width, and the per-agent graph the expectations are written into.
+EXPECTED_OBSERVATION = term("ExpectedObservation")
+MAY_BE = term("mayBe")
+EXPECTED_OF = term("expectedOf")              # its subject, in sensing's words and never an observation's
+EXPECTED_PROPERTY = term("expectedProperty")
+NOISE = term("noise")
+EXPECTATIONS_GRAPH = term("ExpectationsGraph")
+
+
+def expectations_graph(agent_id: str) -> str:
+    """One agent's expected next observations — the name `:ExpectationsGraph` declares the
+    prefix of, built from the one id a process is handed."""
+    from orexis_agent_progression.ontology import GRAPH_PREFIX
+    return GRAPH_PREFIX + "expected/" + agent_id
 STALE_SINCE = term("staleSince")
 WATCH_LIVE = term("watchLive")
 

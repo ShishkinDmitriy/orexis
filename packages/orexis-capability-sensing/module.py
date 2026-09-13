@@ -69,6 +69,11 @@ from .scaling import scaling_for
 from .terms import (INSTRUMENTS_GRAPH, ANNOTATE, BOUNDS, READING_RECORDED, URGENCY, FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S, WATCH_LIVE,
                     SUBSCRIBING)
 from orexis_agent_progression.timer import Timer
+from .terms import NS as _SENSING, NOISE, expectations_graph
+from .sensed_writer import expectation_uri
+from .regions import band_classes_of
+
+_SOSA = "http://www.w3.org/ns/sosa/"
 
 #  The measure this capability declares (a-desire-states-its-own-measure, completed): how
 #  badly an observation-backed want is unmet. OUR file, OUR namespace, OUR code — the kernel
@@ -447,6 +452,9 @@ class SensingModule(Module):
                       repeat=False)
         self._staleness[key] = timer
         timer.start()
+        #  AND WHAT I EXPECT NEXT (#631): the same horizon is the window the next reading is
+        #  expected in, and the drift over it says which bands it may carry.
+        self.expect_next(subject_uri, observed_property, reading, horizon)
 
     def went_stale(self, subject_uri: str, observed_property: str) -> None:
         """The horizon ran out: write it on the reading, and say so upward.
@@ -468,9 +476,102 @@ WHERE {{ GRAPH <{STATE_GRAPH}> {{
        sosa:observedProperty <{observed_property}> .
   FILTER NOT EXISTS {{ ?obs sensing:staleSince ?was }} }}
   BIND(NOW() AS ?now) }}""")
+        #  The expected next observation did not arrive: its window closed with none, and the
+        #  expectation is gone with it (#631) — a missed expected event is what staleness is.
+        self.forget_expected(subject_uri, observed_property)
         for want in self.wants_about(observed_property, subject_uri):
             if want.is_epistemic:
                 reviser.wake(self.agent, want.uri)
+
+    def expect_next(self, subject_uri: str, observed_property: str, reading, horizon: float) -> None:
+        """THE EXPECTED NEXT OBSERVATION (#631, a-prediction-is-a-set-of-bands-that-widens-with-the-horizon).
+
+        An observation is an event: before it occurs, what is known is the WINDOW it is
+        expected in and the BANDS it may carry. The window is the horizon this module already
+        keeps — due when the cadence in force makes it so, closed when the grace runs out.
+        The bands are the set the reading may be in at the window's far end: the drift's
+        centre, read through the rules' own door exactly as the planner reads a drift, widened
+        by the instrument's `sensing:noise` and by what every drift's `orexis:spreadsBy`
+        states over the stretch, and mapped onto the subject's own bands. A world stating no
+        noise and no spread gets the band the drift reaches alone, a set with one member.
+
+        Written into a graph of this agent's own, one node per (subject, property), keyed as
+        the reading is: replaced by the next reading, gone when the window closes with none
+        (`went_stale`). The instant is the reading's own, never the clock's. NOT an observation,
+        and not reached by an observation's words: it names its subject and property in
+        sensing's own (`expectedOf`, `expectedProperty`), because the keeper's answering shape
+        walks a subject's observations by `sosa:hasFeatureOfInterest`, and a node stating no
+        value passes a constraint on a value vacuously — every watch on a predicted number
+        read as answered the moment it opened, measured before this was known.
+        """
+        from orexis_agent_deliberation import effects
+        from orexis_agent_progression.store import Raw
+
+        taken = reading.result_time
+        grace = float(getattr(self.beliefs, "grace_s", 0) or 0)
+        opens = taken + timedelta(seconds=max(0.0, horizon - grace))
+        closes = taken + timedelta(seconds=horizon)
+        store = self.agent.beliefs
+        bind = {"me": self.me.uri, "subject": subject_uri, "about": observed_property,
+                "want": "urn:nothing", "via": "urn:nothing", "claim": Raw('"urn:nobody"'),
+                "beliefs": beliefs_graph(self.agent.id), "state": STATE_GRAPH, "litres": 0.0,
+                "lands": Raw(f'"{closes.isoformat()}"^^xsd:dateTime')}
+        centre = float(reading.value)
+        for rule in effects.drifts_of(store):
+            added, _ = effects.drift(store, rule, horizon, when=closes, **bind)
+            facts: dict[str, dict] = {}
+            for t in added:
+                facts.setdefault(t[0].value, {})[t[1].value] = t[2].value
+            for node in facts.values():
+                if (node.get(_SOSA + "hasFeatureOfInterest") == subject_uri
+                        and node.get(_SOSA + "observedProperty") == observed_property
+                        and node.get(_SOSA + "hasSimpleResult") is not None):
+                    centre = float(node[_SOSA + "hasSimpleResult"])
+        width = 0.0
+        for row in effects.spreads(store, horizon, when=closes, **bind):
+            if row["subject"] == subject_uri and row["property"] == observed_property:
+                width += abs(float(row["width"]))
+        sensor = self.sensor_for(subject_uri, observed_property)
+        if sensor is not None:
+            rows = bindings(store.query(f"SELECT ?n WHERE {{ <{sensor.uri}> <{NOISE}> ?n }} LIMIT 1"))
+            if rows and rows[0].get("n") is not None:
+                width += abs(float(rows[0]["n"]))
+        may: list[str] = []
+        region = self.regions.get(observed_property)
+        if region is not None:
+            bands = band_classes_of(store.query, subject_uri, observed_property)
+            lo, hi = centre - width, centre + width
+            if lo < region.low and bands.get(_SENSING + "BelowRegion"):
+                may.append(bands[_SENSING + "BelowRegion"])
+            if hi >= region.low and lo <= region.high and bands.get(_SENSING + "InRegion"):
+                may.append(bands[_SENSING + "InRegion"])
+            if hi > region.high and bands.get(_SENSING + "AboveRegion"):
+                may.append(bands[_SENSING + "AboveRegion"])
+        node = expectation_uri(subject_uri.rsplit("#", 1)[-1], observed_property)
+        graph = expectations_graph(self.agent.id)
+        bands_text = "".join(f" ;\n      sensing:mayBe <{b}>" for b in may)
+        store.update(f"""
+DELETE {{ GRAPH <{graph}> {{ {node} ?p ?o . ?w ?wp ?wo }} }}
+WHERE  {{ GRAPH <{graph}> {{ {node} ?p ?o . OPTIONAL {{ {node} dcterms:temporal ?w . ?w ?wp ?wo }} }} }} ;
+INSERT DATA {{ GRAPH <{graph}> {{
+  {node} a sensing:ExpectedObservation ;
+      sensing:expectedOf <{subject_uri}> ;
+      sensing:expectedProperty <{observed_property}> ;
+      dcterms:temporal [ a dcterms:PeriodOfTime ;
+                         orexis:start "{opens.isoformat()}"^^xsd:dateTime ;
+                         orexis:end "{closes.isoformat()}"^^xsd:dateTime ]{bands_text} . }} }}""")
+        self.log.info("expecting the next %s reading between %s and %s, in %d band(s)",
+                      observed_property.rsplit("#", 1)[-1], opens.isoformat(timespec="seconds"),
+                      closes.isoformat(timespec="seconds"), len(may))
+
+    def forget_expected(self, subject_uri: str, observed_property: str) -> None:
+        """The expected next observation of this (subject, property) is gone — its window closed
+        with no reading (#631)."""
+        node = expectation_uri(subject_uri.rsplit("#", 1)[-1], observed_property)
+        graph = expectations_graph(self.agent.id)
+        self.agent.beliefs.update(f"""
+DELETE {{ GRAPH <{graph}> {{ {node} ?p ?o . ?w ?wp ?wo }} }}
+WHERE  {{ GRAPH <{graph}> {{ {node} ?p ?o . OPTIONAL {{ {node} dcterms:temporal ?w . ?w ?wp ?wo }} }} }}""")
 
     @contributes(HANDLE)
     def handle(self, topic: str, payload: bytes) -> bool:
@@ -799,6 +900,11 @@ WHERE {{ GRAPH <{STATE_GRAPH}> {{
         g.add((on_property, SH.hasValue, rdflib.URIRef(observed_property)))
         g.add((inner, SH.property, on_time))
         g.add((on_time, SH.path, rdflib.URIRef(SOSA + "resultTime")))
+        #  A NODE THAT SAYS NOTHING PASSES A CONSTRAINT ON A VALUE (#631, found the day the
+        #  expected next observation stood beside the readings): a property constraint holds
+        #  over the values there are, and a node with none has nothing to fail. So the
+        #  answer must SAY when it was taken, and, for a number, what it read.
+        g.add((on_time, SH.minCount, rdflib.Literal(1)))
         g.add((on_time, SH.minExclusive, rdflib.Literal(since.isoformat(), datatype=XSD.dateTime)))
         if band is not None:
             g.add((inner, SH["class"], rdflib.URIRef(str(band))))
@@ -806,6 +912,7 @@ WHERE {{ GRAPH <{STATE_GRAPH}> {{
             predicted = float(predicted)
             g.add((inner, SH.property, on_value))
             g.add((on_value, SH.path, rdflib.URIRef(SOSA + "hasSimpleResult")))
+            g.add((on_value, SH.minCount, rdflib.Literal(1)))
             g.add((on_value, SH.minInclusive, rdflib.Literal(round(predicted, 6), datatype=XSD.decimal)))
             g.add((on_value, SH.maxInclusive, rdflib.Literal(round(predicted, 6), datatype=XSD.decimal)))
         return g

@@ -175,6 +175,13 @@ instants into no number. A pass for a want met at an instant therefore hands the
 age to the drift once, at its root, and every other pass leaves that age undrifted — a seam,
 measured at minutes against a band that takes days.
 
+**And how far off it may be.** `orexis:spreadsBy`, a third select beside the drift, answers
+for each reading it moves the width, in the property's own unit, the reading it carries may
+be off after `$elapsed` — the rate's uncertainty the world states beside the rate, applied
+over the stretch by the domain's own arithmetic (#631). Sensing reads it to widen the bands
+of the [prediction](/domain/prediction.md) it writes after every reading; the search never
+reads the number. A drift stating none spreads nothing.
+
 **And a plan is minutes where a band is days**, which says where this pays. The loner's region
 takes six and a half days to cross; no plan reaches that far, so inside a search the band drift
 fires only where a step is declared to take one. What wants the crossing time is the DERIVATION
