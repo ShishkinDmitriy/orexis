@@ -115,11 +115,12 @@ def crossing_row_of(agent, root: str) -> tuple[datetime, datetime] | None:
     if not abouts or subject is None:
         return None
     earliest = None
-    for r in effects.crossings(agent.beliefs):
+    for r in effects.crossings(agent.beliefs, me=agent.me.uri):
         if r["subject"] != subject or r["property"] not in abouts:
             continue
         at = datetime.fromisoformat(r["at"])
-        when = at + timedelta(seconds=float(r["seconds"]))
+        when = (datetime.fromisoformat(r["crossing"]) if r.get("crossing")
+                else at + timedelta(seconds=float(r["seconds"])))
         if earliest is None or when < earliest[0]:
             earliest = (when, at)
     return earliest

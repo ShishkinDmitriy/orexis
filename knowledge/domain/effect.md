@@ -159,8 +159,14 @@ package's two forms, reading the surroundings as the vent does, from whatever ho
 instant the world is asked about
 ([a-drift-toward-the-surroundings-is-one-link-and-no-physics](/decisions/a-drift-toward-the-surroundings-is-one-link-and-no-physics.md)).
 
+**And a third reads a record where the others read a rate.** The market's `market:Draining`
+drains a vessel by the debts on it as their windows open (`orexis:owedFrom`): the level at a
+future instant is what is held less what is owed to holders whose windows have opened by then
+([a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md)).
+
 **A drift may also say WHEN.** `orexis:crossesAfter`, a select beside the drift, answers for
-each reading in `$state` the seconds after its own instant until it leaves the band it is in —
+each reading in `$state` the seconds after its own instant until it leaves the band it is in,
+or the instant itself where the drift knows an instant and no stretch —
 the same arithmetic asked as when rather than whether. Whoever derives a want from a prediction
 reads it at the belief base (#619); a drift declaring none predicts no crossing. One thing the
 search cannot do with it: drift the present's reading over its own AGE, because every drift in
