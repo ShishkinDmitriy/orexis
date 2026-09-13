@@ -151,9 +151,12 @@ WHERE  {
 #  node IRIs are unchanged: `orexis:desire.<who>.<property>`, `orexis:bounds.…`, `orexis:envelope.…`, so
 #  a ledger row that names one still resolves.
 #
-#  The regions and the envelopes are derived on every rebuild of the desire modality, never at
-#  genesis — a want whose premise has ceased is absent afterwards because the derivation no
-#  longer implies it (#263, #312).
+#  AUTHORED AT GENESIS, NEVER REBUILT (#644, a-root-holds-always-and-an-outdated-graph-is-dropped):
+#  a root is a declaration for the agent's whole life, so these rules run at birth into the
+#  agent's roots graph — `$derived` is that graph there — and again at boot to ENDOW a root an
+#  amendment added, a held one staying whatever the world now says. Nothing of the agent's own
+#  state enters: the foresight is the choir's answer when a child is derived, and the aim is
+#  read by the measure, so the label names the region and no pick.
 #
 #  TWO NODE SHAPES per property, told apart by the FORCE they carry: the region, a violation of
 #  which is a gap, and the envelope, a violation of which is the subject ending. Within each the
@@ -176,7 +179,6 @@ INSERT { GRAPH $derived {
         orexis:bindsWhen orexis:Always ;
         ssn:forProperty ?property ;
         orexis:about ?property ;
-        orexis:foresees ?foresight ;
         prov:wasDerivedFrom ?subject ;
         rdfs:label ?label ;
         rdfs:comment ?describes ;
@@ -256,9 +258,9 @@ INSERT { GRAPH $derived {
             sh:message ?overCeiling ] } }
 $given
 WHERE  {
-    #  HOW FAR AHEAD this agent acts on a predicted crossing (#619): a belief the world may
-    #  state, carried onto the stake as `orexis:foresees`; unbound, the stake foresees nothing.
-    OPTIONAL { $me sensing:foresightS ?foresight }
+    #  NO FORESIGHT HERE (#644): how far ahead this agent acts on a predicted crossing is a
+    #  belief it may re-pick, and a root is not a function of its state — pursuit asks the
+    #  choir (`orexis:foresight`) when it derives, and sensing answers from the belief then.
     { SELECT ?property ?subject (MAX(?min) AS ?low) (MIN(?max) AS ?high) WHERE {
         $me a orexis:Agent ; orexis:actsFor ?subject .
         ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?need .
@@ -302,10 +304,9 @@ WHERE  {
     #  The aim, if one is already picked — for the LABEL only. The measure never bakes it: it
     #  reads $beliefs at query time, which is what lets a re-pick move the urgency between
     #  rebuilds. The label is refreshed on rebuild, which every recorded re-pick triggers.
-    OPTIONAL { $me sensing:aims ?aimed . ?aimed ssn:forProperty ?property ; schema:value ?picked }
-    BIND(CONCAT(?name, " inside ", STR(?low), "-", STR(?high),
-                COALESCE(CONCAT(", aiming ", STR(?picked)), ", no aim picked yet"))
-         AS ?label)
+    #  NO AIM IN THE LABEL either: the aim is a pick the measure reads at query time, and a
+    #  root authored once must not bake the pick of the day it was born (#644).
+    BIND(CONCAT(?name, " inside ", STR(?low), "-", STR(?high)) AS ?label)
     BIND(CONCAT(?who, " holds ", ?name, " of ", STRAFTER(STR(?subject), "#"),
                 " inside ", STR(?low), "-", STR(?high),
                 "; urgency is the distance from its aim (the centre, ", STR(?centre),

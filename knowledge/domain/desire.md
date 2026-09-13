@@ -39,8 +39,9 @@ looking for a distinction that was never there.
 
 # It is deduced, not authored
 
-Nothing writes a desire, and the kernel derives none. The build collects `desires.ru` from every
-loaded package exactly as genesis collects `rules.ru`, and what belongs in one is a want whose
+Nothing writes a desire, and the kernel derives none. Genesis collects `desires.ru` from every
+loaded package exactly as it collects `rules.ru` and runs them at birth into the agent's roots
+graph — a root holds for the agent's whole life and no rebuild touches it (#644) — and what belongs in one is a want whose
 PREMISE belongs to that package: `packages/orexis-capability-sensing/desires.ru` computes the region
 want from what the subject and its instruments state — the result is a
 [region](/domain/region.md); that page has the intersection, the two kinds of bearer, and why a

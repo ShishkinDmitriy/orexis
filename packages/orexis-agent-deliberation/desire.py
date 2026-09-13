@@ -147,52 +147,44 @@ class Desire:
 #  concept.
 
 from assembly import loader
-from orexis_agent_progression.ontology import DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH
-from orexis_agent_progression.store import Raw, bind, Store
+from orexis_agent_progression.ontology import DESIRE_ASSERTED_GRAPH
+from orexis_agent_progression.store import Store
 
 #  The two modality classes whose instances are wants. ConstraintGraph is a want's boundary
 #  rather than a want — but gap, menu and validation all read the two together, and the record
 #  files both under the desires store because what MAY be and what is PURSUED are the two
 #  halves of one question no belief answers.
-class Deducer(Store):
-    """One rebuild's worth of store: the wants DERIVED, the records PROJECTED, and nothing
-    else left standing. Memory, no path — the imaginarium's construction, one lifecycle over.
+class Projection(Store):
+    """One rebuild's worth of store: the roots and the records PROJECTED, and nothing else left
+    standing — nothing deduced (#644). Memory, no path — the imaginarium's construction, one
+    lifecycle over. `Deducer` until the roots were seen to be re-derived from a pick.
 
-    Four moves, in order. The premises are copied in — every public graph, plus the two
-    records the rules and the projections read: the pick record and the obligations record,
-    both reached by the one construction from an agent's own id the rules allow. The
-    packages' `desires.ru` rules run against them, `$derived` bound to this store's own derived
-    graph and `$given` to the premises, exactly the substitution genesis performs for its
-    rules. The world's asserted block (`graph/desire/asserted`, a public graph a world's TriG
-    may fill) is already among the copied publics and simply stays. Last, the public premises
-    that are NOT desire content are dropped — a store answering "what do I want" must not
-    answer with the topology it derived that from — leaving the derived wants, the asserted
-    wants, and the two records.
+    Two moves. Every public graph and every record a want lives in is copied in — the roots
+    graph genesis authored, the pick record, the obligations, the promises, the pursued
+    children — reached by the one construction from an agent's own id the rules allow. Then
+    the public premises that are NOT desire content are dropped, since a store answering
+    "what do I want" must not answer with the topology beside it — leaving the roots, the
+    world's asserted wants (`graph/desire/asserted`, a public graph a world's TriG may fill)
+    and the records.
     """
 
     def __init__(self, beliefs):
-        from orexis_agent_progression.ontology import obligations_graph, promises_graph
+        from orexis_agent_progression.ontology import obligations_graph, promises_graph, roots_graph
         from .ontology import pursued_graph
 
         super().__init__()
         publics = list(beliefs.public_graphs())
-        #  The records projected in beside the derived wants: the picks, the debts, the
-        #  promises, and the wants pursued under a root (#618) — each a want by the same ruling.
-        records = [beliefs.graph, obligations_graph(beliefs.agent_id), promises_graph(beliefs.agent_id),
-                   pursued_graph(beliefs.agent_id)]
+        #  A PROJECTION, AND NO RULE (#644, a-root-holds-always-and-an-outdated-graph-is-dropped):
+        #  the roots — every Always want, authored at genesis into the agent's own roots graph
+        #  and holding at every instant — and the records sourced at a time: the picks, the
+        #  debts, the promises, the wants pursued under a root (#618). The packages' desire
+        #  rules ran here on every rebuild until a root was seen to be re-derived from a pick;
+        #  they run at genesis now, and this build deduces nothing.
+        records = [roots_graph(beliefs.agent_id), beliefs.graph, obligations_graph(beliefs.agent_id),
+                   promises_graph(beliefs.agent_id), pursued_graph(beliefs.agent_id)]
         for iri in publics + records:
             for quad in beliefs.quads(iri):
                 self._store.add(quad)
-        given = "\n".join(f"USING <{g}>" for g in publics + records)
-        for rule in loader.desires_rule_files():
-            text = rule.read_text()
-            out = []
-            for line in text.splitlines():
-                if not line.lstrip().startswith("#"):
-                    line = bind(line, derived=DESIRE_DERIVED_GRAPH, given=Raw(given),
-                                me=beliefs.agent_uri)
-                out.append(line)
-            self.update("\n".join(out))
         for iri in publics:
             if iri != DESIRE_ASSERTED_GRAPH:
                 self.clear_graph(iri)
@@ -228,7 +220,7 @@ class Desires:
         rebound, so every holder of `agent.desires` sees the new state and nobody holds a
         stale handle.
         """
-        built = Deducer(self._beliefs)
+        built = Projection(self._beliefs)
         self.query = built.query
         self.query_union = built.query_union
         self.construct = built.construct

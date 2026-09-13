@@ -51,7 +51,7 @@ if TYPE_CHECKING:
     from orexis_agent_deliberation.desire import Desire
 from .driver import driver_for
 from agent.module import Module, contributes
-from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, ANSWER, WITNESS
+from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, ANSWER, FORESIGHT, WITNESS
 from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
 from orexis_agent_progression.store import bindings
 
@@ -917,6 +917,22 @@ WHERE  {{ GRAPH <{graph}> {{ {node} ?p ?o . OPTIONAL {{ {node} dcterms:temporal 
             g.add((on_value, SH.minInclusive, rdflib.Literal(round(predicted, 6), datatype=XSD.decimal)))
             g.add((on_value, SH.maxInclusive, rdflib.Literal(round(predicted, 6), datatype=XSD.decimal)))
         return g
+
+    @contributes(FORESIGHT)
+    def foresight(self, root: str) -> float | None:
+        """How far ahead a stake I hold foresees, in seconds: my `sensing:foresightS` belief,
+        read when a child is derived and never baked onto the root (#644). None for a root
+        that is not a stake of mine, and None where the belief is unstated — a root stating
+        nothing foresees nothing, so a world that says nothing plans exactly as before."""
+        mine = bindings(self.agent.desires.query_union(f"""
+SELECT ?about WHERE {{ <{self.me.uri}> orexis:holds <{root}> .
+  <{root}> orexis:bindsWhen orexis:Always ; orexis:about ?about .
+  FILTER NOT EXISTS {{ <{root}> a sensing:Freshness }} }} LIMIT 1"""))
+        if not mine:
+            return None
+        rows = bindings(self.agent.beliefs.query(f"""
+SELECT ?f WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ <{self.me.uri}> sensing:foresightS ?f }} }} LIMIT 1"""))
+        return float(rows[0]["f"]) if rows and rows[0].get("f") is not None else None
 
     @contributes(WITNESS)
     def witnessed(self, keyed_class: str, key: dict) -> float | None:

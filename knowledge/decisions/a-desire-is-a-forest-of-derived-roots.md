@@ -120,7 +120,7 @@ the graph, not in a diff archaeology.
 inherits it whole. The tree is a function of premises, regrown by re-derivation; no agent edits
 or retires a branch; a vanished branch is one no longer implied, and its absence should be
 visible. The machinery is further along than #263's text now reads: since the desires store
-became a modality of its own, every package's `desires.ru` runs on every rebuild — boot, a re-pick, an
+became a modality of its own, every package's `desires.ru` ran on every rebuild (at genesis since #644) — boot, a re-pick, an
 obligation transition — not once at genesis. What #263 still holds open (re-derivation during a
 life on premise change, bounded, with visible absence) the hierarchy inherits rather than adds
 to; the analysis stays there.

@@ -79,7 +79,11 @@ prediction's lifecycle.
 # What is built, in the order it is built
 
 1. **Roots authored at genesis, and the rebuild a projection**
-   ([#644](https://github.com/ShishkinDmitriy/orexis/issues/644)).
+   ([#644](https://github.com/ShishkinDmitriy/orexis/issues/644), built): `orexis:RootsGraph`, a
+   per-agent graph with no period; `genesis.author_roots` runs the packages' desire rules at
+   birth and, at every boot, copies in only a root the volume never held; the modality's
+   build is `Projection` and runs no rule; foresight left the root for the choir
+   (`orexis:foresight`, sensing answering from its belief) and the aim left the label.
 2. **Staleness as the first prediction's end**, inside the move of the drift
    ([#642](https://github.com/ShishkinDmitriy/orexis/issues/642)).
 3. **Every want sourced at a time as a graph with a period, and one sweep**

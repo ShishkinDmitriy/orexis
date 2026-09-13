@@ -29,10 +29,10 @@ database "Beliefs · repository" as BEL {
 
 database "Desires · repository" as DES {
   folder "asserted · no graph class" as DA
-  folder "derived · no graph class" as DD
+  folder "roots · orexis:RootsGraph" as DD
 }
 
-component "Deducer\nruns desire derivation" as DB
+component "Deducer\nderives the roots at genesis;\nthe modality projects" as DB
 
 
 P ..> DB : reads

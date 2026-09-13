@@ -151,6 +151,7 @@ CAPABILITY = term("Capability")  # the root every capability term is a kind of
 # --- the choir's questions, as terms (a-hook-is-a-term) ------------------------------------
 HOOK = term("Hook")
 ANSWER = OREXIS + "answer"          # the shape of an observation that answers an act (#516)
+FORESIGHT = OREXIS + "foresight"    # how far ahead a root foresees — the belief is a package's (#644)
 WITNESS = OREXIS + "witness"        # what the world shows for a predicted fact now — the residual (#518)
 DESIRES = OREXIS + "desires"
 DESIRE_URGENCY = OREXIS + "desireUrgency"
@@ -203,7 +204,6 @@ STATE_GRAPH = _GRAPH + "sensed"
 #  the two-category exception the graph-IRI rule states: the build WRITES the first and
 #  projects the second, and no reader ever enumerates either (reads go through the modality's
 #  union surface).
-DESIRE_DERIVED_GRAPH = _GRAPH + "desire/derived"
 DESIRE_ASSERTED_GRAPH = _GRAPH + "desire/asserted"
 # What the five above ARE, in PROV-O, so the store can say it rather than this file's comments.
 # Rename every graph to `g1`..`g5` and a reader could still work out which hold computed facts:
@@ -260,6 +260,13 @@ def promises_graph(agent_id: str) -> str:
     while the step waits, gone when the step's verdict lands. A record the desire modality
     projects like its debts, so `pursuing` lifts a promise as it lifts any want."""
     return _GRAPH + "promises/" + agent_id
+
+
+def roots_graph(agent_id: str) -> str:
+    """One agent's ROOT desires, authored at genesis and holding at every instant — the name
+    `orexis:RootsGraph` declares the prefix of, built from the one id a process is handed
+    (#644). The desire modality projects it; nothing rebuilds it."""
+    return GRAPH_PREFIX + "roots/" + agent_id
 
 
 def obligations_graph(agent_id: str) -> str:

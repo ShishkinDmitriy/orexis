@@ -35,7 +35,7 @@ from agent import config, inference, provenance, vocabulary
 
 from assembly import loader
 from .config import REPO_ROOT
-from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, GRAPH_PREFIX, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, STATE_GRAPH,
+from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, GRAPH_PREFIX, roots_graph, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, STATE_GRAPH,
                        WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, beliefs_graph)
 from orexis_agent_progression.store import NAMESPACES, Raw, Store, bind, bindings
@@ -338,7 +338,90 @@ def birth(st: Store, world: Path, agent_id: str, rebirth: bool = False) -> bool:
         # will fail their own validation at startup, which is where it should be reported.
         return False
     st.put_graph(graph, path.read_text())
+    author_roots(st, agent_id)
     return True
+
+
+def _roots_from_the_world(st: Store, agent_id: str) -> Store:
+    """What the packages' desire rules make of the world and this agent's record, in a scratch
+    store: the ROOTS — every Always want with its met-tests — in a graph named as the volume's
+    roots graph is, so the scratch reads as the volume would. The premises are public knowledge
+    and the agent's own record; `$derived` is the roots graph, `$given` the premises, `$me` the
+    agent — the substitution the desire modality performed on every rebuild until #644."""
+    from assembly import loader
+
+    rows = st.query(f'SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1')
+    found = rows.get("results", {}).get("bindings", [])
+    scratch = Store()
+    if not found:
+        return scratch
+    me = found[0]["a"]["value"]
+    premises = list(st.public_graphs()) + [beliefs_graph(agent_id)]
+    for iri in premises:
+        for quad in st.quads(iri):
+            scratch._store.add(quad)
+    given = "\n".join(f"USING <{g}>" for g in premises)
+    for rule in loader.desires_rule_files():
+        out = []
+        for line in rule.read_text().splitlines():
+            if not line.lstrip().startswith("#"):
+                line = bind(line, derived=roots_graph(agent_id), given=Raw(given), me=me)
+            out.append(line)
+        scratch.update("\n".join(out))
+    return scratch
+
+
+def _held_in(store: Store, graph: str) -> list[str]:
+    rows = store.query(f"SELECT DISTINCT ?r WHERE {{ GRAPH <{graph}> {{ ?me orexis:holds ?r }} }}")
+    return sorted(r["r"]["value"] for r in rows.get("results", {}).get("bindings", []))
+
+
+def _subgraph_of(scratch: Store, graph: str, top: str) -> list:
+    """Every quad reachable from `top` inside `graph`, following objects that are subjects there
+    — a root and its met-test shapes, blank nodes and all — plus the triple that holds it.
+    NEVER THROUGH THE HOLDER: every met-test shape targets the agent's own node, and the agent
+    holds every root, so a walk that crossed it would copy the whole graph twice."""
+    HOLDS = "http://example.org/orexis#holds"
+    quads = list(scratch.quads(graph))
+    by_subject: dict[str, list] = {}
+    for q in quads:
+        by_subject.setdefault(str(q.subject), []).append(q)
+    holders = {str(q.subject) for q in quads if q.predicate.value == HOLDS}
+    out, seen, frontier = [], set(holders), [f"<{top}>"]
+    while frontier:
+        node = frontier.pop()
+        if node in seen:
+            continue
+        seen.add(node)
+        for q in by_subject.get(node, ()):
+            out.append(q)
+            obj = str(q.object)
+            if (obj.startswith("<") or obj.startswith("_:")) and obj not in seen:
+                frontier.append(obj)
+    out.extend(q for q in quads if q.predicate.value == HOLDS and str(q.object) == f"<{top}>")
+    return out
+
+
+def author_roots(st: Store, agent_id: str) -> list[str]:
+    """Write the agent's ROOT desires into its roots graph — at birth, all of them; at a later
+    boot, only the ones it has never held (#644, a-root-holds-always-and-an-outdated-graph-is-dropped).
+
+    A root is a declaration for the agent's whole life, authored once from the ranges and the
+    wiring the world states and holding at every instant, as the T-Box does: the desire
+    modality projects this graph and never rebuilds it. An amendment ENDOWS — a never-held root
+    arrives with its met-tests, a held one stays whatever the world now says, and removal is a
+    rebirth (the record's seam). Returns the roots newly held, so boot can say what changed.
+    """
+    graph = roots_graph(agent_id)
+    scratch = _roots_from_the_world(st, agent_id)
+    fresh = _held_in(scratch, graph)
+    already = set(_held_in(st, graph)) if st.has_graph(graph) else set()
+    new = [r for r in fresh if r not in already]
+    for top in new:
+        triples = "\n".join(f"{q.subject} {q.predicate} {q.object} ." for q in _subgraph_of(scratch, graph, top))
+        if triples:
+            st.update(f"INSERT DATA {{ GRAPH <{graph}> {{\n{triples}\n}} }}")
+    return new
 
 
 def endow(st: Store, world: Path, agent_id: str) -> list[str]:
@@ -494,4 +577,7 @@ def open_belief_base(world: Path, agent_id: str, path: str | None = None,
     if not born and (endowed := endow(st, world, agent_id)):
         log.info("%s endowed — an amendment authored terms this volume never held: %s",
                  agent_id, ", ".join(t.rsplit("#", 1)[-1] for t in endowed))
+    if not born and (rooted := author_roots(st, agent_id)):
+        log.info("%s endowed — an amendment authored roots this volume never held: %s",
+                 agent_id, ", ".join(r.rsplit("#", 1)[-1] for r in rooted))
     return st
