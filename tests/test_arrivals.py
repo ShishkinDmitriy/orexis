@@ -19,7 +19,7 @@ from conftest import build_agent, genesis_store, open_round_for
 
 STORED = "http://example.org/orexis/water#StoredLitres"
 FORESIGHT = "http://example.org/orexis/sensing#foresightS"
-OWED_FROM = "http://example.org/orexis#owedFrom"
+OWED_FROM = "http://example.org/orexis/market#owedFrom"
 SUPPLIER = "http://example.org/orexis/world/simulation#supplier"
 HOURS = 3600.0
 
@@ -55,7 +55,7 @@ def test_a_debt_carries_from_when_its_holder_may_come(monkeypatch):
     opens = datetime.now(timezone.utc) + timedelta(hours=1)
     _promise(agent, "fern", "j-from", 1.0, opens)
     rows = bindings(agent.beliefs.query(f"""SELECT ?from WHERE {{ GRAPH <{obligations_graph("supplier")}> {{
-        ?o <http://example.org/orexis#forClaim> "j-from" ; <{OWED_FROM}> ?from }} }}"""))
+        ?o <http://example.org/orexis/market#forClaim> "j-from" ; <{OWED_FROM}> ?from }} }}"""))
     assert rows and abs((datetime.fromisoformat(rows[0]["from"]) - opens).total_seconds()) < 1.0
 
 

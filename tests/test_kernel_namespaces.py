@@ -283,6 +283,9 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
         1, "migration: where the stand-in vocabulary went — twelve terms behind one prefix, "
            "removable with the last volume older than the move"),
     ("agent/vocabulary.py", "sensing#aims"): (1, "migration: the aim's destination (#377)"),
+    ("agent/vocabulary.py", "market#"): (
+        1, "migration: the ledger's words went home to the market (#635); the row goes when no "
+           "volume predates it"),
     ("agent/vocabulary.py", "actuation#Dosing"): (1, "migration: the dose's destination"),
     ("agent/vocabulary.py", "market#Acquiring"): (1, "migration: buying's destination"),
     ("agent/vocabulary.py", "market#Presenting"): (1, "migration: the held claim's destination"),

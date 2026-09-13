@@ -26,13 +26,19 @@ ever presents it.
 **It is [hosting](/domain/market.md)'s, and the modality is the kernel's.** Only a host owes,
 because a debt arises from a claim this agent ISSUED — so the ledger lives in the market package
 and `HostingModule` holds it. What stays the mind's is the
-[obligation](/domain/obligation.md) itself: the class, the graph it is written into, and the
-branches that rank a debt beside a want.
+[obligation](/domain/obligation.md) itself: an `orexis:Desire` bound within its window, the
+modality that projects the record, and the branches that rank a debt beside a want. The words
+written in the record — the counterparty, the claim, the amount, the window, the discharge —
+and the record's class are the market's (#635), and the ledger writes the debt's own met-test
+beside them, so the planner judges a debt as it judges any authored pattern and names no
+word of the ledger.
 
-**Which needed no new mechanism**, and that is the point worth keeping. A package writing a graph
-the kernel declares is what [sensing](/domain/sensing.md) already does with `graph/sensed` — so
-the ledger writes `orexis:ObligationsGraph` exactly as sensing writes the state graph, and nothing in
-the kernel learns that market exists.
+**Which needed no new mechanism**, and that is the point worth keeping. A package declaring a
+per-agent graph of its own is what [review](/domain/review.md) already does with its summaries —
+so the ledger declares `market:ObligationsGraph` with its prefix and how it arrives, boot
+classifies it as it classifies every such graph, and nothing in the kernel learns that market
+exists. The one thing the kernel keeps is the prefix, because the desire modality projects
+the record and may not import the package to learn its name.
 
 **Not a capability of its own.** Keeping a record cannot be done two ways, and rule 2 reserves a
 capability for an ability whose *how* could differ. It is a thing hosting holds, and what it

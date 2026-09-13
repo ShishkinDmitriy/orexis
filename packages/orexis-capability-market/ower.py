@@ -21,12 +21,14 @@ See knowledge/decisions/an-obligation-is-a-desire-someone-else-sourced.md.
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 
 from orexis_agent_deliberation.desire import Desire
 from agent.module import Module
 from orexis_agent_progression.ontology import OREXIS, obligations_graph
 from orexis_agent_progression.store import bindings
+from .terms import AMOUNT_L, DISCHARGED_AT, FOR_CLAIM, OWED_AT, OWED_FROM, OWED_TO, PRESENTED
 
 #  What I owe, as rows — the obligation branch of what used to be one shipped `desires.rq` for every
 #  kind of want. The stakes and the freshness wants went to sensing with the region
@@ -37,11 +39,23 @@ from orexis_agent_progression.store import bindings
 _DUTIES_Q = """
 SELECT ?desire ?owedTo ?claim ?presented ?at ?expires WHERE {
   GRAPH <%s> {
-    ?desire orexis:owedTo ?owedTo ; orexis:forClaim ?claim ;
-            orexis:presented ?presented ; orexis:owedAt ?at .
+    ?desire market:owedTo ?owedTo ; market:forClaim ?claim ;
+            market:presented ?presented ; market:owedAt ?at .
     OPTIONAL { ?desire orexis:expiresAt ?expires }
-    FILTER NOT EXISTS { ?desire orexis:dischargedAt ?paid } }
+    FILTER NOT EXISTS { ?desire market:dischargedAt ?paid } }
 }"""
+
+_SH_SELECT = "http://www.w3.org/ns/shacl#select"
+
+
+def _unmet(claim_jti: str) -> str:
+    """The debt's own met-test (#635): the select whose rows are this debt undischarged — in
+    the record, and in the world being judged (`$state`, the node's own graph, where
+    Serving's effect writes the discharge). A want is authored by whoever sources it, and the
+    kernel judges an authored pattern without knowing a word of the ledger."""
+    return (f'SELECT ?debt WHERE {{ ?debt market:forClaim "{claim_jti}" . '
+            f'FILTER NOT EXISTS {{ ?debt market:dischargedAt ?paid }} '
+            f'FILTER NOT EXISTS {{ GRAPH $state {{ ?debt market:dischargedAt ?paid2 }} }} }}')
 
 
 def _duty_urgency(row: dict, now: datetime) -> float:
@@ -107,12 +121,12 @@ class Ower(Module):
         #  the pour from the record rather than from a module's memory (#255). Optional for
         #  the one market shape with no quantity; an obligation without it stays servable by
         #  the direct row and unplannable, which is the graceful half of the widening.
-        amount = (f' <{OREXIS}amountL> {amount_l} ;' if amount_l is not None else "")
+        amount = (f' <{AMOUNT_L}> {amount_l} ;' if amount_l is not None else "")
         #  FROM WHEN it may be demanded (#626): the claim's usable instant — the arrival this
         #  debt predicts, which the vessel's drift reads to foresee the stock leaving its region.
         opens = ""
         if usable_from is not None:
-            opens = (f' ;\n                <{OREXIS}owedFrom> '
+            opens = (f' ;\n                <{OWED_FROM}> '
                      f'"{datetime.fromtimestamp(usable_from, timezone.utc).isoformat()}"'
                      f'^^<http://www.w3.org/2001/XMLSchema#dateTime>')
         expiry = ""
@@ -129,10 +143,11 @@ class Ower(Module):
             <{uri}> a <{OREXIS}Desire> ;
                 <{OREXIS}bindsWhen> <{OREXIS}Within> ;
                 <http://www.w3.org/ns/prov#wasDerivedFrom> "{claim_jti}" ;
-                <{OREXIS}owedTo> <{to_agent}> ;
-                <{OREXIS}forClaim> "{claim_jti}" ;
-                <{OREXIS}presented> false ;{amount}
-                <{OREXIS}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{opens}{expiry} }} }}""")
+                <{OWED_TO}> <{to_agent}> ;
+                <{FOR_CLAIM}> "{claim_jti}" ;
+                <{PRESENTED}> false ;{amount}
+                <{OREXIS}unmetWhen> [ <{_SH_SELECT}> {json.dumps(_unmet(claim_jti))} ] ;
+                <{OWED_AT}> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{opens}{expiry} }} }}""")
         #  A debt arriving at runtime is a want arriving at runtime: the record above is the
         #  belief base's, and the desire modality is RECOMPUTED to hold it — the same
         #  record-then-rebuild order a re-pick follows, because recomputation is the only way
@@ -150,10 +165,10 @@ class Ower(Module):
         """
         graph = obligations_graph(self.agent.id)
         self.agent.beliefs.update(f"""
-            DELETE {{ GRAPH <{graph}> {{ ?o <{OREXIS}presented> ?was }} }}
-            INSERT {{ GRAPH <{graph}> {{ ?o <{OREXIS}presented> true }} }}
-            WHERE  {{ GRAPH <{graph}> {{ ?o <{OREXIS}forClaim> "{claim_jti}" ;
-                                         <{OREXIS}presented> ?was }} }}""")
+            DELETE {{ GRAPH <{graph}> {{ ?o <{PRESENTED}> ?was }} }}
+            INSERT {{ GRAPH <{graph}> {{ ?o <{PRESENTED}> true }} }}
+            WHERE  {{ GRAPH <{graph}> {{ ?o <{FOR_CLAIM}> "{claim_jti}" ;
+                                         <{PRESENTED}> ?was }} }}""")
         self.agent.desires.rebuild()   # standing became demanded — the want moved
 
     def discharge(self, claim_jti: str) -> None:
@@ -162,21 +177,41 @@ class Ower(Module):
         stays in its ledger."""
         graph = obligations_graph(self.agent.id)
         self.agent.beliefs.update(f"""INSERT {{ GRAPH <{graph}> {{
-                ?o <{OREXIS}dischargedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
-            WHERE {{ GRAPH <{graph}> {{ ?o <{OREXIS}forClaim> "{claim_jti}" .
-                     FILTER NOT EXISTS {{ ?o <{OREXIS}dischargedAt> ?done }} }} }}""")
+                ?o <{DISCHARGED_AT}> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
+            WHERE {{ GRAPH <{graph}> {{ ?o <{FOR_CLAIM}> "{claim_jti}" .
+                     FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?done }} }} }}""")
         self.agent.desires.rebuild()   # a paid debt is history, and the want is no longer implied
 
     def owed(self, presented_only: bool = False) -> list[dict]:
         """What still stands, newest first — what an agent owes, askable by the sovereign."""
-        extra = f'?o <{OREXIS}presented> true .' if presented_only else ""
+        extra = f'?o <{PRESENTED}> true .' if presented_only else ""
         return bindings(self.agent.beliefs.query(f"""
 SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
-  ?o <{OREXIS}owedTo> ?to ; <{OREXIS}forClaim> ?jti ;
-     <{OREXIS}presented> ?presented ; <{OREXIS}owedAt> ?at .
+  ?o <{OWED_TO}> ?to ; <{FOR_CLAIM}> ?jti ;
+     <{PRESENTED}> ?presented ; <{OWED_AT}> ?at .
   OPTIONAL {{ ?o <{OREXIS}expiresAt> ?expires }}
   {extra}
-  FILTER NOT EXISTS {{ ?o <{OREXIS}dischargedAt> ?done }} }} }} ORDER BY DESC(?at)"""))
+  FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?done }} }} }} ORDER BY DESC(?at)"""))
+
+    def start(self) -> None:
+        self.endow()
+
+    def endow(self) -> int:
+        """A debt written before the record carried its met-test (#635) is endowed with one:
+        never-held terms arrive with their structures, held ones stay the agent's
+        (an-amendment-endows-what-it-grants). Without it the planner, which no longer reads
+        the discharge itself, could not tell a served world from the world in hand."""
+        graph = obligations_graph(self.agent.id)
+        rows = bindings(self.agent.beliefs.query(f"""
+SELECT ?o ?jti WHERE {{ GRAPH <{graph}> {{ ?o <{FOR_CLAIM}> ?jti .
+  FILTER NOT EXISTS {{ ?o <{OREXIS}unmetWhen> ?test }} }} }}"""))
+        for row in rows:
+            self.agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
+                <{row["o"]}> <{OREXIS}unmetWhen> [ <{_SH_SELECT}> {json.dumps(_unmet(row["jti"]))} ] }} }}""")
+        if rows:
+            self.log.info("%d debt(s) written before the record carried a met-test, endowed", len(rows))
+            self.agent.desires.rebuild()
+        return len(rows)
 
     def obligations(self, now: datetime | None = None) -> list[Desire]:
         """What this agent owes, as desires — hottest first, and hot means CLOSE TO EXPIRY.

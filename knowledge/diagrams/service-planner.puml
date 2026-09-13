@@ -26,7 +26,7 @@ database "Beliefs · repository" as BEL {
   folder "orexis:WorldGraph" as W
   folder "orexis:StateGraph" as S
   folder "orexis:PickRecordGraph" as P
-  folder "orexis:ObligationsGraph" as O
+  folder "market:ObligationsGraph" as O
   folder "deliberation:DeliberationGraph" as D
 }
 

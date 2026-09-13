@@ -693,21 +693,15 @@ def test_a_plan_landing_after_the_wants_expiry_is_not_one(make):
 
     from orexis_agent_deliberation.desire import Desire
     from orexis_agent_deliberation.planner import Planner
-    from orexis_agent_progression.ontology import obligations_graph
 
     supplier = make("supplier", genesis_store({("barrel1", STORED): 3.0}))
     now = datetime.now(timezone.utc)
-    uri = "http://example.org/orexis#obligation.w1"
-    supplier.beliefs.update(f"""INSERT DATA {{ GRAPH <{obligations_graph(supplier.id)}> {{
-        <{uri}> a <http://example.org/orexis#Desire> ;
-            <http://example.org/orexis#bindsWhen> <http://example.org/orexis#Within> ;
-            <http://example.org/orexis#owedTo>
-                <http://example.org/orexis/world/simulation#fern_agent> ;
-            <http://example.org/orexis#forClaim> "w1" ;
-            <http://example.org/orexis#presented> true ;
-            <http://example.org/orexis#amountL> 0.5 ;
-            <http://example.org/orexis#owedAt> "{now.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
-    supplier.desires.rebuild()
+    #  THROUGH THE LEDGER (#635): the record carries the debt's own met-test, and a row
+    #  written by hand without one is a want the planner can no longer judge.
+    ledger = supplier.hosting().ledger
+    uri = ledger.owe("fern", "w1", amount_l=0.5)
+    assert uri == "http://example.org/orexis#obligation.w1"
+    ledger.demanded("w1")
 
     def planned(seconds_left):
         want = Desire(uri=uri, urgency=0.9, claim="w1",

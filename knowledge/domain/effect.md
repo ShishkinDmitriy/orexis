@@ -160,7 +160,7 @@ instant the world is asked about
 ([a-drift-toward-the-surroundings-is-one-link-and-no-physics](/decisions/a-drift-toward-the-surroundings-is-one-link-and-no-physics.md)).
 
 **And a third reads a record where the others read a rate.** The market's `market:Draining`
-drains a vessel by the debts on it as their windows open (`orexis:owedFrom`): the level at a
+drains a vessel by the debts on it as their windows open (`market:owedFrom`): the level at a
 future instant is what is held less what is owed to holders whose windows have opened by then
 ([a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md)).
 

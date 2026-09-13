@@ -92,6 +92,19 @@ CLAIM_L = term("claimL")
 CLAIM_DEBIT = term("claimDebit")
 ON_VENUE = term("onVenue")
 PRESENTED_AT = term("presentedAt")
+
+#  THE LEDGER'S WORDS (#635) — what a host owes, written by `ower.py` into the obligations
+#  record and read by Serving's effect, the vessel's drift and the host's covering. An
+#  obligation is an `orexis:Desire` whose premises these are; `orexis:expiresAt` stays the
+#  kernel's, being the deadline any Within want reads.
+OBLIGATIONS_GRAPH = term("ObligationsGraph")
+OWED_TO = term("owedTo")
+FOR_CLAIM = term("forClaim")
+PRESENTED = term("presented")
+OWED_AT = term("owedAt")
+OWED_FROM = term("owedFrom")
+AMOUNT_L = term("amountL")
+DISCHARGED_AT = term("dischargedAt")
 USABLE_FROM = term("usableFrom")
 USABLE_UNTIL = term("usableUntil")
 CLAIMED_AT = term("claimedAt")   # the buyer holding, then presenting, a won claim (#132)

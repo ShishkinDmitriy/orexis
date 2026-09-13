@@ -57,7 +57,6 @@ INAPPLICABLE = "a remembered plan's precondition does not hold here"
 #  trace, the record's one sanctioned exception, shows it.
 COMPILED = "the select compiled from its shape"
 AUTHORED = "the pattern it authors"
-RECORD = "the record of what was discharged"
 MEASURE = "a module's measure"
 UNJUDGED = "nothing — a remembered plan was adopted on its precondition"
 

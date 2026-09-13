@@ -68,7 +68,7 @@ precedents generalised, because modality *determines* lifecycle:
 `orexis:DesireGraph`, `orexis:ConstraintGraph` and `ag:BoundsGraph` when the copy they selected
 dissolved — genesis derives no wants, the modality's own build runs the packages' `desires.ru`
 against the world and the records on every rebuild, and the belief base keeps records only,
-typed for what they are (`orexis:PickRecordGraph`, `orexis:ObligationsGraph`). That build is also
+typed for what they are (`orexis:PickRecordGraph`, `market:ObligationsGraph`). That build is also
 [#263](https://github.com/ShishkinDmitriy/orexis/issues/263)'s mechanism: re-derivation during
 a life is any rebuild, and a want whose premise has ceased is no longer implied. Everything
 in the beliefs

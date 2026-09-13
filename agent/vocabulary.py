@@ -156,6 +156,11 @@ MOVED = {
     "http://example.org/orexis#whenLapsed": "http://example.org/orexis/progression#whenLapsed",
     "http://example.org/orexis#wouldReach": "http://example.org/orexis/deliberation#wouldReach",
     "http://example.org/orexis#wouldTake": "http://example.org/orexis/deliberation#wouldTake",
+    #  #635: the ledger's words are the market's — they sat in `orexis:` because the ledger was
+    #  the kernel's once. A volume written before reads through this row.
+    **{f"http://example.org/orexis#{n}": f"http://example.org/orexis/market#{n}"
+       for n in ("ObligationsGraph", "owedTo", "forClaim", "presented", "owedAt", "owedFrom",
+                 "amountL", "dischargedAt")},
     **{f"http://example.org/orexis/intention#{n}": f"http://example.org/orexis#{n}"
        for n in ("Intention", "by", "Means",
                  "adoptedAt", "resolvedAt", "outcome", "becauseOf", "expectsValueTo",

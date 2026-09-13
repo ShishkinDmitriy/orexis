@@ -263,8 +263,8 @@ def promises_graph(agent_id: str) -> str:
 
 
 def obligations_graph(agent_id: str) -> str:
-    """The record of ONE agent's debts — kernel-named since `orexis:ObligationsGraph` became a
-    kernel record class (#312): the desire modality projects it, the planner's imaginarium
-    copies it, and an effect rule may read it, none of which should import a package for a
-    name built from the one id the rules allow building from."""
+    """The record of ONE agent's debts. The graph CLASS and every word written in it are the
+    ledger's package's (#635); the prefix is built here because the desire modality projects
+    the record and the planner's wants snapshot reads it, neither of which should import a
+    package for a name built from the one id the rules allow building from."""
     return GRAPH_PREFIX + "obligations/" + agent_id

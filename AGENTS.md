@@ -225,6 +225,10 @@ it is a record wearing a bullet.
 - **A plan waiting at its last step is in progress** — held or placed, the world has not
   answered, and a search there found buying available on the very claim the plan was about
   to present and adopted it twice; only the round's close had hidden that.
+- **A package's words are the package's, however long the kernel spoke them** — the ledger's
+  vocabulary sat in `orexis:` because the ledger was the kernel's once, and the planner judged
+  a debt met by naming its discharge itself; a debt now carries its met-test as every authored
+  want does, `market:dischargedAt` is the market's, and the kernel names no word of it (#635).
 - **Deliberation is on triples, and a number is not special** — how a domain describes its
   world, exact numbers, ranges or classes, is decided inside the domain, and its actions'
   preconditions and effects are described the same way; the core compares triples and

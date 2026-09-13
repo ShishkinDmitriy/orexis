@@ -41,14 +41,15 @@ the world and the agent may not move it; the aim is the agent's own pick. Collap
 the oldest mistake in this design — a desire that was three decimals in a beliefs file, a target
 and two edges, denominated in one property and unable to want anything else.
 
-# Its graph is a class, not a name
+# It is asked of a modality, not of a graph by name
 
-The result lives in a graph typed `orexis:ConstraintGraph`, **found by that type rather than by name**,
+The result lives in the desire modality — a store of the mind's own, **asked as a whole rather
+than by any graph's name** ([a-store-is-a-modality](/decisions/a-store-is-a-modality.md)),
 because desire may have more than one source and a reader must not have to know how many. The
 sovereign's ratified mandate, the regions deduced from a subject's ranges, and the obligations received
 on a peer's claim are three sources and one question.
 
-It is **public and recomputed on every start**, because it is a function of the ratified files: a
+It is **recomputed on every start**, because it is a function of the ratified files: a
 plant whose range is amended must not leave an agent holding the old region.
 
 # A violation names its side

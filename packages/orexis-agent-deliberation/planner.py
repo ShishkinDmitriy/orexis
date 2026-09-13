@@ -49,7 +49,7 @@ from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import Raw, bind, bindings
 from .ontology import DELIBERATION, pursued_graph
-from orexis_agent_progression.ontology import (promises_graph, CLASSIFICATION_GRAPH,
+from orexis_agent_progression.ontology import (obligations_graph, promises_graph, CLASSIFICATION_GRAPH,
                             DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             STATE_GRAPH, beliefs_graph)
 from orexis_agent_deliberation.conformance import graph_from, held_shapes, legality_selects
@@ -253,7 +253,7 @@ class Planner:
 
         The NODE is what arrives, and its graph is the whole of what a measure needs: the flat
         rdflib copy this took alongside was only ever read by the wants that state no measure —
-        an obligation, met-or-not over the record — and those ask the imaginarium now too (#481).
+        an obligation, once met-or-not over the record — and those ask the imaginarium now too (#481).
         Anything else unmeasured scores 1.0, the not-knowing answer.
         """
         answer = self.agent.desire_urgency(desire, partial(self.imaginarium.query_at, at=self._at(node)),
@@ -272,8 +272,6 @@ class Planner:
             #  shape — is binary by the same contract as a pattern want: unmet 1, met 0.
             #  Without this the not-knowing fallback below scored the delivered world 1.0
             #  beside the undelivered one, and only the met-test could tell them apart.
-            return 0.0 if self._met_in(node, desire) else 1.0
-        if desire.is_obligation:                        # met-or-not over the record
             return 0.0 if self._met_in(node, desire) else 1.0
         #  A want whose kind nothing loaded answers for, scoring the defined fallback:
         #  maximal, because not knowing how bad IS how bad. It used to serve the freshness
@@ -352,11 +350,9 @@ class Planner:
                 self._unmet, *self._invariant_graphs, self._judged_at(node, desire)))
         shape = self._shape_of(desire)
         if shape is None:
-            #  A obligation's goal state is a PATTERN over the record, not a distance (#255): this
-            #  claim discharged, in whatever world is being judged — which is what lets a
-            #  possible world where Apply ran count as satisfying, and the world in hand not.
-            if desire.is_obligation:
-                return self._holds(node, desire.uri, str(_AG.dischargedAt))
+            #  An obligation's goal state used to be read HERE, by naming the ledger's discharge
+            #  (#255); since #635 the debt carries that as its own `unmetWhen`, judged above
+            #  with every authored pattern, and the kernel names no word of the ledger.
             #  A want with no shape and no property — a CALL (#359) — is met exactly where
             #  whoever measures it says it is: zero urgency in the world being judged. Asked
             #  of the imaginarium at the node's graph, as `_urgency_in` asks.
@@ -371,19 +367,6 @@ class Planner:
         select = violation.unmet_select(shape, self._shape_root(desire))
         return not bindings(self.imaginarium.query_over(
             select, *self._invariant_graphs, self._judged_at(node, desire)))
-
-    def _holds(self, node, subject: str, predicate: str) -> bool:
-        """Whether this node's world states anything about `subject` under `predicate`.
-
-        A membership test the flat world used to answer with `in`, asked of the imaginarium
-        instead (#481). SCOPED, and that is the whole care of it: an unscoped `GRAPH ?g` would
-        read every SIBLING world in the store too, so the graphs are named — this node's
-        readings and the invariant ones, which is exactly what `_border` writes.
-        """
-        graphs = " ".join(f"<{iri}>" for iri in self._invariant_graphs + (self._graph(node),))
-        return bool(bindings(self.imaginarium.query(
-            f"SELECT ?x WHERE {{ VALUES ?g {{ {graphs} }} "
-            f"GRAPH ?g {{ <{subject}> <{predicate}> ?x }} }} LIMIT 1")))
 
     def _estimate_in(self, node, desire: Desire) -> float | None:
         """How far this world still is from meeting the want, by the want's own declaration.
@@ -450,10 +433,16 @@ class Planner:
         answers exactly as the live one does. A pattern that fails to run reads as ENTERED:
         a select the gates admitted and the engine refuses is a defect someone must see,
         and a want stuck hot is how this architecture says so.
+
+        OVER THE INVARIANT GRAPHS (#635): public knowledge AND this agent's own records as
+        the default graph, which is what a rule's CONSTRUCT sees — the plain door reads
+        public alone, and a debt's own met-test, written on the ledger's record, read every
+        world as met because the record it named was not there to bind. `$state` still
+        names the world being judged.
         """
         try:
             text = bind(text, this=self.me.uri, state=graph)
-            return bool(bindings(self.imaginarium.query(text)))
+            return bool(bindings(self.imaginarium.query_over(text, *self._invariant_graphs)))
         except Exception as exc:
             log.error("avoided-state pattern failed to run: %s", exc)
             return True
@@ -1066,7 +1055,7 @@ class Planner:
 
         The SAME order as `_met_in`, and only that order: an authored pattern first, then the
         select compiled in `_begin` — a shape want's violation select, or an avoided state's
-        conformance select — then the record for an obligation, and a module's measure for
+        conformance select — and a module's measure for
         everything else. Asked after the pass rather than remembered during it so the trace
         says what the judge would have said of this want in ANY world, not what it happened
         to say of the last.
@@ -1076,8 +1065,6 @@ class Planner:
             return trace.AUTHORED, pattern
         if getattr(self, "_unmet", None) is not None:
             return trace.COMPILED, self._unmet
-        if desire.is_obligation:
-            return trace.RECORD, None
         return trace.MEASURE, None
 
     def _offer(self, plan: Plan, desire: Desire, node) -> Plan:
@@ -1335,8 +1322,11 @@ class Planner:
         #  And the wants pursued under a root (#618): a derived want POINTS at its root's
         #  met-test, and a snapshot without the graph it points from has no shape to compile
         #  for it — the loner masked that, its child judged by sensing's measure instead.
+        #  The ledger too (#635): a debt carries its met-test as every authored want does,
+        #  and the snapshot is where `_avoided_pattern` looks for it.
         self._want_graphs = (DESIRE_DERIVED_GRAPH, DESIRE_ASSERTED_GRAPH,
-                             promises_graph(self.agent.id), pursued_graph(self.agent.id))
+                             promises_graph(self.agent.id), pursued_graph(self.agent.id),
+                             obligations_graph(self.agent.id))
         self.imaginarium.copy_in(self.agent.desires, *self._want_graphs)
         self._shapes = effects.applied((), self.agent.desires.construct(
             f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ "
