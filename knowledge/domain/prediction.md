@@ -77,11 +77,11 @@ surprise is a reading outside whichever the agent is on.
 
 # Related
 
-- [the-search-reads-predictions-and-computes-none](/decisions/the-search-reads-predictions-and-computes-none.md)
-  — the grooming: a prediction is a graph holding during a period, written by its package at
-  its horizons and read by the search at a node's instant; the expected next observation is
-  the first of them, and the reading's arrival is compared with it once, for the keeper, the
-  reviser and staleness alike. The words on this page are #631's rendering until #642 lands.
+- [a-drift-says-bands-and-the-core-computes-no-number](/decisions/a-drift-says-bands-and-the-core-computes-no-number.md)
+  — the grooming: the drift stays and says bands, the width arithmetic leaves sensing for the
+  package's rule (#642), and the reading's arrival is compared with the set once, for the
+  keeper, the reviser and staleness alike. The width paragraph above is #631's rendering
+  until #642 lands.
 - [band](/domain/band.md) — the crisp thing a prediction is made of.
 - [interval](/domain/interval.md) — why the width lives in the domain's measure and never in
   the core.
