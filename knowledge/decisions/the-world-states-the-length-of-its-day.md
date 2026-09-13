@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: The world states the length of its day
-status: accepted
+status: superseded
+superseded-by: the-agent-keeps-one-timeline-and-its-clock-may-run-fast
 timestamp: 2026-09-13T21:30:00Z
 description: >-
   Found on 2026-09-13 while analysing time: the simulation and the loner worlds run their
@@ -15,6 +16,12 @@ description: >-
   scale from the world's day. Refused — the scale as a substrate knob the mind may not read, and
   rates restated in the agent's clock.
 ---
+
+> **Superseded the day it was built** by
+> [the-agent-keeps-one-timeline-and-its-clock-may-run-fast](/decisions/the-agent-keeps-one-timeline-and-its-clock-may-run-fast.md):
+> the finding below stands, the ruling does not. An agent does not know how many seconds
+> its hour has; a compressed world is a clock that runs fast, not a fact the rules read.
+> The build (#647) was closed unmerged.
 
 # What was found
 

@@ -116,9 +116,9 @@ are the old rendering's names and go with it.
    closing with no reading writes `staleSince`
    ([a-root-holds-always-and-an-outdated-graph-is-dropped](/decisions/a-root-holds-always-and-an-outdated-graph-is-dropped.md)).
    The kernel still runs its own drift at forks for this one step, so every world's plans
-   are unchanged. Before it, the world's day
+   are unchanged. Before it, the clock
    ([#646](https://github.com/ShishkinDmitriy/orexis/issues/646),
-   [the-world-states-the-length-of-its-day](/decisions/the-world-states-the-length-of-its-day.md))
+   [the-agent-keeps-one-timeline-and-its-clock-may-run-fast](/decisions/the-agent-keeps-one-timeline-and-its-clock-may-run-fast.md))
    and the roots authored at genesis ([#644](https://github.com/ShishkinDmitriy/orexis/issues/644)),
    since every measurement after depends on the first and the child's derivation on the second.
 2. **The search reads predictions and computes none**
