@@ -480,6 +480,36 @@ sosa:Observation orexis:keyedBy sosa:hasFeatureOfInterest , sosa:observedPropert
     rdfs:label "band of property" ;
     rdfs:comment "The property whose readings this band classifies — what its definition's `sosa:observedProperty` restriction has as value." .
 
+#################  The expected next observation (#631)  #################
+#
+#  A PREDICTION OF AN EVENT (a-prediction-is-a-set-of-bands-that-widens-with-the-horizon): an
+#  observation occurs at an instant, and before it occurs what is known is the WINDOW it is
+#  expected in and the BANDS it may carry. Sensing writes one after every reading — the window
+#  from the cadence in force and the grace the freshness horizon already uses, the bands from
+#  the drift's centre at the window's far end, widened by the instrument's noise and by what
+#  the drift's own `orexis:spreadsBy` states — into a graph of its own, replaced by the next
+#  reading and gone when the window closes with none. NOT a sosa:Observation, and not reached
+#  by an observation's words either: it names its subject and property in its own
+#  (:expectedOf, :expectedProperty), because a shape walking a subject's observations by
+#  `sosa:hasFeatureOfInterest` reached it, and a node that states no value passes every
+#  constraint on a value vacuously — the keeper's watch on a predicted number read as answered
+#  the moment it opened, measured. The window rides ON the
+#  expectation, never in the periods table: that table says which stretch a GRAPH speaks for.
+#  The bands are a set of possibility — `rdf:type` means IS, and this says MAY BE.
+:ExpectationsGraph a owl:Class ; rdfs:subClassOf orexis:Graph , orexis:WorkingGraph ; rdfs:label "Expectations graph" ;
+    orexis:graphPrefix "http://example.org/orexis/graph/expected/" ; orexis:arrivesBy orexis:Recorded ;
+    rdfs:comment "ONE agent's expected next observations, one per (subject, property) it senses — written by sensing after each reading, read by the sovereign and, in time, by the reviser that wakes on a surprise (#632). A per-agent graph class, boot classifies it as it classifies every graph a package declares; and a WORKING graph, the agent's own and never carried into a plan's imaginarium or read beside the state by a validation: the search plans on readings, and an expectation is for whoever compares the reading that arrives with it. Carried, it re-grounded the cone at every reading — the present matched no kept world, measured." .
+:ExpectedObservation a owl:Class ; rdfs:label "Expected observation" ;
+    rdfs:comment "The next observation of a subject's property, expected inside a window (`dcterms:temporal` on the node: `orexis:start` when the cadence makes it due, `orexis:end` when the grace runs out) and expected to be one of the bands it `:mayBe`. Names its subject and property in its own words (:expectedOf, :expectedProperty), never the observation's, and carries no result: a value is a band collapsed, and what is expected is bands." .
+:expectedOf a owl:ObjectProperty ; rdfs:domain :ExpectedObservation ; rdfs:range sosa:FeatureOfInterest ; rdfs:label "expected of" ;
+    rdfs:comment "The subject whose property's next observation this expects. Not `sosa:hasFeatureOfInterest`: that is an observation's word, and every shape and rule that walks a subject's observations by it would reach the expectation and read a node with no value as one that passes." .
+:expectedProperty a owl:ObjectProperty ; rdfs:domain :ExpectedObservation ; rdfs:range sosa:ObservableProperty ; rdfs:label "expected property" ;
+    rdfs:comment "The property the expected observation is of. Not `sosa:observedProperty`, for the same reason :expectedOf is not `sosa:hasFeatureOfInterest`." .
+:mayBe a owl:ObjectProperty ; rdfs:domain :ExpectedObservation ; rdfs:range owl:Class ; rdfs:label "may be" ;
+    rdfs:comment "A band the expected observation may turn out to be a member of — one of the subject's own (:BelowRegion, :InRegion, :AboveRegion members). The set is the prediction: one member where the drift's reach is inside a band and nothing widens it, more as the horizon grows, every band far enough out. Not `rdf:type`: nothing IS yet." .
+:noise a owl:DatatypeProperty ; rdfs:domain sosa:Sensor ; rdfs:range xsd:decimal ; rdfs:label "noise" ;
+    rdfs:comment "How far a reading this instrument makes may be off from the quantity it reads, in the property's own unit — the instrument's own width, stated beside the instrument by whoever describes it. Sensing widens the expected next observation's bands by it; an instrument stating none is taken at its word." .
+
 #  Was the kernel's (`orexis:Aim`, `orexis:aims`); the region it sits in is this package's, and so is
 #  the aim (the-stake-is-sensings-want).
 #################

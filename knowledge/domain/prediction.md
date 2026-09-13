@@ -1,14 +1,15 @@
 ---
 type: Domain Concept
 title: Prediction
+term: http://example.org/orexis/sensing#ExpectedObservation
 description: >-
   What an agent expects the world to hold at a horizon it has not reached — always a SET of
   bands, never a value, and wider the further out. A value is a band collapsed to a point. A
   prediction of a fluent is a graph holding during a period; a prediction of an event, an
   observation, is an expected occurrence stated inside a graph, carrying the window it is
   expected in and the bands it may carry. The first element of the sequence is the expected
-  next observation, from the instrument's cadence and the drift; the far end is every band,
-  which is not knowing said honestly. Not built beyond the crossing and the forecast.
+  next observation, from the instrument's cadence and the drift, which sensing writes after
+  every reading; the far end is every band, which is not knowing said honestly.
 ---
 
 # What it is
@@ -39,6 +40,17 @@ that window stated inside a graph whose own period says how long the expectation
 believing. An observation is an event, `sosa:resultTime` its instant once it has occurred;
 the **expected next observation** is the prediction of it: the window the instrument's
 cadence gives, and the bands the [drift](/domain/effect.md) applied over that window gives.
+Sensing writes it after every reading (#631), into a working graph of the agent's own — never
+carried into a plan's imaginarium, since the search plans on readings — one node per
+subject and property keyed as the reading is: `sensing:ExpectedObservation`, its window as
+`dcterms:temporal` on the node — due when the cadence in force makes it so, closed when the
+grace runs out — its subject and property in sensing's own words (`sensing:expectedOf`,
+`sensing:expectedProperty`), never the observation's, so nothing walking a subject's
+observations reaches it — and the bands it `sensing:mayBe`, the drift's centre at the window's far
+end widened by the instrument's `sensing:noise` and by what the drift states beside its rate
+(`orexis:spreadsBy`). A world stating no width gets the band the drift reaches alone. The
+next reading replaces it; a window that closes with none takes it away, which is staleness
+said once. It is not an observation, and no rule reading readings reads it as one.
 The host's debt, carrying the window its holder may come in, is the same shape for an
 arrival ([obligation](/domain/obligation.md)).
 

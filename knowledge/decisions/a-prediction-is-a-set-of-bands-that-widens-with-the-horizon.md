@@ -10,9 +10,9 @@ description: >-
   is an event, and the next one can be expected from the cadence and the drift. And a
   prediction is always bands, never a value — a value is a band collapsed — and the further the
   horizon the wider the set, until it is every band. Refused — a numeric spread in the core, a
-  point prediction, a fixed width, and the periods table as the home of an event's window. Not
-  built: the expected next observation, the reviser waking on surprise rather than on a
-  reading, and the crossing taken in the safe direction.
+  point prediction, a fixed width, and the periods table as the home of an event's window.
+  Built: the expected next observation (#631). Not built: the reviser waking on surprise
+  rather than on a reading, and the crossing taken in the safe direction.
 ---
 
 # The claim
@@ -90,11 +90,17 @@ fact, and the second is what remains when no step is pending.
 # What follows, in the order it would be built
 
 1. Sensing writes the expected next observation after every reading
-   ([#631](https://github.com/ShishkinDmitriy/orexis/issues/631)): the window from the cadence
-   and its grace, the bands from the drift's centre and the width the domain states at that
-   horizon; replaced by the next reading, lapsed when its window closes. Where an intention
-   stands, the expectation past a step's landing is the step's own, and sensing writes the
-   drift's from there.
+   ([#631](https://github.com/ShishkinDmitriy/orexis/issues/631), built): the window from the
+   cadence in force and the grace the freshness horizon already uses, the bands from the
+   drift's centre at the window's far end — read through the rules' own door as the planner
+   reads a drift — widened by the instrument's `sensing:noise` and by what each drift's
+   `orexis:spreadsBy` states over the stretch, mapped onto the subject's own bands; into a
+   working graph of the agent's own (`sensing:ExpectationsGraph`, never carried into a
+   plan's imaginarium — carried, it re-grounded the cone at every reading), the window as `dcterms:temporal`
+   on the node, the bands as `sensing:mayBe`; replaced by the next reading, gone when the
+   window closes with none. The world stating no width gets one member, and every world's
+   plans are unchanged. Where an intention stands, the expectation past a step's landing is
+   the step's own, and sensing writes the drift's from there — not yet: the seam below.
 2. The reviser wakes the mind on a surprise, not on a reading
    ([#632](https://github.com/ShishkinDmitriy/orexis/issues/632)): a reading inside its
    expectation is absorbed, one outside wakes a pass that names the surprise, a missed window
@@ -105,6 +111,12 @@ fact, and the second is what remains when no step is pending.
 
 # Seams left open
 
+- **The expectation past a standing step's landing.** Sensing writes the drift's branch
+  always; the intended branch — the step's own predicted band from its landing on — is what
+  the keeper already holds the world to, and joining the two is the reviser's job (#632).
+- **The window's far end is the width's horizon.** The set is widened at the instant the
+  grace runs out, the widest the window reaches: the safe direction, and a reading arriving
+  early is judged against a set slightly wider than its own instant warrants.
 - **The rate's uncertainty is the world's fact.** Review moves the agent's beliefs, and a run
   of surprises against a stated rate says the rate is wrong; whether review may move a world
   fact is the question #607 left, still open.

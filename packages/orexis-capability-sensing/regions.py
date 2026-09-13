@@ -362,6 +362,16 @@ def _subjects_of(beliefs, agent_uri: str) -> list[str]:
         f"SELECT ?s WHERE {{ <{agent_uri}> orexis:actsFor ?s }}"))]
 
 
+def band_classes_of(query, subject_uri: str, observed_property: str) -> dict[str, str]:
+    """The three bands minted for one (subject, property), kind -> member class: what a
+    reading there is typed with, and what an expected next observation `sensing:mayBe`."""
+    rows = bindings(query(f"""
+SELECT ?kind ?band WHERE {{
+  VALUES ?kind {{ sensing:BelowRegion sensing:InRegion sensing:AboveRegion }}
+  ?band rdfs:subClassOf ?kind ; sensing:ofSubject <{subject_uri}> ; sensing:ofProperty <{observed_property}> }}"""))
+    return {r["kind"]: r["band"] for r in rows}
+
+
 def regions_of(query, agent_uri: str) -> dict[str, Region]:
     """Every region one agent holds, property -> region. Read, never computed here.
 

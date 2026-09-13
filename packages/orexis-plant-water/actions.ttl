@@ -59,6 +59,23 @@ water:Drying
             BIND((((xsd:double(?was) - ?lo) / ?rate) * 86400) AS ?seconds)
         }""" ;
 
+    #  HOW FAR OFF IT MAY BE (#631): the rate's uncertainty the world states beside the rate,
+    #  over the same stretch — the domain's own arithmetic, in the domain's own unit. Sensing
+    #  reads it to widen the bands the expected next observation may fall in; the search
+    #  never reads the number. A pot stating no spread yields no row and spreads nothing.
+    orexis:spreadsBy """
+        SELECT ?subject ?property ?width WHERE {
+            GRAPH $state {
+                ?obs sosa:hasFeatureOfInterest ?subject ;
+                     sosa:observedProperty ?property ;
+                     sosa:hasSimpleResult ?was . }
+            FILTER(?property = water:SoilMoisture)
+            ?subject water:driesPerDaySpread ?spread .
+            FILTER(?spread > 0 && $elapsed > 0)
+            BIND(ROUND(($elapsed / 86400.0) * 1000000) / 1000000 AS ?days)
+            BIND(?spread * ?days AS ?width)
+        }""" ;
+
     #  WHAT IT REPLACES: the reading it drifts, by the upsert key the sensed graph holds — one
     #  node per (subject, property), the invariant every effect's retraction already leans on.
     orexis:retracts """
