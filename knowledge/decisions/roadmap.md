@@ -72,6 +72,11 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
   [an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it](/decisions/an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it.md)
   — an Always want is a root never pursued, what is pursued is derived from it, and its binding
   roots the search at the present or at a predicted crossing — #618, #619, #620 in that order.
+  The belief cone's own future is next:
+  [a-prediction-is-a-set-of-bands-that-widens-with-the-horizon](/decisions/a-prediction-is-a-set-of-bands-that-widens-with-the-horizon.md),
+  a prediction as a set of bands widening with the horizon, an observation as an event
+  expected in a window, and the reviser waking on a surprise rather than on a reading —
+  #631, #632, #633.
 
 # Working principle
 

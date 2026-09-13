@@ -96,6 +96,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 # Sensing
 
 * [band](/domain/band.md) - A zone a region divides a property into, as a class of readings the domain declares; asserted on a reading by entailment, never a stored number.
+* [prediction](/domain/prediction.md) - What an agent expects at a horizon it has not reached: a set of bands, wider the further out; an event is expected in a window.
 
 * [observation](/domain/observation.md) - The node recording one act of observing. One per subject and property, and it replaces rather than accumulates.
 
