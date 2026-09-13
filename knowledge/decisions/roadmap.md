@@ -76,7 +76,10 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
   [a-prediction-is-a-set-of-bands-that-widens-with-the-horizon](/decisions/a-prediction-is-a-set-of-bands-that-widens-with-the-horizon.md),
   a prediction as a set of bands widening with the horizon, an observation as an event
   expected in a window, and the reviser waking on a surprise rather than on a reading —
-  #631, #632, #633.
+  #631, #632, #633. Groomed once the first stood beside the keeper's watch:
+  [one-expectation-and-the-reading-is-held-to-it](/decisions/one-expectation-and-the-reading-is-held-to-it.md)
+  — one expectation from the branch the agent is on, one comparison at arrival, the shape
+  per step and the dwell retired — #639, #632, #633, #640 in that order.
 
 # Working principle
 

@@ -77,6 +77,9 @@ surprise is a reading outside whichever the agent is on.
 
 # Related
 
+- [one-expectation-and-the-reading-is-held-to-it](/decisions/one-expectation-and-the-reading-is-held-to-it.md)
+  — the grooming: a standing step's band is folded in from its landing, and the reading's
+  arrival is compared with the set once, for the keeper, the reviser and staleness alike.
 - [band](/domain/band.md) — the crisp thing a prediction is made of.
 - [interval](/domain/interval.md) — why the width lives in the domain's measure and never in
   the core.

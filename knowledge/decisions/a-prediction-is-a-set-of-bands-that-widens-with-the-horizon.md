@@ -89,6 +89,10 @@ fact, and the second is what remains when no step is pending.
 
 # What follows, in the order it would be built
 
+The mechanism was groomed the same day, once item 1 stood beside the keeper's watch:
+[one-expectation-and-the-reading-is-held-to-it](/decisions/one-expectation-and-the-reading-is-held-to-it.md)
+makes the two one fact and one comparison, and items 2 and 3 are built under it.
+
 1. Sensing writes the expected next observation after every reading
    ([#631](https://github.com/ShishkinDmitriy/orexis/issues/631), built): the window from the
    cadence in force and the grace the freshness horizon already uses, the bands from the
