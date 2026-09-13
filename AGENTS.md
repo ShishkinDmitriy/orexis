@@ -198,6 +198,9 @@ it is a record wearing a bullet.
 - **The present is identified among the root's children, never asserted from one** — a child is
   a prediction and the present is observed, so what execution decides is which imagined world
   the real one landed in, and the cone under the match survives while its siblings die.
+- **The claims a host issued are its demand** — a demand prediction was asked for as a new
+  belief and found in the ledger the host already kept: a debt with a window is an occurrence
+  about the window, and a drift that reads it drains the vessel ahead of the arrivals (#626).
 - **A plan is placed at the instant of the root it was found from, never by subtraction from
   a deadline** — a bid placed at the crossing less the plan's duration landed in a round that
   had closed; the bid is taken while the round is open, and what waits for the instant is the

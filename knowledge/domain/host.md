@@ -45,7 +45,11 @@ stake-free and validates the trade it had no part in computing.
 That split is the whole reason a host may be self-interested. It is a party to the trade — it
 wants a good price — so it must not be the last word on whether the trade is legitimate.
 
-# What it owes afterwards is an obligation, not a decision
+# What it owes afterwards is an obligation, not a decision — and its demand
+
+Its debts carry the windows it granted, and its vessel's drift reads them
+([obligation](/domain/obligation.md)): what a host has promised is what it must hold, and it
+plans the refill ahead of the arrivals from the claims alone.
 
 A won [claim](/domain/claim.md) is a claim **on the host**, redeemed by presenting it. The lever
 that answers sits on the host's menu as an [affordance](/domain/affordance.md) row owed to the presenter,

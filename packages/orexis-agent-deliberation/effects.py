@@ -87,7 +87,7 @@ def drift(store, rule: dict, elapsed: float, when=None, **bind) -> tuple[list, l
             _run(store, rule.get("retracts"), bind, when))
 
 
-def crossings(store, when=None) -> list[dict]:
+def crossings(store, me: str | None = None, when=None) -> list[dict]:
     """When each reading the agent holds leaves the band it is in, by every drift that says
     (`orexis:crossesAfter`, #619): rows of subject, property, the reading's own instant and
     the seconds after it. Through the rules' own door, as `lands_after` is — a drift toward the
@@ -97,10 +97,16 @@ def crossings(store, when=None) -> list[dict]:
         text = rule.get("crosses")
         if not text:
             continue
-        for sol in _select(store, text, {"state": STATE_GRAPH}, when):
+        bind = {"state": STATE_GRAPH}
+        if me is not None:
+            bind["me"] = me
+        for sol in _select(store, text, bind, when):
             row = {k: (sol[k].value if sol[k] is not None else None)
-                   for k in ("subject", "property", "at", "seconds")}
-            if row["at"] and row["seconds"] is not None:
+                   for k in ("subject", "property", "at", "seconds", "crossing")}
+            #  Either form: seconds after the reading's own instant, or the instant itself —
+            #  a drift draining a vessel by dated debts knows the instant and no seconds,
+            #  since this engine turns the stretch between two instants into no number.
+            if row["at"] and (row["seconds"] is not None or row["crossing"]):
                 out.append(row)
     return out
 

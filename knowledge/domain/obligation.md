@@ -21,6 +21,15 @@ It carries the counterparty, the claim that caused it, whether it has been deman
 it was discharged. **Kept after payment**, because a debt paid and a debt forgotten must not look
 alike.
 
+# It is the host's predicted arrival
+
+Since [a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md) a debt says from
+when its holder may come — `orexis:owedFrom`, the claim's usable instant — and that makes it
+an occurrence about a window: the holder will come for these litres inside it. The claims a
+host issued are its demand, and the vessel's drift reads the ledger to say when the stock
+leaves its region as the windows open, so a host foresees its refill as a plant foresees a
+dose. A debt discharged is not an arrival.
+
 # It is a desire, and calling it one is the design
 
 BOID's O, and the reason the desire-graph class was a *class* from the start. An obligation is

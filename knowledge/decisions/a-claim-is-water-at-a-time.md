@@ -10,7 +10,7 @@ description: >-
   future instant never sees a round that will have closed — built. A winner receives a CLAIM
   with the time it can be used, not water, so the presenting is what is placed at the instant
   and never the bid — built. The host turns the claims it issued into predicted arrivals and plans its
-  supply on them. A plant asks for a dose at an instant, and a host opens a round only where
+  supply on them — built. A plant asks for a dose at an instant, and a host opens a round only where
   the asks exceed its supply. Refused — placing a bid by subtraction from a deadline, a claim as
   immediate water, the backward walk over preconditions #620 sketched, and a round row that
   outlives its period unswept.
@@ -52,7 +52,16 @@ from, never by subtraction: found from the present, it is taken now.
 arrival expected inside that window — an occurrence, a fact ABOUT a window stated inside a graph
 whose own period says how long it is worth believing — and its supply want reads those as
 demand, so the refill upstream is planned ahead of the presenting
-([#626](https://github.com/ShishkinDmitriy/orexis/issues/626)).
+([#626](https://github.com/ShishkinDmitriy/orexis/issues/626), built). The prediction was
+already there: every claim the host issues is a debt in its ledger, and `orexis:owedFrom`
+carries the claim's usable instant onto it. The market package's drift, `market:Draining`,
+reads the ledger where the water package reads a rate — the level at a future instant is what
+the vessel holds less what it owes to holders whose windows have opened by then, a discharged
+debt not owed — and its crossing is the first window at which the litres owed take the level
+under the floor, stated as an instant. So the host's stock root foresees exactly as a plant's
+does: three litres held, one and a half owed in an hour and one more in two, the crossing is
+the second window, and foreseeing six hours the host plans Acquiring from the city from the
+present, where the round is, with nothing presented yet.
 
 **A plant asks ahead, and a round is the allocation under scarcity.** A want derived from a
 predicted crossing is a request for a dose at an instant, announced as LOW is announced today;

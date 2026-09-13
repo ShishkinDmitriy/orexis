@@ -674,6 +674,9 @@ orexis:presented a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range
 
 orexis:owedAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ;
     rdfs:label "owed at" .
+orexis:owedFrom a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ;
+    rdfs:label "owed from" ;
+    rdfs:comment "From when the holder may present the claim this debt is for — the claim's usable instant (`market:usableFrom`), granted at issue. Absent on a debt whose claim is usable at once. THE HOST'S PREDICTED ARRIVAL (#626, a-claim-is-water-at-a-time): a debt with a window is an occurrence about that window — the holder will come for these litres inside it — and the vessel's drift reads it, so a host foresees its stock leaving its region as the windows open and plans the refill ahead of them. The claims it issued ARE its demand." .
 orexis:holdsAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ;
     rdfs:label "holds at" ;
     rdfs:comment "The instant an `orexis:At` want must hold at — a predicted crossing, read from the reading in hand through the drift's own `orexis:crossesAfter`. The keeper holds the plan's first step `progression:notBefore` this instant less the plan's own duration, so acting early is placed rather than immediate (#619)." .

@@ -509,7 +509,8 @@ SELECT ?r WHERE {{
         #  find no desire module, and record nothing at all while issuing claims all day.
         if (ledger := self.ledger) is not None:
             for claim in result.claims:
-                ledger.owe(claim.sub, claim.jti, expires_at=claim.exp, amount_l=claim.amount_l)
+                ledger.owe(claim.sub, claim.jti, expires_at=claim.exp, amount_l=claim.amount_l,
+                           usable_from=claim.usable_from)
 
     def on_redeem(self, presenter: str, claim: dict) -> None:
         """A holder presented its claim: verify it is theirs, then actuate. Single-use.

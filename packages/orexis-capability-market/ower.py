@@ -77,7 +77,8 @@ class Ower(Module):
         return rows[0]["a"] if rows else None
 
     def owe(self, to_agent_id: str, claim_jti: str,
-            expires_at: float | None = None, amount_l: float | None = None) -> str | None:
+            expires_at: float | None = None, amount_l: float | None = None,
+            usable_from: float | None = None) -> str | None:
         """Record what the society just made this agent owe. Returns the obligation's IRI.
 
         Raised when a claim is ISSUED, not when it is presented: the debt exists from the
@@ -107,6 +108,13 @@ class Ower(Module):
         #  the one market shape with no quantity; an obligation without it stays servable by
         #  the direct row and unplannable, which is the graceful half of the widening.
         amount = (f' <{OREXIS}amountL> {amount_l} ;' if amount_l is not None else "")
+        #  FROM WHEN it may be demanded (#626): the claim's usable instant — the arrival this
+        #  debt predicts, which the vessel's drift reads to foresee the stock leaving its region.
+        opens = ""
+        if usable_from is not None:
+            opens = (f' ;\n                <{OREXIS}owedFrom> '
+                     f'"{datetime.fromtimestamp(usable_from, timezone.utc).isoformat()}"'
+                     f'^^<http://www.w3.org/2001/XMLSchema#dateTime>')
         expiry = ""
         if expires_at is not None:
             expiry = (f' ;\n                <{OREXIS}expiresAt> '
@@ -124,7 +132,7 @@ class Ower(Module):
                 <{OREXIS}owedTo> <{to_agent}> ;
                 <{OREXIS}forClaim> "{claim_jti}" ;
                 <{OREXIS}presented> false ;{amount}
-                <{OREXIS}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{expiry} }} }}""")
+                <{OREXIS}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{opens}{expiry} }} }}""")
         #  A debt arriving at runtime is a want arriving at runtime: the record above is the
         #  belief base's, and the desire modality is RECOMPUTED to hold it — the same
         #  record-then-rebuild order a re-pick follows, because recomputation is the only way
