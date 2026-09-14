@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Prediction
-term: http://example.org/orexis/sensing#ExpectedObservation
+term: http://example.org/orexis#PredictionGraph
 description: >-
   What an agent expects the world to hold at a horizon it has not reached — always a SET of
   bands, never a value, and wider the further out. A value is a band collapsed to a point. A
@@ -40,19 +40,19 @@ that window stated inside a graph whose own period says how long the expectation
 believing. An observation is an event, `sosa:resultTime` its instant once it has occurred;
 the **expected next observation** is the prediction of it: the window the instrument's
 cadence gives, and the bands the [drift](/domain/effect.md) applied over that window gives.
-Sensing writes it after every reading (#631), into a working graph of the agent's own — never
-carried into a plan's imaginarium, since the search plans on readings — one node per
-subject and property keyed as the reading is: `sensing:ExpectedObservation`, its window as
-`dcterms:temporal` on the node — due when the cadence in force makes it so, closed when the
-grace runs out — its subject and property in sensing's own words (`sensing:expectedOf`,
-`sensing:expectedProperty`), never the observation's, so nothing walking a subject's
-observations reaches it — and the bands it `sensing:mayBe`, the drift's centre at the window's far
-end widened by the instrument's `sensing:noise` and by what the drift states beside its rate
-(`orexis:spreadsBy`). A world stating no width gets the band the drift reaches alone. The
-next reading replaces it; a window that closes with none takes it away, which is staleness
-said once. It is not an observation, and no rule reading readings reads it as one.
-The host's debt, carrying the window its holder may come in, is the same shape for an
-arrival ([obligation](/domain/obligation.md)).
+Sensing writes it after every reading, as the first of the PREDICTIONS the drifts give (#642):
+a graph holding during the window, `orexis:PredictionGraph`, carrying the predicted reading
+keyed as the present's reading is and typed with every band it may be in — the drift's centre
+at the window's far end, widened inside the domain's own rule by the instrument's `sensing:noise`
+and the spread the world states beside the rate, so no number leaves the rule. The window is
+due when the cadence in force makes the next reading so and closed when the grace runs out; the
+package's own horizons follow (`sensing:atHorizon`), one prediction each. A world stating no
+width gets the band the drift reaches alone. The next reading rewrites the ladder; the first
+window closing with none takes it away and marks the reading stale, which is staleness said
+once. A prediction is a reading in a predicted world and IS each band it may be in there — a
+shape refusing one refuses the world, the safe direction. The door hands the prediction holding
+at an instant; the agent's records never list it, and nothing carries it into a plan until the
+search reads predictions (#643).
 
 # An intention changes it
 

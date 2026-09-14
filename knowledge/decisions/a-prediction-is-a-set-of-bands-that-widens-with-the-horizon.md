@@ -100,7 +100,8 @@ are built under it (#642, #643, #639, #632).
    cadence in force and the grace the freshness horizon already uses, the bands from the
    drift's centre at the window's far end — read through the rules' own door as the planner
    reads a drift — widened by the instrument's `sensing:noise` and by what each drift's
-   `orexis:spreadsBy` states over the stretch, mapped onto the subject's own bands; into a
+   the rate's spread states over the stretch, typed onto the subject's own bands inside the
+   drift's own rule since #642 (`orexis:spreadsBy` and the set-of-bands words retired); into a
    working graph of the agent's own (`sensing:ExpectationsGraph`, never carried into a
    plan's imaginarium — carried, it re-grounded the cone at every reading), the window as `dcterms:temporal`
    on the node, the bands as `sensing:mayBe`; replaced by the next reading, gone when the

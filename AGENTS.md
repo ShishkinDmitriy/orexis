@@ -229,10 +229,10 @@ it is a record wearing a bullet.
   vocabulary sat in `orexis:` because the ledger was the kernel's once, and the planner judged
   a debt met by naming its discharge itself; a debt now carries its met-test as every authored
   want does, `market:dischargedAt` is the market's, and the kernel names no word of it (#635).
-- **A prediction is bands, and the width lives with the number** — the instrument's noise
-  beside the instrument, a drift's `orexis:spreadsBy` beside its rate; sensing widens the
-  set of bands the next reading may fall in and writes it where the sovereign can ask, and
-  the search reads the set and never the number (#631).
+- **A prediction is bands, and the width never leaves the rule** — a drift types the reading it
+  predicts with every band the instrument's noise and the rate's spread reach, inside its own
+  text; sensing writes what the drifts predict as graphs holding during their windows, the
+  next reading's window first, and no kernel or sensing line adds a width to a centre (#642).
 - **The agent keeps one timeline, and its clock may run fast** — two worlds ran their physics a
   hundred and forty-four times faster than the agent predicted by, because the stand-ins
   scaled their clock and the agent kept the wall's; every instant and stretch is in one
@@ -679,7 +679,9 @@ fails if pyshacl ever entails something the closure does not. See
   drift counts the `$elapsed` the kernel hands it), and so does a decimal division whose
   dividend is an exact zero (`0.0 / 0.25`; cast the dividend to `xsd:double`), and so does a
   decimal PRODUCT past the engine's eighteen fractional digits (`0.5 * (0.02 / 0.375)`; round
-  the repeating operand to six places first, as every derived number here is written), so a
+  the repeating operand to six places first, as every derived number here is written), and so
+  does an exact-zero decimal PRODUCT by a decimal (`0.0 * 0.5` bound nothing where `0.0 * 1`
+  bound zero, measured in #642 — cast a factor that may be zero to `xsd:double`), so a
   column computed that way reads empty for every row and no query errors, no test goes red.
   And `a / b * c` is evaluated as `a / (b * c)` — measured, `0.02 / 0.375 * 1000000` gave
   five hundred-millionths — so parenthesise every chain of two operators. It is the same family as the
