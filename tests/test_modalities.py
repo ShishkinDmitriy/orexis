@@ -168,13 +168,14 @@ def test_every_graph_builder_spells_what_its_class_declares():
     are two spellings of one fact, held together here."""
     from orexis_capability_review.graphs import evidence_graph, revisions_graph, summaries_graph
     from orexis_agent_progression.graphs import intentions_graph
-    from orexis_agent_progression.ontology import obligations_graph, promises_graph
+    from orexis_agent_progression.ontology import obligations_graph, promises_graph, roots_graph
     from orexis_agent_deliberation.ontology import pursued_graph, remembered_graph
     from orexis_capability_sensing.terms import expectations_graph
 
     classes = _per_agent_classes(genesis_store())
     builders = {
         f"{OREXIS}PickRecordGraph": beliefs_graph,
+        f"{OREXIS}RootsGraph": roots_graph,   # #644
         "http://example.org/orexis/market#ObligationsGraph": obligations_graph,   # the ledger's (#635)
         "http://example.org/orexis/progression#IntentionGraph": intentions_graph,
         "http://example.org/orexis/progression#PromisesGraph": promises_graph,

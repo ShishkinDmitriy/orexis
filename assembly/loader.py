@@ -373,10 +373,11 @@ def rule_files() -> tuple[Path, ...]:
 
 
 def desires_rule_files() -> tuple[Path, ...]:
-    """Every package's want-derivation — run by the desire modality's build on every rebuild,
-    never by genesis (#312). Only the desire package ships one today; a package that grows a
-    kind of want ships its own, and the build collects them exactly as genesis collects
-    `rules.ru` — the same union-of-what-is-loaded discipline, one lifecycle over."""
+    """Every package's ROOT-derivation — run by genesis at birth into the agent's roots graph,
+    and again at boot to endow a root an amendment added (#644); never by the desire
+    modality's rebuild, which projects and deduces nothing. Only sensing ships one today; a
+    package that grows a kind of root ships its own, and genesis collects them exactly as it
+    collects `rules.ru` — the same union-of-what-is-loaded discipline."""
     return ask(terms.WANTS)
 
 

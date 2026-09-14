@@ -87,8 +87,9 @@ now `graph/beliefs/<agent>`, `graph/sensed`, `graph/world`, `graph/world/derived
 them and [who-put-the-fact-there](/decisions/who-put-the-fact-there.md) for why the public ones
 split by who authored the fact. Two caveats now that
 [a-store-is-a-modality](/decisions/a-store-is-a-modality.md) is carried out: the WANTS are not
-here at all — no constraint graph exists anywhere; the desire modality derives its own content
-from the world, the records and the packages' `desires.ru` on every rebuild (#312), and
+here at all — no constraint graph exists anywhere; the ROOTS are, in `graph/roots/<agent>`,
+authored at birth by the packages' `desires.ru` and endowed on amendment (#644), and the
+desire modality projects them with the records on every rebuild and derives nothing; and
 `graph/desire/asserted` above is the world's TriG block the build projects, replaced from the
 files each boot. And `graph/intentions/<agent>` has moved OUT of a deployed belief base into
 the intention modality's own room of the volume (`<state>/intentions`, beside
@@ -165,8 +166,8 @@ distinct and both wanted: the **graph** = the lock (who may write); the
 The graph names survive the move to per-agent stores unchanged, and the reasoning above is why:
 they were never about *partitioning one server*, they were about who may write a container. In
 an agent's own store the boundary is doubly held — `:world` is replaced from the ratified files
-on every start and is not the agent's to author, while `:beliefs/<agent>` is written once at
-birth and is the agent's alone thereafter — with one addition that is not a reset: an
+on every start and is not the agent's to author, while `:beliefs/<agent>` and `:roots/<agent>`
+are written once at birth and are the agent's alone thereafter — with one addition that is not a reset: an
 amendment may grant a capability whose opening beliefs the volume has never held, and boot
 **endows** those (never-held terms arrive with their structures, held terms stay the agent's
 whatever their value; `rebirth` remains the explicit discard). See

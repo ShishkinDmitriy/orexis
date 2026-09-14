@@ -34,8 +34,8 @@ def test_the_desires_store_holds_wants_and_only_wants(monkeypatch):
     agent = build_agent("gardener", genesis_store(world="loner"), monkeypatch)
 
     graphs = _graphs_in(agent.desires)
-    assert any(g.endswith("desire/derived") for g in graphs), \
-        "the regions are DERIVED here now — genesis derives no wants (#312)"
+    assert any(g.endswith("roots/gardener") for g in graphs), \
+        "the roots are PROJECTED here — authored at genesis, never rebuilt (#644)"
     assert beliefs_graph("gardener") in graphs, "the pick record is projected: picks are wants"
     assert WORLD_GRAPH not in graphs, "topology is a premise, dropped after the derivation"
     assert STATE_GRAPH not in graphs, "a reading is a belief, not a want"

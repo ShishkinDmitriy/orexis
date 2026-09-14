@@ -50,7 +50,7 @@ from orexis_agent_progression import violation
 from orexis_agent_progression.store import Raw, bind, bindings
 from .ontology import DELIBERATION, pursued_graph
 from orexis_agent_progression.ontology import (obligations_graph, promises_graph, CLASSIFICATION_GRAPH,
-                            DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
+                            DESIRE_ASSERTED_GRAPH, roots_graph,
                             STATE_GRAPH, beliefs_graph)
 from orexis_agent_deliberation.conformance import graph_from, held_shapes, legality_selects
 from orexis_agent_deliberation.judge import crossed_text
@@ -1325,7 +1325,7 @@ class Planner:
         #  for it — the loner masked that, its child judged by sensing's measure instead.
         #  The ledger too (#635): a debt carries its met-test as every authored want does,
         #  and the snapshot is where `_avoided_pattern` looks for it.
-        self._want_graphs = (DESIRE_DERIVED_GRAPH, DESIRE_ASSERTED_GRAPH,
+        self._want_graphs = (roots_graph(self.agent.id), DESIRE_ASSERTED_GRAPH,
                              promises_graph(self.agent.id), pursued_graph(self.agent.id),
                              obligations_graph(self.agent.id))
         self.imaginarium.copy_in(self.agent.desires, *self._want_graphs)

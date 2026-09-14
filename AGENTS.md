@@ -558,7 +558,9 @@ generated and mosquitto now refuses anonymous clients. It then **reloads** the b
 (SIGHUP, not a restart — connected agents keep their sessions), so adding an agent or a world
 still interrupts nothing.
 
-Beliefs are the agent's: **authored** once at birth, never touched by start or stop. Anything
+Beliefs are the agent's: **authored** once at birth, never touched by start or stop — and so are
+its ROOT desires, authored at birth into a graph with no period by the packages' desire rules
+and projected, never rebuilt (#644). Anything
 that would reset them on a restart is a bug, not a convenience. One addition is not a reset:
 an amendment that grants a capability may author terms an existing volume has NEVER held, and
 boot **endows** those — never-held terms arrive with their structures, held terms stay the

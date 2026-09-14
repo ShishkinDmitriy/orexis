@@ -128,7 +128,18 @@ def crossing_row_of(agent, root: str) -> tuple[datetime, datetime] | None:
 
 
 def foresees_of(agent, root: str) -> float | None:
-    """How far ahead this root derives a want from a prediction, in seconds, or None."""
+    """How far ahead this root derives a want from a prediction, in seconds, or None.
+
+    ASKED OF THE CHOIR (#644): a root authored at genesis states no foresight, because the
+    belief that says how far the agent looks ahead is a pick, and a root is not a function of
+    the agent's state — whoever holds that belief answers `orexis:foresight` at the moment a
+    child is derived, so a re-pick reaches the next derivation with no rebuild. An asserted want
+    may still state `orexis:foresees`, read where no voice answers."""
+    from orexis_agent_progression.ontology import FORESIGHT
+
+    for answer in agent.ask(FORESIGHT, root):
+        if answer is not None:
+            return float(answer)
     rows = bindings(agent.desires.query_union(
         f"SELECT ?f WHERE {{ <{root}> orexis:foresees ?f }} LIMIT 1"))
     return float(rows[0]["f"]) if rows else None

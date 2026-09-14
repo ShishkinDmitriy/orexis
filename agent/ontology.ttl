@@ -222,6 +222,9 @@ orexis:BeliefGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Beli
 
 
 
+orexis:RootsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Roots graph" ;
+    orexis:graphPrefix "http://example.org/orexis/graph/roots/" ; orexis:arrivesBy orexis:Asserted ;
+    rdfs:comment "ONE agent's ROOT desires — every `orexis:Always` want it holds for its whole life: the stake per property, the freshness want per sensor, with their met-tests — authored ONCE at genesis from the ranges and the wiring the world states, by the packages' desire rules run at birth, and endowed on amendment: a never-held root arrives, a held one stays (a-root-holds-always-and-an-outdated-graph-is-dropped). NO PERIOD, so it holds at every instant as the T-Box does, and no rebuild of the desire modality touches it; the modality projects it beside the records. Received, never authored by the agent: the sovereign's ranges are the source." .
 orexis:PickRecordGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Pick record graph" ;
     orexis:graphPrefix "http://example.org/orexis/graph/beliefs/" ; orexis:arrivesBy orexis:Asserted ;
     rdfs:comment "ONE agent's record of picking: what birth authored and review has since re-picked, one value per term, plus the belief-proper terms (conversions, the wallet) the #297 sort left beside them. A RECORD class, not a modality — the desire modality derives its wants and projects this record in as a premise-and-content, so what used to need a modality typing to be copied is now read by name, the one construction from an agent's own id the rules allow. The write boundary is orexis:beliefsOf, unchanged." .
@@ -656,7 +659,7 @@ orexis:holdsAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range x
     rdfs:comment "The instant an `orexis:At` want must hold at — a predicted crossing, read from the reading in hand through the drift's own `orexis:crossesAfter`. The keeper holds the plan's first step `progression:notBefore` this instant less the plan's own duration, so acting early is placed rather than immediate (#619)." .
 orexis:foresees a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:decimal ;
     rdfs:label "foresees" ;
-    rdfs:comment "How far ahead, in seconds, a predicted crossing derives a want under this root. A root stating none derives none from a prediction, so a world that says nothing plans exactly as before; sensing writes it on a stake from the agent's `sensing:foresightS` belief, and an asserted want may state it. The policy of how much lead is too much sits here, beside the want, and not in the kernel (#619)." .
+    rdfs:comment "How far ahead, in seconds, a predicted crossing derives a want under this root — stated by an ASSERTED want. A root authored at genesis states none: the belief that says how far it foresees is the agent's (`sensing:foresightS`, a pick), and a root is not a function of the agent's state (#644), so pursuit asks `orexis:foresight` of the choir when it derives and reads this only where no voice answers. The policy of how much lead is too much sits beside the want, and not in the kernel (#619)." .
 orexis:expiresAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ;
     rdfs:label "expires at" ;
     rdfs:comment """When the venue stops holding the claim this debt came from — the claim's own `exp`, kept as the debt's. Absent where the market stated no window, and such a debt never becomes urgent, which is right: nobody is waiting on it.
@@ -685,6 +688,10 @@ orexis:carries a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range <http:/
 
 orexis:answer a assembly:Extension ;
     assembly:signature "(keyed_class, key, carried, since) -> Graph | None" ; orexis:row orexis:Progression ; rdfs:label "answer" ; rdfs:comment "What would an observation that ANSWERS this predicted fact look like? Asked for each KEYED fact a step predicts (a class some package declared `orexis:keyedBy`): the class, its key values and what it carries, as the step's prediction states them. A sh:NodeShape on the subject, conforming when a reading of the property later than `since` lies within `tolerance` of the predicted movement from the baseline — sensing's, because what a reading is is sensing's (#516, #518). The keeper holds the step on it; None is no opinion, and the first opinion wins." .
+
+orexis:foresight a assembly:Extension ;
+    assembly:signature "(root) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "foresight" ;
+    rdfs:comment "How far ahead, in seconds, does this ROOT foresee — a predicted crossing nearer than that derives a want met at the crossing's instant (#619). Asked by pursuit when it derives, of whoever holds the belief that says (sensing, from `sensing:foresightS`), so a root authored at genesis carries no foresight of its own and a re-pick reaches the next derivation without a rebuild (#644). An asserted want may still state `orexis:foresees`, which is read where no voice answers." .
 
 orexis:witness a assembly:Extension ;
     assembly:signature "(keyed_class, key) -> float | None" ; orexis:row orexis:Progression ; rdfs:label "witness" ; rdfs:comment "What value does the world show NOW for this keyed fact — the reading a step predicted, as it stands at the verdict? Asked once per verdict for the residual (observed against predicted) the reviewer reads; sensing's, because what a reading is is sensing's (#518). None is no opinion." .
