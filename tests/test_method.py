@@ -58,7 +58,7 @@ def test_a_won_round_walks_the_method_and_a_lost_one_lapses_it(monkeypatch):
     assert keeper.current(keeper.standing(want=want)[0].uri).action == TENDERING
     assert [p.rsplit("#", 1)[-1] for _, _, p in keeper.held()] == ["answeredWhen"], \
         "the tender is held on its action's doneWhen: a claim on this venue"
-    assert keeper.open_expectations(want) == [], "which is not a watch on the world"
+    assert keeper.watches(want) == [], "which is not a watch on the world"
     fern.deliver(f"{market.claim_topic}/fern", {"auction_id": "r1", "jti": "c1", "amount_l": 0.5, "debit": 0.2})
     claims = bindings(fern.beliefs.query_union(f"SELECT ?c WHERE {{ <{fern.me.uri}> market:holdsClaim ?c . ?c <{CLAIMED_AT}> ?t }}"))
     assert len(claims) == 1, "the claim is a fact in my graph"

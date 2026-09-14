@@ -138,7 +138,7 @@ def test_the_dose_the_actuator_expects_is_the_band_its_rule_declares(monkeypatch
     #  inside, so the reading is a surprise and wakes the mind at arrival (#632).
     gardener.deliver("sensors/moisture_probe/reading", {"value": 0.05})
     keeper = next(m for m in gardener.modules if m.name == "intention")
-    watches = keeper.open_expectations(stake_of(gardener, MOISTURE).uri)
+    watches = keeper.watches(stake_of(gardener, MOISTURE).uri)
     assert len(watches) == 1, "a self-dose went out and opened exactly one expectation"
 
     predicted, _ = effects.apply(

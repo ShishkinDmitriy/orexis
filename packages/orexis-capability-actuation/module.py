@@ -171,7 +171,7 @@ class ActuationModule(Module):
         The actor for `actuation:Actuate` (knowledge/domain/actor.md). Everything the market path
         earns, a self-dose keeps: the act goes through `redeem` on a SELF-CLAIM — signed by
         both keys, verified in the device, confirmed on the status channel, counted when
-        silent — and opens an expectation on the end. An unconfirmed self-dose is not a
+        silent — and opens a watch on the end. An unconfirmed self-dose is not a
         delivered one either; the REA event stands, it merely fulfils no exchange.
         """
         observed_property = act.about
@@ -183,7 +183,7 @@ class ActuationModule(Module):
         keeper = self.agent.keeper
         if keeper is not None:
             now = clock.now()
-            if any(now < w.deadline for w in keeper.open_expectations(desire.uri)):
+            if any(now < w.deadline for w in keeper.watches(desire.uri)):
                 return False  # my own dose has not answered yet — the #167 guard, rung 2
         litres = self.dose_for(observed_property, value)
         if litres is None or litres <= EPS:
@@ -220,7 +220,7 @@ class ActuationModule(Module):
             #  told so here.
             #  Held to the band the step predicted (#579); what I add is the number I aimed
             #  the dose at, for the residual review to read against what the world shows.
-            opened = keeper.expect(
+            opened = keeper.watch(
                 intention,
                 f"self-dosed {litres}L ({cmd.ml:.0f} ml commanded) — the graph says this "
                 f"raises what I am short of, so show me",

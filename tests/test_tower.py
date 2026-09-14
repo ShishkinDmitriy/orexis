@@ -66,7 +66,7 @@ def _walk(agent, uri, steps_seen):
             return
         step = standing[0].step
         steps_seen.append(step.action.rsplit("#", 1)[-1])
-        assert keeper.expect(uri, f"{step.action.rsplit('#', 1)[-1]} — show me",
+        assert keeper.watch(uri, f"{step.action.rsplit('#', 1)[-1]} — show me",
                              not_after=datetime.now(timezone.utc) + timedelta(hours=1))
         _answer(agent, step.predicts)
     raise AssertionError("a plan that never ends")

@@ -22,8 +22,9 @@ reads no belief — and the deliberator ticks at it.
 - **The patience.** Within `progression:patienceS` a second impulse toward the same commitment is
   absorbed rather than re-decided — the amortisation that makes an expensive deliberator
   affordable.
-- **The verification arc.** `expect` opens a watch with a baseline and a deadline; `judge` closes
-  it when a number arrives; enough unmet verdicts for one pair raise a suspicion.
+- **The verification arc.** `watch` opens a watch with a baseline and a deadline; the predictor's
+  comparison at a reading's arrival, or the deadline, closes it (#639); enough unmet verdicts
+  for one pair raise a suspicion.
 
 # What it reads and writes
 
@@ -36,5 +37,5 @@ one-writer scan in `tests/test_intention.py` holds it.
 
 Nothing here chooses. [Execution](/domain/executor.md) hands it a plan's head; the *whether*
 belongs to [deliberation](/domain/deliberator.md). And what a commitment IS — the lifecycle, the
-expectation, why absorption is a cost model — is [intention](/domain/intention.md)'s to say. This
+watch, why absorption is a cost model — is [intention](/domain/intention.md)'s to say. This
 page is the service: its three jobs and the one graph it may write.

@@ -317,7 +317,7 @@ def test_a_parcel_moved_under_a_standing_plan_drops_the_tail_and_replans(monkeyp
     assert uri is not None and len(searches) == 1
     first = keeper.standing(want=WANT)[0].step
     assert keeper.in_progress(WANT) is not None, "the whole delivery stands as one plan"
-    assert keeper.expect(uri, "driving — show me",
+    assert keeper.watch(uri, "driving — show me",
                          not_after=datetime.now(timezone.utc) + timedelta(hours=1))
     # the parcel is moved while the van drives: the world differs from the plan's tail
     agent.beliefs.update(f"""DELETE DATA {{ GRAPH <{STATE_GRAPH}> {{ <{W}parcel> <{C}at> <{W}c1_2> . }} }}""")

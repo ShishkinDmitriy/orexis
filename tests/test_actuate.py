@@ -155,7 +155,7 @@ def test_a_self_dose_is_commanded_co_signed_and_ledgered(gardener):
                           actuation.clearing_key.public_key())
 
     keeper = next(m for m in gardener.modules if m.name == "intention")
-    watches = keeper.open_expectations(stake_of(gardener, MOIST).uri)
+    watches = keeper.watches(stake_of(gardener, MOIST).uri)
     assert len(watches) == 1
     #  The step carries the BAND its rule declared (#579): a dose reaches the region.
     assert [b.rsplit(".", 1)[-1] for b in predicted_bands(gardener, watches[0].step)
@@ -198,7 +198,7 @@ def test_a_dose_in_flight_absorbs_the_next_impulse(gardener, monkeypatch):
     keeper = next(m for m in gardener.modules if m.name == "intention")
     gardener.deliver("sensors/moisture_probe/reading", {"value": 0.05})
     assert len(gardener.sent.to("actuators/pump/command")) == 1
-    monkeypatch.setattr(keeper, "open_expectations", lambda p: [])  # the watch out of the way
+    monkeypatch.setattr(keeper, "watches", lambda p: [])  # the watch out of the way
     gardener.deliver("sensors/moisture_probe/reading", {"value": 0.05})
     assert len(gardener.sent.to("actuators/pump/command")) == 1, \
         "the dose in flight is a commitment, and a commitment absorbs the same impulse"

@@ -111,7 +111,7 @@ progression:step a owl:ObjectProperty ; rdfs:domain progression:Intention ; rdfs
 
 progression:then a owl:ObjectProperty ; rdfs:domain progression:Step ; rdfs:range progression:Step ;
     rdfs:label "then" ;
-    rdfs:comment "The step that follows this one in the plan committed to (#510). Written when the plan is handed down whole; the keeper moves `progression:by` along it when a step's expectation is met, taking the next with no search, and stops when one is unmet — the tail is then abandoned with the intention." .
+    rdfs:comment "The step that follows this one in the plan committed to (#510). Written when the plan is handed down whole; the keeper moves `progression:by` along it when a step's watch is met, taking the next with no search, and stops when one is unmet — the tail is then abandoned with the intention." .
 
 progression:predictedUrgency a owl:DatatypeProperty ; rdfs:domain progression:Step ; rdfs:range xsd:decimal ;
     rdfs:label "predicted urgency" ;
@@ -125,13 +125,13 @@ progression:answeredWhen a owl:ObjectProperty ; rdfs:domain progression:Step ;
     rdfs:label "answered when" ;
     rdfs:comment "The step's COMPLETION condition (#516) where the step predicts a PLAIN fact or its action states `orexis:doneWhen`: a sh:NodeShape that conforms when the world has answered the act, as against `progression:until`, its READINESS condition. Conformance is the verdict met; the deadline passing first is the verdict unmet, the false-knowledge datum. A step predicting a READING holds no shape since #639: the predictor is told the band (`orexis:predicted`) and answers with the verdict at the reading's arrival." .
 
-progression:expectedFrom a owl:DatatypeProperty ; rdfs:domain progression:Step ; rdfs:range xsd:dateTime ;
-    rdfs:label "expected from" ;
-    rdfs:comment "From when the world may answer this step (#639): the baseline's instant, or the taking. A reading dated at or before it is the before, not an answer. Written when the watch opens, and read with progression:landsAt by whoever compares a reading with the step's band." .
+progression:watchedFrom a owl:DatatypeProperty ; rdfs:domain progression:Step ; rdfs:range xsd:dateTime ;
+    rdfs:label "watched from" ;
+    rdfs:comment "From when the watch on this step is open (#639, #640): the baseline's instant, or the taking. A reading dated at or before it is the before, not an answer. Read with progression:landsAt by whoever compares a reading with the step's band." .
 
 progression:landsAt a owl:DatatypeProperty ; rdfs:domain progression:Step ; rdfs:range xsd:dateTime ;
     rdfs:label "lands at" ;
-    rdfs:comment "When the step's change is complete (#639): the taking plus the landing the actor states, or the deadline where the actor cannot say. A reading in the predicted band at any time after progression:expectedFrom is the step answered — early is the dose landing — and one outside it at or after this instant is the step failed; before it, the world says nothing of the step." .
+    rdfs:comment "When the step's change is complete (#639): the taking plus the landing the actor states, or the deadline where the actor cannot say. A reading in the predicted band at any time after progression:watchedFrom is the step answered — early is the dose landing — and one outside it at or after this instant is the step failed; before it, the world says nothing of the step." .
 
 progression:untilNot a owl:ObjectProperty ; rdfs:domain progression:Step ;
     rdfs:label "held until it stops holding" ;
@@ -172,7 +172,7 @@ progression:precondition a owl:DatatypeProperty ; rdfs:domain progression:Step ;
 
 progression:baselineValue a owl:DatatypeProperty ; rdfs:domain progression:Step ; rdfs:range xsd:decimal ;
     rdfs:label "baseline value" ;
-    rdfs:comment "Where the property stood when the expectation was adopted. Copied into the row, deliberately: the sensed graph upserts — one current observation per property — so the BEFORE of any before/after survives nowhere but here. The ledger is the memory of commitments, and this is the commitment's opening position." .
+    rdfs:comment "Where the property stood when the watch was opened. Copied into the row, deliberately: the sensed graph upserts — one current observation per property — so the BEFORE of any before/after survives nowhere but here. The ledger is the memory of commitments, and this is the commitment's opening position." .
 
 progression:predictedValue a owl:DatatypeProperty ; rdfs:domain progression:Step ; rdfs:range xsd:decimal ;
     rdfs:label "predicted value" ;
@@ -198,7 +198,7 @@ progression:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain progression:Step 
 
 progression:suspectAfter a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "suspect after" ;
-    rdfs:comment "How many consecutive unmet expectations for one (means, property) pair make the affordance suspect. A fact about what this society tolerates before it stops trusting a claim, not about how the code is written." .
+    rdfs:comment "How many consecutive unmet watches for one (means, property) pair make the affordance suspect. A fact about what this society tolerates before it stops trusting a claim, not about how the code is written." .
 
 progression:patienceS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
     rdfs:label "patience seconds" ;

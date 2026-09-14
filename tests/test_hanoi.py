@@ -250,7 +250,7 @@ def test_three_disks_are_solved_with_one_search_and_seven_answered_steps(monkeyp
         step = keeper.standing(want=WANT)[0].step
         taken.append(step)
         assert step.predicts is not None, "a step from the ledger carries what it predicted"
-        assert keeper.expect(uri, "moved — show me",
+        assert keeper.watch(uri, "moved — show me",
                              not_after=datetime.now(timezone.utc) + timedelta(hours=1))
         _answer(agent, step.predicts)                       # the world answers as predicted
     assert len(taken) == 7 and len({s.about for s in taken} | {s.via for s in taken}) >= 1
@@ -258,4 +258,4 @@ def test_three_disks_are_solved_with_one_search_and_seven_answered_steps(monkeyp
     assert keeper.in_progress(WANT) is None
     assert len(searches) == 1, "seven moves, one search"
     assert _goal(agent).state == "met", "and the stack stands on the home peg"
-    assert keeper.reports()["expectations_met"] == 7
+    assert keeper.reports()["watches_met"] == 7

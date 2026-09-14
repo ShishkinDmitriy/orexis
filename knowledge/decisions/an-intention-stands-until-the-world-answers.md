@@ -41,7 +41,7 @@ contract.
 # What is decided
 
 **The intention is to the end.** A self-dose's row is adopted by execution, the watch opens on
-that standing row (`keeper.expect(intention, …)`, no `satisfy` first), and the keeper resolves
+that standing row (`keeper.watch(intention, …)`, no `satisfy` first), and the keeper resolves
 it **at the verdict** — satisfied whether the end was met or unmet, because the act was taken
 and *satisfied-and-unmet* is the false-knowledge signature the ledger exists to record. While it
 stands, `adopt` absorbs the next impulse by the standing rule. `Module.absorbs`,

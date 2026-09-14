@@ -28,7 +28,7 @@ def test_the_three_events_are_points_deliberation_fills(thirsty):
         assert thirsty.deliberator.answer(point) is not None, point
 
 
-def test_an_unmet_expectation_is_told_upward_and_marks_the_want(thirsty):
+def test_an_unmet_watch_is_told_upward_and_marks_the_want(thirsty):
     """The keeper judges the step's RESULT against the baseline the actor handed in; what to do
     about a plan that failed is deliberation's, and it hears it as an event rather than the
     ledger importing the search."""
@@ -38,7 +38,7 @@ def test_an_unmet_expectation_is_told_upward_and_marks_the_want(thirsty):
                   finished=thirsty.deliberator._plans_finished)
     #  Held to a BAND (#639): the step predicts the reading inside the region, and a reading
     #  that fell is outside it — nothing before the landing, and unmet when the deadline passes.
-    assert keeper.expect(uri, "watching", baseline=reading_of(thirsty, MOISTURE),
+    assert keeper.watch(uri, "watching", baseline=reading_of(thirsty, MOISTURE),
                          predicts=predicted_reading(thirsty.me.acts_for, MOISTURE,
                                                     band="http://example.org/orexis/sensing#InRegion"))
     write_reading(thirsty, 0.29, MOISTURE)                           # fell — not an answer
@@ -50,10 +50,10 @@ def test_an_unmet_expectation_is_told_upward_and_marks_the_want(thirsty):
     assert want in thirsty.reviser._pending, "a failed plan is a want marked for re-planning"
 
 
-def test_a_met_expectation_is_counted_and_not_re_planned(thirsty):
+def test_a_met_watch_is_counted_and_not_re_planned(thirsty):
     keeper, want = thirsty.keeper, stake_of(thirsty).uri
     uri = keeper.adopt(TENDERING, want, "a dose that lands")
-    assert keeper.expect(uri, "watching", baseline=reading_of(thirsty, MOISTURE),
+    assert keeper.watch(uri, "watching", baseline=reading_of(thirsty, MOISTURE),
                          predicts=predicted_reading(thirsty.me.acts_for, MOISTURE, 0.31))
     write_reading(thirsty, 0.31, MOISTURE)
     assert thirsty.deliberator._plans_finished == 1

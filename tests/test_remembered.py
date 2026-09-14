@@ -29,7 +29,7 @@ def _walk(agent, uri):
         if not standing:
             return
         step = standing[0].step
-        assert keeper.expect(uri, "show me", not_after=datetime.now(timezone.utc) + timedelta(hours=1))
+        assert keeper.watch(uri, "show me", not_after=datetime.now(timezone.utc) + timedelta(hours=1))
         _answer(agent, step.predicts)
     raise AssertionError("a plan that never ends")
 
@@ -79,7 +79,7 @@ def test_a_remembered_plan_that_fails_a_step_is_forgotten(monkeypatch):
     _repose(agent, "c0_0", "c1_2")
     again = pursuit.pursue(agent, _goal(agent))
     assert bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}"))
-    agent.keeper.expect(again, "show me", not_after=datetime.now(timezone.utc) + timedelta(hours=1))
+    agent.keeper.watch(again, "show me", not_after=datetime.now(timezone.utc) + timedelta(hours=1))
     agent.keeper.lapse(again)                                   # the world did not answer
     assert not bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}")), \
         "forgotten: a plan that failed a step is not remembered"
@@ -195,7 +195,7 @@ def test_a_remembered_route_adopted_on_its_precondition_that_fails_is_forgotten(
     _repose(agent, "c0_0", "c1_2")
     agent.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <urn:stray> <urn:p> <urn:o> . }} }}")
     again = pursuit.pursue(agent, _goal(agent))
-    agent.keeper.expect(again, "show me", not_after=datetime.now(timezone.utc) + timedelta(hours=1))
+    agent.keeper.watch(again, "show me", not_after=datetime.now(timezone.utc) + timedelta(hours=1))
     agent.keeper.lapse(again)
     assert not bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}")), \
         "forgotten, whichever road adopted it"

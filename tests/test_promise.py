@@ -46,10 +46,10 @@ def test_a_taker_less_step_with_a_bridge_raises_its_promise_as_a_want(monkeypatc
 SELECT ?w ?step ?sel WHERE {{ GRAPH <{promises_graph(fern.id)}> {{
   <{fern.me.uri}> orexis:holds ?w . ?w progression:promisedBy ?step ; orexis:estimates ?est . ?est sh:select ?sel }} }}"""))
     assert len(rows) == 1 and "?estimate" in rows[0]["sel"], "with the bridge's estimate, bound to this promise"
-    assert keeper.open_expectations(want), "and the step waits on the translated fact"
+    assert keeper.watches(want), "and the step waits on the translated fact"
     # the level beneath keeps the promise: the box is at pier B, in the lower vocabulary
     fern.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <{T}box> <{T}at> <{T}pierB> }} }}")
-    assert keeper.open_expectations(want) == [], "the promised fact answered the step"
+    assert keeper.watches(want) == [], "the promised fact answered the step"
     assert not [d for d in fern.pursuing() if d.uri.startswith("http://example.org/orexis#promise_")], \
         "the promise is withdrawn"
     on = bindings(fern.beliefs.query_over(f"SELECT ?p WHERE {{ <{T}box> <{T}on> ?p }}", STATE_GRAPH))

@@ -103,8 +103,8 @@ a BDI notion; which property it is stays sensing's.
   package that needs the property of a want asks sensing (`want_about`, `stake_about`,
   `wants_about`) or reads the field off the object sensing handed over;
 - an **intention** is `progression:pursues` the want and `progression:by` the act, and the ledger's
-  `ssn:forProperty` is gone; `adopt`, `satisfy`, `drop`, `standing`, `expect`,
-  `open_expectations` and suspicion key on (act, want). The ledger migrates at the keeper's
+  `ssn:forProperty` is gone; `adopt`, `satisfy`, `drop`, `standing`, `watch`,
+  `watches` and suspicion key on (act, want). The ledger migrates at the keeper's
   construction (`vocabulary.migrate_ledger`): a row with a property and no want is given the
   want that property names for the agent, through `orexis:about`, and the property triple is
   dropped from every row;

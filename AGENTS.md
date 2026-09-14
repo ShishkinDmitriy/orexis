@@ -172,7 +172,7 @@ it is a record wearing a bullet.
   repo, at onboarding and at boot holds a family to its actions, because a taker missing at
   runtime looked exactly like an actor that was busy.
 - **An effect is one declaration** — the diff the search planned on rides on the step and is
-  what the world is held to, so no actor sizes an expectation of its own; the one thing an
+  what the world is held to, so no actor sizes a watch of its own; the one thing an
   actor adds is how close, and that is a bounded pick rather than a kernel constant.
 - **The desire owns the term and the package owns the measure** — a want says `unmetWhen`
   and `estimates`; what the pattern means and that the estimate never overstates are promises

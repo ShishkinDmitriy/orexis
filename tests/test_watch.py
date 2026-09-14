@@ -53,7 +53,7 @@ def test_a_claim_opens_a_watch_with_the_baseline_in_the_row(thirsty):
     the sensed graph upserts — the before of any before/after survives nowhere else."""
     win(thirsty)
     keeper = keeper_of(thirsty)
-    watches = keeper.open_expectations(stake_of(thirsty).uri)
+    watches = keeper.watches(stake_of(thirsty).uri)
     assert len(watches) == 1
     watch = watches[0]
     assert watch.baseline == 0.30 and watch.baseline_at is not None
@@ -79,9 +79,9 @@ def test_the_dose_landing_meets_the_end(thirsty):
     win(thirsty)
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.55})
     keeper = keeper_of(thirsty)
-    assert keeper.open_expectations() == []
-    assert keeper.reports()["expectations_met"] == 1
-    assert keeper.reports()["expectations_unmet"] == 0
+    assert keeper.watches() == []
+    assert keeper.reports()["watches_met"] == 1
+    assert keeper.reports()["watches_unmet"] == 0
 
 
 def test_movement_the_wrong_way_proves_nothing_before_the_deadline(thirsty):
@@ -89,7 +89,7 @@ def test_movement_the_wrong_way_proves_nothing_before_the_deadline(thirsty):
     leave the watch open rather than judging early — unmet is a verdict about the DEADLINE."""
     win(thirsty)
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.29})
-    assert len(keeper_of(thirsty).open_expectations()) == 1
+    assert len(keeper_of(thirsty).watches()) == 1
 
 
 def test_the_deadline_passing_unmet_is_the_false_knowledge_datum(monkeypatch):
@@ -100,10 +100,10 @@ def test_the_deadline_passing_unmet_is_the_false_knowledge_datum(monkeypatch):
     keeper.beliefs = replace(keeper.beliefs, patience_s=0)   # the horizon is now
     win(fern)
     fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.28})   # still falling
-    assert keeper.open_expectations() == []
+    assert keeper.watches() == []
     reported = keeper.reports()
-    assert reported["expectations_unmet"] == 1
-    assert reported["expectations_met"] == 0
+    assert reported["watches_unmet"] == 1
+    assert reported["watches_met"] == 0
 
 
 # --- the verification watch: attention follows the unverified -----------------
@@ -146,10 +146,10 @@ def test_an_affordance_that_never_pays_becomes_suspect(monkeypatch, caplog):
             fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": round(value, 2)})
             #  The deadline passes — fired as the keeper's scheduler would (#516): the watch
             #  is a hold, and a deadline of "now" would race the reading it is meant to judge.
-            for watch in keeper.open_expectations():
+            for watch in keeper.watches():
                 keeper.lapse(watch.uri)
 
-    assert keeper.reports()["expectations_unmet"] == 3
+    assert keeper.reports()["watches_unmet"] == 3
     assert keeper.reports()["affordances_suspect"] == 1
     assert [pair for pair in keeper.suspects()
             if pair[0] == PRESENTING and pair[1] == stake_of(fern).uri]
@@ -162,7 +162,7 @@ def test_one_success_resets_the_suspicion(monkeypatch):
     keeper = keeper_of(fern)
 
     def lapse_all():
-        for watch in keeper.open_expectations():
+        for watch in keeper.watches():
             keeper.lapse(watch.uri)
 
     win(fern, auction="r1")
@@ -174,7 +174,7 @@ def test_one_success_resets_the_suspicion(monkeypatch):
     fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.39})   # not an answer
     lapse_all()                                                              # unmet
 
-    assert keeper.reports()["expectations_unmet"] == 2
+    assert keeper.reports()["watches_unmet"] == 2
     assert keeper.reports()["affordances_suspect"] == 0
 
 
@@ -205,7 +205,7 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
     assert thirsty.sent.to(f"{market.redeem_topic}/fern") == [], \
         "winning must present nothing — the watch is not live"
     assert len(keeper.standing(action=PRESENTING)) == 1
-    assert keeper.open_expectations() == []          # the dose is not imminent yet
+    assert keeper.watches() == []          # the dose is not imminent yet
 
     # a reading arrives WITHOUT the ack — the board has not heard the tightening
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.29})
@@ -218,7 +218,7 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
     assert presented and presented[-1]["jti"] == "v1"
     assert not [p for _, _, p in keeper.held() if not p.endswith("answeredWhen")], \
         "the readiness hold is gone; the intention stands at Presenting with its watch on the end (#523)"
-    watches = keeper.open_expectations(stake_of(thirsty).uri)
+    watches = keeper.watches(stake_of(thirsty).uri)
     assert len(watches) == 1 and watches[0].baseline == 0.29
 
 
@@ -298,12 +298,12 @@ def test_a_breath_of_grain_past_the_baseline_is_not_the_world_answering(thirsty)
     win(thirsty)
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.301})
     keeper = keeper_of(thirsty)
-    assert len(keeper.open_expectations()) == 1, "grain must not close a watch"
+    assert len(keeper.watches()) == 1, "grain must not close a watch"
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.37})
-    assert len(keeper.open_expectations()) == 1, "a rise short of the prediction is not it either"
+    assert len(keeper.watches()) == 1, "a rise short of the prediction is not it either"
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.50})
-    assert keeper.open_expectations() == []
-    assert keeper.reports()["expectations_met"] == 1
+    assert keeper.watches() == []
+    assert keeper.reports()["watches_met"] == 1
 
 
 def test_the_step_carries_the_reading_the_rule_predicted(thirsty):
@@ -311,7 +311,7 @@ def test_the_step_carries_the_reading_the_rule_predicted(thirsty):
     reading Acquiring's own rule predicted — 0.30 plus 0.5 L through 2.0 L-per-fraction —
     and that is what the watch holds the world to."""
     win(thirsty, amount=0.5)
-    watch = keeper_of(thirsty).open_expectations(stake_of(thirsty).uri)[0]
+    watch = keeper_of(thirsty).watches(stake_of(thirsty).uri)[0]
     assert [b.rsplit(".", 1)[-1] for b in predicted_bands(thirsty, watch.step)
             if "band." in b] == ["inside"], "a bought lot brings the reading into the region"
 
@@ -321,8 +321,8 @@ def test_a_step_that_predicts_nothing_opens_no_watch(thirsty):
     an expectation that cannot be judged is refused rather than left to sit unverified."""
     keeper = keeper_of(thirsty)
     uri = keeper.adopt(TENDERING, stake_of(thirsty).uri, "an act of unknowable effect")
-    assert not keeper.expect(uri, "nothing predicted", baseline=reading_of(thirsty, MOISTURE))
-    assert keeper.open_expectations() == []
+    assert not keeper.watch(uri, "nothing predicted", baseline=reading_of(thirsty, MOISTURE))
+    assert keeper.watches() == []
 
 
 def test_a_number_handed_in_is_held_to_the_band_it_falls_in(thirsty):
@@ -332,11 +332,11 @@ def test_a_number_handed_in_is_held_to_the_band_it_falls_in(thirsty):
     reviewer reads it against what the world showed."""
     keeper = keeper_of(thirsty)
     uri = keeper.adopt(TENDERING, stake_of(thirsty).uri, "an act predicting 0.35")
-    assert keeper.expect(uri, "0.35, the band it falls in", baseline=reading_of(thirsty, MOISTURE),
+    assert keeper.watch(uri, "0.35, the band it falls in", baseline=reading_of(thirsty, MOISTURE),
                          predicts=predicted_reading(thirsty.me.acts_for, MOISTURE, 0.35))
     write_reading(thirsty, 0.301, MOISTURE)
-    assert keeper.open_expectations() == []
-    assert keeper.reports()["expectations_met"] == 1
+    assert keeper.watches() == []
+    assert keeper.reports()["watches_met"] == 1
     rows = bindings(thirsty.intentions.query_union(f"""
 SELECT ?p ?o WHERE {{ <{uri}> progression:by ?s . ?s progression:predictedValue ?p ; progression:observedValue ?o }}"""))
     assert rows and float(rows[0]["p"]) == 0.35 and abs(float(rows[0]["o"]) - 0.301) < 1e-9
@@ -362,7 +362,7 @@ def test_no_new_purchase_while_my_own_dose_is_unanswered(thirsty, caplog):
     #  is content at that reading and buys nothing; it is the next thirst that buys, which is
     #  what this half is about: the refusal was the open watch, not a rule against bidding.
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.50})
-    assert keeper_of(thirsty).open_expectations(stake_of(thirsty).uri) == []
+    assert keeper_of(thirsty).watches(stake_of(thirsty).uri) == []
     #  THE NEXT THIRST BUYS AT THE READING (#632): 0.30 is outside the band the next
     #  observation was expected in, so the surprise wakes the mind at arrival, and the round
     #  still open is bid in — no further offer needed.
@@ -411,7 +411,7 @@ def test_the_watch_runs_until_the_dose_lands_and_a_reading_could_show_it(monkeyp
     before = datetime.now(timezone.utc).timestamp()
     #  Both halves are the ACTOR's to pass now: the landing from its effect rule, the seeing
     #  from the sensing it holds — the keeper names neither package to find them.
-    assert keeper.expect(uri, "50 seconds of pouring",
+    assert keeper.watch(uri, "50 seconds of pouring",
                          predicts=predicted_reading(gardener.me.acts_for, MOISTURE, 0.2),
                          lands_after_s=50.0, seeing_s=seeing,
                          baseline=reading_of(gardener, MOISTURE))
@@ -438,7 +438,7 @@ def test_an_act_that_cannot_size_itself_keeps_the_patience(monkeypatch):
     keeper = keeper_of(gardener)
     uri = keeper.adopt(_ACTUATE, MOISTURE, "something is on its way")
     before = datetime.now(timezone.utc).timestamp()
-    assert keeper.expect(uri, "bought from someone else's valve",
+    assert keeper.watch(uri, "bought from someone else's valve",
                          predicts=predicted_reading(gardener.me.acts_for, MOISTURE, 0.2),
                          baseline=reading_of(gardener, MOISTURE))
 
@@ -473,7 +473,7 @@ def test_a_step_the_world_overshoots_finishes_the_plan_when_the_want_is_met(monk
     dose = Step(action=_ACTUATE, via=pump, want=want, about=MOISTURE, quantity=0.2)
     uri = keeper.adopt([dose, dose], want, "two doses, the search's plan")
     assert uri is not None
-    assert keeper.expect(uri, "the first dose", baseline=reading_of(gardener, MOISTURE),
+    assert keeper.watch(uri, "the first dose", baseline=reading_of(gardener, MOISTURE),
                          predicts=predicted_reading(
                              gardener.me.acts_for, MOISTURE,
                              band="http://example.org/orexis/sensing#InRegion"))
@@ -483,7 +483,7 @@ def test_a_step_the_world_overshoots_finishes_the_plan_when_the_want_is_met(monk
     write_reading(gardener, 0.20, MOISTURE)            # past the aim (0.18), inside the region
     keeper.reconsider()
     assert keeper.standing() == [], "nothing stands: the plan is finished, not waiting on a second dose"
-    assert keeper.reports()["expectations_met"] == 1
+    assert keeper.reports()["watches_met"] == 1
     outcome = bindings(gardener.intentions.query_union(f"""
 SELECT ?o ?why WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{PROGRESSION}outcome> ?o ; <{PROGRESSION}becauseOf> ?why }} }}"""))
     assert {r["o"] for r in outcome} == {"satisfied"}

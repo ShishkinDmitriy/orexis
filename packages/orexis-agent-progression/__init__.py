@@ -6,7 +6,7 @@ minutes, suspends rather than blocks, searches nothing. What it holds is exactly
 record listed as already true of the code, gathered from `agent/` into one package:
 
 - the **keeper** — the ledger of intentions, the patience that absorbs a repeated impulse,
-  and the expectation watch that verifies whether the world answered (`keeper.py`);
+  and the watch that verifies whether the world answered (`keeper.py`);
 - the **act** and the **commitment** — what is committed to, and what a valve fulfils
   (`act.py`, `commitment.py`), the lowest place their importers put them;
 - the **scheduler** and the **timer** — one thread that keeps time and runs nothing, and the
@@ -19,7 +19,7 @@ record listed as already true of the code, gathered from `agent/` into one packa
 
 Waiting is done by STANDING, never by sleeping. An actor that cannot act now answers False
 and the intention stands for the next trigger; an act with a window carries its own deadline;
-an expectation is judged when a reading arrives. Nothing here holds the loop while it waits,
+a watch is judged when a reading arrives. Nothing here holds the loop while it waits,
 which is the constraint the reactive layer exists to make checkable.
 
 The name is `orexis-agent-progression`: the family `agent` groups the three layers in a

@@ -106,8 +106,10 @@ forecast, which a prediction generalises to what the agent predicts of itself.
 
 A **prediction** is what sensing writes about a horizon; the **expectation** is the first of
 them, the one the next reading is held to; the keeper's row on a step is its **watch**, its
-stake in the predictions from the step's landing. `OpenExpectation` and `open_expectations`
-are the old rendering's names and go with it.
+stake in the predictions from the step's landing. `OpenExpectation`, `open_expectations`,
+`expect` and the `expectations_*` series were the old rendering's names and went with it:
+`Watch`, `watches`, `watch` and `watches_*` (#640), and the instant a watch opened is
+`progression:watchedFrom`.
 
 # What is built, in the order it is built
 
@@ -151,7 +153,8 @@ are the old rendering's names and go with it.
    ([#645](https://github.com/ShishkinDmitriy/orexis/issues/645), built): a round, a claim,
    a cooling row, a debt and a pursued child beside the prediction, one `upkeep.sweep`, the
    verdict of a lapsed debt written first.
-6. **The word** ([#640](https://github.com/ShishkinDmitriy/orexis/issues/640)).
+6. **The word** ([#640](https://github.com/ShishkinDmitriy/orexis/issues/640), built): no identifier
+   in the tree says "expectation" for the keeper's row.
 
 # Seams left open
 

@@ -38,7 +38,7 @@
 #      achieves, not what it achieves times a probability; uncertainty lives in re-planning and
 #      in monitoring, which is where this repo already puts it.
 #    * The machinery for the unmet case already exists and already runs. An Acquire that does
-#      not clear produces an UNMET verdict through the same expectation path a dose that never
+#      not clear produces an UNMET verdict through the same watch's path a dose that never
 #      landed does — see `an-intention-is-an-amortised-deliberation` on the verification arc.
 #      A rule that hedged here would be inventing a second, quieter way to be disappointed.
 #    * A pessimistic rule is not more honest, it is just useless: predicting no change would

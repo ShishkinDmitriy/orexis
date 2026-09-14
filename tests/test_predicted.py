@@ -62,7 +62,7 @@ def test_a_step_predicting_a_reading_holds_no_shape_and_the_predictor_is_told(mo
     the branch it told — the band, and the three instants that frame the comparison."""
     agent = _gardener(monkeypatch)
     uri, _ = _two_doses(agent, IN_REGION)
-    assert agent.keeper.expect(uri, "the first dose", baseline=reading_of(agent, MOISTURE),
+    assert agent.keeper.watch(uri, "the first dose", baseline=reading_of(agent, MOISTURE),
                                lands_after_s=3600.0)
     assert agent.keeper.held() == [], "no hold: the comparison is the predictor's"
     told = agent.keeper.predicted()
@@ -78,12 +78,12 @@ def test_a_reading_in_the_band_after_the_landing_advances_the_plan(monkeypatch):
     would finish the plan instead, #521)."""
     agent = _gardener(monkeypatch)
     uri, want = _two_doses(agent)
-    assert agent.keeper.expect(uri, "the first dose", baseline=reading_of(agent, MOISTURE),
+    assert agent.keeper.watch(uri, "the first dose", baseline=reading_of(agent, MOISTURE),
                                lands_after_s=0.0, seeing_s=600.0)
     first = agent.keeper.predicted()[0].step
     write_reading(agent, 0.08, MOISTURE)
-    assert all(w.step != first for w in agent.keeper.open_expectations()), "the first watch closed"
-    assert agent.keeper.reports()["expectations_met"] == 1
+    assert all(w.step != first for w in agent.keeper.watches()), "the first watch closed"
+    assert agent.keeper.reports()["watches_met"] == 1
     standing = [s for s in agent.keeper.standing(want=want) if s.uri == uri]
     assert standing and len(agent.keeper.walked(uri)) == 2, "advanced to the second dose, and it was taken"
 
@@ -93,12 +93,12 @@ def test_a_reading_outside_the_band_after_the_landing_drops_the_tail(monkeypatch
     reads below — the tail is dropped and deliberation hears the plan fail."""
     agent = _gardener(monkeypatch)
     uri, _ = _two_doses(agent, IN_REGION)
-    assert agent.keeper.expect(uri, "the first dose", baseline=reading_of(agent, MOISTURE),
+    assert agent.keeper.watch(uri, "the first dose", baseline=reading_of(agent, MOISTURE),
                                lands_after_s=0.0, seeing_s=600.0)
     heard = _told(agent, monkeypatch)
     write_reading(agent, 0.06, MOISTURE)
-    assert agent.keeper.open_expectations() == []
-    assert agent.keeper.reports()["expectations_unmet"] == 1
+    assert agent.keeper.watches() == []
+    assert agent.keeper.reports()["watches_unmet"] == 1
     assert agent.keeper.standing() == [], "the tail is dropped"
     assert PLAN_FAILED in heard and PLAN_FINISHED not in heard
 
@@ -108,11 +108,11 @@ def test_a_reading_before_the_landing_says_nothing_of_the_step(monkeypatch):
     the step failing, and the watch stays open."""
     agent = _gardener(monkeypatch)
     uri, _ = _two_doses(agent, IN_REGION)
-    assert agent.keeper.expect(uri, "the first dose", baseline=reading_of(agent, MOISTURE),
+    assert agent.keeper.watch(uri, "the first dose", baseline=reading_of(agent, MOISTURE),
                                lands_after_s=3600.0)
     write_reading(agent, 0.06, MOISTURE)
-    assert len(agent.keeper.open_expectations()) == 1
-    assert agent.keeper.reports()["expectations_unmet"] == 0
+    assert len(agent.keeper.watches()) == 1
+    assert agent.keeper.reports()["watches_unmet"] == 0
 
 
 def test_the_predictions_show_the_intended_branch_while_the_step_stands_and_the_drift_after(monkeypatch):
@@ -121,7 +121,7 @@ def test_the_predictions_show_the_intended_branch_while_the_step_stands_and_the_
     agent = _gardener(monkeypatch)
     assert BELOW in _bands_at(agent, 2 * 3600.0), "the drift's own branch: below, and staying so"
     uri, _ = _two_doses(agent, IN_REGION)
-    assert agent.keeper.expect(uri, "the first dose", baseline=reading_of(agent, MOISTURE),
+    assert agent.keeper.watch(uri, "the first dose", baseline=reading_of(agent, MOISTURE),
                                lands_after_s=3600.0)
     assert IN_REGION in _bands_at(agent, 2 * 3600.0) and BELOW not in _bands_at(agent, 2 * 3600.0), \
         "past the landing the prediction is the step's band"
@@ -130,6 +130,6 @@ def test_the_predictions_show_the_intended_branch_while_the_step_stands_and_the_
     assert BELOW in _bands_at(agent, 700.0) and IN_REGION not in _bands_at(agent, 700.0), \
         "before it, the drift's"
     agent.keeper.lapse(uri)
-    assert agent.keeper.open_expectations() == []
+    assert agent.keeper.watches() == []
     assert BELOW in _bands_at(agent, 2 * 3600.0) and IN_REGION not in _bands_at(agent, 2 * 3600.0), \
         "the watch closed: the world's own branch again"

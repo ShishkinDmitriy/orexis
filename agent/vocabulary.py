@@ -108,6 +108,8 @@ MOVED = {
     "http://example.org/orexis#IntentionGraph": "http://example.org/orexis/progression#IntentionGraph",
     "http://example.org/orexis#PromisesGraph": "http://example.org/orexis/progression#PromisesGraph",
     "http://example.org/orexis#Step": "http://example.org/orexis/progression#Step",
+    #  #640: the keeper's row is a watch, and the instant it opened says so.
+    "http://example.org/orexis/progression#expectedFrom": "http://example.org/orexis/progression#watchedFrom",
     "http://example.org/orexis#adoptedAt": "http://example.org/orexis/progression#adoptedAt",
     "http://example.org/orexis#answeredWhen": "http://example.org/orexis/progression#answeredWhen",
     "http://example.org/orexis#asOf": "http://example.org/orexis/deliberation#asOf",

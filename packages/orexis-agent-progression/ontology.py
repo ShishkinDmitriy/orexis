@@ -105,7 +105,7 @@ LAYER_OF = {
     "deadlineAt": PROGRESSION,
     "endMet": PROGRESSION,
     "endVerifiedAt": PROGRESSION,
-    "expectedFrom": PROGRESSION,
+    "watchedFrom": PROGRESSION,
     "fills": PROGRESSION,
     "forAgent": PROGRESSION,
     "maxPatienceS": PROGRESSION,
@@ -164,7 +164,7 @@ QUIET = OREXIS + "quiet"
 OUTDATED = OREXIS + "outdated"      # a graph's period has ended and it is about to be dropped (#645)
 BELIEF_REVISED = OREXIS + "beliefRevised"
 #  What progression TELLS upward (#452): a lower layer never imports a higher one, so what it
-#  has to say — a step taken, an expectation met or unmet — is an event through the choir.
+#  has to say — a step taken, a watch met or unmet — is an event through the choir.
 STEP_DONE = OREXIS + "stepDone"
 PLAN_FINISHED = OREXIS + "planFinished"
 PLAN_FAILED = OREXIS + "planFailed"

@@ -34,7 +34,7 @@ one name; see [precondition](/domain/precondition.md).
 - it carries what it PREDICTED (`progression:predicts`): the facts the search said taking it makes
   true and false, in the plan's own canonical form — a reading as the [band](/domain/band.md) its
   rule declared (#579) — which is what the world is held to once it is taken, and why no actor
-  sizes an expectation of its own
+  sizes a watch of its own
 - its QUANTITY is filled when it is TAKEN, not when it is planned (#579): the search sizes
   nothing, and the actuator or the bidder computes how much from the reading in hand
 - where it was expanded from a [method](/domain/method.md), the filling it is part of

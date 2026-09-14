@@ -38,10 +38,10 @@ live watch as its condition, and a plan's next step is this road with the previo
 prediction as its condition. This is the middle layer's whole job in one call — adopt, wait,
 take on feedback — and it is why nothing above it needs a timer of its own.
 
-**And an expectation on a reading is the predictor's comparison, told the intended branch**
+**And a watch on a reading is the predictor's comparison, told the intended branch**
 (#639). When an act is taken, the keeper tells whoever predicts — sensing, through
 `orexis:predicted` — the band the step declared for the reading (#510, #579), from when a
-reading may answer (`progression:expectedFrom`), when the step lands (`progression:landsAt`)
+reading may answer (`progression:watchedFrom`), when the step lands (`progression:landsAt`)
 and the deadline; it holds no shape and knows no reading. Sensing compares each reading of
 the key with the band once at arrival and answers (`Keeper.answered`): in the band, met —
 early is the dose landing; outside it at or after the landing, unmet; before the landing,
@@ -69,7 +69,7 @@ Two roads adopt one. A plan's head, chosen by the search, is the ordinary road; 
 adopts the other — the market's Presenting, an [action](/domain/action.md) stating neither a
 precondition nor an effect, which a claim arriving adopts and a watch going live triggers —
 with no search above it, and both stand in the same ledger and wait on the same kind of
-expectation.
+watch.
 
 
 A **commitment**: one want pursued by one action, adopted at a moment and standing
@@ -116,12 +116,12 @@ reason to hold a claim turned out to be *observability* before it was temporal s
 spend a dose you cannot watch land. Adopted when the [claim](/domain/claim.md) arrives,
 standing while the holder waits for its watch to be provably live (the #135 ack at the fast
 cadence, or a bounded wait that redeems blind rather than never), satisfied when the claim is
-presented. A held claim answers maximum urgency exactly as an open expectation does — the hold
-is the watch one step earlier — and the expectation itself opens at presentation, when the dose
+presented. A held claim answers maximum urgency exactly as an open watch does — the hold
+is the watch one step earlier — and the watch itself opens at presentation, when the dose
 becomes imminent, so the baseline is not aged by the hold. Futures now merely extends the
 holding period this gave a mechanism to.
 
-# The expectation — the end, judged apart from the means
+# The watch — the end, judged apart from the means
 
 Before #131, an Acquire resolved when the claim arrived and nothing ever checked whether the
 gap moved: an agent whose water never reached the pot bought, recorded satisfied, and bought

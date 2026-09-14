@@ -410,11 +410,11 @@ class BiddingModule(Module):
         # live (0.302 on the wire, 0.495 in the pot, 0.396 L re-bought). So the bid is DECLINED,
         # not gated: a judgment read off the ledger through the ordinary provider route, bounded
         # by the watch's own deadline — past it, an unanswered dose frees me exactly as before.
-        # A stranger's water stays out of scope: no expectation records it, no clause can read
+        # A stranger's water stays out of scope: no watch records it, no clause can read
         # it, and #151 is the device-side answer to that half.
         if keeper := self._keeper():
             now = clock.now()
-            if any(now < w.deadline for w in keeper.open_expectations(self._stake_uri())):
+            if any(now < w.deadline for w in keeper.watches(self._stake_uri())):
                 self.log.info("auction %s: my own dose has not answered yet — ceding, and "
                               "asking for the look that would answer it", auction_id)
                 sensing.sense_now()
@@ -637,7 +637,7 @@ INSERT DATA {{ GRAPH <{claim_graph(self.agent.id, claim["id"])}> {{
             #  Held to the band the step predicted (#579); what I add is the number I aimed
             #  the lot at, for the residual review to read against what the world shows.
             sensing = self.agent.provider(SENSING)
-            keeper.expect(intention,
+            keeper.watch(intention,
                           f"presented {claim['id']} for {claim['litres']}L — the graph says "
                           f"this moves what I am short of, so show me",
                           baseline=self._baseline(),

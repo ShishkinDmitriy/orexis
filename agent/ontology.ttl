@@ -247,7 +247,7 @@ A ROW is derived and never authored — it is a conclusion whose premises are st
 
 
 orexis:HistoryGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "History graph" ;
-    rdfs:comment "What the agent DID: resolved commitments, discharged obligations, doses delivered, amendments woken into. A bounded ring with the series store behind it — nothing points INTO history, because whatever must outlive the window copies what it needs at commit time, which is how an expectation already carries its own baseline." .
+    rdfs:comment "What the agent DID: resolved commitments, discharged obligations, doses delivered, amendments woken into. A bounded ring with the series store behind it — nothing points INTO history, because whatever must outlive the window copies what it needs at commit time, which is how a watch already carries its own baseline." .
 
 #  --- how it arrived ---
 
@@ -726,10 +726,10 @@ orexis:stepDone a assembly:Extension ;
     assembly:signature "(act, intention, took) -> None" ; orexis:row orexis:Reactive ; rdfs:label "step done" ; rdfs:comment "Progression handed a committed act to its actors and this is the answer: took, or not now. Told on the executing thread, to whoever above cares — a lower layer says this upward as an event, never as an import (#452)." .
 
 orexis:planFinished a assembly:Extension ;
-    assembly:signature "(intention, action, want) -> None" ; orexis:row orexis:Reactive ; rdfs:label "plan finished" ; rdfs:comment "The world answered as the act promised: the expectation on this intention was met. Told by the keeper; deliberation fills it to reconsider the want." .
+    assembly:signature "(intention, action, want) -> None" ; orexis:row orexis:Reactive ; rdfs:label "plan finished" ; rdfs:comment "The world answered as the act promised: the watch on this intention was met. Told by the keeper; deliberation fills it to reconsider the want." .
 
 orexis:planFailed a assembly:Extension ;
-    assembly:signature "(intention, action, want) -> None" ; orexis:row orexis:Reactive ; rdfs:label "plan failed" ; rdfs:comment "The deadline passed and the world did not answer as the act promised: the expectation on this intention is unmet. Told by the keeper; deliberation fills it to re-plan the want." .
+    assembly:signature "(intention, action, want) -> None" ; orexis:row orexis:Reactive ; rdfs:label "plan failed" ; rdfs:comment "The deadline passed and the world did not answer as the act promised: the watch on this intention is unmet. Told by the keeper; deliberation fills it to re-plan the want." .
 
 orexis:subscriptions a assembly:Extension ;
     assembly:signature "() -> list[str]" ; orexis:row orexis:Reactive ; rdfs:label "subscriptions" ; rdfs:comment "Which channels do you need? Asked by whoever holds the connection, once the session is up. The QUESTION is the kernel's; what a channel is carried over is the transport's." .
@@ -803,14 +803,14 @@ orexis:available a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range
 
 
 
-#################  The expectation — the END, judged apart from the means  #################
+#################  The watch — the END, judged apart from the means  #################
 #
 #  `outcome` above says whether the MEANS succeeded: the claim arrived, the look came back.
 #  It says nothing about the END — the commitment was to reduce a gap, and an agent whose water
 #  never reaches the pot buys, records "satisfied", and buys again forever: transaction
 #  confirmed, outcome never audited. Confidently dumb, structurally. Issue #131.
 #
-#  So an intention whose act should MOVE something carries an expectation: the value it left
+#  So an intention whose act should MOVE something carries a watch: the value it left
 #  from (the baseline, copied here at adoption because the sensed graph keeps only the current
 #  witness — the ledger is what remembers), which way it should move (the same direction the
 #  domain states on its valuation, #127), and by when. The verdict lands beside the outcome as

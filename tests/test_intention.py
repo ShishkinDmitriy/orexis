@@ -190,8 +190,8 @@ def test_the_agent_reports_what_stands_and_how_old(make):
     assert fresh["intentions_standing"] == 0
     assert "oldest_intention_s" not in fresh
     # the end-verdict counters ride along since #131 — all quiet on a fresh agent
-    assert (fresh["expectations_open"], fresh["expectations_met"],
-            fresh["expectations_unmet"], fresh["affordances_suspect"]) == (0, 0, 0, 0)
+    assert (fresh["watches_open"], fresh["watches_met"],
+            fresh["watches_unmet"], fresh["affordances_suspect"]) == (0, 0, 0, 0)
     fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     reported = keeper.reports()
     assert reported["intentions_standing"] == 1
@@ -218,7 +218,7 @@ def test_every_transition_is_told_to_the_metrics_with_its_reason(make):
         "bid 0.4L to close my deficit", "claim for 0.4L at a debit of 0.29"]
 
     # and the end's verdict, which is the payoff line of the whole arc (#131)
-    assert keeper.expect(uri, "the dose owes a rise", baseline=reading_of(fern, MOISTURE),
+    assert keeper.watch(uri, "the dose owes a rise", baseline=reading_of(fern, MOISTURE),
                          predicts=predicted_reading(fern.me.acts_for, MOISTURE, 0.50))
     fern.metrics.take_events()
     write_reading(fern, 0.50, MOISTURE)
@@ -518,7 +518,7 @@ def test_a_plan_is_committed_whole_advances_on_a_met_step_and_stops_on_an_unmet_
     assert keeper.standing(action="urn:toy#Go1", want=want) and keeper.in_progress(want) is not None
 
     before = fern.deliberator._plans_finished
-    assert keeper.expect(uri, "watching the first step",
+    assert keeper.watch(uri, "watching the first step",
                          predicts=predicted_reading(fern.me.acts_for, MOISTURE, 0.9),
                          baseline=reading_of(fern, MOISTURE),
                          not_after=datetime.now(timezone.utc) + timedelta(hours=1))
@@ -529,7 +529,7 @@ def test_a_plan_is_committed_whole_advances_on_a_met_step_and_stops_on_an_unmet_
     assert keeper.in_progress(want) is not None, "still a step to come after the second"
 
     failed = fern.deliberator._plans_failed
-    assert keeper.expect(uri, "watching the second step",
+    assert keeper.watch(uri, "watching the second step",
                          predicts=predicted_reading(fern.me.acts_for, MOISTURE, 0.9),
                          baseline=reading_of(fern, MOISTURE),
                          not_after=datetime.now(timezone.utc) + timedelta(hours=1))
