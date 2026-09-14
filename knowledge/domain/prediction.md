@@ -7,8 +7,8 @@ description: >-
   bands, never a value, and wider the further out. A value is a band collapsed to a point. A
   prediction of a fluent is a graph holding during a period; a prediction of an event, an
   observation, is an expected occurrence stated inside a graph, carrying the window it is
-  expected in and the bands it may carry. The first element of the sequence is the expected
-  next observation, from the instrument's cadence and the drift, which sensing writes after
+  expected in and the bands it may carry. The first element of the sequence is the one the
+  next reading is held to, from the instrument's cadence and the drift, which sensing writes after
   every reading; the far end is every band, which is not knowing said honestly.
 ---
 
@@ -36,9 +36,9 @@ period — a forecast of the outside, read by the door at the instant a rule ask
 
 An **event** is not stretched: it occurs at an instant, and before it occurs what is known is
 the window it is expected in. A prediction of one is an **expected occurrence**, a fact ABOUT
-that window stated inside a graph whose own period says how long the expectation is worth
+that window stated inside a graph whose own period says how long it is worth
 believing. An observation is an event, `sosa:resultTime` its instant once it has occurred;
-the **expected next observation** is the prediction of it: the window the instrument's
+the **first prediction** is the prediction of it, the one the next reading is held to: the window the instrument's
 cadence gives, and the bands the [drift](/domain/effect.md) applied over that window gives.
 Sensing writes it after every reading, as the first of the PREDICTIONS the drifts give (#642):
 a graph holding during the window, `orexis:PredictionGraph`, carrying the predicted reading
@@ -60,9 +60,9 @@ crossing a root foresees is the start of the earliest prediction at which the ro
 
 The ladder is the world's own branch, what happens if nothing is done. An adopted plan is
 the agent choosing another branch, so it changes the prediction (#639): when the
-[keeper](/domain/keeper.md) opens a watch on a step it tells sensing the band the step
+[keeper](/domain/keeper.md) opens an expectation on a step it tells sensing the band the step
 declared and the instant it lands, and from that instant on the predictions of the key are
-the step's band, the drift's own before it and again once the watch closes. One ladder, the
+the step's band, the drift's own before it and again once the expectation closes. One ladder, the
 do-nothing branch until an [intention](/domain/intention.md) stands and the intended branch
 after, and a surprise is a reading outside whichever the agent is on. A reading is compared
 with the prediction once at arrival, and that comparison is the step's verdict.

@@ -51,7 +51,7 @@ class Reviser:
     on a thread of the mind's own, which is the whole of the fix and is why every reactive
     caller was routed through this file first.
 
-    **Deduplicated by want, and filtered by expectation.** Ten readings between two passes
+    **Deduplicated by want, and filtered by the first prediction.** Ten readings between two passes
     leave one mark, not ten — and ten readings inside the bands the next observation was
     expected in leave none (#632, `observed`): the mind wakes on contradiction, not on time.
     The projections come after it (layered-by-timescale-and-interruptibility).
@@ -169,12 +169,12 @@ def wake(agent, want: str) -> None:
 
 def observed(agent, want: str, expected: frozenset | None, actual: frozenset, said: str = "") -> bool:
     """A reading of what `want` is about arrived (#632) — the filter, in one rule. `actual`
-    is the bands the reading is, `expected` the bands the expected next observation said it
+    is the bands the reading is, `expected` the bands the first prediction said it
     may be in, as whoever writes both hands them (sensing; the words are its, this door
     compares sets). Sharing a band, the reading is the world going on as believed: absorbed,
     no mark. Sharing none, it is an EXOGENOUS SURPRISE, caught at arrival: marked, with what
     contradicted what, so the pass names it. With nothing expected — no prediction stands
-    for the key — the reading is marked as any change was before there were expectations.
+    for the key — the reading is marked as any change was before there were predictions.
     Returns whether a mark was left."""
     if expected is not None and (actual & expected):
         return False

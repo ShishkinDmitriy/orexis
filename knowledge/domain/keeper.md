@@ -22,8 +22,9 @@ reads no belief — and the deliberator ticks at it.
 - **The patience.** Within `progression:patienceS` a second impulse toward the same commitment is
   absorbed rather than re-decided — the amortisation that makes an expensive deliberator
   affordable.
-- **The verification arc.** `expect` opens a watch with a baseline and a deadline; `judge` closes
-  it when a number arrives; enough unmet verdicts for one pair raise a suspicion.
+- **The verification arc.** `expect` opens an expectation with a baseline and a deadline; the
+  predictor's comparison at a reading's arrival, or the deadline, closes it (#639); enough unmet
+  verdicts for one pair raise a suspicion.
 
 # What it reads and writes
 

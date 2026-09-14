@@ -238,6 +238,10 @@ it is a record wearing a bullet.
   scaled their clock and the agent kept the wall's; every instant and stretch is in one
   timeline now, `clock.now()` is the only read, the pace is a deployment fact converted once
   where something sleeps, and no rule learned a unit (#646).
+- **The core's word has priority, and a package speaks around it** — the keeper's row was
+  renamed to "watch" to make room for a package's use of "expectation", before asking whether the
+  package needed the word at all; it did not — sensing writes predictions, the first is what the
+  next reading is held to — and "watch" was sensing's own, the instrument's, already (#640).
 - **What ends by the clock is a graph with a period, and one sweep drops it** — four
   sweeps each knew its kind and each was a copy, a cooling row kept a timer a restart lost, and
   a claim past its window was let go by hand; the door hides an ended graph from every reader,
