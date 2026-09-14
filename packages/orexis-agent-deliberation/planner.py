@@ -64,7 +64,6 @@ from .trace import SURPRISE_EXOGENOUS, SURPRISE_WITHHELD
 log = logging.getLogger("search")
 
 
-
 @dataclass(frozen=True)
 class _Remembered:
     """A remembered plan as a ROW of the menu (#469, second form): what the trace names it
@@ -508,70 +507,6 @@ class Planner:
         forked = 0                       # worlds THIS pass has imagined, against `self.budget`
         self._forked = 0
 
-        def settle(row, step, depth):
-            """One simulated world weighed: forbidden, dear, late, seen, met, or a place to
-            search on from. The same for a primitive's world and for the world a remembered
-            plan's walk reaches — which is what makes the remembered plan one candidate
-            among the rest rather than a road of its own. Answers a Plan only where the
-            pass ends here: a steering keeper on an already-met want."""
-            def refused(verdict):
-                #  KEPT, with the verdict: a world the search refused to plan through is
-                #  still a world the present may land in (#570), and the plan from inside
-                #  a forbidden state is exactly the recovery never-newly-enter keeps.
-                step.verdict = verdict
-                self._nodes.append(step)
-                self._weighed.append((depth, row, step.urgency, verdict))
-                return None
-            if self._compiled.law is not None:
-                newly = self._forbidden_keys(step) - self._base_forbidden
-                if newly:
-                    return refused(trace.FORBIDDEN)
-            if self._bound is not None and step.cost + _near(step) > self._bound:
-                return refused(trace.COSTLY)
-            if room is not None and step.landing > room:
-                return refused(trace.LATE)
-            #  WORLD AND GROUND (#587): a world already reached, ON THE SAME PREDICTION.
-            #  One ground until something predicts (#589), so this is the world it always was.
-            where = signature.where(step.diff, step.ground)
-            novel = where not in self._seen or step.cost < self._seen[where]
-            #  KEPT WHETHER OR NOT NOVEL (#553): a world already reached is not searched on
-            #  from, but it may be an achiever — a look that changes nothing canonical is one —
-            #  and a resumed pass must find it among the kept nodes. `_by_diff` keeps the
-            #  cheapest node per world; `_nodes` keeps every settled one.
-            self._nodes.append(step)
-            if novel:
-                self._seen[where] = step.cost
-                self._by_diff[where] = step
-                if (step.urgency, _near(step), step.cost) < (
-                        self._best.urgency, _near(self._best), self._best.cost):
-                    self._best = step
-            if (novel or not met_now) and self._met_in(step, desire):
-                step.met = True
-                self._weighed.append((depth, row, step.urgency, trace.MET))
-                if met_now:
-                    #  Already met and still steering: the first novel step that
-                    #  keeps it met stays the answer — re-picking among keepers by
-                    #  cost would be shopping for a want that is not shopping for
-                    #  anything.
-                    return self._record(
-                        desire,
-                        self._offer(Plan(SATISFIED, step.taken, here.urgency, step.urgency, cost=step.cost, origin=step.origin,
-                                         landing=step.landing - here.landing),
-                                    desire, step),
-                        here.urgency)
-                self._achieved.append(step)
-                self._bound = step.cost if self._bound is None else min(self._bound, step.cost)
-                return None
-            if not novel:
-                self._weighed.append((depth, row, step.urgency, trace.SEEN))
-                return None
-            self._weighed.append(
-                (depth, row, step.urgency,
-                 trace.BETTER if step.urgency < here.urgency else trace.WORSE))
-            heapq.heappush(self._open, (_priority(step, met_now), self._minted, step))
-            self._minted += 1
-            return None
-
         while self._open:
             _, _, node = heapq.heappop(self._open)
             if forked >= self.budget:
@@ -598,7 +533,7 @@ class Planner:
                     if isinstance(step, str):
                         self._weighed.append((0, kept, None, step))
                         continue
-                    ended = settle(kept, step, 0)
+                    ended = self._settle(kept, step, 0, desire, met_now, room)
                     if ended is not None:
                         return ended
             for row in self._candidates(node, desire):
@@ -630,7 +565,7 @@ class Planner:
                     self._weighed.append((depth, row, None, trace.UNSIMULATED))
                     continue
                 forked += 1              # a world exists now, whatever becomes of it below
-                ended = settle(row, step, depth)
+                ended = self._settle(row, step, depth, desire, met_now, room)
                 if ended is not None:
                     return ended
             self._forked = forked
@@ -640,6 +575,15 @@ class Planner:
             #  pass re-makes what it reads from the nearest kept graph.
             node.expanded = True
 
+        return self._ended(desire, met_now, saw_candidate)
+
+    def _ended(self, desire, met_now: bool, saw_candidate: bool) -> Plan:
+        """How the pass ends once the frontier is done with: the winner among the achievers,
+        or which of the silences this was.
+
+        Separated from the loop because it decides nothing about WHERE to search and
+        everything about what to CALL what the search found — and the two were read as one
+        block of thirty lines at the bottom of a two-hundred-line method."""
         if self._achieved:
             #  Achievement is absolute — the desire's demand — and cost orders the
             #  achievers; the desire's own measure breaks a cost tie (nearer the aim wins),
@@ -647,10 +591,10 @@ class Planner:
             won = min(self._achieved, key=lambda s: (s.cost, s.urgency))
             return self._record(
                 desire,
-                self._offer(Plan(SATISFIED, won.taken, here.urgency, won.urgency, cost=won.cost, origin=won.origin,
-                                 landing=won.landing - here.landing),
+                self._offer(Plan(SATISFIED, won.taken, self._root.urgency, won.urgency, cost=won.cost, origin=won.origin,
+                                 landing=won.landing - self._root.landing),
                             desire, won),
-                here.urgency)
+                self._root.urgency)
 
         #  A pass that ends with no step worth taking is labelled by the SHAPE, not by the
         #  search: a met desire that weighed its levers and found none worth pulling is
@@ -660,15 +604,80 @@ class Planner:
         best = self._best
         if not saw_candidate:
             return self._record(desire, Plan(SATISFIED if met_now else NOTHING,
-                                           (), here.urgency, here.urgency), here.urgency)
-        if best is here or (best.urgency, _near(best)) >= (here.urgency, _near(here)):
-            after = here.urgency if best is here else best.urgency
+                                           (), self._root.urgency, self._root.urgency), self._root.urgency)
+        if best is self._root or (best.urgency, _near(best)) >= (self._root.urgency, _near(self._root)):
+            after = self._root.urgency if best is self._root else best.urgency
             return self._record(desire, Plan(SATISFIED if met_now else NOT_BETTER,
-                                           (), here.urgency, after), here.urgency)
+                                           (), self._root.urgency, after), self._root.urgency)
         return self._record(desire, self._offer(
             Plan(EXHAUSTED if not self._met_in(best, desire) else SATISFIED,
-                 best.taken, here.urgency, best.urgency, cost=best.cost, origin=best.origin,
-                 landing=best.landing - here.landing), desire, best), here.urgency)
+                 best.taken, self._root.urgency, best.urgency, cost=best.cost, origin=best.origin,
+                 landing=best.landing - self._root.landing), desire, best), self._root.urgency)
+
+    def _settle(self, row, step, depth, desire, met_now, room):
+        """One simulated world weighed: forbidden, dear, late, seen, met, or a place to
+        search on from. The same for a primitive's world and for the world a remembered
+        plan's walk reaches — which is what makes the remembered plan one candidate
+        among the rest rather than a road of its own. Answers a Plan only where the
+        pass ends here: a steering keeper on an already-met want."""
+        if self._compiled.law is not None:
+            newly = self._forbidden_keys(step) - self._base_forbidden
+            if newly:
+                return self._refused(step, row, depth, trace.FORBIDDEN)
+        if self._bound is not None and step.cost + _near(step) > self._bound:
+            return self._refused(step, row, depth, trace.COSTLY)
+        if room is not None and step.landing > room:
+            return self._refused(step, row, depth, trace.LATE)
+        #  WORLD AND GROUND (#587): a world already reached, ON THE SAME PREDICTION.
+        #  One ground until something predicts (#589), so this is the world it always was.
+        where = signature.where(step.diff, step.ground)
+        novel = where not in self._seen or step.cost < self._seen[where]
+        #  KEPT WHETHER OR NOT NOVEL (#553): a world already reached is not searched on
+        #  from, but it may be an achiever — a look that changes nothing canonical is one —
+        #  and a resumed pass must find it among the kept nodes. `_by_diff` keeps the
+        #  cheapest node per world; `_nodes` keeps every settled one.
+        self._nodes.append(step)
+        if novel:
+            self._seen[where] = step.cost
+            self._by_diff[where] = step
+            if (step.urgency, _near(step), step.cost) < (
+                    self._best.urgency, _near(self._best), self._best.cost):
+                self._best = step
+        if (novel or not met_now) and self._met_in(step, desire):
+            step.met = True
+            self._weighed.append((depth, row, step.urgency, trace.MET))
+            if met_now:
+                #  Already met and still steering: the first novel step that
+                #  keeps it met stays the answer — re-picking among keepers by
+                #  cost would be shopping for a want that is not shopping for
+                #  anything.
+                return self._record(
+                    desire,
+                    self._offer(Plan(SATISFIED, step.taken, self._root.urgency, step.urgency, cost=step.cost, origin=step.origin,
+                                     landing=step.landing - self._root.landing),
+                                desire, step),
+                    self._root.urgency)
+            self._achieved.append(step)
+            self._bound = step.cost if self._bound is None else min(self._bound, step.cost)
+            return None
+        if not novel:
+            self._weighed.append((depth, row, step.urgency, trace.SEEN))
+            return None
+        self._weighed.append(
+            (depth, row, step.urgency,
+             trace.BETTER if step.urgency < self._root.urgency else trace.WORSE))
+        heapq.heappush(self._open, (_priority(step, met_now), self._minted, step))
+        self._minted += 1
+        return None
+
+    def _refused(self, step, row, depth, verdict):
+        """A world the search will not plan THROUGH, kept with the verdict that stopped it.
+        Still a world the present may land in (#570), and the plan from inside a forbidden
+        state is exactly the recovery never-newly-enter keeps."""
+        step.verdict = verdict
+        self._nodes.append(step)
+        self._weighed.append((depth, row, step.urgency, verdict))
+        return None
 
     # --- the cone across passes (#553) ---------------------------------------------------------
 
@@ -1739,8 +1748,6 @@ def _priority(node, met_now: bool) -> tuple:
     if met_now:
         return (len(node.taken),)
     return (node.cost + _near(node), node.urgency, node.cost)
-
-
 
 
 def _said(diff: tuple) -> str:
