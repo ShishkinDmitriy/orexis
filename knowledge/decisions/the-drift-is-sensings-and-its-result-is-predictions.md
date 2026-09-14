@@ -47,8 +47,13 @@ landing on from that band; when the watch closes the do-nothing branch returns.
 **The core reads predictions and computes none.** A node's world at an instant is the
 present with the path's diffs applied and, for every keyed fact a prediction holding at that
 instant carries, the predicted fact in place of the present's — except a key the path itself
-changed, because the plan's branch beats the do-nothing branch. The overlay fills the slot the
-drift filled at each fork, so the node's signature, the ground and the cone are untouched. A
+changed, because the plan's branch beats the do-nothing branch. Changed is read off the
+signature, never off node identity: a dose or a purchase changes its key whichever node it
+mints, and a look, which re-stamps the reading it finds and nets to nothing, changes none, so
+the prediction stands in for what it looked at. The overlay fills the slot the
+drift filled at each fork, so the node's signature, the ground and the cone are untouched —
+and a step's own prediction, which the keeper holds the world to, carries none of it: what
+the overlay stood in for another reading is the package's promise, not the step's. A
 pass for a want met at an instant stands at that instant and reads what is predicted there.
 The crossing is generic: an `orexis:At` want is derived at the start of the earliest
 prediction at which the root reads UNMET, the root's own met-test asked through the door — a
@@ -124,9 +129,14 @@ are the old rendering's names and go with it.
    and the roots authored at genesis ([#644](https://github.com/ShishkinDmitriy/orexis/issues/644)),
    since every measurement after depends on the first and the child's derivation on the second.
 2. **The search reads predictions and computes none**
-   ([#643](https://github.com/ShishkinDmitriy/orexis/issues/643)): the overlay at a node's
-   instant, the kernel's drift, projected root and `orexis:Drift` retired, the crossing
-   generic; #633 lands here.
+   ([#643](https://github.com/ShishkinDmitriy/orexis/issues/643), built): the overlay at a
+   node's instant — a key the path changed excepted, in the signature's words — in the slot the drift filled; the
+   kernel's drift, projected root, `orexis:Drift` and `orexis:crossesAfter` retired, the word
+   sensing's; the crossing generic, the start of the earliest prediction at which the root
+   reads unmet, so #633 lands here and a crossing's resolution is the package's ladder; and
+   one point found wanting on the way, `orexis:repredict`, told by whoever moves a premise a
+   drift reads — the ledger, first — so a crossing the ledger creates is seen before the
+   next reading.
 3. **The keeper tells sensing the intended branch, and the verdict comes from the comparison**
    ([#639](https://github.com/ShishkinDmitriy/orexis/issues/639)).
 4. **The reviser wakes on a surprise and a missed window, and on nothing else**

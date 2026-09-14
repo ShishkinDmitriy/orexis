@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from orexis_agent_deliberation import pursuit, trace
-from orexis_agent_progression.ontology import DESIRE_ASSERTED_GRAPH
+from orexis_agent_progression.ontology import DESIRE_ASSERTED_GRAPH, REPREDICT
 from test_greenhouse import AIR, COMFORT, HEATING, VENTING, _comfort, _grower, _outside_as_periods
 
 HOURS = 3600.0
@@ -25,6 +25,7 @@ def _foreseeing(monkeypatch, seconds: float, **kw):
     agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{DESIRE_ASSERTED_GRAPH}> {{
         <{COMFORT}> orexis:foresees {seconds} }} }}""")
     agent.desires.rebuild()
+    agent.tell(REPREDICT)             # what `start()` does for a booted agent: predict from what it holds (#643)
     return agent
 
 
@@ -34,18 +35,21 @@ def _pursued(agent):
 
 
 def test_the_bed_crosses_toward_a_cold_outside_at_the_stated_rate(monkeypatch):
-    """At 20 degrees inside [18, 24] and one degree an hour toward an outside at 8, the bed
-    reaches its floor in two hours — the earliest of the want's two crossings, the soil's being
-    days away. Toward an outside at 21 the bed never leaves its region, and only the soil's
-    crossing remains."""
+    """At 20 degrees inside [18, 24] and one degree an hour toward an outside at 8, the bed is
+    under its floor five hours out, so the crossing is an hour out — the start of the window
+    that reaches five, the first instant the region may be left (#643). Toward an outside at
+    21 the bed never leaves its region, and the soil's crossing, days away, is beyond the
+    ladder the package predicts at: no crossing at all."""
     agent, _ = _grower(monkeypatch, moisture=0.45, air=20.0, outside=8.0)
+    agent.tell(REPREDICT)
     crossing = pursuit.crossing_of(agent, COMFORT)
     assert crossing is not None
-    assert abs((crossing - datetime.now(timezone.utc)).total_seconds() - 2 * HOURS) < 120
+    assert abs((crossing - datetime.now(timezone.utc)).total_seconds() - 1 * HOURS) < 120
 
     warm, _ = _grower(monkeypatch, moisture=0.45, air=20.0, outside=21.0)
+    warm.tell(REPREDICT)
     soil_only = pursuit.crossing_of(warm, COMFORT)
-    assert soil_only is not None and (soil_only - datetime.now(timezone.utc)).total_seconds() > 3 * 86400
+    assert soil_only is None, "the soil crosses days out, beyond the ladder: nothing predicted, nothing foreseen"
 
 
 def test_a_cold_night_foreseen_derives_a_want_the_heater_serves_and_the_vent_cannot(monkeypatch):
@@ -79,16 +83,16 @@ def test_a_warm_afternoon_foresees_nothing(monkeypatch):
 
 
 def test_the_drift_reads_the_surroundings_holding_at_the_instant(monkeypatch):
-    """The surroundings are read as the vent reads them, from whatever holds at the instant the
-    world is asked about. A cold evening the forecast says turns warm before the crossing: the
-    crossing is predicted from the cold in hand, and at the instant the bed has warmed toward
-    the forecast instead — the want reads met there, and nothing is planned."""
+    """The surroundings are read as the vent reads them, from whatever holds at the instant a
+    prediction is for. A cold evening the forecast says turns warm within the hour: every
+    prediction past that reads the warm outside, the bed never reaches its floor, and no
+    crossing is foreseen — nothing is planned (#643)."""
     agent = _foreseeing(monkeypatch, 6 * HOURS, moisture=0.45, air=20.0, outside=8.0)
     now = datetime.now(timezone.utc)
     _outside_as_periods(agent, (8.0, now - timedelta(hours=1), now + timedelta(minutes=30)),
                         (21.0, now + timedelta(minutes=30), now + timedelta(hours=6)))
+    agent.tell(REPREDICT)             # the forecast is a premise the drift reads: predict again
     root = _comfort(agent)
-    crossing = pursuit.crossing_of(agent, COMFORT)
-    assert crossing is not None and (crossing - now).total_seconds() < 3 * HOURS, "predicted from the cold in hand"
+    assert pursuit.crossing_of(agent, COMFORT) is None, "the predictions read the forecast holding at their instant: the bed warms first"
     plan = agent.deliberator.decide(root)
     assert plan is None or plan.steps == (), "at the instant the forecast has warmed the bed: nothing to do"

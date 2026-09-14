@@ -252,6 +252,11 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     for module in agent.modules:
         if hasattr(module, "publish_horizon"):
             module.publish_horizon()
+    #  AND PREDICTS WHAT IT HOLDS (#643), as `start()` re-arms every standing reading: a
+    #  built agent's predictions are what a booted one's are, so a crossing can be read.
+    for module in agent.modules:
+        if hasattr(module, "repredict"):
+            module.repredict()
     return agent
 
 

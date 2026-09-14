@@ -129,16 +129,24 @@ the kernel assuming it. The honest full answer is a RANGE, nothing to the ceilin
 
 # And what the world does unaided
 
-An effect is what a LEVER makes true. A [drift](/decisions/planning-branches-on-action-forecasting-on-belief.md)
-is what the world makes true while nobody pulls one — `orexis:Drift`, declared by the package
-that owns the physics, in exactly this grammar: a construct, a retraction, and `$elapsed` in
-place of a taker. `water:Drying` is the first, and it reads `water:driesPerDay`, which every
-plant has stated since #164 and nothing in planning had ever read.
+An effect is what a LEVER makes true. A [drift](/domain/prediction.md) is what the world makes
+true while nobody pulls one — `sensing:Drift`, declared by the package that owns the physics,
+in exactly this grammar: a construct, a retraction, and `$elapsed` in place of a taker.
+`water:Drying` is the first, and it reads `water:driesPerDay`, which every plant has stated
+since #164 and nothing in planning had ever read.
 
-**It is a rule at the node and not a graph with a period**, which is the distinction the
-two-cones record draws: the RATE is exogenous and the RESULT is not, because a pot dries from
-wherever the plan has left it. So a drift's answer is part of where the plan stands, where a
-forecast of the weather is the same fact in every world.
+**It is run by sensing and read by the search as a prediction** (#643,
+[the-drift-is-sensings-and-its-result-is-predictions](/decisions/the-drift-is-sensings-and-its-result-is-predictions.md)).
+After every reading sensing runs each drift at the horizons its package lists beside it
+(`sensing:atHorizon`), the next reading's window first, and writes one prediction per horizon,
+a graph holding during its window; a premise a drift reads that moves between readings — a
+debt in the ledger, a forecast — tells `orexis:repredict`, and sensing predicts again. The
+search reads the prediction holding at a node's instant, the predicted reading standing in for
+the one the world holds, except a key the plan itself changed — changed as the signature
+reads it, so a look, whose diff nets to nothing, leaves the prediction standing: the plan's
+branch beats the do-nothing branch, and no rule that knows a rate runs inside a pass. What the world does after
+a step is not simulated in the pass; it is predicted once the plan is adopted, from the step's
+band, which is the seam the record states.
 
 **Two drifts, because a reading is known two ways.** One subtracts a rate from a VALUE, which
 a reading the agent observed carries. The other crosses a BAND, which is all a reading an effect
@@ -146,17 +154,10 @@ predicted says (#579) — and how long that takes is the band's own width, from 
 minted it with, over the rate the world states. Nothing new is written down for it: a world that
 re-ranges its bed or re-states its physics changes the answer by changing what it already says.
 
-The band form is optimistic in the direction the world corrects. A pot known only to be IN its
-region is taken to have a full width's worth of drying left, because the band is all that is
-known; a pot that falls sooner is a surprise, and the next pass plans from where it actually is.
-A reading already below its region does not fall further — the band below is open at the bottom,
-so it has no width to cross and nothing under it to reach.
-
 **A second package drifts the same way.** The climate package moves a bed's air toward what
 surrounds it — one `climate:Diffusion` node per property, naming what it follows and how
-fast — in the water
-package's two forms, reading the surroundings as the vent does, from whatever holds at the
-instant the world is asked about
+fast — in the water package's two forms, reading the surroundings from whatever holds at the
+instant the prediction is for
 ([a-drift-toward-the-surroundings-is-one-link-and-no-physics](/decisions/a-drift-toward-the-surroundings-is-one-link-and-no-physics.md)).
 
 **And a third reads a record where the others read a rate.** The market's `market:Draining`
@@ -164,16 +165,12 @@ drains a vessel by the debts on it as their windows open (`market:owedFrom`): th
 future instant is what is held less what is owed to holders whose windows have opened by then
 ([a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md)).
 
-**A drift may also say WHEN.** `orexis:crossesAfter`, a select beside the drift, answers for
-each reading in `$state` the seconds after its own instant until it leaves the band it is in,
-or the instant itself where the drift knows an instant and no stretch —
-the same arithmetic asked as when rather than whether. Whoever derives a want from a prediction
-reads it at the belief base (#619); a drift declaring none predicts no crossing. One thing the
-search cannot do with it: drift the present's reading over its own AGE, because every drift in
-a pass counts `$elapsed` from the pass's clock and this engine turns the stretch between two
-instants into no number. A pass for a want met at an instant therefore hands the reading's
-age to the drift once, at its root, and every other pass leaves that age undrifted — a seam,
-measured at minutes against a band that takes days.
+**The crossing is the first prediction at which the root reads unmet.** No drift says WHEN any
+more: the instant an `orexis:At` want is derived at is the start of the earliest prediction
+whose world violates the root's own met-test, asked through the door at each window's start
+(#643). A prediction typed with the region band and the one below reads unmet, so the safe
+direction (#633) falls out of the bands, and the resolution is the package's ladder — a pot
+below its floor sixteen hours out is foreseen at the start of the window that reaches the day.
 
 **And every band the reading may be in.** A drift types the reading it predicts with each band
 its width reaches — the spread the world states beside the rate and the instrument's noise,

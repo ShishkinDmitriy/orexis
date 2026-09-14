@@ -28,40 +28,12 @@
 #  number again, one level down.
 
 water:Drying
-    a orexis:Drift ;
+    a sensing:Drift ;
     #  THE HORIZONS this package predicts at, in the timeline's seconds, after the next reading's
     #  window sensing adds first (#642): an hour, five, a day — the sovereign's own ladder.
     sensing:atHorizon 3600 , 18000 , 86400 ;
 
     rdfs:label "what a pot loses while nobody waters it" ;
-
-    #  WHEN IT LEAVES ITS REGION (#619): the same arithmetic, asked as WHEN rather than
-    #  whether. For each observed reading — one with a value, which is what the belief
-    #  base holds — the seconds after its own instant until the rate takes it under the
-    #  floor of the region minted for its subject and property. Read at the belief base by
-    #  whoever derives a want from a prediction; a reading already below has no crossing
-    #  ahead of it and yields no row. The dividend is cast to a double because this engine
-    #  binds nothing for an exact-zero decimal dividend (AGENTS, the arithmetic traps), and
-    #  a reading exactly on the floor crosses NOW rather than never.
-    orexis:crossesAfter """
-        SELECT ?subject ?property ?at ?seconds WHERE {
-            GRAPH $state {
-                ?obs sosa:hasFeatureOfInterest ?subject ;
-                     sosa:observedProperty ?property ;
-                     sosa:hasSimpleResult ?was ;
-                     sosa:resultTime ?at . }
-            FILTER(?property = water:SoilMoisture)
-            ?subject water:driesPerDay ?rate .
-            FILTER(?rate > 0)
-            ?inside rdfs:subClassOf sensing:InRegion ;
-                    sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
-                    owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
-            ?r owl:onProperty sosa:hasSimpleResult ;
-               owl:someValuesFrom/owl:withRestrictions ?facets .
-            ?facets rdf:rest*/rdf:first/xsd:minInclusive ?lo .
-            FILTER(?was >= ?lo)
-            BIND((((xsd:double(?was) - ?lo) / ?rate) * 86400) AS ?seconds)
-        }""" ;
 
     #  WHAT IT REPLACES: the reading it drifts, by the upsert key the sensed graph holds — one
     #  node per (subject, property), the invariant every effect's retraction already leans on.
@@ -166,7 +138,7 @@ water:Drying
 #  answer rather than a gap — there is no band under it to fall to.
 
 water:DryingABand
-    a orexis:Drift ;
+    a sensing:Drift ;
 
     rdfs:label "what a pot known only by its band loses while nobody waters it" ;
 

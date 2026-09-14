@@ -152,6 +152,7 @@ CAPABILITY = term("Capability")  # the root every capability term is a kind of
 HOOK = term("Hook")
 ANSWER = OREXIS + "answer"          # the shape of an observation that answers an act (#516)
 FORESIGHT = OREXIS + "foresight"    # how far ahead a root foresees — the belief is a package's (#644)
+REPREDICT = OREXIS + "repredict"    # a premise a prediction reads has moved: predict again (#643)
 WITNESS = OREXIS + "witness"        # what the world shows for a predicted fact now — the residual (#518)
 DESIRES = OREXIS + "desires"
 DESIRE_URGENCY = OREXIS + "desireUrgency"

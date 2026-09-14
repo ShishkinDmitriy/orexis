@@ -19,8 +19,8 @@ of the key rewrites the whole ladder; the first is dropped by the staleness time
 closes unreplaced; the sweep of #645 drops the rest once their ends have occurred, and the door
 hides them before that.
 
-The kernel still runs the same drifts at every fork for this one step (#643 is where the search
-reads predictions instead), so nothing here changes a plan.
+The search reads these at a node's instant and runs no drift (#643): a prediction holding at
+the instant a step lands stands in for every reading the plan did not itself change.
 """
 from __future__ import annotations
 
@@ -41,11 +41,11 @@ _PREDICTION_GRAPH = "http://example.org/orexis#PredictionGraph"
 _RECORDED = "http://example.org/orexis#Recorded"
 _XSD = "http://www.w3.org/2001/XMLSchema#"
 
-#  Every drift the loaded packages declare, with the horizons each lists — `orexis:Drift` is the
-#  kernel's word until #643 moves the drift's vocabulary here with its runner.
+#  Every drift the loaded packages declare against this package's word, with the horizons
+#  each lists (#643).
 _DRIFTS_Q = """
 SELECT ?drift ?construct (GROUP_CONCAT(STR(?h); SEPARATOR=" ") AS ?horizons) WHERE {
-  ?drift a orexis:Drift ; sh:construct ?construct .
+  ?drift a sensing:Drift ; sh:construct ?construct .
   OPTIONAL { ?drift sensing:atHorizon ?h }
 } GROUP BY ?drift ?construct"""
 

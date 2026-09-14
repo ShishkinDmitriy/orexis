@@ -505,9 +505,6 @@ It is not optional, and the reason is arithmetic rather than taste. `sensed_writ
 #  plans against one timeline and verifies against another, and the disagreement surfaces as
 #  false UNMET verdicts — the same failure arriving through the clock instead of the arithmetic.
 
-orexis:crossesAfter a owl:DatatypeProperty ; rdfs:domain orexis:Drift ; rdfs:range xsd:string ;
-    rdfs:label "crosses after" ;
-    rdfs:comment "A SELECT the drift's package declares beside it: for each reading in `$state` this drift moves, `?subject ?property ?at ?seconds` — the reading's own instant and how many seconds after it the reading leaves the band it is in. The crossing, read from the other end (#616, #619): the same arithmetic the drift runs over `$elapsed`, asked as WHEN rather than whether. Read at the belief base by whoever derives a want from a prediction; a drift declaring none predicts no crossing." .
 orexis:landsAfter a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ;
     rdfs:label "lands after" ;
     rdfs:comment """A SELECT yielding `?seconds`: how long after the act until the WORLD CHANGE is complete. A query and not a number, because the duration is a function of the act rather than a property of the lever — a valve open for a two-litre dose is open longer than for a half-litre one, and `min(litres, cap) / calibration` is exactly the arithmetic the effect rule already performs. Its parameters are the effect's own, so one text answers for any act it could be asked about.
@@ -602,7 +599,7 @@ orexis:Always a orexis:Binding ; rdfs:label "always" ;
 orexis:AtEnd a orexis:Binding ; rdfs:label "at end" ;
     rdfs:comment "The plan's end-world is asked and the road there is not. No shipped derivation writes it yet; it exists so the next achievement-shaped want does not land on Always by default." .
 orexis:At a orexis:Binding ; rdfs:label "at" ;
-    rdfs:comment "Met AT an instant (`orexis:holdsAt`), not by it: a candidate plan's end-world is judged as it will be THEN — every declared drift applied from the plan's last landing to the instant — and a candidate whose last change lands past the instant is late. The binding of a want derived under an Always root from a predicted crossing (#619, an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it): its room is TIME, from `prov:generatedAtTime` to the instant, and the search for it begins where the present's own drift stands at the instant minus the plan's duration. PDDL3's nearest word is hold-after; the root's Always is what holds after." .
+    rdfs:comment "Met AT an instant (`orexis:holdsAt`), not by it: a candidate plan's end-world is judged as it will be THEN — the prediction holding at the instant standing in for every reading the plan did not change (#643) — and a candidate whose last change lands past the instant is late. The binding of a want derived under an Always root from a predicted crossing (#619, an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it): its room is TIME, from `prov:generatedAtTime` to the instant, and the search for it begins where the present's own drift stands at the instant minus the plan's duration. PDDL3's nearest word is hold-after; the root's Always is what holds after." .
 orexis:Within a orexis:Binding ; rdfs:label "within" ;
     rdfs:comment "Met before a deadline, or not met at all: a candidate plan's landing time is held to the room left (`orexis:expiresAt`, read with the ledger's `owedAt`). The obligation's binding — a debt's room is time where a stake's is the envelope — and what closes the deadline-is-only-heat seam: a plan that would discharge after expiry is not a plan for this want." .
 
@@ -655,7 +652,7 @@ orexis:Within a orexis:Binding ; rdfs:label "within" ;
 
 orexis:holdsAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ;
     rdfs:label "holds at" ;
-    rdfs:comment "The instant an `orexis:At` want must hold at — a predicted crossing, read from the reading in hand through the drift's own `orexis:crossesAfter`. The keeper holds the plan's first step `progression:notBefore` this instant less the plan's own duration, so acting early is placed rather than immediate (#619)." .
+    rdfs:comment "The instant an `orexis:At` want must hold at — a predicted crossing — the start of the earliest prediction at which the root reads unmet (#643). The keeper holds the plan's first step `progression:notBefore` this instant less the plan's own duration, so acting early is placed rather than immediate (#619)." .
 orexis:foresees a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:decimal ;
     rdfs:label "foresees" ;
     rdfs:comment "How far ahead, in seconds, a predicted crossing derives a want under this root — stated by an ASSERTED want. A root authored at genesis states none: the belief that says how far it foresees is the agent's (`sensing:foresightS`, a pick), and a root is not a function of the agent's state (#644), so pursuit asks `orexis:foresight` of the choir when it derives and reads this only where no voice answers. The policy of how much lead is too much sits beside the want, and not in the kernel (#619)." .
@@ -691,6 +688,10 @@ orexis:answer a assembly:Extension ;
 orexis:foresight a assembly:Extension ;
     assembly:signature "(root) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "foresight" ;
     rdfs:comment "How far ahead, in seconds, does this ROOT foresee — a predicted crossing nearer than that derives a want met at the crossing's instant (#619). Asked by pursuit when it derives, of whoever holds the belief that says (sensing, from `sensing:foresightS`), so a root authored at genesis carries no foresight of its own and a re-pick reaches the next derivation without a rebuild (#644). An asserted want may still state `orexis:foresees`, which is read where no voice answers." .
+
+orexis:repredict a assembly:Extension ;
+    assembly:signature "() -> None" ; orexis:row orexis:Progression ; rdfs:label "repredict" ;
+    rdfs:comment "A premise a prediction reads has moved between two readings — a debt owed or discharged, a forecast landed, a plan adopted — so whoever predicts, predicts again from the reading in hand (#643). Told by the writer of the premise; sensing answers by rewriting the predictions of every reading it holds. Without it a prediction would say what the world expected the last time a reading came, and a crossing the ledger created would wait for the next reading to be seen." .
 
 orexis:witness a assembly:Extension ;
     assembly:signature "(keyed_class, key) -> float | None" ; orexis:row orexis:Progression ; rdfs:label "witness" ; rdfs:comment "What value does the world show NOW for this keyed fact — the reading a step predicted, as it stands at the verdict? Asked once per verdict for the residual (observed against predicted) the reviewer reads; sensing's, because what a reading is is sensing's (#518). None is no opinion." .
@@ -735,14 +736,6 @@ orexis:handle a assembly:Extension ;
 orexis:send a assembly:Extension ;
     assembly:signature "(channel, payload, retain=…, not_after=…) -> bool" ; orexis:row orexis:Reactive ; rdfs:label "send" ; rdfs:comment "Carry this to the society, and say whether it left. True where it reached a live session, False where it did not — a message with a DEADLINE is refused rather than queued when there is none, because a queue would deliver it after the moment it meant anything (publishing-is-a-goal-and-the-protocol-is-a-primitive). Told by Module.publish; answered by whichever module holds the connection." .
 
-orexis:Drift a owl:Class ; rdfs:label "Drift" ;
-    rdfs:comment """WHAT THE WORLD DOES TO A READING WHILE NOBODY ACTS — a happening edge, declared by the package that owns the physics and taken by no one. Its grammar is an action's effect and nothing else: `sh:construct` for what becomes true and `orexis:retracts` for what it replaces, parameterised by `$state`, `$beliefs` and `$elapsed` — the seconds the world has had to itself.
-
-THE RATE IS EXOGENOUS AND THE RESULT IS NOT, which is why this is a rule at the node rather than a graph with a period. A pot dries whether or not the agent acts, so the rate is a plain world fact; but it dries FROM WHEREVER THE PLAN HAS LEFT IT, so the reading it reaches differs between worlds and is part of where a plan stands. A forecast of the weather is the other kind and must not be confused with this one: nothing an agent does changes it, so it is a graph holding during a period, read and never signed (planning-branches-on-action-forecasting-on-belief).
-
-NO PRECONDITION AND NO TAKER, and both absences are load-bearing. A drift is never on a menu — nobody chooses for the world — so it states no `orexis:available`, and the gate that holds an action to both texts does not apply. A taker-less ACTION means something else entirely here (a promise the level beneath keeps), which is why this is a class of its own rather than an action with nobody attached.
-
-WHAT IT MAY COMPUTE: the domain's own arithmetic on its own numbers. `orexis:size` left the effects because a SEARCH inventing a dose was a sizing nobody had authorised; a rate a world states is not that, and a rule that reads it is the domain interpreting its own literal, which is where every literal in this project is interpreted.""" .
 
 orexis:Action a owl:Class ; rdfs:label "Action" ;
     #  EVERY ACTION IS AN EXTENSION POINT (#523): the method that carries one out is

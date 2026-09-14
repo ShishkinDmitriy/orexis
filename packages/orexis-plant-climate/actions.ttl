@@ -221,38 +221,14 @@ climate:Venting
 #  TWO DRIFTS, because a reading is known two ways (#616): one an agent observed carries a
 #  value, and moves by the rate; one an effect predicted carries a band and no value, and
 #  crosses to the band on the surroundings' side after its own width over the rate. The value
-#  form also says WHEN (`orexis:crossesAfter`, #619): the seconds until a reading inside its
+#  form also says WHEN (a crossing select of its own (retired in #643: the crossing is the first prediction at which the root reads unmet), #619): the seconds until a reading inside its
 #  region reaches the edge the surroundings sit beyond.
 
 climate:Exchanging
-    a orexis:Drift ;
+    a sensing:Drift ;
+    #  THE HORIZONS a bed predicts its air at (#643): the same ladder the pots use.
+    sensing:atHorizon 3600 , 18000 , 86400 ;
     rdfs:label "what a reading does toward the surroundings it diffuses to while nobody acts on it" ;
-
-    orexis:crossesAfter """
-        SELECT ?subject ?property ?at ?seconds WHERE {
-            GRAPH $state {
-                ?obs sosa:hasFeatureOfInterest ?subject ;
-                     sosa:observedProperty ?property ;
-                     sosa:hasSimpleResult ?was ;
-                     sosa:resultTime ?at . }
-            ?subject climate:diffusion ?d .
-            ?d ssn:forProperty ?property ; climate:toward ?around ; climate:perHour ?rate .
-            FILTER(?rate > 0)
-            ?out sosa:hasFeatureOfInterest ?around ;
-                 sosa:observedProperty ?property ;
-                 sosa:hasSimpleResult ?there .
-            ?inside rdfs:subClassOf sensing:InRegion ;
-                    sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
-                    owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
-            ?r owl:onProperty sosa:hasSimpleResult ;
-               owl:someValuesFrom/owl:withRestrictions ?facets .
-            ?facets rdf:rest*/rdf:first/xsd:minInclusive ?lo .
-            ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?hi .
-            FILTER(?was >= ?lo && ?was <= ?hi)
-            FILTER(?there < ?lo || ?there > ?hi)
-            BIND(IF(?there < ?lo, xsd:double(?was) - ?lo, ?hi - xsd:double(?was)) AS ?gap)
-            BIND(((?gap / ?rate) * 3600) AS ?seconds)
-        }""" ;
 
     orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
@@ -303,7 +279,7 @@ climate:Exchanging
         }""" .
 
 climate:ExchangingAcrossBands
-    a orexis:Drift ;
+    a sensing:Drift ;
     rdfs:label "what a reading known only by its band does toward the surroundings it diffuses to" ;
 
     #  A reading known only by its band — the world a heating or a venting reaches — leaves the

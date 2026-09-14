@@ -20,7 +20,7 @@ from conftest import build_agent, genesis_store, write_reading
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 DOSING = "http://example.org/orexis/actuation#Dosing"
 FORESIGHT = "http://example.org/orexis/sensing#foresightS"
-FALLING, CONTENT = 0.12, 0.20          # 0.12 crosses the loner's floor of 0.10 in 16 h at 0.03/day
+FALLING, CONTENT = 0.12, 0.20          # 0.12 at 0.03/day is below the loner's floor of 0.10 a day out, not five hours out
 DAY = 86400.0
 
 
@@ -44,15 +44,19 @@ def _crossing_of(agent):
 
 
 def test_the_drift_says_when_the_reading_leaves_its_region(monkeypatch):
-    """`orexis:crossesAfter`, read from the belief base: (0.12 - 0.10) / 0.03 days — sixteen
-    hours after the reading's own instant, not after now."""
+    """The crossing is the start of the earliest prediction at which the root reads unmet (#643):
+    five hours out the pot is still in its region and a day out it is below, so the crossing is
+    where the window that reaches the day opens — five hours after the reading, not sixteen,
+    the safe direction the ladder gives."""
     agent = _gardener(monkeypatch, FALLING)
     crossing = pursuit.crossing_of(agent, _stake(agent).uri)
     assert crossing is not None
     ahead = (crossing - datetime.now(timezone.utc)).total_seconds()
-    assert abs(ahead - (0.02 / 0.03) * DAY) < 120, ahead
-    assert pursuit.crossing_of(_gardener(monkeypatch, 0.05), _stake(_gardener(monkeypatch, 0.05)).uri) is None, \
-        "a reading already below its region has no crossing ahead of it"
+    assert abs(ahead - 18000.0) < 120, ahead
+    under = _gardener(monkeypatch, 0.05)
+    below = pursuit.crossing_of(under, _stake(under).uri)
+    assert below is not None and 0.0 <= (below - datetime.now(timezone.utc)).total_seconds() < 3600.0, \
+        "a reading already below reads unmet at the first prediction, the next expected observation; a root unmet now is pursued as itself"
 
 
 def test_a_root_that_foresees_nothing_derives_nothing_from_a_prediction(monkeypatch):
@@ -89,8 +93,8 @@ def test_a_crossing_within_the_foresight_derives_a_want_met_at_that_instant(monk
 
 
 def test_a_crossing_beyond_the_foresight_derives_nothing(monkeypatch):
-    """Sixteen hours out, foreseeing six: not yet."""
-    agent = _gardener(monkeypatch, FALLING, foresight=6 * 3600.0)
+    """Five hours out, foreseeing one: not yet."""
+    agent = _gardener(monkeypatch, FALLING, foresight=3600.0)
     root = _stake(agent)
     assert agent.deliberator.decide(root) is None
     assert pursuit.child_of(agent, root.uri) is None

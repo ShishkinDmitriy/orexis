@@ -62,7 +62,9 @@ def test_a_debt_carries_from_when_its_holder_may_come(monkeypatch):
 def test_the_vessel_crosses_its_floor_at_the_window_that_empties_it(monkeypatch):
     """Three litres held, one and a half owed in an hour, one more owed in two: after the first
     window the barrel holds one and a half — inside its region — and after the second half a
-    litre, under its floor of one. The crossing is the second window, stated as an instant."""
+    litre, under its floor of one. The crossing is the start of the earliest prediction at
+    which the stock reads unmet: the window from an hour to five hours out, whose far end holds
+    half a litre (#643)."""
     agent = _supplier(monkeypatch, level=3.0)
     now = datetime.now(timezone.utc)
     root = _stock(agent)
@@ -71,7 +73,7 @@ def test_the_vessel_crosses_its_floor_at_the_window_that_empties_it(monkeypatch)
     _promise(agent, "tomato", "j2", 1.0, now + timedelta(hours=2))
     crossing = pursuit.crossing_of(agent, root.uri)
     assert crossing is not None
-    assert abs((crossing - (now + timedelta(hours=2))).total_seconds()) < 60, crossing
+    assert abs((crossing - (now + timedelta(hours=1))).total_seconds()) < 120, crossing
 
 
 def test_a_host_that_foresees_the_crossing_plans_the_refill_from_the_present(monkeypatch):

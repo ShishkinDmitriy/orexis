@@ -41,6 +41,7 @@ STALE_AFTER_S = term("staleAfterS")
 #  PREDICTIONS (#642): the horizons a package lists beside its drift, and the instrument's own
 #  width its rule reads. What a drift predicts is written by `predictions.py` as graphs the
 #  kernel types `orexis:PredictionGraph`.
+DRIFT = term("Drift")            # what the world does to a reading while nobody acts (#643)
 AT_HORIZON = term("atHorizon")
 NOISE = term("noise")
 STALE_SINCE = term("staleSince")
