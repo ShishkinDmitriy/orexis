@@ -199,7 +199,7 @@ def test_silencing_the_deliberator_silences_the_bidder(make, monkeypatch):
     #  the desire door and the property door, and `decide`, the PLAN door execution asks.
     monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
     monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
-    monkeypatch.setattr(decider_of(fern), "decide", lambda desire: None)
+    monkeypatch.setattr(decider_of(fern), "decide", lambda desire, **kw: None)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert fern.sent.to(f"{market.bid_topic}/fern") == []
 
@@ -223,7 +223,7 @@ def test_the_deliberator_choosing_not_to_look_is_honoured(make, monkeypatch):
     #  the desire door and the property door, and `decide`, the PLAN door execution asks.
     monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
     monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
-    monkeypatch.setattr(decider_of(fern), "decide", lambda desire: None)
+    monkeypatch.setattr(decider_of(fern), "decide", lambda desire, **kw: None)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     # nothing was committed to — no observe intention, no acquire, nothing to wait on
     keeper = next(m for m in fern.modules if m.name == "intention")
@@ -563,7 +563,7 @@ def test_a_search_that_answers_nothing_proposes_nothing(make, monkeypatch):
     from orexis_agent_deliberation.planner import Planner
 
     fern = make("fern")
-    monkeypatch.setattr(Planner, "plan", lambda self, desire: search.Plan(search.NOTHING))
+    monkeypatch.setattr(Planner, "plan", lambda self, desire, **kw: search.Plan(search.NOTHING))
     thirsty = ObservedDesire(uri=stake_of(fern).uri, urgency=1.0, observed_property=MOISTURE,
                            value=0.10)
     assert fern.deliberator.propose_for(thirsty) is None, \

@@ -130,11 +130,12 @@ def test_the_dose_the_actuator_expects_is_the_band_its_rule_declares(monkeypatch
     the region, and the step the keeper holds the world to carries exactly the class the
     shipped rule constructs, with no arithmetic of this test's own. Rewrite the rule and
     this test moves with it."""
-    gardener = build_agent("gardener", _loner({("zz", MOISTURE): 0.05}), monkeypatch)
+    gardener = build_agent("gardener", _loner({("zz", MOISTURE): 0.30}), monkeypatch)
     actuation = next(m for m in gardener.modules if m.name == "actuation")
 
     #  BELOW the region, not on its inclusive floor: a dose is what a reading below the
-    #  region wants, and 0.10 IS the loner's floor (#579).
+    #  region wants, and 0.10 IS the loner's floor (#579). From 0.30 the pot was expected
+    #  inside, so the reading is a surprise and wakes the mind at arrival (#632).
     gardener.deliver("sensors/moisture_probe/reading", {"value": 0.05})
     keeper = next(m for m in gardener.modules if m.name == "intention")
     watches = keeper.open_expectations(stake_of(gardener, MOISTURE).uri)

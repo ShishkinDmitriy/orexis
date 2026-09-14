@@ -238,6 +238,11 @@ it is a record wearing a bullet.
   scaled their clock and the agent kept the wall's; every instant and stretch is in one
   timeline now, `clock.now()` is the only read, the pace is a deployment fact converted once
   where something sleeps, and no rule learned a unit (#646).
+- **The mind wakes on contradiction, not on time, and a set of bands is what a reading
+  contradicts** — the actuator marked the stake on every reading and the dwell (#615) was
+  weighed to slow it; a reading inside the bands the next observation was expected in leaves
+  no mark now, one outside is a surprise the pass names, and a boundary crossed inside the
+  set is the hysteresis a margin would have bought, without the margin (#632).
 - **A step's band is the prediction from its landing, and a reading is compared once** — the
   keeper told sensing what a reading answering a step looked like and held a shape per step,
   and a node stating no value passed a constraint on a value; it tells the predictor the

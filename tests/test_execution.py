@@ -83,7 +83,7 @@ def test_a_round_is_decided_once_and_a_second_impulse_is_absorbed(monkeypatch):
 
     passes = []
     monkeypatch.setattr(Planner, "plan",
-                        lambda self, desire: passes.append(desire) or Plan(NOT_BETTER))
+                        lambda self, desire, **kw: passes.append(desire) or Plan(NOT_BETTER))
     fern.deliberator.deliberate_on_gaps()
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1, "no second bid"
     #  The freshness want is met and the stake stands, so the tick has nothing to search
@@ -107,7 +107,7 @@ def test_the_bidder_holds_no_opinion_of_its_own(monkeypatch):
     """Silence the plan door alone and a thirsty bidder with a reading in hand bids nothing:
     `submit` no longer decides, it executes what the search committed to."""
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
-    monkeypatch.setattr(fern.deliberator, "decide", lambda desire: None)
+    monkeypatch.setattr(fern.deliberator, "decide", lambda desire, **kw: None)
     market = wired_markets(fern)[0]
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert fern.sent.to(f"{market.bid_topic}/fern") == []
@@ -209,7 +209,7 @@ ASKED OF HANOI, whose plans are still many steps. It used to be the loner's two 
     agent = _mover(monkeypatch, ["disk_1", "disk_2", "disk_3"])
     searches = []
     real = planner.Planner.plan
-    monkeypatch.setattr(planner.Planner, "plan", lambda self, d: (searches.append(1), real(self, d))[1])
+    monkeypatch.setattr(planner.Planner, "plan", lambda self, d, **kw: (searches.append(1), real(self, d, **kw))[1])
     keeper = agent.keeper
     desire = _goal(agent)
 

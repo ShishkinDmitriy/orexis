@@ -363,8 +363,10 @@ def test_no_new_purchase_while_my_own_dose_is_unanswered(thirsty, caplog):
     #  what this half is about: the refusal was the open watch, not a rule against bidding.
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.50})
     assert keeper_of(thirsty).open_expectations(stake_of(thirsty).uri) == []
+    #  THE NEXT THIRST BUYS AT THE READING (#632): 0.30 is outside the band the next
+    #  observation was expected in, so the surprise wakes the mind at arrival, and the round
+    #  still open is bid in — no further offer needed.
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.30})   # thirsty again
-    thirsty.deliver(market.offer_topic, {"auction_id": "r3", "closes_in_s": 30})
     assert len(thirsty.sent.to(f"{market.bid_topic}/fern")) == bids + 1
 
 

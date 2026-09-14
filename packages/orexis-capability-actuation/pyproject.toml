@@ -12,7 +12,7 @@ requires-python = ">=3.10"
 dependencies = [
     "orexis",  # assembly (the manifest) and, where there is behaviour, the kernel
     "orexis-agent-progression",  # Timer, Act, Commitment, and take_standing — progression's contract
-    "orexis-agent-deliberation",  # effects and the reviser's door — deliberation's contract
+    "orexis-agent-deliberation",  # effects — deliberation's contract
 ]
 
 [build-system]

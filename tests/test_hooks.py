@@ -121,8 +121,8 @@ def test_a_reactive_hook_never_reaches_the_planner(monkeypatch):
     here, ran = threading.current_thread(), []
     plan = Planner.plan
     monkeypatch.setattr(Planner, "plan",
-                        lambda self, desire: (ran.append(threading.current_thread()),
-                                              plan(self, desire))[1])
+                        lambda self, desire, **kw: (ran.append(threading.current_thread()),
+                                              plan(self, desire, **kw))[1])
     gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
     assert not [t for t in ran if t is here], \
         "a reading was delivered and a search ran on the delivering thread"

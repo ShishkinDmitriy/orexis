@@ -240,7 +240,7 @@ def test_three_disks_are_solved_with_one_search_and_seven_answered_steps(monkeyp
     agent = _mover(monkeypatch, ["disk_1", "disk_2", "disk_3"])
     searches = []
     real = planner.Planner.plan
-    monkeypatch.setattr(planner.Planner, "plan", lambda self, d: (searches.append(1), real(self, d))[1])
+    monkeypatch.setattr(planner.Planner, "plan", lambda self, d, **kw: (searches.append(1), real(self, d, **kw))[1])
     keeper = agent.keeper
     uri = pursuit.pursue(agent, _goal(agent))
     assert uri is not None and len(searches) == 1

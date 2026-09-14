@@ -45,7 +45,7 @@ def test_a_plan_that_worked_is_remembered_and_adopted_again_without_a_search(mon
     agent = _driver(monkeypatch, "c0_0", "c1_2")
     searches = []
     real = planner.Planner.plan
-    monkeypatch.setattr(planner.Planner, "plan", lambda self, d: (searches.append(d.uri), real(self, d))[1])
+    monkeypatch.setattr(planner.Planner, "plan", lambda self, d, **kw: (searches.append(d.uri), real(self, d, **kw))[1])
     first = pursuit.pursue(agent, _goal(agent))
     assert first is not None and len(searches) == 1
     walked = agent.keeper.walked(first)
@@ -116,7 +116,7 @@ def test_a_stray_fact_no_longer_forces_a_search(monkeypatch):
     agent.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <urn:stray> <urn:p> <urn:o> . }} }}")
     searches = []
     real = planner.Planner.plan
-    monkeypatch.setattr(planner.Planner, "plan", lambda self, d: (searches.append(d.uri), real(self, d))[1])
+    monkeypatch.setattr(planner.Planner, "plan", lambda self, d, **kw: (searches.append(d.uri), real(self, d, **kw))[1])
     again = pursuit.pursue(agent, _goal(agent))
     assert again is not None and searches == [], "a stray fact is not a fact the plan read"
     assert [s.action for s in agent.keeper.walked(again)] == [s.action for s in walked]
@@ -134,7 +134,7 @@ def test_a_missing_premise_refuses_the_plan_and_the_trace_names_the_fact(monkeyp
     _repose(agent, "c3_3", "c1_2")
     searches = []
     real = planner.Planner.plan
-    monkeypatch.setattr(planner.Planner, "plan", lambda self, d: (searches.append(d.uri), real(self, d))[1])
+    monkeypatch.setattr(planner.Planner, "plan", lambda self, d, **kw: (searches.append(d.uri), real(self, d, **kw))[1])
     again = pursuit.pursue(agent, _goal(agent))
     assert again is not None and len(searches) == 1, "a fact the plan read is absent: the pass searches"
     rows = {r["take"]: r for r in _candidates(agent)}
@@ -178,7 +178,7 @@ def test_a_plan_lifted_without_premises_is_forgotten_since_nothing_says_when_it_
     _repose(agent, "c0_0", "c1_2")
     searches = []
     real = planner.Planner.plan
-    monkeypatch.setattr(planner.Planner, "plan", lambda self, d: (searches.append(d.uri), real(self, d))[1])
+    monkeypatch.setattr(planner.Planner, "plan", lambda self, d, **kw: (searches.append(d.uri), real(self, d, **kw))[1])
     again = pursuit.pursue(agent, _goal(agent))
     assert again is not None and len(searches) == 1, "nothing says when it applies, so it is not adopted"
     assert remembered.remembered_for(agent, WANT) == [], "and it is forgotten on the spot"

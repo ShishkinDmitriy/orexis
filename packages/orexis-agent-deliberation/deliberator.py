@@ -348,7 +348,7 @@ class Deliberator:
         plan = self.decide(desire)
         return plan.first if plan is not None and plan.steps else None
 
-    def decide(self, desire: Desire) -> planner.Plan | None:
+    def decide(self, desire: Desire, surprise: tuple | None = None) -> planner.Plan | None:
         """The PLAN for one desire, whoever sourced it — the deliberator's real question.
 
         Returns the plan as ROWS, because a step is a row and not a means: which lever it
@@ -402,7 +402,7 @@ class Deliberator:
             #  None here is a DECISION and no longer a hand-off. Every case that used to fall
             #  through to the reflex is either refused at the gates or genuinely means "nothing
             #  I hold moves this", which is a true answer worth leaving in the trace.
-            return self._planned(desire)
+            return self._planned(desire, surprise)
         #  Nobody has asked. The holder is waiting for its own watch to be live, and a host
         #  that doses early spends the water where nothing is looking (#132) — so a standing
         #  debt is visible, rankable, and still not actionable until it is presented.
@@ -414,7 +414,7 @@ class Deliberator:
         #  falls out of two rules that never mention each other. A search that answered and
         #  found no move is the evidence the issue demands: the obligation stays hot, stays owed,
         #  and is not pursued into a world where serving discharges nothing.
-        if plan := self._planned(desire):
+        if plan := self._planned(desire, surprise):
             return plan
         #  The search speaks for an obligation only when it FOUND a path — a vessel nobody has read
         #  binds no premise, and a premise that cannot bind proves nothing about serving. So
@@ -429,7 +429,7 @@ class Deliberator:
                 return planner.Plan(OBLIGATION, ((Step.from_row(row)),))
         return None
 
-    def _planned(self, desire: Desire) -> planner.Plan | None:
+    def _planned(self, desire: Desire, surprise: tuple | None = None) -> planner.Plan | None:
         """The plan the search found for one desire, or None — which is now always a DECISION.
 
         It used to hand back `(answered, move)`, because there were three answers and only two
@@ -477,12 +477,12 @@ class Deliberator:
             uri, steps, cost = kept
             plan = planner.Plan(planner.REMEMBERED, tuple(steps), desire.urgency, None, cost=cost)
             trace.write(self.agent.beliefs, self.agent.id, desire, plan, [], desire.urgency, 0.0,
-                        (trace.UNJUDGED, None))
+                        (trace.UNJUDGED, None), surprise=surprise)
             self._decided[desire.uri] = (plan, uri)
             self.log.info("%s: remembered — %d step(s) whose precondition holds here",
                           _short(desire.uri), len(steps))
             return plan
-        plan = search.plan(desire)
+        plan = search.plan(desire, surprise=surprise)
         self._decided[desire.uri] = (plan, None)
         if plan.steps:
             self.log.info("%s: %s (urgency %.2f -> %.2f)",

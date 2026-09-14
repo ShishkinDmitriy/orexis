@@ -672,7 +672,23 @@ WHERE {{ GRAPH <{STATE_GRAPH}> {{
             return
         for want in self.wants_about(observed_property, subject_uri):
             keeper.satisfy(OBSERVING, want.uri, "a reading arrived — the look happened")
-        self._compare(keeper, subject_uri, observed_property)
+        types = {r["t"] for r in bindings(self.agent.beliefs.query(f"""
+SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
+  ?o sosa:hasFeatureOfInterest <{subject_uri}> ; sosa:observedProperty <{observed_property}> ; a ?t }} }}"""))}
+        self._compare(keeper, subject_uri, observed_property, types)
+        #  AND WHETHER THE MIND SHOULD HEAR OF IT (#632): the bands the reading IS against the
+        #  bands the expected next observation said it may be in — the first prediction of the
+        #  key, still standing here since the ladder is rewritten after this is told. The
+        #  reviser holds the rule; this module hands it the two sets in its own words.
+        if subject_uri == self.me.acts_for and (stake := self.stake_about(observed_property)) is not None:
+            from orexis_agent_deliberation import reviser
+            bands = self._bands()
+            actual = frozenset(types & bands)
+            expected = self._expected_bands(subject_uri, observed_property, bands)
+            said = (f"{observed_property.rsplit('#', 1)[-1]} read "
+                    f"{', '.join(sorted(b.rsplit('#', 1)[-1] for b in actual)) or 'nothing'} where "
+                    f"{', '.join(sorted(b.rsplit('#', 1)[-1] for b in (expected or ()))) or 'nothing'} was expected")
+            reviser.observed(self.agent, stake.uri, expected, actual, said)
 
     # --- which want a reading is about: this package's to say --------------------------
 
@@ -846,7 +862,28 @@ SELECT ?b WHERE {{ ?b rdfs:subClassOf sensing:{family} ;
             return frozenset()
         return frozenset({rows[0]["b"], NS + family})
 
-    def _compare(self, keeper, subject_uri: str, observed_property: str) -> None:
+    def _bands(self) -> frozenset:
+        """Every band class the vocabulary declares — the three families and each member the
+        world minted under them — read once: what of a reading's types is a band."""
+        if not hasattr(self, "_band_classes"):
+            families = (NS + "BelowRegion", NS + "InRegion", NS + "AboveRegion")
+            rows = bindings(self.agent.beliefs.query(f"""
+SELECT ?b WHERE {{ VALUES ?f {{ {' '.join(f'<{f}>' for f in families)} }} ?b rdfs:subClassOf ?f }}"""))
+            self._band_classes = frozenset(r["b"] for r in rows) | frozenset(families)
+        return self._band_classes
+
+    def _expected_bands(self, subject_uri: str, observed_property: str, bands: frozenset):
+        """The bands the expected next observation of this key may be in — the types of the
+        first prediction standing for it — or None where no prediction stands."""
+        graphs = predictions.graphs_of(self.agent.beliefs, self.agent.id,
+                                       subject_uri.rsplit("#", 1)[-1], observed_property)
+        if not graphs:
+            return None
+        rows = bindings(self.agent.beliefs.query(f"""
+SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_property}> ; a ?t }} }}"""))
+        return frozenset(r["t"] for r in rows) & bands
+
+    def _compare(self, keeper, subject_uri: str, observed_property: str, types: set) -> None:
         """One comparison per standing step this reading is about (#639): the reading IS the
         band the step predicted — every class the step stated is on it — or it is not. A
         reading dated at or before the watch opened is the before. What is answered is
@@ -857,9 +894,6 @@ SELECT ?b WHERE {{ ?b rdfs:subClassOf sensing:{family} ;
         reading = readings.current_reading(self.agent.beliefs.query, subject_uri, observed_property)
         if reading is None or reading.result_time is None:
             return
-        types = {r["t"] for r in bindings(self.agent.beliefs.query(f"""
-SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
-  ?o sosa:hasFeatureOfInterest <{subject_uri}> ; sosa:observedProperty <{observed_property}> ; a ?t }} }}"""))}
         for p in mine:
             if reading.result_time <= p.since:
                 continue

@@ -311,7 +311,7 @@ def test_a_parcel_moved_under_a_standing_plan_drops_the_tail_and_replans(monkeyp
     agent = _driver(monkeypatch, "c0_0", "c1_2")
     searches = []
     real = planner.Planner.plan
-    monkeypatch.setattr(planner.Planner, "plan", lambda self, d: (searches.append(1), real(self, d))[1])
+    monkeypatch.setattr(planner.Planner, "plan", lambda self, d, **kw: (searches.append(1), real(self, d, **kw))[1])
     keeper = agent.keeper
     uri = pursuit.pursue(agent, _goal(agent))
     assert uri is not None and len(searches) == 1

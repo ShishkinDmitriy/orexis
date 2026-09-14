@@ -39,7 +39,6 @@ from agent.module import Module, contributes
 from orexis_agent_progression.timer import Timer
 from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS
 
-READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import bindings
 
@@ -158,39 +157,12 @@ class ActuationModule(Module):
             auction_id=claim.auction_id,
         ), device
 
-    @contributes(READING_RECORDED)
-    def on_reading_recorded(self, subject_uri: str, observed_property: str,
-                            value: float) -> None:
-        """The Actuate rung's trigger (#190): a fresh look at my own subject, whose gap the
-        deliberator answers with the cheaper rung.
-
-        Everything the market path earns, a self-dose keeps: the WHETHER is the
-        deliberator's (the menu offers Actuate only where the lever and the source are both
-        mine and no market offers the source as its lot); the amortisation is the keeper's
-        (an adoption absorbed within patience means no dose, and an open expectation means
-        my last dose has not answered — the same two guards a bidder runs); and the act
-        itself goes through `redeem` on a SELF-CLAIM — signed by both keys, verified in the
-        device, confirmed on the status channel, counted when silent. An unconfirmed
-        self-dose is not a delivered one either; the REA event stands, it merely fulfils no
-        exchange.
-        """
-        if subject_uri != self.me.acts_for:
-            return
-        if actuator_for(self.actuators, self._subject_of(self.me.agent_id)) is None:
-            return
-        #  THROUGH EXECUTION, never a decision of this module's own: the reading just
-        #  recorded is what the agent believes (`Observations.record` writes before it
-        #  announces), the search decides against it, the keeper commits, and `take` below
-        #  is handed the row. A standing Actuate is not re-taken here — a dose is an act
-        #  whose sizing moves with every reading, so it is re-planned, and an impulse within
-        #  patience is absorbed before anything is written.
-        from orexis_agent_deliberation import reviser
-
-        #  Which want the reading is about is sensing's to say; the door takes the node.
-        sensing = self.agent.provider(SENSING)
-        want = sensing.want_about(observed_property) if sensing is not None else None
-        if want is not None:
-            reviser.wake(self.agent, want.uri)
+    #  THE ACTUATE RUNG'S TRIGGER WAS HERE (#190): every reading of my own subject marked the
+    #  stake, and the search re-sized the dose against it. Since #632 a reading wakes the mind
+    #  only where it contradicts what was expected of it — sensing compares it with the
+    #  expected next observation at arrival and the reviser holds the rule — and the patience
+    #  tick marks every want on its own clock, so a dose the world goes on needing is still
+    #  planned, and one the world goes on as believed is not re-decided ten times an hour.
 
     @contributes(DOSING)
     def dose(self, act, desire, intention: str) -> bool:
