@@ -24,7 +24,7 @@ MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 STORED = "http://example.org/orexis/water#StoredLitres"
 FORESIGHT = "http://example.org/orexis/sensing#foresightS"
 OWED_FROM = "http://example.org/orexis/market#owedFrom"
-FALLING = 0.47          # 0.02 above the simulation fern's floor of 0.45, at 0.12 a day: four hours
+FALLING = 0.47          # 0.02 above the simulation fern's floor of 0.45, at 0.12 a day: below by five hours, so the crossing is an hour out
 HOURS = 3600.0
 
 

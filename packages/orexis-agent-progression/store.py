@@ -425,6 +425,15 @@ class Store:
             self._predictions = sorted(row["g"] for row in bindings(self.query(_PREDICTIONS)))
         return self._holding_at(self._predictions, at)
 
+    def prediction_windows(self) -> list[tuple[str, datetime | None, datetime | None]]:
+        """Every prediction with the window it holds during, earliest first — what a crossing is
+        read off (#643): the start of the earliest window at which a root reads unmet."""
+        if self._predictions is None:
+            self._predictions = sorted(row["g"] for row in bindings(self.query(_PREDICTIONS)))
+        bounds = self.periods()
+        out = [(g, *bounds.get(g, (None, None))) for g in self._predictions]
+        return sorted(out, key=lambda w: (w[1] is None, w[1] or datetime.min.replace(tzinfo=timezone.utc)))
+
     def public_graphs(self, at: datetime | None = None, *, ever: bool = False) -> list[str]:
         """Every graph the vocabulary types as an `orexis:PublicGraph`, and still worth believing.
 

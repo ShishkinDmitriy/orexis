@@ -55,62 +55,6 @@ SELECT ?rule ?construct ?available ?retracts ?lands ?costs WHERE {
 } LIMIT 1"""
 
 
-_DRIFTS_Q = """
-SELECT ?drift ?construct ?retracts ?crosses WHERE {
-  ?drift a orexis:Drift ; sh:construct ?construct .
-  OPTIONAL { ?drift orexis:retracts ?retracts }
-  OPTIONAL { ?drift orexis:crossesAfter ?crosses }
-}"""
-
-
-def drifts_of(store) -> list[dict]:
-    """Every drift the loaded packages declare — what the world does while nobody acts.
-
-    Read off public knowledge like an action's effect, and REMEMBERED per store for the same
-    reason: it is a schema only a write can change, and a pass asks it at every fork.
-    """
-    def fetch():
-        return bindings(store.query(_DRIFTS_Q))
-    return store.remember("drifts", fetch)
-
-
-def drift(store, rule: dict, elapsed: float, when=None, **bind) -> tuple[list, list]:
-    """What one drift makes true over `elapsed` seconds — `(added, retracted)`, as triples.
-
-    The same shape as `apply` and deliberately: a drift is an effect with nobody taking it, so
-    the machinery that computes what a lever would make true computes what the world makes true
-    unaided. What differs is the parameter — `$elapsed`, the seconds the world has had — and
-    that nothing here asks whether it is AVAILABLE, because nobody chooses for the world.
-    """
-    bind = {**bind, "elapsed": elapsed}
-    return (_run(store, rule.get("construct"), bind, when),
-            _run(store, rule.get("retracts"), bind, when))
-
-
-def crossings(store, me: str | None = None, when=None) -> list[dict]:
-    """When each reading the agent holds leaves the band it is in, by every drift that says
-    (`orexis:crossesAfter`, #619): rows of subject, property, the reading's own instant and
-    the seconds after it. Through the rules' own door, as `lands_after` is — a drift toward the
-    surroundings reads the outside as the vent does, from whatever holds at the instant."""
-    out = []
-    for rule in drifts_of(store):
-        text = rule.get("crosses")
-        if not text:
-            continue
-        bind = {"state": STATE_GRAPH}
-        if me is not None:
-            bind["me"] = me
-        for sol in _select(store, text, bind, when):
-            row = {k: (sol[k].value if sol[k] is not None else None)
-                   for k in ("subject", "property", "at", "seconds", "crossing")}
-            #  Either form: seconds after the reading's own instant, or the instant itself —
-            #  a drift draining a vessel by dated debts knows the instant and no seconds,
-            #  since this engine turns the stretch between two instants into no number.
-            if row["at"] and (row["seconds"] is not None or row["crossing"]):
-                out.append(row)
-    return out
-
-
 def rule_for(store, action: str) -> dict | None:
     """The effect rule an action carries, or None for an action an event adopts.
 

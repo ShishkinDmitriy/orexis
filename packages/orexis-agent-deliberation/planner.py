@@ -37,6 +37,7 @@ import logging
 import time
 from dataclasses import dataclass, field, replace
 
+import pyoxigraph as ox
 import rdflib
 from rdflib import RDF, URIRef
 
@@ -179,6 +180,7 @@ class _Node:
     parent: object = None
     added: list = field(default_factory=list)
     retracted: list = field(default_factory=list)
+    changed: frozenset = frozenset()     # the PLACES the steps on this path changed (#643)
     materialised: bool = True
     expanded: bool = False
     met: bool = False
@@ -302,11 +304,11 @@ class Planner:
         #  the last instant a reading is inside its band (the floor is inclusive), and what
         #  the want prevents is the first instant outside, so the world is judged one second
         #  past the instant: a reading that reaches the floor exactly then has not held.
-        elapsed = (desire.holds_at - self._at(node)).total_seconds() + 1.0
-        if elapsed <= 0:
+        instant = desire.holds_at + timedelta(seconds=1.0)
+        if instant <= self._at(node):
             node.judged = graph
             return graph
-        added, retracted = self._drifted(graph, [], [], elapsed, node, None, desire)
+        added, retracted = self._predicted(graph, node, instant)
         if not added and not retracted:
             node.judged = graph
             return graph
@@ -1438,17 +1440,17 @@ class Planner:
         return here
 
     def _projected(self, here, desire: Desire, latest: bool = True):
-        """The root of a pass for a want met AT an instant (#619, #625): the present, drifted.
+        """The root of a pass for a want met AT an instant (#619, #625, #643): the present as it
+        is PREDICTED to be at the latest start — the instant less the longest landing on the
+        root's menu, the latest a plan could begin — where `latest` asks for it: a node of the
+        same tree reached by nobody choosing, standing at that instant, so every step's rule
+        reads the world holding THEN. Without `latest` the root stands at now, which is the
+        pass a want falls back to when the latest start finds nothing on its menu.
 
-        TWO STRETCHES, and both are the world's. The reading's AGE — the present was observed at
-        `read_at` and the pass stands at now, and a drift that counted from now would leave
-        those seconds undrifted; the engine cannot measure them inside a rule (AGENTS, the
-        traps), so the kernel hands them to the drift here, once, at the root. And the LEAD to
-        the latest start — the instant less the longest landing on the root's menu, the latest
-        a plan could begin — where `latest` asks for it: a node of the same tree reached by
-        nobody choosing, standing at that instant, so every step's rule reads the world holding
-        THEN. Without `latest` the root stands at now, aged and no more, which is the pass a
-        want falls back to when the latest start finds nothing on its menu.
+        NO DRIFT AND NO AGE: what the world is at an instant is what a package predicted for
+        it (the-drift-is-sensings-and-its-result-is-predictions), read off the prediction
+        holding then, and a reading's age is inside that prediction already — the trap #619
+        opened, a stretch counted from the wrong clock, has nothing left to count.
         """
         lead = 0.0
         if latest:
@@ -1458,11 +1460,7 @@ class Planner:
                                             **self._bind(desire, here, row))
                 longest = max(longest, lands or 0.0)
             lead = max(0.0, (desire.holds_at - self._clock).total_seconds() - longest)
-        age = (max(0.0, (self._clock - desire.read_at).total_seconds())
-               if desire.read_at is not None else 0.0)
-        if lead + age <= 0:
-            return here
-        added, retracted = self._drifted(STATE_GRAPH, [], [], lead + age, here, None, desire)
+        added, retracted = self._predicted(STATE_GRAPH, here, self._clock + timedelta(seconds=lead))
         if not added and not retracted:
             here.landing = lead
             return here
@@ -1564,19 +1562,28 @@ class Planner:
         act = Step.from_row(row, quantity=bind["litres"] or None)
         path = node.taken + (act,)
         graph = self.imaginarium.reached(self._graph(node), path, added, retracted)
-        #  AND WHAT THE WORLD DID WHILE THE STEP RAN (#592): every declared drift, over the
-        #  seconds this step gave it. A pot dries whether or not the agent acts, and the rate
-        #  is exogenous while the result is not — it dries from wherever the plan has left it
-        #  — so this is a rule at the node and its answer is part of where the plan stands,
-        #  unlike a forecast, which is the same fact in every world (#589).
-        added, retracted = self._drifted(graph, added, retracted, lands or 0.0, node, row, desire,
-                                         apply=True)
+        #  AND WHAT THE WORLD IS PREDICTED TO BE when the step lands (#643): the prediction
+        #  holding at that instant stands in for every reading the path did not itself
+        #  change — the plan's branch beats the do-nothing branch — and the search computes
+        #  no physics. Nothing dries after a step inside a pass: what the world does from the
+        #  step's band is predicted once the plan is adopted, by the package, from there.
+        own_added, own_retracted = list(added), list(retracted)
+        changed = node.changed | self._places(own_added, own_retracted)
+        added, retracted = self._predicted(graph, node, self._at(node, lands), added, retracted,
+                                           apply=True, changed=changed)
         #  WHAT THE PREDICTED READING IS (#576): the bands the domain's entailment asserts on
         #  the node the rule added, asked of the forked world and carried in the diff beside
         #  the number, so a kept world and a step's prediction say the reading's class too.
-        added = list(added) + self.imaginarium.entailed(graph, added, self._keys)
+        entailed = self.imaginarium.entailed(graph, added, self._keys)
+        added = list(added) + entailed
         adds, retracts = signature.facts(added, self._keys), signature.facts(retracted, self._keys)
         diff = signature.advance(node.diff, adds, retracts, self._base_facts)
+        #  WHAT THE STEP ITSELF PREDICTED, apart from what the world is predicted to do around
+        #  it (#643): the keeper holds a step to its own effect, and a prediction the overlay
+        #  stood in for another reading is the package's promise, not this step's.
+        own_subjects = {t.subject for t in own_added}
+        own = (signature.facts(own_added + [t for t in entailed if t.subject in own_subjects], self._keys),
+               signature.facts(own_retracted, self._keys))
         #  When this path's last change completes: the step's own `orexis:landsAfter`, asked
         #  above exactly as the keeper asks it, summed along the path (#472). None — no stated
         #  timing — adds nothing, which is the keeper's own contract for it.
@@ -1586,53 +1593,69 @@ class Planner:
         #  ground is a HAPPENING edge's to do, and nothing draws one yet (#589).
         step = _Node(graph=graph, diff=diff, landing=landing, cost=cost, ground=node.ground,
                      origin=node.origin if node.origin is not None else row.action,
-                     parent=node, added=list(added), retracted=list(retracted))
+                     parent=node, added=list(added), retracted=list(retracted), changed=changed)
         step.urgency = self._urgency_in(step, desire)
         step.estimate = self._estimate_in(step, desire)
         #  THE STEP CARRIES WHAT IT PREDICTED (#510): the same canonical facts the signature
         #  is made of, so the keeper can hold the world to this step without an imaginarium.
-        step.taken = node.taken + (replace(act, urgency_after=step.urgency, predicts=(adds, retracts)),)
+        step.taken = node.taken + (replace(act, urgency_after=step.urgency, predicts=own),)
         return step
 
-    def _drifted(self, graph, added, retracted, elapsed: float, node, row, desire,
-                 apply: bool = False):
-        """The step's diff, plus what every declared drift makes true over `elapsed` seconds.
-
-        Asked of the world the step REACHED — the graph the imaginarium just forked — so a
-        drift reads the reading the step left rather than the one it replaced, and a dose
-        followed by three hours dries from the dose. Nothing is asked where no drift is
-        declared, which is every shipped world but the plants.
+    def _predicted(self, graph: str, node, instant, added=(), retracted=(), apply: bool = False,
+                   changed: frozenset | None = None):
+        """The step's diff, plus what the world is PREDICTED to be at `instant` (#643,
+        the-drift-is-sensings-and-its-result-is-predictions): for every reading a prediction
+        holding then carries, the predicted node in place of the one this world holds — EXCEPT
+        a PLACE the path itself changed, since the plan's branch beats the do-nothing branch.
+        A place is what the signature says it is — a keyed node's class and key, any other
+        subject — so a look, which re-stamps the reading it finds and nets to nothing, changes
+        none and the prediction stands in for what it looked at, while a dose or a purchase
+        changes its key whichever node it minted. The overlay fills the slot the drift filled
+        at every fork, so the node's signature, the ground and the cone are untouched, and the
+        search runs no rule that knows a rate.
         """
-        rules = effects.drifts_of(self.agent.beliefs)
-        if not rules or elapsed <= 0:
-            return added, retracted
-        bind = {**self._bind(desire, node, row, lands=elapsed), "state": graph}
-        for rule in rules:
-            try:
-                more, gone = effects.drift(self.imaginarium, rule, elapsed,
-                                           when=self._at(node, elapsed), **bind)
-            except Exception as exc:                 # a package's rule, not the pass's problem
-                log.error("could not drift %s: %s", rule.get("drift"), exc)
-                continue
-            #  WHAT THE DRIFT TOOK, TAKEN FROM WHAT THE STEP ADDED. The drift is asked of
-            #  the world the step REACHED, so the reading it retracts may be one this very
-            #  step predicted — a look carries the value it found forward, and an hour of
-            #  drying replaces it. Left in, the step would add two readings for one key and
-            #  the world would hold both, which is the invariant the sensed graph's upsert
-            #  exists to prevent.
-            dropped = set(gone)
-            added = [x for x in added if x not in dropped] + list(more)
-            #  THE WHOLE NODE IT TOOK, type and key included: a retraction is canonicalised
-            #  like an addition, by the node's class and key, and a reading retracted without
-            #  its type is two plain triples that cancel nothing — the old value stayed in the
-            #  diff beside the new one, a world claiming two readings for one key (#619).
-            retracted = list(retracted) + list(gone)
-            if apply:
-                #  INTO THE STEP'S OWN FORK, so the world the next rule reads is the world
-                #  the step's lists say it is; a fork re-made from the lists agreed with them
-                #  and the first materialisation did not.
-                self.imaginarium.amend(graph, more, gone)
-        return added, retracted
+        beliefs = self.agent.beliefs
+        holding = beliefs.prediction_graphs(at=instant)
+        if not holding:
+            return list(added), list(retracted)
+        if changed is None:
+            changed = node.changed | self._places(added, retracted)
+        more, gone = [], []
+        for prediction in holding:
+            by_subject: dict = {}
+            for q in beliefs.quads(prediction):
+                by_subject.setdefault(q.subject, []).append(ox.Triple(q.subject, q.predicate, q.object))
+            for subject, triples in by_subject.items():
+                if self._place_of(subject, triples) in changed:
+                    continue
+                #  THE WHOLE NODE IT REPLACES, type and key included — a retraction is
+                #  canonicalised like an addition, and a reading retracted without its type is
+                #  two plain triples that cancel nothing (#619).
+                gone += [ox.Triple(q.subject, q.predicate, q.object)
+                         for q in self.imaginarium.quads(graph) if q.subject == subject]
+                more += triples
+        if not more:
+            return list(added), list(retracted)
+        if apply:
+            self.imaginarium.amend(graph, more, gone)
+        dropped = set(gone)
+        added = [x for x in added if x not in dropped] + more
+        return added, list(retracted) + gone
+
+    def _places(self, added, retracted) -> frozenset:
+        """The places a diff CHANGES, read off its canonical facts: a keyed node's (class,
+        key), any other fact's subject. Additions and retractions that cancel — a look's —
+        change no place."""
+        net = signature.facts(added, self._keys) ^ signature.facts(retracted, self._keys)
+        return frozenset(f[1:3] if f[0] == "keyed" else f[0] for f in net)
+
+    def _place_of(self, subject, triples):
+        """Where a predicted node stands, in the signature's words: its (class, key) where it
+        is keyed, its own term otherwise — and None for a blank node nobody keys."""
+        for f in signature.facts(triples, self._keys):
+            if f[0] == "keyed":
+                return f[1:3]
+        return subject.value if isinstance(subject, ox.NamedNode) else None
 
     def _bind(self, desire: Desire | None, node=None, row=None, litres: float | None = None,
               lands: float | None = None) -> dict:

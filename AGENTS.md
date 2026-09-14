@@ -238,6 +238,11 @@ it is a record wearing a bullet.
   scaled their clock and the agent kept the wall's; every instant and stretch is in one
   timeline now, `clock.now()` is the only read, the pace is a deployment fact converted once
   where something sleeps, and no rule learned a unit (#646).
+- **What a plan changed is read off the signature, never off node identity** — a look
+  re-stamps the node it finds and a purchase mints a new one, so by identity the look kept a
+  pot from drying for five hours and the purchase could not stop the prediction emptying the
+  barrel it had just filled; a key is changed when its canonical facts are, which is what a
+  look's diff netting to nothing already said (#643).
 - **Deliberation is on triples, and a number is not special** — how a domain describes its
   world, exact numbers, ranges or classes, is decided inside the domain, and its actions'
   preconditions and effects are described the same way; the core compares triples and
@@ -676,7 +681,7 @@ fails if pyshacl ever entails something the closure does not. See
   and `duration * number` return unbound in pyoxigraph, and so does every cast of a duration
   to a number (`xsd:decimal(?a - ?b)`, measured on 0.5.9: only a dateTime's `HOURS`, `MINUTES`
   and `SECONDS` bind, so no rule can measure the stretch between two instants, which is why a
-  drift counts the `$elapsed` the kernel hands it), and so does a decimal division whose
+  drift counts the `$elapsed` sensing hands it when it writes a prediction), and so does a decimal division whose
   dividend is an exact zero (`0.0 / 0.25`; cast the dividend to `xsd:double`), and so does a
   decimal PRODUCT past the engine's eighteen fractional digits (`0.5 * (0.02 / 0.375)`; round
   the repeating operand to six places first, as every derived number here is written), and so

@@ -19,7 +19,7 @@ from conftest import build_agent, genesis_store, open_round_for, wired_markets
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 FORESIGHT = "http://example.org/orexis/sensing#foresightS"
-FALLING = 0.47          # 0.02 above the simulation fern's floor of 0.45, at 0.12 a day: four hours
+FALLING = 0.47          # 0.02 above the simulation fern's floor of 0.45, at 0.12 a day: below by five hours, so the crossing is an hour out
 HOURS = 3600.0
 
 

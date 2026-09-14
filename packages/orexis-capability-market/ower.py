@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 
 from orexis_agent_deliberation.desire import Desire
 from agent.module import Module
-from orexis_agent_progression.ontology import OREXIS, obligations_graph
+from orexis_agent_progression.ontology import OREXIS, REPREDICT, obligations_graph
 from orexis_agent_progression.store import bindings
 from .terms import AMOUNT_L, DISCHARGED_AT, FOR_CLAIM, OWED_AT, OWED_FROM, OWED_TO, PRESENTED
 from orexis_agent_progression import clock
@@ -155,6 +155,7 @@ class Ower(Module):
         #  that store ever changes.
         self.agent.desires.rebuild()
         self.log.info("owed to %s for claim %s", to_agent_id, claim_jti)
+        self.agent.tell(REPREDICT)      # the ledger is a premise the vessel's drift reads (#643)
         return uri
 
     def demanded(self, claim_jti: str) -> None:
@@ -171,6 +172,7 @@ class Ower(Module):
             WHERE  {{ GRAPH <{graph}> {{ ?o <{FOR_CLAIM}> "{claim_jti}" ;
                                          <{PRESENTED}> ?was }} }}""")
         self.agent.desires.rebuild()   # standing became demanded — the want moved
+        self.agent.tell(REPREDICT)      # the ledger is a premise the vessel's drift reads (#643)
 
     def discharge(self, claim_jti: str) -> None:
         """The dose is out: the debt is paid, and says when. Never deleted — a debt paid and
@@ -182,6 +184,7 @@ class Ower(Module):
             WHERE {{ GRAPH <{graph}> {{ ?o <{FOR_CLAIM}> "{claim_jti}" .
                      FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?done }} }} }}""")
         self.agent.desires.rebuild()   # a paid debt is history, and the want is no longer implied
+        self.agent.tell(REPREDICT)      # the ledger is a premise the vessel's drift reads (#643)
 
     def owed(self, presented_only: bool = False) -> list[dict]:
         """What still stands, newest first — what an agent owes, askable by the sovereign."""

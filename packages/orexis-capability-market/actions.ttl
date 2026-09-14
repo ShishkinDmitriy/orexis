@@ -502,41 +502,10 @@ market:Serving
 #  owed; a debt with no window is owed from issue.
 
 market:Draining
-    a orexis:Drift ;
+    a sensing:Drift ;
+    #  THE HORIZONS a host predicts its stock at (#643): the same ladder the pots use.
+    sensing:atHorizon 3600 , 18000 , 86400 ;
     rdfs:label "what a vessel loses to the claims on it as their windows open" ;
-
-    orexis:crossesAfter """
-        SELECT ?subject ?property ?at ?crossing WHERE {
-            GRAPH $state {
-                ?obs sosa:hasFeatureOfInterest ?subject ;
-                     sosa:observedProperty ?property ;
-                     sosa:hasSimpleResult ?was ;
-                     sosa:resultTime ?at . }
-            FILTER(?property = water:StoredLitres)
-            $me market:hosts ?venue . ?venue market:marketFor ?subject .
-            ?inside rdfs:subClassOf sensing:InRegion ;
-                    sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
-                    owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
-            ?r owl:onProperty sosa:hasSimpleResult ;
-               owl:someValuesFrom/owl:withRestrictions ?facets .
-            ?facets rdf:rest*/rdf:first/xsd:minInclusive ?lo .
-            {
-              SELECT ?crossing (SUM(?a) AS ?cum) WHERE {
-                {
-                  SELECT DISTINCT ?crossing ?o2 ?a WHERE {
-                    ?o a orexis:Desire ; market:forClaim ?jti ; market:owedFrom ?crossing .
-                    FILTER NOT EXISTS { ?o market:dischargedAt ?d }
-                    ?o2 a orexis:Desire ; market:forClaim ?jti2 ; market:amountL ?a .
-                    OPTIONAL { ?o2 market:owedFrom ?from }
-                    ?o2 market:owedAt ?issued .
-                    FILTER NOT EXISTS { ?o2 market:dischargedAt ?d2 }
-                    FILTER(COALESCE(?from, ?issued) <= ?crossing)
-                  }
-                }
-              } GROUP BY ?crossing
-            }
-            FILTER(?was - ?cum < ?lo)
-        } ORDER BY ?crossing LIMIT 1""" ;
 
     orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
@@ -591,7 +560,7 @@ market:Draining
         }""" .
 
 market:DrainingAcrossBands
-    a orexis:Drift ;
+    a sensing:Drift ;
     rdfs:label "what a vessel known only by its band loses to the claims on it" ;
 
     orexis:retracts """

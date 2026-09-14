@@ -63,10 +63,11 @@ def test_a_deadline_in_the_worlds_seconds_lands_in_real_seconds_over_the_pace(pa
 
 
 def test_the_simulation_fern_foresees_and_places_under_the_worlds_pace(monkeypatch, paced):
-    """The bench in the tests' clothes: the fern at 0.47, drying at 0.12 a day, crosses in four
-    of the world's hours — a hundred bench seconds — and, foreseeing six, derives the want AT
-    the crossing and places the dose's plan ahead of it. Nothing in the agent knows the pace:
-    the crossing is four hours of its own timeline, and the placed instant is in it."""
+    """The bench in the tests' clothes: the fern at 0.47, drying at 0.12 a day, may be below its
+    floor by five of the world's hours, so the crossing is an hour out — the start of the window
+    that reaches five — twenty-five bench seconds; foreseeing six, it derives the want AT the
+    crossing and places the purchase ahead of it. Nothing in the agent knows the pace: the
+    crossing is an hour of its own timeline, and the placed instant is in it."""
     st = genesis_store({("fern", MOISTURE): 0.47})
     st.update(f"""INSERT DATA {{ GRAPH <{beliefs_graph("fern")}> {{
         <http://example.org/orexis/world/simulation#fern_agent> <{FORESIGHT}> 21600 }} }}""")
@@ -75,7 +76,7 @@ def test_the_simulation_fern_foresees_and_places_under_the_worlds_pace(monkeypat
     crossing = pursuit.crossing_of(agent, root.uri)
     assert crossing is not None
     ahead = (crossing - clock.now()).total_seconds()
-    assert abs(ahead - 4 * 3600.0) < 900.0, f"four hours of the agent's timeline, less the seconds the pace has run: {ahead}"
+    assert abs(ahead - 3600.0) < 900.0, f"an hour of the agent's timeline, less the seconds the pace has run: {ahead}"
     from conftest import open_round_for
     open_round_for(agent, "fern", seconds=3600.0)   # an hour of the world: twenty-five real seconds
     uri = pursuit.pursue(agent, root)

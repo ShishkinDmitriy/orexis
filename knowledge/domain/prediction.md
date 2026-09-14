@@ -51,8 +51,10 @@ width gets the band the drift reaches alone. The next reading rewrites the ladde
 window closing with none takes it away and marks the reading stale, which is staleness said
 once. A prediction is a reading in a predicted world and IS each band it may be in there — a
 shape refusing one refuses the world, the safe direction. The door hands the prediction holding
-at an instant; the agent's records never list it, and nothing carries it into a plan until the
-search reads predictions (#643).
+at an instant; the agent's records never list it; and the search reads it at a node's instant
+in place of the reading the world holds, except a key the plan itself changed, a key being
+changed when its canonical facts are — a look changes none (#643). The
+crossing a root foresees is the start of the earliest prediction at which the root reads unmet.
 
 # An intention changes it
 

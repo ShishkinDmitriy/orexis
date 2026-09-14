@@ -51,7 +51,7 @@ if TYPE_CHECKING:
     from orexis_agent_deliberation.desire import Desire
 from .driver import driver_for
 from agent.module import Module, contributes
-from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, ANSWER, FORESIGHT, WITNESS
+from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, ANSWER, FORESIGHT, REPREDICT, WITNESS
 from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
 from orexis_agent_progression.store import bindings
 
@@ -843,6 +843,15 @@ SELECT ?about WHERE {{ <{self.me.uri}> orexis:holds <{root}> .
         rows = bindings(self.agent.beliefs.query(f"""
 SELECT ?f WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ <{self.me.uri}> sensing:foresightS ?f }} }} LIMIT 1"""))
         return float(rows[0]["f"]) if rows and rows[0].get("f") is not None else None
+
+    @contributes(REPREDICT)
+    def repredict(self) -> None:
+        """A premise a prediction reads has moved (#643): every reading I hold is predicted
+        again from where it stands, through the same road a reading arriving takes — the
+        horizon re-armed, the ladder rewritten."""
+        for sensor in self.sensors:
+            if readings.current_reading(self.agent.beliefs.query, sensor.subject, sensor.observes) is not None:
+                self.watch_staleness(sensor.subject, sensor.observes)
 
     @contributes(WITNESS)
     def witnessed(self, keyed_class: str, key: dict) -> float | None:

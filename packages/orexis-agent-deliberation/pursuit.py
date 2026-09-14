@@ -104,27 +104,57 @@ def crossing_of(agent, root: str) -> datetime | None:
     return found[0] if found else None
 
 
+def _unmet_select_of(agent, root: str) -> str | None:
+    """The root's own met-test, compiled to the select whose rows are its violations — the
+    same compile the planner does in `_begin` — from public knowledge and the agent's roots
+    graph, where a root's shape lives since #644. Cached per root on the agent: a root never
+    changes while the agent runs. None where the root states no shape or the compiler refuses."""
+    from rdflib import URIRef
+
+    from orexis_agent_progression.ontology import roots_graph
+    from orexis_agent_progression.violation import Unsupported, unmet_select
+
+    from .conformance import graph_from
+
+    cache = agent.__dict__.setdefault("_root_selects", {})
+    if root in cache:
+        return cache[root]
+    rows = bindings(agent.desires.query_union(f"SELECT ?s WHERE {{ <{root}> orexis:metWhen ?s }} LIMIT 1"))
+    select = None
+    if rows:
+        shape = rows[0]["s"]
+        try:
+            shapes = graph_from(agent.beliefs, *agent.beliefs.public_graphs(), roots_graph(agent.id))
+            select = unmet_select(shapes.cbd(URIRef(shape)), URIRef(shape))
+        except Unsupported as exc:
+            log.warning("%s: its met-test cannot be compiled, so no crossing is read for it: %s",
+                        root.rsplit("#", 1)[-1], exc)
+    cache[root] = select
+    return select
+
+
 def crossing_row_of(agent, root: str) -> tuple[datetime, datetime] | None:
-    """When the reading a root is about is predicted to leave its band, or None: the
-    earliest instant any declared drift's `orexis:crossesAfter` states for the subject this
-    agent acts for and a property the root is about, read at the belief base. The drift's
-    package owns the arithmetic; this reads the rows."""
-    from . import effects
-    abouts = {r["a"] for r in bindings(agent.desires.query_union(
-        f"SELECT ?a WHERE {{ <{root}> orexis:about ?a }}"))}
-    subject = getattr(agent.me, "acts_for", None)
-    if not abouts or subject is None:
+    """When the world a root is about is PREDICTED to leave what the root wants, or None
+    (#643, the-drift-is-sensings-and-its-result-is-predictions): the start of the earliest
+    prediction at which the root reads UNMET — its own met-test asked through the door at each
+    prediction's start, where the door hands the prediction holding then beside the present.
+    A prediction typed with the region band and the one below reads unmet, so the safe
+    direction (#633) falls out of the bands, and no kernel line knows a rate. The second
+    instant is the same start: what a pass for the derived want is clocked from."""
+    select = _unmet_select_of(agent, root)
+    if select is None:
         return None
-    earliest = None
-    for r in effects.crossings(agent.beliefs, me=agent.me.uri):
-        if r["subject"] != subject or r["property"] not in abouts:
+    for graph, start, end in agent.beliefs.prediction_windows():
+        if start is None:
             continue
-        at = datetime.fromisoformat(r["at"])
-        when = (datetime.fromisoformat(r["crossing"]) if r.get("crossing")
-                else at + timedelta(seconds=float(r["seconds"])))
-        if earliest is None or when < earliest[0]:
-            earliest = (when, at)
-    return earliest
+        try:
+            rows = bindings(agent.beliefs.query_at(select, at=start))
+        except Exception as exc:                                    # noqa: BLE001
+            log.error("%s: the crossing could not be read at %s: %s", root.rsplit("#", 1)[-1], start, exc)
+            return None
+        if rows:
+            return start, start
+    return None
 
 
 def foresees_of(agent, root: str) -> float | None:
