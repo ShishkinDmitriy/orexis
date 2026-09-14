@@ -507,7 +507,7 @@ class Planner:
 
     # --- the search --------------------------------------------------------------------------
 
-    def plan(self, desire: Desire) -> Plan:
+    def plan(self, desire: Desire, surprise: tuple | None = None) -> Plan:
         """The best bounded sequence of levers for one desire, or the reason there is none.
 
         Every candidate weighed is remembered as it is weighed, and the pass is written down
@@ -527,7 +527,7 @@ class Planner:
         that raises forgets it whole.
         """
         try:
-            plan = self._search(desire)
+            plan = self._search(desire, surprise)
             #  FROM THE LATEST START, THEN FROM NOW (#625): a want met at an instant is searched
             #  first where the present's drift stands at the instant less the longest landing;
             #  where that finds nothing — the lever it needs is on the menu now and not then, a
@@ -538,7 +538,7 @@ class Planner:
                 self.reset()
                 self._from_now = True
                 try:
-                    plan = self._search(desire)
+                    plan = self._search(desire, surprise)
                 finally:
                     self._from_now = False
             return plan
@@ -557,15 +557,17 @@ class Planner:
         self._kept_worlds = 0
         self._from_now = False
 
-    def _search(self, desire: Desire) -> Plan:
-        """The pass itself. Separate only so `plan` can guarantee the forgetting above."""
+    def _search(self, desire: Desire, surprise: tuple | None = None) -> Plan:
+        """The pass itself. Separate only so `plan` can guarantee the forgetting above.
+        `surprise` is why the mind woke, where the mark said (#632) — written on the pass
+        unless the cone finds a sharper one of its own below."""
         #  Timed from HERE, which is inside the pass and outside the trace write below: a
         #  caller timing `plan()` would be timing the recording as well, and reporting the
         #  cost of reporting is the kind of number a runbook should not carry.
         self._started = time.monotonic()
         self._kept = None
         self._desire_uri = desire.uri
-        self._surprise = None
+        self._surprise = surprise
         #  THE PRESENT AMONG THE KEPT WORLDS (#553), else from nothing.
         #  A WANT MET AT AN INSTANT RESUMES NOTHING (#619): its root is the present projected
         #  to that instant less the plan's duration, a world that moves with the clock.

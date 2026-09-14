@@ -12,8 +12,8 @@ description: >-
   horizon the wider the set, until it is every band. Refused — a numeric spread in the core, a
   point prediction, a fixed width, and the periods table as the home of an event's window.
   Built: the expected next observation (#631), the crossing in the safe direction (#633,
-  inside #643) and the intended branch (#639). Not built: the reviser waking on surprise
-  rather than on a reading (#632).
+  inside #643), the intended branch (#639) and the reviser waking on a surprise rather than
+  on a reading (#632). All four items are built.
 ---
 
 # The claim
@@ -110,9 +110,10 @@ are built under it (#642, #643, #639, #632).
    plans are unchanged. Where an intention stands, the expectation past a step's landing is
    the step's own: built as #639, below.
 2. The reviser wakes the mind on a surprise, not on a reading
-   ([#632](https://github.com/ShishkinDmitriy/orexis/issues/632)): a reading inside its
-   expectation is absorbed, one outside wakes a pass that names the surprise, a missed window
-   takes the freshness road.
+   ([#632](https://github.com/ShishkinDmitriy/orexis/issues/632), built): a reading inside
+   the bands the first prediction typed is absorbed, one outside wakes a pass that names the
+   surprise (`reviser.observed`, sensing handing it the two sets), a missed window takes the
+   freshness road, and the actuator's mark on every reading retired with it.
 3. The crossing is taken in the safe direction
    ([#633](https://github.com/ShishkinDmitriy/orexis/issues/633), built inside #643): the
    crossing is the start of the earliest prediction at which the root reads unmet, and a

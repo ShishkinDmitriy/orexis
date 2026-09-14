@@ -144,7 +144,9 @@ are the old rendering's names and go with it.
    unmet outside it at or after the landing — and the answering shape, `orexis:answer` and the
    watch on a number retired; a plain fact keeps its hold.
 4. **The reviser wakes on a surprise and a missed window, and on nothing else**
-   ([#632](https://github.com/ShishkinDmitriy/orexis/issues/632)).
+   ([#632](https://github.com/ShishkinDmitriy/orexis/issues/632), built): one comparison at
+   arrival, in sensing, and the reviser's rule on the two sets of bands; the pass names the
+   surprise, and the patience tick is the only other road to a pass.
 5. **Every want sourced at a time as a graph with a period, and one sweep**
    ([#645](https://github.com/ShishkinDmitriy/orexis/issues/645)).
 6. **The word** ([#640](https://github.com/ShishkinDmitriy/orexis/issues/640)).

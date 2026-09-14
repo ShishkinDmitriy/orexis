@@ -19,8 +19,10 @@ records ask for next are each a change to this file alone:
 
 - **#392** — deliberation must not run on the transport's callback thread. `wake` becomes a
   MARKER the deliberator drains on its own clock, rather than a call, and no caller changes.
-- **bands, not raw values** — a self-telemetry belief that churns must be filtered here, where
-  the churn is visible, rather than by each writer.
+- **bands, not raw values** — BUILT (#632): a reading is compared with the expected next
+  observation at arrival, by sensing, and `observed` below marks only a reading outside the
+  bands it was expected in — an exogenous surprise, named on the pass — or one nobody
+  expected anything of; a reading the world was going on as believed leaves no mark.
 - **the projections** — *sensor unreachable*, *bus degraded* would be minted here, at the seam,
   which is where an infrastructure fact is allowed to become a belief at all
   (model-it-only-if-a-plan-would-branch-on-it).
@@ -49,9 +51,10 @@ class Reviser:
     on a thread of the mind's own, which is the whole of the fix and is why every reactive
     caller was routed through this file first.
 
-    **Deduplicated by want, and that is the beginning of the filter.** Ten readings between two
-    passes leave one mark, not ten; the record's *bands, not raw values* belongs here next, and
-    the projections after it (layered-by-timescale-and-interruptibility).
+    **Deduplicated by want, and filtered by expectation.** Ten readings between two passes
+    leave one mark, not ten — and ten readings inside the bands the next observation was
+    expected in leave none (#632, `observed`): the mind wakes on contradiction, not on time.
+    The projections come after it (layered-by-timescale-and-interruptibility).
 
     THE DELIBERATION WORKER — the third of the three threads, one per timescale (#452,
     layered-by-timescale-and-interruptibility). The reactive loop runs handlers and takes in
@@ -82,13 +85,15 @@ class Reviser:
 
     # --- the door -----------------------------------------------------------------------
 
-    def note(self, want: str, desire=None) -> None:
+    def note(self, want: str, desire=None, surprise: tuple | None = None) -> None:
         """Something moved that this want is about. Returns at once, whatever it costs to
-        reconsider it."""
+        reconsider it. `surprise` is why, where the mark is a contradiction (#632): the pass
+        it wakes writes it as `deliberation:surprise`, so the trace says why the mind woke —
+        and a mark that names one is not erased by a later one that does not."""
         with self._lock:
-            self._pending.setdefault(want, desire)
-            if desire is not None:
-                self._pending[want] = desire
+            had_desire, had_surprise = self._pending.get(want, (None, None))
+            self._pending[want] = (desire if desire is not None else had_desire,
+                                   surprise if surprise is not None else had_surprise)
             self._lock.notify_all()
 
     # --- the drain ----------------------------------------------------------------------
@@ -136,13 +141,13 @@ class Reviser:
                     if not self._pending:
                         self._lock.notify_all()
                         return
-                    want, desire = next(iter(self._pending.items()))
+                    want, (desire, surprise) = next(iter(self._pending.items()))
                     del self._pending[want]
                 try:
                     if desire is not None:
-                        pursuit.pursue(self.agent, desire)
+                        pursuit.pursue(self.agent, desire, surprise=surprise)
                     else:
-                        pursuit.pursue_for(self.agent, want)
+                        pursuit.pursue_for(self.agent, want, surprise=surprise)
                 except Exception as exc:
                     log.error("%s: could not reconsider %s: %s", self.agent.id,
                               want.rsplit("#", 1)[-1], exc)
@@ -160,6 +165,22 @@ def wake(agent, want: str) -> None:
     ledger, the act it takes — not from here.
     """
     agent.reviser.note(want)
+
+
+def observed(agent, want: str, expected: frozenset | None, actual: frozenset, said: str = "") -> bool:
+    """A reading of what `want` is about arrived (#632) — the filter, in one rule. `actual`
+    is the bands the reading is, `expected` the bands the expected next observation said it
+    may be in, as whoever writes both hands them (sensing; the words are its, this door
+    compares sets). Sharing a band, the reading is the world going on as believed: absorbed,
+    no mark. Sharing none, it is an EXOGENOUS SURPRISE, caught at arrival: marked, with what
+    contradicted what, so the pass names it. With nothing expected — no prediction stands
+    for the key — the reading is marked as any change was before there were expectations.
+    Returns whether a mark was left."""
+    if expected is not None and (actual & expected):
+        return False
+    from .planner import SURPRISE_EXOGENOUS
+    agent.reviser.note(want, surprise=None if expected is None else (SURPRISE_EXOGENOUS, said))
+    return True
 
 
 def wake_for(agent, desire) -> None:

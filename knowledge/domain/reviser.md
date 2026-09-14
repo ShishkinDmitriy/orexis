@@ -34,10 +34,20 @@ agent, which puts each marked want through [executor](/domain/executor.md). The
 [intention](/domain/intention.md) written, an [act](/domain/act.md) handed to an
 [actor](/domain/actor.md) — only not inside the handler that noticed.
 
-**One mark per want.** Ten readings arriving between two passes leave one mark, not ten. That
-is the whole of the judgement today, and the honest description of it is *deduplication rather
-than filtering*: what a fuller seam would decide is whether the change could alter any plan at
-all, which is [model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md)'s
+**One mark per want, and none for a reading the world was going on as believed** (#632).
+Ten readings arriving between two passes leave one mark, not ten — and ten readings inside
+the bands the expected next [observation](/domain/observation.md) said they may be in leave
+none. [Sensing](/domain/sensing.md) compares a reading with the first
+[prediction](/domain/prediction.md) of its key at arrival and hands this seam the two sets of
+bands; the seam's rule is one line: sharing a band, absorbed; sharing none, an exogenous
+surprise, marked with what contradicted what, which the pass writes as
+`deliberation:surprise`; with no prediction standing, marked as any change was. A reading
+that crosses a band boundary inside the expected set wakes nothing, which is the hysteresis
+the deliberation storm asked for, obtained without a margin. The patience tick still marks
+every want on the agent's clock, so a dose the world goes on needing is planned, and one the
+world goes on as believed is not re-decided at every reading. What a fuller seam would
+decide is whether a change could alter any plan at all, which is
+[model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md)'s
 test applied to a change rather than to a belief.
 
 # Why a mark and not a call

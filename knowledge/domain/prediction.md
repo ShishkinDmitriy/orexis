@@ -69,9 +69,9 @@ with the prediction once at arrival, and that comparison is the step's verdict.
 
 # What it is for
 
-- A reading that lands inside its expected set is the world going on as believed, and is not
-  worth waking the mind for; one outside it is a surprise, caught at arrival. That is the
-  filter the [reviser](/domain/reviser.md) has been waiting for.
+- A reading that lands inside its expected set is the world going on as believed, and does
+  not wake the mind; one outside it is a surprise, caught at arrival and named on the pass.
+  That is the [reviser](/domain/reviser.md)'s filter (#632).
 - A reading that does not land in its window is a missed expected event, which is what
   staleness always was, said once.
 - The crossing a root foresees is the first horizon at which the set no longer holds the

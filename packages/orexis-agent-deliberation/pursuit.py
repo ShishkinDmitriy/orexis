@@ -250,7 +250,7 @@ WHERE  {{ GRAPH <{graph}> {{ ?s ?p ?o . FILTER(?s = <{child}> || ?o = <{child}>)
     log.info("%s withdrawn", child.rsplit("#", 1)[-1])
 
 
-def pursue(agent, desire) -> str | None:
+def pursue(agent, desire, surprise: tuple | None = None) -> str | None:
     """Plan, commit, take. The intention that stands for the plan's head — adopted now, or
     already standing and absorbed — or None where the search proposed nothing.
 
@@ -267,7 +267,7 @@ def pursue(agent, desire) -> str | None:
         #  confirms the one before it, and a lapse or a surprise is what brings the question
         #  back here. A search now would re-decide what nothing has contradicted.
         return going.uri
-    plan = agent.deliberator.decide(desire)
+    plan = agent.deliberator.decide(desire, surprise=surprise)
     #  A PROMISE THE SEARCH CANNOT MEET IS REFUSED BELOW (#533): a want some step raised for
     #  this level, answered with no plan, or with a plan that does not reach it, is a promise
     #  the level beneath cannot keep — said to the keeper, which writes the refusal on the
@@ -322,7 +322,7 @@ def pursue(agent, desire) -> str | None:
     return on.submit(commit_and_take).result()
 
 
-def pursue_for(agent, want: str) -> str | None:
+def pursue_for(agent, want: str, surprise: tuple | None = None) -> str | None:
     """The actors' door: something changed about this want — what now, about it?
 
     An actor holding a fresh reading finds the want it means by its own query — sensing's
@@ -331,7 +331,7 @@ def pursue_for(agent, want: str) -> str | None:
     """
     #  BY EITHER NAME (#618): a mark may name the root while the want derived under it stands.
     desire = next((d for d in agent.pursuing() if d.uri == want or d.derived_from == want), None)
-    return pursue(agent, desire) if desire is not None else None
+    return pursue(agent, desire, surprise=surprise) if desire is not None else None
 
 
 def _because(plan, desire) -> str:

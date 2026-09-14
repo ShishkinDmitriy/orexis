@@ -79,7 +79,7 @@ def test_seven_moves_are_planned_once_above_and_each_is_planned_as_drives_below(
     searches = []
     real = planner.Planner.plan
     monkeypatch.setattr(planner.Planner, "plan",
-                        lambda self, d: (searches.append(d.uri), real(self, d))[1])
+                        lambda self, d, **kw: (searches.append(d.uri), real(self, d, **kw))[1])
     keeper = agent.keeper
     outer = pursuit.pursue(agent, next(g for g in agent.pursuing() if g.uri == WANT))
     assert outer is not None and searches == [WANT], "one search at hanoi's level"
