@@ -1331,7 +1331,12 @@ class Planner:
         #  and the snapshot is where `_avoided_pattern` looks for it.
         self._want_graphs = (roots_graph(self.agent.id), DESIRE_ASSERTED_GRAPH,
                              promises_graph(self.agent.id), pursued_graph(self.agent.id),
-                             obligations_graph(self.agent.id))
+                             obligations_graph(self.agent.id),
+                             #  and every debt and pursued child holding now, each a graph
+                             #  of its own since #645
+                             *[g for g in self.agent.beliefs.recorded_graphs()
+                               if g.startswith(pursued_graph(self.agent.id) + "/")
+                               or g.startswith(obligations_graph(self.agent.id) + "/")])
         self.imaginarium.copy_in(self.agent.desires, *self._want_graphs)
         self._shapes = effects.applied((), self.agent.desires.construct(
             f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ "

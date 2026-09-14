@@ -65,9 +65,11 @@ the roadmap records.
 `exp` is set at issue from the market's own `market:redeemWindowS`, a triple the source states
 and the derived venue carries. Every claim from one round shares it: the window runs from the
 moment the society allocated, so two winners are held for the same time and neither can be late
-by an accident of loop order. A presentation after it is refused, the paper is dropped, and the
-debt stays on the host's books undischarged — which reads differently from paid and differently
-again from never demanded.
+by an accident of loop order. A presentation after it is refused and the paper is dropped; on
+the holder's side the claim is a graph holding until the window's end (#645), handed to nobody
+past it and dropped by the one sweep, so no later tender is done by it; on the host's side the
+debt lapses with its verdict, `market:lapsedAt` in the [obligation](/domain/obligation.md)
+record — which reads differently from paid and differently again from never demanded.
 
 The window has to comfortably exceed the longest a holder may wait before presenting, and that
 is one full cycle of whatever cadence its sensing currently commands — dynamic, so no shape can

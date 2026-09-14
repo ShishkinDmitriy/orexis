@@ -180,8 +180,15 @@ class Projection(Store):
         #  debts, the promises, the wants pursued under a root (#618). The packages' desire
         #  rules ran here on every rebuild until a root was seen to be re-derived from a pick;
         #  they run at genesis now, and this build deduces nothing.
+        #  A DEBT AND A PURSUED CHILD ARE GRAPHS OF THEIR OWN, holding during their periods
+        #  (#645): every one the door hands at this instant is projected, under the untimed
+        #  record it sits beneath, so a lapsed debt and a child past its instant are absent
+        #  from this store as they are from every reader.
+        timed = [g for g in beliefs.recorded_graphs()
+                 if g.startswith(obligations_graph(beliefs.agent_id) + "/")
+                 or g.startswith(pursued_graph(beliefs.agent_id) + "/")]
         records = [roots_graph(beliefs.agent_id), beliefs.graph, obligations_graph(beliefs.agent_id),
-                   promises_graph(beliefs.agent_id), pursued_graph(beliefs.agent_id)]
+                   promises_graph(beliefs.agent_id), pursued_graph(beliefs.agent_id), *timed]
         for iri in publics + records:
             for quad in beliefs.quads(iri):
                 self._store.add(quad)

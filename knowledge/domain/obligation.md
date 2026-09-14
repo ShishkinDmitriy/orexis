@@ -18,8 +18,12 @@ An **obligation** is a desire that arrived from outside. When the society issues
 recorded as a first-class thing rather than inferred from the claim whenever somebody looks.
 
 It carries the counterparty, the claim that caused it, whether it has been demanded yet, and when
-it was discharged. **Kept after payment**, because a debt paid and a debt forgotten must not look
-alike.
+it was discharged. **A graph of its own, holding from its issue to the claim's expiry** (#645):
+past that the door hands it to nobody, it is no want in the modality, and the one sweep drops
+it — after the ledger's keeper writes into the untimed obligations record what it came to,
+`market:dischargedAt` carried over for a debt paid or `market:lapsedAt` for one the holder
+never presented. **The verdict is kept, not the want**, because a debt paid and a debt
+forgotten must not look alike; `Ower.settled` is the sovereign's door to it.
 
 # It is the host's predicted arrival
 

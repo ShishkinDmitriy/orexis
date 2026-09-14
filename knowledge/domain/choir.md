@@ -54,7 +54,7 @@ method, and sensing says what it is asked with and how the answers merge
 | `series` | Reactive | `series() -> list[tuple[str, dict, dict]]` | reporting | sensing |
 | `size` | Deliberative | `size(query, graph, row) -> float \| None` | kernel *(direct)* | actuation, market |
 | `subscriptions` | Reactive | `subscriptions() -> list[str]` | mqtt | actuation, market, reporting, sensing |
-| `sweep` | Progression | `sweep() -> int` | kernel | market |
+| `outdated` | Progression | `outdated(graph) -> None` | kernel | market |
 | `take` | Progression | `take(act, desire, intention) -> bool` | kernel *(direct)* | actuation, market, sensing |
 
 ## Declared by `packages/orexis-capability-sensing/` — 4

@@ -87,8 +87,19 @@ prediction's lifecycle.
 2. **Staleness as the first prediction's end**, inside the move of the drift
    ([#642](https://github.com/ShishkinDmitriy/orexis/issues/642)).
 3. **Every want sourced at a time as a graph with a period, and one sweep**
-   ([#645](https://github.com/ShishkinDmitriy/orexis/issues/645)), after the search reads
-   predictions ([#643](https://github.com/ShishkinDmitriy/orexis/issues/643)).
+   ([#645](https://github.com/ShishkinDmitriy/orexis/issues/645), built): a round, a held
+   claim, a cooling row, a debt and a pursued child are each a graph of their own with a
+   period — a round's from its offer to its close, a claim's from its claiming to its
+   window's end, a cooling row's over the cooldown, a debt's from its issue to its expiry, a
+   child's from its derivation to its instant plus the patience its plan is given after it —
+   beside the prediction's window of #642; `Store.outdated` lists what has ended,
+   `Store.drop_graph` drops one whole, and `upkeep.sweep` drops them all on the housekeeping
+   tick and at boot, telling `orexis:outdated` first. `orexis:sweep`, `rounds.sweep_expired`,
+   `sweep_cooled` and its timer, and the bidder's lapsed-claim sweep retired. A restart keeps
+   what a graph said of itself at its write, so what lapsed while the process was down is
+   found outdated and swept before the first pass. The ledger's keeper writes a debt's verdict
+   — `market:dischargedAt` carried over, or `market:lapsedAt` — into the untimed obligations
+   record before the graph goes, and `Ower.settled` is the sovereign's door to it.
 
 # Seams left open
 
@@ -99,3 +110,15 @@ prediction's lifecycle.
   under this as under the timer: a reading that keeps arriving is inside its window.
 - **Retention of verdicts.** How long the reviewer's evidence is kept is the review package's
   bound, and the stretch record's retention seam moves there.
+- **A promise and a call end by an event, not by the clock** — the step above resolving, the
+  round opening — so they stay rows in their untimed graphs, dropped by the event, and no
+  period is said of them. A period whose end nobody knows at the write is not a period.
+- **A child outlives its instant by the patience.** Its plan's last step is placed AT the
+  instant and the verdict comes after; a child dropped at the instant would leave a standing
+  plan pursuing a want nobody holds, and a second plan adopted beside it.
+- **A record is read as it stands now, whatever instant is asked about.** The drift is
+  evaluated at each window's far end, where a debt's own graph will have ended, and a debt
+  standing today is an arrival at every later instant; a forecast the agent received is a
+  fluent and must be read as of the far end. So a period means one of two things, and the
+  vocabulary says which: `orexis:RecordGraph` — the obligations record subclasses it — is
+  handed by the door as of the present, and every other timed graph as of the instant.

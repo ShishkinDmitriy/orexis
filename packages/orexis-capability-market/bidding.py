@@ -38,11 +38,12 @@ from agent import signing
 from .trade import EPS, Bid
 from agent.module import Module, contributes
 from orexis_agent_progression.timer import Timer
-from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, SWEEP
+from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS
 
 SENSING_URGENCY = "http://example.org/orexis/sensing#urgency"       # sensing's hook, spelled as every cross-package reference is
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"
-from orexis_agent_progression.ontology import ONTOLOGY_GRAPH, beliefs_graph
+from orexis_agent_progression.ontology import (CLASSIFICATION_GRAPH, GRAPH_PREFIX, ONTOLOGY_GRAPH,
+                                               PERIODS_GRAPH, beliefs_graph)
 from orexis_agent_progression.store import bindings
 from assembly.contribute import contributes
 
@@ -115,6 +116,11 @@ def value_bid(moisture: float, aim: float, b, balance: float,
     return None if qty <= EPS else Bid(
         agent="", max_qty_l=round(qty, 3), max_price_per_l=round(price, 3)
     )
+
+
+def claim_graph(agent_id: str, jti: str) -> str:
+    """ONE held claim's graph in ONE agent's store — the unit a period is said of (#645)."""
+    return f"{GRAPH_PREFIX}claim/{agent_id}/{jti}"
 
 
 class BiddingModule(Module):
@@ -328,35 +334,9 @@ class BiddingModule(Module):
         if self._deadline:
             self._deadline.stop()
 
-    @contributes(SWEEP)
-    def sweep(self) -> int:
-        """Rounds the clock has closed, and it is the BACKSTOP rather than the mechanism.
-
-        The host declares the close (#599), so a round normally ends on its word, arriving as
-        a message like anything else another agent did. This is what covers silence: a message
-        lost, a host that died mid-round, a row that outlived a restart. A bidder must not
-        believe a round open for ever, and its own `closesAt` is the horizon that says when
-        to stop (#398)."""
-        self._sweep_lapsed_claims()
-        return rounds.sweep_expired(self.agent)
-
-    def _sweep_lapsed_claims(self) -> int:
-        """A claim whose window closed unpresented is no longer held (#627). Holding one is
-        what makes buying available and a tender done, so a claim left over — its
-        presenting dropped, its host gone — would have every later tender done by it and
-        the presenting placed in the past. The window is the claim's own (`usableUntil`);
-        a claim with none is presented the moment it is held, and cannot be left over."""
-        now = clock.now().isoformat()
-        lapsed = bindings(self.agent.beliefs.query(f"""
-SELECT ?c WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
-  <{self.me.uri}> <{HOLDS_CLAIM}> ?c . ?c <{USABLE_UNTIL}> ?until .
-  FILTER NOT EXISTS {{ ?c <{PRESENTED_AT}> ?p }}
-  FILTER(?until < "{now}"^^xsd:dateTime) }} }}"""))
-        for row in lapsed:
-            self.log.info("claim %s lapsed unpresented — no longer held", row["c"].rsplit("_", 1)[-1])
-            self.agent.beliefs.update(f"""
-DELETE DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ <{self.me.uri}> <{HOLDS_CLAIM}> <{row["c"]}> }} }}""")
-        return len(lapsed)
+    #  `sweep` and `_sweep_lapsed_claims` WERE HERE: a round past its close and a claim past
+    #  its window are graphs whose periods have ended (#645) — hidden by the door, dropped by
+    #  the one sweep in upkeep — and this module keeps no sweep of its own.
 
     @contributes(SUBSCRIPTIONS)
     def subscriptions(self) -> list[str]:
@@ -407,7 +387,7 @@ DELETE DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ <{self.me.uri}> <{HOLDS
         #  usually gets, and starting a round with yesterday's rows still standing would read
         #  oddly in a trace. What GUARANTEES they go is the housekeeping tick's `sweep` —
         #  an agent that stops bidding stops getting this event (#398).
-        rounds.sweep_expired(self.agent)   # a round I bid in that closed with no claim lapsed its tender (#523)
+        self.agent.upkeep.sweep()   # a round I bid in that closed with no claim is gone by now (#523, #645)
         from datetime import timedelta
 
         rounds.open_round(self.agent, market.uri, auction_id,
@@ -651,7 +631,7 @@ DELETE DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ <{self.me.uri}> <{HOLDS
                 self.publish(f"{market.redeem_topic}/{self.me.agent_id}",
                              self._signed({"jti": claim["id"], "sub": self.me.agent_id}))
             self.agent.beliefs.update(f"""
-INSERT DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
+INSERT DATA {{ GRAPH <{claim_graph(self.agent.id, claim["id"])}> {{
   <{claim["uri"]}> <{PRESENTED_AT}> "{clock.now().isoformat()}"^^xsd:dateTime }} }}""")
         if keeper := self._keeper():
             #  Held to the band the step predicted (#579); what I add is the number I aimed
@@ -669,10 +649,13 @@ INSERT DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
 
     def _claim_on(self, venue_uri: str | None) -> dict | None:
         """The newest claim I hold on this venue, and whether it is presented already."""
-        rows = bindings(self.agent.beliefs.query(f"""
-SELECT ?c ?id ?l ?at ?p WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
+        #  A CLAIM IS A GRAPH HOLDING DURING ITS WINDOW (#645): the door hands back only one
+        #  still usable, so a claim left over past its window is not held, and nothing here
+        #  sweeps it.
+        rows = bindings(self.agent.beliefs.query_at(f"""
+SELECT ?c ?id ?l ?at ?p WHERE {{
   <{self.me.uri}> <{HOLDS_CLAIM}> ?c . ?c <{CLAIM_ID}> ?id ; <{CLAIM_L}> ?l ; <{ON_VENUE}> <{venue_uri}> ;
-     <{CLAIMED_AT}> ?at . OPTIONAL {{ ?c <{PRESENTED_AT}> ?p }} }} }} ORDER BY DESC(?at) LIMIT 1"""))
+     <{CLAIMED_AT}> ?at . OPTIONAL {{ ?c <{PRESENTED_AT}> ?p }} }} ORDER BY DESC(?at) LIMIT 1"""))
         if not rows:
             return None
         return {"uri": rows[0]["c"], "id": rows[0]["id"], "litres": float(rows[0]["l"]),
@@ -824,12 +807,24 @@ SELECT ?c ?id ?l ?at ?p WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
             f'\n      <{term}> "{claim[key]}"^^xsd:dateTime ;'
             for key, term in (("usable_from", USABLE_FROM), ("usable_until", USABLE_UNTIL))
             if claim.get(key))
+        #  A GRAPH HOLDING DURING THE CLAIM'S WINDOW (#645): from now to `usable_until`, open
+        #  where the host named none, so the door hands a lapsed claim to nobody and the one
+        #  sweep drops it — this module keeps no sweep, and lets nothing go by hand.
+        graph = claim_graph(self.agent.id, jti)
+        ends = (f'\n      orexis:end "{claim["usable_until"]}"^^xsd:dateTime ;' if claim.get("usable_until") else "")
+        self.agent.beliefs.drop_graph(graph)
         self.agent.beliefs.update(f"""
-INSERT DATA {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
+INSERT DATA {{
+  GRAPH <{graph}> {{
   <{self.me.uri}> <{HOLDS_CLAIM}> <{NS}claim_{jti}> .
   <{NS}claim_{jti}> a <{CLAIM}> ; <{CLAIM_ID}> "{jti}" ; <{CLAIMED_AT}> "{now}"^^xsd:dateTime ;{redeemed}{window}
       <{CLAIM_L}> "{amount}"^^xsd:decimal ; <{CLAIM_DEBIT}> "{debit}"^^xsd:decimal ;
-      <{ON_VENUE}> <{market.uri}> . }} }}""")
+      <{ON_VENUE}> <{market.uri}> . }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a orexis:BeliefGraph ; orexis:arrivedBy <{rounds.RECEIVED}> . }}
+  GRAPH <{PERIODS_GRAPH}> {{
+    <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;{ends}
+      orexis:start "{now}"^^xsd:dateTime ] . }}
+}}""")
         #  GRANTED ON MY ASK, with nothing standing for the want (#627): nothing is waiting on
         #  this fact, so the mind is woken — buying is available while I hold a claim, and
         #  the pass plans the presenting, placed by the claim's window. A plan standing is

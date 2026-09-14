@@ -123,8 +123,8 @@ def test_a_host_whose_stock_covers_the_ask_grants_a_claim_with_no_round(monkeypa
     assert claim["amount_l"] == 0.5 and claim["auction_id"].startswith("ask-")
     assert abs((datetime.fromisoformat(claim["usable_from"]) - wanted).total_seconds()) < 1.0
     assert rounds.rounds_of(host) == [], "covered from stock: no round convened"
-    rows = bindings(host.beliefs.query(f"""SELECT ?from WHERE {{ GRAPH <{obligations_graph("supplier")}> {{
-        ?o <http://example.org/orexis/market#forClaim> "{claim['jti']}" ; <{OWED_FROM}> ?from }} }}"""))
+    rows = bindings(host.beliefs.query_at(f"""SELECT ?from WHERE {{
+        ?o <http://example.org/orexis/market#forClaim> "{claim['jti']}" ; <{OWED_FROM}> ?from }}"""))
     assert rows and abs((datetime.fromisoformat(rows[0]["from"]) - wanted).total_seconds()) < 1.0
 
 
@@ -190,17 +190,19 @@ def test_a_granted_claim_makes_the_plan_the_presenting_alone(monkeypatch):
 
 def test_a_claim_whose_window_closed_unpresented_is_no_longer_held(monkeypatch):
     """Holding a claim is what makes buying available and a tender done, so one left over past
-    its window — its presenting dropped — is let go by the sweep, and a later tender is not
-    done by it."""
+    its window — its presenting dropped — is a graph whose period has ended (#645): the door
+    hands it to nobody, the one sweep drops it, and a later tender is not done by it."""
     agent = _fern(monkeypatch)
     market = wired_markets(agent)[0]
     closed = datetime.now(timezone.utc) - timedelta(hours=1)
     agent.deliver(f"{market.claim_topic}/fern", {
         "auction_id": "ask-old", "jti": "j-old", "sub": "fern", "amount_l": 0.5, "debit": 0.2,
         "usable_from": (closed - timedelta(seconds=900)).isoformat(), "usable_until": closed.isoformat()})
-    held = lambda: bindings(agent.beliefs.query(  # noqa: E731
-        f"SELECT ?c WHERE {{ GRAPH <{beliefs_graph('fern')}> {{ <{agent.me.uri}> market:holdsClaim ?c }} }}"))
-    assert held(), "written as held, as any claim is"
-    agent.bidding().sweep()
-    assert held() == [], "its window closed unpresented: let go"
+    held = lambda at=None: bindings(agent.beliefs.query_at(  # noqa: E731
+        f"SELECT ?c WHERE {{ <{agent.me.uri}> market:holdsClaim ?c }}", at=at))
+    from orexis_capability_market.bidding import claim_graph
+    assert held() == [], "its window closed before it was held: handed to nobody at any instant"
+    assert claim_graph(agent.id, "j-old") in agent.beliefs.outdated(), "a graph whose period has ended"
+    assert agent.upkeep.sweep() >= 1, "and the one sweep drops it"
+    assert claim_graph(agent.id, "j-old") not in agent.beliefs.periods()
     assert agent.bidding()._claim_on(market.uri) is None

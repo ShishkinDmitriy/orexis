@@ -513,8 +513,19 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
     triples = " ".join(
         f"<{r['prefix']}{agent_id}> a <{r['class']}> ; orexis:arrivedBy <{r['arrival']}> ."
         for r in sorted(declared, key=lambda r: r["class"]))
+    #  AND WHAT WAS CLASSIFIED AT ITS OWN WRITE (#645): a graph holding during a period — a
+    #  round, a claim, a cooling row, a debt, a pursued child, a prediction — says what it is
+    #  when it is written, and a restart must not unsay it: every such row whose graph still
+    #  exists is kept, so the debt a host incurred before it went down is a debt after.
+    defaults = {f"{r['prefix']}{agent_id}" for r in declared}
+    existing = set(st.graph_names())
+    kept = " ".join(
+        f"<{r['g']}> a <{r['c']}> ; orexis:arrivedBy <{r['a']}> ."
+        for r in bindings(st.query(
+            f"SELECT ?g ?c ?a WHERE {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?c ; orexis:arrivedBy ?a }} }}"))
+        if r["g"] in existing and r["g"] not in defaults)
     st.clear_graph(CLASSIFICATION_GRAPH)
-    st.update(f"INSERT DATA {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ {triples} }} }}")
+    st.update(f"INSERT DATA {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ {triples} {kept} }} }}")
 
 
 def _belief_room(path: str | None) -> str | None:

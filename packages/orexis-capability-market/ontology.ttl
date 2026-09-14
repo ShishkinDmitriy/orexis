@@ -293,9 +293,12 @@ The instant it carries is not for comparing. It is the HORIZON, exactly as a rou
 #  (`orexis:unmetWhen`, a select whose rows are the debt undischarged), written by the ledger
 #  with the debt, so the kernel judges it as it judges every authored pattern and names no
 #  word of this section.
-:ObligationsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Obligations record graph" ;
+:ObligationsGraph a owl:Class ; rdfs:subClassOf orexis:Graph , orexis:RecordGraph ; rdfs:label "Obligations record graph" ;
     orexis:graphPrefix "http://example.org/orexis/graph/obligations/" ; orexis:arrivesBy orexis:Received ;
     rdfs:comment "ONE agent's record of debts: claims won against it, presented or not, discharged rows kept because a debt paid and a debt forgotten must not look alike. A RECORD class — the duty-wants the desire modality serves are this record projected. The prefix is built by the kernel's `obligations_graph`, which is how the desire modality projects the record without importing this package." .
+
+:lapsedAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ; rdfs:label "lapsed at" ;
+    rdfs:comment "The verdict a debt leaves when its window closed with the debt unserved (#645): written into the agent's obligations record by the ledger's keeper when the one sweep drops the debt's own graph, beside `market:dischargedAt` for a debt paid — so a debt paid and a debt forgotten never look alike, and the ledger keeps the verdict rather than the want. Read by `Ower.settled`, the sovereign's door to what a host's debts came to." .
 
 :owedTo a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range orexis:Agent ; rdfs:label "owed to" ;
     rdfs:comment "The counterparty. Always an agent this world's wiring already connects to me — an obligation to a stranger is not a debt, it is a forgery, refused before it becomes a want." .

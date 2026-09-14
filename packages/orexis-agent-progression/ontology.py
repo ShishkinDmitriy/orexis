@@ -161,7 +161,7 @@ DESIRE_URGENCY = OREXIS + "desireUrgency"
 REPORTS = OREXIS + "reports"
 SERIES = OREXIS + "series"
 QUIET = OREXIS + "quiet"
-SWEEP = OREXIS + "sweep"
+OUTDATED = OREXIS + "outdated"      # a graph's period has ended and it is about to be dropped (#645)
 BELIEF_REVISED = OREXIS + "beliefRevised"
 #  What progression TELLS upward (#452): a lower layer never imports a higher one, so what it
 #  has to say — a step taken, an expectation met or unmet — is an event through the choir.

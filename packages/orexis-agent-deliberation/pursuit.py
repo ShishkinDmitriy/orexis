@@ -35,6 +35,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 from .ontology import pursued_graph
+from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, PERIODS_GRAPH
 from .planner import SATISFIED
 
 from orexis_agent_progression.execution import carry_out
@@ -197,6 +198,12 @@ def root_of(agent, want: str) -> str | None:
     return rows[0]["r"] if rows else None
 
 
+def child_graph(agent_id: str, child: str) -> str:
+    """ONE pursued child's graph in ONE agent's store — the unit a period is said of (#645),
+    under the untimed `pursued_graph`."""
+    return f"{pursued_graph(agent_id)}/{child.rsplit('#', 1)[-1]}"
+
+
 def mint(agent, root: str, holds_at: datetime | None = None) -> str | None:
     """Derive the want pursued under `root` and write it to the pursued graph. Its name is the
     root's, suffixed, so a second episode of the same root pursues the same node and everything
@@ -226,13 +233,29 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
         timed = (f' ; orexis:holdsAt "{holds_at.isoformat()}"^^xsd:dateTime'
                  f' ; prov:generatedAtTime "{clock.now().isoformat()}"^^xsd:dateTime')
         label = f"foreseen: {label[len('pursued: '):]} at {holds_at.isoformat(timespec='minutes')}"
+    #  A GRAPH HOLDING DURING THE CHILD (#645): from its derivation to the instant it must
+    #  hold at plus the patience its plan is given after it — the last step is placed AT the
+    #  instant and its verdict comes after — and open for a want met at the plan's end. The
+    #  door hands an outdated child to nobody, and the one sweep drops it.
+    graph = child_graph(agent.id, child)
+    ends = ""
+    if holds_at is not None:
+        patience = float(getattr(getattr(agent.keeper, "beliefs", None), "patience_s", 0) or 0)
+        ends = f'\n      orexis:end "{(holds_at + timedelta(seconds=patience)).isoformat()}"^^xsd:dateTime ;'
+    agent.beliefs.drop_graph(graph)
     agent.beliefs.update(f"""
-INSERT DATA {{ GRAPH <{pursued_graph(agent.id)}> {{
+INSERT DATA {{
+  GRAPH <{graph}> {{
   <{agent.me.uri}> orexis:holds <{child}> .
   <{child}> a orexis:Desire ; orexis:bindsWhen {binding} ; prov:wasDerivedFrom <{root}>{timed} ;
       rdfs:label {json.dumps(label)} .
   {' '.join(pointed)}
-}} }}""")
+  }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a deliberation:PursuedGraph ; orexis:arrivedBy orexis:Recorded . }}
+  GRAPH <{PERIODS_GRAPH}> {{
+    <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;{ends}
+      orexis:start "{clock.now().isoformat()}"^^xsd:dateTime ] . }}
+}}""")
     agent.desires.rebuild()
     log.info("%s reads unmet: pursuing %s", root.rsplit("#", 1)[-1], child.rsplit("#", 1)[-1])
     return child
@@ -242,10 +265,7 @@ def withdraw(agent, child: str) -> None:
     """The want derived under a root is gone: its plan finished, or it reads met with nothing
     standing for it. A root still unmet derives it again on the next pass, so a plan that fell
     short re-plans through a fresh want rather than a stale one."""
-    graph = pursued_graph(agent.id)
-    agent.beliefs.update(f"""
-DELETE {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}
-WHERE  {{ GRAPH <{graph}> {{ ?s ?p ?o . FILTER(?s = <{child}> || ?o = <{child}>) }} }}""")
+    agent.beliefs.drop_graph(child_graph(agent.id, child))
     agent.desires.rebuild()
     log.info("%s withdrawn", child.rsplit("#", 1)[-1])
 

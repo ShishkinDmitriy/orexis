@@ -69,15 +69,7 @@ SELECT ?g WHERE {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a <{_PREDICTION_GRAPH}> 
 def drop(store, graphs) -> None:
     """A prediction is gone with its classification and its period — as a round is."""
     for graph in graphs:
-        store.update(f"""
-DELETE {{
-  GRAPH <{graph}> {{ ?s ?p ?o }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> ?cp ?co }}
-  GRAPH <{PERIODS_GRAPH}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }}
-WHERE  {{
-  {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}
-  UNION {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> ?cp ?co }} }}
-  UNION {{ GRAPH <{PERIODS_GRAPH}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }} }}""")
+        store.drop_graph(graph)
 
 
 def write(agent, me_uri: str, subject_uri: str, observed_property: str, reading,
