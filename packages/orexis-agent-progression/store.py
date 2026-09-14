@@ -89,7 +89,17 @@ SELECT DISTINCT ?g WHERE {{
   #  filters — the engine evaluates a VALUES-bound path end for every candidate rather than
   #  once, and this query runs at the start of every pass.
   FILTER NOT EXISTS {{ ?g a ?work . ?work rdfs:subClassOf* orexis:WorkingGraph }}
+  #  A PREDICTION is a kind of its own (#642): what a package expects a reading to be during a
+  #  window, handed by `query_at` at the instant asked about and never a record of the agent's.
+  FILTER NOT EXISTS {{ ?g a ?guess . ?guess rdfs:subClassOf* orexis:PredictionGraph }}
 }}"""
+
+#  THE PREDICTIONS — every graph the classification types as a prediction, holding or not; the
+#  door filters by period like every other list here.
+_PREDICTIONS = f"""
+SELECT DISTINCT ?g WHERE {{
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }}
+  ?class rdfs:subClassOf* orexis:PredictionGraph }}"""
 
 #  THE PERIOD EACH GRAPH HOLDS DURING — read from the one place that says so, which is named here
 #  for the same reason the two above are: this is the bootstrap root asking what to merge, not a
@@ -383,6 +393,7 @@ class Store:
         self._store = ox.Store(self.path) if self.path else ox.Store()
         self._public: list | None = None  # discovered on demand; see public_graphs()
         self._recorded: list | None = None  # likewise; see recorded_graphs()
+        self._predictions = None
         self._periods: dict | None = None  # graph -> (start, end); see periods()
         self._memo: dict = {}             # what only a write can change; see remember()
 
@@ -405,6 +416,14 @@ class Store:
         if self._recorded is None:
             self._recorded = sorted(row["g"] for row in bindings(self.query(_OWN)))
         return self._holding_at(self._recorded, at)
+
+    def prediction_graphs(self, at: datetime | None = None) -> list[str]:
+        """Every prediction holding at `at` — a graph a package's drift wrote for a window, typed
+        `orexis:PredictionGraph` in the classification (#642). Asked, never listed, and cached
+        like the others: a write drops the answer."""
+        if self._predictions is None:
+            self._predictions = sorted(row["g"] for row in bindings(self.query(_PREDICTIONS)))
+        return self._holding_at(self._predictions, at)
 
     def public_graphs(self, at: datetime | None = None, *, ever: bool = False) -> list[str]:
         """Every graph the vocabulary types as an `orexis:PublicGraph`, and still worth believing.
@@ -498,7 +517,10 @@ class Store:
         afforder and the urgency choir take this door with the instant a node stands at, and
         a round that will have closed by then is not there. JSON bindings, as `query`."""
         out = io.BytesIO()
-        graphs = [ox.NamedNode(g) for g in (*self.public_graphs(at), *self.recorded_graphs(at))]
+        #  AND THE PREDICTIONS HOLDING THEN (#642): a reader standing at an instant is handed what
+        #  a package expects the world to be then, beside what it knows.
+        graphs = [ox.NamedNode(g) for g in (*self.public_graphs(at), *self.recorded_graphs(at),
+                                            *self.prediction_graphs(at))]
         self._store.query(sparql, prefixes=NAMESPACES, default_graph=graphs,
                           substitutions=_terms(substitutions)).serialize(
             output=out, format=ox.QueryResultsFormat.JSON)
@@ -738,6 +760,7 @@ class Store:
         self._public = None
         self._recorded = None
         self._periods = None
+        self._predictions = None
         self._memo.clear()
 
     def remember(self, key, compute):

@@ -107,9 +107,11 @@ are the old rendering's names and go with it.
 # What is built, in the order it is built
 
 1. **The drift moves to sensing and writes predictions**
-   ([#642](https://github.com/ShishkinDmitriy/orexis/issues/642)): sensing's drift
-   vocabulary and runner, the domain drifts declared against it and typing their prediction
-   with every band it may be in, `orexis:PredictionGraph` and the door, one graph per horizon
+   ([#642](https://github.com/ShishkinDmitriy/orexis/issues/642), built): sensing's runner
+   (`predictions.py`), the water drift typing its prediction with every band it may be in,
+   `orexis:PredictionGraph` and the door, one graph per horizon — the drift's vocabulary
+   stays `orexis:Drift` for this one step, since the kernel still runs it at forks and moves
+   with it in #643 —
    after every reading with the next window first; `orexis:spreadsBy`, sensing's arithmetic
    and #631's `ExpectedObservation`, `mayBe` and `ExpectationsGraph` retire, and so do the
    staleness horizon and its timer — the first prediction's end is the horizon, and a window

@@ -170,7 +170,6 @@ def test_every_graph_builder_spells_what_its_class_declares():
     from orexis_agent_progression.graphs import intentions_graph
     from orexis_agent_progression.ontology import obligations_graph, promises_graph, roots_graph
     from orexis_agent_deliberation.ontology import pursued_graph, remembered_graph
-    from orexis_capability_sensing.terms import expectations_graph
 
     classes = _per_agent_classes(genesis_store())
     builders = {
@@ -181,7 +180,6 @@ def test_every_graph_builder_spells_what_its_class_declares():
         "http://example.org/orexis/progression#PromisesGraph": promises_graph,
         "http://example.org/orexis/deliberation#RememberedGraph": remembered_graph,
         "http://example.org/orexis/deliberation#PursuedGraph": pursued_graph,
-        "http://example.org/orexis/sensing#ExpectationsGraph": expectations_graph,   # #631
         "http://example.org/orexis/review#SummariesGraph": summaries_graph,
         "http://example.org/orexis/review#EvidenceGraph": evidence_graph,
         "http://example.org/orexis/review#RevisionsGraph": revisions_graph,

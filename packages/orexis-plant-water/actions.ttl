@@ -3,6 +3,7 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 
@@ -28,6 +29,9 @@
 
 water:Drying
     a orexis:Drift ;
+    #  THE HORIZONS this package predicts at, in the timeline's seconds, after the next reading's
+    #  window sensing adds first (#642): an hour, five, a day — the sovereign's own ladder.
+    sensing:atHorizon 3600 , 18000 , 86400 ;
 
     rdfs:label "what a pot loses while nobody waters it" ;
 
@@ -59,23 +63,6 @@ water:Drying
             BIND((((xsd:double(?was) - ?lo) / ?rate) * 86400) AS ?seconds)
         }""" ;
 
-    #  HOW FAR OFF IT MAY BE (#631): the rate's uncertainty the world states beside the rate,
-    #  over the same stretch — the domain's own arithmetic, in the domain's own unit. Sensing
-    #  reads it to widen the bands the expected next observation may fall in; the search
-    #  never reads the number. A pot stating no spread yields no row and spreads nothing.
-    orexis:spreadsBy """
-        SELECT ?subject ?property ?width WHERE {
-            GRAPH $state {
-                ?obs sosa:hasFeatureOfInterest ?subject ;
-                     sosa:observedProperty ?property ;
-                     sosa:hasSimpleResult ?was . }
-            FILTER(?property = water:SoilMoisture)
-            ?subject water:driesPerDaySpread ?spread .
-            FILTER(?spread > 0 && $elapsed > 0)
-            BIND(ROUND(($elapsed / 86400.0) * 1000000) / 1000000 AS ?days)
-            BIND(?spread * ?days AS ?width)
-        }""" ;
-
     #  WHAT IT REPLACES: the reading it drifts, by the upsert key the sensed graph holds — one
     #  node per (subject, property), the invariant every effect's retraction already leans on.
     orexis:retracts """
@@ -102,9 +89,19 @@ water:Drying
     #  by this engine, and a decimal product past eighteen fractional digits binds NOTHING, so
     #  the rate is rounded to six places before it is multiplied (AGENTS.md, the arithmetic
     #  traps). A drift that bound nothing would read as a pot that never dries.
+    #  AND EVERY BAND IT MAY BE IN (#642, the-drift-is-sensings-and-its-result-is-predictions):
+    #  the centre the rate reaches, widened by the spread the world states beside the rate
+    #  (`water:driesPerDaySpread`, per day, over the stretch) and by the instrument's own
+    #  `sensing:noise`, and the bands whose ranges that width reaches — read off the band
+    #  definitions' own facets, as the crossing reads the floor. No number leaves this rule:
+    #  the predicted reading IS each band it may be in, and a shape refusing one refuses the
+    #  world, which is the safe direction. A world stating no spread and no noise types the one
+    #  band the centre falls in, exactly what the entailment would say of the number. The
+    #  three edges are read in OPTIONALs and filtered after, never inside a UNION: a filter in
+    #  a branch cannot see a variable bound outside it (AGENTS, the traps).
     sh:construct """
         CONSTRUCT {
-            ?obs a sosa:Observation ;
+            ?obs a sosa:Observation , ?band ;
                  sosa:hasFeatureOfInterest ?pot ;
                  sosa:observedProperty water:SoilMoisture ;
                  sosa:hasSimpleResult ?now ;
@@ -128,6 +125,25 @@ water:Drying
             #  asking anything: a fraction of saturation has a floor at nothing.
             BIND(IF(?fell < 0.0, 0.0, ?fell) AS ?now)
             BIND($lands AS ?at)
+            OPTIONAL { ?pot water:driesPerDaySpread ?spread }
+            OPTIONAL { ?sensor sensing:noise ?noise }
+            #  AS DOUBLES: an exact-zero DECIMAL product binds nothing in this engine (measured:
+            #  `0.0 * 0.5` bound nothing where `0.0 * 1` bound zero — AGENTS, the arithmetic
+            #  traps), so a world stating no spread lost its width and every band with it.
+            BIND(((xsd:double(COALESCE(?spread, 0)) * xsd:double(?days)) + xsd:double(COALESCE(?noise, 0))) AS ?width)
+            BIND(xsd:double(?now) - ?width AS ?lo)
+            BIND(xsd:double(?now) + ?width AS ?hi)
+            ?band sensing:ofSubject ?pot ; sensing:ofProperty water:SoilMoisture ;
+                  owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
+            ?r owl:onProperty sosa:hasSimpleResult ;
+               owl:someValuesFrom/owl:withRestrictions ?facets .
+            OPTIONAL { ?facets rdf:rest*/rdf:first/xsd:maxExclusive ?below }
+            OPTIONAL { ?facets rdf:rest*/rdf:first/xsd:minInclusive ?inLo .
+                       ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?inHi }
+            OPTIONAL { ?facets rdf:rest*/rdf:first/xsd:minExclusive ?above }
+            FILTER((BOUND(?below) && ?lo < ?below)
+                   || (BOUND(?inLo) && ?hi >= ?inLo && ?lo <= ?inHi)
+                   || (BOUND(?above) && ?hi > ?above))
         }""" .
 
 

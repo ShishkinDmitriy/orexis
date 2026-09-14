@@ -48,12 +48,6 @@ def _slug(uri: str) -> str:
     return re.sub(r"[^A-Za-z0-9_]", "_", re.split(r"[#/]", uri.rstrip("#/"))[-1])
 
 
-def expectation_uri(feature_id: str, observed_property: str) -> str:
-    """The node one (feature, property) pair's EXPECTED next observation owns (#631) — keyed
-    as the observation is, and replaced as it is."""
-    return f"orexis:expected_{_slug(feature_id)}_{_slug(observed_property)}"
-
-
 def observation_uri(feature_id: str, observed_property: str) -> str:
     """The node one (feature, property) pair owns. Two properties, two nodes — and since #98
     the feature is the SAMPLE where the sensor states one, so two probes in two patches of one
