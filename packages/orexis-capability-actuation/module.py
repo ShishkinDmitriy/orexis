@@ -160,7 +160,7 @@ class ActuationModule(Module):
     #  THE ACTUATE RUNG'S TRIGGER WAS HERE (#190): every reading of my own subject marked the
     #  stake, and the search re-sized the dose against it. Since #632 a reading wakes the mind
     #  only where it contradicts what was expected of it — sensing compares it with the
-    #  expected next observation at arrival and the reviser holds the rule — and the patience
+    #  first prediction at arrival and the reviser holds the rule — and the patience
     #  tick marks every want on its own clock, so a dose the world goes on needing is still
     #  planned, and one the world goes on as believed is not re-decided ten times an hour.
 

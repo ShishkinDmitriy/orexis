@@ -12,7 +12,7 @@ in, a centre where the package has one. The rate, the spread and the instrument'
 inside the package's text; what leaves it is bands, and where a rule types none the vocabulary
 entails the one the centre falls in. A property no drift moves is predicted to stay as it reads.
 
-The FIRST prediction is the expected next observation: its window is the freshness horizon the
+The FIRST prediction is the one the next reading is held to: its window is the freshness horizon the
 module already keeps — due when the cadence in force makes it so, closed when the grace runs
 out — and the window closing with no reading is what stale means, said once. The next reading
 of the key rewrites the whole ladder; the first is dropped by the staleness timer when it

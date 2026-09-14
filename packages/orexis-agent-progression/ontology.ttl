@@ -127,7 +127,7 @@ progression:answeredWhen a owl:ObjectProperty ; rdfs:domain progression:Step ;
 
 progression:expectedFrom a owl:DatatypeProperty ; rdfs:domain progression:Step ; rdfs:range xsd:dateTime ;
     rdfs:label "expected from" ;
-    rdfs:comment "From when the world may answer this step (#639): the baseline's instant, or the taking. A reading dated at or before it is the before, not an answer. Written when the watch opens, and read with progression:landsAt by whoever compares a reading with the step's band." .
+    rdfs:comment "From when the world may answer this step (#639): the baseline's instant, or the taking. A reading dated at or before it is the before, not an answer. Written when the expectation opens, and read with progression:landsAt by whoever compares a reading with the step's band." .
 
 progression:landsAt a owl:DatatypeProperty ; rdfs:domain progression:Step ; rdfs:range xsd:dateTime ;
     rdfs:label "lands at" ;

@@ -119,12 +119,12 @@ def test_an_open_watch_is_maximum_urgency_and_a_verdict_releases_it(thirsty):
     calm = p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55)
 
     win(thirsty)
-    assert keeper.watching(stake_of(thirsty).uri)
+    assert keeper.expecting(stake_of(thirsty).uri)
     # maximum urgency earns the agent's OWN fast cadence — the floor is a clamp, not a target
     assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == p.beliefs.fast_sleep_s
 
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.55})   # dose lands as predicted
-    assert not keeper.watching(stake_of(thirsty).uri)
+    assert not keeper.expecting(stake_of(thirsty).uri)
     assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == calm
 
 

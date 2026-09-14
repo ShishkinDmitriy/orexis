@@ -666,7 +666,7 @@ WHERE {{ GRAPH <{STATE_GRAPH}> {{
         step that predicted this reading is answered by it (#639): in the band it predicted,
         met; outside it at or after the step's landing, unmet; before the landing, nothing.
         Idempotent across two sensing modules on one agent: the second finds nothing
-        standing, and a watch answered once is claimed.
+        standing, and an expectation answered once is claimed.
         """
         if (keeper := self.agent.keeper) is None:
             return
@@ -677,7 +677,7 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
   ?o sosa:hasFeatureOfInterest <{subject_uri}> ; sosa:observedProperty <{observed_property}> ; a ?t }} }}"""))}
         self._compare(keeper, subject_uri, observed_property, types)
         #  AND WHETHER THE MIND SHOULD HEAR OF IT (#632): the bands the reading IS against the
-        #  bands the expected next observation said it may be in — the first prediction of the
+        #  bands the first prediction said it may be in — the one the next reading is held to, the first of the
         #  key, still standing here since the ladder is rewritten after this is told. The
         #  reviser holds the rule; this module hands it the two sets in its own words.
         if subject_uri == self.me.acts_for and (stake := self.stake_about(observed_property)) is not None:
@@ -698,7 +698,7 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
 
         AS THE CONTAINER PRESENTS THEM (#618): while a want derived under a root stands, the
         agent is pursuing THAT, under its own name, and an actor holding a reading must key
-        its commitment, its watch and its mark on the name the ledger holds."""
+        its commitment, its expectation and its mark on the name the ledger holds."""
         return [w for w in self.agent.pursuing()
                 if getattr(w, "observed_property", None) == observed_property
                 and (w.is_epistemic or subject_uri in (None, self.me.acts_for))]
@@ -727,13 +727,13 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
 
     def reading_urgency(self, subject_uri: str, observed_property: str,
                         value: float | None) -> float | None:
-        """The choir's sharpest opinion on a reading, and the keeper's: a watch still open on
+        """The choir's sharpest opinion on a reading, and the keeper's: an expectation still open on
         any want about this property is maximal, because an act has just happened and the
         world owes a movement — attention must not relax before it lands."""
         opinion = choir.urgency(self.agent, subject_uri, observed_property, value)
         keeper = self.agent.keeper
         if (keeper is not None and subject_uri == self.me.acts_for
-                and any(keeper.watching(w.uri) for w in self.wants_about(observed_property))):
+                and any(keeper.expecting(w.uri) for w in self.wants_about(observed_property))):
             return 1.0
         return opinion
 
@@ -802,7 +802,7 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
 
     @contributes(PREDICTED)
     def predicted(self, predicted, standing: bool) -> None:
-        """The keeper says which branch the agent intends (#639): a watch opened on a step
+        """The keeper says which branch the agent intends (#639): an expectation opened on a step
         that predicts a reading of one of my keys, or closed. Kept here, folded into the
         predictions of the key from the step's landing on — the ladder is rewritten at
         once, so the sovereign reading the predictions sees the intended branch while the
@@ -817,13 +817,13 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
         if standing:
             self._intend(predicted)
         else:
-            self._predicted.pop(predicted.watch, None)
+            self._predicted.pop(predicted.intention, None)
         if any(x.subject == subject_uri and x.observes == observed_property for x in self.sensors):
             self.watch_staleness(subject_uri, observed_property)
 
     def _intend(self, predicted) -> None:
         """Keep one intended branch — its bands stated by the step, or read off the number a
-        caller stated. A number no band of mine holds cannot be judged, and the watch can
+        caller stated. A number no band of mine holds cannot be judged, and the expectation can
         only lapse; said once."""
         SOSA = "http://www.w3.org/ns/sosa/"
         key = dict(predicted.key)
@@ -831,11 +831,11 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
             bands = self._bands_for(key.get(SOSA + "hasFeatureOfInterest"),
                                     key.get(SOSA + "observedProperty"), predicted.value)
             if not bands:
-                self.log.warning("no band of mine holds %s for %s: the watch can only lapse",
-                                 predicted.value, predicted.watch.rsplit("#", 1)[-1])
+                self.log.warning("no band of mine holds %s for %s: the expectation can only lapse",
+                                 predicted.value, predicted.intention.rsplit("#", 1)[-1])
                 return
             predicted = _replace(predicted, bands=bands)
-        self._predicted[predicted.watch] = predicted
+        self._predicted[predicted.intention] = predicted
 
     def _intended(self, subject_uri: str, observed_property: str) -> list:
         SOSA = "http://www.w3.org/ns/sosa/"
@@ -873,7 +873,7 @@ SELECT ?b WHERE {{ VALUES ?f {{ {' '.join(f'<{f}>' for f in families)} }} ?b rdf
         return self._band_classes
 
     def _expected_bands(self, subject_uri: str, observed_property: str, bands: frozenset):
-        """The bands the expected next observation of this key may be in — the types of the
+        """The bands the first prediction of this key says it may be in — the types of the
         first prediction standing for it — or None where no prediction stands."""
         graphs = predictions.graphs_of(self.agent.beliefs, self.agent.id,
                                        subject_uri.rsplit("#", 1)[-1], observed_property)
@@ -886,7 +886,7 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
     def _compare(self, keeper, subject_uri: str, observed_property: str, types: set) -> None:
         """One comparison per standing step this reading is about (#639): the reading IS the
         band the step predicted — every class the step stated is on it — or it is not. A
-        reading dated at or before the watch opened is the before. What is answered is
+        reading dated at or before the expectation opened is the before. What is answered is
         the keeper's to carry on: residual, suspicion, advance or drop."""
         mine = self._intended(subject_uri, observed_property)
         if not mine:
@@ -899,10 +899,10 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
                 continue
             band = ", ".join(sorted(b.rsplit("#", 1)[-1] for b in p.bands))
             if p.bands <= types:
-                keeper.answered(p.watch, True, f"answered as the step predicted: the reading "
+                keeper.answered(p.intention, True, f"answered as the step predicted: the reading "
                                               f"of {observed_property.rsplit('#', 1)[-1]} is {band}")
             elif reading.result_time >= p.lands_at:
-                keeper.answered(p.watch, False, f"the step landed and the reading of "
+                keeper.answered(p.intention, False, f"the step landed and the reading of "
                                                f"{observed_property.rsplit('#', 1)[-1]} is not {band} — "
                                                f"the world did not answer as the graph promised")
 

@@ -486,7 +486,7 @@ sosa:Observation orexis:keyedBy sosa:hasFeatureOfInterest , sosa:observedPropert
 #  graphs holding during their windows, `orexis:PredictionGraph`, carrying the predicted reading
 #  keyed as the present's and typed with every band it may be in (the-drift-is-sensings-and-its-
 #  result-is-predictions). A package lists beside its drift the horizons it predicts at; sensing
-#  adds the next reading's window first, which is the expected next observation — the window
+#  adds the next reading's window first, which is the first prediction, the one the next reading is held to — the window
 #  the next reading is held to, and stale when it closes with none. The words of #631's
 #  expectation (an ExpectedObservation with a set it mayBe, in a graph of its own) are retired:
 #  a prediction is a reading in a predicted world, and IS each band it may be in there.

@@ -66,7 +66,7 @@ def test_a_step_predicting_a_reading_holds_no_shape_and_the_predictor_is_told(mo
                                lands_after_s=3600.0)
     assert agent.keeper.held() == [], "no hold: the comparison is the predictor's"
     told = agent.keeper.predicted()
-    assert len(told) == 1 and told[0].watch == uri and told[0].bands == {IN_REGION}
+    assert len(told) == 1 and told[0].intention == uri and told[0].bands == {IN_REGION}
     assert told[0].since < told[0].lands_at <= told[0].not_after
     assert abs((told[0].lands_at - clock.now()).total_seconds() - 3600.0) < 5.0
 

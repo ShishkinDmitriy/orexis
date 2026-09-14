@@ -12,9 +12,9 @@ description: >-
   until the world answers, an Actuate from the command to its verdict (#353), where a dose
   satisfied at the command once stood for nothing and a gardener pulsed its pump 584 times in
   a night. Since #131 the MEANS and the END are judged apart: an acquire's
-  claim opens a watch — baseline copied into the row, promised direction from the domain,
+  claim opens an expectation — baseline copied into the row, promised direction from the domain,
   deadline from the patience — and the verdict lands beside the outcome, so
-  satisfied-and-unmet is recordable, the false-knowledge signature. An open watch is maximum
+  satisfied-and-unmet is recordable, the false-knowledge signature. An open expectation is maximum
   urgency, so the cadence tightens until the world answers; an affordance unmet suspectAfter
   times running is flagged, never auto-retracted.
 ---
@@ -109,7 +109,7 @@ sensed graph, so the first intention is always to look — see
 
 `Acquire` is committed to the **gap, not the round**: adopted with the first bid, absorbed for
 every further bid while it stands, satisfied by the claim — **and satisfied is only the
-MEANS**. The claim opens a *watch* on the end (below).
+MEANS**. The claim opens an *expectation* on the end (below).
 
 `Apply` is **real since #132**, and earlier than the futures market it was reserved for: the
 reason to hold a claim turned out to be *observability* before it was temporal strategy — never
@@ -117,7 +117,7 @@ spend a dose you cannot watch land. Adopted when the [claim](/domain/claim.md) a
 standing while the holder waits for its watch to be provably live (the #135 ack at the fast
 cadence, or a bounded wait that redeems blind rather than never), satisfied when the claim is
 presented. A held claim answers maximum urgency exactly as an open expectation does — the hold
-is the watch one step earlier — and the expectation itself opens at presentation, when the dose
+is the expectation one step earlier — and the expectation itself opens at presentation, when the dose
 becomes imminent, so the baseline is not aged by the hold. Futures now merely extends the
 holding period this gave a mechanism to.
 
@@ -126,7 +126,7 @@ holding period this gave a mechanism to.
 Before #131, an Acquire resolved when the claim arrived and nothing ever checked whether the
 gap moved: an agent whose water never reached the pot bought, recorded satisfied, and bought
 again forever — transaction confirmed, outcome never audited. Now resolving the means opens a
-**watch**: the step gains the *baseline* (value and instant, copied into the ledger because the
+**expectation**: the step gains the *baseline* (value and instant, copied into the ledger because the
 sensed graph keeps only the current witness — the ledger is what remembers) and a *deadline*: the
 act's landing time plus how long a reading takes to arrive, both passed by the actor, or the
 patience where the act cannot say.
@@ -140,19 +140,19 @@ an observation later than the baseline within the tolerance of the predicted val
 fact is the kernel's, present for an addition and gone for a retraction. Conformance before the
 deadline — **met**. Deadline passed without it — **unmet**. An overshoot is as much a surprise
 as a shortfall, and both are the conversion's to answer for at review. The first noisy world
-closed a watch on +0.001 two seconds before its dose arrived and let the same gap be bought
+closed an expectation on +0.001 two seconds before its dose arrived and let the same gap be bought
 twice (#167 — the bidder still declines a new acquisition while its own dose is unanswered,
-bounded by the watch's deadline); a band around the prediction is what makes grain not an
+bounded by the expectation's deadline); a band around the prediction is what makes grain not an
 answer. The verdict is a separate fact beside the outcome, and **satisfied-and-unmet is the
 false-knowledge signature**: the graph claims a movement the world keeps refusing.
 
-Two consequences ride on the watch:
+Two consequences ride on the expectation:
 
 - **it is maximum urgency.** Evaporation is fractions per day; a dose lands in seconds — and
   urgency-by-state relaxes attention exactly when the dose needs watching, because the value
-  improves. So the keeper answers sensing's ordinary `urgency` ask with 1.0 while a watch is
+  improves. So the keeper answers sensing's ordinary `urgency` ask with 1.0 while an expectation is
   open (bounded by its deadline), and the cadence round-trips by itself: tight on adoption,
-  released on verdict. Opening the watch also asks for one look (`sense_now`), so the freshest
+  released on verdict. Opening the expectation also asks for one look (`sense_now`), so the freshest
   before is on record.
 - **enough unmet makes an affordance SUSPECT.** `suspectAfter` consecutive unmet ends for one
   (action, want) pair — consecutive, so one success resets: mostly-paying is noisy, not

@@ -11,7 +11,7 @@ description: >-
   with every band it may be in, no number crossing any boundary. The core reads predictions
   and computes none: a node's world at an instant is the present with the prediction holding
   then standing in for it, the crossing is the first prediction at which the root reads unmet,
-  the expected next observation is the first prediction, and one comparison at arrival is
+  the first prediction is the one the next reading is held to, and one comparison at arrival is
   every verdict. Retired — the drift run inside the search, the projected root, `orexis:Drift`
   and its rule words in the kernel, `orexis:spreadsBy`, sensing's width arithmetic, the
   set-of-bands predicate, the answering shape built per step, the watch on a number, the
@@ -104,10 +104,17 @@ forecast, which a prediction generalises to what the agent predicts of itself.
 
 # The word
 
-A **prediction** is what sensing writes about a horizon; the **expectation** is the first of
-them, the one the next reading is held to; the keeper's row on a step is its **watch**, its
-stake in the predictions from the step's landing. `OpenExpectation` and `open_expectations`
-are the old rendering's names and go with it.
+Two words, and the core's has priority. A **prediction** is what sensing writes about a
+horizon, and the first of them is the one the next reading is held to; sensing has no word of
+its own beyond that, and "the expected next observation" was that first prediction under a
+name the core already owned. The **expectation** is the core's: the row the keeper keeps on a
+taken step — the band the step promised from its landing, judged met or unmet — which is what
+`OpenExpectation`, `open_expectations`, `expect`, the `expectations_*` series and
+`progression:expectedFrom` have always said (#640). A first cut renamed the core's row to
+"watch" to make room for a package's use of the core's word, and was refused: a package
+speaks around the core, never the other way, and "watch" was sensing's already —
+`sensing:watchLive`, the instrument's watch, whether the board reports closely enough to see
+a dose land.
 
 # What is built, in the order it is built
 
@@ -151,7 +158,9 @@ are the old rendering's names and go with it.
    ([#645](https://github.com/ShishkinDmitriy/orexis/issues/645), built): a round, a claim,
    a cooling row, a debt and a pursued child beside the prediction, one `upkeep.sweep`, the
    verdict of a lapsed debt written first.
-6. **The word** ([#640](https://github.com/ShishkinDmitriy/orexis/issues/640)).
+6. **The word** ([#640](https://github.com/ShishkinDmitriy/orexis/issues/640), settled): expectation
+   is the core's, prediction is sensing's, and the pages that said "watch" for the keeper's row say
+   expectation.
 
 # Seams left open
 

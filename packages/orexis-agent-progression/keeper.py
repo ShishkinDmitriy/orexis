@@ -110,7 +110,7 @@ PREDICTED_VALUE = PROGRESSION + "predictedValue"
 OBSERVED_VALUE = PROGRESSION + "observedValue"
 BASELINE_VALUE = PROGRESSION + "baselineValue"
 BASELINE_AT = PROGRESSION + "baselineAt"
-#  `progression:deadlineAt` WAS HERE: the watch's deadline is the ACT's `progression:notAfter` now — one window,
+#  `progression:deadlineAt` WAS HERE: the expectation's deadline is the ACT's `progression:notAfter` now — one window,
 #  read by the keeper, the bidder's give-up and the host's redeem check alike
 #  (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan). `ledger` migrates it.
 END_MET = PROGRESSION + "endMet"
@@ -130,8 +130,8 @@ def kernel(name: str) -> str:
 # sensing is asked to look once so the baseline is the freshest thing on record.
 #  The sensing family, the two market directions and the direction query WERE HERE. The keeper
 #  used to look up which way a dose should move the value (the market's word) and ask sensing
-#  to look once (the sensing family's name) when a watch opened — the last package words this
-#  file named. Both are the ACTOR's to say: whoever opened the watch knows which way its act
+#  to look once (the sensing family's name) when an expectation opened — the last package words this
+#  file named. Both are the ACTOR's to say: whoever opened the expectation knows which way its act
 #  pushes and how long a reading of that property takes to arrive, and nudges its own sensing.
 
 # How many consecutive unmet ends make an affordance suspect — the family's figure, like the
@@ -195,10 +195,10 @@ class Standing:
 
 @dataclass(frozen=True)
 class OpenExpectation:
-    """A watch still on: the act happened, and the world has yet to answer as promised."""
+    """An expectation still on: the act happened, and the world has yet to answer as promised."""
 
     uri: str
-    step: str               # the step the watch is on — the intention stands at it
+    step: str               # the step the expectation is on — the intention stands at it
     action: str
     want: str
     deadline: datetime
@@ -218,7 +218,7 @@ class Predicted:
     predictor compares every reading of the key with it once at arrival and answers the
     keeper (`Keeper.answered`); the keeper holds no shape for it and knows no reading."""
 
-    watch: str                      # the intention the watch is on
+    intention: str                  # the intention the expectation is on
     step: str                       # the step it stands at
     keyed_class: str
     key: tuple                      # ((predicate, value), ...) — the reading's key, as the signature states it
@@ -310,14 +310,14 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{PROGRESSION + "by"}> ?s . FILTER NOT EXIS
         self._picks = picks
 
     def start(self) -> None:
-        """Re-arm the deadline of every watch still open (#639): a timer does not survive a
-        restart and the ledger does, so a watch the process went down on lapses at its
+        """Re-arm the deadline of every expectation still open (#639): a timer does not survive a
+        restart and the ledger does, so an expectation the process went down on lapses at its
         deadline rather than never. THE TICK WAS HERE — on my patience clock, hand every want
         to the search — and it is the deliberator's now (#452): a clock that asks the search
         is the search's clock, and progression may not import the layer above it. The
         patience is still mine, and the deliberator reads its interval off `beliefs.patience_s`."""
-        for watch in self.open_expectations(every=True):
-            self._arm(watch.uri, watch.deadline)
+        for expectation in self.open_expectations(every=True):
+            self._arm(expectation.uri, expectation.deadline)
 
     def stop(self) -> None:
         """Nothing to stop; the ledger is a graph and outlives the process on purpose."""
@@ -839,7 +839,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "by"}> ?act 
         for `untilNot`, so rows always mean the wait is over — and which wait it was. A
         READINESS wait (`until`, `untilNot`) holds a STANDING intention and releases its act;
         a COMPLETION wait (`answeredWhen`) holds an expectation on an intention the means
-        already RESOLVED — resolving the means is where the watch on the end begins — and
+        already RESOLVED — resolving the means is where the expectation on the end begins — and
         answers with the verdict. The holder is the `Standing` or the `OpenExpectation`."""
         rows = bindings(self.agent.intentions.query_union(f"""
 SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
@@ -849,11 +849,11 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
   FILTER(?p IN (<{PROGRESSION + "until"}>, <{PROGRESSION + "untilNot"}>, <{PROGRESSION + "answeredWhen"}>))
   FILTER NOT EXISTS {{ ?act <{END_MET}> ?m }} }} }}"""))
         standing = {s.uri: s for s in self.standing()}
-        watches = {w.uri: w for w in self.open_expectations(every=True)}
+        expectations = {w.uri: w for w in self.open_expectations(every=True)}
         out = []
         for r in rows:
             if r["p"] == PROGRESSION + "answeredWhen":
-                holder = watches.get(r["i"])
+                holder = expectations.get(r["i"])
             else:
                 holder = standing.get(r["i"])
             if holder is not None:
@@ -960,10 +960,10 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
                 self._lapse(holder, predicate)
                 return
         #  A WATCH ON A READING holds no shape (#639): the deadline is the keeper's, the
-        #  verdict at a reading the predictor's, and the first to claim the watch ends it.
-        for watch in self.open_expectations(every=True):
-            if watch.uri == intention_uri:
-                self._lapse(watch, PROGRESSION + "answeredWhen")
+        #  verdict at a reading the predictor's, and the first to claim the expectation ends it.
+        for expectation in self.open_expectations(every=True):
+            if expectation.uri == intention_uri:
+                self._lapse(expectation, PROGRESSION + "answeredWhen")
                 return
         #  NOT HELD: a plan standing at a step nobody took (#510) — its patience is its
         #  deadline, and passing it drops the tail and says so upward, so deliberation
@@ -1080,7 +1080,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                seeing_s: float | None = None,
                not_after: datetime | None = None,
                predicts: tuple | None = None) -> bool:
-        """Open the watch: the step was taken, now the world owes the change it predicted.
+        """Open the expectation: the step was taken, now the world owes the change it predicted.
 
         ONE DECLARATION (#510, #518, #579). What the world is held to is `progression:predicts`
         on the step the intention stands at — the facts the search said this step makes true
@@ -1155,7 +1155,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{{based}{stated}{aimed}
         if keyed:
             #  A READING IS THE PREDICTOR'S TO COMPARE (#639): no shape and no hold — the
             #  intended branch is told, the verdict comes back through `answered`, and the
-            #  deadline is armed here. A new watch on an intention claimed once before is a
+            #  deadline is armed here. A new expectation on an intention claimed once before is a
             #  new wait, so the claim that ended the previous one is released.
             with self._claim_lock:
                 self._claimed.discard(intention_uri)
@@ -1166,7 +1166,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{{based}{stated}{aimed}
             shape = self._plain_shape(predicts)
             if shape is None:
                 self.log.warning("nothing says what a world answering %s would look like "
-                                 "— the watch can only lapse", _short(intention_uri))
+                                 "— the expectation can only lapse", _short(intention_uri))
                 self._arm(intention_uri, deadline_dt)
             else:
                 self._hold_step(intention_uri, PROGRESSION + "answeredWhen", shape, deadline_dt, "unmet")
@@ -1236,7 +1236,7 @@ SELECT ?step ?predicts WHERE {{ GRAPH <{self.graph}> {{
             bands = frozenset(str(v) for p, v in carried.items() if p == _RDF_TYPE)
             number = next((v for p, v in carried.items() if p != _RDF_TYPE
                            and isinstance(v, (int, float)) and not isinstance(v, bool)), None)
-            out.append(Predicted(watch=intention_uri, step=step, keyed_class=cls, key=tuple(key),
+            out.append(Predicted(intention=intention_uri, step=step, keyed_class=cls, key=tuple(key),
                                  bands=bands, value=float(number) if number is not None else None,
                                  since=since, lands_at=lands_at, not_after=not_after))
         return out
@@ -1277,7 +1277,7 @@ SELECT ?step ?predicts WHERE {{ GRAPH <{self.graph}> {{
                                f"SELECT $this WHERE {{\n  {body}\n}}")
 
     def _arm(self, intention_uri: str, not_after: datetime) -> None:
-        """The watch's deadline on the scheduler: `lapse` at that instant, once."""
+        """The expectation's deadline on the scheduler: `lapse` at that instant, once."""
         from .scheduler import scheduler
         entry = self._deadlines.pop(intention_uri, None)
         if entry is not None:
@@ -1286,35 +1286,35 @@ SELECT ?step ?predicts WHERE {{ GRAPH <{self.graph}> {{
         self._deadlines[intention_uri] = scheduler().at(max(0.0, delay), lambda: self.lapse(intention_uri))
 
     def answered(self, intention_uri: str, met: bool, because: str) -> bool:
-        """The predictor's verdict on a watch (#639): a reading of the key arrived in the
+        """The predictor's verdict on an expectation (#639): a reading of the key arrived in the
         band the step predicted (met), or outside it at or after the landing (unmet). The
-        first road to reach the watch — this or the deadline — ends it; the second finds it
+        first road to reach the expectation — this or the deadline — ends it; the second finds it
         gone and answers False. The verdict runs unchanged from here: residual, suspicion,
         advance or drop, and what is said upward."""
-        watch = next((w for w in self.open_expectations(every=True) if w.uri == intention_uri), None)
-        if watch is None or not self._claim(intention_uri):
+        expectation = next((w for w in self.open_expectations(every=True) if w.uri == intention_uri), None)
+        if expectation is None or not self._claim(intention_uri):
             return False
-        self._verdict(watch, met, because)
+        self._verdict(expectation, met, because)
         return True
 
     def predicted(self) -> list:
-        """Every keyed fact a standing watch predicts, as the predictor is told them — what a
+        """Every keyed fact a standing expectation predicts, as the predictor is told them — what a
         predictor starting after the keeper asks for, since a tell it was not there to hear
         is gone and the ledger is not."""
         out = []
-        for watch in self.open_expectations():
-            out.extend(self._predicted_of(watch))
+        for expectation in self.open_expectations():
+            out.extend(self._predicted_of(expectation))
         return out
 
-    def _predicted_of(self, watch: OpenExpectation) -> list:
+    def _predicted_of(self, expectation: OpenExpectation) -> list:
         rows = bindings(self.agent.intentions.query_union(f"""
 SELECT ?predicts ?from ?lands WHERE {{ GRAPH <{self.graph}> {{
-  <{watch.step}> <{PREDICTS}> ?predicts ; <{EXPECTED_FROM}> ?from ; <{LANDS_AT}> ?lands }} }}"""))
+  <{expectation.step}> <{PREDICTS}> ?predicts ; <{EXPECTED_FROM}> ?from ; <{LANDS_AT}> ?lands }} }}"""))
         if not rows:
             return []
-        return self._keyed_of(watch.uri, watch.step, predicts_from_json(rows[0]["predicts"]),
+        return self._keyed_of(expectation.uri, expectation.step, predicts_from_json(rows[0]["predicts"]),
                               datetime.fromisoformat(rows[0]["from"]),
-                              datetime.fromisoformat(rows[0]["lands"]), watch.deadline)
+                              datetime.fromisoformat(rows[0]["lands"]), expectation.deadline)
 
 
     def _about(self, intention_uri: str) -> str | None:
@@ -1337,8 +1337,8 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "by"}> ?act 
                                   OPTIONAL {{ ?act <{PROGRESSION + "notAfter"}> ?was }} }} }}""")
 
     def open_expectations(self, want: str | None = None, *, every: bool = False) -> list[OpenExpectation]:
-        """Every watch still on: expectation adopted, end not yet verified — for one want, or
-        for all of them. A watch on the WORLD — a step that predicted a reading, baselined —
+        """Every expectation still on: expectation adopted, end not yet verified — for one want, or
+        for all of them. An expectation on the WORLD — a step that predicted a reading, baselined —
         is what callers mean by "my dose has not answered": a step held on its action's
         `orexis:doneWhen` (#523) is the same wait inside the keeper and not that, so it is
         left out unless `every` is asked."""
@@ -1368,48 +1368,48 @@ SELECT DISTINCT ?i ?step ?action ?want ?baseline ?baselineAt ?deadline ?predicts
             about_world=bool(r.get("predicts")))
             for r in rows]
 
-    #  `judge(want, value)` WAS HERE — every open watch on a want compared against a number
+    #  `judge(want, value)` WAS HERE — every open expectation on a want compared against a number
     #  that arrived, by this class's own arithmetic. An expectation is a hold on the shape of
     #  an answering observation now (#516), and the reading's write is what re-asks it.
 
-    def _verdict(self, watch: OpenExpectation, met: bool, because: str) -> None:
+    def _verdict(self, expectation: OpenExpectation, met: bool, because: str) -> None:
         now = clock.now().isoformat()
         #  THE RESIDUAL (#518): what the step said the world would show, and what it shows at
         #  the verdict — met or unmet alike — written on the step for the reviewer, since the
         #  sensed graph keeps only the current witness and the ledger is what remembers.
-        predicted, observed = self._residual_of(watch.step)
-        residual = "".join(f'\n  <{watch.step}> <{p}> "{v}"^^xsd:decimal .'
+        predicted, observed = self._residual_of(expectation.step)
+        residual = "".join(f'\n  <{expectation.step}> <{p}> "{v}"^^xsd:decimal .'
                            for p, v in ((PREDICTED_VALUE, predicted), (OBSERVED_VALUE, observed))
                            if v is not None)
         #  A predicted value the actor stated at `expect` is already on the step (#579): the
         #  same number written twice is one triple, so writing it again is harmless.
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{watch.step}> <{END_MET}> "{'true' if met else 'false'}"^^xsd:boolean ;
+  <{expectation.step}> <{END_MET}> "{'true' if met else 'false'}"^^xsd:boolean ;
                  <{END_VERIFIED_AT}> "{now}"^^xsd:dateTime .
-  <{watch.uri}> <{BECAUSE_OF}> {_literal(because)} .{residual}
+  <{expectation.uri}> <{BECAUSE_OF}> {_literal(because)} .{residual}
 }} }}""")
-        #  THE PREDICTOR IS TOLD the watch is closed (#639): the intended branch ends with
+        #  THE PREDICTOR IS TOLD the expectation is closed (#639): the intended branch ends with
         #  the verdict, and the predictions of the key are the world's own branch again.
-        for p in self._predicted_of(watch):
+        for p in self._predicted_of(expectation):
             self.agent.tell(PREDICTED, p, False)
         #  A WATCH ON THE WORLD — a step that predicted something of it — is an end the
         #  graph promised, and its verdict is what the reports count and the suspicion reads.
         #  A step held on its action's `orexis:doneWhen` (#523) is the same wait inside the
         #  keeper and a different thing outside: a bid answered by a claim, or not. It
         #  advances or drops the plan, and says so in its own words.
-        self._withdraw(watch.step, kept=met)
-        world = watch.about_world
+        self._withdraw(expectation.step, kept=met)
+        world = expectation.about_world
         if world:
             (self.log.info if met else self.log.warning)(
-                "end %s for %s: %s", "met" if met else "UNMET", _short(watch.want), because)
-            self._tell("end-met" if met else "end-unmet", watch.action, watch.want, because)
+                "end %s for %s: %s", "met" if met else "UNMET", _short(expectation.want), because)
+            self._tell("end-met" if met else "end-unmet", expectation.action, expectation.want, because)
         else:
             (self.log.info if met else self.log.warning)(
-                "%s %s for %s: %s", watch.action.rsplit("#", 1)[-1], "done" if met else "LAPSED",
-                _short(watch.want), because)
-            self._tell("done" if met else "lapsed", watch.action, watch.want, because)
-        if met and self._next_of(watch.uri) is not None and self._want_met(watch.want):
+                "%s %s for %s: %s", expectation.action.rsplit("#", 1)[-1], "done" if met else "LAPSED",
+                _short(expectation.want), because)
+            self._tell("done" if met else "lapsed", expectation.action, expectation.want, because)
+        if met and self._next_of(expectation.uri) is not None and self._want_met(expectation.want):
             #  AN OVERSHOOT IS NOT A FAILURE OF THE STEP (#521): the world did MORE than the
             #  step promised and the want the plan serves is met already. The tail is
             #  finished, not taken — advancing would hand the next step to an actor that
@@ -1417,13 +1417,13 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             #  at a step nobody will ever take until the patience ran out.
             because = ("the world did more than the step promised — the want is met, "
                        "and the tail is finished rather than taken")
-            self.log.info("%s for %s: %s", watch.action.rsplit("#", 1)[-1], _short(watch.want), because)
-            self.agent.tell(PLAN_FINISHED, watch.uri, watch.action, watch.want)
-            for s in self.standing(action=watch.action, want=watch.want):
-                if s.uri == watch.uri:
+            self.log.info("%s for %s: %s", expectation.action.rsplit("#", 1)[-1], _short(expectation.want), because)
+            self.agent.tell(PLAN_FINISHED, expectation.uri, expectation.action, expectation.want)
+            for s in self.standing(action=expectation.action, want=expectation.want):
+                if s.uri == expectation.uri:
                     self._resolve(s, "satisfied", because)
             return
-        if met and self._advance(watch):
+        if met and self._advance(expectation):
             #  THE PLAN GOES ON (#510): this step's prediction was confirmed by the world,
             #  which is the only license the next step has — no search, no re-decision. The
             #  intention stands; the plan is finished only when its last step is answered.
@@ -1432,9 +1432,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         #  handed in and never against a belief; what deliberation does about it — re-plan the
         #  want, mostly — is its own, heard as an event because the ledger imports no search.
         if met:
-            self.agent.tell(PLAN_FINISHED, watch.uri, watch.action, watch.want)
+            self.agent.tell(PLAN_FINISHED, expectation.uri, expectation.action, expectation.want)
         else:
-            self.agent.tell(PLAN_FAILED, watch.uri, watch.action, watch.want)
+            self.agent.tell(PLAN_FAILED, expectation.uri, expectation.action, expectation.want)
         #  A COMMITMENT THAT STOOD UNTIL THE WORLD ANSWERED is done now, either way. An
         #  Actuate stands from the command to this verdict (#353) — the intention is to the
         #  END, and while it stands `adopt` absorbs the next impulse by the ordinary rule,
@@ -1442,38 +1442,38 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         #  not dropped, whatever the verdict: the act was taken, and satisfied-and-unmet is
         #  the false-knowledge signature this ledger exists to record. An Acquire was already
         #  satisfied by its claim and this finds nothing standing.
-        for s in self.standing(action=watch.action, want=watch.want):
-            if s.uri == watch.uri:
+        for s in self.standing(action=expectation.action, want=expectation.want):
+            if s.uri == expectation.uri:
                 self._resolve(s, "satisfied",
                               f"the world answered — end {'met' if met else 'unmet'}")
-        if world and not met and self._is_suspect(watch.action, watch.want):
+        if world and not met and self._is_suspect(expectation.action, expectation.want):
             self.log.warning(
                 "AFFORDANCE SUSPECT: %s toward %s has not paid %d times running — the graph "
                 "claims a movement the world keeps refusing",
-                watch.action.rsplit("#", 1)[-1], _short(watch.want), self._suspect_after())
+                expectation.action.rsplit("#", 1)[-1], _short(expectation.want), self._suspect_after())
 
-    def _advance(self, watch: OpenExpectation) -> bool:
+    def _advance(self, expectation: OpenExpectation) -> bool:
         """Move the intention to the step that follows the one just answered, and take it.
         False where there is none — the plan's last step, finished the ordinary way."""
         from .execution import carry_out
 
         rows = bindings(self.agent.intentions.query_union(f"""
-SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{watch.step}> <{PROGRESSION + "then"}> ?next }} }}"""))
+SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{expectation.step}> <{PROGRESSION + "then"}> ?next }} }}"""))
         if not rows:
             return False
         following = rows[0]["next"]
         self.agent.intentions.update(f"""
-DELETE {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{PROGRESSION + "by"}> ?was }} }}
-INSERT {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{PROGRESSION + "by"}> <{following}> ;
+DELETE {{ GRAPH <{self.graph}> {{ <{expectation.uri}> <{PROGRESSION + "by"}> ?was }} }}
+INSERT {{ GRAPH <{self.graph}> {{ <{expectation.uri}> <{PROGRESSION + "by"}> <{following}> ;
                                 <{BECAUSE_OF}> {_literal("step answered as predicted — advancing to the next")} }} }}
-WHERE  {{ GRAPH <{self.graph}> {{ <{watch.uri}> <{PROGRESSION + "by"}> ?was }} }}""")
-        standing = next((s for s in self.standing(want=watch.want) if s.uri == watch.uri), None)
+WHERE  {{ GRAPH <{self.graph}> {{ <{expectation.uri}> <{PROGRESSION + "by"}> ?was }} }}""")
+        standing = next((s for s in self.standing(want=expectation.want) if s.uri == expectation.uri), None)
         if standing is None:
             return False
-        self.log.info("advanced %s to %s", _short(watch.uri), standing.action.rsplit("#", 1)[-1])
-        self._tell("advanced", standing.action, watch.want, "the previous step was answered")
-        desire = next((d for d in self.agent.pursuing() if d.uri == watch.want), None)
-        carry_out(self.agent, standing.step, desire, watch.uri)
+        self.log.info("advanced %s to %s", _short(expectation.uri), standing.action.rsplit("#", 1)[-1])
+        self._tell("advanced", standing.action, expectation.want, "the previous step was answered")
+        desire = next((d for d in self.agent.pursuing() if d.uri == expectation.want), None)
+        carry_out(self.agent, standing.step, desire, expectation.uri)
         return True
 
     def walked(self, intention_uri: str) -> list:
@@ -1528,7 +1528,7 @@ SELECT ?s ?next ?action ?via ?about ?quantity ?predicts ?precondition WHERE {{ G
             if not waiting and standing.age_s(now) > self.beliefs.patience_s:
                 continue
             #  A step still to come — or the LAST step waiting on the world (#627): a plan
-            #  at its presenting, held until the watch is live or placed at the claim's
+            #  at its presenting, held until the expectation is live or placed at the claim's
             #  window, is progress the world has not contradicted, and a search now would
             #  find buying available on the very claim it is about to present and adopt
             #  the plan a second time.
@@ -1581,16 +1581,16 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
 }} }}"""))}
         return sorted(p for p in pairs if self._is_suspect(*p))
 
-    # --- what sensing asks me: the verification watch ----------------------------------
+    # --- what sensing asks me: the verification expectation ----------------------------------
 
-    def watching(self, want: str) -> bool:
-        """Is a watch on for this want, its deadline not yet passed?
+    def expecting(self, want: str) -> bool:
+        """Is an expectation open for this want, its deadline not yet passed?
 
         The two processes run at different speeds — evaporation is fractions per day, a dose
         lands in seconds — and the one place urgency-by-state gets it wrong is right after
         acting: the value improves, attention would relax, and the dose would land unobserved.
         So an open expectation IS urgency, and sensing folds this into its cadence as the
-        maximal answer: it tightens the moment the watch opens and relaxes the moment it
+        maximal answer: it tightens the moment the expectation opens and relaxes the moment it
         resolves, bounded by the deadline so a dead sensor cannot hold the fast cadence for
         ever. This was the keeper's answer to the reading choir, keyed by property; the want
         is the key now, and sensing asks per want it holds about the property it is pacing.
