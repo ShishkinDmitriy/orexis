@@ -379,11 +379,16 @@ the agent must steer attention, the sentinel where the world's own events are th
 - **Cadence is a reflex, not a deliberation.** `cadence_for` is deterministic code, like the
   bid. An LLM stance could later argue for more attention; the clamp still binds.
 
-# The shape of an answer
+# The intended branch, and the verdict
 
-What a reading is is sensing's, so the shape of one that answers an act is too (#516). Asked
-through the kernel's `orexis:answer` extension, this module writes it as Core SHACL — a
-qualified value shape reaching the subject's observations, the same family the region wants
-use — with the threshold and the instant baked in when the watch opens. How the
-[keeper](/domain/intention.md) waits on it is that page's; this one only says who writes it and
-that no `sosa` word ever reaches the kernel.
+What a reading is is sensing's, so whether one answers an act is too (#639). The
+[keeper](/domain/intention.md) tells this module the branch a standing step intends —
+`orexis:predicted`: the band the step declared for a reading of one of its keys, and the
+instants that frame it — and the module does two things with it. It folds the band into
+the [predictions](/domain/prediction.md) it writes for the key, from the step's landing on,
+so the sovereign reading them sees what the agent intends while the step stands and the
+drift's own branch after; and it compares every reading of the key with the band once, at
+arrival, answering the keeper with the verdict. No shape is built per step, and no `sosa`
+word ever reaches the kernel. A number a caller stated is held to the band it falls in,
+read off the region this module keeps; a step standing when the process starts is asked of
+the keeper's ledger, since a tell nobody heard is gone.

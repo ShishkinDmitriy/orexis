@@ -11,8 +11,9 @@ description: >-
   prediction is always bands, never a value — a value is a band collapsed — and the further the
   horizon the wider the set, until it is every band. Refused — a numeric spread in the core, a
   point prediction, a fixed width, and the periods table as the home of an event's window.
-  Built: the expected next observation (#631). Not built: the reviser waking on surprise
-  rather than on a reading, and the crossing taken in the safe direction.
+  Built: the expected next observation (#631), the crossing in the safe direction (#633,
+  inside #643) and the intended branch (#639). Not built: the reviser waking on surprise
+  rather than on a reading (#632).
 ---
 
 # The claim
@@ -107,20 +108,25 @@ are built under it (#642, #643, #639, #632).
    on the node, the bands as `sensing:mayBe`; replaced by the next reading, gone when the
    window closes with none. The world stating no width gets one member, and every world's
    plans are unchanged. Where an intention stands, the expectation past a step's landing is
-   the step's own, and sensing writes the drift's from there — not yet: the seam below.
+   the step's own: built as #639, below.
 2. The reviser wakes the mind on a surprise, not on a reading
    ([#632](https://github.com/ShishkinDmitriy/orexis/issues/632)): a reading inside its
    expectation is absorbed, one outside wakes a pass that names the surprise, a missed window
    takes the freshness road.
 3. The crossing is taken in the safe direction
-   ([#633](https://github.com/ShishkinDmitriy/orexis/issues/633)): `orexis:crossesAfter`
-   answers the first instant the region may be left, where a width is stated.
+   ([#633](https://github.com/ShishkinDmitriy/orexis/issues/633), built inside #643): the
+   crossing is the start of the earliest prediction at which the root reads unmet, and a
+   prediction typed with the region band and the one below reads unmet.
+4. The intended branch ([#639](https://github.com/ShishkinDmitriy/orexis/issues/639), built):
+   the keeper tells sensing the band a standing step declared and when it lands; from the
+   landing on the predictions of the key are that band, and a reading is compared with it
+   once at arrival for the verdict.
 
 # Seams left open
 
-- **The expectation past a standing step's landing.** Sensing writes the drift's branch
-  always; the intended branch — the step's own predicted band from its landing on — is what
-  the keeper already holds the world to, and joining the two is the reviser's job (#632).
+- **The intended branch's centre.** From a step's landing the prediction is the step's
+  band with the number the actor aimed at where it stated one, and no number otherwise; a
+  drift run from the band would need a centre a band does not have.
 - **The window's far end is the width's horizon.** The set is widened at the instant the
   grace runs out, the widest the window reaches: the safe direction, and a reading arriving
   early is judged against a set slightly wider than its own instant warrants.

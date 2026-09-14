@@ -36,8 +36,11 @@ def test_an_unmet_expectation_is_told_upward_and_marks_the_want(thirsty):
     uri = keeper.adopt(TENDERING, want, "a dose that will not land")
     before = dict(failed=thirsty.deliberator._plans_failed,
                   finished=thirsty.deliberator._plans_finished)
+    #  Held to a BAND (#639): the step predicts the reading inside the region, and a reading
+    #  that fell is outside it — nothing before the landing, and unmet when the deadline passes.
     assert keeper.expect(uri, "watching", baseline=reading_of(thirsty, MOISTURE),
-                         predicts=predicted_reading(thirsty.me.acts_for, MOISTURE, 0.31))
+                         predicts=predicted_reading(thirsty.me.acts_for, MOISTURE,
+                                                    band="http://example.org/orexis/sensing#InRegion"))
     write_reading(thirsty, 0.29, MOISTURE)                           # fell — not an answer
     #  The deadline passes — fired here as the keeper's scheduler would (#516), on this
     #  thread, so the event it tells upward has landed when the next line asserts.

@@ -427,6 +427,10 @@ def write_reading(agent, value: float, observed_property: str | None = None, age
         value=value, sensor_uri=sensor.uri, observed_property=sensor.observes,
         author_uri=agent.me.uri, used_procedure=sensor.sense_mode,
         ts=(clock.now() - timedelta(seconds=age_s)).isoformat())
+    #  AND SENSING IS TOLD (#639), as the production writer tells it: a reading recorded is
+    #  what every standing step that predicted it is compared with, once, here.
+    for module in agent.providers("http://example.org/orexis/sensing#SensingCapability"):
+        module.on_reading_recorded(sensor.subject, sensor.observes, value)
     #  AND WHETHER THE AGENT STILL TRUSTS IT (#598). A reading is stale because sensing said
     #  so ON the reading, by a deadline landing on the loop — not because its timestamp is
     #  old, which nothing reads as an age any more. `ingest` arms that deadline in production

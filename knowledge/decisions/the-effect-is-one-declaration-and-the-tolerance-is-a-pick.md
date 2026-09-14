@@ -13,6 +13,12 @@ description: >-
   at every step where a shape suffices).
 ---
 
+> **Amended, 2026-09-14 (#639).** A predicted reading is no longer put to sensing for a shape:
+> the keeper tells `orexis:predicted` the band and the instants, sensing compares each reading
+> with the band once at arrival and answers with the verdict, and `orexis:answer` is gone. The
+> declaration is still one — the band the effect rule states — and the tolerance is a pick the
+> reviewer moves from the residual; what moved is where the comparison happens.
+
 # The effect is one declaration, and the tolerance is a pick
 
 The sovereign's rule, 2026-09-02: *the effect we plan on and the effect we observe should be

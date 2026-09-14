@@ -58,14 +58,14 @@ crossing a root foresees is the start of the earliest prediction at which the ro
 
 # An intention changes it
 
-The sequence of expected observations is a discrete rendering of the formula the drift is —
-the reading over time, with the width the domain states growing along it — and it is the
-world's own branch, what happens if nothing is done. An adopted plan is the agent choosing
-another branch, so it changes the prediction: past each step's landing the expected bands are
-the step's predicted effect, which the [keeper](/domain/keeper.md) already holds the world to
-as the step's expectation, and the drift runs on from there. One sequence, the do-nothing
-branch until an [intention](/domain/intention.md) stands and the intended branch after, and a
-surprise is a reading outside whichever the agent is on.
+The ladder is the world's own branch, what happens if nothing is done. An adopted plan is
+the agent choosing another branch, so it changes the prediction (#639): when the
+[keeper](/domain/keeper.md) opens a watch on a step it tells sensing the band the step
+declared and the instant it lands, and from that instant on the predictions of the key are
+the step's band, the drift's own before it and again once the watch closes. One ladder, the
+do-nothing branch until an [intention](/domain/intention.md) stands and the intended branch
+after, and a surprise is a reading outside whichever the agent is on. A reading is compared
+with the prediction once at arrival, and that comparison is the step's verdict.
 
 # What it is for
 

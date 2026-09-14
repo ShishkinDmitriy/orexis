@@ -46,7 +46,7 @@ from .store import bind, bindings
 
 from .graphs import intentions_graph
 from . import clock
-from .ontology import ANSWER, LAYER_OF, OREXIS, PLAN_FAILED, PLAN_FINISHED, REPORTS, WITNESS, PROGRESSION
+from .ontology import LAYER_OF, OREXIS, PLAN_FAILED, PLAN_FINISHED, PREDICTED, REPORTS, WITNESS, PROGRESSION
 
 #  What an intention is made of — the mind's own words, and they were the kernel's already
 #  (the-mind-is-six-graphs). What has joined them is the four figures the KEEPING member used to
@@ -59,6 +59,7 @@ PURSUES = PROGRESSION + "pursues"
 ADOPTED_AT = PROGRESSION + "adoptedAt"
 RESOLVED_AT = PROGRESSION + "resolvedAt"
 _SH_NODE_SHAPE = URIRef("http://www.w3.org/ns/shacl#NodeShape")
+_RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 
 def condition_shape(root: str, focus: str, binds: str):
@@ -114,6 +115,8 @@ BASELINE_AT = PROGRESSION + "baselineAt"
 #  (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan). `ledger` migrates it.
 END_MET = PROGRESSION + "endMet"
 END_VERIFIED_AT = PROGRESSION + "endVerifiedAt"
+EXPECTED_FROM = PROGRESSION + "expectedFrom"     # from when a reading may answer the step (#639)
+LANDS_AT = PROGRESSION + "landsAt"               # when the step's change is complete (#639)
 SUSPECT_AFTER = PROGRESSION + "suspectAfter"
 
 
@@ -205,6 +208,27 @@ class OpenExpectation:
                                          # one held on its action's doneWhen (#523)
 
 
+@dataclass(frozen=True)
+class Predicted:
+    """One keyed fact a standing step predicts, as the keeper tells the predictor (#639,
+    `orexis:predicted`): the intended branch. What is told is the step's own declaration —
+    the class and key of the reading, the bands it is predicted to be (a number a caller
+    stated arrives as `value`, and the predictor says which band that is) — and three
+    instants: from when a reading may answer, when the step lands, and the deadline. The
+    predictor compares every reading of the key with it once at arrival and answers the
+    keeper (`Keeper.answered`); the keeper holds no shape for it and knows no reading."""
+
+    watch: str                      # the intention the watch is on
+    step: str                       # the step it stands at
+    keyed_class: str
+    key: tuple                      # ((predicate, value), ...) — the reading's key, as the signature states it
+    bands: frozenset                # every class the reading is predicted to be; empty where a number was stated
+    value: float | None             # the number a caller stated, or the actor's aim — the residual's, not the verdict's
+    since: datetime                 # `progression:expectedFrom`
+    lands_at: datetime              # `progression:landsAt`
+    not_after: datetime             # the deadline: the keeper's alone
+
+
 class Keeper:
     """The keeper. Speaks to no topic; its callers are its siblings, through the agent.
 
@@ -286,10 +310,14 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{PROGRESSION + "by"}> ?s . FILTER NOT EXIS
         self._picks = picks
 
     def start(self) -> None:
-        """Nothing to start. THE TICK WAS HERE — on my patience clock, hand every want to the
-        search — and it is the deliberator's now (#452): a clock that asks the search is the
-        search's clock, and progression may not import the layer above it. The patience is
-        still mine, and the deliberator reads its interval off `beliefs.patience_s`."""
+        """Re-arm the deadline of every watch still open (#639): a timer does not survive a
+        restart and the ledger does, so a watch the process went down on lapses at its
+        deadline rather than never. THE TICK WAS HERE — on my patience clock, hand every want
+        to the search — and it is the deliberator's now (#452): a clock that asks the search
+        is the search's clock, and progression may not import the layer above it. The
+        patience is still mine, and the deliberator reads its interval off `beliefs.patience_s`."""
+        for watch in self.open_expectations(every=True):
+            self._arm(watch.uri, watch.deadline)
 
     def stop(self) -> None:
         """Nothing to stop; the ledger is a graph and outlives the process on purpose."""
@@ -931,6 +959,12 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
             if holder.uri == intention_uri:
                 self._lapse(holder, predicate)
                 return
+        #  A WATCH ON A READING holds no shape (#639): the deadline is the keeper's, the
+        #  verdict at a reading the predictor's, and the first to claim the watch ends it.
+        for watch in self.open_expectations(every=True):
+            if watch.uri == intention_uri:
+                self._lapse(watch, PROGRESSION + "answeredWhen")
+                return
         #  NOT HELD: a plan standing at a step nobody took (#510) — its patience is its
         #  deadline, and passing it drops the tail and says so upward, so deliberation
         #  decides afresh from the world as it is. A step PLACED at an instant (#619) is the
@@ -1057,12 +1091,13 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         residual review reads a number where the prediction carries none. A caller may hand
         `predicts` in for a step the search did not make — a number, held to exactly.
 
-        The answering shape is generated here (`_answering_shape`): a KEYED fact — an
-        observation, some package's `orexis:keyedBy` class — is put to that package through
-        the `orexis:answer` extension, since what a reading is is sensing's; a PLAIN fact is
-        the kernel's own, present for an addition and gone for a retraction, as one query
-        under a shape. The keeper holds the step on the shape as `progression:answeredWhen` and
-        the verdict is its conformance before the deadline.
+        A KEYED fact — an observation, some package's `orexis:keyedBy` class — is the
+        predictor's to judge (#639): the keeper tells `orexis:predicted` the intended branch
+        (`Predicted`) and holds no shape, and whoever predicts compares each reading of the
+        key with the band once at arrival and answers `answered` with the verdict; the keeper
+        keeps the deadline alone. A PLAIN fact is the kernel's own, present for an addition
+        and gone for a retraction, as one query under a shape held as
+        `progression:answeredWhen`, and the verdict is its conformance before the deadline.
 
         THE DEADLINE IS THE STEP'S WINDOW. `not_after` where the actor states it, or the
         landing time plus the seeing time (#247) — an act that cannot say gets the patience:
@@ -1105,16 +1140,36 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
   <{step}> <{PREDICTS}> {_literal(predicts_json(predicts))} .""" if persisted is None else "")
         aimed = (f"""
   <{step}> <{PREDICTED_VALUE}> "{float(sized)}"^^xsd:decimal .""" if sized is not None else "")
+        #  WHEN THE STEP LANDS (#639): the taking plus the landing the actor states, or the
+        #  deadline where it cannot say — a buyer on somebody else's valve — so a reading
+        #  outside the band fails such a step only at its deadline, as it always did.
+        lands_at = (datetime.fromtimestamp(now.timestamp() + lands_after_s, tz=timezone.utc)
+                    if lands_after_s is not None else deadline_dt)
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{{based}{stated}{aimed}
+  <{step}> <{EXPECTED_FROM}> "{since.isoformat()}"^^xsd:dateTime ;
+           <{LANDS_AT}> "{lands_at.isoformat()}"^^xsd:dateTime .
   <{intention_uri}> <{BECAUSE_OF}> {_literal(because)} . }} }}""")
         self.window(intention_uri, deadline_dt)
-        shape = self._answering_shape(predicts, since)
-        if shape is None:
-            self.log.warning("nothing says what a world answering %s would look like "
-                             "— the watch can only lapse", _short(intention_uri))
+        keyed = self._keyed_of(intention_uri, step, predicts, since, lands_at, deadline_dt)
+        if keyed:
+            #  A READING IS THE PREDICTOR'S TO COMPARE (#639): no shape and no hold — the
+            #  intended branch is told, the verdict comes back through `answered`, and the
+            #  deadline is armed here. A new watch on an intention claimed once before is a
+            #  new wait, so the claim that ended the previous one is released.
+            with self._claim_lock:
+                self._claimed.discard(intention_uri)
+            self._arm(intention_uri, deadline_dt)
+            for p in keyed:
+                self.agent.tell(PREDICTED, p, True)
         else:
-            self._hold_step(intention_uri, PROGRESSION + "answeredWhen", shape, deadline_dt, "unmet")
+            shape = self._plain_shape(predicts)
+            if shape is None:
+                self.log.warning("nothing says what a world answering %s would look like "
+                                 "— the watch can only lapse", _short(intention_uri))
+                self._arm(intention_uri, deadline_dt)
+            else:
+                self._hold_step(intention_uri, PROGRESSION + "answeredWhen", shape, deadline_dt, "unmet")
         self.log.info("expecting %s to answer within %ss (%d predicted, %d retracted%s): %s",
                       _short(intention_uri), round(window), len(predicts[0]), len(predicts[1]),
                       f", from {value:.3f}" if value is not None else "", because)
@@ -1158,30 +1213,46 @@ SELECT ?step ?predicts WHERE {{ GRAPH <{self.graph}> {{
         text = rows[0].get("predicts")
         return rows[0]["step"], (predicts_from_json(text) if text else None)
 
-    def _answering_shape(self, predicts: tuple, since):
-        """The shape a world answering this prediction conforms to, from the step's facts.
-
-        A KEYED fact (`("keyed", class, key, predicate, value)` — a node some package
-        declared `orexis:keyedBy`, an observation) is the package's to answer for: the
-        `orexis:answer` extension is asked with the class, its key and what it carries — the
-        band it is predicted to be, under `rdf:type`, or a number a caller stated — and the
-        first opinion wins. A PLAIN fact `(s, p, o)` is the kernel's: every addition
-        present and every retraction gone, as one query under a shape (`condition_shape`),
-        so the ledger reads as the step meant it. A fact that cannot be stated as a triple
-        — a blank node the search labelled by content — is passed over and said so.
-
-        None where the step predicts nothing statable, or where a keyed fact finds no
-        answerer, or where the prediction spans more than one shape can hold (a step that
-        predicts both a reading and a world fact — no shipped action does; a seam).
-        """
-        adds, retracts = predicts
+    def _keyed_of(self, intention_uri: str, step: str, predicts: tuple, since, lands_at,
+                  not_after) -> list:
+        """Every KEYED fact the step predicts, as `Predicted` records for the predictor (#639)
+        — one per (class, key): the bands under `rdf:type`, a number a caller stated as
+        `value`. A step predicting a reading AND a plain fact is held to the reading alone,
+        and says so — no shipped action does; a seam."""
+        adds, _ = predicts
         keyed: dict = {}
-        present, gone, anchors, passed = [], [], [], 0
+        plain = 0
         for fact in adds:
             if fact and fact[0] == "keyed":
                 _, cls, key, p, v = fact
                 keyed.setdefault((cls, key), {})[p] = v
-            elif (t := _plain_pattern(fact)) is not None:
+            else:
+                plain += 1
+        if keyed and plain:
+            self.log.warning("%s predicts a reading and %d plain fact(s): held to the reading "
+                             "alone", _short(intention_uri), plain)
+        out = []
+        for (cls, key), carried in keyed.items():
+            bands = frozenset(str(v) for p, v in carried.items() if p == _RDF_TYPE)
+            number = next((v for p, v in carried.items() if p != _RDF_TYPE
+                           and isinstance(v, (int, float)) and not isinstance(v, bool)), None)
+            out.append(Predicted(watch=intention_uri, step=step, keyed_class=cls, key=tuple(key),
+                                 bands=bands, value=float(number) if number is not None else None,
+                                 since=since, lands_at=lands_at, not_after=not_after))
+        return out
+
+    def _plain_shape(self, predicts: tuple):
+        """The shape a world answering the step's PLAIN facts conforms to: every addition
+        present and every retraction gone, as one query under a shape (`condition_shape`),
+        so the ledger reads as the step meant it. A fact that cannot be stated as a triple
+        — a blank node the search labelled by content — is passed over and said so. None
+        where the step states no plain fact that can be."""
+        adds, retracts = predicts
+        present, gone, anchors, passed = [], [], [], 0
+        for fact in adds:
+            if fact and fact[0] == "keyed":
+                continue
+            if (t := _plain_pattern(fact)) is not None:
                 present.append(t)
                 anchors.append(fact[0])
             else:
@@ -1197,26 +1268,54 @@ SELECT ?step ?predicts WHERE {{ GRAPH <{self.graph}> {{
         if passed:
             self.log.warning("%d predicted fact(s) cannot be stated as triples — the world is "
                              "not held to them", passed)
-        shapes = []
-        for (cls, key), carried in keyed.items():
-            g = next((g for g in self.agent.ask(ANSWER, cls, dict(key), carried, since)
-                      if g is not None), None)
-            if g is None:
-                self.log.warning("nothing says what answers a predicted %s", cls.rsplit("#", 1)[-1])
-                return None
-            shapes.append(g)
-        if present or gone:
-            anchor = anchors[0]                 # the shape's focus: the first fact's subject
-            body = "\n  ".join(f"{s} {p} {o} ." for s, p, o in present)
-            body += "".join(f"\n  FILTER NOT EXISTS {{ {s} {p} {o} }}" for s, p, o in gone)
-            shapes.append(condition_shape(f"urn:orexis:answer:{uuid.uuid4().hex[:8]}", anchor,
-                                          f"SELECT $this WHERE {{\n  {body}\n}}"))
-        if len(shapes) != 1:
-            if shapes:
-                self.log.warning("a step predicting %d kinds of change is held to none — one "
-                                 "shape holds one kind", len(shapes))
+        if not (present or gone):
             return None
-        return shapes[0]
+        anchor = anchors[0]                 # the shape's focus: the first fact's subject
+        body = "\n  ".join(f"{s} {p} {o} ." for s, p, o in present)
+        body += "".join(f"\n  FILTER NOT EXISTS {{ {s} {p} {o} }}" for s, p, o in gone)
+        return condition_shape(f"urn:orexis:answer:{uuid.uuid4().hex[:8]}", anchor,
+                               f"SELECT $this WHERE {{\n  {body}\n}}")
+
+    def _arm(self, intention_uri: str, not_after: datetime) -> None:
+        """The watch's deadline on the scheduler: `lapse` at that instant, once."""
+        from .scheduler import scheduler
+        entry = self._deadlines.pop(intention_uri, None)
+        if entry is not None:
+            entry.cancel()
+        delay = (not_after - clock.now()).total_seconds()
+        self._deadlines[intention_uri] = scheduler().at(max(0.0, delay), lambda: self.lapse(intention_uri))
+
+    def answered(self, intention_uri: str, met: bool, because: str) -> bool:
+        """The predictor's verdict on a watch (#639): a reading of the key arrived in the
+        band the step predicted (met), or outside it at or after the landing (unmet). The
+        first road to reach the watch — this or the deadline — ends it; the second finds it
+        gone and answers False. The verdict runs unchanged from here: residual, suspicion,
+        advance or drop, and what is said upward."""
+        watch = next((w for w in self.open_expectations(every=True) if w.uri == intention_uri), None)
+        if watch is None or not self._claim(intention_uri):
+            return False
+        self._verdict(watch, met, because)
+        return True
+
+    def predicted(self) -> list:
+        """Every keyed fact a standing watch predicts, as the predictor is told them — what a
+        predictor starting after the keeper asks for, since a tell it was not there to hear
+        is gone and the ledger is not."""
+        out = []
+        for watch in self.open_expectations():
+            out.extend(self._predicted_of(watch))
+        return out
+
+    def _predicted_of(self, watch: OpenExpectation) -> list:
+        rows = bindings(self.agent.intentions.query_union(f"""
+SELECT ?predicts ?from ?lands WHERE {{ GRAPH <{self.graph}> {{
+  <{watch.step}> <{PREDICTS}> ?predicts ; <{EXPECTED_FROM}> ?from ; <{LANDS_AT}> ?lands }} }}"""))
+        if not rows:
+            return []
+        return self._keyed_of(watch.uri, watch.step, predicts_from_json(rows[0]["predicts"]),
+                              datetime.fromisoformat(rows[0]["from"]),
+                              datetime.fromisoformat(rows[0]["lands"]), watch.deadline)
+
 
     def _about(self, intention_uri: str) -> str | None:
         """What the want this intention pursues is about — the property, for a stake."""
@@ -1246,13 +1345,15 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "by"}> ?act 
         prop = ("FILTER(?want IN (%s))" % ", ".join(f"<{n}>" for n in self._names(want))) if want else ""
         world = "" if every else "FILTER(BOUND(?predicts))"
         rows = bindings(self.agent.intentions.query(f"""
-SELECT ?i ?step ?action ?want ?baseline ?baselineAt ?deadline ?predicts WHERE {{
+SELECT DISTINCT ?i ?step ?action ?want ?baseline ?baselineAt ?deadline ?predicts WHERE {{
   GRAPH <{self.graph}> {{
     ?i <{PROGRESSION + "by"}> ?step ;
        <{PROGRESSION + "pursues"}> ?want .
     ?step <{PROGRESSION + "fills"}> ?action ;
-          <{PROGRESSION + "notAfter"}> ?deadline ;
-          <{PROGRESSION + "answeredWhen"}> ?shape .
+          <{PROGRESSION + "notAfter"}> ?deadline .
+    OPTIONAL {{ ?step <{EXPECTED_FROM}> ?from }}
+    OPTIONAL {{ ?step <{PROGRESSION + "answeredWhen"}> ?shape }}
+    FILTER(BOUND(?from) || BOUND(?shape))
     OPTIONAL {{ ?step <{PREDICTS}> ?predicts }}
     OPTIONAL {{ ?step <{BASELINE_VALUE}> ?baseline ; <{BASELINE_AT}> ?baselineAt }}
     FILTER NOT EXISTS {{ ?step <{END_MET}> ?met }}
@@ -1288,6 +1389,10 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                  <{END_VERIFIED_AT}> "{now}"^^xsd:dateTime .
   <{watch.uri}> <{BECAUSE_OF}> {_literal(because)} .{residual}
 }} }}""")
+        #  THE PREDICTOR IS TOLD the watch is closed (#639): the intended branch ends with
+        #  the verdict, and the predictions of the key are the world's own branch again.
+        for p in self._predicted_of(watch):
+            self.agent.tell(PREDICTED, p, False)
         #  A WATCH ON THE WORLD — a step that predicted something of it — is an end the
         #  graph promised, and its verdict is what the reports count and the suspicion reads.
         #  A step held on its action's `orexis:doneWhen` (#523) is the same wait inside the

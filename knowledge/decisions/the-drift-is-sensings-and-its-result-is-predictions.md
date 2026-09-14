@@ -138,7 +138,11 @@ are the old rendering's names and go with it.
    drift reads — the ledger, first — so a crossing the ledger creates is seen before the
    next reading.
 3. **The keeper tells sensing the intended branch, and the verdict comes from the comparison**
-   ([#639](https://github.com/ShishkinDmitriy/orexis/issues/639)).
+   ([#639](https://github.com/ShishkinDmitriy/orexis/issues/639), built): `orexis:predicted`
+   told when a watch opens and closes, the step's band written into the predictions of the
+   key from its landing on, one comparison at arrival answering the keeper — met in the band,
+   unmet outside it at or after the landing — and the answering shape, `orexis:answer` and the
+   watch on a number retired; a plain fact keeps its hold.
 4. **The reviser wakes on a surprise and a missed window, and on nothing else**
    ([#632](https://github.com/ShishkinDmitriy/orexis/issues/632)).
 5. **Every want sourced at a time as a graph with a period, and one sweep**

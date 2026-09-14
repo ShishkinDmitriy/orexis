@@ -58,8 +58,8 @@ def test_a_claim_opens_a_watch_with_the_baseline_in_the_row(thirsty):
     watch = watches[0]
     assert watch.baseline == 0.30 and watch.baseline_at is not None
     assert watch.action == PRESENTING, "the watch is on the method's last step (#523)"
-    assert [p for _, _, p in keeper.held()] == [f"{PROGRESSION}answeredWhen"], \
-        "held on the shape that answers the step's own prediction (#510)"
+    assert keeper.held() == [], \
+        "no shape is built per step (#639): the predictor was told the band and compares at arrival"
 
 
 def test_opening_the_watch_asks_for_a_look(thirsty):
@@ -325,18 +325,21 @@ def test_a_step_that_predicts_nothing_opens_no_watch(thirsty):
     assert keeper.open_expectations() == []
 
 
-def test_no_tolerance_holds_the_world_to_the_exact_reading(thirsty):
-    """A caller that states no tolerance gets the reading itself: grain past the baseline is
-    not it, the predicted value is."""
+def test_a_number_handed_in_is_held_to_the_band_it_falls_in(thirsty):
+    """A caller may still state a number (#579), and the watch on a number is retired (#639):
+    the world is held to the BAND the number falls in — 0.35 is below the fern's floor, as
+    0.301 is, so the first reading answers — and the number stays in the residual, where the
+    reviewer reads it against what the world showed."""
     keeper = keeper_of(thirsty)
     uri = keeper.adopt(TENDERING, stake_of(thirsty).uri, "an act predicting 0.35")
-    assert keeper.expect(uri, "exactly 0.35", baseline=reading_of(thirsty, MOISTURE),
+    assert keeper.expect(uri, "0.35, the band it falls in", baseline=reading_of(thirsty, MOISTURE),
                          predicts=predicted_reading(thirsty.me.acts_for, MOISTURE, 0.35))
     write_reading(thirsty, 0.301, MOISTURE)
-    assert len(keeper.open_expectations()) == 1
-    write_reading(thirsty, 0.35, MOISTURE)
     assert keeper.open_expectations() == []
     assert keeper.reports()["expectations_met"] == 1
+    rows = bindings(thirsty.intentions.query_union(f"""
+SELECT ?p ?o WHERE {{ <{uri}> progression:by ?s . ?s progression:predictedValue ?p ; progression:observedValue ?o }}"""))
+    assert rows and float(rows[0]["p"]) == 0.35 and abs(float(rows[0]["o"]) - 0.301) < 1e-9
 
 
 # --- while my own dose is unanswered, I do not buy again (#167) ---------------

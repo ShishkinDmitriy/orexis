@@ -123,7 +123,15 @@ progression:until a owl:ObjectProperty ; rdfs:domain progression:Step ;
 
 progression:answeredWhen a owl:ObjectProperty ; rdfs:domain progression:Step ;
     rdfs:label "answered when" ;
-    rdfs:comment "The step's COMPLETION condition (#516): a sh:NodeShape that conforms when the world has answered the act — an observation past the baseline, in sensing's words — as against `progression:until`, its READINESS condition. Conformance is the verdict met; the deadline passing first is the verdict unmet, the false-knowledge datum. A plan handed down whole (#510) holds each step's readiness on the previous step's answer." .
+    rdfs:comment "The step's COMPLETION condition (#516) where the step predicts a PLAIN fact or its action states `orexis:doneWhen`: a sh:NodeShape that conforms when the world has answered the act, as against `progression:until`, its READINESS condition. Conformance is the verdict met; the deadline passing first is the verdict unmet, the false-knowledge datum. A step predicting a READING holds no shape since #639: the predictor is told the band (`orexis:predicted`) and answers with the verdict at the reading's arrival." .
+
+progression:expectedFrom a owl:DatatypeProperty ; rdfs:domain progression:Step ; rdfs:range xsd:dateTime ;
+    rdfs:label "expected from" ;
+    rdfs:comment "From when the world may answer this step (#639): the baseline's instant, or the taking. A reading dated at or before it is the before, not an answer. Written when the watch opens, and read with progression:landsAt by whoever compares a reading with the step's band." .
+
+progression:landsAt a owl:DatatypeProperty ; rdfs:domain progression:Step ; rdfs:range xsd:dateTime ;
+    rdfs:label "lands at" ;
+    rdfs:comment "When the step's change is complete (#639): the taking plus the landing the actor states, or the deadline where the actor cannot say. A reading in the predicted band at any time after progression:expectedFrom is the step answered — early is the dose landing — and one outside it at or after this instant is the step failed; before it, the world says nothing of the step." .
 
 progression:untilNot a owl:ObjectProperty ; rdfs:domain progression:Step ;
     rdfs:label "held until it stops holding" ;
@@ -183,7 +191,7 @@ progression:deadlineAt a owl:DatatypeProperty ; rdfs:domain progression:Intentio
 
 progression:endMet a owl:DatatypeProperty ; rdfs:domain progression:Step ; rdfs:range xsd:boolean ;
     rdfs:label "end met" ;
-    rdfs:comment "Whether the world answered as the step predicted: the shape held as `progression:answeredWhen` — generated from `progression:predicts`, an observation within the actor's tolerance of the predicted reading, a plain fact present and a retracted one gone — conformed before the deadline. False is the deadline passing first, the datum an affordance is suspected on." .
+    rdfs:comment "Whether the world answered as the step predicted: for a reading, the predictor's comparison at arrival — in the band `progression:predicts` states, met; outside it at or after `progression:landsAt`, unmet (#639); for a plain fact, the shape held as `progression:answeredWhen` conformed before the deadline. False is also the deadline passing first, the datum an affordance is suspected on." .
 
 progression:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain progression:Step ; rdfs:range xsd:dateTime ;
     rdfs:label "end verified at" .

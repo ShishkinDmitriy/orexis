@@ -38,15 +38,18 @@ live watch as its condition, and a plan's next step is this road with the previo
 prediction as its condition. This is the middle layer's whole job in one call — adopt, wait,
 take on feedback — and it is why nothing above it needs a timer of its own.
 
-**And an expectation is the same primitive, waiting on the shape of an answering observation**
-(#516). When an act is taken, the keeper asks whoever knows what a reading is — sensing,
-through `orexis:answer` — for the shape of an observation that would answer it: on the
-subject, later than the baseline, within the actor's [tolerance](/domain/tolerance.md) of the
-value the step predicted (#510). The step is held on that shape as its COMPLETION condition
-(`progression:answeredWhen`, beside its readiness condition `progression:until`); conformance is the
-verdict met, the deadline passing first the verdict unmet, and the arithmetic that used to
-judge every reading is inside the shape with its numbers baked at the instant the watch
-opened. A plan handed down whole holds each step's readiness on the previous step's answer.
+**And an expectation on a reading is the predictor's comparison, told the intended branch**
+(#639). When an act is taken, the keeper tells whoever predicts — sensing, through
+`orexis:predicted` — the band the step declared for the reading (#510, #579), from when a
+reading may answer (`progression:expectedFrom`), when the step lands (`progression:landsAt`)
+and the deadline; it holds no shape and knows no reading. Sensing compares each reading of
+the key with the band once at arrival and answers (`Keeper.answered`): in the band, met —
+early is the dose landing; outside it at or after the landing, unmet; before the landing,
+nothing. The deadline passing first is the verdict unmet, the keeper's alone. A PLAIN fact
+the step predicts is still held as a shape, its COMPLETION condition
+(`progression:answeredWhen`, beside its readiness condition `progression:until`), and a
+number a caller states is held to the band it falls in, the number kept for the residual.
+A plan handed down whole holds each step's readiness on the previous step's answer.
 
 **And it is the plan, whole** (#510). Deliberation hands every step down; the intention has
 `progression:step` to each, stands at the head, and moves along `progression:then` as the world confirms
