@@ -37,6 +37,7 @@ import logging
 import threading
 
 from . import pursuit
+from .trace import SURPRISE_EXOGENOUS
 
 log = logging.getLogger("reviser")
 
@@ -178,7 +179,6 @@ def observed(agent, want: str, expected: frozenset | None, actual: frozenset, sa
     Returns whether a mark was left."""
     if expected is not None and (actual & expected):
         return False
-    from .planner import SURPRISE_EXOGENOUS
     agent.reviser.note(want, surprise=None if expected is None else (SURPRISE_EXOGENOUS, said))
     return True
 

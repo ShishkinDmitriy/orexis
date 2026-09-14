@@ -51,6 +51,13 @@ REFUSED = "refused below lately — the level beneath found no way to keep its p
 UNAVAILABLE = "a remembered step is not on the menu here"
 INAPPLICABLE = "a remembered plan's precondition does not hold here"
 
+#  What a miss meant (#570): a world we withheld for budget or cost, or one no lever of ours
+#  produces. Written on the pass as `deliberation:surprise`, which is why it is here and not
+#  beside the plan's outcomes: an outcome is what the search FOUND, a surprise is what the
+#  world did that the cone did not predict.
+SURPRISE_WITHHELD = "withheld"
+SURPRISE_EXOGENOUS = "exogenous"
+
 #  HOW A WANT WAS JUDGED in every world the pass weighed (#502) — the road, always said, and
 #  the text where the road is a text. The compiled select lives nowhere else: computed once per
 #  pass by the rule that what the interpreter already knows is never asserted, which is right

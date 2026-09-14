@@ -52,6 +52,8 @@ from .afforder import affordances_of
 from orexis_agent_progression.ontology import (OREXIS, DELIBERATION_GRAPH, PLAN_FAILED, PLAN_FINISHED,
                                                   SERIES, STATE_GRAPH, STEP_DONE, beliefs_graph)
 from .planner import Planner
+from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED,
+                   REMEMBERED, SATISFIED)
 from orexis_agent_progression.store import bindings
 
 # What this package asks OF others, by family — their namespaces, never their Python.
@@ -309,8 +311,8 @@ class Deliberator:
         verdicts = trace.outcomes(self.agent.beliefs.query_union)
         rows.append(("agent_deliberation", {}, {
             outcome.replace(" ", "_"): float(verdicts.get(outcome, 0))
-            for outcome in (planner.SATISFIED, planner.IMPROVED, planner.NOTHING,
-                            planner.EXHAUSTED, planner.NOT_BETTER, planner.REFUSED)}))
+            for outcome in (SATISFIED, IMPROVED, NOTHING,
+                            EXHAUSTED, NOT_BETTER, REFUSED)}))
         #  WHAT IT COST, from the same pass and not a second one. `pursued()` above re-planned
         #  every desire this agent holds, so these are that work's own figures — asking again to
         #  measure would double the cost being measured, which is the one thing an observability
@@ -348,7 +350,7 @@ class Deliberator:
         plan = self.decide(desire)
         return plan.first if plan is not None and plan.steps else None
 
-    def decide(self, desire: Desire, surprise: tuple | None = None) -> planner.Plan | None:
+    def decide(self, desire: Desire, surprise: tuple | None = None) -> Plan | None:
         """The PLAN for one desire, whoever sourced it — the deliberator's real question.
 
         Returns the plan as ROWS, because a step is a row and not a means: which lever it
@@ -426,10 +428,10 @@ class Deliberator:
                            beliefs_graph(self.agent.id)):
             if row.for_agent == desire.owed_to:
                 #  A obligation's row, unsized: the host sizes the serve from the claim it holds.
-                return planner.Plan(OBLIGATION, ((Step.from_row(row)),))
+                return Plan(OBLIGATION, ((Step.from_row(row)),))
         return None
 
-    def _planned(self, desire: Desire, surprise: tuple | None = None) -> planner.Plan | None:
+    def _planned(self, desire: Desire, surprise: tuple | None = None) -> Plan | None:
         """The plan the search found for one desire, or None — which is now always a DECISION.
 
         It used to hand back `(answered, move)`, because there were three answers and only two
@@ -475,7 +477,7 @@ class Deliberator:
             kept = remembered.applicable(self.agent, desire.uri, self.agent.desires.query_union)
         if kept is not None:
             uri, steps, cost = kept
-            plan = planner.Plan(planner.REMEMBERED, tuple(steps), desire.urgency, None, cost=cost)
+            plan = Plan(REMEMBERED, tuple(steps), desire.urgency, None, cost=cost)
             trace.write(self.agent.beliefs, self.agent.id, desire, plan, [], desire.urgency, 0.0,
                         (trace.UNJUDGED, None), surprise=surprise)
             self._decided[desire.uri] = (plan, uri)
@@ -493,7 +495,7 @@ class Deliberator:
         #  point rather than a failure to answer — a met desire quietly holding near its pick
         #  included, which is most passes and not worth a log line; the unmet ones still say
         #  why nothing was done.
-        if plan.outcome != planner.SATISFIED:
+        if plan.outcome != SATISFIED:
             self.log.info("%s: %s — no move improves on doing nothing",
                           _short(desire.uri), plan.outcome)
         return None

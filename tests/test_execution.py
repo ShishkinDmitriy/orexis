@@ -79,7 +79,7 @@ def test_a_round_is_decided_once_and_a_second_impulse_is_absorbed(monkeypatch):
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1
     assert keeper_of(fern).standing(action=TENDERING)
-    from orexis_agent_deliberation.planner import NOT_BETTER, Plan
+    from orexis_agent_deliberation.plan import NOT_BETTER, Plan
 
     passes = []
     monkeypatch.setattr(Planner, "plan",
