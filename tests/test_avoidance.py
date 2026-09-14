@@ -168,8 +168,8 @@ def test_the_shape_form_agrees_with_the_judge(tmp_path, monkeypatch):
         want = _avoidance_row(agent)
         p = Planner(agent, agent.me)
         node = p._begin(want)
-        assert "FILTER EXISTS" in p._unmet, "compiled to the CONFORMANCE select"
-        shape = p._base.cbd(rdflib.URIRef(PATTERN))
+        assert "FILTER EXISTS" in p._compiled.unmet, "compiled to the CONFORMANCE select"
+        shape = p._compiled.base.cbd(rdflib.URIRef(PATTERN))
         results, _ = judge(p._border(node), shape)
         conforms = not list(results.subjects(rdflib.RDF.type, SH.ValidationResult))
         assert conforms == standing, "the judge says the marker conforms exactly when it stands"

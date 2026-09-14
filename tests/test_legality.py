@@ -145,10 +145,10 @@ def _carriers(*graphs) -> dict:
 def _both(planner, agent, graph) -> tuple[set, set]:
     """(compiled, judged): the (shape, focus) pairs each engine refuses at `graph`."""
     node = _Node(graph=graph)
-    compiled = {(shape, focus) for shape, focus, _, _ in planner._illegal(node, planner._legal)}
+    compiled = {(shape, focus) for shape, focus, _, _ in planner._illegal(node, planner._compiled.legal)}
     _, shapes = _shapes_and_vocabulary()
-    package, own = J.verdicts(planner._border(node), shapes, planner._held)
-    to_shape = _carriers(shapes, planner._held)
+    package, own = J.verdicts(planner._border(node), shapes, planner._compiled.held)
+    to_shape = _carriers(shapes, planner._compiled.held)
     judged = ({(to_shape.get(v.source, v.source), v.focus) for v in package
                if v.severity == J.VIOLATION and v.focus == agent.me.uri}
               | {(to_shape.get(v.source, v.source), v.focus) for v in own
@@ -162,7 +162,7 @@ def test_the_legality_check_agrees_with_the_judge_on_a_shipped_world_and_a_broke
     desire = next(d for d in agent.pursuing() if getattr(d, "observed_property", None))
     here = planner._begin(desire)
     try:
-        assert planner._legal, "nothing compiled — the check would accept every world"
+        assert planner._compiled.legal, "nothing compiled — the check would accept every world"
         root_compiled, root_judged = _both(planner, agent, here.graph)
         assert root_compiled == root_judged
         #  A child that breaks a package shape about this agent: a subscribing interval

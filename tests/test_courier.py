@@ -163,7 +163,7 @@ def test_the_world_asserts_the_want_and_the_package_owns_the_measure(monkeypatch
     p = Planner(agent, agent.me)
     node = p._begin(_goal(agent))
     assert p._estimate_in(node, _goal(agent)) == 6.0
-    assert "FILTER NOT EXISTS" in p._unmet and "?this a courier:Parcel" in p._unmet, \
+    assert "FILTER NOT EXISTS" in p._compiled.unmet and "?this a courier:Parcel" in p._compiled.unmet, \
         "the shape compiled to a select over every parcel, in the prefixed names it was written in"
     assert _goal(agent).state == "unmet", "and the shape is judged by its compiled select"
 
@@ -194,7 +194,7 @@ def test_two_domains_in_one_world_and_a_delivery_pass_moves_no_disk(monkeypatch)
     assert len(plan.steps) == 8 and _steps(plan)[-1] == ("Drop", "c3_3"), _steps(plan)
     assert {a for a, _ in _steps(plan)} <= {"Drive", "Pick", "Drop"}
     assert len(forks) == 78, f"{len(forks)} forks: 78 with no disk in the world"
-    assert HANOI + "Move" not in p._relevant
+    assert HANOI + "Move" not in p._compiled.relevant
     rows = bindings(agent.beliefs.query_union(f"""SELECT (COUNT(?c) AS ?n) WHERE {{
         ?c <http://example.org/orexis/deliberation#wouldTake> <{HANOI}Move> ;
            <http://example.org/orexis/deliberation#verdict> "{trace.IRRELEVANT}" }}"""))
