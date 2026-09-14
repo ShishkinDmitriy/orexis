@@ -12,6 +12,10 @@ status: accepted
 timestamp: 2026-08-25T12:00:00Z
 ---
 
+> **Amended again, 2026-09-14 (#639).** For a reading the watch is no longer a shape the ledger
+> holds: the keeper tells the predictor the intended branch and the predictor answers with the
+> verdict at the reading's arrival; a plain fact keeps its shape. The intention still stands
+> until the world answers, and the verdict is still a fact apart from the outcome.
 
 > **Amended, 2026-09-02 (#516).** The watch is a hold on the shape of an answering observation
 > now — sensing writes the shape through `orexis:answer`, the keeper holds the act's step on it

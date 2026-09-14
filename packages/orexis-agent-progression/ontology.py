@@ -93,6 +93,7 @@ LAYER_OF = {
     "Act": PROGRESSION,
     "Intention": PROGRESSION,
     "IntentionGraph": PROGRESSION,
+    "landsAt": PROGRESSION,
     "PromisesGraph": PROGRESSION,
     "Step": PROGRESSION,
     "adoptedAt": PROGRESSION,
@@ -104,6 +105,7 @@ LAYER_OF = {
     "deadlineAt": PROGRESSION,
     "endMet": PROGRESSION,
     "endVerifiedAt": PROGRESSION,
+    "expectedFrom": PROGRESSION,
     "fills": PROGRESSION,
     "forAgent": PROGRESSION,
     "maxPatienceS": PROGRESSION,
@@ -150,7 +152,7 @@ CAPABILITY = term("Capability")  # the root every capability term is a kind of
 
 # --- the choir's questions, as terms (a-hook-is-a-term) ------------------------------------
 HOOK = term("Hook")
-ANSWER = OREXIS + "answer"          # the shape of an observation that answers an act (#516)
+PREDICTED = OREXIS + "predicted"    # a watch opened or closed: the intended branch, told to the predictor (#639)
 FORESIGHT = OREXIS + "foresight"    # how far ahead a root foresees — the belief is a package's (#644)
 REPREDICT = OREXIS + "repredict"    # a premise a prediction reads has moved: predict again (#643)
 WITNESS = OREXIS + "witness"        # what the world shows for a predicted fact now — the residual (#518)

@@ -682,8 +682,9 @@ orexis:carries a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range <http:/
 
 #################  What an action IS  #################
 
-orexis:answer a assembly:Extension ;
-    assembly:signature "(keyed_class, key, carried, since) -> Graph | None" ; orexis:row orexis:Progression ; rdfs:label "answer" ; rdfs:comment "What would an observation that ANSWERS this predicted fact look like? Asked for each KEYED fact a step predicts (a class some package declared `orexis:keyedBy`): the class, its key values and what it carries, as the step's prediction states them. A sh:NodeShape on the subject, conforming when a reading of the property later than `since` lies within `tolerance` of the predicted movement from the baseline — sensing's, because what a reading is is sensing's (#516, #518). The keeper holds the step on it; None is no opinion, and the first opinion wins." .
+orexis:predicted a assembly:Extension ;
+    assembly:signature "(predicted, standing) -> None" ; orexis:row orexis:Progression ; rdfs:label "predicted" ;
+    rdfs:comment "The keeper says which branch the agent intends (#639): a watch opened on a step — the keyed fact it predicts (its class, its key, the bands it is predicted to be, or a number a caller stated), from when a reading may answer it, the instant it lands and the deadline — and, `standing` false, that watch closed. Told to whoever predicts: sensing folds the step's band into the predictions it writes from the landing on, compares every reading of the key with it once at arrival, and answers the keeper with the verdict — met in the band, unmet outside it at or after the landing. No shape is built per step, and no kernel line knows what a reading is." .
 
 orexis:foresight a assembly:Extension ;
     assembly:signature "(root) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "foresight" ;

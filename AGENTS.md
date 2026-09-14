@@ -238,6 +238,11 @@ it is a record wearing a bullet.
   scaled their clock and the agent kept the wall's; every instant and stretch is in one
   timeline now, `clock.now()` is the only read, the pace is a deployment fact converted once
   where something sleeps, and no rule learned a unit (#646).
+- **A step's band is the prediction from its landing, and a reading is compared once** — the
+  keeper told sensing what a reading answering a step looked like and held a shape per step,
+  and a node stating no value passed a constraint on a value; it tells the predictor the
+  intended branch now, the ladder shows it from the landing, and one comparison at arrival is
+  the verdict, met in the band and unmet outside it past the landing (#639).
 - **What a plan changed is read off the signature, never off node identity** — a look
   re-stamps the node it finds and a purchase mints a new one, so by identity the look kept a
   pot from drying for five hours and the purchase could not stop the prediction emptying the

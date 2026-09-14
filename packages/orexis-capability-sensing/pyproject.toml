@@ -11,7 +11,6 @@ description = "Sensing: the reading pipeline (codec, pointer, scaling) and the t
 requires-python = ">=3.10"
 dependencies = [
     # The shape of an answering observation is RDF (#516).
-    "rdflib>=7",
     "orexis",  # assembly (the manifest) and, where there is behaviour, the kernel
     "orexis-agent-progression",  # the store engine and the kernel vocabulary — progression's contract
     "orexis-agent-deliberation",  # the belief and desire modalities — deliberation's contract

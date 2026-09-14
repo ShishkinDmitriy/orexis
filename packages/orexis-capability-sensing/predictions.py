@@ -40,6 +40,7 @@ _SOSA = "http://www.w3.org/ns/sosa/"
 _PREDICTION_GRAPH = "http://example.org/orexis#PredictionGraph"
 _RECORDED = "http://example.org/orexis#Recorded"
 _XSD = "http://www.w3.org/2001/XMLSchema#"
+_RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 #  Every drift the loaded packages declare against this package's word, with the horizons
 #  each lists (#643).
@@ -80,9 +81,12 @@ WHERE  {{
 
 
 def write(agent, me_uri: str, subject_uri: str, observed_property: str, reading,
-          horizon: float, grace: float) -> list[str]:
+          horizon: float, grace: float, intended=()) -> list[str]:
     """Rewrite the ladder of predictions for one key from the reading in hand. Returns the
-    graphs written, first window first."""
+    graphs written, first window first. `intended` is the branches standing steps intend for
+    this key (#639, `Predicted`): from a step's landing on, the predicted reading is the
+    band the step declared, not the drift's — two steps landing inside one window are
+    judged by the later one's — and the drift's own before it."""
     store = agent.beliefs
     taken = reading.result_time
     feature_id = subject_uri.rsplit("#", 1)[-1]
@@ -123,6 +127,19 @@ def write(agent, me_uri: str, subject_uri: str, observed_property: str, reading,
                         and facts.get(_SOSA + "observedProperty") == observed_property):
                     triples.extend(f"{t[0]} {t[1]} {t[2]} ." for t in ts)
                     node = subj
+        #  THE INTENDED BRANCH (#639): a window reaching past a standing step's landing
+        #  predicts the band the step declared, on the present's node, with the number the
+        #  actor aimed at where it stated one; the drift's centre is the do-nothing branch.
+        branch = max((p for p in intended if p.lands_at <= closes), key=lambda p: p.lands_at, default=None)
+        if branch is not None and node is not None:
+            triples = [f"{q.subject} {q.predicate} {q.object} ." for q in present
+                       if q.predicate.value not in (_SOSA + "resultTime", _SOSA + "hasSimpleResult",
+                                                    "http://example.org/orexis/sensing#staleSince")
+                       and not (q.predicate.value == _RDF_TYPE and q.object.value != _SOSA + "Observation")]
+            triples += [f"{node} <{_RDF_TYPE}> <{b}> ." for b in sorted(branch.bands)]
+            if branch.value is not None:
+                triples.append(f'{node} <{_SOSA}hasSimpleResult> "{round(branch.value, 6)}"^^<{_XSD}decimal> .')
+            triples.append(f'{node} <{_SOSA}resultTime> "{closes.isoformat()}"^^<{_XSD}dateTime> .')
         if not triples and n > 0:
             #  A HORIZON NO DRIFT REACHES for this key — a package's ladder is its own property's,
             #  and a reading nothing moves is predicted at the next window alone.

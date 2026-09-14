@@ -41,6 +41,7 @@ Derivation: capabilities/sensing/rules.ru. See knowledge/domain/sensing.md.
 from __future__ import annotations
 
 import uuid
+from dataclasses import replace as _replace
 from datetime import timedelta, datetime, timezone
 from pathlib import Path
 
@@ -51,7 +52,7 @@ if TYPE_CHECKING:
     from orexis_agent_deliberation.desire import Desire
 from .driver import driver_for
 from agent.module import Module, contributes
-from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, ANSWER, FORESIGHT, REPREDICT, WITNESS
+from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, FORESIGHT, PREDICTED, REPREDICT, WITNESS
 from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
 from orexis_agent_progression.store import bindings
 
@@ -66,7 +67,7 @@ from .regions import Gap, Region, aims_of, gaps_of, regions_of
 from .wiring import sensors_of
 from . import readings
 from .scaling import scaling_for
-from .terms import (INSTRUMENTS_GRAPH, ANNOTATE, BOUNDS, READING_RECORDED, URGENCY, FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S, WATCH_LIVE,
+from .terms import (NS, INSTRUMENTS_GRAPH, ANNOTATE, BOUNDS, READING_RECORDED, URGENCY, FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S, WATCH_LIVE,
                     SUBSCRIBING)
 from orexis_agent_progression.timer import Timer
 from . import predictions
@@ -185,6 +186,10 @@ class SensingModule(Module):
 
         # Recording is one place for every capability that records — see observation.py.
         self.observations = Observations(agent, self.sensors)
+        #  THE INTENDED BRANCHES (#639): every keyed fact a standing step predicts, as the
+        #  keeper tells them — folded into the predictions from each step's landing, and what
+        #  every reading of the key is compared with once, at arrival.
+        self._predicted: dict = {}
         #  One deadline per (subject, property): when this agent stops trusting that reading.
         self._staleness: dict = {}
         #  THE REGIONS this agent holds — deduced by my own `desires.ru` from what its subject
@@ -397,6 +402,12 @@ class SensingModule(Module):
         constant and still has to be written down: a want that cannot find the number reads a
         reading of any age as fresh, which is the silent direction to fail."""
         self.publish_horizon()
+        #  AND WHICH STEPS STAND (#639): a tell this module was not there to hear is gone, and
+        #  the keeper's ledger is not — so the intended branches are asked for before the
+        #  predictions below are written, and the ladder shows them from the first.
+        if (keeper := self.agent.keeper) is not None:
+            for p in keeper.predicted():
+                self._intend(p)
         #  AND WHICH OF MY READINGS ARE ALREADY COLD (#598). A timer does not survive a
         #  restart and a belief does, so the horizon on every standing reading is re-armed
         #  here — and one already past it is marked at once, rather than waiting a whole
@@ -454,7 +465,8 @@ class SensingModule(Module):
         #  reading is held to, and the drifts say what the reading may be at every horizon the
         #  packages list — written as graphs holding during their windows.
         predictions.write(self.agent, self.me.uri, subject_uri, observed_property, reading, horizon,
-                          float(getattr(self.beliefs, "grace_s", 0) or 0))
+                          float(getattr(self.beliefs, "grace_s", 0) or 0),
+                          intended=self._intended(subject_uri, observed_property))
 
     def went_stale(self, subject_uri: str, observed_property: str) -> None:
         """The horizon ran out: write it on the reading, and say so upward.
@@ -650,17 +662,17 @@ WHERE {{ GRAPH <{STATE_GRAPH}> {{
         Two things the kernel used to do by property and now does by want, because the ledger
         keys on the want and which wants a property carries is this package's to say
         (the-stake-is-sensings-want): the standing Observe for each is satisfied — the look
-        is this module's act, and the reading arriving is the look done — and the keeper
-        judges every open watch on the want against the number. Idempotent across two sensing
-        modules on one agent: the second finds nothing standing and no watch open.
+        is this module's act, and the reading arriving is the look done — and every standing
+        step that predicted this reading is answered by it (#639): in the band it predicted,
+        met; outside it at or after the step's landing, unmet; before the landing, nothing.
+        Idempotent across two sensing modules on one agent: the second finds nothing
+        standing, and a watch answered once is claimed.
         """
         if (keeper := self.agent.keeper) is None:
             return
         for want in self.wants_about(observed_property, subject_uri):
             keeper.satisfy(OBSERVING, want.uri, "a reading arrived — the look happened")
-        #  The open watches used to be JUDGED here, by name, against the number. Since #516
-        #  an expectation is a hold on the shape of an answering observation — the shape this
-        #  module writes below — and the write of the reading is what re-asks it.
+        self._compare(keeper, subject_uri, observed_property)
 
     # --- which want a reading is about: this package's to say --------------------------
 
@@ -772,61 +784,93 @@ WHERE {{ GRAPH <{STATE_GRAPH}> {{
         region = self.regions.get(observed_property)
         return (region.low, region.high) if region else None
 
-    @contributes(ANSWER)
-    def answering_shape(self, keyed_class: str, key: dict, carried: dict, since):
-        """What an observation answering a PREDICTED one looks like — the keeper's question
-        for each keyed fact a step predicts (#510, #516, #579). Only a `sosa:Observation` is
-        sensing's to answer: the key names the subject and the property; what it carries is
-        the BAND the reading is predicted to be (`rdf:type`, the class an effect rule
-        declared), or a number a caller stated by hand. The shape: on the subject, at least
-        one observation of the property later than `since` that IS the band — `sh:class`,
-        which the reading carries because the writer entailed it — or, for a number, whose
-        value is that number exactly. Nothing is widened here and no actor says how close:
-        the band's edges are the domain's, in its definition."""
-        import rdflib
+    @contributes(PREDICTED)
+    def predicted(self, predicted, standing: bool) -> None:
+        """The keeper says which branch the agent intends (#639): a watch opened on a step
+        that predicts a reading of one of my keys, or closed. Kept here, folded into the
+        predictions of the key from the step's landing on — the ladder is rewritten at
+        once, so the sovereign reading the predictions sees the intended branch while the
+        step stands and the drift's own after — and compared with every reading of the key
+        at arrival. Only a `sosa:Observation` is mine to judge; a number a caller stated is
+        held to the band it falls in, and the number stays in the residual."""
         SOSA = "http://www.w3.org/ns/sosa/"
-        RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-        if keyed_class != SOSA + "Observation":
-            return None
-        subject_uri = key.get(SOSA + "hasFeatureOfInterest")
-        observed_property = key.get(SOSA + "observedProperty")
-        band = carried.get(RDF_TYPE)
-        predicted = carried.get(SOSA + "hasSimpleResult")
-        if subject_uri is None or observed_property is None or (band is None and predicted is None):
-            return None
-        SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
-        XSD = rdflib.Namespace("http://www.w3.org/2001/XMLSchema#")
-        g = rdflib.Graph()
-        root = rdflib.URIRef(f"urn:orexis:answer:{uuid.uuid4().hex[:8]}")
-        outer, inner, on_property, on_time, on_value, path = (rdflib.BNode() for _ in range(6))
-        g.add((root, rdflib.RDF.type, SH.NodeShape))
-        g.add((root, SH.targetNode, rdflib.URIRef(subject_uri)))
-        g.add((root, SH.property, outer))
-        g.add((outer, SH.path, path))
-        g.add((path, SH.inversePath, rdflib.URIRef(SOSA + "hasFeatureOfInterest")))
-        g.add((outer, SH.qualifiedMinCount, rdflib.Literal(1)))
-        g.add((outer, SH.qualifiedValueShape, inner))
-        g.add((inner, SH.property, on_property))
-        g.add((on_property, SH.path, rdflib.URIRef(SOSA + "observedProperty")))
-        g.add((on_property, SH.hasValue, rdflib.URIRef(observed_property)))
-        g.add((inner, SH.property, on_time))
-        g.add((on_time, SH.path, rdflib.URIRef(SOSA + "resultTime")))
-        #  A NODE THAT SAYS NOTHING PASSES A CONSTRAINT ON A VALUE (#631, found the day the
-        #  expected next observation stood beside the readings): a property constraint holds
-        #  over the values there are, and a node with none has nothing to fail. So the
-        #  answer must SAY when it was taken, and, for a number, what it read.
-        g.add((on_time, SH.minCount, rdflib.Literal(1)))
-        g.add((on_time, SH.minExclusive, rdflib.Literal(since.isoformat(), datatype=XSD.dateTime)))
-        if band is not None:
-            g.add((inner, SH["class"], rdflib.URIRef(str(band))))
+        key = dict(predicted.key)
+        subject_uri, observed_property = key.get(SOSA + "hasFeatureOfInterest"), key.get(SOSA + "observedProperty")
+        if predicted.keyed_class != SOSA + "Observation" or subject_uri is None or observed_property is None:
+            return
+        if standing:
+            self._intend(predicted)
         else:
-            predicted = float(predicted)
-            g.add((inner, SH.property, on_value))
-            g.add((on_value, SH.path, rdflib.URIRef(SOSA + "hasSimpleResult")))
-            g.add((on_value, SH.minCount, rdflib.Literal(1)))
-            g.add((on_value, SH.minInclusive, rdflib.Literal(round(predicted, 6), datatype=XSD.decimal)))
-            g.add((on_value, SH.maxInclusive, rdflib.Literal(round(predicted, 6), datatype=XSD.decimal)))
-        return g
+            self._predicted.pop(predicted.watch, None)
+        if any(x.subject == subject_uri and x.observes == observed_property for x in self.sensors):
+            self.watch_staleness(subject_uri, observed_property)
+
+    def _intend(self, predicted) -> None:
+        """Keep one intended branch — its bands stated by the step, or read off the number a
+        caller stated. A number no band of mine holds cannot be judged, and the watch can
+        only lapse; said once."""
+        SOSA = "http://www.w3.org/ns/sosa/"
+        key = dict(predicted.key)
+        if not predicted.bands:
+            bands = self._bands_for(key.get(SOSA + "hasFeatureOfInterest"),
+                                    key.get(SOSA + "observedProperty"), predicted.value)
+            if not bands:
+                self.log.warning("no band of mine holds %s for %s: the watch can only lapse",
+                                 predicted.value, predicted.watch.rsplit("#", 1)[-1])
+                return
+            predicted = _replace(predicted, bands=bands)
+        self._predicted[predicted.watch] = predicted
+
+    def _intended(self, subject_uri: str, observed_property: str) -> list:
+        SOSA = "http://www.w3.org/ns/sosa/"
+        return [p for p in self._predicted.values()
+                if dict(p.key).get(SOSA + "hasFeatureOfInterest") == subject_uri
+                and dict(p.key).get(SOSA + "observedProperty") == observed_property]
+
+    def _bands_for(self, subject_uri: str | None, observed_property: str | None,
+                   value: float | None) -> frozenset:
+        """The band a number falls in, for a subject I act for: the member class the world
+        minted for the subject and property under the family the region says — and the
+        family beside it, as a reading carries both."""
+        if value is None or subject_uri != self.me.acts_for:
+            return frozenset()
+        region = self.regions.get(observed_property)
+        if region is None:
+            return frozenset()
+        family = ("BelowRegion" if value < region.low else
+                  "AboveRegion" if value > region.high else "InRegion")
+        rows = bindings(self.agent.beliefs.query(f"""
+SELECT ?b WHERE {{ ?b rdfs:subClassOf sensing:{family} ;
+                   sensing:ofSubject <{subject_uri}> ; sensing:ofProperty <{observed_property}> }}"""))
+        if not rows:
+            return frozenset()
+        return frozenset({rows[0]["b"], NS + family})
+
+    def _compare(self, keeper, subject_uri: str, observed_property: str) -> None:
+        """One comparison per standing step this reading is about (#639): the reading IS the
+        band the step predicted — every class the step stated is on it — or it is not. A
+        reading dated at or before the watch opened is the before. What is answered is
+        the keeper's to carry on: residual, suspicion, advance or drop."""
+        mine = self._intended(subject_uri, observed_property)
+        if not mine:
+            return
+        reading = readings.current_reading(self.agent.beliefs.query, subject_uri, observed_property)
+        if reading is None or reading.result_time is None:
+            return
+        types = {r["t"] for r in bindings(self.agent.beliefs.query(f"""
+SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
+  ?o sosa:hasFeatureOfInterest <{subject_uri}> ; sosa:observedProperty <{observed_property}> ; a ?t }} }}"""))}
+        for p in mine:
+            if reading.result_time <= p.since:
+                continue
+            band = ", ".join(sorted(b.rsplit("#", 1)[-1] for b in p.bands))
+            if p.bands <= types:
+                keeper.answered(p.watch, True, f"answered as the step predicted: the reading "
+                                              f"of {observed_property.rsplit('#', 1)[-1]} is {band}")
+            elif reading.result_time >= p.lands_at:
+                keeper.answered(p.watch, False, f"the step landed and the reading of "
+                                               f"{observed_property.rsplit('#', 1)[-1]} is not {band} — "
+                                               f"the world did not answer as the graph promised")
 
     @contributes(FORESIGHT)
     def foresight(self, root: str) -> float | None:
