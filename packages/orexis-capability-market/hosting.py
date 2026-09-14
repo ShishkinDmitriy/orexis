@@ -39,7 +39,7 @@ from orexis_agent_deliberation.desire import Desire
 from .ower import Ower
 from agent.module import Module, contributes
 from orexis_agent_progression.timer import Timer
-from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS
+from orexis_agent_progression.ontology import HANDLE, OUTDATED, SUBSCRIPTIONS
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
 from orexis_agent_progression.act import Step
@@ -153,12 +153,9 @@ SELECT ?p WHERE {{
         #  finds (acquire upstream, then offer) rather than a handler (#359).
         self.open_auction: dict | None = None
         self._timer: Timer | None = None
-        #  THE COOLDOWN'S OWN DEADLINE (#598): a venue is cooling while the row is there, and
-        #  what retracts it is a timer landing on the loop — the same road a round's close
-        #  takes. A row that outlived the process holds no timer, so the sweep below is armed
-        #  at boot for exactly that.
-        self._cooling: Timer | None = None
-        rounds.sweep_cooled(self.agent)
+        #  THE COOLDOWN'S OWN DEADLINE WAS A TIMER HERE (#598), with a sweep at boot for a row
+        #  that outlived the process. The cooling row is a graph holding during its period
+        #  now (#645): the door hands it to nobody past the horizon, and the one sweep drops it.
         # Issued and not yet presented, by jti (#132). Winning stopped implying actuation: the
         # holder redeems when its watch is live, so the host keeps the claim until it is
         # presented — single-use, popped on redemption. In-memory, like the round itself: a
@@ -169,6 +166,13 @@ SELECT ?p WHERE {{
     def _keeper(self):
         """Whoever keeps my commitments, or None — and None keeps the old behaviour whole."""
         return self.agent.keeper
+
+    @contributes(OUTDATED)
+    def outdated(self, graph: str) -> None:
+        """A graph of this agent's own has ended and is about to be dropped (#645): the ledger
+        of debts is mine to keep and no module of its own, so the word reaches it through me —
+        a debt whose window closed leaves its verdict in the record before its graph goes."""
+        self.ledger.outdated(graph)
 
     @contributes(SUBSCRIPTIONS)
     def subscriptions(self) -> list[str]:
@@ -182,8 +186,6 @@ SELECT ?p WHERE {{
     def stop(self) -> None:
         if self._timer:
             self._timer.stop()
-        if self._cooling:
-            self._cooling.stop()
 
     # --- what opens an auction ---
 
@@ -269,12 +271,13 @@ SELECT ?p WHERE {{
         stock = self._stock_of(market)
         if stock is None:
             return False
-        rows = bindings(self.agent.beliefs.query(f"""
-SELECT (SUM(?a) AS ?owed) WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
+        #  THROUGH THE DOOR (#645): every debt standing now, each a graph of its own.
+        rows = bindings(self.agent.beliefs.query_at(f"""
+SELECT (SUM(?a) AS ?owed) WHERE {{
   ?debt market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
   OPTIONAL {{ ?debt market:owedFrom ?from }}
   FILTER NOT EXISTS {{ ?debt market:dischargedAt ?d }}
-  FILTER(COALESCE(?from, ?issued) <= \"{wanted_at.isoformat()}\"^^xsd:dateTime) }} }}"""))
+  FILTER(COALESCE(?from, ?issued) <= \"{wanted_at.isoformat()}\"^^xsd:dateTime) }}"""))
         owed = float(rows[0]["owed"]) if rows and rows[0].get("owed") else 0.0
         floor = 0.0
         sensing = self.agent.provider(SENSING)
@@ -491,14 +494,8 @@ SELECT ?r WHERE {{
         self.publish(market.offer_topic, {"auction_id": auction_id,
                                           "host": self.me.agent_id,
                                           "closed": True})
-        #  AND THE VENUE COOLS, until a deadline of its own lands and retracts the row. Spent
-        #  once, like the round's: a cadence here would say a venue stopped cooling on a clock
-        #  of its own rather than on the one cooldown it was told about.
-        if self._cooling:
-            self._cooling.stop()
-        self._cooling = Timer(float(self.beliefs.cooldown_s),
-                              lambda: rounds.cooled(self.agent, market.uri), repeat=False)
-        self._cooling.start()
+        #  AND THE VENUE COOLS — a graph holding during the cooldown (#645), handed to nobody
+        #  once it ran out: no deadline of its own lands here any more.
 
         if not rnd["bids"]:
             self.log.info("auction %s closed with no bids", auction_id)

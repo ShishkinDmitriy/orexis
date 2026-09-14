@@ -54,8 +54,8 @@ def test_a_debt_carries_from_when_its_holder_may_come(monkeypatch):
     agent = _supplier(monkeypatch)
     opens = datetime.now(timezone.utc) + timedelta(hours=1)
     _promise(agent, "fern", "j-from", 1.0, opens)
-    rows = bindings(agent.beliefs.query(f"""SELECT ?from WHERE {{ GRAPH <{obligations_graph("supplier")}> {{
-        ?o <http://example.org/orexis/market#forClaim> "j-from" ; <{OWED_FROM}> ?from }} }}"""))
+    rows = bindings(agent.beliefs.query_at(f"""SELECT ?from WHERE {{
+        ?o <http://example.org/orexis/market#forClaim> "j-from" ; <{OWED_FROM}> ?from }}"""))
     assert rows and abs((datetime.fromisoformat(rows[0]["from"]) - opens).total_seconds()) < 1.0
 
 

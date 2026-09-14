@@ -85,8 +85,8 @@ def test_a_claim_with_a_window_places_the_presenting(monkeypatch):
         "amount_l": 0.5, "debit": 0.2,
         "usable_from": opens.isoformat(),
         "usable_until": (opens + timedelta(seconds=900)).isoformat()})
-    held = bindings(agent.beliefs.query(f"""SELECT ?from WHERE {{ GRAPH <{beliefs_graph("fern")}> {{
-        ?c <http://example.org/orexis/market#claimId> "j-window" ; <{USABLE_FROM}> ?from }} }}"""))
+    held = bindings(agent.beliefs.query_at(f"""SELECT ?from WHERE {{
+        ?c <http://example.org/orexis/market#claimId> "j-window" ; <{USABLE_FROM}> ?from }}"""))
     assert held and datetime.fromisoformat(held[0]["from"]) == opens, "the fact carries from when it is usable"
     presenting = agent.keeper.standing(action=PRESENTING, want=child.uri)
     assert presenting, "the tender was answered and the plan advanced to presenting"

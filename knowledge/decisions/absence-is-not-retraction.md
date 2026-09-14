@@ -68,13 +68,15 @@ background refresh.
   treats it specially: it arrives as an ordinary reading with the instant it was published. A
   reconnect is therefore the one moment a buf-shaped diff would be possible, and we do not take
   it.
-- ~~**The round sweep runs on one agent's one event.**~~ Closed (#398). Retracting what the
-  clock has ended is a choir hook, `orexis:sweep`, asked on the agent's own housekeeping tick —
-  the one clock every agent has, because keeping your own house is not a capability. The
-  kernel asks and never sweeps: which fact expires, and which of the three treatments it
-  deserves, stays with its owner. What the tick guarantees is BOUNDEDNESS rather than
-  promptness — it is hourly, and a bidder still sweeps on an offer because a round beginning
-  with yesterday's rows standing reads oddly in a trace.
+- ~~**The round sweep runs on one agent's one event.**~~ Closed (#398), and closed again
+  (#645). Retracting what the clock has ended was a choir hook, `orexis:sweep`, asked of every
+  module on the agent's own housekeeping tick; everything sourced at a time is a graph
+  holding during a period now, the door hides one past its end from every reader, and ONE
+  sweep in upkeep drops such graphs whatever their kind — on the tick, and at boot. What
+  stays with the owner is what the ending MEANS: the kernel tells `orexis:outdated` before
+  the drop, and the owner writes the verdict the graph leaves. What the tick guarantees is
+  still BOUNDEDNESS rather than promptness, and a bidder still sweeps on an offer because a
+  round beginning with yesterday's rows standing reads oddly in a trace.
 - **The word this record uses for a window is the older one.** *Validity* here means the stretch
   a belief is about, which is what
   [a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md) now calls

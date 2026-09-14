@@ -26,9 +26,10 @@ from datetime import datetime, timezone
 
 from orexis_agent_deliberation.desire import Desire
 from agent.module import Module
-from orexis_agent_progression.ontology import OREXIS, REPREDICT, obligations_graph
+from orexis_agent_progression.ontology import (CLASSIFICATION_GRAPH, OREXIS, PERIODS_GRAPH, REPREDICT,
+                                               obligations_graph)
 from orexis_agent_progression.store import bindings
-from .terms import AMOUNT_L, DISCHARGED_AT, FOR_CLAIM, OWED_AT, OWED_FROM, OWED_TO, PRESENTED
+from .terms import AMOUNT_L, DISCHARGED_AT, FOR_CLAIM, LAPSED_AT, NS, OWED_AT, OWED_FROM, OWED_TO, PRESENTED
 from orexis_agent_progression import clock
 
 #  What I owe, as rows — the obligation branch of what used to be one shipped `desires.rq` for every
@@ -37,14 +38,23 @@ from orexis_agent_progression import clock
 #  Rows are matched by their PREMISES — a counterparty, a claim — and never by a type: the
 #  Obligation class retired (#471), and a volume written before it did carries the old type
 #  triple harmlessly, because nothing asks.
+#  OVER THE MODALITY'S UNION (#645): a debt is a graph of its own, holding from its issue to
+#  its expiry, and the projection copies every one holding now; a settled row — paid or
+#  lapsed — in the untimed record carries no `presented`, so it never reads as a duty.
 _DUTIES_Q = """
 SELECT ?desire ?owedTo ?claim ?presented ?at ?expires WHERE {
-  GRAPH <%s> {
     ?desire market:owedTo ?owedTo ; market:forClaim ?claim ;
             market:presented ?presented ; market:owedAt ?at .
     OPTIONAL { ?desire orexis:expiresAt ?expires }
-    FILTER NOT EXISTS { ?desire market:dischargedAt ?paid } }
+    FILTER NOT EXISTS { ?desire market:dischargedAt ?paid }
+    FILTER NOT EXISTS { ?desire market:lapsedAt ?lapsed }
 }"""
+
+
+def obligation_graph(agent_id: str, claim_jti: str) -> str:
+    """ONE debt's graph in ONE agent's store — the unit a period is said of (#645): holding
+    from the claim's issue to its expiry, under the untimed record `obligations_graph`."""
+    return f"{obligations_graph(agent_id)}/{claim_jti}"
 
 _SH_SELECT = "http://www.w3.org/ns/shacl#select"
 
@@ -136,11 +146,18 @@ class Ower(Module):
                       f'"{datetime.fromtimestamp(expires_at, timezone.utc).isoformat()}"'
                       f'^^<http://www.w3.org/2001/XMLSchema#dateTime>')
         uri = f"{OREXIS}obligation.{claim_jti}"
-        graph = obligations_graph(self.agent.id)
-        if bindings(self.agent.beliefs.query(
-                f"SELECT ?o WHERE {{ GRAPH <{graph}> {{ <{uri}> ?p ?o }} }} LIMIT 1")):
+        graph = obligation_graph(self.agent.id, claim_jti)
+        if bindings(self.agent.beliefs.query_union(
+                f"SELECT ?o WHERE {{ ?o <{FOR_CLAIM}> \"{claim_jti}\" }} LIMIT 1")):
             return None
-        self.agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
+        #  A GRAPH HOLDING DURING THE DEBT (#645): from its issue to the claim's expiry, open
+        #  where the claim named none. The door hands a lapsed debt to nobody, the one sweep
+        #  drops its graph, and `outdated` below writes what it came to into the record.
+        now = clock.now()
+        ends = (f'\n      orexis:end "{datetime.fromtimestamp(expires_at, timezone.utc).isoformat()}"^^xsd:dateTime ;'
+                if expires_at is not None else "")
+        self.agent.beliefs.update(f"""INSERT DATA {{
+  GRAPH <{graph}> {{
             <{uri}> a <{OREXIS}Desire> ;
                 <{OREXIS}bindsWhen> <{OREXIS}Within> ;
                 <http://www.w3.org/ns/prov#wasDerivedFrom> "{claim_jti}" ;
@@ -148,7 +165,12 @@ class Ower(Module):
                 <{FOR_CLAIM}> "{claim_jti}" ;
                 <{PRESENTED}> false ;{amount}
                 <{OREXIS}unmetWhen> [ <{_SH_SELECT}> {json.dumps(_unmet(claim_jti))} ] ;
-                <{OWED_AT}> "{clock.now().isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{opens}{expiry} }} }}""")
+                <{OWED_AT}> "{now.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{opens}{expiry} }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a <{NS}ObligationsGraph> ; orexis:arrivedBy orexis:Received . }}
+  GRAPH <{PERIODS_GRAPH}> {{
+    <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;{ends}
+      orexis:start "{now.isoformat()}"^^xsd:dateTime ] . }}
+}}""")
         #  A debt arriving at runtime is a want arriving at runtime: the record above is the
         #  belief base's, and the desire modality is RECOMPUTED to hold it — the same
         #  record-then-rebuild order a re-pick follows, because recomputation is the only way
@@ -165,12 +187,14 @@ class Ower(Module):
         requires nothing of me, a presented one requires acting now — and the reason urgency
         here is a step rather than a curve until claims may be held over time.
         """
-        graph = obligations_graph(self.agent.id)
+        #  WHEREVER THE DEBT IS: its own graph (#645), or the untimed record for one written
+        #  before debts had graphs of their own.
         self.agent.beliefs.update(f"""
-            DELETE {{ GRAPH <{graph}> {{ ?o <{PRESENTED}> ?was }} }}
-            INSERT {{ GRAPH <{graph}> {{ ?o <{PRESENTED}> true }} }}
-            WHERE  {{ GRAPH <{graph}> {{ ?o <{FOR_CLAIM}> "{claim_jti}" ;
-                                         <{PRESENTED}> ?was }} }}""")
+            DELETE {{ GRAPH ?g {{ ?o <{PRESENTED}> ?was }} }}
+            INSERT {{ GRAPH ?g {{ ?o <{PRESENTED}> true }} }}
+            WHERE  {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> "{claim_jti}" ;
+                                  <{PRESENTED}> ?was }}
+                      FILTER(STRSTARTS(STR(?g), "{obligations_graph(self.agent.id)}")) }}""")
         self.agent.desires.rebuild()   # standing became demanded — the want moved
         self.agent.tell(REPREDICT)      # the ledger is a premise the vessel's drift reads (#643)
 
@@ -178,24 +202,60 @@ class Ower(Module):
         """The dose is out: the debt is paid, and says when. Never deleted — a debt paid and
         a debt forgotten must not look alike, which is the same reason a resolved intention
         stays in its ledger."""
-        graph = obligations_graph(self.agent.id)
-        self.agent.beliefs.update(f"""INSERT {{ GRAPH <{graph}> {{
+        self.agent.beliefs.update(f"""INSERT {{ GRAPH ?g {{
                 ?o <{DISCHARGED_AT}> "{clock.now().isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
-            WHERE {{ GRAPH <{graph}> {{ ?o <{FOR_CLAIM}> "{claim_jti}" .
-                     FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?done }} }} }}""")
+            WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> "{claim_jti}" .
+                     FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?done }} }}
+                     FILTER(STRSTARTS(STR(?g), "{obligations_graph(self.agent.id)}")) }}""")
         self.agent.desires.rebuild()   # a paid debt is history, and the want is no longer implied
         self.agent.tell(REPREDICT)      # the ledger is a premise the vessel's drift reads (#643)
 
     def owed(self, presented_only: bool = False) -> list[dict]:
         """What still stands, newest first — what an agent owes, askable by the sovereign."""
         extra = f'?o <{PRESENTED}> true .' if presented_only else ""
-        return bindings(self.agent.beliefs.query(f"""
-SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
+        #  THROUGH THE DOOR (#645): a debt past its window is handed to nobody, so what still
+        #  stands is what the door hands at this instant.
+        return bindings(self.agent.beliefs.query_at(f"""
+SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{
   ?o <{OWED_TO}> ?to ; <{FOR_CLAIM}> ?jti ;
      <{PRESENTED}> ?presented ; <{OWED_AT}> ?at .
   OPTIONAL {{ ?o <{OREXIS}expiresAt> ?expires }}
   {extra}
-  FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?done }} }} }} ORDER BY DESC(?at)"""))
+  FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?done }} }} ORDER BY DESC(?at)"""))
+
+    def settled(self) -> list[dict]:
+        """What this agent's debts came to (#645): each paid or lapsed, in the untimed record
+        — the verdict the ledger keeps once a debt's own graph is gone. Askable by the sovereign."""
+        return bindings(self.agent.beliefs.query_union(f"""
+SELECT ?o ?to ?jti ?paid ?lapsed WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
+  ?o <{OWED_TO}> ?to ; <{FOR_CLAIM}> ?jti .
+  OPTIONAL {{ ?o <{DISCHARGED_AT}> ?paid }} OPTIONAL {{ ?o <{LAPSED_AT}> ?lapsed }}
+  FILTER(BOUND(?paid) || BOUND(?lapsed)) }} }} ORDER BY ?jti"""))
+
+    def outdated(self, graph: str) -> None:
+        """A debt's window has closed and the one sweep is about to drop its graph (#645): the
+        verdict is written first, into the untimed record — `market:dischargedAt` carried
+        over for a debt paid, `market:lapsedAt` now for one the holder never presented — so
+        a debt paid and a debt forgotten never look alike, and the ledger keeps the verdict,
+        not the want. The vessel's drift read the debt as an arrival, so it predicts again."""
+        if not graph.startswith(obligations_graph(self.agent.id) + "/"):
+            return
+        rows = bindings(self.agent.beliefs.query_union(f"""
+SELECT ?o ?to ?jti ?a ?at ?paid WHERE {{ GRAPH <{graph}> {{
+  ?o <{OWED_TO}> ?to ; <{FOR_CLAIM}> ?jti ; <{OWED_AT}> ?at .
+  OPTIONAL {{ ?o <{AMOUNT_L}> ?a }} OPTIONAL {{ ?o <{DISCHARGED_AT}> ?paid }} }} }}"""))
+        for row in rows:
+            verdict = (f'<{DISCHARGED_AT}> "{row["paid"]}"^^xsd:dateTime' if row.get("paid")
+                       else f'<{LAPSED_AT}> "{clock.now().isoformat()}"^^xsd:dateTime')
+            amount = f' ; <{AMOUNT_L}> {row["a"]}' if row.get("a") else ""
+            self.agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{obligations_graph(self.agent.id)}> {{
+  <{row["o"]}> <{OWED_TO}> <{row["to"]}> ; <{FOR_CLAIM}> "{row["jti"]}" ;
+      <{OWED_AT}> "{row["at"]}"^^xsd:dateTime{amount} ; {verdict} . }} }}""")
+            self.log.info("debt for claim %s %s — the verdict stays, the want goes", row["jti"],
+                          "was paid" if row.get("paid") else "LAPSED unserved")
+        if rows:
+            self.agent.desires.rebuild()
+            self.agent.tell(REPREDICT)
 
     def start(self) -> None:
         self.endow()
@@ -205,12 +265,12 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
         never-held terms arrive with their structures, held ones stay the agent's
         (an-amendment-endows-what-it-grants). Without it the planner, which no longer reads
         the discharge itself, could not tell a served world from the world in hand."""
-        graph = obligations_graph(self.agent.id)
-        rows = bindings(self.agent.beliefs.query(f"""
-SELECT ?o ?jti WHERE {{ GRAPH <{graph}> {{ ?o <{FOR_CLAIM}> ?jti .
-  FILTER NOT EXISTS {{ ?o <{OREXIS}unmetWhen> ?test }} }} }}"""))
+        rows = bindings(self.agent.beliefs.query_union(f"""
+SELECT ?g ?o ?jti WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{PRESENTED}> ?p .
+  FILTER NOT EXISTS {{ ?o <{OREXIS}unmetWhen> ?test }} }}
+  FILTER(STRSTARTS(STR(?g), "{obligations_graph(self.agent.id)}")) }}"""))
         for row in rows:
-            self.agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
+            self.agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{row["g"]}> {{
                 <{row["o"]}> <{OREXIS}unmetWhen> [ <{_SH_SELECT}> {json.dumps(_unmet(row["jti"]))} ] }} }}""")
         if rows:
             self.log.info("%d debt(s) written before the record carried a met-test, endowed", len(rows))
@@ -245,8 +305,7 @@ SELECT ?o ?jti WHERE {{ GRAPH <{graph}> {{ ?o <{FOR_CLAIM}> ?jti .
         """
         now = now or clock.now()
         out = []
-        for row in bindings(self.agent.desires.query_union(
-                _DUTIES_Q % obligations_graph(self.agent.id))):
+        for row in bindings(self.agent.desires.query_union(_DUTIES_Q)):
             demanded = row.get("presented") == "true"
             lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])
             out.append(Desire(uri=row["desire"], urgency=_duty_urgency(row, now),

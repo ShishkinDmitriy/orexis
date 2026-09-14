@@ -548,6 +548,9 @@ class Agent:
         # construction so that building an agent starts no threads and a test can hold one
         # without it acting. Reporting used to start here too and is a module now — mandatory,
         # granted to every agent, and started below with the rest.
+        #  WHAT THE PROCESS WENT DOWN ON (#645): every graph whose period ended while it was
+        #  down is dropped before the first pass, the verdicts it leaves written.
+        self.upkeep.sweep()
         self.reviser.start()
         self.upkeep.start()
         # The watchdog last, after the connect above has had its chance: its disconnection

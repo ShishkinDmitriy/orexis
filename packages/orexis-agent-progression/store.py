@@ -69,6 +69,13 @@ SELECT ?g WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
 #                   and a hypothesis has no place in a hypothesis;
 #    another store's — the intention ledger is classified here and held elsewhere, so the
 #                   result is intersected with what this store actually has.
+#  WHICH OF THE AGENT'S OWN ARE RECORDS (#645): classified under a class the vocabulary says
+#  is an `orexis:RecordGraph`, whichever package declared it.
+_RECORDS = f"""
+SELECT DISTINCT ?g WHERE {{
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }}
+  ?class rdfs:subClassOf* orexis:RecordGraph }}"""
+
 _OWN = f"""
 SELECT DISTINCT ?g WHERE {{
   {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }} }}
@@ -395,6 +402,7 @@ class Store:
         self._recorded: list | None = None  # likewise; see recorded_graphs()
         self._predictions = None
         self._periods: dict | None = None  # graph -> (start, end); see periods()
+        self._records: set = set()          # own graphs that are records — read as of now (#645)
         self._memo: dict = {}             # what only a write can change; see remember()
 
     # --- what counts as public, according to the store itself ---
@@ -415,7 +423,15 @@ class Store:
         """
         if self._recorded is None:
             self._recorded = sorted(row["g"] for row in bindings(self.query(_OWN)))
-        return self._holding_at(self._recorded, at)
+            self._records = {row["g"] for row in bindings(self.query(_RECORDS))}
+        #  A RECORD IS HANDED AS IT STANDS NOW, whatever instant is asked about (#645,
+        #  `orexis:RecordGraph`): its period says how long it is worth believing, not when it
+        #  holds — a debt standing today is an arrival at every later instant, though its own
+        #  window will have closed by then. A graph holding DURING its period is handed as of
+        #  the instant.
+        fluent = [g for g in self._recorded if g not in self._records]
+        records = [g for g in self._recorded if g in self._records]
+        return sorted(self._holding_at(fluent, at) + self._holding_at(records, None))
 
     def prediction_graphs(self, at: datetime | None = None) -> list[str]:
         """Every prediction holding at `at` — a graph a package's drift wrote for a window, typed
@@ -453,6 +469,33 @@ class Store:
         #  instants of its own (the imaginarium, #619), which must hold a forecast for a period
         #  the copier has not reached, and filter by its own clock at each door.
         return list(self._public) if ever else self._holding_at(self._public, at)
+
+    def drop_graph(self, graph: str) -> None:
+        """Drop one graph whole — its triples, its classification and its period — which is
+        how a round closes, a prediction is dropped and the sweep drops what is outdated
+        (#645). One update, so a graph goes entire or not at all."""
+        self.update(f"""
+DELETE {{
+  GRAPH <{graph}> {{ ?s ?p ?o }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> ?cp ?co }}
+  GRAPH <{PERIODS_GRAPH}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }}
+WHERE  {{
+  {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}
+  UNION {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> ?cp ?co }} }}
+  UNION {{ GRAPH <{PERIODS_GRAPH}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }} }}""")
+
+    def outdated(self, at: datetime | None = None) -> list[str]:
+        """Every graph of this agent's own whose period has ENDED by `at` — what the door
+        already hides from every reader and the one sweep drops (#645,
+        a-root-holds-always-and-an-outdated-graph-is-dropped): a round, a claim, a cooling
+        row, a pursued child, a prediction, whatever its kind. Never a public graph: a period
+        the world states is the world's to end."""
+        when = at or clock.now()
+        self.recorded_graphs()
+        self.prediction_graphs()
+        own = set(self._recorded or ()) | set(self._predictions or ())
+        return sorted(g for g, (_, end) in self.periods().items()
+                      if end is not None and when >= end and g in own)
 
     def periods(self) -> dict:
         """The period each graph holds during: IRI -> (start, end), either end None for open.
@@ -768,6 +811,7 @@ class Store:
         than an error — the failure this design keeps having to guard against."""
         self._public = None
         self._recorded = None
+        self._records = set()
         self._periods = None
         self._predictions = None
         self._memo.clear()

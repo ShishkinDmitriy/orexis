@@ -818,10 +818,9 @@ def test_paying_the_debt_discharges_it_and_the_ledger_keeps_the_record(host):
     assert ledger_of(host).owed() == [], "paid — nothing stands"
     from orexis_agent_progression.ontology import obligations_graph
     from orexis_agent_progression.store import bindings
-    kept = bindings(host.beliefs.query(
-        "SELECT ?d WHERE { GRAPH <%s> { ?o <http://example.org/orexis/market#dischargedAt> ?d } }"
-        % obligations_graph("supplier")))
-    assert kept, "and the record of having paid it stays"
+    kept = bindings(host.beliefs.query_union(
+        "SELECT ?d WHERE { ?o <http://example.org/orexis/market#dischargedAt> ?d }"))
+    assert kept, "and the record of having paid it stays — in the debt's graph until its window ends, then as the verdict (#645)"
 
 
 def test_a_debt_to_a_stranger_is_refused_before_it_is_a_want(host, caplog):
@@ -1121,22 +1120,22 @@ def test_the_rows_presence_is_the_openness_and_no_rule_asks_the_clock(make):
     assert not buying(at=now - timedelta(seconds=10)), "and with the fact gone, so is the row at any instant"
 
 
-def test_the_venue_cools_by_a_fact_and_stops_by_a_timer(host):
+def test_the_venue_cools_by_a_fact_that_holds_during_the_cooldown(host):
     """The last clock the market's rules read (#598), and the rename is the point.
 
     `market:mayConveneAt` said when the cooldown runs out, which is TRUE the whole time it is
     written — so its presence said nothing and every reader did the arithmetic. What the venue
-    needs to say is that it IS cooling, and then the row's presence is the fact: written at
-    close, retracted by a deadline of its own landing on the loop.
+    needs to say is that it IS cooling, and then the row's presence is the fact: a graph
+    holding during the cooldown (#645), handed to nobody once it has run out, with no timer.
     """
+    from datetime import datetime, timedelta, timezone
+
     from orexis_capability_market import rounds
     from orexis_capability_market.terms import COOLING_UNTIL
-    from orexis_agent_progression.ontology import beliefs_graph
     from orexis_agent_progression.store import bindings
 
-    def cooling() -> list:
-        return bindings(host.beliefs.query(f"""SELECT ?until WHERE {{
-            GRAPH <{beliefs_graph(host.id)}> {{ ?v <{COOLING_UNTIL}> ?until }} }}"""))
+    def cooling(at=None) -> list:
+        return bindings(host.beliefs.query_at(f"SELECT ?until WHERE {{ ?v <{COOLING_UNTIL}> ?until }}", at=at))
 
     open_auction(host)
     assert cooling() == [], "a venue with a round open is not cooling"
@@ -1144,17 +1143,14 @@ def test_the_venue_cools_by_a_fact_and_stops_by_a_timer(host):
     host.hosting().close()
 
     assert cooling(), "the round closed, so the venue is cooling"
-    timer = host.hosting()._cooling
-    assert timer is not None and not timer.repeat, \
-        "a deadline, spent once — a cadence would stop a cooldown it was never told about"
-    assert timer.interval_s == host.hosting().beliefs.cooldown_s
-
-    timer.stop()
-    rounds.cooled(host, market_of(host).uri)
-    assert cooling() == [], "and when it lands the fact goes, with nothing left to compare"
+    horizon = datetime.now(timezone.utc) + timedelta(seconds=host.hosting().beliefs.cooldown_s)
+    assert cooling(at=horizon - timedelta(seconds=1)), "still cooling just before the horizon"
+    assert cooling(at=horizon + timedelta(seconds=1)) == [], \
+        "and past it the door hands the row to nobody, with nothing left to compare"
+    assert rounds.cooling_graph(host.id, market_of(host).uri) in host.beliefs.periods()
 
 
-def test_a_cooling_row_that_outlived_its_timer_is_swept(host):
+def test_a_cooling_row_that_outlived_the_process_is_swept(host):
     """A timer does not survive a restart and a belief does, so the horizon is the backstop —
     the same shape a round's `closesAt` has. Without this a host that restarted during a
     cooldown would hold a row nothing retracts and never convene again."""
@@ -1165,5 +1161,6 @@ def test_a_cooling_row_that_outlived_its_timer_is_swept(host):
     market = market_of(host)
     rounds.convened(host, market.uri, cooldown_s=60.0,
                     now=datetime.now(timezone.utc) - timedelta(seconds=61))
-    assert rounds.sweep_cooled(host) == 1, "the horizon passed while nothing was running"
-    assert rounds.sweep_cooled(host) == 0, "and there is nothing left to sweep"
+    assert rounds.cooling_graph(host.id, market.uri) in host.beliefs.outdated(), "its period has ended"
+    assert host.upkeep.sweep() == 1, "the horizon passed while nothing was running: the one sweep drops it (#645)"
+    assert host.upkeep.sweep() == 0, "and there is nothing left to sweep"

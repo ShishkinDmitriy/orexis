@@ -36,7 +36,7 @@ import time
 from pathlib import Path
 
 from .timer import Timer
-from orexis_agent_progression.ontology import SWEEP
+from orexis_agent_progression.ontology import OUTDATED
 from orexis_agent_progression.store import bindings
 
 log = logging.getLogger("upkeep")
@@ -143,16 +143,24 @@ class BeliefBaseUpkeep:
         self._timer.start()
 
     def sweep(self) -> int:
-        """Ask every module to retract what the clock has ended. Returns how many rows went.
+        """Drop every graph of the agent's own whose period has ended, whatever its kind
+        (#645, a-root-holds-always-and-an-outdated-graph-is-dropped). Returns how many went.
 
         HERE because keeping your own house is not a capability and this is the clock that
-        proves it: a fact that expires by the clock must not depend on an event some agent may
-        stop receiving. The kernel asks and never sweeps — which fact expires, and what its
-        expiry means, is the owner's (absence-is-not-retraction).
+        proves it: a graph that ends by the clock must not depend on an event some agent may
+        stop receiving. The door already hides an outdated graph from every reader, so
+        correctness never waits on this; it is hygiene for a volume — one function, on this
+        tick and at boot, in place of the sweep each package used to keep. What a graph's
+        ending MEANS is still the owner's: every module is told `orexis:outdated` before the
+        drop, and writes the verdict it leaves (absence-is-not-retraction).
         """
-        gone = sum(self.agent.ask(SWEEP))
+        gone = 0
+        for graph in self.agent.beliefs.outdated():
+            self.agent.tell(OUTDATED, graph)
+            self.agent.beliefs.drop_graph(graph)
+            gone += 1
         if gone:
-            log.info("%s: %d row(s) the clock had ended were retracted", self.agent.id, gone)
+            log.info("%s: %d graph(s) whose period had ended were dropped", self.agent.id, gone)
         return gone
 
     def _tick(self) -> None:

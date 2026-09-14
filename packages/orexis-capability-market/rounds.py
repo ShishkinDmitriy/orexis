@@ -32,8 +32,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from orexis_agent_progression.ontology import (CLASSIFICATION_GRAPH, GRAPH_PREFIX, PERIODS_GRAPH,
-                                               beliefs_graph)
+from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, GRAPH_PREFIX, PERIODS_GRAPH
 from orexis_agent_progression.store import bindings
 
 from .terms import (CLOSES_AT, COOLING_UNTIL, HAS_ROUND, LOT_L, NS, RESERVE_PER_L,
@@ -103,51 +102,17 @@ INSERT DATA {{
 def close_round(agent, auction_id: str) -> None:
     """Retract the round — it is over for this agent, whatever the wire says next: the graph,
     its classification and its period all go."""
-    graph = round_graph(agent.id, auction_id)
-    agent.beliefs.update(f"""
-DELETE {{
-  GRAPH <{graph}> {{ ?s ?p ?o }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> ?cp ?co }}
-  GRAPH <{PERIODS_GRAPH}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }}
-WHERE  {{
-  {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}
-  UNION {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> ?cp ?co }} }}
-  UNION {{ GRAPH <{PERIODS_GRAPH}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }} }}""")
+    agent.beliefs.drop_graph(round_graph(agent.id, auction_id))
 
 
-def sweep_expired(agent, now: datetime | None = None) -> int:
-    """Drop every round graph whose period has ended — the horizon on a belief about another
-    agent. The host says when its round is over (#599) and that is what normally ends the row;
-    the door already hands nobody a round past its period, so this is hygiene for a close that
-    never arrived, a host that stopped, a graph that outlived a restart. Returns how many went."""
-    at = now or clock.now()
-    mine = f"{_ROUNDS}{agent.id}/"
-    gone = [g for g, (_, end) in agent.beliefs.periods().items()
-            if g.startswith(mine) and end is not None and at >= end]
-    for graph in gone:
-        close_round(agent, graph[len(mine):])
-    return len(gone)
+#  `sweep_expired`, `cooled` and `sweep_cooled` WERE HERE (#645): a round past its close and a
+#  venue past its cooldown are graphs whose periods have ended, hidden by the door and dropped
+#  by the one sweep in upkeep, and no timer retracts the cooling row.
 
 
-def cooled(agent, venue_uri: str) -> None:
-    """The cooldown ran out: this venue is not cooling any more."""
-    agent.beliefs.update(f"""
-DELETE {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{COOLING_UNTIL}> ?was }} }}
-WHERE  {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{COOLING_UNTIL}> ?was }} }}""")
-
-
-def sweep_cooled(agent, now: datetime | None = None) -> int:
-    """Retract every cooling row whose horizon has passed — the backstop, as `sweep_expired`
-    is for a round. A timer retracts the row when the cooldown runs out; a process that
-    restarted holds the row and no timer, and this is what covers that."""
-    at = now or clock.now()
-    rows = bindings(agent.beliefs.query(f"""
-SELECT ?v ?until WHERE {{ GRAPH <{beliefs_graph(agent.id)}> {{
-  ?v <{COOLING_UNTIL}> ?until }} }}"""))
-    gone = [r["v"] for r in rows if datetime.fromisoformat(r["until"]) <= at]
-    for venue in gone:
-        cooled(agent, venue)
-    return len(gone)
+def cooling_graph(agent_id: str, venue_uri: str) -> str:
+    """ONE venue's cooling in ONE agent's store — the unit a period is said of (#645)."""
+    return f"{GRAPH_PREFIX}cooling/{agent_id}/{venue_uri.rsplit('#', 1)[-1]}"
 
 
 def rounds_of(agent, venue_uri: str | None = None, at: datetime | None = None) -> list[Round]:
@@ -171,12 +136,20 @@ def convened(agent, venue_uri: str, cooldown_s: float, now: datetime | None = No
     The cooldown is a private belief and stays one; what reaches the graph is the fact that
     this venue is cooling, carrying the instant it stops as its horizon. The Offering action's
     precondition asks whether the row is there and compares nothing (#598) — it read
-    `?may <= NOW()` while the term named the instant instead of the state. Replaced, never
-    accumulated.
+    `?may <= NOW()` while the term named the instant instead of the state. A GRAPH HOLDING
+    DURING ITS PERIOD (#645): from the close to the horizon, so the door hands the row to
+    nobody once the cooldown ran out, with no timer and no sweep of this package's own.
     """
-    until = (now or clock.now()) + timedelta(seconds=float(cooldown_s))
+    since = now or clock.now()
+    until = since + timedelta(seconds=float(cooldown_s))
+    graph = cooling_graph(agent.id, venue_uri)
+    agent.beliefs.drop_graph(graph)
     agent.beliefs.update(f"""
-DELETE {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{COOLING_UNTIL}> ?was }} }}
-WHERE  {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{COOLING_UNTIL}> ?was }} }} ;
-INSERT DATA {{ GRAPH <{beliefs_graph(agent.id)}> {{
-  <{venue_uri}> <{COOLING_UNTIL}> "{until.isoformat()}"^^<{_XSD}dateTime> }} }}""")
+INSERT DATA {{
+  GRAPH <{graph}> {{ <{venue_uri}> <{COOLING_UNTIL}> "{until.isoformat()}"^^<{_XSD}dateTime> . }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a orexis:BeliefGraph ; orexis:arrivedBy <{RECORDED}> . }}
+  GRAPH <{PERIODS_GRAPH}> {{
+    <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;
+      orexis:start "{since.isoformat()}"^^<{_XSD}dateTime> ;
+      orexis:end "{until.isoformat()}"^^<{_XSD}dateTime> ] . }}
+}}""")

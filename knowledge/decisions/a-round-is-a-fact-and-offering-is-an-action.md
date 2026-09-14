@@ -127,15 +127,16 @@ close too, on the topic that carried the offer, and a bidder's row is retracted 
 another agent DID rather than by arithmetic — which is what took `NOW()` out of the premise
 above, and out of Offering's. The clock survives as the BACKSTOP, which is what it should have
 been: a message can be lost and a host can die, so `closesAt` is the horizon on a belief about
-another agent and `sweep_expired` is what covers silence. The general form is
+another agent and the one sweep of #645 is what covers silence (it was `sweep_expired`, this
+package's own, until every timed graph was dropped by one function). The general form is
 [#598](https://github.com/ShishkinDmitriy/orexis/issues/598) — time is another sense, writing facts at the belief-revision seam.
 
 **The cooldown went the same way, and the rename was the work.** `market:mayConveneAt` said
 when the cooldown runs out, which is TRUE the whole time the row is written — so its presence
 said nothing and every reader did the arithmetic. A row whose presence is meant to BE a fact
-has to be named for the state: `market:coolingUntil`, present while the venue is cooling,
-retracted by a deadline of its own landing on the loop, with the instant it carries serving as
-the horizon a sweep reads when a restart leaves a row behind and no timer. So the premise asks
+has to be named for the state: `market:coolingUntil`, present while the venue is cooling —
+since #645 a graph holding during the cooldown, which the door hands to nobody once it ran out
+and the one sweep drops, with no timer of its own and nothing left behind by a restart. So the premise asks
 whether the row is there and compares nothing, and this package's rules read no clock at all —
 held to it by `tests/test_clockless.py`, which names the two that are left, both sensing's.
 

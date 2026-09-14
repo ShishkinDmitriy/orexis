@@ -129,8 +129,8 @@ want states; Acquiring is available on a claim held, Tendering is done by a clai
 unpresented whenever it was claimed — beside the claim cleared since the step was adopted,
 which a host with no redeem channel writes as presented on arrival and which stays the
 only kind that counts — and the tender taken with such a claim in hand bids nothing. A claim
-whose window closed unpresented is let go by the bidder's sweep, or every later tender would
-be done by it. And one line in the keeper: a plan standing at its LAST step and waiting —
+whose window closed unpresented is a graph past its period (#645) — handed to nobody and
+dropped by the one sweep — or every later tender would be done by it. And one line in the keeper: a plan standing at its LAST step and waiting —
 held until the watch is live, or placed at the claim's window — is in progress and not
 re-decided. It was not, since #510 counted only a step still to come, and that was harmless
 while the round's close left nothing on the menu; with the claim held the pass found buying

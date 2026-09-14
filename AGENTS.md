@@ -238,6 +238,12 @@ it is a record wearing a bullet.
   scaled their clock and the agent kept the wall's; every instant and stretch is in one
   timeline now, `clock.now()` is the only read, the pace is a deployment fact converted once
   where something sleeps, and no rule learned a unit (#646).
+- **What ends by the clock is a graph with a period, and one sweep drops it** — four
+  sweeps each knew its kind and each was a copy, a cooling row kept a timer a restart lost, and
+  a claim past its window was let go by hand; the door hides an ended graph from every reader,
+  upkeep drops whatever has ended on its tick and at boot, and what the ending MEANS stays
+  the owner's, told `orexis:outdated` before the drop — which is where a debt's verdict is
+  written, since the ledger keeps the verdict and not the want (#645).
 - **The mind wakes on contradiction, not on time, and a set of bands is what a reading
   contradicts** — the actuator marked the stake on every reading and the dwell (#615) was
   weighed to slow it; a reading inside the bands the next observation was expected in leaves

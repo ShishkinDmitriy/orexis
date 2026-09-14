@@ -307,6 +307,9 @@ orexis:arrivesBy a owl:ObjectProperty ; rdfs:range orexis:Arrival ;
 
 orexis:PredictionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Prediction graph" ;
     rdfs:comment "A PREDICTION: a graph holding during the window it predicts for, carrying what a package expects a reading to be by then — the predicted reading keyed exactly as the present's is, typed with every band it may be in, a centre where the package has one — written by sensing from the drifts after every reading, one graph per horizon (the-drift-is-sensings-and-its-result-is-predictions, #642). A KIND OF ITS OWN to the doors: `query_at` hands a reader the predictions holding at the instant asked about beside public knowledge and the records holding then; the agent's own records never list them, no validation reads them, and no plan carries them into its imaginarium until the search reads predictions (#643). The first is the expected next observation, the window the next reading is held to; the window closing with no reading is staleness. Typed in the classification when written, with a period in the periods table, as a round is." .
+orexis:RecordGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Record graph" ;
+    rdfs:comment "ONE agent's own graph whose period says how long what it states is WORTH BELIEVING, not when it holds (#645): a record of a commitment — a debt, from its issue to the claim's expiry. A reader standing at a later instant is handed such a graph as it stands NOW, since the arrival a standing debt predicts is an arrival at every later instant though the debt's own window will have closed by then; a graph holding DURING its period — a round, a claim, a cooling row, a forecast, a prediction — is handed as of the instant asked about. The class is the door's to read; a package says which of its graphs are records by subclassing it." .
+
 orexis:WorkingGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Working graph" ;
     rdfs:comment "ONE agent's own graph that nothing outside its package reads: a reviewer's scratch, a running summary, a record of decisions. Classified like any per-agent graph, so a volume knows it from litter — and left out of what a plan carries into a possible world and what a validation reads beside the state, since none of it is a fact about the world a shape is written against. What is carried is asked of `store.recorded_graphs()`; this class is how a package says: mine, and not that." .
 
@@ -697,9 +700,9 @@ orexis:repredict a assembly:Extension ;
 orexis:witness a assembly:Extension ;
     assembly:signature "(keyed_class, key) -> float | None" ; orexis:row orexis:Progression ; rdfs:label "witness" ; rdfs:comment "What value does the world show NOW for this keyed fact — the reading a step predicted, as it stands at the verdict? Asked once per verdict for the residual (observed against predicted) the reviewer reads; sensing's, because what a reading is is sensing's (#518). None is no opinion." .
 
-orexis:sweep a assembly:Extension ;
-    assembly:signature "() -> int" ; orexis:row orexis:Progression ; rdfs:label "sweep" ;
-    rdfs:comment "The clock has moved: retract whatever you hold that has stopped being true by it. Asked of every module on the agent's own housekeeping tick, because a fact that expires by the clock must not wait for an event some agent may stop receiving. Only the OWNER of a fact knows which treatment it deserves — retract it, keep and mark it, or keep it and let a want go cold (absence-is-not-retraction) — so the kernel asks and never sweeps." .
+orexis:outdated a assembly:Extension ;
+    assembly:signature "(graph) -> None" ; orexis:row orexis:Progression ; rdfs:label "outdated" ;
+    rdfs:comment "This graph's period has ended, and the one sweep is about to drop it (#645): a round past its close, a claim past its window, a pursued want past its instant, a debt past its expiry, a prediction past its window. Told to every module before the drop, so whoever owns the kind writes the verdict it leaves — a debt lapsed unserved, a claim let go — for the reviewer; the ledger keeps the verdict, not the want. The door already hides the graph from every reader, so nothing waits on this; and no package keeps a sweep of its own." .
 
 orexis:beliefRevised a assembly:Extension ;
     assembly:signature "(belief_term, value) -> None" ; orexis:row orexis:Progression ; rdfs:label "belief revised" ; rdfs:comment "One of this agent's beliefs has been re-picked — take it up, if it is one of yours." .

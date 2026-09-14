@@ -280,11 +280,12 @@ market:Offering
           #  close, so there is nothing to compare (#599).
           FILTER NOT EXISTS { ?via market:hasRound ?open }
           FILTER NOT EXISTS { GRAPH $state { ?via market:hasRound ?imagined } }
-          #  AND THE VENUE IS NOT COOLING (#598): the row's presence is the fact, retracted
-          #  by a timer when the cooldown runs out and by a sweep where the timer did not
-          #  survive a restart. It asked `?may <= NOW()` while the term named the instant
-          #  rather than the state, which is the last clock this package's rules read.
-          FILTER NOT EXISTS { GRAPH $beliefs { ?via market:coolingUntil ?until } }
+          #  AND THE VENUE IS NOT COOLING (#598): the row's presence is the fact — a graph
+          #  holding during its period since #645, so the door hands it to nobody once the
+          #  cooldown ran out, and this reads the default graph. It asked `?may <= NOW()`
+          #  while the term named the instant rather than the state, which is the last clock
+          #  this package's rules read.
+          FILTER NOT EXISTS { ?via market:coolingUntil ?until }
           OPTIONAL { GRAPH $state { ?reading sosa:hasFeatureOfInterest ?source ;
                                     sosa:observedProperty ?stock ;
                                     sosa:hasSimpleResult ?level } }
@@ -352,10 +353,10 @@ market:Tendering
     #  A claim the host redeemed for me arrives presented, and is the first kind only.
     orexis:doneWhen """
         SELECT $this WHERE {
-          GRAPH $beliefs { $me market:holdsClaim ?claim .
-                           ?claim market:onVenue $via ; market:claimedAt ?at .
-                           OPTIONAL { ?claim market:presentedAt ?p }
-                           FILTER(!BOUND(?p) || ?at > $since) } }""" ;
+          $me market:holdsClaim ?claim .
+          ?claim market:onVenue $via ; market:claimedAt ?at .
+          OPTIONAL { ?claim market:presentedAt ?p }
+          FILTER(!BOUND(?p) || ?at > $since) }""" ;
     #  ... or not by the time the round closes: a bidder is told the outcome or nothing.
     orexis:lapsesAt """
         SELECT (MAX(?t) AS ?at) WHERE {
@@ -369,9 +370,9 @@ market:Presenting
     #  receives water at a time, and this is the time. A claim with no window is usable now.
     orexis:readyAt """
         SELECT ?at WHERE {
-          GRAPH $beliefs { $me market:holdsClaim ?claim .
-                           ?claim market:onVenue $via ; market:claimedAt ?t ; market:usableFrom ?at .
-                           FILTER(?t > $since) } }""" ;
+          $me market:holdsClaim ?claim .
+          ?claim market:onVenue $via ; market:claimedAt ?t ; market:usableFrom ?at .
+          FILTER(?t > $since) }""" ;
     #  READY when my watch on the property is provably live (#132, #135): the sensor
     #  monitoring my subject for what the lot moves says so, in sensing's words — or when
     #  the host already redeemed the claim for me (a venue with no redeem channel), and
@@ -380,8 +381,8 @@ market:Presenting
         SELECT $this WHERE {
           { ?sensor sensing:monitors $subject ; sosa:observes $about ; sensing:watchLive true }
           UNION
-          { GRAPH $beliefs { $me market:holdsClaim ?claim . ?claim market:onVenue $via ;
-                             market:claimedAt ?at ; market:presentedAt ?done . FILTER(?at > $since) } } }""" ;
+          { $me market:holdsClaim ?claim . ?claim market:onVenue $via ;
+            market:claimedAt ?at ; market:presentedAt ?done . FILTER(?at > $since) } }""" ;
     #  ... and no longer than the sensor's own horizon: a dose delayed forever is worse than a
     #  dose unobserved, so the step lapses into being taken.
     orexis:lapsesAt """

@@ -16,7 +16,7 @@ See knowledge/decisions/capability-packages.md.
 
 from __future__ import annotations
 
-from orexis_agent_progression.ontology import BELIEF_REVISED, QUIET, REPORTS, SEND, SERIES, SWEEP
+from orexis_agent_progression.ontology import BELIEF_REVISED, QUIET, REPORTS, SEND, SERIES
 from orexis_agent_progression.ontology import DESIRES, DESIRE_URGENCY
 
 from datetime import datetime
@@ -151,20 +151,10 @@ class Module:
         """
         return []
 
-    @contributes(SWEEP)
-    def sweep(self) -> int:
-        """The clock has moved — retract what you hold that has stopped being true by it.
-
-        Asked on the agent's own housekeeping tick, so a fact that expires by the clock never
-        waits for an event this agent may stop receiving: a bidder that stops bidding keeps no
-        round rows, and a belief base holds a fixed number of nodes however long it runs.
-
-        WHICH TREATMENT a fact deserves is the owner's, and there are three
-        (absence-is-not-retraction): retract it, keep it and mark it, or keep it and let a want
-        go cold. This hook is for the first — a module that keeps nothing by the clock answers
-        nothing. Returns how many rows went, for the log.
-        """
-        return 0
+    #  `sweep` WAS HERE, a point every module could answer with what the clock had ended.
+    #  Everything sourced at a time is a graph with a period now, one sweep in upkeep drops
+    #  what is outdated whatever its kind, and a module is told `orexis:outdated` before a
+    #  graph of its kind goes, to write the verdict it leaves (#645).
 
     @contributes(QUIET)
     def quiet(self) -> list[tuple[str, str]]:

@@ -334,8 +334,8 @@ def test_an_obligation_is_judged_by_the_met_test_the_ledger_wrote(monkeypatch):
     ledger = supplier.hosting().ledger
     uri = ledger.owe("fern", "m1", amount_l=0.5)
     ledger.demanded("m1")
-    rows = bindings(supplier.beliefs.query(f"""SELECT ?t WHERE {{ GRAPH <{obligations_graph("supplier")}> {{
-        <{uri}> orexis:unmetWhen ?n . ?n sh:select ?t }} }}"""))
+    rows = bindings(supplier.beliefs.query_union(f"""SELECT ?t WHERE {{
+        <{uri}> orexis:unmetWhen ?n . ?n sh:select ?t }}"""))
     assert rows and "market:dischargedAt" in rows[0]["t"] and "$state" in rows[0]["t"], \
         "the record carries its met-test, in the ledger's own words"
     want = next(d for d in supplier.pursuing() if d.claim == "m1")

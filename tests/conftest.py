@@ -257,6 +257,7 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     for module in agent.modules:
         if hasattr(module, "repredict"):
             module.repredict()
+    agent.upkeep.sweep()          # as boot does: what is outdated is gone before the first pass (#645)
     return agent
 
 
