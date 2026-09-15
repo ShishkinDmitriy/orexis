@@ -232,6 +232,13 @@ def test_an_irrelevant_lever_is_never_even_asked(monkeypatch):
                     <urn:disk_1> a <{HANOI}Disk> ; <{HANOI}size> 1 . }}
                 GRAPH <{STATE_GRAPH}> {{ <urn:disk_1> <{HANOI}on> <{HANOI}PegA> . }} }}""")
             agent.desires.rebuild()
+        #  AND THE BELIEF BASE'S OWN DOOR (#662): a lever this pass finds irrelevant is asked
+        #  THERE, because the imaginarium's copy of the readings has been divided by the view
+        #  and an irrelevant lever reads exactly what the view left out. Counted on this
+        #  store alone, so the ledger's own questions stay out of the arithmetic.
+        beliefs_at = agent.beliefs.query_at
+        monkeypatch.setattr(agent.beliefs, "query_at",
+                            lambda sparql, *a, **k: (asked.append(sparql), beliefs_at(sparql, *a, **k))[1])
         asked.clear()
         plan = Planner(agent, agent.me).plan(_goal(agent))
         assert len(plan.steps) == 8, _steps(plan)

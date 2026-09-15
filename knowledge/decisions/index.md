@@ -99,6 +99,7 @@ The search itself, and the two places a language model is allowed near it.
 * [relevance-is-read-off-the-actions-and-closed-backward](/decisions/relevance-is-read-off-the-actions-and-closed-backward.md) - A pass simulates only levers whose effects reach what the want reads, closed backward; declared touches and reasoning-as-actions refused.
 * [a-pass-is-budgeted-in-worlds](/decisions/a-pass-is-budgeted-in-worlds.md) - The search's ceiling is `deliberation:budgetWorlds`, a sovereign-stated count of forks the pass answers within; depth bounded nothing once best-first.
 * [a-node-holds-one-world](/decisions/a-node-holds-one-world.md) - The flat rdflib copy per search node is gone; a union of deltas cannot express retraction.
+* [a-fork-copies-the-half-a-pass-can-touch](/decisions/a-fork-copies-the-half-a-pass-can-touch.md) - A pass sets aside the readings its view names nothing of; the halves stay disjoint, so no read pays a subtraction.
 * [the-judge-speaks-rust](/decisions/the-judge-speaks-rust.md) - The SHACL judge is rudof behind one door, its two gaps closed on our side; pySHACL stays only as a gate.
 * [the-domain-is-a-plug-in-and-hanoi-is-the-proof](/decisions/the-domain-is-a-plug-in-and-hanoi-is-the-proof.md) - Tower of Hanoi: an ontology, one move action, no Python — the optimal solution is the cheapest achiever.
 * [the-model-is-consulted-at-the-edge-of-knowledge](/decisions/the-model-is-consulted-at-the-edge-of-knowledge.md) - The LLM is a teacher, not a decider in the loop: consulted only when no written-down plan connects a gap to a lever.

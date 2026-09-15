@@ -263,6 +263,11 @@ it is a record wearing a bullet.
   pot from drying for five hours and the purchase could not stop the prediction emptying the
   barrel it had just filled; a key is changed when its canonical facts are, which is what a
   look's diff netting to nothing already said (#643).
+- **A fork copies what the pass could touch, and what it could touch is bounded by what a
+  rule may READ** — the readings a want's view names nothing of are set aside into one graph
+  read with the invariant half, disjoint so no reader pays a subtraction; a node's graph
+  holding only the places its path CHANGED was refused, because hanoi's Move walks a tower it
+  has not touched inside `GRAPH $state` (#662).
 - **Deliberation is on triples, and a number is not special** — how a domain describes its
   world, exact numbers, ranges or classes, is decided inside the domain, and its actions'
   preconditions and effects are described the same way; the core compares triples and

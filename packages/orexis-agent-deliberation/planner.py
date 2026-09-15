@@ -767,6 +767,11 @@ class Planner:
         #  matched diff — the two agree exactly here, and the observed one is the one that
         #  says what the present is.
         self.imaginarium.observe(self.agent.beliefs, STATE_GRAPH)
+        #  AND SET ASIDE AGAIN what this pass cannot touch (#662): the observation brought the
+        #  whole of the present's readings back, and which half of them is invariant is the
+        #  same question it was at the root — the view is the desire's and the desire has not
+        #  changed. Rebuilt rather than kept, because what was set aside may have drifted.
+        self._divide()
         depth, cost0, landing0 = len(node.taken), node.cost, node.landing
         for m in keep:
             dplus, dminus = m.diff
@@ -908,6 +913,49 @@ class Planner:
                 out.add(f)
         return frozenset(out)
 
+    def _divide(self) -> None:
+        """Set aside the readings this pass cannot touch, and read them with the invariant
+        half from here on (#662).
+
+        Per PASS and not per node, which is the one thing about this that had to be measured
+        rather than assumed. A path of depth d has changed at most d subjects, so a node's own
+        graph could be that small — and it cannot be: hanoi's Move reads `?s (hanoi:on)+ ?about`
+        inside `GRAPH $state`, walking a tower the path has not touched, and the courier's Pick
+        reads every parcel's cell there. A rule reads whatever the world it is asked about
+        holds, and a basic graph pattern under one `GRAPH` clause matches entirely within one
+        graph, so anything a rule may READ has to stay in the mutable half. The want's VIEW is
+        exactly that bound — what the want reads plus what the relevant levers read and write —
+        so a subject with nothing in the view is a subject no rule of this pass can bind.
+
+        None is every fact, and then there is nothing to set aside: relevance over-approximates
+        and says so by answering nothing, and a pass that does not know what it reads keeps the
+        world whole.
+        """
+        if self._compiled.view is None:
+            return
+        aside = self.imaginarium.divide(STATE_GRAPH, self._touchable)
+        if aside not in self._compiled.invariant_graphs:
+            self._compiled.invariant_graphs += (aside,)
+
+    def _touchable(self, triples) -> bool:
+        """Whether this pass could read or change what one subject of the world's readings says.
+
+        THE VIEW, asked of a subject rather than of a fact — one owner for what the view keeps,
+        which is `_project`. A subject with nothing in the view is a subject no rule of this
+        pass can bind, because the view holds every predicate the relevant levers read as well
+        as every one they write.
+
+        THE NARROWING IS BY PROPERTY AND NOT BY SUBJECT, and that limit is the predicate
+        one #565 already measured rather than a shortcut taken here. Narrowing a reading to
+        the subject the agent acts for was tried and refused by the greenhouse: the vent's
+        rule reads the OUTSIDE's air to know which way opening would move the bed, and the
+        outside is nobody's subject — and reaching the other way, every pot an agent polls is
+        linked to it through `sensing:polls`, which a look's own precondition reads. Telling
+        this pot's moisture from that one needs a scope over a variable — a subject and a
+        predicate together — which is #565's first item and not this one's.
+        """
+        return bool(self._project(signature.facts(triples, self._compiled.keys)))
+
     def _facts_now(self) -> frozenset:
         """The whole base as the store holds it now, in canonical facts."""
         store = self.agent.beliefs
@@ -924,6 +972,13 @@ class Planner:
         invariant HALF — and neither it nor the classification saying what it is may be in
         this signature, or a cone would die every time a forecast refreshed, on a change no
         lever caused and no plan depends on.
+
+        LESS THE READINGS SET ASIDE AS INVARIANT (#662), and they leave by the same door: the
+        graph they were moved into is the imaginarium's, so the belief base answers nothing for
+        it. That is the right answer rather than a lucky one — they are readings, and what a
+        kept cone is checked against is everything a world holds BESIDES its readings, whether
+        a pass could touch them or not. Whether a reading that drifted kills a cone is
+        `_project`'s question and stays there.
         """
         store = self.agent.beliefs
         out = set(store.periods()) | {CLASSIFICATION_GRAPH}
@@ -1331,6 +1386,9 @@ class Planner:
         #  the want is about. A present is matched to a kept world WITHIN the view, so a fact
         #  the want never reads may drift without killing the cone; None is every fact.
         self._compiled.view = self._view_of(desire)
+        #  AND THE HALF OF THE WORLD'S READINGS THE VIEW LEAVES OUT (#662), moved into the
+        #  invariant half, where every merged reader already looks and no fork copies it.
+        self._divide()
         #  WHAT THE MENU IS ASKED FOR, per node (#504): the relevant levers. Every action on a
         #  menu states an effect — the gate holds a choosable action to both texts (#506) —
         #  so there is no lever to keep on the menu for the sake of saying it was passed over.
@@ -1393,8 +1451,17 @@ class Planner:
         #  named every irrelevant action in the vocabulary would name Move in a plant world
         #  with no disk in it. One query per foreign action per pass is what a truthful
         #  trace costs, against one per node before this.
+        #
+        #  ASKED OF THE BELIEF BASE, not of the imaginarium (#662). These rows are the levers
+        #  this pass finds IRRELEVANT, so their preconditions read exactly what the view does
+        #  not — the knob the runbook flips, a disk in a plant world — and the view is what
+        #  the imaginarium's copy of the readings has been divided by. Asked there, a lever
+        #  passed over would bind nothing and the trace would say the row had vanished rather
+        #  than that it was passed over. The root's readings ARE the agent's own, at the root
+        #  and again at every re-root, where the present is observed from this very store, so
+        #  this is the same world it always asked and a whole one.
         self._passed_over = [] if self._compiled.relevant is None else affordances_of(
-            partial(self.imaginarium.query_at, at=self._clock), self.me.uri, self.agent.desires.query_union,
+            partial(self.agent.beliefs.query_at, at=self._clock), self.me.uri, self.agent.desires.query_union,
             beliefs_graph(self.agent.id), STATE_GRAPH,
             only=frozenset(relevance.actions_of(self.agent.beliefs.query)) - self._compiled.relevant)
         self._base_forbidden = (self._forbidden_keys(here)
@@ -1479,6 +1546,7 @@ class Planner:
         #  no physics. Nothing dries after a step inside a pass: what the world does from the
         #  step's band is predicted once the plan is adopted, by the package, from there.
         own_added, own_retracted = list(added), list(retracted)
+        self._reaches_aside(row.action, own_added, own_retracted)
         changed = node.changed | self._places(own_added, own_retracted)
         added, retracted = self._predicted(graph, node, self._at(node, lands), added, retracted,
                                            apply=True, changed=changed)
@@ -1537,6 +1605,14 @@ class Planner:
             for subject, triples in beliefs.nodes_of(prediction).items():
                 if self._place_of(subject, triples) in changed:
                     continue
+                #  NOR A READING SET ASIDE AS INVARIANT (#662): its node lives with the
+                #  invariant half, so an overlay written into this world's own graph would
+                #  stand BESIDE it rather than replace it — two readings on one key, which
+                #  is the failure `orexis:retracts` exists to prevent. A place this pass
+                #  cannot touch is a place no rule reads and no measure asks about, so
+                #  predicting it changes nothing it could have changed.
+                if not self._touchable(triples):
+                    continue
                 #  THE WHOLE NODE IT REPLACES, type and key included — a retraction is
                 #  canonicalised like an addition, and a reading retracted without its type is
                 #  two plain triples that cancel nothing (#619).
@@ -1557,6 +1633,26 @@ class Planner:
         keys = self._compiled.keys
         net = signature.facts(added, keys) ^ signature.facts(retracted, keys)
         return frozenset(f[1:3] if f[0] == "keyed" else f[0] for f in net)
+
+    def _reaches_aside(self, action: str, added, retracted) -> None:
+        """Say so, loudly, where a step changed a place `_divide` set aside as invariant (#662).
+
+        It cannot happen and it must not happen quietly. Cannot, because the view holds every
+        predicate a relevant lever WRITES, so a subject a step reaches is a subject the view
+        kept — unless the lever's own construct was unparseable, in which case relevance says
+        it reads and writes ANYTHING and there is no view to divide by. Must not, because the
+        old node stays with the invariant half while the new one lands in this world's own
+        graph, and the two halves stop being disjoint: one key, two readings, no error, and a
+        want judged on whichever the engine returns first. An action that reaches outside its
+        pass's view is a defect in that action's declaration, and this is where it surfaces.
+        """
+        if self._compiled.view is None:
+            return
+        keys = self._compiled.keys
+        net = signature.facts(added, keys) ^ signature.facts(retracted, keys)
+        aside = [f[1:3] if f[0] == "keyed" else f[0] for f in net - self._project(net)]
+        if aside:
+            log.error("%s changed what this pass set aside as invariant: %s", action, aside)
 
     def _place_of(self, subject, triples):
         """Where a predicted node stands, in the signature's words: its (class, key) where it

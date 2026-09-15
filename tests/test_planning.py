@@ -658,3 +658,90 @@ def test_no_ontology_graph_carries_a_law_so_the_carve_may_leave_the_vocabulary_o
 SELECT ?g ?s WHERE { GRAPH ?g { ?s a sh:NodeShape ; sh:severity sh:Violation } }"""))
     assert not [r for r in laws if r["g"] in vocabulary], \
         "a law in the vocabulary: the planner's carve would never find it"
+
+
+#################  What a fork copies  #################
+#
+#  A node's world used to be a copy of the whole of the agent's readings, whatever the step
+#  changed — O(state) per node against O(1) in the size of the change, which is free at
+#  shipped sizes and is not free for long (#662). What a pass sets aside now is the half of
+#  the readings its view names nothing of, and the two halves are disjoint: `GRAPH $state`
+#  reads the mutable one, every merged reader reads both, and nobody pays a subtraction.
+
+INVARIANT = "http://example.org/orexis/graph/possible/invariant"
+
+
+def _padded(monkeypatch, moisture, subjects=0, prop=None):
+    """The loner world with `subjects` extra readings in it — of `prop`, or of the property
+    the want is about where none is named. What a many-subject world looks like to a search."""
+    monkeypatch.setenv("OREXIS_WORLD", "loner")
+    st = genesis_store({("zz", MOISTURE): moisture}, world="loner")
+    if subjects:
+        st.update("INSERT DATA { GRAPH <%s> { %s } }" % (STATE_GRAPH, "\n".join(
+            f"""<urn:obs{i}> a <http://www.w3.org/ns/sosa/Observation> ;
+                  <http://www.w3.org/ns/sosa/hasFeatureOfInterest> <urn:pot{i}> ;
+                  <http://www.w3.org/ns/sosa/observedProperty> <{prop or MOISTURE}> ;
+                  <http://www.w3.org/ns/sosa/hasSimpleResult>
+                      "0.3"^^<http://www.w3.org/2001/XMLSchema#decimal> ."""
+            for i in range(subjects))))
+    agent = build_agent("gardener", st, monkeypatch)
+    desire = next(g for g in agent.pursuing()
+                  if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
+    planner = Planner(agent, agent.me)
+    return planner, planner.plan(desire), desire
+
+
+AIR = "http://example.org/orexis/water#AirTemperature"
+
+
+@pytest.mark.parametrize("subjects", [0, 50, 500])
+def test_a_fork_copies_what_the_pass_could_touch_and_not_the_whole_world(monkeypatch, subjects):
+    """A thousand readings of a property this want names nothing of cost a fork NOTHING (#662).
+
+    The measurement the issue was filed on: a state graph padded out took the fork from 0.8%
+    of a pass to 65%, because every node copied the padding again. Held here as the mutable
+    half's size, which is what a fork copies — flat in the number of subjects, where it used
+    to be linear in them.
+    """
+    planner, plan, _ = _padded(monkeypatch, DRY, subjects, prop=AIR)
+
+    mutable = list(planner.imaginarium.quads(STATE_GRAPH))
+    aside = list(planner.imaginarium.quads(INVARIANT))
+    assert len(mutable) == 8, f"{len(mutable)} quads in the mutable half: the pot's reading alone"
+    assert len(aside) == 4 * subjects, "and everything the view names nothing of is beside it"
+    assert [s.action for s in plan.steps] == [DOSING], "the plan is the one it always was"
+
+
+def test_the_two_halves_are_disjoint_and_a_judged_world_still_holds_both(monkeypatch):
+    """No reader pays a subtraction, which is the whole reason the halves are set aside rather
+    than overlaid: a fact is in one graph or the other and never in both, and the border text
+    a judged world is written as still holds the lot."""
+    planner, _, _ = _padded(monkeypatch, DRY, 3, prop=AIR)
+
+    mutable = {(q.subject, q.predicate, q.object) for q in planner.imaginarium.quads(STATE_GRAPH)}
+    aside = {(q.subject, q.predicate, q.object) for q in planner.imaginarium.quads(INVARIANT)}
+    assert mutable and aside, "both halves have something in them, or this proves nothing"
+    assert not mutable & aside, "a fact in both halves is an overlay, and overlays need precedence"
+    assert INVARIANT in planner._compiled.invariant_graphs, \
+        "what was set aside is read with the invariant half, or a rule would find it nowhere"
+    border = planner._border(planner._root)
+    for reading in ("urn:pot0", "urn:pot1", "urn:pot2"):
+        assert reading in border, f"{reading} left the world the judge is handed"
+
+
+def test_a_reading_of_the_property_the_want_is_about_stays_in_the_mutable_half(monkeypatch):
+    """The limit, measured rather than asserted: the narrowing is by PROPERTY and not by
+    subject, because the view is a set of predicates and a predicate cannot separate this pot
+    from that one — the same limit `a-scope-is-measured-before-it-is-a-mechanism` recorded.
+
+    Narrowing a reading to the subject the agent acts for was tried and REFUSED by the
+    greenhouse: the vent's rule reads the OUTSIDE's air to know which way opening would move
+    the bed, and the outside is nobody's subject. Separating two pots needs a scope over a
+    variable — a subject and a predicate together — which is #565's first item.
+    """
+    planner, _, _ = _padded(monkeypatch, DRY, 3)          # padded with MOISTURE, the want's own
+
+    mutable = list(planner.imaginarium.quads(STATE_GRAPH))
+    assert len(mutable) == 8 + 4 * 3, \
+        "a reading of the property the want is about is one the pass could touch"
+    assert not list(planner.imaginarium.quads(INVARIANT)), "so nothing was set aside"

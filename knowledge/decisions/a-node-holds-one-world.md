@@ -84,6 +84,14 @@ What actually carries it is two things, neither about retraction:
   slice, and the place to watch it is
   [measure-the-search](/runbooks/measure-the-search.md).
 
+  **The slice was shrunk rather than the representation changed**, which is the move this
+  paragraph pointed at and did not name:
+  [a-fork-copies-the-half-a-pass-can-touch](/decisions/a-fork-copies-the-half-a-pass-can-touch.md)
+  sets aside the readings a pass's view names nothing of, so a fork is O(what the pass could
+  touch) and the table above is read against that rather than against everything the agent
+  holds. The overlay is still refused, and for the same reason: the halves are disjoint, so
+  nothing gains a precedence to state.
+
 So the world stays materialised per node — but in ONE store, the Rust one, forked by diff,
 which is what the imaginarium was always for. The copy that was deleted is not the world; it is
 the translation of the world into another library.

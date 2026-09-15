@@ -47,6 +47,9 @@ from orexis_agent_progression.store import render, Store
 #  a graph IRI — but in a store nothing else can open, which is what keeps `orexis:PossibleGraph`'s
 #  promise that nothing here survives anything.
 _POSSIBLE = GRAPH_PREFIX + "possible/"
+#  The half of the world's readings no step of this pass can touch (#662), set aside so that
+#  a fork copies what is left. One graph per pass, rebuilt whenever the present is observed.
+_INVARIANT = _POSSIBLE + "invariant"
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 
@@ -183,6 +186,39 @@ class Imaginarium:
         """
         return [ox.Triple(q.subject, q.predicate, q.object)
                 for q in self._store.quads(graph) if q.subject == subject]
+
+    def divide(self, state: str, touchable) -> str:
+        """Move out of `state` every subject `touchable` refuses, into one graph, and name it.
+
+        THE MUTABLE HALF IS WHAT A FORK COPIES, so the cheap way to make a fork cheap is to
+        make that half small (#662). Every reading a pass cannot touch — a neighbouring pot's
+        moisture, a property no relevant lever reads — is the same in every world this pass
+        imagines, so it belongs with public knowledge and the records rather than in a copy
+        per node. What is left in `state` is what a step could change, and a fork is O(that)
+        rather than O(the world).
+
+        **The halves are DISJOINT and nothing pays a subtraction**, which is what makes this
+        different from the overlay `a-node-holds-one-world` refused: a reader merges the two
+        as one default graph and every pattern reads both, with no precedence to state and no
+        `FILTER NOT EXISTS` in anybody's rule text. What a rule scoped to `GRAPH $state` sees
+        is the mutable half alone, and that is the whole of what `touchable` must be right
+        about — a subject it sets aside is a subject no rule of this pass can bind, which is
+        why the test is the want's own view and not the path's own changes.
+
+        Rebuilt from nothing on every call, because the present is OBSERVED at a re-root and
+        what was set aside may have moved with it.
+        """
+        self._store.clear_graph(_INVARIANT)
+        nodes: dict = {}
+        for quad in self._store.quads(state):
+            nodes.setdefault(quad.subject, []).append(quad)
+        aside = [q for quads in nodes.values() if not touchable(quads) for q in quads]
+        if aside:
+            node = ox.NamedNode(_INVARIANT)
+            self._store.remove_quads(aside, forget=False)
+            self._store.add_quads(
+                (ox.Quad(q.subject, q.predicate, q.object, node) for q in aside), forget=False)
+        return _INVARIANT
 
     def reached(self, parent: str, path, added, retracted) -> str:
         """The world one step past `parent`: its readings, less what the step retracts, plus what
