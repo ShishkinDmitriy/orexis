@@ -685,6 +685,44 @@ WHERE  {{
         """
         return self._store.quads_for_pattern(None, None, None, ox.NamedNode(graph_iri))
 
+    def add_quads(self, quads, *, forget: bool = True) -> None:
+        """Write quads straight in, as the TERMS they are — the writing half of `quads`.
+
+        A store that can hand out quads and not take them was only half a store: a reader
+        copying one graph into another had to reach past this class for the other half, which
+        is what let a variant store grow by inheriting the whole of one. Text is not the road
+        (`quads` says why): a serialise-and-reparse relabels blank nodes.
+
+        `forget=False` says the caller KNOWS this write cannot change which graphs are public,
+        which are the agent's own, or anything `remember` holds — a world written into an
+        imaginarium, whose graphs are classified as nothing and hold during no period. It is an
+        assertion, not a hint: wrong, it leaves a stale answer standing, and a stale answer here
+        is an EMPTY RESULT rather than an error. Measured at 10% of a hanoi solve, which is why
+        the escape exists at all rather than being refused on principle.
+        """
+        for quad in quads:
+            self._store.add(quad)
+        if forget:
+            self._forget()
+
+    def remove_quads(self, quads, *, forget: bool = True) -> None:
+        """Take quads out, by term. The mirror of `add_quads`, and the same reason."""
+        for quad in quads:
+            self._store.remove(quad)
+        if forget:
+            self._forget()
+
+    def quads_for_pattern(self, subject=None, predicate=None, obj=None, graph=None):
+        """The quads matching a pattern, as terms — None for any. `graph` may be an IRI."""
+        return self._store.quads_for_pattern(
+            subject, predicate, obj,
+            ox.NamedNode(graph) if isinstance(graph, str) else graph)
+
+    def contains_graph(self, graph_iri: str) -> bool:
+        """Whether the named graph EXISTS. `has_graph` asks whether anything is WRITTEN there,
+        which is a different question: a graph forked and then emptied still exists."""
+        return self._store.contains_named_graph(ox.NamedNode(graph_iri))
+
     def has_graph(self, graph_iri: str) -> bool:
         """Whether anything has been written here — how birth knows it already happened."""
         return any(self._store.quads_for_pattern(None, None, None, ox.NamedNode(graph_iri)))
@@ -809,9 +847,12 @@ WHERE  {{
             "SELECT DISTINCT ?c WHERE { ?c <http://example.org/orexis#keyedBy> ?p }"))}
         return defs, supers, keyed
 
-    def update(self, sparql: str) -> None:
+    def update(self, sparql: str, *, forget: bool = True) -> None:
+        """Write. `forget=False` is the assertion `add_quads` documents: this write cannot
+        change the store's shape, so what was learned by asking may stand."""
         self._store.update(sparql, prefixes=NAMESPACES)
-        self._forget()
+        if forget:
+            self._forget()
         for listener in list(self.__dict__.get("_listeners", ())):
             listener()
 
