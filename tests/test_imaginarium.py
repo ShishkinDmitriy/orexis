@@ -129,7 +129,7 @@ def test_the_snapshot_is_public_knowledge_and_the_named_private_graphs_and_nothi
 
     #  Through the store it HOLDS: what counts as public is a fact about how the imaginarium
     #  was built, not a door anything asks it through, so it is not among the verbs it offers.
-    assert im._of.public_graphs() == st.public_graphs(), \
+    assert im._store.public_graphs() == st.public_graphs(), \
         "public knowledge means the same thing in both, or an unqualified pattern does not"
     for graph in (ONTOLOGY_GRAPH, WORLD_GRAPH, beliefs_graph("fern"), STATE_GRAPH):
         assert im.get_graph(graph).strip(), f"{graph} is empty in the imaginarium"
