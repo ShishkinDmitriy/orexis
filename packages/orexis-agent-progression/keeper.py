@@ -368,19 +368,8 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{PROGRESSION + "by"}> ?s . FILTER NOT EXIS
             act = Step(action=act, via=via or "")
         action = act.action
         now = clock.now()
-        for standing in self.standing(want=want):
-            if standing.action != action and (steps is None or self._next_of(standing.uri) is None):
-                continue                  # a different commitment about this want stands apart
-            #  A step PLACED at an instant (#619) is not outwaited while it waits for it.
-            placed = standing.step.not_before is not None and now < standing.step.not_before
-            if placed or standing.age_s(now) <= self.beliefs.patience_s:
-                if standing.action == action:
-                    return None
-                continue
-            #  A want has one plan at a time (#510): a stale one is superseded whatever its head.
-            self._resolve(standing, "dropped",
-                          f"outwaited: stood {standing.age_s(now):.0f}s against a patience "
-                          f"of {self.beliefs.patience_s}s, superseded by a new adoption")
+        if self._absorbed(want, action, steps, now):
+            return None
         stem = uuid.uuid4().hex[:8]
         uri = f"{OREXIS}intent_{self.agent.id}_{stem}"
         xsd = "http://www.w3.org/2001/XMLSchema#"
@@ -390,40 +379,14 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{PROGRESSION + "by"}> ?s . FILTER NOT EXIS
                      for n in range(len(plan))]
         blocks, parents, written = [], {}, set()
         for n, (step, step_uri) in enumerate(zip(plan, step_uris)):
-            facts = [f'<{PROGRESSION + "fills"}> <{step.action}>']
-            if step.via:
-                facts.append(f'<{PROGRESSION + "through"}> <{step.via}>')
-            if step.for_agent:
-                facts.append(f'<{PROGRESSION + "forAgent"}> <{step.for_agent}>')
-            if step.quantity is not None:
-                facts.append(f'<{PROGRESSION + "quantity"}> "{step.quantity}"^^<{xsd}decimal>')
-            if step.not_before:
-                facts.append(f'<{PROGRESSION + "notBefore"}> "{step.not_before.isoformat()}"^^<{xsd}dateTime>')
-            if step.not_after:
-                facts.append(f'<{PROGRESSION + "notAfter"}> "{step.not_after.isoformat()}"^^<{xsd}dateTime>')
-            if step.urgency_after is not None:
-                facts.append(f'<{PROGRESSION + "predictedUrgency"}> "{step.urgency_after:.6f}"^^<{xsd}decimal>')
-            if step.predicts is not None:
-                facts.append(f'<{PREDICTS}> {_literal(predicts_json(step.predicts))}')
-            if step.precondition is not None:
-                facts.append(f'<{PRECONDITION}> {_literal(precondition_json(step.precondition))}')
-            if step.about:
-                facts.append(f'<{kernel("about")}> <{step.about}>')
+            facts = self._step_facts(step)
             if step.part_of is not None:
                 parent_uri = parents.setdefault(id(step.part_of), f"{OREXIS}step_{self.agent.id}_{stem}_of{len(parents)}")
                 facts.append(f'<{PROGRESSION + "partOf"}> <{parent_uri}>')
                 if id(step.part_of) not in written:
                     written.add(id(step.part_of))
                     p = step.part_of
-                    pfacts = [f'<{PROGRESSION + "fills"}> <{p.action}>']
-                    if p.via:
-                        pfacts.append(f'<{PROGRESSION + "through"}> <{p.via}>')
-                    if p.about:
-                        pfacts.append(f'<{kernel("about")}> <{p.about}>')
-                    if p.predicts is not None:
-                        pfacts.append(f'<{PREDICTS}> {_literal(predicts_json(p.predicts))}')
-                    if p.precondition is not None:
-                        pfacts.append(f'<{PRECONDITION}> {_literal(precondition_json(p.precondition))}')
+                    pfacts = self._step_facts(p, filled=False)
                     if p.part_of is not None:
                         grand = parents.setdefault(id(p.part_of), f"{OREXIS}step_{self.agent.id}_{stem}_of{len(parents)}")
                         pfacts.append(f'<{PROGRESSION + "partOf"}> <{grand}>')
@@ -448,6 +411,66 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             self.hold(uri, until=until, until_not=until_not, not_after=not_after,
                       when_lapsed=when_lapsed)
         return uri
+
+    def _absorbed(self, want: str, action: str, steps, now) -> bool:
+        """Whether a commitment standing for this want absorbs the impulse — and, where one
+        stands but is past my patience, resolving it so the new one may be adopted.
+
+        True is the AMORTISATION: the same means toward the same want already stands and is
+        younger than the patience, so the impulse is not re-decided. False is the caller's
+        road clear — either nothing stood, or what stood was outwaited and has been dropped
+        here with the reason recorded, because honouring a commitment forever is as wrong as
+        honouring it not at all.
+        """
+        for standing in self.standing(want=want):
+            if standing.action != action and (steps is None or self._next_of(standing.uri) is None):
+                continue                  # a different commitment about this want stands apart
+            #  A step PLACED at an instant (#619) is not outwaited while it waits for it.
+            placed = standing.step.not_before is not None and now < standing.step.not_before
+            if placed or standing.age_s(now) <= self.beliefs.patience_s:
+                if standing.action == action:
+                    return True
+                continue
+            #  A want has one plan at a time (#510): a stale one is superseded whatever its head.
+            self._resolve(standing, "dropped",
+                          f"outwaited: stood {standing.age_s(now):.0f}s against a patience "
+                          f"of {self.beliefs.patience_s}s, superseded by a new adoption")
+        return False
+
+    def _step_facts(self, step, filled: bool = True) -> list:
+        """One step as its OWN triples: what it fills, the lever it goes through, and what it
+        was planned to read and reach. Not the ones saying where it sits in the plan — `then`
+        and `partOf` are the plan's to write, and only the caller knows them.
+
+        `filled` is False for a step something was EXPANDED FROM (#523). An abstract action is
+        never taken, so it has no sizing, no window, no predicted urgency and serves nobody
+        directly; the concrete steps beneath it carry all four. That subset used to be built by
+        a second block of ifs beside this one, five of them restating what the first said, so
+        the two could drift and a fact added to a step would silently miss its parent.
+        """
+        xsd = "http://www.w3.org/2001/XMLSchema#"
+        facts = [f'<{PROGRESSION + "fills"}> <{step.action}>']
+        if step.via:
+            facts.append(f'<{PROGRESSION + "through"}> <{step.via}>')
+        if step.predicts is not None:
+            facts.append(f'<{PREDICTS}> {_literal(predicts_json(step.predicts))}')
+        if step.precondition is not None:
+            facts.append(f'<{PRECONDITION}> {_literal(precondition_json(step.precondition))}')
+        if step.about:
+            facts.append(f'<{kernel("about")}> <{step.about}>')
+        if not filled:
+            return facts
+        if step.for_agent:
+            facts.append(f'<{PROGRESSION + "forAgent"}> <{step.for_agent}>')
+        if step.quantity is not None:
+            facts.append(f'<{PROGRESSION + "quantity"}> "{step.quantity}"^^<{xsd}decimal>')
+        if step.not_before:
+            facts.append(f'<{PROGRESSION + "notBefore"}> "{step.not_before.isoformat()}"^^<{xsd}dateTime>')
+        if step.not_after:
+            facts.append(f'<{PROGRESSION + "notAfter"}> "{step.not_after.isoformat()}"^^<{xsd}dateTime>')
+        if step.urgency_after is not None:
+            facts.append(f'<{PROGRESSION + "predictedUrgency"}> "{step.urgency_after:.6f}"^^<{xsd}decimal>')
+        return facts
 
     # --- an intention held until a condition (#512, #514) --------------------------------
 
