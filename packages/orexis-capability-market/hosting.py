@@ -146,11 +146,6 @@ SELECT ?p WHERE {{
   <{self.me.uri}> sensing:polls ?s .
   ?s sensing:monitors <{market.resource}> ; sosa:observes ?p }} LIMIT 1"""))
             self.stock_property[market.uri] = rows[0]["p"] if rows else None
-        #  `deferred` and `last_auction_at` WERE HERE. A LOW nobody could serve was held in a
-        #  dict and reopened on the next reading; the cooldown was a monotonic clock. Both are
-        #  facts now — a `market:Call` and `market:coolingUntil` in my own graph — and the
-        #  Offering action's precondition reads them, so a dry vessel is a plan the search
-        #  finds (acquire upstream, then offer) rather than a handler (#359).
         self.open_auction: dict | None = None
         self._timer: Timer | None = None
         #  THE COOLDOWN'S OWN DEADLINE WAS A TIMER HERE (#598), with a sweep at boot for a row

@@ -64,19 +64,6 @@ from orexis_agent_progression.store import bindings
 # The means are the kernel's words (the-mind-is-six-graphs): a move IS what the keeper
 # records, and four packages name these, which is what makes them lingua franca.
 
-#  WHAT IS NOT HERE ANY MORE: the rung order, the direction terms and the venue join that read
-#  them. Preferring the cheaper rung and matching a lever's stated direction against the gap's
-#  sign were the reflex's whole apparatus, and simulation answers both without being told —
-#  the rung a plan takes is the one whose predicted world scores best, and a lever pointing the
-#  wrong way reaches a world no better than standing still. `market:direction` itself stays: the
-#  keeper's verification arc reads it to know which way a dose should move a reading, and its
-#  retirement rides with repair-matching rather than with this deletion.
-
-#  The line above is also this file's whole remaining relationship with `market:`. It used to
-#  spell four of that package's IRIs — two directions, a venue join and a hosting belief — and
-#  spells none now, which is the ratchet #334 asks for arriving as a consequence rather than as
-#  a rule anybody had to keep.
-
 
 #  THE KEEPER'S PICK, read HERE and handed down (#452): a pick is a belief, and progression —
 #  where the keeper lives — reads none. `capability` only names whoever wanted the pick, for
@@ -335,12 +322,6 @@ class Deliberator:
                                             "plans_failed": self._plans_failed}))
         return rows
 
-    #  `propose_about(property)` and `desire_about(property)` WERE HERE — the actors' door by
-    #  property, and the rule that an unmet epistemic want answers before the stake. Which
-    #  wants a property carries is sensing's to say, so the door is sensing's `want_about`
-    #  now and the rule went with it (the-stake-is-sensings-want); what an actor hands the
-    #  kernel is the want's node, through `execution.pursue_for`.
-
     def propose_for(self, desire: Desire) -> str | None:
         """The MEANS of the move for one desire, or None — `decide` projected to its head.
 
@@ -511,14 +492,6 @@ class Deliberator:
 # the search buys for the ordinary reason. It bites only for an author who picks an aim BELOW
 # the lot they promise — a dealer that would then sit content while unable to serve. Said out
 # loud here rather than left implied: see a-plan-is-a-path-of-graph-diffs.md.
-
-#  `plan.rq` and `plan_for` WERE HERE — the dealer's two-step as a hand-written exposition,
-#  "acquire upstream, then offer downstream", kept as a narrative for a reader after the reflex
-#  went. The search FINDS that plan now (a-round-is-a-fact-and-offering-is-an-action): a call on
-#  a dry vessel with an upstream round open plans exactly those two rows from two action nodes
-#  that never mention each other, and the trace shows it. A narrative beside a search that
-#  produces the same thing is a second statement that can disagree — and it was the kernel's
-#  last reason to spell the market's `Offer`.
 
 #  A obligation's fallback plan — the row owed to its counterparty when the search found no path.
 #  Not one of the planner's outcomes and never in the trace; it labels a row handed to

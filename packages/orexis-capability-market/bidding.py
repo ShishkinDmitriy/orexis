@@ -334,10 +334,6 @@ class BiddingModule(Module):
         if self._deadline:
             self._deadline.stop()
 
-    #  `sweep` and `_sweep_lapsed_claims` WERE HERE: a round past its close and a claim past
-    #  its window are graphs whose periods have ended (#645) — hidden by the door, dropped by
-    #  the one sweep in upkeep — and this module keeps no sweep of its own.
-
     @contributes(SUBSCRIPTIONS)
     def subscriptions(self) -> list[str]:
         topics = []

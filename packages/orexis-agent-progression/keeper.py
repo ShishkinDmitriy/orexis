@@ -110,9 +110,6 @@ PREDICTED_VALUE = PROGRESSION + "predictedValue"
 OBSERVED_VALUE = PROGRESSION + "observedValue"
 BASELINE_VALUE = PROGRESSION + "baselineValue"
 BASELINE_AT = PROGRESSION + "baselineAt"
-#  `progression:deadlineAt` WAS HERE: the expectation's deadline is the ACT's `progression:notAfter` now — one window,
-#  read by the keeper, the bidder's give-up and the host's redeem check alike
-#  (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan). `ledger` migrates it.
 END_MET = PROGRESSION + "endMet"
 END_VERIFIED_AT = PROGRESSION + "endVerifiedAt"
 EXPECTED_FROM = PROGRESSION + "expectedFrom"     # from when a reading may answer the step (#639)
@@ -128,11 +125,6 @@ def kernel(name: str) -> str:
 # What this package asks OF others — namespaces, never Python. The direction a lever moves the
 # property it is priced in is the domain's statement (#127), copied into the expectation row;
 # sensing is asked to look once so the baseline is the freshest thing on record.
-#  The sensing family, the two market directions and the direction query WERE HERE. The keeper
-#  used to look up which way a dose should move the value (the market's word) and ask sensing
-#  to look once (the sensing family's name) when an expectation opened — the last package words this
-#  file named. Both are the ACTOR's to say: whoever opened the expectation knows which way its act
-#  pushes and how long a reading of that property takes to arrive, and nudges its own sensing.
 
 # How many consecutive unmet ends make an affordance suspect — the family's figure, like the
 # patience bounds: what this society tolerates before it stops trusting a claim.
@@ -149,12 +141,6 @@ class KeepingBeliefs:
     """The commitment policy, which is the agent's own opinion."""
 
     patience_s: int
-
-
-#  `KEEPING_PICKS` — the belief reader that fills this dataclass — WAS HERE and is the
-#  deliberator's now (#452): a pick is a belief, a belief is read by the search and by nothing
-#  beneath it, and progression never reads one. The container reads the pick and HANDS the
-#  patience in; a keeper that was handed none says so the moment anything needs it.
 
 
 class NoPatience(LookupError):
@@ -1339,7 +1325,6 @@ SELECT ?predicts ?from ?lands WHERE {{ GRAPH <{self.graph}> {{
                               datetime.fromisoformat(rows[0]["from"]),
                               datetime.fromisoformat(rows[0]["lands"]), expectation.deadline)
 
-
     def _about(self, intention_uri: str) -> str | None:
         """What the want this intention pursues is about — the property, for a stake."""
         rows = bindings(self.agent.intentions.query_union(f"""
@@ -1390,10 +1375,6 @@ SELECT DISTINCT ?i ?step ?action ?want ?baseline ?baselineAt ?deadline ?predicts
             baseline_at=datetime.fromisoformat(r["baselineAt"]) if r.get("baselineAt") else None,
             about_world=bool(r.get("predicts")))
             for r in rows]
-
-    #  `judge(want, value)` WAS HERE — every open expectation on a want compared against a number
-    #  that arrived, by this class's own arithmetic. An expectation is a hold on the shape of
-    #  an answering observation now (#516), and the reading's write is what re-asks it.
 
     def _verdict(self, expectation: OpenExpectation, met: bool, because: str) -> None:
         now = clock.now().isoformat()

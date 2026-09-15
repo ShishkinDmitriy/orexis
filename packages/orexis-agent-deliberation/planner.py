@@ -170,11 +170,6 @@ class Planner:
         #  it, which `orexis-validate` refuses for a stake and cannot for anything else.
         return 1.0
 
-    #  `_value_in` and `_value_of` WERE HERE — the planner reading a property's value out of a
-    #  candidate world by walking sosa. Nothing here reads a value now: an effect rule reads
-    #  where the property stands from `$state` itself, and an actor sizing a step asks
-    #  sensing at the node's graph (`Module.size(query, graph, property)`).
-
     def _judged_at(self, node, desire: Desire) -> str:
         """The world this node is JUDGED in: its own, or — for a want met AT an instant
         (#619) — its own drifted to that instant, forked once per node and dropped with the

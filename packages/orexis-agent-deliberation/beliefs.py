@@ -67,12 +67,6 @@ class Picks:
         return {field: _CASTS[hints[field]] for field in self.terms}
 
 
-#  `Reading`, `_parse_reading` and `current_reading` WERE HERE — the kernel knowing that a
-#  belief about a property is a sosa observation. What a reading looks like is sensing's
-#  (`packages/orexis-capability-sensing/readings.py`, the-stake-is-sensings-want), reached through the
-#  sensing provider; this file keeps the picks, which are beliefs of the agent's own.
-
-
 def _picks_query(agent_uri: str, graph: str, terms: dict[str, str]) -> str:
     lines = "\n".join(
         f"  OPTIONAL {{ <{agent_uri}> <{term}> ?{var} }}" for var, term in terms.items()
@@ -151,7 +145,6 @@ class Beliefs:
         """
         return read_picks_optional(self.query, self.agent_uri, self.graph,
                                    self.agent_id, picks)
-
 
 
 def read_picks(query, agent_uri: str, graph: str, agent_id: str, picks: Picks):

@@ -105,11 +105,6 @@ def close_round(agent, auction_id: str) -> None:
     agent.beliefs.drop_graph(round_graph(agent.id, auction_id))
 
 
-#  `sweep_expired`, `cooled` and `sweep_cooled` WERE HERE (#645): a round past its close and a
-#  venue past its cooldown are graphs whose periods have ended, hidden by the door and dropped
-#  by the one sweep in upkeep, and no timer retracts the cooling row.
-
-
 def cooling_graph(agent_id: str, venue_uri: str) -> str:
     """ONE venue's cooling in ONE agent's store — the unit a period is said of (#645)."""
     return f"{GRAPH_PREFIX}cooling/{agent_id}/{venue_uri.rsplit('#', 1)[-1]}"

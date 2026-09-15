@@ -73,14 +73,6 @@ PROGRESSION = "http://example.org/orexis/progression#"
 # be nameable in SPARQL. `agent.loader` now reads every project namespace off the ontology that
 # declares it, so the prefix arrives with the package. See
 # knowledge/decisions/a-package-owns-its-namespace.md.
-#
-#  THE PACKAGE NAMESPACE CONSTANTS WERE HERE — twelve of them, `MC` to `REVIEW`, every one
-#  interpolated by onboarding's generators and by nothing in the kernel — and are
-#  `onboarding/namespaces.py`'s, where they are consumed (the ratchet's KIND 3, paid). The
-#  kernel names no package's namespace: a package's own is in its `terms.py`, and a runtime
-#  query reaches any of them by the prefix `agent.loader` reads off the declaring ontology.
-#
-#  SOSA was here and is `onboarding/namespaces.py`'s: the kernel spells no reading (#378).
 PROV = "http://www.w3.org/ns/prov#"
 
 

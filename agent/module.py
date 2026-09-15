@@ -47,7 +47,6 @@ class Module:
     CAPABILITY: str = ""
     name: str = "module"
 
-
     def answer(self, term: str):
         """Whatever fills one point on me, as a bound method — or None if I fill none."""
         return assembly_answer(self, term)
@@ -69,19 +68,6 @@ class Module:
                 setattr(self, name, Handle(key, agent.service))
 
     # --- lifecycle ---
-
-    #  `subscriptions()` and `handle(topic, payload)` WERE HERE — the kernel's half of a
-    #  mailbox. Which channels a module needs and what it does with a message are the
-    #  transport's questions, asked through `Agent.ask` by the module that holds the
-    #  connection (`packages/orexis-transport-mqtt/module.py`); a module that listens defines them.
-
-    #  THE READING CHOIR — `on_reading_recorded`, `annotate`, `bounds`, `urgency`, `measures`
-    #  — was defined here by name and is not any more: every one of those hooks is a sentence
-    #  about a reading, and what a reading is belongs to sensing (the-stake-is-sensings-want).
-    #  Sensing states that contract in its own module and asks it through `Agent.ask` and
-    #  `Agent.tell`, which dispatch any hook by name; a module that answers one simply
-    #  defines it. What stays here by name is BDI-shaped: wants, sizing and taking an act,
-    #  the series an agent reports.
 
     @contributes(BELIEF_REVISED)
     def on_belief_revised(self, belief_term: str, value) -> None:
@@ -151,11 +137,6 @@ class Module:
         """
         return []
 
-    #  `sweep` WAS HERE, a point every module could answer with what the clock had ended.
-    #  Everything sourced at a time is a graph with a period now, one sweep in upkeep drops
-    #  what is outdated whatever its kind, and a module is told `orexis:outdated` before a
-    #  graph of its kind goes, to write the verdict it leaves (#645).
-
     @contributes(QUIET)
     def quiet(self) -> list[tuple[str, str]]:
         """What this module has stopped hearing that it expected to hear — `(key, line)` each.
@@ -223,8 +204,3 @@ class Module:
         """
         return any(self.agent.ask(SEND, topic, payload, retain, not_after))
 
-
-#  `Timer` WAS HERE, and is progression's now (`orexis_agent_progression.timer`, #452):
-#  a clock is the layer that executes what is committed, and a timer landing no longer runs
-#  its function on a thread of its own — it enqueues it onto the reactive loop, the one
-#  executing thread. Same API; the eight callers changed their import and nothing else.
