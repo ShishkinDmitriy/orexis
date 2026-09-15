@@ -60,7 +60,7 @@ def test_verdicts_agree_with_the_full_report_and_read_the_data_once(monkeypatch)
     agent, planner, here, border = _border_and_planner(monkeypatch)
     try:
         _, shapes = _shapes_and_vocabulary()
-        held = planner._held
+        held = planner._compiled.held
         reads = []
         real = J.Rudof.read_data
         monkeypatch.setattr(J.Rudof, "read_data", lambda self, *a, **k: reads.append(1) or real(self, *a, **k))

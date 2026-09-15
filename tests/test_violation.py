@@ -48,7 +48,7 @@ def _both_verdicts(agent):
         if shape is None:
             continue
         compiled = bool(bindings(agent.beliefs.query_over(
-            p._unmet, *p._invariant_graphs, STATE_GRAPH)))
+            p._compiled.unmet, *p._compiled.invariant_graphs, STATE_GRAPH)))
         results, _ = judge(p._border(node), shape)
         judged = bool(list(results.subjects(rdflib.RDF.type, SH.ValidationResult)))
         out.append((desire.uri.rsplit("#", 1)[-1], compiled, judged, desire.state))

@@ -169,7 +169,7 @@ def test_a_free_foreign_action_no_longer_multiplies_the_solve(monkeypatch, tmp_p
     plan = p.plan(_goal(agent))
     assert len(plan.steps) == 7, plan.outcome
     assert len(forks) == 50, f"{len(forks)} forks: 50 without the knob, 157 with it unseen"
-    assert "urn:knob#Flip" not in p._relevant, "the knob touches nothing the want reads"
+    assert "urn:knob#Flip" not in p._compiled.relevant, "the knob touches nothing the want reads"
     rows = bindings(agent.beliefs.query_union(f"""SELECT (COUNT(?c) AS ?n) WHERE {{
         ?c <http://example.org/orexis/deliberation#wouldTake> <urn:knob#Flip> ;
            <http://example.org/orexis/deliberation#verdict> "{trace.IRRELEVANT}" }}"""))

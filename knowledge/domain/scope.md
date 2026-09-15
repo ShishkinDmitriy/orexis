@@ -28,7 +28,7 @@ The consequence is about [wants](/domain/desire.md). A want's view is what it re
 the actions [relevant](/domain/relevance.md) to it read and write. Two wants whose views lie in
 different scopes **cannot contradict**: no action serving one writes a fact the other reads,
 so pursuing one can never move the other. That is what would let an agent plan them apart, one
-[cone](/domain/identification.md) each, and simply concatenate the plans.
+[cone](/domain/cone.md) each, and simply concatenate the plans.
 
 # Proven, never declared
 

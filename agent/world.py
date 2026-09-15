@@ -27,17 +27,6 @@ class WorldError(RuntimeError):
     """The world does not say something the code needs. Genesis is wrong, not the runtime."""
 
 
-#  `MessageBus` and `load_bus` WERE HERE — the kernel asking the world for `mqtt:MessageBus`
-#  and its ports, the last package word it spoke. Where a society meets is the transport's to
-#  find, in its own vocabulary: the transport's module — a capability the fact of the bus grants — finds it, and
-#  `packages/orexis-transport-mqtt/module.py` answers (the-kernel-has-no-mailbox).
-
-#  `Sensor`, `Actuator` and `Market` WERE HERE, and `load_self` loaded all three by their
-#  packages' words — the kernel knowing what a probe, a valve and a venue are, in SPARQL the
-#  ratchet could not see (self-is-bdi-and-wiring-is-the-packages). Each lives in its package's
-#  `wiring.py` now, loaded by the module that owns it, and `Self` is what an agent IS.
-
-
 @dataclass
 class Self:
     """What an agent IS, from the world's point of view: its own row, and no one else's.
@@ -123,5 +112,4 @@ def load_self(query: QueryFn, agent_id: str) -> Self:
         acts_for=first.get("actsFor"),
         acts_for_id=first.get("actsForId"),
     )
-
 

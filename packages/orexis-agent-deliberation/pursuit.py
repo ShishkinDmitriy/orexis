@@ -36,7 +36,7 @@ from datetime import datetime, timedelta, timezone
 
 from .ontology import pursued_graph
 from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, PERIODS_GRAPH
-from .planner import SATISFIED
+from .plan import SATISFIED
 
 from orexis_agent_progression.execution import carry_out
 from orexis_agent_progression.store import bindings

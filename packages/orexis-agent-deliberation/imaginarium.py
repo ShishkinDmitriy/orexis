@@ -104,6 +104,38 @@ class Imaginarium(Store):
             for quad in source.quads(iri):
                 self._store.add(quad)
 
+    def observe(self, source, graph: str) -> None:
+        """Make `graph` say what `source` says there, replacing whatever it held.
+
+        The root's readings after a re-root: the present is OBSERVED, so its graph is refreshed
+        from the belief base rather than re-made from the old root plus the matched diff. The
+        two agree exactly there, and the observed one is what says the present is the present.
+        """
+        self.clear_graph(graph)
+        self.copy_in(source, graph)
+
+    def border_text(self, *graphs: str) -> str:
+        """These worlds as one text for the judge, which takes text at the border.
+
+        The CONTRACT, and a caller depends on it: the text CONCATENATES — every line stands
+        alone, so a pass writes the invariant half once and joins each node's readings with
+        `+`, instead of re-serialising a world per judged node. Which serialisation keeps that
+        promise is this store's business and no reader's; it is N-Triples, and the reason is
+        in `Store.dump_nt`.
+        """
+        return self.dump_nt(*graphs)
+
+    def node_of(self, graph: str, subject) -> list:
+        """Everything this world says about one subject, as triples — the whole node, type and
+        key included.
+
+        A retraction is canonicalised like an addition, so a reading retracted without its type
+        is two plain triples that cancel nothing (#619); a caller replacing a node needs all of
+        it, and asking for it a quad at a time is how it came to be asked for wrongly.
+        """
+        return [ox.Triple(q.subject, q.predicate, q.object)
+                for q in self.quads(graph) if q.subject == subject]
+
     def reached(self, parent: str, path, added, retracted) -> str:
         """The world one step past `parent`: its readings, less what the step retracts, plus what
         it adds. Returns the new graph's name, which is what a rule's `$state` is bound to.

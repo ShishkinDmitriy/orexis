@@ -90,9 +90,6 @@ DIST_PREFIX = "orexis"
 # The families. NOT a registry — `packages()` finds whatever directories are there, and this
 # tuple only fixes the order they merge in. A family invented tomorrow is picked up without
 # editing anything; it merely sorts after these.
-#
-# `core` was here and is gone: it held exactly one member, forever, and a family of one
-# classifies nothing. The base vocabulary is the KERNEL now, prepended rather than found.
 BUS = "bus"
 PART = "part"
 PLANT = "plant"
@@ -128,9 +125,6 @@ KINDS = (BUS, PART, PLANT, TOOL, CAPABILITIES, TRANSPORTS, CODECS, CALIBRATIONS)
 #  `lint-imports` forbids outright. So the loader knows their layout by name, which is honest:
 #  their layout is its own. Every other package SAYS what it brings, and may call its files
 #  whatever it likes (the-assembly-is-not-the-mind).
-#
-#  `desires.ru`, `review.rq` and `actions.ttl` were here too and are not: no root has one, and
-#  no package needs a constant for a name only it uses.
 ONTOLOGY = "ontology.ttl"
 SHAPES = "shapes.ttl"
 RULES = "rules.ru"

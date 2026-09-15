@@ -162,7 +162,6 @@ class Agent:
         #  service cleans up after the yield; an ordinary one leaves nothing to do.
         self._closing: list = []
 
-
         # exactly the modules this agent composed — no more, no less, and since #216 the
         # IMPORTS follow the grants too: a capability names its owning package by namespace,
         # so nothing this agent was not granted is ever imported into this process.
@@ -205,7 +204,6 @@ class Agent:
         # bloats whatever else it can do, so this holds a clock no capability owns — an agent
         # given no room to review itself must still compact. Nothing here starts a thread.
         self.upkeep = BeliefBaseUpkeep(self)
-
 
         # And noticing I am cut off (#53) — kernel for the same reason, on a clock of its own
         # because paho's network thread is one of the things it watches. Nothing starts here.
@@ -253,7 +251,6 @@ class Agent:
         for value in (self.beliefs, self.desires, self.intentions,
                       self.keeper, self.deliberator, self.metrics):
             self.offering(type(value), value)
-
 
     # --- how one capability reaches another, without knowing its name ---
 
@@ -523,13 +520,6 @@ class Agent:
         return max(answers) if answers else None
 
     # --- the shared connection; modules route by the topics they asked for ---
-
-    #  `publish`, `_on_connect`, `_on_disconnect` and `_on_message` WERE HERE — the kernel's
-    #  mailbox: a client, a dispatch loop handing every message to every module, a session to
-    #  watch. None of it is BDI. How an agent reaches its society is a capability the fact of
-    #  a bus grants (`packages/orexis-transport-mqtt/module.py`), reached through the choir:
-    #  `Module.publish` tells `send`, the transport asks `subscriptions` and `handle`
-    #  (the-kernel-has-no-mailbox).
 
     def run(self) -> None:
         # Who I am on the bus. The broker refuses anonymous connections, and the ACL it holds

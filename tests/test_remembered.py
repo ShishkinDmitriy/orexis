@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 
 from orexis_agent_deliberation import planner, pursuit, remembered
 from orexis_agent_deliberation.ontology import remembered_graph
+from orexis_agent_deliberation.plan import REMEMBERED
 from orexis_agent_progression.store import bindings
 from test_courier import C, STATE_GRAPH, W, WANT, _driver, _goal
 
@@ -62,7 +63,7 @@ def test_a_plan_that_worked_is_remembered_and_adopted_again_without_a_search(mon
     from orexis_agent_progression.ontology import DELIBERATION_GRAPH
     verdicts = bindings(agent.beliefs.query(f"""
 SELECT ?v WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?d a deliberation:Deliberation ; deliberation:verdict ?v }} }}"""))
-    assert planner.REMEMBERED in {r["v"] for r in verdicts}, "and the trace says it was remembered"
+    assert REMEMBERED in {r["v"] for r in verdicts}, "and the trace says it was remembered"
     _walk(agent, again)
     assert len(bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}"))) == 1, \
         "a remembered plan finishing again is not remembered twice"

@@ -52,6 +52,8 @@ from .afforder import affordances_of
 from orexis_agent_progression.ontology import (OREXIS, DELIBERATION_GRAPH, PLAN_FAILED, PLAN_FINISHED,
                                                   SERIES, STATE_GRAPH, STEP_DONE, beliefs_graph)
 from .planner import Planner
+from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED,
+                   REMEMBERED, SATISFIED)
 from orexis_agent_progression.store import bindings
 
 # What this package asks OF others, by family — their namespaces, never their Python.
@@ -61,19 +63,6 @@ from orexis_agent_progression.store import bindings
 # between deciding and remembering.
 # The means are the kernel's words (the-mind-is-six-graphs): a move IS what the keeper
 # records, and four packages name these, which is what makes them lingua franca.
-
-#  WHAT IS NOT HERE ANY MORE: the rung order, the direction terms and the venue join that read
-#  them. Preferring the cheaper rung and matching a lever's stated direction against the gap's
-#  sign were the reflex's whole apparatus, and simulation answers both without being told —
-#  the rung a plan takes is the one whose predicted world scores best, and a lever pointing the
-#  wrong way reaches a world no better than standing still. `market:direction` itself stays: the
-#  keeper's verification arc reads it to know which way a dose should move a reading, and its
-#  retirement rides with repair-matching rather than with this deletion.
-
-#  The line above is also this file's whole remaining relationship with `market:`. It used to
-#  spell four of that package's IRIs — two directions, a venue join and a hosting belief — and
-#  spells none now, which is the ratchet #334 asks for arriving as a consequence rather than as
-#  a rule anybody had to keep.
 
 
 #  THE KEEPER'S PICK, read HERE and handed down (#452): a pick is a belief, and progression —
@@ -309,8 +298,8 @@ class Deliberator:
         verdicts = trace.outcomes(self.agent.beliefs.query_union)
         rows.append(("agent_deliberation", {}, {
             outcome.replace(" ", "_"): float(verdicts.get(outcome, 0))
-            for outcome in (planner.SATISFIED, planner.IMPROVED, planner.NOTHING,
-                            planner.EXHAUSTED, planner.NOT_BETTER, planner.REFUSED)}))
+            for outcome in (SATISFIED, IMPROVED, NOTHING,
+                            EXHAUSTED, NOT_BETTER, REFUSED)}))
         #  WHAT IT COST, from the same pass and not a second one. `pursued()` above re-planned
         #  every desire this agent holds, so these are that work's own figures — asking again to
         #  measure would double the cost being measured, which is the one thing an observability
@@ -333,12 +322,6 @@ class Deliberator:
                                             "plans_failed": self._plans_failed}))
         return rows
 
-    #  `propose_about(property)` and `desire_about(property)` WERE HERE — the actors' door by
-    #  property, and the rule that an unmet epistemic want answers before the stake. Which
-    #  wants a property carries is sensing's to say, so the door is sensing's `want_about`
-    #  now and the rule went with it (the-stake-is-sensings-want); what an actor hands the
-    #  kernel is the want's node, through `execution.pursue_for`.
-
     def propose_for(self, desire: Desire) -> str | None:
         """The MEANS of the move for one desire, or None — `decide` projected to its head.
 
@@ -348,7 +331,7 @@ class Deliberator:
         plan = self.decide(desire)
         return plan.first if plan is not None and plan.steps else None
 
-    def decide(self, desire: Desire, surprise: tuple | None = None) -> planner.Plan | None:
+    def decide(self, desire: Desire, surprise: tuple | None = None) -> Plan | None:
         """The PLAN for one desire, whoever sourced it — the deliberator's real question.
 
         Returns the plan as ROWS, because a step is a row and not a means: which lever it
@@ -426,10 +409,10 @@ class Deliberator:
                            beliefs_graph(self.agent.id)):
             if row.for_agent == desire.owed_to:
                 #  A obligation's row, unsized: the host sizes the serve from the claim it holds.
-                return planner.Plan(OBLIGATION, ((Step.from_row(row)),))
+                return Plan(OBLIGATION, ((Step.from_row(row)),))
         return None
 
-    def _planned(self, desire: Desire, surprise: tuple | None = None) -> planner.Plan | None:
+    def _planned(self, desire: Desire, surprise: tuple | None = None) -> Plan | None:
         """The plan the search found for one desire, or None — which is now always a DECISION.
 
         It used to hand back `(answered, move)`, because there were three answers and only two
@@ -475,7 +458,7 @@ class Deliberator:
             kept = remembered.applicable(self.agent, desire.uri, self.agent.desires.query_union)
         if kept is not None:
             uri, steps, cost = kept
-            plan = planner.Plan(planner.REMEMBERED, tuple(steps), desire.urgency, None, cost=cost)
+            plan = Plan(REMEMBERED, tuple(steps), desire.urgency, None, cost=cost)
             trace.write(self.agent.beliefs, self.agent.id, desire, plan, [], desire.urgency, 0.0,
                         (trace.UNJUDGED, None), surprise=surprise)
             self._decided[desire.uri] = (plan, uri)
@@ -493,7 +476,7 @@ class Deliberator:
         #  point rather than a failure to answer — a met desire quietly holding near its pick
         #  included, which is most passes and not worth a log line; the unmet ones still say
         #  why nothing was done.
-        if plan.outcome != planner.SATISFIED:
+        if plan.outcome != SATISFIED:
             self.log.info("%s: %s — no move improves on doing nothing",
                           _short(desire.uri), plan.outcome)
         return None
@@ -509,14 +492,6 @@ class Deliberator:
 # the search buys for the ordinary reason. It bites only for an author who picks an aim BELOW
 # the lot they promise — a dealer that would then sit content while unable to serve. Said out
 # loud here rather than left implied: see a-plan-is-a-path-of-graph-diffs.md.
-
-#  `plan.rq` and `plan_for` WERE HERE — the dealer's two-step as a hand-written exposition,
-#  "acquire upstream, then offer downstream", kept as a narrative for a reader after the reflex
-#  went. The search FINDS that plan now (a-round-is-a-fact-and-offering-is-an-action): a call on
-#  a dry vessel with an upstream round open plans exactly those two rows from two action nodes
-#  that never mention each other, and the trace shows it. A narrative beside a search that
-#  produces the same thing is a second statement that can disagree — and it was the kernel's
-#  last reason to spell the market's `Offer`.
 
 #  A obligation's fallback plan — the row owed to its counterparty when the search found no path.
 #  Not one of the planner's outcomes and never in the trace; it labels a row handed to

@@ -57,9 +57,6 @@ def _shapes_and_vocabulary() -> tuple[rdflib.Graph, rdflib.Graph]:
 
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
-#  The report filter that dropped want results (`_without_wants`) WAS HERE and is gone with
-#  the severity it matched (#472): a want's met-test enters no validation pass at all — the
-#  metWhen linkage below keeps it out — so there is nothing to hide from a person any more.
 _MET_WHEN = rdflib.URIRef("http://example.org/orexis#metWhen")
 
 

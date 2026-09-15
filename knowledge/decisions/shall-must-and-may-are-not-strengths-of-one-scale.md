@@ -57,7 +57,7 @@ scale. An unmet SHALL is a [gap](/domain/gap.md) — a distance and an urgency, 
 a plan runs. A broken deontic MUST is a breach — a counterparty defaulted on, kept on the books
 because a debt paid and a debt forgotten must not look alike. A broken alethic MUST is nothing
 at all — not a bad world but an illegitimate one, refused by the gates at ratification and by
-the planner at commitment: `REFUSED` in `packages/orexis-agent-deliberation/planner.py` is a
+the planner at commitment: `REFUSED` in `packages/orexis-agent-deliberation/plan.py` is a
 plan with no steps, and legality is asked once, of the world the winning plan would actually
 reach ([a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md)).
 Three *violateds* that share no arithmetic and no consumer are not three strengths of one
