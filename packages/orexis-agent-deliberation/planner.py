@@ -1773,7 +1773,6 @@ TOO_DEAR = object()
 _PROJECTED = Step(action="urn:orexis:projected", via="")
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
-_AVAILABLE_Q = """SELECT ?available WHERE { ?action a orexis:Action ; orexis:available ?available }"""
 _AG = rdflib.Namespace(_AG_IRI)
 #  No means or family is named here any more: sizing is `Module.size`, asked of the row's
 #  taker by the action's own contribution exactly as execution finds it.
