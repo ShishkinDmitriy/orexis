@@ -685,6 +685,17 @@ WHERE  {{
         """
         return self._store.quads_for_pattern(None, None, None, ox.NamedNode(graph_iri))
 
+    def copy_graphs(self, source, *graph_iris: str, forget: bool = True) -> None:
+        """Copy whole graphs in from ANOTHER store, under their own names.
+
+        The reader's half and the writer's half of the same act, which every caller was pairing
+        by hand — `quads` out of one store, `add_quads` into the next — so a copy between two
+        stores was the one place a caller had to think in quads to do something it thought of
+        in graphs. It is quads underneath for the reason `quads` gives: text relabels blank
+        nodes, and a term that crosses a boundary as text stops being that term.
+        """
+        self.add_quads((quad for iri in graph_iris for quad in source.quads(iri)), forget=forget)
+
     def add_quads(self, quads, *, forget: bool = True) -> None:
         """Write quads straight in, as the TERMS they are — the writing half of `quads`.
 

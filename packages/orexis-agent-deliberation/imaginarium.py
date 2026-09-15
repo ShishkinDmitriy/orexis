@@ -90,9 +90,8 @@ class Imaginarium:
         #  the imaginarium's own door filters by the instant it is asked at, as the belief
         #  base's does; copied at now, a search could not see past the present's weather.
         from orexis_agent_progression.ontology import PERIODS_GRAPH
-        self._of.add_quads(
-            quad for iri in list(store.public_graphs(ever=True)) + [PERIODS_GRAPH] + list(private)
-            for quad in store.quads(iri))
+        self._of.copy_graphs(
+            store, *list(store.public_graphs(ever=True)), PERIODS_GRAPH, *private)
         #  WHICH PREDICATES A KEYED NODE CARRIES (#553): a retraction of one of these matches
         #  by KEY — every value the node carries under that predicate — never by the exact
         #  value the rule named. Within one pass the two agree, since the value the rule
@@ -151,7 +150,7 @@ class Imaginarium:
         Copied in here, a target is resolved at a node by the store that holds the world, and
         the border is written by one dump. Read-only like everything else in here.
         """
-        self._of.add_quads(quad for iri in graphs for quad in source.quads(iri))
+        self._of.copy_graphs(source, *graphs)
 
     def observe(self, source, graph: str) -> None:
         """Make `graph` say what `source` says there, replacing whatever it held.
