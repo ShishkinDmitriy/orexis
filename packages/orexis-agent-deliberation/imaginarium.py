@@ -12,13 +12,19 @@ the **imaginarium**, in the sovereign's word, and the word says the thing that m
 in it never happened. See
 knowledge/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md.
 
-**It is a `Store` because that is what it is.** The graphs a rule may read are copied in, so an
-ordinary query means the same thing here as it does in the belief base — `public_graphs()`
-discovers the same names off the same ontology graph, and `effects.apply` cannot tell the two
-apart. What differs is that this one was constructed with no path, so it is memory and there is
-nothing to clean up: the whole store is dropped when the plan ends, and a crash mid-plan leaves
-nothing behind to find. That is most of why it is a store of its own rather than a graph in the
-agent's — a graph can be forgotten to be dropped, and a store that was never on disk cannot be.
+**It HOLDS a store; it is not one.** The graphs a rule may read are copied in, so an ordinary
+query means the same thing here as it does in the belief base — `public_graphs()` discovers the
+same names off the same ontology graph, and `effects.apply` cannot tell the two apart. What
+differs is that this one was constructed with no path, so it is memory and there is nothing to
+clean up: the whole store is dropped when the plan ends, and a crash mid-plan leaves nothing
+behind to find. That is most of why it is a store of its own rather than a graph in the agent's
+— a graph can be forgotten to be dropped, and a store that was never on disk cannot be.
+
+It SUBCLASSED one until the surface was counted. That handed every caller a volume's lifecycle
+— `put_graph`, `load_file`, `optimize`, `endow_graph` — on an object holding worlds that never
+touch a disk, and the search used the inherited half beside the intended one with nothing
+marking the seam. What it offers now is written down: the verbs a search needs, and the doors
+below, chosen one at a time.
 
 **One named graph per search NODE, and none of them is ever mutated.** The obvious reading is a
 single hypothesis graph each step overwrites, and it is wrong: the search is breadth-first, so
@@ -29,6 +35,7 @@ is binding `$state` to another name. There is nothing to restore because nothing
 
 from __future__ import annotations
 
+from datetime import datetime
 from urllib.parse import quote
 
 import pyoxigraph as ox
@@ -43,8 +50,16 @@ _POSSIBLE = GRAPH_PREFIX + "possible/"
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 
-class Imaginarium(Store):
-    """The graphs a rule may read, in memory, plus one graph per world the plan imagines."""
+class Imaginarium:
+    """The graphs a rule may read, in memory, plus one graph per world the plan imagines.
+
+    It HOLDS a store rather than being one, and the difference is the whole point. As a subclass
+    it offered `put_graph`, `load_file`, `optimize`, `drop_graph` and two dozen more — a volume's
+    lifecycle, meaningless for worlds that never touch a disk — and the search reached through
+    them without anything marking where the repository ended and the handle began. What is
+    reachable now is what is written below: the verbs a search needs, and the doors a rule is
+    asked through. Everything else about how worlds are KEPT is behind `self._store`.
+    """
 
     def __init__(self, store: Store, *private: str):
         """Copy what no step may change: public knowledge, and whichever private graphs are named.
@@ -68,17 +83,15 @@ class Imaginarium(Store):
         prediction's conversion comes out of, and its readings, which are where the search
         starts. Both are copies. Nothing in here is ever written back.
         """
-        super().__init__()                       # no path: memory, and not the belief base
+        self._store = Store()                       # no path: memory, and not the belief base
         #  EVERY public graph WHATEVER ITS PERIOD, and the table of periods with them (#619):
         #  a pass asks its rules at instants of its own — a step's landing, a want's instant —
         #  and a forecast holding then is a graph the present has not reached. Copied whole,
         #  the imaginarium's own door filters by the instant it is asked at, as the belief
         #  base's does; copied at now, a search could not see past the present's weather.
         from orexis_agent_progression.ontology import PERIODS_GRAPH
-        for iri in list(store.public_graphs(ever=True)) + [PERIODS_GRAPH] + list(private):
-            for quad in store.quads(iri):
-                self._store.add(quad)
-        self._public = None
+        self._store.copy_graphs(
+            store, *list(store.public_graphs(ever=True)), PERIODS_GRAPH, *private)
         #  WHICH PREDICATES A KEYED NODE CARRIES (#553): a retraction of one of these matches
         #  by KEY — every value the node carries under that predicate — never by the exact
         #  value the rule named. Within one pass the two agree, since the value the rule
@@ -88,7 +101,44 @@ class Imaginarium(Store):
         #  prevent. One rule, everywhere, is easier to keep true than two.
         from . import signature
         self._carried = frozenset(
-            pred for _, carried in signature.keys_of(self.query).values() for pred in carried)
+            pred for _, carried in signature.keys_of(self._store.query).values() for pred in carried)
+
+    # --- the doors a rule is asked through ------------------------------------------------
+    #
+    #  Named one at a time, on purpose. Each is here because something asks it OF a possible
+    #  world: `effects` runs a package's rule (`construct`, `query`, `remember`), the urgency
+    #  choir measures a want at an instant (`query_at`), the search runs a compiled violation
+    #  select (`query_over`), and a test reads a world back (`quads`, `get_graph`, `dump_nt`).
+    #  A door nothing asks for is not forwarded, which is what makes this list the contract
+    #  rather than an accident of what a base class happened to carry.
+
+    def query(self, sparql: str, substitutions: dict | None = None) -> dict:
+        return self._store.query(sparql, substitutions)
+
+    def query_at(self, sparql: str, substitutions: dict | None = None, *,
+                 at: datetime | None = None) -> dict:
+        return self._store.query_at(sparql, substitutions, at=at)
+
+    def query_over(self, sparql: str, *graphs: str, substitutions: dict | None = None) -> dict:
+        return self._store.query_over(sparql, *graphs, substitutions=substitutions)
+
+    def construct(self, sparql: str, substitutions: dict | None = None,
+                  at: datetime | None = None):
+        #  `at` is the time door and dropping it is not a smaller signature, it is a rule asked
+        #  about the wrong instant — which returns an EMPTY RESULT rather than an error.
+        return self._store.construct(sparql, substitutions, at)
+
+    def remember(self, key, compute):
+        return self._store.remember(key, compute)
+
+    def quads(self, graph_iri: str):
+        return self._store.quads(graph_iri)
+
+    def get_graph(self, graph_iri: str) -> str:
+        return self._store.get_graph(graph_iri)
+
+    def dump_nt(self, *graph_iris: str) -> str:
+        return self._store.dump_nt(*graph_iris)
 
     def copy_in(self, source, *graphs: str) -> None:
         """Graphs from ANOTHER store, copied in under their own names — the wants (#547).
@@ -100,9 +150,7 @@ class Imaginarium(Store):
         Copied in here, a target is resolved at a node by the store that holds the world, and
         the border is written by one dump. Read-only like everything else in here.
         """
-        for iri in graphs:
-            for quad in source.quads(iri):
-                self._store.add(quad)
+        self._store.copy_graphs(source, *graphs)
 
     def observe(self, source, graph: str) -> None:
         """Make `graph` say what `source` says there, replacing whatever it held.
@@ -111,7 +159,7 @@ class Imaginarium(Store):
         from the belief base rather than re-made from the old root plus the matched diff. The
         two agree exactly there, and the observed one is what says the present is the present.
         """
-        self.clear_graph(graph)
+        self._store.clear_graph(graph)
         self.copy_in(source, graph)
 
     def border_text(self, *graphs: str) -> str:
@@ -123,7 +171,7 @@ class Imaginarium(Store):
         promise is this store's business and no reader's; it is N-Triples, and the reason is
         in `Store.dump_nt`.
         """
-        return self.dump_nt(*graphs)
+        return self._store.dump_nt(*graphs)
 
     def node_of(self, graph: str, subject) -> list:
         """Everything this world says about one subject, as triples — the whole node, type and
@@ -134,7 +182,7 @@ class Imaginarium(Store):
         it, and asking for it a quad at a time is how it came to be asked for wrongly.
         """
         return [ox.Triple(q.subject, q.predicate, q.object)
-                for q in self.quads(graph) if q.subject == subject]
+                for q in self._store.quads(graph) if q.subject == subject]
 
     def reached(self, parent: str, path, added, retracted) -> str:
         """The world one step past `parent`: its readings, less what the step retracts, plus what
@@ -159,8 +207,11 @@ class Imaginarium(Store):
         #  10,000 — a quarter, all of it the interpreter's overhead per quad rather than the
         #  store's. Blank node identity survives it, measured: a bnode matched in the WHERE is
         #  the same term when inserted, which matters because a held shape IS a blank node.
+        #  `forget=False`: a possible world is classified as nothing and holds during no
+        #  period, so copying one changes nothing the store learned by asking. Measured at
+        #  ten percent of a hanoi solve when it did invalidate.
         self._store.update(f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
-                           f"WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}")
+                        f"WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}", forget=False)
         #  Retraction after the copy rather than during it, and by TERM rather than by text: a
         #  DELETE DATA would have to re-serialise every literal with its datatype, which is the
         #  road `effects._triple` already got wrong once in the other direction. The lists are
@@ -173,15 +224,16 @@ class Imaginarium(Store):
         written into the step's own fork after the step's effect. Retraction before addition,
         by term, for the reasons `reached` gives."""
         node = ox.NamedNode(name)
+        gone = []
         for triple in retracted:
             if triple.predicate.value in self._carried:
-                for quad in list(self._store.quads_for_pattern(triple.subject, triple.predicate,
-                                                               None, node)):
-                    self._store.remove(quad)
+                gone += list(self._store.quads_for_pattern(triple.subject, triple.predicate,
+                                                        None, node))
             else:
-                self._store.remove(ox.Quad(triple.subject, triple.predicate, triple.object, node))
-        for triple in added:
-            self._store.add(ox.Quad(triple.subject, triple.predicate, triple.object, node))
+                gone.append(ox.Quad(triple.subject, triple.predicate, triple.object, node))
+        self._store.remove_quads(gone, forget=False)
+        self._store.add_quads((ox.Quad(t.subject, t.predicate, t.object, node) for t in added),
+                           forget=False)
 
     def entailed(self, name: str, added, keys) -> list:
         """The class memberships the vocabulary entails of the KEYED nodes `added` put in
@@ -205,7 +257,7 @@ class Imaginarium(Store):
             if len(key) != len(key_preds):
                 continue
             among = " ".join(f"?x <{p.value}> {render(o)} ." for p, o in key)
-            out += [ox.Triple(n, _RDF_TYPE, c) for n, c in self.entail(name, among=among)
+            out += [ox.Triple(n, _RDF_TYPE, c) for n, c in self._store.entail(name, among=among)
                     if n == node]
         return out
 
@@ -214,11 +266,11 @@ class Imaginarium(Store):
         two lists, and `Planner._graph` re-makes the graph from the nearest kept ancestor when
         a rule next has to run against it. The root's readings are never dropped here."""
         if name != STATE_GRAPH:
-            self._store.remove_graph(ox.NamedNode(name))
+            self._store.clear_graph(name)
 
     def holds(self, name: str) -> bool:
         """Whether this world's graph is materialised now."""
-        return self._store.contains_named_graph(ox.NamedNode(name))
+        return self._store.contains_graph(name)
 
 
 def name_of(path) -> str:
