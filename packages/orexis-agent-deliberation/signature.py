@@ -134,6 +134,16 @@ def by_class(facts: frozenset) -> frozenset:
                      if not (f[0] == "keyed" and f[3] != TYPE and (f[1], f[2]) in classed))
 
 
+def named(term) -> str | None:
+    """A term's IRI where it HAS one, and None for a blank node or a literal.
+
+    Here because this module already speaks the store's terms — it is what builds facts out of
+    them — so a caller asking "is this node named, and what by" need not import the store's
+    library to ask.
+    """
+    return term.value if isinstance(term, ox.NamedNode) else None
+
+
 def _term_value(o):
     return o.value if isinstance(o, (ox.NamedNode, ox.BlankNode)) else _literal(o)
 

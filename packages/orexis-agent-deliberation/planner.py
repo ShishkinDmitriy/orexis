@@ -37,7 +37,6 @@ import logging
 import time
 from dataclasses import dataclass, field, replace
 
-import pyoxigraph as ox
 import rdflib
 from rdflib import RDF, URIRef
 
@@ -767,8 +766,7 @@ class Planner:
         #  refreshed from the belief base rather than re-made from the old root plus the
         #  matched diff — the two agree exactly here, and the observed one is the one that
         #  says what the present is.
-        self.imaginarium.clear_graph(STATE_GRAPH)
-        self.imaginarium.copy_in(self.agent.beliefs, STATE_GRAPH)
+        self.imaginarium.observe(self.agent.beliefs, STATE_GRAPH)
         depth, cost0, landing0 = len(node.taken), node.cost, node.landing
         for m in keep:
             dplus, dminus = m.diff
@@ -1408,7 +1406,8 @@ class Planner:
         written by the store's own engine on the first ask and kept for the pass."""
         if self._invariant_text is None:
             self._invariant_text = crossed_text(
-                self.imaginarium.dump_nt(*self._compiled.invariant_graphs, *self._compiled.want_graphs))
+                self.imaginarium.border_text(*self._compiled.invariant_graphs,
+                                             *self._compiled.want_graphs))
         return self._invariant_text
 
     def _border(self, node) -> str:
@@ -1428,7 +1427,7 @@ class Planner:
         scoring a want met by a pattern asks the store at `self._graph(node)` and never needs text.
         """
         if node.readings is None:
-            node.readings = crossed_text(self.imaginarium.dump_nt(self._graph(node)))
+            node.readings = crossed_text(self.imaginarium.border_text(self._graph(node)))
         return self._invariant + node.readings
 
     def _step_from(self, node, row, desire: Desire, bound: float | None = None):
@@ -1535,17 +1534,13 @@ class Planner:
             changed = node.changed | self._places(added, retracted)
         more, gone = [], []
         for prediction in holding:
-            by_subject: dict = {}
-            for q in beliefs.quads(prediction):
-                by_subject.setdefault(q.subject, []).append(ox.Triple(q.subject, q.predicate, q.object))
-            for subject, triples in by_subject.items():
+            for subject, triples in beliefs.nodes_of(prediction).items():
                 if self._place_of(subject, triples) in changed:
                     continue
                 #  THE WHOLE NODE IT REPLACES, type and key included — a retraction is
                 #  canonicalised like an addition, and a reading retracted without its type is
                 #  two plain triples that cancel nothing (#619).
-                gone += [ox.Triple(q.subject, q.predicate, q.object)
-                         for q in self.imaginarium.quads(graph) if q.subject == subject]
+                gone += self.imaginarium.node_of(graph, subject)
                 more += triples
         if not more:
             return list(added), list(retracted)
@@ -1569,7 +1564,7 @@ class Planner:
         for f in signature.facts(triples, self._compiled.keys):
             if f[0] == "keyed":
                 return f[1:3]
-        return subject.value if isinstance(subject, ox.NamedNode) else None
+        return signature.named(subject)
 
     def _bind(self, desire: Desire | None, node=None, row=None, litres: float | None = None,
               lands: float | None = None) -> dict:

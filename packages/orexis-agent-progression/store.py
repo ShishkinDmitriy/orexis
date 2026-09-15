@@ -755,6 +755,17 @@ WHERE  {{
         #  ms each, and a pass forks tens of worlds.
         return out
 
+    def nodes_of(self, graph_iri: str) -> dict:
+        """Everything one graph holds, as triples grouped by subject — the graph's NODES.
+
+        A caller wanting whole nodes had to iterate quads and regroup them, which meant naming
+        the store's triple type to do it. The grouping is the store's, and so is the type.
+        """
+        out: dict = {}
+        for q in self.quads(graph_iri):
+            out.setdefault(q.subject, []).append(ox.Triple(q.subject, q.predicate, q.object))
+        return out
+
     def _nodes_in(self, graph_iri: str, of, among: str) -> list:
         """The nodes to ask about: those named, those a pattern picks out, or all of them."""
         if of and not among:
