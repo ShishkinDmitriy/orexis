@@ -18,7 +18,7 @@ from __future__ import annotations
 import pytest
 import pyoxigraph as ox
 
-from orexis_agent_deliberation import asked, effects, relevance
+from orexis_agent_deliberation import asked, effects
 from orexis_agent_deliberation.asked import Refused
 from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
 from orexis_agent_progression.store import NAMESPACES, Raw, bindings
@@ -110,7 +110,9 @@ def test_every_rule_answers_the_same_whether_the_world_is_materialised_or_a_diff
     agent, st = _agent(monkeypatch, world, agent_id, readings)
     im = Imaginarium(agent.beliefs, beliefs_graph(agent_id), STATE_GRAPH,
                      *agent.beliefs.recorded_graphs())
-    moves = _moves(agent.beliefs)
+    #  THE SET PRODUCTION COMPUTES, not one of the test's own — the narrowing is the thing
+    #  most likely to be wrong, and it is wrong exactly when a rule answers differently.
+    moves = im._moving()
     binds = dict(me=agent.me.uri, subject=agent.me.acts_for or "urn:nobody",
                  about="urn:nothing", via="urn:nothing", want="urn:nothing",
                  beliefs=beliefs_graph(agent_id), litres=0.0, lands=LANDS,
@@ -146,37 +148,6 @@ def test_every_rule_answers_the_same_whether_the_world_is_materialised_or_a_diff
             print(f"      refused  {why}")
 
 
-def _moves(store) -> set:
-    """The predicates some action writes, spelled as a rule spells them."""
-    out = set()
-    for iri in relevance.actions_of(store.query):
-        rule = effects.rule_for(store, iri)
-        if rule is None:
-            continue
-        for kind in ("construct", "retracts"):
-            written = relevance.writes_of_construct(rule[kind]) if rule.get(kind) else None
-            if written is relevance.ANYTHING:
-                return _ANY
-            out |= {str(p) for p in (written or ())}
-    #  Both spellings, since a rule names a predicate either way and this resolves no prefix.
-    return out | {_short(p) for p in out}
-
-
-class _Any(set):
-    def __contains__(self, item):        # every predicate moves: the safe direction
-        return True
-
-
-_ANY = _Any()
-
-
-def _short(iri: str) -> str:
-    for prefix, ns in NAMESPACES.items():
-        if iri.startswith(str(ns)):
-            return f"{prefix}:{iri[len(str(ns)):]}"
-    return iri
-
-
 def _both(im, text: str, binds: dict, moves) -> tuple:
     """The rule's answer against a materialised world, and against the same world as a diff."""
     from orexis_agent_progression.store import bind as bind_text
@@ -204,7 +175,8 @@ def _both(im, text: str, binds: dict, moves) -> tuple:
     #  PROPOSED: the same default graph with the BASE's readings in it, and the patterns doing
     #  the rest. Nothing names a world.
     body, head = _where(text)
-    rewritten = head + "{" + asked.resolved(body, ADDS, RETRACTS, moves) + "}"
+    rewritten = head + "{" + asked.resolved(body, ADDS, RETRACTS, moves,
+                                            world=("$state", f"<{STATE_GRAPH}>")) + "}"
     unnamed = _run(im, bind_text(rewritten, state=STATE_GRAPH, **binds), everything)
     return named, unnamed
 

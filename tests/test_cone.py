@@ -124,6 +124,10 @@ def test_a_moved_invariant_half_forgets_the_cone(monkeypatch):
 
 
 def test_graphs_are_dropped_when_the_pass_ends_and_remade_when_asked(monkeypatch):
+    """The cone's promise (#553), as #666 leaves it: what a node keeps is its DIFF, and what
+    is dropped at the pass's end is any world that was copied out of one. Re-making a node
+    re-makes its diff and copies nothing; a world is made only where something needs every
+    triple of it — the judge at the border, an entailment, a text the rewriting refused."""
     agent = _driver(monkeypatch, "c0_0", "c1_2")
     planner = Planner(agent, agent.me)
     planner.plan(_goal(agent))
@@ -134,7 +138,10 @@ def test_graphs_are_dropped_when_the_pass_ends_and_remade_when_asked(monkeypatch
         "every imagined graph but the root's is gone when the pass ends"
     deepest = max(others, key=lambda n: len(n.taken))
     name = planner._graph(deepest)
-    assert im.holds(name) and deepest.materialised
+    assert deepest.materialised, "the node's world is reachable again"
+    assert not im.holds(name), "and nothing was copied to reach it — a node is its diff (#666)"
+    im.quads(name)                       # the one kind of caller that needs every triple
+    assert im.holds(name), "asked for whole, a world is made"
     chain, m = [], deepest
     while m is not None:
         chain.append(m)

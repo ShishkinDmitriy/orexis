@@ -50,28 +50,38 @@ _STEPS = re.compile(r"[/|*+?^!()]+")
 #  `FILTER(?ss < ?ds)` read as an unterminated IRI and took hanoi's own Move off the fast path.
 _IRI = re.compile(r"<[^\s<>\"{}|^`\\]*>")
 #  What separates one statement from the next, at depth zero.
+#  A statement this is not a pattern. The SOLUTION MODIFIERS are here because a subquery's
+#  `GROUP BY ?term` trails its own closing brace, so it arrives as a statement of its own —
+#  read as a pattern it was rewritten into a union, which is the one shape that got through
+#  the scanner and into the engine.
 _KEYWORDS = ("OPTIONAL", "FILTER", "BIND", "VALUES", "GRAPH", "UNION", "MINUS", "SELECT",
-             "SERVICE", "EXISTS")
+             "SERVICE", "EXISTS", "GROUP", "ORDER", "LIMIT", "OFFSET", "HAVING")
 
 
 class Refused(Exception):
     """This text is not one the scanner can normalise. The caller materialises instead."""
 
 
-def resolved(body: str, adds: str, retracts: str, moves) -> str:
+def resolved(body: str, adds: str, retracts: str, moves, world=(), extension=None) -> str:
     """`body` — a WHERE clause's inside — with every pattern whose predicate MOVES rewritten to
     read the node's adds before the world it stands in. Raises `Refused` where it cannot say.
 
     `moves` is the predicates some action writes, as IRIs in the text's own spelling — full
     `<iri>` or a prefixed name, since a rule writes either and this never resolves a prefix.
+    `world` is how this text spells the world it is asked about, where it spells it at all:
+    a migrated package names nothing, and one that still says `GRAPH $state` has its wrapper
+    taken off here instead. `extension` is what answers for a PROPERTY PATH: given the IRIs
+    the path walks, it names a graph holding just those predicates as this world states them,
+    and the pattern is pointed at it. Without one, a path over a moving predicate is refused.
     """
     body = _uncommented(body)
     out = []
     for kind, text in _scan(body):
         if kind == "triples":
-            out.append(" ".join(_rewrite(t, adds, retracts, moves) for t in _triples(text)))
+            out.append(" ".join(_rewrite(t, adds, retracts, moves, extension)
+                                for t in _triples(text)))
         else:
-            out.append(_block(text, adds, retracts, moves))
+            out.append(_block(text, adds, retracts, moves, world, extension))
     return "\n".join(out)
 
 
@@ -94,7 +104,7 @@ def _uncommented(text: str) -> str:
     return out
 
 
-def _block(text: str, adds: str, retracts: str, moves) -> str:
+def _block(text: str, adds: str, retracts: str, moves, world=(), extension=None) -> str:
     """Anything that is not a run of patterns — a group, an OPTIONAL, a FILTER NOT EXISTS, a
     UNION branch — with whatever it encloses resolved in turn.
 
@@ -115,11 +125,10 @@ def _block(text: str, adds: str, retracts: str, moves) -> str:
         return text                           # data, or somebody else's endpoint: not patterns
     if head.startswith("GRAPH"):
         named = prefix.strip()[5:].strip()
-        if not named.startswith(("$state", "?state")):
+        if named not in world:
             return text                       # a graph the author means: left whole
-        prefix = ""                           # the world it stands in: the wrapper comes off
-        return resolved(inner, adds, retracts, moves)
-    return f"{prefix}{{{resolved(inner, adds, retracts, moves)}}}{suffix}"
+        return resolved(inner, adds, retracts, moves, world, extension)  # the wrapper comes off
+    return f"{prefix}{{{resolved(inner, adds, retracts, moves, world, extension)}}}{suffix}"
 
 
 def _split_block(text: str):
@@ -143,7 +152,7 @@ def _split_block(text: str):
     return text, None, ""
 
 
-def _rewrite(triple: tuple, adds: str, retracts: str, moves) -> str:
+def _rewrite(triple: tuple, adds: str, retracts: str, moves, extension=None) -> str:
     """One pattern: left alone where its predicate cannot move, both cases where it can."""
     s, p, o = triple
     #  A VARIABLE predicate moves, whatever `moves` holds: it binds whichever predicate the
@@ -154,7 +163,14 @@ def _rewrite(triple: tuple, adds: str, retracts: str, moves) -> str:
     if not _moves(p, moves):
         return f"{s} {p} {o} ."
     if not p.startswith(("?", "$")) and _PATH.search(p):
-        raise Refused(f"a property path over a predicate a step moves: {p}")
+        #  A CLOSURE CANNOT ALTERNATE BETWEEN TWO GRAPHS, so a path is not rewritten — it is
+        #  pointed at a graph holding the predicates it walks, as this world states them.
+        #  That is one predicate where a copy of the world is all of it: measured on hanoi
+        #  with the state padded, 0.15x the copy at two thousand triples.
+        if extension is None:
+            raise Refused(f"a property path over a predicate a step moves: {p}")
+        steps = frozenset(step for step in _STEPS.split(p) if step)
+        return f"GRAPH <{extension(steps)}> {{ {s} {p} {o} }} ."
     return (f"{{ {{ GRAPH <{adds}> {{ {s} {p} {o} }} }} UNION "
             f"{{ {s} {p} {o} "
             f"FILTER NOT EXISTS {{ GRAPH <{retracts}> {{ {s} {p} ?_gone{abs(hash(triple)) % 10**6} }} }} }} }}")

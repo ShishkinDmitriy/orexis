@@ -76,9 +76,11 @@ class _Node:
     origin: str | None = None
     #  THE CONE (#553): a node is its parent plus its two lists, and the graph is a cache.
     #  `added`/`retracted` are the raw triples the step's rules answered — identity and
-    #  datatypes intact, which is what re-making the graph needs and what the canonical
-    #  `diff` deliberately drops. `materialised` says whether `graph` exists in the store
-    #  now; `expanded` whether the search has taken every row from here; `met` whether this
+    #  datatypes intact, which is what re-making the world needs and what the canonical
+    #  `diff` deliberately drops. `materialised` says whether `graph` names a world the
+    #  imaginarium can still read — its DIFF since #666, which is what a node is; whether a
+    #  copy of every triple also exists is the imaginarium's business and nobody else's.
+    #  `expanded` says whether the search has taken every row from here; `met` whether this
     #  world met the want when it was settled.
     parent: object = None
     added: list = field(default_factory=list)
