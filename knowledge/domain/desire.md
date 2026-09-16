@@ -375,8 +375,8 @@ against its hardware, scored and pursued by this same machinery.
 
 # A desire is the top of one tree of wants
 
-A **desire** is the top of one tree: a starting point the decomposition grows from, derived
-from nothing above it — which is what the word means here, and why there is no separate "root
+A **desire** is the top of one tree: a starting point the decomposition grows from, with
+nothing above it to have come from — which is what the word means here, and why there is no separate "root
 desire" to be a second kind of anything. Typically it is a statement over a class of things — an
 agent holds one per premise: acting for subjects yields the welfare root, holding instruments
 the freshness root, being able to incur obligations the debts root — so the whole is a
@@ -411,13 +411,14 @@ menu, so the plan's first step is placed at the instant less the plan's own dura
 there. It reads met the moment the newest prediction crosses later than the instant, which is
 what a dose does, and is withdrawn like the other.
 
-Like the wants below it, a desire is deduced, never hand-written; a world may additionally
-ratify one through its asserted desire block, and that is the sovereign speaking rather than
-the agent.
+A desire is DECLARED, which is what separates it from the wants below it: a package states one
+per premise in its `desires.ru` and genesis runs it once, or a world ratifies one through its
+asserted desire block — the sovereign speaking rather than the agent. Neither is the agent's own
+authoring, and neither is a derivation: what is derived is the want.
 
 # Where instances enter
 
-A deduced desire speaks only T-Box words. One level down the decomposition binds the roster —
+A declared desire speaks only T-Box words. One level down the decomposition binds the roster —
 this fern, this probe, this claim — and from there each instance splits per property, each
 property per side of its range. Code still names no instance anywhere: a derivation binds them
 from what the world's files author, and a ratified desire's instance is authored there too. What
