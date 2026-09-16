@@ -276,7 +276,10 @@ it is a record wearing a bullet.
   (`GRAPH $state` for a fact a plan can change, unqualified for one it cannot) is one package
   claiming what every OTHER package's actions can change, including packages that do not exist
   yet; climate's outside read carried the scar (#589), and taking the choice away deleted five
-  doubled clauses and a UNION along with it (#666).
+  doubled clauses and a UNION along with it, for no measurable cost (#666).
+- **A/B on this bench is alternated within one session or it is not a measurement** — the Pi
+  drifts about twofold between invocations, and two sides timed minutes apart made a change
+  that does nothing read as a thirty-percent win (#666).
 - **Deliberation is on triples, and a number is not special** — how a domain describes its
   world, exact numbers, ranges or classes, is decided inside the domain, and its actions'
   preconditions and effects are described the same way; the core compares triples and
