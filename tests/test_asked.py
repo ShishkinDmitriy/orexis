@@ -103,92 +103,81 @@ def _agent(monkeypatch, world, agent_id, readings):
 @pytest.mark.parametrize("world,agent_id,readings", _worlds())
 def test_every_rule_answers_the_same_whether_the_world_is_materialised_or_a_diff(
         monkeypatch, world, agent_id, readings, capsys):
-    """THE GATE. For every action this world loads, the same rule text run against a world the
-    imaginarium materialised and against that world held as a diff must answer identically."""
+    """THE GATE. Every action this world loads has its OWN effect taken, and then every rule
+    text is asked about the world that effect reached — once against that world materialised,
+    which is what the search has always built, and once against it held as a diff. The two
+    must answer identically.
+
+    THE STEP IS THE ACTION'S OWN, and that is what this gate is for. Asked about a synthetic
+    diff — a quad taken out of the readings by hand — the rewriting looked right on every rule
+    in the tree while the search planned the dose and not the heating: a world nobody's rule
+    would ever reach proves nothing about the worlds they do. Each action's construct and
+    retraction make the world here, and every rule is asked about all of them, so the pairs
+    are the ones a pass actually forms.
+
+    IT RUNS PRODUCTION'S OWN REWRITING (`Imaginarium._asked`), never a copy of it: a gate that
+    re-implements what it checks agrees with itself and with nothing else.
+    """
     from orexis_agent_deliberation.imaginarium import Imaginarium
+    from orexis_agent_progression.store import bind as bind_text
 
     agent, st = _agent(monkeypatch, world, agent_id, readings)
     im = Imaginarium(agent.beliefs, beliefs_graph(agent_id), STATE_GRAPH,
                      *agent.beliefs.recorded_graphs())
-    #  THE SET PRODUCTION COMPUTES, not one of the test's own — the narrowing is the thing
-    #  most likely to be wrong, and it is wrong exactly when a rule answers differently.
-    moves = im._moving()
     binds = dict(me=agent.me.uri, subject=agent.me.acts_for or "urn:nobody",
                  about="urn:nothing", via="urn:nothing", want="urn:nothing",
                  beliefs=beliefs_graph(agent_id), litres=0.0, lands=LANDS,
-                 claim=Raw('"urn:nobody"'),
-                 #  The VALUES block an availability select takes, as the afforder fills it:
-                 #  one (want, about) pair. What it binds does not matter here — the two runs
-                 #  are handed the same one, and what is being compared is whether the world
-                 #  being a diff changes the answer.
-                 wants=Raw("(<urn:nothing> <urn:nothing>)"))
-
-    checked, refused = 0, []
+                 claim=Raw('"urn:nobody"'), wants=Raw("(<urn:nothing> <urn:nothing>)"))
+    rules = {}
     for row in bindings(agent.beliefs.query("SELECT ?a WHERE { ?a a orexis:Action }")):
         rule = effects.rule_for(agent.beliefs, row["a"])
-        if rule is None:
+        if rule is not None:
+            rules[row["a"]] = rule
+
+    #  ONE WORLD PER ACTION, reached by that action's own effect — plus the root, so a rule is
+    #  also held to the world a pass starts in.
+    worlds = {"the present": STATE_GRAPH}
+    for action, rule in rules.items():
+        added, retracted = effects.apply(im, action, when=None, state=STATE_GRAPH, **binds)
+        if not added and not retracted:
             continue
-        for kind in ("available", "construct", "retracts"):
-            text = rule.get(kind)
-            if not text:
-                continue
-            try:
-                pair = _both(im, text, binds, moves)
-            except Refused as why:
-                refused.append(f"{row['a'].rsplit('#')[-1]}.{kind}: {why}")
-                continue
-            named, unnamed = pair
-            assert named == unnamed, \
-                f"{row['a']} {kind} answers differently when the world is a diff"
-            checked += 1
+        worlds[action.rsplit("#")[-1]] = im.reached(
+            STATE_GRAPH, (_Step(action),), added, retracted)
+
+    checked, refused, wrong = 0, set(), []
+    for where, node in worlds.items():
+        for action, rule in rules.items():
+            for kind in ("available", "construct", "retracts"):
+                text = rule.get(kind)
+                if not text:
+                    continue
+                bound = bind_text(text, state=node, **binds)
+                rewritten = im._asked(bound)
+                if rewritten is bound:
+                    #  The present is not a diff, so nothing is rewritten there and there is
+                    #  nothing to hold. Anywhere else, an unchanged text is a refusal.
+                    if node is not STATE_GRAPH:
+                        refused.add(f"{action.rsplit('#')[-1]}.{kind}")
+                    continue
+                im.world(node)                       # today's road: the world, every triple
+                graphs = [*im._store.public_graphs(), *im._store.recorded_graphs()]
+                if _run(im, bound, graphs) != _run(im, rewritten, graphs):
+                    wrong.append(f"{action.rsplit('#')[-1]}.{kind} in the world {where} reached")
+                checked += 1
     assert checked, f"{world}: no rule was checked — the gate is measuring nothing"
     with capsys.disabled():
-        print(f"\n  {world}: {checked} texts held to parity, {len(refused)} refused")
-        for why in refused:
+        print(f"\n  {world}: {len(worlds)} worlds x {len(rules)} actions, {checked} asks held, "
+              f"{len(refused)} texts refused")
+        for why in sorted(refused):
             print(f"      refused  {why}")
+    assert not wrong, "answered differently when the world is a diff:\n  " + "\n  ".join(wrong)
 
 
-def _both(im, text: str, binds: dict, moves) -> tuple:
-    """The rule's answer against a materialised world, and against the same world as a diff."""
-    from orexis_agent_progression.store import bind as bind_text
+class _Step:
+    """What `reached` names a world by — an action and a lever, as an affordance row has."""
 
-    #  A step's own diff, taken against the world as it stands, is what a node holds.
-    added, retracted = [], []
-    for quad in list(im.quads(STATE_GRAPH))[:1]:
-        retracted.append(ox.Triple(quad.subject, quad.predicate, quad.object))
-    world = "urn:asked:world"
-    im._store.clear_graph(world); im._store.clear_graph(ADDS); im._store.clear_graph(RETRACTS)
-    im._store.update(f"INSERT {{ GRAPH <{world}> {{ ?s ?p ?o }} }} WHERE "
-                     f"{{ GRAPH <{STATE_GRAPH}> {{ ?s ?p ?o }} }}", forget=False)
-    im._store.remove_quads([ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(world))
-                            for t in retracted], forget=False)
-    im._store.add_quads([ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(ADDS))
-                         for t in added], forget=False)
-    im._store.add_quads({ox.Quad(t.subject, t.predicate, GONE, ox.NamedNode(RETRACTS))
-                         for t in retracted}, forget=False)
-
-    #  TODAY: the default graph is public knowledge and the agent's own — the BASE's readings
-    #  among them — and `GRAPH $state` names the materialised world. That is `Store.construct`.
-    everything = [*im._store.public_graphs(), *im._store.recorded_graphs()]
-    named = _run(im, bind_text(text, state=world, **binds),
-                 [g for g in everything if g != STATE_GRAPH] + [world])
-    #  PROPOSED: the same default graph with the BASE's readings in it, and the patterns doing
-    #  the rest. Nothing names a world.
-    body, head = _where(text)
-    rewritten = head + "{" + asked.resolved(body, ADDS, RETRACTS, moves,
-                                            world=("$state", f"<{STATE_GRAPH}>")) + "}"
-    unnamed = _run(im, bind_text(rewritten, state=STATE_GRAPH, **binds), everything)
-    return named, unnamed
-
-
-def _where(text: str) -> tuple[str, str]:
-    """A query split into everything up to its WHERE's brace, and the body inside it."""
-    i = text.index("WHERE"); j = text.index("{", i); depth = 0
-    for k in range(j, len(text)):
-        depth += (text[k] == "{") - (text[k] == "}")
-        if depth == 0:
-            return text[j + 1:k], text[:j]
-    raise Refused("unbalanced WHERE")
+    def __init__(self, action):
+        self.action, self.via, self.about = action, "urn:nothing", None
 
 
 def _run(im, query: str, graphs: list) -> set:
