@@ -63,18 +63,29 @@ carries a graph at all.
   bridge's promise — which was the keeper stating, on the bridge's behalf, that a plan could
   change what the bridge translated.
 
-# Measured
+# Measured: it costs nothing, and it wins nothing
 
-Best of five on the bench, against `main`:
+Best of five per side, the two sides ALTERNATED in one session:
 
-| | main | this |
+| | before | after |
 |---|---|---|
-| hanoi, 2 disks | 258 ms | **182 ms** |
-| hanoi, 3 disks | 476 ms | **312 ms** |
-| `world/loner`, dry pot | 1397 ms | **1325 ms** |
+| hanoi, 2 disks | 179.0 / 184.0 ms | 179.5 / 170.2 ms |
+| hanoi, 3 disks | 306.1 / 320.8 ms | 318.6 / 303.7 ms |
+| `world/loner`, dry pot | 1307 / 1348 ms | 1351 / 1313 ms |
 
-Fork counts unchanged everywhere. It is FASTER, and the reason is the deletions rather than
-anything clever: a pattern that used to be asked twice is asked once.
+Fork counts unchanged everywhere, and the times inside each other's noise. **A wash.**
+
+This first said FASTER — 258 to 182 ms and 476 to 312 — and that was a measurement, not a
+result. The two sides were timed in separate invocations minutes apart, and the bench machine
+drifts about twofold between them, so what was read as an improvement was the machine cooling
+off. **Alternate the sides within one session, or a number here says more about the Pi than
+about the change.**
+
+What IS measurable runs the other way, and is worth knowing rather than resolving: under
+cProfile the engine's own time rose from 132 ms to 184 ms over the identical 669 queries,
+because a pattern once scoped to one small named graph now reads the merged default graph. The
+deletions evidently pay for that, since wall clock does not move — but "evidently" is as far as
+these numbers carry, and the honest summary is that the contract cost nothing here.
 
 # What was refused, and why it is a different change
 
