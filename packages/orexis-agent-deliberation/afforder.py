@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from orexis_agent_progression.ontology import OREXIS, STATE_GRAPH
+from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import Raw, bind, bindings
 
 @dataclass(frozen=True)
@@ -93,8 +93,7 @@ def _sole(abouts) -> str | None:
     return abouts[0] if abouts and len(abouts) == 1 else None
 
 
-def affordances_of(query, agent_uri: str, desires, beliefs: str, state: str = STATE_GRAPH,
-                   only=None) -> list[Affordance]:
+def affordances_of(query, agent_uri: str, desires, beliefs: str, only=None) -> list[Affordance]:
     """What one agent could do, about what, through which lever — derived, never written.
 
     The Consulting member's prompt substrate and the reflex's worldview as data: a move with no
@@ -131,13 +130,14 @@ def affordances_of(query, agent_uri: str, desires, beliefs: str, state: str = ST
         #  `$beliefs` names the agent's OWN graph, as it does for an effect rule: a premise
         #  may be something only this agent was told — an open round is one (#358) — and
         #  the default graph is public knowledge, so a walk that needs it must say so.
-        #  `$state` names the readings a premise may read — this agent's, or the graph of a
-        #  world a plan is imagining, so a row whose premise an earlier step made true (stock
-        #  after a refill, #359) appears in the menu of THAT world and not of this one.
+        #  WHICH READINGS a premise reads is the DOOR'S to say (#666), never the text's:
+        #  `query` was handed a world by whoever asked — this agent's own, or the one a plan
+        #  is imagining — so a row whose premise an earlier step made true (stock after a
+        #  refill, #359) appears in the menu of THAT world and not of this one, and the
+        #  precondition names no graph to get it.
         #  `$wants` is a VALUES block — rows, not a term — and goes in as `Raw`; the rest
         #  are IRIs the binder renders. A precondition carrying a token nobody binds refuses.
-        q = bind(action["available"], me=agent_uri, wants=Raw(wants), beliefs=beliefs,
-                 state=state)
+        q = bind(action["available"], me=agent_uri, wants=Raw(wants), beliefs=beliefs)
         #  THE ROW SAYS WHICH about IT MATCHED where its select projects one — every action
         #  that filters on the want's about does now — and the want's own answers where it does
         #  not, which is only legible while the want names exactly one (#566).

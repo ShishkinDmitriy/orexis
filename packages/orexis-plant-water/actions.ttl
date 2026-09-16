@@ -15,7 +15,7 @@
 #  hours passing and find the pot exactly as wet as when it started.
 #
 #  A DRIFT IS NOT AN ACTION and this is not on any menu: nobody chooses for the world. What it
-#  shares with an effect is the grammar — a construct, a retraction, `$state` naming the world
+#  shares with an effect is the grammar — a construct, a retraction, the world it is asked about
 #  it is asked about — and what it adds is `$elapsed`, the seconds the world has had to itself
 #  between one node and the next.
 #
@@ -39,11 +39,11 @@ water:Drying
     #  node per (subject, property), the invariant every effect's retraction already leans on.
     orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest ?pot ;
                      sosa:observedProperty water:SoilMoisture ;
                      sosa:hasSimpleResult ?was ;
-                     ?p ?o }
+                     ?p ?o .
             #  THE RATE IS PUBLIC KNOWLEDGE, unqualified: a pot's physics is how the WORLD
             #  behaves and the world graph is public, so an ordinary pattern reads it. Scoped
             #  to `$beliefs` it matched nothing, silently, and a pot that never dried is
@@ -81,14 +81,14 @@ water:Drying
                  sosa:madeBySensor ?sensor ;
                  sosa:usedProcedure ?how .
         } WHERE {
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest ?pot ;
                      sosa:observedProperty water:SoilMoisture ;
                      sosa:hasSimpleResult ?was ;
                      sosa:resultTime ?taken .
                 OPTIONAL { ?obs sosa:madeBySensor ?sensor }
                 OPTIONAL { ?obs sosa:usedProcedure ?how }
-            }
+            
             ?pot water:driesPerDay ?rate .
             FILTER(?rate > 0 && $elapsed > 0)
             BIND(ROUND(($elapsed / 86400.0) * 1000000) / 1000000 AS ?days)
@@ -144,13 +144,13 @@ water:DryingABand
 
     orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest ?pot ;
                      sosa:observedProperty water:SoilMoisture ;
                      a ?band ;
                      ?p ?o .
                 FILTER NOT EXISTS { ?obs sosa:hasSimpleResult ?any }
-            }
+            
             ?band rdfs:subClassOf sensing:InRegion ;
                   sensing:ofSubject ?pot ; sensing:ofProperty water:SoilMoisture ;
                   owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
@@ -176,12 +176,12 @@ water:DryingABand
                  sosa:observedProperty water:SoilMoisture ;
                  sosa:resultTime ?at .
         } WHERE {
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest ?pot ;
                      sosa:observedProperty water:SoilMoisture ;
                      a ?band .
                 FILTER NOT EXISTS { ?obs sosa:hasSimpleResult ?any }
-            }
+            
             ?band rdfs:subClassOf sensing:InRegion ;
                   sensing:ofSubject ?pot ; sensing:ofProperty water:SoilMoisture ;
                   owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .

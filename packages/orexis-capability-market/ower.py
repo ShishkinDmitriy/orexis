@@ -61,12 +61,15 @@ _SH_SELECT = "http://www.w3.org/ns/shacl#select"
 
 def _unmet(claim_jti: str) -> str:
     """The debt's own met-test (#635): the select whose rows are this debt undischarged — in
-    the record, and in the world being judged (`$state`, the node's own graph, where
-    Serving's effect writes the discharge). A want is authored by whoever sources it, and the
-    kernel judges an authored pattern without knowing a word of the ledger."""
+    the record and in the world being judged alike, where Serving's effect writes the
+    discharge. A want is authored by whoever sources it, and the kernel judges an authored
+    pattern without knowing a word of the ledger.
+
+    ONE CLAUSE, not two (#666). It asked twice — once of the record, once of the world — because
+    a rule had to name the world it read and the two stood apart. The door merges them, so a
+    discharge is a discharge wherever it was written and there is no second clause to forget."""
     return (f'SELECT ?debt WHERE {{ ?debt market:forClaim "{claim_jti}" . '
-            f'FILTER NOT EXISTS {{ ?debt market:dischargedAt ?paid }} '
-            f'FILTER NOT EXISTS {{ GRAPH $state {{ ?debt market:dischargedAt ?paid2 }} }} }}')
+            f'FILTER NOT EXISTS {{ ?debt market:dischargedAt ?paid }} }}')
 
 
 def _duty_urgency(row: dict, now: datetime) -> float:

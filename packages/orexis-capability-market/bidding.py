@@ -663,14 +663,12 @@ SELECT ?c ?id ?l ?at ?p WHERE {{
         the part of that landing that is the valve's."""
         from datetime import timedelta
         from orexis_agent_deliberation import effects
-        from orexis_agent_progression.ontology import STATE_GRAPH
         pour = 0.0
         try:
             lands = effects.lands_after(
                 self.agent.beliefs, ACQUIRING, me=f"<{self.me.uri}>",
                 subject=f"<{self.me.acts_for}>", about=f"<{self.about}>", via=f"<{market.uri}>",
-                litres=str(float(litres)), beliefs=f"<{beliefs_graph(self.agent.id)}>",
-                state=f"<{STATE_GRAPH}>")
+                litres=str(float(litres)), beliefs=f"<{beliefs_graph(self.agent.id)}>")
             if lands is not None:
                 pour = max(0.0, float(lands) - float(market.redeem_window_s or 0.0))
         except Exception as exc:                        # a rule's refusal is not the bid's problem

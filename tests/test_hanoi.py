@@ -126,9 +126,9 @@ KNOB = '''@prefix orexis: <http://example.org/orexis#> .
 #  three-disk solve before anything could see it.
 knob:Flip a orexis:Action ;
     orexis:available """SELECT ?via ?about WHERE {
-        GRAPH $state { ?via <urn:knob#at> ?here }
+        ?via <urn:knob#at> ?here .
         ?about a <urn:knob#Position> . FILTER(?about != ?here) }""" ;
-    orexis:retracts """CONSTRUCT { $via <urn:knob#at> ?old } WHERE { GRAPH $state { $via <urn:knob#at> ?old } }""" ;
+    orexis:retracts """CONSTRUCT { $via <urn:knob#at> ?old } WHERE { $via <urn:knob#at> ?old }""" ;
     sh:construct """CONSTRUCT { $via <urn:knob#at> $about } WHERE { }""" .
 knob:left a knob:Position . knob:right a knob:Position .
 '''

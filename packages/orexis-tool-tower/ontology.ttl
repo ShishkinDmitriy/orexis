@@ -31,9 +31,9 @@ hanoi:Disk rdfs:subClassOf courier:Parcel .
         SELECT (?d AS ?estimate) WHERE {
             $about courier:at ?target . ?target courier:x ?tx ; courier:y ?ty .
             ?van a courier:Van .
-            GRAPH $state { ?van courier:at ?vc }
+             ?van courier:at ?vc .
             ?vc courier:x ?vx ; courier:y ?vy .
-            OPTIONAL { GRAPH $state { $via courier:at ?dc } ?dc courier:x ?dx ; courier:y ?dy }
+            OPTIONAL {  $via courier:at ?dc . ?dc courier:x ?dx ; courier:y ?dy }
             BIND(IF(BOUND(?dx),
                     IF(sameTerm(?dc, ?target), 0,
                        ABS(?vx - ?dx) + ABS(?vy - ?dy) + ABS(?dx - ?tx) + ABS(?dy - ?ty) + 2),

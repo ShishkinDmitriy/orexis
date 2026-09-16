@@ -62,7 +62,7 @@ courier:carriedBy a owl:ObjectProperty ; rdfs:domain courier:Parcel ; rdfs:range
 #  overstates what Drive, Pick and Drop will cost to finish — which only whoever declares those
 #  costs can keep. The desire owns the term (`orexis:metWhen`, `orexis:estimates` hang off the
 #  want); the package owns the measure. The shape is compiled by the kernel; the estimate is
-#  run by it with $state naming whichever world is being judged.
+#  run by it against whichever world is being judged, which the rule never names (#666).
 
 courier:delivered a sh:NodeShape ;
     rdfs:label "every parcel standing where it is owed" ;
@@ -76,13 +76,13 @@ courier:drivesOwed sh:select """
                 {
                     ?p a courier:Parcel ; courier:destination ?owed .
                     ?owed courier:x ?ox ; courier:y ?oy .
-                    GRAPH $state { ?p courier:carriedBy ?van . ?van courier:at ?vc }
+                     ?p courier:carriedBy ?van . ?van courier:at ?vc .
                     ?vc courier:x ?vx ; courier:y ?vy .
                     BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) AS ?dist)
                 } UNION {
                     ?p a courier:Parcel ; courier:destination ?owed .
                     ?owed courier:x ?ox ; courier:y ?oy .
-                    GRAPH $state { ?p courier:at ?pc . ?v courier:at ?vc }
+                     ?p courier:at ?pc . ?v courier:at ?vc .
                     ?v a courier:Van .
                     ?pc courier:x ?px ; courier:y ?py .
                     ?vc courier:x ?vx ; courier:y ?vy .

@@ -272,6 +272,11 @@ it is a record wearing a bullet.
   hanoi's Move walks a tower it has not touched inside `GRAPH $state`; narrowing took a padded
   solve from 58% of its time forking to 2% and was not taken, because a real pass forks for
   0.1% of it and reads for fifteen (#662).
+- **A rule does not say which world it reads, and the door is told instead** — naming it
+  (`GRAPH $state` for a fact a plan can change, unqualified for one it cannot) is one package
+  claiming what every OTHER package's actions can change, including packages that do not exist
+  yet; climate's outside read carried the scar (#589), and taking the choice away deleted five
+  doubled clauses and a UNION along with it (#666).
 - **Deliberation is on triples, and a number is not special** — how a domain describes its
   world, exact numbers, ranges or classes, is decided inside the domain, and its actions'
   preconditions and effects are described the same way; the core compares triples and

@@ -14,7 +14,7 @@ courier:Drive a orexis:Action ;
     rdfs:comment "Neighbouring is WORKED OUT, not declared: |dx| + |dy| = 1 over the cells' own coordinates. A world therefore authors a grid by stating where its cells are and nothing about how they connect, and the same coordinates are what a distance heuristic reads." ;
     orexis:available """
         SELECT ?via ?about WHERE {
-            GRAPH $state { ?via courier:at ?here }
+             ?via courier:at ?here .
             ?via a courier:Van .
             ?here courier:x ?hx ; courier:y ?hy .
             ?about a courier:Cell ; courier:x ?ax ; courier:y ?ay .
@@ -24,7 +24,7 @@ courier:Drive a orexis:Action ;
         SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     orexis:retracts """
         CONSTRUCT { $via courier:at ?old } WHERE {
-            GRAPH $state { $via courier:at ?old } }""" ;
+             $via courier:at ?old . }""" ;
     sh:construct """
         CONSTRUCT { $via courier:at $about } WHERE { }""" .
 
@@ -35,7 +35,7 @@ courier:Pick a orexis:Action ;
     rdfs:comment """The retraction removes where the parcel WAS and the construct puts it aboard — a different subject-predicate pair, so nothing replaces the fact that goes. Every other effect in this repository is an upsert: it removes the observation node its own construct immediately re-creates, or the peg a disk was on while stating the peg it is on now. This one removes `courier:at` outright, which is what a delete list means in a classical planner and what nothing here had exercised.""" ;
     orexis:available """
         SELECT ?via ?about WHERE {
-            GRAPH $state { ?about courier:at ?cell . ?via courier:at ?cell }
+             ?about courier:at ?cell . ?via courier:at ?cell .
             ?via a courier:Parcel .
             ?about a courier:Van .
         }""" ;
@@ -43,7 +43,7 @@ courier:Pick a orexis:Action ;
         SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     orexis:retracts """
         CONSTRUCT { $via courier:at ?cell } WHERE {
-            GRAPH $state { $via courier:at ?cell } }""" ;
+             $via courier:at ?cell . }""" ;
     sh:construct """
         CONSTRUCT { $via courier:carriedBy $about } WHERE { }""" .
 
@@ -54,13 +54,13 @@ courier:Drop a orexis:Action ;
     rdfs:comment "The mirror of the pick, and the reason the pair is safe: a parcel is at a cell OR aboard, so the two effects between them keep that true without either needing to know about the other." ;
     orexis:available """
         SELECT ?via ?about WHERE {
-            GRAPH $state { ?via courier:carriedBy ?van . ?van courier:at ?about }
+             ?via courier:carriedBy ?van . ?van courier:at ?about .
             ?via a courier:Parcel .
         }""" ;
     orexis:costs """
         SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     orexis:retracts """
         CONSTRUCT { $via courier:carriedBy ?van } WHERE {
-            GRAPH $state { $via courier:carriedBy ?van } }""" ;
+             $via courier:carriedBy ?van . }""" ;
     sh:construct """
         CONSTRUCT { $via courier:at $about } WHERE { }""" .

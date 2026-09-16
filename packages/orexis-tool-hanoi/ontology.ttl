@@ -38,7 +38,7 @@
 #  WHAT SOLVING MEANS, AND HOW FAR IT IS — the puzzle's, not a world's. A world asserts the
 #  want and points here; both used to sit inline in `world/hanoi/desire.ttl`, and the courier
 #  package's ontology says why they moved. The shape is compiled by the kernel; the estimate
-#  is run by it with $state naming whichever world is being judged.
+#  is run by it against whichever world is being judged, which the rule never names (#666).
 
 :solved a sh:NodeShape ;
     rdfs:label "every disk's chain bottoms out on peg C" ;
@@ -48,7 +48,7 @@
 
 :disksAstray sh:select """
         SELECT (COUNT(DISTINCT ?d) AS ?estimate) WHERE {
-            GRAPH $state { ?d hanoi:on ?rest . ?d (hanoi:on)+ ?p }
+             ?d hanoi:on ?rest . ?d (hanoi:on)+ ?p .
             ?p a hanoi:Peg .
             FILTER(?p != hanoi:PegC)
         }""" ;

@@ -116,17 +116,18 @@ class Imaginarium:
         return self._store.query(sparql, substitutions)
 
     def query_at(self, sparql: str, substitutions: dict | None = None, *,
-                 at: datetime | None = None) -> dict:
-        return self._store.query_at(sparql, substitutions, at=at)
+                 at: datetime | None = None, world: str | None = None) -> dict:
+        return self._store.query_at(sparql, substitutions, at=at, world=world)
 
     def query_over(self, sparql: str, *graphs: str, substitutions: dict | None = None) -> dict:
         return self._store.query_over(sparql, *graphs, substitutions=substitutions)
 
     def construct(self, sparql: str, substitutions: dict | None = None,
-                  at: datetime | None = None):
+                  at: datetime | None = None, world: str | None = None):
         #  `at` is the time door and dropping it is not a smaller signature, it is a rule asked
         #  about the wrong instant — which returns an EMPTY RESULT rather than an error.
-        return self._store.construct(sparql, substitutions, at)
+        #  `world` is the place door, and the same is true of it (#666).
+        return self._store.construct(sparql, substitutions, at, world)
 
     def remember(self, key, compute):
         return self._store.remember(key, compute)
