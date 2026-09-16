@@ -263,6 +263,15 @@ it is a record wearing a bullet.
   pot from drying for five hours and the purchase could not stop the prediction emptying the
   barrel it had just filled; a key is changed when its canonical facts are, which is what a
   look's diff netting to nothing already said (#643).
+- **A rule saying which world it reads is a package claiming something about every other
+  package's actions** — `GRAPH $state` means a plan can change this and an unqualified pattern
+  means it cannot, which depends on the whole loaded action set and is chosen from inside one
+  package; climate's outside read carries the correction (#589), and the fix is precedence in
+  the engine rather than a better guess.
+- **What a fork may skip is bounded by what a rule may READ, never by what a step changed** —
+  hanoi's Move walks a tower it has not touched inside `GRAPH $state`; narrowing took a padded
+  solve from 58% of its time forking to 2% and was not taken, because a real pass forks for
+  0.1% of it and reads for fifteen (#662).
 - **Deliberation is on triples, and a number is not special** — how a domain describes its
   world, exact numbers, ranges or classes, is decided inside the domain, and its actions'
   preconditions and effects are described the same way; the core compares triples and
