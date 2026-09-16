@@ -52,9 +52,11 @@ log = logging.getLogger("imaginarium")
 #  a graph IRI — but in a store nothing else can open, which is what keeps `orexis:PossibleGraph`'s
 #  promise that nothing here survives anything.
 _POSSIBLE = GRAPH_PREFIX + "possible/"
-#  What stands in a retraction graph for "this subject and predicate are gone here". Never
-#  read as a value: what is asked of that graph is only whether a pair is in it.
-_GONE = ox.NamedNode("http://example.org/orexis#gone")
+#  What stands in a retraction graph for "this subject and predicate are gone here". NOT a
+#  term and deliberately not in `orexis:`: nothing reads it, no query names it, and what is
+#  asked of that graph is only whether a subject and predicate are in it. A word nobody reads
+#  is annotation, and `tests/test_linker.py` is right to refuse one in the kernel's namespace.
+_GONE = ox.NamedNode("urn:orexis:asked:gone")
 #  Where a rewriting is held to parsing before it is run. An empty store, so the check costs
 #  the parse and nothing else.
 _PROBE = ox.Store()
@@ -209,17 +211,24 @@ class Imaginarium:
         return self._store.query_at(self._asked(sparql), substitutions, at=at)
 
     def query_over(self, sparql: str, *graphs: str, substitutions: dict | None = None) -> dict:
-        #  A compiled select names no world in its text — the caller passes it as one of the
-        #  graphs merged into the default graph — so the world to read as a diff is found
-        #  there instead, and the base stands in its place.
-        node = next((g for g in graphs if g in self._diff), None)
-        if node is None:
-            return self._store.query_over(sparql, *graphs, substitutions=substitutions)
-        text = self._asked(sparql, node)
-        if text is sparql:                                   # refused: answer it whole
-            return self._store.query_over(sparql, *graphs, substitutions=substitutions)
-        return self._store.query_over(
-            text, *[STATE_GRAPH if g == node else g for g in graphs], substitutions=substitutions)
+        """The door a COMPILED select is asked through — a want's violations, a law's — and the
+        one world that is materialised rather than read as a diff.
+
+        Nobody authors these. The kernel compiles them out of SHACL, they name no graph and no
+        `$state`, and so they have no authoring contract for #666 to fix: what a rule text
+        gains by not naming its world, a generated one never wanted. What they do have is a
+        shape the scanner was not written for — `FILTER(EXISTS { … } || EXISTS { … })` nested
+        two deep, produced by a compiler rather than by a person — and rewritten it answered
+        that a dosed pot was still unmeasured, so the want read as unmet in the world its own
+        dose had repaired and the pass never stopped: two forks became thirty-two and the
+        answer came back `exhausted`.
+
+        Asked about a world whole, as it always was. One materialisation per JUDGED node, and
+        a pass judges far fewer worlds than it forks.
+        """
+        for graph in graphs:
+            self.world(graph)
+        return self._store.query_over(sparql, *graphs, substitutions=substitutions)
 
     def construct(self, sparql: str, substitutions: dict | None = None,
                   at: datetime | None = None):
@@ -370,10 +379,19 @@ class Imaginarium:
             return name
         adds, retracts = self._diff[node]
         values = " ".join(_iri(step) for step in sorted(steps))
+        #  FROM EVERYTHING THE PATTERN WOULD OTHERWISE HAVE READ, not from the readings alone.
+        #  A path walks whatever predicates it names, and they need not be ones a step can
+        #  change: the compiled violation select walks `orexis:actsFor/^sosa:hasFeatureOfInterest`
+        #  — from the agent to its subject's reading — and `orexis:actsFor` is in the world
+        #  graph, which no step touches. Built from the readings alone the path bound nothing,
+        #  the want read as unmet in the world its own dose had repaired, and the search never
+        #  stopped: 2 forks became 32 and the pass answered `exhausted`.
+        sources = " ".join(f"<{g}>" for g in (*self._store.public_graphs(),
+                                              *self._store.recorded_graphs()))
         self._store.update(
             f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} WHERE {{ "
             f"  {{ GRAPH <{adds}> {{ ?s ?p ?o }} VALUES ?p {{ {values} }} }} UNION "
-            f"  {{ GRAPH <{STATE_GRAPH}> {{ ?s ?p ?o }} VALUES ?p {{ {values} }} "
+            f"  {{ GRAPH ?g {{ ?s ?p ?o }} VALUES ?g {{ {sources} }} VALUES ?p {{ {values} }} "
             f"     FILTER NOT EXISTS {{ GRAPH <{retracts}> {{ ?s ?p ?gone }} }} }} }}",
             forget=False)
         self._made.add(name)

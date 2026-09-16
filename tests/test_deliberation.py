@@ -732,10 +732,21 @@ def test_of_two_worlds_the_same_urgency_apart_the_cheaper_is_the_plan(make, tmp_
     from orexis_agent_deliberation.planner import Planner
 
     def toy(name, cost, mark):
+        #  IT UPSERTS, as every shipped effect does. Without the retraction each toy's world
+        #  holds TWO readings of one property — the one the agent stands in and the one the
+        #  toy predicts — and a measure asked about such a world answers from whichever the
+        #  engine returns first, which is unordered. It happened to be stable, so two worlds
+        #  that differ only in a marker scored alike and the tie-break this test is about was
+        #  the only thing left; under #666's rewriting the order changed and they scored
+        #  differently, which is the arbitrary answer becoming visible rather than appearing.
+        #  The fixture states what a real action states; the latent defect is filed.
         return f"""
 toy:{name} a orexis:Action ;
     orexis:available \"\"\"SELECT ?want ?via WHERE {{ VALUES (?want ?about) {{ $wants }} BIND($me AS ?via) }}\"\"\" ;
     orexis:costs \"\"\"SELECT ?cost WHERE {{ BIND({cost} AS ?cost) }}\"\"\" ;
+    orexis:retracts \"\"\"CONSTRUCT {{ ?was ?p ?o }} WHERE {{ GRAPH $state {{
+            ?was <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ;
+                 <http://www.w3.org/ns/sosa/observedProperty> $about ; ?p ?o }} }}\"\"\" ;
     sh:construct \"\"\"CONSTRUCT {{
             ?obs a <http://www.w3.org/ns/sosa/Observation> ;
                  <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ;
@@ -780,6 +791,9 @@ toy:{name} a orexis:Action ;
             GRAPH $state {{ ?old <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ;
                                  <http://www.w3.org/ns/sosa/observedProperty> $about .
                             ?old ?p ?o }} }}\"\"\" ;
+    orexis:retracts \"\"\"CONSTRUCT {{ ?was ?p ?o }} WHERE {{ GRAPH $state {{
+            ?was <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ;
+                 <http://www.w3.org/ns/sosa/observedProperty> $about ; ?p ?o }} }}\"\"\" ;
     sh:construct \"\"\"CONSTRUCT {{
             ?obs a <http://www.w3.org/ns/sosa/Observation> ;
                  <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ;
