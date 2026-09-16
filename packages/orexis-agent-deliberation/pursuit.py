@@ -48,9 +48,13 @@ log = logging.getLogger("pursuit")
 
 # --- what the search is handed (#618) ------------------------------------------------------
 #
-#  AN `orexis:Always` WANT IS A ROOT AND IS NEVER PURSUED. It is the agent's for its whole
+#  AN `orexis:Always` DESIRE IS A ROOT AND IS NEVER PURSUED. It is the agent's for its whole
 #  life — the premise of what is — and what the search is handed is a
 #  want DERIVED under it with a binding of its own, a lifetime and a definition of done: bound
+#  TYPED BOTH, and that is materialised entailment rather than a second statement: the closure
+#  `orexis:Want rdfs:subClassOf orexis:Desire` is computed ONCE, at genesis, over what the store
+#  held then — and a want is minted long after, so nothing would ever entail the supertype for
+#  it and every `?d a orexis:Desire` in the tree would stop finding what it pursues.
 #  `orexis:AtEnd`, `prov:wasDerivedFrom` the root, minted here the first time the root reads
 #  unmet and withdrawn when its plan finishes or it reads met with nothing standing for it
 #  (an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it). It POINTS at the root's
@@ -247,7 +251,7 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
 INSERT DATA {{
   GRAPH <{graph}> {{
   <{agent.me.uri}> orexis:holds <{child}> .
-  <{child}> a orexis:Desire ; orexis:bindsWhen {binding} ; prov:wasDerivedFrom <{root}>{timed} ;
+  <{child}> a orexis:Want , orexis:Desire ; orexis:bindsWhen {binding} ; prov:wasDerivedFrom <{root}>{timed} ;
       rdfs:label {json.dumps(label)} .
   {' '.join(pointed)}
   }}

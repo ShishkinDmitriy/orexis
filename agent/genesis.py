@@ -344,7 +344,7 @@ def birth(st: Store, world: Path, agent_id: str, rebirth: bool = False) -> bool:
 
 def _roots_from_the_world(st: Store, agent_id: str) -> Store:
     """What the packages' desire rules make of the world and this agent's record, in a scratch
-    store: the ROOTS — every Always want with its met-tests — in a graph named as the volume's
+    store: the ROOTS — every Always desire with its met-tests — in a graph named as the volume's
     roots graph is, so the scratch reads as the volume would. The premises are public knowledge
     and the agent's own record; `$derived` is the roots graph, `$given` the premises, `$me` the
     agent — the substitution the desire modality performed on every rebuild until #644."""

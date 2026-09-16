@@ -213,7 +213,7 @@ it is a record wearing a bullet.
   two plain triples that cancel nothing, and a node's diff claimed the old value beside the
   new until the drift kept the whole node it took (#619); the bug hid because novelty needs
   only a difference, and a world claiming two readings for one key is still a different world.
-- **An Always want is a root, and a search is never handed one** — what is pursued is derived
+- **An Always DESIRE is a root, and a search is never handed one** — what is pursued is a WANT derived
   under it with a binding of its own; and the root is not the law, because a stake's region under
   never-newly-enter refused the very dose that repairs it: a replaced reading is a new node, so
   every standing violation re-read as newly entered (#618, measured before it was believed).

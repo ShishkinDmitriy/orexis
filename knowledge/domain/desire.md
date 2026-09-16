@@ -1,7 +1,13 @@
 ---
 type: Domain Concept
 title: Desire
-description: What an agent is trying to bring about — for each property its subject states a need in, the region to hold that property inside and the envelope outside which the subject ends. Deduced at genesis by intersecting every operating range that applies, never authored; the band and the urgency every other capability reads come from here.
+description: >-
+  What an agent is trying to bring about, in two kinds. A DESIRE is standing and underived —
+  no unpaid debts, this subject inside what it states it needs — authored or deduced once, held
+  for the agent's life, and never handed to a search. A WANT is what the world deduces from one
+  when a situation makes it bite: this debt closed before its window, this reading back in its
+  region, bound to an instance, carrying the period it holds during, withdrawn when it is met.
+  The agent holds desires; it pursues wants.
 ---
 
 # What it is
@@ -22,20 +28,36 @@ contributes the debts; and *what am I pursuing* is answered across
 those and the [obligations](/domain/obligation.md) the agent did not source, by `Agent.pursuing`
 merging every module's `desires()`.
 
-# Desire, and the word *want*
+# Desire and want are two kinds, not two words
 
-They are the same thing, and the difference is grammatical rather than conceptual: **desire is
-the kind** — the type `Desire`, the term `orexis:Desire`, the modality, the store — and **a want is
-one of them**, identified by its node. That is what `?want` binds, what an
-[intention](/domain/intention.md) `progression:pursues`, and what the ledger is keyed on beside the
-[act](/domain/act.md). The node the ledger names is the one the search was handed — for an
-`orexis:Always` want, the one derived under it ([root desire](/domain/root-desire.md)) — and the
-keeper answers a question put by either name.
+They were one thing said two ways until an `orexis:Always` desire got a derived child (#618),
+and the distinction the code grew then is this:
 
-So *the desire modality* holds *the wants this agent has*, a package contributes wants through
-the `desires` hook, and a want is met, hot, stale or dropped. Nothing turns on the choice; what
-would turn on it is using both without saying they are one, which is how a reader ends up
-looking for a distinction that was never there.
+| | a **desire** | a **want** |
+|---|---|---|
+| how it comes to be | **declared** — by a package's `desires.ru` at genesis, or ratified by a world | **derived** — from a desire, when the world makes it bite |
+| what is above it | nothing | the desire it was derived from, in `prov:wasDerivedFrom` |
+| when it holds | at every instant; its graph states no period | during a period of its own, and is swept when that ends |
+| what it is bound to | a class, usually — or an instance a world ratified | one instance, with the binding the situation gives it |
+| is it pursued | never | it is the only thing a search is ever handed |
+
+Declared and derived is the whole of it. A desire is stated once and is thereafter a fact:
+`orexis:RootsGraph` says `orexis:arrivesBy orexis:Asserted`, and nothing rebuilds it. A want is
+computed — `prov:wasDerivedFrom` names the desire it came from — and is recomputed, withdrawn
+and derived again as the world moves.
+
+*No unpaid debts* is a desire. A debt arriving deduces a want — **close this one before its
+window closes** — and that want is what gets planned, met and withdrawn, while the desire
+stands unchanged for the next one. Sensing's region desire per property works the same way: it
+holds for the agent's life, and a reading outside its region deduces the want that repairs it.
+
+The two live in two graph families, and the names already said so before this page did:
+`orexis:RootsGraph` holds the desires, authored at genesis and holding at every instant;
+`deliberation:PursuedGraph` holds one graph per want, each with its period.
+
+**The kind is `orexis:Desire` and a want is an `orexis:Want` under it**, which is a subclass —
+so every query asking `?d a orexis:Desire` still finds both through the materialised closure,
+and one that means the standing kind alone says so.
 
 # It is deduced, not authored
 
@@ -162,12 +184,13 @@ number, a candidate possible world inside the planner. See
 A region states where a subject should be. How far outside it something sits, and what that
 distance is worth, is [gap](/domain/gap.md)'s.
 
-# One word owns the concept
+# An artifact is named for the kind it produces
 
-"Want" in prose means a desire — the records have always said both, and prose may. What may
-not: an ARTIFACT named for the synonym, which is how a second vocabulary starts. The files,
-the queries, the hooks and the classes say desire (`desires.ru`, `desires.rq`,
-`Module.desires()`), ruled when a `wants.ru` briefly existed and the sovereign asked why.
+A `wants.ru` briefly existed and the sovereign asked why; the ruling then was that the files,
+the queries and the hooks say desire — `desires.ru`, `desires.rq`, `Module.desires()` — and it
+stands, because what a package contributes at genesis IS desires: standing, underived, one per
+premise. What is deduced from them at runtime is wants, and the graph that holds them is named
+for that. The rule is not *one word wins*; it is *name the artifact for what it makes*.
 
 # What am I pursuing — the whole list, with status
 
@@ -350,9 +373,69 @@ The class was a class from the start because a second source was expected, and
 [obligation](/domain/obligation.md) is it — what the agent owes because the society issued a claim
 against its hardware, scored and pursued by this same machinery.
 
-# The structure above these
+# A desire is the top of one tree of wants
 
-Every want here is a node of a derived hierarchy — [root desire](/domain/root-desire.md) has
-the levels above, and
-[a-desire-is-a-forest-of-derived-roots](/decisions/a-desire-is-a-forest-of-derived-roots.md)
-the argument.
+A **desire** is the top of one tree: a starting point the decomposition grows from, derived
+from nothing above it — which is what the word means here, and why there is no separate "root
+desire" to be a second kind of anything. Typically it is a statement over a class of things — an
+agent holds one per premise: acting for subjects yields the welfare root, holding instruments
+the freshness root, being able to incur obligations the debts root — so the whole is a
+**forest**, and an agent with no premises has no trees. A ratified desire may instead name an
+instance from the start; its position, not its level, is what makes it one.
+
+**A desire is never pursued.** It is the premise of what is: the wants a search is handed are
+derived under it — at-end when the root's shape is violated, at an instant when a prediction
+says it will be — and each is gone when met
+([an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it](/decisions/an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it.md)).
+
+# What is derived under it
+
+The want a search is handed for a desire that reads unmet is a node of its own, bound
+`orexis:AtEnd`, `prov:wasDerivedFrom` the desire, POINTING at its met-test, avoided state
+and estimate — one owner each — and restating only the root's address, what it is about, which
+is what the menu joins a want by. It is minted by the pursuit road the first time the desire
+reads unmet, into the agent's own pursued graph (`deliberation:PursuedGraph`, projected into the
+desire modality like the promises), and named for the desire with a suffix, so a second episode
+of the same desire pursues the same node and everything keyed by it finds what it kept. While it
+stands the container presents IT in the desire's place, carrying the desire's own row — its
+measure, its reading, its property — and naming the desire, so a keeper's verdict, a bidder's
+lookup and a mark by either name meet the same want. It is withdrawn when its plan finishes, or
+when it reads met with nothing standing for it; a desire still unmet derives it again. A met desire
+with nothing derived under it is nothing to pursue, and no pass runs for it.
+
+A desire that reads met may still foresee: where it states `orexis:foresees` and a drift's
+crossing falls within that stretch, the want derived under it is bound `orexis:At` the crossing
+— met at the instant and the instant after, its room the stretch to it — and the search for it
+begins where the present's own drift stands at the instant less the longest landing on the
+menu, so the plan's first step is placed at the instant less the plan's own duration and held
+there. It reads met the moment the newest prediction crosses later than the instant, which is
+what a dose does, and is withdrawn like the other.
+
+Like the wants below it, a desire is deduced, never hand-written; a world may additionally
+ratify one through its asserted desire block, and that is the sovereign speaking rather than
+the agent.
+
+# Where instances enter
+
+A deduced desire speaks only T-Box words. One level down the decomposition binds the roster —
+this fern, this probe, this claim — and from there each instance splits per property, each
+property per side of its range. Code still names no instance anywhere: a derivation binds them
+from what the world's files author, and a ratified desire's instance is authored there too. What
+holds at every level is the provenance discipline — deduced or ratified, never the agent's own
+authoring — rather than any rule about where the T-Box ends.
+
+# Each node states its why
+
+A node names its parent and the premises that imply it — the range statement, the roster
+membership — in PROV. Walking from a hot leaf up to its labelled root therefore reads as an
+explanation, which is what the ask channel shows a sovereign; and where a ratified
+instance-level statement overrides a type-level one, the leaf's derivation names it, so the
+override is audited in the graph.
+
+# The depth is earned
+
+Every level must name a consumer or fold back: leaves feed repair matching, the property node
+carries the pick and the series, the instance node the walk and the override audit, the desire
+the rolled-up urgency and the entry point of the asking. The test, the consumers and the
+argument are in
+[a-desire-is-a-forest-of-derived-roots](/decisions/a-desire-is-a-forest-of-derived-roots.md).

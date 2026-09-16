@@ -42,7 +42,7 @@ envelope, so its urgency is the instantaneous degree of being off, a state funct
 only when the world moves. An `orexis:Within` want's room is TIME — the redeem window, so its
 urgency rises in a frozen world, which is why lapsing is judged by the reader's clock. An
 `orexis:At` want's room is time too, the stretch to its instant, opened when the crossing was
-foreseen ([root desire](/domain/root-desire.md)). And not
+foreseen ([desire](/domain/desire.md)). And not
 knowing consumes the whole of either, which is what maximal always meant. One meaning, two
 projections — the stake and the debt formulas were never two ideas.
 

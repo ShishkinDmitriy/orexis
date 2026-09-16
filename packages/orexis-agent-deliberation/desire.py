@@ -175,7 +175,7 @@ class Projection(Store):
         super().__init__()
         publics = list(beliefs.public_graphs())
         #  A PROJECTION, AND NO RULE (#644, a-root-holds-always-and-an-outdated-graph-is-dropped):
-        #  the roots — every Always want, authored at genesis into the agent's own roots graph
+        #  the roots — every Always desire, authored at genesis into the agent's own roots graph
         #  and holding at every instant — and the records sourced at a time: the picks, the
         #  debts, the promises, the wants pursued under a root (#618). The packages' desire
         #  rules ran here on every rebuild until a root was seen to be re-derived from a pick;
