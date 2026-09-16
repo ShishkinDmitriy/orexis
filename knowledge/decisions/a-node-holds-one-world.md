@@ -84,6 +84,13 @@ What actually carries it is two things, neither about retraction:
   slice, and the place to watch it is
   [measure-the-search](/runbooks/measure-the-search.md).
 
+  **That was the wrong number, and shrinking it is what found out.**
+  [the-mutable-slice-was-narrowed-and-not-taken](/decisions/the-mutable-slice-was-narrowed-and-not-taken.md)
+  built the narrowing, measured a padded solve from 58% of its time forking down to 2%, and
+  refused it: profiled, a pass spends 0.1% forking and about 15% inside the engine answering
+  queries. The overlay is still refused for what this section says — but the argument that
+  carries it now is the READS it would cost, not the fork it would save.
+
 So the world stays materialised per node — but in ONE store, the Rust one, forked by diff,
 which is what the imaginarium was always for. The copy that was deleted is not the world; it is
 the translation of the world into another library.
