@@ -777,7 +777,7 @@ toy:{name} a orexis:Action ;
     orexis:available \"\"\"SELECT ?want ?via WHERE {{ VALUES (?want ?about) {{ $wants }} BIND($me AS ?via) }}\"\"\" ;
     orexis:costs \"\"\"SELECT ?cost WHERE {{ BIND({cost} AS ?cost) }}\"\"\" ;
     orexis:retracts \"\"\"CONSTRUCT {{ ?old ?p ?o }} WHERE {{
-            GRAPH $state {{ ?old <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ;
+            {{ ?old <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ;
                                  <http://www.w3.org/ns/sosa/observedProperty> $about .
                             ?old ?p ?o }} }}\"\"\" ;
     sh:construct \"\"\"CONSTRUCT {{

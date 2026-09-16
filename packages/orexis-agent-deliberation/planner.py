@@ -144,8 +144,10 @@ class Planner:
         an obligation, once met-or-not over the record — and those ask the imaginarium now too (#481).
         Anything else unmeasured scores 1.0, the not-knowing answer.
         """
-        answer = self.agent.desire_urgency(desire, partial(self.imaginarium.query_at, at=self._at(node)),
-                                           self._judged_at(node, desire))
+        answer = self.agent.desire_urgency(
+            desire, partial(self.imaginarium.query_at, at=self._at(node),
+                            world=self._judged_at(node, desire)),
+            self._judged_at(node, desire))
         if answer is not None:
             return answer
         #  An avoided-pattern want is binary by its own contract — met 0, unmet 1 — and the
@@ -239,8 +241,10 @@ class Planner:
             #  A want with no shape and no property — a CALL (#359) — is met exactly where
             #  whoever measures it says it is: zero urgency in the world being judged. Asked
             #  of the imaginarium at the node's graph, as `_urgency_in` asks.
-            answer = self.agent.desire_urgency(desire, partial(self.imaginarium.query_at, at=self._at(node)),
-                                           self._judged_at(node, desire))
+            answer = self.agent.desire_urgency(
+                desire, partial(self.imaginarium.query_at, at=self._at(node),
+                                world=self._judged_at(node, desire)),
+                self._judged_at(node, desire))
             if answer is not None:
                 return answer <= 0.0
             return desire.is_met
@@ -270,8 +274,9 @@ class Planner:
         if text is None:
             return None
         try:
-            rows = bindings(self.imaginarium.query(
-                bind(str(text), this=self.me.uri, state=self._graph(node))))
+            rows = bindings(self.imaginarium.query_at(
+                bind(str(text), this=self.me.uri), at=self._at(node),
+                world=self._graph(node)))
         except Exception as exc:
             log.error("estimate failed to run for %s: %s", desire.uri, exc)
             return None
@@ -324,8 +329,8 @@ class Planner:
         names the world being judged.
         """
         try:
-            text = bind(text, this=self.me.uri, state=graph)
-            return bool(bindings(self.imaginarium.query_over(text, *self._compiled.invariant_graphs)))
+            text = bind(text, this=self.me.uri)
+            return bool(bindings(self.imaginarium.query_at(text, world=graph, at=self._clock)))
         except Exception as exc:
             log.error("avoided-state pattern failed to run: %s", exc)
             return True
@@ -1123,8 +1128,9 @@ class Planner:
             if keeper is not None and keeper.refused_below(wanted.action, wanted.via, wanted.about):
                 return trace.REFUSED, forks
             row = next((r for r in affordances_of(
-                partial(self.imaginarium.query_at, at=self._at(cur)), self.me.uri, self.agent.desires.query_union,
-                beliefs_graph(self.agent.id), self._graph(cur), only=frozenset({wanted.action}))
+                partial(self.imaginarium.query_at, at=self._at(cur), world=self._graph(cur)),
+                self.me.uri, self.agent.desires.query_union,
+                beliefs_graph(self.agent.id), only=frozenset({wanted.action}))
                 if r.is_own and r.via == wanted.via and (r.about or None) == (wanted.about or None)),
                 None)
             if row is None:
@@ -1168,9 +1174,10 @@ class Planner:
         #  "acquire, then offer" is a plan only if the menu of the world after the first step
         #  shows the second. The root node's graph is the agent's own readings, so at depth 0
         #  this is the ordinary menu, exactly as before.
-        for row in affordances_of(partial(self.imaginarium.query_at, at=self._at(node)), self.me.uri,
+        for row in affordances_of(partial(self.imaginarium.query_at, at=self._at(node),
+                                          world=self._graph(node)), self.me.uri,
                            self.agent.desires.query_union,
-                           beliefs_graph(self.agent.id), self._graph(node), only=self._compiled.asked):
+                           beliefs_graph(self.agent.id), only=self._compiled.asked):
             if desire.is_obligation:
                 #  A obligation may be served by its counterparty's honoured row, or approached
                 #  through this agent's own levers — refilling the vessel is an Acquire on its
@@ -1367,6 +1374,7 @@ class Planner:
             longest = 0.0
             for row in self._candidates(here, desire):
                 lands = effects.lands_after(self.imaginarium, row.action, when=self._clock,
+                                            world=self._world(here),
                                             **self._bind(desire, here, row))
                 longest = max(longest, lands or 0.0)
             lead = max(0.0, (desire.holds_at - self._clock).total_seconds() - longest)
@@ -1394,8 +1402,8 @@ class Planner:
         #  with no disk in it. One query per foreign action per pass is what a truthful
         #  trace costs, against one per node before this.
         self._passed_over = [] if self._compiled.relevant is None else affordances_of(
-            partial(self.imaginarium.query_at, at=self._clock), self.me.uri, self.agent.desires.query_union,
-            beliefs_graph(self.agent.id), STATE_GRAPH,
+            partial(self.imaginarium.query_at, at=self._clock), self.me.uri,
+            self.agent.desires.query_union, beliefs_graph(self.agent.id),
             only=frozenset(relevance.actions_of(self.agent.beliefs.query)) - self._compiled.relevant)
         self._base_forbidden = (self._forbidden_keys(here)
                                 if self._compiled.law is not None else frozenset())
@@ -1447,14 +1455,15 @@ class Planner:
         #  THEN — a forecast among them, once a world states one — and knows nothing about
         #  which those are. The clock is the pass's, read once at its root.
         taken_at = self._at(node)
-        lands = effects.lands_after(self.imaginarium, row.action,
-                                    when=taken_at, **self._bind(desire, node, row))
+        lands = effects.lands_after(self.imaginarium, row.action, when=taken_at,
+                                    world=self._world(node), **self._bind(desire, node, row))
         bind = self._bind(desire, node, row, lands=lands)
         #  WHAT IT SPENDS, ASKED FIRST — `orexis:costs`, the landing's twin (#466), and None is
         #  free. It is asked before the rule is run because that is what makes the bound worth
         #  having: a candidate already dearer than a plan in hand is dropped without simulating
         #  its effect or forking its world, which are the two expensive things a step does.
-        spent = effects.cost_of(self.imaginarium, row.action, when=taken_at, **bind)
+        spent = effects.cost_of(self.imaginarium, row.action, when=taken_at,
+                                world=self._world(node), **bind)
         cost = node.cost + (spent or 0.0)
         if bound is not None and cost > bound:
             return TOO_DEAR
@@ -1463,7 +1472,8 @@ class Planner:
             #  DESCRIBES: a vent opened now but completing after dusk is judged against the
             #  dusk the forecast states, not against this afternoon.
             added, retracted = effects.apply(self.imaginarium, row.action,
-                                             when=self._at(node, lands), **bind)
+                                             when=self._at(node, lands),
+                                             world=self._world(node), **bind)
         except Exception as exc:                 # a package's rule is not an agent's problem
             log.error("could not simulate %s: %s", row.action, exc)
             return None
@@ -1566,6 +1576,11 @@ class Planner:
                 return f[1:3]
         return signature.named(subject)
 
+    def _world(self, node) -> str:
+        """The readings a rule asked about this node reads — its own, and the pass's root where
+        there is no node (#666). Handed to the door; no rule text names it."""
+        return self._graph(node) if node is not None else STATE_GRAPH
+
     def _bind(self, desire: Desire | None, node=None, row=None, litres: float | None = None,
               lands: float | None = None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.
@@ -1605,7 +1620,6 @@ class Planner:
         #  VALUES, NOT TEXT (#500): each is the IRI, the number or the literal it is, and
         #  `store.bind` renders it as the term where the rule's `$token` stands — whole token,
         #  never a prefix of a longer one, and a token nobody bound refuses.
-        graph = self._graph(node) if node is not None else STATE_GRAPH
         return {
             "me": self.me.uri,
             "claim": Raw(f'"{desire.claim}"') if desire and desire.claim else Raw('"urn:nobody"'),
@@ -1622,7 +1636,6 @@ class Planner:
             #  $about, and a rule that ignores it loses nothing.
             "via": row.via if row is not None else "urn:nothing",
             "beliefs": beliefs_graph(self.agent.id),
-            "state": graph,
             #  NOT SIZED (#579). The search plans on what a reading IS, and an effect declares
             #  the band it reaches; how much to pour or bid is progression's, computed from
             #  the reading in hand when the step is taken. The token stays bound at nothing

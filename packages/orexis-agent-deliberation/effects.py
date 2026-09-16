@@ -72,7 +72,7 @@ def rule_for(store, action: str) -> dict | None:
     return store.remember(("rule", action), fetch)
 
 
-def apply(store, action: str, when=None, **bind) -> tuple[list, list]:
+def apply(store, action: str, when=None, world=None, **bind) -> tuple[list, list]:
     """Run one means' effect: `(added, retracted)`, as triples, against nothing.
 
     **`store` is whichever dataset the question is being asked ABOUT, and that is the whole of
@@ -103,14 +103,13 @@ def apply(store, action: str, when=None, **bind) -> tuple[list, list]:
     rule = rule_for(store, action)
     if rule is None:
         return [], []
-    #  `$state` DEFAULTS TO THE AGENT'S OWN READINGS (#500): an actuator asking about the
-    #  world it stands in never named the graph, and the token it left in the text used to
-    #  parse as a VARIABLE — `GRAPH $state` matching every graph in the store at once,
-    #  silently. The binder refuses a leftover now, so the caller that means "here" gets
-    #  here, and only a planner names another world.
-    bind.setdefault("state", STATE_GRAPH)
-    return (_run(store, rule.get("construct"), bind, when),
-            _run(store, rule.get("retracts"), bind, when))
+    #  WHICH WORLD, TOLD TO THE DOOR AND NOT TO THE TEXT (#666). `world` is the readings a
+    #  rule's patterns read — this agent's own where a caller means "here", a node's where a
+    #  search means "there" — and the rule names neither. It used to name the graph itself,
+    #  which made a package author decide, pattern by pattern, whether a plan could change
+    #  that fact: a claim about every other package's actions, made from inside one.
+    return (_run(store, rule.get("construct"), bind, when, world),
+            _run(store, rule.get("retracts"), bind, when, world))
 
 
 def world_after(base, store, action: str, /, **bind):
@@ -197,7 +196,7 @@ def _term(x):
     return x
 
 
-def lands_after(store, action: str, when=None, **bind) -> float | None:
+def lands_after(store, action: str, when=None, world=None, **bind) -> float | None:
     """How long after this act the world change completes, in seconds — asked, never computed.
 
     The figure a waiter needs and the figure a planner needs, and they must be the same one.
@@ -211,17 +210,16 @@ def lands_after(store, action: str, when=None, **bind) -> float | None:
     must take None and keep whatever it did before, because a lever with no stated timing is
     still a lever that works — it is only one nobody can wait for precisely.
     """
-    bind.setdefault("state", STATE_GRAPH)
     rule = rule_for(store, action)
     if rule is None or not rule.get("lands"):
         return None
-    rows = _select(store, rule["lands"], bind, when)
+    rows = _select(store, rule["lands"], bind, when, world)
     if not rows or rows[0]["seconds"] is None:
         return None
     return float(rows[0]["seconds"].value)
 
 
-def cost_of(store, action: str, when=None, **bind) -> float | None:
+def cost_of(store, action: str, when=None, world=None, **bind) -> float | None:
     """What taking this act would spend, in the wallet's unit — asked, never computed.
 
     `orexis:landsAfter`'s twin (#466): the owning package declares the SELECT, the same
@@ -230,11 +228,10 @@ def cost_of(store, action: str, when=None, **bind) -> float | None:
     declared, or premises that do not hold — and every caller must read None as FREE, the
     statement an omitted declaration makes.
     """
-    bind.setdefault("state", STATE_GRAPH)
     rule = rule_for(store, action)
     if rule is None or not rule.get("costs"):
         return None
-    rows = _select(store, rule["costs"], bind, when)
+    rows = _select(store, rule["costs"], bind, when, world)
     if not rows or rows[0]["cost"] is None:
         return None
     return float(rows[0]["cost"].value)
@@ -271,7 +268,6 @@ def precondition(store, action: str, keyed=(), **bind) -> list:
     rule = rule_for(store, action)
     if rule is None:
         return []
-    bind.setdefault("state", STATE_GRAPH)
     read = []
     text = _precondition_template(rule["construct"], tuple(keyed), ())
     if text:
@@ -280,7 +276,7 @@ def precondition(store, action: str, keyed=(), **bind) -> list:
         text = _precondition_template(rule["available"], tuple(keyed), ("via", "about", "want"))
         if text:
             read += _run(store, text, {
-                "me": bind["me"], "beliefs": bind["beliefs"], "state": bind["state"],
+                "me": bind["me"], "beliefs": bind["beliefs"],
                 "wants": Raw(f"(<{bind.get('want', 'urn:nothing')}> "
                              f"<{bind.get('about', 'urn:nothing')}>)"),
                 "via": bind.get("via") or "urn:nothing", "about": bind.get("about") or "urn:nothing",
@@ -329,9 +325,11 @@ def _precondition_template(text: str, keyed: tuple, restrict: tuple) -> str | No
             #  node with — the bands the domain asserted — so a premise can state the
             #  reading by what it is rather than by its number.
             template.append(f"{v.n3()} a ?_u{n} .")
-            #  Where the rule could have read the node's type: the default graph, or the
-            #  world's own readings graph — `$state`, the one graph a possible world holds
-            #  apart. Never `GRAPH ?g`: in an imaginarium that is every sibling world at once.
+            #  WHERE THE RULE COULD HAVE READ THE NODE'S TYPE: the default graph, which is
+            #  public knowledge, this agent's records and the world being asked about, all
+            #  three (#666). It was two patterns joined by UNION, because the world stood
+            #  apart under `$state` and a type could be in either; the door merges them now,
+            #  so there is one pattern and nothing to keep in step.
             #  ONLY FOR A NODE THE RULE BOUND. A variable an OPTIONAL left unbound — no
             #  standing reading, no pick — is FREE in a pattern that follows, and an
             #  `OPTIONAL { ?v a ?t }` then binds it to any node of the class; the template
@@ -339,9 +337,8 @@ def _precondition_template(text: str, keyed: tuple, restrict: tuple) -> str | No
             #  as some other observation, typed. So the lookup asks about a stand-in that is
             #  the node where bound and nothing where not.
             types.append(f"BIND(COALESCE({v.n3()}, <urn:orexis:unbound>) AS ?_v{n}) "
-                         f"OPTIONAL {{ VALUES ?_t{n} {{ {classes} }} "
-                         f"{{ ?_v{n} a ?_t{n} }} UNION {{ GRAPH $state {{ ?_v{n} a ?_t{n} }} }} }} "
-                         f"OPTIONAL {{ GRAPH $state {{ ?_v{n} a ?_u{n} }} FILTER(BOUND(?_t{n})) }}")
+                         f"OPTIONAL {{ VALUES ?_t{n} {{ {classes} }} ?_v{n} a ?_t{n} }} "
+                         f"OPTIONAL {{ ?_v{n} a ?_u{n} FILTER(BOUND(?_t{n})) }}")
     return (f"CONSTRUCT {{ {' '.join(template)} }} "
             f"WHERE {{ {{ {body} }} {' '.join(types)} {filters} }}")
 
@@ -402,7 +399,7 @@ def _where_body(text: str) -> str | None:
     return None
 
 
-def _select(store, text: str, bind: dict, when=None) -> list:
+def _select(store, text: str, bind: dict, when=None, world=None) -> list:
     """A rule's query that answers with BINDINGS rather than a graph. Same substitution, same
     swallowing of a rule that will not run: a package's broken query must not take an agent
     down, and what is lost is precision about waiting rather than the ability to act.
@@ -414,17 +411,17 @@ def _select(store, text: str, bind: dict, when=None) -> list:
     serve landed "immediately", silently. The rows come back as engine solutions rather
     than JSON bindings; the one consumer reads its column accordingly."""
     try:
-        return store.construct(bind_text(text, **bind), at=when)
+        return store.construct(bind_text(text, **bind), at=when, world=world)
     except Exception as exc:
         log.error("timing query for this means would not run: %s", exc)
         return []
 
 
-def _run(store, text: str | None, bind: dict, when=None) -> list:
+def _run(store, text: str | None, bind: dict, when=None, world=None) -> list:
     if not text:
         return []
     try:
-        return list(store.construct(bind_text(text, **bind), at=when))
+        return list(store.construct(bind_text(text, **bind), at=when, world=world))
     except Exception as exc:
         #  A rule that will not run is a package's bug and must not take an agent down: the
         #  lever still works, and what is lost is the ability to reason about it in advance.

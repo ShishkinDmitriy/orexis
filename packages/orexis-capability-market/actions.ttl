@@ -170,10 +170,10 @@ market:Acquiring
             #  the reading leaves such a world untouched and the step discarded as somewhere
             #  already seen, which is the road every other "this does not help" arrives by;
             #  a look comes first, as it always did.
-            GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
+             ?standing sosa:hasFeatureOfInterest $subject ;
                              sosa:observedProperty $about .
                            OPTIONAL { ?standing a ?tooWet .
-                                      FILTER(?tooWet = sensing:AboveRegion) } }
+                                      FILTER(?tooWet = sensing:AboveRegion) } 
             BIND(IF(BOUND(?tooWet), sensing:AboveRegion, sensing:InRegion) AS ?family)
             ?band rdfs:subClassOf ?family ;
                   sensing:ofSubject $subject ; sensing:ofProperty $about .
@@ -233,11 +233,10 @@ market:Acquiring
     #  world came back holding both readings, the old one still below the region.
     orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest $subject ;
                      sosa:observedProperty $about ;
-                     ?p ?o
-            }
+                     ?p ?o .
         }""" .
 
 #################  What OFFERING makes true  #################
@@ -277,18 +276,21 @@ market:Offering
                      ?witness sensing:monitors ?source ; sosa:observes ?stock }
           BIND(COALESCE(?stock, ?goodProperty) AS ?about)
           #  AND NO ROUND OF MINE IS OPEN — the row again, and the host retracts its own at
-          #  close, so there is nothing to compare (#599).
+          #  close, so there is nothing to compare (#599). ONE clause since #666: it asked
+          #  twice, of what the host believes and of the world a plan imagines, because a
+          #  rule had to name the world it read and the two stood apart. They are one graph
+          #  to a reader now, so a round opened by an earlier step of this very plan is seen
+          #  by the same pattern — and there is no second clause to forget.
           FILTER NOT EXISTS { ?via market:hasRound ?open }
-          FILTER NOT EXISTS { GRAPH $state { ?via market:hasRound ?imagined } }
           #  AND THE VENUE IS NOT COOLING (#598): the row's presence is the fact — a graph
           #  holding during its period since #645, so the door hands it to nobody once the
           #  cooldown ran out, and this reads the default graph. It asked `?may <= NOW()`
           #  while the term named the instant rather than the state, which is the last clock
           #  this package's rules read.
           FILTER NOT EXISTS { ?via market:coolingUntil ?until }
-          OPTIONAL { GRAPH $state { ?reading sosa:hasFeatureOfInterest ?source ;
+          OPTIONAL {  ?reading sosa:hasFeatureOfInterest ?source ;
                                     sosa:observedProperty ?stock ;
-                                    sosa:hasSimpleResult ?level } }
+                                    sosa:hasSimpleResult ?level . }
           FILTER(!BOUND(?stock) || !BOUND(?level) || ?level > 0)
         }""" ;
 
@@ -296,8 +298,8 @@ market:Offering
     rdfs:label "what opening a round makes true" ;
 
     #  THE EFFECT: a round on the venue — the same fact `announce` writes, predicted. It
-    #  lands in the plan's own graph ($state, where every effect's triples go), which is why
-    #  the precondition above looks there too and why a call's measure reads both graphs.
+    #  lands in the world the plan is imagining, which is why the precondition above sees a
+    #  round this same plan opened — one pattern, since #666, rather than one per graph.
     #  The stock is untouched: offering moves no water. The round's close is `$lands` plus my
     #  bid window, in the duration arithmetic this engine does support — measured before it was
     #  leaned on — and `$lands` rather than NOW() since #588, an offering landing at once.
@@ -454,9 +456,9 @@ market:Serving
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:drawsFrom ?vessel .
             ?vessel ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?levelProp .
-            GRAPH $state { ?cur sosa:hasFeatureOfInterest ?vessel ;
+             ?cur sosa:hasFeatureOfInterest ?vessel ;
                                  sosa:observedProperty ?levelProp ;
-                                 a sensing:InRegion }
+                                 a sensing:InRegion .
             #  STAMPED WHEN THIS ACT'S CHANGE COMPLETES (#588), not when the plan was made:
             #  a reading this construct predicts exists at the instant the act lands, and
             #  `$lands` is that instant — the node's own plus this act's `orexis:landsAfter`.
@@ -510,18 +512,17 @@ market:Draining
 
     orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest ?subject ;
                      sosa:observedProperty water:StoredLitres ;
                      sosa:hasSimpleResult ?was ;
-                     ?p ?o }
+                     ?p ?o .
             $me market:hosts ?venue . ?venue market:marketFor ?subject .
             {
               SELECT (SUM(?a) AS ?owed) WHERE {
                 ?debt a orexis:Desire ; market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
                 OPTIONAL { ?debt market:owedFrom ?from }
                 FILTER NOT EXISTS { ?debt market:dischargedAt ?d }
-                FILTER NOT EXISTS { GRAPH $state { ?debt market:dischargedAt ?d2 } }
                 FILTER(COALESCE(?from, ?issued) <= $lands)
               }
             }
@@ -538,20 +539,19 @@ market:Draining
                  sosa:madeBySensor ?sensor ;
                  sosa:usedProcedure ?how .
         } WHERE {
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest ?subject ;
                      sosa:observedProperty water:StoredLitres ;
                      sosa:hasSimpleResult ?was .
                 OPTIONAL { ?obs sosa:madeBySensor ?sensor }
                 OPTIONAL { ?obs sosa:usedProcedure ?how }
-            }
+            
             $me market:hosts ?venue . ?venue market:marketFor ?subject .
             {
               SELECT (SUM(?a) AS ?owed) WHERE {
                 ?debt a orexis:Desire ; market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
                 OPTIONAL { ?debt market:owedFrom ?from }
                 FILTER NOT EXISTS { ?debt market:dischargedAt ?d }
-                FILTER NOT EXISTS { GRAPH $state { ?debt market:dischargedAt ?d2 } }
                 FILTER(COALESCE(?from, ?issued) <= $lands)
               }
             }
@@ -566,13 +566,13 @@ market:DrainingAcrossBands
 
     orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest ?subject ;
                      sosa:observedProperty water:StoredLitres ;
                      a ?band ;
                      ?p ?o .
                 FILTER NOT EXISTS { ?obs sosa:hasSimpleResult ?any }
-            }
+            
             ?band rdfs:subClassOf sensing:InRegion ;
                   sensing:ofSubject ?subject ; sensing:ofProperty water:StoredLitres ;
                   owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
@@ -586,7 +586,6 @@ market:DrainingAcrossBands
                 ?debt a orexis:Desire ; market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
                 OPTIONAL { ?debt market:owedFrom ?from }
                 FILTER NOT EXISTS { ?debt market:dischargedAt ?d }
-                FILTER NOT EXISTS { GRAPH $state { ?debt market:dischargedAt ?d2 } }
                 FILTER(COALESCE(?from, ?issued) <= $lands)
               }
             }
@@ -600,12 +599,12 @@ market:DrainingAcrossBands
                  sosa:observedProperty water:StoredLitres ;
                  sosa:resultTime ?at .
         } WHERE {
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest ?subject ;
                      sosa:observedProperty water:StoredLitres ;
                      a ?band .
                 FILTER NOT EXISTS { ?obs sosa:hasSimpleResult ?any }
-            }
+            
             ?band rdfs:subClassOf sensing:InRegion ;
                   sensing:ofSubject ?subject ; sensing:ofProperty water:StoredLitres ;
                   owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
@@ -619,7 +618,6 @@ market:DrainingAcrossBands
                 ?debt a orexis:Desire ; market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
                 OPTIONAL { ?debt market:owedFrom ?from }
                 FILTER NOT EXISTS { ?debt market:dischargedAt ?d }
-                FILTER NOT EXISTS { GRAPH $state { ?debt market:dischargedAt ?d2 } }
                 FILTER(COALESCE(?from, ?issued) <= $lands)
               }
             }

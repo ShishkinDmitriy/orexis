@@ -213,11 +213,15 @@ SELECT ?c WHERE {{ GRAPH <{node.graph}> {{ ?o sosa:hasFeatureOfInterest <{agent.
 
     #  The ROW is passed because sizing dispatches on its taker (#268) — an actuator sizes a
     #  dose, a bidder sizes a bid — and because an obligation borrows the row's property when it has
-    #  none of its own (#255). A bare `_bind` sizes nothing on purpose. The value is not in the
-    #  binding any more: the rule reads it from `$state`, which names the node's own graph.
-    assert planner._bind(desire, step, row)["state"] != planner._bind(
-        desire, here, row)["state"], \
+    #  none of its own (#255). A bare `_bind` sizes nothing on purpose.
+    #
+    #  THE WORLD IS NOT IN THE BINDING AT ALL since #666: a rule names no graph, and which
+    #  readings it reads is the door's to say. So what must differ between two nodes is what
+    #  the DOOR is told, not what the text carries.
+    assert planner._world(step) != planner._world(here), \
         "a step taken from here must ASK about here — a rule reads the readings its own node reached"
+    assert "state" not in planner._bind(desire, step, row), \
+        "and no rule is handed a graph to read: that was the author's claim to make, and is gone"
 
     #  AND NOTHING IS SIZED (#579). The binding used to ask the step's taker how much it
     #  would pour, so a rule could predict a number; the search plans on the band a dose

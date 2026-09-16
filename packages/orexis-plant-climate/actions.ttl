@@ -62,15 +62,15 @@ climate:Heating
         } WHERE {
             $me orexis:actsFor $subject ; climate:hasHeater ?heater .
             ?heater climate:warms $subject ; climate:warmsProperty $about .
-            GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
-                                     sosa:observedProperty $about }
+             ?standing sosa:hasFeatureOfInterest $subject ;
+                                     sosa:observedProperty $about .
             ?warm rdfs:subClassOf sensing:InRegion ;
                   sensing:ofSubject $subject ; sensing:ofProperty $about .
             OPTIONAL {
                 ?heater climate:driesTheSoil true ;
                         climate:driesProperty ?soil .
-                GRAPH $state { ?wet sosa:hasFeatureOfInterest $subject ;
-                                    sosa:observedProperty ?soil }
+                 ?wet sosa:hasFeatureOfInterest $subject ;
+                                    sosa:observedProperty ?soil .
                 ?parched rdfs:subClassOf sensing:BelowRegion ;
                          sensing:ofSubject $subject ; sensing:ofProperty ?soil .
                 BIND(BNODE() AS ?dry)
@@ -100,11 +100,10 @@ climate:Heating
             } UNION {
                 ?heater climate:driesTheSoil true ; climate:driesProperty ?moved .
             }
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest $subject ;
                      sosa:observedProperty ?moved ;
-                     ?p ?o
-            }
+                     ?p ?o .
         }""" .
 
 #################  What VENTING makes true  #################
@@ -161,14 +160,15 @@ climate:Venting
             #  one where the property was never read (#579), and the outside's, since without
             #  it nothing says which way opening would move things — and guessing is what an
             #  agent must not do about a world it can see.
-            GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
-                                     sosa:observedProperty $about }
-            #  THE OUTSIDE IS NOT READ FROM $state, and that is the correction (#589). A step
-            #  changes the bed and never the weather, so the outside is not this node's to
-            #  hold — it is whatever the graphs holding AT THIS INSTANT say, which the door
-            #  hands over when the search asks the rule about the world its act lands in. A
-            #  forecast then reaches a vent opening after dusk without this rule knowing what
-            #  time it is, and with the reading standing now it answers exactly as before.
+             ?standing sosa:hasFeatureOfInterest $subject ;
+                                     sosa:observedProperty $about .
+            #  THE OUTSIDE IS READ LIKE EVERYTHING ELSE (#666). This rule used to say which
+            #  facts came from the world a plan imagines and which from the graphs holding at
+            #  the instant, because it had to — and "a step changes the bed and never the
+            #  weather" (#589) is true only while no loaded action writes an outside reading,
+            #  which is a claim about other packages that this one cannot make. The door
+            #  decides now: whatever a step changed is what a pattern reads, and whatever it
+            #  did not is what holds at that instant, forecast included.
             ?out sosa:hasFeatureOfInterest ?outside ;
                  sosa:observedProperty $about ;
                  sosa:hasSimpleResult ?there .
@@ -200,11 +200,10 @@ climate:Venting
         CONSTRUCT { ?obs ?p ?o } WHERE {
             $me orexis:actsFor $subject ; climate:hasVent ?vent .
             ?vent climate:ventilates $subject ; climate:ventilatesProperty ?moved .
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest $subject ;
                      sosa:observedProperty ?moved ;
-                     ?p ?o
-            }
+                     ?p ?o .
         }""" .
 
 
@@ -232,11 +231,11 @@ climate:Exchanging
 
     orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest ?subject ;
                      sosa:observedProperty ?property ;
                      sosa:hasSimpleResult ?was ;
-                     ?p ?o }
+                     ?p ?o .
             ?subject climate:diffusion ?d .
             ?d ssn:forProperty ?property ; climate:toward ?around ; climate:perHour ?rate .
             ?out sosa:hasFeatureOfInterest ?around ;
@@ -257,13 +256,13 @@ climate:Exchanging
                  sosa:madeBySensor ?sensor ;
                  sosa:usedProcedure ?how .
         } WHERE {
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest ?subject ;
                      sosa:observedProperty ?property ;
                      sosa:hasSimpleResult ?was .
                 OPTIONAL { ?obs sosa:madeBySensor ?sensor }
                 OPTIONAL { ?obs sosa:usedProcedure ?how }
-            }
+            
             ?subject climate:diffusion ?d .
             ?d ssn:forProperty ?property ; climate:toward ?around ; climate:perHour ?rate .
             ?out sosa:hasFeatureOfInterest ?around ;
@@ -288,13 +287,13 @@ climate:ExchangingAcrossBands
     #  the region: the bands beyond it are open on one side and have no width to cross.
     orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest ?subject ;
                      sosa:observedProperty ?property ;
                      a ?band ;
                      ?p ?o .
                 FILTER NOT EXISTS { ?obs sosa:hasSimpleResult ?any }
-            }
+            
             ?band rdfs:subClassOf sensing:InRegion ;
                   sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
                   owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
@@ -320,12 +319,12 @@ climate:ExchangingAcrossBands
                  sosa:observedProperty ?property ;
                  sosa:resultTime ?at .
         } WHERE {
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest ?subject ;
                      sosa:observedProperty ?property ;
                      a ?band .
                 FILTER NOT EXISTS { ?obs sosa:hasSimpleResult ?any }
-            }
+            
             ?band rdfs:subClassOf sensing:InRegion ;
                   sensing:ofSubject ?subject ; sensing:ofProperty ?property ;
                   owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .

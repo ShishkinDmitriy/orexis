@@ -89,10 +89,10 @@ actuation:Dosing
             #  the reading leaves such a world untouched and the step discarded as somewhere
             #  already seen, which is the road every other "this does not help" arrives by;
             #  a look comes first, as it always did.
-            GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
+             ?standing sosa:hasFeatureOfInterest $subject ;
                              sosa:observedProperty $about .
                            OPTIONAL { ?standing a ?tooWet .
-                                      FILTER(?tooWet = sensing:AboveRegion) } }
+                                      FILTER(?tooWet = sensing:AboveRegion) } 
             BIND(IF(BOUND(?tooWet), sensing:AboveRegion, sensing:InRegion) AS ?family)
             ?band rdfs:subClassOf ?family ;
                   sensing:ofSubject $subject ; sensing:ofProperty $about .
@@ -156,9 +156,8 @@ actuation:Dosing
     #  reject the plan that works.
     orexis:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest $subject ;
                      sosa:observedProperty $about ;
-                     ?p ?o
-            }
+                     ?p ?o .
         }""" .

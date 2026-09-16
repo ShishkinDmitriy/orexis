@@ -31,7 +31,8 @@ from typing import Callable
 import pyoxigraph as ox
 
 from assembly import loader
-from .ontology import OREXIS, CLASSIFICATION_GRAPH, ONTOLOGY_GRAPH, PUBLIC_GRAPH, PERIODS_GRAPH
+from .ontology import (OREXIS, CLASSIFICATION_GRAPH, ONTOLOGY_GRAPH, PUBLIC_GRAPH,
+                       PERIODS_GRAPH, STATE_GRAPH)
 
 # A SPARQL SELECT -> the SPARQL-JSON results dict. The seam every reader is written against,
 # unchanged from when this was an HTTP client, so nothing above here knows the difference.
@@ -558,8 +559,31 @@ WHERE  {{
         )
         return json.loads(out.getvalue())
 
+    def about(self, world: str | None = None, at: datetime | None = None,
+              predictions: bool = False) -> list[str]:
+        """The graphs a RULE is answered over: public knowledge, this agent's own records, and
+        ONE world's readings standing where this agent's own stand.
+
+        **A rule does not say which world it reads** (#666). It says what it needs to be true,
+        and the door it is asked through decides where "here" is — the agent's own readings for
+        an actuator standing in the world, a node's for a search imagining one. Said in the text
+        instead, the choice is a package author's, and it is a claim about every OTHER package's
+        actions: `GRAPH $state` means *a plan can change this* and an unqualified pattern means
+        *a plan cannot*, which depends on the whole loaded action set. `climate:Venting` carries
+        the correction that cost (#589), and it was true only while nothing wrote an outside
+        reading.
+
+        Nothing overlaps: the world named REPLACES the readings rather than joining them, so
+        there is one answer per fact and no precedence for anyone to establish.
+        """
+        out = [g for g in (*self.public_graphs(at), *self.recorded_graphs(at))
+               if g != STATE_GRAPH]
+        if predictions:
+            out += list(self.prediction_graphs(at))
+        return out + [world or STATE_GRAPH]
+
     def query_at(self, sparql: str, substitutions: dict | None = None, *,
-                 at: datetime | None = None) -> dict:
+                 at: datetime | None = None, world: str | None = None) -> dict:
         """Read as a RULE reads: public knowledge AND this agent's own graphs, at an instant.
 
         `query` reads public alone, and a rule's SELECT has always been run through the
@@ -571,15 +595,14 @@ WHERE  {{
         out = io.BytesIO()
         #  AND THE PREDICTIONS HOLDING THEN (#642): a reader standing at an instant is handed what
         #  a package expects the world to be then, beside what it knows.
-        graphs = [ox.NamedNode(g) for g in (*self.public_graphs(at), *self.recorded_graphs(at),
-                                            *self.prediction_graphs(at))]
+        graphs = [ox.NamedNode(g) for g in self.about(world, at, predictions=True)]
         self._store.query(sparql, prefixes=NAMESPACES, default_graph=graphs,
                           substitutions=_terms(substitutions)).serialize(
             output=out, format=ox.QueryResultsFormat.JSON)
         return json.loads(out.getvalue())
 
     def construct(self, sparql: str, substitutions: dict | None = None,
-                  at: datetime | None = None):
+                  at: datetime | None = None, world: str | None = None):
         """Run a CONSTRUCT and hand back the triples, which are not written anywhere.
 
         The one thing `query` cannot do: it serialises results as JSON bindings, and a
@@ -601,7 +624,7 @@ WHERE  {{
         #  AT WHICH INSTANT (#589): a rule asked about a world the agent has not reached is
         #  asked about the graphs that hold THEN, not the ones holding now — which is how a
         #  forecast reaches a step landing inside it and no rule has to know the time.
-        public = [ox.NamedNode(g) for g in (*self.public_graphs(at), *self.recorded_graphs(at))]
+        public = [ox.NamedNode(g) for g in self.about(world, at)]
         return list(self._store.query(sparql, prefixes=NAMESPACES, default_graph=public,
                                       substitutions=_terms(substitutions)))
 

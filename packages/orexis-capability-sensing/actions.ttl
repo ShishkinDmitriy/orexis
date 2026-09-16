@@ -93,7 +93,7 @@ sensing:Observing
             ?sensor sensing:monitors $subject ;
                     sosa:observes ?property .
             FILTER(?sensor = $about || ?property = $about)
-            OPTIONAL { GRAPH $state {
+            OPTIONAL { 
                 ?seen sosa:hasFeatureOfInterest $subject ;
                       sosa:observedProperty ?property .
                 OPTIONAL { ?seen sosa:hasSimpleResult ?value }
@@ -101,7 +101,7 @@ sensing:Observing
                 #  know, never the band the reading is in, and a predicted reading has no
                 #  number to be classified from again.
                 OPTIONAL { ?seen a ?band . FILTER(?band != sosa:Observation) }
-            } }
+             }
             BIND(COALESCE(?seen, BNODE()) AS ?obs)
             #  STAMPED WHEN THIS ACT'S CHANGE COMPLETES (#588), not when the plan was made:
             #  a reading this construct predicts exists at the instant the act lands, and
@@ -124,9 +124,8 @@ sensing:Observing
         CONSTRUCT { ?obs ?p ?o } WHERE {
             ?sensor sensing:monitors $subject ; sosa:observes ?property .
             FILTER(?sensor = $about || ?property = $about)
-            GRAPH $state {
+            
                 ?obs sosa:hasFeatureOfInterest $subject ;
                      sosa:observedProperty ?property ;
-                     ?p ?o
-            }
+                     ?p ?o .
         }""" .

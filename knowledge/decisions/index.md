@@ -94,6 +94,7 @@ The search itself, and the two places a language model is allowed near it.
 
 * [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) - Classical planning lifted to RDF: menu rows are action schemas and the Reflex is a depth-1 planner.
 * [a-rule-is-asked-about-a-world-not-about-a-store](/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md) - Effects run against the store, so step two never sees step one. Snapshot per plan and bind the hypothesis in.
+* [a-rule-does-not-say-which-world-it-reads](/decisions/a-rule-does-not-say-which-world-it-reads.md) - The door is told which world; naming it was one package claiming what every other package's actions can change.
 * [a-habit-is-a-compiled-deliberation](/decisions/a-habit-is-a-compiled-deliberation.md) - A stable environment lets deliberation compile into if-then policy, minted and retired by review on evidence.
 * [a-step-declares-its-cost](/decisions/a-step-declares-its-cost.md) - An action declares `orexis:costs` beside its timing; the search sums it and breaks urgency ties cheaper, never trading wellbeing for money.
 * [relevance-is-read-off-the-actions-and-closed-backward](/decisions/relevance-is-read-off-the-actions-and-closed-backward.md) - A pass simulates only levers whose effects reach what the want reads, closed backward; declared touches and reasoning-as-actions refused.

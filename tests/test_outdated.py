@@ -94,10 +94,15 @@ def test_a_restart_finds_what_lapsed_while_it_was_down_and_sweeps_it_first(monke
     comes up finds the debt outdated, drops it before its first pass, and holds the verdict."""
     supplier = build_agent("supplier", genesis_store({("barrel1", STORED): 3.0}), monkeypatch)
     ledger = supplier.hosting().ledger
-    ledger.owe("fern", "j-down", expires_at=(clock.now() + timedelta(seconds=1)).timestamp(), amount_l=1.0)
+    #  A WINDOW WIDE ENOUGH TO OUTLIVE THE ASSERT BELOW. It was one second, and the assert
+    #  that the debt still stands then raced it: under `-n auto` on a loaded machine the
+    #  window closed first and the door handed the debt to nobody, which reads exactly like
+    #  the defect this test is about. What the test is FOR is the boot that comes after the
+    #  window closes, and three seconds proves that as well as one.
+    ledger.owe("fern", "j-down", expires_at=(clock.now() + timedelta(seconds=3)).timestamp(), amount_l=1.0)
     assert len(ledger.owed()) == 1
     import time
-    time.sleep(1.2)                       # the window closes while the process is "down"
+    time.sleep(3.2)                       # the window closes while the process is "down"
     reborn = build_agent("supplier", supplier.beliefs, monkeypatch)   # boots on the same store, and sweeps
     assert reborn.hosting().ledger.owed() == []
     assert obligation_graph(reborn.id, "j-down") not in reborn.beliefs.periods(), "swept at boot"

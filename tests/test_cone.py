@@ -318,7 +318,7 @@ def test_a_world_the_law_refused_is_kept_and_the_exit_is_planned_from_it(tmp_pat
 toy:Exit a orexis:Action ;
     orexis:available """SELECT ?want ?via WHERE { VALUES (?want ?about) { $wants } BIND($me AS ?via) }""" ;
     orexis:retracts """CONSTRUCT { <urn:naughty> ?p ?o } WHERE {
-            GRAPH $state { <urn:naughty> ?p ?o } }""" ;
+            <urn:naughty> ?p ?o }""" ;
     sh:construct "CONSTRUCT {} WHERE {}" .
 '''
     #  The toys at no cost (#579): the real dose is free and reaches the region, so a

@@ -555,9 +555,13 @@ SELECT ?bridge ?construct ?estimate WHERE {{
             f"SELECT ?s WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel('by')}> ?s }} }}"))), None)
         want = f"{OREXIS}promise_{self.agent.id}_{uuid.uuid4().hex[:8]}"
         patterns = " ".join(f"{s} {p} {o} ." for s, p, o in (_plain_pattern(f) for f in facts))
-        unmet = f"SELECT ?unmet WHERE {{ BIND(1 AS ?unmet) FILTER NOT EXISTS {{ GRAPH $state {{ {patterns} }} }} }}"
+        #  NAMING NO WORLD (#666): the promise is met where the facts the bridge translated
+        #  hold, and where they hold — the belief base, or a world a plan below is imagining —
+        #  is the door's to say. It used to wrap them in `GRAPH $state`, which made the keeper
+        #  state, on the bridge's behalf, that a plan could change them.
+        unmet = f"SELECT ?unmet WHERE {{ BIND(1 AS ?unmet) FILTER NOT EXISTS {{ {patterns} }} }}"
         #  THE ESTIMATE is the bridge's, a template over the parent's $via and $about: bound
-        #  here, once, into a node of this promise's own; $this and $state stay the planner's.
+        #  here, once, into a node of this promise's own; $this stays the planner's.
         estimate = ""
         if bridge.get("estimate"):
             texts = bindings(self.agent.beliefs.query(

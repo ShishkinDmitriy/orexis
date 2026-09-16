@@ -372,8 +372,13 @@ class Agent:
                 select = found[0]["select"] if found else None
             try:
                 if select:
-                    text = bind(select, this=self.me.uri, state=STATE_GRAPH)
-                    entered = bool(bindings(self.beliefs.query(text)))
+                    #  ASKED AS A RULE IS (#666): public knowledge, this agent's records and
+                    #  its readings, all one default graph. The pattern names no world —
+                    #  `query` alone reads the PUBLIC graphs, and an avoided state is almost
+                    #  always about a reading, so asked there it binds nothing and a hot want
+                    #  reads as met.
+                    text = bind(select, this=self.me.uri)
+                    entered = bool(bindings(self.beliefs.query_at(text)))
                 elif bindings(self.beliefs.query(_IS_SHAPE_Q, {"node": row["avoided"]})):
                     #  THE AVOIDED STATE AS A SHAPE (#499): compiled to its conformance
                     #  select — rows where the state has been entered — and run over the

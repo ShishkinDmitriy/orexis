@@ -41,7 +41,7 @@ def _avoiding_world(tmp_path, both=False, shaped=False):
           <http://www.w3.org/ns/shacl#hasValue> <urn:o> ] .'''
                if shaped else
                f'''<{PATTERN}> <http://www.w3.org/ns/shacl#select>
-      """SELECT (1 AS ?entered) WHERE {{ GRAPH $state {{ {MARKER} }} }}""" .''')
+      """SELECT (1 AS ?entered) WHERE {{ {MARKER} }}""" .''')
     (dst / "desire.ttl").write_text(f'''GRAPH <{ASSERTED}> {{
   <{GARDENER}> <http://example.org/orexis#holds> <{WANT}> .
   <{WANT}> a <http://example.org/orexis#Desire> ;
@@ -104,7 +104,7 @@ toy:{name} a orexis:Action ;
     orexis:available """SELECT ?want ?via WHERE {{ VALUES (?want ?about) {{ $wants }} BIND($me AS ?via) }}""" ;
     orexis:costs """SELECT ?cost WHERE {{ BIND({cost} AS ?cost) }}""" ;
     orexis:retracts """CONSTRUCT {{ <urn:naughty> ?p ?o }} WHERE {{
-            GRAPH $state {{ <urn:naughty> ?p ?o }} }}""" ;
+            <urn:naughty> ?p ?o }}""" ;
     sh:construct "CONSTRUCT {{}} WHERE {{}}" .
 '''
     toys = tmp_path / "actions.ttl"
@@ -297,7 +297,7 @@ def test_an_agent_already_inside_the_forbidden_state_keeps_its_exit(tmp_path, mo
 toy:Exit a orexis:Action ;
     orexis:available """SELECT ?want ?via WHERE { VALUES (?want ?about) { $wants } BIND($me AS ?via) }""" ;
     orexis:retracts """CONSTRUCT { <urn:naughty> ?p ?o } WHERE {
-            GRAPH $state { <urn:naughty> ?p ?o } }""" ;
+            <urn:naughty> ?p ?o }""" ;
     sh:construct "CONSTRUCT {} WHERE {}" .
 ''')
     agent, st = _lawful_gardener(tmp_path, monkeypatch, exit_toy)
