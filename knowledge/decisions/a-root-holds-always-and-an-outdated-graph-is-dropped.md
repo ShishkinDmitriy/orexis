@@ -35,7 +35,7 @@ and that the how could differ — is about the met-test, which is still minted f
 **Only a child is built from a state at a time, and it says so with a period.** Everything
 sourced at a time is a graph holding during its period
 ([a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md)): a
-[pursued](/domain/root-desire.md) child from its derivation to the instant it must hold at; an
+[pursued](/domain/desire.md) child from its derivation to the instant it must hold at; an
 [obligation](/domain/obligation.md) from its issue to its expiry; a [call](/domain/call.md)
 until its round opens; a promise until the step above resolves; a
 [prediction](/domain/prediction.md) during its window; a [round](/domain/round.md) during its

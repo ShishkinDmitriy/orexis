@@ -18,11 +18,17 @@ description: >-
   second planner as a capability.
 ---
 
+> **THE NOUNS MOVED.** This record says *want* for the root and *want* for what is derived under
+> it, because when it was written they were one word. They are two kinds now — a **desire**
+> stands and is never pursued, a **want** is deduced from one and carries a period — and
+> [desire](/domain/desire.md) is the current statement. Read *want* below as *desire* wherever
+> it means the root. The argument is unchanged; only what the two ends are called is.
+
 # The claim
 
 **An `orexis:Always` want is a root, and it is never pursued.** It is the agent's for its whole
 life — every subject on the roster inside what it states it needs — and it is the PREMISE of
-what is pursued: a [root desire](/domain/root-desire.md) in the forest's sense, with the
+what is pursued: a [desire](/domain/desire.md) in the forest's sense, with the
 pursued wants derived under it. **It is not the search's law**, and the first draft of this
 record said it was: the binding record gives an Always want the reading *judged at every
 state*, and what enforces that today is never-newly-enter over the shapes an agent holds at

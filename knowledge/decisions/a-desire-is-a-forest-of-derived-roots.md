@@ -17,6 +17,10 @@ status: accepted
 timestamp: 2026-08-24T14:30:00Z
 ---
 
+> **THE NOUNS MOVED.** A *root desire* here is simply a **desire**: standing, underived, never
+> pursued. What grows below it are **wants**. [desire](/domain/desire.md) is the current
+> statement; the forest and the argument for it are unchanged.
+
 # A desire is a forest of derived roots
 
 What an agent holds today is a flat set: sensing's `desires.ru` derives one region and one envelope
