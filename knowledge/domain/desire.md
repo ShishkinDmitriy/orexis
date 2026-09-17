@@ -261,7 +261,7 @@ Three deliberate differences from the diff above:
   unactionable desire and a calm society graphed as a stuck one. Ten minutes on the bench
   found it.
 - **Whether anything can be DONE is not in the query.** That is the deliberator's answer — the
-  menu is the union of what every loaded package contributes, and a copy of it inside a desire
+  actions are the union of what every loaded package contributes, and a copy of them inside a desire
   query would be free to disagree with the one the agent acts on. `pursued()` annotates each row
   by asking `propose_for`, and `series()` publishes the count, so a society drowning stops
   graphing like a society thirsty.
@@ -332,7 +332,7 @@ ratified data, authored directly in the asserted block, and NO capability is in 
 there is nothing to grant, so the kernel lifts it into pursuit and judges it — binary, by
 running the pattern with `$this` and `$state` substituted against whichever world is asked,
 the store's engine live and candidate alike. It usually states no `orexis:about`, and so
-ranges over the whole menu as a call does: any lever might exit a state. Its hard twin is
+ranges over every affordance as a call does: any lever might exit a state. Its hard twin is
 not a desire at all — a ratified violation shape, pruned in the search at every step. See
 [a-want-met-by-absence](/decisions/a-want-met-by-absence.md).
 

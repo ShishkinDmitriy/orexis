@@ -331,7 +331,7 @@ when the search began finding the same two rows itself.
 # The menu — what I could do
 
 The rows a deliberator ranges over. This package keeps only the frame and its consumers — it
-shipped one big `menu.rq` here first, which made the menu's KINDS a registry in this directory
+shipped one big `menu.rq` here first, which made the KINDS of action a registry in this directory
 until the sovereign caught the overclaim.
 
 **Chaining therefore needs no precondition language**, and that is the one thing about the menu
@@ -348,7 +348,7 @@ Runs one per candidate, against the [imaginarium](/domain/imaginarium.md). What 
 The consequence for this loop: an [action](/domain/action.md) carrying no rule cannot be simulated,
 which is why the gate refuses a choosable one without a rule (#506); the pass used to be marked
 PARTIAL, a flag that routed the question elsewhere and then only said what happened, and it is
-gone with the condition it flagged. Concluding from part of the menu is concluding wrongly, and the row
+gone with the condition it flagged. Concluding from part of the affordances is concluding wrongly, and the row
 nobody could simulate may be the one that works — measured on fern, which buys its water. Which
 is why a world holding such a lever is refused before it can run.
 

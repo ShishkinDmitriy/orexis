@@ -6,7 +6,7 @@ description: >-
   property it is about, the lever it goes through, which way that moves it, and whom it
   serves if not the agent itself. Always DERIVED and never stored, because a stored row can
   outlive the plumbing it was concluded from; each row comes from an action's `orexis:available`
-  query, so a new way of acting is a new node rather than an edit to a registry. The menu is the union of those rows, and it is also the precondition language —
+  query, so a new way of acting is a new node rather than an edit to a registry. They are the precondition language too —
   a row whose premises cannot hold does not exist, so chaining needs no separate `requires`.
   The row that is ABSENT is a finding too: a desire with no lever is legitimate and legible.
 ---
@@ -25,7 +25,7 @@ written into it:
 | `direction` | which way it moves the property, or **empty** for a look |
 | `for_agent` | whom the row serves, where it is an obligation. Absent on the agent's own rows |
 
-The **menu** is every such row for one agent, and `menu_of` is the whole of it. For the
+`Afforder.offered` hands back every such row for one agent, in one world. For the
 simulation's fern: *look at moisture through the probe; look at temperature through the
 thermometer; raise moisture through the market.* For the loner world's gardener: *raise it
 through your own pump* — the Actuate rung, offered exactly where the lever chain and the
@@ -39,7 +39,7 @@ change what it knows.
 
 A row is a **conclusion whose premises are stored** — regions, wiring, denominations, all facts
 that exist for their own reasons. Storing the conclusion would let it outlive them: unplumb the
-valve and an authored row still says you can dose. So the menu is computed on every ask, and the
+valve and an authored row still says you can dose. So they are computed on every ask, and the
 [menu graph](/decisions/the-mind-is-six-graphs.md) holds rules about means but never rows about
 levers.
 
@@ -61,13 +61,15 @@ the term the value is, and a text still carrying a token nobody bound refuses ra
 reaching the engine as a free variable — where the engine's own parameters serve only the
 kernel's simple queries, since they cannot reach a subquery or an aggregate.
 
-**The collection is not the [menu](/domain/menu.md).** The menu keeps the templates; this derives
-what they come to in one world, one action at a time. Deciding which actions to ask about and
-whose wants to ask them against is neither's — it is the [afforder](/domain/afforder.md)'s, and
-all three were one file until the shape was settled. A thing that keeps, a thing that derives and
-a thing that decides are three kinds, and one name for all of them hid which a sentence meant.
+**Neither this collection nor [actions](/domain/action.md) is the [menu](/domain/menu.md).** The
+menu is the MODALITY both sit in — *what I could do* — and the word had been naming all three.
+`Actions` keeps what the packages declare; this derives what one of them comes to in one world,
+one action at a time; deciding which to ask about and whose wants to ask them against is
+neither's but the [afforder](/domain/afforder.md)'s. A modality, a thing that keeps, a thing that
+derives and a thing that decides are four kinds, and one name for all of them hid which was meant
+in any given sentence.
 
-# The menu is the precondition language
+# An affordance is the precondition language
 
 This is the part worth internalising, because it is why planning needs no `requires` clause of
 its own.
@@ -85,10 +87,10 @@ one validation; trusting a declaration that turns out to be wrong costs a plant.
 # Each package ships its own rows
 
 There is no menu file. Each package that owns a lever ships its [actions](/domain/action.md),
-and `menu_of` runs every action's `orexis:available` it finds in the store — sensing contributes
+and `Afforder.offered` runs every action's `orexis:available` it finds in the store — sensing contributes
 Observe, actuation Actuate, the market Acquire and the host's Apply.
 
-It began as one `menu.rq` in the deliberation package, which made the menu's KINDS a registry in
+It began as one `menu.rq` in the deliberation package, which made the KINDS of action a registry in
 one directory: adding a way of acting meant editing another package's file. The sovereign caught
 the overclaim — *how is it dynamic if the list is hardcoded?* — and the fix was this repo's
 mechanic applied again. **A new way of acting is a new directory**: an action node for its

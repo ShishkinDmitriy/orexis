@@ -108,7 +108,7 @@ ordinary answer to every caller (treating it as an error would make shipping a p
 two-file obligation) and a REFUSAL at exactly one place: `orexis-validate` will not pass a
 world in which such a means puts a row on some agent's menu. Most means never do.
 
-What a search must NOT do is conclude from a partial menu. A plan that passed over any lever is
+What a search must NOT do is conclude from part of the affordances. A plan that passed over any lever is
 marked partial and defers, because the lever it could not simulate may be the one that works.
 
 # How long it takes, asked by two readers

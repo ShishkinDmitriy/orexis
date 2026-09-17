@@ -1159,7 +1159,7 @@ class Planner:
     def _candidates(self, node, judgment: Judgment):
         """The levers worth simulating from here — the menu, re-run in the world reached.
 
-        THE MENU IS THE PRECONDITION LANGUAGE, which is why chaining needs none of its own: a
+        AN AFFORDANCE IS THE PRECONDITION LANGUAGE, which is why chaining needs none of its own: a
         row whose premises cannot hold does not exist, so an effect that makes a missing row
         appear is the step before it. At depth 0 this is the ordinary menu; deeper, it is the
         menu of a world nobody is in yet.

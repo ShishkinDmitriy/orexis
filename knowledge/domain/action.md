@@ -44,7 +44,7 @@ world and not in this one).
 `loader.action_files()` finds every package's `actions.ttl`; genesis loads them into the action
 graph beside the T-Box. Three readers, one join:
 
-- `menu_of` runs every action's `orexis:available` with `$me` and the desired `$properties` filled
+- `Afforder.offered` runs every action's `orexis:available` with `$me` and the desired `$properties` filled
   in, and each row it returns is an affordance carrying the action;
 - `effects.rule_for(action)` reads the node's construct and retraction and runs them against
   the [imaginarium](/domain/imaginarium.md);

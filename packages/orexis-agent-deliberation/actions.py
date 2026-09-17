@@ -11,7 +11,9 @@ held both questions: a three-disk solve re-read the same eleven templates eighte
 the vocabulary is this collection's job and asking a world is `Affordances`'; an `Afforder` puts
 the two together.
 
-This is what knowledge/domain/menu.md describes and had no class for.
+These are what is WRITTEN INTO the menu modality (knowledge/domain/menu.md); what is derived
+out of it is `Affordances`. Neither is named for the modality, and the word had been naming
+both of them and the modality too (#686).
 """
 
 from __future__ import annotations

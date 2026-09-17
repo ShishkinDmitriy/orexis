@@ -136,7 +136,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [belief-base](/domain/belief-base.md) - One belief base per agent, not one shared store: named-graph layout, SOSA shape, provenance, structural isolation.
 * [gateway](/domain/gateway.md) - Decommissioned in v1: the measurement-witness role, folded into the self-asserting plant edge.
 * [planner](/domain/planner.md) - Runs planning: a bounded search over simulated worlds, writing one possible world per node.
-* [menu](/domain/menu.md) - The modality that holds what could be done: templates, never rows.
+* [menu](/domain/menu.md) - The alethic modality, what I COULD do: actions are written into it, affordances derived out.
 * [keeper](/domain/keeper.md) - Runs keeping, the patience and the verification arc; the intention graph's only writer.
 * [ower](/domain/ower.md) - Runs owing: one row per claim issued against this agent, durable across a restart.
 * [inference](/domain/inference.md) - Materialises what the vocabulary entails, so both engines read one graph.
