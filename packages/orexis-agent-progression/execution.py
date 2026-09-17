@@ -37,7 +37,7 @@ log = logging.getLogger("execution")
 
 #  Asked by NAME of the whole default graph — the T-Box is public, and which capability takes
 #  a means is a fact about the vocabulary rather than about any world.
-def take_standing(agent, standing, desire) -> bool:
+def take_standing(agent, standing, judgment) -> bool:
     """Carry out a step that already stands — the trigger changed, the decision did not.
 
     An offer arriving while an Acquire stands, a reading arriving while an Actuate does: the
@@ -49,10 +49,10 @@ def take_standing(agent, standing, desire) -> bool:
     rows = bindings(agent.desires.query_union(
         f"SELECT ?about WHERE {{ <{standing.want}> orexis:about ?about }}"))
     act = replace(standing.step, about=rows[0]["about"] if rows else None)
-    return carry_out(agent, act, desire, standing.uri)
+    return carry_out(agent, act, judgment, standing.uri)
 
 
-def carry_out(agent, act: Step, desire, intention: str) -> bool:
+def carry_out(agent, act: Step, judgment, intention: str) -> bool:
     """Hand one committed act to whoever the T-Box says takes its action. True if anyone did.
 
     On the loop. A caller that IS the loop takes it now; any other caller enqueues it and
@@ -61,11 +61,11 @@ def carry_out(agent, act: Step, desire, intention: str) -> bool:
     """
     on = loop()
     if on.is_current():
-        return _take(agent, act, desire, intention)
-    return on.submit(_take, agent, act, desire, intention).result()
+        return _take(agent, act, judgment, intention)
+    return on.submit(_take, agent, act, judgment, intention).result()
 
 
-def _take(agent, act: Step, desire, intention: str) -> bool:
+def _take(agent, act: Step, judgment, intention: str) -> bool:
     #  BY THE ACTION'S OWN POINT (#523): every action is an extension point, and the module
     #  that carries it out contributes the method — asking the choir by the action reaches
     #  exactly its takers, every member of a family of two, and nobody else. An action nobody
@@ -87,7 +87,7 @@ def _take(agent, act: Step, desire, intention: str) -> bool:
     keeper = getattr(agent, "keeper", None)
     if keeper is not None and not keeper.ready(intention):
         return False
-    took = any(bool(answer) for answer in agent.ask(act.action, act, desire, intention))
+    took = any(bool(answer) for answer in agent.ask(act.action, act, judgment, intention))
     if took and keeper is not None:
         keeper.after_take(intention)
     if not took:

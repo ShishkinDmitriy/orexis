@@ -105,7 +105,7 @@ def validate_world(world: str) -> bool:
     # flattened beside their projections they would split every blank-node aim in two.
     data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH)
     from orexis_agent_deliberation.beliefs import Beliefs
-    from orexis_agent_deliberation.desire import Desires
+    from orexis_agent_deliberation.desires import Desires
 
     desires = {a: Desires(Beliefs(st, a)) for a in everyone}
     for a in everyone:

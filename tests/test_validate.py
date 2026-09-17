@@ -15,7 +15,7 @@ import pytest
 
 from agent import genesis
 from orexis_agent_deliberation.beliefs import Beliefs
-from orexis_agent_deliberation.desire import Desires
+from orexis_agent_deliberation.desires import Desires
 from orexis_agent_progression.ontology import ACTIONS_GRAPH, ONTOLOGY_GRAPH
 from onboarding.validate import deliberable, ids_are_unique
 

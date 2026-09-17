@@ -47,7 +47,7 @@ from orexis_agent_progression.timer import Timer
 
 from . import planner, pursuit, trace
 from orexis_agent_progression.act import Step
-from orexis_agent_deliberation.desire import Desire
+from orexis_agent_deliberation.judgment import Judgment
 from .afforder import affordances_of
 from orexis_agent_progression.ontology import (OREXIS, DELIBERATION_GRAPH, PLAN_FAILED, PLAN_FINISHED,
                                                   SERIES, STATE_GRAPH, STEP_DONE, beliefs_graph)
@@ -106,14 +106,14 @@ class Deliberator:
         self._planners: dict = {}
         self._plans_failed = 0
 
-    def pursued(self) -> list[tuple[Desire, str | None]]:
+    def pursued(self) -> list[tuple[Judgment, str | None]]:
         """Every desire this agent holds, with the move I propose for it — or None.
 
         Here because deciding what can be done is exactly what a deliberator is, and because
         the kernel may not name a capability's family: `agent.pursuing()` merges what the modules
         want, and this is the only place that can say whether anything answers.
         """
-        return [(desire, self.propose_for(desire)) for desire in self.agent.pursuing()]
+        return [(judgment, self.propose_for(judgment)) for judgment in self.agent.pursuing()]
 
     def start(self) -> None:
         """Drop whatever the last process was thinking.
@@ -152,9 +152,9 @@ class Deliberator:
 
     def tick(self) -> None:
         """The clock landed, on the loop: mark every want and return. Never searches here."""
-        for desire in self.agent.pursuing():
-            if not desire.is_obligation:
-                self.agent.reviser.note(desire.uri, desire)
+        for judgment in self.agent.pursuing():
+            if not judgment.is_obligation:
+                self.agent.reviser.note(judgment.uri, judgment)
 
     def deliberate_on_gaps(self) -> None:
         """Every want, through pursuit, NOW. Noticing is plural; deciding is not; doing is one road.
@@ -172,10 +172,10 @@ class Deliberator:
         Obligations are skipped: a host serves on a presentation or when stock arrives with a
         claim held, and hosting wakes the search on those events itself.
         """
-        for desire in self.agent.pursuing():
-            if desire.is_obligation:
+        for judgment in self.agent.pursuing():
+            if judgment.is_obligation:
                 continue
-            pursuit.pursue(self.agent, desire)
+            pursuit.pursue(self.agent, judgment)
 
     # --- what progression tells me (#452): a lower layer speaks upward only as an event -----
 
@@ -275,19 +275,19 @@ class Deliberator:
         #  round, so tagging by it would mint a new series every time the society traded and
         #  make the store's cardinality grow with its history — the cost of a dashboard nobody
         #  could then load. Whom I owe is a handful of agents and says the thing worth seeing.
-        for desire, _ in pursued:
+        for judgment, _ in pursued:
             #  A want pursued under a root is reported as the ROOT (#618): one series per
             #  want the agent holds, whichever node the pass is currently handed.
-            about = (desire.owed_to.rsplit("#", 1)[-1] if desire.is_obligation
-                     else (desire.derived_from or desire.uri).rsplit("#", 1)[-1])
+            about = (judgment.owed_to.rsplit("#", 1)[-1] if judgment.is_obligation
+                     else (judgment.derived_from or judgment.uri).rsplit("#", 1)[-1])
             #  `agent_want` and its tag KEEP THE RETIRED WORD, deliberately. The noun "want"
             #  gave way to "desire" everywhere else when the vocabulary was ruled on
             #  (domain/desire.md), and a measurement name is the one place the rename costs more
             #  than it buys: it is an external surface with history behind it, so renaming
             #  splits every series at the cutover and leaves a dashboard reading half of one.
             #  The word is wrong and the continuity is worth more.
-            rows.append(("agent_want", {"want": f"obligation.{about}" if desire.is_obligation else about},
-                         {"urgency": float(desire.urgency)}))
+            rows.append(("agent_want", {"want": f"obligation.{about}" if judgment.is_obligation else about},
+                         {"urgency": float(judgment.urgency)}))
 
         #  HOW IT DECIDED, not just what it wants (#256). `pursued()` above has just re-planned
         #  every desire, so the trace holds this tick's verdicts — read from there rather than
@@ -322,17 +322,17 @@ class Deliberator:
                                             "plans_failed": self._plans_failed}))
         return rows
 
-    def propose_for(self, desire: Desire) -> str | None:
-        """The MEANS of the move for one desire, or None — `decide` projected to its head.
+    def propose_for(self, judgment: Judgment) -> str | None:
+        """The MEANS of the move for one judgment, or None — `decide` projected to its head.
 
         Kept for every caller that wants only the kind of act; execution wants the row and
         asks `decide`. Silencing a deliberator means silencing both.
         """
-        plan = self.decide(desire)
+        plan = self.decide(judgment)
         return plan.first if plan is not None and plan.steps else None
 
-    def decide(self, desire: Desire, surprise: tuple | None = None) -> Plan | None:
-        """The PLAN for one desire, whoever sourced it — the deliberator's real question.
+    def decide(self, judgment: Judgment, surprise: tuple | None = None) -> Plan | None:
+        """The PLAN for one judgment, whoever sourced it — the deliberator's real question.
 
         Returns the plan as ROWS, because a step is a row and not a means: which lever it
         goes through is half of what it says, and execution writes that half to the ledger
@@ -341,32 +341,32 @@ class Deliberator:
         It takes the want itself, so an obligation reaches deliberation as what it is: a thing wanted,
         ranked in the same currency, pursued through an affordance like anything else. It is
         the widening the obligation record predicted — "the filter lifts when a member can
-        pursue a desire that is a diff rather than a distance".
+        pursue a judgment that is a diff rather than a distance".
 
         A obligation's means is not deduced here and could not be: it is the row OWED to that
         counterparty, which the market's own `honoured.rq` derives from the delivery chain.
         None where no lever answers — a debt to somebody my hardware cannot reach — and that
         None is the point. It used to be an exception thrown deep inside actuation; now it is
-        a desire that stays hot, stays owed, and shows up in the ledger unpaid, which is this
+        a judgment that stays hot, stays owed, and shows up in the ledger unpaid, which is this
         project's posture towards everything it cannot prevent: leave evidence.
         """
         #  A ROOT IS NEVER HANDED TO THE SEARCH (#618): an `orexis:Always` want is law and
         #  premise, and what is decided is the want derived under it — minted the first time
         #  the root reads unmet, withdrawn once it reads met with nothing standing for it. A
         #  met root with nothing derived under it is nothing to pursue, and no pass runs.
-        handed = pursuit.handed(self.agent, desire)
+        handed = pursuit.handed(self.agent, judgment)
         if handed is None:
             return None
-        desire = handed
+        judgment = handed
         keeper = getattr(self.agent, "keeper", None)
-        if (desire.derived_from is not None and desire.is_met
-                and (keeper is None or not keeper.standing(want=desire.uri))):
-            pursuit.withdraw(self.agent, desire.uri)
+        if (judgment.derived_from is not None and judgment.is_met
+                and (keeper is None or not keeper.standing(want=judgment.uri))):
+            pursuit.withdraw(self.agent, judgment.uri)
             return None
         #  NOTHING IS ANSWERED BY HARDCODE HERE ANY MORE, and the line that was is the whole
         #  of what this change existed to remove.
         #
-        #  `if desire.state in ("unmeasured", "stale"): return OBSERVE` stood at the top of
+        #  `if judgment.state in ("unmeasured", "stale"): return OBSERVE` stood at the top of
         #  this method — the last descendant of the reflex's `if value is None: return
         #  OBSERVE`, kept because nothing else could answer it. What made it removable was
         #  saying the want out loud: freshness is a shape (there exists a reading of this, and
@@ -375,7 +375,7 @@ class Deliberator:
         #  make. Same first move, reached by the one road. The plan record set exactly this as
         #  its own acceptance test: a widening that leaves the special case beside it has not
         #  widened anything.
-        if not desire.is_obligation:
+        if not judgment.is_obligation:
             #  THE SEARCH, and there is nowhere else to go. Asking whether a lever points the
             #  right way is not the same as asking whether taking it leaves this agent better
             #  off, and only the second question refuses to water a plant that is already too
@@ -385,11 +385,11 @@ class Deliberator:
             #  None here is a DECISION and no longer a hand-off. Every case that used to fall
             #  through to the reflex is either refused at the gates or genuinely means "nothing
             #  I hold moves this", which is a true answer worth leaving in the trace.
-            return self._planned(desire, surprise)
+            return self._planned(judgment, surprise)
         #  Nobody has asked. The holder is waiting for its own watch to be live, and a host
         #  that doses early spends the water where nothing is looking (#132) — so a standing
         #  debt is visible, rankable, and still not actionable until it is presented.
-        if not desire.pursuable:
+        if not judgment.pursuable:
             return None
         #  SIMULATE FIRST, exactly as a stake does (#255): the search sees the honoured row
         #  AND this agent's own levers, so a host owing water it does not hold plans the
@@ -397,7 +397,7 @@ class Deliberator:
         #  falls out of two rules that never mention each other. A search that answered and
         #  found no move is the evidence the issue demands: the obligation stays hot, stays owed,
         #  and is not pursued into a world where serving discharges nothing.
-        if plan := self._planned(desire, surprise):
+        if plan := self._planned(judgment, surprise):
             return plan
         #  The search speaks for an obligation only when it FOUND a path — a vessel nobody has read
         #  binds no premise, and a premise that cannot bind proves nothing about serving. So
@@ -407,13 +407,13 @@ class Deliberator:
         #  search outcome and is not written to the trace: it is the row the obligation names.
         for row in affordances_of(self.agent.beliefs.query_at, self.me.uri, self.agent.desires.query_union,
                            beliefs_graph(self.agent.id)):
-            if row.for_agent == desire.owed_to:
+            if row.for_agent == judgment.owed_to:
                 #  A obligation's row, unsized: the host sizes the serve from the claim it holds.
                 return Plan(OBLIGATION, ((Step.from_row(row)),))
         return None
 
-    def _planned(self, desire: Desire, surprise: tuple | None = None) -> Plan | None:
-        """The plan the search found for one desire, or None — which is now always a DECISION.
+    def _planned(self, judgment: Judgment, surprise: tuple | None = None) -> Plan | None:
+        """The plan the search found for one judgment, or None — which is now always a DECISION.
 
         It used to hand back `(answered, move)`, because there were three answers and only two
         would fit in one: take this, take nothing, and *I cannot decide this by simulation*.
@@ -436,49 +436,49 @@ class Deliberator:
         #  and legitimately unmeasured (it has no distance to scale); any other want about a
         #  property is a stake, and a stake nothing measures is what the gate refuses. Told
         #  apart by the kernel's own structure — the kernel holds no region to consult.
-        if (not desire.is_obligation and not desire.is_epistemic
+        if (not judgment.is_obligation and not judgment.is_epistemic
                 and self.agent.desire_urgency(
-                    desire, self.agent.beliefs.query_at, STATE_GRAPH) is None):
+                    judgment, self.agent.beliefs.query_at, STATE_GRAPH) is None):
             self.log.error(
                 "%s: I hold a stake here and nothing I composed can measure it — every world "
                 "I could reach scores alike, so I am about to conclude that nothing helps from "
                 "a comparison that means nothing. `orexis-validate` refuses this world.",
-                _short(desire.uri))
+                _short(judgment.uri))
         #  A PLAN THAT WORKED HERE BEFORE is adopted without a search (#469, #551): the same
         #  want, a world where the plan's regressed precondition holds and its first step is
         #  on the menu. The trace says so; the world verifies it step by step.
         from . import remembered, trace
-        search = self._planners.get(desire.uri)
+        search = self._planners.get(judgment.uri)
         if search is None:
-            search = self._planners[desire.uri] = Planner(self.agent, self.me)
+            search = self._planners[judgment.uri] = Planner(self.agent, self.me)
         kept = None
-        if remembered.remembered_for(self.agent, desire.uri):
+        if remembered.remembered_for(self.agent, judgment.uri):
             #  KEYED BY WHAT A READING IS (#576): a remembered plan's premises state readings
             #  by the bands the domain asserted, plain triples asked of the present.
-            kept = remembered.applicable(self.agent, desire.uri, self.agent.desires.query_union)
+            kept = remembered.applicable(self.agent, judgment.uri, self.agent.desires.query_union)
         if kept is not None:
             uri, steps, cost = kept
-            plan = Plan(REMEMBERED, tuple(steps), desire.urgency, None, cost=cost)
-            trace.write(self.agent.beliefs, self.agent.id, desire, plan, [], desire.urgency, 0.0,
+            plan = Plan(REMEMBERED, tuple(steps), judgment.urgency, None, cost=cost)
+            trace.write(self.agent.beliefs, self.agent.id, judgment, plan, [], judgment.urgency, 0.0,
                         (trace.UNJUDGED, None), surprise=surprise)
-            self._decided[desire.uri] = (plan, uri)
+            self._decided[judgment.uri] = (plan, uri)
             self.log.info("%s: remembered — %d step(s) whose precondition holds here",
-                          _short(desire.uri), len(steps))
+                          _short(judgment.uri), len(steps))
             return plan
-        plan = search.plan(desire, surprise=surprise)
-        self._decided[desire.uri] = (plan, None)
+        plan = search.plan(judgment, surprise=surprise)
+        self._decided[judgment.uri] = (plan, None)
         if plan.steps:
             self.log.info("%s: %s (urgency %.2f -> %.2f)",
-                          _short(desire.uri), plan.outcome, plan.urgency_now, plan.urgency_after)
+                          _short(judgment.uri), plan.outcome, plan.urgency_now, plan.urgency_after)
             return plan
         #  A world reachable and not worth reaching, or no lever pointing at this want at all.
         #  THIS is the decision the reflex could not make, and returning None here is the whole
-        #  point rather than a failure to answer — a met desire quietly holding near its pick
+        #  point rather than a failure to answer — a met judgment quietly holding near its pick
         #  included, which is most passes and not worth a log line; the unmet ones still say
         #  why nothing was done.
         if plan.outcome != SATISFIED:
             self.log.info("%s: %s — no move improves on doing nothing",
-                          _short(desire.uri), plan.outcome)
+                          _short(judgment.uri), plan.outcome)
         return None
 
 # WHAT WENT WITH THE REFLEX, and what that costs: the dealer's shop query — the lot my

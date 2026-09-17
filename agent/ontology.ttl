@@ -715,10 +715,10 @@ orexis:beliefRevised a assembly:Extension ;
     assembly:signature "(belief_term, value) -> None" ; orexis:row orexis:Progression ; rdfs:label "belief revised" ; rdfs:comment "One of this agent's beliefs has been re-picked — take it up, if it is one of yours." .
 
 orexis:desires a assembly:Extension ;
-    assembly:signature "(now=…) -> list['Desire']" ; orexis:row orexis:Deliberative ; rdfs:label "desires" ; rdfs:comment "What do you contribute to what this agent pursues? Answers are ranked together, one want per node." .
+    assembly:signature "(now=…) -> list['Judgment']" ; orexis:row orexis:Deliberative ; rdfs:label "desires" ; rdfs:comment "What do you contribute to what this agent pursues? Answers are ranked together, one want per node." .
 
 orexis:desireUrgency a assembly:Extension ;
-    assembly:signature "(desire, query, state, value=…) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
+    assembly:signature "(judgment, query, state, value=…) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
 
 orexis:reports a assembly:Extension ;
     assembly:signature "() -> dict" ; orexis:row orexis:Reactive ; rdfs:label "reports" ; rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." .
@@ -756,7 +756,7 @@ orexis:Action a owl:Class ; rdfs:label "Action" ;
     #  `orexis:takenBy` restated it and retired as a duplicate, with `orexis:take`, the one
     #  hook every module implemented with an if-chain on the action inside. The gates hold a
     #  family to its actions — in the repo, at onboarding and at boot.
-    assembly:signature "(act, desire, intention) -> bool" ; orexis:row orexis:Progression ;
+    assembly:signature "(act, judgment, intention) -> bool" ; orexis:row orexis:Progression ;
     rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `orexis:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `orexis:retracts` are its effect, with `orexis:landsAfter` and `orexis:confirmedBy` beside them; who carries it out is the code's to say, by `@contributes`. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
 
 

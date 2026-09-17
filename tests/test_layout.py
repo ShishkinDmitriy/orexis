@@ -820,7 +820,7 @@ def test_what_the_kernel_offers_is_reachable_by_its_class(monkeypatch):
     design was written against, wearing a registry.
     """
     from orexis_agent_deliberation.beliefs import Beliefs
-    from orexis_agent_deliberation.desire import Desires
+    from orexis_agent_deliberation.desires import Desires
     from agent.metrics import Metrics
     from conftest import build_agent
 

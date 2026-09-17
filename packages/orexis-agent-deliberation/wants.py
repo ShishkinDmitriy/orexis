@@ -37,7 +37,6 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass
 from datetime import datetime
 
 from orexis_agent_progression import clock
@@ -45,6 +44,7 @@ from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, PERIODS_GRAP
 from orexis_agent_progression.store import bindings
 
 from .ontology import pursued_graph
+from .want import Want
 
 log = logging.getLogger("wants")
 
@@ -54,32 +54,6 @@ log = logging.getLogger("wants")
 #  a market with a busy ledger mints one per claim and a stuck sweep leaves them standing.
 #  Generous enough that no correct caller meets it, small enough that meeting it is survivable.
 PAGE = 100
-
-
-@dataclass(frozen=True)
-class Want:
-    """One want, as the store holds it: what it was derived from, when it must hold, and what
-    it points at.
-
-    STORED FACTS ONLY. How urgent it is and whether it is met are COMPUTED — a capability's
-    answer about a world being judged — and belong to `Desire`, which is what `pursuing()`
-    hands out. A repository returns what is written down; the mind's view of it is not this
-    object's business.
-    """
-
-    uri: str
-    desire: str                         # what it was derived from — `prov:wasDerivedFrom`
-    binds: str                          # orexis:AtEnd, orexis:At, orexis:Within
-    label: str = ""
-    holds_at: str | None = None         # the instant it must hold at, where it binds At
-    derived_at: str | None = None
-    #  What it POINTS AT rather than restates: the desire's met-test, avoided state and
-    #  estimate, one owner each — as `(predicate, object)` IRIs.
-    points: tuple = ()
-    about: str | None = None
-    #  When it stops holding — the instant it must hold at plus the patience its plan is given
-    #  after it, for a want bound `orexis:At`; open for one met at its plan's end.
-    ends: str | None = None
 
 
 class Wants:

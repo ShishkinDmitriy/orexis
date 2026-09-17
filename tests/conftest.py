@@ -293,7 +293,7 @@ def desires_build(st: Store, agent_id: str):
     pursuit list builds the modality the way the agent's boot does, and asks it.
     """
     from orexis_agent_deliberation.beliefs import Beliefs
-    from orexis_agent_deliberation.desire import Desires
+    from orexis_agent_deliberation.desires import Desires
 
     return Desires(Beliefs(st, agent_id))
 

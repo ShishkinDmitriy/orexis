@@ -21,7 +21,8 @@ import pytest
 from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, PERIODS_GRAPH
 from orexis_agent_progression.store import Store, bindings
 
-from orexis_agent_deliberation.wants import Want, Wants
+from orexis_agent_deliberation.want import Want
+from orexis_agent_deliberation.wants import Wants
 
 A_DESIRE = "urn:test:gardener.no_overdue_debts"
 HOLDER = "urn:test:gardener"

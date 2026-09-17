@@ -1480,8 +1480,8 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{expectation.uri}> <{PROGRESSION + "by"}> ?wa
             return False
         self.log.info("advanced %s to %s", _short(expectation.uri), standing.action.rsplit("#", 1)[-1])
         self._tell("advanced", standing.action, expectation.want, "the previous step was answered")
-        desire = next((d for d in self.agent.pursuing() if d.uri == expectation.want), None)
-        carry_out(self.agent, standing.step, desire, expectation.uri)
+        judgment = next((d for d in self.agent.pursuing() if d.uri == expectation.want), None)
+        carry_out(self.agent, standing.step, judgment, expectation.uri)
         return True
 
     def walked(self, intention_uri: str) -> list:

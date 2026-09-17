@@ -65,7 +65,7 @@ from datetime import datetime, timedelta, timezone
 from assembly import loader
 from agent.module import Module, contributes
 from orexis_agent_progression.ontology import BELIEF_REVISED
-from orexis_agent_deliberation.desire import Desires
+from orexis_agent_deliberation.desires import Desires
 from agent.metrics import Metrics
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled

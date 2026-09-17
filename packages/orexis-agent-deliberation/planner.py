@@ -43,7 +43,7 @@ from rdflib import RDF, URIRef
 from . import effects, relevance, signature, trace
 from .beliefs import Picks
 from orexis_agent_progression.act import Step
-from orexis_agent_deliberation.desire import Desire
+from orexis_agent_deliberation.judgment import Judgment
 from .afforder import affordances_of, wants_of
 from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
@@ -119,8 +119,8 @@ class Planner:
 
     # --- what a world is worth ---------------------------------------------------------------
 
-    def _urgency_in(self, node, desire: Desire) -> float:
-        """How bad this desire is, in the world given. Lower is better; 1.0 is the worst there is.
+    def _urgency_in(self, node, judgment: Judgment) -> float:
+        """How bad this judgment is, in the world given. Lower is better; 1.0 is the worst there is.
 
         A CAPABILITY'S ANSWER, never this file's arithmetic: the choir is asked
         (`Agent.desire_urgency`) with the imaginarium as the world and `$state`-equivalent
@@ -145,24 +145,24 @@ class Planner:
         Anything else unmeasured scores 1.0, the not-knowing answer.
         """
         answer = self.agent.desire_urgency(
-            desire, partial(self.imaginarium.query_at, at=self._at(node),
-                            world=self._judged_at(node, desire)),
-            self._judged_at(node, desire))
+            judgment, partial(self.imaginarium.query_at, at=self._at(node),
+                            world=self._judged_at(node, judgment)),
+            self._judged_at(node, judgment))
         if answer is not None:
             return answer
         #  An avoided-pattern want is binary by its own contract — met 0, unmet 1 — and the
         #  kernel judges it (#468): no capability answers for pure ratified data, and the
         #  flat not-knowing fallback below would send the search shopping for a want that
         #  wants nothing whenever the pattern is held.
-        pattern = self._avoided_pattern(desire)
+        pattern = self._avoided_pattern(judgment)
         if pattern is not None:
-            return 1.0 if self._pattern_binds(pattern, self._judged_at(node, desire)) else 0.0
+            return 1.0 if self._pattern_binds(pattern, self._judged_at(node, judgment)) else 0.0
         if self._compiled.unmet is not None:
             #  A compiled want nobody measures — the puzzles', an aversion authored as a
             #  shape — is binary by the same contract as a pattern want: unmet 1, met 0.
             #  Without this the not-knowing fallback below scored the delivered world 1.0
             #  beside the undelivered one, and only the met-test could tell them apart.
-            return 0.0 if self._met_in(node, desire) else 1.0
+            return 0.0 if self._met_in(node, judgment) else 1.0
         #  A want whose kind nothing loaded answers for, scoring the defined fallback:
         #  maximal, because not knowing how bad IS how bad. It used to serve the freshness
         #  want too — epistemic wants had no declared measure, so every candidate world
@@ -171,13 +171,13 @@ class Planner:
         #  it, which `orexis-validate` refuses for a stake and cannot for anything else.
         return 1.0
 
-    def _judged_at(self, node, desire: Desire) -> str:
+    def _judged_at(self, node, judgment: Judgment) -> str:
         """The world this node is JUDGED in: its own, or — for a want met AT an instant
         (#619) — its own drifted to that instant, forked once per node and dropped with the
         pass. A dose that lands in the region and is dried out of it again by the instant
         has not kept the want; the root's own reading, drifted, is what makes acting early
         visible at all, since compared against the present an early dose changes nothing."""
-        if desire.holds_at is None:
+        if judgment.holds_at is None:
             return self._graph(node)
         if node.judged is not None:
             return node.judged
@@ -186,7 +186,7 @@ class Planner:
         #  the last instant a reading is inside its band (the floor is inclusive), and what
         #  the want prevents is the first instant outside, so the world is judged one second
         #  past the instant: a reading that reaches the floor exactly then has not held.
-        instant = desire.holds_at + timedelta(seconds=1.0)
+        instant = judgment.holds_at + timedelta(seconds=1.0)
         if instant <= self._at(node):
             node.judged = graph
             return graph
@@ -202,7 +202,7 @@ class Planner:
         node.judged = fork
         return fork
 
-    def _met_in(self, node, desire: Desire) -> bool:
+    def _met_in(self, node, judgment: Judgment) -> bool:
         """Whether the desire's OWN shape is satisfied in this world.
 
         Its own and no others, which is what makes a pass affordable. Measured on the bench:
@@ -212,7 +212,7 @@ class Planner:
         Legality is asked once, of the winner, in `_offer`.
 
         UNFOCUSED, and that is not a detail either: pySHACL answers qualified value shapes
-        wrong under `focus_nodes` — measured both ways round — and every desire shape here is
+        wrong under `focus_nodes` — measured both ways round — and every judgment shape here is
         qualified. A candidate judged with a focus would be judged by the wrong answer, with
         nothing to show that it had been.
         """
@@ -220,9 +220,9 @@ class Planner:
         #  and met is the pattern binding nothing — one text, the store's own engine, judged
         #  against this node's own readings, so the flat/named-graph split a met-shape would
         #  force never opens.
-        pattern = self._avoided_pattern(desire)
+        pattern = self._avoided_pattern(judgment)
         if pattern is not None:
-            return not self._pattern_binds(pattern, self._judged_at(node, desire))
+            return not self._pattern_binds(pattern, self._judged_at(node, judgment))
         if self._compiled.unmet is not None:
             #  A SHAPE-AUTHORED WANT, judged by its compiled violation select (#497): the
             #  shape is positive and universal, the select is its negation as rows, the
@@ -232,8 +232,8 @@ class Planner:
             #  About a millisecond where the judge's reader floors at tens; held to the judge
             #  by parity in tests/test_violation.py.
             return not bindings(self.imaginarium.query_over(
-                self._compiled.unmet, *self._compiled.invariant_graphs, self._judged_at(node, desire)))
-        shape = self._shape_of(desire)
+                self._compiled.unmet, *self._compiled.invariant_graphs, self._judged_at(node, judgment)))
+        shape = self._shape_of(judgment)
         if shape is None:
             #  An obligation's goal state used to be read HERE, by naming the ledger's discharge
             #  (#255); since #635 the debt carries that as its own `unmetWhen`, judged above
@@ -242,20 +242,20 @@ class Planner:
             #  whoever measures it says it is: zero urgency in the world being judged. Asked
             #  of the imaginarium at the node's graph, as `_urgency_in` asks.
             answer = self.agent.desire_urgency(
-                desire, partial(self.imaginarium.query_at, at=self._at(node),
-                                world=self._judged_at(node, desire)),
-                self._judged_at(node, desire))
+                judgment, partial(self.imaginarium.query_at, at=self._at(node),
+                                world=self._judged_at(node, judgment)),
+                self._judged_at(node, judgment))
             if answer is not None:
                 return answer <= 0.0
-            return desire.is_met
-        #  A shape want the pass did not compile in `_begin` — another desire than the
+            return judgment.is_met
+        #  A shape want the pass did not compile in `_begin` — another judgment than the
         #  pass's — is compiled here, by the same compiler and to the same select (#548);
         #  the judge is not asked inside the search any more.
-        select = violation.unmet_select(shape, self._shape_root(desire))
+        select = violation.unmet_select(shape, self._shape_root(judgment))
         return not bindings(self.imaginarium.query_over(
-            select, *self._compiled.invariant_graphs, self._judged_at(node, desire)))
+            select, *self._compiled.invariant_graphs, self._judged_at(node, judgment)))
 
-    def _estimate_in(self, node, desire: Desire) -> float | None:
+    def _estimate_in(self, node, judgment: Judgment) -> float | None:
         """How far this world still is from meeting the want, by the want's own declaration.
 
         The desire's term and the action's twin: `orexis:costs` says what a step spends,
@@ -267,7 +267,7 @@ class Planner:
         with no estimate is not a want that is zero away, and treating a broken declaration as
         "arrived" would crown a plan that achieved nothing.
         """
-        node_uri = self._compiled.shapes.value(URIRef(desire.uri), _AG.estimates)
+        node_uri = self._compiled.shapes.value(URIRef(judgment.uri), _AG.estimates)
         if node_uri is None:
             return None
         text = self._select_of(node_uri)
@@ -278,13 +278,13 @@ class Planner:
                 bind(str(text), this=self.me.uri), at=self._at(node),
                 world=self._graph(node)))
         except Exception as exc:
-            log.error("estimate failed to run for %s: %s", desire.uri, exc)
+            log.error("estimate failed to run for %s: %s", judgment.uri, exc)
             return None
         return float(rows[0]["estimate"]) if rows and "estimate" in rows[0] else None
 
-    def _avoided_pattern(self, desire: Desire) -> str | None:
+    def _avoided_pattern(self, judgment: Judgment) -> str | None:
         """The `orexis:unmetWhen` select this want carries, or None — the negative twin."""
-        node = self._compiled.shapes.value(URIRef(desire.uri), _AG.unmetWhen)
+        node = self._compiled.shapes.value(URIRef(judgment.uri), _AG.unmetWhen)
         if node is None:
             return None
         #  A node that is a SHAPE carries no select of its own: it was compiled in `_begin`
@@ -335,7 +335,7 @@ class Planner:
             log.error("avoided-state pattern failed to run: %s", exc)
             return True
 
-    def _shape_of(self, desire: Desire):
+    def _shape_of(self, judgment: Judgment):
         """The desire's shape, with everything hanging off it, or None if it has none.
 
         Asked of the DESIRE MODALITY, not of the world being judged (#298): what is pursued
@@ -344,7 +344,7 @@ class Planner:
         read, for years, as a note that the met-check is about one; the shapes snapshot is per
         pass (`_begin`), so a rebuild mid-search cannot hand two depths two different wants.
         """
-        root = self._shape_root(desire)
+        root = self._shape_root(judgment)
         if root is None:
             return None
         #  THE PACKAGE OWNS THE MEASURE: a world's asserted want may point at a shape the
@@ -354,13 +354,13 @@ class Planner:
         source = shapes if (root, RDF.type, _SH.NodeShape) in shapes else self._compiled.base
         return source.cbd(root)
 
-    def _relevant_actions(self, desire: Desire, shape) -> frozenset | None:
+    def _relevant_actions(self, judgment: Judgment, shape) -> frozenset | None:
         """The actions relevant to this want, or None for all of them — see `relevance.py`."""
         if shape is not None:
-            reads = relevance.reads_of_shape(shape, self._shape_root(desire))
+            reads = relevance.reads_of_shape(shape, self._shape_root(judgment))
         else:
-            avoided = self._compiled.shapes.value(URIRef(desire.uri), _AG.unmetWhen)
-            pattern = self._avoided_pattern(desire) if avoided is not None else None
+            avoided = self._compiled.shapes.value(URIRef(judgment.uri), _AG.unmetWhen)
+            pattern = self._avoided_pattern(judgment) if avoided is not None else None
             if pattern is not None:
                 reads = relevance.reads_of_select(pattern)
             elif avoided is not None and self._compiled.unmet is not None:
@@ -377,13 +377,13 @@ class Planner:
                                   relevance.rule_edges(),
                                   relevance.subproperties_of(self.agent.beliefs.query))
 
-    def _shape_root(self, desire: Desire):
+    def _shape_root(self, judgment: Judgment):
         """The node the desire's shape hangs from, or None where it has none."""
-        node = URIRef(desire.uri)
-        #  The met-test hangs OFF the desire node since the reification — a desire is a node
+        node = URIRef(judgment.uri)
+        #  The met-test hangs OFF the judgment node since the reification — a judgment is a node
         #  carrying its shape, not the shape itself — so the walk is one hop of `orexis:metWhen`.
-        #  A node that IS a shape stays legal: an asserted root desire is a bare NodeShape a
-        #  world's TriG may state, and it never grew a desire node around it.
+        #  A node that IS a shape stays legal: an asserted root judgment is a bare NodeShape a
+        #  world's TriG may state, and it never grew a judgment node around it.
         met = self._compiled.shapes.value(node, _AG.metWhen)
         if met is not None and ((met, RDF.type, _SH.NodeShape) in self._compiled.shapes
                                 or (met, RDF.type, _SH.NodeShape) in self._compiled.base):
@@ -394,8 +394,8 @@ class Planner:
 
     # --- the search --------------------------------------------------------------------------
 
-    def plan(self, desire: Desire, surprise: tuple | None = None) -> Plan:
-        """The best bounded sequence of levers for one desire, or the reason there is none.
+    def plan(self, judgment: Judgment, surprise: tuple | None = None) -> Plan:
+        """The best bounded sequence of levers for one judgment, or the reason there is none.
 
         Every candidate weighed is remembered as it is weighed, and the pass is written down
         when it ends (#256) — otherwise all of this dies in-process as a single log line, and
@@ -414,18 +414,18 @@ class Planner:
         that raises forgets it whole.
         """
         try:
-            plan = self._search(desire, surprise)
+            plan = self._search(judgment, surprise)
             #  FROM THE LATEST START, THEN FROM NOW (#625): a want met at an instant is searched
             #  first where the present's drift stands at the instant less the longest landing;
             #  where that finds nothing — the lever it needs is on the menu now and not then, a
             #  round open now — the pass is run again from the present, and a plan found there
             #  is taken now. Two passes at most, and the second only where the first failed.
-            if (desire.holds_at is not None and not plan.steps and not self._from_now
+            if (judgment.holds_at is not None and not plan.steps and not self._from_now
                     and self._root is not None and self._root.landing > 0):
                 self.reset()
                 self._from_now = True
                 try:
-                    plan = self._search(desire, surprise)
+                    plan = self._search(judgment, surprise)
                 finally:
                     self._from_now = False
             return plan
@@ -452,7 +452,7 @@ class Planner:
         self._kept_worlds = 0
         self._from_now = False
 
-    def _search(self, desire: Desire, surprise: tuple | None = None) -> Plan:
+    def _search(self, judgment: Judgment, surprise: tuple | None = None) -> Plan:
         """The pass itself. Separate only so `plan` can guarantee the forgetting above.
         `surprise` is why the mind woke, where the mark said (#632) — written on the pass
         unless the cone finds a sharper one of its own below."""
@@ -461,12 +461,12 @@ class Planner:
         #  cost of reporting is the kind of number a runbook should not carry.
         self._started = time.monotonic()
         self._kept = None
-        self._desire_uri = desire.uri
+        self._desire_uri = judgment.uri
         self._surprise = surprise
         #  THE PRESENT AMONG THE KEPT WORLDS (#553), else from nothing.
         #  A WANT MET AT AN INSTANT RESUMES NOTHING (#619): its root is the present projected
         #  to that instant less the plan's duration, a world that moves with the clock.
-        resumed = desire.holds_at is None and self._resume(desire)
+        resumed = judgment.holds_at is None and self._resume(judgment)
         if not resumed:
             #  THE CLOCK IS NOW, for every want. A pass for a want met at an instant was clocked
             #  from the reading's own instant for a day (#619), so the drift would count the
@@ -474,22 +474,22 @@ class Planner:
             #  instant, so the door hid it (#625). The age is drifted at the root instead
             #  (`_projected`), and the door is asked about the instants the pass stands at.
             self._clock = clock.now()
-            here = self._begin(desire)
+            here = self._begin(judgment)
             root_at = signature.where(here.diff, here.ground)
             self._root, self._nodes, self._by_diff = here, [here], {root_at: here}
             self._seen, self._achieved, self._best, self._bound = {root_at: here.cost}, [], here, None
             self._pending, self._kept_worlds = [], 0
             self._signature = self._invariant_signature()
         here = self._root
-        trace.clear(self.agent.beliefs, self.agent.id, desire.uri)
-        met_now = self._met_in(here, desire)
+        trace.clear(self.agent.beliefs, self.agent.id, judgment.uri)
+        met_now = self._met_in(here, judgment)
         if met_now and here.urgency <= 0.0:
-            return self._record(desire, Plan(SATISFIED, (), here.urgency, here.urgency),
+            return self._record(judgment, Plan(SATISFIED, (), here.urgency, here.urgency),
                                 here.urgency)
         #  Within-binding wants have ROOM: seconds until the want expires (#472). A candidate
         #  whose last change lands past it is LATE, weighed and refused like a dear one.
         #  Or AT an instant (#619): a candidate landing past the instant cannot hold at it.
-        deadline = desire.expires if desire.expires is not None else desire.holds_at
+        deadline = judgment.expires if judgment.expires is not None else judgment.holds_at
         #  Measured from the PASS'S clock, which every landing in the pass is summed from: a
         #  fresh read here made a plan placed exactly at its instant a few milliseconds late.
         room = (max(0.0, (deadline - self._clock).total_seconds())
@@ -517,7 +517,7 @@ class Planner:
                 break
             depth = len(node.taken)
             if node is here:
-                for kept in self._remembered_rows(desire):
+                for kept in self._remembered_rows(judgment):
                     saw_candidate = True
                     #  ITS PRECONDITION FIRST (#551): the facts the chain read that it did not
                     #  produce, asked of the root world as one query. A fact absent is the plan
@@ -527,15 +527,15 @@ class Planner:
                     if absent:
                         self._weighed.append((0, kept, None, trace.INAPPLICABLE, absent[0]))
                         continue
-                    step, spent = self._walk(here, kept, desire, self._bound, self.budget - forked)
+                    step, spent = self._walk(here, kept, judgment, self._bound, self.budget - forked)
                     forked += spent
                     if isinstance(step, str):
                         self._weighed.append((0, kept, None, step))
                         continue
-                    ended = self._settle(kept, step, 0, desire, met_now, room)
+                    ended = self._settle(kept, step, 0, judgment, met_now, room)
                     if ended is not None:
                         return ended
-            for row in self._candidates(node, desire):
+            for row in self._candidates(node, judgment):
                 keeper = getattr(self.agent, "keeper", None)
                 if keeper is not None and keeper.refused_below(row.action, row.via, row.about):
                     #  REFUSED BELOW (#533): the level beneath found no way to keep this very
@@ -555,7 +555,7 @@ class Planner:
                     self._weighed.append((depth, row, None, trace.SPENT))
                     node.withheld.append((row, trace.SPENT))
                     continue
-                step = self._step_from(node, row, desire, self._bound)
+                step = self._step_from(node, row, judgment, self._bound)
                 if step is TOO_DEAR:
                     self._weighed.append((depth, row, None, trace.COSTLY))
                     node.withheld.append((row, trace.COSTLY))
@@ -564,7 +564,7 @@ class Planner:
                     self._weighed.append((depth, row, None, trace.UNSIMULATED))
                     continue
                 forked += 1              # a world exists now, whatever becomes of it below
-                ended = self._settle(row, step, depth, desire, met_now, room)
+                ended = self._settle(row, step, depth, judgment, met_now, room)
                 if ended is not None:
                     return ended
             self._forked = forked
@@ -574,9 +574,9 @@ class Planner:
             #  pass re-makes what it reads from the nearest kept graph.
             node.expanded = True
 
-        return self._ended(desire, met_now, saw_candidate)
+        return self._ended(judgment, met_now, saw_candidate)
 
-    def _ended(self, desire, met_now: bool, saw_candidate: bool) -> Plan:
+    def _ended(self, judgment, met_now: bool, saw_candidate: bool) -> Plan:
         """How the pass ends once the frontier is done with: the winner among the achievers,
         or which of the silences this was.
 
@@ -589,10 +589,10 @@ class Planner:
             #  so the answer is deterministic whatever order the menu yielded them in.
             won = min(self._achieved, key=lambda s: (s.cost, s.urgency))
             return self._record(
-                desire,
+                judgment,
                 self._offer(Plan(SATISFIED, won.taken, self._root.urgency, won.urgency, cost=won.cost, origin=won.origin,
                                  landing=won.landing - self._root.landing),
-                            desire, won),
+                            judgment, won),
                 self._root.urgency)
 
         #  A pass that ends with no step worth taking is labelled by the SHAPE, not by the
@@ -602,18 +602,18 @@ class Planner:
         #  NOT_BETTER (my doses are too coarse) or NOTHING (equip me), and those must not blur.
         best = self._best
         if not saw_candidate:
-            return self._record(desire, Plan(SATISFIED if met_now else NOTHING,
+            return self._record(judgment, Plan(SATISFIED if met_now else NOTHING,
                                            (), self._root.urgency, self._root.urgency), self._root.urgency)
         if best is self._root or (best.urgency, _near(best)) >= (self._root.urgency, _near(self._root)):
             after = self._root.urgency if best is self._root else best.urgency
-            return self._record(desire, Plan(SATISFIED if met_now else NOT_BETTER,
+            return self._record(judgment, Plan(SATISFIED if met_now else NOT_BETTER,
                                            (), self._root.urgency, after), self._root.urgency)
-        return self._record(desire, self._offer(
-            Plan(EXHAUSTED if not self._met_in(best, desire) else SATISFIED,
+        return self._record(judgment, self._offer(
+            Plan(EXHAUSTED if not self._met_in(best, judgment) else SATISFIED,
                  best.taken, self._root.urgency, best.urgency, cost=best.cost, origin=best.origin,
-                 landing=best.landing - self._root.landing), desire, best), self._root.urgency)
+                 landing=best.landing - self._root.landing), judgment, best), self._root.urgency)
 
-    def _settle(self, row, step, depth, desire, met_now, room):
+    def _settle(self, row, step, depth, judgment, met_now, room):
         """One simulated world weighed: forbidden, dear, late, seen, met, or a place to
         search on from. The same for a primitive's world and for the world a remembered
         plan's walk reaches — which is what makes the remembered plan one candidate
@@ -642,7 +642,7 @@ class Planner:
             if (step.urgency, _near(step), step.cost) < (
                     self._best.urgency, _near(self._best), self._best.cost):
                 self._best = step
-        if (novel or not met_now) and self._met_in(step, desire):
+        if (novel or not met_now) and self._met_in(step, judgment):
             step.met = True
             self._weighed.append((depth, row, step.urgency, trace.MET))
             if met_now:
@@ -651,10 +651,10 @@ class Planner:
                 #  cost would be shopping for a want that is not shopping for
                 #  anything.
                 return self._record(
-                    desire,
+                    judgment,
                     self._offer(Plan(SATISFIED, step.taken, self._root.urgency, step.urgency, cost=step.cost, origin=step.origin,
                                      landing=step.landing - self._root.landing),
-                                desire, step),
+                                judgment, step),
                     self._root.urgency)
             self._achieved.append(step)
             self._bound = step.cost if self._bound is None else min(self._bound, step.cost)
@@ -680,7 +680,7 @@ class Planner:
 
     # --- the cone across passes (#553) ---------------------------------------------------------
 
-    def _resume(self, desire: Desire) -> bool:
+    def _resume(self, judgment: Judgment) -> bool:
         """Re-root the kept cone on the present, or say there is nothing to resume.
 
         Two questions, in the order that makes the second cheap. Has the INVARIANT half
@@ -726,10 +726,10 @@ class Planner:
                 if m.verdict is not None:
                     continue
                 rows = [row for row, _ in m.withheld] if m.expanded else [
-                    row for row in self._candidates(m, desire)
+                    row for row in self._candidates(m, judgment)
                     if self._compiled.relevant is None or row.action in self._compiled.relevant]
                 for row in rows:
-                    step = self._step_from(m, row, desire, None)
+                    step = self._step_from(m, row, judgment, None)
                     if step is not None and step is not TOO_DEAR:
                         self._nodes.append(step)
                         at = signature.where(step.diff, step.ground)
@@ -752,10 +752,10 @@ class Planner:
         #  whole of the identity, and the worlds beneath the node — computed from bands, each
         #  carrying its own — stand. The cell-only re-root of #573, which dropped a subtree
         #  computed from a number the present did not hold, has nothing left to drop.
-        self._reroot(node, present, subtree=True, desire=desire)
+        self._reroot(node, present, subtree=True, judgment=judgment)
         return True
 
-    def _reroot(self, node, present: frozenset, subtree: bool = True, desire=None) -> None:
+    def _reroot(self, node, present: frozenset, subtree: bool = True, judgment=None) -> None:
         """`node` becomes the root: every node beneath it re-based on the present, everything
         else dropped. Diffs are re-based by set algebra on absolute worlds — a kept world is
         the old base less its minus set plus its plus set, and its new diff is what that
@@ -792,11 +792,11 @@ class Planner:
         #  one world, and that is what made it the root.
         node.diff = signature.EMPTY
         self._root, self._nodes, self._base_facts = node, keep, present
-        if not subtree and desire is not None:
+        if not subtree and judgment is not None:
             #  Scored from the present, not from the number it was predicted to hold: a pot
             #  a hundredth below its aim is not a met want.
-            node.urgency = self._urgency_in(node, desire)
-            node.estimate = self._estimate_in(node, desire)
+            node.urgency = self._urgency_in(node, judgment)
+            node.estimate = self._estimate_in(node, judgment)
         #  Re-keyed AFTER the diffs are re-based above. A kept world's GROUND survives a
         #  re-root untouched: which of the world's branches it sits under is not measured from
         #  the root, and the new root is a world the old cone predicted on that same ground.
@@ -848,7 +848,7 @@ class Planner:
         node.materialised = True
         return node.graph
 
-    def _view_of(self, desire: Desire) -> frozenset | None:
+    def _view_of(self, judgment: Judgment) -> frozenset | None:
         """The predicates this pass's worlds may differ in, or None for all of them."""
         reads = getattr(self, "_reads", relevance.ANYTHING)
         if reads is relevance.ANYTHING or self._compiled.relevant is None:
@@ -937,7 +937,7 @@ class Planner:
         quads += [quad for iri in self._compiled.want_graphs for quad in self.agent.desires.quads(iri)]
         return signature.facts(quads, self._compiled.keys)
 
-    def _record(self, desire, plan, stands_at):
+    def _record(self, judgment, plan, stands_at):
         """Write the pass down and hand back the plan unchanged.
 
         Threaded through the returns rather than wrapped around `plan()` so that the EARLY ones
@@ -946,12 +946,12 @@ class Planner:
         is why the clock is read here: every return passes through, so no exit is untimed.
         """
         #  PLACED AT THE ROOT'S INSTANT (#625), where the pass stood later than now.
-        if (desire.holds_at is not None and plan.steps and self._root is not None
+        if (judgment.holds_at is not None and plan.steps and self._root is not None
                 and self._root.landing > 0):
             plan = replace(plan, placed_at=self._clock + timedelta(seconds=self._root.landing))
-        trace.write(self.agent.beliefs, self.agent.id, desire, plan,
+        trace.write(self.agent.beliefs, self.agent.id, judgment, plan,
                     getattr(self, "_weighed", []), stands_at,
-                    time.monotonic() - self._started, self._judged(desire),
+                    time.monotonic() - self._started, self._judged(judgment),
                     kept=getattr(self, "_kept_worlds", 0),
                     surprise=getattr(self, "_surprise", None))
         #  THE PASS IS OVER: every imagined graph is dropped (#487, #553), the nodes stay.
@@ -959,7 +959,7 @@ class Planner:
             self._release(node)
         return plan
 
-    def _judged(self, desire: Desire) -> tuple[str, str | None]:
+    def _judged(self, judgment: Judgment) -> tuple[str, str | None]:
         """Which road `_met_in` took for this want, and the text where the road is one (#502).
 
         The SAME order as `_met_in`, and only that order: an authored pattern first, then the
@@ -969,18 +969,18 @@ class Planner:
         says what the judge would have said of this want in ANY world, not what it happened
         to say of the last.
         """
-        pattern = self._avoided_pattern(desire)
+        pattern = self._avoided_pattern(judgment)
         if pattern is not None:
             return trace.AUTHORED, pattern
         if self._compiled.unmet is not None:
             return trace.COMPILED, self._compiled.unmet
         return trace.MEASURE, None
 
-    def _offer(self, plan: Plan, desire: Desire, node) -> Plan:
+    def _offer(self, plan: Plan, judgment: Judgment, node) -> Plan:
         """A plan, once it has been checked for legality — and only the winner is checked.
 
         Validating every candidate against the whole rulebook was the obvious reading and costs
-        twenty times what the desire check does: measured on the bench, 1.73s against 0.083s, so a
+        twenty times what the judgment check does: measured on the bench, 1.73s against 0.083s, so a
         pass at depth 2 would take twenty-two seconds instead of under two. The guarantee does
         not need it. What must be true is that the agent never COMMITS to reaching an
         illegitimate world, and the plan it commits to is one — so the expensive question is
@@ -1003,7 +1003,7 @@ class Planner:
         #  the imaginarium still holds it — depth queries, never per fork. ONCE per node
         #  (#553): a kept node offered again by a resumed pass carries them already.
         if any(step.precondition is None for step in node.taken):
-            node.taken = self._with_precondition(node.taken, desire, node)
+            node.taken = self._with_precondition(node.taken, judgment, node)
         plan = replace(plan, steps=node.taken)
         if node.legal is not None:
             return plan if node.legal else Plan(REFUSED, (), plan.urgency_now, plan.urgency_after)
@@ -1054,7 +1054,7 @@ class Planner:
         #  candidate, paid at every expansion in a world that ratifies a law.
         return frozenset(self._illegal(node, self._compiled.law_selects))
 
-    def _with_precondition(self, steps: tuple, desire: Desire, node) -> tuple:
+    def _with_precondition(self, steps: tuple, judgment: Judgment, node) -> tuple:
         """The steps with each one's precondition filled: the facts its rules read at its parent
         world, canonical, as `predicts` is. A step whose rules will not say is carried with
         None — the plan is not worse for it, and the log has the reason. `node` is the world
@@ -1067,7 +1067,7 @@ class Planner:
         out = []
         for i, step in enumerate(steps):
             reached = chain[i + 1] if i + 1 < len(chain) else chain[i]
-            bind = self._bind(desire, node=chain[i], row=step, litres=step.quantity or 0.0,
+            bind = self._bind(judgment, node=chain[i], row=step, litres=step.quantity or 0.0,
                               lands=reached.landing - chain[i].landing)
             try:
                 read = effects.precondition(self.imaginarium, step.action,
@@ -1089,14 +1089,14 @@ class Planner:
                 for shape, select in selects.items()
                 for row in bindings(self.imaginarium.query_over(select, *graphs))]
 
-    def _remembered_rows(self, desire: Desire) -> list:
+    def _remembered_rows(self, judgment: Judgment) -> list:
         """The plans remembered for this want, as rows — asked once per pass."""
         if getattr(self, "_kept", None) is None:
             from . import remembered
             self._kept = [
-                _Remembered(action=uri, via=(steps[0].via or uri), want=desire.uri,
+                _Remembered(action=uri, via=(steps[0].via or uri), want=judgment.uri,
                             steps=tuple(steps), about=steps[0].about)
-                for uri, steps, _ in remembered.remembered_for(self.agent, desire.uri)]
+                for uri, steps, _ in remembered.remembered_for(self.agent, judgment.uri)]
         return self._kept
 
     def _absent(self, kept: _Remembered) -> list:
@@ -1107,7 +1107,7 @@ class Planner:
         facts = remembered.regressed(kept.steps)
         return [] if facts is None else remembered.missing(self.agent, facts)
 
-    def _walk(self, node, kept: _Remembered, desire: Desire, bound, budget_left: int):
+    def _walk(self, node, kept: _Remembered, judgment: Judgment, bound, budget_left: int):
         """A remembered plan walked from `node` as one candidate: the world its steps reach,
         or the verdict that stopped the walk, and how many worlds it forked either way.
 
@@ -1135,7 +1135,7 @@ class Planner:
                 None)
             if row is None:
                 return trace.UNAVAILABLE, forks
-            step = self._step_from(cur, row, desire, bound)
+            step = self._step_from(cur, row, judgment, bound)
             if step is TOO_DEAR:
                 return trace.COSTLY, forks
             if step is None:
@@ -1151,7 +1151,7 @@ class Planner:
         cur.origin = kept.action
         return cur, forks
 
-    def _candidates(self, node, desire: Desire):
+    def _candidates(self, node, judgment: Judgment):
         """The levers worth simulating from here — the menu, re-run in the world reached.
 
         THE MENU IS THE PRECONDITION LANGUAGE, which is why chaining needs none of its own: a
@@ -1178,11 +1178,11 @@ class Planner:
                                           world=self._graph(node)), self.me.uri,
                            self.agent.desires.query_union,
                            beliefs_graph(self.agent.id), only=self._compiled.asked):
-            if desire.is_obligation:
+            if judgment.is_obligation:
                 #  A obligation may be served by its counterparty's honoured row, or approached
                 #  through this agent's own levers — refilling the vessel is an Acquire on its
                 #  own stake, and that is the whole of why an obligation is in the search (#255).
-                if not (row.is_own or row.for_agent == desire.owed_to):
+                if not (row.is_own or row.for_agent == judgment.owed_to):
                     continue
             else:
                 if not row.is_own:
@@ -1190,12 +1190,12 @@ class Planner:
                 #  A row that names a want serves that want. A want ABOUT NOTHING — a call —
                 #  ranges over every row of the agent's own, because what would raise the
                 #  stock a round needs is a row the stake names (the dealer's two-step).
-                if (row.want is not None and row.want != desire.uri
-                        and desire.uri in self._compiled.about_of):
+                if (row.want is not None and row.want != judgment.uri
+                        and judgment.uri in self._compiled.about_of):
                     continue
             yield row
 
-    def _begin(self, desire: Desire) -> _Node:
+    def _begin(self, judgment: Judgment) -> _Node:
         """This plan's imaginarium, and the root node standing in the world the agent is in.
 
         The imaginarium is built per PLAN and dropped with it — see `plan`, which does that in a
@@ -1228,7 +1228,7 @@ class Planner:
         #  asserted, and the promises a bridge raised — never the record projections: the
         #  flat world below already carries the pick record through the belief flatten, and a
         #  second copy with fresh blank nodes splits every aim in two, which AimShape rightly
-        #  refuses as not steering. They come from the desire modality's OWN store, and go
+        #  refuses as not steering. They come from the judgment modality's OWN store, and go
         #  two ways: into the imaginarium under their own names (#547), so a shape's target
         #  over a want is resolved where the world is and the border is one dump; and as one
         #  rdflib graph, because a cbd walks blank nodes and the carves below want one —
@@ -1312,13 +1312,13 @@ class Planner:
         #  want is not a shape (a pattern want, an obligation, a call). A shape this compiler
         #  cannot say REFUSES here, loudly, rather than judging by something quieter: a want
         #  that silently read as met is the failure the compiler exists to rule out.
-        shape = self._shape_of(desire)
-        self._compiled.unmet = (violation.unmet_select(shape, self._shape_root(desire))
+        shape = self._shape_of(judgment)
+        self._compiled.unmet = (violation.unmet_select(shape, self._shape_root(judgment))
                        if shape is not None else None)
         #  THE NEGATIVE TWIN AS A SHAPE (#499): an aversion under `orexis:unmetWhen` authored
         #  as the avoided state, compiled to its CONFORMANCE select — rows where the state
         #  has been entered — and judged by the same road as a compiled positive want.
-        avoided = self._compiled.shapes.value(URIRef(desire.uri), _AG.unmetWhen)
+        avoided = self._compiled.shapes.value(URIRef(judgment.uri), _AG.unmetWhen)
         if avoided is not None and self._compiled.unmet is None:
             shapes, flat = self._compiled.shapes, self._compiled.base
             source = (shapes if (avoided, RDF.type, _SH.NodeShape) in shapes
@@ -1332,12 +1332,12 @@ class Planner:
         #  simulated — one free foreign action multiplied a hanoi solve 2.8 times, and this is
         #  the only defence that sees it. None where the want reads anything a parser cannot
         #  name, and then every row is weighed exactly as before: over-approximation is safe.
-        self._compiled.relevant = self._relevant_actions(desire, shape)
+        self._compiled.relevant = self._relevant_actions(judgment, shape)
         #  THE WANT'S VIEW (#554, #565): the predicates its closure names — what it reads,
         #  and what the relevant levers read and write — and, for a reading, the property
         #  the want is about. A present is matched to a kept world WITHIN the view, so a fact
         #  the want never reads may drift without killing the cone; None is every fact.
-        self._compiled.view = self._view_of(desire)
+        self._compiled.view = self._view_of(judgment)
         #  WHAT THE MENU IS ASKED FOR, per node (#504): the relevant levers. Every action on a
         #  menu states an effect — the gate holds a choosable action to both texts (#506) —
         #  so there is no lever to keep on the menu for the sake of saying it was passed over.
@@ -1348,15 +1348,15 @@ class Planner:
         #  with no disk in it. One query per foreign action per pass is what a truthful
         #  trace costs, against one per node before this.
         here = _Node(graph=STATE_GRAPH)
-        if desire.holds_at is not None:
-            here = self._projected(here, desire, latest=not self._from_now)
-        here.estimate = self._estimate_in(here, desire)
-        here.urgency = self._urgency_in(here, desire)
+        if judgment.holds_at is not None:
+            here = self._projected(here, judgment, latest=not self._from_now)
+        here.estimate = self._estimate_in(here, judgment)
+        here.urgency = self._urgency_in(here, judgment)
         self._root = here
         self._at_root(here)
         return here
 
-    def _projected(self, here, desire: Desire, latest: bool = True):
+    def _projected(self, here, judgment: Judgment, latest: bool = True):
         """The root of a pass for a want met AT an instant (#619, #625, #643): the present as it
         is PREDICTED to be at the latest start — the instant less the longest landing on the
         root's menu, the latest a plan could begin — where `latest` asks for it: a node of the
@@ -1372,12 +1372,12 @@ class Planner:
         lead = 0.0
         if latest:
             longest = 0.0
-            for row in self._candidates(here, desire):
+            for row in self._candidates(here, judgment):
                 lands = effects.lands_after(self.imaginarium, row.action, when=self._clock,
                                             world=self._world(here),
-                                            **self._bind(desire, here, row))
+                                            **self._bind(judgment, here, row))
                 longest = max(longest, lands or 0.0)
-            lead = max(0.0, (desire.holds_at - self._clock).total_seconds() - longest)
+            lead = max(0.0, (judgment.holds_at - self._clock).total_seconds() - longest)
         added, retracted = self._predicted(STATE_GRAPH, here, self._clock + timedelta(seconds=lead))
         if not added and not retracted:
             here.landing = lead
@@ -1438,7 +1438,7 @@ class Planner:
             node.readings = crossed_text(self.imaginarium.border_text(self._graph(node)))
         return self._invariant + node.readings
 
-    def _step_from(self, node, row, desire: Desire, bound: float | None = None):
+    def _step_from(self, node, row, judgment: Judgment, bound: float | None = None):
         """The node one step on from here, or None where the rule would not run.
 
         The diff lands in ONE place — the imaginarium graph the next step's rule will read —
@@ -1456,8 +1456,8 @@ class Planner:
         #  which those are. The clock is the pass's, read once at its root.
         taken_at = self._at(node)
         lands = effects.lands_after(self.imaginarium, row.action, when=taken_at,
-                                    world=self._world(node), **self._bind(desire, node, row))
-        bind = self._bind(desire, node, row, lands=lands)
+                                    world=self._world(node), **self._bind(judgment, node, row))
+        bind = self._bind(judgment, node, row, lands=lands)
         #  WHAT IT SPENDS, ASKED FIRST — `orexis:costs`, the landing's twin (#466), and None is
         #  free. It is asked before the rule is run because that is what makes the bound worth
         #  having: a candidate already dearer than a plan in hand is dropped without simulating
@@ -1516,8 +1516,8 @@ class Planner:
         step = _Node(graph=graph, diff=diff, landing=landing, cost=cost, ground=node.ground,
                      origin=node.origin if node.origin is not None else row.action,
                      parent=node, added=list(added), retracted=list(retracted), changed=changed)
-        step.urgency = self._urgency_in(step, desire)
-        step.estimate = self._estimate_in(step, desire)
+        step.urgency = self._urgency_in(step, judgment)
+        step.estimate = self._estimate_in(step, judgment)
         #  THE STEP CARRIES WHAT IT PREDICTED (#510): the same canonical facts the signature
         #  is made of, so the keeper can hold the world to this step without an imaginarium.
         step.taken = node.taken + (replace(act, urgency_after=step.urgency, predicts=own),)
@@ -1581,7 +1581,7 @@ class Planner:
         there is no node (#666). Handed to the door; no rule text names it."""
         return self._graph(node) if node is not None else STATE_GRAPH
 
-    def _bind(self, desire: Desire | None, node=None, row=None, litres: float | None = None,
+    def _bind(self, judgment: Judgment | None, node=None, row=None, litres: float | None = None,
               lands: float | None = None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.
 
@@ -1604,7 +1604,7 @@ class Planner:
         before, the retraction found the observation still on disk and predicted a reading that
         landed BESIDE the previous step's instead of replacing it.
 
-        Bound from the desire alone — which is how this was first written —
+        Bound from the judgment alone — which is how this was first written —
         every step is predicted from the reading the agent actually holds, so a second dose
         computes `0.04 + 0.21/conversion` exactly as the first did, lands on the world the
         first one reached, and is discarded by cycle detection as somewhere already seen.
@@ -1622,12 +1622,12 @@ class Planner:
         #  never a prefix of a longer one, and a token nobody bound refuses.
         return {
             "me": self.me.uri,
-            "claim": Raw(f'"{desire.claim}"') if desire and desire.claim else Raw('"urn:nobody"'),
+            "claim": Raw(f'"{judgment.claim}"') if judgment and judgment.claim else Raw('"urn:nobody"'),
             "subject": self.me.acts_for if self.me.acts_for else "urn:nobody",
             #  THE WANT AND WHAT IT IS ABOUT, carried from the row to the rule and never read
             #  here: `$about` is whatever the want's deriver said (`orexis:about`) — a property,
             #  for a region want — and the rule joins on it in its own words.
-            "want": desire.uri if desire else "urn:nothing",
+            "want": judgment.uri if judgment else "urn:nothing",
             "about": row.about if row is not None and row.about else "urn:nothing",
             #  THE LEVER, since the sovereign struck hanoi's ground-action grid: a row always
             #  carried which lever a step goes through, and the effect could never see it —

@@ -34,7 +34,7 @@ import json
 from agent import signing
 from .auction import run_auction
 from .trade import EPS, Bid, Limits, MarketState, Offer
-from orexis_agent_deliberation.desire import Desire
+from orexis_agent_deliberation.judgment import Judgment
 
 from .ower import Ower
 from agent.module import Module, contributes
@@ -310,11 +310,11 @@ SELECT (SUM(?a) AS ?owed) WHERE {{
         """Every call I hold — on one venue, or all — through execution."""
         from orexis_agent_deliberation import reviser
 
-        for desire in self.desires():
-            if market is None or desire.uri == calls.uri_for(market.uri):
-                reviser.wake_for(self.agent, desire)
+        for judgment in self.desires():
+            if market is None or judgment.uri == calls.uri_for(market.uri):
+                reviser.wake_for(self.agent, judgment)
 
-    def desires(self, now=None) -> list[Desire]:
+    def desires(self, now=None) -> list[Judgment]:
         """My contribution to what this agent pursues: the calls on the venues I host.
 
         A call is a want somebody else sourced, like a debt (owing contributes those); it is
@@ -327,25 +327,25 @@ SELECT (SUM(?a) AS ?owed) WHERE {{
         """
         #  AND THE DEBTS, delegated: the ledger is no longer a module in its own right, so
         #  what it contributed to the choir arrives through the module that holds it.
-        return ([Desire(uri=c.uri, urgency=1.0) for c in calls.calls_of(self.agent)]
+        return ([Judgment(uri=c.uri, urgency=1.0) for c in calls.calls_of(self.agent)]
                 + self.ledger.desires(now))
 
     def series(self) -> list[tuple[str, dict, dict]]:
         """What I owe, as figures — the ledger's, through the module that holds it."""
         return self.ledger.series()
 
-    def desire_urgency(self, desire, query, state: str, value=None) -> float | None:
+    def desire_urgency(self, judgment, query, state: str, value=None) -> float | None:
         """How badly a CALL is unmet, in the world `query` answers about: 0 where a round
         stands on its venue, 1 where none does. Reads both the graph I hold rounds in and
         the graph a plan imagines them into, because an Offer's effect lands in the latter.
         None for anything that is not a call."""
-        if not desire.uri.startswith(f"{calls.NS}call_"):
+        if not judgment.uri.startswith(f"{calls.NS}call_"):
             return None
         from orexis_agent_progression.ontology import beliefs_graph
 
         rows = bindings(query(f"""
 SELECT ?r WHERE {{
-  GRAPH <{beliefs_graph(self.agent.id)}> {{ <{desire.uri}> market:calledOn ?via }}
+  GRAPH <{beliefs_graph(self.agent.id)}> {{ <{judgment.uri}> market:calledOn ?via }}
   {{ ?via market:hasRound ?r . ?r market:closesAt ?c }}
   UNION {{ GRAPH <{state}> {{ ?via market:hasRound ?r }} }}
 }} LIMIT 1"""))
@@ -363,9 +363,9 @@ SELECT ?r WHERE {{
             if subject_uri != market.resource or observed_property != self.stock_property.get(market.uri):
                 continue
             if (ledger := self.ledger) is not None:
-                for desire in ledger.obligations():
-                    if desire.pursuable and desire.claim in self.held:
-                        self._pursue(desire.claim,
+                for judgment in ledger.obligations():
+                    if judgment.pursuable and judgment.claim in self.held:
+                        self._pursue(judgment.claim,
                                      f"my vessel reports {value:.3f} — trying again")
             self._pursue_calls(market)
 
@@ -675,8 +675,8 @@ SELECT ?r WHERE {{
         if ledger is None:
             self._serve(jti, why)
             return
-        desire = next((g for g in ledger.obligations() if g.claim == jti), None)
-        if desire is None:
+        judgment = next((g for g in ledger.obligations() if g.claim == jti), None)
+        if judgment is None:
             return
         #  THROUGH EXECUTION: the search sees the honoured row AND this agent's own levers,
         #  so a host owing water it does not hold plans the refill — an Acquire, committed and
@@ -689,10 +689,10 @@ SELECT ?r WHERE {{
         #  of it is not this handler's to wait for. The claim stays in `held` until it is
         #  served — which is what happened anyway when nothing was committed — so the moment
         #  the answer changes, the sweep serves it.
-        reviser.wake_for(self.agent, desire)
+        reviser.wake_for(self.agent, judgment)
 
     @contributes(OFFERING)
-    def offer(self, act, desire, intention: str) -> bool:
+    def offer(self, act, judgment, intention: str) -> bool:
         """THE HOST'S MOVE, taken: announce on the venue the row names, for the call the plan
         served. `announce` sizes the lot by the vessel and writes the round; the call is
         answered by the round existing. Satisfied at once — the round is the end, and it is
@@ -704,11 +704,11 @@ SELECT ?r WHERE {{
         if not self.announce(market, trigger=by):
             return False
         if (keeper := self._keeper()) is not None:
-            keeper.satisfy(OFFERING, desire.uri, "the round opened")
+            keeper.satisfy(OFFERING, judgment.uri, "the round opened")
         return True
 
     @contributes(SERVING)
-    def serve(self, act, desire, intention: str) -> bool:
+    def serve(self, act, judgment, intention: str) -> bool:
         """Carry out a committed serve: pour the claim this obligation names.
 
         The actor for `market:Serving` on the obligation's row (knowledge/domain/actor.md). A
@@ -716,7 +716,7 @@ SELECT ?r WHERE {{
         serve, and only for a claim still held — an obligation whose claim was never presented
         is not this module's to invent.
         """
-        if not desire.claim or desire.claim not in self.held:
+        if not judgment.claim or judgment.claim not in self.held:
             return False
         #  A VESSEL I KNOW IS TOO LOW IS NOT POURED FROM. The search used to keep this claim
         #  held by planning the refill first; since a round is a fact (#358) there may be no
@@ -724,17 +724,17 @@ SELECT ?r WHERE {{
         #  what reaches here. The actor is the boundary then: what I know of my stock says the
         #  claim cannot be honoured, so it stays held for the reading that changes that. A
         #  vessel I have never read keeps the old arrangement and is judged by the pour.
-        claim = self.held[desire.claim]
+        claim = self.held[judgment.claim]
         market = next((m for m in self.markets if m.uri == act.via or
                        self.stock_property.get(m.uri)), None)
         stock = self._stock_of(market) if market is not None else None
         if stock is not None and stock + EPS < claim.amount_l:
             self.log.info("claim %s waits — my vessel holds %.3f L and it asks %.3f L",
-                          desire.claim, stock, claim.amount_l)
+                          judgment.claim, stock, claim.amount_l)
             return False
-        self._serve(desire.claim, "the plan's head — an obligation's row")
+        self._serve(judgment.claim, "the plan's head — an obligation's row")
         if (keeper := self._keeper()) is not None:
-            keeper.satisfy(SERVING, desire.uri, "served")
+            keeper.satisfy(SERVING, judgment.uri, "served")
         return True
 
     def _serve(self, jti: str, why: str) -> None:

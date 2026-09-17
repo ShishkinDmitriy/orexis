@@ -125,7 +125,7 @@ def clear(store, agent_id: str, desire_uri: str) -> None:
                     OPTIONAL {{ <{node}> deliberation:considered ?c . ?c ?cp ?co }} }} }}""")
 
 
-def write(store, agent_id: str, desire, plan, considered, stands_at: float,
+def write(store, agent_id: str, judgment, plan, considered, stands_at: float,
           took_s: float = 0.0, judged: tuple[str, str | None] = (UNJUDGED, None),
           kept: int = 0, surprise: tuple | None = None) -> None:
     """Record one pass: what was weighed, what each would have reached, and what was taken.
@@ -135,15 +135,15 @@ def write(store, agent_id: str, desire, plan, considered, stands_at: float,
     the same posture `reporting` takes towards the series store.
     """
     try:
-        _write(store, agent_id, desire, plan, considered, stands_at, took_s, judged, kept, surprise)
+        _write(store, agent_id, judgment, plan, considered, stands_at, took_s, judged, kept, surprise)
     except Exception as exc:                      # noqa: BLE001 - see the docstring
         log.warning("could not record what was considered: %s", exc)
 
 
-def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
+def _write(store, agent_id: str, judgment, plan, considered, stands_at: float,
            took_s: float, judged: tuple[str, str | None], kept: int = 0,
            surprise: tuple | None = None) -> None:
-    node = _uri(agent_id, desire.uri)
+    node = _uri(agent_id, judgment.uri)
     #  The candidate the plan came THROUGH — a remembered route walked as one candidate is
     #  named as the route, not as the first of its steps (#469).
     chosen = getattr(plan, "origin", None) or (plan.steps[0].action if plan.steps else None)
@@ -186,7 +186,7 @@ def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
         f'        deliberation:judgedBy {ox.Literal(text)} ;\n'
     store.update(f"""INSERT DATA {{ GRAPH <{DELIBERATION_GRAPH}> {{
     <{node}> a deliberation:Deliberation ;
-        deliberation:deliberatedOn <{desire.uri}> ;
+        deliberation:deliberatedOn <{judgment.uri}> ;
         deliberation:verdict "{plan.outcome}" ;
         deliberation:judgedThrough {ox.Literal(road)} ;
 {by}        deliberation:standsAt {stands_at:.6f} ;

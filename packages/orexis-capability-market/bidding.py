@@ -607,7 +607,7 @@ class BiddingModule(Module):
         return None
 
     @contributes(PRESENTING)
-    def present(self, act, desire, intention: str) -> bool:
+    def present(self, act, judgment, intention: str) -> bool:
         """The second step of Acquiring's method (#523): present the claim I hold on this
         venue and open the watch on the end. Reached only when the keeper released the step
         — my watch is live, or the sensor's horizon passed and a dose delayed forever is
@@ -676,7 +676,7 @@ SELECT ?c ?id ?l ?at ?p WHERE {{
         return holds_at - timedelta(seconds=pour)
 
     @contributes(TENDERING)
-    def tender(self, act, desire, intention: str) -> bool:
+    def tender(self, act, judgment, intention: str) -> bool:
         """The first step of Acquiring's method (#523): bid into the round that is open, if
         one is. No round open is "not now": the intention stands, and the next offer runs
         `submit`, which finds the tender standing and comes back here — a bid adopted on the
@@ -718,7 +718,7 @@ SELECT ?c ?id ?l ?at ?p WHERE {{
             return False
         return self._bid(reading.value, market, newest.auction_id,
                          not_after=newest.closes_at,
-                         wanted_at=getattr(desire, "holds_at", None))
+                         wanted_at=getattr(judgment, "holds_at", None))
 
     def _bid(self, moisture: float, market, auction_id: str, not_after=None,
              wanted_at=None) -> bool:

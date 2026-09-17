@@ -7,6 +7,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 # Agents (the tier with a stake)
 
 * [agent](/domain/agent.md) - The general principal: certified identity, wallet, stake. Plant agent and supplier specialise it.
+* [judgment](/domain/judgment.md) - How badly one desire is wanted right now, made fresh each pass by whoever holds the stake and written down nowhere.
 * [plant-agent](/domain/plant-agent.md) - A self-interested plant: desire, wallet, a stance of its own. Judges its own band, asserts its own readings.
 * [supplier](/domain/supplier.md) - Strategic seller downstream, genuine buyer upstream, the barrel between. Actuates its own valves; cannot mint.
 * [host](/domain/host.md) - Whoever convenes a venue and runs its rounds. A role a supplier or a dealer plays; which side hosts is structural, never measured.
