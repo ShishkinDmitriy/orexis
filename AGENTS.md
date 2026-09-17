@@ -280,6 +280,14 @@ it is a record wearing a bullet.
 - **A/B on this bench is alternated within one session or it is not a measurement** — the Pi
   drifts about twofold between invocations, and two sides timed minutes apart made a change
   that does nothing read as a thirty-percent win (#666).
+- **A repository is a collection of domain objects and not a store** — it is BACKED by one
+  and does not own it, so two repositories may share a store while each keeps its own queries
+  and graph names; `Store` is infrastructure and keeps its name, and the layer above it is
+  mostly absent, with domain code writing 236 query strings against it.
+- **A repository is the plural of what it holds, and its methods are `find_all`,
+  `find_all_by_x`, `find_first_by_x`** — the name answers what is in it and the signature
+  answers the shape of the answer and the criterion; an evocative name is a claim a reader
+  cannot check, so a name kept against this says in its page why.
 - **Deliberation is on triples, and a number is not special** — how a domain describes its
   world, exact numbers, ranges or classes, is decided inside the domain, and its actions'
   preconditions and effects are described the same way; the core compares triples and
