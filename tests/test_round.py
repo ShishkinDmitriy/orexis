@@ -995,11 +995,15 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     owed = ledger.owed()
     assert len(owed) == 1 and owed[0]["to"].endswith("#supplier")
 
-    assert city.pursuing(), "and its debts are desires like anyone else's"
+    assert city.pursuing(), "and its debts are wants like anyone else's"
     assert all(g.is_obligation for g in city.pursuing()), "all of them owed, none of them its own"
 
     ledger.discharge("j-city-1")
     assert ledger.owed() == [], "paid"
+    #  AND STILL NOTHING OF ITS OWN. The city holds one DESIRE since the market began declaring
+    #  one — no overdue debts, because it hosts a venue — but a desire states no met-test yet
+    #  and so is never lifted into what is pursued (#675). What the city pursues is still its
+    #  debts and nothing else, which is what this sentence has always said.
     assert city.pursuing() == [], "and a pure seller with nothing outstanding wants nothing at all"
 
 

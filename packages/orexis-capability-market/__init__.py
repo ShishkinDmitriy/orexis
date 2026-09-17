@@ -17,7 +17,7 @@ knowledge/decisions/a-package-owns-its-namespace.md.
 
 from pathlib import Path
 
-from assembly import contributes, ACTIONS, DERIVATION, REVIEW, SHAPES, VOCABULARY
+from assembly import contributes, ACTIONS, DERIVATION, REVIEW, SHAPES, VOCABULARY, WANTS
 from .terms import BID_MATCHING, BIDDING, HOSTING, MATCHES_BY, PAY_AS_BID, UNIFORM_PRICE
 
 @contributes(VOCABULARY)
@@ -34,6 +34,11 @@ def shapes(package: Path) -> list[Path]:
 def derivation(package: Path) -> list[Path]:
     """the premise that grants it."""
     return [package / "rules.ru"]
+
+@contributes(WANTS)
+def wants(package: Path) -> list[Path]:
+    """what holding it makes an agent want: a host wants no overdue debts."""
+    return [package / "desires.ru"]
 
 @contributes(ACTIONS)
 def actions(package: Path) -> list[Path]:
