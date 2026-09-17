@@ -33,8 +33,7 @@ import logging
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
-from .ontology import pursued_graph
-from .wants import Want
+from .want import Want
 from .plan import SATISFIED
 
 from orexis_agent_progression.execution import carry_out
@@ -63,35 +62,37 @@ log = logging.getLogger("pursuit")
 #  a bidder's lookup and a mark by either name meet the same want.
 
 
-def handed(agent, desire):
+def handed(agent, judgment):
     """The want the search is handed for `desire`: itself, unless it is a ROOT — then the want
     derived under it, minted if the root reads unmet and none stands; None for a met root
     with nothing derived under it, which is nothing to pursue and runs no pass."""
-    if desire.derived_from is not None or desire.is_obligation or not _is_root(agent, desire.uri):
-        return desire
-    child = child_of(agent, desire.uri)
+    if judgment.derived_from is not None or judgment.is_obligation or not _is_root(agent, judgment.uri):
+        return judgment
+    child = child_of(agent, judgment.uri)
     if child is None:
-        if desire.is_met:
+        if judgment.is_met:
             #  MET NOW, AND PREDICTED NOT TO BE (#619): a crossing the root foresees derives a
             #  want that must hold AT that instant; nothing foreseen is nothing to pursue.
-            instant = foreseen(agent, desire.uri)
+            instant = foreseen(agent, judgment.uri)
             if instant is None:
                 return None
-            child = mint(agent, desire.uri, holds_at=instant)
+            child = mint(agent, judgment.uri, holds_at=instant)
         else:
-            child = mint(agent, desire.uri)
+            child = mint(agent, judgment.uri)
         if child is None:
-            return desire
+            return judgment
     #  AS THE CONTAINER PRESENTS IT: a want met at an instant carries its instant, its
     #  time room and the state the newest prediction gives it (`Agent.pursuing`), none of
     #  which the root's row knows; an at-end want is the root's row under the derived name.
     presented = next((d for d in agent.pursuing() if d.uri == child and d.holds_at is not None), None)
-    return presented if presented is not None else replace(desire, uri=child, derived_from=desire.uri)
+    return presented if presented is not None else replace(judgment, uri=child, derived_from=judgment.uri)
 
 
 def _is_root(agent, want: str) -> bool:
-    return bool(bindings(agent.desires.query_union(
-        f"SELECT ?b WHERE {{ <{want}> orexis:bindsWhen orexis:Always }} LIMIT 1")))
+    """Is this the DECLARED kind — a standing rule, never handed to a search (#618)? Asked of
+    the collection that holds them, whose answer's binding says which kind came back."""
+    found = agent.desires.find_first_by_uri(want)
+    return found is not None and found.binds.endswith("Always")
 
 
 def child_of(agent, root: str) -> str | None:
@@ -196,15 +197,14 @@ def foreseen(agent, root: str) -> datetime | None:
 
 
 def root_of(agent, want: str) -> str | None:
-    """The desire `want` was derived under, or None where it was derived from no desire."""
-    found = agent.wants.find_first_by_uri(want)
-    return found.desire or None if found else None
+    """The desire `want` was derived under, or None where it was derived from no desire.
 
-
-def child_graph(agent_id: str, child: str) -> str:
-    """ONE pursued child's graph in ONE agent's store — the unit a period is said of (#645),
-    under the untimed `pursued_graph`."""
-    return f"{pursued_graph(agent_id)}/{child.rsplit('#', 1)[-1]}"
+    THROUGH THE COLLECTION THAT HOLDS THE ANSWER. It was asked of `Wants` — find the want, read
+    the name it kept — which walks one collection to reach an element of another and hands back
+    a field rather than a thing.
+    """
+    found = agent.desires.find_first_by_want(want)
+    return found.uri if found else None
 
 
 def mint(agent, root: str, holds_at: datetime | None = None) -> str | None:
@@ -261,7 +261,7 @@ def withdraw(agent, child: str) -> None:
     log.info("%s withdrawn", child.rsplit("#", 1)[-1])
 
 
-def pursue(agent, desire, surprise: tuple | None = None) -> str | None:
+def pursue(agent, judgment, surprise: tuple | None = None) -> str | None:
     """Plan, commit, take. The intention that stands for the plan's head — adopted now, or
     already standing and absorbed — or None where the search proposed nothing.
 
@@ -269,23 +269,23 @@ def pursue(agent, desire, surprise: tuple | None = None) -> str | None:
     An absorbed impulse is NOT None — the commitment stands, and the caller is told which.
     """
     #  A ROOT IS NEVER HANDED TO THE SEARCH (#618): what is pursued is the want derived under it.
-    desire = handed(agent, desire)
-    if desire is None:
+    judgment = handed(agent, judgment)
+    if judgment is None:
         return None
     keeper = agent.keeper
-    if keeper is not None and (going := keeper.in_progress(desire.uri)) is not None:
+    if keeper is not None and (going := keeper.in_progress(judgment.uri)) is not None:
         #  A PLAN IN PROGRESS IS NOT RE-DECIDED (#510): its next step is taken when the world
         #  confirms the one before it, and a lapse or a surprise is what brings the question
         #  back here. A search now would re-decide what nothing has contradicted.
         return going.uri
-    plan = agent.deliberator.decide(desire, surprise=surprise)
+    plan = agent.deliberator.decide(judgment, surprise=surprise)
     #  A PROMISE THE SEARCH CANNOT MEET IS REFUSED BELOW (#533): a want some step raised for
     #  this level, answered with no plan, or with a plan that does not reach it, is a promise
     #  the level beneath cannot keep — said to the keeper, which writes the refusal on the
     #  step and lapses it at once, so the level above passes the move over and decides again.
-    if keeper is not None and _promised(agent, desire.uri) and \
+    if keeper is not None and _promised(agent, judgment.uri) and \
             (plan is None or plan.outcome != SATISFIED):
-        keeper.refuse_below(desire.uri, plan.outcome if plan is not None else "nothing to do")
+        keeper.refuse_below(judgment.uri, plan.outcome if plan is not None else "nothing to do")
         return None
     if plan is None or not plan.steps:
         return None
@@ -304,21 +304,21 @@ def pursue(agent, desire, surprise: tuple | None = None) -> str | None:
     #  claim, an Actuate until its watch is judged (#353). There used to be a hook here for
     #  the one act that resolved at the command; making its intention stand to the END was
     #  the BDI-shaped fix, and the hook went with it.
-    because = _because(plan, desire)
+    because = _because(plan, judgment)
 
     def commit_and_take() -> str | None:
-        uri = keeper.adopt(plan.steps, desire.uri, because)          # the WHOLE plan (#510)
+        uri = keeper.adopt(plan.steps, judgment.uri, because)          # the WHOLE plan (#510)
         if uri is None:
             #  ABSORBED: the same commitment already stands within patience. Say WHICH, so a
             #  caller that needs to know whether anything is on its way (a bidder waiting for
             #  a look) can tell an absorbed impulse from a want nothing can serve — both used
             #  to come back as None, and the second is the only one that means "sit out".
-            standing = keeper.standing(action=act.action, want=desire.uri)
+            standing = keeper.standing(action=act.action, want=judgment.uri)
             return standing[0].uri if standing else None
         #  THE STEP THE LEDGER STANDS AT, not the plan's head as the search wrote it: an
         #  action with a method was expanded at adoption (#523), and its first step is
         #  what there is to take.
-        carry_out(agent, keeper.current(uri) or act, desire, uri)
+        carry_out(agent, keeper.current(uri) or act, judgment, uri)
         return uri
 
     #  ONLY THE RESULT CROSSES ONTO THE LOOP. The search ran on whoever called — the
@@ -341,14 +341,14 @@ def pursue_for(agent, want: str, surprise: tuple | None = None) -> str | None:
     and hands the NODE here. None where the agent is not pursuing that want at all.
     """
     #  BY EITHER NAME (#618): a mark may name the root while the want derived under it stands.
-    desire = next((d for d in agent.pursuing() if d.uri == want or d.derived_from == want), None)
-    return pursue(agent, desire, surprise=surprise) if desire is not None else None
+    judgment = next((d for d in agent.pursuing() if d.uri == want or d.derived_from == want), None)
+    return pursue(agent, judgment, surprise=surprise) if judgment is not None else None
 
 
-def _because(plan, desire) -> str:
+def _because(plan, judgment) -> str:
     """The ledger's prose: what the plan found and how far it expected to get."""
-    what = (f"an obligation to {desire.owed_to.rsplit('#', 1)[-1]}" if desire.is_obligation
-            else desire.uri.rsplit("#", 1)[-1])
+    what = (f"an obligation to {judgment.owed_to.rsplit('#', 1)[-1]}" if judgment.is_obligation
+            else judgment.uri.rsplit("#", 1)[-1])
     if plan.urgency_now is None or plan.urgency_after is None:
         return f"{plan.outcome} for {what}"
     return (f"{plan.outcome} for {what}: urgency {plan.urgency_now:.2f} -> "

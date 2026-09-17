@@ -165,7 +165,7 @@ class ActuationModule(Module):
     #  planned, and one the world goes on as believed is not re-decided ten times an hour.
 
     @contributes(DOSING)
-    def dose(self, act, desire, intention: str) -> bool:
+    def dose(self, act, judgment, intention: str) -> bool:
         """Carry out a committed self-dose: size it from the reading in hand and command it.
 
         The actor for `actuation:Actuate` (knowledge/domain/actor.md). Everything the market path
@@ -183,12 +183,12 @@ class ActuationModule(Module):
         keeper = self.agent.keeper
         if keeper is not None:
             now = clock.now()
-            if any(now < w.deadline for w in keeper.open_expectations(desire.uri)):
+            if any(now < w.deadline for w in keeper.open_expectations(judgment.uri)):
                 return False  # my own dose has not answered yet — the #167 guard, rung 2
         litres = self.dose_for(observed_property, value)
         if litres is None or litres <= EPS:
             if keeper is not None:
-                keeper.drop(DOSING, desire.uri,
+                keeper.drop(DOSING, judgment.uri,
                             "the dose sized to nothing from the reading in hand")
             return False
         jti = uuid.uuid4().hex
@@ -206,7 +206,7 @@ class ActuationModule(Module):
                                     subject=f"<{self.me.acts_for}>", litres=repr(float(litres)))
         not_after = (clock.now() + timedelta(seconds=lands + (seeing or 0.0))
                      if lands is not None else None)
-        promised = replace(act, quantity=litres, want=desire.uri, not_after=not_after)
+        promised = replace(act, quantity=litres, want=judgment.uri, not_after=not_after)
         cmd = self.redeem(Commitment(sub=self.me.agent_id, permits="actuate:self",
                                      amount_l=litres, auction_id=f"self-{jti[:8]}", jti=jti,
                                      step=promised))
@@ -229,7 +229,7 @@ class ActuationModule(Module):
             if opened and sensing is not None:
                 sensing.sense_now()   # the freshest before on record
             if not opened:
-                keeper.satisfy(DOSING, desire.uri,
+                keeper.satisfy(DOSING, judgment.uri,
                                f"the dose is commanded — {cmd.ml:.0f} ml on its way, and no "
                                f"watch could be opened on the end")
         return True

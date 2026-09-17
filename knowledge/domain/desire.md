@@ -28,6 +28,10 @@ contributes the debts; and *what am I pursuing* is answered across
 those and the [obligations](/domain/obligation.md) the agent did not source, by `Agent.pursuing`
 merging every module's `desires()`.
 
+What comes back from that merge is not desires. Neither kind below says how much it matters at
+the instant it is asked about, and what supplies that is a [judgment](/domain/judgment.md) — made
+per pass by whoever holds the stake, ranked against every other, and stored nowhere.
+
 # Desire and want are two kinds, not two words
 
 They were one thing said two ways until an `orexis:Always` desire got a derived child (#618),

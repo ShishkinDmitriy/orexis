@@ -288,6 +288,16 @@ it is a record wearing a bullet.
   `find_all_by_x`, `find_first_by_x`** — the name answers what is in it and the signature
   answers the shape of the answer and the criterion; an evocative name is a claim a reader
   cannot check, so a name kept against this says in its page why.
+- **A desire is declared and a judgment is made** — the class called `Desire` carried an
+  urgency and an expiry, was built fresh by whichever capability held the stake and was never
+  written down or read back, while the row a package's rule writes at genesis had no type at
+  all; naming the second thing let the first become data and `Want` subclass it as
+  `orexis:Want rdfs:subClassOf orexis:Desire` already said.
+- **A collection over stored rows is handed a store, and one over contributed answers is handed
+  the agent** — `Wants` reads graphs so it takes somewhere to search, `Judgments` asks the choir
+  so it must reach the choir, and the asymmetry is what tells the two kinds of collection apart.
+- **A singular file holds the model and its plural holds the collection** — `desire.py` and
+  `desires.py`, `want.py` and `wants.py`, so neither reader has to open the other's file.
 - **Deliberation is on triples, and a number is not special** — how a domain describes its
   world, exact numbers, ranges or classes, is decided inside the domain, and its actions'
   preconditions and effects are described the same way; the core compares triples and

@@ -49,7 +49,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     #  Annotation-only (#455): named in hook signatures, constructed nowhere at import.
-    from orexis_agent_deliberation.desire import Desire
+    from orexis_agent_deliberation.judgment import Judgment
 from .driver import driver_for
 from agent.module import Module, contributes
 from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, FORESIGHT, PREDICTED, REPREDICT, WITNESS
@@ -219,7 +219,7 @@ class SensingModule(Module):
 
     # --- the measure I declare, answered when the kernel asks (desire_urgency) ---
 
-    def desire_urgency(self, desire, query, state: str,
+    def desire_urgency(self, judgment, query, state: str,
                        value: float | None = None) -> float | None:
         """How urgent an OBSERVATION-BACKED want is, in the world `query` answers about.
 
@@ -249,10 +249,10 @@ class SensingModule(Module):
         measure that raises: a package's bug must not take an agent down, and every ranking
         caller reads silence as the maximal 1.0.
         """
-        about = getattr(desire, "observed_property", None)
-        if desire.is_obligation or about is None:
+        about = getattr(judgment, "observed_property", None)
+        if judgment.is_obligation or about is None:
             return None
-        if (instrument := desire.instrument) is not None:
+        if (instrument := judgment.instrument) is not None:
             return self._answer(query, _FRESHNESS_MEASURE
                                 #  `$sensor` and not `$instrument`: `$instruments` names the
                                 #  graph, and a parameter that is a prefix of another gets
@@ -958,20 +958,20 @@ SELECT ?f WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ <{self.me.uri}> sen
             return None
         if value is None:
             return 1.0
-        #  Deferred (#455): the row type subclasses the mind's Desire, and a base class is
+        #  Deferred (#455): the row type subclasses the mind's Judgment, and a base class is
         #  an import — at assembly a sensing-only grant must not load the deliberation
         #  layer; in any running agent it is already loaded.
-        from .rows import ObservedDesire
-        answer = self._measured(ObservedDesire(uri="urn:asked", urgency=1.0,
+        from .rows import ObservedJudgment
+        answer = self._measured(ObservedJudgment(uri="urn:asked", urgency=1.0,
                                              observed_property=observed_property, value=value),
                                 value)
         return 1.0 if answer is None else answer
 
-    def _measured(self, desire, value: float | None = None) -> float | None:
+    def _measured(self, judgment, value: float | None = None) -> float | None:
         """The choir road, asked of the LIVE belief base — through the agent rather than
         straight to `desire_urgency`, so a second module that measures the same want (none
         ships) would be heard, and so one question has one asker."""
-        return self.agent.desire_urgency(desire, self.agent.beliefs.query_at, STATE_GRAPH, value)
+        return self.agent.desire_urgency(judgment, self.agent.beliefs.query_at, STATE_GRAPH, value)
 
     def gaps(self) -> dict[str, Gap]:
         """Where every property the agent wants stands against where it wants it — stale rows
@@ -989,10 +989,10 @@ SELECT ?f WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ <{self.me.uri}> sen
                  if d.is_epistemic and d.is_met}
         return {prop: gap for prop, gap in self.gaps().items() if prop in fresh}
 
-    def desires(self, now: datetime | None = None) -> list[Desire]:
+    def desires(self, now: datetime | None = None) -> list[Judgment]:
         """My contribution to what the agent is pursuing: its stakes and its freshness wants,
         the two kinds whose premise is an observation. The obligations are the ledger's."""
-        from .rows import desires_of  # deferred (#455): same reason as ObservedDesire above
+        from .rows import desires_of  # deferred (#455): same reason as ObservedJudgment above
         return desires_of(self.agent.desires.query_union, self.agent.beliefs.query,
                           self.me.uri, measure=self._measured)
 
@@ -1418,7 +1418,7 @@ class SubscribingModule(SensingModule):
                 self.drivers[sensor.uri].sense_now(sensor)
 
     @contributes(OBSERVING)
-    def look(self, act, desire, intention: str) -> bool:
+    def look(self, act, judgment, intention: str) -> bool:
         """Carry out a committed look: nudge the driver that watches this row's lever.
 
         The actor for `sensing:Observe` (knowledge/domain/actor.md) — the FAMILY is named, so the
@@ -1475,7 +1475,7 @@ class ListeningModule(SensingModule):
     """
 
     @contributes(OBSERVING)
-    def look(self, act, desire, intention: str) -> bool:
+    def look(self, act, judgment, intention: str) -> bool:
         """A look, declined: a listening device takes no orders, so there is nothing to nudge.
         Contributed rather than left to the family's other member, because the family must
         answer for every look handed to it (#523), and an agent that ONLY listens has no other

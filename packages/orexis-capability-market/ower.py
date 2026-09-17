@@ -24,7 +24,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 
-from orexis_agent_deliberation.desire import Desire
+from orexis_agent_deliberation.judgment import Judgment
 from agent.module import Module
 from orexis_agent_progression.ontology import (CLASSIFICATION_GRAPH, OREXIS, PERIODS_GRAPH, REPREDICT,
                                                obligations_graph)
@@ -280,7 +280,7 @@ SELECT ?g ?o ?jti WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{PRESENTED}> ?p 
             self.agent.desires.rebuild()
         return len(rows)
 
-    def obligations(self, now: datetime | None = None) -> list[Desire]:
+    def obligations(self, now: datetime | None = None) -> list[Judgment]:
         """What this agent owes, as desires — hottest first, and hot means CLOSE TO EXPIRY.
 
         A stake's urgency is distance scaled by the survival envelope; an obligation has no envelope,
@@ -298,7 +298,7 @@ SELECT ?g ?o ?jti WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{PRESENTED}> ?p 
         """
         return self.desires(now)
 
-    def desires(self, now: datetime | None = None) -> list[Desire]:
+    def desires(self, now: datetime | None = None) -> list[Judgment]:
         """MY contribution to what this agent is pursuing: its debts, and no stakes.
 
         The half of the choir the city had no way to contribute before, which is the whole of
@@ -311,7 +311,7 @@ SELECT ?g ?o ?jti WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{PRESENTED}> ?p 
         for row in bindings(self.agent.desires.query_union(_DUTIES_Q)):
             demanded = row.get("presented") == "true"
             lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])
-            out.append(Desire(uri=row["desire"], urgency=_duty_urgency(row, now),
+            out.append(Judgment(uri=row["desire"], urgency=_duty_urgency(row, now),
                               claim=row["claim"], owed_to=row["owedTo"],
                               expires=(datetime.fromisoformat(row["expires"])
                                        if row.get("expires") else None),

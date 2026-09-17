@@ -86,14 +86,14 @@ class Reviser:
 
     # --- the door -----------------------------------------------------------------------
 
-    def note(self, want: str, desire=None, surprise: tuple | None = None) -> None:
+    def note(self, want: str, judgment=None, surprise: tuple | None = None) -> None:
         """Something moved that this want is about. Returns at once, whatever it costs to
         reconsider it. `surprise` is why, where the mark is a contradiction (#632): the pass
         it wakes writes it as `deliberation:surprise`, so the trace says why the mind woke —
         and a mark that names one is not erased by a later one that does not."""
         with self._lock:
             had_desire, had_surprise = self._pending.get(want, (None, None))
-            self._pending[want] = (desire if desire is not None else had_desire,
+            self._pending[want] = (judgment if judgment is not None else had_desire,
                                    surprise if surprise is not None else had_surprise)
             self._lock.notify_all()
 
@@ -142,11 +142,11 @@ class Reviser:
                     if not self._pending:
                         self._lock.notify_all()
                         return
-                    want, (desire, surprise) = next(iter(self._pending.items()))
+                    want, (judgment, surprise) = next(iter(self._pending.items()))
                     del self._pending[want]
                 try:
-                    if desire is not None:
-                        pursuit.pursue(self.agent, desire, surprise=surprise)
+                    if judgment is not None:
+                        pursuit.pursue(self.agent, judgment, surprise=surprise)
                     else:
                         pursuit.pursue_for(self.agent, want, surprise=surprise)
                 except Exception as exc:
@@ -183,8 +183,8 @@ def observed(agent, want: str, expected: frozenset | None, actual: frozenset, sa
     return True
 
 
-def wake_for(agent, desire) -> None:
+def wake_for(agent, judgment) -> None:
     """The same door, for a caller holding the want itself rather than its node — a host with a
     call to convene for. The desire travels with the mark, because the caller derived it and
     the drain would have no way to find it again."""
-    agent.reviser.note(desire.uri, desire)
+    agent.reviser.note(judgment.uri, judgment)

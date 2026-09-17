@@ -44,7 +44,7 @@ def _flatten(st, world_dir=GENESIS_DIR) -> rdflib.Graph:
     # flattened beside its projection splits every blank-node aim in two.
     from orexis_agent_deliberation import effects
     from orexis_agent_deliberation.beliefs import Beliefs
-    from orexis_agent_deliberation.desire import Desires
+    from orexis_agent_deliberation.desires import Desires
 
     for path in sorted(world_dir.glob(genesis.BELIEFS_GLOB)):
         wants = Desires(Beliefs(st, agent_id_of(path)))

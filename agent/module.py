@@ -24,10 +24,10 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    #  Annotation-only (#455): the base Module names Desire in hook SIGNATURES and never
+    #  Annotation-only (#455): the base Module names Judgment in hook SIGNATURES and never
     #  touches it — a contract annotation is free, where an import would make every module
     #  that subclasses this load the deliberation layer at assembly.
-    from orexis_agent_deliberation.desire import Desire
+    from orexis_agent_deliberation.judgment import Judgment
 
 import json
 import logging
@@ -125,12 +125,12 @@ class Module:
         return {}
 
     @contributes(DESIRES)
-    def desires(self, now: "datetime | None" = None) -> list["Desire"]:
+    def desires(self, now: "datetime | None" = None) -> list["Judgment"]:
         """What this module contributes to what the agent is pursuing. Empty by default.
 
         A choir hook, like `annotate` and `series`: desires are the AGENT's, assembled from
         whichever of its modules hold wants, because no single module can see all of them any
-        more. Desire contributes stakes and owing contributes debts, and an agent may have
+        more. Sensing contributes stakes and owing contributes debts, and an agent may have
         either without the other — a plant wants for itself and owes nobody, a pure seller owes
         and wants nothing for itself. Ranking them against each other is `agent.pursuing()`, which
         is where a currency common to both belongs.
@@ -159,7 +159,7 @@ class Module:
         return []
 
     @contributes(DESIRE_URGENCY)
-    def desire_urgency(self, desire, query, state: str,
+    def desire_urgency(self, judgment, query, state: str,
                        value: float | None = None) -> float | None:
         """How urgent one DESIRE is, in the WORLD `query` answers about. None: no opinion.
 

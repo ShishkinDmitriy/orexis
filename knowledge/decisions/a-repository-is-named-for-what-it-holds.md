@@ -106,6 +106,15 @@ prose, which is where every other argument in this repository lives.
 **Where a name is kept against the convention, its page must say why**, and "it reads better" is
 not a why. That clause exists so the exception is auditable rather than habitual.
 
+# And a file is named the same way
+
+`desire.py` holds the model, `desires.py` holds the collection; `want.py` and `wants.py`,
+`judgment.py` and `judgments.py` likewise. A reader looking for what a thing IS opens the
+singular and one looking for where they are kept opens the plural, and neither has to read the
+other to find out which they wanted. It fell out of
+[a-desire-is-declared-and-a-judgment-is-made](/decisions/a-desire-is-declared-and-a-judgment-is-made.md),
+where one file held a model, a projection and a collection at once and the name could not say so.
+
 # Not applied here, and it is not a rename
 
 This record is the convention. Applying it is a layer, not a pass of `sed`:
@@ -121,6 +130,12 @@ This record is the convention. Applying it is a layer, not a pass of `sed`:
 - **The menu may stay classless.** Its rows are derived on every ask and never stored, which is
   a reason rather than an omission — but then its page should say what kind of thing it is more
   carefully than `Repository` does.
+- **`Judgments` is the exception the convention asks to be stated.** It is a repository by its
+  name and a service by its work: nothing writes a judgment, so it assembles rather than reads —
+  asking the choir, running an avoided state's select, compiling a shape into the select whose
+  rows are its violations. It is kept on the collection side for the reason `menu` is, and for
+  the same reason it is handed the whole AGENT rather than a store: a collection over stored rows
+  needs a store, and one over CONTRIBUTED answers needs the contributors.
 - **`Wants` is the one to build first**, because it is new: wants are derived, held in one graph
   family, and read by the planner, the keeper and the ask channel through three different query
   texts today. A repository there has no legacy to unpick. **Built in #677**, and what it took
