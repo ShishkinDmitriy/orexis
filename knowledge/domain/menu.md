@@ -21,6 +21,18 @@ One node per way of acting, and everything a search needs to reason about it:
 Each package ships its own in `actions.ttl`, so adding a way of acting is a node in a new
 directory rather than an edit here.
 
+# Its class is `Actions`, and its name is going
+
+The collection this page describes had no class until the afforder was split into the service it
+is and the two collections it uses; it is `Actions` now, reading public knowledge because a
+template is the same in every world.
+
+**The word "menu" is on its way out** (#686), and this page's own definition is why: it defines
+the menu as the TEMPLATES, while eight other pages use the word for the ROWS — so a reader meets
+one word for two concepts, which is how [action](/domain/action.md) and
+[affordance](/domain/affordance.md) come to feel like one thing. Where it meant the rows it will
+say affordances; where it meant these, actions.
+
 # Templates, never rows
 
 The rows are [affordances](/domain/affordance.md), derived per ask and stored nowhere. What

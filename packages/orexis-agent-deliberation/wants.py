@@ -59,16 +59,23 @@ PAGE = 100
 class Wants:
     """Every want this agent holds, however it came to be held."""
 
-    def __init__(self, store, holder: str, agent_id: str):
-        #  Somewhere to search and write, and three things of its own. WHAT the store is — a
-        #  belief base, a bare one under a test — is the caller's business: this class asks it
-        #  to read every graph it holds, to update and to drop one, and has no opinion about
-        #  the rest of its surface. Not the engine beneath it, though that would be narrower:
-        #  the adapter's `update` is what invalidates the caches the door is computed from and
-        #  what tells the keeper the world moved (#512), so writing past it breaks both.
+    def __init__(self, store):
+        """A store, and nothing else.
+
+        THE AGENT IS ANOTHER AGGREGATE ROOT and this collection has no business holding its
+        identity. It held the holder's URI and the agent's local id, which made it a thing that
+        knew what an Agent is; they are QUERY CRITERIA now, passed by whoever is asking, and
+        which store this is at all is the agent's decision since the agent owns both the stores
+        and the collections over them.
+
+        The READS take no criterion, and that is not an oversight: one agent, one volume (rule
+        4), so the store IS the scope and a want in it is this agent's by construction. Only the
+        writes need one, because a graph is NAMED for whose it is.
+
+        The two listener lists are not identity and stay: they are this collection's own
+        contract — a write announces itself — and say nothing about who is asking.
+        """
         self._store = store
-        self._holder = holder
-        self._graph = pursued_graph(agent_id)
         #  Announced, not acted on: whoever assembled this appends what a write invalidates.
         self.on_saved: list = []
         self.on_deleted: list = []
@@ -114,7 +121,7 @@ class Wants:
 
     # --- write --------------------------------------------------------------------------
 
-    def save(self, want: Want) -> None:
+    def save(self, agent_id: str, want: Want) -> None:
         """Write a DERIVED want, then say so.
 
         THE GRAPH IS THIS REPOSITORY'S TO NAME, and so is what is said ABOUT it: one graph per
@@ -124,7 +131,7 @@ class Wants:
         would have to remember all three, which is the shape of an omission nobody notices
         until a want outlives its window.
         """
-        graph = self.graph_of(want.uri)
+        graph = self.graph_of(agent_id, want.uri)
         points = " ".join(f"<{want.uri}> <{p}> <{o}> ." for p, o in want.points)
         timed = (f' ; orexis:holdsAt "{want.holds_at}"^^xsd:dateTime'
                  f' ; prov:generatedAtTime "{want.derived_at}"^^xsd:dateTime'
@@ -135,7 +142,7 @@ class Wants:
         self._store.update(f"""
 INSERT DATA {{
   GRAPH <{graph}> {{
-  <{self._holder}> orexis:holds <{want.uri}> .
+  <{want.holder}> orexis:holds <{want.uri}> .
   <{want.uri}> a orexis:Want ; orexis:bindsWhen {want.binds}{timed}{about} ;
       prov:wasDerivedFrom <{want.desire}> ;
       rdfs:label {json.dumps(want.label)} .
@@ -149,19 +156,19 @@ INSERT DATA {{
         for listener in self.on_saved:
             listener(want)
 
-    def delete_by_uri(self, uri: str) -> None:
+    def delete_by_uri(self, agent_id: str, uri: str) -> None:
         """Forget one want. Its graph goes whole — a want IS its graph since #645, so there is
         nothing to leave behind and no second place to tidy."""
-        self._store.drop_graph(self.graph_of(uri))
+        self._store.drop_graph(self.graph_of(agent_id, uri))
         for listener in self.on_deleted:
             listener(uri)
 
     # --- where they live ------------------------------------------------------------------
 
-    def graph_of(self, uri: str) -> str:
+    def graph_of(self, agent_id: str, uri: str) -> str:
         """The graph one DERIVED want lives in. Named for the want so a second episode of the
         same desire reuses it, and everything keyed by the want finds what it kept."""
-        return f"{self._graph}/{uri.rsplit('#', 1)[-1]}"
+        return f"{pursued_graph(agent_id)}/{uri.rsplit('#', 1)[-1]}"
 
     def _select(self, where: str, at: datetime | None = None,
                 limit: int = PAGE, offset: int = 0) -> list[Want]:

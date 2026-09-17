@@ -38,7 +38,7 @@ because its name is right.
 | — | `Desires` | a repository, named for its content |
 | — | `Intentions` | a repository, named for its content |
 | [belief-base](/domain/belief-base.md) | `Beliefs` | a modality that FORWARDS the whole store surface — 122 calls pass through it |
-| [menu](/domain/menu.md) | *none* | a page typed `Repository`; the rows are computed per ask |
+| [menu](/domain/menu.md) | `Actions` | a page typed `Repository`, and its row here said the rows are computed per ask — which is the AFFORDANCES; the menu is the templates, and the ambiguity is #686 |
 | [imaginarium](/domain/imaginarium.md) | `Imaginarium` | a repository of worlds, named for a mood |
 
 Two repositories exist. Everywhere else, domain code holds the store and writes SPARQL against
@@ -106,6 +106,32 @@ prose, which is where every other argument in this repository lives.
 **Where a name is kept against the convention, its page must say why**, and "it reads better" is
 not a why. That clause exists so the exception is auditable rather than habitual.
 
+# A repository holds a store, and nothing else
+
+The sovereign's rule, and the argument for it is Domain-Driven Design's own rather than this
+project's: **an agent id is another AGGREGATE ROOT's identity**, so a collection of wants has no
+business holding one. It is not the collection's job to know what an Agent is.
+
+`Wants` held the holder's URI and the agent's local id; `Affordances`, for one change, held
+identity and no store at all — the shape inverted — because moving the world onto the question
+took the door out of its constructor and left the rest behind. Both take a store now and nothing
+else, and **which** store is the agent's decision, since the agent owns both the stores and the
+collections over them. A service may hold identity — `Afforder` is the agent's, and hands its URI
+and its own graph down as criteria — because a service is somebody's where a collection is
+nobody's.
+
+Two things fall out that are worth stating, because neither was obvious before the rule was
+applied:
+
+- **The reads need no criterion at all.** One agent, one volume (rule 4), so the store IS the
+  scope and every want in it is this agent's by construction. Only the writes take one, because a
+  graph is NAMED for whose it is. A `find_all_by_agent` would have been a parameter that can only
+  take one value, and worse, would imply another value returns somebody else's wants — it would
+  return nothing, silently.
+- **What a want records about its holder is the want's.** `<holder> orexis:holds <want>` is a
+  stored fact in the want's own graph, so it moved onto the `Want` model rather than staying
+  identity the collection carried.
+
 # And a file is named the same way
 
 `desire.py` holds the model, `desires.py` holds the collection; `want.py` and `wants.py`,
@@ -127,9 +153,11 @@ This record is the convention. Applying it is a layer, not a pass of `sed`:
   genuinely infrastructure, and giving the first a method that owns the query.
 - **`Imaginarium` → `Worlds`**, with its page folding the way `root-desire.md` folded into
   `desire.md`, or keeping its page and stating the exception under the clause above.
-- **The menu may stay classless.** Its rows are derived on every ask and never stored, which is
-  a reason rather than an omission — but then its page should say what kind of thing it is more
-  carefully than `Repository` does.
+- **The menu did not stay classless, and the reason it was expected to was a misreading.** This
+  record had it that the menu's rows are derived on every ask — true of the AFFORDANCES and not of
+  the menu, which keeps templates and says so on its own page. It is `Actions` now, an ordinary
+  repository over stored nodes, and what is derived per ask belongs to two other names
+  (an-afforder-is-a-service-between-two-collections).
 - **`Judgments` is the exception the convention asks to be stated.** It is a repository by its
   name and a service by its work: nothing writes a judgment, so it assembles rather than reads —
   asking the choir, running an avoided state's select, compiling a shape into the select whose

@@ -44,6 +44,8 @@ from . import effects, relevance, signature, trace
 from .beliefs import Picks
 from orexis_agent_progression.act import Step
 from orexis_agent_deliberation.judgment import Judgment
+
+
 from .affordances import Affordances
 from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
@@ -444,6 +446,10 @@ class Planner:
         object (no law, no view, every row relevant).
         """
         self.imaginarium = None
+        #  The rows an IMAGINED world affords, over the store those worlds live in. One per
+        #  pass, beside the imaginarium it reads — not one per node, which is what it was
+        #  while the world sat in this collection's constructor.
+        self._imagined = None
         self._compiled = _Compiled()
         self._root = None
         self._nodes = []
@@ -1127,10 +1133,9 @@ class Planner:
                 return trace.SPENT, forks
             if keeper is not None and keeper.refused_below(wanted.action, wanted.via, wanted.about):
                 return trace.REFUSED, forks
-            row = next((r for r in Affordances(
-                partial(self.imaginarium.query_at, at=self._at(cur), world=self._graph(cur)),
-                self.me.uri, self.agent.desires,
-                beliefs_graph(self.agent.id)).find_all(only=frozenset({wanted.action}))
+            row = next((r for r in self.agent.afforder.offered(
+                self._imagined, at=self._at(cur), world=self._graph(cur),
+                only=frozenset({wanted.action}))
                 if r.is_own and r.via == wanted.via and (r.about or None) == (wanted.about or None)),
                 None)
             if row is None:
@@ -1174,10 +1179,9 @@ class Planner:
         #  "acquire, then offer" is a plan only if the menu of the world after the first step
         #  shows the second. The root node's graph is the agent's own readings, so at depth 0
         #  this is the ordinary menu, exactly as before.
-        for row in Affordances(partial(self.imaginarium.query_at, at=self._at(node),
-                                          world=self._graph(node)), self.me.uri,
-                           self.agent.desires,
-                           beliefs_graph(self.agent.id)).find_all(only=self._compiled.asked):
+        for row in self.agent.afforder.offered(
+                self._imagined, at=self._at(node), world=self._graph(node),
+                only=self._compiled.asked):
             if judgment.is_obligation:
                 #  A obligation may be served by its counterparty's honoured row, or approached
                 #  through this agent's own levers — refilling the vessel is an Acquire on its
@@ -1224,6 +1228,9 @@ class Planner:
             #  a graph nobody had copied. Read-only like everything else copied in: no
             #  effect touches it, and a plan cannot re-command a cadence.
             *self.agent.beliefs.recorded_graphs())
+        #  The rows an imagined world affords, over the store those worlds live in — built here
+        #  beside the imaginarium and once for the pass.
+        self._imagined = Affordances(self.imaginarium)
         #  What this agent PURSUES, snapshotted for the pass. The WANT graphs alone — derived,
         #  asserted, and the promises a bridge raised — never the record projections: the
         #  flat world below already carries the pick record through the belief flatten, and a
@@ -1401,9 +1408,11 @@ class Planner:
         #  named every irrelevant action in the vocabulary would name Move in a plant world
         #  with no disk in it. One query per foreign action per pass is what a truthful
         #  trace costs, against one per node before this.
-        self._passed_over = [] if self._compiled.relevant is None else Affordances(
-            partial(self.imaginarium.query_at, at=self._clock), self.me.uri,
-            self.agent.desires, beliefs_graph(self.agent.id)).find_all(only=frozenset(relevance.actions_of(self.agent.beliefs.query)) - self._compiled.relevant)
+        self._passed_over = [] if self._compiled.relevant is None else \
+            self.agent.afforder.offered(
+                self._imagined, at=self._clock,
+                only=frozenset(relevance.actions_of(self.agent.beliefs.query))
+                - self._compiled.relevant)
         self._base_forbidden = (self._forbidden_keys(here)
                                 if self._compiled.law is not None else frozenset())
 
