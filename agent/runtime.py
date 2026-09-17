@@ -78,6 +78,7 @@ SELECT ?me ?root ?child ?holdsAt ?since WHERE {
 from orexis_agent_deliberation.deliberator import KEEPING_PICKS, Deliberator
 from orexis_agent_deliberation.desire import Desire, Desires
 from orexis_agent_deliberation.reviser import Reviser
+from orexis_agent_deliberation.wants import Wants
 from orexis_agent_progression.intentions import Intentions
 from orexis_agent_progression.keeper import Keeper
 from .metrics import Metrics
@@ -141,6 +142,14 @@ class Agent:
         # decides its own store and its own writability — this one exposes no writer — and
         # the agent holds the modalities, never the stores, by the sovereign's ruling.
         self.desires = Desires(self.beliefs)
+        #  The wants this agent holds, as a collection (#677). It is handed a store to search
+        #  and writes to it; the desire modality is a PROJECTION of that store, so a write
+        #  makes it stale — and being told so is this assembler's job rather than the
+        #  collection's, which is why the rebuild is registered here and not taken on its own
+        #  initiative.
+        self.wants = Wants(self.beliefs, self.me.uri, agent_id)
+        self.wants.on_saved.append(lambda _want: self.desires.rebuild())
+        self.wants.on_deleted.append(lambda _uri: self.desires.rebuild())
         # The intention modality: the ledger's own store, in its own room of the volume — a
         # commitment survives a restart, so it persists where the imaginarium never does. A
         # pathless mind (every test agent) has no rooms and the ledger stays beside the

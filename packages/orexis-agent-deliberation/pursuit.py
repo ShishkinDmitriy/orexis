@@ -29,13 +29,12 @@ knowledge/decisions/an-intention-is-a-plan-committed-to.md.
 
 from __future__ import annotations
 
-import json
 import logging
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 from .ontology import pursued_graph
-from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, PERIODS_GRAPH
+from .wants import Want
 from .plan import SATISFIED
 
 from orexis_agent_progression.execution import carry_out
@@ -96,11 +95,13 @@ def _is_root(agent, want: str) -> bool:
 
 
 def child_of(agent, root: str) -> str | None:
-    """The want derived under `root` that stands now, or None."""
-    rows = bindings(agent.desires.query_union(
-        f"SELECT ?c WHERE {{ ?c prov:wasDerivedFrom <{root}> ; a orexis:Desire ; "
-        f"orexis:bindsWhen ?b . FILTER(?b IN (orexis:AtEnd, orexis:At)) }} LIMIT 1"))
-    return rows[0]["c"] if rows else None
+    """The want derived under `root` that stands now, or None.
+
+    THROUGH THE REPOSITORY (#677): which graphs hold wants and what asks for one are `Wants`',
+    and this is the question rather than the query.
+    """
+    found = agent.wants.find_first_by_desire(root)
+    return found.uri if found else None
 
 
 def crossing_of(agent, root: str) -> datetime | None:
@@ -195,11 +196,9 @@ def foreseen(agent, root: str) -> datetime | None:
 
 
 def root_of(agent, want: str) -> str | None:
-    """The root `want` is derived under, or None where it is not derived from a want."""
-    rows = bindings(agent.desires.query_union(
-        f"SELECT ?r WHERE {{ <{want}> prov:wasDerivedFrom ?r . ?r a orexis:Desire ; "
-        f"orexis:bindsWhen orexis:Always }} LIMIT 1"))
-    return rows[0]["r"] if rows else None
+    """The desire `want` was derived under, or None where it was derived from no desire."""
+    found = agent.wants.find_first_by_uri(want)
+    return found.desire or None if found else None
 
 
 def child_graph(agent_id: str, child: str) -> str:
@@ -215,7 +214,7 @@ def mint(agent, root: str, holds_at: datetime | None = None) -> str | None:
     root stays the goal, where the root states its met-test inline: a blank node has no name
     another graph could point at, and copying it would make a second owner of the claim."""
     child = root + ".pursued"
-    pointed = []
+    points_said = []
     #  The raw SPARQL-JSON rows, because the TYPE of the object matters here and
     #  `bindings` flattens it away: a blank node cannot be pointed at from another graph.
     said = agent.desires.query_union(f"""
@@ -226,41 +225,30 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
             log.warning("%s states its %s inline; it is pursued itself", root.rsplit("#", 1)[-1],
                         sol["p"]["value"].rsplit("#", 1)[-1])
             return None
-        pointed.append(f"<{child}> <{sol['p']['value']}> <{sol['o']['value']}> .")
+        points_said.append(sol)
     labels = bindings(agent.desires.query_union(
         f"SELECT ?l WHERE {{ <{root}> rdfs:label ?l }} LIMIT 1"))
     label = "pursued: " + (labels[0]["l"] if labels else root.rsplit("#", 1)[-1])
     #  AT AN INSTANT (#619): bound `orexis:At`, holding at the crossing, its room opening now.
-    binding, timed = "orexis:AtEnd", ""
+    binding = "orexis:AtEnd"
     if holds_at is not None:
         binding = "orexis:At"
-        timed = (f' ; orexis:holdsAt "{holds_at.isoformat()}"^^xsd:dateTime'
-                 f' ; prov:generatedAtTime "{clock.now().isoformat()}"^^xsd:dateTime')
         label = f"foreseen: {label[len('pursued: '):]} at {holds_at.isoformat(timespec='minutes')}"
-    #  A GRAPH HOLDING DURING THE CHILD (#645): from its derivation to the instant it must
-    #  hold at plus the patience its plan is given after it — the last step is placed AT the
-    #  instant and its verdict comes after — and open for a want met at the plan's end. The
-    #  door hands an outdated child to nobody, and the one sweep drops it.
-    graph = child_graph(agent.id, child)
-    ends = ""
+    #  IT HOLDS FROM ITS DERIVATION to the instant it must hold at plus the patience its plan
+    #  is given after it — the last step is placed AT the instant and its verdict comes after —
+    #  and is open for a want met at its plan's end (#645).
+    #  THE WANT, AND THE REPOSITORY WRITES IT (#677). What is derived is decided here — the
+    #  binding, the label, what it points at — and where a want is kept, how its graph is
+    #  classified and what period it holds during are `Wants`'.
+    ends = None
     if holds_at is not None:
         patience = float(getattr(getattr(agent.keeper, "beliefs", None), "patience_s", 0) or 0)
-        ends = f'\n      orexis:end "{(holds_at + timedelta(seconds=patience)).isoformat()}"^^xsd:dateTime ;'
-    agent.beliefs.drop_graph(graph)
-    agent.beliefs.update(f"""
-INSERT DATA {{
-  GRAPH <{graph}> {{
-  <{agent.me.uri}> orexis:holds <{child}> .
-  <{child}> a orexis:Want , orexis:Desire ; orexis:bindsWhen {binding} ; prov:wasDerivedFrom <{root}>{timed} ;
-      rdfs:label {json.dumps(label)} .
-  {' '.join(pointed)}
-  }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a deliberation:PursuedGraph ; orexis:arrivedBy orexis:Recorded . }}
-  GRAPH <{PERIODS_GRAPH}> {{
-    <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;{ends}
-      orexis:start "{clock.now().isoformat()}"^^xsd:dateTime ] . }}
-}}""")
-    agent.desires.rebuild()
+        ends = (holds_at + timedelta(seconds=patience)).isoformat()
+    agent.wants.save(Want(
+        uri=child, desire=root, binds=binding, label=label, ends=ends,
+        holds_at=holds_at.isoformat() if holds_at is not None else None,
+        derived_at=clock.now().isoformat() if holds_at is not None else None,
+        points=tuple((sol["p"]["value"], sol["o"]["value"]) for sol in points_said)))
     log.info("%s reads unmet: pursuing %s", root.rsplit("#", 1)[-1], child.rsplit("#", 1)[-1])
     return child
 
@@ -269,8 +257,7 @@ def withdraw(agent, child: str) -> None:
     """The want derived under a root is gone: its plan finished, or it reads met with nothing
     standing for it. A root still unmet derives it again on the next pass, so a plan that fell
     short re-plans through a fresh want rather than a stale one."""
-    agent.beliefs.drop_graph(child_graph(agent.id, child))
-    agent.desires.rebuild()
+    agent.wants.delete_by_uri(child)
     log.info("%s withdrawn", child.rsplit("#", 1)[-1])
 
 

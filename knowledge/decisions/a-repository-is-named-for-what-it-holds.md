@@ -8,7 +8,13 @@ description: >-
   and writes SPARQL, 136 calls and 236 query strings across 18 files. The convention for the
   ones that exist and the ones that should: a repository is the PLURAL of its element, its
   methods are Spring Data's `find_all`, `find_all_by_x`, `find_first_by_x`, and a name that
-  answers anything but what is inside must say in its page why.
+  answers anything but what is inside must say in its page why. `Wants` was built first and
+  taught the rest - it is handed a STORE and never learns which one, rather than the agent it
+  first took; it ANNOUNCES its writes rather than re-deriving the projection they staled, since
+  that is the assembler's call; and pyoxigraph's own store is too narrow to hand it, because
+  the adapter's update is what keeps the door's caches and the keeper's listeners true. Every
+  plural read is bounded by a defaulted `limit`/`offset`, ordered before it is cut - an
+  unordered LIMIT picks by engine layout - and says so when a page comes back full.
 status: accepted
 timestamp: 2026-09-17T12:00:00Z
 ---
@@ -31,7 +37,7 @@ because its name is right.
 |---|---|---|
 | — | `Desires` | a repository, named for its content |
 | — | `Intentions` | a repository, named for its content |
-| [belief-base](/domain/belief-base.md) | *none* | a page typed `Repository`; `agent.beliefs` is a raw `Store` |
+| [belief-base](/domain/belief-base.md) | `Beliefs` | a modality that FORWARDS the whole store surface — 122 calls pass through it |
 | [menu](/domain/menu.md) | *none* | a page typed `Repository`; the rows are computed per ask |
 | [imaginarium](/domain/imaginarium.md) | `Imaginarium` | a repository of worlds, named for a mood |
 
@@ -56,10 +62,23 @@ else — not how it stores, not what it is for, not what it evokes.
 
 | | |
 |---|---|
-| `find_all()` | every element |
-| `find_all_by_x(x)` | every element matching |
+| `find_all(*, limit, offset)` | one page of every element |
+| `find_all_by_x(x, *, limit, offset)` | one page of every element matching |
 | `find_first_by_x(x)` | the first, or None |
 | `save(e)` / `delete_by_x(x)` | the two writes |
+
+**Every plural read is BOUNDED, and the bound has a default.** A collection whose size is the
+world's is one an author sizes by hoping — wants are tens today, and nothing enforces that, since
+a busy ledger mints one per claim and a stuck sweep leaves them standing. So `limit` and `offset`
+are on every `find_all…`, defaulting to a page generous enough that no correct caller meets it.
+
+Two things fall out of that and neither is optional. **A page is ordered before it is cut**:
+SPARQL leaves an unordered result in whatever order the engine reached it, so a `LIMIT` over one
+is a pick by internal layout — the trap `beliefs.py` records, where a bare `LIMIT 1` read the
+PLANT for every pick until a load order changed. Ordered, `offset` walks the collection instead
+of resampling it, and `find_first_by_…` answers the same way twice. **And a full page is said out
+loud**: truncating in silence is the empty-result trap wearing a cap, so whoever meets the bound
+is told, because they either page or have a leak.
 
 The point is that the SIGNATURE carries the shape of the answer and the criterion. This tree's
 current names carry neither: `owed()` does not say whether it returns one or many, `read()` and
@@ -92,9 +111,11 @@ not a why. That clause exists so the exception is auditable rather than habitual
 This record is the convention. Applying it is a layer, not a pass of `sed`:
 
 - **`Desires` and `Intentions` comply** and need only their methods moved.
-- **`Beliefs` does not exist.** Making it exist means deciding which of the 136 store calls are
-  domain questions — *what do I believe about this subject* — and which are genuinely
-  infrastructure, and giving the first a method on a repository that owns the query.
+- **`Beliefs` is a modality, not yet a repository.** The class exists and discovers its own
+  agent URI, but `__getattr__` forwards the entire store surface, so 122 of the calls above go
+  straight through it to `query`, `update` and `quads`. Making it a repository means deciding
+  which of them are domain questions — *what do I believe about this subject* — and which are
+  genuinely infrastructure, and giving the first a method that owns the query.
 - **`Imaginarium` → `Worlds`**, with its page folding the way `root-desire.md` folded into
   `desire.md`, or keeping its page and stating the exception under the clause above.
 - **The menu may stay classless.** Its rows are derived on every ask and never stored, which is
@@ -102,7 +123,41 @@ This record is the convention. Applying it is a layer, not a pass of `sed`:
   carefully than `Repository` does.
 - **`Wants` is the one to build first**, because it is new: wants are derived, held in one graph
   family, and read by the planner, the keeper and the ask channel through three different query
-  texts today. A repository there has no legacy to unpick.
+  texts today. A repository there has no legacy to unpick. **Built in #677**, and what it took
+  is the section below.
+
+# A repository is handed a store, and announces its writes
+
+`Wants` was first built taking the AGENT — reading through `agent.desires`, writing through
+`agent.beliefs`, and calling `agent.desires.rebuild()` after each write. It worked, and it was
+refused for two reasons the sovereign named.
+
+**Taking the agent is taking the whole mind.** A collection that reaches into one modality to
+read and another to write has a position on which modality answers what, which is the mind's
+business. What a repository needs is somewhere to search, whoever holds the elements, and the
+one identifier a process is legitimately handed (rule 1) — so `Wants(store, holder, agent_id)`,
+and it never learns which store it got. That is what makes it testable against a bare one: six
+tests, no world, no genesis, seventy milliseconds.
+
+**Re-deriving a projection is not a collection's initiative.** A want is written to a store the
+desire modality projects, so a write leaves that projection stale — and every writer used to
+remember to rebuild. Moving the rebuild INTO the repository fixed the forgetting and bought a
+worse thing: a collection reaching up a layer to decide what a write invalidated. It announces
+instead — `on_saved` and `on_deleted`, appended to by whoever assembles the agent — and the
+assembler rebuilds, because that is a decision about the mind's parts and it is made where the
+parts are known.
+
+**And the narrowing paid for itself.** Reading through the projection meant a want was invisible
+between being written and the rebuild landing; reading through the store it was written to, it
+is there at once. The one piece of the door that mattered — a graph whose period has ENDED is
+handed to nobody (#645) — the repository now keeps itself, in one filter, because a want IS its
+graph and this class is the one that names it.
+
+**How narrow it could go is bounded by the store, not by taste.** Down to pyoxigraph's own
+`Store` would be narrower still, and it is wrong: `Store.update` invalidates the caches the
+door is computed from and fires the write listeners the keeper waits on (#512), so a write
+straight to the engine leaves the graphs-I-own answer stale and the keeper unnotified. The
+adapter is the floor.
 
 The prize is not tidier names. It is that a graph name and a query text stop being things a
 deliberator knows — which is the same discipline rule 1 already states for instances, applied to
