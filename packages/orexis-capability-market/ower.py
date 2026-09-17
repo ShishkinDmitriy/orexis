@@ -161,7 +161,7 @@ class Ower(Module):
                 if expires_at is not None else "")
         self.agent.beliefs.update(f"""INSERT DATA {{
   GRAPH <{graph}> {{
-            <{uri}> a <{OREXIS}Want> , <{OREXIS}Desire> ;
+            <{uri}> a <{OREXIS}Want> ;
                 <{OREXIS}bindsWhen> <{OREXIS}Within> ;
                 <http://www.w3.org/ns/prov#wasDerivedFrom> <{self.agent.me.uri}.no_overdue_debts> ;
                 <{OWED_TO}> <{to_agent}> ;

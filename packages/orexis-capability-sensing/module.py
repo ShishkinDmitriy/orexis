@@ -914,7 +914,7 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
         nothing foresees nothing, so a world that says nothing plans exactly as before."""
         mine = bindings(self.agent.desires.query_union(f"""
 SELECT ?about WHERE {{ <{self.me.uri}> orexis:holds <{root}> .
-  <{root}> orexis:bindsWhen orexis:Always ; orexis:about ?about .
+  <{root}> a orexis:Desire ; orexis:about ?about .
   FILTER NOT EXISTS {{ <{root}> a sensing:Freshness }} }} LIMIT 1"""))
         if not mine:
             return None

@@ -34,21 +34,28 @@ per pass by whoever holds the stake, ranked against every other, and stored nowh
 
 # Desire and want are two kinds, not two words
 
-They were one thing said two ways until an `orexis:Always` desire got a derived child (#618),
-and the distinction the code grew then is this:
+They were one thing said two ways until a standing desire got a child of its own (#618), and
+the distinction is this:
 
 | | a **desire** | a **want** |
 |---|---|---|
-| how it comes to be | **declared** — by a package's `desires.ru` at genesis, or ratified by a world | **derived** — from a desire, when the world makes it bite |
-| what is above it | nothing | the desire it was derived from, in `prov:wasDerivedFrom` |
-| when it holds | at every instant; its graph states no period | during a period of its own, and is swept when that ends |
+| when it holds | at every instant; its graph states no period | on an occasion, during a period of its own, swept when that ends |
+| what it binds | nothing — holding always is what its type says | `orexis:bindsWhen`: at an end, at an instant, within a window |
 | what it is bound to | a class, usually — or an instance a world ratified | one instance, with the binding the situation gives it |
 | is it pursued | never | it is the only thing a search is ever handed |
 
-Declared and derived is the whole of it. A desire is stated once and is thereafter a fact:
-`orexis:RootsGraph` says `orexis:arrivesBy orexis:Asserted`, and nothing rebuilds it. A want is
-computed — `prov:wasDerivedFrom` names the desire it came from — and is recomputed, withdrawn
-and derived again as the world moves.
+**Standing versus occasioned is the whole of it, and the TYPE carries it.** `orexis:Desire` and
+`orexis:Want` are disjoint classes, so a reader says which it means and no reader infers a kind
+from a binding — which is what let a node be one by type and the other by binding at once, in
+three shipped worlds, until [a-kind-is-a-type-not-a-binding](/decisions/a-kind-is-a-type-not-a-binding.md)
+took the ambiguity out.
+
+**How it came to be is provenance, not kind.** Most wants are derived, and `prov:wasDerivedFrom`
+names the desire; the pursuit road recomputes, withdraws and derives them again as the world
+moves. But a world may ratify a want DIRECTLY, and three do — hanoi's *every disk home*, the
+courier's *every parcel delivered*, the tower's — authored once, standing there for the agent's
+whole life, and handed to a search like any other. A desire is likewise usually deduced at
+genesis and may equally be ratified. Who wrote it says nothing about which kind it is.
 
 *No overdue debts* is a desire, and the market declares it for any agent that hosts a venue. A
 claim arriving derives a want under it — **close this debt before its window closes** — and that

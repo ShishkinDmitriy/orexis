@@ -56,13 +56,13 @@ SELECT ?me ?want ?shape WHERE {
   ?me orexis:holds ?want .
   ?want orexis:metWhen ?shape .
 }"""
-#  THE WANTS DERIVED UNDER A ROOT (#618): an `orexis:Always` want is never pursued itself, and
+#  THE WANTS DERIVED UNDER A ROOT (#618): an `orexis:Desire` is never pursued itself, and
 #  while a want derived under it stands the container presents THAT, with the root's own measure.
 _CHILDREN_Q = """
 SELECT ?me ?root ?child ?holdsAt ?since WHERE {
   ?me orexis:holds ?child .
-  ?child a orexis:Desire ; orexis:bindsWhen ?binding ; prov:wasDerivedFrom ?root .
-  ?root a orexis:Desire ; orexis:bindsWhen orexis:Always .
+  ?child a orexis:Want ; orexis:bindsWhen ?binding ; prov:wasDerivedFrom ?root .
+  ?root a orexis:Desire .
   FILTER(?binding IN (orexis:AtEnd, orexis:At))
   OPTIONAL { ?child orexis:holdsAt ?holdsAt ; prov:generatedAtTime ?since }
 }"""

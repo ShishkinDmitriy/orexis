@@ -37,9 +37,9 @@ same claim on the agent's attention, and that equivalence is deliberate rather t
 Since the binding axis landed
 ([shall-must-and-may-are-not-strengths-of-one-scale](/decisions/shall-must-and-may-are-not-strengths-of-one-scale.md),
 #472), the table's pattern has a name: **urgency is the fraction of the want's ROOM consumed,
-and the binding names which room.** An `orexis:Always` want's room is STATE — the survival
-envelope, so its urgency is the instantaneous degree of being off, a state function that moves
-only when the world moves. An `orexis:Within` want's room is TIME — the redeem window, so its
+and the kind or the binding names which room.** A standing `orexis:Desire`'s room is STATE —
+the survival envelope, so its urgency is the instantaneous degree of being off, a state function
+that moves only when the world moves. An `orexis:Within` want's room is TIME — the redeem window, so its
 urgency rises in a frozen world, which is why lapsing is judged by the reader's clock. An
 `orexis:At` want's room is time too, the stretch to its instant, opened when the crossing was
 foreseen ([desire](/domain/desire.md)). And not

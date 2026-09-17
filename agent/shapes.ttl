@@ -96,8 +96,14 @@ What that costs: an agent with a stake and no lever is required to state a patie
         sh:prefixes orexis: ;
         sh:select """
             SELECT ?this WHERE {
+                #  BOTH KINDS, and they are named because they used to be one by entailment:
+                #  `orexis:Want` was a subclass, so `a orexis:Desire` reached a world-ratified
+                #  want too — which is how three worlds came under this shape at all. The types
+                #  are disjoint now (a-kind-is-a-type-not-a-binding) and an agent that wants
+                #  anything, standing or occasioned, is what this is about.
+                VALUES ?kind { orexis:Desire orexis:Want }
                 ?this orexis:holds ?want .
-                ?want a orexis:Desire .
+                ?want a ?kind .
                 FILTER NOT EXISTS { ?want orexis:violationIs
                                           orexis:Stale }
             }
@@ -190,12 +196,18 @@ Every figure here was computed, so this is arithmetic rather than authorship —
     #  and, for what still enters validation, with what force (the-stake-is-sensings-want).
 
 orexis:BindingWantShape a sh:NodeShape ;
-    rdfs:comment "Every derived want states WHEN it binds (#472) — no want defaults its binding, because a defaulted binding is the implicit convention the axis exists to retire. Targeted on the metWhen carriers: the derivations mint those fresh on every rebuild, so no volume can hold a legacy one. An obligation's record is deliberately NOT targeted — a volume written before the scope word existed carries rows the writer could not have scoped, and a boot check that refused them would refuse the debt it exists to keep visible; the deadline on the record is the fact, and the scope the ledger writes on new rows restates it." ;
-    sh:targetSubjectsOf orexis:metWhen , orexis:unmetWhen ;
+    rdfs:comment """Every want states WHEN it binds (#472) — no want defaults its binding, because a defaulted binding is the implicit convention the axis exists to retire.
+
+TARGETED ON THE CLASS, and it has to be now. It was targeted on the metWhen carriers, which no longer separates a want from a desire: a desire carries a met-test too and states no binding at all, so the old target demanded one of every desire an agent holds. The class is what tells the two apart (a-kind-is-a-type-not-a-binding), which is the whole point of the change, and it is also what finally reaches a want a world RATIFIED — three do, and the old target caught them only by accident of their carrying a met-test inline.
+
+An obligation's record was deliberately excluded here, against a volume written before the binding existed carrying rows its writer could not have bound. It is included now, because the ledger has stated `orexis:Within` on every debt it mints since #472 and a volume older than that fails a good deal else; if one is ever met, the answer is a migration like the ledger's own, not a shape that cannot see half its subject.
+
+orexis:At WAS MISSING from the enumeration and is here now. A want derived from a foreseen crossing (#619) binds it, `Wants.save` writes it, and this shape would have refused one — silently, because such a want is minted at runtime and swept long before the next boot validates anything.""" ;
+    sh:targetClass orexis:Want ;
     sh:property [ sh:path orexis:bindsWhen ;
                   sh:minCount 1 ; sh:maxCount 1 ;
-                  sh:in ( orexis:Always orexis:AtEnd orexis:Within ) ;
-                  sh:message "a derived want must state when it binds — orexis:Always, orexis:AtEnd or orexis:Within — written by its derivation, defaulted by nothing" ] .
+                  sh:in ( orexis:AtEnd orexis:At orexis:Within ) ;
+                  sh:message "a want must state when it binds — orexis:AtEnd, orexis:At or orexis:Within — written by whoever minted it, defaulted by nothing" ] .
 
 orexis:MetTestShape a sh:NodeShape ;
     rdfs:comment "A want says when it is MET (a shape, conformance) or when it is UNMET (a pattern, rows) — one of the two and never both, because two verdicts on one want is a want two readers disagree about. Carriers of neither stay legal: an obligation's discharge-test and a call's measure live in the planner's own roads." ;

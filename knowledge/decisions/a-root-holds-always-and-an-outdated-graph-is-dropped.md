@@ -17,7 +17,7 @@ description: >-
 
 # The claim
 
-**A root is declared.** An `orexis:Always` want — the stake per property, the freshness want per
+**A root is declared.** An `orexis:Desire` — the stake per property, the freshness desire per
 sensor — is a declaration for the agent's whole life, and the modality re-derived it from
 beliefs at every rebuild, carrying a foresight read off a pick. That made a root a function of
 the agent's current state, which a root is not. It is authored once, at genesis, into a graph of

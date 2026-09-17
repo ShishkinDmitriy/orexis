@@ -191,6 +191,7 @@ A directory is a package. What that buys, and what the tree is not allowed to im
 * [a-package-is-its-name](/decisions/a-package-is-its-name.md) - The tree goes flat: a package's directory, distribution and module are one string, and the family is its second segment.
 * [a-package-states-what-it-needs-of-the-world](/decisions/a-package-states-what-it-needs-of-the-world.md) - A package projects the world it needs; the belief base is the union over a kernel bootstrap root.
 * [a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md) - Three layers in the code and two types in the bundle: a repository holds data, a service holds logic.
+* [a-kind-is-a-type-not-a-binding](/decisions/a-kind-is-a-type-not-a-binding.md) - `orexis:Always` told six readers which KIND a node was; the type does that now, and `Want` is no longer a subclass.
 * [a-desire-is-declared-and-a-judgment-is-made](/decisions/a-desire-is-declared-and-a-judgment-is-made.md) - One word named a stored row and a per-pass answer; naming the second `Judgment` let the first become data.
 * [a-repository-is-named-for-what-it-holds](/decisions/a-repository-is-named-for-what-it-holds.md) - A collection of domain objects, not a store: the plural of its element, Spring Data's methods, and a layer mostly absent.
 * [a-layer-is-a-distribution](/decisions/a-layer-is-a-distribution.md) - SUPERSEDED IN PART — the layering and tested arrows stand; the root-tree placement and the universal roster fell before their first merge.

@@ -11,19 +11,25 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .desire import Desire
 
 
 
 @dataclass(frozen=True)
-class Want(Desire):
+class Want:
     """One want, as the store holds it: what it was derived from, when it must hold, and what
     it points at.
 
-    A SUBCLASS, because `orexis:Want rdfs:subClassOf orexis:Desire` and the stored shapes may as
-    well say what the vocabulary says. What a want ADDS to a declared desire is exactly what the
-    word means: the desire it was derived from, and the temporals — a declared desire binds
-    `orexis:Always` and has no instant to hold at, a want binds to one.
+    A SIBLING OF `Desire`, NOT A SUBCLASS. It was one, mirroring `orexis:Want rdfs:subClassOf
+    orexis:Desire` — and that axis is gone, because it bought nothing where it was supposed to
+    pay. The closure is materialised once at genesis and a want is minted long after, so no
+    runtime want was ever entailed to be a desire and every writer hand-wrote both types to
+    compensate; what the subclass actually did was make `?d a orexis:Desire` match both kinds,
+    which is why a collection of desires had to filter on a binding to find its own contents
+    (a-kind-is-a-type-not-a-binding). The two kinds are disjoint and each means itself.
+
+    WHAT A WANT ADDS is the occasion: `orexis:bindsWhen`, which a desire states none of, the
+    temporals, and — where it was derived rather than authored — the desire it came from. HOW it
+    came to be is not the axis: three worlds ratify a want directly and it is a want all the same.
 
     STORED FACTS ONLY. How urgent it is and whether it is met are COMPUTED — a capability's
     answer about a world being judged — and belong to `Judgment`, which is what `pursuing()`
@@ -31,6 +37,13 @@ class Want(Desire):
     object's business.
     """
 
+    uri: str
+    binds: str = ""                     # orexis:AtEnd, orexis:At, orexis:Within
+    label: str = ""
+    about: str | None = None
+    #  What it POINTS AT rather than restates: the desire's met-test, avoided state and
+    #  estimate, one owner each — as `(predicate, object)` IRIs.
+    points: tuple = ()
     desire: str = ""                    # what it was derived from — `prov:wasDerivedFrom`
     holds_at: str | None = None         # the instant it must hold at, where it binds At
     derived_at: str | None = None

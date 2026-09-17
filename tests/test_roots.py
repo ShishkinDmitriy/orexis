@@ -1,7 +1,7 @@
 """A root is authored at genesis and never rebuilt (#644,
 a-root-holds-always-and-an-outdated-graph-is-dropped).
 
-An `orexis:Always` want is a declaration for the agent's whole life: written once at birth into
+An `orexis:Desire` is a declaration for the agent's whole life: written once at birth into
 the agent's own roots graph, holding at every instant with no period, endowed on amendment, and
 left untouched by every rebuild of the desire modality — which projects it beside the records
 and deduces nothing. Its foresight is not on it: a pick is the agent's state, and pursuit asks
@@ -59,7 +59,7 @@ def test_a_rebuild_leaves_the_roots_untouched(monkeypatch):
     agent.desires.rebuild()
     assert _triples(st) == before, "nothing a rebuild does reaches the roots"
     assert _roots(st) <= {r["r"] for r in bindings(agent.desires.query_union(
-        "SELECT ?r WHERE { ?me orexis:holds ?r . ?r a orexis:Desire ; orexis:bindsWhen orexis:Always }"))}, \
+        "SELECT ?r WHERE { ?me orexis:holds ?r . ?r a orexis:Desire }"))}, \
         "and the modality projects every root"
 
 

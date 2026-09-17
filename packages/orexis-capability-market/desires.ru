@@ -6,7 +6,8 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 #################  WHAT A HOST WANTS OF ITS OWN LEDGER  #################
 #
 #  ONE DESIRE, declared once at genesis: **no overdue debts**. It is the standing rule a host
-#  holds for its whole life, `orexis:Always`, and it is never handed to a search — a desire is
+#  holds for its whole life — `orexis:Desire` says so by its type — and it is never handed to a
+#  search; a desire is
 #  the premise of what is pursued, not the thing pursued
 #  (knowledge/domain/desire.md). What a claim arriving derives under it is the WANT: close THIS
 #  debt before its window closes, which the ledger mints beside the debt it is about.
@@ -33,7 +34,6 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 INSERT { GRAPH $derived {
     $me orexis:holds ?desire .
     ?desire a orexis:Desire ;
-        orexis:bindsWhen orexis:Always ;
         rdfs:label "no overdue debts — every claim I issued honoured before its window closes" ;
         rdfs:comment "The standing rule a host holds over its own ledger. A claim arriving derives a want under it, to close that debt before its window closes; the desire itself is never pursued." ;
         #  NO MET-TEST YET, and the absence is stated rather than an oversight. "Overdue" is

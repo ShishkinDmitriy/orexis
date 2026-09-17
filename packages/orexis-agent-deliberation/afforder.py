@@ -58,14 +58,22 @@ class Affordance:
         return self.for_agent is None
 
 
+#  BOTH KINDS ON PURPOSE, and it is said out loud here because it used to be said by entailment.
+#  The planner keys this map by whatever node it is standing on, and that is USUALLY a want — the
+#  pursuit road hands it the one derived under a desire — but not always: where a root reads unmet
+#  and nothing can be minted for it, the root itself is what gets planned for. While `orexis:Want`
+#  was a subclass, `?want a orexis:Desire` quietly matched both and nothing said so; the types are
+#  disjoint now (a-kind-is-a-type-not-a-binding), so the query names the two it means.
+#
 #  What this agent wants and what each want is ABOUT — the kernel's words only. A want with no
 #  `orexis:about` is one no action query could join a lever to, and it is simply absent from the
 #  VALUES block; the obligations are not here at all, because an obligation's row names whom it is owed
 #  to and joins on that. (This used to read the property off the met-shape, and the kernel
 #  no longer knows a want has one — the-stake-is-sensings-want.)
 _WANTS_Q = """SELECT ?me ?want ?about WHERE {
+  VALUES ?kind { orexis:Desire orexis:Want }
   ?me orexis:holds ?want .
-  ?want a orexis:Desire ; orexis:about ?about }"""
+  ?want a ?kind ; orexis:about ?about }"""
 
 
 _ACTIONS_Q = """SELECT ?action ?available WHERE {

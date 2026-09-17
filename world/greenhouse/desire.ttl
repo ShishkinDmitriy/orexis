@@ -20,7 +20,6 @@
 GRAPH <http://example.org/orexis/graph/desire/asserted> {
   :grower orexis:holds :the_bed_is_comfortable .
   :the_bed_is_comfortable a orexis:Desire ;
-      orexis:bindsWhen orexis:Always ;
       orexis:about water:SoilMoisture , water:AirTemperature ;
       rdfs:label "the bed is comfortable — soil and air both in the ranges the bed states" ;
       rdfs:comment "The first shipped want about two properties: no single lever serves it, so its plan is a dose and a heating." ;
