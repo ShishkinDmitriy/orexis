@@ -106,6 +106,17 @@ next boot validates anything. And it targeted `sh:targetSubjectsOf orexis:metWhe
 this change would demand a binding of every DESIRE. It targets `orexis:Want` now, which is the
 thing it is about.
 
+# Amended: what the type MEANS, and where the binding goes next
+
+This record said *the type is the kind* and stopped there — true, and thin enough that it could
+only argue from the bug it was fixing.
+[a-desire-is-universal-and-a-want-is-existential](/decisions/a-desire-is-universal-and-a-want-is-existential.md)
+says what the two kinds mean — a desire holds at EVERY instant of its period, a want at SOME
+instant of it — which is a better reason for their disjointness than this record gave, and which
+finds that `orexis:bindsWhen` states a third time what the type and the graph's period already say
+between them. Nothing here is reversed; the binding this record left standing as "a want's, saying
+when along a plan" is on its way out for the same reason `orexis:Always` was.
+
 # Seams left open
 
 - **The shape now reaches an obligation's record**, which it deliberately did not before, against
