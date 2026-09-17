@@ -62,10 +62,10 @@ reaching the engine as a free variable — where the engine's own parameters ser
 kernel's simple queries, since they cannot reach a subquery or an aggregate.
 
 **The collection is not the [menu](/domain/menu.md).** The menu keeps the templates; this derives
-what they come to in one world. They were one page once, and one file after that — `afforder.py`
-held the model, the deriving, and a question about what the agent holds that belonged to
-[desire](/domain/desire.md)'s own collection. A thing that keeps and a thing that derives are
-different kinds, and one name for both hid which a sentence meant.
+what they come to in one world, one action at a time. Deciding which actions to ask about and
+whose wants to ask them against is neither's — it is the [afforder](/domain/afforder.md)'s, and
+all three were one file until the shape was settled. A thing that keeps, a thing that derives and
+a thing that decides are three kinds, and one name for all of them hid which a sentence meant.
 
 # The menu is the precondition language
 

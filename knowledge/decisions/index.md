@@ -190,21 +190,28 @@ A directory is a package. What that buys, and what the tree is not allowed to im
 * [every-package-is-a-project](/decisions/every-package-is-a-project.md) - Each package is its own distribution with its own dependencies, held to what it imports in both directions.
 * [a-package-is-its-name](/decisions/a-package-is-its-name.md) - The tree goes flat: a package's directory, distribution and module are one string, and the family is its second segment.
 * [a-package-states-what-it-needs-of-the-world](/decisions/a-package-states-what-it-needs-of-the-world.md) - A package projects the world it needs; the belief base is the union over a kernel bootstrap root.
-* [a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md) - Three layers in the code and two types in the bundle: a repository holds data, a service holds logic.
-* [a-kind-is-a-type-not-a-binding](/decisions/a-kind-is-a-type-not-a-binding.md) - `orexis:Always` told six readers which KIND a node was; the type does that now, and `Want` is no longer a subclass.
-* [a-desire-is-universal-and-a-want-is-existential](/decisions/a-desire-is-universal-and-a-want-is-existential.md) - The type is the quantifier and the graph's period is the interval; `orexis:bindsWhen` states a third time what they already say.
-* [a-desire-is-declared-and-a-judgment-is-made](/decisions/a-desire-is-declared-and-a-judgment-is-made.md) - One word named a stored row and a per-pass answer; naming the second `Judgment` let the first become data.
-* [a-situated-instance-is-kept-only-when-it-is-testimony](/decisions/a-situated-instance-is-kept-only-when-it-is-testimony.md) - A long-lived object and situational data about it, three times; only testimony is stored.
-* [a-repository-is-named-for-what-it-holds](/decisions/a-repository-is-named-for-what-it-holds.md) - A collection of domain objects, not a store: the plural of its element, Spring Data's methods, and a layer mostly absent.
 * [a-layer-is-a-distribution](/decisions/a-layer-is-a-distribution.md) - SUPERSEDED IN PART — the layering and tested arrows stand; the root-tree placement and the universal roster fell before their first merge.
 * [a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md) - A layer is a family in the one tree, pulled by hard dependency from what is granted; a soft need injects and never loads.
 * [a-term-nobody-reads-is-annotation](/decisions/a-term-nobody-reads-is-annotation.md) - The confirmation route is retired; the cognitive rows survive the same audit, because assembly reads them.
-* [the-service-is-the-page](/decisions/the-service-is-the-page.md) - A service page carries its process, repositories and graph types; the shared dictionary does not fold into it.
 * [noticing-is-what-a-freshness-want-does](/decisions/noticing-is-what-a-freshness-want-does.md) - A hook nobody asked, retired; the want covers it, and a guard now refuses the next one.
 * [repository-layout](/decisions/repository-layout.md) - One convention across the Python trees, one distribution, and a packaging boundary replaced by a test and an import contract.
 * [a-package-may-test-itself](/decisions/a-package-may-test-itself.md) - A package carries its own tests beside its code, and `testpaths` names both roots so neither is invisible.
 * [telemetry-is-a-mandatory-capability](/decisions/telemetry-is-a-mandatory-capability.md) - Rule 2 asks only whether the how could differ, so a capability every agent holds is still one — and is not optional.
 * [capability-modules](/decisions/capability-modules.md) - SUPERSEDED IN PART — what a capability is, and that it is derived rather than declared, still holds. Where the files live does not.
+
+# Collections, services and what each is named for
+
+A repository holds data and a service holds logic. Which of the model's parts is which, what
+each is called, and what a name has to answer to.
+
+* [a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md) - Three layers in the code and two types in the bundle: a repository holds data, a service holds logic.
+* [a-repository-is-named-for-what-it-holds](/decisions/a-repository-is-named-for-what-it-holds.md) - A collection of domain objects, not a store: the plural of its element, Spring Data's methods, and a layer mostly absent.
+* [a-kind-is-a-type-not-a-binding](/decisions/a-kind-is-a-type-not-a-binding.md) - `orexis:Always` told six readers which KIND a node was; the type does that now, and `Want` is no longer a subclass.
+* [a-desire-is-universal-and-a-want-is-existential](/decisions/a-desire-is-universal-and-a-want-is-existential.md) - The type is the quantifier and the graph's period is the interval; `orexis:bindsWhen` states a third time what they already say.
+* [a-desire-is-declared-and-a-judgment-is-made](/decisions/a-desire-is-declared-and-a-judgment-is-made.md) - One word named a stored row and a per-pass answer; naming the second `Judgment` let the first become data.
+* [a-situated-instance-is-kept-only-when-it-is-testimony](/decisions/a-situated-instance-is-kept-only-when-it-is-testimony.md) - A long-lived object and situational data about it, three times; only testimony is stored.
+* [an-afforder-is-a-service-between-two-collections](/decisions/an-afforder-is-a-service-between-two-collections.md) - A repository does not ask another; the glue is a service, and it holds no query.
+* [the-service-is-the-page](/decisions/the-service-is-the-page.md) - A service page carries its process, repositories and graph types; the shared dictionary does not fold into it.
 
 # Hardware — boards, parts and wiring
 

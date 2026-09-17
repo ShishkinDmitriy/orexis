@@ -1110,11 +1110,11 @@ def test_the_rows_presence_is_the_openness_and_no_rule_asks_the_clock(make):
                       opened_at=now - timedelta(seconds=31))   # closed a second ago
 
     def buying(at=None) -> bool:
+        from orexis_agent_deliberation.actions import Actions
+        from orexis_agent_deliberation.afforder import Afforder
         from orexis_agent_deliberation.affordances import Affordances
         from orexis_agent_progression.ontology import beliefs_graph
-        return any(row.action == ACQUIRING for row in Affordances(
-            partial(fern.beliefs.query_at, at=at), fern.me.uri, fern.desires,
-            beliefs_graph(fern.id)).find_all())
+        return any(row.action == ACQUIRING for row in Afforder(Actions(partial(fern.beliefs.query_at, at=at)), fern.desires, fern.me.uri).offered(Affordances(partial(fern.beliefs.query_at, at=at), fern.me.uri, beliefs_graph(fern.id))))
 
     assert not buying(), "past its period the round reaches no rule, and buying is off the menu"
     assert buying(at=now - timedelta(seconds=10)), \

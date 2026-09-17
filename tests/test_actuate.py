@@ -9,6 +9,8 @@ deciding, committing and acting runs with no economy at all.
 
 import pytest
 
+from orexis_agent_deliberation.actions import Actions
+from orexis_agent_deliberation.afforder import Afforder
 from orexis_agent_deliberation.affordances import Affordances
 from orexis_capability_market.terms import ACQUIRING
 from orexis_capability_actuation.terms import DOSING
@@ -45,7 +47,7 @@ def test_the_menu_offers_actuate_where_both_chains_are_mine():
     mine and that no market offers as its lot. Both end at the gardener, so the rung appears —
     beside Observe, with the domain's one stated physics atom as its direction."""
     st = genesis_store(world="loner")
-    rows = Affordances(st.query, GARDENER, desires_build(st, "gardener"), beliefs_graph("gardener")).find_all()
+    rows = Afforder(Actions(st.query), desires_build(st, "gardener"), GARDENER).offered(Affordances(st.query, GARDENER, beliefs_graph("gardener")))
     assert [(r.action.rsplit("#", 1)[-1], r.direction and r.direction.rsplit("#", 1)[-1])
             for r in rows if r.about == MOIST] == [
         ("Dosing", "Raises"), ("Observing", None)]
@@ -67,7 +69,7 @@ def test_opening_a_shop_on_your_own_bottle_costs_you_the_free_rung():
     st.clear_graph(WORLD_DERIVED_GRAPH)
     for rule in loader.rule_files():
         st.update(genesis.substitute(rule.read_text(), st))
-    rows = Affordances(st.query, GARDENER, desires_build(st, "gardener"), beliefs_graph("gardener")).find_all()
+    rows = Afforder(Actions(st.query), desires_build(st, "gardener"), GARDENER).offered(Affordances(st.query, GARDENER, beliefs_graph("gardener")))
     assert not any(r.action == DOSING for r in rows), \
         "a source a market offers is not yours to open free, whoever holds the pump"
 
@@ -86,7 +88,7 @@ def test_a_pot_local_pump_on_the_shared_barrel_still_yields_acquire_only():
             <http://example.org/orexis/actuation#drawsFrom> <{ns}barrel1> .
     }} }}""")
     open_round_for(st, "fern")
-    rows = [r for r in Affordances(st.query_at, ns + "fern_agent", desires_build(st, "fern"), beliefs_graph("fern")).find_all()
+    rows = [r for r in Afforder(Actions(st.query_at), desires_build(st, "fern"), ns + "fern_agent").offered(Affordances(st.query_at, ns + "fern_agent", beliefs_graph("fern")))
             if r.about == MOIST]
     assert any(r.action == ACQUIRING for r in rows)
     assert not any(r.action == DOSING for r in rows), \
