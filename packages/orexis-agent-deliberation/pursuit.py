@@ -243,8 +243,8 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
     if holds_at is not None:
         patience = float(getattr(getattr(agent.keeper, "beliefs", None), "patience_s", 0) or 0)
         ends = (holds_at + timedelta(seconds=patience)).isoformat()
-    agent.wants.save(Want(
-        uri=child, desire=root, binds=binding, label=label, ends=ends,
+    agent.wants.save(agent.id, Want(
+        uri=child, holder=agent.me.uri, desire=root, binds=binding, label=label, ends=ends,
         holds_at=holds_at.isoformat() if holds_at is not None else None,
         derived_at=clock.now().isoformat() if holds_at is not None else None,
         points=tuple((sol["p"]["value"], sol["o"]["value"]) for sol in points_said)))
@@ -256,7 +256,7 @@ def withdraw(agent, child: str) -> None:
     """The want derived under a root is gone: its plan finished, or it reads met with nothing
     standing for it. A root still unmet derives it again on the next pass, so a plan that fell
     short re-plans through a fresh want rather than a stale one."""
-    agent.wants.delete_by_uri(child)
+    agent.wants.delete_by_uri(agent.id, child)
     log.info("%s withdrawn", child.rsplit("#", 1)[-1])
 
 

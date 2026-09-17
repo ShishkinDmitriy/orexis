@@ -30,7 +30,7 @@ WORLDS = [("tower", "mover"), ("courier", "courier"), ("hanoi", "hanoi"), ("lone
 
 def _held(world: str, agent_id: str):
     beliefs = Beliefs(genesis_store(world=world), agent_id)
-    desires, wants = Desires(beliefs), Wants(beliefs, beliefs.agent_uri, agent_id)
+    desires, wants = Desires(beliefs), Wants(beliefs)
     held = {r["w"] for r in bindings(desires.query_union(
         f"SELECT ?w WHERE {{ <{beliefs.agent_uri}> orexis:holds ?w . ?w a ?t . "
         f"FILTER(?t IN (orexis:Desire, orexis:Want)) }}"))}

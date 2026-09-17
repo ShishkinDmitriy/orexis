@@ -40,7 +40,7 @@ from assembly import loader
 from orexis_agent_deliberation.beliefs import BeliefError, Beliefs
 from assembly.inject import attribute_for, opened
 from orexis_agent_progression.ontology import STATE_GRAPH
-from orexis_agent_progression.ontology import DESIRE_URGENCY
+from orexis_agent_progression.ontology import DESIRE_URGENCY, beliefs_graph
 
 from orexis_agent_deliberation.deliberator import KEEPING_PICKS, Deliberator
 from orexis_agent_deliberation.judgment import Judgment
@@ -48,6 +48,7 @@ from orexis_agent_deliberation.desires import Desires
 from orexis_agent_deliberation.reviser import Reviser
 from orexis_agent_deliberation.actions import Actions
 from orexis_agent_deliberation.afforder import Afforder
+from orexis_agent_deliberation.affordances import Affordances
 from orexis_agent_deliberation.wants import Wants
 from orexis_agent_progression.intentions import Intentions
 
@@ -119,7 +120,7 @@ class Agent:
         #  makes it stale — and being told so is this assembler's job rather than the
         #  collection's, which is why the rebuild is registered here and not taken on its own
         #  initiative.
-        self.wants = Wants(self.beliefs, self.me.uri, agent_id)
+        self.wants = Wants(self.beliefs)
         self.wants.on_saved.append(lambda _want: self.desires.rebuild())
         self.wants.on_deleted.append(lambda _uri: self.desires.rebuild())
         #  The judgments this agent is making, as a collection. Handed the WHOLE agent, and
@@ -131,7 +132,8 @@ class Agent:
         #  service held a memo and so became a thing to keep. It is stateless; each collection
         #  remembers its own answer for as long as it is allowed to, and the WORLD is a
         #  parameter of the ask rather than of the service.
-        self.afforder = Afforder(Actions(self.beliefs), self.desires, self.me.uri)
+        self.afforder = Afforder(Actions(self.beliefs), Affordances(self.beliefs),
+                                 self.desires, self.me.uri, beliefs_graph(agent_id))
         # The intention modality: the ledger's own store, in its own room of the volume — a
         # commitment survives a restart, so it persists where the imaginarium never does. A
         # pathless mind (every test agent) has no rooms and the ledger stays beside the

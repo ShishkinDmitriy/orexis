@@ -294,6 +294,10 @@ it is a record wearing a bullet.
   whose premises are stored and would outlive them, and the differences the likeness hides are
   cardinality (nine of eleven actions afford nothing, one afforded three), provenance
   (contributed, derived, received) and whether two agents may differ and both be right.
+- **A repository holds a store and nothing else, because an agent id is another aggregate
+  root's identity** — which store is the agent's decision since it owns the stores and the
+  collections; identity travels as a query criterion, and the reads need none at all, since one
+  agent, one volume means the store IS the scope.
 - **A kind is a type, not a binding** — the always-binding had six readers and every one asked
   it which KIND a node was, while the planner it named as its reader never branched on it; a node
   could be a desire by type and a want by binding at once, which three shipped worlds were, and

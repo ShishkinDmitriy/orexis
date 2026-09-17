@@ -5,9 +5,8 @@ that action's own precondition against the world this collection was handed and 
 binding into an `Affordance`. Nothing is stored — a row is a conclusion whose premises are stored
 and would outlive them (a-situated-instance-is-kept-only-when-it-is-testimony).
 
-**PARAMETERISED BY THE WORLD.** `Wants` is handed a store and `Judgments` the choir; this is
-handed a DOOR — `beliefs.query_at` for what is, the imaginarium's for a world a plan is
-imagining — so one agent has as many menus as there are worlds to ask about, and the precondition
+**THE WORLD IS ASKED ABOUT, NOT HELD.** Every question here names one — `at` and `world` — so
+one of these serves as many menus as the store has worlds to be asked about, and the precondition
 names no graph to get it (#666). Which readings a premise reads is the door's to say.
 
 **IT ASKS FOR NOTHING.** What the agent holds and which actions are worth asking are handed in.
@@ -27,15 +26,27 @@ from .affordance import Affordance
 class Affordances:
     """The rows one world admits, asked one action at a time."""
 
-    def __init__(self, query, agent_uri: str, beliefs: str):
-        #  The DOOR: whichever world, at whichever instant, the caller means.
-        self._query = query
-        self._me = agent_uri
-        self._beliefs = beliefs
+    def __init__(self, store):
+        """The store whose worlds this asks about, and nothing else.
 
-    def find_all_by_action(self, action: Action,
-                           about_of: dict[str, tuple[str, ...]]) -> list[Affordance]:
-        """Every row this action affords here — zero, one or many.
+        IT HELD IDENTITY AND NO STORE for one change — the shape inverted — because moving the
+        world onto the question took the door out of the constructor and left only the agent's
+        URI and graph name behind. The agent is another aggregate root; both are criteria of the
+        ask now, and WHICH store this is is the agent's decision, since a search asks the
+        imaginarium what an imagined world affords and the present asks the belief base.
+        """
+        self._store = store
+
+    def find_all_by_action(self, action: Action, about_of: dict[str, tuple[str, ...]],
+                           me: str, beliefs: str, *, at=None,
+                           world: str | None = None) -> list[Affordance]:
+        """Every row this action affords in one world — zero, one or many.
+
+        WHICH WORLD IS A CRITERION, `at` and `world`, and was the constructor's until the
+        sovereign asked why the planner was building collections: it built one per node, because
+        the world was in the constructor and the world is the thing that moves. A world is part
+        of the QUESTION — *what could I do there* — not part of what this collection is. So is
+        `me`, and so is which graph is the agent's own.
 
         ZERO IS ORDINARY and is the commonest answer: nine of the eleven actions a simulation
         agent loads afford it nothing, because their preconditions do not bind. MANY is ordinary
@@ -55,14 +66,14 @@ class Affordances:
         #  block — rows, not a term — and goes in as `Raw`; the rest are IRIs the binder renders.
         #  A precondition carrying a token nobody binds refuses rather than reaching the engine as
         #  a free variable (#500).
-        q = bind(action.available, me=self._me, wants=Raw(wants), beliefs=self._beliefs)
+        q = bind(action.available, me=me, wants=Raw(wants), beliefs=beliefs)
         #  THE ROW SAYS WHICH about IT MATCHED where its select projects one — every action that
         #  filters on the want's about does now — and the want's own answers where it does not,
         #  which is only legible while the want names exactly one (#566).
         return [Affordance(action=action.uri, via=r["via"], want=r.get("want"),
                            about=r.get("about") or _sole(about_of.get(r.get("want"))),
                            direction=r.get("direction"), for_agent=r.get("for_agent"))
-                for r in bindings(self._query(q))]
+                for r in bindings(self._store.query_at(q, at=at, world=world))]
 
 
 def _sole(abouts) -> str | None:

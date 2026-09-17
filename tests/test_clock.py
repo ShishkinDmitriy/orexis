@@ -69,14 +69,20 @@ def test_the_simulation_fern_foresees_and_places_under_the_worlds_pace(monkeypat
     crossing and places the purchase ahead of it. Nothing in the agent knows the pace: the
     crossing is an hour of its own timeline, and the placed instant is in it."""
     st = genesis_store({("fern", MOISTURE): 0.47})
+    #  THE INSTANT THE WORLD WAS MADE, which is what the crossing is an hour out FROM. Read at
+    #  assert time instead, `clock.now()` has run on by however long genesis and boot took —
+    #  times the world's pace, so 4.6 bench seconds of boot is 660 of the agent's, and the
+    #  tolerance was absorbing that rather than measuring anything. Under enough parallel load
+    #  it stopped fitting: boot alone is 4.18s of a 6.25s budget on this bench, measured.
+    made = clock.now()
     st.update(f"""INSERT DATA {{ GRAPH <{beliefs_graph("fern")}> {{
         <http://example.org/orexis/world/simulation#fern_agent> <{FORESIGHT}> 21600 }} }}""")
     agent = build_agent("fern", st, monkeypatch)
     root = next(d for d in agent.pursuing() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
     crossing = pursuit.crossing_of(agent, root.uri)
     assert crossing is not None
-    ahead = (crossing - clock.now()).total_seconds()
-    assert abs(ahead - 3600.0) < 900.0, f"an hour of the agent's timeline, less the seconds the pace has run: {ahead}"
+    ahead = (crossing - made).total_seconds()
+    assert abs(ahead - 3600.0) < 300.0, f"an hour of the agent's timeline from when the world was made: {ahead}"
     from conftest import open_round_for
     open_round_for(agent, "fern", seconds=3600.0)   # an hour of the world: twenty-five real seconds
     uri = pursuit.pursue(agent, root)

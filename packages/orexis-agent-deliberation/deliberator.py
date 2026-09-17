@@ -50,7 +50,6 @@ from orexis_agent_progression.act import Step
 from orexis_agent_deliberation.judgment import Judgment
 
 
-from .affordances import Affordances
 from orexis_agent_progression.ontology import (OREXIS, DELIBERATION_GRAPH, PLAN_FAILED, PLAN_FINISHED,
                                                   SERIES, STATE_GRAPH, STEP_DONE, beliefs_graph)
 from .planner import Planner
@@ -407,8 +406,7 @@ class Deliberator:
         #  honoured row for this counterparty, and the actuation boundary judges the vessel
         #  when it pours. Handed back as a one-row plan labelled OBLIGATION, which is not a
         #  search outcome and is not written to the trace: it is the row the obligation names.
-        for row in self.agent.afforder.offered(
-                Affordances(self.agent.beliefs.query_at, self.me.uri, beliefs_graph(self.agent.id))):
+        for row in self.agent.afforder.offered():
             if row.for_agent == judgment.owed_to:
                 #  A obligation's row, unsized: the host sizes the serve from the claim it holds.
                 return Plan(OBLIGATION, ((Step.from_row(row)),))

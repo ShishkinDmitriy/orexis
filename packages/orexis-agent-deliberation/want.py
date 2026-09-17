@@ -44,6 +44,10 @@ class Want:
     #  What it POINTS AT rather than restates: the desire's met-test, avoided state and
     #  estimate, one owner each — as `(predicate, object)` IRIs.
     points: tuple = ()
+    #  WHO HOLDS IT — `<holder> orexis:holds <want>`, written into the want's own graph, so it
+    #  is a stored fact of this want and not identity the collection carries. The agent is
+    #  another aggregate root; what a want records ABOUT it is the want's.
+    holder: str = ""
     desire: str = ""                    # what it was derived from — `prov:wasDerivedFrom`
     holds_at: str | None = None         # the instant it must hold at, where it binds At
     derived_at: str | None = None

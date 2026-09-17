@@ -25,8 +25,8 @@ service was carved out of: the file that consumed the answer held the query for 
 collection's contents.
 
 **Which world each ask is about.** What a package DECLARES is public and timeless; what a WORLD
-affords is neither, so a search hands this service a fresh [affordance](/domain/affordance.md)
-collection per node while the templates stay where they are.
+affords is neither, so a search names a different world at every node — and names it, rather than
+being given a collection built for it.
 
 An agent holds ONE of these and it keeps nothing. It held a memo once, so that it would ask each
 side only as often as that side could change — and a service with state is a thing every caller
@@ -35,10 +35,10 @@ that already knows when to forget it.
 
 # The world is a parameter of the ask, not of the service
 
-`offered(affordances, only=…)` takes the collection already opened on whichever world is meant.
-Why that has to be so belongs to [affordance](/domain/affordance.md), which owns the argument;
-what it buys HERE is that one instance of this service survives a whole pass while the world under
-it changes at every node — which is what lets the two sides be asked at their own rates.
+`offered(query, only=…)` takes a DOOR onto whichever world is meant. Why that has to be so
+belongs to [affordance](/domain/affordance.md), which owns the argument; what it buys HERE is that
+an agent holds one of everything — this service and each collection it uses — while the world
+under them changes at every node of a search. The planner builds nothing but the door.
 
 # Why it is a service and the two beside it are not
 

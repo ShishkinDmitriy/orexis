@@ -38,7 +38,6 @@ from orexis_agent_progression.store import bindings
 
 
 
-from .affordances import Affordances
 from .ontology import (FOR_WANT, LIFTED, MEASURED_COST, REMEMBERED_AT, REMEMBERED_PLAN,
                        remembered_graph)
 from orexis_agent_progression import clock
@@ -110,9 +109,7 @@ def on_menu_now(agent, step, desires) -> bool:
     the thing — the availability select's own answer, filters and all."""
     return any(
         r.is_own and r.via == step.via and (r.about or None) == (step.about or None)
-        for r in agent.afforder.offered(
-            Affordances(agent.beliefs.query_at, agent.me.uri, beliefs_graph(agent.id)),
-            only=frozenset({step.action})))
+        for r in agent.afforder.offered(only=frozenset({step.action})))
 
 
 _SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")

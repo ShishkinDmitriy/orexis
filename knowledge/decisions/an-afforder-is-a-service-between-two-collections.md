@@ -73,7 +73,13 @@ differently); `Desires.abouts` remembers against the projection, and a rebuild I
 invalidation, since a rebuild is what every write that could change the answer already triggers.
 Measured after: a three-disk solve asks for the templates eighteen times and queries twice.
 
-The service is stateless, the agent holds ONE, and the world stays a parameter of the ask.
+The service is stateless and the agent holds ONE.
+
+**And then the same question again, of the other collection.** The planner was still CONSTRUCTING
+an `Affordances` — three times, once per node — because the world was in its constructor and the
+world is the thing that moves. A world is part of the QUESTION, *what could I do there*, and not
+part of what a collection IS. It is the first argument of the ask now, the agent holds one of
+every collection and one afforder, and a search builds nothing but a door.
 
 # The class is back, and this time it exists
 

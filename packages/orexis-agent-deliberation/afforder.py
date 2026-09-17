@@ -26,20 +26,31 @@ from .affordance import Affordance
 class Afforder:
     """What an agent could do, in the world it is asked about — assembled, never stored."""
 
-    def __init__(self, actions, desires, agent_uri: str):
-        #  The two collections that answer about the AGENT, which does not change between
-        #  worlds: what its packages declare, and what it holds.
+    def __init__(self, actions, affordances, desires, agent_uri: str, beliefs: str):
+        #  The collections. `affordances` is the DEFAULT one — over the belief base, which is
+        #  the world the agent is actually in; a caller asking about an imagined world passes
+        #  the collection over the store those worlds live in, because which store a collection
+        #  is over is the question's, not this service's.
         self._actions = actions
+        self._affordances = affordances
         self._desires = desires
+        #  AND THE IDENTITY, which a SERVICE may hold where a collection may not. This one is
+        #  the agent's afforder; a collection is nobody's, which is why the agent's URI and its
+        #  own graph reach the collections below as criteria rather than as state.
         self._me = agent_uri
+        self._beliefs = beliefs
 
-    def offered(self, affordances, only=None) -> list[Affordance]:
-        """Every row this agent has in the world `affordances` opens, name-ordered.
+    def offered(self, affordances=None, *, at=None, world: str | None = None,
+                only=None) -> list[Affordance]:
+        """Every row this agent has in one world, name-ordered.
 
-        THE WORLD IS A PARAMETER OF THE ASK and not of this service, which is what lets the two
-        sides be asked at their own rates: one afforder per pass holds the templates and what the
-        agent holds, and a search hands it a fresh `Affordances` per node. Before the split both
-        were re-read per node.
+        THE WORLD IS A PARAMETER OF THE ASK and of nothing else — not of this service, and not
+        of the collections it uses. A search names a world per node and builds nothing per node:
+        one afforder, one collection per STORE, and as many worlds as the pass reaches.
+
+        `affordances` says which store the worlds are in, defaulting to the agent's own. A
+        search passes its imaginarium's, because an imagined world is not in the belief base —
+        which is the one thing about this that a caller genuinely knows and the service cannot.
 
         `only` is the set of actions worth asking at all — the search's RELEVANT set (#504), or
         None for every action. A precondition is a query per action per world, and a lever that
@@ -61,6 +72,7 @@ class Afforder:
         for action in self._actions.find_all():
             if only is not None and action.uri not in only:
                 continue
-            rows += affordances.find_all_by_action(action, about_of)
+            rows += (affordances or self._affordances).find_all_by_action(
+                action, about_of, self._me, self._beliefs, at=at, world=world)
         #  Sorted because per-action order is no order.
         return sorted(rows, key=lambda a: (a.want or "", a.action, a.for_agent or ""))

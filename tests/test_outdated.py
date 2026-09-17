@@ -58,7 +58,7 @@ def test_a_pursued_child_and_a_prediction_past_their_ends_are_swept(monkeypatch)
     reading = readings.current_reading(agent.beliefs.query, agent.me.acts_for, MOISTURE)
     ladder = predictions.write(agent, agent.me.uri, agent.me.acts_for, MOISTURE, reading, 600.0, 45.0)
     assert ladder
-    ended = {agent.wants.graph_of(child), *ladder}
+    ended = {agent.wants.graph_of(agent.id, child), *ladder}
     assert ended <= set(agent.beliefs.outdated())
     assert pursuit.child_of(agent, root) is None, "a child past its instant is pursued by nobody"
     assert agent.beliefs.prediction_graphs() == []
