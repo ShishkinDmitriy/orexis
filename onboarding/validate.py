@@ -167,7 +167,7 @@ def deliberable(st, desires: dict) -> bool:
     faults = 0
     #  EVERY ACTION STATES BOTH TEXTS OR NEITHER (#506). One with both is a lever a plan may
     #  choose; one with neither is adopted by an event — the market's Presenting — and never
-    #  asked by the afforder. One with a precondition and no effect is a menu row nobody can
+    #  asked for the menu. One with a precondition and no effect is a menu row nobody can
     #  simulate, a conclusion drawn from part of the menu; one with an effect and no
     #  precondition is a lever nobody can reach. Asked of the action's own node — a fact about
     #  the loaded packages, not about any menu a world holds at genesis — so a lever whose

@@ -46,6 +46,27 @@ levers.
 The same argument in reverse is why the [action](/domain/action.md) *is* stored — a node in
 `actions.ttl` is a schema, and a schema cannot outlive anything.
 
+# Which world, is the caller's to say
+
+![the rows one agent has, and what they are read from](../diagrams/service-afforder.svg)
+
+**The world a row is true in is a PARAMETER, and that is the whole of why nothing is stored.**
+`Affordances` is handed a door — `beliefs.query_at` for what is, the
+[imaginarium](/domain/imaginarium.md)'s for a world a plan is imagining — so stock after a refill
+appears among that world's rows and not among this one's. A stored answer has one world; a search
+needs one per node.
+
+Every token a precondition carries is filled by `store.bind` (#500): a whole token, rendered as
+the term the value is, and a text still carrying a token nobody bound refuses rather than
+reaching the engine as a free variable — where the engine's own parameters serve only the
+kernel's simple queries, since they cannot reach a subquery or an aggregate.
+
+**The collection is not the [menu](/domain/menu.md).** The menu keeps the templates; this derives
+what they come to in one world. They were one page once, and one file after that — `afforder.py`
+held the model, the deriving, and a question about what the agent holds that belonged to
+[desire](/domain/desire.md)'s own collection. A thing that keeps and a thing that derives are
+different kinds, and one name for both hid which a sentence meant.
+
 # The menu is the precondition language
 
 This is the part worth internalising, because it is why planning needs no `requires` clause of
