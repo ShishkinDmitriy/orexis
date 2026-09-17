@@ -1,48 +1,58 @@
 ---
-type: Repository
+type: Domain Concept
 title: Menu
+term: http://example.org/orexis#MenuGraph
 description: >-
-  The modality that holds what could be done — one `orexis:Action` node per way of acting, each
-  carrying its precondition, its effect and its taker. It keeps TEMPLATES and never rows: a row
-  exists exactly while its premise holds, so storing one would keep a conclusion its own plumbing
-  can outlive.
+  One of the six modalities the mind is made of, and the alethic one - what the agent COULD do,
+  beside belief's what IS and intention's what I am DOING. It is not a collection and has no
+  class: what is STORED in it is the actions, and what it comes to for one agent in one world is
+  the affordances, which are derived on every ask and written nowhere. The word had been doing
+  all three jobs, and a reader who met it could not tell which.
 ---
 
-# What it holds
+# What it is
 
-One node per way of acting, and everything a search needs to reason about it:
+A **modality**, not a store of some particular thing.
+[the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) sets them out in one table, and
+this is the row that asserts *what I could do*:
 
-| part | property |
+| graph | asserts |
 |---|---|
-| precondition | `orexis:available` — a SELECT binding the lever, the want and the direction |
-| effect | `sh:construct`, `orexis:retracts`, `orexis:landsAfter` |
-| taker | the module that contributes the action — `@contributes(<action>)`, read off the code |
+| belief | what IS |
+| constraint | what MAY be |
+| desire | what I PURSUE |
+| **menu** | **what I COULD do** |
+| intention | what I am DOING |
+| history | what I DID |
 
-Each package ships its own in `actions.ttl`, so adding a way of acting is a node in a new
-directory rather than an edit here.
+`orexis:MenuGraph` is the class, and `orexis:ActionGraph` sits under it: a modality with one
+kind of thing written into it and one kind derived out.
 
-# Its class is `Actions`, and its name is going
+# The two things inside it, and neither is called this
 
-The collection this page describes had no class until the afforder was split into the service it
-is and the two collections it uses; it is `Actions` now, reading public knowledge because a
-template is the same in every world.
+**Written in**: [actions](/domain/action.md). One node per way of acting, shipped by the package
+that owns the lever, carrying the precondition that says when it is possible and the effect that
+says what taking it would make true. Stored, and safely — a schema outlives nothing. Their
+collection in the code is `Actions`.
 
-**The word "menu" is on its way out** (#686), and this page's own definition is why: it defines
-the menu as the TEMPLATES, while eight other pages use the word for the ROWS — so a reader meets
-one word for two concepts, which is how [action](/domain/action.md) and
-[affordance](/domain/affordance.md) come to feel like one thing. Where it meant the rows it will
-say affordances; where it meant these, actions.
+**Derived out**: [affordances](/domain/affordance.md). What one action comes to for one agent in
+one world, which is where the lever, the want and the direction get bound. Never written: a row
+is a conclusion whose premises are stored, and an authored one could outlive them. Their
+collection is `Affordances`, and the service that puts the two together is the
+[afforder](/domain/afforder.md).
 
-# Templates, never rows
+So this modality holds rules about means and never rows about levers — which reads as a puzzle
+until the modality and its contents are told apart.
 
-The rows are [affordances](/domain/affordance.md), derived per ask and stored nowhere. What
-this holds is what those rows are derived FROM — which is why the modality can be a repository
-at all while its conclusions cannot be.
+# Why the word needed pinning down
 
-# Where it lives today
+It had been naming all three: the modality, the templates, and the rows. This page itself opened
+*"the modality that holds what could be done"* and then described the templates, while typed as
+though it were their collection; other pages used it for the rows. A reader meeting it had no way
+to tell which was meant, which is how an action and an affordance came to feel like one thing
+when they are a schema and its situated instance
+([a-situated-instance-is-kept-only-when-it-is-testimony](/decisions/a-situated-instance-is-kept-only-when-it-is-testimony.md)).
 
-`orexis:MenuGraph` is a real class and `orexis:ActionGraph` is a subclass of it, so the modality's only
-instance is the action graph — which sits in the [belief base](/domain/belief-base.md) rather
-than a store of its own. One of the two graphs whose modality is not their store's, and the
-target [a-store-is-a-modality](/decisions/a-store-is-a-modality.md) states is the other way
-round.
+The word keeps the sense that has a term behind it and a row in the table above. Records written
+before this use it more loosely; where one says the menu is computed per ask it means the
+affordances, and where it says the menu is what the packages contribute it means the actions.

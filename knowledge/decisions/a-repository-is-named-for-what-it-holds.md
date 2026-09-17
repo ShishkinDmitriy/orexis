@@ -38,7 +38,7 @@ because its name is right.
 | — | `Desires` | a repository, named for its content |
 | — | `Intentions` | a repository, named for its content |
 | [belief-base](/domain/belief-base.md) | `Beliefs` | a modality that FORWARDS the whole store surface — 122 calls pass through it |
-| [menu](/domain/menu.md) | `Actions` | a page typed `Repository`, and its row here said the rows are computed per ask — which is the AFFORDANCES; the menu is the templates, and the ambiguity is #686 |
+| [menu](/domain/menu.md) | *none, and none is owed* | typed `Repository` here and on its own page, and it is a MODALITY — `Actions` and `Affordances` are the collections inside it (#686) |
 | [imaginarium](/domain/imaginarium.md) | `Imaginarium` | a repository of worlds, named for a mood |
 
 Two repositories exist. Everywhere else, domain code holds the store and writes SPARQL against
@@ -153,11 +153,11 @@ This record is the convention. Applying it is a layer, not a pass of `sed`:
   genuinely infrastructure, and giving the first a method that owns the query.
 - **`Imaginarium` → `Worlds`**, with its page folding the way `root-desire.md` folded into
   `desire.md`, or keeping its page and stating the exception under the clause above.
-- **The menu did not stay classless, and the reason it was expected to was a misreading.** This
-  record had it that the menu's rows are derived on every ask — true of the AFFORDANCES and not of
-  the menu, which keeps templates and says so on its own page. It is `Actions` now, an ordinary
-  repository over stored nodes, and what is derived per ask belongs to two other names
-  (an-afforder-is-a-service-between-two-collections).
+- **The menu was never a repository at all, and this record read it twice as one.** It had the
+  menu's rows derived on every ask — which is the AFFORDANCES — and then, corrected, had it
+  keeping templates — which is the ACTIONS. Both were wrong in the same way: `orexis:MenuGraph` is
+  a MODALITY, one of the six the mind is made of, asserting *what I could do*. Two collections sit
+  inside it and neither is named for it (#686).
 - **`Judgments` is the exception the convention asks to be stated.** It is a repository by its
   name and a service by its work: nothing writes a judgment, so it assembles rather than reads —
   asking the choir, running an avoided state's select, compiling a shape into the select whose
