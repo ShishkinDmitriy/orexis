@@ -46,15 +46,11 @@ log = logging.getLogger("pursuit")
 
 # --- what the search is handed (#618) ------------------------------------------------------
 #
-#  AN `orexis:Always` DESIRE IS A ROOT AND IS NEVER PURSUED. It is the agent's for its whole
-#  life — the premise of what is — and what the search is handed is a
-#  want DERIVED under it with a binding of its own, a lifetime and a definition of done: bound
-#  TYPED BOTH, and that is materialised entailment rather than a second statement: the closure
-#  `orexis:Want rdfs:subClassOf orexis:Desire` is computed ONCE, at genesis, over what the store
-#  held then — and a want is minted long after, so nothing would ever entail the supertype for
-#  it and every `?d a orexis:Desire` in the tree would stop finding what it pursues.
-#  `orexis:AtEnd`, `prov:wasDerivedFrom` the root, minted here the first time the root reads
-#  unmet and withdrawn when its plan finishes or it reads met with nothing standing for it
+#  A DESIRE IS A ROOT AND IS NEVER PURSUED. It is the agent's for its whole life — the premise
+#  of what is pursued — and what the search is handed is a WANT derived under it, with a binding
+#  of its own, a lifetime and a definition of done: bound `orexis:AtEnd`, `prov:wasDerivedFrom`
+#  the root, minted here the first time the root reads unmet and withdrawn when its plan
+#  finishes or it reads met with nothing standing for it
 #  (an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it). It POINTS at the root's
 #  met-test, avoided state and estimate — one owner each — and restates only the root's
 #  address, `orexis:about`, which is what the menu joins a want by. The container presents it
@@ -89,10 +85,13 @@ def handed(agent, judgment):
 
 
 def _is_root(agent, want: str) -> bool:
-    """Is this the DECLARED kind — a standing rule, never handed to a search (#618)? Asked of
-    the collection that holds them, whose answer's binding says which kind came back."""
-    found = agent.desires.find_first_by_uri(want)
-    return found is not None and found.binds.endswith("Always")
+    """Is this the standing kind — a desire, never handed to a search (#618)?
+
+    BEING IN THE COLLECTION IS THE ANSWER. It read the binding, back when a want was a desire
+    by entailment and only `orexis:Always` separated them; the types are disjoint now, so the
+    question is simply whether the desires hold it (a-kind-is-a-type-not-a-binding).
+    """
+    return agent.desires.find_first_by_uri(want) is not None
 
 
 def child_of(agent, root: str) -> str | None:

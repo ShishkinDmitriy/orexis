@@ -213,7 +213,7 @@ it is a record wearing a bullet.
   two plain triples that cancel nothing, and a node's diff claimed the old value beside the
   new until the drift kept the whole node it took (#619); the bug hid because novelty needs
   only a difference, and a world claiming two readings for one key is still a different world.
-- **An Always DESIRE is a root, and a search is never handed one** — what is pursued is a WANT derived
+- **A DESIRE is a root, and a search is never handed one** — what is pursued is a WANT derived
   under it with a binding of its own; and the root is not the law, because a stake's region under
   never-newly-enter refused the very dose that repairs it: a replaced reading is a new node, so
   every standing violation re-read as newly entered (#618, measured before it was believed).
@@ -288,6 +288,17 @@ it is a record wearing a bullet.
   `find_all_by_x`, `find_first_by_x`** — the name answers what is in it and the signature
   answers the shape of the answer and the criterion; an evocative name is a claim a reader
   cannot check, so a name kept against this says in its page why.
+- **A kind is a type, not a binding** — the always-binding had six readers and every one asked
+  it which KIND a node was, while the planner it named as its reader never branched on it; a node
+  could be a desire by type and a want by binding at once, which three shipped worlds were, and
+  neither collection could see them.
+- **`orexis:Want` is not a subclass of `orexis:Desire`** — the closure is materialised once at
+  genesis and a want is minted long after, so the entailment never reached one and every writer
+  hand-wrote both types; what the axis actually did was make `?d a orexis:Desire` match both
+  kinds, so a collection of desires had to filter on a binding to find its own contents.
+- **Standing versus occasioned is the axis, and who wrote it is provenance** — three worlds
+  ratify a WANT directly, authored and standing and handed to a search, so declared-versus-derived
+  was never the distinction it was written up as.
 - **A desire is declared and a judgment is made** — the class called `Desire` carried an
   urgency and an expiry, was built fresh by whichever capability held the stake and was never
   written down or read back, while the row a package's rule writes at genesis had no type at

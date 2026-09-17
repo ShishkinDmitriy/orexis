@@ -350,7 +350,7 @@ class Deliberator:
         a judgment that stays hot, stays owed, and shows up in the ledger unpaid, which is this
         project's posture towards everything it cannot prevent: leave evidence.
         """
-        #  A ROOT IS NEVER HANDED TO THE SEARCH (#618): an `orexis:Always` want is law and
+        #  A ROOT IS NEVER HANDED TO THE SEARCH (#618): an `orexis:Desire` is law and
         #  premise, and what is decided is the want derived under it — minted the first time
         #  the root reads unmet, withdrawn once it reads met with nothing standing for it. A
         #  met root with nothing derived under it is nothing to pursue, and no pass runs.

@@ -102,7 +102,7 @@ class Judgment:
     state: str | None = None
 
     #  THE ROOT THIS WANT IS DERIVED UNDER (#618), or None for a root and for anything not
-    #  derived from a want. An `orexis:Always` want is never pursued itself: the row the
+    #  derived from a want. An `orexis:Desire` is never pursued itself: the row the
     #  container presents in its place carries the root's own measure and names the root
     #  here, so a mark or a lookup by either name meets the same want.
     derived_from: str | None = None

@@ -8,7 +8,8 @@ description: >-
   is the row a package's rule writes at genesis, which had no type at all. Naming the second
   thing `Judgment` is what let the first become data, `Want` subclass it as the ontology already
   said, and a repository hand back either without meaning the other.
-status: accepted
+status: superseded-in-part
+superseded-by: a-kind-is-a-type-not-a-binding
 timestamp: 2026-09-17T18:00:00Z
 ---
 
@@ -62,6 +63,21 @@ already in the T-Box, and a stored want is a stored desire plus what it was deri
 the temporals — the same shape, exactly as the ontology says. With the name free, `Want(Desire)`
 states that in the type system for nothing. With the name taken, the two stored types can never
 be related, and the ontology's own axis stays invisible to the code.
+
+# Amended: the subclass argument did not survive being measured
+
+The deciding argument above was the subclass axis — that `orexis:Want rdfs:subClassOf
+orexis:Desire` was already in the T-Box, so freeing the name let `Want(Desire)` state it in the
+type system for nothing. The argument was sound and its PREMISE was wrong:
+[a-kind-is-a-type-not-a-binding](/decisions/a-kind-is-a-type-not-a-binding.md) found that the
+entailment is materialised once at genesis and can never reach a want minted at runtime, so every
+writer hand-wrote both types and the axis bought nothing where it was supposed to pay. The
+subclass is unlinked and the two stored types are siblings.
+
+**Nothing else here moves.** That a desire is DECLARED and a judgment is MADE, that the seven
+construction sites all judge and none read, that the word had to be freed before a collection of
+desires could exist — all of it stands, and the rename is what made the measurement above
+possible at all.
 
 # Judgment is the name, and it names work rather than a thing
 

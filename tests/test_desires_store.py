@@ -49,19 +49,25 @@ def test_a_region_is_readable_from_the_desires_store_alone(monkeypatch):
     #  BY BAND (#579): the met-shape asks whether a reading of the property IS a
     #  `sensing:BelowRegion` or an `AboveRegion`, and the edges those classes stand for are
     #  the bands' own, minted at genesis and public. What must be in the DESIRES store is the
-    #  want, its scope and its met-shape — which is what this asks for.
+    #  desire, its KIND and its met-shape — which is what this asks for.
+    #
+    #  THE KIND, NOT A BINDING. The pattern walked `orexis:bindsWhen orexis:Always` until the
+    #  binding was measured to have no reader but the six asking which kind a node was; a region
+    #  is a standing desire and says so by its type now, and states no binding at all
+    #  (a-kind-is-a-type-not-a-binding). Walking the type on purpose, for the same reason the
+    #  binding was walked before: a derivation that stops typing what it writes goes red here.
     rows = bindings(agent.desires.query_union(f"""
         SELECT ?below ?above WHERE {{
-          ?desire orexis:metWhen ?region ; orexis:bindsWhen orexis:Always .
+          ?desire a orexis:Desire ; orexis:metWhen ?region .
           ?region ssn:forProperty <{MOISTURE}> ; sh:property ?below , ?above .
           ?below orexis:violationIs orexis:Below ;
                  sh:qualifiedValueShape/sh:class sensing:BelowRegion .
           ?above orexis:violationIs orexis:Above ;
                  sh:qualifiedValueShape/sh:class sensing:AboveRegion .
         }}"""))
-    assert rows, ("the gardener's moisture region must be in the desires store — and the want "
-                  "must state its scope (#472): the pattern walks orexis:bindsWhen on purpose, so "
-                  "a derivation that stops writing one goes red here")
+    assert rows, ("the gardener's moisture region must be in the desires store, typed the "
+                  "standing kind: the pattern walks `a orexis:Desire` on purpose, so a "
+                  "derivation that stops typing what it writes goes red here")
     assert rows[0]["below"] != rows[0]["above"], "two side shapes, one per way out of the region"
 
 

@@ -63,7 +63,6 @@ PREFIX schema: <https://schema.org/>
 INSERT { GRAPH $derived {
     $me orexis:holds ?fresh .
     ?fresh a orexis:Desire , sensing:Freshness ;
-        orexis:bindsWhen orexis:Always ;
         ssn:forProperty ?property ;
         orexis:about ?sensor ;
         #  THE SENSOR ALONE, and the subject is reached through it. This carried both for a
@@ -176,7 +175,6 @@ WHERE  {
 INSERT { GRAPH $derived {
     $me orexis:holds ?desire , ?envelope .
     ?desire a orexis:Desire ;
-        orexis:bindsWhen orexis:Always ;
         ssn:forProperty ?property ;
         orexis:about ?property ;
         prov:wasDerivedFrom ?subject ;

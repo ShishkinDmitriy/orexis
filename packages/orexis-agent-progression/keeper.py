@@ -577,7 +577,7 @@ SELECT ?bridge ?construct ?estimate WHERE {{
                 estimate = f" ; orexis:estimates [ sh:select {_literal(bound)} ]"
         triples = f"""
   <{self.me.uri}> orexis:holds <{want}> .
-  <{want}> a orexis:Desire ; orexis:bindsWhen orexis:AtEnd ;
+  <{want}> a orexis:Want ; orexis:bindsWhen orexis:AtEnd ;
       progression:promisedBy <{step_uri}> ;
       orexis:unmetWhen [ sh:select {_literal(unmet)} ]{estimate} ;
       rdfs:label {_literal("the promise of " + standing.action.rsplit("#", 1)[-1] + " below")} ."""
@@ -1608,15 +1608,15 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
 
     def _names(self, want: str) -> list[str]:
         """`want` and every name the ledger may hold it under (#618): the want pursued under
-        it, where `want` is an `orexis:Always` root, or the root it is pursued under. The
+        it, where `want` is an `orexis:Desire` root, or the root it is pursued under. The
         ledger names the want the search was handed, and a reader — a bidder holding its
         stake's name, a test, the sovereign — may hold either; both meet the same commitment.
         Asked of the desire modality by vocabulary alone, since which want is derived under
         which is deliberation's to say and progression may not import it."""
         rows = bindings(self.agent.desires.query_union(f"""
 SELECT ?n WHERE {{
-  {{ ?n prov:wasDerivedFrom <{want}> ; orexis:bindsWhen orexis:AtEnd }}
-  UNION {{ <{want}> prov:wasDerivedFrom ?n . ?n orexis:bindsWhen orexis:Always }} }}"""))
+  {{ ?n a orexis:Want ; prov:wasDerivedFrom <{want}> }}
+  UNION {{ <{want}> prov:wasDerivedFrom ?n . ?n a orexis:Desire }} }}"""))
         return [want] + [r["n"] for r in rows if r["n"] != want]
 
     def standing(self, action: str | None = None, want: str | None = None) -> list[Standing]:

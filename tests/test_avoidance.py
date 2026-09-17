@@ -193,7 +193,6 @@ def test_a_want_saying_met_and_unmet_at_once_is_refused(tmp_path, monkeypatch):
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 <{GARDENER}> orexis:holds <{WANT}> .
 <{WANT}> a orexis:Desire ;
-    orexis:bindsWhen orexis:Always ;
     orexis:metWhen <{PATTERN}> ;
     orexis:unmetWhen <{PATTERN}> .
 <{PATTERN}> sh:select """SELECT (1 AS ?entered) WHERE {{ {MARKER} }}""" .

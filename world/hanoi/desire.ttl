@@ -13,7 +13,7 @@
 #  achiever, by no code of this world's.
 GRAPH <http://example.org/orexis/graph/desire/asserted> {
   :hanoi orexis:holds :every_disk_home .
-  :every_disk_home a orexis:Desire ;
+  :every_disk_home a orexis:Want ;
       orexis:bindsWhen orexis:AtEnd ;
       rdfs:label "every disk home on peg C — the sentence the puzzle is" ;
       orexis:metWhen hanoi:solved ;

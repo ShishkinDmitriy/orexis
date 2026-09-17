@@ -136,7 +136,7 @@ class Wants:
 INSERT DATA {{
   GRAPH <{graph}> {{
   <{self._holder}> orexis:holds <{want.uri}> .
-  <{want.uri}> a orexis:Want , orexis:Desire ; orexis:bindsWhen {want.binds}{timed}{about} ;
+  <{want.uri}> a orexis:Want ; orexis:bindsWhen {want.binds}{timed}{about} ;
       prov:wasDerivedFrom <{want.desire}> ;
       rdfs:label {json.dumps(want.label)} .
   {points} }}

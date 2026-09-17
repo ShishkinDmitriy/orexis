@@ -146,16 +146,18 @@ class Desires:
     #  so this half reads and offers no `save`.
 
     def find_all(self, *, limit: int = PAGE, offset: int = 0) -> list[Desire]:
-        """Every declared desire this agent holds — `orexis:Always`, the standing rules.
+        """Every desire this agent holds — the standing rules it lives by.
 
-        NOT the wants derived under them, which are `Wants`'. A want is an `orexis:Desire` too,
-        by the subclass axis, so the binding is what separates the two roads and it is asked
-        for here rather than left to a caller to remember.
+        THE TYPE IS THE WHOLE TEST now. It was `orexis:bindsWhen orexis:Always`, because
+        `orexis:Want` was a subclass and the type alone could not tell the two apart — so this
+        collection filtered on a binding to find its own contents, and a node typed a desire
+        and bound `AtEnd` fell out of both. The types are disjoint
+        (a-kind-is-a-type-not-a-binding) and each means itself.
         """
-        return self._desires("?d orexis:bindsWhen orexis:Always .", limit, offset)
+        return self._desires("?d a orexis:Desire .", limit, offset)
 
     def find_first_by_uri(self, uri: str) -> Desire | None:
-        """One desire by name, declared or derived — the binding on what comes back says which."""
+        """One desire by name, or None where the name is a want's — the types are disjoint."""
         return next(iter(self._desires(f"BIND(<{uri}> AS ?d) ?d a orexis:Desire .", 1, 0)), None)
 
     def find_first_by_want(self, want: str) -> Desire | None:
@@ -175,14 +177,13 @@ class Desires:
         unordered `LIMIT` picks by the engine's internal layout, which is the trap `beliefs.py`
         records, and a silent truncation is the empty-result trap wearing a cap."""
         rows = bindings(self.query_union(f"""
-SELECT ?d ?binds ?label ?about WHERE {{
+SELECT ?d ?label ?about WHERE {{
   {where}
-  OPTIONAL {{ ?d orexis:bindsWhen ?binds }}
   OPTIONAL {{ ?d rdfs:label ?label }}
   OPTIONAL {{ ?d orexis:about ?about }}
 }} ORDER BY ?d LIMIT {int(limit)} OFFSET {int(offset)}"""))
         if len(rows) == limit and limit != 1:
             log.warning("desires: a full page of %d at offset %d — page or there is a leak",
                         limit, offset)
-        return [Desire(uri=r["d"], binds=r.get("binds", ""), label=r.get("label", ""),
+        return [Desire(uri=r["d"], label=r.get("label", ""),
                        about=r.get("about")) for r in rows]

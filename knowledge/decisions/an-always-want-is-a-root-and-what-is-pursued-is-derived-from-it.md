@@ -26,7 +26,12 @@ description: >-
 
 # The claim
 
-**An `orexis:Always` want is a root, and it is never pursued.** It is the agent's for its whole
+*(The word in this record's title is gone: `orexis:Always` was a binding, and
+[a-kind-is-a-type-not-a-binding](/decisions/a-kind-is-a-type-not-a-binding.md) found it had no
+reader but the six asking which KIND a node was. A root is an `orexis:Desire` by its type now,
+and everything below holds with that substitution.)*
+
+**A root is never pursued.** It is the agent's for its whole
 life — every subject on the roster inside what it states it needs — and it is the PREMISE of
 what is pursued: a [desire](/domain/desire.md) in the forest's sense, with the
 pursued wants derived under it. **It is not the search's law**, and the first draft of this

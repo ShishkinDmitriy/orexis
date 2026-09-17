@@ -224,7 +224,7 @@ orexis:BeliefGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Beli
 
 orexis:RootsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Roots graph" ;
     orexis:graphPrefix "http://example.org/orexis/graph/roots/" ; orexis:arrivesBy orexis:Asserted ;
-    rdfs:comment "ONE agent's DESIRES — every `orexis:Always` desire it holds for its whole life: the stake per property, the freshness desire per sensor, with their met-tests — DECLARED once at genesis from the ranges and the wiring the world states, by the packages' desire rules run at birth, and endowed on amendment: a never-held root arrives, a held one stays (a-root-holds-always-and-an-outdated-graph-is-dropped). NO PERIOD, so it holds at every instant as the T-Box does, and no rebuild of the desire modality touches it; the modality projects it beside the records. Received, never authored by the agent: the sovereign's ranges are the source." .
+    rdfs:comment "ONE agent's DESIRES — every `orexis:Desire` it holds for its whole life: the stake per property, the freshness desire per sensor, with their met-tests — DECLARED once at genesis from the ranges and the wiring the world states, by the packages' desire rules run at birth, and endowed on amendment: a never-held root arrives, a held one stays (a-root-holds-always-and-an-outdated-graph-is-dropped). NO PERIOD, so it holds at every instant as the T-Box does, and no rebuild of the desire modality touches it; the modality projects it beside the records. Received, never authored by the agent: the sovereign's ranges are the source." .
 orexis:PickRecordGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Pick record graph" ;
     orexis:graphPrefix "http://example.org/orexis/graph/beliefs/" ; orexis:arrivesBy orexis:Asserted ;
     rdfs:comment "ONE agent's record of picking: what birth authored and review has since re-picked, one value per term, plus the belief-proper terms (conversions, the wallet) the #297 sort left beside them. A RECORD class, not a modality — the desire modality derives its wants and projects this record in as a premise-and-content, so what used to need a modality typing to be copied is now read by name, the one construction from an agent's own id the rules allow. The write boundary is orexis:beliefsOf, unchanged." .
@@ -565,12 +565,18 @@ orexis:holds a owl:ObjectProperty ; rdfs:domain orexis:Agent ;
 #  node instead of being it, and the measure hangs beside it.
 
 orexis:Desire a owl:Class ; rdfs:label "Desire" ;
-    rdfs:comment "One thing an agent pursues: a node carrying the met-test (orexis:metWhen, a SHACL shape, unchanged in content from when the desire WAS that shape) and a label a dashboard or the ask channel can print. Derived by the desire modality's build, never authored — the same discipline the shapes always had. What the node does NOT carry is a measure: how badly such a want is unmet is a capability's answer, asked through the choir (Module.desire_urgency) of whichever world is being judged, and the kernel holds no measure vocabulary at all — the comment after orexis:metWhen says why." .
+    rdfs:comment """One thing an agent stands for, for its whole life: a node carrying the met-test (orexis:metWhen, a SHACL shape, unchanged in content from when the desire WAS that shape) and a label a dashboard or the ask channel can print. It holds at every instant, it is NEVER handed to a search, and what is pursued is an orexis:Want.
 
-orexis:Want a owl:Class ; rdfs:subClassOf orexis:Desire ; rdfs:label "Want" ;
+IT STATES NO BINDING, and the absence is the statement. A desire holds always, so a triple saying so said nothing that the type did not — and the binding was then doing a type's job, which is how a node could be a desire by its type and a want by its binding at once. Three worlds shipped exactly that, and neither collection could see them. The type is the kind now; orexis:bindsWhen is a want's and says when along a plan (a-kind-is-a-type-not-a-binding).
+
+What the node does NOT carry is a measure: how badly one is unmet is a capability's answer, asked through the choir (Module.desire_urgency) of whichever world is being judged, and the kernel holds no measure vocabulary at all — the comment after orexis:metWhen says why.""" .
+
+orexis:Want a owl:Class ; rdfs:label "Want" ;
     rdfs:comment """What a desire comes to when a situation makes it bite: deduced FROM one — `prov:wasDerivedFrom` names which — bound to the instance the situation gives it, holding during a period of its own, and withdrawn when it is met. A desire stands and is never handed to a search; a want is the only thing that ever is. "No unpaid debts" is a desire, and a debt arriving deduces the want that closes it.
 
-A SUBCLASS on purpose, and the closure is why: every query already asks `?d a orexis:Desire` — what an agent holds, what the ledger keys on, what a keeper's verdict names — and the entailment is materialised at genesis, so a want answers all of them without one of them being touched. What the subclass buys is the other direction: a reader that means the standing kind alone can now say so, where before there was nothing to say it with.
+NOT A SUBCLASS OF orexis:Desire, and it was one until the axis was measured. The entailment is materialised ONCE at genesis, and a want is minted long after — so nothing ever entailed the supertype for a runtime want and every writer hand-wrote `a orexis:Want , orexis:Desire` to compensate. The subclass bought nothing at runtime, cost a doubled type on every mint, and made `?d a orexis:Desire` match both kinds, which is why a collection of desires had to filter on a binding to find its own contents. Unlinked, each type means exactly itself and no query filters (a-kind-is-a-type-not-a-binding).
+
+HOW IT CAME TO BE IS NOT THE AXIS. Most wants are derived — `prov:wasDerivedFrom` names the desire — but a world may ratify one directly, and three do: hanoi's every disk home, the courier's every parcel delivered, the tower's. Those are wants, authored rather than deduced, and they are handed to a search like any other. Standing versus occasioned is the axis; who wrote it is provenance.
 
 NOT a second modality and not a second store. Both live in the desire modality; what differs is which graph family holds them — `orexis:RootsGraph` for the desires, holding at every instant, and `deliberation:PursuedGraph` for one graph per want, each with its period (#618, #645). See knowledge/domain/desire.md.""" .
 
@@ -600,12 +606,17 @@ orexis:about a owl:ObjectProperty ; rdfs:domain orexis:Desire ;
 orexis:Binding a owl:Class ; rdfs:label "Binding" ;
     rdfs:comment "WHEN a want binds along a plan. The planner is the reader: Always is judged at every state of a candidate plan — not at-end every loop, every step of each loop — AtEnd at the end-world alone, Within against the simulated clock." .
 
-orexis:bindsWhen a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range orexis:Binding ;
+orexis:bindsWhen a owl:ObjectProperty ; rdfs:domain orexis:Want ; rdfs:range orexis:Binding ;
     rdfs:label "binds when" ;
-    rdfs:comment "The want's time semantics, stated by whoever derives it — no derived want defaults one (orexis:BindingWantShape). On the DESIRE and never on its met-shape, and named as `orexis:metWhen`'s sibling by the sentence that defines the axis: the met-test says WHAT would satisfy, this says WHEN along a path that question is asked. NOT `orexis:scope`, ruled by the sovereign on being asked: an axis is never a predicate's name here — force has no `orexis:force`, being carried by severity and the met/measure split. The axis's NOUN was Scope until 2026-09-08, when the sovereign ruled that a core concept outranks a niche one for a name and gave `scope` to how far anything an agent does can reach (knowledge/domain/scope.md). It is `orexis:Binding` now, which is what `bindsWhen` said all along, and scope's everyday reading — what a thing covers — was never when it binds." .
+    rdfs:comment "The want's time semantics, stated by whoever derives it — no want defaults one (orexis:BindingWantShape). A DESIRE STATES NONE: it holds always, which its type says, and a binding that identified the kind was a type's job in a property's clothes (a-kind-is-a-type-not-a-binding). On the WANT and never on its met-shape, and named as `orexis:metWhen`'s sibling by the sentence that defines the axis: the met-test says WHAT would satisfy, this says WHEN along a path that question is asked. NOT `orexis:scope`, ruled by the sovereign on being asked: an axis is never a predicate's name here — force has no `orexis:force`, being carried by severity and the met/measure split. The axis's NOUN was Scope until 2026-09-08, when the sovereign ruled that a core concept outranks a niche one for a name and gave `scope` to how far anything an agent does can reach (knowledge/domain/scope.md). It is `orexis:Binding` now, which is what `bindsWhen` said all along, and scope's everyday reading — what a thing covers — was never when it binds." .
 
-orexis:Always a orexis:Binding ; rdfs:label "always" ;
-    rdfs:comment "Every state of the plan is asked, not the end alone — and every tick asks reality again: the loop is the half of always the planner cannot give. The region and the freshness wants are Always." .
+#  NO `orexis:Always` BINDING, and its removal is a ruling rather than an oversight. It was
+#  PDDL3's word and it read well, but nothing ever used it as a binding: the planner, which this
+#  property names as its reader, never branched on it — six readers asked it and all six were
+#  asking WHICH KIND a node was, which orexis:Desire now answers. A want that must hold
+#  THROUGHOUT a plan is a real thing PDDL3 has a word for, and if one is ever needed the word
+#  comes back as a binding with an actual reader rather than as the thing that identifies a
+#  desire. See knowledge/decisions/a-kind-is-a-type-not-a-binding.md.
 orexis:AtEnd a orexis:Binding ; rdfs:label "at end" ;
     rdfs:comment "The plan's end-world is asked and the road there is not. No shipped derivation writes it yet; it exists so the next achievement-shaped want does not land on Always by default." .
 orexis:At a orexis:Binding ; rdfs:label "at" ;
