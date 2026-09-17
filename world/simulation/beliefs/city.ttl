@@ -2,6 +2,7 @@
 @prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix reporting: <http://example.org/orexis/reporting#> .
 @prefix market: <http://example.org/orexis/market#> .
+@prefix progression: <http://example.org/orexis/progression#> .
 
 #  The city's PRIVATE beliefs — a seller's terms, and nothing else.
 #
@@ -21,6 +22,13 @@
 ##  actuation:Actuation — how long past a dose's own open-seconds it waits for the valve's
 #   confirmation. A refill pours at mains pace, so the grace is slack on the report, not on
 #   the water.
+#  A PATIENCE, because the city wants something after all (#666's follow-on). Hosting a venue
+#  means it can incur debts, and the market declares one desire for any agent that can: NO
+#  OVERDUE DEBTS. That is a stake — met while every claim it issued still has time to run — and
+#  the constitution holds an agent with a stake to stating how long it waits before deciding
+#  again. 300 seconds, the supplier's, because they are the same kind of agent: a seller whose
+#  only plans are about serving what it owes.
+:city progression:patienceS 300 .
 :city actuation:doseGraceS 10 .
 
 ##  How often it says how it is. Omit and the agent reports nothing; see orexis/metrics.py.

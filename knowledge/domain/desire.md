@@ -46,9 +46,18 @@ Declared and derived is the whole of it. A desire is stated once and is thereaft
 computed — `prov:wasDerivedFrom` names the desire it came from — and is recomputed, withdrawn
 and derived again as the world moves.
 
-*No unpaid debts* is a desire. A debt arriving deduces a want — **close this one before its
-window closes** — and that want is what gets planned, met and withdrawn, while the desire
-stands unchanged for the next one. Sensing's region desire per property works the same way: it
+*No overdue debts* is a desire, and the market declares it for any agent that hosts a venue. A
+claim arriving derives a want under it — **close this debt before its window closes** — and that
+want is what gets planned, met and withdrawn, while the desire stands unchanged for the next
+one. OVERDUE rather than unpaid, deliberately: a host that owes water and has not yet poured it
+is not in violation of anything, and a rule that said so would read unmet from the instant a
+claim cleared.
+
+**Two roads derive, and one of them is temporary.** Sensing's wants come from the pursuit road:
+the desire's own met-test asked at the start of each prediction the agent holds, and the first
+window reading unmet is the crossing. The market's come from the ledger, at the moment a claim
+arrives. Both are derivations from a declared desire, which is what the word means here — but
+one road is the goal, and #675 carries the argument and what it needs. Sensing's region desire per property works the same way: it
 holds for the agent's life, and a reading outside its region deduces the want that repairs it.
 
 The two live in two graph families, and the names already said so before this page did:
