@@ -32,13 +32,6 @@ class Afforder:
         self._actions = actions
         self._desires = desires
         self._me = agent_uri
-        #  BOTH SIDES ASKED ONCE, and how often to ask is precisely this service's decision —
-        #  neither collection could know that its answer is stable for a pass. What a package
-        #  declares cannot change while one runs, and what the agent holds is re-projected by a
-        #  write rather than by a search. The world is the only thing that moves per node, and
-        #  the world is not here.
-        self._about_of: dict | None = None
-        self._templates: list | None = None
 
     def offered(self, affordances, only=None) -> list[Affordance]:
         """Every row this agent has in the world `affordances` opens, name-ordered.
@@ -59,14 +52,15 @@ class Afforder:
         #  desire modality from inside the menu, which is why "why does the afforder ask for
         #  wants?" was a fair question. The service needs to know what the agent holds; being
         #  told is not the same as fetching it.
-        if self._about_of is None:
-            self._about_of = self._desires.abouts(self._me)
-        if self._templates is None:
-            self._templates = self._actions.find_all()
+        #  STATELESS, and the sovereign's question is why. Holding a memo here made this a
+        #  thing callers had to keep, so there were three of them — one per pass, one per
+        #  deliberator call, one per remembered candidate. An agent has ONE afforder now; each
+        #  collection remembers its own answer for exactly as long as it is allowed to.
+        about_of = self._desires.abouts(self._me)
         rows: list[Affordance] = []
-        for action in self._templates:
+        for action in self._actions.find_all():
             if only is not None and action.uri not in only:
                 continue
-            rows += affordances.find_all_by_action(action, self._about_of)
+            rows += affordances.find_all_by_action(action, about_of)
         #  Sorted because per-action order is no order.
         return sorted(rows, key=lambda a: (a.want or "", a.action, a.for_agent or ""))

@@ -71,7 +71,7 @@ def test_the_bed_holds_one_want_about_two_properties(monkeypatch):
     agent, st = _grower(monkeypatch)
     abouts = agent.desires.abouts(agent.me.uri)
     assert set(abouts[COMFORT]) == {MOISTURE, AIR}, "one want, about both properties"
-    rows = [r for r in Afforder(Actions(st.query), agent.desires, agent.me.uri).offered(Affordances(st.query, agent.me.uri, beliefs_graph("grower"))) if r.want == COMFORT]
+    rows = [r for r in Afforder(Actions(st), agent.desires, agent.me.uri).offered(Affordances(st.query, agent.me.uri, beliefs_graph("grower"))) if r.want == COMFORT]
     assert {(r.action, r.about) for r in rows} >= {(DOSING, MOISTURE), (HEATING, AIR)}, \
         "the dose is offered about the soil and the heating about the air, for the one want"
 

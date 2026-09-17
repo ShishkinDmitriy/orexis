@@ -46,6 +46,8 @@ from orexis_agent_deliberation.deliberator import KEEPING_PICKS, Deliberator
 from orexis_agent_deliberation.judgment import Judgment
 from orexis_agent_deliberation.desires import Desires
 from orexis_agent_deliberation.reviser import Reviser
+from orexis_agent_deliberation.actions import Actions
+from orexis_agent_deliberation.afforder import Afforder
 from orexis_agent_deliberation.wants import Wants
 from orexis_agent_progression.intentions import Intentions
 
@@ -124,6 +126,12 @@ class Agent:
         #  that is the point rather than an omission: a judgment is contributed by whichever
         #  capability holds the stake, so the collection has to reach the choir.
         self.judgments = Judgments(self)
+        #  ONE AFFORDER, and the sovereign asked how many there were: there had been one per
+        #  search pass, one per deliberator call and one per remembered candidate, because the
+        #  service held a memo and so became a thing to keep. It is stateless; each collection
+        #  remembers its own answer for as long as it is allowed to, and the WORLD is a
+        #  parameter of the ask rather than of the service.
+        self.afforder = Afforder(Actions(self.beliefs), self.desires, self.me.uri)
         # The intention modality: the ledger's own store, in its own room of the volume — a
         # commitment survives a restart, so it persists where the imaginarium never does. A
         # pathless mind (every test agent) has no rooms and the ledger stays beside the

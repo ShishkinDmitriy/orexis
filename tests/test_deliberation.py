@@ -297,7 +297,7 @@ def test_the_menu_is_derived_from_the_graph(make):
     menu; every row is a join over facts that exist for their own reasons."""
     st = genesis_store()
     open_round_for(st, "fern")
-    rows = Afforder(Actions(st.query_at), desires_build(st, "fern"), FERN).offered(Affordances(st.query_at, FERN, beliefs_graph("fern")))
+    rows = Afforder(Actions(st), desires_build(st, "fern"), FERN).offered(Affordances(st.query_at, FERN, beliefs_graph("fern")))
     as_tuples = {(r.action.rsplit("#", 1)[-1], r.about.rsplit("#", 1)[-1],
                   r.direction.rsplit("#", 1)[-1] if r.direction else None) for r in rows}
     #  A row says which WANT it serves through what the want is about: a stake is about its
@@ -333,7 +333,7 @@ def test_the_dealers_menu_gained_its_lever(make):
     """
     st = genesis_store()
     open_round_for(st, "supplier")
-    rows = Afforder(Actions(st.query_at), desires_build(st, "supplier"), "http://example.org/orexis/world/simulation#supplier").offered(Affordances(st.query_at, "http://example.org/orexis/world/simulation#supplier", beliefs_graph("supplier")))
+    rows = Afforder(Actions(st), desires_build(st, "supplier"), "http://example.org/orexis/world/simulation#supplier").offered(Affordances(st.query_at, "http://example.org/orexis/world/simulation#supplier", beliefs_graph("supplier")))
     assert {(r.action.rsplit("#", 1)[-1], r.about.rsplit("#", 1)[-1],
              (r.direction or "").rsplit("#", 1)[-1] or None)
             for r in rows if r.is_own} == {("Acquiring", "StoredLitres", "Raises"),
@@ -363,7 +363,7 @@ def test_a_market_no_valve_connects_to_your_pot_is_no_lever(make):
     st.update(f"""DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
         <http://example.org/orexis/world/simulation#valve_fern>
             <http://example.org/orexis/actuation#actuates> ?pot }} }}""")
-    rows = Afforder(Actions(st.query_at), desires_build(st, "fern"), FERN).offered(Affordances(st.query_at, FERN, beliefs_graph("fern")))
+    rows = Afforder(Actions(st), desires_build(st, "fern"), FERN).offered(Affordances(st.query_at, FERN, beliefs_graph("fern")))
     assert not any(r.action == ACQUIRING for r in rows), (
         "an unplumbed market must yield no Acquire row")
     assert any(r.action == OBSERVING for r in rows), (
@@ -404,7 +404,7 @@ def test_two_denominations_make_two_rows_and_never_four(make):
         <{ns}fern_agent> <{market}bidsIn> <{ns}fan_market> .
     }} }}""")
     open_round_for(st, "fern")
-    acquire = [r for r in Afforder(Actions(st.query_at), desires_build(st, "fern"), FERN).offered(Affordances(st.query_at, FERN, beliefs_graph("fern")))
+    acquire = [r for r in Afforder(Actions(st), desires_build(st, "fern"), FERN).offered(Affordances(st.query_at, FERN, beliefs_graph("fern")))
                if r.action == ACQUIRING and r.about.endswith("SoilMoisture")]
     assert sorted((r.direction or "").rsplit("#", 1)[-1] for r in acquire) == \
         ["Lowers", "Raises"], (
@@ -466,7 +466,7 @@ orexis:Consulting a orexis:Action ; orexis:means orexis:Consult ;
     monkeypatch.setattr(loader, "action_files", lambda: real + (toy,))
     st = genesis_store()
     open_round_for(st, "fern")
-    rows = Afforder(Actions(st.query_at), desires_build(st, "fern"), FERN).offered(Affordances(st.query_at, FERN, beliefs_graph("fern")))
+    rows = Afforder(Actions(st), desires_build(st, "fern"), FERN).offered(Affordances(st.query_at, FERN, beliefs_graph("fern")))
     kinds = {r.action.rsplit("#", 1)[-1] for r in rows}
     assert "Consulting" in kinds, "the toy package's kind must appear"
     assert {"Observing", "Acquiring"} <= kinds, "and the shipped kinds must survive it"
@@ -488,7 +488,7 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     from orexis_agent_deliberation.judgment import Judgment
 
     supplier = make("supplier")
-    rows = Afforder(Actions(supplier.beliefs.query_at), supplier.desires, supplier.me.uri).offered(Affordances(supplier.beliefs.query_at, supplier.me.uri, beliefs_graph(supplier.id)))
+    rows = Afforder(Actions(supplier.beliefs), supplier.desires, supplier.me.uri).offered(Affordances(supplier.beliefs.query_at, supplier.me.uri, beliefs_graph(supplier.id)))
     obligations = [r for r in rows if not r.is_own]
     assert obligations, "the conduct surface includes what it honours"
 
@@ -507,7 +507,7 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
 def test_a_buyer_honours_nothing(make):
     """Fern holds no venue and no valve: everything on its menu is its own to choose."""
     fern = make("fern")
-    assert all(r.is_own for r in Afforder(Actions(fern.beliefs.query_at), fern.desires, fern.me.uri).offered(Affordances(fern.beliefs.query_at, fern.me.uri, beliefs_graph(fern.id))))
+    assert all(r.is_own for r in Afforder(Actions(fern.beliefs), fern.desires, fern.me.uri).offered(Affordances(fern.beliefs.query_at, fern.me.uri, beliefs_graph(fern.id))))
 
 
 # --- step 9: a desire, not a property and a value -----------------------------

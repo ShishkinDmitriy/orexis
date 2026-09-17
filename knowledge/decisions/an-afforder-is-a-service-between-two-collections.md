@@ -56,10 +56,24 @@ dominated by the canonicaliser (#667), so the honest statement is seventeen fewe
 three-disk solve and nothing about the clock. Measuring that properly means alternating sides in
 one session on this bench, and the expected effect is below the noise it would have to clear.
 
-What the split bought that is not a number: **only the thing holding both sides could have known
-which one moves.** Neither collection can decide how often the other should be asked, which is why
-the caching lives on the service and why it is legitimate there — how often to ask is a decision,
-and deciding is the whole of what this class does.
+# How many afforders an agent has, and the first answer was wrong
+
+One. The sovereign asked, and counting gave three: one per search pass, one per deliberator call,
+and one per remembered candidate — `on_menu_now` builds it inside the loop over them.
+
+The cause was a memo. The service held the templates and the abouts so it would ask once, which
+made it STATEFUL, and a stateful service is a thing every caller has to keep — so every caller
+kept its own and the memo bought nothing across them. **A collection knows when its own answer
+goes stale; a service does not**, which is the whole of why the memo was in the wrong place.
+
+It is on the stores now, where each has an invalidation already: `Actions` remembers against the
+belief store, which forgets on every write (`Store.remember`, #552 — added for this exact
+symptom, the same text fetched per fork by callers none of which could have answered
+differently); `Desires.abouts` remembers against the projection, and a rebuild IS the
+invalidation, since a rebuild is what every write that could change the answer already triggers.
+Measured after: a three-disk solve asks for the templates eighteen times and queries twice.
+
+The service is stateless, the agent holds ONE, and the world stays a parameter of the ask.
 
 # The class is back, and this time it exists
 

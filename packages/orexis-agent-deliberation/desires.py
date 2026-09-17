@@ -132,6 +132,9 @@ class Desires:
         stale handle.
         """
         built = Projection(self._beliefs)
+        #  Held so a read may memoise against it. The memo dies with the projection it was
+        #  computed from, which is exactly when it should: a rebuild IS the invalidation.
+        self._built = built
         self.query = built.query
         self.query_union = built.query_union
         self.construct = built.construct
@@ -224,7 +227,13 @@ SELECT ?d ?label ?about WHERE {{
         the first shipped want whose plan needs two different levers. Every want the plant worlds
         hold names exactly one, and reads the same through the tuple.
         """
-        out: dict[str, list[str]] = {}
-        for r in bindings(self.query_union(_ABOUT_Q, {"me": agent_uri})):
-            out.setdefault(r["want"], []).append(r["about"])
-        return {w: tuple(sorted(a)) for w, a in out.items()}
+        def compute():
+            out: dict[str, list[str]] = {}
+            for r in bindings(self.query_union(_ABOUT_Q, {"me": agent_uri})):
+                out.setdefault(r["want"], []).append(r["about"])
+            return {w: tuple(sorted(a)) for w, a in out.items()}
+
+        #  REMEMBERED AGAINST THE PROJECTION, so a rebuild is the invalidation — and a rebuild is
+        #  what every write that could change this answer already triggers. The afforder memoised
+        #  it instead, which made that service stateful and forced its callers to keep one each.
+        return self._built.remember(("abouts", agent_uri), compute)

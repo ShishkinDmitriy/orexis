@@ -24,11 +24,14 @@ and what each of them is about, and hands that to every ask. Fetching it here wa
 service was carved out of: the file that consumed the answer held the query for another
 collection's contents.
 
-**How often to ask each side.** What a package DECLARES is public and timeless; what a WORLD
-affords is neither. One afforder per pass reads the templates once — a three-disk hanoi solve
-re-read the same eleven of them eighteen times before the split, and one pass now reads them
-once — while a search hands it a fresh [affordance](/domain/affordance.md) collection per node.
-Neither collection could have decided that: only the thing holding both knows which side moves.
+**Which world each ask is about.** What a package DECLARES is public and timeless; what a WORLD
+affords is neither, so a search hands this service a fresh [affordance](/domain/affordance.md)
+collection per node while the templates stay where they are.
+
+An agent holds ONE of these and it keeps nothing. It held a memo once, so that it would ask each
+side only as often as that side could change — and a service with state is a thing every caller
+has to keep, so there were three. Each collection remembers its own answer now, against something
+that already knows when to forget it.
 
 # The world is a parameter of the ask, not of the service
 

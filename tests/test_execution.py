@@ -138,7 +138,7 @@ def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monk
         monkeypatch.setenv("OREXIS_WORLD", world)
         agent = build_agent(agent_id, genesis_store(world=world), monkeypatch)
         open_round_for(agent, agent_id)
-        for row in Afforder(Actions(agent.beliefs.query_at), agent.desires, agent.me.uri).offered(Affordances(agent.beliefs.query_at, agent.me.uri, beliefs_graph(agent.id))):
+        for row in Afforder(Actions(agent.beliefs), agent.desires, agent.me.uri).offered(Affordances(agent.beliefs.query_at, agent.me.uri, beliefs_graph(agent.id))):
             rows_seen += 1
             from orexis_agent_progression.act import takers_of
             takers = [m.name for m in takers_of(agent, row.action)]

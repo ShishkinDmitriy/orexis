@@ -125,7 +125,7 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing():
     uri = lambda who: load_wired(st.query, who).uri
 
     def honoured(who):
-        return [r for r in Afforder(Actions(st.query), desires_build(st, who), uri(who)).offered(Affordances(st.query, uri(who), beliefs_graph(who)))
+        return [r for r in Afforder(Actions(st), desires_build(st, who), uri(who)).offered(Affordances(st.query, uri(who), beliefs_graph(who)))
                 if not r.is_own]
 
     assert not regions_of(st.query, uri("city")), \
