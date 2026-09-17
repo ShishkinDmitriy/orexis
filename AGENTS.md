@@ -288,6 +288,12 @@ it is a record wearing a bullet.
   `find_all_by_x`, `find_first_by_x`** — the name answers what is in it and the signature
   answers the shape of the answer and the criterion; an evocative name is a claim a reader
   cannot check, so a name kept against this says in its page why.
+- **A long-lived object and situational data about it is one shape three times, and only
+  testimony is kept** — a desire and a judgment, an action and an affordance, a property and an
+  observation; the observation is stored because it IS the premise, the other two are conclusions
+  whose premises are stored and would outlive them, and the differences the likeness hides are
+  cardinality (nine of eleven actions afford nothing, one afforded three), provenance
+  (contributed, derived, received) and whether two agents may differ and both be right.
 - **A kind is a type, not a binding** — the always-binding had six readers and every one asked
   it which KIND a node was, while the planner it named as its reader never branched on it; a node
   could be a desire by type and a want by binding at once, which three shipped worlds were, and
