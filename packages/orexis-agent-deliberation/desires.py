@@ -37,6 +37,23 @@ log = logging.getLogger("desires")
 #  and the same number: a collection whose size is the world's is one an author sizes by hoping.
 PAGE = 100
 
+#  BOTH KINDS ON PURPOSE, and it is said out loud here because it used to be said by entailment.
+#  The planner keys this map by whatever node it is standing on, and that is USUALLY a want — the
+#  pursuit road hands it the one derived under a desire — but not always: where a root reads unmet
+#  and nothing can be minted for it, the root itself is what gets planned for. While `orexis:Want`
+#  was a subclass, `?want a orexis:Desire` quietly matched both and nothing said so; the types are
+#  disjoint now (a-kind-is-a-type-not-a-binding), so the query names the two it means.
+#
+#  What this agent wants and what each want is ABOUT — the kernel's words only. A want with no
+#  `orexis:about` is one no action query could join a lever to, and it is simply absent from the
+#  VALUES block; the obligations are not here at all, because an obligation's row names whom it is owed
+#  to and joins on that. (This used to read the property off the met-shape, and the kernel
+#  no longer knows a want has one — the-stake-is-sensings-want.)
+_ABOUT_Q = """SELECT ?me ?want ?about WHERE {
+  VALUES ?kind { orexis:Desire orexis:Want }
+  ?me orexis:holds ?want .
+  ?want a ?kind ; orexis:about ?about }"""
+
 #  The two modality classes whose instances are wants. ConstraintGraph is a want's boundary
 #  rather than a want — but gap, menu and validation all read the two together, and the record
 #  files both under the desires store because what MAY be and what is PURSUED are the two
@@ -187,3 +204,27 @@ SELECT ?d ?label ?about WHERE {{
                         limit, offset)
         return [Desire(uri=r["d"], label=r.get("label", ""),
                        about=r.get("about")) for r in rows]
+
+    def abouts(self, agent_uri: str) -> dict[str, tuple[str, ...]]:
+        """What each thing this agent holds is ABOUT, node -> the IRIs it names.
+
+        HERE BECAUSE THIS MODALITY OWNS THE STORE IT READS. It was `afforder.wants_of`, in a
+        file named for the service that consumes the answer rather than for the collection that
+        has it — which is why "why does the afforder select for wants?" was a fair question with
+        no good answer. The afforder needs to know what this agent holds; being told is not the
+        same as fetching it, and a menu that fetched it knew a query text about somebody else's
+        contents.
+
+        BOTH KINDS, spanning this collection and `Wants`. The planner keys the map by whatever
+        node it is standing on, usually a want and sometimes a root, so the map holds both —
+        which is the one question here that is not answerable from `find_all` alone.
+
+        SEVERAL PER NODE, because a want may be (#566): a greenhouse bed is comfortable when its
+        soil and its air are both in their regions, and that is ONE want about two properties —
+        the first shipped want whose plan needs two different levers. Every want the plant worlds
+        hold names exactly one, and reads the same through the tuple.
+        """
+        out: dict[str, list[str]] = {}
+        for r in bindings(self.query_union(_ABOUT_Q, {"me": agent_uri})):
+            out.setdefault(r["want"], []).append(r["about"])
+        return {w: tuple(sorted(a)) for w, a in out.items()}

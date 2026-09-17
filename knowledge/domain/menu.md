@@ -23,7 +23,7 @@ directory rather than an edit here.
 
 # Templates, never rows
 
-The rows are the [afforder](/domain/afforder.md)'s, derived per ask and stored nowhere. What
+The rows are [affordances](/domain/affordance.md), derived per ask and stored nowhere. What
 this holds is what those rows are derived FROM — which is why the modality can be a repository
 at all while its conclusions cannot be.
 

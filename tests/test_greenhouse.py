@@ -64,13 +64,13 @@ def _comfort(agent):
 def test_the_bed_holds_one_want_about_two_properties(monkeypatch):
     """The want this world exists for: one desire, two `orexis:about`, and the menu offering a
     row per property — which is what lets a single want reach two levers (#566)."""
-    from orexis_agent_deliberation.afforder import affordances_of, wants_of
+    from orexis_agent_deliberation.affordances import Affordances
     from orexis_agent_progression.ontology import beliefs_graph
     agent, st = _grower(monkeypatch)
-    abouts = wants_of(agent.desires.query_union, agent.me.uri)
+    abouts = agent.desires.abouts(agent.me.uri)
     assert set(abouts[COMFORT]) == {MOISTURE, AIR}, "one want, about both properties"
-    rows = [r for r in affordances_of(st.query, agent.me.uri, agent.desires.query_union,
-                                      beliefs_graph("grower")) if r.want == COMFORT]
+    rows = [r for r in Affordances(st.query, agent.me.uri, agent.desires,
+                                      beliefs_graph("grower")).find_all() if r.want == COMFORT]
     assert {(r.action, r.about) for r in rows} >= {(DOSING, MOISTURE), (HEATING, AIR)}, \
         "the dose is offered about the soil and the heating about the air, for the one want"
 

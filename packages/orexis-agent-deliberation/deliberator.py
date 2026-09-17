@@ -48,7 +48,7 @@ from orexis_agent_progression.timer import Timer
 from . import planner, pursuit, trace
 from orexis_agent_progression.act import Step
 from orexis_agent_deliberation.judgment import Judgment
-from .afforder import affordances_of
+from .affordances import Affordances
 from orexis_agent_progression.ontology import (OREXIS, DELIBERATION_GRAPH, PLAN_FAILED, PLAN_FINISHED,
                                                   SERIES, STATE_GRAPH, STEP_DONE, beliefs_graph)
 from .planner import Planner
@@ -212,7 +212,7 @@ class Deliberator:
     @contributes(PLAN_FAILED)
     def on_plan_failed(self, intention: str, action: str, want: str) -> None:
         """The deadline passed and the world did not answer. Re-plan: the want is marked and
-        the worker searches again, with the unmet verdict in the ledger for the afforder to
+        the worker searches again, with the unmet verdict in the ledger for the menu to
         read — the suspicion an affordance earns is progression's count, and what to do about
         a suspect lever is the search's."""
         self._plans_failed += 1
@@ -405,8 +405,8 @@ class Deliberator:
         #  honoured row for this counterparty, and the actuation boundary judges the vessel
         #  when it pours. Handed back as a one-row plan labelled OBLIGATION, which is not a
         #  search outcome and is not written to the trace: it is the row the obligation names.
-        for row in affordances_of(self.agent.beliefs.query_at, self.me.uri, self.agent.desires.query_union,
-                           beliefs_graph(self.agent.id)):
+        for row in Affordances(self.agent.beliefs.query_at, self.me.uri, self.agent.desires,
+                           beliefs_graph(self.agent.id)).find_all():
             if row.for_agent == judgment.owed_to:
                 #  A obligation's row, unsized: the host sizes the serve from the claim it holds.
                 return Plan(OBLIGATION, ((Step.from_row(row)),))
@@ -455,7 +455,7 @@ class Deliberator:
         if remembered.remembered_for(self.agent, judgment.uri):
             #  KEYED BY WHAT A READING IS (#576): a remembered plan's premises state readings
             #  by the bands the domain asserted, plain triples asked of the present.
-            kept = remembered.applicable(self.agent, judgment.uri, self.agent.desires.query_union)
+            kept = remembered.applicable(self.agent, judgment.uri, self.agent.desires)
         if kept is not None:
             uri, steps, cost = kept
             plan = Plan(REMEMBERED, tuple(steps), judgment.urgency, None, cost=cost)

@@ -7,9 +7,9 @@ whole:
 
 - the **deliberator** — asked `decide(desire)`, answering with a plan, and the mind's own
   clock: on the agent's patience it marks every want for reconsideration (`deliberator.py`);
-- the **planner**, the **imaginarium** it searches in, the **afforder** that finds the rows,
+- the **planner**, the **imaginarium** it searches in, the **affordances** it ranges over,
   the **effects** that predict a step's world and the **signature** that tells two worlds
-  apart (`planner.py`, `imaginarium.py`, `afforder.py`, `effects.py`, `signature.py`);
+  apart (`planner.py`, `imaginarium.py`, `affordances.py`, `effects.py`, `signature.py`);
 - the **trace** — what a pass considered and why, for a reader (`trace.py`);
 - the **reviser** — the belief-revision seam: a mark per want, drained on a thread of the
   mind's own, so nothing that notices a change ever waits for a search (`reviser.py`);

@@ -202,7 +202,7 @@ def test_two_domains_in_one_world_and_a_delivery_pass_moves_no_disk(monkeypatch)
 
 
 def test_an_irrelevant_lever_is_never_even_asked(monkeypatch):
-    """#504: relevance stopped the search SIMULATING a foreign row; the afforder still ran
+    """#504: relevance stopped the search SIMULATING a foreign row; the menu still ran
     every action's precondition at every node and threw the rows away. Now a lever outside
     the relevant set is asked ONCE, at the root, so the trace can say truthfully that it was
     there — and never again at any of the 78 nodes. Move is in the vocabulary whether or not a
@@ -218,7 +218,7 @@ def test_an_irrelevant_lever_is_never_even_asked(monkeypatch):
     query = imaginarium.Imaginarium.query
     monkeypatch.setattr(imaginarium.Imaginarium, "query",
                         lambda self, sparql, *a, **k: (asked.append(sparql), query(self, sparql, *a, **k))[1])
-    #  The afforder asks through the rules' door since a round became a graph with a period
+    #  The menu asks through the rules' door since a round became a graph with a period
     #  (#620): counted the same, since what is counted is the precondition text being run.
     query_at = imaginarium.Imaginarium.query_at
     monkeypatch.setattr(imaginarium.Imaginarium, "query_at",

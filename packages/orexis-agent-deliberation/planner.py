@@ -44,7 +44,7 @@ from . import effects, relevance, signature, trace
 from .beliefs import Picks
 from orexis_agent_progression.act import Step
 from orexis_agent_deliberation.judgment import Judgment
-from .afforder import affordances_of, wants_of
+from .affordances import Affordances
 from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import Raw, bind, bindings
@@ -1127,10 +1127,10 @@ class Planner:
                 return trace.SPENT, forks
             if keeper is not None and keeper.refused_below(wanted.action, wanted.via, wanted.about):
                 return trace.REFUSED, forks
-            row = next((r for r in affordances_of(
+            row = next((r for r in Affordances(
                 partial(self.imaginarium.query_at, at=self._at(cur), world=self._graph(cur)),
-                self.me.uri, self.agent.desires.query_union,
-                beliefs_graph(self.agent.id), only=frozenset({wanted.action}))
+                self.me.uri, self.agent.desires,
+                beliefs_graph(self.agent.id)).find_all(only=frozenset({wanted.action}))
                 if r.is_own and r.via == wanted.via and (r.about or None) == (wanted.about or None)),
                 None)
             if row is None:
@@ -1174,10 +1174,10 @@ class Planner:
         #  "acquire, then offer" is a plan only if the menu of the world after the first step
         #  shows the second. The root node's graph is the agent's own readings, so at depth 0
         #  this is the ordinary menu, exactly as before.
-        for row in affordances_of(partial(self.imaginarium.query_at, at=self._at(node),
+        for row in Affordances(partial(self.imaginarium.query_at, at=self._at(node),
                                           world=self._graph(node)), self.me.uri,
-                           self.agent.desires.query_union,
-                           beliefs_graph(self.agent.id), only=self._compiled.asked):
+                           self.agent.desires,
+                           beliefs_graph(self.agent.id)).find_all(only=self._compiled.asked):
             if judgment.is_obligation:
                 #  A obligation may be served by its counterparty's honoured row, or approached
                 #  through this agent's own levers — refilling the vessel is an Acquire on its
@@ -1272,7 +1272,7 @@ class Planner:
         #  Which beliefs are UPSERTED, and by what — declared by the package that writes them
         #  (`orexis:keyedBy`, `orexis:carries` on the node's class), read once per pass so the signature
         #  canonicalises a reading without this file knowing what one looks like.
-        self._compiled.about_of = wants_of(self.agent.desires.query_union, self.me.uri)
+        self._compiled.about_of = self.agent.desires.abouts(self.me.uri)
         self._compiled.keys = signature.keys_of(store.query)
         #  THE LAW THIS PASS PRUNES BY (#468): the violation-severity shapes the DATA
         #  carries — a world-authored MUST NOT over a runtime state — collected once, held
@@ -1401,10 +1401,9 @@ class Planner:
         #  named every irrelevant action in the vocabulary would name Move in a plant world
         #  with no disk in it. One query per foreign action per pass is what a truthful
         #  trace costs, against one per node before this.
-        self._passed_over = [] if self._compiled.relevant is None else affordances_of(
+        self._passed_over = [] if self._compiled.relevant is None else Affordances(
             partial(self.imaginarium.query_at, at=self._clock), self.me.uri,
-            self.agent.desires.query_union, beliefs_graph(self.agent.id),
-            only=frozenset(relevance.actions_of(self.agent.beliefs.query)) - self._compiled.relevant)
+            self.agent.desires, beliefs_graph(self.agent.id)).find_all(only=frozenset(relevance.actions_of(self.agent.beliefs.query)) - self._compiled.relevant)
         self._base_forbidden = (self._forbidden_keys(here)
                                 if self._compiled.law is not None else frozenset())
 

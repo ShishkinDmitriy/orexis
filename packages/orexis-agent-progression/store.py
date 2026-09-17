@@ -590,7 +590,7 @@ WHERE  {{
         construct door instead (`effects._select`, #472) because a premise may be a record.
         A round is now a graph of the agent's own holding during its period (#620), so what
         an availability select or a measure asks about a venue depends on WHEN it asks: the
-        afforder and the urgency choir take this door with the instant a node stands at, and
+        menu and the urgency choir take this door with the instant a node stands at, and
         a round that will have closed by then is not there. JSON bindings, as `query`."""
         out = io.BytesIO()
         #  AND THE PREDICTIONS HOLDING THEN (#642): a reader standing at an instant is handed what

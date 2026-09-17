@@ -44,6 +44,14 @@ page whose class keeps the old word would produce exactly the `belief` / `belief
 record exists to close — one vocabulary in the bundle and another in the source. Six services
 would need a code rename first, and each has a defensible name waiting:
 
+*(One of the six has since dissolved rather than been renamed: affording turned out to be a
+COLLECTION derived per ask rather than a service that decides something, so `Afforder` is
+`Affordances` and its page folded into [affordance](/domain/affordance.md) — the model keeps the
+page and the collection lives in the code, which is the shape
+[a-repository-is-named-for-what-it-holds](/decisions/a-repository-is-named-for-what-it-holds.md)
+settles. The discipline below is what forced it: the page followed the code rather than drifting
+from it.)*
+
 **All six have landed.** `Executor` took the name a retired component held; `Afforder`, `Deducer`, `Ower` and `Reviser` renamed with their code, because a doc-only rename produces the split this convention exists to close. `Ower` is consistency rather than clarity and the honest note is that the gerund still reads better than the agent noun; `Reviser` turned out to REMOVE a collision, since `review:Revision` is a different thing — a record of a belief re-picked.
 
 **`Executor` went to the service that carries out a plan**, and the page that held the name gave

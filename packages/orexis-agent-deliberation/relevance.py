@@ -272,7 +272,7 @@ def actions_of(query) -> dict[str, tuple]:
             #  simulated. Reading it as ANYTHING-writes-ANYTHING collapsed every want's
             #  closure to everything, for the market's Presenting.
             continue
-        #  No precondition text is a lever with nothing to widen the want by — the afforder
+        #  No precondition text is a lever with nothing to widen the want by — the menu
         #  yields it no rows, but a construct it does carry says what it would write.
         reads = reads_of_select(row["available"]) if row.get("available") else frozenset()
         writes = writes_of_construct(row["construct"])
