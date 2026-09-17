@@ -106,13 +106,15 @@ class Wants:
     def find_first_by_desire(self, desire: str, at: datetime | None = None) -> Want | None:
         """The want standing under one desire now, or None — the pursuit road's question.
 
-        FILTERED TO THE BINDINGS A SEARCH IS HANDED (`orexis:AtEnd`, `orexis:At`), because a
-        debt binds `orexis:Within` and is not what a desire derived: the ledger mints it on a
-        claim arriving, and the two roads meet only at #675.
+        SCOPED TO THE PURSUIT ROAD'S OWN FAMILY, because a debt is derived from a desire too —
+        the ledger mints it when a claim arrives — and is not what a search is handed; the two
+        roads meet only at #675. It asked the BINDING before, which named that difference in a
+        property where the graph's classification already said it (#681), and named it as a
+        temporal fact when what it meant was whose road the want came by.
         """
         found = self._select(
-            f"?w a orexis:Want ; prov:wasDerivedFrom <{desire}> ; orexis:bindsWhen ?b . "
-            f"FILTER(?b IN (orexis:AtEnd, orexis:At))", at, limit=1)
+            f"?w a orexis:Want ; prov:wasDerivedFrom <{desire}> .", at, limit=1,
+            family="deliberation:PursuedGraph")
         return found[0] if found else None
 
     def find_first_by_uri(self, uri: str, at: datetime | None = None) -> Want | None:
@@ -143,7 +145,7 @@ class Wants:
 INSERT DATA {{
   GRAPH <{graph}> {{
   <{want.holder}> orexis:holds <{want.uri}> .
-  <{want.uri}> a orexis:Want ; orexis:bindsWhen {want.binds}{timed}{about} ;
+  <{want.uri}> a orexis:Want{timed}{about} ;
       prov:wasDerivedFrom <{want.desire}> ;
       rdfs:label {json.dumps(want.label)} .
   {points} }}
@@ -171,7 +173,7 @@ INSERT DATA {{
         return f"{pursued_graph(agent_id)}/{uri.rsplit('#', 1)[-1]}"
 
     def _select(self, where: str, at: datetime | None = None,
-                limit: int = PAGE, offset: int = 0) -> list[Want]:
+                limit: int = PAGE, offset: int = 0, family: str = "") -> list[Want]:
         """Read every graph this store holds, keep the door THIS repository owns, and hand
         back one ordered page.
 
@@ -195,17 +197,20 @@ INSERT DATA {{
         the bound either pages or has a leak, and either way someone should see it.
         """
         now = (at or clock.now()).isoformat()
+        #  A WANT IS ITS GRAPH, so asking which FAMILY it belongs to is asking of the graph —
+        #  the classification the writer set, not a property on the want. It replaced a filter
+        #  on `orexis:bindsWhen`, which named a kind where a graph class already said it (#681).
+        family = (f"\n  GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a {family} }}" if family else "")
         rows = bindings(self._store.query_union(f"""
-SELECT ?w ?desire ?binds ?label ?holdsAt ?since ?about WHERE {{
+SELECT ?w ?desire ?label ?holdsAt ?since ?about WHERE {{
   GRAPH ?g {{
     {where}
     OPTIONAL {{ ?w prov:wasDerivedFrom ?desire }}
-    OPTIONAL {{ ?w orexis:bindsWhen ?binds }}
     OPTIONAL {{ ?w rdfs:label ?label }}
     OPTIONAL {{ ?w orexis:holdsAt ?holdsAt }}
     OPTIONAL {{ ?w prov:generatedAtTime ?since }}
     OPTIONAL {{ ?w orexis:about ?about }}
-  }}
+  }}{family}
   FILTER NOT EXISTS {{
     GRAPH <{PERIODS_GRAPH}> {{ ?g dcterms:temporal ?period . ?period orexis:end ?end }}
     FILTER(?end <= "{now}"^^xsd:dateTime) }}
@@ -213,6 +218,6 @@ SELECT ?w ?desire ?binds ?label ?holdsAt ?since ?about WHERE {{
         if len(rows) == limit:
             log.warning("wants: a full page of %d at offset %d — page or there is a leak",
                         limit, offset)
-        return [Want(uri=r["w"], desire=r.get("desire", ""), binds=r.get("binds", ""),
+        return [Want(uri=r["w"], desire=r.get("desire", ""),
                      label=r.get("label", ""), holds_at=r.get("holdsAt"),
                      derived_at=r.get("since"), about=r.get("about")) for r in rows]

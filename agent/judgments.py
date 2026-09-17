@@ -61,9 +61,8 @@ SELECT ?me ?want ?shape WHERE {
 _CHILDREN_Q = """
 SELECT ?me ?root ?child ?holdsAt ?since WHERE {
   ?me orexis:holds ?child .
-  ?child a orexis:Want ; orexis:bindsWhen ?binding ; prov:wasDerivedFrom ?root .
+  ?child a orexis:Want ; prov:wasDerivedFrom ?root .
   ?root a orexis:Desire .
-  FILTER(?binding IN (orexis:AtEnd, orexis:At))
   OPTIONAL { ?child orexis:holdsAt ?holdsAt ; prov:generatedAtTime ?since }
 }"""
 

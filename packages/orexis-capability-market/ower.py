@@ -162,7 +162,6 @@ class Ower(Module):
         self.agent.beliefs.update(f"""INSERT DATA {{
   GRAPH <{graph}> {{
             <{uri}> a <{OREXIS}Want> ;
-                <{OREXIS}bindsWhen> <{OREXIS}Within> ;
                 <http://www.w3.org/ns/prov#wasDerivedFrom> <{self.agent.me.uri}.no_overdue_debts> ;
                 <{OWED_TO}> <{to_agent}> ;
                 <{FOR_CLAIM}> "{claim_jti}" ;

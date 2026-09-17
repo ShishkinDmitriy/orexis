@@ -20,10 +20,9 @@ from dataclasses import dataclass
 class Desire:
     """One desire as the store holds it — the DECLARED kind, standing and underived.
 
-    IT STATES NO BINDING. A desire holds at every instant, so a triple saying so said nothing
-    its type did not — and while it said it, the binding was doing a type's job and a node could
-    be a desire by type and a want by binding at once. `orexis:bindsWhen` is a `Want`\'s alone
-    (a-kind-is-a-type-not-a-binding).
+    IT HOLDS AT EVERY INSTANT, which its type says and its graph says again by having no period
+    (a-desire-is-universal-and-a-want-is-existential). There was an `orexis:bindsWhen` carrying
+    that as a fourth statement, and it is gone (#681).
 
     STORED FACTS ONLY. What a capability judges ABOUT one — urgency, the reading, the window
     left — is `Judgment`\'s and is never written down.

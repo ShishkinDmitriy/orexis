@@ -39,14 +39,14 @@ Since the binding axis landed
 #472), the table's pattern has a name: **urgency is the fraction of the want's ROOM consumed,
 and the kind or the binding names which room.** A standing `orexis:Desire`'s room is STATE —
 the survival envelope, so its urgency is the instantaneous degree of being off, a state function
-that moves only when the world moves. An `orexis:Within` want's room is TIME — the redeem window, so its
+that moves only when the world moves. A DEBT's room is TIME — the redeem window, so its
 urgency rises in a frozen world, which is why lapsing is judged by the reader's clock. An
-`orexis:At` want's room is time too, the stretch to its instant, opened when the crossing was
+want with an instant to hold at has room in time too, the stretch to it, opened when the crossing was
 foreseen ([desire](/domain/desire.md)). And not
 knowing consumes the whole of either, which is what maximal always meant. One meaning, two
 projections — the stake and the debt formulas were never two ideas.
 
-The corollary explains an absence: an `orexis:AtEnd` want with no deadline has no room being
+The corollary explains an absence: a want with no deadline has no room being
 consumed, so nothing makes it urgent — and a want with no urgency never wins attention. That is
 the quiet reason no derivation writes one; a real AtEnd customer must declare its heat or
 borrow a clock, at which point it is really a Within. The customer that arrived is the want

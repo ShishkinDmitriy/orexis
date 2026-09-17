@@ -37,9 +37,19 @@ def wants():
     return Wants(Store())
 
 
-def _want(uri="urn:test:want", desire=A_DESIRE, binds="orexis:AtEnd", **kw):
-    return Want(uri=uri, holder=HOLDER, desire=desire, binds=binds,
-                label="a want under test", **kw)
+def _want(uri="urn:test:want", desire=A_DESIRE, **kw):
+    return Want(uri=uri, holder=HOLDER, desire=desire, label="a want under test", **kw)
+
+
+def _owe(wants, uri):
+    """A debt, written the way the LEDGER writes one — its own graph, classified its own family.
+    It cannot be written through `save`, which classifies what it writes as the pursuit road's,
+    and that is the point of the case below."""
+    graph = f"http://example.org/orexis/market#obligations/gardener/{uri.rsplit(':', 1)[-1]}"
+    wants._store.update(f"""INSERT DATA {{
+  GRAPH <{graph}> {{ <{uri}> a orexis:Want ; prov:wasDerivedFrom <{A_DESIRE}> ;
+      rdfs:label "a debt under test" . }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a market:ObligationsGraph . }} }}""")
 
 
 def test_a_saved_want_is_found_and_a_deleted_one_is_not(wants):
@@ -80,7 +90,7 @@ def test_a_want_is_found_by_the_desire_it_was_derived_from(wants):
     assert wants.find_first_by_desire(A_DESIRE).uri == "urn:test:want"
     assert wants.find_all_by_desire("urn:test:nobody") == []
     assert wants.find_first_by_desire("urn:test:nobody") is None
-    assert wants.find_first_by_uri("urn:test:want").binds.endswith("AtEnd")
+    assert wants.find_first_by_uri("urn:test:want").desire == A_DESIRE
     assert wants.find_first_by_uri("urn:test:missing") is None
 
 
@@ -119,12 +129,15 @@ def test_a_want_whose_period_has_closed_is_not_handed_out(wants):
 
 
 def test_a_debt_is_a_want_but_not_one_a_search_is_handed(wants):
-    """The distinction the collection keeps, and why `find_first_by_desire` filters. A debt IS a
-    want — typed one, carrying a period — but it binds `orexis:Within` and the ledger mints it
-    when a claim arrives, not when a desire read unmet. So it is in `find_all` and it is not
-    what the pursuit road finds under a desire. The two roads meet at #675 and not before."""
+    """The distinction the collection keeps, and what `find_first_by_desire` scopes by.
+
+    A debt IS a want, typed one, and it is derived from a desire like any other — the ledger
+    mints it when a claim arrives rather than when a desire read unmet. What separates it is
+    WHOSE ROAD it came by, and the graph's classification is where that is written. It was a
+    binding, `orexis:Within` against `orexis:AtEnd`, which said the difference as a temporal
+    fact when what it meant was a family (#681)."""
     wants.save(AGENT, _want(uri="urn:test:derived"))
-    wants.save(AGENT, _want(uri="urn:test:owed", binds="orexis:Within"))
+    _owe(wants, "urn:test:owed")
 
     assert {w.uri for w in wants.find_all()} == \
         {"urn:test:derived", "urn:test:owed"}

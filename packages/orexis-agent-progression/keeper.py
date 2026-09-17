@@ -577,7 +577,7 @@ SELECT ?bridge ?construct ?estimate WHERE {{
                 estimate = f" ; orexis:estimates [ sh:select {_literal(bound)} ]"
         triples = f"""
   <{self.me.uri}> orexis:holds <{want}> .
-  <{want}> a orexis:Want ; orexis:bindsWhen orexis:AtEnd ;
+  <{want}> a orexis:Want ;
       progression:promisedBy <{step_uri}> ;
       orexis:unmetWhen [ sh:select {_literal(unmet)} ]{estimate} ;
       rdfs:label {_literal("the promise of " + standing.action.rsplit("#", 1)[-1] + " below")} ."""

@@ -27,7 +27,8 @@ class Want:
     which is why a collection of desires had to filter on a binding to find its own contents
     (a-kind-is-a-type-not-a-binding). The two kinds are disjoint and each means itself.
 
-    WHAT A WANT ADDS is the occasion: `orexis:bindsWhen`, which a desire states none of, the
+    WHAT A WANT ADDS is the occasion: the period its graph holds during, which a desire has none
+    of, the
     temporals, and — where it was derived rather than authored — the desire it came from. HOW it
     came to be is not the axis: three worlds ratify a want directly and it is a want all the same.
 
@@ -38,7 +39,6 @@ class Want:
     """
 
     uri: str
-    binds: str = ""                     # orexis:AtEnd, orexis:At, orexis:Within
     label: str = ""
     about: str | None = None
     #  What it POINTS AT rather than restates: the desire's met-test, avoided state and

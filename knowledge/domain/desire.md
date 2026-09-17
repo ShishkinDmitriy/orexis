@@ -40,7 +40,7 @@ the distinction is this:
 | | a **desire** | a **want** |
 |---|---|---|
 | when it holds | at every instant; its graph states no period | on an occasion, during a period of its own, swept when that ends |
-| what it binds | nothing — holding always is what its type says | `orexis:bindsWhen`: at an end, at an instant, within a window |
+| what says when | its type, and a graph with no period | its graph's period, and `orexis:holdsAt` where it must hold AT an instant |
 | what it is bound to | a class, usually — or an instance a world ratified | one instance, with the binding the situation gives it |
 | is it pursued | never | it is the only thing a search is ever handed |
 
@@ -411,7 +411,7 @@ says it will be — and each is gone when met
 # What is derived under it
 
 The want a search is handed for a desire that reads unmet is a node of its own, bound
-`orexis:AtEnd`, `prov:wasDerivedFrom` the desire, POINTING at its met-test, avoided state
+`prov:wasDerivedFrom` the desire, POINTING at its met-test, avoided state
 and estimate — one owner each — and restating only the root's address, what it is about, which
 is what the menu joins a want by. It is minted by the pursuit road the first time the desire
 reads unmet, into the agent's own pursued graph (`deliberation:PursuedGraph`, projected into the
@@ -424,7 +424,7 @@ when it reads met with nothing standing for it; a desire still unmet derives it 
 with nothing derived under it is nothing to pursue, and no pass runs for it.
 
 A desire that reads met may still foresee: where it states `orexis:foresees` and a drift's
-crossing falls within that stretch, the want derived under it is bound `orexis:At` the crossing
+crossing falls within that stretch, the want derived under it must hold AT the crossing
 — met at the instant and the instant after, its room the stretch to it — and the search for it
 begins where the present's own drift stands at the instant less the longest landing on the
 menu, so the plan's first step is placed at the instant less the plan's own duration and held

@@ -45,7 +45,6 @@ def _avoiding_world(tmp_path, both=False, shaped=False):
     (dst / "desire.ttl").write_text(f'''GRAPH <{ASSERTED}> {{
   <{GARDENER}> <http://example.org/orexis#holds> <{WANT}> .
   <{WANT}> a <http://example.org/orexis#Desire> ;
-      <http://example.org/orexis#bindsWhen> <http://example.org/orexis#Always> ;
       <http://www.w3.org/2000/01/rdf-schema#label>
           "never let the naughty marker stand — the sentence somebody ratified" ;
       <http://example.org/orexis#unmetWhen> <{PATTERN}> .
