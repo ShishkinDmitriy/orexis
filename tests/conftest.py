@@ -181,12 +181,25 @@ class Msg:
         self.payload = json.dumps(payload).encode()
 
 
-def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
+def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None, *,
+                validating: bool = False):
     """A real Agent — real world, real beliefs, real modules — with the broker captured.
 
     Nothing is stubbed except the two things that would reach the network: MQTT and Influx.
     The modules under test are the ones that ship.
+
+    AND THE BOOT GATE IS NOT RUN unless a test asks (`validating=True`). `validate_agent`
+    holds the agent's beliefs to its capabilities' shapes at boot — a check that raises or
+    passes and changes nothing else — and it cost two seconds of every boot here: the store
+    flattened into rdflib, skolemised, serialised and judged, about 250 times a run, to say
+    the same thing every time about a store built from the ratified files. The gate is the
+    SUBJECT of `test_validate`, `test_shapes` and the tests that build an `Agent` themselves;
+    everywhere else it was the price of the fixture. Measured: a fern boot 2.35 s with it,
+    0.3 s without.
     """
+    from contextlib import nullcontext
+    from unittest import mock
+
     from agent import runtime
 
     class NoInflux:
@@ -217,7 +230,9 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     # What `open_belief_base` does for a deployed agent and a bare genesis store lacks: the
     # agent's own graphs say what they ARE, which is how the mind's build selects them.
     genesis.classify_own_graphs(st, agent_id)
-    agent = runtime.Agent(agent_id, st=st)
+    with (nullcontext() if validating
+          else mock.patch.object(runtime, "validate_agent", lambda *a, **k: None)):
+        agent = runtime.Agent(agent_id, st=st)
     # convenience: reach a module by name, the way a test wants to talk about it
     agent.module = lambda name: next(m for m in agent.modules if m.name == name)
     #  The wire, read through the transport's captured client: everything sent, and every
