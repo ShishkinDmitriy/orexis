@@ -25,9 +25,10 @@ from orexis_agent_progression.store import bindings
 HOUR = 3600.0
 
 
-def _host(monkeypatch):
+def _host(monkeypatch, stock: float | None = None):
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
-    agent = build_agent("supplier", genesis_store(world="simulation"), monkeypatch)
+    seeded = {("barrel1", "http://example.org/orexis/water#StoredLitres"): stock} if stock else None
+    agent = build_agent("supplier", genesis_store(seeded, world="simulation"), monkeypatch)
     ledger = next(m for m in agent.modules if m.__class__.__name__ == "HostingModule").ledger
     return agent, ledger, f"{agent.me.uri}.no_overdue_debts"
 
@@ -104,3 +105,33 @@ def test_a_second_claim_is_a_second_want_and_the_first_stands(monkeypatch):
     assert pursuit.handed(agent, presented).uri == first.uri
     assert pursuit.top_up(agent, root) == [], "nothing new to mint"
     assert {w.uri for w in agent.wants.find_all_pursued()} == {first.uri, second.uri}
+
+
+def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(monkeypatch):
+    """A claim with a deadline is a want AT its lapse — the road read that off the prediction —
+    and a plan for a want at an instant is placed to land at it (#619). Then the holder
+    presents, an hour early. The debt is in violation NOW, and a want still saying "hold at
+    the lapse" would have the serve placed at the deadline less the pour while the buyer
+    waits: hosting's own presentation path served now, and a pass from `pursuing()` did
+    not. The road re-mints the want with no instant, under the same name, and a pass from
+    either door serves now."""
+    from orexis_agent_progression import clock
+
+    agent, ledger, root = _host(monkeypatch, stock=3.0)
+    deadline = time.time() + HOUR
+    debt = ledger.owe("fern", "jti-5", expires_at=deadline, amount_l=0.5)
+    [foreseen] = agent.wants.find_all_pursued()
+    assert foreseen.holds_at is not None, "minted at the lapse"
+
+    ledger.demanded("jti-5")
+    [now] = agent.wants.find_all_pursued()
+    assert now.uri == foreseen.uri and now.about == (debt,), "the same want, re-minted"
+    assert now.holds_at is None, "at no instant: the holder is waiting"
+    assert pursuit.top_up(agent, root) == [], "and the road is idle again"
+
+    presented = next(j for j in agent.pursuing() if j.uri == now.uri)
+    assert presented.holds_at is None and presented.pursuable
+    plan = agent.deliberator.decide(presented)
+    assert plan is not None and [s.action.rsplit("#", 1)[-1] for s in plan.steps] == ["Serving"]
+    assert plan.placed_at is None or plan.placed_at <= clock.now(), \
+        "placed from the present, not at the lapse less the pour"

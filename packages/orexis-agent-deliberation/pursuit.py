@@ -64,9 +64,11 @@ def handed(agent, judgment):
     with nothing derived under it, which is nothing to pursue and runs no pass."""
     if judgment.derived_from is not None or not _is_root(agent, judgment.uri):
         #  A WANT THE ROAD MINTED, or one a package speaks for: handed as it is. Its root may
-        #  have gained instances since — a second claim — so the road tops up first.
-        if judgment.derived_from is not None:
-            top_up(agent, judgment.derived_from)
+        #  have gained instances since — a second claim — so the road tops up first; and where
+        #  that re-minted THIS want — what it foresaw has arrived — the judgment in hand still
+        #  carries the old instant, so it is presented again.
+        if judgment.derived_from is not None and judgment.uri in top_up(agent, judgment.derived_from):
+            return next((d for d in agent.pursuing() if d.uri == judgment.uri), judgment)
         return judgment
     #  THE PASS STANDS ON THE ROOT, so the container's judgment of its present is in hand and
     #  the road is told it rather than reading it again — which is also what lets a root whose
@@ -119,12 +121,24 @@ def top_up(agent, root: str, *, unmet_now: bool | None = None) -> list[str]:
     #  exactly those, holding at the earliest instant among them. Every shipped world is one
     #  scope, so two properties of one bed are one want; two debts are two instances and two
     #  wants. A cluster that already has its want — `about` for `about` — is left standing.
-    standing = {w.about for w in agent.wants.find_all_by_desire(root)}
+    #
+    #  UNLESS WHAT WAS FORESEEN HAS ARRIVED. A want minted at a foreseen instant says "hold
+    #  at T", and a plan for it is placed to land at T (#619). A cluster unmet NOW whose want
+    #  still says T — the holder asked before the claim lapsed, the pot crossed before the
+    #  drift said it would — is re-minted with no instant, under the same name, so the
+    #  trace, a remembered plan and the keeper meet the want they kept and a plan is found
+    #  from the present. The instant was the road's reading of the predictions; the present
+    #  outranks it, as it does everywhere else here.
+    standing = {w.about: w for w in agent.wants.find_all_by_desire(root)}
     minted = []
     for cluster in _clusters(agent, found) or [[]]:
         about = tuple(sorted({w.about for w in cluster if w.about}))
-        if about in standing or (not about and standing):
+        stood = standing.get(about) if about else next(iter(standing.values()), None)
+        if stood is not None and not (unmet_now and stood.holds_at):
             continue
+        if stood is not None:
+            log.info("%s: what was foreseen at %s has arrived", stood.uri.rsplit("#", 1)[-1],
+                     stood.holds_at)
         instant = min((w.at for w in cluster), default=None) if ahead is not None else None
         child = mint(agent, root, holds_at=instant, about=about)
         if child is not None:

@@ -147,3 +147,24 @@ def test_a_reading_that_lifts_the_prediction_reads_the_want_met_and_withdraws_it
     assert now.uri == child.uri and now.state == "met"
     assert agent.deliberator.decide(now) is None
     assert pursuit.child_of(agent, root.uri) is None
+
+
+def test_a_pot_that_crosses_before_the_drift_said_is_wanted_now_and_not_at_the_crossing(monkeypatch):
+    """What was foreseen has arrived. The want was minted AT the predicted crossing, and a plan
+    for it is placed to land there (#619); then a reading shows the pot already below its
+    floor. The root is unmet NOW, and a want still saying "hold at the crossing" would have
+    the dose placed hours out. The road re-mints it with no instant under the same name, and
+    the pass that stood on the old judgment is handed the new one."""
+    agent = _gardener(monkeypatch, FALLING, foresight=DAY)
+    root = _stake(agent)
+    agent.deliberator.decide(root)
+    child = _stake(agent)
+    [minted] = agent.wants.find_all_pursued()
+    assert minted.uri == child.uri and minted.holds_at is not None, "minted at the crossing"
+
+    write_reading(agent, 0.05)                                       # below the floor, now
+    assert pursuit.handed(agent, child).holds_at is None, \
+        "handed the want as it stands now, not as the pass first read it"
+    [again] = agent.wants.find_all_pursued()
+    assert again.uri == minted.uri and again.holds_at is None, "the same want, at no instant"
+    assert pursuit.top_up(agent, root.uri) == [], "and once is enough"

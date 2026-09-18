@@ -139,6 +139,18 @@ found no target, raised, and read the root unmet every pass — silently, since 
 as the loud direction. And **a package's answer reaches the choir only through a module the
 choir asks**: the ledger is held by hosting and is not one, so its foresight is forwarded.
 
+**What was foreseen may arrive early, and the present outranks the instant.** A want minted
+at a foreseen instant says *hold at T*, and a plan for it is placed to land at T (#619). The
+holder presented an hour before the lapse; a reading showed the pot below its floor before
+the drift said it would. The cluster is unmet NOW and its want still said T, so a plan found
+from `pursuing()` was placed at the deadline less the pour while the buyer waited — hosting's
+own presentation path served now, and the two doors disagreed. The road re-mints such a want
+with no instant, under the same name, so the trace, a remembered plan and the keeper meet the
+want they kept; and a pass that stood on the old judgment is handed the new one. The instant
+was only ever the road's reading of the predictions. A plan ALREADY placed at the instant is
+the keeper's, and stands until its lapse or a surprise (#527) — the road does not reach into
+the ledger.
+
 - **Clustering runs within a desire**, not across. A want derived from two desires would name two
   parents, and nothing here needs it: one universal per premise is what puts soil and air under
   one desire in the first place.
