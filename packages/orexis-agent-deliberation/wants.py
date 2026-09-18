@@ -153,6 +153,7 @@ class Wants:
         """
         graph = self.graph_of(agent_id, want.uri)
         points = " ".join(f"<{want.uri}> <{p}> <{o}> ." for p, o in want.points)
+        shape = "\n  ".join(want.shape)
         timed = (f' ; orexis:holdsAt "{want.holds_at}"^^xsd:dateTime'
                  f' ; prov:generatedAtTime "{want.derived_at}"^^xsd:dateTime'
                  if want.holds_at is not None else "")
@@ -166,7 +167,8 @@ INSERT DATA {{
   <{want.uri}> a orexis:Want{timed}{about} ;
       prov:wasDerivedFrom <{want.desire}> ;
       rdfs:label {json.dumps(want.label)} .
-  {points} }}
+  {points}
+  {shape} }}
   GRAPH <{CLASSIFICATION_GRAPH}> {{
     <{graph}> a deliberation:PursuedGraph ; orexis:arrivedBy orexis:Recorded . }}
   GRAPH <{PERIODS_GRAPH}> {{

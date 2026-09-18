@@ -57,8 +57,15 @@ GRAPH graph:classification {
 }
 
 # What the road is expected to leave standing under the desire: each want by its name,
-# what it is about, and the instant it holds at where it holds at one.
+# what it is about, the instant it holds at where it holds at one, and its met-test — the
+# desire's, instantiated at the tank in trouble and narrowed to what the want is about.
 GRAPH :expected {
-  :keeper.in_range.pursued.tank1.level orexis:about :level .
-  :keeper.in_range.pursued.tank2.level orexis:about :level .
+  :keeper.in_range.pursued.tank1.level a orexis:Want ;
+      orexis:about :level ;
+      orexis:metWhen [ a sh:NodeShape ; sh:targetNode :tank1 ;
+          sh:property [ sh:path :level ; sh:minInclusive 10 ] ] .
+  :keeper.in_range.pursued.tank2.level a orexis:Want ;
+      orexis:about :level ;
+      orexis:metWhen [ a sh:NodeShape ; sh:targetNode :tank2 ;
+          sh:property [ sh:path :level ; sh:minInclusive 10 ] ] .
 }

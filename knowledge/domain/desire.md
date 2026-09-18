@@ -416,9 +416,11 @@ says it will be — and each is gone when met
 # What is derived under it
 
 The want a search is handed for a desire that reads unmet is a node of its own, bound
-`prov:wasDerivedFrom` the desire, POINTING at its met-test, avoided state
-and estimate — one owner each — and restating only the root's address, what it is about, which
-is what the menu joins a want by. It is minted by the pursuit road the first time the desire
+`prov:wasDerivedFrom` the desire, CARRYING the desire's met-test instantiated at its witness —
+the same shape, targeting the one instance in trouble, with the blocks about what the want is
+about, so *all properties in range* becomes *this tank's level from 10* and the want is judged
+on its own instance — POINTING at the desire's avoided state and estimate, one owner each, and
+restating the root's address, what it is about, which is what the affordances join a want by. It is minted by the pursuit road the first time the desire
 reads unmet, into the agent's own pursued graph (`deliberation:PursuedGraph`, projected into the
 desire modality like the promises), and named for the desire with a suffix, so a second episode
 of the same desire pursues the same node and everything keyed by it finds what it kept. While it
