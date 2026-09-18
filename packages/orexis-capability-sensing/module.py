@@ -156,6 +156,8 @@ class SensingModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
+        #  The wants I have said I cannot measure, so each is said once (`desire_urgency`).
+        self._unmeasurable: set[str] = set()
         # MINE, not the agent's. An agent may hold sensors of different modes, and it derives a
         # capability for each — but a module that took all of them would aim a cadence at a device
         # that takes no orders, and swallow readings from one it never re-aims. The derivation
@@ -263,10 +265,22 @@ class SensingModule(Module):
                                 .replace("$property", f"<{about}>")
                                 .replace("$state", f"<{state}>"))
         region = self.region(about)
-        if region is None:
-            return None
-        text = self._measure_for(query, about)
+        text = self._measure_for(query, about) if region is not None else None
         if text is None:
+            #  A STAKE NOTHING MEASURES, said ONCE per want, loudly. The planner asks this of
+            #  every candidate world and takes the flat 1.0 where nobody answers — which
+            #  makes every possible world score alike, so "no move improves" comes back with
+            #  confidence from an unrankable comparison. `orexis-validate` refuses such a
+            #  world; a volume onboarded before that gate, or started past it, meets this.
+            #  Mine to say, since the regions are mine: a want about a property with no
+            #  region under it, or a region my declaration states no measure for.
+            if judgment.uri not in self._unmeasurable:
+                self._unmeasurable.add(judgment.uri)
+                self.log.error(
+                    "%s: I hold a stake here and nothing I composed can measure it — every "
+                    "world I could reach scores alike, so a pass is about to conclude that "
+                    "nothing helps from a comparison that means nothing. `orexis-validate` "
+                    "refuses this world.", judgment.uri.rsplit("#", 1)[-1])
             return None
         outer_low = region.floor if region.floor is not None else region.low
         outer_high = region.ceiling if region.ceiling is not None else region.high

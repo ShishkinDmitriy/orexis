@@ -124,11 +124,11 @@ class Wants:
     def find_first_by_desire(self, desire: str, at: datetime | None = None) -> Want | None:
         """The want standing under one desire now, or None — the pursuit road's question.
 
-        SCOPED TO THE PURSUIT ROAD'S OWN FAMILY, because a debt is derived from a desire too —
-        the ledger mints it when a claim arrives — and is not what a search is handed; the two
-        roads meet only at #675. It asked the BINDING before, which named that difference in a
-        property where the graph's classification already said it (#681), and named it as a
-        temporal fact when what it meant was whose road the want came by.
+        SCOPED TO THE PURSUIT ROAD'S OWN FAMILY. While the ledger minted its own wants, in a
+        family of its own, this had to say which road's it asked for; one road derives every
+        want now (#675) and the scope is simply the family every derived want is in. It asked
+        the BINDING before, which named that difference in a property where the graph's
+        classification already said it (#681).
         """
         found = self._select(
             f"?w a orexis:Want ; prov:wasDerivedFrom <{desire}> .", at, limit=1,
@@ -233,7 +233,9 @@ SELECT ?w ?desire ?label ?holdsAt ?since (GROUP_CONCAT(STR(?about); separator=" 
     GRAPH <{PERIODS_GRAPH}> {{ ?g dcterms:temporal ?period . ?period orexis:end ?end }}
     FILTER(?end <= "{now}"^^xsd:dateTime) }}
 }} GROUP BY ?w ?desire ?label ?holdsAt ?since ORDER BY ?w LIMIT {int(limit)} OFFSET {int(offset)}"""))
-        if len(rows) == limit:
+        #  A PAGE OF ONE IS ALWAYS FULL: `find_first_by_x` asks for one, and one standing is
+        #  the ordinary answer, not a leak.
+        if limit > 1 and len(rows) == limit:
             log.warning("wants: a full page of %d at offset %d — page or there is a leak",
                         limit, offset)
         return [Want(uri=r["w"], desire=r.get("desire", ""),
