@@ -20,5 +20,6 @@ INSERT { GRAPH $derived {
 $given
 WHERE  {
     ?agent a orexis:Agent ; orexis:localId ?id .
-    BIND(IRI(CONCAT("http://example.org/orexis/graph/beliefs/", ?id)) AS ?graph)
+    orexis:PickRecordGraph orexis:graphPrefix ?prefix .
+    BIND(IRI(CONCAT(?prefix, ?id)) AS ?graph)
 }

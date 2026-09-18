@@ -656,6 +656,33 @@ def test_the_kernel_names_no_domain():
                 f"{path}:{n} names the water domain — the kernel must survive the domain swap"
 
 
+def test_no_source_spells_a_per_agent_graphs_prefix():
+    """A per-agent graph's name has ONE owner: the `orexis:graphPrefix` its class declares.
+
+    Boot classifies an agent's graphs by those prefixes, and every helper that names one for
+    a write reads the same prefix through `graph_prefix` — so a graph is renamed in its T-Box
+    and nowhere else. Ten helpers spelled their prefix beside the T-Box's before this, and one
+    rule minted the beliefs graph outright; nothing checked the two spellings agreed. This
+    holds every `.py`, `.ru` and `.rq` outside the T-Box to naming none — neither the full
+    prefix nor its quoted tail (`"roots/"`). The sovereign asked which graphs could be renamed
+    freely; the answer was none, and this is what makes it all of them.
+    """
+    from assembly import loader
+
+    prefixes = loader.graph_prefixes()
+    assert len(prefixes) >= 10, "graphPrefix stopped matching — this guard checks nothing"
+    offenders = []
+    for path in [*loader.sources("*.py"), *loader.sources("*.ru"), *loader.sources("*.rq")]:
+        if "ontology.py" in path.name or path.name.startswith("test_"):
+            continue
+        text = path.read_text()
+        for cls, prefix in prefixes.items():
+            tail = prefix.rsplit("/", 2)[-2] + "/"
+            if prefix in text or f'"{tail}"' in text or f"'{tail}'" in text:
+                offenders.append(f"{path.relative_to(REPO_ROOT)} spells {cls.rsplit('#', 1)[-1]}'s prefix")
+    assert not offenders, "\n".join(offenders)
+
+
 def test_the_kernel_namespace_holds_no_individuals():
     """A world owns its individuals; orexis: is the vocabulary's (#179's other half).
 

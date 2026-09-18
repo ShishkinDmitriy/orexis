@@ -699,6 +699,23 @@ def external_prefixes() -> dict[str, str]:
 
 
 @lru_cache(maxsize=1)
+def graph_prefixes() -> dict[str, str]:
+    """Where each per-agent graph class puts its graphs: class IRI -> `orexis:graphPrefix`,
+    read off every loaded ontology once. THE ONE OWNER OF A PER-AGENT GRAPH'S NAME: boot
+    classifies an agent's graphs by these prefixes, and the helpers that name one for a
+    write build it from here — so a graph is renamed in its T-Box and nowhere else, and no
+    Python file spells a prefix (`tests/test_layout.py` refuses one that does)."""
+    import rdflib
+
+    out: dict[str, str] = {}
+    for path in ontology_files():
+        g = rdflib.Graph().parse(path, format="turtle")
+        for cls, prefix in g.subject_objects(rdflib.URIRef("http://example.org/orexis#graphPrefix")):
+            out[str(cls)] = str(prefix)
+    return out
+
+
+@lru_cache(maxsize=1)
 def prefixes() -> dict[str, str]:
     """Every project-internal namespace there is, label -> IRI, found by looking.
 
