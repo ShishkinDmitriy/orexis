@@ -30,7 +30,7 @@ knowledge/decisions/an-intention-is-a-plan-committed-to.md.
 from __future__ import annotations
 
 import logging
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 
 from .want import Want
@@ -66,15 +66,29 @@ def handed(agent, judgment):
         return judgment
     child = child_of(agent, judgment.uri)
     if child is None:
+        instant = None
         if judgment.is_met:
             #  MET NOW, AND PREDICTED NOT TO BE (#619): a crossing the root foresees derives a
             #  want that must hold AT that instant; nothing foreseen is nothing to pursue.
             instant = foreseen(agent, judgment.uri)
             if instant is None:
                 return None
-            child = mint(agent, judgment.uri, holds_at=instant)
+            found = [w for w in witnesses_of(agent, judgment.uri) if w.at == instant]
         else:
-            child = mint(agent, judgment.uri)
+            #  UNMET NOW: the same select at the present says which instances are in trouble.
+            found = witnesses_of(agent, judgment.uri, now=True)
+        #  ONE WANT PER SCOPE OF WHAT IS IN TROUBLE (one-road-derives-every-want): the
+        #  witnesses clustered by which of them some action can move together, and a want
+        #  minted per cluster about exactly those, holding at the instant they share — the
+        #  foreseen crossing, or none for a want unmet now. Every shipped world is one scope,
+        #  so this is one want; the road is the same when it is not. Where the select yields
+        #  no rows — a shape naming nothing per block, or a met-test the compiler refused —
+        #  one want about everything the desire is about, which is what every want was.
+        clusters = _clusters(agent, found) or [[]]
+        minted = [mint(agent, judgment.uri, holds_at=instant,
+                       about=tuple(sorted({w.about for w in cluster if w.about})))
+                  for cluster in clusters]
+        child = next((c for c in minted if c is not None), None)
         if child is None:
             return judgment
     #  AS THE CONTAINER PRESENTS IT: a want met at an instant carries its instant, its
@@ -82,6 +96,36 @@ def handed(agent, judgment):
     #  which the root's row knows; an at-end want is the root's row under the derived name.
     presented = next((d for d in agent.pursuing() if d.uri == child and d.holds_at is not None), None)
     return presented if presented is not None else replace(judgment, uri=child, derived_from=judgment.uri)
+
+
+def _clusters(agent, witnesses: list) -> list[list]:
+    """The witnesses grouped by SCOPE — which of them some action can move together — so a
+    want is minted per group. Two in one scope are one want and one cone; two in different
+    scopes are two, planned apart and concatenated, which is the mechanism `scope.md` says the
+    concept exists for. A witness naming no property joins every group it could belong to, which
+    with one scope is the one group.
+
+    Measured on every shipped world: one scope, so one group. The code path is the same the
+    day a world splits, and a scope is over PREDICATES — two debts to two hosts are one scope,
+    correctly, since they may draw from one vessel."""
+    if not witnesses:
+        return []
+    from . import relevance
+    parts = agent.beliefs.remember("deliberation:scopes", lambda: relevance.scopes(
+        relevance.actions_of(agent.beliefs.query), relevance.rule_edges()))
+    def scope_of(about):
+        return next((i for i, part in enumerate(parts) if about in part), None)
+    groups: dict = {}
+    loose = []
+    for w in witnesses:
+        key = scope_of(w.about) if w.about else None
+        (groups.setdefault(key, []) if key is not None else loose).append(w)
+    if not groups:
+        return [loose]
+    for w in loose:
+        for group in groups.values():
+            group.append(w)
+    return list(groups.values())
 
 
 def _is_root(agent, want: str) -> bool:
@@ -111,14 +155,19 @@ def crossing_of(agent, root: str) -> datetime | None:
 
 
 def _unmet_select_of(agent, root: str) -> str | None:
-    """The root's own met-test, compiled to the select whose rows are its violations — the
-    same compile the planner does in `_begin` — from public knowledge and the agent's roots
-    graph, where a root's shape lives since #644. Cached per root on the agent: a root never
-    changes while the agent runs. None where the root states no shape or the compiler refuses."""
+    """The root's own met-test, compiled to the select whose rows are its VIOLATIONS — `?this`,
+    which constraint, and `?_about` where the constraint's block says what it is about — from
+    public knowledge and the agent's roots graph, where a root's shape lives since #644. Cached
+    per root on the agent: a root never changes while the agent runs. None where the root states
+    no shape or the compiler refuses.
+
+    THE REPORT AND NOT THE FOCUS NODES (one-road-derives-every-want): a desire universal over
+    several properties fails per property, and the rows are what say which. The planner
+    compiles the same shape the same way for the law it holds candidates to."""
     from rdflib import URIRef
 
     from orexis_agent_progression.ontology import roots_graph
-    from orexis_agent_progression.violation import Unsupported, unmet_select
+    from orexis_agent_progression.violation import Unsupported, report_select
 
     from .conformance import graph_from
 
@@ -131,7 +180,7 @@ def _unmet_select_of(agent, root: str) -> str | None:
         shape = rows[0]["s"]
         try:
             shapes = graph_from(agent.beliefs, *agent.beliefs.public_graphs(), roots_graph(agent.id))
-            select = unmet_select(shapes.cbd(URIRef(shape)), URIRef(shape))
+            select = report_select(shapes.cbd(URIRef(shape)), URIRef(shape))
         except Unsupported as exc:
             log.warning("%s: its met-test cannot be compiled, so no crossing is read for it: %s",
                         root.rsplit("#", 1)[-1], exc)
@@ -139,28 +188,56 @@ def _unmet_select_of(agent, root: str) -> str | None:
     return select
 
 
-def crossing_row_of(agent, root: str) -> tuple[datetime, datetime] | None:
-    """When the world a root is about is PREDICTED to leave what the root wants, or None
-    (#643, the-drift-is-sensings-and-its-result-is-predictions): the start of the earliest
-    prediction at which the root reads UNMET — its own met-test asked through the door at each
-    prediction's start, where the door hands the prediction holding then beside the present.
-    A prediction typed with the region band and the one below reads unmet, so the safe
-    direction (#633) falls out of the bands, and no kernel line knows a rate. The second
-    instant is the same start: what a pass for the derived want is clocked from."""
+@dataclass(frozen=True)
+class Witness:
+    """One way a desire is failing, and when it first does: the focus node that failed, the
+    constraint it failed, what that constraint is about where its block says, and the instant.
+    A universal is refuted by a witness, and the want minted under it is the universal
+    instantiated at that witness (one-road-derives-every-want)."""
+
+    instance: str
+    constraint: str
+    about: str | None
+    at: datetime
+
+
+def witnesses_of(agent, root: str, *, now: bool = False) -> list[Witness]:
+    """Every (instance, constraint) under which `root` reads unmet, each at the FIRST instant it
+    does — the start of the earliest prediction where it fails, or now where `now` is asked.
+
+    The root's own met-test asked through the door at each prediction's start, where the door
+    hands the prediction holding then beside the present (#643). A prediction typed with the
+    region band and the one below reads unmet, so the safe direction (#633) falls out of the
+    bands, and no kernel line knows a rate. One select per desire is the whole of the
+    decomposition: its rows ARE the instances in trouble, and `?_about` says which property
+    where the desire's shape states it per block.
+    """
     select = _unmet_select_of(agent, root)
     if select is None:
-        return None
-    for graph, start, end in agent.beliefs.prediction_windows():
-        if start is None:
-            continue
+        return []
+    instants = ([clock.now()] if now else []) + [
+        start for _graph, start, _end in agent.beliefs.prediction_windows() if start is not None]
+    seen: dict[tuple[str, str], Witness] = {}
+    for at in instants:
         try:
-            rows = bindings(agent.beliefs.query_at(select, at=start))
+            rows = bindings(agent.beliefs.query_at(select, at=at))
         except Exception as exc:                                    # noqa: BLE001
-            log.error("%s: the crossing could not be read at %s: %s", root.rsplit("#", 1)[-1], start, exc)
-            return None
-        if rows:
-            return start, start
-    return None
+            log.error("%s: the crossing could not be read at %s: %s", root.rsplit("#", 1)[-1], at, exc)
+            return []
+        for r in rows:
+            key = (r["this"], r.get("_constraint", ""))
+            if key not in seen:
+                seen[key] = Witness(instance=r["this"], constraint=r.get("_constraint", ""),
+                                    about=r.get("_about"), at=at)
+    return sorted(seen.values(), key=lambda w: (w.at, w.instance, w.constraint))
+
+
+def crossing_row_of(agent, root: str) -> tuple[datetime, datetime] | None:
+    """When the world a root is about is PREDICTED to leave what the root wants, or None: the
+    earliest witness among the predictions. The second instant is the same start — what a pass
+    for the derived want is clocked from. Kept for its readers; the rows are `witnesses_of`."""
+    found = witnesses_of(agent, root)
+    return (found[0].at, found[0].at) if found else None
 
 
 def foresees_of(agent, root: str) -> float | None:
@@ -206,13 +283,24 @@ def root_of(agent, want: str) -> str | None:
     return found.uri if found else None
 
 
-def mint(agent, root: str, holds_at: datetime | None = None) -> str | None:
+def mint(agent, root: str, holds_at: datetime | None = None, about: tuple = ()) -> str | None:
     """Derive the want pursued under `root` and write it to the pursued graph. Its name is the
     root's, suffixed, so a second episode of the same root pursues the same node and everything
     keyed by it — the planner, a remembered plan, the trace — finds what it kept. None, and the
     root stays the goal, where the root states its met-test inline: a blank node has no name
     another graph could point at, and copying it would make a second owner of the claim."""
-    child = root + ".pursued"
+    #  NAMED FOR WHAT IT IS ABOUT where that is NARROWER than the desire, so two wants under
+    #  one desire — soil now, air later — are two nodes; and for the desire alone where it is
+    #  not, which is every want there was before and keeps the trace, a remembered plan and
+    #  the keeper meeting what they kept. A desire about one property mints `<desire>.pursued`
+    #  exactly as it always did.
+    desire_abouts = tuple(sorted(
+        r["a"] for r in bindings(agent.desires.query_union(
+            f"SELECT ?a WHERE {{ <{root}> orexis:about ?a }}"))))
+    abouts = about or desire_abouts
+    narrower = bool(about) and set(about) != set(desire_abouts)
+    suffix = "".join(f".{a.rsplit('#', 1)[-1].rsplit('/', 1)[-1]}" for a in about) if narrower else ""
+    child = root + ".pursued" + suffix
     points_said = []
     #  The raw SPARQL-JSON rows, because the TYPE of the object matters here and
     #  `bindings` flattens it away: a blank node cannot be pointed at from another graph.
@@ -224,7 +312,12 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
             log.warning("%s states its %s inline; it is pursued itself", root.rsplit("#", 1)[-1],
                         sol["p"]["value"].rsplit("#", 1)[-1])
             return None
+        #  WHAT IT IS ABOUT is the witnesses' where the shape named them per block, and the
+        #  desire's whole where it did not; the met-test and the rest are pointed at as ever.
+        if sol["p"]["value"].endswith("#about"):
+            continue
         points_said.append(sol)
+
     labels = bindings(agent.desires.query_union(
         f"SELECT ?l WHERE {{ <{root}> rdfs:label ?l }} LIMIT 1"))
     label = "pursued: " + (labels[0]["l"] if labels else root.rsplit("#", 1)[-1])
@@ -245,6 +338,7 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
         uri=child, holder=agent.me.uri, desire=root, label=label, ends=ends,
         holds_at=holds_at.isoformat() if holds_at is not None else None,
         derived_at=clock.now().isoformat() if holds_at is not None else None,
+        about=abouts,
         points=tuple((sol["p"]["value"], sol["o"]["value"]) for sol in points_said)))
     log.info("%s reads unmet: pursuing %s", root.rsplit("#", 1)[-1], child.rsplit("#", 1)[-1])
     return child

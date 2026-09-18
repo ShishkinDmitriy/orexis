@@ -83,8 +83,10 @@ class Judgments:
         #  ASKED OF THE COLLECTION THAT HOLDS THEM (#618): the want derived under each root,
         #  and the instant it must hold at. This was a select here, keyed on the agent and on
         #  the parent being a desire — every column of which is a field of `Want`.
-        children = {w.desire: w for w in self._agent.wants.find_all_pursued(now)}
-        derived = {w.uri for w in children.values()}
+        children: dict = {}
+        for w in self._agent.wants.find_all_pursued(now):
+            children.setdefault(w.desire, []).append(w)
+        derived = {w.uri for ws in children.values() for w in ws}
         for wants in self._agent.ask(DESIRES, now):
             for judgment in wants:
                 if judgment.uri not in derived:
@@ -151,14 +153,20 @@ class Judgments:
             seen[row["want"]] = Judgment(uri=row["want"],
                                        urgency=1.0 if violated else 0.0,
                                        state="unmet" if violated else "met")
-        for root, want in children.items():
+        #  A ROOT WITH WANTS UNDER IT IS PRESENTED AS THEM — one judgment per want, each
+        #  carrying the root's own measure under the want's name. Several where the witnesses
+        #  fell in several scopes (one-road-derives-every-want); one everywhere shipped.
+        for root, wants in children.items():
             if root not in seen:
                 continue
-            seen[root] = replace(seen[root], uri=want.uri, derived_from=root)
-            if want.holds_at:
-                seen[root] = self._at_instant(
-                    seen[root], root, datetime.fromisoformat(want.holds_at),
-                    datetime.fromisoformat(want.derived_at) if want.derived_at else None, now)
+            base = seen.pop(root)
+            for want in wants:
+                presented = replace(base, uri=want.uri, derived_from=root)
+                if want.holds_at:
+                    presented = self._at_instant(
+                        presented, root, datetime.fromisoformat(want.holds_at),
+                        datetime.fromisoformat(want.derived_at) if want.derived_at else None, now)
+                seen[want.uri] = presented
         return sorted(seen.values(), key=lambda g: -g.urgency)
 
     def _at_instant(self, row: Judgment, root: str, holds_at: datetime, since: datetime | None,

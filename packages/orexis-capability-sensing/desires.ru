@@ -191,6 +191,7 @@ INSERT { GRAPH $derived {
         sh:property [
             sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
             orexis:violationIs orexis:Unmeasured ;
+            orexis:about ?property ;
             sh:qualifiedMinCount 1 ;
             sh:qualifiedValueShape [
                 sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
@@ -207,6 +208,7 @@ INSERT { GRAPH $derived {
         sh:property [
             sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
             orexis:violationIs orexis:Below ;
+            orexis:about ?property ;
             sh:qualifiedMaxCount 0 ;
             sh:qualifiedValueShape [
                 sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
@@ -215,6 +217,7 @@ INSERT { GRAPH $derived {
         sh:property [
             sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
             orexis:violationIs orexis:Above ;
+            orexis:about ?property ;
             sh:qualifiedMaxCount 0 ;
             sh:qualifiedValueShape [
                 sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;

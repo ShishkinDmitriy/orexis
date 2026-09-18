@@ -40,7 +40,10 @@ class Want:
 
     uri: str
     label: str = ""
-    about: str | None = None
+    #  WHAT IT IS ABOUT, several where the desire is: a soil-and-air want is about both, and
+    #  a want minted for the soil alone is about the soil alone. It was one string, which the
+    #  greenhouse already contradicted (#566); the tuple is the properties in trouble.
+    about: tuple = ()
     #  What it POINTS AT rather than restates: the desire's met-test, avoided state and
     #  estimate, one owner each — as `(predicate, object)` IRIs.
     points: tuple = ()

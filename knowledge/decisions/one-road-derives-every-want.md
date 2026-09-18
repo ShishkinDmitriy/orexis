@@ -102,12 +102,20 @@ right before this record did — *a desire is the top of one tree of wants*.
 
 # What is left
 
-- **`crossing_row_of` returns a boolean per root.** It uses `unmet_select` and asks *any rows?*
-  It becomes `report_select` and returns the rows — instance, constraint, first instant. That is
-  stage one and most of the mechanism.
-- **`Want.about` is single-valued** and a cluster is about several things. It becomes a tuple,
-  which is the lossiness `Wants` was built with and noted then.
-- **`mint` names the want `<desire>.pursued`**, once per desire ever. It names one per cluster.
+Stage one is built. `witnesses_of` runs the desire's report select — `?this`, which constraint,
+and `?_about` where the constraint's block states it — now and at each prediction's start, and
+returns the rows with their first instants; `_clusters` groups them by scope; `mint` names one
+want per cluster, about exactly those, suffixed for what it is about only where that is narrower
+than the desire, so a desire about one property mints `<desire>.pursued` exactly as before.
+`Want.about` is a tuple. Measured on the greenhouse: a dry, warm bed mints a want about the soil
+alone and plans a dose alone; a cold, dry bed mints one want about both.
+
+Two things were learned building it. **`GROUP_CONCAT` over an IRI binds nothing** on this
+engine — no column, no error — and over `STR(?x)` it binds; the trap AGENTS.md records, arriving
+through aggregation, and pinned in `test_wants.py`. And **the per-block `orexis:about` is an
+authoring convention**: sensing's region shape and the greenhouse's state it per constraint,
+and a shape that does not falls back to the desire's whole `orexis:about`, which is what every
+want was before.
 - **The ledger's met-test and prediction**, then `owe` stops minting and the `is_obligation`
   sites collapse. #675 carries this and is superseded in part by the framing here.
 - **Clustering runs within a desire**, not across. A want derived from two desires would name two

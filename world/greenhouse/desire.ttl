@@ -33,6 +33,7 @@ GRAPH <http://example.org/orexis/graph/desire/asserted> {
       sh:property [
           sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
           orexis:violationIs orexis:Below ;
+          orexis:about water:SoilMoisture ;
           sh:qualifiedMaxCount 0 ;
           sh:qualifiedValueShape [
               sh:property [ sh:path sosa:observedProperty ; sh:hasValue water:SoilMoisture ] ;
@@ -41,6 +42,7 @@ GRAPH <http://example.org/orexis/graph/desire/asserted> {
       sh:property [
           sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
           orexis:violationIs orexis:Below ;
+          orexis:about water:AirTemperature ;
           sh:qualifiedMaxCount 0 ;
           sh:qualifiedValueShape [
               sh:property [ sh:path sosa:observedProperty ; sh:hasValue water:AirTemperature ] ;
