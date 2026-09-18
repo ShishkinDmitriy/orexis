@@ -65,9 +65,24 @@ market:Acquiring
     #  link by link; only the last — that the good RAISES this property — is stated, once, by
     #  the domain, because it is physics. The valuation joins through the venue's good (#198):
     #  property alone put both directions on both rows the day two venues priced one property.
+    #
+    #  NAMED FOR THE WANT IT SERVES, and a debt is one (one-road-derives-every-want): the want
+    #  the road mints under *no overdue debts* is about a debt, and a debt owed to a buyer in
+    #  a venue I host is served from the vessel my valve there draws from — the very subject
+    #  this venue's winnings reach. So the refill is named for that want too, which is how
+    #  "refill, then serve" is found by a search that takes only rows named for its want; the
+    #  chain is the market's to state, and it is stated here rather than known by the search.
     orexis:available """
         SELECT DISTINCT ?want ?about ?via ?direction WHERE {
-          VALUES (?want ?about) { $wants }
+          {
+            VALUES (?want ?about) { $wants }
+          } UNION {
+            VALUES (?want ?debt) { $wants }
+            ?debt market:owedTo ?buyer .
+            $me market:hosts ?served ; actuation:hasActuator ?valve .
+            ?buyer market:bidsIn ?served .
+            ?valve actuation:drawsFrom ?subject .
+          }
           $me orexis:actsFor ?subject .
           $me market:bidsIn ?via .
           ?via market:marketFor ?src .
@@ -412,14 +427,19 @@ market:Presenting
 market:Serving
     a orexis:Action ;
 
-    #  AVAILABLE as a DUTY — ?for_agent bound — for each buyer this venue admits who acts for a
-    #  subject my valve serves: the ACL's shape applied to obligation, so a presentation from
-    #  anyone else is a forgery before it is a duty. The valuation is tied by the RECIPIENT's
-    #  stated need, not the good alone (#198 from the other side): a valve serving a pot must not
-    #  also claim to move that pot's stored litres. Disclosure, not a filter — what an obligation
-    #  makes me do arrives as a want, and the deliberator ranges over it like any other.
+    #  AVAILABLE as a DUTY — ?for_agent bound — for each WANT this agent holds about a debt,
+    #  to a buyer this venue admits who acts for a subject my valve serves: the ACL's shape
+    #  applied to obligation, so a presentation from anyone else is a forgery before it is a
+    #  duty. THE ROW NAMES THE WANT IT SERVES: the want the road mints under *no overdue
+    #  debts* is about the debt (one-road-derives-every-want), the debt names whom it is owed
+    #  to, and joining the two here is what lets the search treat a serve as it treats any row
+    #  that names a want — the kernel never learns what a counterparty is. The valuation is
+    #  tied by the RECIPIENT's stated need, not the good alone (#198 from the other side): a
+    #  valve serving a pot must not also claim to move that pot's stored litres.
     orexis:available """
-        SELECT ?about ?via ?direction ?for_agent WHERE {
+        SELECT ?want ?about ?via ?direction ?for_agent WHERE {
+          VALUES (?want ?debt) { $wants }
+          ?debt market:owedTo ?for_agent .
           $me market:hosts ?venue ; actuation:hasActuator ?via .
           ?venue market:marketFor ?source .
           ?via actuation:drawsFrom ?source ;
@@ -451,7 +471,8 @@ market:Serving
         CONSTRUCT {
             ?obl market:dischargedAt ?now .
         } WHERE {
-            ?obl market:forClaim $claim ; market:amountL ?litres .
+            $want orexis:about ?obl .
+            ?obl market:amountL ?litres .
             FILTER NOT EXISTS { ?obl market:dischargedAt ?done }
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:drawsFrom ?vessel .
@@ -470,7 +491,8 @@ market:Serving
     #  computed anywhere else would be a second claim about when the world should answer.
     orexis:landsAfter """
         SELECT ?seconds WHERE {
-            ?obl market:forClaim $claim ; market:amountL ?litres .
+            $want orexis:about ?obl .
+            ?obl market:amountL ?litres .
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:maxDoseMl ?cap ;
                    actuation:mlPerSecond ?rate .

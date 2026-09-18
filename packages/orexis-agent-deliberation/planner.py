@@ -1182,21 +1182,21 @@ class Planner:
         for row in self.agent.afforder.offered(
                 self._imagined, at=self._at(node), world=self._graph(node),
                 only=self._compiled.asked):
-            if judgment.is_obligation:
-                #  A obligation may be served by its counterparty's honoured row, or approached
-                #  through this agent's own levers — refilling the vessel is an Acquire on its
-                #  own stake, and that is the whole of why an obligation is in the search (#255).
-                if not (row.is_own or row.for_agent == judgment.owed_to):
+            #  A ROW THAT NAMES A WANT SERVES THAT WANT — Dosing for this pot and not the next,
+            #  and a look for this instrument. A row owed to someone serves the want it names
+            #  and no other: the market joined it to the debt the want is about, so a debt is
+            #  served by its counterparty's row or approached through this agent's own levers,
+            #  and which of those levers serve a debt — the refill of the vessel a serve draws
+            #  from (#255) — the market says by naming the want on them. What a counterparty
+            #  is, this file does not know. A want ABOUT NOTHING — a call — ranges over every
+            #  row of the agent's own, because what would raise the stock a round needs is a
+            #  row the stake names (the dealer's two-step).
+            if not row.is_own:
+                if row.want != judgment.uri:
                     continue
-            else:
-                if not row.is_own:
-                    continue
-                #  A row that names a want serves that want. A want ABOUT NOTHING — a call —
-                #  ranges over every row of the agent's own, because what would raise the
-                #  stock a round needs is a row the stake names (the dealer's two-step).
-                if (row.want is not None and row.want != judgment.uri
-                        and judgment.uri in self._compiled.about_of):
-                    continue
+            elif (row.want is not None and row.want != judgment.uri
+                    and judgment.uri in self._compiled.about_of):
+                continue
             yield row
 
     def _begin(self, judgment: Judgment) -> _Node:
@@ -1630,7 +1630,6 @@ class Planner:
         #  never a prefix of a longer one, and a token nobody bound refuses.
         return {
             "me": self.me.uri,
-            "claim": Raw(f'"{judgment.claim}"') if judgment and judgment.claim else Raw('"urn:nobody"'),
             "subject": self.me.acts_for if self.me.acts_for else "urn:nobody",
             #  THE WANT AND WHAT IT IS ABOUT, carried from the row to the rule and never read
             #  here: `$about` is whatever the want's deriver said (`orexis:about`) — a property,

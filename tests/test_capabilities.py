@@ -95,7 +95,7 @@ def test_supplier_gets_hosting_actuation_and_matching(me):
                                            BIDDING, LINKING}
 
 
-def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing():
+def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing(monkeypatch):
     """The split #233 asked for, stated as the two agents that separate it.
 
     The city keeps a ledger and deduces nothing: it acts for a mains that states a capacity and
@@ -118,23 +118,30 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing():
     from orexis_agent_deliberation.affordances import Affordances
     from orexis_capability_sensing.regions import regions_of
 
-    from orexis_agent_progression.ontology import beliefs_graph
-    from conftest import desires_build
+    from conftest import build_agent
 
     st = genesis_store()
     uri = lambda who: load_wired(st.query, who).uri
-
-    def honoured(who):
-        return [r for r in Afforder(Actions(st), Affordances(st), desires_build(st, who), uri(who), beliefs_graph(who)).offered()
-                if not r.is_own]
 
     assert not regions_of(st.query, uri("city")), \
         "a mains states no ranges — the city wants nothing for itself"
     assert regions_of(st.query, uri("fern")), \
         "a plant states ranges, so it holds regions of its own"
 
-    assert honoured("city"), "the city hosts a venue and holds the valve that serves it"
-    assert not honoured("fern"), "a plant holds no lever anyone may demand"
+    #  WHAT IS HONOURED IS A ROW PER WANT ABOUT A DEBT, named for it — so the lever others may
+    #  demand is offered once somebody has a claim on it, and a plant, which keeps no
+    #  ledger anyone could write a debt into, never shows one.
+    city = build_agent("city", st, monkeypatch)
+    ledger = city.hosting().ledger
+    ledger.owe("supplier", "j-split", amount_l=0.5)
+    ledger.demanded("j-split")
+    honoured = [r for r in city.afforder.offered() if not r.is_own]
+    assert honoured and all(r.want in {j.uri for j in ledger.obligations()} for r in honoured), \
+        "the city hosts a venue and holds the valve that serves it"
+    fern = build_agent("fern", genesis_store(), monkeypatch)
+    assert not any(m.name == "hosting" for m in fern.modules), "a plant keeps no ledger"
+    assert not [r for r in fern.afforder.offered() if not r.is_own], \
+        "a plant holds no lever anyone may demand"
 
 
 def test_only_a_host_matches(me):
