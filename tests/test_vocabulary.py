@@ -16,7 +16,7 @@ from __future__ import annotations
 import pytest
 
 from agent import genesis, vocabulary
-from orexis_agent_progression.ontology import OREXIS, beliefs_graph, PROGRESSION
+from orexis_agent_progression.ontology import OREXIS, picks_graph, PROGRESSION
 from orexis_agent_progression.store import Store, bindings
 
 from conftest import WORLDS_ROOT, genesis_store
@@ -55,7 +55,7 @@ def _aged_store():
     not move, because birth happens once.
     """
     st = genesis_store(world="simulation")
-    st.put_graph(beliefs_graph("fern"), BEFORE_THE_SWEEP)
+    st.put_graph(picks_graph("fern"), BEFORE_THE_SWEEP)
     return st
 
 
@@ -105,8 +105,8 @@ def test_beliefs_a_vocabulary_behind_are_seen():
     """The whole of #87: the store holds values, and the code cannot read them."""
     st = _aged_store()
     found = vocabulary.stale(st)
-    assert beliefs_graph("fern") in found, "a volume behind the vocabulary looked current"
-    behind = found[beliefs_graph("fern")]
+    assert picks_graph("fern") in found, "a volume behind the vocabulary looked current"
+    behind = found[picks_graph("fern")]
     assert OREXIS + "slowSleepS" in behind
     assert behind[OREXIS + "slowSleepS"].endswith("sensing#slowSleepS")
 
@@ -120,7 +120,7 @@ def test_what_the_agent_would_have_read_instead_is_nothing():
     """
     st = _aged_store()
     rows = bindings(st.query(
-        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % beliefs_graph("fern")))
+        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % picks_graph("fern")))
     assert rows == [], "this test's premise is gone — the old spelling now answers"
 
 
@@ -146,7 +146,7 @@ def test_migration_keeps_the_value_and_changes_only_the_spelling():
     st = _aged_store()
     vocabulary.check(st, migrating=True)
     rows = bindings(st.query(
-        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % beliefs_graph("fern")))
+        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % picks_graph("fern")))
     assert [r["v"] for r in rows] == ["600"]
     assert vocabulary.stale(st) == {}
 
@@ -159,7 +159,7 @@ def test_migration_moves_every_belief_not_only_the_one_looked_at():
                   "review:reviewIntervalS 300", "water:litresPerFraction 2.0"):
         predicate, value = query.split()
         rows = bindings(st.query(
-            "SELECT ?v WHERE { GRAPH <%s> { ?a %s ?v } }" % (beliefs_graph("fern"), predicate)))
+            "SELECT ?v WHERE { GRAPH <%s> { ?a %s ?v } }" % (picks_graph("fern"), predicate)))
         assert rows and rows[0]["v"].startswith(value.rstrip("0").rstrip(".")), predicate
 
 
@@ -167,7 +167,7 @@ def test_a_term_with_no_successor_is_refused_rather_than_dropped():
     """Deletion is not renaming, and guessing at it would lose a value silently."""
     st = _aged_store()
     st.update("INSERT DATA { GRAPH <%s> { <%sfern_agent> <%sabolishedS> 7 } }"
-              % (beliefs_graph("fern"), OREXIS, OREXIS))
+              % (picks_graph("fern"), OREXIS, OREXIS))
     with pytest.raises(SystemExit) as exc:
         vocabulary.check(st, migrating=True)
     assert "abolishedS" in str(exc.value)
@@ -197,7 +197,7 @@ def test_an_aged_volume_refuses_to_open(tmp_path, monkeypatch):
 
     genesis.open_belief_base(world, "fern", path)  # born, current
     aged = Store(genesis._belief_room(path))
-    aged.put_graph(beliefs_graph("fern"), BEFORE_THE_SWEEP)  # and then the code moved on
+    aged.put_graph(picks_graph("fern"), BEFORE_THE_SWEEP)  # and then the code moved on
     del aged
 
     with pytest.raises(SystemExit, match="slowSleepS"):
@@ -210,13 +210,13 @@ def test_and_opens_when_asked_to_migrate(tmp_path, monkeypatch):
 
     genesis.open_belief_base(world, "fern", path)
     aged = Store(genesis._belief_room(path))
-    aged.put_graph(beliefs_graph("fern"), BEFORE_THE_SWEEP)
+    aged.put_graph(picks_graph("fern"), BEFORE_THE_SWEEP)
     del aged
 
     monkeypatch.setenv("OREXIS_MIGRATE_BELIEFS", "1")
     st = genesis.open_belief_base(world, "fern", path)
     rows = bindings(st.query(
-        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % beliefs_graph("fern")))
+        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % picks_graph("fern")))
     assert [r["v"] for r in rows] == ["600"]
 
 
@@ -226,17 +226,17 @@ def test_a_package_to_package_move_is_migrated_by_the_same_lookup():
     kernel one. The successor is found by local name whatever namespace the old spelling wore,
     so a term may move house twice and a volume from either era still follows."""
     st = genesis_store(world="simulation")
-    st.put_graph(beliefs_graph("fern"), f"""
+    st.put_graph(picks_graph("fern"), f"""
 @prefix old: <http://example.org/orexis/perception#> .
 @prefix orexis: <{OREXIS}> .
 
 orexis:fern_agent old:fastSleepS 30 ; old:slowSleepS 600 ; old:readingGraceS 45 .
 """)
     found = vocabulary.stale(st)
-    assert beliefs_graph("fern") in found, "a post-sweep volume looked current"
+    assert picks_graph("fern") in found, "a post-sweep volume looked current"
     vocabulary.check(st, migrating=True)
     rows = bindings(st.query(
-        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % beliefs_graph("fern")))
+        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % picks_graph("fern")))
     assert [r["v"] for r in rows] == ["600"]
     assert vocabulary.stale(st) == {}
 
@@ -251,14 +251,14 @@ def test_a_term_that_changed_namespace_and_name_still_migrates(tmp_path):
     `intention:outcome` had two candidates by local name with nothing able to choose. So a
     MOVE is data — a decision made once, written down, and preferred over the inference."""
     st = genesis_store(world="simulation")
-    st.put_graph(beliefs_graph("fern"), f"""
+    st.put_graph(picks_graph("fern"), f"""
 @prefix old: <http://example.org/orexis/desire#> .
 @prefix older: <http://example.org/orexis/intention#> .
 <http://example.org/orexis/world/simulation#fern_agent>
     old:desires <http://example.org/orexis#r> ;
     older:outcome "dropped" .""")
     found = vocabulary.stale(st)
-    successors = found[beliefs_graph("fern")]
+    successors = found[picks_graph("fern")]
     assert successors["http://example.org/orexis/desire#desires"] == OREXIS + "holds"
     assert successors["http://example.org/orexis/intention#outcome"] == PROGRESSION + "outcome"
 
@@ -279,5 +279,5 @@ def test_a_graph_nothing_declares_any_more_is_dropped(tmp_path, monkeypatch):
     dropped = genesis.drop_ghost_graphs(st, "fern")
     assert ghost in dropped and ghost not in st.graph_names()
     # and nothing owned or declared went with it
-    assert beliefs_graph("fern") not in dropped
+    assert picks_graph("fern") not in dropped
     assert all(g not in dropped for g in st.public_graphs())

@@ -93,14 +93,14 @@ def test_an_action_states_both_texts_or_neither(monkeypatch, caplog):
     from orexis_agent_deliberation.afforder import Afforder
     from orexis_agent_deliberation.affordances import Affordances
     from agent.world import load_self
-    from orexis_agent_progression.ontology import beliefs_graph
+    from orexis_agent_progression.ontology import picks_graph
 
     st = build("simulation", monkeypatch)
     wants = desires_of(st)
     assert deliberable(st, wants), "the shipped world, Presenting included, passes"
     for agent_id, agent_wants in wants.items():
         me = load_self(st.query, agent_id)
-        rows = Afforder(Actions(st), Affordances(st), agent_wants, me.uri, beliefs_graph(agent_id)).offered()
+        rows = Afforder(Actions(st), Affordances(st), agent_wants, me.uri, picks_graph(agent_id)).offered()
         assert not any(r.action.endswith("Presenting") for r in rows), \
             f"{agent_id}: an action with neither text is on no menu"
 

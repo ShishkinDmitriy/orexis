@@ -43,7 +43,7 @@ from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS
 SENSING_URGENCY = "http://example.org/orexis/sensing#urgency"       # sensing's hook, spelled as every cross-package reference is
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"
 from orexis_agent_progression.ontology import (CLASSIFICATION_GRAPH, GRAPH_PREFIX, ONTOLOGY_GRAPH,
-                                               PERIODS_GRAPH, beliefs_graph)
+                                               PERIODS_GRAPH, picks_graph)
 from orexis_agent_progression.store import bindings
 from assembly.contribute import contributes
 
@@ -668,7 +668,7 @@ SELECT ?c ?id ?l ?at ?p WHERE {{
             lands = effects.lands_after(
                 self.agent.beliefs, ACQUIRING, me=f"<{self.me.uri}>",
                 subject=f"<{self.me.acts_for}>", about=f"<{self.about}>", via=f"<{market.uri}>",
-                litres=str(float(litres)), beliefs=f"<{beliefs_graph(self.agent.id)}>")
+                litres=str(float(litres)), picks=f"<{picks_graph(self.agent.id)}>")
             if lands is not None:
                 pour = max(0.0, float(lands) - float(market.redeem_window_s or 0.0))
         except Exception as exc:                        # a rule's refusal is not the bid's problem

@@ -131,7 +131,7 @@ def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_
     scaling stays asymmetric: the room below the aim is aim-to-floor, above it aim-to-ceiling,
     so the same 0.10 out reads differently per side. Fern: region 0.45-0.65, survives 0.2-0.85.
     """
-    from orexis_agent_progression.ontology import beliefs_graph
+    from orexis_agent_progression.ontology import picks_graph
 
     st, fern = _fern({("fern", MOISTURE): 0.55}, monkeypatch)
 
@@ -144,9 +144,9 @@ def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_
     #  The re-pick: the aim moves in the BELIEF BASE alone — the desires store is deliberately
     #  not rebuilt, because the claim under test is that the measure asks, not that a rebuild
     #  recompiles.
-    st.update(f"""DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim <https://schema.org/value> ?v }} }}
-                  INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim <https://schema.org/value> 0.65 }} }}
-                  WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{
+    st.update(f"""DELETE {{ GRAPH <{picks_graph("fern")}> {{ ?aim <https://schema.org/value> ?v }} }}
+                  INSERT {{ GRAPH <{picks_graph("fern")}> {{ ?aim <https://schema.org/value> 0.65 }} }}
+                  WHERE  {{ GRAPH <{picks_graph("fern")}> {{
                       <{FERN}> <http://example.org/orexis/sensing#aims> ?aim .
                       ?aim <http://www.w3.org/ns/ssn/forProperty> <{MOISTURE}> ;
                            <https://schema.org/value> ?v }} }}""")

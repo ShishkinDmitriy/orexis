@@ -1642,7 +1642,7 @@ class Planner:
             #  nodes. One schema needs the channel: $via is the row's lever, symmetric with
             #  $about, and a rule that ignores it loses nothing.
             "via": row.via if row is not None else "urn:nothing",
-            "beliefs": self.agent.beliefs.graph,
+            "picks": self.agent.beliefs.graph,
             #  NOT SIZED (#579). The search plans on what a reading IS, and an effect declares
             #  the band it reaches; how much to pour or bid is progression's, computed from
             #  the reading in hand when the step is taken. The token stays bound at nothing

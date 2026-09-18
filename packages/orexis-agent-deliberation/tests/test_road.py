@@ -28,7 +28,7 @@ from types import SimpleNamespace
 import pytest
 
 from orexis_agent_progression import clock
-from orexis_agent_progression.ontology import ONTOLOGY_GRAPH, beliefs_graph
+from orexis_agent_progression.ontology import ONTOLOGY_GRAPH, picks_graph
 from orexis_agent_progression.store import Store, bindings
 
 from orexis_agent_deliberation import pursuit
@@ -45,7 +45,7 @@ CASES = sorted((Path(__file__).parent / "road").glob("*.trig"))
 def stand_in(case: Path):
     """An agent standing on the case: the store the file describes, and the two collections."""
     st = Store()
-    st.agent_id, st.agent_uri, st.graph = AGENT, ME, beliefs_graph(AGENT)
+    st.agent_id, st.agent_uri, st.graph = AGENT, ME, picks_graph(AGENT)
     st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
       <{ONTOLOGY_GRAPH}> a orexis:PublicGraph . <{WORLD}> a orexis:PublicGraph . <{ACTIONS}> a orexis:PublicGraph .
       orexis:PredictionGraph rdfs:subClassOf orexis:Graph . orexis:DesireGraph rdfs:subClassOf orexis:Graph . }} }}""")

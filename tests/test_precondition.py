@@ -123,7 +123,7 @@ def test_an_optional_the_world_leaves_unbound_states_no_premise(monkeypatch):
     said the butt's reading was read. The lookup asks about a stand-in now, the node where
     bound and nothing where not."""
     from orexis_agent_deliberation import signature
-    from orexis_agent_progression.ontology import beliefs_graph
+    from orexis_agent_progression.ontology import picks_graph
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     agent.beliefs.update(f"""DELETE {{ GRAPH <{STATE_GRAPH}> {{ ?obs ?p ?o }} }}
         WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?obs <{SOSA}observedProperty> <{MOISTURE}> ; ?p ?o }} }}""")
@@ -132,7 +132,7 @@ def test_an_optional_the_world_leaves_unbound_states_no_premise(monkeypatch):
         f"SELECT ?p WHERE {{ <{agent.me.uri}> actuation:hasActuator ?p }}"))[0]["p"]
     read = effects.precondition(agent.beliefs, ACTUATION + "Dosing", keyed=tuple(keys),
                             me=agent.me.uri, subject=agent.me.acts_for, about=MOISTURE,
-                            state=STATE_GRAPH, beliefs=beliefs_graph("gardener"), litres=0.1,
+                            state=STATE_GRAPH, picks=picks_graph("gardener"), litres=0.1,
                             via=pump, want=desire.uri)
     assert read, "the rule's chain is read"
     typed = [t for t in read if t.predicate.value.endswith("#type")

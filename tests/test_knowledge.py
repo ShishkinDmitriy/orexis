@@ -699,9 +699,9 @@ def _graphs() -> tuple[set[str], set[str]]:
     #  source, asked with a marker id.
     from orexis_agent_deliberation.ontology import pursued_graph, remembered_graph
     from orexis_agent_progression.graphs import intentions_graph
-    from orexis_agent_progression.ontology import beliefs_graph, obligations_graph, promises_graph, roots_graph
+    from orexis_agent_progression.ontology import picks_graph, obligations_graph, promises_graph, roots_graph
     from orexis_capability_review.graphs import evidence_graph, revisions_graph, summaries_graph
-    for helper in (beliefs_graph, roots_graph, promises_graph, obligations_graph, intentions_graph,
+    for helper in (picks_graph, roots_graph, promises_graph, obligations_graph, intentions_graph,
                    pursued_graph, remembered_graph, evidence_graph, revisions_graph, summaries_graph):
         name = helper("x")
         assert name.startswith(_GRAPH_BASE) and name.endswith("x")
@@ -712,9 +712,9 @@ def _graphs() -> tuple[set[str], set[str]]:
 def test_no_document_names_a_graph_the_store_has_never_had():
     """Every `:shorthand` a document writes is a graph the store has, or something declared.
 
-    One thing it cannot check: a per-agent graph's AGENT. `:beliefs/nobody` passes, because the
+    One thing it cannot check: a per-agent graph's AGENT. `:picks/nobody` passes, because the
     prefix is what the ontology declares and the suffix is whatever agents a world happens to
-    hold — and a document naming `:beliefs/fern` as an example is not claiming that world exists.
+    hold — and a document naming `:picks/fern` as an example is not claiming that world exists.
     The graph before the slash is the part that can rot, and that part is checked.
     """
     absent_on_purpose = {

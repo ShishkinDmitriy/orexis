@@ -69,7 +69,7 @@ from orexis_agent_deliberation.desires import Desires
 from agent.metrics import Metrics
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
-from orexis_agent_progression.ontology import beliefs_graph
+from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import bindings, decimal
 from agent.validate import BeliefsInvalid, validate_agent
 
@@ -84,7 +84,7 @@ log = logging.getLogger("review")
 # What a `review.rq` may say instead of an instance identifier. The rule is shipped in a package
 # and must name no agent and no graph of one, so the three things it cannot know are substituted
 # before it runs. Everything else it needs it discovers, exactly as code here does.
-ME, EVIDENCE, BELIEFS = "$me", "$evidence", "$beliefs"
+ME, EVIDENCE, PICKS = "$me", "$evidence", "$picks"
 
 
 @dataclass(frozen=True)
@@ -254,7 +254,7 @@ SELECT ?term ?below ?above WHERE {{
 
     def current(self, belief_term: str) -> float | None:
         rows = bindings(self.agent.beliefs.query(f"""
-SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
+SELECT ?v WHERE {{ GRAPH <{picks_graph(self.agent.id)}> {{
   <{self.agent.me.uri}> <{belief_term}> ?v }} }} LIMIT 1"""))
         return float(rows[0]["v"]) if rows else None
 
@@ -321,7 +321,7 @@ SELECT ?action ?p ?o ?b ?t WHERE {
             query = (path.read_text()
                      .replace(ME, f"<{self.agent.me.uri}>")
                      .replace(EVIDENCE, evidence_graph(self.agent.id))
-                     .replace(BELIEFS, beliefs_graph(self.agent.id)))
+                     .replace(PICKS, picks_graph(self.agent.id)))
             try:
                 rows = bindings(self.agent.beliefs.query(query))
             except Exception as exc:
@@ -378,7 +378,7 @@ SELECT ?action ?p ?o ?b ?t WHERE {
         return self._apply(room, held, value)
 
     def _apply(self, room: Range, was: float, value: float) -> bool:
-        graph = beliefs_graph(self.agent.id)
+        graph = picks_graph(self.agent.id)
         self._write(graph, room.term, value)
         #  Rebuild BEFORE validating: the modality re-derives from the record just written,
         #  so the shapes judge the new pick against the wants as they now stand — validating

@@ -6,7 +6,7 @@
 # is statistics computable without knowing what a property means — so the same lines would
 # serve a society allocating electricity.
 #
-# `$me`, `$evidence` and `$beliefs` are the three things a shipped rule cannot know and are
+# `$me`, `$evidence` and `$picks` are the three things a shipped rule cannot know and are
 # substituted before it runs. Everything else is discovered. Prefixes come from store.PREFIXES,
 # exactly as for a query in Python — a rule must not carry its own.
 #

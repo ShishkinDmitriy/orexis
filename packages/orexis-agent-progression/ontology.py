@@ -38,7 +38,7 @@ vocabulary edit that touches no code.
 What survives is the **bootstrap root** and the **write targets**, and they are different
 things. The root is `ONTOLOGY_GRAPH`: the T-Box has to be loaded somewhere before it can be
 asked anything, exactly as an agent is handed its own id before it can discover anything else.
-The write targets are named because a writer must say where it writes — `beliefs_graph(id)`
+The write targets are named because a writer must say where it writes — `picks_graph(id)`
 does the same, from the one identifier it is given. Neither is a reader enumerating what to
 read, which is what rule 1 is actually about.
 
@@ -242,14 +242,20 @@ GRAPH_PREFIX = _GRAPH
 #  the class (`Store.graphs_of`, `recorded_graphs`). Rename one here and only the eyes notice.
 
 
-def beliefs_graph(agent_id: str) -> str:
-    """The graph holding ONE agent's private parameters. Also its write boundary.
+def picks_graph(agent_id: str) -> str:
+    """The graph holding ONE agent's picks — its record of picking (`orexis:PickRecordGraph`),
+    birth's first entries and review's revisions. Also its write boundary.
 
     Write boundary in the strong sense now: a review may write here and nowhere else. It reads
     the world as constraint and `:sensed` as evidence, and changes neither — which is what makes
     the graph classes above load-bearing rather than documentation.
+
+    Called `beliefs/<agent>` until a-graph-class-is-named-for-what-it-holds, from the file it
+    is authored from — a name that said where the picks came from rather than what they are,
+    and the misnaming `orexis:BeliefGraph`'s own comment records. A volume written under the
+    old name is moved once at boot (`genesis._move_pick_record`).
     """
-    return _GRAPH + "beliefs/" + agent_id
+    return _GRAPH + "picks/" + agent_id
 
 
 def promises_graph(agent_id: str) -> str:

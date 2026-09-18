@@ -112,7 +112,7 @@ about a world whole, because nobody authors it and its shape is a compiler's.
 
 - **A node still holds a copy of the readings.** That is the trade above, and the number to
   watch is in [measure-the-search](/runbooks/measure-the-search.md).
-- **`$beliefs` is the same leak, smaller.** A rule still says `GRAPH $beliefs { … }` for the
+- **`$picks` is the same leak, smaller.** A rule still says `GRAPH $picks { … }` for the
   agent's own settings. That one is LOCAL knowledge — a package knows whether it is reading a
   belief of its own — so it is ergonomics rather than a claim about anyone else.
 - **A world holding two readings on one key still scores arbitrarily** (#669). Nothing holds a

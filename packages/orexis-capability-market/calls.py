@@ -12,7 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from orexis_agent_progression.ontology import beliefs_graph
+from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import bindings
 
 from .terms import CALL, CALLED_AT, CALLED_BY, CALLED_ON, NS
@@ -40,9 +40,9 @@ def call(agent, venue_uri: str, by: str, now: datetime | None = None) -> str:
     uri = uri_for(venue_uri)
     at = (now or clock.now()).isoformat()
     agent.beliefs.update(f"""
-DELETE {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{uri}> ?p ?o }} }}
-WHERE  {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{uri}> ?p ?o }} }} ;
-INSERT DATA {{ GRAPH <{beliefs_graph(agent.id)}> {{
+DELETE {{ GRAPH <{picks_graph(agent.id)}> {{ <{uri}> ?p ?o }} }}
+WHERE  {{ GRAPH <{picks_graph(agent.id)}> {{ <{uri}> ?p ?o }} }} ;
+INSERT DATA {{ GRAPH <{picks_graph(agent.id)}> {{
   <{uri}> a <{CALL}> ;
     <{CALLED_ON}> <{venue_uri}> ;
     <{CALLED_BY}> "{by}" ;
@@ -55,14 +55,14 @@ def answer(agent, venue_uri: str) -> None:
     """A round opened on this venue: the call is answered and the row goes."""
     uri = uri_for(venue_uri)
     agent.beliefs.update(f"""
-DELETE {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{uri}> ?p ?o }} }}
-WHERE  {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{uri}> ?p ?o }} }}""")
+DELETE {{ GRAPH <{picks_graph(agent.id)}> {{ <{uri}> ?p ?o }} }}
+WHERE  {{ GRAPH <{picks_graph(agent.id)}> {{ <{uri}> ?p ?o }} }}""")
 
 
 def calls_of(agent, venue_uri: str | None = None) -> list[Call]:
     venue = f"FILTER(?v = <{venue_uri}>)" if venue_uri else ""
     rows = bindings(agent.beliefs.query(f"""
-SELECT ?c ?v ?by ?at WHERE {{ GRAPH <{beliefs_graph(agent.id)}> {{
+SELECT ?c ?v ?by ?at WHERE {{ GRAPH <{picks_graph(agent.id)}> {{
   ?c a <{CALL}> ; <{CALLED_ON}> ?v ; <{CALLED_BY}> ?by ; <{CALLED_AT}> ?at . {venue} }} }}"""))
     return [Call(uri=r["c"], venue=r["v"], called_by=r["by"],
                  called_at=datetime.fromisoformat(r["at"])) for r in rows]

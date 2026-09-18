@@ -75,7 +75,7 @@ four `USING` lines typed by hand into every rule of every capability's `rules.ru
 
 That is rule 1, violated in the open. `orexis:WorldGraph` is a T-Box term and code may name it;
 `…/graph/world` is a particular graph and is no more nameable than a world's `:fern_agent` — which, since worlds took their individuals out of `orexis:` entirely, no longer even shares the vocabulary's namespace. The
-asymmetry gave it away: `beliefs_graph(agent_id)` *constructs* its IRI from the one identifier a
+asymmetry gave it away: `picks_graph(agent_id)` *constructs* its IRI from the one identifier a
 process is legitimately handed, exactly as the rule allows, while the public five were bare
 constants nobody had questioned.
 
@@ -98,7 +98,7 @@ graph nobody typed is invisible until someone says what it is.
 **Two things are still named, and they are not the same act.** The *bootstrap root*
 `ONTOLOGY_GRAPH`, because the T-Box has to be loaded somewhere before it can be asked anything —
 the same shape as the exception rule 1 already carries for an agent's own id. And the *write
-targets*, because a writer must say where it writes, exactly as `beliefs_graph(id)` does. Rule 1
+targets*, because a writer must say where it writes, exactly as `picks_graph(id)` does. Rule 1
 is about a reader enumerating what to read, and no reader does that any more.
 
 **One consequence worth flagging**: the discovery query walks `rdfs:subClassOf*` by hand, which
@@ -109,12 +109,12 @@ would otherwise read.
 
 ## The per-agent catalog is derived, not written
 
-Every world used to carry `<…/graph/beliefs/fern> a orexis:BeliefsGraph ; orexis:beliefsOf :fern_agent`,
+Every world used to carry `<…/graph/picks/fern> a orexis:BeliefsGraph ; orexis:beliefsOf :fern_agent`,
 once per agent, beside the roster it restated. A second list is a second thing to drift, and this
 one drifted silently — nothing failed if an agent was added and its line was not.
 
 It is a function of the roster, so a rule in the kernel's own rules file derived it (deleted in #708 — genesis classifies the pick record at birth now), building the IRI from
-the agent's own `orexis:localId` exactly as `ontology.beliefs_graph()` does. That also closes the seam
+the agent's own `orexis:localId` exactly as `ontology.picks_graph()` does. That also closes the seam
 an earlier pass recorded, where a computed description stood beside a hand-written one.
 
 ## Sovereign is a role, and a user is the identity

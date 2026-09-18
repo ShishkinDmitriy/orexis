@@ -102,7 +102,7 @@ and every crossing already has a native shape in the house:
 - **The affordance walks take the desired properties as a parameter.** Three `affordances.rq`
   files join wiring with *which properties I hold desires in* — a small set, injected as a
   `VALUES` block by the same collector that already substitutes `$me`.
-- **Effect rules already take their inputs as parameters.** `GRAPH $beliefs { … ?conversion }`
+- **Effect rules already take their inputs as parameters.** `GRAPH $picks { … ?conversion }`
   becomes `$conversion`, the move
   [#247](https://github.com/ShishkinDmitriy/orexis/issues/247) made for `$value` when the
   baseline stopped being a store lookup — and for the same reason: a rule is a function of
@@ -177,7 +177,7 @@ it always was in these records: the sitting's phrase for the frame, not a compon
 ## The sort, term by term
 
 What [#297](https://github.com/ShishkinDmitriy/orexis/issues/297) asked for: every term
-authored into `graph/beliefs/<agent>` across the shipped worlds, classified by what its
+authored into `graph/picks/<agent>` across the shipped worlds, classified by what its
 triple asserts. The test that decides each row: **can the world contradict it?** A belief can
 be WRONG — a later reading, a ledger, a drained pot can refute it. A pick can only be
 ill-chosen; nothing in the world makes 600 seconds of patience false. Falsifiable goes to

@@ -270,7 +270,7 @@ one.
 
 Attention scales with how close the plant is to its own `LOW`: thirsty plants watch closely,
 comfortable ones let the board sleep. The numbers are **the agent's own belief**
-(`sensing:fastSleepS` / `sensing:slowSleepS` in `:beliefs/<agent>`), read at startup — a succulent can
+(`sensing:fastSleepS` / `sensing:slowSleepS` in `:picks/<agent>`), read at startup — a succulent can
 reasonably watch less often than a fern, and does. The policy that turns them into an interval
 lives with the agent (`cadence_for`), never on the board — same reason the band does. A
 polling agent would read the same two figures: they describe an interval either way, and only

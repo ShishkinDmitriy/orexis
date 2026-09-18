@@ -62,7 +62,7 @@ below on why the graph, not the provenance triple, carries the trust):
   reads all of it. It exists so the wiring is stated **once** instead of being repeated in
   every agent's beliefs. Written by genesis, not sensed. Nothing interpretive lives here —
   no targets, no bands, no cadence, no prices. See [world-graph](/decisions/world-graph.md).
-- `:beliefs/<agent>` — one agent's **private opinion**: its aim (`sensing:aims`), its sensing cadence
+- `:picks/<agent>` — one agent's **private opinion**: its aim (`sensing:aims`), its sensing cadence
   and freshness limit, its value curve. Its comfort limits are NOT here — those are the region
   its subject states, deduced and public.
   Per-agent, not shared; two agents may hold different numbers about the same plant and
@@ -78,7 +78,7 @@ below on why the graph, not the provenance triple, carries the trust):
 **And that is five of them.** The list above is the original trust partition and is no longer
 the whole store: the mind grew a graph per modality, and provenance grew one per arrival. The
 full set is whatever `orexis:Graph` has instances of — ask, never count — but for orientation it is
-now `graph/beliefs/<agent>`, `graph/sensed`, `graph/world`, `graph/world/derived`,
+now `graph/picks/<agent>`, `graph/sensed`, `graph/world`, `graph/world/derived`,
 `graph/world/entailed`, `graph/ontology`, `graph/ontology/entailed`, `graph/provenance`,
 `graph/desire/asserted`, `graph/obligations/<agent>`,
 `graph/deliberation`, `graph/effects`, `graph/evidence/<agent>`, `graph/revisions/<agent>`,
@@ -97,7 +97,7 @@ the intention modality's own room of the volume (`<state>/intentions`, beside
 did.
 
 The graphs themselves are **typed, self-describing resources** (`:world a orexis:WorldGraph`,
-`:beliefs/fern a orexis:DesireGraph ; orexis:beliefsOf orexis:fern_agent` — the pick record, typed by its modality since `orexis:BeliefsGraph` retired) — a graph catalog,
+`:picks/fern a orexis:PickRecordGraph ; orexis:beliefsOf orexis:fern_agent` — the pick record, typed for what it holds) — a graph catalog,
 not magic strings. Topology (durable, authored) is kept out of `:sensed` (sensed, overwritten)
 and out of the belief graphs (opinion, revisable): three origins, three kinds of graph. See
 [genesis](/decisions/genesis.md) and [world-graph](/decisions/world-graph.md).
@@ -112,7 +112,7 @@ are already in place; the remaining scoping work is:
   agents they are *about*. It does not exist: there is no such graph and no mint, so a
   balance is self-reported and clearing checks solvency against the bidder's own number.
   See [wallet](/domain/wallet.md), which marks what is built apart from what is designed.
-- `:beliefs/<agent>` — done: the agent's private desire and limits, and later its learning
+- `:picks/<agent>` — done: the agent's private desire and limits, and later its learning
   *and* its own (untrusted) self-metrics.
 
 **Reads are isolated STRUCTURALLY, and no longer by the store.** An earlier design enforced
@@ -137,7 +137,7 @@ there is no witness — each plant asserts its own state, and measurement stays 
 judgment by living in a different graph:
 - `:sensed` — the agent's **sensor data** (`hasSimpleResult 0.18`), `prov:wasGeneratedBy` the
   plant. What it read.
-- `:beliefs/<agent>` — the agent's **judgments and dispositions** (its aim, its valuation, its
+- `:picks/<agent>` — the agent's **judgments and dispositions** (its aim, its valuation, its
   cadences, and later its learning). What it concludes and what it wants. Its band LIMITS are not
   here and have not been since the region was deduced rather than authored — see
   [band](/domain/band.md), which is the page that tells a stale mention from a live one.
@@ -156,7 +156,7 @@ The graph is a **write-authorization boundary, not a label.** Citability can't r
 `prov:wasGeneratedBy :gateway` *triple* — a triple is forgeable by anyone who can write, so
 a troll would just self-stamp its own claim. Trust comes from **who may write the
 container**, not from a stamp inside it. `:world` is the graph only the sovereign writes and
-`:beliefs/fern` the one only fern writes; "citable?" is therefore *membership in a container
+`:picks/fern` the one only fern writes; "citable?" is therefore *membership in a container
 you cannot write*, which no rhetoric or
 forged triple can fake. (The village registry is trusted because only the registrar may
 write the book — not because each entry says "signed, the registrar.") The two things are
@@ -166,7 +166,7 @@ distinct and both wanted: the **graph** = the lock (who may write); the
 The graph names survive the move to per-agent stores unchanged, and the reasoning above is why:
 they were never about *partitioning one server*, they were about who may write a container. In
 an agent's own store the boundary is doubly held — `:world` is replaced from the ratified files
-on every start and is not the agent's to author, while `:beliefs/<agent>` and `:roots/<agent>`
+on every start and is not the agent's to author, while `:picks/<agent>` and `:roots/<agent>`
 are written once at birth and are the agent's alone thereafter — with one addition that is not a reset: an
 amendment may grant a capability whose opening beliefs the volume has never held, and boot
 **endows** those (never-held terms arrive with their structures, held terms stay the agent's

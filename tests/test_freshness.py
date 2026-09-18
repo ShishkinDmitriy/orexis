@@ -124,7 +124,7 @@ def test_the_want_fires_as_a_shape_and_does_not_refuse_the_boot(monkeypatch):
     starting, which is precisely the failure the severity split exists to prevent.
     """
     from orexis_capability_sensing.terms import INSTRUMENTS_GRAPH
-    from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
+    from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
     from agent.validate import _shapes_and_vocabulary, conforms, graph_from
 
     agent, st = _fern(monkeypatch, value=0.55)

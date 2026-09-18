@@ -43,7 +43,7 @@ surprise.
 
 A method's steps are not on any menu — no precondition, no effect — and each says what it
 waits for as SELECT templates with the rules' own tokens (`$me`, `$via`, `$about`,
-`$subject`, `$beliefs`, `$since` — the intention's adoption), bound when the step becomes
+`$subject`, `$picks`, `$since` — the intention's adoption), bound when the step becomes
 current:
 
 - `orexis:readyWhen` holds the step before it is taken, as its `progression:until`; a step whose

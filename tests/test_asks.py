@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from orexis_agent_deliberation import pursuit
-from orexis_agent_progression.ontology import PROGRESSION, beliefs_graph, obligations_graph
+from orexis_agent_progression.ontology import PROGRESSION, picks_graph, obligations_graph
 from orexis_agent_progression.store import bindings
 from orexis_capability_market import rounds
 from orexis_capability_market.terms import ACQUIRING, PRESENTING, TENDERING
@@ -30,7 +30,7 @@ HOURS = 3600.0
 
 def _fern(monkeypatch, moisture=FALLING, foresight=6 * HOURS):
     st = genesis_store({("fern", MOISTURE): moisture})
-    st.update(f"""INSERT DATA {{ GRAPH <{beliefs_graph("fern")}> {{
+    st.update(f"""INSERT DATA {{ GRAPH <{picks_graph("fern")}> {{
         <http://example.org/orexis/world/simulation#fern_agent> <{FORESIGHT}> {foresight} }} }}""")
     return build_agent("fern", st, monkeypatch)
 

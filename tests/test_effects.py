@@ -11,7 +11,7 @@ import pytest
 
 from agent import genesis
 from orexis_agent_deliberation import effects
-from orexis_agent_progression.ontology import ACTIONS_GRAPH, STATE_GRAPH, beliefs_graph
+from orexis_agent_progression.ontology import ACTIONS_GRAPH, STATE_GRAPH, picks_graph
 from orexis_agent_progression.store import bindings, Raw
 
 from conftest import stake_of, MOISTURE, build_agent, genesis_store, predicted_bands
@@ -144,7 +144,7 @@ def test_the_dose_the_actuator_expects_is_the_band_its_rule_declares(monkeypatch
     predicted, _ = effects.apply(
         gardener.beliefs, DOSING, me=f"<{actuation.me.uri}>",
         subject=f"<{actuation.me.acts_for}>", about=f"<{MOISTURE}>",
-        state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>", litres="0.0",
+        state=f"<{STATE_GRAPH}>", picks=f"<{picks_graph('gardener')}>", litres="0.0",
         lands=LANDS_AT)
     from_rule = {t.object.value for t in predicted if t.predicate.value == TYPE} - {SOSA + "Observation"}
     assert from_rule and all(b.startswith("http://example.org/orexis#band.") for b in from_rule)
@@ -167,7 +167,7 @@ def test_the_effect_declares_the_region_wherever_the_reading_stands(monkeypatch)
         predicted, _ = effects.apply(
             gardener.beliefs, DOSING, me=f"<{actuation.me.uri}>",
             subject=f"<{actuation.me.acts_for}>", about=f"<{MOISTURE}>",
-            state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>", litres="0.0",
+            state=f"<{STATE_GRAPH}>", picks=f"<{picks_graph('gardener')}>", litres="0.0",
         lands=LANDS_AT)
         return {t.object.value for t in predicted if t.predicate.value == TYPE} - {SOSA + "Observation"}
 

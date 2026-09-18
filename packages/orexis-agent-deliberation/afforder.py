@@ -26,7 +26,7 @@ from .affordance import Affordance
 class Afforder:
     """What an agent could do, in the world it is asked about — assembled, never stored."""
 
-    def __init__(self, actions, affordances, desires, agent_uri: str, beliefs: str):
+    def __init__(self, actions, affordances, desires, agent_uri: str, picks: str):
         #  The collections. `affordances` is the DEFAULT one — over the belief base, which is
         #  the world the agent is actually in; a caller asking about an imagined world passes
         #  the collection over the store those worlds live in, because which store a collection
@@ -38,7 +38,7 @@ class Afforder:
         #  the agent's afforder; a collection is nobody's, which is why the agent's URI and its
         #  own graph reach the collections below as criteria rather than as state.
         self._me = agent_uri
-        self._beliefs = beliefs
+        self._picks = picks
 
     def offered(self, affordances=None, *, at=None, world: str | None = None,
                 only=None) -> list[Affordance]:
@@ -73,6 +73,6 @@ class Afforder:
             if only is not None and action.uri not in only:
                 continue
             rows += (affordances or self._affordances).find_all_by_action(
-                action, about_of, self._me, self._beliefs, at=at, world=world)
+                action, about_of, self._me, self._picks, at=at, world=world)
         #  Sorted because per-action order is no order.
         return sorted(rows, key=lambda a: (a.want or "", a.action, a.for_agent or ""))

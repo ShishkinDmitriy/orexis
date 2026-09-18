@@ -67,11 +67,11 @@ def test_the_bed_holds_one_want_about_two_properties(monkeypatch):
     from orexis_agent_deliberation.actions import Actions
     from orexis_agent_deliberation.afforder import Afforder
     from orexis_agent_deliberation.affordances import Affordances
-    from orexis_agent_progression.ontology import beliefs_graph
+    from orexis_agent_progression.ontology import picks_graph
     agent, st = _grower(monkeypatch)
     abouts = agent.desires.abouts(agent.me.uri)
     assert set(abouts[COMFORT]) == {MOISTURE, AIR}, "one want, about both properties"
-    rows = [r for r in Afforder(Actions(st), Affordances(st), agent.desires, agent.me.uri, beliefs_graph("grower")).offered() if r.want == COMFORT]
+    rows = [r for r in Afforder(Actions(st), Affordances(st), agent.desires, agent.me.uri, picks_graph("grower")).offered() if r.want == COMFORT]
     assert {(r.action, r.about) for r in rows} >= {(DOSING, MOISTURE), (HEATING, AIR)}, \
         "the dose is offered about the soil and the heating about the air, for the one want"
 
@@ -174,14 +174,14 @@ def test_the_same_venting_reaches_a_different_band_for_each_outside(monkeypatch)
 
     Asked of the RULE rather than of a plan, because what is under test is the declaration."""
     from orexis_agent_deliberation import effects
-    from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
+    from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
     reached = {}
     for outside in (21.0, 5.0, 30.0):
         agent, _ = _grower(monkeypatch, air=12.0, outside=outside)
         added, retracted = effects.apply(
             agent.beliefs, VENTING, me=f"<{agent.me.uri}>", subject=f"<{agent.me.acts_for}>",
             about=f"<{AIR}>", state=f"<{STATE_GRAPH}>",
-            beliefs=f"<{beliefs_graph('grower')}>", litres="0.0", lands=LANDS_AT)
+            picks=f"<{picks_graph('grower')}>", litres="0.0", lands=LANDS_AT)
         reached[outside] = sorted(t.object.value.rsplit(".", 1)[-1] for t in added
                                   if t.predicate.value.endswith("#type") and "band." in t.object.value)
         assert retracted, "and it replaces the reading it moves, as every reading-mover does"
@@ -229,7 +229,7 @@ def _forecast(agent, celsius: float, since, until) -> str:
     own `dcterms:temporal` bounds it (a-graph-holds-during-a-stretch) — arriving `Received`,
     from a service rather than an instrument, in a graph of the agent's own.
     """
-    from orexis_agent_progression.ontology import PERIODS_GRAPH, beliefs_graph
+    from orexis_agent_progression.ontology import PERIODS_GRAPH, picks_graph
 
     graph = f"http://example.org/orexis/graph/forecast/{int(celsius)}"
     agent.beliefs.update(f"""INSERT DATA {{
@@ -251,12 +251,12 @@ def _forecast(agent, celsius: float, since, until) -> str:
 def _vented_band(agent, when) -> set:
     """The band venting reaches, asked of the rule at one instant."""
     from orexis_agent_deliberation import effects
-    from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
+    from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
 
     added, _ = effects.apply(
         agent.beliefs, VENTING, when=when, me=f"<{agent.me.uri}>",
         subject=f"<{agent.me.acts_for}>", about=f"<{AIR}>", state=f"<{STATE_GRAPH}>",
-        beliefs=f"<{beliefs_graph('grower')}>", litres="0.0", lands=LANDS_AT)
+        picks=f"<{picks_graph('grower')}>", litres="0.0", lands=LANDS_AT)
     return {t.object.value.rsplit(".", 1)[-1] for t in added
             if t.predicate.value.endswith("#type") and "band." in t.object.value}
 

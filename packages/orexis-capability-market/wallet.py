@@ -15,7 +15,7 @@ knowledge/domain/wallet.md.
 
 from __future__ import annotations
 
-from orexis_agent_progression.ontology import beliefs_graph
+from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import bindings
 
 from .terms import BALANCE, HAS_ENDOWMENT
@@ -37,7 +37,7 @@ SELECT ?balance ?endowment WHERE { GRAPH <%s> {
 
 def balance_of(agent) -> float:
     """What this agent has left. The endowment until it has won anything."""
-    graph = beliefs_graph(agent.id)
+    graph = picks_graph(agent.id)
     rows = bindings(agent.beliefs.query(
         _BALANCE_Q % (graph, agent.me.uri, BALANCE, agent.me.uri, HAS_ENDOWMENT)))
     if not rows:
@@ -57,9 +57,9 @@ def debit(agent, amount: float) -> float:
     """
     left = round(balance_of(agent) - float(amount), 6)
     agent.beliefs.update(f"""
-DELETE {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{agent.me.uri}> <{BALANCE}> ?was }} }}
-INSERT {{ GRAPH <{beliefs_graph(agent.id)}> {{
+DELETE {{ GRAPH <{picks_graph(agent.id)}> {{ <{agent.me.uri}> <{BALANCE}> ?was }} }}
+INSERT {{ GRAPH <{picks_graph(agent.id)}> {{
   <{agent.me.uri}> <{BALANCE}> "{left}"^^<{_XSD}decimal> }} }}
-WHERE  {{ OPTIONAL {{ GRAPH <{beliefs_graph(agent.id)}> {{
+WHERE  {{ OPTIONAL {{ GRAPH <{picks_graph(agent.id)}> {{
   <{agent.me.uri}> <{BALANCE}> ?was }} }} }}""")
     return left

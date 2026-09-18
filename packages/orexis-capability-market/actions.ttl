@@ -96,7 +96,7 @@ market:Acquiring
           #  AND A ROUND IS OPEN (#358). The hop the walk was missing: without it the row said
           #  "I could buy here", and the keeper committed an Acquire that then waited for the
           #  market to knock. The round is what THIS agent was told, in its own graph, so the
-          #  hop names $beliefs.
+          #  hop names $picks.
           #
           #  THE ROW'S PRESENCE IS THE OPENNESS (#599). This asked `?closes > NOW()` because a
           #  bidder that lost was told nothing and had to end the round by its own arithmetic.
@@ -132,7 +132,7 @@ market:Acquiring
             ?src market:supplies ?good .
             ?valuation market:ofGood ?good ;
                        market:aboutProperty $about .
-            GRAPH $beliefs { $me <http://example.org/orexis/water#maxValuePerL> ?ceiling }
+            GRAPH $picks { $me <http://example.org/orexis/water#maxValuePerL> ?ceiling }
             #  WHAT ONE ACT SPENDS, at the ceiling this agent set (#579). It was the ceiling
             #  times the litres the search had sized, and the search sizes nothing now: a lot
             #  costs what a lot costs, and how many litres are bought is settled when the
@@ -166,7 +166,7 @@ market:Acquiring
             ?host market:hosts ?via ; actuation:hasActuator ?lever .
             ?lever actuation:actuates $subject .
             ?term market:ofGood ?good ; market:aboutProperty $about .
-            GRAPH $beliefs { $me ?term ?conversion }
+            GRAPH $picks { $me ?term ?conversion }
             FILTER(?conversion > 0)
             #  THE BAND A BOUGHT LOT REACHES: in the region, of this subject's property — the member genesis
             #  minted from the range the subject states — from below it or from inside it.
@@ -328,7 +328,7 @@ market:Offering
                    market:closesAt ?closes .
         } WHERE {
             $me market:hosts ?via .
-            GRAPH $beliefs { $me market:offerQuantityL ?lot ;
+            GRAPH $picks { $me market:offerQuantityL ?lot ;
                                  market:reservePricePerL ?reserve ;
                                  market:bidWindowS ?window }
             BIND(BNODE() AS ?round)

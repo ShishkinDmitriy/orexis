@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 
 from orexis_agent_deliberation import pursuit
 from orexis_agent_deliberation.planner import Planner
-from orexis_agent_progression.ontology import beliefs_graph
+from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import bindings
 from conftest import build_agent, genesis_store, write_reading
 
@@ -28,7 +28,7 @@ def _gardener(monkeypatch, moisture, foresight: float | None = None):
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): moisture}, world="loner")
     if foresight is not None:
-        st.update(f"""INSERT DATA {{ GRAPH <{beliefs_graph("gardener")}> {{
+        st.update(f"""INSERT DATA {{ GRAPH <{picks_graph("gardener")}> {{
             <http://example.org/orexis/world/loner#gardener> <{FORESIGHT}> {foresight} }} }}""")
     return build_agent("gardener", st, monkeypatch)
 

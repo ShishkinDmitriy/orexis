@@ -217,7 +217,7 @@ orexis:Graph a owl:Class ; rdfs:label "Named graph" .
 
 
 orexis:BeliefGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Belief graph" ;
-    rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, and what instruments report. NOT the graph historically called `beliefs`, which holds picks and no beliefs at all — that misnaming is what naming the axis exposed." .
+    rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, and what instruments report. NOT the graph historically called `beliefs` — `picks/<agent>` now — which holds picks and no beliefs at all; that misnaming is what naming the axis exposed." .
 
 
 
@@ -836,7 +836,7 @@ orexis:available a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range
 #  by its effect and its cost. The keeper expands a step of such an action at adoption into
 #  its method's steps, the last inheriting the prediction, and steps through them on feedback
 #  as it steps through any plan. Each step's action may declare what it WAITS for, as query
-#  templates with the rule's own tokens ($me, $via, $about, $subject, $beliefs), bound when
+#  templates with the rule's own tokens ($me, $via, $about, $subject, $picks), bound when
 #  the step becomes current: `orexis:readyWhen` holds it before it is taken, `orexis:doneWhen`
 #  holds it after, and `orexis:lapsesAt` says when either wait is over. The protocol that was
 #  a chain of reactions in the bidder's Python — an offer, a bid, a claim, a hold, a redeem —

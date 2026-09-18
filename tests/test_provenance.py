@@ -124,11 +124,11 @@ def test_an_ordinary_pattern_spans_every_public_graph(world):
 def test_private_graphs_are_not_in_the_default_graph():
     """The default graph is PUBLIC knowledge, not everything. An agent's beliefs stay reachable
     only by naming their graph, which is what keeps a review's write boundary checkable."""
-    from orexis_agent_progression.ontology import beliefs_graph
+    from orexis_agent_progression.ontology import picks_graph
 
     st = _public("simulation")
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
-    assert _in_graph(st, beliefs_graph("fern"), "?a sensing:slowSleepS ?v")
+    assert _in_graph(st, picks_graph("fern"), "?a sensing:slowSleepS ?v")
     assert not bindings(st.query("SELECT * WHERE { ?a sensing:slowSleepS ?v }"))
 
 

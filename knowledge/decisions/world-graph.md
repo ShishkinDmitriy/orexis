@@ -26,7 +26,7 @@ something else).
 
 **There is no config file.** Everything an agent needs is in the belief base, split by kind:
 
-| | `:world` | `:beliefs/<agent>` |
+| | `:world` | `:picks/<agent>` |
 |---|---|---|
 | **holds** | topology + physical facts | desire, limits, cadence, valuation |
 | **visible to** | everyone | that agent only |
@@ -81,8 +81,8 @@ That is the whole configuration story now.
 
 # Where each old config key went
 
-- targets, bands, cadence, freshness, value model → `:beliefs/<agent>` (opinion)
-- supplier's quantity, reserve, round cooldown → `:beliefs/supplier` (its terms are its own)
+- targets, bands, cadence, freshness, value model → `:picks/<agent>` (opinion)
+- supplier's quantity, reserve, round cooldown → `:picks/supplier` (its terms are its own)
 - valve calibration (`mlPerSecond`, `maxDoseMl`) → the **valve** in `:world` — a physical fact
   about that hardware, so the executor reads dosing from the device
 - barrel capacity → the **source** in `:world`; it is the constitution's allocation ceiling
@@ -120,7 +120,7 @@ ratify, write — only the ratified artifact's format changed.
 - **Re-genesis replaces editing.** Changing the wiring means editing `world.ttl` and bumping
   `versionNumber`; every fact recorded afterwards is stamped with it.
 - **Read authorization is now enforced**, which this decision only set up: per-agent store
-  credentials and a per-graph access list generated from this graph, so `:beliefs/fern` is
+  credentials and a per-graph access list generated from this graph, so `:picks/fern` is
   private in fact and not only by habit. Writes remain unscoped — the same gap
   [trusted-agent-mode](/decisions/trusted-agent-mode.md) accepts. See
   [belief-base-isolation](/decisions/belief-base-isolation.md).

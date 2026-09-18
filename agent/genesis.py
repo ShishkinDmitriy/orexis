@@ -35,9 +35,9 @@ from agent import config, inference, provenance, vocabulary
 
 from assembly import loader
 from .config import REPO_ROOT
-from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, GRAPH_PREFIX, OREXIS, roots_graph, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, STATE_GRAPH,
+from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, CLASSIFICATION_GRAPH, GRAPH_PREFIX, OREXIS, roots_graph, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, STATE_GRAPH,
                        WORLD_DERIVED_GRAPH,
-                       WORLD_ENTAILED_GRAPH, WORLD_GRAPH, beliefs_graph)
+                       WORLD_ENTAILED_GRAPH, WORLD_GRAPH, picks_graph)
 from orexis_agent_progression.store import NAMESPACES, Raw, Store, bind, bindings
 
 # Everything public that is computed rather than read from a file. Emptied before each recompute
@@ -318,7 +318,7 @@ def derived(st: Store) -> list[tuple[str, str]]:
 
 def is_born(st: Store, agent_id: str) -> bool:
     """Whether this agent already has beliefs. Birth happens exactly once."""
-    return st.has_graph(beliefs_graph(agent_id))
+    return st.has_graph(picks_graph(agent_id))
 
 
 def birth(st: Store, world: Path, agent_id: str, rebirth: bool = False) -> bool:
@@ -329,7 +329,7 @@ def birth(st: Store, world: Path, agent_id: str, rebirth: bool = False) -> bool:
     it is a flag rather than a side effect because doing it by accident is the bug this
     separation prevents.
     """
-    graph = beliefs_graph(agent_id)
+    graph = picks_graph(agent_id)
     if st.has_graph(graph) and not rebirth:
         return False
     path = world / BELIEFS_DIR / f"{agent_id}.ttl"
@@ -357,7 +357,7 @@ def _roots_from_the_world(st: Store, agent_id: str) -> Store:
     if not found:
         return scratch
     me = found[0]["a"]["value"]
-    premises = list(st.public_graphs()) + [beliefs_graph(agent_id)]
+    premises = list(st.public_graphs()) + [picks_graph(agent_id)]
     for iri in premises:
         for quad in st.quads(iri):
             scratch._store.add(quad)
@@ -438,9 +438,9 @@ def endow(st: Store, world: Path, agent_id: str) -> list[str]:
     Returns the endowed terms, so boot can say what changed; empty on every ordinary boot.
     """
     path = world / BELIEFS_DIR / f"{agent_id}.ttl"
-    if not path.exists() or not st.has_graph(beliefs_graph(agent_id)):
+    if not path.exists() or not st.has_graph(picks_graph(agent_id)):
         return []
-    return st.endow_graph(beliefs_graph(agent_id), path.read_text())
+    return st.endow_graph(picks_graph(agent_id), path.read_text())
 
 
 def drop_ghost_graphs(st: Store, agent_id: str) -> list[str]:
@@ -496,7 +496,7 @@ def classify_kernel_graphs(st: Store, agent_id: str) -> None:
     depended on a name; a name is for eyes now, and code asks the class.
     """
     me = agent_uri(st, agent_id)
-    st.classify(beliefs_graph(agent_id), OREXIS + "PickRecordGraph", OREXIS + "Asserted", me)
+    st.classify(picks_graph(agent_id), OREXIS + "PickRecordGraph", OREXIS + "Asserted", me)
     st.classify(roots_graph(agent_id), OREXIS + "DesireGraph", OREXIS + "Asserted", me)
 
 
@@ -527,6 +527,23 @@ def _belief_room(path: str | None) -> str | None:
     return str(room)
 
 
+def _move_pick_record(st: Store, agent_id: str) -> None:
+    """A volume written when the pick record was called `beliefs/<agent>` is moved to
+    `picks/<agent>` once, BEFORE birth asks whether the agent exists: birth reads the record's
+    presence as the answer, and the old name left standing would have re-authored every pick
+    on the next start — the reset AGENTS.md calls a bug. The old spelling lives here and
+    nowhere else, since a migration names what it migrates from; what the classification
+    said about the old name follows it, and `classify_kernel_graphs` says the rest."""
+    old, new = GRAPH_PREFIX + "beliefs/" + agent_id, picks_graph(agent_id)
+    if st.has_graph(new) or not st.has_graph(old):
+        return
+    st.update(f"MOVE GRAPH <{old}> TO <{new}>")
+    st.update(f"""DELETE {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ <{old}> ?p ?o }} }}
+INSERT {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ <{new}> ?p ?o }} }}
+WHERE  {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ <{old}> ?p ?o }} }}""")
+    log.info("%s: pick record moved from %s to %s", agent_id, old, new)
+
+
 def open_belief_base(world: Path, agent_id: str, path: str | None = None,
                      rebirth: bool = False) -> Store:
     """An agent's whole boot sequence: open the store, refresh the world, be born if new.
@@ -539,6 +556,7 @@ def open_belief_base(world: Path, agent_id: str, path: str | None = None,
     """
     st = Store(_belief_room(path))
     refresh_public(st, world)
+    _move_pick_record(st, agent_id)
     born = birth(st, world, agent_id, rebirth)
     if born:
         log.info("%s born — opening beliefs written", agent_id)
