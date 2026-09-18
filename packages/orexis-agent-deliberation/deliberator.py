@@ -267,28 +267,29 @@ class Deliberator:
         })]
         #  ONE ROW PER WANT, which is what makes a single graph able to show all of them.
         #  The tag is the want ITSELF and not the property it is about, because a property
-        #  cannot name every want: freshness is per instrument, an obligation is per counterparty, and
-        #  a panel keyed on `property` could only ever draw stakes. Urgency is unit-free by
+        #  cannot name every want: freshness is per instrument, a debt is per claim, and a
+        #  panel keyed on `property` could only ever draw stakes. Urgency is unit-free by
         #  construction, so a moisture, a look overdue and a litre owed belong on one axis —
         #  that is the whole claim of a common currency, and this is where it becomes visible.
         #
-        #  A OBLIGATION is tagged by whom it is owed to and never by its claim. A jti is unique per
-        #  round, so tagging by it would mint a new series every time the society traded and
-        #  make the store's cardinality grow with its history — the cost of a dashboard nobody
-        #  could then load. Whom I owe is a handful of agents and says the thing worth seeing.
+        #  NEVER BY THE INSTANCE a derived want is about. A jti is unique per round, so a debt
+        #  tagged by its claim would mint a new series every time the society traded and make
+        #  the store's cardinality grow with its history — the cost of a dashboard nobody
+        #  could then load. A debt used to be tagged by whom it is owed to instead, which the
+        #  kernel could say only by knowing what a debt was; whom a host owes is the market's
+        #  figure now (`agent_debts`, per counterparty), and here a debt is a want under its
+        #  root like any other.
         for judgment, _ in pursued:
             #  A want pursued under a root is reported as the ROOT (#618): one series per
-            #  want the agent holds, whichever node the pass is currently handed.
-            about = (judgment.owed_to.rsplit("#", 1)[-1] if judgment.is_obligation
-                     else (judgment.derived_from or judgment.uri).rsplit("#", 1)[-1])
+            #  desire the agent holds, whichever node the pass is currently handed.
+            about = (judgment.derived_from or judgment.uri).rsplit("#", 1)[-1]
             #  `agent_want` and its tag KEEP THE RETIRED WORD, deliberately. The noun "want"
             #  gave way to "desire" everywhere else when the vocabulary was ruled on
             #  (domain/desire.md), and a measurement name is the one place the rename costs more
             #  than it buys: it is an external surface with history behind it, so renaming
             #  splits every series at the cutover and leaves a dashboard reading half of one.
             #  The word is wrong and the continuity is worth more.
-            rows.append(("agent_want", {"want": f"obligation.{about}" if judgment.is_obligation else about},
-                         {"urgency": float(judgment.urgency)}))
+            rows.append(("agent_want", {"want": about}, {"urgency": float(judgment.urgency)}))
 
         #  HOW IT DECIDED, not just what it wants (#256). `pursued()` above has just re-planned
         #  every desire, so the trace holds this tick's verdicts — read from there rather than

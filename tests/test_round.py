@@ -952,7 +952,7 @@ def test_a_duty_no_move_answers_stays_hot_until_the_answer_changes(host, caplog)
     deliberator = host.deliberator
     #  The PLAN door, which is what execution asks: silencing it is the deliberator proposing
     #  no move for this obligation.
-    real, deliberator.decide = deliberator.decide, lambda desire: None
+    real, deliberator.decide = deliberator.decide, lambda desire, surprise=None: None
 
     with caplog.at_level(logging.WARNING):
         host.deliver(f"{market_of(host).redeem_topic}/fern", {"jti": jti, "sub": "fern"})

@@ -44,8 +44,8 @@ def test_urgency_is_drawn_per_want_and_per_agent():
     `agent_goals.hottest` carries the maximum an agent holds and cannot say whether that
     maximum is a plant's moisture or its temperature. This draws one line per (agent, WANT) —
     by the want and not by the property it is about, because a property cannot name a
-    freshness want (per instrument) or an obligation (per counterparty), and a panel keyed on
-    property could only ever draw stakes.
+    freshness want (per instrument) or a debt (a want under *no overdue debts*), and a panel
+    keyed on property could only ever draw stakes.
 
     The axis is pinned 0–1 because urgency IS normalised — 0 at the region's point, 1 at the
     edge of what the subject survives — so a rescaling axis would throw away the only thing
