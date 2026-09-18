@@ -56,15 +56,6 @@ SELECT ?me ?want ?shape WHERE {
   ?me orexis:holds ?want .
   ?want orexis:metWhen ?shape .
 }"""
-#  THE WANTS DERIVED UNDER A ROOT (#618): an `orexis:Desire` is never pursued itself, and
-#  while a want derived under it stands the container presents THAT, with the root's own measure.
-_CHILDREN_Q = """
-SELECT ?me ?root ?child ?holdsAt ?since WHERE {
-  ?me orexis:holds ?child .
-  ?child a orexis:Want ; prov:wasDerivedFrom ?root .
-  ?root a orexis:Desire .
-  OPTIONAL { ?child orexis:holdsAt ?holdsAt ; prov:generatedAtTime ?since }
-}"""
 
 
 class Judgments:
@@ -89,9 +80,11 @@ class Judgments:
         #  A ROOT IS PRESENTED AS THE WANT DERIVED UNDER IT (#618), where one stands: the
         #  root's own row — its measure, its reading, its property — under the derived want's
         #  name, naming the root beside it. The derived want is never lifted on its own.
-        children = {r["root"]: r
-                    for r in bindings(self._agent.desires.query_union(_CHILDREN_Q, {"me": self._agent.me.uri}))}
-        derived = {r["child"] for r in children.values()}
+        #  ASKED OF THE COLLECTION THAT HOLDS THEM (#618): the want derived under each root,
+        #  and the instant it must hold at. This was a select here, keyed on the agent and on
+        #  the parent being a desire — every column of which is a field of `Want`.
+        children = {w.desire: w for w in self._agent.wants.find_all_pursued(now)}
+        derived = {w.uri for w in children.values()}
         for wants in self._agent.ask(DESIRES, now):
             for judgment in wants:
                 if judgment.uri not in derived:
@@ -158,14 +151,14 @@ class Judgments:
             seen[row["want"]] = Judgment(uri=row["want"],
                                        urgency=1.0 if violated else 0.0,
                                        state="unmet" if violated else "met")
-        for root, r in children.items():
+        for root, want in children.items():
             if root not in seen:
                 continue
-            seen[root] = replace(seen[root], uri=r["child"], derived_from=root)
-            if r.get("holdsAt"):
-                seen[root] = self._at_instant(seen[root], root, datetime.fromisoformat(r["holdsAt"]),
-                                              datetime.fromisoformat(r["since"]) if r.get("since") else None,
-                                              now)
+            seen[root] = replace(seen[root], uri=want.uri, derived_from=root)
+            if want.holds_at:
+                seen[root] = self._at_instant(
+                    seen[root], root, datetime.fromisoformat(want.holds_at),
+                    datetime.fromisoformat(want.derived_at) if want.derived_at else None, now)
         return sorted(seen.values(), key=lambda g: -g.urgency)
 
     def _at_instant(self, row: Judgment, root: str, holds_at: datetime, since: datetime | None,

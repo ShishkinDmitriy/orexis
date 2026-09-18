@@ -95,6 +95,24 @@ class Wants:
         """
         return self._select("?w a orexis:Want .", at, limit, offset)
 
+    def find_all_pursued(self, at: datetime | None = None, *,
+                         limit: int = PAGE, offset: int = 0) -> list[Want]:
+        """Every want the PURSUIT ROAD derived, whatever desire each came under.
+
+        The family, not a criterion a caller could name: `deliberation:PursuedGraph` is this
+        collection's own word for where it writes, and handing it out would be handing out the
+        graph names this class exists to keep. What a caller is asking is *which of my wants did
+        a desire reading unmet bring about* — as against a debt, which the ledger mints when a
+        claim arrives, or a promise, which a level below raises.
+
+        THE CONTAINER ASKED THIS AS A QUERY OF ITS OWN, keyed on the agent and on the parent
+        being a desire, and every column it selected — the parent, the want, the instant, when it
+        was derived — is a field of `Want`. A query about this collection's contents belongs to
+        this collection, which is where `root_of` and the abouts went before it.
+        """
+        return self._select("?w a orexis:Want .", at, limit, offset,
+                            family="deliberation:PursuedGraph")
+
     def find_all_by_desire(self, desire: str, at: datetime | None = None, *,
                            limit: int = PAGE, offset: int = 0) -> list[Want]:
         """Every want derived from one desire. Several, because a desire universal over a class
