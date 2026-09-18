@@ -722,7 +722,10 @@ SELECT ?r WHERE {{
         serve, and only for a claim still held — an obligation whose claim was never presented
         is not this module's to invent.
         """
-        if not judgment.claim or judgment.claim not in self.held:
+        #  THE MARKET'S OWN JUDGMENT carries the claim (`OwedJudgment`); a judgment of any other kind
+        #  names none, and a serve is not this module's to invent for it.
+        jti = getattr(judgment, "claim", None)
+        if not jti or jti not in self.held:
             return False
         #  A VESSEL I KNOW IS TOO LOW IS NOT POURED FROM. The search used to keep this claim
         #  held by planning the refill first; since a round is a fact (#358) there may be no
@@ -730,15 +733,15 @@ SELECT ?r WHERE {{
         #  what reaches here. The actor is the boundary then: what I know of my stock says the
         #  claim cannot be honoured, so it stays held for the reading that changes that. A
         #  vessel I have never read keeps the old arrangement and is judged by the pour.
-        claim = self.held[judgment.claim]
+        claim = self.held[jti]
         market = next((m for m in self.markets if m.uri == act.via or
                        self.stock_property.get(m.uri)), None)
         stock = self._stock_of(market) if market is not None else None
         if stock is not None and stock + EPS < claim.amount_l:
             self.log.info("claim %s waits — my vessel holds %.3f L and it asks %.3f L",
-                          judgment.claim, stock, claim.amount_l)
+                          jti, stock, claim.amount_l)
             return False
-        self._serve(judgment.claim, "the plan's head — an obligation's row")
+        self._serve(jti, "the plan's head — an obligation's row")
         if (keeper := self._keeper()) is not None:
             keeper.satisfy(SERVING, judgment.uri, "served")
         return True

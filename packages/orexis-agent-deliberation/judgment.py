@@ -46,7 +46,7 @@ class Judgment:
     fern a litre" finally rank against each other.
     """
 
-    uri: str  # the desire's own node: a shape this agent holds, or an obligation
+    uri: str  # the want's own node
     urgency: float  # 0 = content, 1 = at the edge of what it can bear or of its deadline
 
     # What it currently reads, where whoever contributed the want has a number for it — a
@@ -56,25 +56,25 @@ class Judgment:
     # (the-stake-is-sensings-want; sensing's `ObservedDesire` carries `observed_property`).
     value: float | None = None
 
-    # A obligation's two: the claim it came from and whom it is owed to. A stake has neither, which
-    # is what `is_obligation` reads — no kind field, because a flag that can disagree with the data
-    # beside it is a flag that eventually does.
-    claim: str | None = None
-    owed_to: str | None = None
+    #  A PACKAGE'S WORDS ARE NOT HERE. A debt's claim and whom it is owed to were two fields
+    #  of this type, and `is_obligation` read them — every kernel branch on it has gone, one
+    #  slice at a time (#697, #698, #700), and the market's own judgment carries the two
+    #  words now (`orexis_capability_market.ower.OwedJudgment`, a subclass). What the kernel does
+    #  with a judgment it does with every judgment: rank it, ask whether it may be acted on,
+    #  hand it to the search.
 
-    #  When the want stops being satisfiable — `orexis:expiresAt`, carried onto the Judgment so
-    #  the planner can hold a candidate plan's landing time to the room left. #472: the
-    #  obligation's binding is `orexis:Within`, and this is the deadline that binding reads —
-    #  a legacy record from before the word behaves identically, because the deadline is the
-    #  fact and the binding restates it. None for a stake, and None for a debt whose market
-    #  stated no window: such a debt has no landing to miss.
+    #  When the want stops being satisfiable, carried onto the Judgment so the planner can
+    #  hold a candidate plan's landing time to the room left (#472). A BY, not an AT: a plan
+    #  for a want at an instant (`holds_at`) is placed to land there; a plan for a want that
+    #  expires is refused where it would land late. A debt's deadline, set by the ledger that
+    #  speaks for it; None for a stake, and None for a debt whose market stated no window.
     expires: datetime | None = None
 
     # An EPISTEMIC want's one: the instrument whose reading is wanted current. Present exactly
     # where the want is about knowing rather than about a number, which is what `is_epistemic`
-    # reads — the same discipline as `is_obligation` above, and for the same reason: it is not a flag
-    # saying what kind this is, it is the premise, and a want derived from an instrument is a
-    # want about that instrument by construction.
+    # reads — not a flag saying what kind this is, because a flag that can disagree with the
+    # data beside it is a flag that eventually does: it is the premise, and a want derived from
+    # an instrument is a want about that instrument by construction.
     #
     # It is here because two wants can now be about ONE property — fern holds a region in its
     # moisture AND wants its probe to have spoken recently — and everything that used to ask
@@ -131,13 +131,9 @@ class Judgment:
 
     @property
     def is_met(self) -> bool:
-        """Nothing is wanted here right now. False for an obligation, which is never *met* — it is
-        discharged, and a discharged debt is history rather than a desire."""
+        """Nothing is wanted here right now. A debt's judgment never says so — a debt is
+        discharged, and a discharged debt is history rather than a want."""
         return self.state == "met"
-
-    @property
-    def is_obligation(self) -> bool:
-        return self.claim is not None
 
     @property
     def is_epistemic(self) -> bool:

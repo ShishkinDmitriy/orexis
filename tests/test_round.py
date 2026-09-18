@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from orexis_capability_market.ower import OwedJudgment
 from orexis_capability_market.terms import TENDERING
 
 from conftest import sensing_of, HUMIDITY, MOISTURE, build_agent, genesis_store, open_round_for, wired_actuator_for, wired_hosted_markets, wired_markets, wired_sensors
@@ -910,8 +911,8 @@ def test_a_duty_and_a_thirst_rank_in_one_currency(host):
 
     desires = host.pursuing(now=asked_at)
     assert desires, "an agent with a stake and a debt wants something"
-    assert desires[0].is_obligation, "a debt near its deadline outranks a barrel that is merely low"
-    assert any(not g.is_obligation for g in desires), "and the stake is still on the list, not replaced"
+    assert isinstance(desires[0], OwedJudgment), "a debt near its deadline outranks a barrel that is merely low"
+    assert any(not isinstance(g, OwedJudgment) for g in desires), "and the stake is still on the list, not replaced"
     assert desires == sorted(desires, key=lambda g: -g.urgency)
 
 
@@ -1000,9 +1001,9 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     #  is waiting until then — so the debt stands in the record with nothing pursued for it,
     #  and presenting it derives the want, about that debt, under the city's one desire
     #  (one-road-derives-every-want).
-    assert not any(g.is_obligation for g in city.pursuing()), "recorded, and nobody waiting"
+    assert not any(isinstance(g, OwedJudgment) for g in city.pursuing()), "recorded, and nobody waiting"
     ledger.demanded("j-city-1")
-    assert any(g.is_obligation and g.derived_from == root for g in city.pursuing()), \
+    assert any(isinstance(g, OwedJudgment) and g.derived_from == root for g in city.pursuing()), \
         "presented: its debt is a want like anyone else's, derived under its desire"
 
     ledger.discharge("j-city-1")
@@ -1014,7 +1015,7 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     #  left is the rule, met. What the city pursues is its debts and nothing else, which is
     #  what this sentence has always said.
     paid = city.pursuing()
-    assert paid and all(g.is_met and not g.is_obligation for g in paid), \
+    assert paid and all(g.is_met and not isinstance(g, OwedJudgment) for g in paid), \
         "paid: nothing under its rule is in trouble"
     for judged in paid:
         city.deliberator.decide(judged)
@@ -1040,7 +1041,7 @@ def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):
         "a pour from a vessel known too low discharges nothing — the claim is held, not spent"
 
     open_round_for(host, "supplier")   # the city has a round open — the refill is buyable
-    obligation = next(g for g in host.pursuing() if g.is_obligation)
+    obligation = next(g for g in host.pursuing() if isinstance(g, OwedJudgment))
     move = host.deliberator.propose_for(obligation)
     assert move == "http://example.org/orexis/market#Acquiring", \
         "the plan's first step is the refill — the search found the chain the reflex never could"
@@ -1058,7 +1059,7 @@ def test_a_host_holding_enough_serves_the_presented_claim_by_the_same_search(hos
 
     assert host.sent.to(valve.command_topic), "holding enough, the presentation pours"
 
-    obligation = [g for g in host.pursuing() if g.is_obligation and g.claim == claim["jti"]]
+    obligation = [g for g in host.pursuing() if isinstance(g, OwedJudgment) and g.claim == claim["jti"]]
     assert obligation == [], "and the discharged debt is history, not a desire"
 
 

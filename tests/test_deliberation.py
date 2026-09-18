@@ -531,7 +531,7 @@ def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
     counterparty. A host with two buyers must not serve one's claim through the other's valve,
     which is why the match is on the agent and not on the mode alone.
     """
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_capability_market.ower import OwedJudgment
 
     supplier = make("supplier")
     #  THE WANT THE ROAD MINTED for a presented claim, which is what the market's serve names
@@ -544,7 +544,7 @@ def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
     assert supplier.deliberator.propose_for(obligation) == \
         "http://example.org/orexis/market#Serving"
 
-    stranger = Judgment(uri="urn:o", urgency=0.9, claim="j-2", owed_to="urn:nobody")
+    stranger = OwedJudgment(uri="urn:o", urgency=0.9, claim="j-2", owed_to="urn:nobody")
     assert supplier.deliberator.propose_for(stranger) is None, \
         "a debt no lever of mine can reach proposes nothing — and stays owed"
 
@@ -555,10 +555,10 @@ def test_an_unpresented_duty_is_hot_and_still_not_acted_on(make):
     strength of urgency alone would spend the water where nothing is looking — and a debt
     approaching its deadline that nobody has presented is exactly the case where the two
     answers differ."""
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_capability_market.ower import OwedJudgment
 
     supplier = make("supplier")
-    standing = Judgment(uri="urn:o", urgency=0.99, claim="j-3", pursuable=False,
+    standing = OwedJudgment(uri="urn:o", urgency=0.99, claim="j-3", pursuable=False,
                     owed_to="http://example.org/orexis/world/simulation#fern_agent")
     assert supplier.deliberator.propose_for(standing) is None
 
@@ -709,7 +709,7 @@ def test_a_plan_landing_after_the_wants_expiry_is_not_one(make):
     gate did it, and not the fixture."""
     from datetime import datetime, timedelta, timezone
 
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_capability_market.ower import OwedJudgment
     from orexis_agent_deliberation.planner import Planner
 
     supplier = make("supplier", genesis_store({("barrel1", STORED): 3.0}))
@@ -727,7 +727,7 @@ def test_a_plan_landing_after_the_wants_expiry_is_not_one(make):
     assert uri.startswith(f"{supplier.me.uri}.no_overdue_debts.pursued.")
 
     def planned(seconds_left):
-        want = Judgment(uri=uri, urgency=0.9, claim="w1",
+        want = OwedJudgment(uri=uri, urgency=0.9, claim="w1",
                     owed_to="http://example.org/orexis/world/simulation#fern_agent",
                     expires=now + timedelta(seconds=seconds_left))
         return Planner(supplier, supplier.me).plan(want)

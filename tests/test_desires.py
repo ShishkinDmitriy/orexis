@@ -15,6 +15,7 @@ import pyoxigraph as ox
 
 
 from orexis_capability_sensing.regions import ObservedJudgment
+from orexis_capability_market.ower import OwedJudgment
 from conftest import sensing_of, MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
@@ -43,7 +44,7 @@ def test_the_query_and_the_module_agree_with_the_diff(query_with_readings, monke
     #  and a dict keyed on the property alone quietly kept whichever came last. The diff is
     #  about numbers, so the wants it must agree with are the ones about numbers.
     stakes = {g.observed_property: g for g in desires
-              if not g.is_obligation and not g.is_epistemic}
+              if getattr(g, "observed_property", None) is not None and not g.is_epistemic}
     assert set(stakes) == set(diffs), "the same wants, whichever text is run"
     for prop, gap in diffs.items():
         assert abs(stakes[prop].urgency - abs(gap.gap)) < 1e-9
@@ -110,7 +111,7 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them(mo
     ledger.endow()
     def duty_at(offset_s):
         return next(g for g in ledger.desires(now=owed + timedelta(seconds=offset_s))
-                    if g.is_obligation)
+                    if isinstance(g, OwedJudgment))
     assert duty_at(0).urgency == 0.0
     assert abs(duty_at(450).urgency - 0.5) < 0.02
     assert duty_at(900).urgency == 1.0
@@ -333,7 +334,7 @@ def test_an_obligation_is_judged_by_the_met_test_the_ledger_wrote(monkeypatch):
     #  (one-road-derives-every-want): a `sh:sparql` in the ledger's own words, whose
     #  violation is a debt presented or lapsing and not discharged — so a world where a
     #  serve wrote the discharge reads met. AND IT NAMES NO WORLD (#666).
-    want = next(d for d in supplier.pursuing() if d.claim == "m1")
+    want = next(d for d in supplier.pursuing() if getattr(d, "claim", None) == "m1")
     assert want.uri != debt, "the want is the road's, not the debt"
     rows = bindings(supplier.beliefs.query_union(f"""SELECT ?t WHERE {{
         <{want.uri}> orexis:metWhen ?shape . ?shape sh:sparql ?c . ?c sh:select ?t }}"""))
@@ -346,4 +347,5 @@ def test_an_obligation_is_judged_by_the_met_test_the_ledger_wrote(monkeypatch):
         "judged by the select compiled from the ledger's shape, not by a kernel branch"
     assert "dischargedAt" not in inspect.getsource(planner_module), "the kernel names no ledger word"
     ledger.discharge("m1")
-    assert not any(d.claim == "m1" for d in supplier.pursuing()), "paid: no longer pursued"
+    assert not any(getattr(d, "claim", None) == "m1" for d in supplier.pursuing()), \
+        "paid: no longer pursued"
