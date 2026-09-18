@@ -29,7 +29,7 @@ database "Beliefs · repository" as BEL {
 
 database "Desires · repository" as DES {
   folder "asserted · no graph class" as DA
-  folder "roots · orexis:RootsGraph" as DD
+  folder "roots · orexis:DesireGraph" as DD
 }
 
 component "Deducer\nderives the roots at genesis;\nthe modality projects" as DB

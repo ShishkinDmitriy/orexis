@@ -51,7 +51,7 @@ GRAPH graph:sensed {
 
 # What each graph IS, and when it holds — said once each, beside the data.
 GRAPH graph:classification {
-  roots:keeper a orexis:RootsGraph .
+  roots:keeper a orexis:DesireGraph .
 }
 
 # What the road is expected to leave standing under the desire: each want by its name,

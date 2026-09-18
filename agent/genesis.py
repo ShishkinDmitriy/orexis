@@ -422,7 +422,7 @@ def author_roots(st: Store, agent_id: str) -> list[str]:
         triples = "\n".join(f"{q.subject} {q.predicate} {q.object} ." for q in _subgraph_of(scratch, graph, top))
         if triples:
             st.update(f"INSERT DATA {{ GRAPH <{graph}> {{\n{triples}\n}} }}")
-    st.classify(graph, OREXIS + "RootsGraph", OREXIS + "Asserted", agent_uri(st, agent_id))
+    st.classify(graph, OREXIS + "DesireGraph", OREXIS + "Asserted", agent_uri(st, agent_id))
     return new
 
 
@@ -497,7 +497,7 @@ def classify_kernel_graphs(st: Store, agent_id: str) -> None:
     """
     me = agent_uri(st, agent_id)
     st.classify(beliefs_graph(agent_id), OREXIS + "PickRecordGraph", OREXIS + "Asserted", me)
-    st.classify(roots_graph(agent_id), OREXIS + "RootsGraph", OREXIS + "Asserted", me)
+    st.classify(roots_graph(agent_id), OREXIS + "DesireGraph", OREXIS + "Asserted", me)
 
 
 def _belief_room(path: str | None) -> str | None:

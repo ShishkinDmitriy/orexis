@@ -21,7 +21,7 @@ description: >-
 sensor — is a declaration for the agent's whole life, and the modality re-derived it from
 beliefs at every rebuild, carrying a foresight read off a pick. That made a root a function of
 the agent's current state, which a root is not. It is authored once, at genesis, into a graph of
-the agent's own with no period (`orexis:RootsGraph`), and a graph with no period holds at every
+the agent's own with no period (`orexis:DesireGraph`), and a graph with no period holds at every
 instant exactly as the T-Box does: the door hands it to a reader asking about any instant. It is
 endowed on amendment — a never-held root arrives, a held one stays
 ([an-amendment-endows-what-it-grants](/decisions/an-amendment-endows-what-it-grants.md)) — and a
@@ -79,7 +79,7 @@ prediction's lifecycle.
 # What is built, in the order it is built
 
 1. **Roots authored at genesis, and the rebuild a projection**
-   ([#644](https://github.com/ShishkinDmitriy/orexis/issues/644), built): `orexis:RootsGraph`, a
+   ([#644](https://github.com/ShishkinDmitriy/orexis/issues/644), built): `orexis:DesireGraph`, a
    per-agent graph with no period; `genesis.author_roots` runs the packages' desire rules at
    birth and, at every boot, copies in only a root the volume never held; the modality's
    build is `Projection` and runs no rule; foresight left the root for the choir

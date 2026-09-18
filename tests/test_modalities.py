@@ -19,6 +19,9 @@ from conftest import genesis_store
 #  The desire modality's graph classes (DesireGraph, ConstraintGraph, BoundsGraph) retired
 #  with #312: its carrier is a STORE, and inside a store the graphs say only who put the fact
 #  there. The classes below remain graph vocabulary until their modalities' stores land.
+#  `orexis:DesireGraph` is back as a CONTENT class — a graph of desire rows, beside
+#  `orexis:WantGraph` — which is a different claim from the modality one #312 retired, and
+#  is why neither is in this set: a graph is classified by its owner for what it holds.
 MODALITIES = {"BeliefGraph", "MenuGraph", "IntentionGraph", "HistoryGraph"}
 ARRIVALS = {"Asserted", "Derived", "Entailed", "Recorded", "Received"}
 

@@ -70,8 +70,13 @@ dissolved — genesis derives no wants, the modality's own build runs the packag
 against the world and the records on every rebuild, and the belief base keeps records only,
 typed for what they are (`orexis:PickRecordGraph`, `market:ObligationsGraph`). Amended by
 [a-root-holds-always-and-an-outdated-graph-is-dropped](/decisions/a-root-holds-always-and-an-outdated-graph-is-dropped.md):
-the ROOTS are authored at genesis into `orexis:RootsGraph` and the build projects them, deducing
-nothing — the rules run at birth and at boot to endow. That build was also
+the ROOTS are authored at genesis into a graph the build projects, deducing
+nothing — the rules run at birth and at boot to endow. Amended again by
+[a-graph-class-is-named-for-what-it-holds](/decisions/a-graph-class-is-named-for-what-it-holds.md):
+the spelling `orexis:DesireGraph` is back as a CONTENT class — a graph of `orexis:Desire` rows,
+the roots and the promises, beside `orexis:WantGraph` for the pursued — which is a different
+claim from the modality class retired here: what rows a graph carries, said by its owner, and
+not which store it belongs to. That build was also
 [#263](https://github.com/ShishkinDmitriy/orexis/issues/263)'s mechanism: re-derivation during
 a life is any rebuild, and a want whose premise has ceased is no longer implied. Everything
 in the beliefs

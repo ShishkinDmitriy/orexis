@@ -207,6 +207,7 @@ each is called, and what a name has to answer to.
 
 * [a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md) - Three layers in the code and two types in the bundle: a repository holds data, a service holds logic.
 * [a-repository-is-named-for-what-it-holds](/decisions/a-repository-is-named-for-what-it-holds.md) - A collection of domain objects, not a store: the plural of its element, Spring Data's methods, and a layer mostly absent.
+* [a-graph-class-is-named-for-what-it-holds](/decisions/a-graph-class-is-named-for-what-it-holds.md) - A graph class is named for the rows it holds — desire graphs, want graphs, the asserted one both; the pick record's name says picks.
 * [a-kind-is-a-type-not-a-binding](/decisions/a-kind-is-a-type-not-a-binding.md) - `orexis:Always` told six readers which KIND a node was; the type does that now, and `Want` is no longer a subclass.
 * [a-desire-is-universal-and-a-want-is-existential](/decisions/a-desire-is-universal-and-a-want-is-existential.md) - The type is the quantifier and the graph's period is the interval; `orexis:bindsWhen` states a third time what they already say.
 * [a-desire-is-declared-and-a-judgment-is-made](/decisions/a-desire-is-declared-and-a-judgment-is-made.md) - One word named a stored row and a per-pass answer; naming the second `Judgment` let the first become data.

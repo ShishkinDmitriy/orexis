@@ -262,7 +262,7 @@ def promises_graph(agent_id: str) -> str:
 
 def roots_graph(agent_id: str) -> str:
     """One agent's ROOT desires, authored at genesis and holding at every instant — the name
-    `orexis:RootsGraph` declares the prefix of, built from the one id a process is handed
+    `orexis:DesireGraph` declares the prefix of, built from the one id a process is handed
     (#644). The desire modality projects it; nothing rebuilds it."""
     return _GRAPH + "roots/" + agent_id
 

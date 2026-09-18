@@ -154,7 +154,7 @@ complete"*. This series hit it five more times, all in the same direction — a 
 
 | guard | stopped seeing |
 |---|---|
-| `test_inference` rule scan | `agent/rules.ru` — one case, under a comment asserting every `.ru` belongs to a package |
+| `test_inference` rule scan | the kernel's own rules file (deleted in #708) — one case, under a comment asserting every `.ru` belongs to a package |
 | `test_knowledge._declared` | the kernel's ontology, then its shapes |
 | `test_knowledge`'s dictionary census | a second hand-maintained copy of the same list |
 | `test_layout` doc-term census | shape names the entry documents cite |

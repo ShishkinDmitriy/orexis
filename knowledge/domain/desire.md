@@ -75,7 +75,7 @@ while, a second deriver reaching the same family by a different door, and stoppe
 deadline became a prediction like any other.
 
 The two live in two graph families, and the names already said so before this page did:
-`orexis:RootsGraph` holds the desires, authored at genesis and holding at every instant;
+`orexis:DesireGraph` holds the desires, authored at genesis and holding at every instant;
 `deliberation:PursuedGraph` holds one graph per want, each with its period.
 
 **The kind is `orexis:Desire` and a want is an `orexis:Want` under it**, which is a subclass —

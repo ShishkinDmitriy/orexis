@@ -27,8 +27,8 @@ def _graphs_in(desires) -> set[str]:
 
 def test_the_desires_store_holds_wants_and_only_wants(monkeypatch):
     """Selection is by CLASS, not by list: every graph the catalog types with a desire
-    modality is copied — the derived regions, and the picks, since the pick record is typed
-    `orexis:DesireGraph` and the sovereign's ruling made that literal — and nothing else is.
+    modality is copied — the derived regions, and the picks, since the pick record is
+    projected in by its class and the sovereign's ruling made picks wants — and nothing else is.
     A reading or a world fact in the desires store would be the modality split failing on
     day one."""
     agent = build_agent("gardener", genesis_store(world="loner"), monkeypatch)

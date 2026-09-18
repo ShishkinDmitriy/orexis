@@ -113,7 +113,7 @@ Every world used to carry `<…/graph/beliefs/fern> a orexis:BeliefsGraph ; orex
 once per agent, beside the roster it restated. A second list is a second thing to drift, and this
 one drifted silently — nothing failed if an agent was added and its line was not.
 
-It is a function of the roster, so the kernel's `agent/rules.ru` derives it, building the IRI from
+It is a function of the roster, so a rule in the kernel's own rules file derived it (deleted in #708 — genesis classifies the pick record at birth now), building the IRI from
 the agent's own `orexis:localId` exactly as `ontology.beliefs_graph()` does. That also closes the seam
 an earlier pass recorded, where a computed description stood beside a hand-written one.
 
