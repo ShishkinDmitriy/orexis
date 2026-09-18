@@ -298,6 +298,11 @@ it is a record wearing a bullet.
   whose premises are stored and would outlive them, and the differences the likeness hides are
   cardinality (nine of eleven actions afford nothing, one afforded three), provenance
   (contributed, derived, received) and whether two agents may differ and both be right.
+- **A graph's name has one owner, and it is the class's prefix in the T-Box** — ten helpers
+  spelled a per-agent graph's prefix beside the `orexis:graphPrefix` boot classifies by, a
+  rule minted the beliefs graph outright, and nothing held the spellings together; asked which
+  graphs could be renamed freely, the answer was none, and naming every one from its class is
+  what makes it all of them.
 - **A repository holds a store and nothing else, because an agent id is another aggregate
   root's identity** — which store is the agent's decision since it owns the stores and the
   collections; identity travels as a query criterion, and the reads need none at all, since one
@@ -735,7 +740,11 @@ fails if pyshacl ever entails something the closure does not. See
   whichever package declares it, and `orexis:WorkingGraph` is how a package says its graph is
   its own and not carried. Naming one is still legitimate to SUBTRACT it
   (`validate_agent` takes the pick record out where the desires modality already carries it),
-  which is saying which road a fact came by rather than enumerating what to read.
+  which is saying which road a fact came by rather than enumerating what to read. **And a
+  per-agent graph is NAMED from its class**: `graph_prefix(<class>)` reads the
+  `orexis:graphPrefix` the T-Box declares, every helper builds from it, and
+  `tests/test_layout.py` refuses a source that spells a prefix — so the T-Box is the one
+  owner of a graph's name and a rename is one string.
 - **SPARQL prefixes.** Only what `store.NAMESPACES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in
   production. `tests/test_store.py` checks this by scanning the source text — and asserts each
