@@ -135,3 +135,30 @@ def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(mon
     assert plan is not None and [s.action.rsplit("#", 1)[-1] for s in plan.steps] == ["Serving"]
     assert plan.placed_at is None or plan.placed_at <= clock.now(), \
         "placed from the present, not at the lapse less the pour"
+
+
+def test_the_tick_marks_a_presented_debt_and_leaves_an_unpresented_one_standing(monkeypatch):
+    """The tick marks every want that may be acted on and skips what nobody may act on yet —
+    a debt its holder has not presented stands hot and unmarked, since a pass on it would
+    decide nothing (#132). It used to skip DEBTS, by kind, and leave a presented one the
+    search could not serve to hosting's own wake-ups alone; a presented debt is a want like
+    any other now, reconsidered on the tick until the world changes the answer."""
+    from orexis_agent_deliberation import deliberator as deliberation
+
+    agent, ledger, root = _host(monkeypatch, stock=3.0)
+    ledger.owe("fern", "jti-6", expires_at=time.time() + HOUR, amount_l=0.5)
+    ledger.owe("fern", "jti-7", expires_at=time.time() + HOUR, amount_l=0.5)
+    ledger.demanded("jti-7")
+    asked, presented = {j.claim: j for j in ledger.obligations()}, {}
+    assert not asked["jti-6"].pursuable and asked["jti-7"].pursuable
+
+    pursued = []
+    monkeypatch.setattr(deliberation.pursuit, "pursue", lambda a, j, **k: pursued.append(j.uri))
+    agent.deliberator.deliberate_on_gaps()
+    assert asked["jti-7"].uri in pursued, "presented: reconsidered like any other want"
+    assert asked["jti-6"].uri not in pursued, "unpresented: standing, hot, and not decided on"
+
+    marked = []
+    monkeypatch.setattr(agent.reviser, "note", lambda uri, judgment=None, **k: marked.append(uri))
+    agent.deliberator.tick()
+    assert asked["jti-7"].uri in marked and asked["jti-6"].uri not in marked

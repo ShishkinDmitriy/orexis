@@ -152,9 +152,15 @@ class Deliberator:
             self._tick.stop()
 
     def tick(self) -> None:
-        """The clock landed, on the loop: mark every want and return. Never searches here."""
+        """The clock landed, on the loop: mark every want that may be acted on and return.
+        Never searches here. A want nobody may act on yet — a debt its holder has not
+        presented — is left standing and hot; marking it would run a pass to decide nothing.
+        It used to be debts that were skipped, by kind: a host serves on a presentation or
+        when stock arrives, and hosting wakes the search on those itself. It still does; a
+        presented debt the search could not serve is now reconsidered on the tick as any
+        other want is, which is one more pass that finds nothing until the stock arrives."""
         for judgment in self.agent.pursuing():
-            if not judgment.is_obligation:
+            if judgment.pursuable:
                 self.agent.reviser.note(judgment.uri, judgment)
 
     def deliberate_on_gaps(self) -> None:
@@ -170,11 +176,10 @@ class Deliberator:
         STANDS — so the bidder answers the next offer from what it already committed to,
         without a second search. See knowledge/domain/executor.md.
 
-        Obligations are skipped: a host serves on a presentation or when stock arrives with a
-        claim held, and hosting wakes the search on those events itself.
+        What nobody may act on yet is skipped, as the tick skips it — see `tick`.
         """
         for judgment in self.agent.pursuing():
-            if judgment.is_obligation:
+            if not judgment.pursuable:
                 continue
             pursuit.pursue(self.agent, judgment)
 
@@ -429,21 +434,10 @@ class Deliberator:
         an agent meeting either must say so loudly rather than decide quietly on half the
         evidence.
         """
-        #  ASKED OF THE LIVE WORLD ONCE, purely to complain. The planner asks the same
-        #  question of every candidate and takes the flat 1.0 when nobody answers — which
-        #  makes every possible world score alike, so "no move improves" comes back with
-        #  confidence from an unrankable comparison. An EPISTEMIC want is the freshness case
-        #  and legitimately unmeasured (it has no distance to scale); any other want about a
-        #  property is a stake, and a stake nothing measures is what the gate refuses. Told
-        #  apart by the kernel's own structure — the kernel holds no region to consult.
-        if (not judgment.is_obligation and not judgment.is_epistemic
-                and self.agent.desire_urgency(
-                    judgment, self.agent.beliefs.query_at, STATE_GRAPH) is None):
-            self.log.error(
-                "%s: I hold a stake here and nothing I composed can measure it — every world "
-                "I could reach scores alike, so I am about to conclude that nothing helps from "
-                "a comparison that means nothing. `orexis-validate` refuses this world.",
-                _short(judgment.uri))
+        #  A STAKE NOTHING MEASURES is complained about by the package that holds the
+        #  regions, once per want, the first time the planner asks it (sensing's
+        #  `desire_urgency`) — the kernel used to ask the live world once here to say so,
+        #  and could tell a stake from a debt only by kind.
         #  A PLAN THAT WORKED HERE BEFORE is adopted without a search (#469, #551): the same
         #  want, a world where the plan's regressed precondition holds and its first step is
         #  on the menu. The trace says so; the world verifies it step by step.
