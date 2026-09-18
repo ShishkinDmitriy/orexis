@@ -438,12 +438,16 @@ authoring, and neither is a derivation: what is derived is the want.
 
 # Where instances enter
 
-A declared desire speaks only T-Box words. One level down the decomposition binds the roster —
-this fern, this probe, this claim — and from there each instance splits per property, each
-property per side of its range. Code still names no instance anywhere: a derivation binds them
-from what the world's files author, and a ratified desire's instance is authored there too. What
-holds at every level is the provenance discipline — deduced or ratified, never the agent's own
-authoring — rather than any rule about where the T-Box ends.
+A declared desire speaks only T-Box words, and its met-test's target is the class it quantifies
+over. The instances enter as WANTS: the met-test compiled to the select whose rows are its
+violations, run now and at each prediction's start, names every instance in trouble and when —
+this fern's moisture at 14:32, this debt at its deadline — and one want is minted per
+[scope](/domain/scope.md) of them
+([one-road-derives-every-want](/decisions/one-road-derives-every-want.md)). Code still names no
+instance anywhere: the world's files author them and the packages write them as they arrive, and
+a ratified desire's instance is authored there too. What holds at every level is the provenance
+discipline — deduced or ratified, never the agent's own authoring — rather than any rule about
+where the T-Box ends.
 
 # Each node states its why
 

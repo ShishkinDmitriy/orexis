@@ -298,6 +298,11 @@ it is a record wearing a bullet.
   root's identity** — which store is the agent's decision since it owns the stores and the
   collections; identity travels as a query criterion, and the reads need none at all, since one
   agent, one volume means the store IS the scope.
+- **One road derives every want, and a package writes instances and predictions** — a desire
+  is one and universal, its met-test's violation rows are the instances in trouble and each
+  prediction's start is when, a want is minted per scope of them, and the ledger's own road was
+  only ever decomposition having no runtime form; the per-instance DESIRE level was drawn and
+  struck, because the instance is the want's grain.
 - **A want states no time semantics of its own** — the KIND is its type, the INTERVAL is its
   graph's period, the INSTANT is `orexis:holdsAt`, and the FAMILY a reader filtering on a binding
   actually wanted is the graph's classification; the binding property said all four a fifth
