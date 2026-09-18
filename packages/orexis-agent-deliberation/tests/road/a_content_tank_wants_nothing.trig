@@ -50,6 +50,11 @@ GRAPH graph:sensed {
   :tank2 :level 20 ; :temperature 20 .
 }
 
+# What each graph IS, and when it holds — said once each, beside the data.
+GRAPH graph:classification {
+  roots:keeper a orexis:RootsGraph .
+}
+
 # What the road is expected to leave standing under the desire: each want by its name,
 # what it is about, and the instant it holds at where it holds at one.
 GRAPH :expected { }

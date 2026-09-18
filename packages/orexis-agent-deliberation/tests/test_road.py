@@ -11,12 +11,12 @@ that covered the road end to end (`tests/test_greenhouse.py`, `test_foreseen.py`
 `test_one_road.py`, `test_pursued.py`) each stood a whole agent up to show one of these.
 
 The clock stands at 2026-01-01T12:00:00Z, so a file can say an instant and mean it. What the
-store needs beyond the case is four triples: which three graphs are public, and that the
-prediction graph class exists at all — the door asks for predictions by `rdfs:subClassOf*`,
-and a zero-length path matches a class only where the class is a term of the graph asked.
-Nothing classifies the roots graph as the agent's own: the road names it, and that
-classification is boot's, for the readers that ask which graphs are the agent's. See
-knowledge/decisions/one-road-derives-every-want.md.
+store needs beyond the case is five triples: which three graphs are public, and that the two
+graph classes a case uses exist at all — the door asks for predictions and for the agent's own
+graphs by `rdfs:subClassOf*`, and a zero-length path matches a class only where the class is
+a term of the graph asked. A case classifies its roots graph as boot does, `orexis:RootsGraph`:
+the road finds a root's shape by asking which graphs are the agent's, never by spelling the
+graph's name. See knowledge/decisions/one-road-derives-every-want.md.
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ def stand_in(case: Path):
     st.agent_id, st.agent_uri, st.graph = AGENT, ME, beliefs_graph(AGENT)
     st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
       <{ONTOLOGY_GRAPH}> a orexis:PublicGraph . <{WORLD}> a orexis:PublicGraph . <{ACTIONS}> a orexis:PublicGraph .
-      orexis:PredictionGraph rdfs:subClassOf orexis:Graph . }} }}""")
+      orexis:PredictionGraph rdfs:subClassOf orexis:Graph . orexis:RootsGraph rdfs:subClassOf orexis:Graph . }} }}""")
     st.put_graph(WORLD, case.read_text(), dataset=True)
     desires, wants = Desires(st), Wants(st)
     wants.on_saved.append(lambda _: desires.rebuild())

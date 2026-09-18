@@ -212,15 +212,14 @@ class Judgments:
 
         cache = self.__dict__.setdefault("_compiled_wants", {})
         if (want, entered) not in cache:
-            #  AND THE ROOTS GRAPH: a package's desire and its shape are authored there at
-            #  genesis (#644), not in public knowledge — compiled from the public graphs alone
-            #  the ledger's shape had no target, raised, and the error path read the root as
-            #  unmet every pass. Sensing's roots never met this because the choir speaks for
-            #  them and this select is never compiled; the ledger speaks for the WANTS, so
-            #  its root is judged here, and here must see where a root lives.
-            from orexis_agent_progression.ontology import roots_graph
+            #  AND THE AGENT'S OWN GRAPHS, asked by classification: a package's desire and its
+            #  shape are authored into the roots graph at genesis (#644), not into public
+            #  knowledge — compiled from the public graphs alone the ledger's shape had no
+            #  target, raised, and the error path read the root as unmet every pass. It named
+            #  the roots graph for a while; which graphs are the agent's is what boot's
+            #  classification says, and a reader asks it rather than spelling an instance.
             public = graph_from(self._agent.beliefs, *self._agent.beliefs.public_graphs(),
-                                roots_graph(self._agent.id))
+                                *self._agent.beliefs.recorded_graphs())
             compile = entered_select if entered else unmet_select
             cache[(want, entered)] = compile(public.cbd(URIRef(shape)), URIRef(shape))
         return cache[(want, entered)]

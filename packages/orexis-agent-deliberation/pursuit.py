@@ -217,16 +217,17 @@ def crossing_of(agent, root: str) -> datetime | None:
 def _unmet_select_of(agent, root: str) -> str | None:
     """The root's own met-test, compiled to the select whose rows are its VIOLATIONS — `?this`,
     which constraint, and `?_about` where the constraint's block says what it is about — from
-    public knowledge and the agent's roots graph, where a root's shape lives since #644. Cached
-    per root on the agent: a root never changes while the agent runs. None where the root states
-    no shape or the compiler refuses.
+    public knowledge and the graphs the agent owns, ASKED by their classification and never
+    named (a root's shape lives in the roots graph since #644, and the roots graph is
+    `orexis:RootsGraph` in the classification boot writes). Cached per root on the agent: a
+    root never changes while the agent runs. None where the root states no shape or the
+    compiler refuses.
 
     THE REPORT AND NOT THE FOCUS NODES (one-road-derives-every-want): a desire universal over
     several properties fails per property, and the rows are what say which. The planner
     compiles the same shape the same way for the law it holds candidates to."""
     from rdflib import URIRef
 
-    from orexis_agent_progression.ontology import roots_graph
     from orexis_agent_progression.violation import Unsupported, report_select
 
     from .conformance import graph_from
@@ -239,7 +240,8 @@ def _unmet_select_of(agent, root: str) -> str | None:
     if rows:
         shape = rows[0]["s"]
         try:
-            shapes = graph_from(agent.beliefs, *agent.beliefs.public_graphs(), roots_graph(agent.id))
+            shapes = graph_from(agent.beliefs, *agent.beliefs.public_graphs(),
+                                *agent.beliefs.recorded_graphs())
             select = report_select(shapes.cbd(URIRef(shape)), URIRef(shape))
         except Unsupported as exc:
             log.warning("%s: its met-test cannot be compiled, so no crossing is read for it: %s",
