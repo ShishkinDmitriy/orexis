@@ -125,9 +125,11 @@ own deadline; `discharge` and the sweep drop the prediction; the ledger speaks f
 want by its claim's window; the host answers foresight for that root as every deadline it has
 been given; a debt written before the ledger predicted is endowed its prediction at boot. A
 debt with no deadline and nobody asking is nothing to pursue until its holder asks, and the
-want minted then holds at no instant. The `is_obligation` sites stand — they branch on the
-choir's judgment, which is still the market's — and collapsing them is a cleanup, not this
-road. #675 is done.
+want minted then holds at no instant. The `is_obligation` sites stood at first, branching on
+the choir's judgment; they were collapsed one slice at a time afterwards — the serve's
+affordance names the want it is owed for (#697), a debt is reported under its root (#698),
+the tick marks what may be acted on (#700), and the kernel's `Judgment` carries no market
+word, the market's `OwedJudgment` carrying the claim and whom it is owed to. #675 is done.
 
 Stage two taught three things. **A root met now with nothing foreseen derives nothing** — the
 road's fallback, one want about everything the desire is about, is for a root unmet now whose

@@ -128,11 +128,13 @@ either knowing how the other was computed.
 
 # The kind is read, never flagged
 
-A stake carries what is wanted and what it currently reads. A obligation carries the claim it came from
-and whom it is owed to. An **epistemic** want carries the instrument it was derived from.
-**Each kind is known by the premise it has and the others do not, which is what `is_obligation` and
-`is_epistemic` read** — there is no kind field, because a flag that can disagree with the data
-beside it is a flag that eventually does.
+A stake carries what is wanted and what it currently reads. An **epistemic** want carries the
+instrument it was derived from. A debt is the market's own judgment — `OwedJudgment`, the kernel's type
+with the claim it came from and whom it is owed to beside it — and the kernel's type carries
+neither word. **Each kind is known by the premise it has and the others do not, which is what
+`is_epistemic` reads** — there is no kind field, because a flag that can disagree with the data
+beside it is a flag that eventually does; and a debt is known by its type, which the market
+declares and only the market reads, since no kernel branch asks any more.
 
 The third one had to become sayable when a property stopped having one want. Fern holds a
 region in its moisture AND wants its probe to have spoken recently, and those are two things it

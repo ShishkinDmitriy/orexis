@@ -38,8 +38,7 @@ def keeper_of(agent):
 
 def stake_of(agent, prop=MOISTURE):
     return next(d for d in agent.pursuing()
-                if not d.is_obligation and not d.is_epistemic
-                and getattr(d, "observed_property", None) == prop)
+                if not d.is_epistemic and getattr(d, "observed_property", None) == prop)
 
 
 # --- an intention is the plan's head, lever included ------------------------------------------
