@@ -11,7 +11,7 @@ lives in the IRI space is not this package's business; what it holds is.
 
 from __future__ import annotations
 
-from orexis_agent_progression.ontology import graph_prefix
+from orexis_agent_progression.ontology import GRAPH_PREFIX
 
 REVIEW = "http://example.org/orexis/review#"
 
@@ -23,12 +23,12 @@ def revisions_graph(agent_id: str) -> str:
     shapes say so with `sh:maxCount 1` — so a decision cannot live beside the value it replaced
     without making the agent fail its own validation.
     """
-    return graph_prefix(REVIEW + "RevisionsGraph") + agent_id
+    return GRAPH_PREFIX + "revisions/" + agent_id
 
 
 def evidence_graph(agent_id: str) -> str:
     """The reviewer's scratch, rebuilt at every arising. Nothing else ever reads it."""
-    return graph_prefix(REVIEW + "EvidenceGraph") + agent_id
+    return GRAPH_PREFIX + "evidence/" + agent_id
 
 
 def summaries_graph(agent_id: str) -> str:
@@ -40,4 +40,4 @@ def summaries_graph(agent_id: str) -> str:
     every time it arises. Keeping them in one graph would have made "a review does not touch the
     sensed record" untestable, and an invariant nothing can check is a comment.
     """
-    return graph_prefix(REVIEW + "SummariesGraph") + agent_id
+    return GRAPH_PREFIX + "summaries/" + agent_id

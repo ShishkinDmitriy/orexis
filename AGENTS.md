@@ -298,11 +298,11 @@ it is a record wearing a bullet.
   whose premises are stored and would outlive them, and the differences the likeness hides are
   cardinality (nine of eleven actions afford nothing, one afforded three), provenance
   (contributed, derived, received) and whether two agents may differ and both be right.
-- **A graph's name has one owner, and it is the class's prefix in the T-Box** — ten helpers
-  spelled a per-agent graph's prefix beside the `orexis:graphPrefix` boot classifies by, a
-  rule minted the beliefs graph outright, and nothing held the spellings together; asked which
-  graphs could be renamed freely, the answer was none, and naming every one from its class is
-  what makes it all of them.
+- **A graph's name is for eyes, and code relies on its classification alone** — an owner
+  classifies what it writes when it creates it, a reader asks by class, and the name is a
+  readable convention nothing depends on; boot used to type every per-agent graph by matching
+  its name against a prefix its class declared, the planner and the projection named five,
+  and asked which graphs could be renamed freely the answer was none — it is all of them now.
 - **A repository holds a store and nothing else, because an agent id is another aggregate
   root's identity** — which store is the agent's decision since it owns the stores and the
   collections; identity travels as a query criterion, and the reads need none at all, since one
@@ -733,18 +733,19 @@ fails if pyshacl ever entails something the closure does not. See
   Two things are still named and both are writes or the bootstrap root, never a reader
   enumerating what to read — adding a public graph is a vocabulary edit that touches no Python.
   **A PER-AGENT graph is asked for the same way**: `store.recorded_graphs()` answers with every
-  graph this agent owns — its picks, its debts, whatever a package records — by reading the
-  classification the agent wrote about itself at boot, since a graph that does not exist until
-  its agent does cannot be declared in a T-Box. What boot types is ASKED of the vocabulary
-  (#448): a class saying `orexis:graphPrefix` and `orexis:arrivesBy` is a per-agent graph class
-  whichever package declares it, and `orexis:WorkingGraph` is how a package says its graph is
-  its own and not carried. Naming one is still legitimate to SUBTRACT it
-  (`validate_agent` takes the pick record out where the desires modality already carries it),
-  which is saying which road a fact came by rather than enumerating what to read. **And a
-  per-agent graph is NAMED from its class**: `graph_prefix(<class>)` reads the
-  `orexis:graphPrefix` the T-Box declares, every helper builds from it, and
-  `tests/test_layout.py` refuses a source that spells a prefix — so the T-Box is the one
-  owner of a graph's name and a rename is one string.
+  graph this agent owns — its picks, its debts, whatever a package records — and
+  `store.graphs_of(<class>)` with the ones of a kind, by reading the classification each
+  graph's OWNER wrote when it created the graph (`Store.classify`): the ledger its record, the
+  keeper its promises, review its three, the road each want, sensing each prediction, genesis
+  the pick record and the roots. A graph that does not exist until its agent does cannot be
+  declared in a T-Box, and boot used to type them by matching names against a prefix each
+  class declared — the one reader that depended on a name. `orexis:WorkingGraph` is how a
+  package says its graph is its own and not carried. And a reader that means its OWN gets
+  its own: the belief base tells the store whose it is, the classification says whose each
+  graph is, and every list of the agent's graphs is kept to that owner — a graph saying no
+  owner is anyone's. A graph's NAME is for eyes: the helpers
+  spell a readable convention for writers, and `tests/test_layout.py` refuses a reader that
+  imports one — a reader asks the class.
 - **SPARQL prefixes.** Only what `store.NAMESPACES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in
   production. `tests/test_store.py` checks this by scanning the source text — and asserts each

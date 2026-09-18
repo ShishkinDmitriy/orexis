@@ -25,7 +25,7 @@ import logging
 
 from agent import genesis
 
-from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
+from orexis_agent_progression.ontology import OREXIS, STATE_GRAPH
 from orexis_agent_progression.store import Store
 #  THE JUDGE IS THE FLOOR'S. `conforms` and its helpers were this file's, and went to
 #  `orexis_agent_deliberation.conformance` when the kernel split along its layers (#452): the
@@ -77,7 +77,8 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities,
     #  came by.
     recorded = st.recorded_graphs()
     if desires is not None:
-        recorded = [g for g in recorded if g != beliefs_graph(agent_id)]
+        picks = set(st.graphs_of(OREXIS + "PickRecordGraph"))
+        recorded = [g for g in recorded if g not in picks]
     private = [STATE_GRAPH, *recorded]
     data = graph_from(st, *st.public_graphs(), *private)
     if desires is not None:

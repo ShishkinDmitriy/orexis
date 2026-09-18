@@ -316,7 +316,7 @@ described automatically now, and a graph a **world file** declares still is not.
 # Amended: and the saying is not inside the said
 
 Every graph says who put it there, and where it SAYS it is beside the graph rather than in it —
-the ontology graph for a static one, `graph/classification` for a per-agent one written at boot,
+the ontology graph for a static one, `graph/classification` for a per-agent one, written by its owner when it creates the graph,
 `graph/provenance` for the PROV account of a load. Asked whether the description should live in
 the graph it describes, and refused: a graph is a scope a reader is handed, so a description
 inside it is inherited by every reader of the data, which is the hazard the provenance graph is

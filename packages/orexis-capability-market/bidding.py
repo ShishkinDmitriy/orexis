@@ -814,7 +814,8 @@ INSERT DATA {{
   <{NS}claim_{jti}> a <{CLAIM}> ; <{CLAIM_ID}> "{jti}" ; <{CLAIMED_AT}> "{now}"^^xsd:dateTime ;{redeemed}{window}
       <{CLAIM_L}> "{amount}"^^xsd:decimal ; <{CLAIM_DEBIT}> "{debit}"^^xsd:decimal ;
       <{ON_VENUE}> <{market.uri}> . }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a orexis:BeliefGraph ; orexis:arrivedBy <{rounds.RECEIVED}> . }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a orexis:BeliefGraph ; orexis:arrivedBy <{rounds.RECEIVED}> ;
+      orexis:beliefsOf <{self.me.uri}> . }}
   GRAPH <{PERIODS_GRAPH}> {{
     <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;{ends}
       orexis:start "{now}"^^xsd:dateTime ] . }}

@@ -222,12 +222,17 @@ orexis:BeliefGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Beli
 
 
 
+orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range orexis:Agent ;
+    rdfs:label "beliefs of" ;
+    rdfs:comment "Which agent owns this graph — said by the owner in the classification it writes when it creates the graph, beside what the graph is and how it arrived, so a reader that means its OWN graphs of a kind asks by owner as well as by class. In a deployed volume every graph is the one agent's; the world-wide validation and the tests stand several agents in one store, and this is what keeps one agent's roots and picks apart from the next's there — the name used to, and a name is for eyes." .
+
+orexis:AssertedDesireGraph a owl:Class ; rdfs:subClassOf orexis:PublicGraph ; rdfs:label "Asserted desire graph" ;
+    rdfs:comment "The one public graph that holds WANTS: what a world ratifies directly — the courier's, hanoi's — beside the topology it states. A class of its own so that a reader meaning it asks by class, as it asks for every other graph, and names no instance; the graph's IRI is the world's to write." .
+
 orexis:RootsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Roots graph" ;
-    orexis:graphPrefix "http://example.org/orexis/graph/roots/" ; orexis:arrivesBy orexis:Asserted ;
     rdfs:comment "ONE agent's DESIRES — every `orexis:Desire` it holds for its whole life: the stake per property, the freshness desire per sensor, with their met-tests — DECLARED once at genesis from the ranges and the wiring the world states, by the packages' desire rules run at birth, and endowed on amendment: a never-held root arrives, a held one stays (a-root-holds-always-and-an-outdated-graph-is-dropped). NO PERIOD, so it holds at every instant as the T-Box does, and no rebuild of the desire modality touches it; the modality projects it beside the records. Received, never authored by the agent: the sovereign's ranges are the source." .
 orexis:PickRecordGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Pick record graph" ;
-    orexis:graphPrefix "http://example.org/orexis/graph/beliefs/" ; orexis:arrivesBy orexis:Asserted ;
-    rdfs:comment "ONE agent's record of picking: what birth authored and review has since re-picked, one value per term, plus the belief-proper terms (conversions, the wallet) the #297 sort left beside them. A RECORD class, not a modality — the desire modality derives its wants and projects this record in as a premise-and-content, so what used to need a modality typing to be copied is now read by name, the one construction from an agent's own id the rules allow. The write boundary is orexis:beliefsOf, unchanged." .
+    rdfs:comment "ONE agent's record of picking: what birth authored and review has since re-picked, one value per term, plus the belief-proper terms (conversions, the wallet) the #297 sort left beside them. A RECORD class, not a modality — the desire modality derives its wants and projects this record in as a premise-and-content, so what used to need a modality typing to be copied is now read by name, the one construction from an agent's own id the rules allow. The write boundary is the volume: one agent, one store." .
 
 #  `orexis:Mode`, `orexis:Chosen` and `orexis:Honoured` WERE HERE and are retired (an-action-is-one-node):
 #  whether a row is the agent's own or a duty is whether its `orexis:available` query bound
@@ -297,14 +302,6 @@ orexis:end a owl:DatatypeProperty ; rdfs:domain dcterms:PeriodOfTime ; rdfs:rang
 orexis:arrivedBy a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range orexis:Arrival ;
     rdfs:label "arrived by" .
 
-orexis:graphPrefix a owl:DatatypeProperty ; rdfs:domain orexis:Graph ; rdfs:range xsd:string ;
-    rdfs:label "graph prefix" ;
-    rdfs:comment "Where graphs of this class live, for the ones that cannot be declared: a per-agent graph does not exist until its agent does, so the vocabulary states the PREFIX and the instances are found under it. What this exists for is knowing litter from property — a graph nothing declares and no prefix claims is a ghost from an amendment, and dropping it is how a volume stops holding facts in a spelling nothing speaks. Declared by whichever package mints the graphs, which is why the sweep needs no list: it asks." .
-
-orexis:arrivesBy a owl:ObjectProperty ; rdfs:range orexis:Arrival ;
-    rdfs:label "arrives by" ;
-    rdfs:comment "How every graph of a per-agent class arrives — said of the CLASS, beside its prefix, where `orexis:arrivedBy` is said of a graph. A per-agent graph cannot be declared, so its class declares both halves of what its instances are, and boot classifies each agent's instance from the two (#448): the kernel's own record classes, the layers' and any package's, by one road and no list. A class with a prefix and no arrival is refused at boot — a graph nobody says how it arrives is a graph nothing classifies, which is the situation review's three stood in for as long as the kernel listed its own." .
-
 orexis:PredictionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Prediction graph" ;
     rdfs:comment "A PREDICTION: a graph holding during the window it predicts for, carrying what a package expects a reading to be by then — the predicted reading keyed exactly as the present's is, typed with every band it may be in, a centre where the package has one — written by sensing from the drifts after every reading, one graph per horizon (the-drift-is-sensings-and-its-result-is-predictions, #642). A KIND OF ITS OWN to the doors: `query_at` hands a reader the predictions holding at the instant asked about beside public knowledge and the records holding then; the agent's own records never list them, no validation reads them, and no plan carries them into its imaginarium until the search reads predictions (#643). The first is the one the next reading is held to, its window the next reading's; the window closing with no reading is staleness. Typed in the classification when written, with a period in the periods table, as a round is." .
 orexis:RecordGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Record graph" ;
@@ -363,10 +360,6 @@ orexis:ProvenanceGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "
 orexis:PeriodGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Period graph" ;
     rdfs:comment """WHEN the other graphs hold, as `dcterms:temporal`. NOT public, and for the same use-versus-mention reason the provenance graph is not: these are statements ABOUT graphs, so merging them would make an ordinary pattern answer with periods. And not the agent's OWN either — declared with no `orexis:arrivedBy`, which is how `store._OWN` leaves the provenance graph out — because a period CHANGES, and a graph a plan imagines from is one whose facts are part of where that plan stands: a lapsing period would move the invariant signature and kill a kept cone.""" .
 
-orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range orexis:Agent ;
-    rdfs:label "beliefs of" ;
-    rdfs:comment "Which agent owns this graph — the write boundary, made explicit. The domain is orexis:Graph since orexis:BeliefsGraph retired (#299): the whole store is beliefs, so a class naming one graph inside it 'the beliefs graph' asserted nothing — what the graph at .../graph/beliefs/<id> actually holds is the PICK RECORD, typed orexis:PickRecordGraph for what it IS, and this property still says whose it is." .
-
 ##  The instances. Data, not terms — code names the classes above and finds these by asking.
 ##  Three world graphs and two ontology graphs, because the role is what a graph HOLDS and how
 ##  a fact got there is a separate question — which each instance now answers with orexis:arrivedBy
@@ -414,7 +407,7 @@ orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range or
 ##  them on every boot exactly as the world graph is, projected into the desire modality by
 ##  its build. Declared here so the ghost walk keeps it and so a world file needs no typing
 ##  line — naming the graph is enough, and a world may name instances.
-<http://example.org/orexis/graph/desire/asserted>   a orexis:PublicGraph ;
+<http://example.org/orexis/graph/desire/asserted>   a orexis:AssertedDesireGraph ;
     orexis:arrivedBy orexis:Asserted .
 
 

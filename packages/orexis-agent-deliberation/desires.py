@@ -28,7 +28,6 @@ from .desire import Desire
 import logging
 
 from assembly import loader
-from orexis_agent_progression.ontology import DESIRE_ASSERTED_GRAPH
 from orexis_agent_progression.store import Store, bindings
 
 log = logging.getLogger("desires")
@@ -65,7 +64,8 @@ class Projection(Store):
 
     Two moves. Every public graph and every record a want lives in is copied in — the roots
     graph genesis authored, the pick record, the obligations, the promises, the pursued
-    children — reached by the one construction from an agent's own id the rules allow. Then
+    children — asked by CLASS of the classification each graph's owner wrote, and kept to
+    this agent where the store knows whose it is; no name is constructed here (#705). Then
     the public premises that are NOT desire content are dropped, since a store answering
     "what do I want" must not answer with the topology beside it — leaving the roots, the
     world's asserted wants (`graph/desire/asserted`, a public graph a world's TriG may fill)
@@ -73,8 +73,8 @@ class Projection(Store):
     """
 
     def __init__(self, beliefs):
-        from orexis_agent_progression.ontology import obligations_graph, promises_graph, roots_graph
-        from .ontology import pursued_graph
+        from orexis_agent_progression.ontology import OREXIS, PROGRESSION
+        from .ontology import DELIBERATION
 
         super().__init__()
         publics = list(beliefs.public_graphs())
@@ -88,16 +88,19 @@ class Projection(Store):
         #  (#645): every one the door hands at this instant is projected, under the untimed
         #  record it sits beneath, so a lapsed debt and a child past its instant are absent
         #  from this store as they are from every reader.
-        timed = [g for g in beliefs.recorded_graphs()
-                 if g.startswith(obligations_graph(beliefs.agent_id) + "/")
-                 or g.startswith(pursued_graph(beliefs.agent_id) + "/")]
-        records = [roots_graph(beliefs.agent_id), beliefs.graph, obligations_graph(beliefs.agent_id),
-                   promises_graph(beliefs.agent_id), pursued_graph(beliefs.agent_id), *timed]
+        #  ASKED BY CLASS, never named: the roots, the pick record, the obligations record
+        #  and every debt's graph under it, the promises, and every pursued want — whatever
+        #  each is called. The owners classified them; this reads the classification.
+        records = beliefs.graphs_of(
+            OREXIS + "RootsGraph", OREXIS + "PickRecordGraph",
+            "http://example.org/orexis/market#ObligationsGraph",
+            PROGRESSION + "PromisesGraph", DELIBERATION + "PursuedGraph")
+        asserted = set(beliefs.graphs_of(OREXIS + "AssertedDesireGraph"))
         for iri in publics + records:
             for quad in beliefs.quads(iri):
                 self._store.add(quad)
         for iri in publics:
-            if iri != DESIRE_ASSERTED_GRAPH:
+            if iri not in asserted:
                 self.clear_graph(iri)
 
 

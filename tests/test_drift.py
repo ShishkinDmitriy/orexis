@@ -31,7 +31,7 @@ RATE = 0.03                                   # the loner's pot, per day
 def _gardener(monkeypatch, moisture=0.30):
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): moisture}, world="loner")
-    genesis.classify_own_graphs(st, "gardener")
+    genesis.classify_kernel_graphs(st, "gardener")
     agent = runtime.Agent("gardener", st=st)
     for module in agent.modules:          # predict what it holds, as a booted agent does
         if hasattr(module, "repredict"):

@@ -239,6 +239,15 @@ class Keeper:
         self.me = agent.me
         self.log = logging.getLogger(f"{agent.id}.{self.name}")
         self.graph = intentions_graph(agent.id)
+        #  MY LEDGER AND MY PROMISES ARE MINE TO CLASSIFY, at construction, whatever the
+        #  graphs are called. The ledger is said in the belief base's classification though
+        #  the modality may hold it in a room of its own: a room-less mind keeps it beside the
+        #  beliefs, and there it is one of the agent's own graphs — what a pass's invariant
+        #  half reads, so an adoption between two passes is a change the kept cone dies on.
+        from .ontology import promises_graph
+        agent.beliefs.classify(self.graph, PROGRESSION + "IntentionGraph", OREXIS + "Recorded", agent.me.uri)
+        agent.beliefs.classify(promises_graph(agent.id), PROGRESSION + "PromisesGraph", OREXIS + "Recorded",
+                               agent.me.uri)
         self._picks = None
         #  A volume from before the ledger keyed on the want: rows carrying a property are
         #  given the want that property names for this agent, once, at construction.

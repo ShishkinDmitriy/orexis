@@ -236,20 +236,10 @@ PUBLIC_GRAPH = term("PublicGraph")
 # own builds their names from here — where a graph SITS is the kernel's, what it HOLDS is not.
 # See capabilities/review/graphs.py, which owns three.
 GRAPH_PREFIX = _GRAPH
-
-
-def graph_prefix(graph_class: str) -> str:
-    """Where a per-agent graph class puts its graphs — the `orexis:graphPrefix` its T-Box
-    declares, and the ONE place a graph's name is spelled. Boot classifies an agent's graphs
-    by the same prefixes; the helpers below build a name for a write from here and spell
-    none themselves, so a graph is renamed in its T-Box and nowhere else."""
-    from assembly import loader
-
-    try:
-        return loader.graph_prefixes()[graph_class]
-    except KeyError:
-        raise KeyError(f"{graph_class} declares no orexis:graphPrefix — a per-agent graph class "
-                       "says where its graphs live, or nothing can name one") from None
+#  A GRAPH'S NAME IS FOR EYES. The helpers below spell a readable convention for the graphs
+#  the kernel writes — `roots/<agent>`, `beliefs/<agent>` — and nothing in code depends on
+#  the spelling: an owner classifies what it writes (`Store.classify`) and every reader asks
+#  the class (`Store.graphs_of`, `recorded_graphs`). Rename one here and only the eyes notice.
 
 
 def beliefs_graph(agent_id: str) -> str:
@@ -259,7 +249,7 @@ def beliefs_graph(agent_id: str) -> str:
     the world as constraint and `:sensed` as evidence, and changes neither — which is what makes
     the graph classes above load-bearing rather than documentation.
     """
-    return graph_prefix(OREXIS + "PickRecordGraph") + agent_id
+    return _GRAPH + "beliefs/" + agent_id
 
 
 def promises_graph(agent_id: str) -> str:
@@ -267,20 +257,19 @@ def promises_graph(agent_id: str) -> str:
     level beneath, translated through the bridge — each an `orexis:Desire` the agent holds
     while the step waits, gone when the step's verdict lands. A record the desire modality
     projects like its debts, so `pursuing` lifts a promise as it lifts any want."""
-    return graph_prefix(term("PromisesGraph")) + agent_id
+    return _GRAPH + "promises/" + agent_id
 
 
 def roots_graph(agent_id: str) -> str:
     """One agent's ROOT desires, authored at genesis and holding at every instant — the name
     `orexis:RootsGraph` declares the prefix of, built from the one id a process is handed
     (#644). The desire modality projects it; nothing rebuilds it."""
-    return graph_prefix(OREXIS + "RootsGraph") + agent_id
+    return _GRAPH + "roots/" + agent_id
 
 
 def obligations_graph(agent_id: str) -> str:
     """The record of ONE agent's debts. The graph CLASS and every word written in it are the
     ledger's package's (#635); the name is built here because the desire modality projects
     the record and the planner's wants snapshot reads it, neither of which should import a
-    package for a name built from the one id the rules allow building from — and it is built
-    from the class the market declares, never spelled."""
-    return graph_prefix("http://example.org/orexis/market#ObligationsGraph") + agent_id
+    package for a name built from the one id the rules allow building from."""
+    return _GRAPH + "obligations/" + agent_id

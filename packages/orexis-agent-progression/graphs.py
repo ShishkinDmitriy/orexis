@@ -20,9 +20,9 @@ question an operator brings to it: what did this agent think it was doing, and w
 
 from __future__ import annotations
 
-from .ontology import graph_prefix, term
+from .ontology import GRAPH_PREFIX
 
 
 def intentions_graph(agent_id: str) -> str:
     """What this agent is committed to, standing and resolved. Its own, and only its own."""
-    return graph_prefix(term("IntentionGraph")) + agent_id
+    return GRAPH_PREFIX + "intentions/" + agent_id

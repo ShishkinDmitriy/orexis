@@ -36,6 +36,8 @@ from orexis_agent_progression.act import (Step, predicts_from_json, predicts_jso
 from orexis_agent_progression.ontology import OREXIS, PROGRESSION, STATE_GRAPH, beliefs_graph
 from orexis_agent_progression.store import bindings
 
+from .ontology import DELIBERATION
+
 
 
 from .ontology import (FOR_WANT, LIFTED, MEASURED_COST, REMEMBERED_AT, REMEMBERED_PLAN,
@@ -203,6 +205,7 @@ def lift(agent, want: str, steps: list, cost: float | None) -> str:
                      want.rsplit("#", 1)[-1], uri.rsplit("#", 1)[-1])
             return uri
     graph = remembered_graph(agent.id)
+    agent.beliefs.classify(graph, DELIBERATION + "RememberedGraph", OREXIS + "Recorded", agent.me.uri)
     uri = f"{OREXIS}remembered_{agent.id}_{uuid.uuid4().hex[:8]}"
     nodes = [f"{uri}_{n}" for n in range(len(steps))]
     blocks = []

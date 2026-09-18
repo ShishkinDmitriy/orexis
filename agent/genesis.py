@@ -35,7 +35,7 @@ from agent import config, inference, provenance, vocabulary
 
 from assembly import loader
 from .config import REPO_ROOT
-from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, GRAPH_PREFIX, roots_graph, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, STATE_GRAPH,
+from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, GRAPH_PREFIX, OREXIS, roots_graph, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, STATE_GRAPH,
                        WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, beliefs_graph)
 from orexis_agent_progression.store import NAMESPACES, Raw, Store, bind, bindings
@@ -338,6 +338,7 @@ def birth(st: Store, world: Path, agent_id: str, rebirth: bool = False) -> bool:
         # will fail their own validation at startup, which is where it should be reported.
         return False
     st.put_graph(graph, path.read_text())
+    st.classify(graph, OREXIS + "PickRecordGraph", OREXIS + "Asserted", agent_uri(st, agent_id))
     author_roots(st, agent_id)
     return True
 
@@ -421,6 +422,7 @@ def author_roots(st: Store, agent_id: str) -> list[str]:
         triples = "\n".join(f"{q.subject} {q.predicate} {q.object} ." for q in _subgraph_of(scratch, graph, top))
         if triples:
             st.update(f"INSERT DATA {{ GRAPH <{graph}> {{\n{triples}\n}} }}")
+    st.classify(graph, OREXIS + "RootsGraph", OREXIS + "Asserted", agent_uri(st, agent_id))
     return new
 
 
@@ -457,17 +459,17 @@ def drop_ghost_graphs(st: Store, agent_id: str) -> list[str]:
     """
     from orexis_agent_progression.ontology import OREXIS, PROVENANCE_GRAPH
 
+    #  A GRAPH IS THE AGENT'S BY ITS CLASSIFICATION and by nothing about its name: what the
+    #  owners classified (the agent's own, its predictions) and what the vocabulary declares
+    #  are kept; a graph under the kernel's prefix that nobody typed is the ghost. Run after
+    #  every owner has spoken (`runtime.Agent`), never before — it used to ask which classes
+    #  state a prefix and keep whatever a name matched, the one reader that needed a name.
     declared = {r["g"] for r in bindings(st.query("SELECT ?g WHERE { ?g a ?class }"))
                 if r["g"].startswith(GRAPH_PREFIX)}
-    # Where per-agent graphs live, ASKED rather than listed: a graph that does not exist
-    # until its agent does cannot be declared, so its class states the prefix and this finds
-    # the instances under it. Listing them here instead would eat the next package's graphs,
-    # which is exactly what the first draft did to review's summaries.
-    prefixes = tuple(r["p"] for r in bindings(st.query(
-        f"SELECT ?p WHERE {{ ?class orexis:graphPrefix ?p }}")))
+    owned = set(st.recorded_graphs()) | set(st.prediction_graphs()) | set(st.graphs_of(OREXIS + "Graph"))
     ghosts = [g for g in st.graph_names()
               if g.startswith(GRAPH_PREFIX) and g not in declared and g != PROVENANCE_GRAPH
-              and not g.startswith(prefixes)]
+              and g not in owned]
     for g in ghosts:
         st.clear_graph(g)
     if ghosts:
@@ -476,56 +478,26 @@ def drop_ghost_graphs(st: Store, agent_id: str) -> list[str]:
     return ghosts
 
 
-def classify_own_graphs(st: Store, agent_id: str) -> None:
-    """Say what this agent's own graphs ARE, on all three axes (the-mind-is-six-graphs).
+def agent_uri(st: Store, agent_id: str) -> str | None:
+    """The agent the world declares under this id, or None where the world names none — the
+    one construction from the id a process is handed that a reader may make."""
+    rows = bindings(st.query(f'SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1'))
+    return rows[0]["a"] if rows else None
 
-    The static graphs declare their own classification in the vocabulary; a per-agent graph
-    cannot, because the agent does not exist until it does. So it says so itself, into the
-    provenance graph — which already exists to hold statements ABOUT graphs, and is kept out
-    of the default graph for exactly that reason: these are mentions, not uses.
 
-    ASKED, NEVER LISTED (#448): every class that states where its instances live
-    (`orexis:graphPrefix`) and how they arrive (`orexis:arrivesBy`) is a per-agent graph
-    class, whichever package declared it — the kernel's own records, the layers' ledgers, a
-    capability's scratch — and this agent's instance is the prefix and its id. The kernel
-    used to list its own five here and review's three went unclassified for as long as it
-    did, invisible to the sweep that knows litter from property and to every reader that
-    asks what the agent owns. A class with a prefix and no arrival REFUSES the boot rather
-    than being classified as something quieter.
-
-    Written on every start rather than once at birth, and cheap: the classification is a
-    function of the vocabulary, so a graph whose modality is refined by an amendment says the
-    new thing on the next boot without a migration.
+def classify_kernel_graphs(st: Store, agent_id: str) -> None:
+    """Say what the two graphs the KERNEL writes for an agent are — its pick record and its
+    roots — at every start, so a volume written before owners classified their own graphs
+    says so too. An owner classifies what it writes (`Store.classify`): the ledger its
+    record, the keeper its promises, review its three, the road each want, sensing each
+    prediction — each at construction or at the write, by the class it declares, whatever
+    the graph is called. Boot used to type every per-agent graph by matching names against
+    a prefix each class declared (`orexis:graphPrefix`), and was the one reader that
+    depended on a name; a name is for eyes now, and code asks the class.
     """
-    from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH
-
-    declared = bindings(st.query(
-        "SELECT ?class ?prefix ?arrival WHERE { ?class orexis:graphPrefix ?prefix . "
-        "OPTIONAL { ?class orexis:arrivesBy ?arrival } }"))
-    unarrived = sorted(r["class"] for r in declared if not r.get("arrival"))
-    if unarrived:
-        raise RuntimeError(
-            f"{agent_id} will not start: {', '.join(c.rsplit('#', 1)[-1] for c in unarrived)} "
-            "states where its graphs live and not how they arrive — a per-agent graph class "
-            "declares both (orexis:graphPrefix and orexis:arrivesBy), or the graph is nothing")
-    #  FULL IRIs, since #529: a per-agent graph's class is its layer's word, and spelling every
-    #  class `orexis:` classified the promises graph as nothing the store recognises.
-    triples = " ".join(
-        f"<{r['prefix']}{agent_id}> a <{r['class']}> ; orexis:arrivedBy <{r['arrival']}> ."
-        for r in sorted(declared, key=lambda r: r["class"]))
-    #  AND WHAT WAS CLASSIFIED AT ITS OWN WRITE (#645): a graph holding during a period — a
-    #  round, a claim, a cooling row, a debt, a pursued child, a prediction — says what it is
-    #  when it is written, and a restart must not unsay it: every such row whose graph still
-    #  exists is kept, so the debt a host incurred before it went down is a debt after.
-    defaults = {f"{r['prefix']}{agent_id}" for r in declared}
-    existing = set(st.graph_names())
-    kept = " ".join(
-        f"<{r['g']}> a <{r['c']}> ; orexis:arrivedBy <{r['a']}> ."
-        for r in bindings(st.query(
-            f"SELECT ?g ?c ?a WHERE {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?c ; orexis:arrivedBy ?a }} }}"))
-        if r["g"] in existing and r["g"] not in defaults)
-    st.clear_graph(CLASSIFICATION_GRAPH)
-    st.update(f"INSERT DATA {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ {triples} {kept} }} }}")
+    me = agent_uri(st, agent_id)
+    st.classify(beliefs_graph(agent_id), OREXIS + "PickRecordGraph", OREXIS + "Asserted", me)
+    st.classify(roots_graph(agent_id), OREXIS + "RootsGraph", OREXIS + "Asserted", me)
 
 
 def _belief_room(path: str | None) -> str | None:
@@ -574,11 +546,10 @@ def open_belief_base(world: Path, agent_id: str, path: str | None = None,
     #  a volume older than the classes holds readings nobody classified, and the next
     #  reading would classify only itself.
     st.entail(STATE_GRAPH)
-    classify_own_graphs(st, agent_id)
+    classify_kernel_graphs(st, agent_id)
     # Before the vocabulary check, deliberately: a ghost graph holds terms this code no
     # longer speaks, and refusing to boot over facts nobody declares any more would be
     # refusing over litter.
-    drop_ghost_graphs(st, agent_id)
     vocabulary.check(st, migrating=bool(config.env("OREXIS_MIGRATE_BELIEFS")))
     # Endowment comes AFTER the vocabulary check, deliberately: an aged volume's old
     # spellings would read as never-held pairs, and endowing before migrating re-authored a

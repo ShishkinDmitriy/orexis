@@ -170,7 +170,8 @@ INSERT DATA {{
   {points}
   {shape} }}
   GRAPH <{CLASSIFICATION_GRAPH}> {{
-    <{graph}> a deliberation:PursuedGraph ; orexis:arrivedBy orexis:Recorded . }}
+    <{graph}> a deliberation:PursuedGraph ; orexis:arrivedBy orexis:Recorded ;
+        orexis:beliefsOf <{want.holder}> . }}
   GRAPH <{PERIODS_GRAPH}> {{
     <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;{ends}
       orexis:start "{clock.now().isoformat()}"^^xsd:dateTime ] . }}

@@ -36,7 +36,7 @@ def _driver(monkeypatch, van, parcel):
     monkeypatch.setenv("INFLUX_TOKEN", "test-token-courier")
     st = genesis_store(world="courier")
     _pose(st, van, parcel)
-    genesis.classify_own_graphs(st, "courier")
+    genesis.classify_kernel_graphs(st, "courier")
     return runtime.Agent("courier", st=st)
 
 

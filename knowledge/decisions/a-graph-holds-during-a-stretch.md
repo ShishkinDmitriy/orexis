@@ -110,7 +110,7 @@ classification would do all three. The objection to keeping a graph's own descri
 is answered by putting the description where mentions already live.
 
 The door then reads it by naming that graph, which is the bootstrap-root exception rule 1
-already makes and which `_OWN` already uses for the classification graph: a reader asking WHICH
+already makes and which `_own` already uses for the classification graph: a reader asking WHICH
 graphs to merge has to start somewhere, and starting there is not the same as a query narrowing
 itself to a graph instance.
 
@@ -182,8 +182,8 @@ A description held beside the data changes without touching what any world holds
 
 **The coupling it aims at is already there, by replacement rather than by containment.** Neither
 meta-graph accumulates: the provenance graph is `put_graph`-replaced whole on every
-`refresh_public`, and the classification graph is cleared and rebuilt at every boot, because
-both are functions of what was loaded. Nothing orphans, and a sweep that drops a lapsed graph
+`refresh_public`, and the classification graph is written by each graph's owner when it creates
+the graph and said again at every start, since a statement made twice is one statement. Nothing orphans, and a sweep that drops a lapsed graph
 drops its statements in the same update — atomicity is two lines, not a design.
 
 **One more thing self-description would cost: saying anything about a graph you do not hold.**

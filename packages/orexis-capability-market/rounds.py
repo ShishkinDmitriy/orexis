@@ -90,7 +90,7 @@ INSERT DATA {{
       <{RESERVE_PER_L}> "{float(reserve_per_l)}"^^<{_XSD}decimal> ;
       <{CLOSES_AT}> "{closes_at.isoformat()}"^^<{_XSD}dateTime> . }}
   GRAPH <{CLASSIFICATION_GRAPH}> {{
-    <{graph}> a orexis:BeliefGraph ; orexis:arrivedBy <{arrival}> . }}
+    <{graph}> a orexis:BeliefGraph ; orexis:arrivedBy <{arrival}> ; orexis:beliefsOf <{agent.me.uri}> . }}
   GRAPH <{PERIODS_GRAPH}> {{
     <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;
       orexis:start "{since}"^^<{_XSD}dateTime> ;
@@ -142,7 +142,8 @@ def convened(agent, venue_uri: str, cooldown_s: float, now: datetime | None = No
     agent.beliefs.update(f"""
 INSERT DATA {{
   GRAPH <{graph}> {{ <{venue_uri}> <{COOLING_UNTIL}> "{until.isoformat()}"^^<{_XSD}dateTime> . }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a orexis:BeliefGraph ; orexis:arrivedBy <{RECORDED}> . }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a orexis:BeliefGraph ; orexis:arrivedBy <{RECORDED}> ;
+      orexis:beliefsOf <{agent.me.uri}> . }}
   GRAPH <{PERIODS_GRAPH}> {{
     <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;
       orexis:start "{since.isoformat()}"^^<{_XSD}dateTime> ;

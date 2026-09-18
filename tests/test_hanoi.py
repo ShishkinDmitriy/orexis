@@ -33,7 +33,7 @@ def _mover(monkeypatch, disks):
     monkeypatch.setenv("INFLUX_TOKEN", "test-token-hanoi")
     st = genesis_store(world="hanoi")
     _pose(st, disks)
-    genesis.classify_own_graphs(st, "hanoi")
+    genesis.classify_kernel_graphs(st, "hanoi")
     return runtime.Agent("hanoi", st=st)
 
 

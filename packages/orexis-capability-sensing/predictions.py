@@ -153,7 +153,8 @@ INSERT DATA {{
   GRAPH <{graph}> {{
     {chr(10).join(triples)}
   }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a <{_PREDICTION_GRAPH}> ; orexis:arrivedBy <{_RECORDED}> . }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a <{_PREDICTION_GRAPH}> ; orexis:arrivedBy <{_RECORDED}> ;
+      orexis:beliefsOf <{me_uri}> . }}
   GRAPH <{PERIODS_GRAPH}> {{
     <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;
       orexis:start "{opens.isoformat()}"^^<{_XSD}dateTime> ;

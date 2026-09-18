@@ -694,9 +694,18 @@ def _graphs() -> tuple[set[str], set[str]]:
         text = ttl.read_text()
         fixed |= {iri[len(_GRAPH_BASE):]
                   for iri in re.findall(rf"<({re.escape(_GRAPH_BASE)}[^>]*)>", text)}
-        prefixes |= {p[len(_GRAPH_BASE):]
-                     for p in re.findall(r'orexis:graphPrefix\s+"([^"]+)"', text)
-                     if p.startswith(_GRAPH_BASE)}
+    #  THE PER-AGENT PREFIXES ARE THE WRITERS' CONVENTIONS — a graph's name is for eyes and
+    #  code asks the class, so no ontology declares one; the helpers that spell them are the
+    #  source, asked with a marker id.
+    from orexis_agent_deliberation.ontology import pursued_graph, remembered_graph
+    from orexis_agent_progression.graphs import intentions_graph
+    from orexis_agent_progression.ontology import beliefs_graph, obligations_graph, promises_graph, roots_graph
+    from orexis_capability_review.graphs import evidence_graph, revisions_graph, summaries_graph
+    for helper in (beliefs_graph, roots_graph, promises_graph, obligations_graph, intentions_graph,
+                   pursued_graph, remembered_graph, evidence_graph, revisions_graph, summaries_graph):
+        name = helper("x")
+        assert name.startswith(_GRAPH_BASE) and name.endswith("x")
+        prefixes.add(name[len(_GRAPH_BASE):-1])
     return {f for f in fixed if f}, prefixes
 
 
@@ -744,7 +753,7 @@ def test_no_document_names_a_graph_the_store_has_never_had():
     docs = concepts()
     assert docs, "no concept documents found — the glob stopped matching"
     assert fixed, "no graphs found — the ontology scan stopped matching"
-    assert prefixes, "no per-agent graph prefixes found — `orexis:graphPrefix` stopped matching"
+    assert prefixes, "no per-agent graph prefixes found — the helpers stopped answering"
 
     def resolves(name: str) -> bool:
         bare = name.lstrip(":")

@@ -111,6 +111,14 @@ class Ower(Module):
     #  an operator greps, for no gain.
     name = "owing"
 
+    def __init__(self, agent):
+        super().__init__(agent)
+        #  MY RECORD IS MINE TO CLASSIFY, at construction, whatever the graph is called: the
+        #  untimed record every debt's own graph hangs under. Each debt's graph and each lapse
+        #  are classified where they are written.
+        agent.beliefs.classify(obligations_graph(agent.id), f"{NS}ObligationsGraph", OREXIS + "Received",
+                               agent.me.uri)
+
     def _uri_of(self, agent_id: str) -> str | None:
         """The counterparty's node, from the one thing a claim carries: its id. Public wiring,
         so a debt names an agent the world declares and never a string somebody sent me."""
@@ -185,7 +193,8 @@ class Ower(Module):
             lapse = f"""
   GRAPH <{lapse_graph(self.agent.id, claim_jti)}> {{
             <{uri}> <{LAPSES_AT}> "{when}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{lapse_graph(self.agent.id, claim_jti)}> a orexis:PredictionGraph ; orexis:arrivedBy orexis:Recorded . }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{lapse_graph(self.agent.id, claim_jti)}> a orexis:PredictionGraph ; orexis:arrivedBy orexis:Recorded ;
+      orexis:beliefsOf <{self.agent.me.uri}> . }}
   GRAPH <{PERIODS_GRAPH}> {{
     <{lapse_graph(self.agent.id, claim_jti)}> dcterms:temporal [ a dcterms:PeriodOfTime ;
       orexis:start "{when}"^^xsd:dateTime ] . }}"""
@@ -195,7 +204,8 @@ class Ower(Module):
                 <{FOR_CLAIM}> "{claim_jti}" ;
                 <{PRESENTED}> false ;{amount}
                 <{OWED_AT}> "{now.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{opens}{expiry} }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a <{NS}ObligationsGraph> ; orexis:arrivedBy orexis:Received . }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a <{NS}ObligationsGraph> ; orexis:arrivedBy orexis:Received ;
+      orexis:beliefsOf <{self.agent.me.uri}> . }}
   GRAPH <{PERIODS_GRAPH}> {{
     <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;{ends}
       orexis:start "{now.isoformat()}"^^xsd:dateTime ] . }}{lapse}
@@ -224,7 +234,7 @@ class Ower(Module):
             INSERT {{ GRAPH ?g {{ ?o <{PRESENTED}> true }} }}
             WHERE  {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> "{claim_jti}" ;
                                   <{PRESENTED}> ?was }}
-                      FILTER(STRSTARTS(STR(?g), "{obligations_graph(self.agent.id)}")) }}""")
+                      GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a <{NS}ObligationsGraph> }} }}""")
         self.agent.desires.rebuild()   # standing became demanded — the want moved
         self.agent.tell(REPREDICT)      # the ledger is a premise the vessel's drift reads (#643)
         self._road()                    # a claim with no deadline is a want from presentation
@@ -237,7 +247,7 @@ class Ower(Module):
                 ?o <{DISCHARGED_AT}> "{clock.now().isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
             WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> "{claim_jti}" .
                      FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?done }} }}
-                     FILTER(STRSTARTS(STR(?g), "{obligations_graph(self.agent.id)}")) }}""")
+                     GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a <{NS}ObligationsGraph> }} }}""")
         #  A DEBT PAID WILL NOT LAPSE: the prediction goes, and with it the want's ground.
         self.agent.beliefs.drop_graph(lapse_graph(self.agent.id, claim_jti))
         self.agent.desires.rebuild()   # a paid debt is history, and the want is no longer implied
@@ -313,13 +323,14 @@ SELECT ?o ?to ?jti ?a ?at ?paid WHERE {{ GRAPH <{graph}> {{
         rows = bindings(self.agent.beliefs.query_union(f"""
 SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS}expiresAt> ?expires .
   FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?paid }} FILTER NOT EXISTS {{ ?o <{LAPSED_AT}> ?lapsed }} }}
-  FILTER(STRSTARTS(STR(?g), "{obligations_graph(self.agent.id)}"))
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a <{NS}ObligationsGraph> }}
   FILTER NOT EXISTS {{ GRAPH ?p {{ ?o <{LAPSES_AT}> ?w }} }} }}"""))
         for row in rows:
             lapse = lapse_graph(self.agent.id, row["jti"])
             self.agent.beliefs.update(f"""INSERT DATA {{
   GRAPH <{lapse}> {{ <{row["o"]}> <{LAPSES_AT}> "{row["expires"]}"^^xsd:dateTime }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{lapse}> a orexis:PredictionGraph ; orexis:arrivedBy orexis:Recorded . }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{lapse}> a orexis:PredictionGraph ; orexis:arrivedBy orexis:Recorded ;
+      orexis:beliefsOf <{self.agent.me.uri}> . }}
   GRAPH <{PERIODS_GRAPH}> {{
     <{lapse}> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "{row["expires"]}"^^xsd:dateTime ] . }} }}""")
         if rows:

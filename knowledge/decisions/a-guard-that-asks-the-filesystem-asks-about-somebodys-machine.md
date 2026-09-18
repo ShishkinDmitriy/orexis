@@ -66,7 +66,8 @@ own docstring disowns as overclaiming.
 
 `test_no_document_names_a_graph_the_store_has_never_had` was written in the same change, for
 [#269](https://github.com/ShishkinDmitriy/orexis/issues/269), and it is the same move: the graphs
-are **enumerable** — declared in an ontology as `…/graph/<name>`, or as an `orexis:graphPrefix` — so
+are **enumerable** — declared in an ontology as `…/graph/<name>`, or spelled by a helper as the
+convention a per-agent graph's name follows — so
 the guard resolves against what is declared instead of against a list of forbidden words. A bundle
 writes a graph and an individual with the same shorthand and neither carries a namespace, so it
 asks one question of both: does the project declare this?
