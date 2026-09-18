@@ -153,6 +153,18 @@ was only ever the road's reading of the predictions. A plan ALREADY placed at th
 the keeper's, and stands until its lapse or a surprise (#527) — the road does not reach into
 the ledger.
 
+**The road's contract is a table, and the table found a defect on its first run.**
+`packages/orexis-agent-deliberation/tests/road/` holds one TriG file per case — the world, the
+levers, the desire with its met-test, the present, the foreseen, what stands, and the wants
+expected — loaded into a bare store and run through `top_up` in milliseconds, where the four
+world files that covered the road each stood an agent up to show one case. Two tanks low
+about their level are two clusters, per instance as two debts are, and were ONE name,
+`<desire>.pursued.level`; the second mint overwrote the first, and no shipped world could
+show it, since sensing's desires and the greenhouse's name their one node and a debt's want
+is about the debt itself. A want is named for its instance where the desire ranges over
+several — its shape targets a class, or whatever bears a property — and what stands is
+checked by name; a desire naming its one node (`sh:targetNode`) keeps every name it had.
+
 - **Clustering runs within a desire**, not across. A want derived from two desires would name two
   parents, and nothing here needs it: one universal per premise is what puts soil and air under
   one desire in the first place.

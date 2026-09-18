@@ -129,18 +129,25 @@ def top_up(agent, root: str, *, unmet_now: bool | None = None) -> list[str]:
     #  trace, a remembered plan and the keeper meet the want they kept and a plan is found
     #  from the present. The instant was the road's reading of the predictions; the present
     #  outranks it, as it does everywhere else here.
-    standing = {w.about: w for w in agent.wants.find_all_by_desire(root)}
+    #  STANDING IS BY NAME, and the name is the cluster's: what it is about, and which instance
+    #  where the desire ranges over several (`name_of`). Two tanks low about their level are
+    #  two clusters and two names; keyed by what they were about alone, the second read the
+    #  first as standing, and by construction the second mint had overwritten the first.
+    standing = {w.uri: w for w in agent.wants.find_all_by_desire(root)}
     minted = []
     for cluster in _clusters(agent, found) or [[]]:
         about = tuple(sorted({w.about for w in cluster if w.about}))
-        stood = standing.get(about) if about else next(iter(standing.values()), None)
+        instances = {w.instance for w in cluster}
+        instance = next(iter(instances)) if len(instances) == 1 else None
+        child = name_of(agent, root, about, instance)
+        stood = standing.get(child)
         if stood is not None and not (unmet_now and stood.holds_at):
             continue
         if stood is not None:
             log.info("%s: what was foreseen at %s has arrived", stood.uri.rsplit("#", 1)[-1],
                      stood.holds_at)
         instant = min((w.at for w in cluster), default=None) if ahead is not None else None
-        child = mint(agent, root, holds_at=instant, about=about)
+        child = mint(agent, root, holds_at=instant, about=about, instance=instance)
         if child is not None:
             minted.append(child)
     return minted
@@ -337,24 +344,55 @@ def root_of(agent, want: str) -> str | None:
     return found.uri if found else None
 
 
-def mint(agent, root: str, holds_at: datetime | None = None, about: tuple = ()) -> str | None:
-    """Derive the want pursued under `root` and write it to the pursued graph. Its name is the
-    root's, suffixed, so a second episode of the same root pursues the same node and everything
-    keyed by it — the planner, a remembered plan, the trace — finds what it kept. None, and the
-    root stays the goal, where the root states its met-test inline: a blank node has no name
-    another graph could point at, and copying it would make a second owner of the claim."""
-    #  NAMED FOR WHAT IT IS ABOUT where that is NARROWER than the desire, so two wants under
-    #  one desire — soil now, air later — are two nodes; and for the desire alone where it is
-    #  not, which is every want there was before and keeps the trace, a remembered plan and
-    #  the keeper meeting what they kept. A desire about one property mints `<desire>.pursued`
-    #  exactly as it always did.
+def _tail(iri: str) -> str:
+    return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
+
+
+def name_of(agent, root: str, about: tuple, instance: str | None) -> str:
+    """The name of the want minted under `root` for one cluster of its witnesses: the root's,
+    suffixed, so a second episode of the same cluster pursues the same node and everything
+    keyed by it — the planner, a remembered plan, the trace, the keeper — finds what it kept.
+
+    NAMED FOR WHAT IT IS ABOUT where that is NARROWER than the desire, so two wants under one
+    desire — soil now, air later — are two nodes; and for the desire alone where it is not,
+    which is every want there was before the road: a desire about one property mints
+    `<desire>.pursued` exactly as it always did. AND FOR THE INSTANCE where the desire ranges
+    over several — its shape targets a class, or whatever bears a property, rather than one
+    node — since two tanks low about their level are two clusters, two plans, and would be one
+    name otherwise (found by the road's own table, `tests/road/`); a desire whose shape names
+    its one node (`sh:targetNode`, sensing's and the greenhouse's) keeps its names, and an
+    instance the want is already about (a debt, `orexis:about sh:this`) is not said twice.
+    """
+    desire_abouts = tuple(sorted(
+        r["a"] for r in bindings(agent.desires.query_union(
+            f"SELECT ?a WHERE {{ <{root}> orexis:about ?a }}"))))
+    tails = [_tail(a) for a in about] if about and set(about) != set(desire_abouts) else []
+    if instance is not None and instance not in about and not _targets_one_node(agent, root):
+        tails.insert(0, _tail(instance))
+    return root + ".pursued" + "".join(f".{t}" for t in tails)
+
+
+def _targets_one_node(agent, root: str) -> bool:
+    """Does the root's met-test name the one node it is about (`sh:targetNode`)? Cached per
+    root on the agent: a root never changes while the agent runs."""
+    cache = agent.__dict__.setdefault("_root_targets_one", {})
+    if root not in cache:
+        cache[root] = bool(bindings(agent.desires.query_union(
+            f"SELECT ?n WHERE {{ <{root}> orexis:metWhen ?s . ?s sh:targetNode ?n }} LIMIT 1")))
+    return cache[root]
+
+
+def mint(agent, root: str, holds_at: datetime | None = None, about: tuple = (),
+         instance: str | None = None) -> str | None:
+    """Derive the want pursued under `root` and write it to the pursued graph, named by
+    `name_of`. None, and the root stays the goal, where the root states its met-test inline:
+    a blank node has no name another graph could point at, and copying it would make a second
+    owner of the claim."""
     desire_abouts = tuple(sorted(
         r["a"] for r in bindings(agent.desires.query_union(
             f"SELECT ?a WHERE {{ <{root}> orexis:about ?a }}"))))
     abouts = about or desire_abouts
-    narrower = bool(about) and set(about) != set(desire_abouts)
-    suffix = "".join(f".{a.rsplit('#', 1)[-1].rsplit('/', 1)[-1]}" for a in about) if narrower else ""
-    child = root + ".pursued" + suffix
+    child = name_of(agent, root, about, instance)
     points_said = []
     #  The raw SPARQL-JSON rows, because the TYPE of the object matters here and
     #  `bindings` flattens it away: a blank node cannot be pointed at from another graph.
