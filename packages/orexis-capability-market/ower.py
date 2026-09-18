@@ -21,15 +21,15 @@ See knowledge/decisions/an-obligation-is-a-desire-someone-else-sourced.md.
 
 from __future__ import annotations
 
-import json
 from datetime import datetime, timezone
 
 from orexis_agent_deliberation.judgment import Judgment
 from agent.module import Module
 from orexis_agent_progression.ontology import (CLASSIFICATION_GRAPH, OREXIS, PERIODS_GRAPH, REPREDICT,
                                                obligations_graph)
-from orexis_agent_progression.store import bindings
-from .terms import AMOUNT_L, DISCHARGED_AT, FOR_CLAIM, LAPSED_AT, NS, OWED_AT, OWED_FROM, OWED_TO, PRESENTED
+from orexis_agent_progression.store import bind, bindings
+from .terms import (AMOUNT_L, DISCHARGED_AT, FOR_CLAIM, LAPSED_AT, LAPSES_AT, NS, OWED_AT, OWED_FROM,
+                    OWED_TO, PRESENTED)
 from orexis_agent_progression import clock
 
 #  What I owe, as rows — the obligation branch of what used to be one shipped `desires.rq` for every
@@ -41,13 +41,20 @@ from orexis_agent_progression import clock
 #  OVER THE MODALITY'S UNION (#645): a debt is a graph of its own, holding from its issue to
 #  its expiry, and the projection copies every one holding now; a settled row — paid or
 #  lapsed — in the untimed record carries no `presented`, so it never reads as a duty.
+#  THE ROAD'S WANT, judged by the ledger. A want under "no overdue debts" is minted by the
+#  pursuit road about ONE debt — `orexis:about` names it — and what the ledger contributes is
+#  the judgment of that want: how far its claim's redeem window has run, whom it is owed to,
+#  when it expires, whether the holder has asked. The ledger used to mint the want itself and
+#  judge its own; it writes debts and predictions now, and speaks for what the road derives
+#  (one-road-derives-every-want). `$root` is this agent's desire.
 _DUTIES_Q = """
 SELECT ?desire ?owedTo ?claim ?presented ?at ?expires WHERE {
-    ?desire market:owedTo ?owedTo ; market:forClaim ?claim ;
-            market:presented ?presented ; market:owedAt ?at .
-    OPTIONAL { ?desire orexis:expiresAt ?expires }
-    FILTER NOT EXISTS { ?desire market:dischargedAt ?paid }
-    FILTER NOT EXISTS { ?desire market:lapsedAt ?lapsed }
+    ?desire prov:wasDerivedFrom $root ; orexis:about ?debt .
+    ?debt market:owedTo ?owedTo ; market:forClaim ?claim ;
+          market:presented ?presented ; market:owedAt ?at .
+    OPTIONAL { ?debt orexis:expiresAt ?expires }
+    FILTER NOT EXISTS { ?debt market:dischargedAt ?paid }
+    FILTER NOT EXISTS { ?debt market:lapsedAt ?lapsed }
 }"""
 
 
@@ -56,20 +63,12 @@ def obligation_graph(agent_id: str, claim_jti: str) -> str:
     from the claim's issue to its expiry, under the untimed record `obligations_graph`."""
     return f"{obligations_graph(agent_id)}/{claim_jti}"
 
-_SH_SELECT = "http://www.w3.org/ns/shacl#select"
-
-
-def _unmet(claim_jti: str) -> str:
-    """The debt's own met-test (#635): the select whose rows are this debt undischarged — in
-    the record and in the world being judged alike, where Serving's effect writes the
-    discharge. A want is authored by whoever sources it, and the kernel judges an authored
-    pattern without knowing a word of the ledger.
-
-    ONE CLAUSE, not two (#666). It asked twice — once of the record, once of the world — because
-    a rule had to name the world it read and the two stood apart. The door merges them, so a
-    discharge is a discharge wherever it was written and there is no second clause to forget."""
-    return (f'SELECT ?debt WHERE {{ ?debt market:forClaim "{claim_jti}" . '
-            f'FILTER NOT EXISTS {{ ?debt market:dischargedAt ?paid }} }}')
+def lapse_graph(agent_id: str, claim_jti: str) -> str:
+    """The PREDICTION beside one debt: that it lapses at its deadline, a graph holding from that
+    instant on. What makes "overdue" askable — the door hands it at the deadline and not before,
+    so the desire's met-test reads met while a debt has time to run and unmet at the instant it
+    would not, with no rule reading a clock (one-road-derives-every-want)."""
+    return f"{obligation_graph(agent_id, claim_jti)}/lapse"
 
 
 def _duty_urgency(row: dict, now: datetime) -> float:
@@ -159,19 +158,31 @@ class Ower(Module):
         now = clock.now()
         ends = (f'\n      orexis:end "{datetime.fromtimestamp(expires_at, timezone.utc).isoformat()}"^^xsd:dateTime ;'
                 if expires_at is not None else "")
+        #  THE DEBT, AND WHAT THE LEDGER PREDICTS OF IT — never the want. The want under "no
+        #  overdue debts" is the road's to mint from this, the way a want under a region desire
+        #  is minted from a reading and the drift's prediction (one-road-derives-every-want).
+        #  The prediction is a graph holding FROM the deadline: at that instant the debt is
+        #  unserved unless something is done, which is exactly what a drift says of a reading.
+        lapse = ""
+        if expires_at is not None:
+            when = datetime.fromtimestamp(expires_at, timezone.utc).isoformat()
+            lapse = f"""
+  GRAPH <{lapse_graph(self.agent.id, claim_jti)}> {{
+            <{uri}> <{LAPSES_AT}> "{when}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{lapse_graph(self.agent.id, claim_jti)}> a orexis:PredictionGraph ; orexis:arrivedBy orexis:Recorded . }}
+  GRAPH <{PERIODS_GRAPH}> {{
+    <{lapse_graph(self.agent.id, claim_jti)}> dcterms:temporal [ a dcterms:PeriodOfTime ;
+      orexis:start "{when}"^^xsd:dateTime ] . }}"""
         self.agent.beliefs.update(f"""INSERT DATA {{
   GRAPH <{graph}> {{
-            <{uri}> a <{OREXIS}Want> ;
-                <http://www.w3.org/ns/prov#wasDerivedFrom> <{self.agent.me.uri}.no_overdue_debts> ;
-                <{OWED_TO}> <{to_agent}> ;
+            <{uri}> <{OWED_TO}> <{to_agent}> ;
                 <{FOR_CLAIM}> "{claim_jti}" ;
                 <{PRESENTED}> false ;{amount}
-                <{OREXIS}unmetWhen> [ <{_SH_SELECT}> {json.dumps(_unmet(claim_jti))} ] ;
                 <{OWED_AT}> "{now.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{opens}{expiry} }}
   GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a <{NS}ObligationsGraph> ; orexis:arrivedBy orexis:Received . }}
   GRAPH <{PERIODS_GRAPH}> {{
     <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;{ends}
-      orexis:start "{now.isoformat()}"^^xsd:dateTime ] . }}
+      orexis:start "{now.isoformat()}"^^xsd:dateTime ] . }}{lapse}
 }}""")
         #  A debt arriving at runtime is a want arriving at runtime: the record above is the
         #  belief base's, and the desire modality is RECOMPUTED to hold it — the same
@@ -180,6 +191,7 @@ class Ower(Module):
         self.agent.desires.rebuild()
         self.log.info("owed to %s for claim %s", to_agent_id, claim_jti)
         self.agent.tell(REPREDICT)      # the ledger is a premise the vessel's drift reads (#643)
+        self._road()                    # an instance arrived; the road mints, the ledger does not
         return uri
 
     def demanded(self, claim_jti: str) -> None:
@@ -199,6 +211,7 @@ class Ower(Module):
                       FILTER(STRSTARTS(STR(?g), "{obligations_graph(self.agent.id)}")) }}""")
         self.agent.desires.rebuild()   # standing became demanded — the want moved
         self.agent.tell(REPREDICT)      # the ledger is a premise the vessel's drift reads (#643)
+        self._road()                    # a claim with no deadline is a want from presentation
 
     def discharge(self, claim_jti: str) -> None:
         """The dose is out: the debt is paid, and says when. Never deleted — a debt paid and
@@ -209,6 +222,8 @@ class Ower(Module):
             WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> "{claim_jti}" .
                      FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?done }} }}
                      FILTER(STRSTARTS(STR(?g), "{obligations_graph(self.agent.id)}")) }}""")
+        #  A DEBT PAID WILL NOT LAPSE: the prediction goes, and with it the want's ground.
+        self.agent.beliefs.drop_graph(lapse_graph(self.agent.id, claim_jti))
         self.agent.desires.rebuild()   # a paid debt is history, and the want is no longer implied
         self.agent.tell(REPREDICT)      # the ledger is a premise the vessel's drift reads (#643)
 
@@ -256,28 +271,55 @@ SELECT ?o ?to ?jti ?a ?at ?paid WHERE {{ GRAPH <{graph}> {{
             self.log.info("debt for claim %s %s — the verdict stays, the want goes", row["jti"],
                           "was paid" if row.get("paid") else "LAPSED unserved")
         if rows:
+            #  THE VERDICT IS WRITTEN; the prediction that the debt would lapse has come true
+            #  or been overtaken, and either way it is not a forecast any more.
+            self.agent.beliefs.drop_graph(graph + "/lapse")
             self.agent.desires.rebuild()
             self.agent.tell(REPREDICT)
 
     def start(self) -> None:
         self.endow()
 
+    def _road(self) -> None:
+        """Run the pursuit road for this agent's desire: an instance was written or moved, and
+        the want under it is the road's to mint. The one thing the ledger asks of deliberation,
+        and it asks rather than does — nothing here writes a want."""
+        from orexis_agent_deliberation import pursuit
+        pursuit.top_up(self.agent, f"{self.agent.me.uri}.no_overdue_debts")
+
     def endow(self) -> int:
-        """A debt written before the record carried its met-test (#635) is endowed with one:
-        never-held terms arrive with their structures, held ones stay the agent's
-        (an-amendment-endows-what-it-grants). Without it the planner, which no longer reads
-        the discharge itself, could not tell a served world from the world in hand."""
+        """A debt written while the ledger minted its own want carried no PREDICTION beside it,
+        and the road derives nothing from a debt that predicts nothing: never-held structures
+        arrive with the volume (an-amendment-endows-what-it-grants). Each debt with a deadline
+        and no lapse in view gets the lapse the ledger would write today — wherever the debt
+        is, its own graph or the untimed record of one written before debts had graphs. The
+        met-test it used to carry is the DESIRE's now and is left where it lies."""
         rows = bindings(self.agent.beliefs.query_union(f"""
-SELECT ?g ?o ?jti WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{PRESENTED}> ?p .
-  FILTER NOT EXISTS {{ ?o <{OREXIS}unmetWhen> ?test }} }}
-  FILTER(STRSTARTS(STR(?g), "{obligations_graph(self.agent.id)}")) }}"""))
+SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS}expiresAt> ?expires .
+  FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?paid }} FILTER NOT EXISTS {{ ?o <{LAPSED_AT}> ?lapsed }} }}
+  FILTER(STRSTARTS(STR(?g), "{obligations_graph(self.agent.id)}"))
+  FILTER NOT EXISTS {{ GRAPH ?p {{ ?o <{LAPSES_AT}> ?w }} }} }}"""))
         for row in rows:
-            self.agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{row["g"]}> {{
-                <{row["o"]}> <{OREXIS}unmetWhen> [ <{_SH_SELECT}> {json.dumps(_unmet(row["jti"]))} ] }} }}""")
+            lapse = lapse_graph(self.agent.id, row["jti"])
+            self.agent.beliefs.update(f"""INSERT DATA {{
+  GRAPH <{lapse}> {{ <{row["o"]}> <{LAPSES_AT}> "{row["expires"]}"^^xsd:dateTime }}
+  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{lapse}> a orexis:PredictionGraph ; orexis:arrivedBy orexis:Recorded . }}
+  GRAPH <{PERIODS_GRAPH}> {{
+    <{lapse}> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "{row["expires"]}"^^xsd:dateTime ] . }} }}""")
         if rows:
-            self.log.info("%d debt(s) written before the record carried a met-test, endowed", len(rows))
+            self.log.info("%d debt(s) written before the ledger predicted their lapse, endowed", len(rows))
             self.agent.desires.rebuild()
+            self._road()
         return len(rows)
+
+    def foresight(self, root: str) -> float | None:
+        """How far ahead "no overdue debts" derives a want from a prediction: EVERY deadline a
+        host has been given. A region desire foresees as far as its drift is worth believing;
+        a debt's deadline is not a forecast but a term of the claim, and a host that only
+        noticed a debt some hours before it lapsed would be a host that never planned to serve.
+        Unbounded, for this root and no other. Reached through the module that holds the
+        ledger, since the ledger is no longer a module of its own in the choir."""
+        return float("inf") if root == f"{self.agent.me.uri}.no_overdue_debts" else None
 
     def obligations(self, now: datetime | None = None) -> list[Judgment]:
         """What this agent owes, as desires — hottest first, and hot means CLOSE TO EXPIRY.
@@ -307,7 +349,10 @@ SELECT ?g ?o ?jti WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{PRESENTED}> ?p 
         """
         now = now or clock.now()
         out = []
-        for row in bindings(self.agent.desires.query_union(_DUTIES_Q)):
+        #  `$root` THROUGH THE BINDER, not the engine's substitutions: those reach only a
+        #  variable the query projects at its top level, and this one is a token in a pattern.
+        for row in bindings(self.agent.desires.query_union(
+                bind(_DUTIES_Q, root=f"{self.agent.me.uri}.no_overdue_debts"))):
             demanded = row.get("presented") == "true"
             lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])
             out.append(Judgment(uri=row["desire"], urgency=_duty_urgency(row, now),

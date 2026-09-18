@@ -116,8 +116,29 @@ through aggregation, and pinned in `test_wants.py`. And **the per-block `orexis:
 authoring convention**: sensing's region shape and the greenhouse's state it per constraint,
 and a shape that does not falls back to the desire's whole `orexis:about`, which is what every
 want was before.
-- **The ledger's met-test and prediction**, then `owe` stops minting and the `is_obligation`
-  sites collapse. #675 carries this and is superseded in part by the framing here.
+**Stage two is built: the ledger writes debts and predictions.** *No overdue debts* carries a
+met-test whose two violations are each about the debt itself (`orexis:about sh:this`, on a
+`sh:sparql` constraint so that a serve's discharge reads met in the imagined world): a lapse in
+view and unpaid, or presented and unpaid. `owe` writes the debt and a `market:lapsesAt`
+prediction holding from the deadline, then ASKS the road, which mints one want per debt at its
+own deadline; `discharge` and the sweep drop the prediction; the ledger speaks for the road's
+want by its claim's window; the host answers foresight for that root as every deadline it has
+been given; a debt written before the ledger predicted is endowed its prediction at boot. A
+debt with no deadline and nobody asking is nothing to pursue until its holder asks, and the
+want minted then holds at no instant. The `is_obligation` sites stand — they branch on the
+choir's judgment, which is still the market's — and collapsing them is a cleanup, not this
+road. #675 is done.
+
+Stage two taught three things. **A root met now with nothing foreseen derives nothing** — the
+road's fallback, one want about everything the desire is about, is for a root unmet now whose
+select yields no rows, and it minted a want under a met root the first time the road ran
+without a pass's judgment in hand; the road is told the verdict where a pass stands on the
+root and reads it off the select where a package asks. **A root's shape lives in the roots
+graph**, not in public knowledge, and the container compiling it from the public graphs alone
+found no target, raised, and read the root unmet every pass — silently, since an error reads
+as the loud direction. And **a package's answer reaches the choir only through a module the
+choir asks**: the ledger is held by hosting and is not one, so its foresight is forwarded.
+
 - **Clustering runs within a desire**, not across. A want derived from two desires would name two
   parents, and nothing here needs it: one universal per premise is what puts soil and air under
   one desire in the first place.

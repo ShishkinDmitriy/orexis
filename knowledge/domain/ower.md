@@ -26,11 +26,12 @@ ever presents it.
 **It is [hosting](/domain/market.md)'s, and the modality is the kernel's.** Only a host owes,
 because a debt arises from a claim this agent ISSUED — so the ledger lives in the market package
 and `HostingModule` holds it. What stays the mind's is the
-[obligation](/domain/obligation.md) itself: an `orexis:Desire` bound within its window, the
-modality that projects the record, and the branches that rank a debt beside a want. The words
-written in the record — the counterparty, the claim, the amount, the window, the discharge —
-and the record's class are the market's (#635), and the ledger writes the debt's own met-test
-beside them, so the planner judges a debt as it judges any authored pattern and names no
+want under *no overdue debts* — minted by the pursuit road about the
+[obligation](/domain/obligation.md), holding at its deadline — the modality that projects the
+record, and the branches that rank a debt beside a stake. The words written in the record —
+the counterparty, the claim, the amount, the window, the discharge — and the record's class
+are the market's (#635), and so is the desire's met-test, authored by the ledger's own
+`desires.ru`; the planner judges the road's want as it judges any shaped want and names no
 word of the ledger.
 
 **Which needed no new mechanism**, and that is the point worth keeping. A package declaring a

@@ -63,39 +63,73 @@ def handed(agent, judgment):
     derived under it, minted if the root reads unmet and none stands; None for a met root
     with nothing derived under it, which is nothing to pursue and runs no pass."""
     if judgment.derived_from is not None or judgment.is_obligation or not _is_root(agent, judgment.uri):
+        #  A WANT THE ROAD MINTED, or one a package speaks for: handed as it is. Its root may
+        #  have gained instances since — a second claim — so the road tops up first.
+        if judgment.derived_from is not None:
+            top_up(agent, judgment.derived_from)
         return judgment
+    #  THE PASS STANDS ON THE ROOT, so the container's judgment of its present is in hand and
+    #  the road is told it rather than reading it again — which is also what lets a root whose
+    #  met-test the compiler refused, judged unmet by the choir, still derive its one want.
+    top_up(agent, judgment.uri, unmet_now=not judgment.is_met)
     child = child_of(agent, judgment.uri)
     if child is None:
-        instant = None
-        if judgment.is_met:
-            #  MET NOW, AND PREDICTED NOT TO BE (#619): a crossing the root foresees derives a
-            #  want that must hold AT that instant; nothing foreseen is nothing to pursue.
-            instant = foreseen(agent, judgment.uri)
-            if instant is None:
-                return None
-            found = [w for w in witnesses_of(agent, judgment.uri) if w.at == instant]
-        else:
-            #  UNMET NOW: the same select at the present says which instances are in trouble.
-            found = witnesses_of(agent, judgment.uri, now=True)
-        #  ONE WANT PER SCOPE OF WHAT IS IN TROUBLE (one-road-derives-every-want): the
-        #  witnesses clustered by which of them some action can move together, and a want
-        #  minted per cluster about exactly those, holding at the instant they share — the
-        #  foreseen crossing, or none for a want unmet now. Every shipped world is one scope,
-        #  so this is one want; the road is the same when it is not. Where the select yields
-        #  no rows — a shape naming nothing per block, or a met-test the compiler refused —
-        #  one want about everything the desire is about, which is what every want was.
-        clusters = _clusters(agent, found) or [[]]
-        minted = [mint(agent, judgment.uri, holds_at=instant,
-                       about=tuple(sorted({w.about for w in cluster if w.about})))
-                  for cluster in clusters]
-        child = next((c for c in minted if c is not None), None)
-        if child is None:
-            return judgment
+        return None
     #  AS THE CONTAINER PRESENTS IT: a want met at an instant carries its instant, its
     #  time room and the state the newest prediction gives it (`Agent.pursuing`), none of
     #  which the root's row knows; an at-end want is the root's row under the derived name.
     presented = next((d for d in agent.pursuing() if d.uri == child and d.holds_at is not None), None)
     return presented if presented is not None else replace(judgment, uri=child, derived_from=judgment.uri)
+
+
+def top_up(agent, root: str, *, unmet_now: bool | None = None) -> list[str]:
+    """Mint a want under `root` for every cluster of its witnesses that has none, and return
+    what was minted. The whole of the road's writing, run whenever a pass stands on the root
+    or on any want under it — and by a package that has just written an instance, since a
+    claim arriving should be a want arriving, not a want on the next tick. A package that
+    calls this mints nothing; it says an instance is there and the road does the rest
+    (one-road-derives-every-want).
+
+    `unmet_now` is the root's present as the caller judged it — the container's verdict,
+    where a pass stands on the root — and is read off the root's own select where nobody
+    says. The instant is EACH CLUSTER'S OWN. A root unmet now derives wants with none. A
+    root met now derives them at the crossings it foresees — and two debts cross at two
+    deadlines, so the second is not filtered away by the first's; each cluster holds at its
+    earliest witness, and one past the foresight is not derived. A root met now with nothing
+    foreseen derives NOTHING: there is nothing to pursue, and a want about everything the
+    desire is about is minted only for a root unmet now whose select yields no rows — a
+    met-test the compiler refused, or a shape naming nothing per block — which is what every
+    want was before the road.
+    """
+    present = witnesses_of(agent, root, now=True)
+    if unmet_now is None:
+        unmet_now = bool(present)
+    if unmet_now:
+        found, ahead = present, None
+    else:
+        ahead = foresees_of(agent, root)
+        if ahead is None:
+            return []
+        found = [w for w in witnesses_of(agent, root)
+                 if (w.at - clock.now()).total_seconds() <= ahead]
+        if not found:
+            return []
+    #  ONE WANT PER SCOPE OF WHAT IS IN TROUBLE, and per INSTANCE: the witnesses clustered by
+    #  which of them some action can move together, and a want minted per cluster about
+    #  exactly those, holding at the earliest instant among them. Every shipped world is one
+    #  scope, so two properties of one bed are one want; two debts are two instances and two
+    #  wants. A cluster that already has its want — `about` for `about` — is left standing.
+    standing = {w.about for w in agent.wants.find_all_by_desire(root)}
+    minted = []
+    for cluster in _clusters(agent, found) or [[]]:
+        about = tuple(sorted({w.about for w in cluster if w.about}))
+        if about in standing or (not about and standing):
+            continue
+        instant = min((w.at for w in cluster), default=None) if ahead is not None else None
+        child = mint(agent, root, holds_at=instant, about=about)
+        if child is not None:
+            minted.append(child)
+    return minted
 
 
 def _clusters(agent, witnesses: list) -> list[list]:
@@ -118,7 +152,12 @@ def _clusters(agent, witnesses: list) -> list[list]:
     groups: dict = {}
     loose = []
     for w in witnesses:
-        key = scope_of(w.about) if w.about else None
+        #  KEYED BY INSTANCE TOO: a desire whose shape targets the agent has one instance and
+        #  one group per scope; one whose shape targets each debt has one group per debt, so
+        #  a Serving step can name its claim. A witness about the instance itself — the block
+        #  said `sh:this` — is its own group by construction.
+        scope = scope_of(w.about) if w.about else None
+        key = (scope, w.instance) if scope is not None or w.about == w.instance else None
         (groups.setdefault(key, []) if key is not None else loose).append(w)
     if not groups:
         return [loose]
@@ -203,7 +242,8 @@ class Witness:
 
 def witnesses_of(agent, root: str, *, now: bool = False) -> list[Witness]:
     """Every (instance, constraint) under which `root` reads unmet, each at the FIRST instant it
-    does — the start of the earliest prediction where it fails, or now where `now` is asked.
+    does — the start of the earliest prediction where it fails; or, with `now`, at the PRESENT
+    alone, which is a different question: what is in trouble already, not what will be.
 
     The root's own met-test asked through the door at each prediction's start, where the door
     hands the prediction holding then beside the present (#643). A prediction typed with the
@@ -215,7 +255,7 @@ def witnesses_of(agent, root: str, *, now: bool = False) -> list[Witness]:
     select = _unmet_select_of(agent, root)
     if select is None:
         return []
-    instants = ([clock.now()] if now else []) + [
+    instants = [clock.now()] if now else [
         start for _graph, start, _end in agent.beliefs.prediction_windows() if start is not None]
     seen: dict[tuple[str, str], Witness] = {}
     for at in instants:

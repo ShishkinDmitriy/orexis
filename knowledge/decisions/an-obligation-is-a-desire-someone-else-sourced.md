@@ -174,8 +174,10 @@ facts were sayable in authored and entailed terms (`market:matchesBy`, `market:o
 - ~~**What a claim-sourced desire says exactly.**~~ CLOSED by
   [#255](https://github.com/ShishkinDmitriy/orexis/issues/255), the way the note said it had to
   be: the state is *this claim discharged* — a pattern over the record, asked of whatever
-  world is judged; since #635 the ledger writes it as the debt's own `orexis:unmetWhen` and
-  the planner names no word of the ledger — and the act stayed an affordance (`ag:Apply`, whose
+  world is judged; #635 had the ledger write it as the debt's own `orexis:unmetWhen`, and
+  since [one-road-derives-every-want](/decisions/one-road-derives-every-want.md) it is the
+  met-test of the host's desire, the want under it minted by the road — and the planner names
+  no word of the ledger — and the act stayed an affordance (`ag:Apply`, whose
   effect rule now states what serving makes true, sized from the record's own `market:amountL`).
 - **What becomes of the honoured row.** ANSWERED: disclosure survived, the filter did not, and
   the row gained a job nobody had planned for it — it is how an obligation finds the lever that serves

@@ -105,6 +105,7 @@ OWED_AT = term("owedAt")
 OWED_FROM = term("owedFrom")
 AMOUNT_L = term("amountL")
 DISCHARGED_AT = term("dischargedAt")
+LAPSES_AT = term("lapsesAt")          # the PREDICTION beside a debt: it lapses at its deadline
 LAPSED_AT = term("lapsedAt")          # the verdict a debt leaves when its window closed unserved (#645)
 USABLE_FROM = term("usableFrom")
 USABLE_UNTIL = term("usableUntil")
