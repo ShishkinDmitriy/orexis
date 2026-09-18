@@ -63,8 +63,22 @@ def test_a_root_is_never_handed_to_the_search_and_what_is_pursued_is_derived_und
 
     said = _said_of(agent, child.uri)
     assert (DERIVED_FROM, root.uri) in said
-    met = next(o for p, o in _said_of(agent, root.uri) if p == MET_WHEN)
-    assert (MET_WHEN, met) in said, "the met-test is pointed at, never copied: one owner"
+    #  THE MET-TEST IS CARRIED, INSTANTIATED — the root's shape at this want's witness, under
+    #  the want's own name: the same node targeted (the root names its one node), the block
+    #  about its property, so the want is judged on its own instance. It was pointed at
+    #  before, one owner, and every want under a desire over several instances read unmet
+    #  for any of them.
+    from orexis_agent_progression.store import bindings
+    [own] = [o for p, o in said if p == MET_WHEN]
+    assert own == child.uri + ".met", "its own shape, named for the want"
+    root_met = next(o for p, o in _said_of(agent, root.uri) if p == MET_WHEN)
+    rows = bindings(agent.beliefs.query_union(f"""SELECT ?target ?about WHERE {{
+        <{own}> sh:targetNode ?target ; sh:property ?b . ?b orexis:about ?about }}"""))
+    [same] = bindings(agent.beliefs.query_union(
+        f"SELECT ?target WHERE {{ <{root_met}> sh:targetNode ?target }}"))
+    assert rows and {r["target"] for r in rows} == {same["target"]} \
+        and {r["about"] for r in rows} == {MOISTURE}, \
+        "the desire's own target and the blocks about this property, and nothing else"
 
 
 def test_a_met_root_derives_nothing_and_no_pass_runs(monkeypatch):

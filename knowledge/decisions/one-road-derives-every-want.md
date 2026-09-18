@@ -153,6 +153,32 @@ was only ever the road's reading of the predictions. A plan ALREADY placed at th
 the keeper's, and stands until its lapse or a surprise (#527) — the road does not reach into
 the ledger.
 
+**The road's contract is a table, and the table found a defect on its first run.**
+`packages/orexis-agent-deliberation/tests/road/` holds one TriG file per case — the world, the
+levers, the desire with its met-test, the present, the foreseen, what stands, and the wants
+expected — loaded into a bare store and run through `top_up` in milliseconds, where the four
+world files that covered the road each stood an agent up to show one case. Two tanks low
+about their level are two clusters, per instance as two debts are, and were ONE name,
+`<desire>.pursued.level`; the second mint overwrote the first, and no shipped world could
+show it, since sensing's desires and the greenhouse's name their one node and a debt's want
+is about the debt itself. A want is named for its instance where the desire ranges over
+several — its shape targets a class, or whatever bears a property — and what stands is
+checked by name; a desire naming its one node (`sh:targetNode`) keeps every name it had.
+
+**A want carries the desire's met-test instantiated at its witness — it pointed at the
+universal for a while.** The sovereign, reading a case's expected want as a name, two abouts
+and an instant, expected a want to be structurally a desire, only more specific: *all
+properties in range* becomes *this tank's level from 10*. It was; the implementation had the
+want point at the desire's whole shape, and the table showed what that meant — tank1's want
+read UNMET with tank1 fixed, because tank2 was low, and a debt's want read unmet for any
+debt unpaid. `mint` carves the desire's shape now and narrows it — `sh:targetNode` the
+instance, only the property blocks and `sh:sparql` constraints about what the want is about
+— and writes it into the want's own graph as `<want>.met`; the avoided state and the
+estimate are still pointed at, one owner each. The container judges a derived want's STATE
+by its own shape and keeps the root's MEASURE (met-and-urgent is a true situation, and the
+choir's words, `stale` and `unmeasured`, are finer than a shape's two); the planner already
+compiled the judgment's own met-test. A case's expected want is written as that shape.
+
 - **Clustering runs within a desire**, not across. A want derived from two desires would name two
   parents, and nothing here needs it: one universal per premise is what puts soil and air under
   one desire in the first place.

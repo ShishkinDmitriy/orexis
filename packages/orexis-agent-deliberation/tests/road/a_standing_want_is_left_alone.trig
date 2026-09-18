@@ -1,0 +1,82 @@
+# a_standing_want_is_left_alone
+#
+# The want for tank1's level already stands, and the level is still low: the road is idempotent
+# over what stands.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix graph: <http://example.org/orexis/graph/> .
+@prefix roots: <http://example.org/orexis/graph/roots/> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+
+GRAPH :world {
+  :tank1 a :Tank .
+  :tank2 a :Tank .
+}
+
+# The levers loaded. A rule text is parsed with the store's prefixes, not this file's, so
+# each says its own — an unreadable lever joins every property into one scope.
+GRAPH :actions {
+  :fill a orexis:Action ;
+      sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?t :level ?x . } WHERE { ?t a :Tank }""" .
+  :heat a orexis:Action ;
+      sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
+}
+
+GRAPH roots:keeper {
+  :keeper orexis:holds :keeper.in_range .
+  :keeper.in_range a orexis:Desire ;
+      rdfs:label "every tank in range" ;
+      orexis:about :level , :temperature ;
+      orexis:foresees 3600 ;
+      orexis:metWhen :in_range .
+  :in_range a sh:NodeShape ;
+      sh:targetClass :Tank ;
+      sh:property [ sh:path :level ; sh:minInclusive 10 ; orexis:about :level ] ;
+      sh:property [ sh:path :temperature ; sh:maxInclusive 30 ; orexis:about :temperature ] .
+}
+
+GRAPH graph:sensed {
+  :tank1 :level 5 ; :temperature 20 .
+  :tank2 :level 20 ; :temperature 20 .
+}
+
+GRAPH pursued:keeper.in_range.pursued.tank1.level {
+  :keeper orexis:holds :keeper.in_range.pursued.tank1.level .
+  :keeper.in_range.pursued.tank1.level a orexis:Want ;
+      prov:wasDerivedFrom :keeper.in_range ;
+      orexis:metWhen :keeper.in_range.pursued.tank1.level.met ;
+      orexis:about :level ;
+      rdfs:label "pursued: every tank in range" .
+  :keeper.in_range.pursued.tank1.level.met a sh:NodeShape ; sh:targetNode :tank1 ;
+      sh:property [ sh:path :level ; sh:minInclusive 10 ] .
+}
+
+# What each graph IS, and when it holds — said once each, beside the data.
+GRAPH graph:classification {
+  roots:keeper a orexis:RootsGraph .
+  pursued:keeper.in_range.pursued.tank1.level a deliberation:PursuedGraph ; orexis:arrivedBy orexis:Recorded .
+}
+GRAPH graph:periods {
+  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00Z"^^xsd:dateTime ] .
+}
+
+# What the road is expected to leave standing under the desire: each want by its name,
+# what it is about, the instant it holds at where it holds at one, and its met-test — the
+# desire's, instantiated at the tank in trouble and narrowed to what the want is about.
+GRAPH :expected {
+  :keeper.in_range.pursued.tank1.level a orexis:Want ;
+      orexis:about :level ;
+      orexis:metWhen [ a sh:NodeShape ; sh:targetNode :tank1 ;
+          sh:property [ sh:path :level ; sh:minInclusive 10 ] ] .
+}

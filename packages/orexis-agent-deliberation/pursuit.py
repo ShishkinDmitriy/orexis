@@ -51,11 +51,13 @@ log = logging.getLogger("pursuit")
 #  of its own, a lifetime and a definition of done: bound `orexis:AtEnd`, `prov:wasDerivedFrom`
 #  the root, minted here the first time the root reads unmet and withdrawn when its plan
 #  finishes or it reads met with nothing standing for it
-#  (an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it). It POINTS at the root's
-#  met-test, avoided state and estimate — one owner each — and restates only the root's
-#  address, `orexis:about`, which is what the menu joins a want by. The container presents it
-#  in the root's place with the root's own measure (`Agent.pursuing`), so a keeper's verdict,
-#  a bidder's lookup and a mark by either name meet the same want.
+#  (an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it). It CARRIES the root's
+#  met-test instantiated at its witness — the same shape, targeting the one instance in
+#  trouble, with the blocks about what the want is about (`narrowed`) — POINTS at the root's
+#  avoided state and estimate, one owner each, and restates the root's address,
+#  `orexis:about`, which is what the affordances join a want by. The container presents it in
+#  the root's place with the root's own measure and its own state (`Agent.pursuing`), so a
+#  keeper's verdict, a bidder's lookup and a mark by either name meet the same want.
 
 
 def handed(agent, judgment):
@@ -129,18 +131,25 @@ def top_up(agent, root: str, *, unmet_now: bool | None = None) -> list[str]:
     #  trace, a remembered plan and the keeper meet the want they kept and a plan is found
     #  from the present. The instant was the road's reading of the predictions; the present
     #  outranks it, as it does everywhere else here.
-    standing = {w.about: w for w in agent.wants.find_all_by_desire(root)}
+    #  STANDING IS BY NAME, and the name is the cluster's: what it is about, and which instance
+    #  where the desire ranges over several (`name_of`). Two tanks low about their level are
+    #  two clusters and two names; keyed by what they were about alone, the second read the
+    #  first as standing, and by construction the second mint had overwritten the first.
+    standing = {w.uri: w for w in agent.wants.find_all_by_desire(root)}
     minted = []
     for cluster in _clusters(agent, found) or [[]]:
         about = tuple(sorted({w.about for w in cluster if w.about}))
-        stood = standing.get(about) if about else next(iter(standing.values()), None)
+        instances = {w.instance for w in cluster}
+        instance = next(iter(instances)) if len(instances) == 1 else None
+        child = name_of(agent, root, about, instance)
+        stood = standing.get(child)
         if stood is not None and not (unmet_now and stood.holds_at):
             continue
         if stood is not None:
             log.info("%s: what was foreseen at %s has arrived", stood.uri.rsplit("#", 1)[-1],
                      stood.holds_at)
         instant = min((w.at for w in cluster), default=None) if ahead is not None else None
-        child = mint(agent, root, holds_at=instant, about=about)
+        child = mint(agent, root, holds_at=instant, about=about, instance=instance)
         if child is not None:
             minted.append(child)
     return minted
@@ -210,16 +219,17 @@ def crossing_of(agent, root: str) -> datetime | None:
 def _unmet_select_of(agent, root: str) -> str | None:
     """The root's own met-test, compiled to the select whose rows are its VIOLATIONS — `?this`,
     which constraint, and `?_about` where the constraint's block says what it is about — from
-    public knowledge and the agent's roots graph, where a root's shape lives since #644. Cached
-    per root on the agent: a root never changes while the agent runs. None where the root states
-    no shape or the compiler refuses.
+    public knowledge and the graphs the agent owns, ASKED by their classification and never
+    named (a root's shape lives in the roots graph since #644, and the roots graph is
+    `orexis:RootsGraph` in the classification boot writes). Cached per root on the agent: a
+    root never changes while the agent runs. None where the root states no shape or the
+    compiler refuses.
 
     THE REPORT AND NOT THE FOCUS NODES (one-road-derives-every-want): a desire universal over
     several properties fails per property, and the rows are what say which. The planner
     compiles the same shape the same way for the law it holds candidates to."""
     from rdflib import URIRef
 
-    from orexis_agent_progression.ontology import roots_graph
     from orexis_agent_progression.violation import Unsupported, report_select
 
     from .conformance import graph_from
@@ -232,7 +242,8 @@ def _unmet_select_of(agent, root: str) -> str | None:
     if rows:
         shape = rows[0]["s"]
         try:
-            shapes = graph_from(agent.beliefs, *agent.beliefs.public_graphs(), roots_graph(agent.id))
+            shapes = graph_from(agent.beliefs, *agent.beliefs.public_graphs(),
+                                *agent.beliefs.recorded_graphs())
             select = report_select(shapes.cbd(URIRef(shape)), URIRef(shape))
         except Unsupported as exc:
             log.warning("%s: its met-test cannot be compiled, so no crossing is read for it: %s",
@@ -337,40 +348,86 @@ def root_of(agent, want: str) -> str | None:
     return found.uri if found else None
 
 
-def mint(agent, root: str, holds_at: datetime | None = None, about: tuple = ()) -> str | None:
-    """Derive the want pursued under `root` and write it to the pursued graph. Its name is the
-    root's, suffixed, so a second episode of the same root pursues the same node and everything
-    keyed by it — the planner, a remembered plan, the trace — finds what it kept. None, and the
-    root stays the goal, where the root states its met-test inline: a blank node has no name
-    another graph could point at, and copying it would make a second owner of the claim."""
-    #  NAMED FOR WHAT IT IS ABOUT where that is NARROWER than the desire, so two wants under
-    #  one desire — soil now, air later — are two nodes; and for the desire alone where it is
-    #  not, which is every want there was before and keeps the trace, a remembered plan and
-    #  the keeper meeting what they kept. A desire about one property mints `<desire>.pursued`
-    #  exactly as it always did.
+def _tail(iri: str) -> str:
+    return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
+
+
+def name_of(agent, root: str, about: tuple, instance: str | None) -> str:
+    """The name of the want minted under `root` for one cluster of its witnesses: the root's,
+    suffixed, so a second episode of the same cluster pursues the same node and everything
+    keyed by it — the planner, a remembered plan, the trace, the keeper — finds what it kept.
+
+    NAMED FOR WHAT IT IS ABOUT where that is NARROWER than the desire, so two wants under one
+    desire — soil now, air later — are two nodes; and for the desire alone where it is not,
+    which is every want there was before the road: a desire about one property mints
+    `<desire>.pursued` exactly as it always did. AND FOR THE INSTANCE where the desire ranges
+    over several — its shape targets a class, or whatever bears a property, rather than one
+    node — since two tanks low about their level are two clusters, two plans, and would be one
+    name otherwise (found by the road's own table, `tests/road/`); a desire whose shape names
+    its one node (`sh:targetNode`, sensing's and the greenhouse's) keeps its names, and an
+    instance the want is already about (a debt, `orexis:about sh:this`) is not said twice.
+    """
+    desire_abouts = tuple(sorted(
+        r["a"] for r in bindings(agent.desires.query_union(
+            f"SELECT ?a WHERE {{ <{root}> orexis:about ?a }}"))))
+    tails = [_tail(a) for a in about] if about and set(about) != set(desire_abouts) else []
+    if instance is not None and instance not in about and not _targets_one_node(agent, root):
+        tails.insert(0, _tail(instance))
+    return root + ".pursued" + "".join(f".{t}" for t in tails)
+
+
+def _targets_one_node(agent, root: str) -> bool:
+    """Does the root's met-test name the one node it is about (`sh:targetNode`)? Cached per
+    root on the agent: a root never changes while the agent runs."""
+    cache = agent.__dict__.setdefault("_root_targets_one", {})
+    if root not in cache:
+        cache[root] = bool(bindings(agent.desires.query_union(
+            f"SELECT ?n WHERE {{ <{root}> orexis:metWhen ?s . ?s sh:targetNode ?n }} LIMIT 1")))
+    return cache[root]
+
+
+def mint(agent, root: str, holds_at: datetime | None = None, about: tuple = (),
+         instance: str | None = None) -> str | None:
+    """Derive the want pursued under `root` and write it to the pursued graph, named by
+    `name_of`. None, and the root stays the goal, where the root states its met-test inline:
+    a blank node has no name another graph could point at, and copying it would make a second
+    owner of the claim."""
     desire_abouts = tuple(sorted(
         r["a"] for r in bindings(agent.desires.query_union(
             f"SELECT ?a WHERE {{ <{root}> orexis:about ?a }}"))))
     abouts = about or desire_abouts
-    narrower = bool(about) and set(about) != set(desire_abouts)
-    suffix = "".join(f".{a.rsplit('#', 1)[-1].rsplit('/', 1)[-1]}" for a in about) if narrower else ""
-    child = root + ".pursued" + suffix
+    child = name_of(agent, root, about, instance)
     points_said = []
     #  The raw SPARQL-JSON rows, because the TYPE of the object matters here and
     #  `bindings` flattens it away: a blank node cannot be pointed at from another graph.
     said = agent.desires.query_union(f"""
 SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
   FILTER(?p IN (orexis:metWhen, orexis:unmetWhen, orexis:estimates, orexis:about)) }}""")
+    met_test = None
     for sol in said.get("results", {}).get("bindings", []):
         if sol["o"]["type"] == "bnode":
             log.warning("%s states its %s inline; it is pursued itself", root.rsplit("#", 1)[-1],
                         sol["p"]["value"].rsplit("#", 1)[-1])
             return None
         #  WHAT IT IS ABOUT is the witnesses' where the shape named them per block, and the
-        #  desire's whole where it did not; the met-test and the rest are pointed at as ever.
+        #  desire's whole where it did not; the avoided state and the estimate are pointed at
+        #  as ever, and the met-test is carried, instantiated, below.
         if sol["p"]["value"].endswith("#about"):
             continue
+        if sol["p"]["value"].endswith("#metWhen"):
+            met_test = sol["o"]["value"]
+            continue
         points_said.append(sol)
+    #  THE MET-TEST IS THE DESIRE'S INSTANTIATED AT THE WITNESS: carved from where the root's
+    #  shape lives and narrowed to this cluster — the instance as its target, the blocks about
+    #  what the want is about — and written into the want's own graph under its own name, so
+    #  the want is judged on its instance and a plan for one tank is not refused for another's.
+    shape_lines: tuple = ()
+    points = [(sol["p"]["value"], sol["o"]["value"]) for sol in points_said]
+    if met_test is not None:
+        own = child + ".met"
+        shape_lines = narrowed(agent, met_test, own, instance, abouts)
+        points.append((OREXIS_MET_WHEN, own))
 
     labels = bindings(agent.desires.query_union(
         f"SELECT ?l WHERE {{ <{root}> rdfs:label ?l }} LIMIT 1"))
@@ -392,10 +449,55 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
         uri=child, holder=agent.me.uri, desire=root, label=label, ends=ends,
         holds_at=holds_at.isoformat() if holds_at is not None else None,
         derived_at=clock.now().isoformat() if holds_at is not None else None,
-        about=abouts,
-        points=tuple((sol["p"]["value"], sol["o"]["value"]) for sol in points_said)))
+        about=abouts, points=tuple(points), shape=shape_lines))
     log.info("%s reads unmet: pursuing %s", root.rsplit("#", 1)[-1], child.rsplit("#", 1)[-1])
     return child
+
+
+OREXIS_MET_WHEN = "http://example.org/orexis#metWhen"
+
+
+def narrowed(agent, shape: str, own: str, instance: str | None, abouts: tuple) -> tuple[str, ...]:
+    """The desire's met-test as THIS want's: the same shape under the want's own name, its
+    target the one instance the want is about where the cluster had one, and only the property
+    blocks and `sh:sparql` constraints about what the want is about — the universal instantiated
+    at its witness (a-desire-is-universal-and-a-want-is-existential). A block or constraint
+    saying nothing about what it is about is kept, as is one about `sh:this`, which is the
+    instance. The triples, as N-Triples lines the collection writes into the want's graph.
+
+    Carved from public knowledge and the agent's own graphs, asked by classification, where a
+    root's shape lives; a shape that names its one node (`sh:targetNode`) narrows to the same
+    node, so sensing's wants and the greenhouse's keep their target and lose only the blocks
+    they are not about.
+    """
+    from rdflib import Graph, URIRef
+    from rdflib.namespace import SH
+
+    from .conformance import graph_from
+
+    about_p = URIRef("http://example.org/orexis#about")
+    targets = {SH.targetNode, SH.targetClass, SH.targetSubjectsOf, SH.targetObjectsOf, SH.target}
+    cbd = graph_from(agent.beliefs, *agent.beliefs.public_graphs(),
+                     *agent.beliefs.recorded_graphs()).cbd(URIRef(shape))
+    keep = {URIRef(a) for a in abouts}
+    out, dropped = Graph(), Graph()
+    for p, o in cbd.predicate_objects(URIRef(shape)):
+        if p in targets and instance is not None:
+            continue
+        if p in (SH.property, SH.sparql):
+            about = cbd.value(o, about_p)
+            if about == SH.this:
+                about = URIRef(instance) if instance is not None else None
+            if keep and about is not None and about not in keep:
+                dropped += cbd.cbd(o)
+                continue
+        out.add((URIRef(own), p, o))
+    if instance is not None:
+        out.add((URIRef(own), SH.targetNode, URIRef(instance)))
+    for s, p, o in cbd:
+        if s != URIRef(shape) and (s, p, o) not in dropped:
+            out.add((s, p, o))
+    return tuple(line for line in out.serialize(format="nt").splitlines() if line.strip())
 
 
 def withdraw(agent, child: str) -> None:

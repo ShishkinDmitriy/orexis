@@ -44,9 +44,17 @@ class Want:
     #  a want minted for the soil alone is about the soil alone. It was one string, which the
     #  greenhouse already contradicted (#566); the tuple is the properties in trouble.
     about: tuple = ()
-    #  What it POINTS AT rather than restates: the desire's met-test, avoided state and
-    #  estimate, one owner each — as `(predicate, object)` IRIs.
+    #  What it POINTS AT rather than restates: the desire's avoided state and estimate, one
+    #  owner each — as `(predicate, object)` IRIs — and its OWN met-test, below.
     points: tuple = ()
+    #  ITS MET-TEST, which is the desire's instantiated at the witness: the same shape, its
+    #  target the one instance in trouble and its blocks the ones about what this want is
+    #  about — a plant's moisture inside its range, where the desire said every property of
+    #  everything. Carried as the triples of that shape, written into the want's own graph,
+    #  so a want is judged on its own instance and a plan for one tank is not refused for
+    #  another's. It pointed at the desire's whole shape for a while, and read unmet for
+    #  every instance the desire was about.
+    shape: tuple = ()
     #  WHO HOLDS IT — `<holder> orexis:holds <want>`, written into the want's own graph, so it
     #  is a stored fact of this want and not identity the collection carries. The agent is
     #  another aggregate root; what a want records ABOUT it is the want's.
