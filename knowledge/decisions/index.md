@@ -124,6 +124,7 @@ Time in the search: an instant, a stretch, a graph holding during a period, a pr
 * [a-prediction-is-a-set-of-bands-that-widens-with-the-horizon](/decisions/a-prediction-is-a-set-of-bands-that-widens-with-the-horizon.md) - A prediction is a set of bands widening with the horizon; a state is a graph with a period, an event a fact about its window.
 * [a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md) - A round holds during its period, a claim is water at a time, a host predicts its arrivals, and a plant asks ahead of its crossing.
 * [a-drift-toward-the-surroundings-is-one-link-and-no-physics](/decisions/a-drift-toward-the-surroundings-is-one-link-and-no-physics.md) - A sample exchanges heat with what surrounds it: one link, a stated rate, the sign of the gap, no physics; the drift says when it crosses.
+* [one-road-derives-every-want](/decisions/one-road-derives-every-want.md) - A desire is one; its met-test's violations are the instances in trouble, clustered by scope into wants; packages write instances and predictions, never wants.
 * [an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it](/decisions/an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it.md) - An Always want is a root and law, never pursued; what is pursued is derived from it, and its binding roots the search.
 
 # The market

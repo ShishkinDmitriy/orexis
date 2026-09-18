@@ -13,7 +13,8 @@ description: >-
   the strictness asymmetry binds the agent and the agent may author nothing. Every level must
   name a consumer or fold back, and the two standing rules — never retracted, only recomputed;
   premises stored, conclusions earned — are what make the materialisation legitimate.
-status: accepted
+status: superseded-in-part
+superseded-by: one-road-derives-every-want
 timestamp: 2026-08-24T14:30:00Z
 ---
 
@@ -22,6 +23,12 @@ timestamp: 2026-08-24T14:30:00Z
 > statement; the forest and the argument for it are unchanged.
 
 # A desire is a forest of derived roots
+
+*(Amended by [one-road-derives-every-want](/decisions/one-road-derives-every-want.md): the
+forest stands, and its nodes below a root are WANTS, minted by one road from the instances the
+world presents, not derived desires materialised by a rule. A desire is one and universal; what
+is per instance, per property and per side is what gets minted under it. The hierarchy this
+record settled is right; what its nodes are was drawn one level too high.)*
 
 What an agent holds today is a flat set: sensing's `desires.ru` derives one region and one envelope
 per (agent, property), a freshness want per instrument, and nothing that relates any of them.
