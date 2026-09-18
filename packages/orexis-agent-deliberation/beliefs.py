@@ -111,7 +111,11 @@ class Beliefs:
             raise BeliefError(
                 f"no agent with localId '{agent_id}' in this store — "
                 "was the world loaded before the modality was built?")
-        self.agent_uri = rows[0]["a"]
+        #  TOLD TO THE STORE, not kept here: which graphs are the agent's OWN is the store's
+        #  answer (`recorded_graphs`, `graphs_of`), kept to this agent by the owner each
+        #  graph's classification names, and the store is what every reader of that answer
+        #  holds. Read back through `__getattr__` like the rest of the store.
+        store.agent_uri = rows[0]["a"]
 
     def __getattr__(self, name):
         return getattr(self._store, name)

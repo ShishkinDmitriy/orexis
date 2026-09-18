@@ -36,7 +36,7 @@ from datetime import datetime, timezone
 
 from orexis_agent_progression.store import Store, bindings, decimal
 
-from .graphs import summaries_graph
+from .graphs import REVIEW, summaries_graph
 from orexis_agent_progression import clock
 
 # How many completed windows an agent keeps behind the one it is filling. Constant, so the
@@ -114,6 +114,9 @@ class Summaries:
     def __init__(self, store: Store, agent_id: str):
         self.store = store
         self.graph = summaries_graph(agent_id)
+        #  MINE TO CLASSIFY, at construction, whatever the graph is called.
+        store.classify(self.graph, REVIEW + "SummariesGraph", "http://example.org/orexis#Recorded",
+                       store.agent_uri)
 
     # --- accumulating -------------------------------------------------------------------
 

@@ -57,7 +57,7 @@ SELECT ?g WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
 #  package declares its own in its ontology (sensing's instruments graph, and the kernel does
 #  not know its name), while a PER-AGENT graph cannot be declared in a T-Box at all — it does
 #  not exist until its agent does — so the agent types its own at boot into the classification
-#  graph (genesis.classify_own_graphs).
+#  graph (`Store.classify`, said by each graph's owner; the kernel's two by genesis).
 #
 #  BOTH of those are named here, and both are the bootstrap root rather than a reader
 #  enumerating: they are where a graph says what it IS, and there is nowhere else to ask.
@@ -77,37 +77,58 @@ SELECT DISTINCT ?g WHERE {{
   GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }}
   ?class rdfs:subClassOf* orexis:RecordGraph }}"""
 
-_OWN = f"""
-SELECT DISTINCT ?g WHERE {{
-  {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }} }}
-  UNION
-  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?g a ?class ; orexis:arrivedBy ?arrival }} }}
-  ?class rdfs:subClassOf* orexis:Graph .
-  #  ASKED OF THE GRAPH AND NOT OF THE CLASS THAT MATCHED: `graph/classification` is typed
-  #  both public and belief, so a filter on one binding lets it through on the other. Both
-  #  run in the DEFAULT graph, which `query` unions from the public ones — inside a GRAPH
-  #  block pyoxigraph evaluates the NOT EXISTS before the UNION binds `?g`, and every row
-  #  is dropped.
-  FILTER NOT EXISTS {{ ?g a ?any . ?any rdfs:subClassOf* <{PUBLIC_GRAPH}> }}
-  FILTER NOT EXISTS {{ ?g a ?hyp . ?hyp rdfs:subClassOf* orexis:PossibleGraph }}
-  #  A WORKING GRAPH is the agent's and not carried (#448): a reviewer's scratch, a summary, a
-  #  record of decisions — classified so a volume knows it from litter, left out of what a
-  #  plan imagines from and a validation reads beside the state. A filter of its own, and
-  #  not a VALUES over both classes inside one: measured at 600 ms against 2 ms for the two
-  #  filters — the engine evaluates a VALUES-bound path end for every candidate rather than
-  #  once, and this query runs at the start of every pass.
-  FILTER NOT EXISTS {{ ?g a ?work . ?work rdfs:subClassOf* orexis:WorkingGraph }}
-  #  A PREDICTION is a kind of its own (#642): what a package expects a reading to be during a
-  #  window, handed by `query_at` at the instant asked about and never a record of the agent's.
-  FILTER NOT EXISTS {{ ?g a ?guess . ?guess rdfs:subClassOf* orexis:PredictionGraph }}
-}}"""
+def _own(mine: str) -> str:
+    """The agent's own graphs, kept to its owner by `mine` (see `_mine`)."""
+    return f"""
+    SELECT DISTINCT ?g WHERE {{
+      {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }} }}
+      UNION
+      {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?g a ?class ; orexis:arrivedBy ?arrival }} }}
+      ?class rdfs:subClassOf* orexis:Graph .
+      {mine}
+      #  ASKED OF THE GRAPH AND NOT OF THE CLASS THAT MATCHED: `graph/classification` is typed
+      #  both public and belief, so a filter on one binding lets it through on the other. Both
+      #  run in the DEFAULT graph, which `query` unions from the public ones — inside a GRAPH
+      #  block pyoxigraph evaluates the NOT EXISTS before the UNION binds `?g`, and every row
+      #  is dropped.
+      FILTER NOT EXISTS {{ ?g a ?any . ?any rdfs:subClassOf* <{PUBLIC_GRAPH}> }}
+      FILTER NOT EXISTS {{ ?g a ?hyp . ?hyp rdfs:subClassOf* orexis:PossibleGraph }}
+      #  A WORKING GRAPH is the agent's and not carried (#448): a reviewer's scratch, a summary, a
+      #  record of decisions — classified so a volume knows it from litter, left out of what a
+      #  plan imagines from and a validation reads beside the state. A filter of its own, and
+      #  not a VALUES over both classes inside one: measured at 600 ms against 2 ms for the two
+      #  filters — the engine evaluates a VALUES-bound path end for every candidate rather than
+      #  once, and this query runs at the start of every pass.
+      FILTER NOT EXISTS {{ ?g a ?work . ?work rdfs:subClassOf* orexis:WorkingGraph }}
+      #  A PREDICTION is a kind of its own (#642): what a package expects a reading to be during a
+      #  window, handed by `query_at` at the instant asked about and never a record of the agent's.
+      FILTER NOT EXISTS {{ ?g a ?guess . ?guess rdfs:subClassOf* orexis:PredictionGraph }}
+    }}"""
+
 
 #  THE PREDICTIONS — every graph the classification types as a prediction, holding or not; the
 #  door filters by period like every other list here.
-_PREDICTIONS = f"""
-SELECT DISTINCT ?g WHERE {{
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }}
-  ?class rdfs:subClassOf* orexis:PredictionGraph }}"""
+def _predictions(mine: str) -> str:
+    return f"""
+    SELECT DISTINCT ?g WHERE {{
+      GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }}
+      ?class rdfs:subClassOf* orexis:PredictionGraph
+      {mine} }}"""
+
+
+def _mine(owner: str | None) -> str:
+    """The clause that keeps a list of graphs to the store's own agent, in the two queries
+    above and in `graphs_of`: a graph saying whose it is (`orexis:beliefsOf`) must say it is
+    `owner`'s, and a graph saying nothing is anyone's — a volume written before owners were
+    said, a case's hand-written roots. Empty where the store has been told no owner, which
+    is a store nobody shares (rule 4: one agent, one volume, and every classified graph in
+    it is the agent's). The fixture that builds a society on one store is where this
+    matters: every agent classifies what it writes there, and a plan that carried the
+    others' beliefs and roots into its imaginarium as its own found a different world."""
+    if not owner:
+        return ""
+    return (f"OPTIONAL {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g orexis:beliefsOf ?owner }} }}\n"
+            f"  FILTER(!BOUND(?owner) || ?owner = <{owner}>)")
 
 #  THE PERIOD EACH GRAPH HOLDS DURING — read from the one place that says so, which is named here
 #  for the same reason the two above are: this is the bootstrap root asking what to merge, not a
@@ -405,6 +426,24 @@ class Store:
         self._periods: dict | None = None  # graph -> (start, end); see periods()
         self._records: set = set()          # own graphs that are records — read as of now (#645)
         self._memo: dict = {}             # what only a write can change; see remember()
+        #  WHOSE STORE THIS IS, told by the belief base when it is built over the store — the
+        #  agent the world declares under the id the process was handed. None until told: a
+        #  bare store answers for every classified graph. See `agent_uri` below.
+        self._agent_uri: str | None = None
+
+    @property
+    def agent_uri(self) -> str | None:
+        """The agent whose store this is, or None where nothing has said. What a list of the
+        agent's OWN graphs is kept to (`_mine`): the classification says whose each graph is,
+        by the owner that wrote it, and a reader that means its own asks the class and gets
+        this agent's. Told, the store forgets what it learned by asking, since the answer to
+        which graphs are its own has moved."""
+        return self._agent_uri
+
+    @agent_uri.setter
+    def agent_uri(self, uri: str | None) -> None:
+        self._agent_uri = uri
+        self._forget()
 
     # --- what counts as public, according to the store itself ---
 
@@ -423,7 +462,7 @@ class Store:
         for it yields nothing, for the same reason.
         """
         if self._recorded is None:
-            self._recorded = sorted(row["g"] for row in bindings(self.query(_OWN)))
+            self._recorded = sorted(row["g"] for row in bindings(self.query(_own(self._mine()))))
             self._records = {row["g"] for row in bindings(self.query(_RECORDS))}
         #  A RECORD IS HANDED AS IT STANDS NOW, whatever instant is asked about (#645,
         #  `orexis:RecordGraph`): its period says how long it is worth believing, not when it
@@ -439,17 +478,50 @@ class Store:
         `orexis:PredictionGraph` in the classification (#642). Asked, never listed, and cached
         like the others: a write drops the answer."""
         if self._predictions is None:
-            self._predictions = sorted(row["g"] for row in bindings(self.query(_PREDICTIONS)))
+            self._predictions = sorted(row["g"] for row in bindings(self.query(_predictions(self._mine()))))
         return self._holding_at(self._predictions, at)
 
     def prediction_windows(self) -> list[tuple[str, datetime | None, datetime | None]]:
         """Every prediction with the window it holds during, earliest first — what a crossing is
         read off (#643): the start of the earliest window at which a root reads unmet."""
         if self._predictions is None:
-            self._predictions = sorted(row["g"] for row in bindings(self.query(_PREDICTIONS)))
+            self._predictions = sorted(row["g"] for row in bindings(self.query(_predictions(self._mine()))))
         bounds = self.periods()
         out = [(g, *bounds.get(g, (None, None))) for g in self._predictions]
         return sorted(out, key=lambda w: (w[1] is None, w[1] or datetime.min.replace(tzinfo=timezone.utc)))
+
+    def _mine(self) -> str:
+        """The owner clause for this store's agent — see `_mine` above."""
+        return _mine(self.agent_uri)
+
+    def classify(self, graph: str, graph_class: str, arrival: str, owner: str | None = None) -> None:
+        """Say what a graph IS, how it arrived and WHOSE it is — by its owner, when it creates
+        the graph and at every start, whatever the graph is called. A name is for eyes; every
+        reader asks the class, and a reader that means its own asks by owner too. Idempotent:
+        the same statement twice is one statement, so an owner may say it at construction
+        without asking whether the graph is new. Boot used to type an agent's graphs by
+        matching their names against a prefix each class declared, which was the one reader
+        that depended on a name — and the name was where the owner used to be said."""
+        whose = f" ; orexis:beliefsOf <{owner}>" if owner else ""
+        self.update(f"""INSERT DATA {{ GRAPH <{CLASSIFICATION_GRAPH}> {{
+  <{graph}> a <{graph_class}> ; orexis:arrivedBy <{arrival}>{whose} . }} }}""")
+
+    def graphs_of(self, *graph_classes: str, at: datetime | None = None) -> list[str]:
+        """Every graph classified under any of `graph_classes` — subclasses included, as
+        `_own` walks them — holding at `at` (now, where None), and this agent's where the
+        store has been told whose it is (`_mine`). The door a reader takes for a graph it
+        means by KIND — the roots, the pursued wants, the obligations record; naming one is
+        what rule 1 forbids and what a rename would break."""
+        values = " ".join(f"<{c}>" for c in graph_classes)
+        rows = bindings(self.query(f"""
+SELECT DISTINCT ?g WHERE {{
+  {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }} }}
+  UNION
+  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?g a ?class ; orexis:arrivedBy ?arrival }} }}
+  VALUES ?kind {{ {values} }}
+  ?class rdfs:subClassOf* ?kind
+  {self._mine()} }}"""))
+        return self._holding_at(sorted(r["g"] for r in rows), at)
 
     def public_graphs(self, at: datetime | None = None, *, ever: bool = False) -> list[str]:
         """Every graph the vocabulary types as an `orexis:PublicGraph`, and still worth believing.

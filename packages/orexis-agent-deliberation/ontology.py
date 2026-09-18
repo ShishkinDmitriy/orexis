@@ -16,12 +16,10 @@ REMEMBERED_AT = DELIBERATION + "rememberedAt"
 
 def remembered_graph(agent_id: str) -> str:
     """ONE agent's remembered plans: a recorded graph, disclosed like the ledger."""
-    from orexis_agent_progression.ontology import graph_prefix
-    return graph_prefix(DELIBERATION + "RememberedGraph") + agent_id
+    return "http://example.org/orexis/graph/remembered/" + agent_id
 
 
 def pursued_graph(agent_id: str) -> str:
     """ONE agent's pursued wants (#618): the wants derived under its `orexis:Desire` roots while
     they read unmet — a recorded graph the desire modality projects, disclosed like the ledger."""
-    from orexis_agent_progression.ontology import graph_prefix
-    return graph_prefix(DELIBERATION + "PursuedGraph") + agent_id
+    return "http://example.org/orexis/graph/pursued/" + agent_id

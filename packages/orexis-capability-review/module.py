@@ -74,7 +74,7 @@ from orexis_agent_progression.store import bindings, decimal
 from agent.validate import BeliefsInvalid, validate_agent
 
 from .beliefs import REVIEW_PICKS
-from .graphs import evidence_graph, revisions_graph
+from .graphs import REVIEW, evidence_graph, revisions_graph
 from .summary import Summaries
 from .terms import RECKONING
 from orexis_agent_progression import clock
@@ -151,6 +151,10 @@ class ReviewModule(Module):
     def __init__(self, agent):
         super().__init__(agent)
         self.summaries = Summaries(agent.beliefs, agent.id)
+        #  MY EVIDENCE AND MY REVISIONS ARE MINE TO CLASSIFY, at construction.
+        for graph, cls in ((evidence_graph(agent.id), "EvidenceGraph"),
+                           (revisions_graph(agent.id), "RevisionsGraph")):
+            agent.beliefs.classify(graph, REVIEW + cls, "http://example.org/orexis#Recorded", agent.me.uri)
         self.rules = loader.review_rules()
         self.revisions = self.declined = self.refused = 0
         # The floor between two arisings. Required now, not optional: an agent holding this

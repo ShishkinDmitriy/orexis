@@ -167,8 +167,10 @@ def test_the_kernel_stands_alone_with_no_packages_at_all(tmp_path, monkeypatch):
         #  the things a package may ship, and the vocabulary it declares is really there.
         assert loader.shapes_files() == (loader.KERNEL.file(loader.SHAPES),), \
             "with no packages, the only shapes are the kernel's own"
-        assert loader.rule_files() == (loader.KERNEL.file(loader.RULES),), \
-            "and the only derivation"
+        #  AND NO DERIVATION: the kernel's one rule minted every agent's pick record graph by
+        #  name, in the world graph, for nobody to read — a graph is classified by its owner
+        #  when it writes it, and a name is for eyes.
+        assert loader.rule_files() == (), "with no packages there is nothing to derive"
 
         import rdflib
         g = rdflib.Graph()
@@ -656,30 +658,29 @@ def test_the_kernel_names_no_domain():
                 f"{path}:{n} names the water domain — the kernel must survive the domain swap"
 
 
-def test_no_source_spells_a_per_agent_graphs_prefix():
-    """A per-agent graph's name has ONE owner: the `orexis:graphPrefix` its class declares.
+def test_no_reader_names_a_per_agent_graph():
+    """A graph's name is for eyes; code relies on its classification alone.
 
-    Boot classifies an agent's graphs by those prefixes, and every helper that names one for
-    a write reads the same prefix through `graph_prefix` — so a graph is renamed in its T-Box
-    and nowhere else. Ten helpers spelled their prefix beside the T-Box's before this, and one
-    rule minted the beliefs graph outright; nothing checked the two spellings agreed. This
-    holds every `.py`, `.ru` and `.rq` outside the T-Box to naming none — neither the full
-    prefix nor its quoted tail (`"roots/"`). The sovereign asked which graphs could be renamed
-    freely; the answer was none, and this is what makes it all of them.
+    An owner classifies what it writes (`Store.classify`) and a reader asks by class
+    (`Store.graphs_of`, `recorded_graphs`). The helpers that spell a readable name —
+    `roots_graph`, `pursued_graph`, the ledger's, review's — are the WRITERS' conventions, and
+    a module that reads the mind's graphs may import none of them: the planner named five,
+    the desires projection five and filtered the rest by string prefix, and boot typed every
+    per-agent graph by matching its name against a prefix its class declared — the sovereign
+    asked which graphs could be renamed freely, and this is what makes it all of them.
     """
-    from assembly import loader
-
-    prefixes = loader.graph_prefixes()
-    assert len(prefixes) >= 10, "graphPrefix stopped matching — this guard checks nothing"
+    helpers = {"beliefs_graph", "roots_graph", "promises_graph", "obligations_graph", "intentions_graph",
+               "pursued_graph", "remembered_graph", "revisions_graph", "evidence_graph", "summaries_graph"}
+    readers = ["packages/orexis-agent-deliberation/planner.py", "packages/orexis-agent-deliberation/desires.py",
+               "packages/orexis-agent-deliberation/imaginarium.py", "packages/orexis-agent-deliberation/pursuit.py",
+               "packages/orexis-agent-deliberation/afforder.py", "packages/orexis-agent-deliberation/affordances.py",
+               "packages/orexis-agent-deliberation/reviser.py", "agent/judgments.py", "agent/validate.py"]
     offenders = []
-    for path in [*loader.sources("*.py"), *loader.sources("*.ru"), *loader.sources("*.rq")]:
-        if "ontology.py" in path.name or path.name.startswith("test_"):
-            continue
-        text = path.read_text()
-        for cls, prefix in prefixes.items():
-            tail = prefix.rsplit("/", 2)[-2] + "/"
-            if prefix in text or f'"{tail}"' in text or f"'{tail}'" in text:
-                offenders.append(f"{path.relative_to(REPO_ROOT)} spells {cls.rsplit('#', 1)[-1]}'s prefix")
+    for path in readers:
+        text = (REPO_ROOT / path).read_text()
+        for name in sorted(helpers):
+            if re.search(rf"\b{name}\(", text):
+                offenders.append(f"{path} names a graph through {name}()")
     assert not offenders, "\n".join(offenders)
 
 

@@ -11,7 +11,6 @@ and the suite's fork and step pins already carry.
 from __future__ import annotations
 
 from orexis_agent_deliberation import pursuit
-from orexis_agent_deliberation.ontology import pursued_graph
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import bindings
 from conftest import build_agent, genesis_store, write_reading
@@ -157,7 +156,13 @@ def test_a_mark_by_either_name_pursues_the_same_want(monkeypatch):
 
 
 def test_the_pursued_graph_is_this_agents_own_and_recorded(monkeypatch):
-    """Classified at boot from the vocabulary like every per-agent graph (#448), so the sweep,
-    the ask channel and the imaginarium's copy of the records all see it."""
+    """Classified by the ROAD when it mints the want — each want a graph of its own since
+    #645, typed `deliberation:PursuedGraph` where it is written and never by its name — so
+    the sweep, the ask channel and the imaginarium's copy of the records all see it."""
     agent = _gardener(monkeypatch, DRY)
-    assert pursued_graph(agent.id) in agent.beliefs.recorded_graphs()
+    root = _stake(agent)
+    agent.deliberator.decide(root)
+    child = _stake(agent)
+    graph = agent.wants.graph_of(agent.id, child.uri)
+    assert graph in agent.beliefs.recorded_graphs(), "the road classified what it wrote"
+    assert graph in agent.beliefs.graphs_of("http://example.org/orexis/deliberation#PursuedGraph")

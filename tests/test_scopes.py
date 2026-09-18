@@ -63,7 +63,7 @@ def test_every_shipped_want_falls_inside_one_scope(world, monkeypatch):
         #  to a wire — only to `pursuing` and the planner's view.
         from agent import runtime
         st = genesis_store(world=world)
-        genesis.classify_own_graphs(st, agent_id)
+        genesis.classify_kernel_graphs(st, agent_id)
         agent = runtime.Agent(agent_id, st=st)
         planner = Planner(agent, agent.me)
         for want in agent.pursuing():

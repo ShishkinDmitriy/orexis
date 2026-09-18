@@ -193,13 +193,13 @@ the wiring once.
 
 `store.recorded_graphs()` answers with every graph this agent owns, from two places because a
 graph is classified wherever it can be: a package declares its own in its ontology — sensing's
-instruments graph, whose name the kernel does not know — and a per-agent graph is typed by the
-agent itself at boot, into the classification graph, because it does not exist until its agent
-does. Boot ASKS which classes to type (#448): every class stating where its instances live
-(`orexis:graphPrefix`) and how they arrive (`orexis:arrivesBy`) is a per-agent graph class,
-whichever package declared it — the kernel's records, the layers' ledgers, review's scratch —
-and this agent's instance is the prefix and its id. A class with a prefix and no arrival
-refuses the boot.
+instruments graph, whose name the kernel does not know — and a per-agent graph is typed by its
+OWNER when it creates the graph, into the classification graph, because it does not exist
+until its agent does: the ledger types its record, the keeper its promises, review its three,
+the road each want, sensing each prediction, genesis the pick record and the roots. Whatever
+each is called — a name is for eyes, and a reader asks the class (`store.graphs_of`). Boot used
+to type them by matching names against a prefix each class declared, and was the one reader
+that depended on a name.
 
 Four things are left out, and each was a real answer the query gave before it was narrowed:
 

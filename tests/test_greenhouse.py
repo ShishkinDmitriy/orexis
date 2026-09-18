@@ -53,7 +53,7 @@ def _grower(monkeypatch, dries=False, moisture=0.20, air=12.0, outside=8.0, heat
     if dries:
         st.update(f"""INSERT DATA {{ GRAPH <http://example.org/orexis/graph/world> {{
             <{WORLD}heater> <{CLIMATE}driesTheSoil> true }} }}""")
-    genesis.classify_own_graphs(st, "grower")
+    genesis.classify_kernel_graphs(st, "grower")
     return runtime.Agent("grower", st=st), st
 
 

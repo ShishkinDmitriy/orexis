@@ -29,7 +29,7 @@ def _agent(monkeypatch, world, name, pose=None, readings=None):
     st = genesis_store(readings, world=world) if readings else genesis_store(world=world)
     if pose:
         st.update("INSERT DATA { GRAPH <%s> { %s } }" % (STATE_GRAPH, pose))
-    genesis.classify_own_graphs(st, world)
+    genesis.classify_kernel_graphs(st, world)
     return runtime.Agent(name, st=st)
 
 

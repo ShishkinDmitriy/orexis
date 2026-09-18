@@ -96,7 +96,12 @@ _QUERY_WORDS = ("SELECT", "INSERT", "DELETE", "CONSTRUCT", "ASK", "WHERE", "GRAP
 #  No `*.rq` any more: the kernel's last query file was `desires.rq`, and it went to sensing
 #  with the stake (the-stake-is-sensings-want). A kind the kernel legitimately ships none of
 #  is not a kind the ratchet has lost sight of.
-_KINDS = ("*.py", "*.ru", "*.ttl")
+#  NO `*.ru`: the kernel's one rules file was `agent/rules.ru`, whose one rule minted every
+#  agent's pick graph by name, and it went when each graph's owner began classifying what it
+#  writes (#705) — genesis says what the pick record is. A kernel that ships a rules file again
+#  adds the kind back here, so the ratchet reads it; until then the guard below would only be
+#  asserting an absence on purpose.
+_KINDS = ("*.py", "*.ttl")
 
 # PARTITIONED out of the loader's union, exactly as `test_store.py` does: the kernel is what is
 # left when `packages/` is taken away, so a tree nobody here has heard of lands on one side or

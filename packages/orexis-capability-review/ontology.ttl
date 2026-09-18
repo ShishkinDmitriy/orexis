@@ -92,7 +92,6 @@ DERIVED, never stated. `capabilities/sensing/rules.ru` computes it from the sens
 #  and a separate argument.)
 
 :SummariesGraph a owl:Class ; rdfs:subClassOf orexis:Graph , orexis:WorkingGraph ; rdfs:label "Summaries graph" ;
-    orexis:graphPrefix "http://example.org/orexis/graph/summaries/" ; orexis:arrivesBy orexis:Recorded ;
     rdfs:comment "What ONE agent's readings came to. Apart from :sensed on purpose, and the separation is what makes the write boundary checkable: :sensed is the measurement record, written by whatever observed and never by a review, while a summary is the agent's own derived account of its own past. In one graph, 'a review does not touch the sensed record' would have been untestable — and an invariant nothing can check is a comment." .
 
 :ObservationSummary a owl:Class ; rdfs:label "Observation summary" ;
@@ -118,7 +117,6 @@ DERIVED, never stated. `capabilities/sensing/rules.ru` computes it from the sens
 #################  What a review saw, derived at each arising  #################
 
 :EvidenceGraph a owl:Class ; rdfs:subClassOf orexis:Graph , orexis:WorkingGraph ; rdfs:label "Evidence graph" ;
-    orexis:graphPrefix "http://example.org/orexis/graph/evidence/" ; orexis:arrivesBy orexis:Recorded ;
     rdfs:comment "The reviewer's own scratch: statistics derived from the summaries, plus the range each revisable term may move in. Rebuilt at every arising and never read by anything else, so a rule can be plain SPARQL over well-known terms instead of arithmetic." .
 
 :Evidence a owl:Class ; rdfs:label "Evidence" ;
@@ -150,7 +148,6 @@ DERIVED, never stated. `capabilities/sensing/rules.ru` computes it from the sens
 #################  What it decided, and when to look again  #################
 
 :RevisionsGraph a owl:Class ; rdfs:subClassOf orexis:Graph , orexis:WorkingGraph ; rdfs:label "Revisions graph" ;
-    orexis:graphPrefix "http://example.org/orexis/graph/revisions/" ; orexis:arrivesBy orexis:Recorded ;
     rdfs:comment "What ONE agent has decided about itself. Append-only, and apart from the beliefs graph so that the beliefs graph still holds exactly one value per term — which is what every capability's shapes are written against. Deliberately NOT validated: it is the record of a decision, not a belief anyone acts on." .
 
 :Revision a owl:Class ; rdfs:label "Revision" ;

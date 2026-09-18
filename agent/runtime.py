@@ -222,6 +222,12 @@ class Agent:
         # STORE three dozen lines above was already built for every agent, while the thing that
         # writes it was a grant. A modality nobody may write is not a modality.
         self.keeper = Keeper(self)
+        #  GHOSTS ARE SWEPT HERE and not where the store opened: a graph is the agent's by
+        #  its classification, and the owners that classify theirs — the ledger, review, the
+        #  keeper — are the modules just built. Only for a store this agent opened itself; a
+        #  store handed in is somebody else's to keep tidy.
+        if st_given is None:
+            genesis.drop_ghost_graphs(st, agent_id)
         #  ITS PATIENCE, handed down: the keeper is progression's and reads no belief, so the
         #  container reads the pick through the desire modality and assigns it. An agent that
         #  states none — `world/sensing`'s stakeless one, every minimal fixture — is handed

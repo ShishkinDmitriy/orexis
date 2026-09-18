@@ -229,7 +229,7 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None, *,
     st = st or genesis_store()
     # What `open_belief_base` does for a deployed agent and a bare genesis store lacks: the
     # agent's own graphs say what they ARE, which is how the mind's build selects them.
-    genesis.classify_own_graphs(st, agent_id)
+    genesis.classify_kernel_graphs(st, agent_id)
     with (nullcontext() if validating
           else mock.patch.object(runtime, "validate_agent", lambda *a, **k: None)):
         agent = runtime.Agent(agent_id, st=st)
@@ -328,7 +328,12 @@ def open_round_for(st_or_agent, agent_id: str, seconds: float = 60.0) -> list[st
     from orexis_capability_market import rounds
 
     st = getattr(st_or_agent, "beliefs", st_or_agent)
-    agent = st_or_agent if hasattr(st_or_agent, "beliefs") else SimpleNamespace(beliefs=st, id=agent_id)
+    #  A bare store gets a stand-in with what the writer reads: the store, the id, and who I
+    #  am — the writer says whose graph it writes.
+    me = next(iter(bindings(st.query(
+        f'SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1'))), {}).get("a")
+    agent = (st_or_agent if hasattr(st_or_agent, "beliefs")
+             else SimpleNamespace(beliefs=st, id=agent_id, me=SimpleNamespace(uri=me)))
     venues = [r["v"] for r in bindings(st.query(
         f'SELECT ?v WHERE {{ ?a orexis:localId "{agent_id}" ; market:bidsIn ?v }}'))]
     closes = clock.now() + timedelta(seconds=seconds)
