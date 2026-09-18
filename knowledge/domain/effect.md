@@ -179,11 +179,15 @@ leaves it (#642). Sensing writes what the drifts predict as [predictions](/domai
 at the horizons a package lists beside its drift (`sensing:atHorizon`).
 
 **And a plan is minutes where a band is days**, which says where this pays. The loner's region
-takes six and a half days to cross; no plan reaches that far, so inside a search the band drift
-fires only where a step is declared to take one. What wants the crossing time is the DERIVATION
-of a want met at that instant — *when will this leave its region* is the same number read from
-the other end ([#619](https://github.com/ShishkinDmitriy/orexis/issues/619)), and it is what
-lets an agent act before the crossing rather than at it.
+takes six and a half days to cross; no plan reaches that far. A second drift once said what a
+reading known only by its band does — the world a step reaches, where no number is left to
+subtract from (#612) — and it fired inside a search between steps; since the search reads
+predictions and runs no drift (#643) the only reading a drift is ever run from is the one the
+instrument made, which carries a number, and the band drifts were struck as dead. What wants
+the crossing time is the DERIVATION of a want met at that instant — *when will this leave its
+region* is the same number read from the other end
+([#619](https://github.com/ShishkinDmitriy/orexis/issues/619)), and it is what lets an agent
+act before the crossing rather than at it.
 
 **And a step that takes time makes a look somewhere new**, which is not a defect. A look's world
 used to be its parent's, so cycle detection discarded it; if an hour passes inside the step, the
