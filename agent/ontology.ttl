@@ -567,7 +567,7 @@ orexis:holds a owl:ObjectProperty ; rdfs:domain orexis:Agent ;
 orexis:Desire a owl:Class ; rdfs:label "Desire" ;
     rdfs:comment """One thing an agent stands for, for its whole life: a node carrying the met-test (orexis:metWhen, a SHACL shape, unchanged in content from when the desire WAS that shape) and a label a dashboard or the ask channel can print. It holds at every instant, it is NEVER handed to a search, and what is pursued is an orexis:Want.
 
-IT STATES NO BINDING, and the absence is the statement. A desire holds always, so a triple saying so said nothing that the type did not — and the binding was then doing a type's job, which is how a node could be a desire by its type and a want by its binding at once. Three worlds shipped exactly that, and neither collection could see them. The type is the kind now; orexis:bindsWhen is a want's and says when along a plan (a-kind-is-a-type-not-a-binding).
+IT STATES NO TIME SEMANTICS, and neither does a want. A desire holds always, which its type says; a want holds over its graph's period, which the period says; a want that must hold AT an instant carries orexis:holdsAt, which is the one thing a period cannot say. There was a binding property carrying all of that beside them, and every reader of it was asking which KIND or which FAMILY a node was (a-kind-is-a-type-not-a-binding, #681).
 
 What the node does NOT carry is a measure: how badly one is unmet is a capability's answer, asked through the choir (Module.desire_urgency) of whichever world is being judged, and the kernel holds no measure vocabulary at all — the comment after orexis:metWhen says why.""" .
 
@@ -603,26 +603,23 @@ orexis:about a owl:ObjectProperty ; rdfs:domain orexis:Desire ;
 #  needs one. The class mirrors orexis:Side: a value-typing class, not a mood flag — the moods
 #  stay computed off the carriers, never asserted.
 
-orexis:Binding a owl:Class ; rdfs:label "Binding" ;
-    rdfs:comment "WHEN a want binds along a plan. The planner is the reader: Always is judged at every state of a candidate plan — not at-end every loop, every step of each loop — AtEnd at the end-world alone, Within against the simulated clock." .
-
-orexis:bindsWhen a owl:ObjectProperty ; rdfs:domain orexis:Want ; rdfs:range orexis:Binding ;
-    rdfs:label "binds when" ;
-    rdfs:comment "The want's time semantics, stated by whoever derives it — no want defaults one (orexis:BindingWantShape). A DESIRE STATES NONE: it holds always, which its type says, and a binding that identified the kind was a type's job in a property's clothes (a-kind-is-a-type-not-a-binding). On the WANT and never on its met-shape, and named as `orexis:metWhen`'s sibling by the sentence that defines the axis: the met-test says WHAT would satisfy, this says WHEN along a path that question is asked. NOT `orexis:scope`, ruled by the sovereign on being asked: an axis is never a predicate's name here — force has no `orexis:force`, being carried by severity and the met/measure split. The axis's NOUN was Scope until 2026-09-08, when the sovereign ruled that a core concept outranks a niche one for a name and gave `scope` to how far anything an agent does can reach (knowledge/domain/scope.md). It is `orexis:Binding` now, which is what `bindsWhen` said all along, and scope's everyday reading — what a thing covers — was never when it binds." .
-
-#  NO `orexis:Always` BINDING, and its removal is a ruling rather than an oversight. It was
-#  PDDL3's word and it read well, but nothing ever used it as a binding: the planner, which this
-#  property names as its reader, never branched on it — six readers asked it and all six were
-#  asking WHICH KIND a node was, which orexis:Desire now answers. A want that must hold
-#  THROUGHOUT a plan is a real thing PDDL3 has a word for, and if one is ever needed the word
-#  comes back as a binding with an actual reader rather than as the thing that identifies a
-#  desire. See knowledge/decisions/a-kind-is-a-type-not-a-binding.md.
-orexis:AtEnd a orexis:Binding ; rdfs:label "at end" ;
-    rdfs:comment "The plan's end-world is asked and the road there is not. No shipped derivation writes it yet; it exists so the next achievement-shaped want does not land on Always by default." .
-orexis:At a orexis:Binding ; rdfs:label "at" ;
-    rdfs:comment "Met AT an instant (`orexis:holdsAt`), not by it: a candidate plan's end-world is judged as it will be THEN — the prediction holding at the instant standing in for every reading the plan did not change (#643) — and a candidate whose last change lands past the instant is late. The binding of a want derived under an Always root from a predicted crossing (#619, an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it): its room is TIME, from `prov:generatedAtTime` to the instant, and the search for it begins where the present's own drift stands at the instant minus the plan's duration. PDDL3's nearest word is hold-after; the root's Always is what holds after." .
-orexis:Within a orexis:Binding ; rdfs:label "within" ;
-    rdfs:comment "Met before a deadline, or not met at all: a candidate plan's landing time is held to the room left (`orexis:expiresAt`, read with the ledger's `owedAt`). The obligation's binding — a debt's room is time where a stake's is the envelope — and what closes the deadline-is-only-heat seam: a plan that would discharge after expiry is not a plan for this want." .
+#  NO BINDING VOCABULARY, and its removal is a ruling rather than an omission. There were four
+#  — Always, AtEnd, At, Within — and a property `orexis:bindsWhen` to carry one. What they said
+#  is said twice over by things that were already written:
+#
+#    the KIND        `orexis:Desire` against `orexis:Want`, standing against occasioned, which
+#                    took Always (a-kind-is-a-type-not-a-binding);
+#    the INTERVAL    the graph's own `dcterms:temporal`, which the door already reads at an
+#                    instant — no period is "ever", a start alone is "from then on", a start and
+#                    an end is "within" (a-desire-is-universal-and-a-want-is-existential);
+#    the INSTANT     `orexis:holdsAt`, which is what At meant and is the one thing of the four an
+#                    interval cannot carry: hold AT a point, not somewhere in a window;
+#    the FAMILY      the graph's classification, which is what a reader filtering on AtEnd or At
+#                    actually wanted — the pursuit road's own, not a temporal fact.
+#
+#  `mint` computed the binding from whether an instant was known, and two readers filtered on it
+#  to mean "not a debt". Nothing read it for the time semantics its own comment claimed — the
+#  planner, named there as its reader, never branched on it (#681).
 
 #  NO measure vocabulary here, and the absence is the ruling rather than an omission. Two
 #  drafts put it in the kernel — first the measure's SPARQL compiled into the derivation, then

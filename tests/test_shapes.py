@@ -748,8 +748,7 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
         INSERT { GRAPH <http://example.org/orexis/graph/constraint> {
             <http://example.org/orexis/world/simulation#fern_agent> <http://example.org/orexis#holds> [
                 a <http://example.org/orexis#Desire> ;
-                <http://example.org/orexis#bindsWhen> <http://example.org/orexis#Always> ;
-                <http://www.w3.org/ns/ssn/forProperty>
+                          <http://www.w3.org/ns/ssn/forProperty>
                     <http://example.org/orexis/water#AirHumidity> ;
                 <http://example.org/orexis#metWhen> [
                 a <http://www.w3.org/ns/shacl#NodeShape> ;

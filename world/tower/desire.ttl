@@ -6,7 +6,6 @@
 GRAPH <http://example.org/orexis/graph/desire/asserted> {
   :mover orexis:holds :every_disk_home .
   :every_disk_home a orexis:Want ;
-      orexis:bindsWhen orexis:AtEnd ;
       rdfs:label "every disk home on peg C — hanoi's sentence, on the courier's grid" ;
       orexis:metWhen hanoi:solved ;
       orexis:estimates hanoi:disksAstray .

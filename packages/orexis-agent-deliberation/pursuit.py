@@ -229,9 +229,7 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
         f"SELECT ?l WHERE {{ <{root}> rdfs:label ?l }} LIMIT 1"))
     label = "pursued: " + (labels[0]["l"] if labels else root.rsplit("#", 1)[-1])
     #  AT AN INSTANT (#619): bound `orexis:At`, holding at the crossing, its room opening now.
-    binding = "orexis:AtEnd"
     if holds_at is not None:
-        binding = "orexis:At"
         label = f"foreseen: {label[len('pursued: '):]} at {holds_at.isoformat(timespec='minutes')}"
     #  IT HOLDS FROM ITS DERIVATION to the instant it must hold at plus the patience its plan
     #  is given after it — the last step is placed AT the instant and its verdict comes after —
@@ -244,7 +242,7 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
         patience = float(getattr(getattr(agent.keeper, "beliefs", None), "patience_s", 0) or 0)
         ends = (holds_at + timedelta(seconds=patience)).isoformat()
     agent.wants.save(agent.id, Want(
-        uri=child, holder=agent.me.uri, desire=root, binds=binding, label=label, ends=ends,
+        uri=child, holder=agent.me.uri, desire=root, label=label, ends=ends,
         holds_at=holds_at.isoformat() if holds_at is not None else None,
         derived_at=clock.now().isoformat() if holds_at is not None else None,
         points=tuple((sol["p"]["value"], sol["o"]["value"]) for sol in points_said)))

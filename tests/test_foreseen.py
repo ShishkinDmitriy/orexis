@@ -88,7 +88,9 @@ def test_a_crossing_within_the_foresight_derives_a_want_met_at_that_instant(monk
         "its room is the stretch to the instant, barely run — never less than the root's own measure"
     said = {r["p"]: r["o"] for r in bindings(agent.desires.query_union(
         f"SELECT ?p ?o WHERE {{ <{child.uri}> ?p ?o }}"))}
-    assert said["http://example.org/orexis#bindsWhen"] == "http://example.org/orexis#At"
+    #  THE INSTANT IS WHAT SAYS IT, and it is all that ever did: the want carried
+    #  `orexis:bindsWhen orexis:At` beside this, computed from whether an instant was known
+    #  (#681). One fact, and the instant is the half an interval cannot carry.
     assert "http://example.org/orexis#holdsAt" in said and "http://www.w3.org/ns/prov#generatedAtTime" in said
 
 

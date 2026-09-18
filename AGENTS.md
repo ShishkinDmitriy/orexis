@@ -298,6 +298,11 @@ it is a record wearing a bullet.
   root's identity** — which store is the agent's decision since it owns the stores and the
   collections; identity travels as a query criterion, and the reads need none at all, since one
   agent, one volume means the store IS the scope.
+- **A want states no time semantics of its own** — the KIND is its type, the INTERVAL is its
+  graph's period, the INSTANT is `orexis:holdsAt`, and the FAMILY a reader filtering on a binding
+  actually wanted is the graph's classification; the binding property said all four a fifth
+  time, was computed from whether an instant was known, and the planner its own comment named
+  as its reader never branched on it (#681).
 - **A kind is a type, not a binding** — the always-binding had six readers and every one asked
   it which KIND a node was, while the planner it named as its reader never branched on it; a node
   could be a desire by type and a want by binding at once, which three shipped worlds were, and

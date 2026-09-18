@@ -54,18 +54,18 @@ def test_everything_held_is_in_exactly_one_collection(world, agent_id, monkeypat
 
 
 @pytest.mark.parametrize("world,agent_id", WORLDS)
-def test_a_desire_states_no_binding_and_a_want_states_one(world, agent_id, monkeypatch):
-    """The other half, asked of the vocabulary rather than of the collections. A desire holds at
-    every instant, so a binding on one is a type's job in a property's clothes — which is what
-    let a node be a desire by type and a want by binding at once."""
+def test_nothing_states_a_time_semantics_of_its_own(world, agent_id, monkeypatch):
+    """The other half, asked of the vocabulary rather than of the collections.
+
+    There were four bindings and a property to carry one, and every one of them said something
+    already written down: the KIND is the type, the INTERVAL is the graph's period, the INSTANT
+    is `orexis:holdsAt`, and the FAMILY — which is what a reader filtering on them actually
+    wanted — is the graph's classification (#681). A node stating its own time semantics beside
+    those is a second place for one fact, which is how a want and a desire came to disagree
+    about which they were."""
     monkeypatch.setenv("OREXIS_WORLD", world)
     beliefs = Beliefs(genesis_store(world=world), agent_id)
 
     loose = bindings(Desires(beliefs).query_union(
-        "SELECT ?d WHERE { ?d a orexis:Desire ; orexis:bindsWhen ?b }"))
-    assert not loose, f"a desire states when it binds: {[r['d'] for r in loose]}"
-
-    unbound = bindings(Desires(beliefs).query_union(
-        f"SELECT ?w WHERE {{ <{beliefs.agent_uri}> orexis:holds ?w . ?w a orexis:Want . "
-        f"FILTER NOT EXISTS {{ ?w orexis:bindsWhen ?b }} }}"))
-    assert not unbound, f"a want defaults its binding: {[r['w'] for r in unbound]}"
+        "SELECT ?n ?p WHERE { ?n ?p ?o . VALUES ?p { orexis:bindsWhen } }"))
+    assert not loose, f"the binding is back: {[(r['n'], r['p']) for r in loose]}"

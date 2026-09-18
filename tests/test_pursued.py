@@ -19,8 +19,6 @@ from conftest import build_agent, genesis_store, write_reading
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 DOSING = "http://example.org/orexis/actuation#Dosing"
 DRY, CONTENT = 0.04, 0.20
-BINDS = "http://example.org/orexis#bindsWhen"
-AT_END = "http://example.org/orexis#AtEnd"
 MET_WHEN = "http://example.org/orexis#metWhen"
 DERIVED_FROM = "http://www.w3.org/ns/prov#wasDerivedFrom"
 
@@ -64,7 +62,7 @@ def test_a_root_is_never_handed_to_the_search_and_what_is_pursued_is_derived_und
         "the search was handed the derived want and never the root"
 
     said = _said_of(agent, child.uri)
-    assert (BINDS, AT_END) in said and (DERIVED_FROM, root.uri) in said
+    assert (DERIVED_FROM, root.uri) in said
     met = next(o for p, o in _said_of(agent, root.uri) if p == MET_WHEN)
     assert (MET_WHEN, met) in said, "the met-test is pointed at, never copied: one owner"
 
