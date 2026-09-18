@@ -189,7 +189,11 @@ class _Compiler:
                     raise Unsupported(f"{shape}: a select body binds {projected}, which the report projects")
             bound = f" BIND({value} AS ?_offending)" if value else ""
             #  WHICH PROPERTY, where the block says: the row can then name what is in trouble.
-            bound += f" BIND({self.term(about)} AS ?_about)" if about is not None else ""
+            #  `sh:this` is the focus node itself, for a desire whose instances are its rows.
+            if about == SH.this:
+                bound += " BIND(?this AS ?_about)"
+            elif about is not None:
+                bound += f" BIND({self.term(about)} AS ?_about)"
             branches.append(f"{{ {target} {text} BIND({k} AS ?_constraint){bound} }}")
         return branches
 
@@ -269,7 +273,10 @@ class _Compiler:
                 out.extend(self._about_each(prop, self.property_violations(prop, focus)))
         if own:
             for constraint in self.g.objects(shape, SH.sparql):
-                out.append((self.sparql_body(constraint, focus), None, None))
+                #  A SPARQL constraint may say what it is about, as a property block may — the
+                #  ledger's desire says each of its is about the debt itself, `sh:this`.
+                out.append((self.sparql_body(constraint, focus), None,
+                            self.g.value(constraint, OREXIS.about)))
             out.extend((t, v, None) for t, v in self.value_violations(shape, focus))
             for negated in self.g.objects(shape, SH["not"]):
                 #  Violated exactly where the negated shape is CONFORMED to.
@@ -334,7 +341,9 @@ class _Compiler:
 
     def _about_each(self, block, alternatives) -> list[tuple]:
         """Every alternative of one property block, tagged with what the block says it is
-        about — `orexis:about` on the block, or None."""
+        about — `orexis:about` on the block, or None. `orexis:about sh:this` means the focus
+        node ITSELF: a desire universal over instances — every debt of mine — says each
+        constraint is about the instance it failed on, and the row carries that instance."""
         about = self.g.value(block, OREXIS.about)
         return [(text, value, about) for text, value in alternatives]
 

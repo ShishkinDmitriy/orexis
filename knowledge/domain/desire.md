@@ -64,12 +64,15 @@ one. OVERDUE rather than unpaid, deliberately: a host that owes water and has no
 is not in violation of anything, and a rule that said so would read unmet from the instant a
 claim cleared.
 
-**Two roads derive, and one of them is temporary.** Sensing's wants come from the pursuit road:
-the desire's own met-test asked at the start of each prediction the agent holds, and the first
-window reading unmet is the crossing. The market's come from the ledger, at the moment a claim
-arrives. Both are derivations from a declared desire, which is what the word means here — but
-one road is the goal, and #675 carries the argument and what it needs. Sensing's region desire per property works the same way: it
-holds for the agent's life, and a reading outside its region deduces the want that repairs it.
+**One road derives, for both.** The desire's own met-test, compiled to the select whose rows
+are its violations, asked at the start of each prediction the agent holds; the rows are the
+instances in trouble and the first instant each appears is its witness
+([one-road-derives-every-want](/decisions/one-road-derives-every-want.md)). Sensing's region
+desire is witnessed by what the drift predicts of a reading; *no overdue debts* by what the
+ledger predicts of a debt — that it lapses at its deadline, a prediction written beside the
+debt when the claim arrives. Neither package mints a want. The ledger wrote its own for a
+while, a second deriver reaching the same family by a different door, and stopped when its
+deadline became a prediction like any other.
 
 The two live in two graph families, and the names already said so before this page did:
 `orexis:RootsGraph` holds the desires, authored at genesis and holding at every instant;

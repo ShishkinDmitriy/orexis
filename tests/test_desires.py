@@ -82,41 +82,35 @@ def test_the_states_a_stake_can_be_in(monkeypatch):
 
 def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them(monkeypatch):
     """The engine limit, made visible rather than worked around.
-
     A obligation's urgency is the fraction of its redeem window that has run, and this store binds
     NOTHING for `duration / duration` — so the query carries `owedAt` and `expiresAt` and the
     division happens in Python. Asked at three points across one window, because the ends are
     what the choice was made about: cool at issue, maximal at the deadline.
+
+    The debt is written by hand, with the fixed instants the curve is read against, and
+    endowed as boot would — which asks the road for its want, the node the ledger judges
+    (one-road-derives-every-want).
     """
     from agent import genesis
     from orexis_agent_progression.ontology import obligations_graph
-
-    st = genesis_store({("fern", MOISTURE): 0.55})
-    genesis.birth(st, genesis.world_dir("simulation"), "fern")
+    stored = "http://example.org/orexis/water#StoredLitres"
+    st = genesis_store({("barrel1", stored): 3.0})
+    genesis.birth(st, genesis.world_dir("simulation"), "supplier")
     owed = datetime(2026, 8, 20, 12, 0, tzinfo=timezone.utc)
-    st.update(f"""INSERT DATA {{ GRAPH <{obligations_graph("fern")}> {{
-        <http://example.org/orexis#obligation.j1> a <http://example.org/orexis#Desire> ;
+    st.update(f"""INSERT DATA {{ GRAPH <{obligations_graph("supplier")}> {{
+        <http://example.org/orexis#obligation.j1>
             <http://example.org/orexis/market#owedTo>
-                <http://example.org/orexis/world/simulation#tomato_agent> ;
+                <http://example.org/orexis/world/simulation#fern_agent> ;
             <http://example.org/orexis/market#forClaim> "j1" ;
             <http://example.org/orexis/market#presented> true ;
             <http://example.org/orexis/market#owedAt> "{owed.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
             <http://example.org/orexis#expiresAt> "{(owed + timedelta(seconds=900)).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
-
-    fern = build_agent("fern", st, monkeypatch)
-
-    #  THE LEDGER IS CONSTRUCTED, not reached through the agent: it is hosting's since the
-    #  ledger moved into the market package, and fern bids rather than hosts. What is under
-    #  test is the urgency curve of a debt, which is the ledger's arithmetic and needs no
-    #  host to exercise.
-    from orexis_capability_market.ower import Ower
-
-    ledger = Ower(fern)
-
+    supplier = build_agent("supplier", st, monkeypatch)
+    ledger = supplier.hosting().ledger
+    ledger.endow()
     def duty_at(offset_s):
         return next(g for g in ledger.desires(now=owed + timedelta(seconds=offset_s))
                     if g.is_obligation)
-
     assert duty_at(0).urgency == 0.0
     assert abs(duty_at(450).urgency - 0.5) < 0.02
     assert duty_at(900).urgency == 1.0
@@ -280,48 +274,49 @@ def test_this_store_will_not_divide_an_exact_zero_by_a_decimal():
 
 def test_an_obligation_row_typed_before_the_class_retired_still_serves(monkeypatch):
     """#471 folded the Obligation class, and readers match premises, never a type.
-
     A live volume written before the fold holds rows typed with the retired IRI, and beliefs
     are never reset — so the guarantee has to be a reader that does not care. This authors
     exactly such a row and asserts the ledger still serves it, on both the desire road and the
-    ask road; the day a type-match regrows in `_DUTIES_Q` or `owed`, this goes red."""
+    ask road; the day a type-match regrows in `_DUTIES_Q` or `owed`, this goes red.
+
+    AND ENDOWED what the road needs (one-road-derives-every-want): a debt written before the
+    ledger predicted its lapse predicts nothing, and the road derives nothing from it — so
+    boot writes the lapse the ledger would write today, once, and asks the road."""
     from agent import genesis
     from orexis_agent_progression.ontology import obligations_graph
-
-    st = genesis_store({("fern", MOISTURE): 0.55})
-    genesis.birth(st, genesis.world_dir("simulation"), "fern")
+    stored = "http://example.org/orexis/water#StoredLitres"
+    st = genesis_store({("barrel1", stored): 3.0})
+    genesis.birth(st, genesis.world_dir("simulation"), "supplier")
     owed = datetime(2026, 8, 20, 12, 0, tzinfo=timezone.utc)
-    st.update(f"""INSERT DATA {{ GRAPH <{obligations_graph("fern")}> {{
+    st.update(f"""INSERT DATA {{ GRAPH <{obligations_graph("supplier")}> {{
         <http://example.org/orexis#obligation.legacy> a <http://example.org/orexis#Obligation> ;
             <http://example.org/orexis/market#owedTo>
-                <http://example.org/orexis/world/simulation#tomato_agent> ;
+                <http://example.org/orexis/world/simulation#fern_agent> ;
             <http://example.org/orexis/market#forClaim> "legacy-1" ;
             <http://example.org/orexis/market#presented> true ;
-            <http://example.org/orexis/market#owedAt> "{owed.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
-
-    fern = build_agent("fern", st, monkeypatch)
-    from orexis_capability_market.ower import Ower
-
+            <http://example.org/orexis/market#owedAt> "{owed.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+            <http://example.org/orexis#expiresAt> "{(owed + timedelta(days=400)).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
+    supplier = build_agent("supplier", st, monkeypatch)
     from orexis_agent_progression.store import bindings
-
-    ledger = Ower(fern)
-    #  AND ENDOWED (#635): a row written before the record carried its met-test gets one at
-    #  boot — never-held terms arrive with their structures — and only once.
-    assert ledger.endow() == 1 and ledger.endow() == 0
-    assert bindings(fern.beliefs.query(f"""SELECT ?t WHERE {{ GRAPH <{obligations_graph("fern")}> {{
-        <http://example.org/orexis#obligation.legacy> orexis:unmetWhen ?n . ?n sh:select ?t }} }}""")), \
-        "the legacy debt now carries the select whose rows are the debt undischarged"
+    ledger = supplier.hosting().ledger
+    #  AS BOOT DOES — a built agent is never started, so the endowment is asked for here.
+    assert ledger.endow() == 1, "a debt predicting nothing is endowed its lapse"
+    assert ledger.endow() == 0, "and only once"
+    assert bindings(supplier.beliefs.query_union("""SELECT ?w WHERE {
+        <http://example.org/orexis#obligation.legacy> market:lapsesAt ?w }""")), \
+        "the legacy debt now predicts its lapse, as one written today would"
     assert any(g.claim == "legacy-1" for g in ledger.desires(now=owed)), \
         "a pre-fold row must still be served: readers match premises, never the type"
     assert any(r["jti"] == "legacy-1" for r in ledger.owed()), "and on the ask road too"
 
 
 def test_an_obligation_is_judged_by_the_met_test_the_ledger_wrote(monkeypatch):
-    """#635: the ledger's words are the market's, and the planner names none of them. A debt
-    is written with `orexis:unmetWhen` — the select whose rows are the debt undischarged, in
-    the record and in the world being judged — so the search reads a world where Serving ran
-    as met by the debt's own test, exactly as it reads every authored pattern, and the branch
-    that named the discharge inside the kernel is gone."""
+    """#635: the ledger's words are the market's, and the planner names none of them. The
+    host's desire carries a shape the ledger authored — its violations are the debts presented
+    or lapsing and not discharged, in the record and in the world being judged — and the want
+    the road mints under it points at that shape, so the search reads a world where Serving
+    ran as met by the ledger's own test, compiled exactly as every shaped want is, and the
+    branch that named the discharge inside the kernel is gone."""
     import inspect
 
     from orexis_agent_deliberation import planner as planner_module, trace
@@ -332,19 +327,23 @@ def test_an_obligation_is_judged_by_the_met_test_the_ledger_wrote(monkeypatch):
     stored = "http://example.org/orexis/water#StoredLitres"
     supplier = build_agent("supplier", genesis_store({("barrel1", stored): 3.0}), monkeypatch)
     ledger = supplier.hosting().ledger
-    uri = ledger.owe("fern", "m1", amount_l=0.5)
+    debt = ledger.owe("fern", "m1", amount_l=0.5)
     ledger.demanded("m1")
-    rows = bindings(supplier.beliefs.query_union(f"""SELECT ?t WHERE {{
-        <{uri}> orexis:unmetWhen ?n . ?n sh:select ?t }}"""))
-    #  AND IT NAMES NO WORLD (#666). It used to ask twice — of the record and of the world a
-    #  plan imagines — because a rule had to say which it read; one clause covers both now.
-    assert rows and "market:dischargedAt" in rows[0]["t"] and "$state" not in rows[0]["t"], \
-        "the record carries its met-test, in the ledger's own words"
+    #  THE MET-TEST IS THE DESIRE'S, and the want the road minted POINTS at it
+    #  (one-road-derives-every-want): a `sh:sparql` in the ledger's own words, whose
+    #  violation is a debt presented or lapsing and not discharged — so a world where a
+    #  serve wrote the discharge reads met. AND IT NAMES NO WORLD (#666).
     want = next(d for d in supplier.pursuing() if d.claim == "m1")
+    assert want.uri != debt, "the want is the road's, not the debt"
+    rows = bindings(supplier.beliefs.query_union(f"""SELECT ?t WHERE {{
+        <{want.uri}> orexis:metWhen ?shape . ?shape sh:sparql ?c . ?c sh:select ?t }}"""))
+    assert rows and all("market:dischargedAt" in r["t"] and "$state" not in r["t"] for r in rows), \
+        "the desire carries its met-test, in the ledger's own words"
     planner = Planner(supplier, supplier.me)
     plan = planner.plan(want)
     assert plan.steps, "the serve is planned: the served world reads met by the debt's own test"
-    assert planner._judged(want)[0] == trace.AUTHORED, "judged as an authored pattern, not a record"
+    assert planner._judged(want)[0] == trace.COMPILED, \
+        "judged by the select compiled from the ledger's shape, not by a kernel branch"
     assert "dischargedAt" not in inspect.getsource(planner_module), "the kernel names no ledger word"
     ledger.discharge("m1")
     assert not any(d.claim == "m1" for d in supplier.pursuing()), "paid: no longer pursued"

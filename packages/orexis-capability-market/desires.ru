@@ -36,7 +36,43 @@ INSERT { GRAPH $derived {
     ?desire a orexis:Desire ;
         rdfs:label "no overdue debts — every claim I issued honoured before its window closes" ;
         rdfs:comment "The standing rule a host holds over its own ledger. A claim arriving derives a want under it, to close that debt before its window closes; the desire itself is never pursued." ;
-        #  NO MET-TEST YET, and the absence is stated rather than an oversight. "Overdue" is
+        #  THE MET-TEST, askable now that overdue is an instant the door can be asked at
+        #  (one-road-derives-every-want): the ledger writes, beside each debt, a PREDICTION
+        #  that it lapses at its deadline — a graph holding from that instant on. A debt with a
+        #  lapse in view is the violation; asked at the prediction's start, the row names the
+        #  debt and the instant, and the road mints the want that must hold AT it. Asked now,
+        #  no prediction holds yet and every debt with time to run reads met — which is what
+        #  "no OVERDUE debts" was always supposed to say.
+        orexis:metWhen ?honoured .
+    ?honoured a sh:NodeShape ;
+        sh:targetSubjectsOf market:forClaim ;
+        #  TWO WAYS A DEBT IS NOT HONOURED, each ABOUT THE DEBT ITSELF — `sh:this` names the
+        #  focus node, so the want minted under this desire is about one debt and a Serving
+        #  step can name its claim. SPARQL rather than a property block, because both must
+        #  read MET in a world where a serve has written the discharge — the search judges a
+        #  candidate's end-world by this test, and the lapse prediction still holds there.
+        #
+        #  (1) it is about to LAPSE and is not paid: the prediction the ledger wrote beside it
+        #      holds — from its deadline on — and nothing has discharged it;
+        sh:sparql [
+            sh:prefixes orexis: ;
+            orexis:about sh:this ;
+            sh:message "a debt of mine is about to lapse unserved" ;
+            sh:select """SELECT $this WHERE {
+                $this market:lapsesAt ?when .
+                FILTER NOT EXISTS { $this market:dischargedAt ?paid } }""" ] ;
+        #  (2) the holder has PRESENTED and it is not paid: somebody is waiting now, whatever
+        #      the deadline — and a claim that named none is served this way alone.
+        sh:sparql [
+            sh:prefixes orexis: ;
+            orexis:about sh:this ;
+            sh:message "a claim of mine is presented and unserved" ;
+            sh:select """SELECT $this WHERE {
+                $this market:presented true .
+                FILTER NOT EXISTS { $this market:dischargedAt ?paid } }""" ] .
+    ?desire
+        #  THE MET-TEST ABOVE WAS MISSING until the lapse became a prediction, and this
+        #  comment kept the reason: "overdue" was unaskable without a clock. "Overdue" is
         #  not askable without a clock today: the door already hides a debt whose window has
         #  closed (#645), so a select over what a reader sees cannot find one; and
         #  `market:lapsedAt`, which the record keeps, is PERMANENT — a desire tested on it
@@ -62,4 +98,5 @@ WHERE {
     #  file.
     $me market:hosts ?venue .
     BIND(IRI(CONCAT(STR($me), ".no_overdue_debts")) AS ?desire)
+    BIND(IRI(CONCAT(STR($me), ".no_overdue_debts.honoured")) AS ?honoured)
 }

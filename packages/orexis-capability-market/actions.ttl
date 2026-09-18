@@ -520,7 +520,7 @@ market:Draining
             $me market:hosts ?venue . ?venue market:marketFor ?subject .
             {
               SELECT (SUM(?a) AS ?owed) WHERE {
-                ?debt a orexis:Want ; market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
+                ?debt market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
                 OPTIONAL { ?debt market:owedFrom ?from }
                 FILTER NOT EXISTS { ?debt market:dischargedAt ?d }
                 FILTER(COALESCE(?from, ?issued) <= $lands)
@@ -549,7 +549,7 @@ market:Draining
             $me market:hosts ?venue . ?venue market:marketFor ?subject .
             {
               SELECT (SUM(?a) AS ?owed) WHERE {
-                ?debt a orexis:Want ; market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
+                ?debt market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
                 OPTIONAL { ?debt market:owedFrom ?from }
                 FILTER NOT EXISTS { ?debt market:dischargedAt ?d }
                 FILTER(COALESCE(?from, ?issued) <= $lands)
@@ -583,7 +583,7 @@ market:DrainingAcrossBands
             $me market:hosts ?venue . ?venue market:marketFor ?subject .
             {
               SELECT (SUM(?a) AS ?owed) WHERE {
-                ?debt a orexis:Want ; market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
+                ?debt market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
                 OPTIONAL { ?debt market:owedFrom ?from }
                 FILTER NOT EXISTS { ?debt market:dischargedAt ?d }
                 FILTER(COALESCE(?from, ?issued) <= $lands)
@@ -615,7 +615,7 @@ market:DrainingAcrossBands
             $me market:hosts ?venue . ?venue market:marketFor ?subject .
             {
               SELECT (SUM(?a) AS ?owed) WHERE {
-                ?debt a orexis:Want ; market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
+                ?debt market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
                 OPTIONAL { ?debt market:owedFrom ?from }
                 FILTER NOT EXISTS { ?debt market:dischargedAt ?d }
                 FILTER(COALESCE(?from, ?issued) <= $lands)

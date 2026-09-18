@@ -990,21 +990,37 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     assert not sensing_of(city).gaps(), \
         "still no stake — a mains that states no ranges wants nothing, and that stays true"
     ledger = ledger_of(city)
+    root = f"{city.me.uri}.no_overdue_debts"
 
     assert ledger.owe("supplier", "j-city-1", expires_at=None) is not None
     owed = ledger.owed()
     assert len(owed) == 1 and owed[0]["to"].endswith("#supplier")
 
-    assert city.pursuing(), "and its debts are wants like anyone else's"
-    assert all(g.is_obligation for g in city.pursuing()), "all of them owed, none of them its own"
+    #  A CLAIM THAT NAMED NO DEADLINE is a want when its holder ASKS and not before — nobody
+    #  is waiting until then — so the debt stands in the record with nothing pursued for it,
+    #  and presenting it derives the want, about that debt, under the city's one desire
+    #  (one-road-derives-every-want).
+    assert not any(g.is_obligation for g in city.pursuing()), "recorded, and nobody waiting"
+    ledger.demanded("j-city-1")
+    assert any(g.is_obligation and g.derived_from == root for g in city.pursuing()), \
+        "presented: its debt is a want like anyone else's, derived under its desire"
 
     ledger.discharge("j-city-1")
     assert ledger.owed() == [], "paid"
-    #  AND STILL NOTHING OF ITS OWN. The city holds one DESIRE since the market began declaring
-    #  one — no overdue debts, because it hosts a venue — but a desire states no met-test yet
-    #  and so is never lifted into what is pursued (#675). What the city pursues is still its
-    #  debts and nothing else, which is what this sentence has always said.
-    assert city.pursuing() == [], "and a pure seller with nothing outstanding wants nothing at all"
+    #  AND STILL NOTHING OF ITS OWN. The city holds one DESIRE — no overdue debts, because it
+    #  hosts a venue — which is what it stands for and never pursues. With the debt paid the
+    #  want under it reads met by the desire's own test, the ledger speaking for it no
+    #  longer, and the next pass withdraws it with nothing standing for it (#618); what is
+    #  left is the rule, met. What the city pursues is its debts and nothing else, which is
+    #  what this sentence has always said.
+    paid = city.pursuing()
+    assert paid and all(g.is_met and not g.is_obligation for g in paid), \
+        "paid: nothing under its rule is in trouble"
+    for judged in paid:
+        city.deliberator.decide(judged)
+    standing = city.pursuing()
+    assert [g.uri for g in standing] == [root] and standing[0].is_met, \
+        "a pure seller with nothing outstanding holds its rule and wants nothing"
 
 
 def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):

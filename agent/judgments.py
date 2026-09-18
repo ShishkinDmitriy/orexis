@@ -87,9 +87,15 @@ class Judgments:
         for w in self._agent.wants.find_all_pursued(now):
             children.setdefault(w.desire, []).append(w)
         derived = {w.uri for ws in children.values() for w in ws}
+        #  A CAPABILITY MAY SPEAK FOR A WANT THE ROAD MINTED — the ledger judges the want
+        #  under "no overdue debts" by its claim's redeem window, and names the claim — and
+        #  its judgment wins over the root's copy below, keeping the road's provenance.
+        spoken_for: dict = {}
         for wants in self._agent.ask(DESIRES, now):
             for judgment in wants:
-                if judgment.uri not in derived:
+                if judgment.uri in derived:
+                    spoken_for.setdefault(judgment.uri, judgment)
+                else:
                     seen.setdefault(judgment.uri, judgment)
         #  THE WANTS NO MODULE SPEAKS FOR (#468): a world may ratify a desire DIRECTLY — the
         #  asserted block — and wanting is the kernel's, so the kernel is who lifts such a
@@ -161,7 +167,9 @@ class Judgments:
                 continue
             base = seen.pop(root)
             for want in wants:
-                presented = replace(base, uri=want.uri, derived_from=root)
+                presented = (replace(spoken_for[want.uri], derived_from=root)
+                             if want.uri in spoken_for
+                             else replace(base, uri=want.uri, derived_from=root))
                 if want.holds_at:
                     presented = self._at_instant(
                         presented, root, datetime.fromisoformat(want.holds_at),
@@ -204,7 +212,15 @@ class Judgments:
 
         cache = self.__dict__.setdefault("_compiled_wants", {})
         if (want, entered) not in cache:
-            public = graph_from(self._agent.beliefs, *self._agent.beliefs.public_graphs())
+            #  AND THE ROOTS GRAPH: a package's desire and its shape are authored there at
+            #  genesis (#644), not in public knowledge — compiled from the public graphs alone
+            #  the ledger's shape had no target, raised, and the error path read the root as
+            #  unmet every pass. Sensing's roots never met this because the choir speaks for
+            #  them and this select is never compiled; the ledger speaks for the WANTS, so
+            #  its root is judged here, and here must see where a root lives.
+            from orexis_agent_progression.ontology import roots_graph
+            public = graph_from(self._agent.beliefs, *self._agent.beliefs.public_graphs(),
+                                roots_graph(self._agent.id))
             compile = entered_select if entered else unmet_select
             cache[(want, entered)] = compile(public.cbd(URIRef(shape)), URIRef(shape))
         return cache[(want, entered)]

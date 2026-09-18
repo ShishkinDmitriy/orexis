@@ -701,9 +701,14 @@ def test_a_plan_landing_after_the_wants_expiry_is_not_one(make):
     #  THROUGH THE LEDGER (#635): the record carries the debt's own met-test, and a row
     #  written by hand without one is a want the planner can no longer judge.
     ledger = supplier.hosting().ledger
-    uri = ledger.owe("fern", "w1", amount_l=0.5)
-    assert uri == "http://example.org/orexis#obligation.w1"
+    debt = ledger.owe("fern", "w1", amount_l=0.5)
+    assert debt == "http://example.org/orexis#obligation.w1"
     ledger.demanded("w1")
+    #  THE WANT IS THE ROAD'S, not the debt (one-road-derives-every-want): presented, the
+    #  debt is a want under "no overdue debts", about that debt, and it is the want the
+    #  search is handed — pointing at the desire's met-test, which reads a serve as met.
+    uri = next(j.uri for j in ledger.obligations() if j.claim == "w1")
+    assert uri.startswith(f"{supplier.me.uri}.no_overdue_debts.pursued.")
 
     def planned(seconds_left):
         want = Judgment(uri=uri, urgency=0.9, claim="w1",

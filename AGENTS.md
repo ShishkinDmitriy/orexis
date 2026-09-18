@@ -227,8 +227,12 @@ it is a record wearing a bullet.
   to present and adopted it twice; only the round's close had hidden that.
 - **A package's words are the package's, however long the kernel spoke them** — the ledger's
   vocabulary sat in `orexis:` because the ledger was the kernel's once, and the planner judged
-  a debt met by naming its discharge itself; a debt now carries its met-test as every authored
-  want does, `market:dischargedAt` is the market's, and the kernel names no word of it (#635).
+  a debt met by naming its discharge itself; the host's desire carries the met-test in the
+  ledger's words — the debt's own from #635 until one road put it on the desire —
+  `market:dischargedAt` is the market's, and the kernel names no word of it (#635).
+- **A fallback is held to the case it was written for** — one want about everything a desire
+  is about was for a root UNMET now whose select yields no rows, and it minted a want under a
+  met root with nothing foreseen the first time the road ran without a judgment in hand.
 - **A prediction is bands, and the width never leaves the rule** — a drift types the reading it
   predicts with every band the instrument's noise and the rate's spread reach, inside its own
   text; sensing writes what the drifts predict as graphs holding during their windows, the
@@ -298,6 +302,10 @@ it is a record wearing a bullet.
   root's identity** — which store is the agent's decision since it owns the stores and the
   collections; identity travels as a query criterion, and the reads need none at all, since one
   agent, one volume means the store IS the scope.
+- **A capability that asks the road is not minting** — the ledger, having written a debt and
+  what it predicts of it, calls `pursuit.top_up` for its desire so a claim arriving is a want
+  arriving and not a want on the next tick; what it writes is the instance and the prediction,
+  and what stands afterwards is the road's, in deliberation's family, about that debt.
 - **One road derives every want, and a package writes instances and predictions** — a desire
   is one and universal, its met-test's violation rows are the instances in trouble and each
   prediction's start is when, a want is minted per scope of them, and the ledger's own road was
