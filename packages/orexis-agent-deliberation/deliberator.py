@@ -376,39 +376,38 @@ class Deliberator:
         #  make. Same first move, reached by the one road. The plan record set exactly this as
         #  its own acceptance test: a widening that leaves the special case beside it has not
         #  widened anything.
-        if not judgment.is_obligation:
-            #  THE SEARCH, and there is nowhere else to go. Asking whether a lever points the
-            #  right way is not the same as asking whether taking it leaves this agent better
-            #  off, and only the second question refuses to water a plant that is already too
-            #  wet — the direction test says Raises, the gap says below the aim, and both are
-            #  true of a drowning plant whose aim sits above it.
-            #
-            #  None here is a DECISION and no longer a hand-off. Every case that used to fall
-            #  through to the reflex is either refused at the gates or genuinely means "nothing
-            #  I hold moves this", which is a true answer worth leaving in the trace.
-            return self._planned(judgment, surprise)
-        #  Nobody has asked. The holder is waiting for its own watch to be live, and a host
-        #  that doses early spends the water where nothing is looking (#132) — so a standing
-        #  debt is visible, rankable, and still not actionable until it is presented.
+        #  WANTED IS NOT ACTIONABLE. A want nobody may act on yet is visible, rankable and left
+        #  standing: a debt the holder has not presented, since a host that doses early spends
+        #  the water where nothing is looking (#132). A stake is always pursuable — a plant does
+        #  not ask — so this says nothing to it.
         if not judgment.pursuable:
             return None
-        #  SIMULATE FIRST, exactly as a stake does (#255): the search sees the honoured row
-        #  AND this agent's own levers, so a host owing water it does not hold plans the
-        #  refill — Acquire raises the level Apply's premise reads, and "refill, then serve"
-        #  falls out of two rules that never mention each other. A search that answered and
-        #  found no move is the evidence the issue demands: the obligation stays hot, stays owed,
-        #  and is not pursued into a world where serving discharges nothing.
+        #  THE SEARCH, and there is nowhere else to go. Asking whether a lever points the
+        #  right way is not the same as asking whether taking it leaves this agent better
+        #  off, and only the second question refuses to water a plant that is already too
+        #  wet — the direction test says Raises, the gap says below the aim, and both are
+        #  true of a drowning plant whose aim sits above it. A debt is simulated exactly as a
+        #  stake is (#255): the search sees the row owed to its counterparty AND this agent's
+        #  own levers, so a host owing water it does not hold plans the refill — Acquire
+        #  raises the level Apply's premise reads, and "refill, then serve" falls out of two
+        #  rules that never mention each other.
+        #
+        #  None here is a DECISION and no longer a hand-off. Every case that used to fall
+        #  through to the reflex is either refused at the gates or genuinely means "nothing
+        #  I hold moves this", which is a true answer worth leaving in the trace.
         if plan := self._planned(judgment, surprise):
             return plan
-        #  The search speaks for an obligation only when it FOUND a path — a vessel nobody has read
-        #  binds no premise, and a premise that cannot bind proves nothing about serving. So
-        #  anything short of a plan falls through to the pre-#255 road, unchanged: the
-        #  honoured row for this counterparty, and the actuation boundary judges the vessel
-        #  when it pours. Handed back as a one-row plan labelled OBLIGATION, which is not a
-        #  search outcome and is not written to the trace: it is the row the obligation names.
+        #  A ROW OWED TO SOMEONE THAT NAMES THIS WANT is taken without a search. The search
+        #  speaks for a debt only when it FOUND a path — a vessel nobody has read binds no
+        #  premise, and a premise that cannot bind proves nothing about serving — so anything
+        #  short of a plan falls through to the pre-#255 road, unchanged: the row the market
+        #  joined to this want, and the actuation boundary judges the vessel when it pours.
+        #  Handed back as a one-row plan labelled OBLIGATION, which is not a search outcome and
+        #  is not written to the trace. A stake has no such row, and nothing here asks what
+        #  kind of want it is holding.
         for row in self.agent.afforder.offered():
-            if row.for_agent == judgment.owed_to:
-                #  A obligation's row, unsized: the host sizes the serve from the claim it holds.
+            if not row.is_own and row.want == judgment.uri:
+                #  Unsized: the host sizes the serve from the claim it holds.
                 return Plan(OBLIGATION, ((Step.from_row(row)),))
         return None
 

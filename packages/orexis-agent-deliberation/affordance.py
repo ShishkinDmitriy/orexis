@@ -30,7 +30,9 @@ class Affordance:
     by whoever derived the want, and opaque here: sensing says a region want is about a
     property, and its own action queries join a lever to it. The kernel carries it from the
     want to the rule (`$about`) and never reads it. Both None on a row that serves any want —
-    a host's Offering — or an obligation's, which names whom it is owed to instead.
+    a host's Offering. A row owed to someone names the want it serves AND whom it is owed to:
+    the market joins its serve to the want that is about the debt, so the search takes it by
+    the want's name and never learns what a counterparty is.
     """
 
     action: str

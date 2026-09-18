@@ -19,11 +19,11 @@ written into it:
 | | |
 |---|---|
 | `action` | the [action](/domain/action.md) — the kind of act: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `market:Offering` |
-| `want` | the [desire](/domain/desire.md) it serves — the node, which is the kernel's only key. Empty on a row that serves any want (a host's Offering) or an obligation's |
+| `want` | the [desire](/domain/desire.md) it serves — the node, which is the kernel's only key. Empty on a row that serves any want (a host's Offering); on a row owed to someone, the want about the debt it serves |
 | `about` | what that want is about — `orexis:about`, said by whoever derived the want and opaque to the kernel: a property for a stake, an instrument for a freshness want. Carried to the effect as `$about` |
 | `via` | the lever it goes through: this probe, this valve, this venue |
 | `direction` | which way it moves the property, or **empty** for a look |
-| `for_agent` | whom the row serves, where it is an obligation. Absent on the agent's own rows |
+| `for_agent` | whom the row serves, where it is an obligation's — read off the debt the named want is about. Absent on the agent's own rows |
 
 `Afforder.offered` hands back every such row for one agent, in one world. For the
 simulation's fern: *look at moisture through the probe; look at temperature through the
@@ -108,8 +108,8 @@ is a decision, and a deliberator that ranged over it would be choosing whether t
 
 That one column is the whole of the distinction — there is no mode term
 ([an-action-is-one-node](/decisions/an-action-is-one-node.md)). It is also what lets an obligation find
-its means: an obligation names who it is owed to, and the row that answers is the one bound to
-exactly that agent.
+its means: the row that answers is the one the market joined to the want about that debt, and
+it carries whom the debt is owed to.
 
 # The row that is not there
 

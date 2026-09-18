@@ -340,11 +340,11 @@ def test_the_dealers_menu_gained_its_lever(make):
                                             ("Offering", "StoredLitres", None)}, \
         "buy upstream while the city's round is open, and offer downstream (#359) — no direction " \
         "on the second, because offering moves no water"
-    #  And beside them, since #218, what the dealer HONOURS: claims presented against the
-    #  venue it hosts are redeemed through its valves — one row per lever, never a proposal.
-    honoured = [r for r in rows if not r.is_own]
-    assert {r.action.rsplit("#", 1)[-1] for r in honoured} == {"Serving"}
-    assert len(honoured) == 3, "one obligation per valve it holds for its buyers"
+    #  And NOTHING HONOURED beside them: what the dealer honours — claims presented against
+    #  the venue it hosts, redeemed through its valves (#218) — is a row per want about a
+    #  debt, and a store with no debt in it holds no such want. It used to be one row per
+    #  valve, standing whether or not anybody was owed anything.
+    assert [r for r in rows if not r.is_own] == [], "nothing owed, nothing honoured"
 
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
@@ -488,9 +488,20 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     from orexis_agent_deliberation.judgment import Judgment
 
     supplier = make("supplier")
-    rows = Afforder(Actions(supplier.beliefs), Affordances(supplier.beliefs), supplier.desires, supplier.me.uri, beliefs_graph(supplier.id)).offered()
+    #  A ROW OWED TO SOMEONE EXISTS FOR A WANT ABOUT A DEBT, and names it: the market joins
+    #  its serve to the want the road minted under *no overdue debts*, so with nothing owed
+    #  there is nothing honoured among the affordances, and with a claim presented there is.
+    ledger = supplier.hosting().ledger
+    afforder = Afforder(Actions(supplier.beliefs), Affordances(supplier.beliefs), supplier.desires,
+                        supplier.me.uri, beliefs_graph(supplier.id))
+    assert not [r for r in afforder.offered() if not r.is_own], "nothing owed, nothing honoured"
+    ledger.owe("fern", "j-owed", amount_l=0.5)
+    ledger.demanded("j-owed")
+    [want] = [j.uri for j in ledger.obligations()]
+    rows = afforder.offered()
     obligations = [r for r in rows if not r.is_own]
-    assert obligations, "the conduct surface includes what it honours"
+    assert obligations and all(r.want == want for r in obligations), \
+        "the conduct surface includes what it honours, and each row names the want it serves"
 
     deliberator = supplier.deliberator
     duty_means = {r.action for r in obligations}
@@ -523,8 +534,13 @@ def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
     from orexis_agent_deliberation.judgment import Judgment
 
     supplier = make("supplier")
-    obligation = Judgment(uri="urn:o", urgency=0.9, claim="j-1",
-                owed_to="http://example.org/orexis/world/simulation#fern_agent")
+    #  THE WANT THE ROAD MINTED for a presented claim, which is what the market's serve names
+    #  (one-road-derives-every-want); a judgment written by hand names no debt, so no row
+    #  names it, which is the stranger below.
+    ledger = supplier.hosting().ledger
+    ledger.owe("fern", "j-1", amount_l=0.5)
+    ledger.demanded("j-1")
+    obligation = next(j for j in ledger.obligations() if j.claim == "j-1")
     assert supplier.deliberator.propose_for(obligation) == \
         "http://example.org/orexis/market#Serving"
 
