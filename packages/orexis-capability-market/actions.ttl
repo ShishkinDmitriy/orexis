@@ -518,13 +518,14 @@ market:Serving
 #  is a debt in its ledger, and since #625 a debt says FROM WHEN its holder may come
 #  (`market:owedFrom`). So the vessel's level at a future instant is what it holds now less
 #  what it owes to holders whose windows have opened by then — a drift, in the grammar the
-#  water and climate packages use, reading the ledger where they read a rate. Two forms, as
-#  theirs: a level with a value falls by the litres; one known only by its band falls below its
-#  region once the litres owed exceed the region's width, optimistic in the direction the world
-#  corrects. The value form says WHEN: the first window at which the litres owed so far take
-#  the level under the floor — an instant, not seconds, since nothing here can measure a
-#  stretch. A debt already discharged, in the ledger or in the world a plan imagines, is not
-#  owed; a debt with no window is owed from issue.
+#  water and climate packages use, reading the ledger where they read a rate. A level with a
+#  value falls by the litres, and says WHEN: the first window at which the litres owed so far
+#  take the level under the floor — an instant, not seconds, since nothing here can measure a
+#  stretch. (A second form for a level known only by its band was struck with the water and
+#  climate packages' band drifts: since the search runs no drift (#643) a drift is only ever
+#  run from the reading the instrument made, which carries a number.) A debt already
+#  discharged, in the ledger or in the world a plan imagines, is not owed; a debt with no
+#  window is owed from issue.
 
 market:Draining
     a sensing:Drift ;
@@ -579,72 +580,5 @@ market:Draining
             }
             FILTER($elapsed > 0 && ?owed > 0)
             BIND(IF(?was - ?owed < 0.0, 0.0, ?was - ?owed) AS ?now)
-            BIND($lands AS ?at)
-        }""" .
-
-market:DrainingAcrossBands
-    a sensing:Drift ;
-    rdfs:label "what a vessel known only by its band loses to the claims on it" ;
-
-    orexis:retracts """
-        CONSTRUCT { ?obs ?p ?o } WHERE {
-            
-                ?obs sosa:hasFeatureOfInterest ?subject ;
-                     sosa:observedProperty water:StoredLitres ;
-                     a ?band ;
-                     ?p ?o .
-                FILTER NOT EXISTS { ?obs sosa:hasSimpleResult ?any }
-            
-            ?band rdfs:subClassOf sensing:InRegion ;
-                  sensing:ofSubject ?subject ; sensing:ofProperty water:StoredLitres ;
-                  owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
-            ?r owl:onProperty sosa:hasSimpleResult ;
-               owl:someValuesFrom/owl:withRestrictions ?facets .
-            ?facets rdf:rest*/rdf:first/xsd:minInclusive ?lo .
-            ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?hi .
-            $me market:hosts ?venue . ?venue market:marketFor ?subject .
-            {
-              SELECT (SUM(?a) AS ?owed) WHERE {
-                ?debt market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
-                OPTIONAL { ?debt market:owedFrom ?from }
-                FILTER NOT EXISTS { ?debt market:dischargedAt ?d }
-                FILTER(COALESCE(?from, ?issued) <= $lands)
-              }
-            }
-            FILTER($elapsed > 0 && ?owed > (?hi - ?lo))
-        }""" ;
-
-    sh:construct """
-        CONSTRUCT {
-            ?obs a sosa:Observation , ?below ;
-                 sosa:hasFeatureOfInterest ?subject ;
-                 sosa:observedProperty water:StoredLitres ;
-                 sosa:resultTime ?at .
-        } WHERE {
-            
-                ?obs sosa:hasFeatureOfInterest ?subject ;
-                     sosa:observedProperty water:StoredLitres ;
-                     a ?band .
-                FILTER NOT EXISTS { ?obs sosa:hasSimpleResult ?any }
-            
-            ?band rdfs:subClassOf sensing:InRegion ;
-                  sensing:ofSubject ?subject ; sensing:ofProperty water:StoredLitres ;
-                  owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
-            ?r owl:onProperty sosa:hasSimpleResult ;
-               owl:someValuesFrom/owl:withRestrictions ?facets .
-            ?facets rdf:rest*/rdf:first/xsd:minInclusive ?lo .
-            ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?hi .
-            $me market:hosts ?venue . ?venue market:marketFor ?subject .
-            {
-              SELECT (SUM(?a) AS ?owed) WHERE {
-                ?debt market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
-                OPTIONAL { ?debt market:owedFrom ?from }
-                FILTER NOT EXISTS { ?debt market:dischargedAt ?d }
-                FILTER(COALESCE(?from, ?issued) <= $lands)
-              }
-            }
-            FILTER($elapsed > 0 && ?owed > (?hi - ?lo))
-            ?below rdfs:subClassOf sensing:BelowRegion ;
-                   sensing:ofSubject ?subject ; sensing:ofProperty water:StoredLitres .
             BIND($lands AS ?at)
         }""" .
