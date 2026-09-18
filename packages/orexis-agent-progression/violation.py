@@ -50,6 +50,7 @@ from .store import NAMESPACES, Raw, bind
 _PREFIX_OF = dict(sorted(NAMESPACES.items(), key=lambda kv: -len(kv[1])))
 
 SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
+OREXIS = rdflib.Namespace("http://example.org/orexis#")
 
 #  What a property shape and a node shape may carry in SHACL's OWN namespace beside a
 #  constraint this compiles. A predicate outside `sh:` is an annotation — a label, a
@@ -160,7 +161,9 @@ class _Compiler:
         branches = self.report_branches(shape, focus_node)
         if not branches:
             return None
-        return "SELECT DISTINCT ?this ?_constraint ?_offending WHERE { " + " UNION ".join(branches) + " }"
+        #  `?_about` is unbound on a row whose constraint's block says nothing, and that is the
+        #  reader's signal to fall back to the desire's own `orexis:about`.
+        return "SELECT DISTINCT ?this ?_constraint ?_offending ?_about WHERE { " + " UNION ".join(branches) + " }"
 
     def targeted(self, shape) -> bool:
         return any((shape, t, None) in self.g for t in (
@@ -176,15 +179,17 @@ class _Compiler:
             target = f"VALUES ?this {{ {self.term(focus_node)} }} " + target
         severity = self.g.value(shape, SH.severity) or SH.Violation
         branches = []
-        for k, (text, value) in enumerate(self.alternatives(shape, "?this", severity, SH.Violation)):
+        for k, (text, value, about) in enumerate(self.alternatives(shape, "?this", severity, SH.Violation)):
             #  Projected under UNDERSCORED names, reserved for the report — an authored body
             #  says `?shape`, and one that says `?_shape` is refused: a BIND onto a variable
             #  the branch already binds is a parse error the engine reports, never a quiet
             #  wrong row.
-            for projected in ("?_constraint", "?_offending"):
+            for projected in ("?_constraint", "?_offending", "?_about"):
                 if projected in text or projected in target:
                     raise Unsupported(f"{shape}: a select body binds {projected}, which the report projects")
             bound = f" BIND({value} AS ?_offending)" if value else ""
+            #  WHICH PROPERTY, where the block says: the row can then name what is in trouble.
+            bound += f" BIND({self.term(about)} AS ?_about)" if about is not None else ""
             branches.append(f"{{ {target} {text} BIND({k} AS ?_constraint){bound} }}")
         return branches
 
@@ -227,11 +232,18 @@ class _Compiler:
     # --- a node shape's violations, each an alternative --------------------------------------
 
     def violations(self, shape, focus: str) -> list[str]:
-        return [text for text, _ in self.alternatives(shape, focus)]
+        return [text for text, _, _ in self.alternatives(shape, focus)]
 
-    def alternatives(self, shape, focus: str, severity=None, only=None) -> list[tuple[str, str | None]]:
+    def alternatives(self, shape, focus: str, severity=None, only=None) -> list[tuple]:
         """Each way `focus` can violate `shape`, as (pattern, the offending value's variable
-        or None). With `only`, an alternative whose severity is not `only` is left out; a
+        or None, what the constraint is ABOUT or None).
+
+        THE THIRD MEMBER is `orexis:about` stated on the property block — the one kernel word a
+        block may carry beside SHACL's own. A desire universal over several properties states it
+        per block, and a violation row can then say WHICH property is in trouble, which is what
+        lets a want be minted about that and not about everything the desire covers
+        (one-road-derives-every-want). A block that states none yields None, and a reader falls
+        back to the desire's own `orexis:about`. With `only`, an alternative whose severity is not `only` is left out; a
         conformance check passes neither.
 
         WHOSE SEVERITY, measured against the judge (#548) rather than read off the
@@ -246,7 +258,7 @@ class _Compiler:
         if (shape, SH.path, None) in self.g:
             #  A PROPERTY shape where a node shape was expected — a member of `sh:or`, which
             #  SHACL allows and the public-graph shape uses. Its constraints are its own.
-            return self.property_violations(shape, focus)
+            return self._about_each(shape, self.property_violations(shape, focus))
         for p in self.g.predicates(shape):
             if _is_shacl(p) and p not in _NODE_ANNOTATIONS:
                 raise Unsupported(f"{shape}: {p.n3()} on a node shape is not compiled")
@@ -254,25 +266,25 @@ class _Compiler:
         own = only is None or severity == only
         for prop in self.g.objects(shape, SH.property):
             if only is None or (self.g.value(prop, SH.severity) or SH.Violation) == only:
-                out.extend(self.property_violations(prop, focus))
+                out.extend(self._about_each(prop, self.property_violations(prop, focus)))
         if own:
             for constraint in self.g.objects(shape, SH.sparql):
-                out.append((self.sparql_body(constraint, focus), None))
-            out.extend(self.value_violations(shape, focus))
+                out.append((self.sparql_body(constraint, focus), None, None))
+            out.extend((t, v, None) for t, v in self.value_violations(shape, focus))
             for negated in self.g.objects(shape, SH["not"]):
                 #  Violated exactly where the negated shape is CONFORMED to.
-                out.append((self.conforms(negated, focus), None))
+                out.append((self.conforms(negated, focus), None, None))
             for members in self.g.objects(shape, SH["or"]):
                 #  Violated where NO member is conformed to: every member violated.
                 out.append((" ".join(f"FILTER({self.violated(m, focus)})"
-                                     for m in Collection(self.g, members)), None))
+                                     for m in Collection(self.g, members)), None, None))
             for members in self.g.objects(shape, SH.xone):
                 shapes = list(Collection(self.g, members))
                 if len(shapes) != 2:
                     raise Unsupported(f"{shape}: sh:xone over {len(shapes)} shapes — only two")
                 a, b = (self.violated(m, focus) for m in shapes)
                 #  Violated where both or neither conform: exactly one is what xone means.
-                out.append((f"FILTER(({a} && {b}) || (!({a}) && !({b})))", None))
+                out.append((f"FILTER(({a} && {b}) || (!({a}) && !({b})))", None, None))
         return out
 
     def value_violations(self, shape, focus: str) -> list[tuple[str, str | None]]:
@@ -319,6 +331,12 @@ class _Compiler:
             else:
                 clauses.append(f"FILTER NOT EXISTS {{ {alt} }}")
         return " ".join(clauses)
+
+    def _about_each(self, block, alternatives) -> list[tuple]:
+        """Every alternative of one property block, tagged with what the block says it is
+        about — `orexis:about` on the block, or None."""
+        about = self.g.value(block, OREXIS.about)
+        return [(text, value, about) for text, value in alternatives]
 
     def property_violations(self, prop, focus: str) -> list[tuple[str, str | None]]:
         path = self.path(self.g.value(prop, SH.path))

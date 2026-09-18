@@ -156,7 +156,7 @@ class Wants:
         timed = (f' ; orexis:holdsAt "{want.holds_at}"^^xsd:dateTime'
                  f' ; prov:generatedAtTime "{want.derived_at}"^^xsd:dateTime'
                  if want.holds_at is not None else "")
-        about = f" ; orexis:about <{want.about}>" if want.about else ""
+        about = "".join(f" ; orexis:about <{a}>" for a in want.about)
         ends = (f'\n      orexis:end "{want.ends}"^^xsd:dateTime ;' if want.ends else "")
         self._store.drop_graph(graph)
         self._store.update(f"""
@@ -220,7 +220,7 @@ INSERT DATA {{
         #  on `orexis:bindsWhen`, which named a kind where a graph class already said it (#681).
         family = (f"\n  GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a {family} }}" if family else "")
         rows = bindings(self._store.query_union(f"""
-SELECT ?w ?desire ?label ?holdsAt ?since ?about WHERE {{
+SELECT ?w ?desire ?label ?holdsAt ?since (GROUP_CONCAT(STR(?about); separator=" ") AS ?abouts) WHERE {{
   GRAPH ?g {{
     {where}
     OPTIONAL {{ ?w prov:wasDerivedFrom ?desire }}
@@ -232,10 +232,18 @@ SELECT ?w ?desire ?label ?holdsAt ?since ?about WHERE {{
   FILTER NOT EXISTS {{
     GRAPH <{PERIODS_GRAPH}> {{ ?g dcterms:temporal ?period . ?period orexis:end ?end }}
     FILTER(?end <= "{now}"^^xsd:dateTime) }}
-}} ORDER BY ?w LIMIT {int(limit)} OFFSET {int(offset)}"""))
+}} GROUP BY ?w ?desire ?label ?holdsAt ?since ORDER BY ?w LIMIT {int(limit)} OFFSET {int(offset)}"""))
         if len(rows) == limit:
             log.warning("wants: a full page of %d at offset %d — page or there is a leak",
                         limit, offset)
         return [Want(uri=r["w"], desire=r.get("desire", ""),
                      label=r.get("label", ""), holds_at=r.get("holdsAt"),
-                     derived_at=r.get("since"), about=r.get("about")) for r in rows]
+                     derived_at=r.get("since"),
+                     #  ONE ROW PER WANT, however many things it is about: grouped, so a page
+                     #  counts wants and not (want, about) pairs, and the abouts come back as one
+                     #  space-joined string. `STR()` IS LOAD-BEARING: this engine's GROUP_CONCAT
+                     #  over an IRI binds NOTHING — no error, no column, the page reads as about
+                     #  nothing — and over its string it binds. Measured on a bare store, and
+                     #  pinned by `test_wants.py`.
+                     about=tuple(sorted(r["abouts"].split())) if r.get("abouts") else ())
+                for r in rows]

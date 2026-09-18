@@ -81,6 +81,17 @@ def test_a_write_announces_itself_and_re_derives_nothing(wants):
     assert deleted == ["urn:test:want"], "and which one went"
 
 
+def test_a_want_about_several_things_reads_back_about_all_of_them(wants):
+    """The read path a want about one thing never exercised, and it was broken: the abouts come
+    back grouped, and this engine's GROUP_CONCAT over an IRI binds NOTHING — no error, no
+    column, every want reading as about nothing. Over `STR(?about)` it binds. Pinned here so
+    the day the engine changes its mind, this says so (the engine-lacks-it trap, AGENTS.md)."""
+    wants.save(AGENT, _want(about=("urn:test:air", "urn:test:soil")))
+    found = wants.find_first_by_uri("urn:test:want")
+    assert found.about == ("urn:test:air", "urn:test:soil"), found.about
+    assert wants.find_all()[0].about == found.about, "and the page groups the same way"
+
+
 def test_a_want_is_found_by_the_desire_it_was_derived_from(wants):
     """The pursuit road's question, asked of the collection rather than written as a query."""
     wants.save(AGENT, _want())

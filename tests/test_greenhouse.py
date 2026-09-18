@@ -136,6 +136,34 @@ def test_the_warm_half_alone_is_planned_when_only_the_air_is_cold(monkeypatch):
     assert [s.action for s in plan.steps] == [HEATING]
 
 
+def test_the_want_minted_for_a_dry_warm_bed_is_about_the_soil_alone(monkeypatch):
+    """ONE ROAD, and what it narrows (one-road-derives-every-want). The desire is about both
+    properties; the want minted under it is about what is IN TROUBLE. Its shape states one
+    constraint per property, each saying `orexis:about` which, so the compiled select's rows
+    name the property that failed — and a dry, warm bed fails one. The want is about the soil,
+    named for it, and its plan is a dose with no heating on the menu it joins."""
+    from orexis_agent_deliberation import pursuit
+    agent, _ = _grower(monkeypatch, moisture=0.20, air=21.0)
+    handed = pursuit.handed(agent, _comfort(agent))
+    assert handed is not None and handed.derived_from == COMFORT
+    minted = agent.wants.find_all_pursued()
+    assert [w.about for w in minted] == [(MOISTURE,)], "about the soil and nothing else"
+    assert minted[0].uri.endswith(".pursued.SoilMoisture"), minted[0].uri
+    plan = Planner(agent, agent.me).plan(handed)
+    assert [s.action for s in plan.steps] == [DOSING]
+
+
+def test_a_cold_dry_bed_mints_one_want_about_both(monkeypatch):
+    """The other reading: both in trouble, one scope — one want about both, named for both,
+    which is the greenhouse's own want and what every shipped world's one scope makes of any
+    desire. Two scopes would be two wants; nothing shipped splits."""
+    from orexis_agent_deliberation import pursuit
+    agent, _ = _grower(monkeypatch)
+    pursuit.handed(agent, _comfort(agent))
+    minted = agent.wants.find_all_pursued()
+    assert len(minted) == 1 and set(minted[0].about) == {MOISTURE, AIR}
+
+
 # --- the vent: one act, and the world decides what it does ---------------------
 
 def test_the_same_venting_reaches_a_different_band_for_each_outside(monkeypatch):
