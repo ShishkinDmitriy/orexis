@@ -301,8 +301,9 @@ def _urgency_panel(buckets: dict, y: int, panel_id: int) -> dict:
                        #  stored stays the name the graph knows it by.
                        #
                        #  The prefix is kept rather than dropped, because it is not always
-                       #  redundant: an obligation is tagged `obligation.<owed to>`, and in the supplier's
-                       #  bucket that reads "supplier owes fern" only if the holder is said.
+                       #  redundant: a want the road derived is tagged by its ROOT, so a debt
+                       #  reads `no_overdue_debts`, and whom it is owed to is `agent_debts`'s
+                       #  per-counterparty row, not this panel's.
                        f'  |> map(fn: (r) => ({{ r with _field: "{agent_id}/" + '
                        f'strings.replace(v: r.want, t: ".{agent_id}.", u: ".", i: 1) }}))')}
             for i, (agent_id, bucket) in enumerate(sorted(buckets.items()))

@@ -62,7 +62,7 @@ def handed(agent, judgment):
     """The want the search is handed for `desire`: itself, unless it is a ROOT — then the want
     derived under it, minted if the root reads unmet and none stands; None for a met root
     with nothing derived under it, which is nothing to pursue and runs no pass."""
-    if judgment.derived_from is not None or judgment.is_obligation or not _is_root(agent, judgment.uri):
+    if judgment.derived_from is not None or not _is_root(agent, judgment.uri):
         #  A WANT THE ROAD MINTED, or one a package speaks for: handed as it is. Its root may
         #  have gained instances since — a second claim — so the road tops up first.
         if judgment.derived_from is not None:
@@ -477,9 +477,9 @@ def pursue_for(agent, want: str, surprise: tuple | None = None) -> str | None:
 
 
 def _because(plan, judgment) -> str:
-    """The ledger's prose: what the plan found and how far it expected to get."""
-    what = (f"an obligation to {judgment.owed_to.rsplit('#', 1)[-1]}" if judgment.is_obligation
-            else judgment.uri.rsplit("#", 1)[-1])
+    """The ledger's prose: what the plan found and how far it expected to get. The want by
+    its own name, which says what it is about — a debt's carries its claim."""
+    what = judgment.uri.rsplit("#", 1)[-1]
     if plan.urgency_now is None or plan.urgency_after is None:
         return f"{plan.outcome} for {what}"
     return (f"{plan.outcome} for {what}: urgency {plan.urgency_now:.2f} -> "

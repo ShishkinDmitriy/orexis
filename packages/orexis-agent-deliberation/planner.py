@@ -495,6 +495,9 @@ class Planner:
         #  Within-binding wants have ROOM: seconds until the want expires (#472). A candidate
         #  whose last change lands past it is LATE, weighed and refused like a dear one.
         #  Or AT an instant (#619): a candidate landing past the instant cannot hold at it.
+        #  THE TWO ARE NOT ONE FIELD: a deadline is a BY and an instant is an AT — a plan for
+        #  an instant is placed to land at it, and a serve placed to land at the claim's
+        #  lapse would be a host paying on the last second.
         deadline = judgment.expires if judgment.expires is not None else judgment.holds_at
         #  Measured from the PASS'S clock, which every landing in the pass is summed from: a
         #  fresh read here made a plan placed exactly at its instant a few milliseconds late.

@@ -250,7 +250,7 @@ class SensingModule(Module):
         caller reads silence as the maximal 1.0.
         """
         about = getattr(judgment, "observed_property", None)
-        if judgment.is_obligation or about is None:
+        if about is None:
             return None
         if (instrument := judgment.instrument) is not None:
             return self._answer(query, _FRESHNESS_MEASURE

@@ -369,8 +369,15 @@ SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS
         exactly like a calm one on every panel — and a host with no stake of its own reported
         nothing at all, because the module that would have said so was never composed."""
         obligations = self.desires()
-        return [("agent_debts", {}, {
-            "owed": float(len(obligations)),
-            "demanded": float(sum(1 for g in obligations if g.pursuable)),
-            "hottest": max((g.urgency for g in obligations), default=0.0),
-        })]
+        def figures(some):
+            return {"owed": float(len(some)),
+                    "demanded": float(sum(1 for g in some if g.pursuable)),
+                    "hottest": max((g.urgency for g in some), default=0.0)}
+        #  AND PER COUNTERPARTY, which is the thing worth seeing — "supplier owes fern" — and
+        #  which the kernel's own row per want used to say by tagging a debt with whom it is
+        #  owed to, a thing it could do only by knowing what a debt was; every want is reported
+        #  under its root there now, and whom I owe is mine to say.
+        to = sorted({g.owed_to for g in obligations})
+        return [("agent_debts", {}, figures(obligations))] + [
+            ("agent_debts", {"to": who.rsplit("#", 1)[-1]},
+             figures([g for g in obligations if g.owed_to == who])) for who in to]
