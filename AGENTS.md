@@ -337,6 +337,10 @@ it is a record wearing a bullet.
   so it must reach the choir, and the asymmetry is what tells the two kinds of collection apart.
 - **A singular file holds the model and its plural holds the collection** — `desire.py` and
   `desires.py`, `want.py` and `wants.py`, so neither reader has to open the other's file.
+- **An update takes no dataset** — `Store.query` is handed its graphs per call, which is the
+  door, and `Store.update` names them only in its own text; so what chooses which graphs are
+  the world at an instant is Python or a materialised view, a derivation that needs neither
+  is a rule, and a search — an order, a budget, a stop — is neither and stays Python.
 - **Deliberation is on triples, and a number is not special** — how a domain describes its
   world, exact numbers, ranges or classes, is decided inside the domain, and its actions'
   preconditions and effects are described the same way; the core compares triples and
