@@ -306,6 +306,10 @@ it is a record wearing a bullet.
   what it predicts of it, calls `pursuit.top_up` for its desire so a claim arriving is a want
   arriving and not a want on the next tick; what it writes is the instance and the prediction,
   and what stands afterwards is the road's, in deliberation's family, about that debt.
+- **What was foreseen may arrive early, and the present outranks the instant** — a want
+  minted at a predicted crossing or lapse says *hold at T* and its plan is placed to land at
+  T, so when the holder presented an hour early the serve was placed at the deadline; a
+  cluster unmet now whose want still names an instant is re-minted at none, same name.
 - **One road derives every want, and a package writes instances and predictions** — a desire
   is one and universal, its met-test's violation rows are the instances in trouble and each
   prediction's start is when, a want is minted per scope of them, and the ledger's own road was
