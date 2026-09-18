@@ -160,29 +160,59 @@ class Judgments:
                                        urgency=1.0 if violated else 0.0,
                                        state="unmet" if violated else "met")
         #  A ROOT WITH WANTS UNDER IT IS PRESENTED AS THEM — one judgment per want, each
-        #  carrying the root's own measure under the want's name. Several where the witnesses
-        #  fell in several scopes (one-road-derives-every-want); one everywhere shipped.
+        #  carrying the root's own measure under the want's name, and ITS OWN STATE: a want's
+        #  met-test is the root's instantiated at its witness, so a want about one tank reads
+        #  met when that tank is in range, whatever the others read. Several where the
+        #  witnesses fell in several scopes (one-road-derives-every-want); one everywhere shipped.
         for root, wants in children.items():
             if root not in seen:
                 continue
             base = seen.pop(root)
             for want in wants:
-                presented = (replace(spoken_for[want.uri], derived_from=root)
-                             if want.uri in spoken_for
-                             else replace(base, uri=want.uri, derived_from=root))
+                if want.uri in spoken_for:
+                    presented = replace(spoken_for[want.uri], derived_from=root)
+                else:
+                    presented = replace(base, uri=want.uri, derived_from=root)
+                    #  THE STATE IS THE WANT'S OWN where its shape says met — its instance is
+                    #  in range, whatever the root's others read — and the root's word
+                    #  otherwise, since the choir's words are finer than a shape's two
+                    #  (`stale`, `unmeasured`); the MEASURE stays the root's either way, and
+                    #  met-and-urgent is a true situation (desire.md).
+                    own = self._own_state(want.uri)
+                    if own == "met" or (own == "unmet" and presented.state == "met"):
+                        presented = replace(presented, state=own)
                 if want.holds_at:
                     presented = self._at_instant(
-                        presented, root, datetime.fromisoformat(want.holds_at),
+                        presented, want.uri, datetime.fromisoformat(want.holds_at),
                         datetime.fromisoformat(want.derived_at) if want.derived_at else None, now)
                 seen[want.uri] = presented
         return sorted(seen.values(), key=lambda g: -g.urgency)
 
-    def _at_instant(self, row: Judgment, root: str, holds_at: datetime, since: datetime | None,
+    def _own_state(self, want: str) -> str | None:
+        """What a derived want's OWN met-test says of the world now — `met` or `unmet` — or
+        None where it carries none of its own and is judged as its root is (a want minted
+        before wants carried one). The shape lives in the want's graph, the agent's own."""
+        rows = bindings(self._agent.desires.query_union(
+            f"SELECT ?s WHERE {{ <{want}> orexis:metWhen ?s . FILTER(?s != <{want}>) }} LIMIT 1"))
+        if not rows or not rows[0]["s"].startswith(want):
+            return None
+        try:
+            text = self._unmet_select(want, rows[0]["s"])
+            violated = bool(bindings(self._agent.beliefs.query_over(
+                text, *self._agent.beliefs.public_graphs(), *self._agent.beliefs.recorded_graphs())))
+        except Exception as exc:                                    # noqa: BLE001
+            log.error("%s: could not judge %s by its own shape: %s", self._agent.id, want, exc)
+            return None
+        return "unmet" if violated else "met"
+
+    def _at_instant(self, row: Judgment, node: str, holds_at: datetime, since: datetime | None,
                     now: datetime | None) -> Judgment:
         """A want met AT an instant, as presented (#619): its room is TIME — the stretch from
         its derivation to the instant, the fraction run being its urgency, never less than
         the root's own — and it reads met exactly where the newest prediction says the
-        reading still holds at the instant, unmet where it says it will have crossed."""
+        reading still holds at the instant, unmet where it says it will have crossed. The
+        crossing is read off the want's OWN met-test (`node`), so a want about one tank is
+        not held to another's prediction."""
         from orexis_agent_deliberation import pursuit
         now = now or clock.now()
         urgency = row.urgency
@@ -193,7 +223,7 @@ class Judgments:
         if state == "met":
             #  The newest prediction, from the reading in hand: still crossing by the instant
             #  is unmet; a reading a dose has lifted predicts a later crossing, and that is met.
-            found = pursuit.crossing_row_of(self._agent, root)
+            found = pursuit.crossing_row_of(self._agent, node)
             state = "unmet" if found is not None and found[0] <= holds_at else "met"
             #  A want nobody's row dates — an asserted one the kernel lifts — takes the instant
             #  of the reading the crossing was predicted from, which is what a pass for it

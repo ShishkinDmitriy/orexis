@@ -51,11 +51,13 @@ log = logging.getLogger("pursuit")
 #  of its own, a lifetime and a definition of done: bound `orexis:AtEnd`, `prov:wasDerivedFrom`
 #  the root, minted here the first time the root reads unmet and withdrawn when its plan
 #  finishes or it reads met with nothing standing for it
-#  (an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it). It POINTS at the root's
-#  met-test, avoided state and estimate — one owner each — and restates only the root's
-#  address, `orexis:about`, which is what the menu joins a want by. The container presents it
-#  in the root's place with the root's own measure (`Agent.pursuing`), so a keeper's verdict,
-#  a bidder's lookup and a mark by either name meet the same want.
+#  (an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it). It CARRIES the root's
+#  met-test instantiated at its witness — the same shape, targeting the one instance in
+#  trouble, with the blocks about what the want is about (`narrowed`) — POINTS at the root's
+#  avoided state and estimate, one owner each, and restates the root's address,
+#  `orexis:about`, which is what the affordances join a want by. The container presents it in
+#  the root's place with the root's own measure and its own state (`Agent.pursuing`), so a
+#  keeper's verdict, a bidder's lookup and a mark by either name meet the same want.
 
 
 def handed(agent, judgment):
@@ -401,16 +403,31 @@ def mint(agent, root: str, holds_at: datetime | None = None, about: tuple = (),
     said = agent.desires.query_union(f"""
 SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
   FILTER(?p IN (orexis:metWhen, orexis:unmetWhen, orexis:estimates, orexis:about)) }}""")
+    met_test = None
     for sol in said.get("results", {}).get("bindings", []):
         if sol["o"]["type"] == "bnode":
             log.warning("%s states its %s inline; it is pursued itself", root.rsplit("#", 1)[-1],
                         sol["p"]["value"].rsplit("#", 1)[-1])
             return None
         #  WHAT IT IS ABOUT is the witnesses' where the shape named them per block, and the
-        #  desire's whole where it did not; the met-test and the rest are pointed at as ever.
+        #  desire's whole where it did not; the avoided state and the estimate are pointed at
+        #  as ever, and the met-test is carried, instantiated, below.
         if sol["p"]["value"].endswith("#about"):
             continue
+        if sol["p"]["value"].endswith("#metWhen"):
+            met_test = sol["o"]["value"]
+            continue
         points_said.append(sol)
+    #  THE MET-TEST IS THE DESIRE'S INSTANTIATED AT THE WITNESS: carved from where the root's
+    #  shape lives and narrowed to this cluster — the instance as its target, the blocks about
+    #  what the want is about — and written into the want's own graph under its own name, so
+    #  the want is judged on its instance and a plan for one tank is not refused for another's.
+    shape_lines: tuple = ()
+    points = [(sol["p"]["value"], sol["o"]["value"]) for sol in points_said]
+    if met_test is not None:
+        own = child + ".met"
+        shape_lines = narrowed(agent, met_test, own, instance, abouts)
+        points.append((OREXIS_MET_WHEN, own))
 
     labels = bindings(agent.desires.query_union(
         f"SELECT ?l WHERE {{ <{root}> rdfs:label ?l }} LIMIT 1"))
@@ -432,10 +449,55 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
         uri=child, holder=agent.me.uri, desire=root, label=label, ends=ends,
         holds_at=holds_at.isoformat() if holds_at is not None else None,
         derived_at=clock.now().isoformat() if holds_at is not None else None,
-        about=abouts,
-        points=tuple((sol["p"]["value"], sol["o"]["value"]) for sol in points_said)))
+        about=abouts, points=tuple(points), shape=shape_lines))
     log.info("%s reads unmet: pursuing %s", root.rsplit("#", 1)[-1], child.rsplit("#", 1)[-1])
     return child
+
+
+OREXIS_MET_WHEN = "http://example.org/orexis#metWhen"
+
+
+def narrowed(agent, shape: str, own: str, instance: str | None, abouts: tuple) -> tuple[str, ...]:
+    """The desire's met-test as THIS want's: the same shape under the want's own name, its
+    target the one instance the want is about where the cluster had one, and only the property
+    blocks and `sh:sparql` constraints about what the want is about — the universal instantiated
+    at its witness (a-desire-is-universal-and-a-want-is-existential). A block or constraint
+    saying nothing about what it is about is kept, as is one about `sh:this`, which is the
+    instance. The triples, as N-Triples lines the collection writes into the want's graph.
+
+    Carved from public knowledge and the agent's own graphs, asked by classification, where a
+    root's shape lives; a shape that names its one node (`sh:targetNode`) narrows to the same
+    node, so sensing's wants and the greenhouse's keep their target and lose only the blocks
+    they are not about.
+    """
+    from rdflib import Graph, URIRef
+    from rdflib.namespace import SH
+
+    from .conformance import graph_from
+
+    about_p = URIRef("http://example.org/orexis#about")
+    targets = {SH.targetNode, SH.targetClass, SH.targetSubjectsOf, SH.targetObjectsOf, SH.target}
+    cbd = graph_from(agent.beliefs, *agent.beliefs.public_graphs(),
+                     *agent.beliefs.recorded_graphs()).cbd(URIRef(shape))
+    keep = {URIRef(a) for a in abouts}
+    out, dropped = Graph(), Graph()
+    for p, o in cbd.predicate_objects(URIRef(shape)):
+        if p in targets and instance is not None:
+            continue
+        if p in (SH.property, SH.sparql):
+            about = cbd.value(o, about_p)
+            if about == SH.this:
+                about = URIRef(instance) if instance is not None else None
+            if keep and about is not None and about not in keep:
+                dropped += cbd.cbd(o)
+                continue
+        out.add((URIRef(own), p, o))
+    if instance is not None:
+        out.add((URIRef(own), SH.targetNode, URIRef(instance)))
+    for s, p, o in cbd:
+        if s != URIRef(shape) and (s, p, o) not in dropped:
+            out.add((s, p, o))
+    return tuple(line for line in out.serialize(format="nt").splitlines() if line.strip())
 
 
 def withdraw(agent, child: str) -> None:
