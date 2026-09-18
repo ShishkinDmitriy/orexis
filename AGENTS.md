@@ -797,6 +797,12 @@ fails if pyshacl ever entails something the closure does not. See
   same family as the empty-result trap above, arriving through arithmetic and aggregation: measure an unfamiliar operation on a
   literal before building a column on it, and pin what you measured — `tests/test_desires.py`
   does, so the day the engine grows the operation the guard says so.
+- **`build_agent` does not run the boot gate.** The fixture patches `validate_agent` out of
+  the boot unless a test passes `validating=True`: the gate raises or passes and changes
+  nothing else, it cost two seconds of every boot, and it was paid about 250 times a run to
+  say the same thing about a store built from the ratified files. A test that expects
+  `BeliefsInvalid` from a built agent gets none — say `validating=True`, or build the
+  `Agent` yourself as `test_shapes` and `test_hanoi` do.
 - **Stray host processes are the usual cause of doubled data.** A leaked publisher from an
   earlier run keeps writing to the same topic, and both readings get ingested. `podman compose
   down` removes a society deterministically, which is half of why deployment is containers.
