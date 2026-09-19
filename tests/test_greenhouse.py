@@ -17,6 +17,7 @@ import pytest
 from conftest import genesis_store
 from agent import genesis, runtime
 from orexis_agent_deliberation import relevance as R
+from orexis_agent_deliberation.scope_actions import scopes
 from orexis_agent_deliberation.planner import Planner
 from orexis_agent_progression.store import Raw
 
@@ -113,7 +114,7 @@ def test_both_regimes_are_one_scope_which_is_the_predicate_level_limit(monkeypat
     _, apart = _grower(monkeypatch, dries=False)
     _, coupled = _grower(monkeypatch, dries=True)
     for store, regime in ((apart, "independent"), (coupled, "coupled")):
-        parts = R.scopes(R.actions_of(store.query), R.rule_edges())
+        parts = scopes(R.actions_of(store.query), R.rule_edges())
         assert len(parts) == 1, f"{regime}: {len(parts)} scopes"
 
 
