@@ -675,7 +675,7 @@ def test_no_reader_names_a_per_agent_graph():
     readers = ["packages/orexis-agent-deliberation/planner.py", "packages/orexis-agent-deliberation/desires.py",
                "packages/orexis-agent-deliberation/imaginarium.py", "packages/orexis-agent-deliberation/pursuit.py",
                "packages/orexis-agent-deliberation/judge_desires.py", "packages/orexis-agent-deliberation/derive_wants.py",
-               "packages/orexis-agent-deliberation/scoping_actions.py",
+               "packages/orexis-agent-deliberation/scope_actions.py",
                "packages/orexis-agent-deliberation/afforder.py", "packages/orexis-agent-deliberation/affordances.py",
                "packages/orexis-agent-deliberation/reviser.py", "agent/judgments.py", "agent/validate.py"]
     offenders = []

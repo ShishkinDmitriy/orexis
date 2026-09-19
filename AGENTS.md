@@ -326,7 +326,7 @@ it is a record wearing a bullet.
   the judgments as SHACL reports to a working graph, replaced whole; `derive_wants` mints the
   wants from that graph and nothing in hand; each is held to a snapshot of the store it
   leaves, and the eleven cases leave the wants the one-function road left. A third,
-  `scoping_actions`, writes the scopes at boot, so the derivation reads no action.
+  `scope_actions`, writes the scopes at boot, so the derivation reads no action.
 - **What was foreseen may arrive early, and the present outranks the instant** — a want
   minted at a predicted crossing or lapse says *hold at T* and its plan is placed to land at
   T, so when the holder presented an hour early the serve was placed at the deadline; a

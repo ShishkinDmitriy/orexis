@@ -1,6 +1,6 @@
 """The scopes in the store, as SPARQL and nothing else.
 
-`scoping_actions` hands the partition here and it is written as scopes; `derive_wants`
+`scope_actions` hands the partition here and it is written as scopes; `derive_wants`
 reads it back with one SELECT. This module owns the scope graph: its name for eyes
 (`scopes/<agent>`), its classification with owner, and that it is replaced whole on every run,
 as `judgments.py` owns the judgment graph. A reader that means the graph asks its class.

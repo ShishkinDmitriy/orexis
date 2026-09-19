@@ -122,7 +122,7 @@ def _clusters(agent, witnesses: list) -> list[list]:
     concept exists for. A witness naming no property, or one no scope holds, joins every group
     it could belong to, which with one scope is the one group.
 
-    THE SCOPES ARE READ, NEVER COMPUTED: `scoping_actions` wrote them (scoping-actions),
+    THE SCOPES ARE READ, NEVER COMPUTED: `scope_actions` wrote them (scope-actions),
     and a store holding no scope graph is refused rather than clustered as one scope — the
     loud direction, since one want about everything is what a missing partition would have
     quietly minted.
@@ -135,7 +135,7 @@ def _clusters(agent, witnesses: list) -> list[list]:
     from .scopes import find_scopes
     scopes = find_scopes(agent.beliefs)
     if scopes is None:
-        raise RuntimeError(f"{agent.id}: the store holds no scope graph — scoping_actions has not run")
+        raise RuntimeError(f"{agent.id}: the store holds no scope graph — scope_actions has not run")
     groups: dict = {}
     loose = []
     for w in witnesses:

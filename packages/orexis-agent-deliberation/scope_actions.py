@@ -1,6 +1,6 @@
-"""`scoping_actions`: the actions an agent holds, clustered into the scopes their effects
+"""`scope_actions`: the actions an agent holds, clustered into the scopes their effects
 join, written to the store — the function that makes the scope partition data
-(scoping-actions). After the call, the store says which predicates some one action or
+(scope-actions). After the call, the store says which predicates some one action or
 derivation reads or writes together, and which scope each predicate and each action is in;
 `derive_wants` clusters a desire's results by it and reads no action.
 
@@ -17,10 +17,10 @@ import logging
 from . import relevance
 from .scopes import save_scopes
 
-log = logging.getLogger("scoping_actions")
+log = logging.getLogger("scope_actions")
 
 
-def scoping_actions(agent) -> None:
+def scope_actions(agent) -> None:
     """Cluster every action the store holds into scopes and write them, replacing what stood.
 
     An action is in the scope its reads and writes lie in — one by construction, since an
