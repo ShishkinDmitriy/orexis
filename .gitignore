@@ -46,7 +46,7 @@ firmware/*/include/config.h
 # same again for the dashboard's server certificate
 infra/grafana/certs/
 # generated per world by `orexis-dashboards`
-infra/grafana/dashboards/*/
+infra/grafana/dashboards/
 
 # agent worktrees — a live checkout of this repo inside itself
 .claude/worktrees/

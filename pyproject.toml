@@ -53,7 +53,7 @@ dependencies = [
 # for an output format nobody here can eyeball, since it is easy to emit YAML that
 # parses and that the tool then rejects. Rendering to SVG additionally needs the
 # graphviz BINARY, which pip cannot install and no test needs.
-dev = ["pytest>=8", "import-linter>=2", "wireviz>=0.4", "pytest-xdist>=3"]
+dev = ["pytest>=8", "import-linter>=2", "wireviz>=0.4", "pytest-xdist>=3", "pyshacl>=0.30"]
 
 [project.scripts]
 # The agent. One process, one agent, told only its own id.
