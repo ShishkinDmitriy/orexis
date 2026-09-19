@@ -19,8 +19,8 @@
 #
 # Green here means "nothing obviously broke". It does not mean a world runs.
 #
-# ON THE PULL REQUEST, and not on every push as well: a private repository's minutes are
-# metered, and a push that has a pull request open ran the same suite twice. The sovereign's
+# ON THE PULL REQUEST, and not on every push as well: a push that has a pull request open
+# ran the same suite twice, and the minutes were metered while the repository was private. The sovereign's
 # flow is push the draft, wait for this, mark it ready (judge-desires-then-derive-wants's
 # session); a push with no pull request is a branch nobody has asked about yet. A newer push
 # cancels the run in progress on the same branch, for the same reason.
@@ -35,22 +35,26 @@ concurrency:
   group: gates-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
+#
+# IN PARALLEL JOBS, since the sovereign asked whether the packages' tests could run apart from
+# the rest: the worlds and the two file gates in one job, the root tests in four shards of
+# files dealt round-robin so the shards are even, the packages' own tests in one more. Each
+# job installs on a runner of its own — a minute, cached — and the wall time is the slowest
+# shard's rather than the sum; the minutes are free on a public repository. One job in sequence
+# took seven and a half minutes on the same runner.
+
 jobs:
-  gates:
+  worlds:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"      # what the agent image runs; see Containerfile
           cache: pip
-
       # Every package is its own distribution (every-package-is-a-project), so every one is
-      # installed, found by looking as the loader finds them; `.[dev]` alone left 24 of 25
-      # uninstalled once the packages became projects, and the step went stale unnoticed
-      # while the workflow was disabled.
+      # installed, found by looking as the loader finds them.
       - name: install
         run: |
           python -m pip install --upgrade pip
@@ -73,23 +77,6 @@ jobs:
             echo "::endgroup::"
           done
 
-      # IN TWO HALVES PLUS THE PACKAGES, the Pi's own recipe: the whole suite at `-n auto` was
-      # killed for memory on a 16 GB machine, the halves at `-n auto` were not. The repository
-      # is public, so the runner is the 4-vCPU, 16 GB one and the halves take every core; at
-      # two workers, when it was private and the runner had 7 GB, a run took ten to thirteen
-      # minutes. The packages' tests are named, not reached through `pytest tests`: a package
-      # carries its own beside its code, and the halves split the root tree alone.
-      - name: pytest, first half
-        run: |
-          N=$(ls tests/test_*.py | wc -l); H=$(( (N + 1) / 2 ))
-          pytest -q -n auto $(ls tests/test_*.py | head -$H)
-      - name: pytest, second half
-        run: |
-          N=$(ls tests/test_*.py | wc -l); H=$(( (N + 1) / 2 ))
-          pytest -q -n auto $(ls tests/test_*.py | tail -n +$((H + 1)))
-      - name: pytest, the packages' own
-        run: pytest -q -n auto packages
-
       # The layering the flat layout gave up a packaging split to assert: onboarding may import
       # agent, agent may never import onboarding, and no capability or transport may touch
       # onboarding at all. See knowledge/decisions/repository-layout.md.
@@ -100,3 +87,45 @@ jobs:
       # that only one machine can run is not a gate.
       - name: OKF bundle
         run: ./tools/validate-okf.sh knowledge
+
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" $(ls -d packages/*/)
+      # THE ROOT TESTS IN FOUR SHARDS, the files dealt round-robin — the first, fifth, ninth
+      # to the first shard and so on — so a slow file's neighbours land elsewhere; every core
+      # of the runner inside each. The Pi's recipe is two halves, because the whole suite at
+      # `-n auto` was killed for memory there; a quarter at every core is well inside 16 GB.
+      - name: pytest, shard ${{ matrix.shard }} of 4
+        run: pytest -q -n auto $(ls tests/test_*.py | awk 'NR % 4 == ${{ matrix.shard }} % 4')
+
+  packages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" $(ls -d packages/*/)
+      # The packages' own tests are named, not reached through `pytest tests`: a package
+      # carries its own beside its code, and the shards above split the root tree alone.
+      - name: pytest, the packages' own
+        run: pytest -q -n auto packages
