@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from orexis_agent_deliberation import pursuit, trace
-from orexis_agent_deliberation.judge_desires import judge_desires
+from orexis_agent_deliberation.derive_wants import derive_wants
 from orexis_agent_progression.ontology import REPREDICT
 from test_greenhouse import AIR, COMFORT, HEATING, VENTING, _comfort, _grower, _outside_as_periods
 
@@ -45,14 +45,14 @@ def test_the_bed_crosses_toward_a_cold_outside_at_the_stated_rate(monkeypatch):
     ladder the package predicts at: no crossing at all."""
     agent, _ = _grower(monkeypatch, moisture=0.45, air=20.0, outside=8.0)
     agent.tell(REPREDICT)
-    judge_desires(agent.beliefs.engine)   # a crossing is what the last judging found
+    derive_wants(agent.beliefs.engine)   # a crossing is what the last judging found
     crossing = pursuit.crossing_of(agent, COMFORT)
     assert crossing is not None
     assert abs((crossing - datetime.now(timezone.utc)).total_seconds() - 1 * HOURS) < 120
 
     warm, _ = _grower(monkeypatch, moisture=0.45, air=20.0, outside=21.0)
     warm.tell(REPREDICT)
-    judge_desires(warm.beliefs.engine)
+    derive_wants(warm.beliefs.engine)
     soil_only = pursuit.crossing_of(warm, COMFORT)
     assert soil_only is None, "the soil crosses days out, beyond the ladder: nothing predicted, nothing foreseen"
 
@@ -98,7 +98,7 @@ def test_the_drift_reads_the_surroundings_holding_at_the_instant(monkeypatch):
                         (21.0, now + timedelta(minutes=30), now + timedelta(hours=6)))
     agent.tell(REPREDICT)             # the forecast is a premise the drift reads: predict again
     root = _comfort(agent)
-    judge_desires(agent.beliefs.engine)
+    derive_wants(agent.beliefs.engine)
     assert pursuit.crossing_of(agent, COMFORT) is None, "the predictions read the forecast holding at their instant: the bed warms first"
     plan = agent.deliberator.decide(root)
     assert plan is None or plan.steps == (), "at the instant the forecast has warmed the bed: nothing to do"

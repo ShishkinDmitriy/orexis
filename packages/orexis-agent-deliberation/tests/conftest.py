@@ -68,10 +68,9 @@ def stand_in(case: Path, text: str | None = None):
         orexis:CatalogueGraph rdfs:subClassOf orexis:Graph . orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
         orexis:PredictionGraph rdfs:subClassOf orexis:Graph . orexis:DesireGraph rdfs:subClassOf orexis:Graph .
         orexis:WantGraph rdfs:subClassOf orexis:Graph . deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
-        deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
         deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
         orexis:OntologyGraph rdfs:subClassOf orexis:Graph . orexis:StateGraph rdfs:subClassOf orexis:Graph .
-        deliberation:PursuedGraph rdfs:subClassOf orexis:Graph . deliberation:JudgmentGraph rdfs:subClassOf orexis:Graph .
+        deliberation:PursuedGraph rdfs:subClassOf orexis:Graph .
         deliberation:ScopeGraph rdfs:subClassOf orexis:Graph . }} }}""")
     st.close_catalogue()      # a case's rows say one class each; every kind stands on them now, as on a volume's
     desires, wants = Desires(st), Wants(st)

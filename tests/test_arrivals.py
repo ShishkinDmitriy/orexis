@@ -89,14 +89,17 @@ def test_a_host_that_foresees_the_crossing_plans_the_refill_from_the_present(mon
     _promise(agent, "tomato", "j2", 1.0, now + timedelta(hours=2))
     open_round_for(agent, "supplier", seconds=60.0)
     #  EVERY DESIRE IS DERIVED THE MOMENT A CLAIM ARRIVES (judge-desires-then-derive-wants):
-    #  the stock root was judged met at the present and unmet at the crossing, the want stands
-    #  already, and the container presents the root under it.
-    from orexis_agent_deliberation.judgments import find_judgments
+    #  the stock desire reads met at the present and unmet at the crossing, the want stands
+    #  already, and the container presents the desire under it.
+    from orexis_agent_deliberation.judging import shapes_in, read_ahead, read_now
     child = _stock(agent, derived=True)
     root = child.derived_from
-    judged = [r for r in find_judgments(agent.beliefs.engine)[agent.me.uri] if r["desire"] == root]
-    assert next(r["met"] for r in judged if not r.get("at")) == "true", "met at the present"
-    assert any(r["met"] == "false" for r in judged if r.get("at")), "unmet at a crossing"
+    engine, shapes = agent.beliefs.engine, None
+    from orexis_agent_deliberation.judging import _one
+    holder, shape = _one(engine, root)
+    shapes = shapes_in(engine)
+    assert read_now(engine, shapes, holder, root, shape, clock.now()) == [], "met at the present"
+    assert read_ahead(engine, shapes, holder, root, shape, clock.now()), "unmet at a crossing"
     plan = agent.deliberator.decide(child)
     assert plan is not None and [s.action for s in plan.steps] == [ACQUIRING], plan
     assert plan.placed_at is None, "found from the present, where the round is: taken now"

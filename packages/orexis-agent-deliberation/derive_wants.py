@@ -1,20 +1,25 @@
-"""`derive_wants`: the wants every desire's judgments imply, minted under their desires — the
-second of the road's two functions (judge-desires-then-derive-wants), reading the judgment
-graph with one select and nothing in hand — and the minting beside it: which results cluster
-into one want (a scope), what the want is named, and the desire's met-test narrowed to the
-want's.
+"""`derive_wants`: every desire judged, and a want minted for every cluster of what its
+met-test reads unmet (judge-desires-then-derive-wants). ONE FUNCTION and one contract — after
+the call the store holds every want its desires imply, and NOTHING STANDS BETWEEN A DESIRE AND
+A WANT.
 
-A FUNCTION OVER THE STORE, like the one before it: handed the engine, a `pyoxigraph.Store`,
-and nothing else. The judgments say what each desire read and whose they are, the scope graph
-says which results cluster, the graphs of desires say what a desire is about and what its
-met-test is, the graphs of wants say what already stands, and the pick record says how long a
-plan is given after its instant. The present is the clock's, the one read outside the store.
+There was a third thing once, a `deliberation:Judgment`: what a met-test read, per desire per
+instant, written to a working graph and read back by the minting and by whoever wanted a
+crossing. It is gone, and everything it carried a want carries — which instance is in trouble,
+what the trouble is about, which way it broke (`orexis:violationIs`) and the instant it must
+hold at. What a met-test reads is a WITNESS, computed where it is needed and stored nowhere
+(`judging.py`): the answer is about a situation, and the situation has moved by the next pass.
 
-After the call, every want the store's judgments imply stands in the store; what was minted
-this time comes back for the caller that asked whether its own want was re-minted. A caller
-holding a projection of the wants refreshes it on a non-empty answer — announcing a write is
-the repository's contract, and a road that writes past the repository leaves the refresh to
-whoever holds one.
+A FUNCTION OVER THE STORE: handed the engine, a `pyoxigraph.Store`, and nothing else. The
+judging says what each desire reads and whose it is, the scope graph says which witnesses
+cluster, the graphs of desires say what a desire is about and what its met-test is, the graphs
+of wants say what already stands, and the pick record says how long a plan is given after its
+instant. The present is the clock's, the one read outside the store.
+
+What was minted this time comes back for the caller that asked whether its own want was
+re-minted. A caller holding a projection of the wants refreshes it on a non-empty answer —
+announcing a write is the repository's contract, and a function that writes past it leaves the
+refresh to whoever holds one.
 """
 
 from __future__ import annotations
@@ -29,7 +34,7 @@ from orexis_agent_progression.keeper import PATIENCE_S
 from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import NAMESPACES, bind, instant, rows
 
-from .judgments import Witness, find_judgments
+from .judging import Witness, desires_in, read_ahead, read_now, shapes_in
 from .want import Want
 from .wants import save_want
 
@@ -77,71 +82,49 @@ ORDER BY ?w"""
 
 
 def derive_wants(store: ox.Store) -> list[str]:
-    """Mint a want under every desire for every cluster of its judgments' results that has
-    none, and return what was minted — the second of the road's two functions, reading the
-    judgments `judge_desires` wrote with one select and nothing in hand
-    (judge-desires-then-derive-wants). Run whenever a pass stands on a root or on any want
-    under it, and by a package that has just written an instance, since a claim arriving
-    should be a want arriving and not a want on the next tick. A package that calls this
-    mints nothing; it says an instance is there and the road does the rest
-    (one-road-derives-every-want).
+    """Mint a want under every desire for every cluster of what its met-test reads unmet, and
+    return what was minted. Run whenever a pass stands on a desire or on any want under it,
+    and by a package that has just written an instance, since a claim arriving should be a
+    want arriving and not a want on the next tick. A package that calls this mints nothing; it
+    says an instance is there and this does the rest (one-road-derives-every-want).
 
-    IT IS THE DECOMPOSITION OF THE JUDGMENTS AND NOTHING ELSE. `judge_desires` judges each
-    desire at the present and at every instant a prediction reaches, and writes what it read;
-    this turns those judgments into wants, and asks no question the judgments do not answer.
-    A FORESIGHT once stood here — a per-agent pick that discarded a foreseen failure further
-    out than N seconds — and it is gone: the judgments already say which instants fail and
-    when, and how far ahead the agent sees is said by the drifts, each declaring the horizons
-    it predicts at. A second number gating the first was an on/off switch wearing a horizon's
-    name, and no shipped world set it.
+    IT IS THE DECOMPOSITION OF WHAT THE MET-TESTS READ. A desire is judged at the present and,
+    where it reads met there, at every instant a prediction reaches; what comes back is
+    witnesses, and a want is minted per cluster of them. Nothing is written between the two.
 
     The instant is EACH CLUSTER'S OWN. A desire unmet at the present derives wants with none.
-    One met at the present derives them at the instants it is judged unmet — and two debts
-    cross at two deadlines, so the second is not filtered away by the first's; each cluster
-    holds at its earliest result. A desire met at every instant judged derives NOTHING: there
-    is nothing to pursue, and a want about everything the desire is about is minted only for a
-    desire unmet at the present with no result, which is what every want was before the road.
+    One met at the present derives them at the instants it reads unmet — and two debts cross
+    at two deadlines, so the second is not filtered away by the first's; each cluster holds at
+    its earliest witness. A desire met at every instant read derives NOTHING: there is nothing
+    to pursue, and a want about everything the desire is about is minted only for a desire
+    unmet at the present with no witness, which is what every want once was.
 
-    WHOSE, FROM THE JUDGMENT: each judgment graph says whose it is, so the wants a holder's
-    judgments imply are written to graphs that holder owns. One agent, one volume, so the
-    holder is the agent.
+    WHOSE, FROM THE DESIRE: the graph a desire lives in says who holds it, so the wants it
+    implies are written to graphs that holder owns. One agent, one volume, so the holder is
+    the agent; a store holding several agents' desires derives for each.
     """
     now = clock.now()
+    shapes = shapes_in(store)
     minted: list[str] = []
-    for holder, judged in sorted(find_judgments(store).items()):
-        by_desire: dict[str, list[dict]] = {}
-        for row in judged:
-            by_desire.setdefault(row["desire"], []).append(row)
-        for root, judgments in sorted(by_desire.items()):
-            minted += _derive_under(store, holder, root, judgments, now)
+    for holder, desire, shape in desires_in(store, now):
+        #  WHAT IT READS NOW, and what it reads ahead only where now is met: a desire in
+        #  trouble already is pursued as it stands, and a crossing is a thing in the future.
+        present = read_now(store, shapes, holder, desire, shape, now)
+        if present is None:
+            continue
+        unmet_now = bool(present)
+        found = present if unmet_now else read_ahead(store, shapes, holder, desire, shape, now)
+        if not found:
+            continue
+        minted += _derive_under(store, holder, desire, found, unmet_now, now)
     return minted
 
 
-def _derive_under(store: ox.Store, holder: str, root: str, judged: list[dict],
-                  now: datetime) -> list[str]:
-    """The wants one desire's judgments imply, minted where none stands. `judged` are the
-    judgment graph's rows: one per result, a met judgment's row naming no focus."""
-    present = [r for r in judged if not r.get("at")]
-    if not present:
-        return []
-    unmet_now = present[0]["met"] != "true"
-    if unmet_now:
-        found = [Witness(instance=r["focus"], constraint=r["k"], about=r.get("about"), at=now)
-                 for r in present if r.get("focus")]
-    else:
-        #  MET NOW, AND JUDGED UNMET LATER: each (instance, constraint) at the FIRST instant
-        #  it fails. Every instant here is one `judge_desires` was asked about, which is every
-        #  instant a prediction reaches — so what bounds the lookahead is what the drifts
-        #  predict, and nothing filters them again.
-        seen: dict[tuple[str, str], Witness] = {}
-        for r in sorted((r for r in judged if r.get("at") and r["met"] != "true" and r.get("focus")),
-                        key=lambda r: r["at"]):
-            seen.setdefault((r["focus"], r["k"]), Witness(
-                instance=r["focus"], constraint=r["k"], about=r.get("about"),
-                at=datetime.fromisoformat(r["at"])))
-        found = sorted(seen.values(), key=lambda w: (w.at, w.instance, w.constraint))
-        if not found:
-            return []
+def _derive_under(store: ox.Store, holder: str, root: str, found: list[Witness],
+                  unmet_now: bool, now: datetime) -> list[str]:
+    """The wants one desire's witnesses imply, minted where none stands. `found` is what its
+    met-test read: at the present where it is unmet now, and otherwise each witness at the
+    earliest foreseen instant it reads unmet."""
     #  ONE WANT PER SCOPE OF WHAT IS IN TROUBLE, and per INSTANCE: the results clustered by
     #  which of them some action can move together, and a want minted per cluster about
     #  exactly those, holding at the earliest instant among them. Every shipped world is one
@@ -174,7 +157,11 @@ def _derive_under(store: ox.Store, holder: str, root: str, judged: list[dict],
             log.info("%s: what was foreseen at %s has arrived", child.rsplit("#", 1)[-1],
                      standing[child])
         at = None if unmet_now else min((w.at for w in cluster), default=None)
-        child = mint(store, holder, root, said, holds_at=at, about=about, instance=instance)
+        #  ONE SIDE OR NONE: the witnesses of a cluster agree where the same block found them
+        #  all, and two sides in one cluster is a want about two troubles, which says neither.
+        sides = {w.side for w in cluster if w.side}
+        child = mint(store, holder, root, said, holds_at=at, about=about, instance=instance,
+                     side=next(iter(sides)) if len(sides) == 1 else None)
         if child is not None:
             minted.append(child)
     return minted
@@ -257,7 +244,7 @@ def _targets_one_node(store: ox.Store, root: str) -> bool:
 
 
 def mint(store: ox.Store, holder: str, root: str, said=None, holds_at: datetime | None = None,
-         about: tuple = (), instance: str | None = None) -> str | None:
+         about: tuple = (), instance: str | None = None, side: str | None = None) -> str | None:
     """Derive the want pursued under `root` and write it to the pursued graph, named by
     `name_of`. None, and the root stays the goal, where the root states its met-test inline:
     a blank node has no name another graph could point at, and copying it would make a second
@@ -312,7 +299,7 @@ def mint(store: ox.Store, holder: str, root: str, said=None, holds_at: datetime 
         uri=child, holder=holder, desire=root, label=label, ends=ends,
         holds_at=holds_at.isoformat() if holds_at is not None else None,
         derived_at=clock.now().isoformat() if holds_at is not None else None,
-        about=abouts, points=tuple(points), shape=shape_lines))
+        about=abouts, points=tuple(points), shape=shape_lines, side=side))
     log.info("%s reads unmet: pursuing %s", root.rsplit("#", 1)[-1], child.rsplit("#", 1)[-1])
     return child
 
@@ -345,7 +332,6 @@ def narrowed(store: ox.Store, shape: str, own: str, instance: str | None, abouts
     from rdflib import Graph, URIRef
     from rdflib.namespace import SH
 
-    from .judge_desires import shapes_in
 
     about_p = URIRef(OREXIS + "about")
     targets = {SH.targetNode, SH.targetClass, SH.targetSubjectsOf, SH.targetObjectsOf, SH.target}

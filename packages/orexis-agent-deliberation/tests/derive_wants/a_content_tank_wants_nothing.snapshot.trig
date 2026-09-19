@@ -6,11 +6,6 @@
 # Every tank inside its ranges, nothing foreseen: the road mints nothing.
 #
 # The clock stands at 2026-01-01T12:00:00Z when the road runs.
-#
-# THE JUDGMENTS AS `judge_desires` LEFT THEM on this situation (judge_desires/a_content_tank_wants_nothing.trig),
-# and the scopes `scope_actions` made of its levers: the desires, the scopes, whatever
-# stands, the judgment graph, and the catalogue that says what each is — no world, no
-# readings, no predictions, no levers. `derive_wants` reads the store and nothing in hand.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
@@ -22,21 +17,26 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
 
+GRAPH :world {
+  :tank1 a :Tank .
+  :tank2 a :Tank .
+}
+
 GRAPH :desires {
-  :in_range a sh:NodeShape ;
-      sh:property [ orexis:about :level ;
-          sh:minInclusive 10 ;
-          sh:path :level ] ;
-      sh:property [ orexis:about :temperature ;
-          sh:maxInclusive 30 ;
-          sh:path :temperature ] ;
-      sh:targetClass :Tank .
   :keeper orexis:holds :keeper.in_range .
   :keeper.in_range a orexis:Desire ;
-      orexis:about :level ;
-      orexis:about :temperature ;
-      orexis:metWhen :in_range ;
-      rdfs:label "every tank in range" .
+      rdfs:label "every tank in range" ;
+      orexis:about :level , :temperature ;
+      orexis:metWhen :in_range .
+  :in_range a sh:NodeShape ;
+      sh:targetClass :Tank ;
+      sh:property [ sh:path :level ; sh:minInclusive 10 ; orexis:about :level ] ;
+      sh:property [ sh:path :temperature ; sh:maxInclusive 30 ; orexis:about :temperature ] .
+}
+
+GRAPH :sensed {
+  :tank1 :level 20 ; :temperature 20 .
+  :tank2 :level 20 ; :temperature 20 .
 }
 
 GRAPH :scopes {
@@ -48,19 +48,12 @@ GRAPH :scopes {
   :temperature deliberation:inScope :keeper.scope.2 .
 }
 
-GRAPH :judgments {
-  :keeper.in_range.judgment a deliberation:Judgment ;
-      deliberation:judges :keeper.in_range ;
-      prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
-      sh:conforms true .
-}
-
+# What each graph IS, and when it holds — said once each, beside the data.
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph , orexis:Graph .
   :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
-  :judgments a deliberation:JudgmentGraph , orexis:WorkingGraph , orexis:Graph ;
-      orexis:arrivedBy orexis:Derived ;
-      orexis:beliefsOf :keeper .
+  :world a orexis:PublicGraph , orexis:Graph .
+  :sensed a orexis:StateGraph , orexis:BeliefGraph , orexis:Graph .
   :desires a orexis:DesireGraph , orexis:Graph .
   :scopes a deliberation:ScopeGraph , orexis:WorkingGraph , orexis:Graph ;
       orexis:arrivedBy orexis:Derived ;
@@ -70,8 +63,6 @@ GRAPH :catalogue {
 # --- WRITTEN (the first snapshot also holds the loader's own vocabulary stub) ---
 
 GRAPH :ontology {
-  deliberation:JudgmentGraph rdfs:subClassOf orexis:Graph ;
-      rdfs:subClassOf orexis:WorkingGraph .
   deliberation:PursuedGraph rdfs:subClassOf orexis:Graph ;
       rdfs:subClassOf orexis:WantGraph .
   deliberation:ScopeGraph rdfs:subClassOf orexis:Graph ;

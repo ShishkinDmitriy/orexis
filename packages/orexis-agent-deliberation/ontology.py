@@ -25,21 +25,6 @@ def pursued_graph(agent_id: str) -> str:
     return "http://example.org/orexis/graph/pursued/" + agent_id
 
 
-#  A JUDGMENT (judge-desires-then-derive-wants): what a desire's met-test read at an instant,
-#  in SHACL's words for a report, `deliberation:judges` the desire.
-JUDGMENT = DELIBERATION + "Judgment"
-JUDGES = DELIBERATION + "judges"
-CONSTRAINT = DELIBERATION + "constraint"
-
-
-def judgments_graph(holder: str) -> str:
-    """ONE holder's judgments, replaced whole on every run of `judge_desires`: a working
-    graph, read by `derive_wants` and by eyes, carried by no plan and recorded by nothing.
-    Named for the holder's local name, since the road is a function over the store and is
-    handed no id; a reader asks the class, and `save_judgments` drops by it."""
-    return "http://example.org/orexis/graph/judgments/" + holder
-
-
 #  A DERIVATION (scope-actions): one INSERT of one loaded rule, as the edge it makes. Written
 #  at every refresh of public knowledge, so the partition is a function of the store and not of
 #  the files — the actions are in the store already and the rules were not.

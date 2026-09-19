@@ -82,6 +82,8 @@ def save_want(engine, agent_id: str, want: Want) -> None:
              f' ; prov:generatedAtTime "{want.derived_at}"^^xsd:dateTime'
              if want.holds_at is not None else "")
     about = "".join(f" ; orexis:about <{a}>" for a in want.about)
+    #  WHICH WAY IT BROKE, where the met-test's block said so (`orexis:violationIs`).
+    side = f" ; orexis:violationIs <{want.side}>" if want.side else ""
     period = f' ; orexis:start "{clock.now().isoformat()}"^^xsd:dateTime' + (
         f' ; orexis:end "{want.ends}"^^xsd:dateTime' if want.ends else "")
     engine.update(f"""
@@ -92,7 +94,7 @@ WHERE  {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{graph}> ?p ?o .
 INSERT {{
   GRAPH <{graph}> {{
   <{want.holder}> orexis:holds <{want.uri}> .
-  <{want.uri}> a orexis:Want{timed}{about} ;
+  <{want.uri}> a orexis:Want{timed}{about}{side} ;
       prov:wasDerivedFrom <{want.desire}> ;
       rdfs:label {json.dumps(want.label)} .
   {points}
@@ -268,7 +270,7 @@ class Wants:
                 f'    FILTER(!BOUND(?owner) || ?owner = <{self._store.agent_uri}>)'
                 if self._store.agent_uri else "")
         rows = bindings(self._store.query(f"""
-SELECT ?w ?desire ?label ?holdsAt ?since (GROUP_CONCAT(STR(?about); separator=" ") AS ?abouts) WHERE {{
+SELECT ?w ?desire ?label ?holdsAt ?since ?side (GROUP_CONCAT(STR(?about); separator=" ") AS ?abouts) WHERE {{
   GRAPH ?g {{
     {where}
     OPTIONAL {{ ?w prov:wasDerivedFrom ?desire }}
@@ -276,6 +278,7 @@ SELECT ?w ?desire ?label ?holdsAt ?since (GROUP_CONCAT(STR(?about); separator=" 
     OPTIONAL {{ ?w orexis:holdsAt ?holdsAt }}
     OPTIONAL {{ ?w prov:generatedAtTime ?since }}
     OPTIONAL {{ ?w orexis:about ?about }}
+    OPTIONAL {{ ?w orexis:violationIs ?side }}
   }}
   GRAPH ?catalogue {{
     ?catalogue a orexis:CatalogueGraph .
@@ -284,7 +287,7 @@ SELECT ?w ?desire ?label ?holdsAt ?since (GROUP_CONCAT(STR(?about); separator=" 
     OPTIONAL {{ ?g dcterms:temporal ?period . OPTIONAL {{ ?period orexis:start ?start }} OPTIONAL {{ ?period orexis:end ?end }} }} }}
   FILTER(!BOUND(?start) || ?start <= "{now}"^^xsd:dateTime)
   FILTER(!BOUND(?end) || ?end > "{now}"^^xsd:dateTime)
-}} GROUP BY ?w ?desire ?label ?holdsAt ?since ORDER BY ?w LIMIT {int(limit)} OFFSET {int(offset)}""", ()))
+}} GROUP BY ?w ?desire ?label ?holdsAt ?since ?side ORDER BY ?w LIMIT {int(limit)} OFFSET {int(offset)}""", ()))
         #  A PAGE OF ONE IS ALWAYS FULL: `find_first_by_x` asks for one, and one standing is
         #  the ordinary answer, not a leak.
         if limit > 1 and len(rows) == limit:
@@ -292,7 +295,7 @@ SELECT ?w ?desire ?label ?holdsAt ?since (GROUP_CONCAT(STR(?about); separator=" 
                         limit, offset)
         return [Want(uri=r["w"], desire=r.get("desire", ""),
                      label=r.get("label", ""), holds_at=r.get("holdsAt"),
-                     derived_at=r.get("since"),
+                     derived_at=r.get("since"), side=r.get("side"),
                      #  ONE ROW PER WANT, however many things it is about: grouped, so a page
                      #  counts wants and not (want, about) pairs, and the abouts come back as one
                      #  space-joined string. `STR()` IS LOAD-BEARING: this engine's GROUP_CONCAT

@@ -31,7 +31,6 @@ from orexis_agent_progression.store import bind, bindings
 from .terms import (AMOUNT_L, DISCHARGED_AT, FOR_CLAIM, LAPSED_AT, LAPSES_AT, NS, OWED_AT, OWED_FROM,
                     OWED_TO, PRESENTED)
 from orexis_agent_progression import clock
-from orexis_agent_deliberation.judge_desires import judge_desires
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import KNOWN, RECORD
 
@@ -311,7 +310,6 @@ SELECT ?o ?to ?jti ?a ?at ?paid WHERE {{ GRAPH <{graph}> {{
         the want under it is the road's to mint. The one thing the ledger asks of deliberation,
         and it asks rather than does — nothing here writes a want."""
         from orexis_agent_deliberation import pursuit
-        judge_desires(self.agent.beliefs.engine)
         pursuit.derived(self.agent)
 
     def endow(self) -> int:

@@ -215,7 +215,7 @@ class Judgments:
         reading still holds at the instant, unmet where it says it will have crossed. The
         question is asked of the want's OWN results — the cluster it was minted from — so a
         want about one tank is not held to another's prediction."""
-        from orexis_agent_deliberation.judgments import unmet_by
+        from orexis_agent_deliberation.judging import unmet_by
         now = now or clock.now()
         urgency = row.urgency
         if since is not None and holds_at > since:

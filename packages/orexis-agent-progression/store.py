@@ -428,7 +428,7 @@ def answer(engine, sparql: str, graphs=(), **values) -> dict:
 def rows(engine, sparql: str, graphs=(), **values) -> list[dict]:
     """`answer`, flattened to {var: value-string} — what a reader wanting values takes. A
     reader that needs the TERMS a row holds takes `engine.query` itself and reads the
-    solutions, as `judge_desires` does to write them back."""
+    solutions, as the judging does to read a met-test's own terms."""
     return bindings(answer(engine, sparql, graphs, **values))
 
 
@@ -475,7 +475,7 @@ class Store:
     @property
     def engine(self) -> ox.Store:
         """The pyoxigraph store this class is built over, for a function over the store —
-        `judge_desires` is handed it and nothing else, asks the catalogue in its own texts and
+        `derive_wants` is handed it and nothing else, asks the catalogue in its own texts and
         writes the judgments through it. HANDED OUT, WHAT WAS LEARNED BY ASKING IS DROPPED:
         whoever holds the engine may write, and this class cannot see a write it did not
         make, so it forgets its index and its memo now and asks again at the next read —

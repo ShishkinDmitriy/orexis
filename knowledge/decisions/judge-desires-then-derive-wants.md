@@ -122,7 +122,7 @@ reader outside the process cannot recompute, since the belief base is locked by 
 holding it, and what the snapshots show beside the wants.
 
 **Each function has its own cases and is held to a snapshot** of the store it leaves. A case
-in `packages/orexis-agent-deliberation/tests/judge_desires/` is a world as an agent finds it;
+in `packages/orexis-agent-deliberation/tests/derive_wants/` is a world as an agent finds it;
 one in `packages/orexis-agent-deliberation/tests/derive_wants/` is the judged state alone — the judgments, the desires, the levers whose effects say what a
 scope is, whatever stands — and nothing of the world that was judged, so a case that gave the
 function more would not be testing its contract. Beside each, `<case>.snapshot.trig` is the

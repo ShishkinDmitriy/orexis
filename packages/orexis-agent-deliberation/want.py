@@ -65,3 +65,11 @@ class Want:
     #  When it stops holding — the instant it must hold at plus the patience its plan is given
     #  after it, for a want bound `orexis:At`; open for one met at its plan's end.
     ends: str | None = None
+
+    #  WHICH WAY IT BROKE when it was minted — `orexis:violationIs`, the side the met-test's
+    #  own block declared: below, above, unmeasured, stale. It was a `deliberation:Judgment`'s
+    #  to carry and there is no judgment now; a want says it, because it is what decides the
+    #  repair — a look answers an unmeasured one and no lever does, water answers below and
+    #  drowns on above. None where the block declared none, and where a cluster's witnesses
+    #  disagree: two sides in one want is a want about two troubles.
+    side: str | None = None

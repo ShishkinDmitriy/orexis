@@ -34,8 +34,7 @@ from dataclasses import replace
 from datetime import datetime
 
 from .derive_wants import derive_wants
-from .judge_desires import judge_desires
-from .judgments import witnesses_of
+from .judging import witnesses_of
 from .plan import SATISFIED
 
 from orexis_agent_progression.execution import carry_out
@@ -72,14 +71,12 @@ def handed(agent, judgment):
         #  that re-minted THIS want — what it foresaw has arrived — the judgment in hand still
         #  carries the old instant, so it is presented again.
         if judgment.derived_from is not None:
-            judge_desires(agent.beliefs.engine)
             if judgment.uri in derived(agent):
                 return next((d for d in agent.pursuing() if d.uri == judgment.uri), judgment)
         return judgment
     #  THE PASS STANDS ON THE ROOT: every desire is judged into the store and the wants derived
     #  from what the store says — a root whose met-test the compiler refused is judged by the
     #  choir there, and still derives its one want.
-    judge_desires(agent.beliefs.engine)
     derived(agent)
     child = child_of(agent, judgment.uri)
     if child is None:
