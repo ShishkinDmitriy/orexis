@@ -40,10 +40,10 @@ import logging
 from datetime import datetime
 
 from orexis_agent_progression import clock
-from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, PERIODS_GRAPH
+from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import bindings
 
-from .ontology import pursued_graph
+from .ontology import DELIBERATION, pursued_graph
 from .want import Want
 
 log = logging.getLogger("wants")
@@ -158,7 +158,6 @@ class Wants:
                  f' ; prov:generatedAtTime "{want.derived_at}"^^xsd:dateTime'
                  if want.holds_at is not None else "")
         about = "".join(f" ; orexis:about <{a}>" for a in want.about)
-        ends = (f'\n      orexis:end "{want.ends}"^^xsd:dateTime ;' if want.ends else "")
         self._store.drop_graph(graph)
         self._store.update(f"""
 INSERT DATA {{
@@ -169,12 +168,8 @@ INSERT DATA {{
       rdfs:label {json.dumps(want.label)} .
   {points}
   {shape} }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{
-    <{graph}> a deliberation:PursuedGraph ; orexis:arrivedBy orexis:Recorded ;
-        orexis:beliefsOf <{want.holder}> . }}
-  GRAPH <{PERIODS_GRAPH}> {{
-    <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;{ends}
-      orexis:start "{clock.now().isoformat()}"^^xsd:dateTime ] . }}
+  {self._store.entry(graph, DELIBERATION + "PursuedGraph", OREXIS + "Recorded", want.holder,
+                     start=clock.now(), end=want.ends)}
 }}""")
         for listener in self.on_saved:
             listener(want)
@@ -221,7 +216,7 @@ INSERT DATA {{
         #  A WANT IS ITS GRAPH, so asking which FAMILY it belongs to is asking of the graph —
         #  the classification the writer set, not a property on the want. It replaced a filter
         #  on `orexis:bindsWhen`, which named a kind where a graph class already said it (#681).
-        family = (f"\n  GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a {family} }}" if family else "")
+        family = (f"\n  GRAPH <{self._store.catalogue}> {{ ?g a {family} }}" if family else "")
         rows = bindings(self._store.query_union(f"""
 SELECT ?w ?desire ?label ?holdsAt ?since (GROUP_CONCAT(STR(?about); separator=" ") AS ?abouts) WHERE {{
   GRAPH ?g {{
@@ -233,7 +228,7 @@ SELECT ?w ?desire ?label ?holdsAt ?since (GROUP_CONCAT(STR(?about); separator=" 
     OPTIONAL {{ ?w orexis:about ?about }}
   }}{family}
   FILTER NOT EXISTS {{
-    GRAPH <{PERIODS_GRAPH}> {{ ?g dcterms:temporal ?period . ?period orexis:end ?end }}
+    GRAPH <{self._store.catalogue}> {{ ?g dcterms:temporal ?period . ?period orexis:end ?end }}
     FILTER(?end <= "{now}"^^xsd:dateTime) }}
 }} GROUP BY ?w ?desire ?label ?holdsAt ?since ORDER BY ?w LIMIT {int(limit)} OFFSET {int(offset)}"""))
         #  A PAGE OF ONE IS ALWAYS FULL: `find_first_by_x` asks for one, and one standing is

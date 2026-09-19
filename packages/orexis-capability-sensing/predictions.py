@@ -28,8 +28,7 @@ import logging
 from datetime import datetime, timedelta
 
 from orexis_agent_progression import clock
-from orexis_agent_progression.ontology import (CLASSIFICATION_GRAPH, GRAPH_PREFIX, PERIODS_GRAPH,
-                                               STATE_GRAPH, picks_graph)
+from orexis_agent_progression.ontology import GRAPH_PREFIX, STATE_GRAPH, picks_graph
 from orexis_agent_progression.store import Raw, bind, bindings
 
 from .sensed_writer import _slug
@@ -61,7 +60,7 @@ def graphs_of(store, agent_id: str, feature_id: str, observed_property: str) -> 
     """Every prediction written for this key, first window first — asked of the classification."""
     stem = graph_of(agent_id, feature_id, observed_property, 0)[:-1]
     rows = bindings(store.query(f"""
-SELECT ?g WHERE {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a <{_PREDICTION_GRAPH}> }}
+SELECT ?g WHERE {{ GRAPH <{store.catalogue}> {{ ?g a <{_PREDICTION_GRAPH}> }}
   FILTER(STRSTARTS(STR(?g), "{stem}")) }}"""))
     return sorted((r["g"] for r in rows), key=lambda g: int(g.rsplit("/", 1)[-1]))
 
@@ -153,12 +152,7 @@ INSERT DATA {{
   GRAPH <{graph}> {{
     {chr(10).join(triples)}
   }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a <{_PREDICTION_GRAPH}> ; orexis:arrivedBy <{_RECORDED}> ;
-      orexis:beliefsOf <{me_uri}> . }}
-  GRAPH <{PERIODS_GRAPH}> {{
-    <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;
-      orexis:start "{opens.isoformat()}"^^<{_XSD}dateTime> ;
-      orexis:end "{closes.isoformat()}"^^<{_XSD}dateTime> ] . }} }}""")
+  {store.entry(graph, _PREDICTION_GRAPH, _RECORDED, me_uri, start=opens, end=closes)} }}""")
         #  WHAT IT IS, where the rule said nothing: the band the centre falls in, entailed from
         #  the number by the vocabulary exactly as a written reading's is (#576).
         store.entail(graph, of=[node])

@@ -51,7 +51,7 @@ from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import Raw, bind, bindings
 from .ontology import DELIBERATION
-from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, OREXIS, STATE_GRAPH
+from orexis_agent_progression.ontology import OREXIS, STATE_GRAPH
 from orexis_agent_deliberation.conformance import graph_from, held_shapes, legality_selects
 from orexis_agent_deliberation.judge import crossed_text
 from orexis_agent_progression import clock
@@ -887,7 +887,7 @@ class Planner:
         #  IS is a mention, not a fact a plan stands on — and a forecast arriving at runtime
         #  says what it is there, so a signed classification would kill every kept world on a
         #  change no lever caused, which is the thing this exclusion exists to prevent.
-        out = set(store.periods()) | {CLASSIFICATION_GRAPH}
+        out = set(store.periods())
         return [iri for iri in [*store.public_graphs(), *store.recorded_graphs()]
                 if iri not in out]
 
@@ -938,7 +938,7 @@ class Planner:
         lever caused and no plan depends on.
         """
         store = self.agent.beliefs
-        out = set(store.periods()) | {CLASSIFICATION_GRAPH}
+        out = set(store.periods())
         quads = [quad for iri in self._compiled.invariant_graphs if iri not in out
                  for quad in store.quads(iri)]
         quads += [quad for iri in self._compiled.want_graphs for quad in self.agent.desires.quads(iri)]

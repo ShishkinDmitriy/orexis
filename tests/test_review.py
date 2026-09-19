@@ -111,7 +111,6 @@ def test_a_world_that_widens_a_mandate_will_not_validate():
     reviewer's intersection was the only defence. A sovereign granting more room than the society
     allows is now refused before anything starts, which is where a governance error belongs.
     """
-    from orexis_agent_progression.ontology import PROVENANCE_GRAPH
     from orexis_agent_progression.store import Store
     from agent.validate import conforms, graph_from
 
@@ -132,7 +131,7 @@ def test_a_world_that_widens_a_mandate_will_not_validate():
         from orexis_agent_deliberation import effects
         from conftest import desires_build
 
-        data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH)
+        data = graph_from(st, *st.public_graphs(), st.catalogue)
         for a in everyone:
             for triple in desires_build(st, a).construct(
                     "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):

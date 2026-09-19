@@ -16,7 +16,7 @@ import pytest
 from conftest import build_agent, genesis_store, write_reading
 from orexis_agent_deliberation import signature
 from orexis_agent_deliberation.planner import Planner
-from orexis_agent_progression.ontology import ONTOLOGY_GRAPH, STATE_GRAPH
+from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import Store, bindings
 from test_planning import MOISTURE, STORED
 
@@ -104,9 +104,10 @@ def test_the_entailment_door_honours_an_intersection_of_values_and_facets():
     Membership needs all of them; the facets are read as XSD reads them, inclusive or
     exclusive; a node in another graph or of another subject is not asked."""
     st = Store()
-    #  A bare store discovers its public graphs from the ontology graph, so the definitions'
-    #  graph is declared public there and the definitions go in it.
-    st.update(f"INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{ <urn:g:vocabulary> a orexis:PublicGraph }} }}")
+    #  A bare store discovers its public graphs from the one graph that describes every graph
+    #  and itself, so the case brings that graph, saying the definitions' graph is public.
+    st.update("""INSERT DATA { GRAPH <urn:g:catalogue> {
+      <urn:g:catalogue> a orexis:CatalogueGraph . <urn:g:vocabulary> a orexis:PublicGraph } }""")
     st.update("""INSERT DATA { GRAPH <urn:g:vocabulary> {
       <urn:c:cold> a owl:Class ; owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( <urn:Thing>
           [ a owl:Restriction ; owl:onProperty <urn:of> ; owl:hasValue <urn:room> ]

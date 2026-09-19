@@ -80,7 +80,7 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities,
         picks = set(st.graphs_of(OREXIS + "PickRecordGraph"))
         recorded = [g for g in recorded if g not in picks]
     private = [STATE_GRAPH, *recorded]
-    data = graph_from(st, *st.public_graphs(), *private)
+    data = graph_from(st, *st.public_graphs(), *private, st.catalogue)
     if desires is not None:
         from orexis_agent_deliberation import effects
         for triple in desires.construct(

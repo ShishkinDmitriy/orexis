@@ -32,7 +32,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, GRAPH_PREFIX, PERIODS_GRAPH
+from orexis_agent_progression.ontology import GRAPH_PREFIX
 from orexis_agent_progression.store import bindings
 
 from .terms import (CLOSES_AT, COOLING_UNTIL, HAS_ROUND, LOT_L, NS, RESERVE_PER_L,
@@ -89,12 +89,7 @@ INSERT DATA {{
       <{LOT_L}> "{float(lot_l)}"^^<{_XSD}decimal> ;
       <{RESERVE_PER_L}> "{float(reserve_per_l)}"^^<{_XSD}decimal> ;
       <{CLOSES_AT}> "{closes_at.isoformat()}"^^<{_XSD}dateTime> . }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{
-    <{graph}> a orexis:BeliefGraph ; orexis:arrivedBy <{arrival}> ; orexis:beliefsOf <{agent.me.uri}> . }}
-  GRAPH <{PERIODS_GRAPH}> {{
-    <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;
-      orexis:start "{since}"^^<{_XSD}dateTime> ;
-      orexis:end "{closes_at.isoformat()}"^^<{_XSD}dateTime> ] . }}
+  {agent.beliefs.entry(graph, "http://example.org/orexis#BeliefGraph", arrival, agent.me.uri, start=since, end=closes_at)}
 }}""")
     return uri
 
@@ -142,10 +137,5 @@ def convened(agent, venue_uri: str, cooldown_s: float, now: datetime | None = No
     agent.beliefs.update(f"""
 INSERT DATA {{
   GRAPH <{graph}> {{ <{venue_uri}> <{COOLING_UNTIL}> "{until.isoformat()}"^^<{_XSD}dateTime> . }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a orexis:BeliefGraph ; orexis:arrivedBy <{RECORDED}> ;
-      orexis:beliefsOf <{agent.me.uri}> . }}
-  GRAPH <{PERIODS_GRAPH}> {{
-    <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;
-      orexis:start "{since.isoformat()}"^^<{_XSD}dateTime> ;
-      orexis:end "{until.isoformat()}"^^<{_XSD}dateTime> ] . }}
+  {agent.beliefs.entry(graph, "http://example.org/orexis#BeliefGraph", RECORDED, agent.me.uri, start=since, end=until)}
 }}""")

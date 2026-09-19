@@ -116,6 +116,7 @@ Time in the search: an instant, a stretch, a graph holding during a period, a pr
 
 * [the-future-is-a-cone-and-the-present-is-identified-in-it](/decisions/the-future-is-a-cone-and-the-present-is-identified-in-it.md) - The future is a tree of diffs under the observed present; execution identifies which child the present is in, never asserts one.
 * [a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md) - A class is timeless; the stretch a saying holds during is the graph's, said once and read at the door. The forecast first.
+* [one-catalogue-describes-every-graph-and-itself](/decisions/one-catalogue-describes-every-graph-and-itself.md) - One graph, the catalogue, says what every graph is, whose, how it arrived and when it holds, itself included, so no reader names it.
 * [planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md) - One tree of possible worlds, two kinds of edge: chosen ones are searched, happening ones folded in; a look narrows the second.
 * [a-root-holds-always-and-an-outdated-graph-is-dropped](/decisions/a-root-holds-always-and-an-outdated-graph-is-dropped.md) - A root is authored at genesis into a graph with no period; everything sourced at a time has one, and one sweep drops the outdated.
 * [the-agent-keeps-one-timeline-and-its-clock-may-run-fast](/decisions/the-agent-keeps-one-timeline-and-its-clock-may-run-fast.md) - One timeline for every instant and stretch; a compressed world paces the runtime's clock, and the mind never learns a unit.

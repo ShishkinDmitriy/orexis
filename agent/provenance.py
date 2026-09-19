@@ -42,9 +42,8 @@ from pathlib import Path
 
 from assembly import loader
 from .config import REPO_ROOT
-from orexis_agent_progression.ontology import (CLASSIFICATION_GRAPH, DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
-                       ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
-                       WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
+from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
+                       ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
 
 # A file, as something a graph can be derived FROM. Minted under our own namespace rather than
 # `file:` on purpose: an absolute path bakes one machine into the store, and the world sits at
@@ -58,7 +57,6 @@ _ACTIVITY = "http://example.org/orexis/activity/"
 CLOSURE = _ACTIVITY + "closure"  # orexis/inference.py
 DERIVATION = _ACTIVITY + "derivation"  # every package's rules.ru
 RATIFICATION = _ACTIVITY + "ratification"  # a user authored the world files
-CLASSIFICATION = _ACTIVITY + "classification"  # the agent said what its own graphs are
 #  Who does it: the kernel, named by its file like every rule is. A computed graph must
 #  say what made it, and "the runtime" is not an answer a reader can follow to a line.
 _KERNEL_AGENT = _FILE + "agent/genesis.py"
@@ -175,13 +173,6 @@ def _turtle(world: Path, attribution: tuple[str, str] | None = None,
     #  and public means it accounts for itself here like every other public graph. Generated
     #  by the kernel from the vocabulary's graph classes and the one identifier the process
     #  is given, which is why the classification activity used the ontology and nothing else.
-    lines += [
-        "",
-        f"<{CLASSIFICATION_GRAPH}> a prov:Entity ; prov:wasGeneratedBy <{CLASSIFICATION}> .",
-        f"<{CLASSIFICATION}> a prov:Activity ; prov:used <{ONTOLOGY_GRAPH}> , "
-        f"<{ONTOLOGY_ENTAILED_GRAPH}> ; prov:wasAssociatedWith <{_KERNEL_AGENT}> .",
-        f"<{_KERNEL_AGENT}> a prov:SoftwareAgent .",
-    ]
 
     lines += [
         "",
@@ -212,7 +203,7 @@ def attribution_of(st) -> tuple[str, str] | None:
 
 
 def describe(st, world: Path, derived_graphs: tuple[str, ...] = (WORLD_DERIVED_GRAPH,)) -> None:
-    """Replace the meta-graph with an account of what was just loaded.
+    """Replace the catalogue's account of what was just loaded.
 
     Runs last in `refresh_public`, because it describes the result. Replaced rather than added
     to, for the same reason the closure is recomputed: it is a function of the files, and a
@@ -222,4 +213,15 @@ def describe(st, world: Path, derived_graphs: tuple[str, ...] = (WORLD_DERIVED_G
     which graphs the rules write into, and asking twice would mean two places that could
     disagree about what a derivation produced.
     """
-    st.put_graph(PROVENANCE_GRAPH, _turtle(world, attribution_of(st), derived_graphs))
+    import rdflib
+    catalogue = st.catalogue
+    #  INTO THE CATALOGUE, where everything said about a graph lives, and replaced there: every
+    #  row in PROV's words is this account's — a want's `prov:wasDerivedFrom` is in the want's
+    #  own graph, never here — so the previous account is exactly the PROV rows.
+    st.update(f"""
+DELETE {{ GRAPH <{catalogue}> {{ ?s ?p ?o }} }}
+WHERE  {{ GRAPH <{catalogue}> {{ ?s ?p ?o }}
+         FILTER(STRSTARTS(STR(?p), "http://www.w3.org/ns/prov#")
+                || (isIRI(?o) && STRSTARTS(STR(?o), "http://www.w3.org/ns/prov#"))) }}""")
+    account = rdflib.Graph().parse(data=_turtle(world, attribution_of(st), derived_graphs), format="turtle")
+    st.update(f"INSERT DATA {{ GRAPH <{catalogue}> {{\n{account.serialize(format='nt')}\n}} }}")

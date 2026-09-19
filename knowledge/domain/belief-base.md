@@ -79,10 +79,10 @@ below on why the graph, not the provenance triple, carries the trust):
 the whole store: the mind grew a graph per modality, and provenance grew one per arrival. The
 full set is whatever `orexis:Graph` has instances of — ask, never count — but for orientation it is
 now `graph/picks/<agent>`, `graph/sensed`, `graph/world`, `graph/world/derived`,
-`graph/world/entailed`, `graph/ontology`, `graph/ontology/entailed`, `graph/provenance`,
+`graph/world/entailed`, `graph/ontology`, `graph/ontology/entailed`, `graph/catalogue`,
 `graph/desire/asserted`, `graph/obligations/<agent>`,
 `graph/deliberation`, `graph/effects`, `graph/evidence/<agent>`, `graph/revisions/<agent>`,
-`graph/summaries/<agent>`, `graph/classification` and `graph/instruments`. See
+`graph/summaries/<agent>` and `graph/instruments`. See
 [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) for the three axes that classify
 them and [who-put-the-fact-there](/decisions/who-put-the-fact-there.md) for why the public ones
 split by who authored the fact. Two caveats now that
@@ -191,15 +191,18 @@ the wiring once.
 
 # Which of them a reader gets, and how it asks
 
-`store.recorded_graphs()` answers with every graph this agent owns, from two places because a
-graph is classified wherever it can be: a package declares its own in its ontology — sensing's
-instruments graph, whose name the kernel does not know — and a per-agent graph is typed by its
-OWNER when it creates the graph, into the classification graph, because it does not exist
+`store.recorded_graphs()` answers with every graph this agent owns, from one place, the
+catalogue, which two writers fill: a package declares its own in its ontology — sensing's
+instruments graph, whose name the kernel does not know — and genesis transcribes that at every
+start; a per-agent graph is typed by its
+OWNER when it creates the graph, because it does not exist
 until its agent does: the ledger types its record, the keeper its promises, review its three,
 the road each want, sensing each prediction, genesis the pick record and the roots. Whatever
 each is called — a name is for eyes, and a reader asks the class (`store.graphs_of`). Boot used
 to type them by matching names against a prefix each class declared, and was the one reader
-that depended on a name.
+that depended on a name. The catalogue is the one graph that describes itself, which is how
+the store finds it without a name of its own to know; what it holds of each graph is in
+[one-catalogue-describes-every-graph-and-itself](/decisions/one-catalogue-describes-every-graph-and-itself.md).
 
 Four things are left out, and each was a real answer the query gave before it was narrowed:
 

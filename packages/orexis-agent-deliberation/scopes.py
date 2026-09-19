@@ -8,7 +8,7 @@ as `judgments.py` owns the judgment graph. A reader that means the graph asks it
 
 from __future__ import annotations
 
-from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH
+from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import bindings
 
 from .ontology import DELIBERATION, scopes_graph
@@ -35,9 +35,7 @@ INSERT DATA {{
   GRAPH <{graph}> {{
 {chr(10).join(blocks)}
   }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{
-    <{graph}> a deliberation:ScopeGraph ; orexis:arrivedBy orexis:Derived ;
-        orexis:beliefsOf <{holder}> . }}
+  {store.entry(graph, DELIBERATION + "ScopeGraph", OREXIS + "Derived", holder)}
 }}""")
 
 

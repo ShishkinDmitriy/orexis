@@ -42,8 +42,7 @@ from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS
 
 SENSING_URGENCY = "http://example.org/orexis/sensing#urgency"       # sensing's hook, spelled as every cross-package reference is
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"
-from orexis_agent_progression.ontology import (CLASSIFICATION_GRAPH, GRAPH_PREFIX, ONTOLOGY_GRAPH,
-                                               PERIODS_GRAPH, picks_graph)
+from orexis_agent_progression.ontology import GRAPH_PREFIX, ONTOLOGY_GRAPH, OREXIS, picks_graph
 from orexis_agent_progression.store import bindings
 from assembly.contribute import contributes
 
@@ -805,7 +804,6 @@ SELECT ?c ?id ?l ?at ?p WHERE {{
         #  where the host named none, so the door hands a lapsed claim to nobody and the one
         #  sweep drops it — this module keeps no sweep, and lets nothing go by hand.
         graph = claim_graph(self.agent.id, jti)
-        ends = (f'\n      orexis:end "{claim["usable_until"]}"^^xsd:dateTime ;' if claim.get("usable_until") else "")
         self.agent.beliefs.drop_graph(graph)
         self.agent.beliefs.update(f"""
 INSERT DATA {{
@@ -814,11 +812,8 @@ INSERT DATA {{
   <{NS}claim_{jti}> a <{CLAIM}> ; <{CLAIM_ID}> "{jti}" ; <{CLAIMED_AT}> "{now}"^^xsd:dateTime ;{redeemed}{window}
       <{CLAIM_L}> "{amount}"^^xsd:decimal ; <{CLAIM_DEBIT}> "{debit}"^^xsd:decimal ;
       <{ON_VENUE}> <{market.uri}> . }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a orexis:BeliefGraph ; orexis:arrivedBy <{rounds.RECEIVED}> ;
-      orexis:beliefsOf <{self.me.uri}> . }}
-  GRAPH <{PERIODS_GRAPH}> {{
-    <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;{ends}
-      orexis:start "{now}"^^xsd:dateTime ] . }}
+  {self.agent.beliefs.entry(graph, OREXIS + "BeliefGraph", rounds.RECEIVED, self.me.uri,
+                            start=now, end=claim.get("usable_until"))}
 }}""")
         #  GRANTED ON MY ASK, with nothing standing for the want (#627): nothing is waiting on
         #  this fact, so the mind is woken — buying is available while I hold a claim, and

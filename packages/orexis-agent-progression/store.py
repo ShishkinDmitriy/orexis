@@ -31,8 +31,7 @@ from typing import Callable
 import pyoxigraph as ox
 
 from assembly import loader
-from .ontology import (OREXIS, CLASSIFICATION_GRAPH, ONTOLOGY_GRAPH, PUBLIC_GRAPH,
-                       PERIODS_GRAPH, STATE_GRAPH)
+from .ontology import OREXIS, STATE_GRAPH
 
 # A SPARQL SELECT -> the SPARQL-JSON results dict. The seam every reader is written against,
 # unchanged from when this was an HTTP client, so nothing above here knows the difference.
@@ -47,99 +46,55 @@ QueryFn = Callable[[str], dict]
 # tells the loader where to put the closure. The one graph named here is the bootstrap root: the
 # T-Box has to be loaded somewhere before it can be asked anything, exactly as an agent is handed
 # its own id before it can discover anything else.
-_DISCOVER = f"""
-SELECT ?g WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
-  ?g a ?class . ?class rdfs:subClassOf* <{PUBLIC_GRAPH}> .
-}} }}"""
-
-#  THE AGENT'S OWN GRAPHS — what a plan must carry into its imaginarium and a validation must
-#  read beside the state. Two sources, because a graph is classified wherever it can be: a
-#  package declares its own in its ontology (sensing's instruments graph, and the kernel does
-#  not know its name), while a PER-AGENT graph cannot be declared in a T-Box at all — it does
-#  not exist until its agent does — so the agent types its own at boot into the classification
-#  graph (`Store.classify`, said by each graph's owner; the kernel's two by genesis).
+#  THE CATALOGUE — the one graph that says what every graph IS: its class, whose it is, how
+#  it arrived, when it holds, and the PROV account of the load that made it (one-catalogue-
+#  describes-every-graph-and-itself). It DESCRIBES ITSELF, which is what lets a store find it
+#  without knowing its name: the one graph that says of itself `a orexis:CatalogueGraph`.
+#  Nothing else about graphs is named anywhere a reader stands — the bootstrap root used to be
+#  two named graphs, the ontology's instances and the classification, with the periods in a
+#  third and the provenance in a fourth; a writer names the catalogue when it creates it, and
+#  a migration names what it migrates from.
 #
-#  BOTH of those are named here, and both are the bootstrap root rather than a reader
-#  enumerating: they are where a graph says what it IS, and there is nowhere else to ask.
-#
-#  What is EXCLUDED and why, because each was a real answer this query gave before:
-#    public       — the world declares every agent's belief graph by name, so city's store can
-#                   see that `beliefs/fern` exists. A name is not content, but carrying it
-#                   would be carrying somebody else's;
-#    possible     — the deliberation trace is a record of a pass, not a fact about the world,
-#                   and a hypothesis has no place in a hypothesis;
-#    another store's — the intention ledger is classified here and held elsewhere, so the
-#                   result is intersected with what this store actually has.
-#  WHICH OF THE AGENT'S OWN ARE RECORDS (#645): classified under a class the vocabulary says
-#  is an `orexis:RecordGraph`, whichever package declared it.
-_RECORDS = f"""
-SELECT DISTINCT ?g WHERE {{
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }}
-  ?class rdfs:subClassOf* orexis:RecordGraph }}"""
+#  NOT PUBLIC, deliberately: a rule reads triples and never learns what a graph is, whose it
+#  is, or when it holds — the door decides all three, structurally, by handing the rule a
+#  dataset (a-graph-holds-during-a-stretch). Every door here reads the catalogue by the IRI
+#  it discovered, and nothing else does.
+CATALOGUE = OREXIS + "CatalogueGraph"
+_CATALOGUES = f"SELECT ?g WHERE {{ GRAPH ?g {{ ?g a <{CATALOGUE}> }} }}"
 
-def _own(mine: str) -> str:
-    """The agent's own graphs, kept to its owner by `mine` (see `_mine`)."""
+#  THE INDEX of the catalogue: one row per graph and class, with the owner, the arrival and
+#  the period beside — read with one query, the class hierarchy with a second, and kept
+#  until a write. Which graphs are public, the agent's own, predictions or records is then a
+#  question of set membership in Python rather than four SPARQL texts with the NOT EXISTS
+#  traps this file used to carry (a VALUES-bound path end evaluated per candidate, a NOT
+#  EXISTS evaluated before a UNION binds).
+def _entries(catalogue: str) -> str:
     return f"""
-    SELECT DISTINCT ?g WHERE {{
-      {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }} }}
-      UNION
-      {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?g a ?class ; orexis:arrivedBy ?arrival }} }}
-      ?class rdfs:subClassOf* orexis:Graph .
-      {mine}
-      #  ASKED OF THE GRAPH AND NOT OF THE CLASS THAT MATCHED: `graph/classification` is typed
-      #  both public and belief, so a filter on one binding lets it through on the other. Both
-      #  run in the DEFAULT graph, which `query` unions from the public ones — inside a GRAPH
-      #  block pyoxigraph evaluates the NOT EXISTS before the UNION binds `?g`, and every row
-      #  is dropped.
-      FILTER NOT EXISTS {{ ?g a ?any . ?any rdfs:subClassOf* <{PUBLIC_GRAPH}> }}
-      FILTER NOT EXISTS {{ ?g a ?hyp . ?hyp rdfs:subClassOf* orexis:PossibleGraph }}
-      #  A WORKING GRAPH is the agent's and not carried (#448): a reviewer's scratch, a summary, a
-      #  record of decisions — classified so a volume knows it from litter, left out of what a
-      #  plan imagines from and a validation reads beside the state. A filter of its own, and
-      #  not a VALUES over both classes inside one: measured at 600 ms against 2 ms for the two
-      #  filters — the engine evaluates a VALUES-bound path end for every candidate rather than
-      #  once, and this query runs at the start of every pass.
-      FILTER NOT EXISTS {{ ?g a ?work . ?work rdfs:subClassOf* orexis:WorkingGraph }}
-      #  A PREDICTION is a kind of its own (#642): what a package expects a reading to be during a
-      #  window, handed by `query_at` at the instant asked about and never a record of the agent's.
-      FILTER NOT EXISTS {{ ?g a ?guess . ?guess rdfs:subClassOf* orexis:PredictionGraph }}
-    }}"""
+SELECT ?g ?class ?owner ?arrival ?period ?start ?end WHERE {{
+  GRAPH <{catalogue}> {{
+    ?g a ?class .
+    OPTIONAL {{ ?g orexis:beliefsOf ?owner }}
+    OPTIONAL {{ ?g orexis:arrivedBy ?arrival }}
+    OPTIONAL {{ ?g dcterms:temporal ?period .
+               OPTIONAL {{ ?period orexis:start ?start }} OPTIONAL {{ ?period orexis:end ?end }} }} }} }}"""
 
 
-#  THE PREDICTIONS — every graph the classification types as a prediction, holding or not; the
-#  door filters by period like every other list here.
-def _predictions(mine: str) -> str:
-    return f"""
-    SELECT DISTINCT ?g WHERE {{
-      GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }}
-      ?class rdfs:subClassOf* orexis:PredictionGraph
-      {mine} }}"""
+def _supers(ontologies: list[str]) -> str:
+    """The class hierarchy, from the graphs the catalogue types as the vocabulary's: every
+    `rdfs:subClassOf` there, closed in Python. Small — the graph classes are a few dozen."""
+    return ("SELECT DISTINCT ?c ?s WHERE { GRAPH ?onto { ?c rdfs:subClassOf ?s } VALUES ?onto { "
+            + " ".join(f"<{g}>" for g in ontologies) + " } }")
 
 
-def _mine(owner: str | None) -> str:
-    """The clause that keeps a list of graphs to the store's own agent, in the two queries
-    above and in `graphs_of`: a graph saying whose it is (`orexis:beliefsOf`) must say it is
-    `owner`'s, and a graph saying nothing is anyone's — a volume written before owners were
-    said, a case's hand-written roots. Empty where the store has been told no owner, which
-    is a store nobody shares (rule 4: one agent, one volume, and every classified graph in
-    it is the agent's). The fixture that builds a society on one store is where this
-    matters: every agent classifies what it writes there, and a plan that carried the
-    others' beliefs and roots into its imaginarium as its own found a different world."""
-    if not owner:
-        return ""
-    return (f"OPTIONAL {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g orexis:beliefsOf ?owner }} }}\n"
-            f"  FILTER(!BOUND(?owner) || ?owner = <{owner}>)")
+class _Entry:
+    """What the catalogue says of one graph."""
 
-#  THE PERIOD EACH GRAPH HOLDS DURING — read from the one place that says so, which is named here
-#  for the same reason the two above are: this is the bootstrap root asking what to merge, not a
-#  reader narrowing itself to a graph instance. Absent bounds mean always, which is what every
-#  graph meant before the term existed.
-_PERIODS = f"""
-SELECT ?g ?start ?end WHERE {{ GRAPH <{PERIODS_GRAPH}> {{
-  ?g dcterms:temporal ?period .
-  OPTIONAL {{ ?period orexis:start ?start }}
-  OPTIONAL {{ ?period orexis:end ?end }}
-}} }}"""
+    __slots__ = ("classes", "owner", "arrival", "timed", "start", "end")
+
+    def __init__(self):
+        self.classes: set = set()
+        self.owner = self.arrival = self.start = self.end = None
+        self.timed = False                  # says a period, readable or not
 
 
 # Sent with every query. This is the ONLY set a query may use — some engines silently pre-bind
@@ -420,11 +375,8 @@ class Store:
     def __init__(self, path: str | Path | None = None):
         self.path = str(path) if path else None
         self._store = ox.Store(self.path) if self.path else ox.Store()
-        self._public: list | None = None  # discovered on demand; see public_graphs()
-        self._recorded: list | None = None  # likewise; see recorded_graphs()
-        self._predictions = None
-        self._periods: dict | None = None  # graph -> (start, end); see periods()
-        self._records: set = set()          # own graphs that are records — read as of now (#645)
+        self._catalogue: str | None = None      # the graph that describes itself; see `catalogue`
+        self._catalogue_index: dict | None = None   # what it says of every graph; see `_index`
         self._memo: dict = {}             # what only a write can change; see remember()
         #  WHOSE STORE THIS IS, told by the belief base when it is built over the store — the
         #  agent the world declares under the id the process was handed. None until told: a
@@ -447,115 +399,172 @@ class Store:
 
     # --- what counts as public, according to the store itself ---
 
+    @property
+    def catalogue(self) -> str | None:
+        """The graph that describes every graph and itself — found by asking every graph for
+        the one that says of itself `a orexis:CatalogueGraph`, once, and kept: nothing moves
+        it. None for a store nobody has told anything to, which then has no public knowledge,
+        no own graphs and no periods — the store it always was. Two is refused: a store with
+        two catalogues has two truths about what its graphs are."""
+        if self._catalogue is None:
+            found = sorted(str(row["g"].value) for row in self._store.query(_CATALOGUES, prefixes=NAMESPACES))
+            if len(found) > 1:
+                raise RuntimeError(f"two graphs describe themselves as the catalogue: {', '.join(found)}")
+            self._catalogue = found[0] if found else None
+        return self._catalogue
+
+    def _index(self) -> dict:
+        """Every graph the catalogue describes, with its classes CLOSED over the vocabulary's
+        `rdfs:subClassOf` — so a membership test asks what a graph IS and walks nothing."""
+        if self._catalogue_index is not None:
+            return self._catalogue_index
+        catalogue = self.catalogue
+        entries: dict = {}
+        if catalogue is not None:
+            for row in self._store.query(_entries(catalogue), prefixes=NAMESPACES):
+                e = entries.setdefault(str(row["g"].value), _Entry())
+                e.classes.add(str(row["class"].value))
+                for name in ("owner", "arrival"):
+                    if row[name] is not None:
+                        setattr(e, name, str(row[name].value))
+                if row["period"] is not None:
+                    e.timed = True                  # a bound nobody can read reads as open, and the graph stays
+                for name in ("start", "end"):
+                    if row[name] is not None:
+                        setattr(e, name, _instant(row[name].value))
+            ontologies = [g for g, e in entries.items() if OREXIS + "OntologyGraph" in e.classes]
+            supers: dict = {}
+            if ontologies:
+                for row in self._store.query(_supers(ontologies), prefixes=NAMESPACES):
+                    supers.setdefault(str(row["c"].value), set()).add(str(row["s"].value))
+            for e in entries.values():
+                todo, seen = list(e.classes), set()
+                while todo:
+                    c = todo.pop()
+                    if c in seen:
+                        continue
+                    seen.add(c)
+                    todo.extend(supers.get(c, ()))
+                e.classes = seen
+        self._catalogue_index = entries
+        return entries
+
+    def _mine(self, graph: str, entry) -> bool:
+        """A graph saying whose it is must say it is this agent's; one saying nothing is
+        anyone's — a volume written before owners were said, a case's hand-written roots.
+        Every graph, where the store has been told no owner (rule 4: one agent, one volume)."""
+        return self.agent_uri is None or entry.owner is None or entry.owner == self.agent_uri
+
+    _NOT_OWN = frozenset({OREXIS + "PublicGraph", OREXIS + "PossibleGraph",
+                          OREXIS + "WorkingGraph", OREXIS + "PredictionGraph", CATALOGUE})
+
+    def _own(self) -> list[str]:
+        """The agent's own graphs: typed as some kind of `orexis:Graph`, this agent's, and none
+        of the kinds that are not carried — public (somebody else's, or everyone's), possible
+        (a hypothesis has no place in a hypothesis), working (a package's scratch, #448),
+        a prediction (handed by the door at an instant, #642), the catalogue itself."""
+        return sorted(g for g, e in self._index().items()
+                      if OREXIS + "Graph" in e.classes and not (e.classes & self._NOT_OWN)
+                      and self._mine(g, e))
+
     def recorded_graphs(self, at: datetime | None = None) -> list[str]:
         """The agent's own graphs — what a plan carries into its imaginarium and a validation
-        reads beside the state. Asked, never listed.
+        reads beside the state. Asked of the catalogue, never listed.
 
-        NAMED WHETHER OR NOT THE GRAPH EXISTS YET, which is deliberate and was learned by
-        intersecting with `graph_names()` and watching every world fail to boot: `sensed` has
-        no graph until the first reading, and a validation that stopped naming it lost the
-        state its shapes are written against. A graph that is not there contributes nothing —
-        which is exactly how sensing's instruments graph behaved before it had ever been
-        written — so the tolerant list is also the correct one.
-
-        The intention ledger is named here and held in a store of its own; asking this store
-        for it yields nothing, for the same reason.
+        A RECORD IS HANDED AS IT STANDS NOW, whatever instant is asked about (#645,
+        `orexis:RecordGraph`): its period says how long it is worth believing, not when it
+        holds — a debt standing today is an arrival at every later instant, though its own
+        window will have closed by then. A graph holding DURING its period is handed as of
+        the instant. A graph named here that this store does not hold — the intention ledger,
+        in a room of its own — contributes nothing, which is the tolerant and correct answer.
         """
-        if self._recorded is None:
-            self._recorded = sorted(row["g"] for row in bindings(self.query(_own(self._mine()))))
-            self._records = {row["g"] for row in bindings(self.query(_RECORDS))}
-        #  A RECORD IS HANDED AS IT STANDS NOW, whatever instant is asked about (#645,
-        #  `orexis:RecordGraph`): its period says how long it is worth believing, not when it
-        #  holds — a debt standing today is an arrival at every later instant, though its own
-        #  window will have closed by then. A graph holding DURING its period is handed as of
-        #  the instant.
-        fluent = [g for g in self._recorded if g not in self._records]
-        records = [g for g in self._recorded if g in self._records]
+        index = self._index()
+        own = self._own()
+        records = [g for g in own if OREXIS + "RecordGraph" in index[g].classes]
+        fluent = [g for g in own if g not in set(records)]
         return sorted(self._holding_at(fluent, at) + self._holding_at(records, None))
 
     def prediction_graphs(self, at: datetime | None = None) -> list[str]:
         """Every prediction holding at `at` — a graph a package's drift wrote for a window, typed
-        `orexis:PredictionGraph` in the classification (#642). Asked, never listed, and cached
-        like the others: a write drops the answer."""
-        if self._predictions is None:
-            self._predictions = sorted(row["g"] for row in bindings(self.query(_predictions(self._mine()))))
-        return self._holding_at(self._predictions, at)
+        `orexis:PredictionGraph` in the catalogue (#642). Asked, never listed."""
+        return self._holding_at(self._typed(OREXIS + "PredictionGraph"), at)
 
     def prediction_windows(self) -> list[tuple[str, datetime | None, datetime | None]]:
         """Every prediction with the window it holds during, earliest first — what a crossing is
         read off (#643): the start of the earliest window at which a root reads unmet."""
-        if self._predictions is None:
-            self._predictions = sorted(row["g"] for row in bindings(self.query(_predictions(self._mine()))))
-        bounds = self.periods()
-        out = [(g, *bounds.get(g, (None, None))) for g in self._predictions]
+        index = self._index()
+        out = [(g, index[g].start, index[g].end) for g in self._typed(OREXIS + "PredictionGraph")]
         return sorted(out, key=lambda w: (w[1] is None, w[1] or datetime.min.replace(tzinfo=timezone.utc)))
 
-    def _mine(self) -> str:
-        """The owner clause for this store's agent — see `_mine` above."""
-        return _mine(self.agent_uri)
-
-    def classify(self, graph: str, graph_class: str, arrival: str, owner: str | None = None) -> None:
-        """Say what a graph IS, how it arrived and WHOSE it is — by its owner, when it creates
-        the graph and at every start, whatever the graph is called. A name is for eyes; every
-        reader asks the class, and a reader that means its own asks by owner too. Idempotent:
-        the same statement twice is one statement, so an owner may say it at construction
-        without asking whether the graph is new. Boot used to type an agent's graphs by
-        matching their names against a prefix each class declared, which was the one reader
-        that depended on a name — and the name was where the owner used to be said."""
+    def entry(self, graph: str, graph_class: str, arrival: str, owner: str | None = None,
+              start: datetime | str | None = None, end: datetime | str | None = None) -> str:
+        """What the catalogue says of a graph, as the `GRAPH … { … }` block a writer puts
+        beside the graph's own in ONE update — so a graph and its description land together
+        or not at all. The writer names nothing: the catalogue is the store's to find."""
+        catalogue = self.catalogue
+        if catalogue is None:
+            raise RuntimeError("no graph describes itself as the catalogue — nothing has said what the graphs are")
         whose = f" ; orexis:beliefsOf <{owner}>" if owner else ""
-        self.update(f"""INSERT DATA {{ GRAPH <{CLASSIFICATION_GRAPH}> {{
-  <{graph}> a <{graph_class}> ; orexis:arrivedBy <{arrival}>{whose} . }} }}""")
+        stamp = lambda t: t if isinstance(t, str) else t.isoformat()
+        when = ""
+        if start is not None or end is not None:
+            bounds = "".join(f' ; orexis:{k} "{stamp(v)}"^^xsd:dateTime' for k, v in (("start", start), ("end", end)) if v is not None)
+            when = f" ; dcterms:temporal [ a dcterms:PeriodOfTime{bounds} ]"
+        return (f"GRAPH <{catalogue}> {{ <{graph}> a <{graph_class}> ; orexis:arrivedBy <{arrival}>"
+                f"{whose}{when} . }}")
+
+    def classify(self, graph: str, graph_class: str, arrival: str, owner: str | None = None,
+                 start: datetime | str | None = None, end: datetime | str | None = None) -> None:
+        """Say what a graph IS, how it arrived, WHOSE it is and WHEN it holds — by its owner,
+        when it creates the graph and at every start, whatever the graph is called. A name is
+        for eyes; every reader asks the catalogue. Idempotent for the same statement, so an
+        owner may say it at construction without asking whether the graph is new; a writer
+        that lands the graph in the same update embeds `entry` instead."""
+        self.update(f"INSERT DATA {{ {self.entry(graph, graph_class, arrival, owner, start, end)} }}")
+
+    def _typed(self, *graph_classes: str) -> list[str]:
+        """Every graph of these kinds this agent may see, WHATEVER its period — what a window
+        table and the sweep of what has ended read; a reader meaning a world at an instant
+        takes `graphs_of`, which holds the list to the door."""
+        wanted = set(graph_classes)
+        return sorted(g for g, e in self._index().items() if e.classes & wanted and self._mine(g, e))
 
     def graphs_of(self, *graph_classes: str, at: datetime | None = None) -> list[str]:
-        """Every graph classified under any of `graph_classes` — subclasses included, as
-        `_own` walks them — holding at `at` (now, where None), and this agent's where the
-        store has been told whose it is (`_mine`). The door a reader takes for a graph it
+        """Every graph the catalogue types under any of `graph_classes` — subclasses included,
+        the index having closed them — holding at `at` (now, where None), and this agent's
+        where the store has been told whose it is. The door a reader takes for a graph it
         means by KIND — the roots, the pursued wants, the obligations record; naming one is
         what rule 1 forbids and what a rename would break."""
-        values = " ".join(f"<{c}>" for c in graph_classes)
-        rows = bindings(self.query(f"""
-SELECT DISTINCT ?g WHERE {{
-  {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a ?class }} }}
-  UNION
-  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?g a ?class ; orexis:arrivedBy ?arrival }} }}
-  VALUES ?kind {{ {values} }}
-  ?class rdfs:subClassOf* ?kind
-  {self._mine()} }}"""))
-        return self._holding_at(sorted(r["g"] for r in rows), at)
+        return self._holding_at(self._typed(*graph_classes), at)
 
     def public_graphs(self, at: datetime | None = None, *, ever: bool = False) -> list[str]:
-        """Every graph the vocabulary types as an `orexis:PublicGraph`, and still worth believing.
+        """Every graph the catalogue types as an `orexis:PublicGraph`, and still worth believing.
 
-        Cached because it is asked before every query and the answer only moves when something
-        is written. Any write drops the cache rather than trying to work out whether it mattered
-        — the query is small and a stale answer here is an empty result rather than an error,
-        which is the failure mode this whole design keeps having to guard against.
-
-        Empty until a T-Box is loaded, and that is correct: a store nobody has told anything to
-        has no public knowledge. Naming a graph explicitly still reads it, so the tools that
-        build a bare store and query one graph are unaffected.
-        """
-        if self._public is None:
-            rows = self._store.query(_DISCOVER, prefixes=NAMESPACES)
-            self._public = sorted(str(row["g"].value) for row in rows)
-        #  `ever`: every public graph whatever its period — for a copy that will be asked at
-        #  instants of its own (the imaginarium, #619), which must hold a forecast for a period
-        #  the copier has not reached, and filter by its own clock at each door.
-        return list(self._public) if ever else self._holding_at(self._public, at)
+        Empty until a catalogue is there, and that is correct: a store nobody has told anything
+        to has no public knowledge. Naming a graph explicitly still reads it, so the tools that
+        build a bare store and query one graph are unaffected. `ever` hands every public graph
+        whatever its period — what a copy takes, since the copy's own door filters by the
+        instant it is asked at."""
+        found = sorted(g for g, e in self._index().items() if OREXIS + "PublicGraph" in e.classes)
+        return found if ever else self._holding_at(found, at)
 
     def drop_graph(self, graph: str) -> None:
-        """Drop one graph whole — its triples, its classification and its period — which is
-        how a round closes, a prediction is dropped and the sweep drops what is outdated
+        """Drop one graph whole — its triples and everything the catalogue says of it — which
+        is how a round closes, a prediction is dropped and the sweep drops what is outdated
         (#645). One update, so a graph goes entire or not at all."""
+        catalogue = self.catalogue
+        about = ""
+        if catalogue is not None:
+            about = f"""
+  GRAPH <{catalogue}> {{ <{graph}> ?cp ?co . }}
+  GRAPH <{catalogue}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }}"""
         self.update(f"""
 DELETE {{
-  GRAPH <{graph}> {{ ?s ?p ?o }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> ?cp ?co }}
-  GRAPH <{PERIODS_GRAPH}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }}
+  GRAPH <{graph}> {{ ?s ?p ?o }}{about} }}
 WHERE  {{
-  {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}
-  UNION {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> ?cp ?co }} }}
-  UNION {{ GRAPH <{PERIODS_GRAPH}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }} }}""")
+  {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}""" + (f"""
+  UNION {{ GRAPH <{catalogue}> {{ <{graph}> ?cp ?co }} }}
+  UNION {{ GRAPH <{catalogue}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }}""" if catalogue else "") + " }")
 
     def outdated(self, at: datetime | None = None) -> list[str]:
         """Every graph of this agent's own whose period has ENDED by `at` — what the door
@@ -564,26 +573,16 @@ WHERE  {{
         row, a pursued child, a prediction, whatever its kind. Never a public graph: a period
         the world states is the world's to end."""
         when = at or clock.now()
-        self.recorded_graphs()
-        self.prediction_graphs()
-        own = set(self._recorded or ()) | set(self._predictions or ())
+        own = set(self._own()) | set(self._typed(OREXIS + "PredictionGraph"))
         return sorted(g for g, (_, end) in self.periods().items()
                       if end is not None and when >= end and g in own)
 
     def periods(self) -> dict:
         """The period each graph holds during: IRI -> (start, end), either end None for open.
-
-        Read from `graph/periods` and remembered until a write, like everything else here.
-        The TABLE is remembered rather than a filtered list, because the answer to *which
-        graphs now* depends on when it is asked and the table does not: filtering a handful of
-        bounds in Python costs nothing, and a memo keyed by an instant would miss on every call.
-        """
-        if self._periods is None:
-            self._periods = {
-                str(row["g"].value): (_instant(row["start"] and row["start"].value),
-                                      _instant(row["end"] and row["end"].value))
-                for row in self._store.query(_PERIODS, prefixes=NAMESPACES)}
-        return self._periods
+        Read off the catalogue and remembered until a write, like everything else here. The
+        TABLE is remembered rather than a filtered list, because the answer to *which graphs
+        now* depends on when it is asked and the table does not."""
+        return {g: (e.start, e.end) for g, e in self._index().items() if e.timed}
 
     def _holding_at(self, graphs: list[str], at: datetime | None) -> list[str]:
         """`graphs`, less whatever is outside its own period at `at`.
@@ -967,11 +966,7 @@ WHERE  {{
         the agent's own, and whatever `remember` holds. Dropping rather than working out
         whether the write mattered, because a stale answer here is an empty result rather
         than an error — the failure this design keeps having to guard against."""
-        self._public = None
-        self._recorded = None
-        self._records = set()
-        self._periods = None
-        self._predictions = None
+        self._catalogue_index = None
         self._memo.clear()
 
     def remember(self, key, compute):

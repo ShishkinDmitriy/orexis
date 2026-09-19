@@ -89,9 +89,8 @@ class Imaginarium:
         #  and a forecast holding then is a graph the present has not reached. Copied whole,
         #  the imaginarium's own door filters by the instant it is asked at, as the belief
         #  base's does; copied at now, a search could not see past the present's weather.
-        from orexis_agent_progression.ontology import PERIODS_GRAPH
         self._store.copy_graphs(
-            store, *list(store.public_graphs(ever=True)), PERIODS_GRAPH, *private)
+            store, *list(store.public_graphs(ever=True)), store.catalogue, *private)
         #  WHICH PREDICATES A KEYED NODE CARRIES (#553): a retraction of one of these matches
         #  by KEY — every value the node carries under that predicate — never by the exact
         #  value the rule named. Within one pass the two agree, since the value the rule

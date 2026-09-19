@@ -14,7 +14,7 @@ import json
 from datetime import datetime
 
 from orexis_agent_progression import clock
-from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH
+from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import bindings
 
 from .ontology import DELIBERATION, judgments_graph
@@ -63,9 +63,7 @@ INSERT DATA {{
   GRAPH <{graph}> {{
 {chr(10).join(blocks)}
   }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{
-    <{graph}> a deliberation:JudgmentGraph ; orexis:arrivedBy orexis:Derived ;
-        orexis:beliefsOf <{holder}> . }}
+  {store.entry(graph, DELIBERATION + "JudgmentGraph", OREXIS + "Derived", holder)}
 }}""")
 
 

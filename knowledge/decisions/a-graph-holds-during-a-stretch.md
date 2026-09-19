@@ -100,19 +100,27 @@ drops it then — the machinery that already exists, applied to the door.
 
 # Where the period is said: a meta-graph outside the default union
 
+*Amended 2026-09-19: the meta-graphs this section weighs — the provenance graph, the
+classification graph, and the periods graph it decided on — are one graph now, the catalogue,
+and the property the section argues for is the one it keeps: the catalogue is not public, so
+nothing said in it is a fact in any world. Where the text below names one of the three, read
+the catalogue; the argument is in
+[one-catalogue-describes-every-graph-and-itself](/decisions/one-catalogue-describes-every-graph-and-itself.md).*
+
 The sovereign's answer to the placements below, and it is the right one for a reason worth
-stating: `graph/provenance` is deliberately OUTSIDE the default union, and that is exactly the
-property a changing statement needs. Measured on a built store — eight graphs are merged as the
-query-time default and provenance is not among them, while `graph/classification` is. So an
+stating: the provenance graph was deliberately OUTSIDE the default union, and that is exactly the
+property a changing statement needs. Measured on a built store — eight graphs were merged as the
+query-time default and provenance was not among them, while the classification graph was. So an
 interval said in provenance never reaches `_base_facts`, never becomes a fact in a possible
 world, and never moves the invariant signature when it lapses; the same period said in
-classification would do all three. The objection to keeping a graph's own description inside it
+classification would have done all three. The objection to keeping a graph's own description inside it
 is answered by putting the description where mentions already live.
 
 The door then reads it by naming that graph, which is the bootstrap-root exception rule 1
-already makes and which `_own` already uses for the classification graph: a reader asking WHICH
+already makes and which `_own` already used for the classification graph: a reader asking WHICH
 graphs to merge has to start somewhere, and starting there is not the same as a query narrowing
-itself to a graph instance.
+itself to a graph instance. (Since the catalogue, not even that: the door asks every graph for
+the one that describes itself, and no reader spells the name.)
 
 **One contract has to give, and the build decides which.** `describe()` replaces the provenance
 graph WHOLE on every `refresh_public`, because it is a function of the files that were loaded.
@@ -168,10 +176,11 @@ filter.** That is why validity is not on triples. Put the graph's description in
 and every reader of the data inherits the description: an unqualified pattern unions the public
 graphs, so `?s ?p ?o` over the sensed graph would answer with `<graph/sensed> a
 sensing:SensedGraph` beside the readings. The repo has met this once already — the per-agent
-classifications sat in the provenance graph, which is deliberately outside the default union
+classifications sat in the provenance graph, which was deliberately outside the default union
 *to keep mentions of graphs from answering questions about devices*, and moving them to a public
 classification graph is what let a scoped query see them. Inside the data is the same hazard
-with nowhere left to move it to.
+with nowhere left to move it to. (The catalogue settles it the third way: outside the union,
+and a scoped query names it through the door, `store.catalogue`, in a `GRAPH` clause.)
 
 **And a changing mention would churn world identity.** `_base_facts` reads every quad of the
 public and recorded graphs, so a self-description is a fact in every possible world — constant,
@@ -180,9 +189,9 @@ lapses would move the invariant signature, and a kept cone dies on an invariant 
 ([the-future-is-a-cone-and-the-present-is-identified-in-it](/decisions/the-future-is-a-cone-and-the-present-is-identified-in-it.md)).
 A description held beside the data changes without touching what any world holds.
 
-**The coupling it aims at is already there, by replacement rather than by containment.** Neither
-meta-graph accumulates: the provenance graph is `put_graph`-replaced whole on every
-`refresh_public`, and the classification graph is written by each graph's owner when it creates
+**The coupling it aims at is already there, by replacement rather than by containment.** The
+meta-graph does not accumulate: the PROV account is rewritten whole on every
+`refresh_public`, the public rows transcribed again, and a per-agent row is written by each graph's owner when it creates
 the graph and said again at every start, since a statement made twice is one statement. Nothing orphans, and a sweep that drops a lapsed graph
 drops its statements in the same update — atomicity is two lines, not a design.
 
@@ -239,8 +248,8 @@ Self-describing in transit, described beside on disk.
 # Order of work
 
 **The door first, and it is built** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)'s first half): a graph says `dcterms:temporal`, one
-`dcterms:PeriodOfTime` with an `orexis:start` and an `orexis:end`, in `graph/periods`, and
-`store.public_graphs(at=…)` drops what is outside it. Absent bounds mean always, so a store
+`dcterms:PeriodOfTime` with an `orexis:start` and an `orexis:end`, in the meta-graph (the
+catalogue now), and `store.public_graphs(at=…)` drops what is outside it. Absent bounds mean always, so a store
 that states none is the store it always was — every shipped world included. The cost is at the
 door and it is nothing: 0.9 µs a call with no period stated and 1.9 µs with one, against
 milliseconds for the query it precedes. Naming a graph still reads it, because lapsing is not

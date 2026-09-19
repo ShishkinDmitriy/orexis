@@ -57,7 +57,8 @@ facts. The proof it was not enough is that **renaming all five to `g1`..`g5` wou
 query in this repository working** — nothing parses these strings, they are constants referenced
 by name. So the names could not be where the knowledge lived.
 
-`graph/provenance` carries an account of the other five, in **PROV-O and nothing else**. No
+A meta-graph — `graph/provenance` then, the catalogue since 2026-09-19 (see the amendment
+below) — carries an account of the other five, in **PROV-O and nothing else**. No
 `ag:Ratified`, no `ag:DerivedGraph`, no term of ours: `prov:` is already in `store.PREFIXES` and
 every observation already records its author with `prov:wasGeneratedBy`, so this is the existing
 habit rather than a new vocabulary.
@@ -316,10 +317,13 @@ described automatically now, and a graph a **world file** declares still is not.
 # Amended: and the saying is not inside the said
 
 Every graph says who put it there, and where it SAYS it is beside the graph rather than in it —
-the ontology graph for a static one, `graph/classification` for a per-agent one, written by its owner when it creates the graph,
-`graph/provenance` for the PROV account of a load. Asked whether the description should live in
+when this was written, the ontology graph for a static one, a classification graph for a per-agent one, written by its owner when it creates the graph,
+and a provenance graph for the PROV account of a load; since 2026-09-19 one graph for all three,
+the catalogue, into which the vocabulary's declarations are transcribed at every start
+([one-catalogue-describes-every-graph-and-itself](/decisions/one-catalogue-describes-every-graph-and-itself.md)).
+Asked whether the description should live in
 the graph it describes, and refused: a graph is a scope a reader is handed, so a description
-inside it is inherited by every reader of the data, which is the hazard the provenance graph is
+inside it is inherited by every reader of the data, which is the hazard the catalogue is
 kept out of the default union to avoid. The argument is in
 [a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md),
 which had to settle the same question for an interval.

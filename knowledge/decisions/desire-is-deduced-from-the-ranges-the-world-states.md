@@ -185,7 +185,7 @@ single graph the vocabulary types that way, and refuses if there is not exactly 
 names a graph** still holds — a graph IRI is an instance, and rule 1 applies to it. Three things
 that used to be true of exactly one graph because there *was* exactly one are now asked of the
 rules rather than remembered: what derivations may read (`$given` excludes every write target),
-what is cleared before a recompute, and what the provenance graph must account for.
+what is cleared before a recompute, and what the catalogue's PROV account must cover.
 
 # What moved, and what that cost
 

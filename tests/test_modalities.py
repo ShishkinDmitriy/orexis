@@ -11,7 +11,7 @@ import pytest
 from agent import genesis
 
 from assembly import loader
-from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, OREXIS, PROVENANCE_GRAPH, picks_graph
+from orexis_agent_progression.ontology import OREXIS, picks_graph
 from orexis_agent_progression.store import bindings
 
 from conftest import genesis_store
@@ -27,8 +27,7 @@ ARRIVALS = {"Asserted", "Derived", "Entailed", "Recorded", "Received"}
 
 
 def types_of(st, graph_iri: str) -> set[str]:
-    """What some graph says it is, wherever it says it — the vocabulary for the static ones,
-    the provenance graph for an agent's own."""
+    """What some graph says it is, wherever it says it — the catalogue, for every graph."""
     rows = bindings(st.query_union(
         f"SELECT ?t WHERE {{ <{graph_iri}> a ?t }}"))
     return {r["t"].rsplit("#", 1)[-1] for r in rows}
@@ -76,20 +75,15 @@ def test_the_regions_live_in_the_desire_modality_and_nowhere_else():
 
 def test_an_agents_own_graphs_classify_themselves(tmp_path, monkeypatch):
     """A per-agent graph cannot be declared in the vocabulary — the agent does not exist until
-    it does — so it says what it is at boot, into a PUBLIC classification graph.
-
-    Public deliberately: a modality-scoped query asks `?d a orexis:DesireGraph` and must resolve
-    it without naming any graph instance, which is the rule that stops a query reading part of
-    the truth. The static graphs have always been classified in the ontology graph, which is
-    public too; the per-agent ones were going to `provenance`, which sits outside the default
-    union, and a scoped query could not see them.
+    it does — so its owner says what it is when it creates it, into the CATALOGUE, the one
+    graph that says what every graph is and itself (one-catalogue-describes-every-graph-and-
+    itself). Not public: a reader asks the catalogue by class through the store's door and
+    never names it, and a rule reads triples and learns nothing of what a graph is.
     """
     st = genesis_store()                          # birth classified fern's pick record
     genesis.classify_kernel_graphs(st, "fern")   # and saying so again is saying it once
-    resolved = {r["g"] for r in bindings(st.query(
-        f"SELECT ?g WHERE {{ ?g a <{OREXIS}PickRecordGraph> }}"))}
-    assert picks_graph("fern") in resolved, (
-        "an unscoped, instance-free query must find what this agent's graphs are")
+    assert picks_graph("fern") in st.graphs_of(OREXIS + "PickRecordGraph"), (
+        "a reader asking the class, and naming no graph, must find this agent's graphs")
     kinds = types_of(st, picks_graph("fern"))
     assert "PickRecordGraph" in kinds, (
         "the graph called `beliefs` is the RECORD of picking — what birth authored and review "

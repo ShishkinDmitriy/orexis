@@ -27,22 +27,29 @@ GRAPH :actions {
         CONSTRUCT { ?t ?p ?x . } WHERE { ?t a :Tank ; ?p ?x }""" .
 }
 
-# --- WRITTEN (the first snapshot also holds the loader's own vocabulary stub) ---
-
-GRAPH graph:classification {
+# CHANGED, re-rendered:
+GRAPH :catalogue {
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  graph:ontology a orexis:OntologyGraph .
   scopes:keeper a deliberation:ScopeGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
 }
 
+
+# --- WRITTEN (the first snapshot also holds the loader's own vocabulary stub) ---
+
 GRAPH graph:ontology {
-  :actions a orexis:PublicGraph .
-  :world a orexis:PublicGraph .
   deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
+  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
   deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
-  graph:ontology a orexis:PublicGraph .
+  orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
   orexis:DesireGraph rdfs:subClassOf orexis:Graph .
+  orexis:OntologyGraph rdfs:subClassOf orexis:PublicGraph .
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:PublicGraph rdfs:subClassOf orexis:Graph .
+  orexis:WantGraph rdfs:subClassOf orexis:Graph .
   orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
 }
 

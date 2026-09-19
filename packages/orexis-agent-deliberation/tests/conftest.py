@@ -46,13 +46,21 @@ def stand_in(case: Path, text: str | None = None):
     """An agent standing on the case — or on `text`, a snapshot of one: the store the file
     describes, and the two collections."""
     st = Store()
-    st.agent_id, st.agent_uri, st.graph = AGENT, ME, picks_graph(AGENT)
-    st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
-      <{ONTOLOGY_GRAPH}> a orexis:PublicGraph . <{WORLD}> a orexis:PublicGraph . <{ACTIONS}> a orexis:PublicGraph .
-      orexis:PredictionGraph rdfs:subClassOf orexis:Graph . orexis:DesireGraph rdfs:subClassOf orexis:Graph .
-      deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph . orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
-      deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph . }} }}""")
     st.put_graph(WORLD, text if text is not None else case.read_text(), dataset=True)
+    st.agent_id, st.agent_uri, st.graph = AGENT, ME, picks_graph(AGENT)
+    #  THE CASE SAYS WHAT ITS GRAPHS ARE, in a catalogue it names — `:catalogue` — found by what
+    #  it says of itself, never by its spelling: which graphs are public, which graph is the
+    #  vocabulary. The stub adds only the vocabulary graph itself, whose axioms say what every
+    #  graph class the road asks by is beneath; a case with no catalogue is refused, since a
+    #  store that says nothing of its graphs has no public knowledge to read.
+    assert st.catalogue is not None, f"{case.name} names no graph that describes itself as the catalogue"
+    st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
+        orexis:PublicGraph rdfs:subClassOf orexis:Graph . orexis:OntologyGraph rdfs:subClassOf orexis:PublicGraph .
+        orexis:CatalogueGraph rdfs:subClassOf orexis:Graph . orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+        orexis:PredictionGraph rdfs:subClassOf orexis:Graph . orexis:DesireGraph rdfs:subClassOf orexis:Graph .
+        orexis:WantGraph rdfs:subClassOf orexis:Graph . deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
+        deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
+        deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph . }} }}""")
     desires, wants = Desires(st), Wants(st)
     wants.on_saved.append(lambda _: desires.rebuild())
     wants.on_deleted.append(lambda _: desires.rebuild())
@@ -97,7 +105,9 @@ def prefixes_of(case: Path) -> dict[str, str]:
     return dict(re.findall(r"^@prefix (\w*): <([^>]*)> \.", case.read_text(), flags=re.M))
 
 
-BLOCK = re.compile(r"(?:^#[^\n]*\n)*^GRAPH (\S+) \{[ \t]*\}?\n?(?:.*?^\}\n)?\n*", flags=re.S | re.M)
+#  A block is one line holding its closing brace, or lines up to a line that is one — never
+#  a one-line block that runs on to the next block's brace, which copied a catalogue twice.
+BLOCK = re.compile(r"(?:^#[^\n]*\n)*^GRAPH (\S+) \{(?:[^\n]*\}[ \t]*\n|[ \t]*\n(?:.*?^\}\n)?)\n*", flags=re.S | re.M)
 
 
 def segments_of(text: str) -> tuple[str, list[tuple[str, str]]]:

@@ -29,7 +29,7 @@ import rdflib
 from pyshacl import validate as shacl_validate
 
 from agent import genesis
-from orexis_agent_progression.ontology import PROVENANCE_GRAPH, picks_graph
+from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import Store
 from agent.validate import _shapes_and_vocabulary, conforms, graph_from
 
@@ -77,7 +77,7 @@ def _world_with(tmp_path, **files: str):
     everyone = [genesis.agent_id_of(p) for p in sorted(world.glob(genesis.BELIEFS_GLOB))]
     for agent_id in everyone:
         genesis.birth(st, world, agent_id)
-    return graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH,
+    return graph_from(st, *st.public_graphs(), st.catalogue,
                       *(picks_graph(a) for a in everyone))
 
 

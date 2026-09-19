@@ -230,7 +230,7 @@ def _forecast(agent, celsius: float, since, until) -> str:
     own `dcterms:temporal` bounds it (a-graph-holds-during-a-stretch) — arriving `Received`,
     from a service rather than an instrument, in a graph of the agent's own.
     """
-    from orexis_agent_progression.ontology import PERIODS_GRAPH, picks_graph
+    from orexis_agent_progression.ontology import OREXIS, picks_graph
 
     graph = f"http://example.org/orexis/graph/forecast/{int(celsius)}"
     agent.beliefs.update(f"""INSERT DATA {{
@@ -240,12 +240,7 @@ def _forecast(agent, celsius: float, since, until) -> str:
                 sosa:observedProperty <{AIR}> ;
                 sosa:hasSimpleResult "{celsius}"^^xsd:decimal ;
                 sosa:resultTime "{since.isoformat()}"^^xsd:dateTime }}
-        GRAPH <{PERIODS_GRAPH}> {{
-            <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ;
-                orexis:start "{since.isoformat()}"^^xsd:dateTime ;
-                orexis:end "{until.isoformat()}"^^xsd:dateTime ] }}
-        GRAPH <http://example.org/orexis/graph/classification> {{
-            <{graph}> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Received }} }}""")
+        {agent.beliefs.entry(graph, OREXIS + "BeliefGraph", OREXIS + "Received", start=since, end=until)} }}""")
     return graph
 
 
