@@ -27,7 +27,7 @@ everything is in the store.
 
 # The decision
 
-**Two functions in `pursuit.py`, one contract each.**
+**Two functions, each a file of its own — `judge_desires.py`, `derive_wants.py` — one contract each.**
 
 - `judge_desires(agent)`: every desire's compiled met-test run through the door at the present
   and at every prediction's start, and the answers written as one `deliberation:Judgment` per

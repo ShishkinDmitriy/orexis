@@ -32,6 +32,8 @@ from orexis_agent_progression.store import bind, bindings
 from .terms import (AMOUNT_L, DISCHARGED_AT, FOR_CLAIM, LAPSED_AT, LAPSES_AT, NS, OWED_AT, OWED_FROM,
                     OWED_TO, PRESENTED)
 from orexis_agent_progression import clock
+from orexis_agent_deliberation.derive_wants import derive_wants
+from orexis_agent_deliberation.judge_desires import judge_desires
 
 #  What I owe, as rows — the obligation branch of what used to be one shipped `desires.rq` for every
 #  kind of want. The stakes and the freshness wants went to sensing with the region
@@ -311,8 +313,8 @@ SELECT ?o ?to ?jti ?a ?at ?paid WHERE {{ GRAPH <{graph}> {{
         the want under it is the road's to mint. The one thing the ledger asks of deliberation,
         and it asks rather than does — nothing here writes a want."""
         from orexis_agent_deliberation import pursuit
-        pursuit.judge_desires(self.agent)
-        pursuit.derive_wants(self.agent)
+        judge_desires(self.agent)
+        derive_wants(self.agent)
 
     def endow(self) -> int:
         """A debt written while the ledger minted its own want carried no PREDICTION beside it,

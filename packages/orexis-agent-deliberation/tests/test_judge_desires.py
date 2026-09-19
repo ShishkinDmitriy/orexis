@@ -18,7 +18,7 @@ import pytest
 
 from orexis_agent_progression import clock
 
-from orexis_agent_deliberation import pursuit
+from orexis_agent_deliberation.judge_desires import judge_desires
 
 CASES_DIR = Path(__file__).parent / "judge_desires"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
@@ -29,7 +29,7 @@ def test_judge_desires_leaves_the_store_as_the_snapshot_says(case, monkeypatch, 
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     agent = snapshots.stand_in(case)
     before = snapshots.snapshot_of(agent.beliefs)
-    pursuit.judge_desires(agent)
+    judge_desires(agent)
     snapshots.held_to(case, request, "judge_desires", before, snapshots.snapshot_of(agent.beliefs))
 
 
