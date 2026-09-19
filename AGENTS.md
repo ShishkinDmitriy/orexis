@@ -327,6 +327,11 @@ it is a record wearing a bullet.
   wants from that graph and nothing in hand; each is held to a snapshot of the store it
   leaves, and the eleven cases leave the wants the one-function road left. A third,
   `scope_actions`, writes the scopes at boot, so the derivation reads no action.
+- **A function over the store is handed the engine and nothing else** — `judge_desires`
+  takes `pyoxigraph.Store` and no wrapper: which graphs it reads it asks of the catalogue in
+  its own texts, whose a judgment is it reads off `orexis:holds`, and the present is the
+  clock's; the wrapper caching a view of the store cannot see a write it did not make, so
+  asking it for the engine (`Store.engine`) is what makes it forget.
 - **What was foreseen may arrive early, and the present outranks the instant** — a want
   minted at a predicted crossing or lapse says *hold at T* and its plan is placed to land at
   T, so when the holder presented an hour early the serve was placed at the deadline; a

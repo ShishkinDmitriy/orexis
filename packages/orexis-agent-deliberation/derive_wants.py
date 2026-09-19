@@ -40,8 +40,9 @@ def derive_wants(agent) -> list[str]:
     holds at its earliest result, and one past the foresight is not derived. A desire met at
     the present with nothing foreseen derives NOTHING: there is nothing to pursue, and a want
     about everything the desire is about is minted only for a desire unmet at the present
-    with no result — a met-test the compiler refused, judged by the choir — which is what
-    every want was before the road.
+    with no result, which is what every want was before the road; the case that wrote such
+    a judgment — a met-test the compiler refused, judged by the choir — went when
+    `judge_desires` became a function over the store, and nothing writes one now.
     """
     by_desire: dict[str, list[dict]] = {}
     for row in find_judgments(agent.beliefs):

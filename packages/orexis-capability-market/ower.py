@@ -307,7 +307,7 @@ SELECT ?o ?to ?jti ?a ?at ?paid WHERE {{ GRAPH <{graph}> {{
         the want under it is the road's to mint. The one thing the ledger asks of deliberation,
         and it asks rather than does — nothing here writes a want."""
         from orexis_agent_deliberation import pursuit
-        judge_desires(self.agent)
+        judge_desires(self.agent.beliefs.engine)
         derive_wants(self.agent)
 
     def endow(self) -> int:

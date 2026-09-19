@@ -169,5 +169,5 @@ def test_a_pot_that_crosses_before_the_drift_said_is_wanted_now_and_not_at_the_c
         "handed the want as it stands now, not as the pass first read it"
     [again] = agent.wants.find_all_by_desire(root.uri)
     assert again.uri == minted.uri and again.holds_at is None, "the same want, at no instant"
-    judge_desires(agent)
+    judge_desires(agent.beliefs.engine)
     assert derive_wants(agent) == [], "and once is enough"

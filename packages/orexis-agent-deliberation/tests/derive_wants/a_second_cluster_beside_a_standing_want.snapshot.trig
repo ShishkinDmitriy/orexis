@@ -132,17 +132,22 @@ GRAPH pursued:keeper.in_range.pursued.tank1.temperature {
 }
 
 GRAPH :ontology {
-  deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
-  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
-  deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
+  deliberation:JudgmentGraph rdfs:subClassOf orexis:Graph ;
+      rdfs:subClassOf orexis:WorkingGraph .
+  deliberation:PursuedGraph rdfs:subClassOf orexis:Graph ;
+      rdfs:subClassOf orexis:WantGraph .
+  deliberation:ScopeGraph rdfs:subClassOf orexis:Graph ;
+      rdfs:subClassOf orexis:WorkingGraph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
   orexis:DesireGraph rdfs:subClassOf orexis:Graph .
-  orexis:OntologyGraph rdfs:subClassOf orexis:PublicGraph .
+  orexis:OntologyGraph rdfs:subClassOf orexis:Graph ;
+      rdfs:subClassOf orexis:PublicGraph .
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:PublicGraph rdfs:subClassOf orexis:Graph .
   orexis:RecordGraph rdfs:subClassOf orexis:Graph .
-  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph ;
+      rdfs:subClassOf orexis:Graph .
   orexis:WantGraph rdfs:subClassOf orexis:Graph .
   orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
 }

@@ -398,6 +398,19 @@ class Store:
         self._agent_uri = uri
         self._forget()
 
+    @property
+    def engine(self) -> ox.Store:
+        """The pyoxigraph store this class is built over, for a function over the store —
+        `judge_desires` is handed it and nothing else, asks the catalogue in its own texts and
+        writes the judgments through it. HANDED OUT, WHAT WAS LEARNED BY ASKING IS DROPPED:
+        whoever holds the engine may write, and this class cannot see a write it did not
+        make, so it forgets its index and its memo now and asks again at the next read —
+        which every caller makes after the function returns. No listener is told: a write
+        through the engine is not an event this class emits, and what such a write moves is
+        the writer's to say."""
+        self._forget()
+        return self._store
+
     # --- what counts as public, according to the store itself ---
 
     @property

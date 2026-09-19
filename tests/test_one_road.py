@@ -66,7 +66,7 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_road_mints_the_
     #  A LAPSE IS NOT IN VIEW YET — the prediction holds from the deadline, and the desire's
     #  select names the debt at that instant and at no other
     assert agent.beliefs.graphs_of(PREDICTION, at=clock.now()) == []
-    [w] = witnesses_of(agent, root)
+    [w] = witnesses_of(agent.beliefs.engine, root)
     assert w.instance == debt and w.about == debt, "the row is about the debt itself (sh:this)"
     assert abs(w.at.timestamp() - deadline) < 1.0
 
@@ -82,7 +82,7 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_road_mints_the_
 def test_presenting_makes_the_roads_want_pursuable_and_paying_withdraws_its_ground(monkeypatch):
     agent, ledger, root = _host(monkeypatch)
     ledger.owe("fern", "jti-2", expires_at=time.time() + HOUR, amount_l=1.0)
-    judge_desires(agent)
+    judge_desires(agent.beliefs.engine)
     derive_wants(agent)
     ledger.demanded("jti-2")
     [judged] = ledger.obligations()
@@ -90,7 +90,7 @@ def test_presenting_makes_the_roads_want_pursuable_and_paying_withdraws_its_grou
 
     ledger.discharge("jti-2")
     assert ledger.obligations() == [], "a paid debt is judged by nobody"
-    assert witnesses_of(agent, root) == [], "and will not lapse: the prediction went"
+    assert witnesses_of(agent.beliefs.engine, root) == [], "and will not lapse: the prediction went"
 
 
 def test_a_second_claim_is_a_second_want_and_the_first_stands(monkeypatch):
@@ -108,7 +108,7 @@ def test_a_second_claim_is_a_second_want_and_the_first_stands(monkeypatch):
 
     presented = next(j for j in agent.pursuing() if j.uri == first.uri)
     assert pursuit.handed(agent, presented).uri == first.uri
-    judge_desires(agent)
+    judge_desires(agent.beliefs.engine)
     assert derive_wants(agent) == [], "nothing new to mint"
     assert {w.uri for w in agent.wants.find_all_by_desire(root)} == {first.uri, second.uri}
 
@@ -133,7 +133,7 @@ def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(mon
     [now] = agent.wants.find_all_pursued()
     assert now.uri == foreseen.uri and now.about == (debt,), "the same want, re-minted"
     assert now.holds_at is None, "at no instant: the holder is waiting"
-    judge_desires(agent)
+    judge_desires(agent.beliefs.engine)
     assert derive_wants(agent) == [], "and the road is idle again"
 
     presented = next(j for j in agent.pursuing() if j.uri == now.uri)
