@@ -51,6 +51,10 @@ GRAPH graph:sensed {
 }
 
 # What each graph IS, and when it holds — said once each, beside the data.
-GRAPH graph:classification {
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  graph:ontology a orexis:OntologyGraph .
+  :world a orexis:PublicGraph .
+  :actions a orexis:PublicGraph .
   roots:keeper a orexis:DesireGraph .
 }

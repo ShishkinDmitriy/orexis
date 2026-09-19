@@ -55,10 +55,14 @@ GRAPH graph:sensed {
 
 # What each graph IS, and when it holds — said once each, beside the data.
 # CHANGED, re-rendered:
-GRAPH graph:classification {
+GRAPH :catalogue {
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :world a orexis:PublicGraph .
   <http://example.org/orexis/graph/judgments/keeper> a deliberation:JudgmentGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
+  graph:ontology a orexis:OntologyGraph .
   roots:keeper a orexis:DesireGraph .
 }
 
@@ -73,12 +77,14 @@ GRAPH <http://example.org/orexis/graph/judgments/keeper> {
 }
 
 GRAPH graph:ontology {
-  :actions a orexis:PublicGraph .
-  :world a orexis:PublicGraph .
   deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
+  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
   deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
-  graph:ontology a orexis:PublicGraph .
+  orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
   orexis:DesireGraph rdfs:subClassOf orexis:Graph .
+  orexis:OntologyGraph rdfs:subClassOf orexis:PublicGraph .
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:PublicGraph rdfs:subClassOf orexis:Graph .
+  orexis:WantGraph rdfs:subClassOf orexis:Graph .
   orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
 }

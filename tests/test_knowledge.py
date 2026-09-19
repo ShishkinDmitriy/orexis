@@ -706,6 +706,11 @@ def _graphs() -> tuple[set[str], set[str]]:
         name = helper("x")
         assert name.startswith(_GRAPH_BASE) and name.endswith("x")
         prefixes.add(name[len(_GRAPH_BASE):-1])
+    #  THE CATALOGUE IS THE ONE FIXED NAME NO ONTOLOGY DECLARES: it describes itself, and the
+    #  only spelling is genesis's, which creates it (one-catalogue-describes-every-graph-and-itself).
+    from orexis_agent_progression.ontology import CATALOGUE_GRAPH
+    assert CATALOGUE_GRAPH.startswith(_GRAPH_BASE)
+    fixed.add(CATALOGUE_GRAPH[len(_GRAPH_BASE):])
     return {f for f in fixed if f}, prefixes
 
 
@@ -726,6 +731,11 @@ def test_no_document_names_a_graph_the_store_has_never_had():
         # The judgment graph trusted-agent-mode asked for, which shipped as `:classification`.
         # That record keeps the name it chose, with the amendment beside it.
         ":opinion",
+        # And what it shipped as: the graph an agent's own interpretations went to, later the
+        # graph each owner typed its graphs into (#708), and since one-catalogue-describes-
+        # every-graph-and-itself a row of the catalogue. Five documents narrate the first
+        # sense, each in the past tense or beside the record that amended it.
+        ":classification",
         # Three writers with three graphs, in agent-centric-epistemics' two-store block. The
         # writers collapsed into one and none of these names was built; the block quotes itself.
         ":ledger",

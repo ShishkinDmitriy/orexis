@@ -99,8 +99,9 @@ def test_a_volume_written_under_the_old_name_is_moved_once_at_boot(tmp_path):
     A volume written then holds the record under that name, and birth reads the record's
     presence as whether the agent exists — so the move runs before birth, the classification
     follows the graph, a second boot finds nothing to move, and birth re-authors nothing."""
-    from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, GRAPH_PREFIX, OREXIS
+    from orexis_agent_progression.ontology import GRAPH_PREFIX, OREXIS
     st = Store()
+    st.update("INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph } }")
     world = world_with(tmp_path, ":dealer market:reservePricePerL 0.35 .")
     old = GRAPH_PREFIX + "beliefs/dealer"
     st.update(f"INSERT DATA {{ GRAPH <{old}> {{ <{NS}dealer> <{MARKET}reservePricePerL> 0.35 }} }}")
@@ -108,7 +109,7 @@ def test_a_volume_written_under_the_old_name_is_moved_once_at_boot(tmp_path):
     genesis._move_pick_record(st, "dealer")
     assert not st.has_graph(old) and [float(v) for v in value_of(st, MARKET + "reservePricePerL")] == [0.35]
     classified = {r["g"] for r in bindings(st.query(
-        f"SELECT ?g WHERE {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ ?g a <{OREXIS}PickRecordGraph> }} }}"))}
+        f"SELECT ?g WHERE {{ GRAPH <{st.catalogue}> {{ ?g a <{OREXIS}PickRecordGraph> }} }}"))}
     assert classified == {picks_graph("dealer")}, "what was said of the old name is said of the new"
     genesis._move_pick_record(st, "dealer")
     assert not genesis.birth(st, world, "dealer"), "already born: the moved record is the answer"

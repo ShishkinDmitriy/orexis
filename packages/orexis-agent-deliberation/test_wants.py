@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import pytest
 
-from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, PERIODS_GRAPH
 from orexis_agent_progression.store import Store, bindings
 
 from orexis_agent_deliberation.want import Want
@@ -34,7 +33,9 @@ def wants():
     """A collection over a bare store and NOTHING ELSE — which is the whole point of taking
     one. It took the holder's URI and the agent's id too, until those were seen for what they
     are: another aggregate root's identity, which a collection has no business holding."""
-    return Wants(Store())
+    st = Store()
+    st.update("INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph } }")
+    return Wants(st)
 
 
 def _want(uri="urn:test:want", desire=A_DESIRE, **kw):
@@ -49,7 +50,7 @@ def _owe(wants, uri):
     wants._store.update(f"""INSERT DATA {{
   GRAPH <{graph}> {{ <{uri}> a orexis:Want ; prov:wasDerivedFrom <{A_DESIRE}> ;
       rdfs:label "a debt under test" . }}
-  GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a market:ObligationsGraph . }} }}""")
+  GRAPH <{wants._store.catalogue}> {{ <{graph}> a market:ObligationsGraph . }} }}""")
 
 
 def test_a_saved_want_is_found_and_a_deleted_one_is_not(wants):
@@ -116,11 +117,11 @@ def test_saving_writes_the_graph_the_classification_and_the_period(wants):
     graph = wants.graph_of(AGENT, "urn:test:want")
 
     kinds = bindings(wants._store.query_union(
-        f"SELECT ?t WHERE {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ <{graph}> a ?t }} }}"))
+        f"SELECT ?t WHERE {{ GRAPH <{wants._store.catalogue}> {{ <{graph}> a ?t }} }}"))
     assert any(r["t"].endswith("PursuedGraph") for r in kinds), "classified as the family it is"
 
     period = bindings(wants._store.query_union(
-        f"SELECT ?s ?e WHERE {{ GRAPH <{PERIODS_GRAPH}> {{ <{graph}> dcterms:temporal ?p . "
+        f"SELECT ?s ?e WHERE {{ GRAPH <{wants._store.catalogue}> {{ <{graph}> dcterms:temporal ?p . "
         f"?p orexis:start ?s . OPTIONAL {{ ?p orexis:end ?e }} }} }}"))
     assert period and period[0].get("e", "").startswith("2026-09-17T12:10"), \
         "and it stops holding when its plan's room runs out"

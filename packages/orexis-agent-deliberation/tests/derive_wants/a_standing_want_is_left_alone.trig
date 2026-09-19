@@ -7,8 +7,8 @@
 #
 # THE JUDGMENTS AS `judge_desires` LEFT THEM on this situation (judge_desires/a_standing_want_is_left_alone.trig),
 # and the scopes `scope_actions` made of its levers: the desires, the scopes, whatever
-# stands, and the judgment graph — no world, no readings, no predictions, no levers.
-# `derive_wants` reads the judgments and the scopes, and nothing in hand.
+# stands, the judgment graph, and the catalogue that says what each is — no world, no
+# readings, no predictions, no levers. `derive_wants` reads the store and nothing in hand.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
@@ -76,19 +76,18 @@ GRAPH judgments:keeper {
           sh:value 5 ] .
 }
 
-GRAPH graph:classification {
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  graph:ontology a orexis:OntologyGraph .
   judgments:keeper a deliberation:JudgmentGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
   pursued:keeper.in_range.pursued.tank1.level a deliberation:PursuedGraph ;
+      dcterms:temporal [ a dcterms:PeriodOfTime ;
+          orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] ;
       orexis:arrivedBy orexis:Recorded .
   roots:keeper a orexis:DesireGraph .
   scopes:keeper a deliberation:ScopeGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
-}
-
-GRAPH graph:periods {
-  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ;
-          orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
 }

@@ -26,7 +26,6 @@ import logging
 import sys
 
 from agent import genesis
-from orexis_agent_progression.ontology import PROVENANCE_GRAPH
 from orexis_agent_progression.store import Store, bindings
 from agent.validate import conforms, graph_from
 
@@ -103,7 +102,7 @@ def validate_world(world: str) -> bool:
     # the sovereign's check builds per agent exactly what the agent's own boot builds, and
     # judges the world against it. The pick records travel the same road and only that road —
     # flattened beside their projections they would split every blank-node aim in two.
-    data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH)
+    data = graph_from(st, *st.public_graphs(), st.catalogue)
     from orexis_agent_deliberation.beliefs import Beliefs
     from orexis_agent_deliberation.desires import Desires
 

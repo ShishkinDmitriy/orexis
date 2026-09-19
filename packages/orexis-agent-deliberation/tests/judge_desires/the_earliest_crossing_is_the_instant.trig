@@ -54,12 +54,14 @@ GRAPH :predicted-0 { :tank1 :level 5 . }
 GRAPH :predicted-1 { :tank1 :level 8 . }
 
 # What each graph IS, and when it holds — said once each, beside the data.
-GRAPH graph:classification {
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  graph:ontology a orexis:OntologyGraph .
+  :world a orexis:PublicGraph .
+  :actions a orexis:PublicGraph .
   roots:keeper a orexis:DesireGraph .
   :predicted-0 a orexis:PredictionGraph .
   :predicted-1 a orexis:PredictionGraph .
-}
-GRAPH graph:periods {
   :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:45:00Z"^^xsd:dateTime ] .
   :predicted-1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:20:00Z"^^xsd:dateTime ] .
 }

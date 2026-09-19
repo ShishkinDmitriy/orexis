@@ -371,6 +371,11 @@ it is a record wearing a bullet.
   preconditions and effects are described the same way; the core compares triples and
   interprets no literal, and progression sizes the act when it is taken. A partition and an
   interval were both built into the core and refused on reading.
+- **One graph describes every graph and itself** — what a graph is, whose it is, how it arrived,
+  when it holds and what loaded it were three meta-graphs each reader named by kind; the
+  catalogue is found by its own row, `a orexis:CatalogueGraph`, genesis alone spells its name
+  because genesis creates it, and it is neither public nor the agent's own, so a mention of a
+  graph is never a fact in a world.
 
 ## The rules the code lives by
 
@@ -761,7 +766,9 @@ fails if pyshacl ever entails something the closure does not. See
   graph is, and every list of the agent's graphs is kept to that owner — a graph saying no
   owner is anyone's. A graph's NAME is for eyes: the helpers
   spell a readable convention for writers, and `tests/test_layout.py` refuses a reader that
-  imports one — a reader asks the class.
+  imports one — a reader asks the class. Every one of those answers comes from ONE graph, the
+  catalogue, which describes itself and is asked for from the door (`store.catalogue`) by a
+  reader that must name it in a `GRAPH` clause — never spelled, since genesis alone creates it.
 - **SPARQL prefixes.** Only what `store.NAMESPACES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in
   production. `tests/test_store.py` checks this by scanning the source text — and asserts each

@@ -18,3 +18,9 @@ GRAPH :actions {
         CONSTRUCT { ?t :level ?x . } WHERE { ?t a :Tank }""" .
   :look a orexis:Action .
 }
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  graph:ontology a orexis:OntologyGraph .
+  :actions a orexis:PublicGraph .
+}

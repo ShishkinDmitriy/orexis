@@ -17,7 +17,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from conftest import genesis_store
-from orexis_agent_progression.ontology import ACTIONS_GRAPH, PERIODS_GRAPH, WORLD_GRAPH
+from orexis_agent_progression.ontology import ACTIONS_GRAPH, WORLD_GRAPH
 
 def _now() -> datetime:
     """Read per test, never once per module: an instant captured at import is a minute old by
@@ -38,7 +38,7 @@ def _say(st, graph: str, until=None, since=None) -> None:
         bounds.append(f'orexis:start "{since.isoformat()}"^^xsd:dateTime')
     if until is not None:
         bounds.append(f'orexis:end "{until.isoformat()}"^^xsd:dateTime')
-    st.update(f"""INSERT DATA {{ GRAPH <{PERIODS_GRAPH}> {{
+    st.update(f"""INSERT DATA {{ GRAPH <{st.catalogue}> {{
         <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ; {' ; '.join(bounds)} ] }} }}""")
 
 
@@ -48,7 +48,7 @@ def test_a_store_that_states_no_range_is_the_store_it_always_was():
     now = _now()
     st = _store()
     assert st.periods() == {}
-    assert len(st.public_graphs()) == 8
+    assert len(st.public_graphs()) == 7     # the classification was the eighth; it is the catalogue now, and not public
     assert st.public_graphs() == st.public_graphs(at=now + timedelta(days=365))
 
 
@@ -103,10 +103,10 @@ def test_the_table_is_remembered_and_a_write_drops_it():
     now = _now()
     st = _store()
     _say(st, ACTIONS_GRAPH, until=now + timedelta(minutes=1))
-    assert st.periods() and st._periods is not None
+    assert st.periods() and st._catalogue_index is not None
 
     st.update("INSERT DATA { GRAPH <http://example.org/orexis/graph/sensed> { <urn:a> <urn:b> <urn:c> } }")
-    assert st._periods is None, "a write drops what was learned by asking"
+    assert st._catalogue_index is None, "a write drops what was learned by asking"
     assert ACTIONS_GRAPH in st.periods(), "and asking again learns it back"
 
 
@@ -114,7 +114,7 @@ def test_a_bound_nobody_can_read_does_not_drop_a_graph():
     """Not knowing is maximal everywhere here, and this is the same rule read the safe way
     round: a graph whose range is unreadable stays, rather than vanishing silently."""
     st = _store()
-    st.update(f"""INSERT DATA {{ GRAPH <{PERIODS_GRAPH}> {{ <{ACTIONS_GRAPH}> dcterms:temporal
+    st.update(f"""INSERT DATA {{ GRAPH <{st.catalogue}> {{ <{ACTIONS_GRAPH}> dcterms:temporal
         [ a dcterms:PeriodOfTime ; orexis:end "whenever"^^xsd:dateTime ] }} }}""")
 
     assert st.periods()[ACTIONS_GRAPH] == (None, None)
@@ -129,4 +129,4 @@ def test_a_range_on_a_graph_nobody_types_adds_nothing():
     st = _store()
     _say(st, "http://example.org/orexis/graph/nowhere", until=now + timedelta(days=1))
 
-    assert len(st.public_graphs()) == 8
+    assert len(st.public_graphs()) == 7     # the classification was the eighth; it is the catalogue now, and not public

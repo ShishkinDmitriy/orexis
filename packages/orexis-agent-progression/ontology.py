@@ -213,14 +213,12 @@ ACTIONS_GRAPH = _GRAPH + "actions"
 #  outside because the belief base is locked by the process holding it. Private, replaced per
 #  pass, never read back by the planner itself. See the deliberation layer's DeliberationGraph.
 DELIBERATION_GRAPH = _GRAPH + "deliberation"
-PROVENANCE_GRAPH = _GRAPH + "provenance"
-#  Which stretch each graph speaks for — said of the graph, outside the default union, and read
-#  by the door rather than by any rule (a-graph-holds-during-a-stretch).
-PERIODS_GRAPH = _GRAPH + "periods"
-#  What this agent's own graphs ARE, said by the agent at boot: public, because a
-#  modality-scoped query must resolve `?d a orexis:DesireGraph` without naming an instance.
-CLASSIFICATION_GRAPH = _GRAPH + "classification"
-
+#  THE CATALOGUE: the one graph that says what every graph IS — class, owner, arrival, period,
+#  and the PROV account of the load — and describes itself, so no reader knows this name:
+#  `Store.catalogue` finds the graph that says of itself `a orexis:CatalogueGraph`. Named
+#  here for the one writer that CREATES it, genesis, and for nothing else
+#  (one-catalogue-describes-every-graph-and-itself).
+CATALOGUE_GRAPH = _GRAPH + "catalogue"
 # The class a graph must be an instance of to be read by an unqualified pattern. This is a TERM,
 # and it is all the code needs: `store.public_graphs()` asks which graphs are instances of it,
 # so nothing here lists them and adding one is a vocabulary edit.

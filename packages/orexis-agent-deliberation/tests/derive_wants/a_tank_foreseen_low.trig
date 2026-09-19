@@ -7,8 +7,8 @@
 #
 # THE JUDGMENTS AS `judge_desires` LEFT THEM on this situation (judge_desires/a_tank_foreseen_low.trig),
 # and the scopes `scope_actions` made of its levers: the desires, the scopes, whatever
-# stands, and the judgment graph — no world, no readings, no predictions, no levers.
-# `derive_wants` reads the judgments and the scopes, and nothing in hand.
+# stands, the judgment graph, and the catalogue that says what each is — no world, no
+# readings, no predictions, no levers. `derive_wants` reads the store and nothing in hand.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
@@ -68,7 +68,9 @@ GRAPH judgments:keeper {
           sh:value 5 ] .
 }
 
-GRAPH graph:classification {
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  graph:ontology a orexis:OntologyGraph .
   judgments:keeper a deliberation:JudgmentGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .

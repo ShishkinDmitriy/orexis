@@ -24,7 +24,7 @@ import pytest
 from agent import genesis, ratified
 
 from assembly import loader
-from orexis_agent_progression.ontology import (OREXIS, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
+from orexis_agent_progression.ontology import (OREXIS, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
                             WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH,
                             WORLD_GRAPH)
 from orexis_agent_progression.store import Store, bindings
@@ -144,7 +144,7 @@ def test_every_public_graph_accounts_for_itself(world):
     """
     st = _public(world)
     described = {r["g"] for r in _in_graph(
-        st, PROVENANCE_GRAPH,
+        st, st.catalogue,
         "?g a prov:Entity ; ?p ?o FILTER(?p IN (prov:wasDerivedFrom, prov:wasGeneratedBy))")}
     public = set(st.public_graphs())
     assert public <= described, (
@@ -164,9 +164,9 @@ def test_the_graph_names_could_be_opaque_and_nothing_would_be_lost():
     """
     st = _public("simulation")
     from_files = {r["g"] for r in _in_graph(
-        st, PROVENANCE_GRAPH, "?g a prov:Entity ; prov:wasDerivedFrom ?f")}
+        st, st.catalogue, "?g a prov:Entity ; prov:wasDerivedFrom ?f")}
     computed = {r["g"] for r in _in_graph(
-        st, PROVENANCE_GRAPH,
+        st, st.catalogue,
         "?g a prov:Entity ; prov:wasGeneratedBy [ prov:wasAssociatedWith ?agent ] ."
         "?agent a prov:SoftwareAgent")}
 
@@ -177,28 +177,27 @@ def test_the_graph_names_could_be_opaque_and_nothing_would_be_lost():
     # files — recovered from the kind of agent the activity was associated with, not from a name.
     # The world graph is legitimately both: read from files, and those files ratified by someone.
     by_a_person = {r["g"] for r in _in_graph(
-        st, PROVENANCE_GRAPH,
+        st, st.catalogue,
         "?g a prov:Entity ; prov:wasGeneratedBy [ prov:qualifiedAssociation [ "
         "prov:hadRole ?role ] ]")}
     assert by_a_person and not (by_a_person & computed), (
         "what a person ratified and what a program computed must be distinguishable")
 
     activities = {r["a"] for r in _in_graph(
-        st, PROVENANCE_GRAPH, "?g a prov:Entity ; prov:wasGeneratedBy ?a")}
-    assert len(activities) == 4, (
-        "ratification, derivation, closure and classification are distinct — a fourth joined "
-        "when an agent began saying what its own graphs ARE, which it must do somewhere "
-        "READABLE for a modality-scoped query to resolve `?d a orexis:DesireGraph` without naming "
-        "an instance (the-mind-is-six-graphs)")
+        st, st.catalogue, "?g a prov:Entity ; prov:wasGeneratedBy ?a")}
+    assert len(activities) == 3, (
+        "ratification, derivation and closure are distinct activities — the fourth there was, "
+        "the agent classifying its own graphs, is no activity now: each owner says what its "
+        "graph is in the catalogue when it creates it, in the same update")
 
 
 def test_a_graph_that_explains_nothing_is_refused():
     """The shape, exercised. Without this the shape could be silently wrong and nothing would
     say so — a constitution nobody tests is a comment with extra syntax."""
     st = _public("simulation")
-    st.update(f"""INSERT DATA {{ GRAPH <{PROVENANCE_GRAPH}> {{
+    st.update(f"""INSERT DATA {{ GRAPH <{st.catalogue}> {{
         <http://example.org/orexis/graph/mystery> a prov:Entity }} }}""")
-    data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH)
+    data = graph_from(st, *st.public_graphs(), st.catalogue)
     ok, report = conforms(data)
     assert not ok and "mystery" in report
 
@@ -212,13 +211,18 @@ def test_a_sixth_public_graph_needs_no_python():
     rule of every capability, so a capability author maintained a copy of a registry.
 
     Here a graph is declared public in the vocabulary alone. Nothing is imported, nothing is
-    edited, and it turns up in the default graph of an ordinary query.
+    edited: the step of every boot that transcribes the vocabulary's graph declarations into the
+    catalogue runs again, as it would on the next start, and the graph turns up in the default
+    graph of an ordinary query. The declaration says how the graph arrives, as every graph
+    instance the vocabulary declares does — that is what marks it as a graph and not a term.
     """
     st = _public("simulation")
     before = set(st.public_graphs())
 
     st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
-        <http://example.org/orexis/graph/sixth> a orexis:PublicGraph }} }}""")
+        <http://example.org/orexis/graph/sixth> a orexis:PublicGraph ;
+            orexis:arrivedBy orexis:Asserted }} }}""")
+    genesis.catalogue_public(st)
     st.update("""INSERT DATA { GRAPH <http://example.org/orexis/graph/sixth> {
         <http://example.org/orexis/world/simulation#fern_agent> orexis:somethingNew "yes" } }""")
 
@@ -304,7 +308,7 @@ def test_provenance_is_not_in_the_default_graph():
     """
     st = _public("simulation")
     assert not bindings(st.query("SELECT * WHERE { ?s a prov:Activity }"))
-    assert _in_graph(st, PROVENANCE_GRAPH, "?s a prov:Activity")
+    assert _in_graph(st, st.catalogue, "?s a prov:Activity")
 
 
 @pytest.mark.parametrize("world", WORLDS)
@@ -312,8 +316,9 @@ def test_a_file_is_identified_the_same_wherever_the_tree_sits(world):
     """`prov:wasDerivedFrom` wants an IRI, and an absolute path would bake one machine into the
     store — a world is at `/app/world/` in a container and `world/<name>/` on a host, so the same
     world would describe itself differently depending on where it was built."""
+    st = _public(world)
     derived = {r["f"] for r in _in_graph(
-        _public(world), PROVENANCE_GRAPH, f"<{WORLD_GRAPH}> prov:wasDerivedFrom ?f")}
+        st, st.catalogue, f"<{WORLD_GRAPH}> prov:wasDerivedFrom ?f")}
     assert derived
     for iri in derived:
         assert iri.startswith("http://example.org/orexis/file/world/"), iri
@@ -326,7 +331,7 @@ def test_a_file_is_identified_the_same_wherever_the_tree_sits(world):
 def test_the_ratified_world_records_who_ratified_it_and_in_what_capacity(world):
     """`prov:agent` alone would say a user was involved. `prov:hadRole` says in what capacity —
     the only form that survives an installation having several users with different powers."""
-    rows = _in_graph(_public(world), PROVENANCE_GRAPH, f"""
+    rows = _in_graph((st := _public(world)), st.catalogue, f"""
         <{WORLD_GRAPH}> prov:wasGeneratedBy ?act .
         ?act prov:qualifiedAssociation [ prov:agent ?user ; prov:hadRole ?role ] .""")
     assert rows, "the ratified graph names nobody"

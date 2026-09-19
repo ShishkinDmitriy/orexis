@@ -356,11 +356,8 @@ PUBLIC and not belief. A rule here is a SCHEMA — what applying a lever WOULD d
 
 
 
-orexis:ProvenanceGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Provenance graph" ;
-    rdfs:comment "What the other graphs ARE, in PROV-O. NOT public, and the reason is use versus mention: these are statements ABOUT graphs, so merging them into the default graph would make an ordinary `?device a ?class` start returning activities." .
-
-orexis:PeriodGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Period graph" ;
-    rdfs:comment """WHEN the other graphs hold, as `dcterms:temporal`. NOT public, and for the same use-versus-mention reason the provenance graph is not: these are statements ABOUT graphs, so merging them would make an ordinary pattern answer with periods. And not the agent's OWN either — declared with no `orexis:arrivedBy`, which is how `store._OWN` leaves the provenance graph out — because a period CHANGES, and a graph a plan imagines from is one whose facts are part of where that plan stands: a lapsing period would move the invariant signature and kill a kept cone.""" .
+orexis:CatalogueGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Catalogue graph" ;
+    rdfs:comment "THE ONE GRAPH THAT SAYS WHAT EVERY GRAPH IS, ITSELF INCLUDED (one-catalogue-describes-every-graph-and-itself): its class, whose it is (`orexis:beliefsOf`), how it arrived (`orexis:arrivedBy`), when it holds (`dcterms:temporal`, a `dcterms:PeriodOfTime` either end open) and, for a public graph, the PROV-O account of the load that made it. Written by whoever creates a graph, in the same update as the graph; the vocabulary's own instances below are transcribed into it on every start. It describes ITSELF, which is what lets a store find it without knowing its name — `Store.catalogue` asks every graph for the one that says of itself it is this — so no reader names it, and the three graphs it replaced (the classification, the periods, the provenance) were the bootstrap root's names. NOT public, and the reason is use versus mention: these are statements ABOUT graphs, so merged into the default graph they would answer open patterns that mean something else — `?device a ?class` would return graphs — and a period is a fact that moves, which in every possible world would move the invariant signature and kill a kept cone. The door reads it and hands a rule a dataset; the rule learns nothing of it." .
 
 ##  The instances. Data, not terms — code names the classes above and finds these by asking.
 ##  Three world graphs and two ontology graphs, because the role is what a graph HOLDS and how
@@ -376,35 +373,14 @@ orexis:PeriodGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Peri
 ##  `graph/instruments` — what the agent holds about the instruments it polls — is declared in
 ##  sensing's ontology: a package may own a belief graph, and this one is its.
 <http://example.org/orexis/graph/actions>            a orexis:ActionGraph ;  orexis:arrivedBy orexis:Asserted .
-<http://example.org/orexis/graph/provenance>        a orexis:ProvenanceGraph .
 ##  One pass per goal and no more: written at the start of each, replacing what was there.
 <http://example.org/orexis/graph/deliberation>      a deliberation:DeliberationGraph ; orexis:arrivedBy orexis:Derived .
 
-##  Where an agent says what its OWN graphs are. A per-agent graph cannot be declared in a
-##  T-Box — it does not exist until its agent does — so the agent classifies its own at boot,
-##  and it has to land somewhere READABLE — a reader asks what a graph IS and must resolve
-##  it without naming any graph instance, which is the rule that keeps a query from silently
-##  reading part of the truth. (The example this comment carried, a modality-scoped
-##  `?d a orexis:DesireGraph`, retired with the modality classes — the desire modality is a STORE
-##  now, and inside a store the graphs say only who put the fact there, #312 — and the spelling
-##  is back as a CONTENT class, a graph of desire rows, which a reader asks exactly that way.)
-##
-##  Public and belief-modality, because a classification is a fact about what a graph IS —
-##  and the static graphs above have always been classified in the ontology graph, which is
-##  public too. Putting the per-agent ones in `provenance` (which is deliberately outside the
-##  default union, to keep mentions of graphs from answering questions about devices) was the
-##  inconsistency, and it showed up the first time a scoped query could not see them.
-##  WHEN EACH GRAPH HOLDS — one `dcterms:PeriodOfTime` per graph, under `dcterms:temporal` —
-##  and deliberately NOT public: a period changes, and a
-##  statement inside the default union is a fact in every possible world — one that lapsed would
-##  move the invariant signature and kill a kept cone. A sibling of `graph/provenance`, which has
-##  the same property and is the other place mentions of graphs live; not provenance itself,
-##  because that graph is replaced WHOLE by every load and a runtime period is not a function
-##  of the files. Read by the store's door, which is the bootstrap root asking what to merge.
-<http://example.org/orexis/graph/periods>           a orexis:PeriodGraph .
-
-<http://example.org/orexis/graph/classification>    a orexis:PublicGraph , orexis:BeliefGraph ;
-    orexis:arrivedBy orexis:Recorded .
+##  WHAT AN AGENT'S OWN GRAPHS ARE, WHEN ANY GRAPH HOLDS AND HOW A LOAD HAPPENED used to be
+##  three graphs declared here — `classification`, `periods`, `provenance` — and are the
+##  catalogue's now, which describes itself and is declared by nobody (orexis:CatalogueGraph
+##  above). A per-agent graph is said by its owner when it creates it; a public one below is
+##  transcribed by genesis on every start.
 
 ##  Where a world states a root desire: a TriG block in the world's own files, replaced from
 ##  them on every boot exactly as the world graph is, projected into the desire modality by

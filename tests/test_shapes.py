@@ -421,6 +421,7 @@ def _wiring(body: str) -> rdflib.Graph:
     st = Store()
     st.put_graph(ONTOLOGY_GRAPH, "\n".join(p.read_text() for p in loader.ontology_files()))
     st.put_graph(WORLD_GRAPH, _WIRING_PREAMBLE + body + _RAILS)
+    genesis.catalogue_public(st)          # a store built by hand says what its graphs are, as genesis does
     inference.materialise(st)
 
     data = rdflib.Graph()

@@ -23,3 +23,9 @@ GRAPH :actions {
       sh:construct """PREFIX : <http://example.org/test#>
         CONSTRUCT { ?t ?p ?x . } WHERE { ?t a :Tank ; ?p ?x }""" .
 }
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  graph:ontology a orexis:OntologyGraph .
+  :actions a orexis:PublicGraph .
+}

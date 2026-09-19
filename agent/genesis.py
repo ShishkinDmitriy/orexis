@@ -35,7 +35,7 @@ from agent import config, inference, provenance, vocabulary
 
 from assembly import loader
 from .config import REPO_ROOT
-from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, CLASSIFICATION_GRAPH, GRAPH_PREFIX, OREXIS, roots_graph, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, STATE_GRAPH,
+from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, CATALOGUE_GRAPH, GRAPH_PREFIX, OREXIS, roots_graph, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, STATE_GRAPH,
                        WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, picks_graph)
 from orexis_agent_progression.store import NAMESPACES, Raw, Store, bind, bindings
@@ -171,7 +171,6 @@ WHERE {{
 # means what it always meant, so no existing rule changed.
 _INTO = re.compile(r"\$into\(([^)]+)\)")
 
-_GRAPH_OF_CLASS = "SELECT ?g WHERE {{ ?g a <{cls}> }}"
 
 
 def _expand(prefixed: str) -> str:
@@ -198,7 +197,7 @@ def graph_of_class(st: Store, class_iri: str) -> str:
     nobody named. Zero is the likelier mistake: a package that declared a class and forgot to
     type an instance would otherwise write into a graph called `None`.
     """
-    graphs = sorted({r["g"] for r in bindings(st.query(_GRAPH_OF_CLASS.format(cls=class_iri)))})
+    graphs = sorted(st.graphs_of(class_iri, at=None))
     if len(graphs) != 1:
         raise RuntimeError(
             f"<{class_iri}> types {len(graphs)} graphs ({', '.join(graphs) or 'none'}) — a rule "
@@ -294,6 +293,7 @@ def refresh_public(st: Store, world: Path) -> None:
     st.clear_graph(DESIRE_ASSERTED_GRAPH)
     st.put_graph(WORLD_GRAPH, "\n".join(p.read_text() for p in world_files(world)),
                  dataset=True)
+    catalogue_public(st)
     # The T-Box is in, so a rule's `$into` can be resolved: a write target is discovered from
     # the vocabulary, and everything below treats all of them alike. Computed before the clear
     # rather than after, because a graph cleared is a graph whose class assertion still stands —
@@ -307,6 +307,56 @@ def refresh_public(st: Store, world: Path) -> None:
     # Last, because it describes the result: which graph holds what, in PROV-O, so the
     # store answers that rather than this file's comments. See orexis/provenance.py.
     provenance.describe(st, world, targets)
+
+
+def ensure_catalogue(st: Store) -> str:
+    """The catalogue, created where the store has none — the one place its name is written:
+    it says of itself what it is, and every reader finds it by that
+    (one-catalogue-describes-every-graph-and-itself). Genesis is the one writer that creates
+    it, at refresh, at birth and at every start, so a bare store may be born into."""
+    if st.catalogue is None:
+        st.update(f"""INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{
+  <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph ; orexis:arrivedBy orexis:Derived . }} }}""")
+    return st.catalogue
+
+
+def catalogue_public(st: Store) -> None:
+    """Say what the public graphs are, in the catalogue.
+
+    The vocabulary DECLARES its graph instances (`<…/graph/world> a orexis:WorldGraph`, and a
+    package's own beside its terms), and that declaration is transcribed here on every start:
+    the catalogue is where a reader asks, the T-Box is where a package says. What the catalogue
+    said of a public graph before is dropped first, since the vocabulary may have changed its
+    mind. A graph instance is known by `orexis:arrivedBy`, which the vocabulary states of a
+    graph and of nothing else — no walk of the class hierarchy, which the closure owns."""
+    catalogue = ensure_catalogue(st)
+    for graph in st.public_graphs(ever=True):
+        st.update(f"DELETE WHERE {{ GRAPH <{catalogue}> {{ <{graph}> ?p ?o }} }}")
+    st.update(f"""
+INSERT {{ GRAPH <{catalogue}> {{ ?g a ?class ; orexis:arrivedBy ?arrival }} }}
+WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?g a ?class ; orexis:arrivedBy ?arrival }} }}""")
+
+
+def _gather_into_catalogue(st: Store) -> None:
+    """A volume written when what a graph is, when it holds and how it was loaded lived in
+    three graphs of their own — the classification, the periods, the provenance — is gathered
+    into the catalogue once, before anything reads it. The old spellings live here and nowhere
+    else, since a migration names what it migrates from; the provenance is not carried, being
+    rewritten on every start by `provenance.describe`."""
+    catalogue = ensure_catalogue(st)
+    old = {kind: GRAPH_PREFIX + kind for kind in ("classification", "periods", "provenance")}
+    moved = []
+    for kind in ("classification", "periods"):
+        if st.has_graph(old[kind]):
+            st.update(f"ADD <{old[kind]}> TO <{catalogue}>")
+            st.clear_graph(old[kind])
+            moved.append(kind)
+    if st.has_graph(old["provenance"]):
+        st.clear_graph(old["provenance"])
+    if moved:
+        for name in old.values():
+            st.update(f"DELETE WHERE {{ GRAPH <{catalogue}> {{ <{name}> ?p ?o }} }}")
+        log.info("gathered %s into the catalogue", " and ".join(moved))
 
 
 def derived(st: Store) -> list[tuple[str, str]]:
@@ -338,6 +388,7 @@ def birth(st: Store, world: Path, agent_id: str, rebirth: bool = False) -> bool:
         # will fail their own validation at startup, which is where it should be reported.
         return False
     st.put_graph(graph, path.read_text())
+    ensure_catalogue(st)
     st.classify(graph, OREXIS + "PickRecordGraph", OREXIS + "Asserted", agent_uri(st, agent_id))
     author_roots(st, agent_id)
     return True
@@ -422,6 +473,7 @@ def author_roots(st: Store, agent_id: str) -> list[str]:
         triples = "\n".join(f"{q.subject} {q.predicate} {q.object} ." for q in _subgraph_of(scratch, graph, top))
         if triples:
             st.update(f"INSERT DATA {{ GRAPH <{graph}> {{\n{triples}\n}} }}")
+    ensure_catalogue(st)
     st.classify(graph, OREXIS + "DesireGraph", OREXIS + "Asserted", agent_uri(st, agent_id))
     return new
 
@@ -457,19 +509,14 @@ def drop_ghost_graphs(st: Store, agent_id: str) -> list[str]:
     nothing AND it is none of this agent's own. Anything owned or declared is left alone,
     because the safe direction to fail is to keep too much.
     """
-    from orexis_agent_progression.ontology import OREXIS, PROVENANCE_GRAPH
+    from orexis_agent_progression.ontology import OREXIS
 
-    #  A GRAPH IS THE AGENT'S BY ITS CLASSIFICATION and by nothing about its name: what the
-    #  owners classified (the agent's own, its predictions) and what the vocabulary declares
-    #  are kept; a graph under the kernel's prefix that nobody typed is the ghost. Run after
-    #  every owner has spoken (`runtime.Agent`), never before — it used to ask which classes
-    #  state a prefix and keep whatever a name matched, the one reader that needed a name.
-    declared = {r["g"] for r in bindings(st.query("SELECT ?g WHERE { ?g a ?class }"))
-                if r["g"].startswith(GRAPH_PREFIX)}
-    owned = set(st.recorded_graphs()) | set(st.prediction_graphs()) | set(st.graphs_of(OREXIS + "Graph"))
-    ghosts = [g for g in st.graph_names()
-              if g.startswith(GRAPH_PREFIX) and g not in declared and g != PROVENANCE_GRAPH
-              and g not in owned]
+    #  A GRAPH IS THE AGENT'S BY THE CATALOGUE and by nothing about its name: whatever the
+    #  catalogue describes — public, the agent's own, a prediction, a working graph — and the
+    #  catalogue itself are kept; a graph under the kernel's prefix the catalogue says nothing
+    #  of is the ghost. Run after every owner has spoken (`runtime.Agent`), never before.
+    described = set(st.graphs_of(OREXIS + "Graph", at=None)) | {st.catalogue}
+    ghosts = [g for g in st.graph_names() if g.startswith(GRAPH_PREFIX) and g not in described]
     for g in ghosts:
         st.clear_graph(g)
     if ghosts:
@@ -496,6 +543,7 @@ def classify_kernel_graphs(st: Store, agent_id: str) -> None:
     depended on a name; a name is for eyes now, and code asks the class.
     """
     me = agent_uri(st, agent_id)
+    ensure_catalogue(st)
     st.classify(picks_graph(agent_id), OREXIS + "PickRecordGraph", OREXIS + "Asserted", me)
     st.classify(roots_graph(agent_id), OREXIS + "DesireGraph", OREXIS + "Asserted", me)
 
@@ -538,9 +586,9 @@ def _move_pick_record(st: Store, agent_id: str) -> None:
     if st.has_graph(new) or not st.has_graph(old):
         return
     st.update(f"MOVE GRAPH <{old}> TO <{new}>")
-    st.update(f"""DELETE {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ <{old}> ?p ?o }} }}
-INSERT {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ <{new}> ?p ?o }} }}
-WHERE  {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ <{old}> ?p ?o }} }}""")
+    st.update(f"""DELETE {{ GRAPH <{st.catalogue}> {{ <{old}> ?p ?o }} }}
+INSERT {{ GRAPH <{st.catalogue}> {{ <{new}> ?p ?o }} }}
+WHERE  {{ GRAPH <{st.catalogue}> {{ <{old}> ?p ?o }} }}""")
     log.info("%s: pick record moved from %s to %s", agent_id, old, new)
 
 
@@ -556,6 +604,7 @@ def open_belief_base(world: Path, agent_id: str, path: str | None = None,
     """
     st = Store(_belief_room(path))
     refresh_public(st, world)
+    _gather_into_catalogue(st)
     _move_pick_record(st, agent_id)
     born = birth(st, world, agent_id, rebirth)
     if born:

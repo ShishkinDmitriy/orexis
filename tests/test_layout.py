@@ -423,6 +423,7 @@ def test_the_society_repeats_every_limit_the_wiring_states():
         st = Store()
         st.put_graph(ONTOLOGY_GRAPH, t_box)
         st.put_graph(WORLD_GRAPH, "\n".join(p.read_text() for p in paths), dataset=True)
+        genesis.catalogue_public(st)          # a store built by hand says what its graphs are, as genesis does
         inference.materialise(st)
         return st
 
