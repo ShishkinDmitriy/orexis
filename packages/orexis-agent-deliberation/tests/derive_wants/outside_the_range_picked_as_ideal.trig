@@ -22,6 +22,11 @@
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix water: <http://example.org/orexis/water#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -38,18 +43,19 @@ GRAPH :desires {
       sh:sparql [ orexis:about sh:this ;
           sh:message "a watched property reads outside the range picked as ideal for it" ;
           sh:prefixes orexis: ;
-          sh:select """SELECT $this WHERE {
-            $this <http://example.org/test#of> ?sample ;
-                  <http://example.org/test#forProperty> ?property ;
-                  <http://example.org/test#reads> ?value .
-            ?sample <http://example.org/test#around> ?plant .
-            ?plant <http://example.org/test#idealRange> ?range .
-            ?range <http://example.org/test#band> ?band .
-            ?band <http://example.org/test#forProperty> ?property ;
-                  <http://example.org/test#low> ?low ;
-                  <http://example.org/test#high> ?high .
+          sh:select """PREFIX : <http://example.org/test#>
+            SELECT $this WHERE {
+            $this ssn:isPropertyOf ?sample ;
+                  ssn:forProperty ?property ;
+                  sosa:hasSimpleResult ?value .
+            ?sample sosa:isSampleOf ?plant .
+            ?plant :idealRange ?range .
+            ?range ssn-system:inCondition ?band .
+            ?band ssn:forProperty ?property ;
+                  schema:minValue ?low ;
+                  schema:maxValue ?high .
             FILTER(?value < ?low || ?value > ?high) }""" ] ;
-      sh:targetClass :Watched .
+      sh:targetClass ssn:Property .
 }
 
 #  THE PARTITION a world with a waterer and a heater leaves. It decides nothing here: a result
@@ -58,9 +64,9 @@ GRAPH :desires {
 GRAPH :scopes {
   :keeper.scope.1 a deliberation:Scope .
   :keeper.scope.2 a deliberation:Scope .
-  :moisture deliberation:inScope :keeper.scope.1 .
-  :water deliberation:inScope :keeper.scope.1 .
-  :warmth deliberation:inScope :keeper.scope.2 .
+  water:SoilMoisture deliberation:inScope :keeper.scope.1 .
+  :dose deliberation:inScope :keeper.scope.1 .
+  water:AirTemperature deliberation:inScope :keeper.scope.2 .
   :heat deliberation:inScope :keeper.scope.2 .
 }
 

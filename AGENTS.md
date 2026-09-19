@@ -806,7 +806,12 @@ fails if pyshacl ever entails something the closure does not. See
   query** (#508): it uses the same names, says `sh:prefixes orexis:` on the node that carries
   it, and the store's `DECLARATION` — the dictionary in SHACL's words, assembled and never
   authored — travels with every shapes graph either engine is handed. A select spelling an
-  IRI in full that the store has a name for fails the same test.
+  IRI in full that the store has a name for fails the same test. **A select speaking words the
+  store never loaded declares them itself**, `PREFIX name: <iri>` above its `SELECT` as SPARQL
+  says it, and the compiler writes them at the head of the query it produces; a name the store
+  already spells differently, or two selects spelling one name two ways, is refused. No shape
+  shipped here needs one — a package's namespace is one the store discovered from that
+  package's own ontology — and a test case speaking its own words does.
 - **A test that asserts inside a loop can assert nothing.** An empty result set is not an error,
   so the body never runs and the test is green. The repo-root `conftest.py` traces the at-risk
   tests — an `assert` inside a loop over something that could be empty — and fails the run if a

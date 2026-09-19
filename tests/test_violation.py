@@ -144,6 +144,77 @@ def test_a_shape_the_compiler_cannot_say_refuses():
         unmet_select(g, ex.U)
 
 
+def test_a_select_brings_its_own_prefix_and_the_compiled_query_keeps_it():
+    """SPARQL declares a prefix with `PREFIX`, and a `sh:select` is a query like any other.
+
+    Only the BODY of a select is inlined into the compiled branch, so a `PREFIX` line would
+    otherwise be dropped and its names left unresolvable — which is why a shape speaking a
+    vocabulary the store never loaded had to spell every IRI in full. What the select declared
+    is written at the head of the compiled query instead, and the query RUNS, which is what
+    this asserts rather than the text it produced.
+
+    Almost every shape needs none: a package's namespace is one the store discovered from that
+    package's own ontology, and no shape shipped here declares a prefix of its own.
+    """
+    import pyoxigraph as ox
+
+    from orexis_agent_progression.store import NAMESPACES
+    from orexis_agent_progression.violation import report_select
+
+    g = rdflib.Graph()
+    g.parse(data="""
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix orexis: <http://example.org/orexis#> .
+        @prefix ex: <http://example.org/nobody-loaded-this#> .
+        ex:S a sh:NodeShape ; sh:targetClass ex:Thing ;
+            sh:sparql [ sh:prefixes orexis: ; orexis:about sh:this ;
+                sh:select '''PREFIX ex: <http://example.org/nobody-loaded-this#>
+                    SELECT $this WHERE { $this ex:reads ?v FILTER(?v > 10) }''' ] .
+    """, format="turtle")
+    select = report_select(g, rdflib.URIRef("http://example.org/nobody-loaded-this#S"))
+    assert select.startswith("PREFIX ex: <http://example.org/nobody-loaded-this#>"), select
+
+    store = ox.Store()
+    store.update("""INSERT DATA { GRAPH <http://g> {
+        <http://example.org/nobody-loaded-this#a> a <http://example.org/nobody-loaded-this#Thing> ;
+            <http://example.org/nobody-loaded-this#reads> 40 .
+        <http://example.org/nobody-loaded-this#b> a <http://example.org/nobody-loaded-this#Thing> ;
+            <http://example.org/nobody-loaded-this#reads> 4 . } }""")
+    rows = [str(r["this"].value) for r in store.query(
+        select, prefixes=NAMESPACES, default_graph=[ox.NamedNode("http://g")])]
+    assert rows == ["http://example.org/nobody-loaded-this#a"], rows
+
+
+def test_a_select_may_not_redeclare_a_name_that_already_means_something():
+    """Two spellings of one name is the confusion prefixes exist to prevent, and the engine
+    would take whichever came last. Refused, named, whether the other spelling is the store's
+    or another select's in the same shape."""
+    from orexis_agent_progression.violation import Unsupported, report_select
+
+    g = rdflib.Graph()
+    g.parse(data="""
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix orexis: <http://example.org/orexis#> .
+        @prefix ex: <http://example.org/x#> .
+        ex:S a sh:NodeShape ; sh:targetClass ex:Thing ;
+            sh:sparql [ sh:prefixes orexis: ;
+                sh:select '''PREFIX orexis: <http://example.org/somewhere-else#>
+                    SELECT $this WHERE { $this orexis:p ?v }''' ] .
+        ex:T a sh:NodeShape ; sh:targetClass ex:Thing ;
+            sh:sparql [ sh:prefixes orexis: ;
+                sh:select '''PREFIX qq: <http://example.org/one#>
+                    SELECT $this WHERE { $this qq:p ?v }''' ] ,
+                      [ sh:prefixes orexis: ;
+                sh:select '''PREFIX qq: <http://example.org/two#>
+                    SELECT $this WHERE { $this qq:q ?v }''' ] .
+    """, format="turtle")
+    ex = rdflib.Namespace("http://example.org/x#")
+    with pytest.raises(Unsupported, match="the store calls that prefix"):
+        report_select(g, ex.S)
+    with pytest.raises(Unsupported, match="declare qq: differently"):
+        report_select(g, ex.T)
+
+
 def test_the_fragment_compiles_to_readable_sparql():
     """The shapes the derivations emit, in one small shape: a sequence path with an inverse
     step, a qualified value shape with min count one, another with max count zero and a

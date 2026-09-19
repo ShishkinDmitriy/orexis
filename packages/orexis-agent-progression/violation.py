@@ -49,6 +49,9 @@ from .store import NAMESPACES, Raw, bind
 #  Longest namespace first, so a prefix whose namespace extends another's wins.
 _PREFIX_OF = dict(sorted(NAMESPACES.items(), key=lambda kv: -len(kv[1])))
 
+#  `PREFIX name: <iri>` as SPARQL writes it, the empty name included.
+_PREFIX_LINE = re.compile(r"PREFIX\s+([A-Za-z][\w.\-]*)?\s*:\s*<([^>]*)>", re.I)
+
 SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 OREXIS = rdflib.Namespace("http://example.org/orexis#")
 
@@ -134,7 +137,7 @@ def report_selects(shapes: rdflib.Graph, focus_node=None) -> dict:
             continue
         branches = c.report_branches(shape, focus_node)
         if branches:
-            out[shape] = ("SELECT DISTINCT ?this ?_constraint ?_offending WHERE { "
+            out[shape] = (c.preamble() + "SELECT DISTINCT ?this ?_constraint ?_offending WHERE { "
                           + " UNION ".join(branches) + " }")
     return out
 
@@ -151,9 +154,35 @@ class _Compiler:
     def __init__(self, g: rdflib.Graph):
         self.g = g
         self._vars = itertools.count()
+        #  A SELECT MAY BRING ITS OWN WORDS. SPARQL declares a prefix with `PREFIX`, and a
+        #  `sh:select` is a query like any other; what a shape's body says in prefixed names
+        #  is kept here and written at the head of whatever this compiler produces. Almost
+        #  every select needs none — a package's namespace is one the store discovered from
+        #  its ontology — and one that speaks a vocabulary the store never loaded says so
+        #  itself, rather than spelling every IRI in full.
+        self.prefixes: dict = {}
 
     def fresh(self) -> str:
         return f"?v{next(self._vars)}"
+
+    def declare(self, name: str, iri: str) -> None:
+        """Keep one prefix a select declared, and refuse a name that already means something
+        else — to this compiler, or to the store. Two spellings of one name is the confusion
+        prefixes exist to prevent, and the engine would silently take whichever came last."""
+        known = NAMESPACES.get(name)
+        if known is not None and known != iri:
+            raise Unsupported(f"a select declares {name}: as <{iri}>, and the store calls that "
+                              f"prefix <{known}>")
+        if self.prefixes.get(name, iri) != iri:
+            raise Unsupported(f"two selects declare {name}: differently — <{iri}> and "
+                              f"<{self.prefixes[name]}>")
+        if known is None:
+            self.prefixes[name] = iri
+
+    def preamble(self) -> str:
+        """What the selects brought, at the head of the compiled query. Empty for every shape
+        that speaks the store's own words, which is every shape shipped."""
+        return "".join(f"PREFIX {name}: <{iri}> " for name, iri in sorted(self.prefixes.items()))
 
     # --- the whole ----------------------------------------------------------------------------
 
@@ -163,7 +192,8 @@ class _Compiler:
             return None
         #  `?_about` is unbound on a row whose constraint's block says nothing, and that is the
         #  reader's signal to fall back to the desire's own `orexis:about`.
-        return "SELECT DISTINCT ?this ?_constraint ?_offending ?_about WHERE { " + " UNION ".join(branches) + " }"
+        return (self.preamble() + "SELECT DISTINCT ?this ?_constraint ?_offending ?_about WHERE { "
+                + " UNION ".join(branches) + " }")
 
     def targeted(self, shape) -> bool:
         return any((shape, t, None) in self.g for t in (
@@ -204,9 +234,10 @@ class _Compiler:
             raise Unsupported(f"{shape} states no constraint this compiler knows — a want "
                               "with nothing to violate would read as met for ever")
         if entered:
-            return f"SELECT DISTINCT ?this WHERE {{ {target} {self.conforms(shape, '?this')} }}"
+            return (self.preamble()
+                    + f"SELECT DISTINCT ?this WHERE {{ {target} {self.conforms(shape, '?this')} }}")
         branches = " UNION ".join(f"{{ {target} {alt} }}" for alt in alternatives)
-        return f"SELECT DISTINCT ?this WHERE {{ {branches} }}"
+        return self.preamble() + f"SELECT DISTINCT ?this WHERE {{ {branches} }}"
 
     def target(self, shape) -> str:
         nodes = list(self.g.objects(shape, SH.targetNode))
@@ -435,6 +466,12 @@ class _Compiler:
         head, brace, rest = text.partition("{")
         if "SELECT" not in head.upper() or "WHERE" not in head.upper() or not brace:
             raise Unsupported(f"{node}: a select must be SELECT … WHERE {{ … }}")
+        #  WHAT THE SELECT DECLARED FOR ITSELF, kept for the compiled query: only the body is
+        #  inlined below, so a `PREFIX` line would otherwise be dropped and its names left
+        #  unresolvable — the reason a shape speaking a vocabulary the store never loaded had
+        #  to spell every IRI in full.
+        for name, iri in _PREFIX_LINE.findall(head):
+            self.declare(name, iri)
         body = rest[:rest.rfind("}")]
         for forbidden in ("$PATH", "$value", "$currentShape", "$shapesGraph"):
             if forbidden in body:
