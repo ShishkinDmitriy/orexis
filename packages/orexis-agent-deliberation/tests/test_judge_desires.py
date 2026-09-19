@@ -29,7 +29,7 @@ def test_judge_desires_leaves_the_store_as_the_snapshot_says(case, monkeypatch, 
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     agent = snapshots.stand_in(case)
     before = snapshots.snapshot_of(agent.beliefs)
-    judge_desires(agent)
+    judge_desires(agent.beliefs.engine)
     snapshots.held_to(case, request, "judge_desires", before, snapshots.snapshot_of(agent.beliefs))
 
 

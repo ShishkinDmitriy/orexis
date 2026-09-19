@@ -71,14 +71,14 @@ def handed(agent, judgment):
         #  that re-minted THIS want — what it foresaw has arrived — the judgment in hand still
         #  carries the old instant, so it is presented again.
         if judgment.derived_from is not None:
-            judge_desires(agent)
+            judge_desires(agent.beliefs.engine)
             if judgment.uri in derive_wants(agent):
                 return next((d for d in agent.pursuing() if d.uri == judgment.uri), judgment)
         return judgment
     #  THE PASS STANDS ON THE ROOT: every desire is judged into the store and the wants derived
     #  from what the store says — a root whose met-test the compiler refused is judged by the
     #  choir there, and still derives its one want.
-    judge_desires(agent)
+    judge_desires(agent.beliefs.engine)
     derive_wants(agent)
     child = child_of(agent, judgment.uri)
     if child is None:
@@ -120,7 +120,7 @@ def crossing_row_of(agent, root: str) -> tuple[datetime, datetime] | None:
     """When the world a root is about is PREDICTED to leave what the root wants, or None: the
     earliest witness among the predictions. The second instant is the same start — what a pass
     for the derived want is clocked from. Kept for its readers; the rows are `witnesses_of`."""
-    found = witnesses_of(agent, root)
+    found = witnesses_of(agent.beliefs.engine, root)
     return (found[0].at, found[0].at) if found else None
 
 

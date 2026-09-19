@@ -32,10 +32,12 @@ JUDGES = DELIBERATION + "judges"
 CONSTRAINT = DELIBERATION + "constraint"
 
 
-def judgments_graph(agent_id: str) -> str:
-    """ONE agent's judgments, replaced whole on every run of `judge_desires`: a working
-    graph, read by `derive_wants` and by eyes, carried by no plan and recorded by nothing."""
-    return "http://example.org/orexis/graph/judgments/" + agent_id
+def judgments_graph(holder: str) -> str:
+    """ONE holder's judgments, replaced whole on every run of `judge_desires`: a working
+    graph, read by `derive_wants` and by eyes, carried by no plan and recorded by nothing.
+    Named for the holder's local name, since the road is a function over the store and is
+    handed no id; a reader asks the class, and `save_judgments` drops by it."""
+    return "http://example.org/orexis/graph/judgments/" + holder
 
 
 #  A SCOPE (scope-actions): which predicates some one action or derivation moves together.

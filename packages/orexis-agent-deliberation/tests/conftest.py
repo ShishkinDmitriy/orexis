@@ -51,7 +51,9 @@ def stand_in(case: Path, text: str | None = None):
     #  THE CASE SAYS WHAT ITS GRAPHS ARE, in a catalogue it names — `:catalogue` — found by what
     #  it says of itself, never by its spelling: which graphs are public, which graph is the
     #  vocabulary. The stub adds only the axioms, into whichever graph the case types as the
-    #  vocabulary's, and they say what every graph class the road asks by is beneath; a case
+    #  vocabulary's, and they say what every graph class the road asks by is beneath — with
+    #  what the closure entails of them, as a volume's entailed graph carries it, since a
+    #  writer over the engine asks one `rdfs:subClassOf` step for every kind a row bears; a case
     #  with no catalogue is refused, since a store that says nothing of its graphs has no
     #  public knowledge to read, and one typing no vocabulary graph the same, since the axioms
     #  would have nowhere to go. No name in a case is the kernel's: every graph is called what
@@ -67,7 +69,10 @@ def stand_in(case: Path, text: str | None = None):
         orexis:PredictionGraph rdfs:subClassOf orexis:Graph . orexis:DesireGraph rdfs:subClassOf orexis:Graph .
         orexis:WantGraph rdfs:subClassOf orexis:Graph . deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
         deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
-        deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph . }} }}""")
+        deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
+        orexis:OntologyGraph rdfs:subClassOf orexis:Graph . orexis:StateGraph rdfs:subClassOf orexis:Graph .
+        deliberation:PursuedGraph rdfs:subClassOf orexis:Graph . deliberation:JudgmentGraph rdfs:subClassOf orexis:Graph .
+        deliberation:ScopeGraph rdfs:subClassOf orexis:Graph . }} }}""")
     st.close_catalogue()      # a case's rows say one class each; every kind stands on them now, as on a volume's
     desires, wants = Desires(st), Wants(st)
     wants.on_saved.append(lambda _: desires.rebuild())

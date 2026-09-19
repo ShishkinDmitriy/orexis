@@ -3,19 +3,19 @@
 `judge_desires` hands the engine's own rows here and they are written as judgments;
 `derive_wants` reads them back with one SELECT. No Python object stands for a judgment in
 between — the sovereign's question, and the answer is no: the next function reads the
-graph. This module owns the judgment graph: its name for eyes (`judgments/<agent>`), its
-classification with owner, and that it is replaced whole on every run, exactly as `Wants`
-owns the pursued graphs. A reader that means the graph asks its class.
+graph. This module owns the judgment graph: its name for eyes (`judgments/<holder>`), its
+classification with owner, and that a holder's judgments are replaced whole on every run,
+exactly as `Wants` owns the pursued graphs. A reader that means the graph asks its class.
 """
 
 from __future__ import annotations
 
-import json
 from datetime import datetime
 
+import pyoxigraph as ox
+
 from orexis_agent_progression import clock
-from orexis_agent_progression.ontology import OREXIS
-from orexis_agent_progression.store import bindings
+from orexis_agent_progression.store import NAMESPACES, bind, bindings
 
 from .ontology import DELIBERATION, judgments_graph
 
@@ -29,10 +29,17 @@ SELECT ?desire ?at ?met ?focus ?about ?k WHERE {
   OPTIONAL { ?j sh:result ?r . ?r sh:focusNode ?focus ; deliberation:constraint ?k .
              OPTIONAL { ?r orexis:about ?about } } }"""
 
+#  THE HOLDER'S STANDING JUDGMENT GRAPHS, asked of the catalogue by class and owner — what a
+#  run replaces, whatever each is called.
+_STANDING_Q = """
+SELECT ?g WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a deliberation:JudgmentGraph ; orexis:beliefsOf $holder } }
+ORDER BY ?g"""
 
-def save_judgments(store, agent_id: str, holder: str,
+
+def save_judgments(store: ox.Store, holder: str,
                    judged: list[tuple[str, datetime | None, bool, list[dict]]]) -> None:
-    """Replace the agent's judgments with these — `(desire, instant or None for the present,
+    """Replace `holder`'s judgments with these — `(desire, instant or None for the present,
     met, the engine's rows)` each — and say what the graph is.
 
     ONE GRAPH, WRITTEN WHOLE: a judgment is a conclusion about a situation, and the
@@ -40,31 +47,49 @@ def save_judgments(store, agent_id: str, holder: str,
     beside this one. Each judgment is named for its desire and its instant, so the same
     situation writes the same text — which is what a snapshot of the store is held to. A
     row is the compiled select's own binding (`this`, `_constraint`, `_about`,
-    `_offending`), and the offending value is rendered back AS THE TERM it was — a bare
-    string would lose whether it was an IRI or a typed literal."""
-    graph = judgments_graph(agent_id)
+    `_offending`) as the engine's terms, and the offending value is written back AS THE
+    TERM it was — a bare string would lose whether it was an IRI or a typed literal.
+
+    ONE UPDATE OVER THE ENGINE, and the writer names nothing it did not create: the
+    holder's standing judgment graphs are asked of the catalogue by class and owner and
+    dropped, whatever they are called; the new graph is named for its holder, since a name
+    is for eyes and the holder is the one thing a desire says about whose it is; the
+    catalogue that describes it is found by its own row; and every kind the vocabulary puts
+    a judgment graph beneath is written on the row from the graphs the catalogue types as
+    the vocabulary's — one `rdfs:subClassOf` step, since the closure is materialised at
+    genesis and one step is every step (one-graph-both-engines-read) — so a text asks `?g a
+    orexis:WorkingGraph` and walks no path. The graph and its description land together or
+    not at all."""
+    standing = [row["g"].value for row in store.query(bind(_STANDING_Q, holder=holder), prefixes=NAMESPACES)]
+    graph = judgments_graph(holder.rsplit("#", 1)[-1].rsplit("/", 1)[-1])
     now = clock.now().isoformat()
     blocks = []
     for desire, at, met, rows in judged:
         node = desire + ".judgment" + (at.strftime(".%Y%m%dT%H%M%SZ") if at is not None else "")
         when = f' ; orexis:holdsAt "{at.isoformat()}"^^xsd:dateTime' if at is not None else ""
         results = "".join(
-            f" ;\n      sh:result [ a sh:ValidationResult ; sh:focusNode <{r['this']['value']}> ;"
-            f" deliberation:constraint {int(r['_constraint']['value'])}"
-            + (f" ; orexis:about <{r['_about']['value']}>" if "_about" in r else "")
+            f" ;\n      sh:result [ a sh:ValidationResult ; sh:focusNode {r['this']} ;"
+            f" deliberation:constraint {int(r['_constraint'].value)}"
+            + (f" ; orexis:about {r['_about']}" if "_about" in r else "")
             + (f" ; sh:value {term}" if (term := _term(r.get("_offending"))) else "") + " ]"
             for r in rows)
         blocks.append(f"  <{node}> a deliberation:Judgment ; deliberation:judges <{desire}>{when} ;\n"
                       f'      prov:generatedAtTime "{now}"^^xsd:dateTime ;\n'
                       f"      sh:conforms {'true' if met else 'false'}{results} .")
-    store.drop_graph(graph)
-    store.update(f"""
-INSERT DATA {{
+    dropped = "".join(
+        f"DROP SILENT GRAPH <{g}> ;\n"
+        f"DELETE {{ GRAPH ?cat {{ <{g}> ?p ?o }} }} WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{g}> ?p ?o }} }} ;\n"
+        for g in standing)
+    store.update(dropped + f"""
+INSERT {{
   GRAPH <{graph}> {{
 {chr(10).join(blocks)}
   }}
-  {store.entry(graph, DELIBERATION + "JudgmentGraph", OREXIS + "Derived", holder)}
-}}""")
+  GRAPH ?cat {{ <{graph}> a deliberation:JudgmentGraph ; orexis:arrivedBy orexis:Derived ; orexis:beliefsOf <{holder}> . }} }}
+WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
+INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} }}
+WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
+        GRAPH ?vocabulary {{ deliberation:JudgmentGraph rdfs:subClassOf ?kind }} }}""", prefixes=NAMESPACES)
 
 
 def find_judgments(store) -> list[dict]:
@@ -74,16 +99,9 @@ def find_judgments(store) -> list[dict]:
     return bindings(store.query_over(JUDGMENTS_Q, *graphs)) if graphs else []
 
 
-def _term(binding: dict | None) -> str | None:
-    if not binding:
+def _term(term) -> str | None:
+    """The engine's term as the text that writes it back, or None for a blank node, which no
+    other graph could point at."""
+    if term is None or isinstance(term, ox.BlankNode):
         return None
-    if binding["type"] == "uri":
-        return f"<{binding['value']}>"
-    if binding["type"] != "literal":
-        return None
-    text = json.dumps(binding["value"])
-    if binding.get("datatype"):
-        return f"{text}^^<{binding['datatype']}>"
-    if binding.get("xml:lang"):
-        return f"{text}@{binding['xml:lang']}"
-    return text
+    return str(term)                                        # its N-Triples form
