@@ -34,7 +34,7 @@ def _foreseeing(monkeypatch, **kw):
 
 def _pursued(agent):
     """The want the container presents for the bed's comfort: the root, or what is derived under it."""
-    return next(d for d in agent.pursuing() if d.uri == COMFORT or d.derived_from == COMFORT)
+    return next(d for d in agent.pursuing() if d.uri == COMFORT or d.desire == COMFORT)
 
 
 def test_the_bed_crosses_toward_a_cold_outside_at_the_stated_rate(monkeypatch):
@@ -69,7 +69,7 @@ def test_a_cold_night_foreseen_derives_a_want_the_heater_serves_and_the_vent_can
     assert plan is not None and [s.action for s in plan.steps] == [HEATING], plan
 
     child = _pursued(agent)
-    assert child.derived_from == COMFORT and child.holds_at is not None and child.state == "unmet"
+    assert child.desire == COMFORT and child.holds_at is not None and child.state == "unmet"
     assert child.read_at is not None, "a kernel-lifted want takes the instant of the reading the crossing came from"
     weighed = agent.deliberator._planners[child.uri]._weighed
     verdicts = {str(r.action).rsplit("#", 1)[-1]: v for _, r, _, v, *rest in weighed}

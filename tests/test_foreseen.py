@@ -46,7 +46,7 @@ def _crossing_of(agent):
     produced.
     """
     derive_wants(agent.beliefs.engine)
-    return pursuit.crossing_of(agent, _stake(agent).derived_from or _stake(agent).uri)
+    return pursuit.crossing_of(agent, _stake(agent).desire or _stake(agent).uri)
 
 
 def test_the_drift_says_when_the_reading_leaves_its_region(monkeypatch):
@@ -88,7 +88,7 @@ def test_a_crossing_derives_a_want_met_at_that_instant(monkeypatch):
     assert plan is not None and [s.action for s in plan.steps] == [DOSING], plan
 
     child = _stake(agent)
-    assert child.derived_from == root.uri and child.holds_at is not None
+    assert child.desire == root.uri and child.holds_at is not None
     assert abs((child.holds_at - _crossing_of(agent)).total_seconds()) < 1.0
     assert child.state == "unmet", "the newest prediction still says the reading crosses by the instant"
     assert child.urgency == root.urgency > 0.0, \

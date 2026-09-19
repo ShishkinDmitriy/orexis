@@ -17,7 +17,7 @@ from orexis_capability_actuation.terms import DOSING
 from orexis_capability_sensing.terms import OBSERVING
 
 from orexis_agent_progression.ontology import picks_graph
-from orexis_capability_sensing.regions import ObservedJudgment
+from orexis_capability_sensing.regions import ObservedWant
 from conftest import sensing_of, stake_of, build_agent, genesis_store, desires_build, open_round_for, write_reading, predicted_bands
 from orexis_agent_progression.ontology import PUBLIC
 
@@ -107,7 +107,7 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
     rung a plan takes is the one whose predicted world scores best, and above the aim every
     world a dose reaches is worse than standing still.
     """
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_agent_deliberation.want import Want
 
     deliberator = gardener.deliberator
     #  The world holds the value; the want does not. Written OLD, so the freshness want the
@@ -116,11 +116,11 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
     #  reading on it is in region, met, and wants nothing.
     write_reading(gardener, 0.05, MOIST, age_s=10_000)
     assert deliberator.propose_for(
-        ObservedJudgment(uri=stake_of(gardener, MOIST).uri, urgency=0.6, observed_property=MOIST,
+        ObservedWant(uri=stake_of(gardener, MOIST).uri, urgency=0.6, observed_property=MOIST,
                      value=0.05)) == DOSING
     write_reading(gardener, 0.30, MOIST, age_s=10_000)
     assert deliberator.propose_for(
-        ObservedJudgment(uri=stake_of(gardener, MOIST).uri, urgency=0.1, observed_property=MOIST,
+        ObservedWant(uri=stake_of(gardener, MOIST).uri, urgency=0.1, observed_property=MOIST,
                      value=0.25)) is None, \
         "above the aim, nothing — as ever"
     #  NOT SEEING is answered by the search like everything else, and it is a different WANT

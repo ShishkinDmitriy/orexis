@@ -51,7 +51,7 @@ def _foresee(agent):
     assert root.is_met
     assert agent.deliberator.decide(root) is None, "no round, no claim: nothing on the menu"
     child = _stake(agent)
-    assert child.derived_from == root.uri and child.holds_at is not None
+    assert child.desire == root.uri and child.holds_at is not None
     return root, child
 
 

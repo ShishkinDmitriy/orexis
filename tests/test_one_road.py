@@ -61,7 +61,7 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_road_mints_the_
     [want] = agent.wants.find_all_by_desire(root)          # every desire derives; this one's
     assert want.desire == root and want.about == (debt,)
     assert want.uri.startswith(root + ".pursued.obligation.")
-    assert abs(datetime.fromisoformat(want.holds_at).timestamp() - deadline) < 1.0
+    assert abs(want.holds_at.timestamp() - deadline) < 1.0
 
     #  A LAPSE IS NOT IN VIEW YET — the prediction holds from the deadline, and the desire's
     #  select names the debt at that instant and at no other
@@ -75,7 +75,7 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_road_mints_the_
     assert judged.uri == want.uri and judged.claim == "jti-1"
     assert judged.state == "standing" and not judged.pursuable
     presented = next(j for j in agent.pursuing() if j.uri == want.uri)
-    assert presented.claim == "jti-1" and presented.derived_from == root, \
+    assert presented.claim == "jti-1" and presented.desire == root, \
         "the choir's judgment, under the road's provenance"
 
 
@@ -103,7 +103,7 @@ def test_a_second_claim_is_a_second_want_and_the_first_stands(monkeypatch):
     ledger.owe("fern", "jti-4", expires_at=time.time() + 2 * HOUR, amount_l=1.0)
     first, second = _want_for(agent, "jti-3"), _want_for(agent, "jti-4")
     assert first is not None and second is not None, "one want per debt"
-    assert datetime.fromisoformat(second.holds_at) > datetime.fromisoformat(first.holds_at), \
+    assert second.holds_at > first.holds_at, \
         "each at its own deadline"
 
     presented = next(j for j in agent.pursuing() if j.uri == first.uri)

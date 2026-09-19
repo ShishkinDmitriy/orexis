@@ -25,7 +25,7 @@ from orexis_agent_progression.store import bindings
 from orexis_agent_deliberation import planner as search, trace
 from orexis_agent_deliberation.planner import Planner
 
-from orexis_capability_sensing.regions import ObservedJudgment
+from orexis_capability_sensing.regions import ObservedWant
 from conftest import stake_of, build_agent, genesis_store, open_round_for, write_reading
 from orexis_agent_progression.ontology import PUBLIC
 
@@ -291,7 +291,7 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     as the claim rather than the comparison, because the reflex it was compared against has
     since been deleted. What must be true is the cede itself, on both sides of the aim.
     """
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_agent_deliberation.want import Want
 
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
     fern = build_agent("fern", genesis_store(), monkeypatch)
@@ -299,16 +299,16 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     decider = fern.deliberator
 
     #  fern aims at 0.55, and the store holds NO reading — which is the arrangement that makes
-    #  the fabrication possible at all. A bare Judgment suffices: the measure is not the want's
+    #  the fabrication possible at all. A bare Want suffices: the measure is not the want's
     #  to carry, and sensing answers the choir for any observation-backed stake.
     write_reading(fern, 0.30, MOISTURE)   # the world holds the value; a want's `value` is not it
-    stake = ObservedJudgment(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+    stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
                          value=0.30)
     assert decider.propose_for(stake) == "http://example.org/orexis/market#Acquiring", \
         "below the aim there is a deficit to close, and the search must still close it"
     for value in (0.55, 0.80):
         write_reading(fern, value, MOISTURE)
-        stake = ObservedJudgment(uri=stake_of(fern).uri, urgency=0.4,
+        stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4,
                              observed_property=MOISTURE, value=value)
         assert decider.propose_for(stake) is None, \
             f"a content plant bought water at {value} — a zero-size act made something true"

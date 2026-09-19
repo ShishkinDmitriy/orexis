@@ -41,7 +41,7 @@ def _stock(agent, derived: bool = False):
     derived the moment a claim arrives, both may be pursued at once."""
     return next(d for d in agent.pursuing()
                 if getattr(d, "observed_property", None) == STORED and not d.is_epistemic
-                and (d.derived_from is not None) == derived)
+                and (d.desire is not None) == derived)
 
 
 def _promise(agent, to: str, jti: str, litres: float, opens: datetime) -> None:
@@ -93,7 +93,7 @@ def test_a_host_that_foresees_the_crossing_plans_the_refill_from_the_present(mon
     #  already, and the container presents the desire under it.
     from orexis_agent_deliberation.judging import shapes_in, read_ahead, read_now
     child = _stock(agent, derived=True)
-    root = child.derived_from
+    root = child.desire
     engine, shapes = agent.beliefs.engine, None
     from orexis_agent_deliberation.judging import _one
     holder, shape = _one(engine, root)
@@ -104,7 +104,7 @@ def test_a_host_that_foresees_the_crossing_plans_the_refill_from_the_present(mon
     assert plan is not None and [s.action for s in plan.steps] == [ACQUIRING], plan
     assert plan.placed_at is None, "found from the present, where the round is: taken now"
     child = _stock(agent, derived=True)
-    assert child.derived_from == root and child.state == "unmet"
+    assert child.desire == root and child.state == "unmet"
 
 
 def test_a_discharged_debt_is_not_an_arrival(monkeypatch):

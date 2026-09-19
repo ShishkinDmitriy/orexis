@@ -57,6 +57,17 @@ log = logging.getLogger("wants")
 PAGE = 100
 
 
+def _moment(value) -> str:
+    """One instant as the store keeps it. A string is passed through: a caller that already
+    has the literal has nothing to convert."""
+    return value if isinstance(value, str) else value.isoformat()
+
+
+def _instant(text: str | None) -> datetime | None:
+    """One instant as a want carries it, or None where the store holds none."""
+    return datetime.fromisoformat(text) if text else None
+
+
 def graph_of(agent_id: str, uri: str) -> str:
     """The graph one DERIVED want lives in. Named for the want so a second episode of the same
     desire reuses it, and everything keyed by the want finds what it kept."""
@@ -78,14 +89,18 @@ def save_want(engine, agent_id: str, want: Want) -> None:
     graph = graph_of(agent_id, want.uri)
     points = " ".join(f"<{want.uri}> <{p}> <{o}> ." for p, o in want.points)
     shape = "\n  ".join(want.shape)
-    timed = (f' ; orexis:holdsAt "{want.holds_at}"^^xsd:dateTime'
-             f' ; prov:generatedAtTime "{want.derived_at}"^^xsd:dateTime'
+    #  INSTANTS CROSS HERE AND NOWHERE ELSE. A want carries them as instants, because what
+    #  reads them — the keeper placing a step, the container measuring the room left — works in
+    #  instants; the store keeps them as `xsd:dateTime` literals. This is the boundary, so it
+    #  is where the two forms meet, one line each way (`_moment` below, and `_instant` on read).
+    timed = (f' ; orexis:holdsAt "{_moment(want.holds_at)}"^^xsd:dateTime'
+             f' ; prov:generatedAtTime "{_moment(want.derived_at)}"^^xsd:dateTime'
              if want.holds_at is not None else "")
     about = "".join(f" ; orexis:about <{a}>" for a in want.about)
     #  WHICH WAY IT BROKE, where the met-test's block said so (`orexis:violationIs`).
     side = f" ; orexis:violationIs <{want.side}>" if want.side else ""
     period = f' ; orexis:start "{clock.now().isoformat()}"^^xsd:dateTime' + (
-        f' ; orexis:end "{want.ends}"^^xsd:dateTime' if want.ends else "")
+        f' ; orexis:end "{_moment(want.ends)}"^^xsd:dateTime' if want.ends else "")
     engine.update(f"""
 DROP SILENT GRAPH <{graph}> ;
 DELETE {{ GRAPH ?cat {{ <{graph}> ?p ?o . ?period ?pp ?po }} }}
@@ -293,9 +308,9 @@ SELECT ?w ?desire ?label ?holdsAt ?since ?side (GROUP_CONCAT(STR(?about); separa
         if limit > 1 and len(rows) == limit:
             log.warning("wants: a full page of %d at offset %d — page or there is a leak",
                         limit, offset)
-        return [Want(uri=r["w"], desire=r.get("desire", ""),
-                     label=r.get("label", ""), holds_at=r.get("holdsAt"),
-                     derived_at=r.get("since"), side=r.get("side"),
+        return [Want(uri=r["w"], desire=r.get("desire"),
+                     label=r.get("label", ""), holds_at=_instant(r.get("holdsAt")),
+                     derived_at=_instant(r.get("since")), side=r.get("side"),
                      #  ONE ROW PER WANT, however many things it is about: grouped, so a page
                      #  counts wants and not (want, about) pairs, and the abouts come back as one
                      #  space-joined string. `STR()` IS LOAD-BEARING: this engine's GROUP_CONCAT

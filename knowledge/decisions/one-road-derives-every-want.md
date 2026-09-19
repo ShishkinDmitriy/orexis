@@ -128,7 +128,7 @@ debt with no deadline and nobody asking is nothing to pursue until its holder as
 want minted then holds at no instant. The `is_obligation` sites stood at first, branching on
 the choir's judgment; they were collapsed one slice at a time afterwards — the serve's
 affordance names the want it is owed for (#697), a debt is reported under its root (#698),
-the tick marks what may be acted on (#700), and the kernel's `Judgment` carries no market
+the tick marks what may be acted on (#700), and the kernel's `Want` carries no market
 word, the market's `OwedJudgment` carrying the claim and whom it is owed to. #675 is done.
 
 Stage two taught three things. **A root met now with nothing foreseen derives nothing** — the

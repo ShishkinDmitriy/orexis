@@ -3,7 +3,7 @@ met-test reads unmet (judge-desires-then-derive-wants). ONE FUNCTION and one con
 the call the store holds every want its desires imply, and NOTHING STANDS BETWEEN A DESIRE AND
 A WANT.
 
-There was a third thing once, a `deliberation:Judgment`: what a met-test read, per desire per
+There was a third thing once, a `deliberation:Want`: what a met-test read, per desire per
 instant, written to a working graph and read back by the minting and by whoever wanted a
 crossing. It is gone, and everything it carried a want carries — which instance is in trouble,
 what the trouble is about, which way it broke (`orexis:violationIs`) and the instant it must

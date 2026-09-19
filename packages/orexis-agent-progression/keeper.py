@@ -1559,7 +1559,7 @@ SELECT ?s ?next ?action ?via ?about ?quantity ?predicts ?precondition WHERE {{ G
         of a store: what met means is the want's own (a shape, a measure, a pattern), and the
         ledger knows none of it."""
         return any(d.state == "met" for d in self.agent.pursuing()
-                   if d.uri == want or d.derived_from == want)
+                   if d.uri == want or d.desire == want)
 
     def _next_of(self, intention_uri: str) -> str | None:
         rows = bindings(self.agent.intentions.query_over(f"""

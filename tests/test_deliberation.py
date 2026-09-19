@@ -26,7 +26,7 @@ from orexis_capability_market.terms import ACQUIRING
 from orexis_capability_sensing.terms import OBSERVING
 
 from orexis_agent_progression.ontology import picks_graph
-from orexis_capability_sensing.regions import ObservedJudgment
+from orexis_capability_sensing.regions import ObservedWant
 from conftest import stake_of, MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for, wired_markets, wired_sensors, write_reading
 
 
@@ -141,7 +141,7 @@ def test_below_the_aim_means_pursue_and_above_means_nothing(make):
     safe — and they disagree exactly where the old answer was wrong, which
     `tests/test_planning.py` measures on a plant sitting above its region.
     """
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_agent_deliberation.want import Want
 
     fern = make("fern")
     open_round_for(fern, "fern")   # a buying row exists only while a round is open (#358)
@@ -154,12 +154,12 @@ def test_below_the_aim_means_pursue_and_above_means_nothing(make):
     #  nothing either: a lot reaches the region from below, and from above it helps nothing.
     for value in (0.10, 0.39):
         write_reading(fern, value, MOISTURE)
-        stake = ObservedJudgment(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+        stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
                              value=value)
         assert decider.propose_for(stake) == ACQUIRING, f"thirsty at {value} and not buying"
     for value in (0.54, 0.55, 0.80):
         write_reading(fern, value, MOISTURE)
-        stake = ObservedJudgment(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+        stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
                              value=value)
         assert decider.propose_for(stake) is None, f"content at {value} and buying anyway"
 
@@ -176,10 +176,10 @@ def test_a_property_this_agent_cannot_move_is_not_pursued(make):
     desire it could rank; the reflex's aim clause had been unreachable for a measurable want
     since simulation landed. What answers now is the honest fact: no lever, no move.
     """
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_agent_deliberation.want import Want
 
     fern = make("fern")
-    stake = ObservedJudgment(uri=stake_of(fern, TEMPERATURE).uri, urgency=0.4,
+    stake = ObservedWant(uri=stake_of(fern, TEMPERATURE).uri, urgency=0.4,
                          observed_property=TEMPERATURE, value=5.0)
     assert decider_of(fern).propose_for(stake) is None
 
@@ -271,7 +271,7 @@ def test_the_sign_is_the_packages_statement_and_not_this_codes(make):
     better than standing still and declines. The bit itself is untouched here, which is the
     point — it steers nothing now, and its retirement rides with repair-matching.
     """
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_agent_deliberation.want import Want
     from orexis_agent_progression.ontology import ACTIONS_GRAPH
 
     ds = genesis_store()
@@ -283,7 +283,7 @@ def test_the_sign_is_the_packages_statement_and_not_this_codes(make):
     fern = make("fern", ds)
     open_round_for(fern, "fern")
     decider = decider_of(fern)
-    stake = ObservedJudgment(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+    stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
                          value=0.10)
     assert decider.propose_for(stake) is None, \
         "a lever the graph says would dry this plant out was pulled anyway"
@@ -478,14 +478,14 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     """The sovereign asking what an agent DOES gets its obligations beside its options — and asked
     about a PROPERTY it holds a stake in, deliberation proposes none of them.
 
-    An obligation IS a want — a Judgment whose premise is a claim (#471) — and reaches deliberation through the
+    An obligation IS a want — a Want whose premise is a claim (#471) — and reaches deliberation through the
     door that takes the want itself. What must not happen is an obligation answering a question about
     a stake: the honoured row exists because somebody else holds paper, and serving it is not
     a move this agent may choose for its own reasons. The search enforces it by filtering to
     chosen rows for anything that is not an obligation — the same filter the chain applied, for the
     same reason, one road further along.
     """
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_agent_deliberation.want import Want
 
     supplier = make("supplier")
     #  A ROW OWED TO SOMEONE EXISTS FOR A WANT ABOUT A DEBT, and names it: the market joins
@@ -509,7 +509,7 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     #  filter that leaks.
     for row in obligations:
         for value in (0.0, 0.5, 5.0, 50.0):
-            stake = ObservedJudgment(uri="urn:w", urgency=0.5, observed_property=row.about,
+            stake = ObservedWant(uri="urn:w", urgency=0.5, observed_property=row.about,
                                  value=value)
             assert deliberator.propose_for(stake) not in duty_means, \
                 "an obligation was proposed as if it were a choice"
@@ -531,7 +531,7 @@ def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
     counterparty. A host with two buyers must not serve one's claim through the other's valve,
     which is why the match is on the agent and not on the mode alone.
     """
-    from orexis_capability_market.ower import OwedJudgment
+    from orexis_capability_market.ower import OwedWant
 
     supplier = make("supplier")
     #  THE WANT THE ROAD MINTED for a presented claim, which is what the market's serve names
@@ -544,7 +544,7 @@ def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
     assert supplier.deliberator.propose_for(obligation) == \
         "http://example.org/orexis/market#Serving"
 
-    stranger = OwedJudgment(uri="urn:o", urgency=0.9, claim="j-2", owed_to="urn:nobody")
+    stranger = OwedWant(uri="urn:o", urgency=0.9, claim="j-2", owed_to="urn:nobody")
     assert supplier.deliberator.propose_for(stranger) is None, \
         "a debt no lever of mine can reach proposes nothing — and stays owed"
 
@@ -555,10 +555,10 @@ def test_an_unpresented_duty_is_hot_and_still_not_acted_on(make):
     strength of urgency alone would spend the water where nothing is looking — and a debt
     approaching its deadline that nobody has presented is exactly the case where the two
     answers differ."""
-    from orexis_capability_market.ower import OwedJudgment
+    from orexis_capability_market.ower import OwedWant
 
     supplier = make("supplier")
-    standing = OwedJudgment(uri="urn:o", urgency=0.99, claim="j-3", pursuable=False,
+    standing = OwedWant(uri="urn:o", urgency=0.99, claim="j-3", pursuable=False,
                     owed_to="http://example.org/orexis/world/simulation#fern_agent")
     assert supplier.deliberator.propose_for(standing) is None
 
@@ -577,12 +577,12 @@ def test_a_search_that_answers_nothing_proposes_nothing(make, monkeypatch):
     cannot claim about itself.
     """
     from orexis_agent_deliberation import planner as search
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_agent_deliberation.want import Want
     from orexis_agent_deliberation.planner import Planner
 
     fern = make("fern")
     monkeypatch.setattr(Planner, "plan", lambda self, desire, **kw: search.Plan(search.NOTHING))
-    thirsty = ObservedJudgment(uri=stake_of(fern).uri, urgency=1.0, observed_property=MOISTURE,
+    thirsty = ObservedWant(uri=stake_of(fern).uri, urgency=1.0, observed_property=MOISTURE,
                            value=0.10)
     assert fern.deliberator.propose_for(thirsty) is None, \
         "the search said it had nothing to weigh, and something else answered anyway"
@@ -602,7 +602,7 @@ def test_a_stake_nothing_measures_is_complained_about_rather_than_decided_quietl
     """
     import logging
 
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_agent_deliberation.want import Want
     from orexis_agent_progression.ontology import ONTOLOGY_GRAPH
 
     ds = genesis_store()
@@ -610,7 +610,7 @@ def test_a_stake_nothing_measures_is_complained_about_rather_than_decided_quietl
                   WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?p a sosa:ObservableProperty }} }}""")
     fern = make("fern", ds)
     decider = decider_of(fern)
-    stake = ObservedJudgment(uri=stake_of(fern).uri, urgency=1.0, observed_property=MOISTURE,
+    stake = ObservedWant(uri=stake_of(fern).uri, urgency=1.0, observed_property=MOISTURE,
                          value=0.10)
 
     with caplog.at_level(logging.ERROR):
@@ -709,7 +709,7 @@ def test_a_plan_landing_after_the_wants_expiry_is_not_one(make):
     gate did it, and not the fixture."""
     from datetime import datetime, timedelta, timezone
 
-    from orexis_capability_market.ower import OwedJudgment
+    from orexis_capability_market.ower import OwedWant
     from orexis_agent_deliberation.planner import Planner
 
     supplier = make("supplier", genesis_store({("barrel1", STORED): 3.0}))
@@ -727,7 +727,7 @@ def test_a_plan_landing_after_the_wants_expiry_is_not_one(make):
     assert uri.startswith(f"{supplier.me.uri}.no_overdue_debts.pursued.")
 
     def planned(seconds_left):
-        want = OwedJudgment(uri=uri, urgency=0.9, claim="w1",
+        want = OwedWant(uri=uri, urgency=0.9, claim="w1",
                     owed_to="http://example.org/orexis/world/simulation#fern_agent",
                     expires=now + timedelta(seconds=seconds_left))
         return Planner(supplier, supplier.me).plan(want)
