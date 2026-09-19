@@ -3,21 +3,15 @@
 # `pytest packages/orexis-agent-deliberation/tests --update-snapshots` — review the diff; it is the claim.
 # a_plant_that_could_be_moved_or_warmed
 #
-# A WANT KEEPS EVERY LINK SOME ACTION COULD MOVE. The fern is judged BELOW because the air of the
-# room it stands in reads below the range it wants; the other room's air already reads inside. So
-# there are two plans — HEAT the cold room, or MOVE the fern to the warm one — and the want has
-# to leave room for both.
+# A WANT NARROWS BY INSTANCE, NEVER BY PATH. The fern is judged below through three links —
+# where it stands, the air of that room, the readings of that air — and the want derived under
+# that judgment carries the desire's met-test with every link of the walk intact. What the
+# narrowing replaces is the TARGET: `sh:targetNode :fern` in place of `sh:targetClass
+# water:Plant`, so the want is about the one plant in trouble and about nothing else.
 #
-# What is derived is one want about the fern, and what it carries is the desire's own met-test
-# with the whole chain intact: where the plant stands, the air of that room, the readings of that
-# air. The narrowing a want does is by INSTANCE — `sh:targetNode :fern` in place of
-# `sh:targetClass water:Plant` — and never by path. Narrow the path instead, to the air the fern
-# happens to be near today, and the want becomes one no move could ever satisfy: the cold room
-# stays cold whatever the fern does, and heating is the only plan the search can still see.
-#
-# The two levers are in the scope graph, and in two scopes: heating writes a reading and moving
-# writes where the plant stands, and no action touches both. One want spans both, which is what
-# a scope partition is for — it says what CANNOT interact, never what one want may reach.
+# Which is the whole of it. A want about the fern is about the air wherever the fern stands, and
+# stays that, because the walk is what the desire said it was about and the want keeps what the
+# desire said.
 #
 # The clock stands at 2026-01-01T12:00:00Z when the road runs.
 #
@@ -49,11 +43,9 @@ GRAPH :desires {
       orexis:about water:AirTemperature ;
       orexis:metWhen :warm_where_it_stands .
 
-  #  THE WHOLE CHAIN, because an action may move any link of it. `:standsIn` is the plant's
-  #  room, `:hasAir` is that room's air, and the inverse of `sosa:hasFeatureOfInterest` reaches
-  #  the readings of it. A shape that stopped at the air the fern is near today would be a
-  #  shape no move could ever satisfy — the cold room stays cold whatever the fern does — and
-  #  the search would be left with heating as the only plan it could see.
+  #  THE WHOLE CHAIN. `:standsIn` is the plant's room, `:hasAir` is that room's air, and the
+  #  inverse of `sosa:hasFeatureOfInterest` reaches the readings of it. What the desire is
+  #  about is the air where the plant stands, which is not a fact about any one room.
   #
   #  One block per way of failing, each saying which way, as every met-test asked by band does.
   :warm_where_it_stands a sh:NodeShape ;
@@ -78,9 +70,10 @@ GRAPH :desires {
           sh:message "the air where this plant stands reads above the range it wants" ] .
 }
 
-#  WHAT `scope_actions` MADE OF THE TWO LEVERS (scope_actions/a_heater_and_a_trolley.trig). Heating writes what a reading is; moving writes
-#  where a plant stands. Nothing touches both, so they are two scopes — and the one want reaches
-#  across them, because a scope says what cannot interact and never what a want may reach.
+#  WHAT `scope_actions` MADE OF THE TWO LEVERS (scope_actions/a_heater_and_a_trolley.trig): a
+#  heater writes what a reading is, a trolley writes where a plant stands, nothing touches both,
+#  so they are two scopes. The one witness here is about a property no scope holds, so the
+#  clustering falls to the instance and one want is minted.
 GRAPH :scopes {
   :heat deliberation:inScope scopes:2 .
   :move deliberation:inScope scopes:1 .

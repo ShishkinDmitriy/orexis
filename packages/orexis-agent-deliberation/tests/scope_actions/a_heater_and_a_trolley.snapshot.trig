@@ -3,15 +3,10 @@
 # `pytest packages/orexis-agent-deliberation/tests --update-snapshots` — review the diff; it is the claim.
 # a_heater_and_a_trolley
 #
-# TWO LEVERS THAT SERVE ONE WANT AND SHARE NOTHING. A heater changes what a reading says; a
-# trolley changes where a plant stands. No predicate is touched by both, so they fall in two
-# scopes — and the want they both serve reaches across the two
-# (derive_wants/a_plant_that_could_be_moved_or_warmed).
-#
-# That is what a scope partition is and is not. It says what CANNOT interact: nothing the
-# trolley writes is read by anything the heater writes, so a plan for one cannot spoil the
-# other. It says nothing about which levers a want may use, which is the want's view and is
-# computed backward from what its met-test reads.
+# TWO LEVERS THAT SHARE NO PREDICATE ARE TWO SCOPES. A heater writes what a reading says; a
+# trolley writes where a plant stands. Nothing either writes is read by the other, so the
+# partition separates them — which is what a scope says and the only thing it says: these
+# cannot interact.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .

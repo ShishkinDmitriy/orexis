@@ -1,25 +1,17 @@
 # a_plant_that_could_be_moved_or_warmed
 #
-# A WANT KEEPS EVERY LINK SOME ACTION COULD MOVE, and that is what decides how far a met-test
-# reaches. The companion case (outside_the_range_picked_as_ideal) narrows to one watched property
-# and is right to: nothing in that world can change which sample a plant's property belongs to,
-# so the only repair is to the reading, and the shape asks about the reading alone.
+# A MET-TEST REACHES AS FAR AS THE DESIRE IS ABOUT, and here that is three links. The fern does
+# not have air of its own: it stands in a room, the room has air, and the air is what is read.
+# So "this plant is in air it wants" is a walk — where it STANDS, the air of THAT room, the
+# readings of that air — and the shape says it that way.
 #
-# Here something can. The fern stands in a room, the room has air, and the air is what is read —
-# so a plant is cold either because its room is cold, which HEATING repairs, or because it is
-# standing in the wrong room, which MOVING repairs. Both are real plans and the desire must
-# leave room for both.
+# The companion case (outside_the_range_picked_as_ideal) reaches one link, to a watched
+# property's own readings, because that is as far as what it is about goes. Neither length is a
+# rule; the desire says how far, and judging follows it.
 #
-# So the met-test walks the whole chain: where the plant STANDS, the air of that room, the
-# readings of that air. Three links, and an action may move any of them. Heating changes which
-# band the cold room's air reads; moving changes `:standsIn`, and the warm room's air already
-# reads inside. The search finds either, because the closure walks back from every link the want
-# reads to whatever writes it — and it would find neither if the shape had been narrowed to the
-# one sample the fern happens to be near today.
-#
-# The narrowing a want does is by INSTANCE, never by path: `sh:targetNode :fern` replaces
-# `sh:targetClass`, and every link stays. A want about the fern is about wherever the fern
-# stands, not about the cold room.
+# The fern stands in the cold room, whose air reads BELOW. The warm room's air reads inside and
+# the fern is not in it, so the desire is violated through where the fern stands. The row names
+# the FERN — the focus node the shape targets — and says which way, `orexis:violationIs`.
 #
 # The clock stands at 2026-01-01T12:00:00Z when the road runs.
 
@@ -39,7 +31,7 @@
 @prefix judgments: <http://example.org/orexis/graph/judgments/> .
 
 GRAPH :world {
-  #  Where the fern stands today, and the other room it could stand in.
+  #  Where the fern stands, and another room with air of its own.
   :fern a water:Plant ; :standsIn :cold_room .
 
   :cold_room a :Room ; :hasAir :air_of_cold_room .
@@ -56,11 +48,10 @@ GRAPH :desires {
       orexis:about water:AirTemperature ;
       orexis:metWhen :warm_where_it_stands .
 
-  #  THE WHOLE CHAIN, because an action may move any link of it. `:standsIn` is the plant's
-  #  room, `:hasAir` is that room's air, and the inverse of `sosa:hasFeatureOfInterest` reaches
-  #  the readings of it. A shape that stopped at the air the fern is near today would be a
-  #  shape no move could ever satisfy — the cold room stays cold whatever the fern does — and
-  #  the search would be left with heating as the only plan it could see.
+  #  THE WHOLE CHAIN. `:standsIn` is the plant's room, `:hasAir` is that room's air, and the
+  #  inverse of `sosa:hasFeatureOfInterest` reaches the readings of it. What the desire is
+  #  about is the air where the plant stands, which is not a fact about any one room, so the
+  #  shape walks to it rather than naming the room the fern is in today.
   #
   #  One block per way of failing, each saying which way, as every met-test asked by band does.
   :warm_where_it_stands a sh:NodeShape ;
@@ -86,8 +77,8 @@ GRAPH :desires {
 }
 
 GRAPH :sensed {
-  #  The room the fern is in reads BELOW; the room it is not in reads inside. Two ways out, and
-  #  the desire is violated by the first only because of where the fern stands.
+  #  The room the fern is in reads BELOW; the room it is not in reads inside. The desire is
+  #  violated through the first, and only because of where the fern stands.
   :cold_reading a sosa:Observation , sensing:BelowRegion ;
       sosa:hasFeatureOfInterest :air_of_cold_room ;
       sosa:observedProperty water:AirTemperature ;
