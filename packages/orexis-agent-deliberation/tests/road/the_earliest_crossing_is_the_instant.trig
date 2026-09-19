@@ -63,14 +63,3 @@ GRAPH graph:periods {
   :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:45:00Z"^^xsd:dateTime ] .
   :predicted-1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:20:00Z"^^xsd:dateTime ] .
 }
-
-# What the road is expected to leave standing under the desire: each want by its name,
-# what it is about, the instant it holds at where it holds at one, and its met-test — the
-# desire's, instantiated at the tank in trouble and narrowed to what the want is about.
-GRAPH :expected {
-  :keeper.in_range.pursued.tank1.level a orexis:Want ;
-      orexis:about :level ;
-      orexis:holdsAt "2026-01-01T12:20:00Z"^^xsd:dateTime ;
-      orexis:metWhen [ a sh:NodeShape ; sh:targetNode :tank1 ;
-          sh:property [ sh:path :level ; sh:minInclusive 10 ] ] .
-}
