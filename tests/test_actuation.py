@@ -71,7 +71,13 @@ class _Beliefs:
     def read(self, block):
         return block.cls(dose_grace_s=self._grace)
 
-    def query(self, _q):
+    def reader(self, *kinds, at=None):
+        return self.query
+
+    def graphs_of(self, *kinds, at=None):
+        return []
+
+    def query(self, _q, graphs=None, substitutions=None):
         return {"results": {"bindings": []}}
 
 

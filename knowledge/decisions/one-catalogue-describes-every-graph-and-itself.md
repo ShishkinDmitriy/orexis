@@ -117,7 +117,7 @@ kind of answer. What a row is FOR is said by its predicates; where it sits is no
 - **The catalogue has no period and is never dropped.** A sweep that drops an ended graph drops
   the graph's rows with it; the catalogue's own row says no stretch, and no sweep reads it.
 - **A bare store has no public knowledge until it has a catalogue.** `Store()` answers
-  `public_graphs()` with nothing; a test that builds one and expects a world to be public
+  `graphs_of(PUBLIC)` with nothing; a test that builds one and expects a world to be public
   creates the catalogue first, as the package tests' stand-in does. The refusal of two
   catalogues means a volume assembled from two stores fails at the door rather than answering
   from one of them.

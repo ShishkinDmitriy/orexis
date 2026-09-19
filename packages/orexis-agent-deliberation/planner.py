@@ -60,7 +60,7 @@ from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED,
                    REMEMBERED, SATISFIED)
 from .trace import SURPRISE_EXOGENOUS, SURPRISE_WITHHELD
 from orexis_agent_progression.ontology import PUBLIC
-from orexis_agent_progression.ontology import KNOWN, STATE, PREDICTION
+from orexis_agent_progression.ontology import DESIRE, KNOWN, PREDICTION, RECORD, STATE, WANT
 
 log = logging.getLogger("search")
 
@@ -760,6 +760,20 @@ class Planner:
         #  whole of the identity, and the worlds beneath the node — computed from bands, each
         #  carrying its own — stand. The cell-only re-root of #573, which dropped a subtree
         #  computed from a number the present did not hold, has nothing left to drop.
+        #  A LEVER ON THE MENU NOW AND NOT WHEN THE CONE WAS MADE — a round opened since — is
+        #  a timed graph, which the invariant half leaves out on purpose (#589): the cone
+        #  survives it, and a kept root already expanded would never offer the lever. So the
+        #  present's menu is asked once more, over the graphs the present holds now, and a cone
+        #  whose root gained a lever is forgotten — a fresh pass is what finds the chain
+        #  through it, as it found the refill through a round nobody had opened before.
+        beliefs = self.agent.beliefs
+        self.imaginarium.refresh(beliefs, beliefs.catalogue, *beliefs.graphs_of(*KNOWN))
+        if node.expanded:
+            offered = frozenset((r.action, r.via, r.about, r.want) for r in self.agent.afforder.offered(
+                self._imagined, graphs=self._dataset(clock.now(), STATE_GRAPH), only=self._compiled.asked))
+            if offered - node.menu:
+                self.reset()
+                return False
         self._reroot(node, present, subtree=True, judgment=judgment)
         return True
 
@@ -780,6 +794,12 @@ class Planner:
         #  matched diff — the two agree exactly here, and the observed one is the one that
         #  says what the present is.
         self.imaginarium.observe(self.agent.beliefs, STATE_GRAPH)
+        #  AND EVERY OTHER GRAPH A RULE READS, as the present holds it now, with the catalogue
+        #  that says what they are: a round opened or a claim arrived since the cone was made
+        #  is a timed graph, which the invariant half leaves out on purpose (#589) — the cone
+        #  survives it, and the resumed pass has to read it.
+        beliefs = self.agent.beliefs
+        self.imaginarium.refresh(beliefs, beliefs.catalogue, *beliefs.graphs_of(*KNOWN))
         depth, cost0, landing0 = len(node.taken), node.cost, node.landing
         for m in keep:
             dplus, dminus = m.diff
@@ -1189,9 +1209,13 @@ class Planner:
         #  "acquire, then offer" is a plan only if the menu of the world after the first step
         #  shows the second. The root node's graph is the agent's own readings, so at depth 0
         #  this is the ordinary menu, exactly as before.
-        for row in self.agent.afforder.offered(
-                self._imagined, graphs=self._dataset(self._at(node), self._graph(node)),
-                only=self._compiled.asked):
+        rows = self.agent.afforder.offered(
+            self._imagined, graphs=self._dataset(self._at(node), self._graph(node)),
+            only=self._compiled.asked)
+        #  WHAT THE MENU WAS when this node was expanded, so a resumed pass can tell a lever
+        #  that is on it now and was not then (`_resume`).
+        node.menu = frozenset((r.action, r.via, r.about, r.want) for r in rows)
+        for row in rows:
             #  A ROW THAT NAMES A WANT SERVES THAT WANT — Dosing for this pot and not the next,
             #  and a look for this instrument. A row owed to someone serves the want it names
             #  and no other: the market joined it to the debt the want is about, so a debt is
@@ -1260,8 +1284,7 @@ class Planner:
         #  (each pursued want, the asserted one again) and the debts record — each classified
         #  by its owner, whatever it is called, the children holding now among them (#645).
         self._compiled.want_graphs = tuple(self.agent.beliefs.graphs_of(
-            OREXIS + "DesireGraph", OREXIS + "WantGraph",
-            "http://example.org/orexis/market#ObligationsGraph"))
+            DESIRE, WANT, RECORD, at=self._clock))
         self.imaginarium.copy_in(self.agent.desires, *self._compiled.want_graphs)
         self._compiled.shapes = effects.applied((), self.agent.desires.construct(
             f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ "
@@ -1319,7 +1342,7 @@ class Planner:
         #  everything else about which graphs exist.
         readings = set(self.agent.beliefs.graphs_of(STATE))
         self._compiled.invariant_graphs = tuple(
-            iri for iri in self.agent.beliefs.graphs_of(*KNOWN) if iri not in readings)
+            iri for iri in self.agent.beliefs.graphs_of(*KNOWN, at=self._clock) if iri not in readings)
         #  SKOLEMIZED AT THE BORDER (#485), by the scheme `judge.crossed` uses for a graph: a
         #  blank focus node is then legal in rudof's VALUES pre-binding, and the legality
         #  check below reads this text as it is, with no rdflib graph in between.
@@ -1706,7 +1729,7 @@ class Planner:
         store = self.agent.beliefs
         vocabulary = {r["g"] for r in bindings(store.query(
             "SELECT ?g WHERE { ?g a orexis:OntologyGraph }", store.graphs_of(PUBLIC)))}
-        base = graph_from(store, *(g for g in store.graphs_of(*KNOWN, at=clock.now()) if g not in vocabulary))
+        base = graph_from(store, *(g for g in store.graphs_of(*KNOWN, at=self._clock) if g not in vocabulary))
         #  The vocabulary's shapes, as subgraphs: every triple of a node shape, and of every
         #  blank node reachable from it — a property shape, a qualified value shape, a list.
         #  The path walks through IRIs too, and the filter keeps only what is the shape's

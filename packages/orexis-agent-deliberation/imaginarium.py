@@ -149,6 +149,15 @@ class Imaginarium:
         """
         self._store.copy_graphs(source, *graphs)
 
+    def refresh(self, source, *graphs: str) -> None:
+        """Make each of `graphs` say what `source` says there now — the present's graphs a
+        resumed pass reads beside its kept worlds: a round opened, a claim arrived, a debt
+        written since the cone was made, and the catalogue that says what they are. A timed
+        graph is not part of the invariant half by design (#589), so a change to one keeps
+        the cone; it must not keep the copy."""
+        for graph in graphs:
+            self.observe(source, graph)
+
     def observe(self, source, graph: str) -> None:
         """Make `graph` say what `source` says there, replacing whatever it held.
 

@@ -86,6 +86,7 @@ class _Node:
     changed: frozenset = frozenset()     # the PLACES the steps on this path changed (#643)
     materialised: bool = True
     expanded: bool = False
+    menu: frozenset = frozenset()        # the rows this node was expanded with, for a resumed pass to compare
     met: bool = False
     legal: bool | None = None            # the society's verdict on this world, once asked
     #  A SURPRISE IS READ BY WHAT WAS NOT IMAGINED (#570): `verdict` is why this world, once

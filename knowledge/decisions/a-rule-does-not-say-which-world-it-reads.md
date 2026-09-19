@@ -35,9 +35,9 @@ conclusions* — except that here the conclusions belong to a future package.
 outside reading. Ship a shade, a fan, or a second grower venting into the same space, and the
 vent reads the pre-plan value: no error, no empty result, a wrong plan.
 
-# What the door does instead
+# What the runner's list does instead
 
-`Store.about(world, at)` assembles the graphs a rule is answered over — public knowledge, this
+`Store.about(world, at)` assembled the graphs a rule is answered over — public knowledge, this
 agent's own records, and **one world's readings standing where this agent's own stand**. An
 actuator asking about the world it is in is handed its own; a search asking about a node is
 handed that node's. The rule says only what it needs to be true.
@@ -45,9 +45,13 @@ handed that node's. The rule says only what it needs to be true.
 Nothing overlaps, and that is what makes it free: the world named REPLACES the readings rather
 than joining them, so there is one answer per fact and no precedence for anyone to establish.
 
-`effects.apply`, `cost_of`, `lands_after`, `affordances_of`, `Store.query_at` and
-`Store.construct` all take `world` and no longer take `$state`. `planner._bind` no longer
-carries a graph at all.
+`effects.apply`, `cost_of`, `lands_after` and the affordances collection took `world`, and
+`Store.query_at` and `Store.construct` swapped it into the dataset. Since
+[a-reader-states-the-kinds-it-reads](/decisions/a-reader-states-the-kinds-it-reads.md) the
+swap is the planner's own: it builds one graph list per node, the kinds a rule reads at the
+node's instant with the node's readings in the state's place, and hands it to `query` and
+`construct`, which take a list and nothing else. `planner._bind` no longer carries a graph
+at all.
 
 # What it deleted
 
@@ -57,7 +61,7 @@ carries a graph at all.
   whether a debt was discharged. One clause covers both now, and there is no second one to
   forget — forgetting it planned a second round, silently.
 - **A UNION in the kernel's own class check.** `effects` built
-  `{ ?v a ?t } UNION { GRAPH $state { ?v a ?t } }` because a type could be in either; the door
+  `{ ?v a ?t } UNION { GRAPH $state { ?v a ?t } }` because a type could be in either; the list
   merges them.
 - **`ower._unmet`'s second `FILTER NOT EXISTS`**, and the keeper's `GRAPH $state` around a
   bridge's promise — which was the keeper stating, on the bridge's behalf, that a plan could

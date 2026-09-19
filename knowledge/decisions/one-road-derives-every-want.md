@@ -43,7 +43,7 @@ target is the class it quantifies over
 **Judging is one select, and it is already compiled.** The met-test compiled by `report_select`
 is the SELECT whose rows are `?this` — the focus node that failed — and `?_constraint`, which
 property or side of it. That select IS the decomposition: run against a world, its rows are the
-instances in trouble. Run it now, through the door, and at the start of each prediction the
+instances in trouble. Run it now, over the graphs holding now, and at the start of each prediction the
 agent holds — sensing's drift, the ledger's *undischarged at its deadline* — and each row's
 first instant is its witness, the t₀ at which *always* would stop being true. Decomposition and
 witnessing are one query per desire, which is why neither needs a rule of its own.
@@ -65,7 +65,7 @@ reaches it has fixed what needed fixing by when it was needed.
 prediction that it is undischarged at its deadline. Sensing, on a reading: the reading, and what
 the drift predicts of it. Neither writes a want. *No overdue debts* gets the met-test it never
 had — overdue was unaskable because it wanted the clock, and a prediction at the deadline is an
-instant the door can be asked at. The road does the rest, for both, the same way.
+instant a reader can ask at. The road does the rest, for both, the same way.
 
 # What was refused
 

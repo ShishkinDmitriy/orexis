@@ -167,7 +167,7 @@ future instant is what is held less what is owed to holders whose windows have o
 
 **The crossing is the first prediction at which the root reads unmet.** No drift says WHEN any
 more: the instant a want with an `orexis:holdsAt` is derived at is the start of the earliest prediction
-whose world violates the root's own met-test, asked through the door at each window's start
+whose world violates the root's own met-test, asked over the graphs holding at each window's start
 (#643). A prediction typed with the region band and the one below reads unmet, so the safe
 direction (#633) falls out of the bands, and the resolution is the package's ladder — a pot
 below its floor sixteen hours out is foreseen at the start of the window that reaches the day.

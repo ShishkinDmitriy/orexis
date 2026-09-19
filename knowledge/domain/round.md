@@ -33,8 +33,8 @@ Since [a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a-fact
 an open round is a `market:Round` in the belief base of whoever announced or heard it — the
 venue it is on (`market:hasRound`), its lot, its reserve, and `market:closesAt` — in a graph of
 its own that HOLDS DURING the round, from the offer to its close
-([a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md)): the door hands it to a reader asking about an instant inside
-that stretch and to nobody asking about one past it, so a search standing hours ahead never
+([a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md)): a reader asking about an instant inside
+that stretch is handed it, and one asking about an instant past it is not, so a search standing hours ahead never
 sees a round that will have closed, and no rule asks the clock. Retracted when it is over for
 that agent, and swept once past its period. It carries what the offer said and nothing the
 offer did not: the host's window and cooldown stay its own. `market/rounds.py` is the one

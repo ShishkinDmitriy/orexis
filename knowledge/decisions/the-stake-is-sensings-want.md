@@ -165,6 +165,6 @@ per step, what a met-test reads — which is all the kernel knows of it; what is
 packages' word. The instance keeps its IRI (`graph/sensed`) so a deployed volume keeps its
 readings. The placeholder a rule is handed is `$state`. And `graph/instruments` is sensing's:
 declared in sensing's ontology, named in its terms, and found by the kernel as every graph is —
-`Store.recorded_graphs()` asks for belief graphs that arrive recorded, so the planner's
-imaginarium and the validator carry it without naming it. `orexis:Means` and a duplicated
+a reader asking `graphs_of` for belief graphs is handed it, so the planner's imaginarium and
+the validator carry it without naming it. `orexis:Means` and a duplicated
 `orexis:Action` block left the ontology in the same sweep.

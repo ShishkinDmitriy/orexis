@@ -171,7 +171,7 @@ def test_reads_its_subject(query_with_readings):
 
 
 def test_no_reading_yet_is_none(fern):
-    assert current_reading(fern.query, "http://example.org/orexis/world/simulation#fern", MOISTURE) is None
+    assert current_reading(fern.reader(PUBLIC), "http://example.org/orexis/world/simulation#fern", MOISTURE) is None
 
 
 def test_two_properties_of_one_subject_both_survive(query_with_readings):
