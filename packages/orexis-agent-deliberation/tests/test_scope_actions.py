@@ -37,5 +37,5 @@ def test_scope_actions_leaves_the_store_as_the_snapshot_says(case, monkeypatch, 
 
 def test_every_case_is_read_and_no_snapshot_is_orphaned(snapshots):
     """A glob that stopped matching would pass every case by running none."""
-    assert len(CASES) >= 4, [c.name for c in CASES]
+    assert len(CASES) >= 5, [c.name for c in CASES]
     assert not snapshots.orphans_in(CASES_DIR)
