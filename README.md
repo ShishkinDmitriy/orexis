@@ -399,3 +399,8 @@ on a leash — wallet debiting and metabolic cost, which is also what makes *sen
 action, and the constitution as SHACL over the trade. Direction lives in
 [`roadmap`](knowledge/decisions/roadmap.md); what is known to be wrong lives in the issue
 tracker, and what was deliberately left open lives in each record's *seams* section.
+
+## License
+
+MIT, see [`LICENSE`](LICENSE). The knowledge bundle under `knowledge/`, the worlds and the firmware are
+under the same terms as the code.
