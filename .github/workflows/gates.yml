@@ -73,21 +73,22 @@ jobs:
             echo "::endgroup::"
           done
 
-      # IN TWO HALVES PLUS THE PACKAGES, at two workers: the whole suite at `-n auto` was
-      # killed for memory on a 16 GB machine, and a private repository's runner has 7 GB.
-      # The halves are the Pi's own recipe. The packages' tests are named, not reached
-      # through `pytest tests`: a package carries its own beside its code, and the halves
-      # split the root tree alone.
+      # IN TWO HALVES PLUS THE PACKAGES, the Pi's own recipe: the whole suite at `-n auto` was
+      # killed for memory on a 16 GB machine, the halves at `-n auto` were not. The repository
+      # is public, so the runner is the 4-vCPU, 16 GB one and the halves take every core; at
+      # two workers, when it was private and the runner had 7 GB, a run took ten to thirteen
+      # minutes. The packages' tests are named, not reached through `pytest tests`: a package
+      # carries its own beside its code, and the halves split the root tree alone.
       - name: pytest, first half
         run: |
           N=$(ls tests/test_*.py | wc -l); H=$(( (N + 1) / 2 ))
-          pytest -q -n 2 $(ls tests/test_*.py | head -$H)
+          pytest -q -n auto $(ls tests/test_*.py | head -$H)
       - name: pytest, second half
         run: |
           N=$(ls tests/test_*.py | wc -l); H=$(( (N + 1) / 2 ))
-          pytest -q -n 2 $(ls tests/test_*.py | tail -n +$((H + 1)))
+          pytest -q -n auto $(ls tests/test_*.py | tail -n +$((H + 1)))
       - name: pytest, the packages' own
-        run: pytest -q -n 2 packages
+        run: pytest -q -n auto packages
 
       # The layering the flat layout gave up a packaging split to assert: onboarding may import
       # agent, agent may never import onboarding, and no capability or transport may touch
