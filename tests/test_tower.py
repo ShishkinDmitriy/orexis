@@ -12,6 +12,7 @@ import pytest
 
 from orexis_agent_progression.store import bindings
 from conftest import genesis_store
+from orexis_agent_progression.ontology import PUBLIC
 
 H = "http://example.org/orexis/hanoi#"
 C = "http://example.org/orexis/courier#"
@@ -140,5 +141,5 @@ def test_a_move_the_courier_cannot_make_is_refused_below_and_the_outer_level_sto
     from orexis_agent_progression.ontology import DELIBERATION_GRAPH
     refusals = bindings(agent.beliefs.query(f"""
 SELECT ?c WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
-  ?c deliberation:verdict "{trace.REFUSED}" ; progression:through <{W}disk_1> }} }}"""))
+  ?c deliberation:verdict "{trace.REFUSED}" ; progression:through <{W}disk_1> }} }}""", agent.beliefs.graphs_of(PUBLIC)))
     assert refusals, "and the trace says why it was passed over"

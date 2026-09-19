@@ -253,5 +253,5 @@ def _because(plan, judgment) -> str:
 
 def _promised(agent, want: str) -> bool:
     """Is this want a promise some step raised for this level (`progression:promisedBy`)?"""
-    return bool(bindings(agent.desires.query_union(
+    return bool(bindings(agent.desires.query(
         f"SELECT ?s WHERE {{ <{want}> progression:promisedBy ?s }} LIMIT 1")))

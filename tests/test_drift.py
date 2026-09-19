@@ -21,6 +21,8 @@ from orexis_agent_deliberation.planner import Planner
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import ACTIONS_GRAPH, STATE_GRAPH
 from orexis_agent_progression.store import bindings
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import PREDICTION
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 OBSERVING = "http://example.org/orexis/sensing#Observing"
@@ -60,7 +62,7 @@ def test_a_fact_the_plan_changed_is_not_overridden_by_a_prediction(monkeypatch):
     agent = _gardener(monkeypatch, moisture=0.04)
     planner = Planner(agent, agent.me)
     root = planner._begin(_stake(agent))
-    node = bindings(agent.beliefs.query(f"SELECT ?o WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:observedProperty <{MOISTURE}> }} }}"))[0]["o"]
+    node = bindings(agent.beliefs.query(f"SELECT ?o WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:observedProperty <{MOISTURE}> }} }}", agent.beliefs.graphs_of(PUBLIC)))[0]["o"]
     later = clock.now() + timedelta(hours=3)
     #  A step's diff is the whole node, as every effect's retraction writes it (#619): the
     #  present's reading out, the same key back with the value the dose reaches.
@@ -86,7 +88,7 @@ def test_the_at_want_is_derived_at_the_first_prediction_that_reads_unmet(monkeyp
     root = _stake(agent)
     crossing = pursuit.crossing_of(agent, root.uri)
     assert crossing is not None
-    windows = agent.beliefs.prediction_windows()
+    windows = agent.beliefs.windows_of(PREDICTION)
     starts = [s for _, s, _ in windows]
     assert crossing in starts, "the crossing is a window's start"
     assert abs((crossing - clock.now()).total_seconds() - 18000) < 120, "five hours: the window that reaches a day"

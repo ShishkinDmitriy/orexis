@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from orexis_agent_progression.ontology import PUBLIC
 
 
 @dataclass(frozen=True)
@@ -118,5 +119,5 @@ def takers_of(agent, action: str) -> list:
     """The modules that carry an action out: whoever contributes it, or — for an action with
     a method — whoever contributes any step it comes to, since an abstract action is taken
     through its steps (#523). Who sizes a bid is who tenders it."""
-    actions = [action] + method_of(agent.beliefs.query, action)
+    actions = [action] + method_of(agent.beliefs.reader(PUBLIC), action)
     return [m for m in agent.modules if any(m.answer(a) is not None for a in actions)]

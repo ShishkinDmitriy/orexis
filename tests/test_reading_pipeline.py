@@ -27,6 +27,7 @@ from orexis_agent_progression.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from orexis_agent_progression.store import PREFIXES, bindings
 
 from conftest import genesis_store, query_fn, load_wired
+from orexis_agent_progression.ontology import PUBLIC
 
 
 def sensors_of(world="sensing", agent="fern"):
@@ -53,7 +54,7 @@ def test_the_conclusions_land_in_the_derived_graph_not_the_world():
     store = genesis_store(world="sensing")
     asserted = bindings(store.query(PREFIXES + f"""
         SELECT ?s WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-          {{ ?s codec:decodedBy ?a }} UNION {{ ?s scaling:scaledBy ?b }} }} }}"""))
+          {{ ?s codec:decodedBy ?a }} UNION {{ ?s scaling:scaledBy ?b }} }} }}""", store.graphs_of(PUBLIC)))
     assert asserted == [], "a conclusion was stated in the world rather than derived"
 
     # Two, not three: `sensing` has three sensors and TWO streams — one reading topic the
@@ -61,7 +62,7 @@ def test_the_conclusions_land_in_the_derived_graph_not_the_world():
     # change: an encoding used to be copied onto every sensor and is now stated once per
     # stream, which is the only place it was ever a fact about.
     derived = bindings(store.query(PREFIXES + f"""
-        SELECT ?s WHERE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{ ?s codec:decodedBy ?c }} }}"""))
+        SELECT ?s WHERE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{ ?s codec:decodedBy ?c }} }}""", store.graphs_of(PUBLIC)))
     assert len(derived) == 2
 
 
@@ -133,7 +134,7 @@ def test_one_device_disagreeing_about_a_shared_stream_is_refused():
     rows = bindings(store.query(PREFIXES + f"""
         SELECT ?c WHERE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
           ?ch a mqtt:Channel ; mqtt:channelTopic "sensors/moisture_sensor_fern/reading" ;
-              codec:decodedBy ?c }} }}"""))
+              codec:decodedBy ?c }} }}""", store.graphs_of(PUBLIC)))
     assert len(rows) == 2, "a stream with two claims on it must show both, for the shape to see"
 
 
@@ -150,7 +151,7 @@ def test_a_stated_premise_produces_exactly_one_conclusion():
     rows = bindings(store.query(PREFIXES + f"""
         SELECT ?c WHERE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
           ?ch a mqtt:Channel ; mqtt:channelTopic "sensors/moisture_sensor_fern/reading" ;
-              codec:decodedBy ?c }} }}"""))
+              codec:decodedBy ?c }} }}""", store.graphs_of(PUBLIC)))
     assert len(rows) == 1
 
 

@@ -19,6 +19,7 @@ from orexis_agent_deliberation.imaginarium import Imaginarium
 from orexis_agent_progression.ontology import (ONTOLOGY_GRAPH, STATE_GRAPH, WORLD_GRAPH, picks_graph)
 
 from conftest import MOISTURE, genesis_store
+from orexis_agent_progression.ontology import PUBLIC
 
 GARDENER = "http://example.org/orexis/world/loner#gardener"
 ZZ = "http://example.org/orexis/world/loner#zz"
@@ -48,7 +49,7 @@ def _bands_in(im, graph):
     from orexis_agent_progression.store import bindings, Raw
     return sorted(r["c"] for r in bindings(im.query(f"""
 SELECT ?c WHERE {{ GRAPH <{graph}> {{ ?o sosa:hasFeatureOfInterest <{ZZ}> ;
-  sosa:observedProperty <{MOISTURE}> ; a ?c }} FILTER(CONTAINS(STR(?c), "band.")) }}""")))
+  sosa:observedProperty <{MOISTURE}> ; a ?c }} FILTER(CONTAINS(STR(?c), "band.")) }}""", ())))
 
 
 def _bands(triples):
@@ -129,7 +130,7 @@ def test_the_snapshot_is_public_knowledge_and_the_named_private_graphs_and_nothi
 
     #  Through the store it HOLDS: what counts as public is a fact about how the imaginarium
     #  was built, not a door anything asks it through, so it is not among the verbs it offers.
-    assert im._store.public_graphs() == st.public_graphs(), \
+    assert im._store.graphs_of(PUBLIC) == st.graphs_of(PUBLIC), \
         "public knowledge means the same thing in both, or an unqualified pattern does not"
     for graph in (ONTOLOGY_GRAPH, WORLD_GRAPH, picks_graph("fern"), STATE_GRAPH):
         assert im.get_graph(graph).strip(), f"{graph} is empty in the imaginarium"

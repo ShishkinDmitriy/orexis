@@ -19,6 +19,7 @@ from orexis_capability_sensing.terms import OBSERVING
 from orexis_agent_progression.ontology import picks_graph
 from orexis_capability_sensing.regions import ObservedJudgment
 from conftest import sensing_of, stake_of, build_agent, genesis_store, desires_build, open_round_for, write_reading, predicted_bands
+from orexis_agent_progression.ontology import PUBLIC
 
 MOIST = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
@@ -184,7 +185,7 @@ def test_the_gardener_derives_no_market_pair():
     from agent.world import load_self
 
     caps = {c.rsplit("#", 1)[-1] for c in
-            load_self(genesis_store(world="loner").query, "gardener").capabilities}
+            load_self(genesis_store(world="loner").reader(PUBLIC), "gardener").capabilities}
     assert caps == {"Subscribing", "Listening", "Storing",
                     "Actuation", "Linking"}, "both clocks in one agent since the butt got its witness"
 

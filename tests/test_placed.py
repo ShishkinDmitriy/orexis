@@ -16,6 +16,8 @@ from orexis_agent_progression.store import bindings
 from orexis_capability_market.clearing import Claim
 from orexis_capability_market.terms import ACQUIRING, PRESENTING, USABLE_FROM
 from conftest import build_agent, genesis_store, open_round_for, wired_markets
+from orexis_agent_progression.ontology import FORESEEN
+from orexis_agent_progression import clock
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 FORESIGHT = "http://example.org/orexis/sensing#foresightS"
@@ -85,8 +87,9 @@ def test_a_claim_with_a_window_places_the_presenting(monkeypatch):
         "amount_l": 0.5, "debit": 0.2,
         "usable_from": opens.isoformat(),
         "usable_until": (opens + timedelta(seconds=900)).isoformat()})
-    held = bindings(agent.beliefs.query_at(f"""SELECT ?from WHERE {{
-        ?c <http://example.org/orexis/market#claimId> "j-window" ; <{USABLE_FROM}> ?from }}"""))
+    held = bindings(agent.beliefs.query(f"""SELECT ?from WHERE {{
+        ?c <http://example.org/orexis/market#claimId> "j-window" ; <{USABLE_FROM}> ?from }}""",
+        agent.beliefs.graphs_of(*FORESEEN, at=clock.now())))
     assert held and datetime.fromisoformat(held[0]["from"]) == opens, "the fact carries from when it is usable"
     presenting = agent.keeper.standing(action=PRESENTING, want=child.uri)
     assert presenting, "the tender was answered and the plan advanced to presenting"

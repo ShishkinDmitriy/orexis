@@ -12,6 +12,7 @@ import rdflib
 from conftest import genesis_store
 
 from orexis_agent_deliberation import relevance as R
+from orexis_agent_progression.ontology import PUBLIC
 
 C = "http://example.org/orexis/courier#"
 H = "http://example.org/orexis/hanoi#"
@@ -26,7 +27,7 @@ def test_what_the_shipped_actions_read_and_write():
     """Off the texts themselves: Drive writes where the van is and nothing else, Move writes
     what a disk rests on, and a plant lever whose retraction template carries a variable
     predicate writes what its construct writes — the node it removes is the one it replaces."""
-    acts = R.actions_of(genesis_store(world="courier").query)
+    acts = R.actions_of(genesis_store(world="courier").reader(PUBLIC))
     reads, writes = acts[C + "Drive"]
     assert _short(writes) == {"at"} and _short(reads) == {"at", "x", "y", "type"}
     assert _short(acts[C + "Pick"][1]) == {"at", "carriedBy"}
@@ -47,9 +48,9 @@ def test_what_the_shipped_wants_read_and_which_levers_reach_them():
     which costs forks and never correctness."""
     st = genesis_store(world="courier")
     public = rdflib.Graph()
-    for g in st.public_graphs():
+    for g in st.graphs_of(PUBLIC):
         public.parse(data=st.get_graph(g), format="turtle")
-    acts = R.actions_of(st.query)
+    acts = R.actions_of(st.reader(PUBLIC))
 
     delivered = R.reads_of_shape(public, rdflib.URIRef(C + "delivered"))
     assert _short(delivered) == {"at", "destination", "type"}

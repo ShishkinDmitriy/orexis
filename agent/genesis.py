@@ -39,6 +39,7 @@ from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GR
                        WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, picks_graph)
 from orexis_agent_progression.store import NAMESPACES, Raw, Store, bind, bindings
+from orexis_agent_progression.ontology import PUBLIC
 
 # Everything public that is computed rather than read from a file. Emptied before each recompute
 # so the answer is the files' and not last boot's — a fact that stops being entailed, or a rule
@@ -162,7 +163,7 @@ WHERE {{
 
 
 # A rule that owns a graph of its own names its CLASS, never the graph. `$into(pkg:SomeGraph)`
-# is resolved against the vocabulary here, which is the same discipline `store.public_graphs()`
+# is resolved against the vocabulary here, which is the same discipline `store.graphs_of(PUBLIC)`
 # follows for reads — a graph IRI is an instance, and rule 1 applies to it as much as it applies
 # to `orexis:fern_agent`.
 #
@@ -244,7 +245,7 @@ def substitute(rule: str, st: Store) -> str:
     reported as a syntax error twenty lines from anything a reader had written.
     """
     targets = write_targets(st)
-    given = "\n".join(f"USING <{g}>" for g in st.public_graphs() if g not in targets)
+    given = "\n".join(f"USING <{g}>" for g in st.graphs_of(PUBLIC) if g not in targets)
     out = []
     for line in rule.splitlines():
         if not line.lstrip().startswith("#"):
@@ -330,11 +331,20 @@ def catalogue_public(st: Store) -> None:
     mind. A graph instance is known by `orexis:arrivedBy`, which the vocabulary states of a
     graph and of nothing else — no walk of the class hierarchy, which the closure owns."""
     catalogue = ensure_catalogue(st)
-    for graph in st.public_graphs(ever=True):
+    for graph in st.graphs_of(PUBLIC):
         st.update(f"DELETE WHERE {{ GRAPH <{catalogue}> {{ <{graph}> ?p ?o }} }}")
-    st.update(f"""
-INSERT {{ GRAPH <{catalogue}> {{ ?g a ?class ; orexis:arrivedBy ?arrival }} }}
-WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?g a ?class ; orexis:arrivedBy ?arrival }} }}""")
+    #  THROUGH `classify`, one row per declaration, so every kind the vocabulary puts the class
+    #  beneath stands on the row too — `a orexis:PublicGraph` of a world graph outright — and a
+    #  text joining the catalogue asks by any kind without a path. The closure this reads is
+    #  the T-Box's `rdfs:subClassOf`, in the store by now; the entailed graph is not, being
+    #  materialised later in the same refresh.
+    for row in bindings(st.query(
+            "SELECT ?g ?class ?arrival WHERE { ?g a ?class ; orexis:arrivedBy ?arrival }",
+            [ONTOLOGY_GRAPH])):
+        st.classify(row["g"], row["class"], row["arrival"])
+    #  The vocabulary graph's own row lands somewhere in that loop, and a row classified before
+    #  it had no hierarchy to close over: said again of every row, now that it is there.
+    st.close_catalogue()
 
 
 def _gather_into_catalogue(st: Store) -> None:
@@ -361,7 +371,7 @@ def _gather_into_catalogue(st: Store) -> None:
 
 def derived(st: Store) -> list[tuple[str, str]]:
     """Who the world says exists, and what it turned out to be able to do."""
-    return [(r["agentId"], r["caps"]) for r in bindings(st.query(_CAPABILITIES_Q))]
+    return [(r["agentId"], r["caps"]) for r in bindings(st.query(_CAPABILITIES_Q, st.graphs_of(PUBLIC)))]
 
 
 # --- private knowledge: written once ---------------------------------------------------------
@@ -402,13 +412,13 @@ def _roots_from_the_world(st: Store, agent_id: str) -> Store:
     agent — the substitution the desire modality performed on every rebuild until #644."""
     from assembly import loader
 
-    rows = st.query(f'SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1')
+    rows = st.query(f'SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1', st.graphs_of(PUBLIC))
     found = rows.get("results", {}).get("bindings", [])
     scratch = Store()
     if not found:
         return scratch
     me = found[0]["a"]["value"]
-    premises = list(st.public_graphs()) + [picks_graph(agent_id)]
+    premises = list(st.graphs_of(PUBLIC)) + [picks_graph(agent_id)]
     for iri in premises:
         for quad in st.quads(iri):
             scratch._store.add(quad)
@@ -424,7 +434,7 @@ def _roots_from_the_world(st: Store, agent_id: str) -> Store:
 
 
 def _held_in(store: Store, graph: str) -> list[str]:
-    rows = store.query(f"SELECT DISTINCT ?r WHERE {{ GRAPH <{graph}> {{ ?me orexis:holds ?r }} }}")
+    rows = store.query(f"SELECT DISTINCT ?r WHERE {{ GRAPH <{graph}> {{ ?me orexis:holds ?r }} }}", store.graphs_of(PUBLIC))
     return sorted(r["r"]["value"] for r in rows.get("results", {}).get("bindings", []))
 
 
@@ -528,7 +538,7 @@ def drop_ghost_graphs(st: Store, agent_id: str) -> list[str]:
 def agent_uri(st: Store, agent_id: str) -> str | None:
     """The agent the world declares under this id, or None where the world names none — the
     one construction from the id a process is handed that a reader may make."""
-    rows = bindings(st.query(f'SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1'))
+    rows = bindings(st.query(f'SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1', st.graphs_of(PUBLIC)))
     return rows[0]["a"] if rows else None
 
 
@@ -605,6 +615,7 @@ def open_belief_base(world: Path, agent_id: str, path: str | None = None,
     st = Store(_belief_room(path))
     refresh_public(st, world)
     _gather_into_catalogue(st)
+    st.close_catalogue()              # every row says every kind it is, however it was written
     _move_pick_record(st, agent_id)
     born = birth(st, world, agent_id, rebirth)
     if born:

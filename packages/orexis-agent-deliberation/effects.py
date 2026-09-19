@@ -37,6 +37,9 @@ from rdflib.plugins.sparql.parserutils import CompValue
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import PREFIXES, Raw, bindings, bind as bind_text
 from .relevance import _TOKEN, parseable
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import KNOWN
+from orexis_agent_progression import clock
 
 log = logging.getLogger("effects")
 
@@ -67,12 +70,12 @@ def rule_for(store, action: str) -> dict | None:
     #  it, yet it was fetched on every fork by `apply`, `cost_of` and `lands_after` each —
     #  three of the seven store calls a fork cost, answering the same thing every time.
     def fetch():
-        rows = bindings(store.query(_RULE_Q, {"rule": action}))
+        rows = bindings(store.query(_RULE_Q, store.graphs_of(PUBLIC), {"rule": action}))
         return rows[0] if rows else None
     return store.remember(("rule", action), fetch)
 
 
-def apply(store, action: str, when=None, world=None, **bind) -> tuple[list, list]:
+def apply(store, action: str, graphs=None, **bind) -> tuple[list, list]:
     """Run one means' effect: `(added, retracted)`, as triples, against nothing.
 
     **`store` is whichever dataset the question is being asked ABOUT, and that is the whole of
@@ -103,13 +106,13 @@ def apply(store, action: str, when=None, world=None, **bind) -> tuple[list, list
     rule = rule_for(store, action)
     if rule is None:
         return [], []
-    #  WHICH WORLD, TOLD TO THE DOOR AND NOT TO THE TEXT (#666). `world` is the readings a
+    #  WHICH WORLD, IN THE LIST THE CALLER BUILT AND NOT IN THE TEXT (#666). `graphs` carries the readings a
     #  rule's patterns read — this agent's own where a caller means "here", a node's where a
     #  search means "there" — and the rule names neither. It used to name the graph itself,
     #  which made a package author decide, pattern by pattern, whether a plan could change
     #  that fact: a claim about every other package's actions, made from inside one.
-    return (_run(store, rule.get("construct"), bind, when, world),
-            _run(store, rule.get("retracts"), bind, when, world))
+    return (_run(store, rule.get("construct"), bind, graphs),
+            _run(store, rule.get("retracts"), bind, graphs))
 
 
 def world_after(base, store, action: str, /, **bind):
@@ -196,7 +199,7 @@ def _term(x):
     return x
 
 
-def lands_after(store, action: str, when=None, world=None, **bind) -> float | None:
+def lands_after(store, action: str, graphs=None, **bind) -> float | None:
     """How long after this act the world change completes, in seconds — asked, never computed.
 
     The figure a waiter needs and the figure a planner needs, and they must be the same one.
@@ -213,13 +216,13 @@ def lands_after(store, action: str, when=None, world=None, **bind) -> float | No
     rule = rule_for(store, action)
     if rule is None or not rule.get("lands"):
         return None
-    rows = _select(store, rule["lands"], bind, when, world)
+    rows = _select(store, rule["lands"], bind, graphs)
     if not rows or rows[0]["seconds"] is None:
         return None
     return float(rows[0]["seconds"].value)
 
 
-def cost_of(store, action: str, when=None, world=None, **bind) -> float | None:
+def cost_of(store, action: str, graphs=None, **bind) -> float | None:
     """What taking this act would spend, in the wallet's unit — asked, never computed.
 
     `orexis:landsAfter`'s twin (#466): the owning package declares the SELECT, the same
@@ -231,7 +234,7 @@ def cost_of(store, action: str, when=None, world=None, **bind) -> float | None:
     rule = rule_for(store, action)
     if rule is None or not rule.get("costs"):
         return None
-    rows = _select(store, rule["costs"], bind, when, world)
+    rows = _select(store, rule["costs"], bind, graphs)
     if not rows or rows[0]["cost"] is None:
         return None
     return float(rows[0]["cost"].value)
@@ -399,7 +402,7 @@ def _where_body(text: str) -> str | None:
     return None
 
 
-def _select(store, text: str, bind: dict, when=None, world=None) -> list:
+def _select(store, text: str, bind: dict, graphs=None) -> list:
     """A rule's query that answers with BINDINGS rather than a graph. Same substitution, same
     swallowing of a rule that will not run: a package's broken query must not take an agent
     down, and what is lost is precision about waiting rather than the ability to act.
@@ -411,17 +414,25 @@ def _select(store, text: str, bind: dict, when=None, world=None) -> list:
     serve landed "immediately", silently. The rows come back as engine solutions rather
     than JSON bindings; the one consumer reads its column accordingly."""
     try:
-        return store.construct(bind_text(text, **bind), at=when, world=world)
+        return store.construct(bind_text(text, **bind), _graphs(store, graphs))
     except Exception as exc:
         log.error("timing query for this means would not run: %s", exc)
         return []
 
 
-def _run(store, text: str | None, bind: dict, when=None, world=None) -> list:
+def _graphs(store, graphs) -> list[str]:
+    """What a rule is answered over: the list the caller built — the search, for an imagined
+    world at an instant — or, where none is handed in, the kinds a rule reads as they hold
+    now: an actuator standing in the present, a test. Stated here, once, for the rules this
+    module runs; no store decides it."""
+    return graphs if graphs is not None else store.graphs_of(*KNOWN, at=clock.now())
+
+
+def _run(store, text: str | None, bind: dict, graphs=None) -> list:
     if not text:
         return []
     try:
-        return list(store.construct(bind_text(text, **bind), at=when, world=world))
+        return list(store.construct(bind_text(text, **bind), _graphs(store, graphs)))
     except Exception as exc:
         #  A rule that will not run is a package's bug and must not take an agent down: the
         #  lever still works, and what is lost is the ability to reason about it in advance.

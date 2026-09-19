@@ -33,10 +33,10 @@ def migrate_ledger(intentions, graph: str, about_of: dict[str, str]) -> int:
     Returns how many rows gained a want.
     """
     want_of = {about: want for want, about in about_of.items()}
-    rows = bindings(intentions.query(f"""
+    rows = bindings(intentions.query_over(f"""
         SELECT ?i ?property WHERE {{ GRAPH <{graph}> {{
             ?i <{_LEDGER_PROPERTY}> ?property .
-            FILTER NOT EXISTS {{ ?i progression:pursues ?want }} }} }}"""))
+            FILTER NOT EXISTS {{ ?i progression:pursues ?want }} }} }}""", graph))
     given = 0
     for row in rows:
         if (want := want_of.get(row["property"])) is None:
@@ -61,11 +61,11 @@ def migrate_ledger_acts(intentions, graph: str) -> int:
     `progression:through` moved onto it, and `progression:by` repointed. Told apart by structure — a `by` object
     that is not `a progression:Act` in the ledger — so the migration is idempotent. Returns how many.
     """
-    rows = bindings(intentions.query(f"""
+    rows = bindings(intentions.query_over(f"""
         SELECT ?i ?action ?through WHERE {{ GRAPH <{graph}> {{
             ?i progression:by ?action .
             OPTIONAL {{ ?i progression:through ?through }}
-            FILTER NOT EXISTS {{ ?action a progression:Act }} }} }}"""))
+            FILTER NOT EXISTS {{ ?action a progression:Act }} }} }}""", graph))
     for row in rows:
         act = row["i"].replace("intent_", "act_", 1) if "intent_" in row["i"] else row["i"] + ".act"
         through = f'<{act}> progression:through <{row["through"]}> .' if row.get("through") else ""

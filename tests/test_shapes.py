@@ -21,6 +21,7 @@ from orexis_agent_progression.store import Store
 from agent.genesis import agent_id_of
 
 from conftest import GENESIS_DIR, WORLDS_ROOT, genesis_store
+from orexis_agent_progression.ontology import PUBLIC
 
 
 def _flatten(st, world_dir=GENESIS_DIR) -> rdflib.Graph:
@@ -34,7 +35,7 @@ def _flatten(st, world_dir=GENESIS_DIR) -> rdflib.Graph:
     seven pin-role tests failing was the only reason anyone noticed.
     """
     data = rdflib.Graph()
-    for iri in st.public_graphs():
+    for iri in st.graphs_of(PUBLIC):
         ttl = st.get_graph(iri)
         if ttl.strip():
             data.parse(data=ttl, format="turtle")
@@ -425,7 +426,7 @@ def _wiring(body: str) -> rdflib.Graph:
     inference.materialise(st)
 
     data = rdflib.Graph()
-    for iri in st.public_graphs():
+    for iri in st.graphs_of(PUBLIC):
         ttl = st.get_graph(iri)
         if ttl.strip():
             data.parse(data=ttl, format="turtle")
@@ -918,7 +919,7 @@ def test_what_a_probe_detects_is_entailed_from_its_part():
 SELECT ?stimulus ?property WHERE {
   ?probe a <http://example.org/orexis/moisture-probe#CapacitiveMoistureProbe> ;
          <http://www.w3.org/ns/ssn/detects> ?stimulus .
-  ?stimulus <http://www.w3.org/ns/ssn/isProxyFor> ?property }"""))
+  ?stimulus <http://www.w3.org/ns/ssn/isProxyFor> ?property }""", st.graphs_of(PUBLIC)))
     assert rows, "the probe detects nothing — the hasValue entailment or the proxy is gone"
     assert all(r["property"].endswith("SoilMoisture") for r in rows)
 
@@ -964,7 +965,7 @@ def test_the_shipped_wiring_keeps_its_alarm_promise():
         ?leg <http://example.org/orexis/microcontroller#pinRole> ?role .
         ?wire <http://example.org/orexis/microcontroller#joins> ?leg , ?pin .
         ?board <http://example.org/orexis/microcontroller#hasPin> ?pin ;
-               <http://example.org/orexis/microcontroller#watcherReachesRole> ?role . }""")
+               <http://example.org/orexis/microcontroller#watcherReachesRole> ?role . }""", st.graphs_of(PUBLIC))
     from orexis_agent_progression.store import bindings
     assert bindings(rows), (
         "the sensing world's watched channel must be visibly within its board's reach — if "
@@ -1002,7 +1003,7 @@ def test_the_windowsill_sits_inside_every_stated_range():
         ?sensor <http://www.w3.org/ns/ssn/systems/hasSystemCapability> ?c .
         ?c <http://www.w3.org/ns/ssn/systems/hasSystemProperty> ?r .
         ?r a <http://www.w3.org/ns/ssn/systems/MeasurementRange> ;
-           <https://schema.org/unitCode> ?u . }""")
+           <https://schema.org/unitCode> ?u . }""", st.graphs_of(PUBLIC))
     from orexis_agent_progression.store import bindings
     found = bindings(rows)
     assert len(found) >= 2, (

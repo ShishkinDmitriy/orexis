@@ -691,10 +691,10 @@ def test_the_figures_do_not_cost_what_they_report(make):
     fern = make("fern", genesis_store({"fern": 0.10}))
     next(m for m in fern.modules if m.name == "deliberation").series()   # fill the trace
 
-    trace.effort(fern.desires.query_union)                                 # warm
+    trace.effort(fern.desires.query)                                 # warm
     started = time.monotonic()
     for _ in range(5):
-        trace.effort(fern.desires.query_union)
+        trace.effort(fern.desires.query)
     each = (time.monotonic() - started) / 5
 
     assert each < 0.05, f"reading the figures took {each*1000:.0f}ms — it should be under 1ms"

@@ -12,6 +12,7 @@ from orexis_agent_progression.ontology import DELIBERATION_GRAPH
 from orexis_agent_progression.store import bindings
 from orexis_capability_sensing import predictions
 from conftest import MOISTURE, build_agent, genesis_store, sensing_of, stake_of, write_reading
+from orexis_agent_progression.ontology import PUBLIC
 
 PROBE = "http://example.org/orexis/world/loner#moisture_probe"
 WORLD = "http://example.org/orexis/graph/world"
@@ -45,7 +46,7 @@ def test_ten_readings_inside_the_expectation_leave_no_mark_and_one_outside_leave
     assert surprise is not None and surprise[0] == "exogenous" and "BelowRegion" in surprise[1]
     agent.reviser.settle()
     rows = bindings(agent.beliefs.query(f"""
-SELECT ?s WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?d deliberation:surprise ?s }} }}"""))
+SELECT ?s WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?d deliberation:surprise ?s }} }}""", agent.beliefs.graphs_of(PUBLIC)))
     assert rows and any("exogenous" in r["s"] and "BelowRegion" in r["s"] for r in rows), rows
 
 

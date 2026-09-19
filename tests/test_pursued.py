@@ -14,6 +14,8 @@ from orexis_agent_deliberation import pursuit
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import bindings
 from conftest import build_agent, genesis_store, write_reading
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import WANT
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 DOSING = "http://example.org/orexis/actuation#Dosing"
@@ -35,7 +37,7 @@ def _stake(agent):
 
 
 def _said_of(agent, want):
-    return {(r["p"], r["o"]) for r in bindings(agent.desires.query_union(
+    return {(r["p"], r["o"]) for r in bindings(agent.desires.query(
         f"SELECT ?p ?o WHERE {{ <{want}> ?p ?o }}"))}
 
 
@@ -133,8 +135,8 @@ def test_the_derived_want_borrows_the_roots_measure(monkeypatch):
     root = _stake(agent)
     agent.deliberator.decide(root)
     child = _stake(agent)
-    assert agent.desire_urgency(child, agent.beliefs.query, STATE_GRAPH) == \
-        agent.desire_urgency(root, agent.beliefs.query, STATE_GRAPH) > 0.0
+    assert agent.desire_urgency(child, agent.beliefs.reader(PUBLIC), STATE_GRAPH) == \
+        agent.desire_urgency(root, agent.beliefs.reader(PUBLIC), STATE_GRAPH) > 0.0
 
 
 def test_a_mark_by_either_name_pursues_the_same_want(monkeypatch):
@@ -164,5 +166,5 @@ def test_the_pursued_graph_is_this_agents_own_and_recorded(monkeypatch):
     agent.deliberator.decide(root)
     child = _stake(agent)
     graph = agent.wants.graph_of(agent.id, child.uri)
-    assert graph in agent.beliefs.recorded_graphs(), "the road classified what it wrote"
+    assert graph in agent.beliefs.graphs_of(WANT), "the road classified what it wrote"
     assert graph in agent.beliefs.graphs_of("http://example.org/orexis/deliberation#PursuedGraph")

@@ -151,11 +151,11 @@ def test_the_world_asserts_the_want_and_the_package_owns_the_measure(monkeypatch
     from orexis_agent_progression.store import bindings
 
     agent = _driver(monkeypatch, "c0_0", "c1_2")
-    inline = bindings(agent.desires.query_union(
+    inline = bindings(agent.desires.query(
         "SELECT ?n WHERE { GRAPH <http://example.org/orexis/graph/desire/asserted> "
         "{ { ?n sh:select ?t } UNION { ?n a sh:NodeShape } } }"))
     assert not inline, f"the world file states no measure of its own: {inline}"
-    where = bindings(agent.desires.query_union(
+    where = bindings(agent.desires.query(
         f"SELECT ?m ?e WHERE {{ <{WANT}> orexis:metWhen ?m ; orexis:estimates ?e }}"))[0]
     assert where["m"].startswith(C) and where["e"].startswith(C), \
         "both point into the courier package's namespace"
@@ -218,11 +218,6 @@ def test_an_irrelevant_lever_is_never_even_asked(monkeypatch):
     query = imaginarium.Imaginarium.query
     monkeypatch.setattr(imaginarium.Imaginarium, "query",
                         lambda self, sparql, *a, **k: (asked.append(sparql), query(self, sparql, *a, **k))[1])
-    #  The menu asks through the rules' door since a round became a graph with a period
-    #  (#620): counted the same, since what is counted is the precondition text being run.
-    query_at = imaginarium.Imaginarium.query_at
-    monkeypatch.setattr(imaginarium.Imaginarium, "query_at",
-                        lambda self, sparql, *a, **k: (asked.append(sparql), query_at(self, sparql, *a, **k))[1])
 
     def pass_with(disks):
         agent = _driver(monkeypatch, "c0_0", "c1_2")

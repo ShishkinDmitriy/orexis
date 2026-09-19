@@ -19,6 +19,7 @@ from orexis_agent_progression.store import bindings
 from orexis_capability_review.summary import RING, Summaries
 
 from conftest import WORLDS_ROOT, build_agent, genesis_store
+from orexis_agent_progression.ontology import PUBLIC
 
 # Sensing's term, built from sensing's namespace. The kernel `term()` is still
 # imported for review's own, which is the distinction this sweep exists to make visible.
@@ -54,7 +55,7 @@ def feed(agent, values, sensor=None):
 
 def window(agent) -> int:
     rows = bindings(agent.beliefs.query(
-        "SELECT ?n WHERE { GRAPH ?g { sensing:SensingCapability sensing:reviewWindow ?n } }"))
+        "SELECT ?n WHERE { GRAPH ?g { sensing:SensingCapability sensing:reviewWindow ?n } }", agent.beliefs.graphs_of(PUBLIC)))
     return int(rows[0]["n"])
 
 
@@ -63,11 +64,11 @@ def window(agent) -> int:
 def test_a_revisable_term_is_discovered_from_the_t_box_not_from_python(fern):
     """No registry and no import: the reviewer asks the merged ontology what may be re-picked,
     so a capability nobody here has read is reviewable on the same terms as this one."""
-    assert SLOW in world_ranges(fern.beliefs.query)
+    assert SLOW in world_ranges(fern.beliefs.reader(PUBLIC))
 
 
 def test_the_world_range_comes_from_the_constitution(fern):
-    room = world_ranges(fern.beliefs.query)[SLOW]
+    room = world_ranges(fern.beliefs.reader(PUBLIC))[SLOW]
     assert (room.floor, room.ceiling) == (10.0, 900.0)
 
 
@@ -76,7 +77,7 @@ def test_the_jolt_threshold_is_revisable_on_the_same_terms(fern):
     Python knowing its name: constitution from the family's figures, narrowed by the mandate.
     Revisable because the first 0.25 was an estimate measured on nothing, and correcting an
     estimate must cost a retained command, never a reflash."""
-    room = world_ranges(fern.beliefs.query)[DELTA]
+    room = world_ranges(fern.beliefs.reader(PUBLIC))[DELTA]
     assert (room.floor, room.ceiling) == (0.05, 0.5)
     narrowed = fern.reviewing().ranges()[DELTA]
     assert (narrowed.floor, narrowed.ceiling) == (DELTA_FINE, DELTA_COARSE)
@@ -131,7 +132,7 @@ def test_a_world_that_widens_a_mandate_will_not_validate():
         from orexis_agent_deliberation import effects
         from conftest import desires_build
 
-        data = graph_from(st, *st.public_graphs(), st.catalogue)
+        data = graph_from(st, *st.graphs_of(PUBLIC), st.catalogue)
         for a in everyone:
             for triple in desires_build(st, a).construct(
                     "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):
@@ -338,7 +339,7 @@ def _decisions(agent) -> list[dict]:
     return bindings(agent.beliefs.query(f"""
 SELECT ?term ?from ?to ?why ?outcome ?at ?due WHERE {{ GRAPH <{revisions_graph(agent.id)}> {{
   ?r a review:Revision ; review:revisedTerm ?term ; review:fromValue ?from ; review:toValue ?to ;
-     review:becauseOf ?why ; review:outcome ?outcome ; review:atTime ?at ; review:dueAt ?due }} }}"""))
+     review:becauseOf ?why ; review:outcome ?outcome ; review:atTime ?at ; review:dueAt ?due }} }}""", agent.beliefs.graphs_of(PUBLIC)))
 
 
 def test_an_agent_given_no_room_has_no_review_at_all(monkeypatch):
@@ -416,7 +417,7 @@ INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
 
 def _limit(st):
     rows = bindings(st.query("""
-SELECT ?floor WHERE { ?a review:limitedTo ?l . ?l review:onTerm ?t ; review:notBelow ?floor }"""))
+SELECT ?floor WHERE { ?a review:limitedTo ?l . ?l review:onTerm ?t ; review:notBelow ?floor }""", st.graphs_of(PUBLIC)))
     return [float(r["floor"]) for r in rows]
 
 

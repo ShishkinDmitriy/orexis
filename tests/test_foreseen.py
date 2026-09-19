@@ -88,7 +88,7 @@ def test_a_crossing_within_the_foresight_derives_a_want_met_at_that_instant(monk
     assert child.state == "unmet", "the newest prediction still says the reading crosses by the instant"
     assert child.urgency == root.urgency > 0.0, \
         "its room is the stretch to the instant, barely run — never less than the root's own measure"
-    said = {r["p"]: r["o"] for r in bindings(agent.desires.query_union(
+    said = {r["p"]: r["o"] for r in bindings(agent.desires.query(
         f"SELECT ?p ?o WHERE {{ <{child.uri}> ?p ?o }}"))}
     #  THE INSTANT IS WHAT SAYS IT, and it is all that ever did: the want carried
     #  `orexis:bindsWhen orexis:At` beside this, computed from whether an instant was known

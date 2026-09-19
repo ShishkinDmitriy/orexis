@@ -19,6 +19,7 @@ from orexis_agent_progression.store import bindings
 from orexis_capability_sensing.wiring import Sensor
 
 from conftest import build_agent, genesis_store, query_fn, wired_sensors, load_wired, reading_of
+from orexis_agent_progression.ontology import PUBLIC
 
 AIR_TEMP = "http://example.org/orexis/water#AirTemperature"
 AIR_HUMIDITY = "http://example.org/orexis/water#AirHumidity"
@@ -280,7 +281,7 @@ def test_an_observation_says_which_procedure_made_it(monkeypatch):
     rows = bindings(agent.beliefs.query(f"""
         PREFIX sosa: <http://www.w3.org/ns/sosa/>
         SELECT ?proc WHERE {{ GRAPH <{STATE_GRAPH}> {{
-          ?obs a sosa:Observation ; sosa:usedProcedure ?proc }} }}"""))
+          ?obs a sosa:Observation ; sosa:usedProcedure ?proc }} }}""", agent.beliefs.graphs_of(PUBLIC)))
     assert rows, "no observation cited a procedure"
     cited = {r["proc"] for r in rows}
 

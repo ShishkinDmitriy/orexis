@@ -35,6 +35,8 @@ from orexis_agent_progression.store import Store
 #  asking the agent's check, and that check IS this verdict.
 from orexis_agent_deliberation.conformance import (  # noqa: F401 — re-exported on purpose
     _shapes_and_vocabulary, conforms, graph_from)
+from orexis_agent_progression.ontology import KNOWN
+from orexis_agent_progression import clock
 
 log = logging.getLogger("validate")
 
@@ -75,12 +77,11 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities,
     #  them. Which is why the record is SUBTRACTED where the modality carries it — naming it
     #  to take it out is not the enumeration the rule forbids, it is saying which road it
     #  came by.
-    recorded = st.recorded_graphs()
+    graphs = st.graphs_of(*KNOWN, at=clock.now())
     if desires is not None:
         picks = set(st.graphs_of(OREXIS + "PickRecordGraph"))
-        recorded = [g for g in recorded if g not in picks]
-    private = [STATE_GRAPH, *recorded]
-    data = graph_from(st, *st.public_graphs(), *private, st.catalogue)
+        graphs = [g for g in graphs if g not in picks]
+    data = graph_from(st, *graphs, st.catalogue)
     if desires is not None:
         from orexis_agent_deliberation import effects
         for triple in desires.construct(

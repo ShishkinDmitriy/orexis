@@ -23,6 +23,7 @@ from orexis_capability_review import RECKONING
 LINKING = "http://example.org/orexis/mqtt#Linking"
 
 from conftest import genesis_store, query_fn, load_wired
+from orexis_agent_progression.ontology import PUBLIC
 
 
 @pytest.fixture
@@ -121,11 +122,11 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing(monkeypat
     from conftest import build_agent
 
     st = genesis_store()
-    uri = lambda who: load_wired(st.query, who).uri
+    uri = lambda who: load_wired(st.reader(PUBLIC), who).uri
 
-    assert not regions_of(st.query, uri("city")), \
+    assert not regions_of(st.reader(PUBLIC), uri("city")), \
         "a mains states no ranges — the city wants nothing for itself"
-    assert regions_of(st.query, uri("fern")), \
+    assert regions_of(st.reader(PUBLIC), uri("fern")), \
         "a plant states ranges, so it holds regions of its own"
 
     #  WHAT IS HONOURED IS A ROW PER WANT ABOUT A DEBT, named for it — so the lever others may

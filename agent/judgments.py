@@ -32,6 +32,8 @@ from orexis_agent_deliberation.judgment import Judgment
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import DESIRES
 from orexis_agent_progression.store import bind, bindings
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import FORESEEN, KNOWN
 
 log = logging.getLogger("judgments")
 
@@ -103,7 +105,7 @@ class Judgments:
         #  avoided-pattern wants, whose judging is one select on the store's own engine;
         #  binary, because between entered and held there is nothing to be nearer to. A
         #  pattern that fails to run reads as unmet — the loud direction.
-        for row in bindings(self._agent.desires.query_union(_AVOIDED_Q, {"me": self._agent.me.uri})):
+        for row in bindings(self._agent.desires.query(_AVOIDED_Q, {"me": self._agent.me.uri})):
             if row["want"] in seen or row["want"] in derived:
                 continue
             #  THE DESIRE OWNS THE TERM AND THE PACKAGE OWNS THE MEASURE: a world may write
@@ -112,7 +114,7 @@ class Judgments:
             #  knowledge and is asked of the belief base — one text, either road.
             select = row.get("select")
             if not select:
-                found = bindings(self._agent.beliefs.query(_SELECT_Q, {"node": row["avoided"]}))
+                found = bindings(self._agent.beliefs.query(_SELECT_Q, self._agent.beliefs.graphs_of(PUBLIC), {"node": row["avoided"]}))
                 select = found[0]["select"] if found else None
             try:
                 if select:
@@ -122,15 +124,15 @@ class Judgments:
                     #  always about a reading, so asked there it binds nothing and a hot want
                     #  reads as met.
                     text = bind(select, this=self._agent.me.uri)
-                    entered = bool(bindings(self._agent.beliefs.query_at(text)))
-                elif bindings(self._agent.beliefs.query(_IS_SHAPE_Q, {"node": row["avoided"]})):
+                    entered = bool(bindings(self._agent.beliefs.query(
+                        text, self._agent.beliefs.graphs_of(*FORESEEN, at=clock.now()))))
+                elif bindings(self._agent.beliefs.query(_IS_SHAPE_Q, self._agent.beliefs.graphs_of(PUBLIC), {"node": row["avoided"]})):
                     #  THE AVOIDED STATE AS A SHAPE (#499): compiled to its conformance
                     #  select — rows where the state has been entered — and run over the
                     #  same view a compiled positive want is.
                     text = self._unmet_select(row["want"], row["avoided"], entered=True)
-                    entered = bool(bindings(self._agent.beliefs.query_over(
-                        text, *self._agent.beliefs.public_graphs(),
-                        *self._agent.beliefs.recorded_graphs())))
+                    entered = bool(bindings(self._agent.beliefs.query(
+                    text, self._agent.beliefs.graphs_of(*KNOWN, at=clock.now()))))
                 else:
                     log.error("%s: %s points at an avoided state that is neither a select "
                               "nor a shape", self._agent.id, row["want"])
@@ -146,13 +148,13 @@ class Judgments:
         #  per want into the select whose rows are its violations — computed, never stored —
         #  and run on the store's own engine over the same view the judge would be handed.
         #  Binary, like the pattern wants above: met is no row.
-        for row in bindings(self._agent.desires.query_union(_SHAPED_Q, {"me": self._agent.me.uri})):
+        for row in bindings(self._agent.desires.query(_SHAPED_Q, {"me": self._agent.me.uri})):
             if row["want"] in seen or row["want"] in derived:
                 continue
             try:
                 text = self._unmet_select(row["want"], row["shape"])
-                violated = bool(bindings(self._agent.beliefs.query_over(
-                    text, *self._agent.beliefs.public_graphs(), *self._agent.beliefs.recorded_graphs())))
+                violated = bool(bindings(self._agent.beliefs.query(
+                    text, self._agent.beliefs.graphs_of(*KNOWN, at=clock.now()))))
             except Exception as exc:
                 log.error("%s: could not judge %s by its shape: %s", self._agent.id, row["want"], exc)
                 violated = True
@@ -192,14 +194,14 @@ class Judgments:
         """What a derived want's OWN met-test says of the world now — `met` or `unmet` — or
         None where it carries none of its own and is judged as its root is (a want minted
         before wants carried one). The shape lives in the want's graph, the agent's own."""
-        rows = bindings(self._agent.desires.query_union(
+        rows = bindings(self._agent.desires.query(
             f"SELECT ?s WHERE {{ <{want}> orexis:metWhen ?s . FILTER(?s != <{want}>) }} LIMIT 1"))
         if not rows or not rows[0]["s"].startswith(want):
             return None
         try:
             text = self._unmet_select(want, rows[0]["s"])
-            violated = bool(bindings(self._agent.beliefs.query_over(
-                text, *self._agent.beliefs.public_graphs(), *self._agent.beliefs.recorded_graphs())))
+            violated = bool(bindings(self._agent.beliefs.query(
+                    text, self._agent.beliefs.graphs_of(*KNOWN, at=clock.now()))))
         except Exception as exc:                                    # noqa: BLE001
             log.error("%s: could not judge %s by its own shape: %s", self._agent.id, want, exc)
             return None
@@ -248,8 +250,8 @@ class Judgments:
             #  target, raised, and the error path read the root as unmet every pass. It named
             #  the roots graph for a while; which graphs are the agent's is what boot's
             #  classification says, and a reader asks it rather than spelling an instance.
-            public = graph_from(self._agent.beliefs, *self._agent.beliefs.public_graphs(),
-                                *self._agent.beliefs.recorded_graphs())
+            public = graph_from(self._agent.beliefs,
+                                *self._agent.beliefs.graphs_of(*KNOWN, at=clock.now()))
             compile = entered_select if entered else unmet_select
             cache[(want, entered)] = compile(public.cbd(URIRef(shape)), URIRef(shape))
         return cache[(want, entered)]

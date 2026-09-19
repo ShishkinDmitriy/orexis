@@ -19,6 +19,8 @@ from orexis_capability_market import rounds
 from orexis_capability_market.terms import ACQUIRING, PRESENTING, TENDERING
 from conftest import (build_agent, genesis_store, wired_event_topic, wired_hosted_markets,
                       wired_markets, wired_sensors)
+from orexis_agent_progression.ontology import FORESEEN
+from orexis_agent_progression import clock
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 STORED = "http://example.org/orexis/water#StoredLitres"
@@ -123,8 +125,9 @@ def test_a_host_whose_stock_covers_the_ask_grants_a_claim_with_no_round(monkeypa
     assert claim["amount_l"] == 0.5 and claim["auction_id"].startswith("ask-")
     assert abs((datetime.fromisoformat(claim["usable_from"]) - wanted).total_seconds()) < 1.0
     assert rounds.rounds_of(host) == [], "covered from stock: no round convened"
-    rows = bindings(host.beliefs.query_at(f"""SELECT ?from WHERE {{
-        ?o <http://example.org/orexis/market#forClaim> "{claim['jti']}" ; <{OWED_FROM}> ?from }}"""))
+    rows = bindings(host.beliefs.query(f"""SELECT ?from WHERE {{
+        ?o <http://example.org/orexis/market#forClaim> "{claim['jti']}" ; <{OWED_FROM}> ?from }}""",
+        host.beliefs.graphs_of(*FORESEEN, at=clock.now())))
     assert rows and abs((datetime.fromisoformat(rows[0]["from"]) - wanted).total_seconds()) < 1.0
 
 
@@ -198,8 +201,9 @@ def test_a_claim_whose_window_closed_unpresented_is_no_longer_held(monkeypatch):
     agent.deliver(f"{market.claim_topic}/fern", {
         "auction_id": "ask-old", "jti": "j-old", "sub": "fern", "amount_l": 0.5, "debit": 0.2,
         "usable_from": (closed - timedelta(seconds=900)).isoformat(), "usable_until": closed.isoformat()})
-    held = lambda at=None: bindings(agent.beliefs.query_at(  # noqa: E731
-        f"SELECT ?c WHERE {{ <{agent.me.uri}> market:holdsClaim ?c }}", at=at))
+    held = lambda at=None: bindings(agent.beliefs.query(  # noqa: E731
+        f"SELECT ?c WHERE {{ <{agent.me.uri}> market:holdsClaim ?c }}",
+        agent.beliefs.graphs_of(*FORESEEN, at=at or clock.now())))
     from orexis_capability_market.bidding import claim_graph
     assert held() == [], "its window closed before it was held: handed to nobody at any instant"
     assert claim_graph(agent.id, "j-old") in agent.beliefs.outdated(), "a graph whose period has ended"

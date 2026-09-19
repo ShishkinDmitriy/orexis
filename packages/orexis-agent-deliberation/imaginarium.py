@@ -13,7 +13,7 @@ in it never happened. See
 knowledge/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md.
 
 **It HOLDS a store; it is not one.** The graphs a rule may read are copied in, so an ordinary
-query means the same thing here as it does in the belief base — `public_graphs()` discovers the
+query means the same thing here as it does in the belief base — `graphs_of(PUBLIC)` discovers the
 same names off the same ontology graph, and `effects.apply` cannot tell the two apart. What
 differs is that this one was constructed with no path, so it is memory and there is nothing to
 clean up: the whole store is dropped when the plan ends, and a crash mid-plan leaves nothing
@@ -40,7 +40,7 @@ from urllib.parse import quote
 
 import pyoxigraph as ox
 
-from orexis_agent_progression.ontology import GRAPH_PREFIX, STATE_GRAPH
+from orexis_agent_progression.ontology import GRAPH_PREFIX, PUBLIC, STATE_GRAPH
 from orexis_agent_progression.store import render, Store
 
 #  Where a node's readings sit. Under the same root as every other graph, because a graph IRI is
@@ -75,7 +75,7 @@ class Imaginarium:
         rows, no exception, and a planner that quietly finds every lever useless. Eleven
         milliseconds on a pass costing over a second is not a price worth that.
 
-        It is also the rule the rest of the repo follows. `store.public_graphs()` ASKS the
+        It is also the rule the rest of the repo follows. `store.graphs_of(PUBLIC)` ASKS the
         vocabulary which graphs are public; naming four of them here would be the enumeration
         rule 1 forbids, and adding a fifth public graph would silently stop reaching this.
 
@@ -89,8 +89,7 @@ class Imaginarium:
         #  and a forecast holding then is a graph the present has not reached. Copied whole,
         #  the imaginarium's own door filters by the instant it is asked at, as the belief
         #  base's does; copied at now, a search could not see past the present's weather.
-        self._store.copy_graphs(
-            store, *list(store.public_graphs(ever=True)), store.catalogue, *private)
+        self._store.copy_graphs(store, *dict.fromkeys([*store.graphs_of(PUBLIC), store.catalogue, *private]))
         #  WHICH PREDICATES A KEYED NODE CARRIES (#553): a retraction of one of these matches
         #  by KEY — every value the node carries under that predicate — never by the exact
         #  value the rule named. Within one pass the two agree, since the value the rule
@@ -100,7 +99,7 @@ class Imaginarium:
         #  prevent. One rule, everywhere, is easier to keep true than two.
         from . import signature
         self._carried = frozenset(
-            pred for _, carried in signature.keys_of(self._store.query).values() for pred in carried)
+            pred for _, carried in signature.keys_of(self._store.reader(PUBLIC)).values() for pred in carried)
 
     # --- the doors a rule is asked through ------------------------------------------------
     #
@@ -111,22 +110,20 @@ class Imaginarium:
     #  A door nothing asks for is not forwarded, which is what makes this list the contract
     #  rather than an accident of what a base class happened to carry.
 
-    def query(self, sparql: str, substitutions: dict | None = None) -> dict:
-        return self._store.query(sparql, substitutions)
-
-    def query_at(self, sparql: str, substitutions: dict | None = None, *,
-                 at: datetime | None = None, world: str | None = None) -> dict:
-        return self._store.query_at(sparql, substitutions, at=at, world=world)
+    def query(self, sparql: str, graphs, substitutions: dict | None = None) -> dict:
+        return self._store.query(sparql, graphs, substitutions)
 
     def query_over(self, sparql: str, *graphs: str, substitutions: dict | None = None) -> dict:
         return self._store.query_over(sparql, *graphs, substitutions=substitutions)
 
-    def construct(self, sparql: str, substitutions: dict | None = None,
-                  at: datetime | None = None, world: str | None = None):
-        #  `at` is the time door and dropping it is not a smaller signature, it is a rule asked
-        #  about the wrong instant — which returns an EMPTY RESULT rather than an error.
-        #  `world` is the place door, and the same is true of it (#666).
-        return self._store.construct(sparql, substitutions, at, world)
+    def graphs_of(self, *kinds: str, at: datetime | None = None) -> list[str]:
+        return self._store.graphs_of(*kinds, at=at)
+
+    def construct(self, sparql: str, graphs, substitutions: dict | None = None):
+        #  Handed its graphs like `query`: the instant and the world a rule is asked about are
+        #  in the list the search built, and a list built for the wrong instant returns an
+        #  EMPTY RESULT rather than an error (#666), so the search builds it in one place.
+        return self._store.construct(sparql, graphs, substitutions)
 
     def remember(self, key, compute):
         return self._store.remember(key, compute)

@@ -17,6 +17,7 @@ import pyoxigraph as ox
 from orexis_capability_sensing.regions import ObservedJudgment
 from orexis_capability_market.ower import OwedJudgment
 from conftest import sensing_of, MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
+from orexis_agent_progression.ontology import PUBLIC
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
 
@@ -178,7 +179,7 @@ def test_the_measure_answers_one_for_a_world_with_no_reading(monkeypatch):
 
     st, fern = _fern(None, monkeypatch)       # no readings seeded at all
     probe = ObservedJudgment(uri="urn:asked", urgency=1.0, observed_property=MOISTURE)
-    assert fern.desire_urgency(probe, st.query, STATE_GRAPH) == 1.0
+    assert fern.desire_urgency(probe, st.reader(PUBLIC), STATE_GRAPH) == 1.0
 
 
 def test_a_want_whose_kind_nothing_measures_scores_a_logged_one(monkeypatch):
@@ -212,11 +213,11 @@ def test_every_shipped_stake_resolves_a_declared_measure(monkeypatch):
         monkeypatch.setenv("OREXIS_WORLD", world)
         st = genesis_store(world=world)
         for row in bindings(st.query(
-                'SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }')):
+                'SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }', st.graphs_of(PUBLIC))):
             agent = build_agent(row["id"], st, monkeypatch)
             for prop in sensing_of(agent).regions:
                 probe = ObservedJudgment(uri="urn:asked", urgency=1.0, observed_property=prop)
-                assert agent.desire_urgency(probe, st.query, STATE_GRAPH) is not None, \
+                assert agent.desire_urgency(probe, st.reader(PUBLIC), STATE_GRAPH) is not None, \
                     f'{row["id"]} in {world}: a stake nothing loaded measures'
                 checked += 1
     assert checked >= 3, "the walk went quiet — no stakes were checked at all"

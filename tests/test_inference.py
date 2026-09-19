@@ -30,6 +30,7 @@ from orexis_agent_progression.ontology import OREXIS, ONTOLOGY_ENTAILED_GRAPH, O
 from onboarding.namespaces import MC, SENSING
 
 from orexis_agent_progression.store import Store, bindings
+from orexis_agent_progression.ontology import PUBLIC
 
 MC = "http://example.org/orexis/microcontroller#"
 ONEWIRE = "http://example.org/orexis/onewire#"
@@ -46,7 +47,7 @@ def _public(world: str = "sensing") -> Store:
 
 def _types_of(st: Store, graph: str, subject: str) -> set[str]:
     return {r["t"] for r in bindings(st.query(
-        f"SELECT ?t WHERE {{ GRAPH <{graph}> {{ <{subject}> a ?t }} }}"))}
+        f"SELECT ?t WHERE {{ GRAPH <{graph}> {{ <{subject}> a ?t }} }}", st.graphs_of(PUBLIC)))}
 
 
 # --- what the closure asserts ----------------------------------------------------------------
@@ -80,7 +81,7 @@ def test_a_world_instance_gets_what_its_class_fixes_for_every_member():
     """
     caps = {r["c"] for r in bindings(_public().query(
         f"SELECT ?c WHERE {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{"
-        f" <{SENSING_WORLD}air_sensor_fern> ssn-system:hasSystemCapability ?c }} }}"))}
+        f" <{SENSING_WORLD}air_sensor_fern> ssn-system:hasSystemCapability ?c }} }}", _public().graphs_of(PUBLIC)))}
     assert caps == {DHT11 + "ContinuousOperationCapability"}
 
 
@@ -97,7 +98,7 @@ def test_a_part_described_once_reaches_every_device_it_is_fitted_to():
     st = _public()
     reached = {}
     for row in bindings(st.query(
-            f"SELECT ?s ?p WHERE {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?s ssn:implements ?p }} }}")):
+            f"SELECT ?s ?p WHERE {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?s ssn:implements ?p }} }}", st.graphs_of(PUBLIC))):
         reached.setdefault(row["s"], set()).add(row["p"])
 
     # The part performs the conversation; each sub-sensor performs its half of the frame. Both
@@ -113,7 +114,7 @@ def test_a_part_described_once_reaches_every_device_it_is_fitted_to():
                                ("http://example.org/orexis/world/sensing#air_humidity_fern", DHT11 + "HumiditySensorCapability")):
         caps = {r["c"] for r in bindings(st.query(
             f"SELECT ?c WHERE {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{"
-            f" <{device}> ssn-system:hasSystemCapability ?c }} }}"))}
+            f" <{device}> ssn-system:hasSystemCapability ?c }} }}", st.graphs_of(PUBLIC)))}
         assert capability in caps, f"<{device}> was not reached by its sub-sensor's capability"
 
     # The fourth subject is the firmware's doing, not the part's (#181): the moisture channel
@@ -132,7 +133,7 @@ def test_an_anonymous_class_expression_never_becomes_a_type():
     st = _public()
     for graph in (ONTOLOGY_ENTAILED_GRAPH, WORLD_ENTAILED_GRAPH):
         anonymous = bindings(st.query(
-            f"SELECT ?s ?t WHERE {{ GRAPH <{graph}> {{ ?s a ?t FILTER(!isIRI(?t)) }} }}"))
+            f"SELECT ?s ?t WHERE {{ GRAPH <{graph}> {{ ?s a ?t FILTER(!isIRI(?t)) }} }}", st.graphs_of(PUBLIC)))
         assert not anonymous, f"{graph} types something by an unaskable class expression"
 
 
@@ -156,7 +157,7 @@ def test_a_reader_still_sees_one_world():
     because `store.query` makes them the default graph. A reader that had to know which of the
     five holds its fact would be a worse design than the one #58 replaced."""
     rows = bindings(_public().query(
-        f"SELECT ?t WHERE {{ <{SENSING_WORLD}moisture_sensor_fern> a ?t }}"))
+        f"SELECT ?t WHERE {{ <{SENSING_WORLD}moisture_sensor_fern> a ?t }}", _public().graphs_of(PUBLIC)))
     types = {r["t"] for r in rows}
     assert SOSA + "Sensor" in types  # asserted in the world
     assert MC + "Peripheral" in types  # entailed, in another graph entirely
@@ -194,7 +195,7 @@ def test_pyshacl_agrees_with_the_materialised_closure(world):
     """
     st = _public(world)
     data = rdflib.Graph()
-    for iri in st.public_graphs():
+    for iri in st.graphs_of(PUBLIC):
         ttl = st.get_graph(iri)
         if ttl.strip():
             data.parse(data=ttl, format="turtle")
@@ -318,12 +319,12 @@ def test_hosting_is_entailed_from_the_deployment():
     st = genesis_store(world="sensing")
     rows = bindings(st.query("""
 SELECT ?hosted WHERE { <http://example.org/orexis/world/sensing#esp32_fern>
-  <http://www.w3.org/ns/sosa/hosts> ?hosted }"""))
+  <http://www.w3.org/ns/sosa/hosts> ?hosted }""", st.graphs_of(PUBLIC)))
     hosted = {r["hosted"].rsplit("#", 1)[-1] for r in rows}
     assert {"moisture_sensor_fern", "status_led_fern", "air_sensor_fern"} <= hosted
     # and the conclusion sits in the entailed graph, never the asserted wiring
     from orexis_agent_progression.ontology import WORLD_ENTAILED_GRAPH
     entailed = bindings(st.query(f"""
 SELECT ?hosted WHERE {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{
-  <http://example.org/orexis/world/sensing#esp32_fern> <http://www.w3.org/ns/sosa/hosts> ?hosted }} }}"""))
+  <http://example.org/orexis/world/sensing#esp32_fern> <http://www.w3.org/ns/sosa/hosts> ?hosted }} }}""", st.graphs_of(PUBLIC)))
     assert len(entailed) >= 3, "the chain's conclusion must land in world/entailed"

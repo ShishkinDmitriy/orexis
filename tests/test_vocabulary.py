@@ -20,6 +20,7 @@ from orexis_agent_progression.ontology import OREXIS, picks_graph, PROGRESSION
 from orexis_agent_progression.store import Store, bindings
 
 from conftest import WORLDS_ROOT, genesis_store
+from orexis_agent_progression.ontology import PUBLIC
 
 # What `world/society/beliefs/fern.ttl` said before the sweep: every belief in the kernel
 # namespace. Written out rather than generated, because a fixture that derived it from the
@@ -120,7 +121,7 @@ def test_what_the_agent_would_have_read_instead_is_nothing():
     """
     st = _aged_store()
     rows = bindings(st.query(
-        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % picks_graph("fern")))
+        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % picks_graph("fern"), st.graphs_of(PUBLIC)))
     assert rows == [], "this test's premise is gone — the old spelling now answers"
 
 
@@ -146,7 +147,7 @@ def test_migration_keeps_the_value_and_changes_only_the_spelling():
     st = _aged_store()
     vocabulary.check(st, migrating=True)
     rows = bindings(st.query(
-        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % picks_graph("fern")))
+        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % picks_graph("fern"), st.graphs_of(PUBLIC)))
     assert [r["v"] for r in rows] == ["600"]
     assert vocabulary.stale(st) == {}
 
@@ -159,7 +160,7 @@ def test_migration_moves_every_belief_not_only_the_one_looked_at():
                   "review:reviewIntervalS 300", "water:litresPerFraction 2.0"):
         predicate, value = query.split()
         rows = bindings(st.query(
-            "SELECT ?v WHERE { GRAPH <%s> { ?a %s ?v } }" % (picks_graph("fern"), predicate)))
+            "SELECT ?v WHERE { GRAPH <%s> { ?a %s ?v } }" % (picks_graph("fern"), predicate), st.graphs_of(PUBLIC)))
         assert rows and rows[0]["v"].startswith(value.rstrip("0").rstrip(".")), predicate
 
 
@@ -178,9 +179,9 @@ def test_public_graphs_are_never_the_agents_to_migrate():
     """They are replaced from the ratified files on every start, so a stale term in one would
     mean the files are wrong — and rewriting it here would hide that."""
     st = _aged_store()
-    before = {g: len(st.get_graph(g)) for g in st.public_graphs()}
+    before = {g: len(st.get_graph(g)) for g in st.graphs_of(PUBLIC)}
     vocabulary.check(st, migrating=True)
-    assert {g: len(st.get_graph(g)) for g in st.public_graphs()} == before
+    assert {g: len(st.get_graph(g)) for g in st.graphs_of(PUBLIC)} == before
 
 
 # --- the boot path, end to end --------------------------------------------------------------
@@ -216,7 +217,7 @@ def test_and_opens_when_asked_to_migrate(tmp_path, monkeypatch):
     monkeypatch.setenv("OREXIS_MIGRATE_BELIEFS", "1")
     st = genesis.open_belief_base(world, "fern", path)
     rows = bindings(st.query(
-        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % picks_graph("fern")))
+        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % picks_graph("fern"), st.graphs_of(PUBLIC)))
     assert [r["v"] for r in rows] == ["600"]
 
 
@@ -236,7 +237,7 @@ orexis:fern_agent old:fastSleepS 30 ; old:slowSleepS 600 ; old:readingGraceS 45 
     assert picks_graph("fern") in found, "a post-sweep volume looked current"
     vocabulary.check(st, migrating=True)
     rows = bindings(st.query(
-        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % picks_graph("fern")))
+        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % picks_graph("fern"), st.graphs_of(PUBLIC)))
     assert [r["v"] for r in rows] == ["600"]
     assert vocabulary.stale(st) == {}
 
@@ -280,4 +281,4 @@ def test_a_graph_nothing_declares_any_more_is_dropped(tmp_path, monkeypatch):
     assert ghost in dropped and ghost not in st.graph_names()
     # and nothing owned or declared went with it
     assert picks_graph("fern") not in dropped
-    assert all(g not in dropped for g in st.public_graphs())
+    assert all(g not in dropped for g in st.graphs_of(PUBLIC))

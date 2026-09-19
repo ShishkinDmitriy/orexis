@@ -17,6 +17,8 @@ from orexis_capability_market.ower import OwedJudgment
 from orexis_capability_market.terms import TENDERING
 
 from conftest import sensing_of, HUMIDITY, MOISTURE, build_agent, genesis_store, open_round_for, wired_actuator_for, wired_hosted_markets, wired_markets, wired_sensors
+from orexis_agent_progression.ontology import FORESEEN
+from orexis_agent_progression import clock
 
 
 @pytest.fixture
@@ -1156,7 +1158,8 @@ def test_the_venue_cools_by_a_fact_that_holds_during_the_cooldown(host):
     from orexis_agent_progression.store import bindings
 
     def cooling(at=None) -> list:
-        return bindings(host.beliefs.query_at(f"SELECT ?until WHERE {{ ?v <{COOLING_UNTIL}> ?until }}", at=at))
+        return bindings(host.beliefs.query(f"SELECT ?until WHERE {{ ?v <{COOLING_UNTIL}> ?until }}",
+                                           host.beliefs.graphs_of(*FORESEEN, at=at or clock.now())))
 
     open_auction(host)
     assert cooling() == [], "a venue with a round open is not cooling"

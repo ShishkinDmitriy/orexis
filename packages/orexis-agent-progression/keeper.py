@@ -47,6 +47,8 @@ from .store import bind, bindings
 from .graphs import intentions_graph
 from . import clock
 from .ontology import LAYER_OF, OREXIS, PLAN_FAILED, PLAN_FINISHED, PREDICTED, REPORTS, WITNESS, PROGRESSION
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import KNOWN
 
 #  What an intention is made of — the mind's own words, and they were the kernel's already
 #  (the-mind-is-six-graphs). What has joined them is the four figures the KEEPING member used to
@@ -251,7 +253,7 @@ class Keeper:
         self._picks = None
         #  A volume from before the ledger keyed on the want: rows carrying a property are
         #  given the want that property names for this agent, once, at construction.
-        about_of = {r["want"]: r["about"] for r in bindings(agent.desires.query_union(
+        about_of = {r["want"]: r["about"] for r in bindings(agent.desires.query(
             f"SELECT ?want ?about WHERE {{ <{self.me.uri}> orexis:holds ?want . "
             f"?want orexis:about ?about }}"))}
         if (n := ledger.migrate_ledger(agent.intentions, self.graph, about_of)):
@@ -500,10 +502,10 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         return out
 
     def _method_of(self, action: str) -> list[str]:
-        return method_of(self.agent.beliefs.query, action)
+        return method_of(self.agent.beliefs.reader(PUBLIC), action)
 
     def _template_of(self, action: str, term: str) -> str | None:
-        rows = bindings(self.agent.beliefs.query(f"SELECT ?t WHERE {{ <{action}> <{kernel(term)}> ?t }}"))
+        rows = bindings(self.agent.beliefs.query(f"SELECT ?t WHERE {{ <{action}> <{kernel(term)}> ?t }}", self.agent.beliefs.graphs_of(PUBLIC)))
         return rows[0]["t"] if rows else None
 
     def _tokens(self, intention_uri: str, step) -> dict:
@@ -524,7 +526,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         rows = bindings(self.agent.beliefs.query(f"""
 SELECT ?bridge ?construct ?estimate WHERE {{
   ?bridge a orexis:Bridge ; orexis:refines <{action}> ; sh:construct ?construct .
-  OPTIONAL {{ ?bridge orexis:estimates ?estimate }} }} LIMIT 1"""))
+  OPTIONAL {{ ?bridge orexis:estimates ?estimate }} }} LIMIT 1""", self.agent.beliefs.graphs_of(PUBLIC)))
         return rows[0] if rows else None
 
     def _translated(self, standing, bridge: dict) -> list[tuple]:
@@ -535,7 +537,7 @@ SELECT ?bridge ?construct ?estimate WHERE {{
                     about=standing.step.about or "urn:nothing", subject=self.me.acts_for or "urn:nobody",
                     picks=picks_graph(self.agent.id), state=STATE_GRAPH)
         out = []
-        for t in self.agent.beliefs.construct(text):
+        for t in self.agent.beliefs.construct(text, self.agent.beliefs.graphs_of(*KNOWN, at=clock.now())):
             out.append((str(t.subject.value), str(t.predicate.value),
                         t.object.value if hasattr(t.object, "value") else str(t.object)))
         return out
@@ -560,8 +562,8 @@ SELECT ?bridge ?construct ?estimate WHERE {{
             self.log.warning("the bridge for %s translated %s's promise to nothing",
                              standing.action.rsplit("#", 1)[-1], _short(intention_uri))
             return False
-        step_uri = next((r["s"] for r in bindings(self.agent.intentions.query_union(
-            f"SELECT ?s WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel('by')}> ?s }} }}"))), None)
+        step_uri = next((r["s"] for r in bindings(self.agent.intentions.query_over(
+            f"SELECT ?s WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel('by')}> ?s }} }}", self.graph))), None)
         want = f"{OREXIS}promise_{self.agent.id}_{uuid.uuid4().hex[:8]}"
         patterns = " ".join(f"{s} {p} {o} ." for s, p, o in (_plain_pattern(f) for f in facts))
         #  NAMING NO WORLD (#666): the promise is met where the facts the bridge translated
@@ -574,7 +576,7 @@ SELECT ?bridge ?construct ?estimate WHERE {{
         estimate = ""
         if bridge.get("estimate"):
             texts = bindings(self.agent.beliefs.query(
-                f"SELECT ?t WHERE {{ <{bridge['estimate']}> sh:select ?t }}"))
+                f"SELECT ?t WHERE {{ <{bridge['estimate']}> sh:select ?t }}", self.agent.beliefs.graphs_of(PUBLIC)))
             if texts:
                 from .store import render
                 import re as _re
@@ -602,7 +604,7 @@ SELECT ?bridge ?construct ?estimate WHERE {{
         return True
 
     def _promise_of(self, step_uri: str) -> str | None:
-        rows = bindings(self.agent.desires.query_union(
+        rows = bindings(self.agent.desires.query(
             f"SELECT ?w WHERE {{ ?w progression:promisedBy <{step_uri}> }}"))
         return rows[0]["w"] if rows else None
 
@@ -625,8 +627,8 @@ WHERE  {{ GRAPH <{promises_graph(self.agent.id)}> {{
         for standing in self.standing(want=want):
             self._resolve(standing, "dropped", "the promise it served was withdrawn")
         if kept:
-            rows = bindings(self.agent.intentions.query_union(
-                f"SELECT ?p WHERE {{ GRAPH <{self.graph}> {{ <{step_uri}> <{PREDICTS}> ?p }} }}"))
+            rows = bindings(self.agent.intentions.query_over(
+                f"SELECT ?p WHERE {{ GRAPH <{self.graph}> {{ <{step_uri}> <{PREDICTS}> ?p }} }}", self.graph))
             if rows:
                 adds, retracts = predicts_from_json(rows[0]["p"])
                 gone = [t for f in retracts if (t := _plain_pattern(f)) is not None]
@@ -644,7 +646,7 @@ WHERE  {{ GRAPH <{promises_graph(self.agent.id)}> {{
         it has searched. The refusal is written on the promising step — `refusedBelow`, what
         the level above passes the move over by while it is younger than the patience — and
         the step lapses at once rather than waiting out its patience: the answer is in."""
-        rows = bindings(self.agent.desires.query_union(
+        rows = bindings(self.agent.desires.query(
             f"SELECT ?step WHERE {{ <{want}> <{kernel('promisedBy')}> ?step }}"))
         if not rows:
             return
@@ -656,8 +658,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                          _short(step_uri), because)
         for standing in self.standing():
             if standing.step is not None and self.current(standing.uri) is not None and \
-                    bindings(self.agent.intentions.query_union(
-                        f"SELECT ?s WHERE {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{kernel('by')}> <{step_uri}> }} }}")):
+                    bindings(self.agent.intentions.query_over(
+                        f"SELECT ?s WHERE {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{kernel('by')}> <{step_uri}> }} }}", self.graph)):
                 self.lapse(standing.uri)
 
     def refused_below(self, action: str, via: str | None, about: str | None) -> bool:
@@ -675,10 +677,10 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         lever = f'?s <{kernel("through")}> <{via}> .' if iri(via) else ""
         subject = f'?s <{kernel("about")}> <{about}> .' if iri(about) else ""
         try:
-            return bool(bindings(self.agent.intentions.query_union(f"""
+            return bool(bindings(self.agent.intentions.query_over(f"""
 SELECT ?s WHERE {{ GRAPH <{self.graph}> {{
   ?s <{kernel("fills")}> <{action}> ; <{kernel("refusedBelow")}> ?at . {lever} {subject}
-  FILTER(?at > "{since.isoformat()}"^^xsd:dateTime) }} }} LIMIT 1""")))
+  FILTER(?at > "{since.isoformat()}"^^xsd:dateTime) }} }} LIMIT 1""", self.graph)))
         except Exception as exc:                                    # noqa: BLE001
             self.log.error("could not ask whether %s was refused below: %s", action.rsplit("#", 1)[-1], exc)
             return False
@@ -696,9 +698,8 @@ SELECT ?s WHERE {{ GRAPH <{self.graph}> {{
         if not text:
             return None
         try:
-            rows = bindings(self.agent.beliefs.query_over(
-                bind(text, **tokens), *self.agent.beliefs.public_graphs(),
-                *self.agent.beliefs.recorded_graphs()))
+            rows = bindings(self.agent.beliefs.query(
+                bind(text, **tokens), self.agent.beliefs.graphs_of(*KNOWN, at=clock.now())))
         except Exception as exc:                                    # noqa: BLE001
             self.log.error("%s's lapsesAt will not run: %s", action.rsplit("#", 1)[-1], exc)
             return None
@@ -716,8 +717,8 @@ SELECT ?s WHERE {{ GRAPH <{self.graph}> {{
         root = next(s for s in shape.subjects(rdflib.RDF.type, _SH_NODE_SHAPE)
                     if isinstance(s, rdflib.URIRef))
         select = violation.entered_select(shape, root)
-        return bool(bindings(self.agent.beliefs.query_over(
-            select, *self.agent.beliefs.public_graphs(), *self.agent.beliefs.recorded_graphs())))
+        return bool(bindings(self.agent.beliefs.query(
+                select, self.agent.beliefs.graphs_of(*KNOWN, at=clock.now()))))
 
     def ready(self, intention_uri: str) -> bool:
         """May the step this intention stands at be taken now? True where its action states no
@@ -863,13 +864,13 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "by"}> ?act 
         a COMPLETION wait (`answeredWhen`) holds an expectation on an intention the means
         already RESOLVED — resolving the means is where the expectation on the end begins — and
         answers with the verdict. The holder is the `Standing` or the `OpenExpectation`."""
-        rows = bindings(self.agent.intentions.query_union(f"""
+        rows = bindings(self.agent.intentions.query_over(f"""
 SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
   ?i <{PROGRESSION + "by"}> ?act .
   ?act ?p ?node ; <{PROGRESSION + "whenLapsed"}> ?when .
   ?node a sh:NodeShape .
   FILTER(?p IN (<{PROGRESSION + "until"}>, <{PROGRESSION + "untilNot"}>, <{PROGRESSION + "answeredWhen"}>))
-  FILTER NOT EXISTS {{ ?act <{END_MET}> ?m }} }} }}"""))
+  FILTER NOT EXISTS {{ ?act <{END_MET}> ?m }} }} }}""", self.graph))
         standing = {s.uri: s for s in self.standing()}
         expectations = {w.uri: w for w in self.open_expectations(every=True)}
         out = []
@@ -917,9 +918,8 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
             now = clock.now()
             for holder, select, predicate in held:
                 try:
-                    rows = bindings(self.agent.beliefs.query_over(
-                        select, *self.agent.beliefs.public_graphs(),
-                        *self.agent.beliefs.recorded_graphs()))
+                    rows = bindings(self.agent.beliefs.query(
+                select, self.agent.beliefs.graphs_of(*KNOWN, at=clock.now())))
                 except Exception as exc:                        # noqa: BLE001 — a bad select
                     self.log.error("the condition %s waits for will not run: %s",
                                    _short(holder.uri), exc)
@@ -1012,9 +1012,9 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
                 self.agent.tell(PLAN_FAILED, standing.uri, standing.action, standing.want)
 
     def _when_lapsed(self, intention_uri: str) -> str:
-        rows = bindings(self.agent.intentions.query_union(f"""
+        rows = bindings(self.agent.intentions.query_over(f"""
 SELECT ?when WHERE {{ GRAPH <{self.graph}> {{
-  <{intention_uri}> <{PROGRESSION + "by"}> ?act . ?act <{PROGRESSION + "whenLapsed"}> ?when }} }}"""))
+  <{intention_uri}> <{PROGRESSION + "by"}> ?act . ?act <{PROGRESSION + "whenLapsed"}> ?when }} }}""", self.graph))
         return rows[0]["when"] if rows else "take"
 
     def _release(self, standing: Standing, because: str) -> None:
@@ -1202,9 +1202,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{{based}{stated}{aimed}
         where nothing says a number (a plain-fact step) or nobody will witness it. The number
         is the actor's `sized` where the step's prediction is a band (#579), else the one
         number the prediction carries; a prediction carrying two says nothing."""
-        rows = bindings(self.agent.intentions.query_union(f"""
+        rows = bindings(self.agent.intentions.query_over(f"""
 SELECT ?predicts ?aimed WHERE {{ GRAPH <{self.graph}> {{ <{step_uri}> <{PREDICTS}> ?predicts .
-  OPTIONAL {{ <{step_uri}> <{PREDICTED_VALUE}> ?aimed }} }} }}"""))
+  OPTIONAL {{ <{step_uri}> <{PREDICTED_VALUE}> ?aimed }} }} }}""", self.graph))
         if not rows:
             return None, None
         adds, _ = predicts_from_json(rows[0]["predicts"])
@@ -1226,10 +1226,10 @@ SELECT ?predicts ?aimed WHERE {{ GRAPH <{self.graph}> {{ <{step_uri}> <{PREDICTS
     def _step_of(self, intention_uri: str) -> tuple[str | None, tuple | None]:
         """The step an intention stands at, and what it predicts — None where it predicts
         nothing (a step an event adopted, a look)."""
-        rows = bindings(self.agent.intentions.query_union(f"""
+        rows = bindings(self.agent.intentions.query_over(f"""
 SELECT ?step ?predicts WHERE {{ GRAPH <{self.graph}> {{
   <{intention_uri}> <{PROGRESSION + "by"}> ?step .
-  OPTIONAL {{ ?step <{PREDICTS}> ?predicts }} }} }}"""))
+  OPTIONAL {{ ?step <{PREDICTS}> ?predicts }} }} }}""", self.graph))
         if not rows:
             return None, None
         text = rows[0].get("predicts")
@@ -1329,9 +1329,9 @@ SELECT ?step ?predicts WHERE {{ GRAPH <{self.graph}> {{
         return out
 
     def _predicted_of(self, expectation: OpenExpectation) -> list:
-        rows = bindings(self.agent.intentions.query_union(f"""
+        rows = bindings(self.agent.intentions.query_over(f"""
 SELECT ?predicts ?from ?lands WHERE {{ GRAPH <{self.graph}> {{
-  <{expectation.step}> <{PREDICTS}> ?predicts ; <{EXPECTED_FROM}> ?from ; <{LANDS_AT}> ?lands }} }}"""))
+  <{expectation.step}> <{PREDICTS}> ?predicts ; <{EXPECTED_FROM}> ?from ; <{LANDS_AT}> ?lands }} }}""", self.graph))
         if not rows:
             return []
         return self._keyed_of(expectation.uri, expectation.step, predicts_from_json(rows[0]["predicts"]),
@@ -1340,11 +1340,11 @@ SELECT ?predicts ?from ?lands WHERE {{ GRAPH <{self.graph}> {{
 
     def _about(self, intention_uri: str) -> str | None:
         """What the want this intention pursues is about — the property, for a stake."""
-        rows = bindings(self.agent.intentions.query_union(f"""
-SELECT ?want WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "pursues"}> ?want }} }}"""))
+        rows = bindings(self.agent.intentions.query_over(f"""
+SELECT ?want WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "pursues"}> ?want }} }}""", self.graph))
         if not rows:
             return None
-        about = bindings(self.agent.desires.query_union(
+        about = bindings(self.agent.desires.query(
             "SELECT ?want ?about WHERE { ?want orexis:about ?about }", {"want": rows[0]["want"]}))
         return about[0]["about"] if about else None
 
@@ -1365,7 +1365,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "by"}> ?act 
         left out unless `every` is asked."""
         prop = ("FILTER(?want IN (%s))" % ", ".join(f"<{n}>" for n in self._names(want))) if want else ""
         world = "" if every else "FILTER(BOUND(?predicts))"
-        rows = bindings(self.agent.intentions.query(f"""
+        rows = bindings(self.agent.intentions.query_over(f"""
 SELECT DISTINCT ?i ?step ?action ?want ?baseline ?baselineAt ?deadline ?predicts WHERE {{
   GRAPH <{self.graph}> {{
     ?i <{PROGRESSION + "by"}> ?step ;
@@ -1380,7 +1380,7 @@ SELECT DISTINCT ?i ?step ?action ?want ?baseline ?baselineAt ?deadline ?predicts
     FILTER NOT EXISTS {{ ?step <{END_MET}> ?met }}
     {world}
     {prop}
-  }} }}"""))
+  }} }}""", self.graph))
         return [OpenExpectation(
             uri=r["i"], step=r["step"], action=r["action"], want=r["want"],
             deadline=datetime.fromisoformat(r["deadline"]),
@@ -1474,8 +1474,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         False where there is none — the plan's last step, finished the ordinary way."""
         from .execution import carry_out
 
-        rows = bindings(self.agent.intentions.query_union(f"""
-SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{expectation.step}> <{PROGRESSION + "then"}> ?next }} }}"""))
+        rows = bindings(self.agent.intentions.query_over(f"""
+SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{expectation.step}> <{PROGRESSION + "then"}> ?next }} }}""", self.graph))
         if not rows:
             return False
         following = rows[0]["next"]
@@ -1498,15 +1498,15 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{expectation.uri}> <{PROGRESSION + "by"}> ?wa
         what a plan that reached its end was, for whoever lifts it (#469). A plan the world
         finished early (#521) stands at the step the world overshot, and what was walked is
         the steps to there: the tail that was never taken is not what worked."""
-        at = bindings(self.agent.intentions.query_union(f"""
-SELECT ?cur WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?cur }} }}"""))
+        at = bindings(self.agent.intentions.query_over(f"""
+SELECT ?cur WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?cur }} }}""", self.graph))
         current = at[0]["cur"] if at else None
-        rows = bindings(self.agent.intentions.query_union(f"""
+        rows = bindings(self.agent.intentions.query_over(f"""
 SELECT ?s ?next ?action ?via ?about ?quantity ?predicts ?precondition WHERE {{ GRAPH <{self.graph}> {{
   <{intention_uri}> <{kernel("step")}> ?s . ?s <{kernel("fills")}> ?action .
   OPTIONAL {{ ?s <{kernel("then")}> ?next }} OPTIONAL {{ ?s <{kernel("through")}> ?via }}
   OPTIONAL {{ ?s <{kernel("about")}> ?about }} OPTIONAL {{ ?s <{kernel("quantity")}> ?quantity }}
-  OPTIONAL {{ ?s <{kernel("predicts")}> ?predicts }} OPTIONAL {{ ?s <{PRECONDITION}> ?precondition }} }} }}"""))
+  OPTIONAL {{ ?s <{kernel("predicts")}> ?predicts }} OPTIONAL {{ ?s <{PRECONDITION}> ?precondition }} }} }}""", self.graph))
         by = {r["s"]: r for r in rows}
         nexts = {r.get("next") for r in rows if r.get("next")}
         head = next((s for s in by if s not in nexts), None)
@@ -1562,12 +1562,12 @@ SELECT ?s ?next ?action ?via ?about ?quantity ?predicts ?precondition WHERE {{ G
                    if d.uri == want or d.derived_from == want)
 
     def _next_of(self, intention_uri: str) -> str | None:
-        rows = bindings(self.agent.intentions.query_union(f"""
-SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "by"}> ?s . ?s <{PROGRESSION + "then"}> ?next }} }}"""))
+        rows = bindings(self.agent.intentions.query_over(f"""
+SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "by"}> ?s . ?s <{PROGRESSION + "then"}> ?next }} }}""", self.graph))
         return rows[0]["next"] if rows else None
 
     def _suspect_after(self) -> int:
-        rows = bindings(self.agent.beliefs.query(_SUSPECT_Q))
+        rows = bindings(self.agent.beliefs.query(_SUSPECT_Q, self.agent.beliefs.graphs_of(PUBLIC)))
         return int(rows[0]["n"]) if rows else 3
 
     def _is_suspect(self, action: str, want: str) -> bool:
@@ -1576,26 +1576,26 @@ SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + 
         Consecutive rather than cumulative, so one success resets the count: an affordance
         that mostly pays is noisy, not false.
         """
-        rows = bindings(self.agent.intentions.query(f"""
+        rows = bindings(self.agent.intentions.query_over(f"""
 SELECT ?met WHERE {{ GRAPH <{self.graph}> {{
   ?i <{PROGRESSION + "step"}> ?act ;
      <{PROGRESSION + "pursues"}> <{want}> .
   ?act <{PROGRESSION + "fills"}> <{action}> ;
        <{END_MET}> ?met ;
        <{END_VERIFIED_AT}> ?at .
-}} }} ORDER BY DESC(?at) LIMIT {self._suspect_after()}"""))
+}} }} ORDER BY DESC(?at) LIMIT {self._suspect_after()}""", self.graph))
         n = self._suspect_after()
         return len(rows) >= n and all(r["met"] == "false" for r in rows)
 
     def suspects(self) -> list[tuple[str, str]]:
         """Every (action, want) pair currently suspect. What review and the report read."""
-        pairs = {(r["action"], r["want"]) for r in bindings(self.agent.intentions.query(f"""
+        pairs = {(r["action"], r["want"]) for r in bindings(self.agent.intentions.query_over(f"""
 SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
   ?i <{PROGRESSION + "step"}> ?act ;
      <{PROGRESSION + "pursues"}> ?want .
   ?act <{PROGRESSION + "fills"}> ?action ;
        <{END_MET}> ?met .
-}} }}"""))}
+}} }}""", self.graph))}
         return sorted(p for p in pairs if self._is_suspect(*p))
 
     # --- what sensing asks me: the verification expectation ----------------------------------
@@ -1622,7 +1622,7 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
         stake's name, a test, the sovereign — may hold either; both meet the same commitment.
         Asked of the desire modality by vocabulary alone, since which want is derived under
         which is deliberation's to say and progression may not import it."""
-        rows = bindings(self.agent.desires.query_union(f"""
+        rows = bindings(self.agent.desires.query(f"""
 SELECT ?n WHERE {{
   {{ ?n a orexis:Want ; prov:wasDerivedFrom <{want}> }}
   UNION {{ <{want}> prov:wasDerivedFrom ?n . ?n a orexis:Desire }} }}"""))
@@ -1644,14 +1644,14 @@ SELECT ?n WHERE {{
             clauses.append(f'OPTIONAL {{ ?act <{kernel(term)}> ?{term} }}')
         clauses.append(f'OPTIONAL {{ SELECT ?i (MAX(?v) AS ?advanced) WHERE {{ '
                        f'?i <{PROGRESSION + "step"}> ?done . ?done <{END_VERIFIED_AT}> ?v }} GROUP BY ?i }}')
-        rows = bindings(self.agent.intentions.query(
+        rows = bindings(self.agent.intentions.query_over(
             "SELECT ?i ?act ?action ?want ?at ?through ?quantity ?forAgent ?notBefore ?notAfter "
             "?predicts ?about ?partOf ?advanced WHERE { GRAPH <%s> { %s } }"
-            % (self.graph, " ".join(clauses))))
+            % (self.graph, " ".join(clauses)), self.graph))
         #  WHAT THE WANT IS ABOUT rides along (#510): a step taken from the ledger — the
         #  second of a plan, advanced to on feedback — goes to its actor exactly as the head
         #  did from the search, and the actor reads the property off the step, not the want.
-        about_of = {w["want"]: w["about"] for w in bindings(self.agent.desires.query_union(
+        about_of = {w["want"]: w["about"] for w in bindings(self.agent.desires.query(
             "SELECT ?want ?about WHERE { ?want orexis:about ?about }"))} if rows else {}
         return [Standing(
             uri=r["i"], want=r["want"], adopted_at=datetime.fromisoformat(r["at"]),
@@ -1682,9 +1682,9 @@ SELECT ?n WHERE {{
         # The end-verdicts, counted from the ledger. `expectations_unmet` climbing while
         # `satisfied` outcomes accumulate is the false-knowledge signature in series form;
         # `affordances_suspect` above zero is the flag itself.
-        rows = bindings(self.agent.intentions.query(f"""
+        rows = bindings(self.agent.intentions.query_over(f"""
 SELECT ?met (COUNT(?s) AS ?n) WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{PROGRESSION + "step"}> ?s . ?s <{END_MET}> ?met ; <{PREDICTS}> ?world }} }} GROUP BY ?met"""))
+  ?i <{PROGRESSION + "step"}> ?s . ?s <{END_MET}> ?met ; <{PREDICTS}> ?world }} }} GROUP BY ?met""", self.graph))
         counts = {r["met"]: int(r["n"]) for r in rows}
         out["expectations_open"] = len(self.open_expectations())
         out["expectations_met"] = counts.get("true", 0)

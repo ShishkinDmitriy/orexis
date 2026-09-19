@@ -33,6 +33,7 @@ from orexis_agent_progression.store import bindings
 
 from .watchdog import BusWatchdog
 from orexis_agent_progression import clock
+from orexis_agent_progression.ontology import PUBLIC
 
 log = logging.getLogger("mqtt")
 
@@ -55,7 +56,7 @@ class MqttModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        rows = bindings(agent.beliefs.query(_BUS_Q))
+        rows = bindings(agent.beliefs.query(_BUS_Q, agent.beliefs.graphs_of(PUBLIC)))
         if not rows:
             raise RuntimeError("the world declares no mqtt:MessageBus — has it been seeded?")
         if len(rows) > 1:

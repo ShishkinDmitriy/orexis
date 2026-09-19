@@ -34,7 +34,13 @@ def wants():
     one. It took the holder's URI and the agent's id too, until those were seen for what they
     are: another aggregate root's identity, which a collection has no business holding."""
     st = Store()
-    st.update("INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph } }")
+    #  A catalogue, and the vocabulary's word on what the families are beneath: the collection
+    #  asks for graphs of WANTS and of RECORDS, and a pursued graph and an obligations graph
+    #  are those by the axioms the packages declare.
+    st.update("""INSERT DATA {
+  GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph . <urn:test:ontology> a orexis:OntologyGraph }
+  GRAPH <urn:test:ontology> { deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
+                              market:ObligationsGraph rdfs:subClassOf orexis:RecordGraph } }""")
     return Wants(st)
 
 
@@ -50,7 +56,7 @@ def _owe(wants, uri):
     wants._store.update(f"""INSERT DATA {{
   GRAPH <{graph}> {{ <{uri}> a orexis:Want ; prov:wasDerivedFrom <{A_DESIRE}> ;
       rdfs:label "a debt under test" . }}
-  GRAPH <{wants._store.catalogue}> {{ <{graph}> a market:ObligationsGraph . }} }}""")
+  GRAPH <{wants._store.catalogue}> {{ <{graph}> a market:ObligationsGraph , orexis:RecordGraph . }} }}""")
 
 
 def test_a_saved_want_is_found_and_a_deleted_one_is_not(wants):

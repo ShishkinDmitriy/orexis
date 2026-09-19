@@ -6,6 +6,7 @@ import pytest
 
 from orexis_capability_market.clearing import clear, issue_claims, validate
 from orexis_capability_market.trade import Bid, Limits, MarketState, Offer, Trade, TradeLine
+from orexis_agent_progression.ontology import PUBLIC
 
 
 def base_state() -> MarketState:
@@ -202,13 +203,13 @@ def test_a_world_whose_plants_state_survival_ranges_yields_ceilings():
     for world, want in expected.items():
         store = genesis_store(world=world)
         venues = [r["m"] for r in
-                  store.query("SELECT ?m WHERE { ?m a market:Market }")["results"]["bindings"]]
+                  store.query("SELECT ?m WHERE { ?m a market:Market }", store.graphs_of(PUBLIC))["results"]["bindings"]]
         # Aggregated across the world's venues: a plant bids at the barrel, the supplier at the
         # city mains, and only the first kind acts for something with a survival range.
         found: dict[str, float] = {}
         for venue in venues:
             # `allocation_ceilings` reads only the uri; a Market is not needed to ask the store.
-            found |= allocation_ceilings(store.query, SimpleNamespace(uri=venue["value"]))
+            found |= allocation_ceilings(store.reader(PUBLIC), SimpleNamespace(uri=venue["value"]))
             checked += 1
         assert set(found) == want, f"{world}: ceilings for {sorted(found)}, expected {sorted(want)}"
         assert all(v > 0 for v in found.values()), f"{world}: a ceiling of zero refuses everything"

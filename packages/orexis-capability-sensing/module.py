@@ -72,6 +72,8 @@ from .terms import (NS, INSTRUMENTS_GRAPH, ANNOTATE, BOUNDS, READING_RECORDED, U
 from orexis_agent_progression.timer import Timer
 from . import predictions
 from orexis_agent_progression import clock
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import FORESEEN
 
 
 #  The measure this capability declares (a-desire-states-its-own-measure, completed): how
@@ -162,7 +164,7 @@ class SensingModule(Module):
         # capability for each — but a module that took all of them would aim a cadence at a device
         # that takes no orders, and swallow readings from one it never re-aims. The derivation
         # split the capabilities; this splits the sensors the same way.
-        wired = sensors_of(self.agent.beliefs.query, self.me.uri)
+        wired = sensors_of(self.agent.beliefs.reader(PUBLIC), self.me.uri)
         self.sensors = tuple(s for s in wired
                              if self.SENSE_MODE is None or s.sense_mode == self.SENSE_MODE)
         unclaimed = [s.local_id for s in wired if s not in self.sensors]
@@ -199,9 +201,9 @@ class SensingModule(Module):
         #  question about them is a question about a reading, so they are mine now
         #  (the-stake-is-sensings-want). Every sensing module the agent composes reads the
         #  same ones, and `Agent.pursuing` folds a want seen twice into one by its node.
-        self.regions: dict[str, Region] = regions_of(self.agent.beliefs.query, self.me.uri)
+        self.regions: dict[str, Region] = regions_of(self.agent.beliefs.reader(PUBLIC), self.me.uri)
         #  And the AIM inside each — the agent's own pick, a belief, which a review may move.
-        self._aims: dict[str, float] = aims_of(self.agent.desires.query_union, self.agent.id,
+        self._aims: dict[str, float] = aims_of(self.agent.desires.query, self.agent.id,
                                                self.me.uri)
         if self.regions:
             self.log.info("wants %s", ", ".join(
@@ -453,7 +455,7 @@ class SensingModule(Module):
         key = (subject_uri, observed_property)
         if (running := self._staleness.pop(key, None)) is not None:
             running.stop()
-        reading = readings.current_reading(self.agent.beliefs.query, subject_uri,
+        reading = readings.current_reading(self.agent.beliefs.reader(PUBLIC), subject_uri,
                                            observed_property)
         if reading is None or reading.result_time is None:
             return                      # nothing to go cold; the want reads unmeasured
@@ -688,7 +690,7 @@ WHERE {{ GRAPH <{STATE_GRAPH}> {{
             keeper.satisfy(OBSERVING, want.uri, "a reading arrived — the look happened")
         types = {r["t"] for r in bindings(self.agent.beliefs.query(f"""
 SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
-  ?o sosa:hasFeatureOfInterest <{subject_uri}> ; sosa:observedProperty <{observed_property}> ; a ?t }} }}"""))}
+  ?o sosa:hasFeatureOfInterest <{subject_uri}> ; sosa:observedProperty <{observed_property}> ; a ?t }} }}""", self.agent.beliefs.graphs_of(PUBLIC)))}
         self._compare(keeper, subject_uri, observed_property, types)
         #  AND WHETHER THE MIND SHOULD HEAR OF IT (#632): the bands the reading IS against the
         #  bands the first prediction said it may be in — the one the next reading is held to, the first of the
@@ -788,7 +790,7 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
         """An aim is a belief, so a review may move it — within the region, which is the same
         check boot makes. Re-read rather than patched: the revision names a term and an aim is
         a structure, so the simplest correct answer is to ask the graph again."""
-        self._aims = aims_of(self.agent.desires.query_union, self.agent.id, self.me.uri)
+        self._aims = aims_of(self.agent.desires.query, self.agent.id, self.me.uri)
 
     def _is_mine(self, subject_uri: str, observed_property: str) -> bool:
         """A stake is in one property of the one subject the agent advances. Both have to
@@ -871,7 +873,7 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
                   "AboveRegion" if value > region.high else "InRegion")
         rows = bindings(self.agent.beliefs.query(f"""
 SELECT ?b WHERE {{ ?b rdfs:subClassOf sensing:{family} ;
-                   sensing:ofSubject <{subject_uri}> ; sensing:ofProperty <{observed_property}> }}"""))
+                   sensing:ofSubject <{subject_uri}> ; sensing:ofProperty <{observed_property}> }}""", self.agent.beliefs.graphs_of(PUBLIC)))
         if not rows:
             return frozenset()
         return frozenset({rows[0]["b"], NS + family})
@@ -882,7 +884,7 @@ SELECT ?b WHERE {{ ?b rdfs:subClassOf sensing:{family} ;
         if not hasattr(self, "_band_classes"):
             families = (NS + "BelowRegion", NS + "InRegion", NS + "AboveRegion")
             rows = bindings(self.agent.beliefs.query(f"""
-SELECT ?b WHERE {{ VALUES ?f {{ {' '.join(f'<{f}>' for f in families)} }} ?b rdfs:subClassOf ?f }}"""))
+SELECT ?b WHERE {{ VALUES ?f {{ {' '.join(f'<{f}>' for f in families)} }} ?b rdfs:subClassOf ?f }}""", self.agent.beliefs.graphs_of(PUBLIC)))
             self._band_classes = frozenset(r["b"] for r in rows) | frozenset(families)
         return self._band_classes
 
@@ -894,7 +896,7 @@ SELECT ?b WHERE {{ VALUES ?f {{ {' '.join(f'<{f}>' for f in families)} }} ?b rdf
         if not graphs:
             return None
         rows = bindings(self.agent.beliefs.query(f"""
-SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_property}> ; a ?t }} }}"""))
+SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_property}> ; a ?t }} }}""", self.agent.beliefs.graphs_of(PUBLIC)))
         return frozenset(r["t"] for r in rows) & bands
 
     def _compare(self, keeper, subject_uri: str, observed_property: str, types: set) -> None:
@@ -905,7 +907,7 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
         mine = self._intended(subject_uri, observed_property)
         if not mine:
             return
-        reading = readings.current_reading(self.agent.beliefs.query, subject_uri, observed_property)
+        reading = readings.current_reading(self.agent.beliefs.reader(PUBLIC), subject_uri, observed_property)
         if reading is None or reading.result_time is None:
             return
         for p in mine:
@@ -926,14 +928,14 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
         read when a child is derived and never baked onto the root (#644). None for a root
         that is not a stake of mine, and None where the belief is unstated — a root stating
         nothing foresees nothing, so a world that says nothing plans exactly as before."""
-        mine = bindings(self.agent.desires.query_union(f"""
+        mine = bindings(self.agent.desires.query(f"""
 SELECT ?about WHERE {{ <{self.me.uri}> orexis:holds <{root}> .
   <{root}> a orexis:Desire ; orexis:about ?about .
   FILTER NOT EXISTS {{ <{root}> a sensing:Freshness }} }} LIMIT 1"""))
         if not mine:
             return None
         rows = bindings(self.agent.beliefs.query(f"""
-SELECT ?f WHERE {{ GRAPH <{picks_graph(self.agent.id)}> {{ <{self.me.uri}> sensing:foresightS ?f }} }} LIMIT 1"""))
+SELECT ?f WHERE {{ GRAPH <{picks_graph(self.agent.id)}> {{ <{self.me.uri}> sensing:foresightS ?f }} }} LIMIT 1""", self.agent.beliefs.graphs_of(PUBLIC)))
         return float(rows[0]["f"]) if rows and rows[0].get("f") is not None else None
 
     @contributes(REPREDICT)
@@ -942,7 +944,7 @@ SELECT ?f WHERE {{ GRAPH <{picks_graph(self.agent.id)}> {{ <{self.me.uri}> sensi
         again from where it stands, through the same road a reading arriving takes — the
         horizon re-armed, the ladder rewritten."""
         for sensor in self.sensors:
-            if readings.current_reading(self.agent.beliefs.query, sensor.subject, sensor.observes) is not None:
+            if readings.current_reading(self.agent.beliefs.reader(PUBLIC), sensor.subject, sensor.observes) is not None:
                 self.watch_staleness(sensor.subject, sensor.observes)
 
     @contributes(WITNESS)
@@ -985,13 +987,13 @@ SELECT ?f WHERE {{ GRAPH <{picks_graph(self.agent.id)}> {{ <{self.me.uri}> sensi
         """The choir road, asked of the LIVE belief base — through the agent rather than
         straight to `desire_urgency`, so a second module that measures the same want (none
         ships) would be heard, and so one question has one asker."""
-        return self.agent.desire_urgency(judgment, self.agent.beliefs.query_at, STATE_GRAPH, value)
+        return self.agent.desire_urgency(judgment, self.agent.beliefs.reader(*FORESEEN, at=clock.now()), STATE_GRAPH, value)
 
     def gaps(self) -> dict[str, Gap]:
         """Where every property the agent wants stands against where it wants it — stale rows
         included. A dry pot read an hour ago is "last I looked I was dry, and I cannot see any
         more", which a deliberator needs precisely because nothing else will mention it."""
-        return gaps_of(self.agent.desires.query_union, self.agent.beliefs.query,
+        return gaps_of(self.agent.desires.query, self.agent.beliefs.reader(PUBLIC),
                        self.me.uri, self.agent.id, measure=self._measured)
 
     def current(self) -> dict[str, Gap]:
@@ -1007,7 +1009,7 @@ SELECT ?f WHERE {{ GRAPH <{picks_graph(self.agent.id)}> {{ <{self.me.uri}> sensi
         """My contribution to what the agent is pursuing: its stakes and its freshness wants,
         the two kinds whose premise is an observation. The obligations are the ledger's."""
         from .rows import desires_of  # deferred (#455): same reason as ObservedJudgment above
-        return desires_of(self.agent.desires.query_union, self.agent.beliefs.query,
+        return desires_of(self.agent.desires.query, self.agent.beliefs.reader(PUBLIC),
                           self.me.uri, measure=self._measured)
 
     def reports(self) -> dict:
@@ -1041,7 +1043,7 @@ SELECT ?f WHERE {{ GRAPH <{picks_graph(self.agent.id)}> {{ <{self.me.uri}> sensi
     def current_reading(self, subject_uri: str, observed_property: str):
         """The newest reading of one property of one subject, whatever its age — the door every
         other capability comes through, now that what a reading looks like is this package's."""
-        return readings.current_reading(self.agent.beliefs.query, subject_uri, observed_property)
+        return readings.current_reading(self.agent.beliefs.reader(PUBLIC), subject_uri, observed_property)
 
     def value_in(self, query, graph: str, subject_uri: str, observed_property: str):
         """What a property reads in the world `query` answers about, at `graph` — the planner's
@@ -1050,7 +1052,7 @@ SELECT ?f WHERE {{ GRAPH <{picks_graph(self.agent.id)}> {{ <{self.me.uri}> sensi
 
     def fresh_reading(self, subject_uri: str, observed_property: str):
         """The latest reading of one property, or None if it is older than I trust."""
-        reading = readings.current_reading(self.agent.beliefs.query, subject_uri, observed_property)
+        reading = readings.current_reading(self.agent.beliefs.reader(PUBLIC), subject_uri, observed_property)
         if reading is None:
             return None
         return reading if reading.is_fresh(self.stale_after_s(subject_uri, observed_property)) else None
@@ -1134,7 +1136,7 @@ class SubscribingModule(SensingModule):
         return int(cadence) + self.beliefs.grace_s
 
     def _bounds(self) -> tuple[int, int, float]:
-        rows = bindings(self.agent.beliefs.query(_BOUNDS_Q))
+        rows = bindings(self.agent.beliefs.query(_BOUNDS_Q, self.agent.beliefs.graphs_of(PUBLIC)))
         if not rows:
             raise RuntimeError("the ontology states no cadence bounds — re-run orexis-seed")
         # A relax factor at or below 1 could never release at all, which is a vocabulary slip
@@ -1353,7 +1355,7 @@ class SubscribingModule(SensingModule):
             for peer in group:
                 if peer.local_id == sensor.local_id:
                     continue
-                reading = readings.current_reading(self.agent.beliefs.query, peer.subject, peer.observes)
+                reading = readings.current_reading(self.agent.beliefs.reader(PUBLIC), peer.subject, peer.observes)
                 if reading is None:
                     continue
                 claims.append((
@@ -1472,7 +1474,7 @@ class SubscribingModule(SensingModule):
         else:
             self.beliefs = self.agent.desires.read(picks.SUBSCRIBING_PICKS)
         for sensor in self.sensors:
-            reading = readings.current_reading(self.agent.beliefs.query, sensor.subject, sensor.observes)
+            reading = readings.current_reading(self.agent.beliefs.reader(PUBLIC), sensor.subject, sensor.observes)
             if reading is not None:
                 self.set_cadence(
                     sensor,

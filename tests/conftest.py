@@ -25,6 +25,7 @@ from orexis_agent_progression import clock   # the agent's timeline, which a tes
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_capability_sensing.sensed_writer import observation_uri
 from orexis_agent_progression.store import Store
+from orexis_agent_progression.ontology import PUBLIC
 
 REPO_ROOT = loader.REPO_ROOT
 WORLDS_ROOT = REPO_ROOT / "world"
@@ -125,7 +126,7 @@ def _made_by(st: Store, subject: str, observed_property: str) -> str:
     """
     rows = st.query(
         f"SELECT ?s WHERE {{ ?s sensing:monitors <{subject}> ; sosa:observes "
-        f"<{observed_property}> }} LIMIT 1")["results"]["bindings"]
+        f"<{observed_property}> }} LIMIT 1", st.graphs_of(PUBLIC))["results"]["bindings"]
     return f"sosa:madeBySensor <{rows[0]['s']['value']}> ;" if rows else ""
 
 
@@ -140,12 +141,12 @@ def _by_subject_and_property(readings: dict) -> dict[tuple[str, str], float]:
 
 def query_fn(st: Store):
     """The QueryFn a reader is written against. It is simply the store's own."""
-    return st.query
+    return st.reader(PUBLIC)
 
 
 @pytest.fixture
 def query():
-    return genesis_store().query
+    return genesis_store().reader(PUBLIC)
 
 
 @pytest.fixture
@@ -331,11 +332,11 @@ def open_round_for(st_or_agent, agent_id: str, seconds: float = 60.0) -> list[st
     #  A bare store gets a stand-in with what the writer reads: the store, the id, and who I
     #  am — the writer says whose graph it writes.
     me = next(iter(bindings(st.query(
-        f'SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1'))), {}).get("a")
+        f'SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1', st.graphs_of(PUBLIC)))), {}).get("a")
     agent = (st_or_agent if hasattr(st_or_agent, "beliefs")
              else SimpleNamespace(beliefs=st, id=agent_id, me=SimpleNamespace(uri=me)))
     venues = [r["v"] for r in bindings(st.query(
-        f'SELECT ?v WHERE {{ ?a orexis:localId "{agent_id}" ; market:bidsIn ?v }}'))]
+        f'SELECT ?v WHERE {{ ?a orexis:localId "{agent_id}" ; market:bidsIn ?v }}', st.graphs_of(PUBLIC)))]
     closes = clock.now() + timedelta(seconds=seconds)
     return [rounds.open_round(agent, v, f"test-{agent_id}-{i}", 2.0, 0.4, closes)
             for i, v in enumerate(venues)]
@@ -377,12 +378,12 @@ def stake_of(agent, observed_property=None):
 
 def wired_sensors(agent):
     from orexis_capability_sensing.wiring import sensors_of
-    return sensors_of(agent.beliefs.query, agent.me.uri)
+    return sensors_of(agent.beliefs.reader(PUBLIC), agent.me.uri)
 
 
 def wired_actuators(agent):
     from orexis_capability_actuation.wiring import actuators_of
-    return actuators_of(agent.beliefs.query, agent.me.uri)
+    return actuators_of(agent.beliefs.reader(PUBLIC), agent.me.uri)
 
 
 def wired_actuator_for(agent, subject_id: str):
@@ -392,12 +393,12 @@ def wired_actuator_for(agent, subject_id: str):
 
 def wired_markets(agent):
     from orexis_capability_market.wiring import bidding_markets_of
-    return bidding_markets_of(agent.beliefs.query, agent.me.uri)
+    return bidding_markets_of(agent.beliefs.reader(PUBLIC), agent.me.uri)
 
 
 def wired_hosted_markets(agent):
     from orexis_capability_market.wiring import hosted_markets_of
-    return hosted_markets_of(agent.beliefs.query, agent.me.uri)
+    return hosted_markets_of(agent.beliefs.reader(PUBLIC), agent.me.uri)
 
 
 def load_wired(query, agent_id: str):
@@ -423,7 +424,7 @@ def load_wired(query, agent_id: str):
 
 def wired_event_topic(agent):
     from orexis_capability_sensing.wiring import event_topic_of
-    return event_topic_of(agent.beliefs.query, agent.me.uri)
+    return event_topic_of(agent.beliefs.reader(PUBLIC), agent.me.uri)
 
 
 def reading_of(agent, observed_property: str, subject_uri: str | None = None):

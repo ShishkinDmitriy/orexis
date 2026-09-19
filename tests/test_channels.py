@@ -11,6 +11,7 @@ from onboarding.namespaces import MQTT
 from orexis_agent_progression.store import bindings
 
 from conftest import genesis_store
+from orexis_agent_progression.ontology import PUBLIC
 
 OREXIS = "http://example.org/orexis#"
 
@@ -35,7 +36,7 @@ def sensing():
 
 
 def _rows(store, query):
-    return bindings(store.query(query))
+    return bindings(store.query(query, store.graphs_of(PUBLIC)))
 
 
 def test_one_node_per_distinct_topic(sensing):

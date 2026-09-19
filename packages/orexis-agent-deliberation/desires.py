@@ -29,6 +29,7 @@ import logging
 
 from assembly import loader
 from orexis_agent_progression.store import Store, bindings
+from orexis_agent_progression.ontology import DESIRE, RECORD, WANT
 
 log = logging.getLogger("desires")
 
@@ -57,6 +58,13 @@ _ABOUT_Q = """SELECT ?me ?want ?about WHERE {
 #  rather than a want — but gap, menu and validation all read the two together, and the record
 #  files both under the desires store because what MAY be and what is PURSUED are the two
 #  halves of one question no belief answers.
+#  WHAT THIS MODALITY HOLDS, by kind: the desires (the roots, the promises), the wants (each
+#  pursued child, the world's asserted ones) and the records (the picks, the obligations and
+#  every debt under them) — the picks ARE wants by the sovereign's ruling and a debt is served
+#  as the want it raises. Copied in by these kinds and read back by them.
+HELD = (DESIRE, WANT, RECORD)
+
+
 class Projection(Store):
     """One rebuild's worth of store: the roots and the records PROJECTED, and nothing else left
     standing — nothing deduced (#644). Memory, no path — the imaginarium's construction, one
@@ -73,10 +81,12 @@ class Projection(Store):
     """
 
     def __init__(self, beliefs):
-        from orexis_agent_progression.ontology import OREXIS
+        from orexis_agent_progression import clock
+        from orexis_agent_progression.ontology import OREXIS, PUBLIC
 
         super().__init__()
-        publics = list(beliefs.public_graphs())
+        now = clock.now()
+        publics = list(beliefs.graphs_of(PUBLIC, at=now))
         #  A PROJECTION, AND NO RULE (#644, a-root-holds-always-and-an-outdated-graph-is-dropped):
         #  the roots — every Always desire, authored at genesis into the agent's own roots graph
         #  and holding at every instant — and the records sourced at a time: the picks, the
@@ -92,15 +102,19 @@ class Projection(Store):
         #  the obligations record and every debt's graph under it — whatever each is called.
         #  The owners classified them; this reads the classification. The world's asserted
         #  graph is a desire and a want graph too, and public: it rides in with the publics.
-        records = [g for g in beliefs.graphs_of(
-            OREXIS + "DesireGraph", OREXIS + "WantGraph", OREXIS + "PickRecordGraph",
-            "http://example.org/orexis/market#ObligationsGraph") if g not in publics]
+        records = [g for g in beliefs.graphs_of(*HELD, at=now) if g not in publics]
         asserted = set(beliefs.graphs_of(OREXIS + "AssertedDesireGraph"))
-        for iri in publics + records:
+        #  AND THE CATALOGUE, so this store answers by kind as the belief base does: what it
+        #  holds is asked for as desires, wants and records, never as everything — which
+        #  needs the vocabulary's axioms too, since a pursued graph is a graph of wants by
+        #  `rdfs:subClassOf` and the closure reads the graphs typed as the vocabulary's.
+        #  Terms are not topology, and no read by these kinds reaches them.
+        kept = asserted | set(beliefs.graphs_of(OREXIS + "OntologyGraph"))
+        for iri in publics + records + [beliefs.catalogue]:
             for quad in beliefs.quads(iri):
                 self._store.add(quad)
         for iri in publics:
-            if iri not in asserted:
+            if iri not in kept:
                 self.clear_graph(iri)
 
 
@@ -138,10 +152,15 @@ class Desires:
         #  Held so a read may memoise against it. The memo dies with the projection it was
         #  computed from, which is exactly when it should: a rebuild IS the invalidation.
         self._built = built
-        self.query = built.query
-        self.query_union = built.query_union
-        self.construct = built.construct
         self.quads = built.quads
+        #  THE READ SURFACE IS THE COPY'S: a `query` handed out before a rebuild keeps
+        #  answering from the copy it was made over — replaced, never edited. It asks the
+        #  modality's store over what it holds (`HELD`), the kinds stated here, once, by the
+        #  modality that owns the store — a modality's store is its decision.
+        self.query = lambda sparql, substitutions=None: built.query(
+            sparql, built.graphs_of(*HELD), substitutions)
+        self.construct = lambda sparql, substitutions=None: built.construct(
+            sparql, built.graphs_of(*HELD), substitutions)
 
     def read(self, picks):
         """Fill one capability's picks FROM THE DESIRE MODALITY — where they belong,
@@ -149,14 +168,14 @@ class Desires:
         this store's rebuilt copy, so a re-pick reaches a module the moment the rebuild runs
         and never before: the record is the belief base's, the read surface is this one."""
         from .beliefs import read_picks
-        return read_picks(self.query_union, self._beliefs.agent_uri, self._beliefs.graph,
+        return read_picks(self.query, self._beliefs.agent_uri, self._beliefs.graph,
                           self._beliefs.agent_id, picks)
 
     def read_optional(self, picks):
         """The picks, or None where the agent said nothing at all — `Beliefs.read_optional`'s
         contract, served from this modality's copy."""
         from .beliefs import read_picks_optional
-        return read_picks_optional(self.query_union, self._beliefs.agent_uri,
+        return read_picks_optional(self.query, self._beliefs.agent_uri,
                                    self._beliefs.graph, self._beliefs.agent_id, picks)
 
     # --- the collection ---------------------------------------------------------------------
@@ -191,7 +210,7 @@ class Desires:
         collection to reach an element of another, and hands back a field rather than a thing.
         A want's provenance is the want's; what stands at the end of it is this collection's.
         """
-        rows = bindings(self.query_union(
+        rows = bindings(self.query(
             f"SELECT ?d WHERE {{ <{want}> prov:wasDerivedFrom ?d . ?d a orexis:Desire }} LIMIT 1"))
         return self.find_first_by_uri(rows[0]["d"]) if rows else None
 
@@ -199,7 +218,7 @@ class Desires:
         """Ordered before it is cut, and capped by default — the convention's two clauses. An
         unordered `LIMIT` picks by the engine's internal layout, which is the trap `beliefs.py`
         records, and a silent truncation is the empty-result trap wearing a cap."""
-        rows = bindings(self.query_union(f"""
+        rows = bindings(self.query(f"""
 SELECT ?d ?label ?about WHERE {{
   {where}
   OPTIONAL {{ ?d rdfs:label ?label }}
@@ -232,7 +251,7 @@ SELECT ?d ?label ?about WHERE {{
         """
         def compute():
             out: dict[str, list[str]] = {}
-            for r in bindings(self.query_union(_ABOUT_Q, {"me": agent_uri})):
+            for r in bindings(self.query(_ABOUT_Q, {"me": agent_uri})):
                 out.setdefault(r["want"], []).append(r["about"])
             return {w: tuple(sorted(a)) for w, a in out.items()}
 

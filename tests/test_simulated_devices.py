@@ -18,6 +18,7 @@ from orexis_agent_progression.store import bindings
 
 from conftest import WORLDS_ROOT, genesis_store, load_wired
 from test_shapes import _conforms, _flatten
+from orexis_agent_progression.ontology import PUBLIC
 
 OREXIS = "http://example.org/orexis#"
 SIM = "http://example.org/orexis/sim#"   # what stands in for hardware nobody built
@@ -30,7 +31,7 @@ SELECT ?id ?cap WHERE {{
 def _caps(world: str) -> dict[str, set[str]]:
     st = genesis_store(world=world)
     out: dict[str, set[str]] = {}
-    for row in bindings(st.query(_CAPS_Q)):
+    for row in bindings(st.query(_CAPS_Q, st.graphs_of(PUBLIC))):
         out.setdefault(row["id"], set()).add(row["cap"].rsplit("#", 1)[-1])
     return out
 
@@ -136,7 +137,7 @@ def test_a_stand_in_may_share_a_neighbours_wire_without_a_bus_of_its_own():
     st = genesis_store(world="simulation")
     rows = bindings(st.query(f"""
         SELECT ?id WHERE {{ ?s <{OREXIS}localId> ?id ; <{SIM}simulatedBy> ?m .
-                            FILTER NOT EXISTS {{ ?s <http://example.org/orexis/mqtt#onBus> ?b }} }}"""))
+                            FILTER NOT EXISTS {{ ?s <http://example.org/orexis/mqtt#onBus> ?b }} }}""", st.graphs_of(PUBLIC)))
     assert [r["id"] for r in rows] == ["air_temp_fern"], \
         "the world that this test is about no longer has a stand-in sharing a wire"
 
@@ -165,7 +166,7 @@ def test_a_temperature_is_not_refused_for_not_being_a_fraction():
     st = genesis_store(world="simulation")
     rows = bindings(st.query(f"""
         SELECT ?initial WHERE {{ <http://example.org/orexis/world/simulation#air_temp_fern> <{SIM}simulatedBy> ?m .
-                                 ?m <{SIM}initialValue> ?initial }}"""))
+                                 ?m <{SIM}initialValue> ?initial }}""", st.graphs_of(PUBLIC)))
     assert rows, "air_temp_fern states no initial value; this test has lost its subject"
     assert float(rows[0]["initial"]) == 21.0
 
@@ -341,7 +342,7 @@ def test_a_peripheral_inherits_its_boards_clock():
     derives sensing:Subscribing, because the mode is found through the shared stream."""
     from orexis_capability_sensing.terms import SCHEDULED
 
-    fern = load_wired(genesis_store(world="simulation").query, "fern")
+    fern = load_wired(genesis_store(world="simulation").reader(PUBLIC), "fern")
     air = next(s for s in fern.sensors if s.local_id == "air_temp_fern")
     assert air.sense_mode == SCHEDULED
 

@@ -11,6 +11,7 @@ from orexis_agent_progression.store import bindings
 from orexis_capability_review.graphs import evidence_graph
 from conftest import (MOISTURE, build_agent, genesis_store, predicted_reading, reading_of,
                       stake_of, write_reading)
+from orexis_agent_progression.ontology import PUBLIC
 
 CONVERSION = "http://example.org/orexis/water#litresPerFraction"
 BASELINE, PREDICTED = 0.30, 0.55            # 0.5 L through 2.0 L-per-fraction from 0.30
@@ -61,7 +62,7 @@ def test_residuals_are_published_as_evidence_off_the_ledger(fern):
     rows = bindings(fern.beliefs.query(f"""
 SELECT ?o ?b WHERE {{ GRAPH <{evidence_graph(fern.id)}> {{
   ?r a review:Residual ; review:ofAction <{TENDERING}> ; review:predicted ?p ;
-     review:observed ?o ; review:baseline ?b }} }} ORDER BY ?o"""))
+     review:observed ?o ; review:baseline ?b }} }} ORDER BY ?o""", fern.beliefs.graphs_of(PUBLIC)))
     assert [float(r["o"]) for r in rows] == [pytest.approx(0.40), pytest.approx(0.60)]
     assert all(float(r["b"]) == pytest.approx(BASELINE) for r in rows)
 

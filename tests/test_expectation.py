@@ -22,6 +22,7 @@ from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import OREXIS, PROGRESSION
 
 from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading, predicted_bands
+from orexis_agent_progression.ontology import PUBLIC
 
 
 @pytest.fixture
@@ -417,7 +418,7 @@ def test_the_watch_runs_until_the_dose_lands_and_a_reading_could_show_it(monkeyp
                          baseline=reading_of(gardener, MOISTURE))
 
     rows = bindings(gardener.beliefs.query(f"""
-SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{PROGRESSION}by> ?act . ?act <{PROGRESSION}notAfter> ?d }} }}"""))
+SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{PROGRESSION}by> ?act . ?act <{PROGRESSION}notAfter> ?d }} }}""", gardener.beliefs.graphs_of(PUBLIC)))
     window = datetime.fromisoformat(rows[0]["d"]).timestamp() - before
     assert abs(window - (50.0 + seeing)) < 2.0, (
         f"the watch should run for the dose (50s) plus how long seeing takes ({seeing}s), "
@@ -443,7 +444,7 @@ def test_an_act_that_cannot_size_itself_keeps_the_patience(monkeypatch):
                          baseline=reading_of(gardener, MOISTURE))
 
     rows = bindings(gardener.beliefs.query(f"""
-SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{PROGRESSION}by> ?act . ?act <{PROGRESSION}notAfter> ?d }} }}"""))
+SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{PROGRESSION}by> ?act . ?act <{PROGRESSION}notAfter> ?d }} }}""", gardener.beliefs.graphs_of(PUBLIC)))
     window = datetime.fromisoformat(rows[0]["d"]).timestamp() - before
     assert abs(window - keeper.beliefs.patience_s) < 2.0
 
@@ -469,7 +470,7 @@ def test_a_step_the_world_overshoots_finishes_the_plan_when_the_want_is_met(monk
     keeper = keeper_of(gardener)
     want = stake_of(gardener).uri
     pump = bindings(gardener.beliefs.query(
-        f"SELECT ?p WHERE {{ <{gardener.me.uri}> actuation:hasActuator ?p }}"))[0]["p"]
+        f"SELECT ?p WHERE {{ <{gardener.me.uri}> actuation:hasActuator ?p }}", gardener.beliefs.graphs_of(PUBLIC)))[0]["p"]
     dose = Step(action=_ACTUATE, via=pump, want=want, about=MOISTURE, quantity=0.2)
     uri = keeper.adopt([dose, dose], want, "two doses, the search's plan")
     assert uri is not None

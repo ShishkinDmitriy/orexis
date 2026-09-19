@@ -15,6 +15,7 @@ from orexis_agent_deliberation.derive_wants import foresees_of
 from orexis_agent_progression.ontology import picks_graph, roots_graph
 from orexis_agent_progression.store import bindings
 from conftest import build_agent, genesis_store
+from orexis_agent_progression.ontology import PUBLIC
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
@@ -23,7 +24,7 @@ FORESIGHT = "http://example.org/orexis/sensing#foresightS"
 
 def _roots(st, agent_id="gardener") -> set[str]:
     return {r["r"] for r in bindings(st.query(
-        f"SELECT ?r WHERE {{ GRAPH <{roots_graph(agent_id)}> {{ ?me orexis:holds ?r . ?r a orexis:Desire }} }}"))}
+        f"SELECT ?r WHERE {{ GRAPH <{roots_graph(agent_id)}> {{ ?me orexis:holds ?r . ?r a orexis:Desire }} }}", st.graphs_of(PUBLIC)))}
 
 
 def _triples(st, agent_id="gardener") -> set[tuple]:
@@ -46,7 +47,7 @@ def test_the_roots_exist_after_birth_and_before_any_rebuild(monkeypatch):
     assert "http://example.org/orexis#desire.gardener.SoilMoisture" in roots, roots
     assert any(r.startswith("http://example.org/orexis#fresh.gardener.") for r in roots), "the freshness want is a root too"
     assert roots_graph("gardener") not in st.periods(), "no period: it holds at every instant, as the T-Box does"
-    assert st.query(f"ASK {{ GRAPH <{roots_graph('gardener')}> {{ ?r orexis:foresees ?f }} }}")["boolean"] is False, \
+    assert st.query(f"ASK {{ GRAPH <{roots_graph('gardener')}> {{ ?r orexis:foresees ?f }} }}", st.graphs_of(PUBLIC))["boolean"] is False, \
         "a root carries no foresight: that is a pick, the agent's state, and a root is not a function of it"
 
 
@@ -59,7 +60,7 @@ def test_a_rebuild_leaves_the_roots_untouched(monkeypatch):
     agent.desires.rebuild()
     agent.desires.rebuild()
     assert _triples(st) == before, "nothing a rebuild does reaches the roots"
-    assert _roots(st) <= {r["r"] for r in bindings(agent.desires.query_union(
+    assert _roots(st) <= {r["r"] for r in bindings(agent.desires.query(
         "SELECT ?r WHERE { ?me orexis:holds ?r . ?r a orexis:Desire }"))}, \
         "and the modality projects every root"
 
@@ -112,8 +113,8 @@ def test_a_root_the_volume_never_held_is_endowed_at_boot_and_a_held_one_stays(mo
     endowed = genesis.author_roots(st, "gardener")
     assert endowed == [gone], endowed
     assert gone in _roots(st)
-    assert st.query(f"ASK {{ GRAPH <{roots_graph('gardener')}> {{ <{gone}> orexis:metWhen <http://example.org/orexis#bounds.gardener.SoilMoisture> }} }}")["boolean"], \
+    assert st.query(f"ASK {{ GRAPH <{roots_graph('gardener')}> {{ <{gone}> orexis:metWhen <http://example.org/orexis#bounds.gardener.SoilMoisture> }} }}", st.graphs_of(PUBLIC))["boolean"], \
         "with its met-test"
-    labels = bindings(st.query(f"SELECT ?l WHERE {{ GRAPH <{roots_graph('gardener')}> {{ <{kept}> rdfs:label ?l }} }}"))
+    labels = bindings(st.query(f"SELECT ?l WHERE {{ GRAPH <{roots_graph('gardener')}> {{ <{kept}> rdfs:label ?l }} }}", st.graphs_of(PUBLIC)))
     assert [r["l"] for r in labels] == ["mine now"], "a held root stays the agent's, whatever the world would say"
     assert genesis.author_roots(st, "gardener") == [], "and endowment is idempotent"

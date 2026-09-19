@@ -19,6 +19,7 @@ from orexis_agent_deliberation.planner import Planner
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import Store, bindings
 from test_planning import MOISTURE, STORED
+from orexis_agent_progression.ontology import PUBLIC
 
 SOSA = "http://www.w3.org/ns/sosa/"
 SENSING = "http://example.org/orexis/sensing#"
@@ -29,7 +30,7 @@ TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 def _bands_of(store, subject_local: str, prop_local: str) -> dict:
     """member local name -> family, for one (subject, property)."""
     rows = bindings(store.query(f"""
-SELECT ?c ?f WHERE {{ ?c a owl:Class ; rdfs:subClassOf ?f . FILTER(STRSTARTS(STR(?c), "{BAND}{subject_local}.{prop_local}.")) }}"""))
+SELECT ?c ?f WHERE {{ ?c a owl:Class ; rdfs:subClassOf ?f . FILTER(STRSTARTS(STR(?c), "{BAND}{subject_local}.{prop_local}.")) }}""", store.graphs_of(PUBLIC)))
     return {r["c"].rsplit(".", 1)[-1]: r["f"].rsplit("#", 1)[-1] for r in rows}
 
 
@@ -38,14 +39,14 @@ def _classes_of(store, observed_property: str) -> set[str]:
     are asserted too, but the member says which band."""
     rows = bindings(store.query(f"""
 SELECT ?c WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:observedProperty <{observed_property}> ; a ?c }}
-  FILTER(STRSTARTS(STR(?c), "{BAND}")) }}"""))
+  FILTER(STRSTARTS(STR(?c), "{BAND}")) }}""", store.graphs_of(PUBLIC)))
     return {r["c"].rsplit(".", 1)[-1] for r in rows}
 
 
 def _families_of(store, observed_property: str) -> set[str]:
     rows = bindings(store.query(f"""
 SELECT ?c WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:observedProperty <{observed_property}> ; a ?c }}
-  FILTER(STRSTARTS(STR(?c), "{SENSING}")) }}"""))
+  FILTER(STRSTARTS(STR(?c), "{SENSING}")) }}""", store.graphs_of(PUBLIC)))
     return {r["c"].rsplit("#", 1)[-1] for r in rows}
 
 
@@ -68,7 +69,7 @@ SELECT ?p ?v ?facet ?bound WHERE {{
   <{BAND}zz.SoilMoisture.inside> owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
   ?r a owl:Restriction ; owl:onProperty ?p .
   OPTIONAL {{ ?r owl:hasValue ?v }}
-  OPTIONAL {{ ?r owl:someValuesFrom/owl:withRestrictions/rdf:rest*/rdf:first ?f . ?f ?facet ?bound }} }}"""))
+  OPTIONAL {{ ?r owl:someValuesFrom/owl:withRestrictions/rdf:rest*/rdf:first ?f . ?f ?facet ?bound }} }}""", st.graphs_of(PUBLIC)))
     stated = {(r["p"].rsplit("/", 1)[-1], r.get("v", "").rsplit("#", 1)[-1] or None,
                (r.get("facet") or "").rsplit("#", 1)[-1] or None, r.get("bound")) for r in rows}
     assert ("hasFeatureOfInterest", "zz", None, None) in stated
@@ -122,7 +123,7 @@ def test_the_entailment_door_honours_an_intersection_of_values_and_facets():
     found = {(n.value, c.value) for n, c in st.entail("urn:g:state")}
     assert found == {("urn:a", "urn:c:cold")}, found
     assert {(n.value, c.value) for n, c in st.entail("urn:g:state", of=["<urn:b>"])} == set()
-    rows = bindings(st.query("SELECT ?x WHERE { GRAPH <urn:g:state> { ?x a <urn:c:cold> } }"))
+    rows = bindings(st.query("SELECT ?x WHERE { GRAPH <urn:g:state> { ?x a <urn:c:cold> } }", st.graphs_of(PUBLIC)))
     assert [r["x"] for r in rows] == ["urn:a"], "asserted where the node is"
 
 

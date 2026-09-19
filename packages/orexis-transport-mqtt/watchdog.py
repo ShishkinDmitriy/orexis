@@ -44,6 +44,7 @@ import signal
 from orexis_agent_progression.timer import Timer
 from orexis_agent_progression.ontology import QUIET
 from orexis_agent_progression.store import bindings
+from orexis_agent_progression.ontology import PUBLIC
 
 log = logging.getLogger("watchdog")
 
@@ -65,7 +66,7 @@ class BusWatchdog:
         self.agent = link.agent
         self._timer: Timer | None = None
         self._quiet: dict[str, str] = {}  # key -> the line last said, so it is said once
-        rows = bindings(self.agent.beliefs.query(_RESIGN_Q))
+        rows = bindings(self.agent.beliefs.query(_RESIGN_Q, self.agent.beliefs.graphs_of(PUBLIC)))
         if not rows:
             raise RuntimeError("the ontology states no orexis:resignAfterS — re-run orexis-seed")
         self.resign_after_s = int(rows[0]["s"])

@@ -302,7 +302,7 @@ class Deliberator:
         #  one fact. Six fields because a planner has six answers where returning a move or
         #  None had two, and the pair worth watching is `no candidate` against `exhausted`:
         #  one says equip me, the other says my doses are too coarse.
-        verdicts = trace.outcomes(self.agent.beliefs.query_union)
+        verdicts = trace.outcomes(self.agent.beliefs.reader())
         rows.append(("agent_deliberation", {}, {
             outcome.replace(" ", "_"): float(verdicts.get(outcome, 0))
             for outcome in (SATISFIED, IMPROVED, NOTHING,
@@ -319,7 +319,7 @@ class Deliberator:
         #  reached (#258); both are closed. `blind` above zero is a package that never stated
         #  what its lever does. A number that shows a known defect is worth more than one that
         #  says things are fine.
-        rows.append(("agent_planning", {}, {**trace.effort(self.agent.beliefs.query_union),
+        rows.append(("agent_planning", {}, {**trace.effort(self.agent.beliefs.reader()),
                                             #  what progression told me since the process
                                             #  started (#452): acts its actors took, and
                                             #  acts declined as "not now"

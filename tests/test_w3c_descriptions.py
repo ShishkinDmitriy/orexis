@@ -34,6 +34,7 @@ from orexis_agent_progression.store import Store
 from agent.validate import _shapes_and_vocabulary, conforms, graph_from
 
 from conftest import WORLDS_ROOT
+from orexis_agent_progression.ontology import PUBLIC
 
 FIXTURES = Path(__file__).parent / "fixtures" / "w3c-ssn"
 
@@ -77,7 +78,7 @@ def _world_with(tmp_path, **files: str):
     everyone = [genesis.agent_id_of(p) for p in sorted(world.glob(genesis.BELIEFS_GLOB))]
     for agent_id in everyone:
         genesis.birth(st, world, agent_id)
-    return graph_from(st, *st.public_graphs(), st.catalogue,
+    return graph_from(st, *st.graphs_of(PUBLIC), st.catalogue,
                       *(picks_graph(a) for a in everyone))
 
 

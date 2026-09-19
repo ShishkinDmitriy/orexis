@@ -18,6 +18,7 @@ from orexis_capability_market.terms import NS as MARKET
 BID_WINDOW_S, ROUND_COOLDOWN_S = MARKET + "bidWindowS", MARKET + "roundCooldownS"
 
 from conftest import build_agent, genesis_store, wired_markets
+from orexis_agent_progression.ontology import PUBLIC
 
 
 @pytest.fixture
@@ -32,7 +33,7 @@ def market_of(agent):
 def _row_terms(agent, uri):
     from orexis_agent_progression.store import bindings
     return {r["p"] for r in bindings(agent.beliefs.query(
-        f"SELECT ?p WHERE {{ GRAPH ?g {{ <{uri}> ?p ?o }} }}"))}
+        f"SELECT ?p WHERE {{ GRAPH ?g {{ <{uri}> ?p ?o }} }}", agent.beliefs.graphs_of(PUBLIC)))}
 
 
 # --- the host --------------------------------------------------------------------------------

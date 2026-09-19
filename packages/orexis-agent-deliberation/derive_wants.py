@@ -163,7 +163,7 @@ def foresees_of(agent, root: str) -> float | None:
     for answer in agent.ask(FORESIGHT, root):
         if answer is not None:
             return float(answer)
-    rows = bindings(agent.desires.query_union(
+    rows = bindings(agent.desires.query(
         f"SELECT ?f WHERE {{ <{root}> orexis:foresees ?f }} LIMIT 1"))
     return float(rows[0]["f"]) if rows else None
 
@@ -188,7 +188,7 @@ def name_of(agent, root: str, about: tuple, instance: str | None) -> str:
     instance the want is already about (a debt, `orexis:about sh:this`) is not said twice.
     """
     desire_abouts = tuple(sorted(
-        r["a"] for r in bindings(agent.desires.query_union(
+        r["a"] for r in bindings(agent.desires.query(
             f"SELECT ?a WHERE {{ <{root}> orexis:about ?a }}"))))
     tails = [_tail(a) for a in about] if about and set(about) != set(desire_abouts) else []
     if instance is not None and instance not in about and not _targets_one_node(agent, root):
@@ -201,7 +201,7 @@ def _targets_one_node(agent, root: str) -> bool:
     root on the agent: a root never changes while the agent runs."""
     cache = agent.__dict__.setdefault("_root_targets_one", {})
     if root not in cache:
-        cache[root] = bool(bindings(agent.desires.query_union(
+        cache[root] = bool(bindings(agent.desires.query(
             f"SELECT ?n WHERE {{ <{root}> orexis:metWhen ?s . ?s sh:targetNode ?n }} LIMIT 1")))
     return cache[root]
 
@@ -213,14 +213,14 @@ def mint(agent, root: str, holds_at: datetime | None = None, about: tuple = (),
     a blank node has no name another graph could point at, and copying it would make a second
     owner of the claim."""
     desire_abouts = tuple(sorted(
-        r["a"] for r in bindings(agent.desires.query_union(
+        r["a"] for r in bindings(agent.desires.query(
             f"SELECT ?a WHERE {{ <{root}> orexis:about ?a }}"))))
     abouts = about or desire_abouts
     child = name_of(agent, root, about, instance)
     points_said = []
     #  The raw SPARQL-JSON rows, because the TYPE of the object matters here and
     #  `bindings` flattens it away: a blank node cannot be pointed at from another graph.
-    said = agent.desires.query_union(f"""
+    said = agent.desires.query(f"""
 SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
   FILTER(?p IN (orexis:metWhen, orexis:unmetWhen, orexis:estimates, orexis:about)) }}""")
     met_test = None
@@ -249,7 +249,7 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
         shape_lines = narrowed(agent, met_test, own, instance, abouts)
         points.append((OREXIS_MET_WHEN, own))
 
-    labels = bindings(agent.desires.query_union(
+    labels = bindings(agent.desires.query(
         f"SELECT ?l WHERE {{ <{root}> rdfs:label ?l }} LIMIT 1"))
     label = "pursued: " + (labels[0]["l"] if labels else root.rsplit("#", 1)[-1])
     #  AT AN INSTANT (#619): bound `orexis:At`, holding at the crossing, its room opening now.

@@ -36,6 +36,7 @@ class Intentions:
         self._own = Store(str(Path(state_path) / "intentions")) if state_path else None
         backing = self._own if self._own is not None else beliefs
         self.query = backing.query
+        self.query_over = backing.query_over
         self.query_union = backing.query_union
         self.update = backing.update
         self.quads = backing.quads

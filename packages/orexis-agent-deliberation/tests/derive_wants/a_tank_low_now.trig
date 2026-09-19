@@ -60,13 +60,13 @@ GRAPH :judgments {
 }
 
 GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :ontology a orexis:OntologyGraph .
-  :judgments a deliberation:JudgmentGraph ;
+  :catalogue a orexis:CatalogueGraph , orexis:Graph .
+  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
+  :judgments a deliberation:JudgmentGraph , orexis:WorkingGraph , orexis:Graph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
-  :desires a orexis:DesireGraph .
-  :scopes a deliberation:ScopeGraph ;
+  :desires a orexis:DesireGraph , orexis:Graph .
+  :scopes a deliberation:ScopeGraph , orexis:WorkingGraph , orexis:Graph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
 }

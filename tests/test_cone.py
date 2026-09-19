@@ -17,6 +17,7 @@ from orexis_agent_deliberation.planner import Planner
 from orexis_agent_progression.ontology import DELIBERATION_GRAPH, STATE_GRAPH
 from orexis_agent_progression.store import bindings
 from test_courier import C, W, WANT, _driver, _goal
+from orexis_agent_progression.ontology import PUBLIC
 
 
 def _take(agent, step):
@@ -56,7 +57,7 @@ SELECT ?minI ?minE ?maxI ?maxE WHERE {{
   OPTIONAL {{ ?facets rdf:rest*/rdf:first/xsd:minInclusive ?minI }}
   OPTIONAL {{ ?facets rdf:rest*/rdf:first/xsd:minExclusive ?minE }}
   OPTIONAL {{ ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?maxI }}
-  OPTIONAL {{ ?facets rdf:rest*/rdf:first/xsd:maxExclusive ?maxE }} }}"""))
+  OPTIONAL {{ ?facets rdf:rest*/rdf:first/xsd:maxExclusive ?maxE }} }}""", agent.beliefs.graphs_of(PUBLIC)))
     r = rows[0]
     lo = r.get("minI") or r.get("minE")
     hi = r.get("maxI") or r.get("maxE")
@@ -114,7 +115,7 @@ def test_a_moved_invariant_half_forgets_the_cone(monkeypatch):
     agent = _driver(monkeypatch, "c0_0", "c1_2")
     planner = Planner(agent, agent.me)
     planner.plan(_goal(agent))
-    graph = agent.beliefs.public_graphs()[0]
+    graph = agent.beliefs.graphs_of(PUBLIC)[0]
     agent.beliefs.update(f"INSERT DATA {{ GRAPH <{graph}> {{ <urn:test:new> <urn:test:fact> <urn:test:o> . }} }}")
     begins = []
     real = search.Planner._begin

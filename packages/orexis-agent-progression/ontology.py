@@ -31,7 +31,7 @@ identifier a process is given: its own agent id.
 **Graph IRIs used to be listed here as though they were terms, and they are not.**
 `orexis:WorldGraph` is the term; `…/graph/world` is a particular graph, no more a term than
 `orexis:fern_agent` is. The instances now live in `agent/ontology.ttl`, typed by class,
-and `store.public_graphs()` asks the store which ones they are — so a query means "public
+and `store.graphs_of(PUBLIC)` asks the store which ones they are — so a query means "public
 knowledge" without any Python knowing what that consists of, and a sixth public graph is a
 vocabulary edit that touches no code.
 
@@ -191,6 +191,26 @@ WORLD_ENTAILED_GRAPH = _GRAPH + "world/entailed"  # what the vocabulary implies 
 #  The IRI still says "sensed", for every volume that holds readings under it; the NAME says
 #  what the kernel knows about it, which is not that (the-stake-is-sensings-want).
 STATE_GRAPH = _GRAPH + "sensed"
+
+#  THE KINDS A READER ASKS FOR. A graph is read by what the catalogue says it IS, never by
+#  its name (a-reader-states-the-kinds-it-reads): a reader lists the kinds it means and the
+#  instant it stands at, `Store.graphs_of` answers with the graphs, and the store decides
+#  nothing on anyone's behalf. Each kind is a kernel term a package may put its own graph
+#  under, which is how a package's record reaches every rule without the kernel learning the
+#  package's name.
+PUBLIC = OREXIS + "PublicGraph"          # everyone's: the vocabulary, the world, the actions
+BELIEF = OREXIS + "BeliefGraph"          # what IS: the state, the instruments, a claim held
+STATE = OREXIS + "StateGraph"            # the readings — what a plan forks and an effect rewrites
+PREDICTION = OREXIS + "PredictionGraph"  # what is expected, holding during its window
+RECORD = OREXIS + "RecordGraph"          # an agent's own record, worth believing during its period
+DESIRE = OREXIS + "DesireGraph"          # desires
+WANT = OREXIS + "WantGraph"              # wants
+#  What a RULE is answered over — a met-test, a precondition, an availability select, an
+#  effect: everyone's knowledge, what is, the records, the desires and the wants. Stated once
+#  here and named at every runner, so a runner says what it hands a text.
+KNOWN = (PUBLIC, BELIEF, RECORD, DESIRE, WANT)
+#  ...and, for a reader standing at an instant, what is expected to hold then.
+FORESEEN = (*KNOWN, PREDICTION)
 #  What this agent knows about its own instruments — the rhythm each is running and the
 #  horizon that follows from it. Private, and separate from `sensed` because a cadence is
 #  not a reading: it is what the agent believes about the instrument that produced one.
@@ -220,7 +240,7 @@ DELIBERATION_GRAPH = _GRAPH + "deliberation"
 #  (one-catalogue-describes-every-graph-and-itself).
 CATALOGUE_GRAPH = _GRAPH + "catalogue"
 # The class a graph must be an instance of to be read by an unqualified pattern. This is a TERM,
-# and it is all the code needs: `store.public_graphs()` asks which graphs are instances of it,
+# and it is all the code needs: `store.graphs_of(PUBLIC)` asks which graphs are instances of it,
 # so nothing here lists them and adding one is a vocabulary edit.
 #
 # Why it matters beyond tidiness: a single basic graph pattern inside one `GRAPH` clause must

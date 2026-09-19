@@ -33,6 +33,8 @@ from .terms import (AMOUNT_L, DISCHARGED_AT, FOR_CLAIM, LAPSED_AT, LAPSES_AT, NS
 from orexis_agent_progression import clock
 from orexis_agent_deliberation.derive_wants import derive_wants
 from orexis_agent_deliberation.judge_desires import judge_desires
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import KNOWN, RECORD
 
 #  What I owe, as rows — the obligation branch of what used to be one shipped `desires.rq` for every
 #  kind of want. The stakes and the freshness wants went to sensing with the region
@@ -125,7 +127,7 @@ class Ower(Module):
         so a debt names an agent the world declares and never a string somebody sent me."""
         rows = bindings(self.agent.beliefs.query(
             f'SELECT ?a WHERE {{ ?a a <http://example.org/orexis#Agent> ; '
-            f'<http://example.org/orexis#localId> "{agent_id}" }} LIMIT 1'))
+            f'<http://example.org/orexis#localId> "{agent_id}" }} LIMIT 1', self.agent.beliefs.graphs_of(PUBLIC)))
         return rows[0]["a"] if rows else None
 
     def owe(self, to_agent_id: str, claim_jti: str,
@@ -174,8 +176,9 @@ class Ower(Module):
                       f'^^<http://www.w3.org/2001/XMLSchema#dateTime>')
         uri = f"{OREXIS}obligation.{claim_jti}"
         graph = obligation_graph(self.agent.id, claim_jti)
-        if bindings(self.agent.beliefs.query_union(
-                f"SELECT ?o WHERE {{ ?o <{FOR_CLAIM}> \"{claim_jti}\" }} LIMIT 1")):
+        if bindings(self.agent.beliefs.query(
+                f"SELECT ?o WHERE {{ ?o <{FOR_CLAIM}> \"{claim_jti}\" }} LIMIT 1",
+                self.agent.beliefs.graphs_of(RECORD))):
             return None
         #  A GRAPH HOLDING DURING THE DEBT (#645): from its issue to the claim's expiry, open
         #  where the claim named none. The door hands a lapsed debt to nobody, the one sweep
@@ -250,22 +253,23 @@ class Ower(Module):
         extra = f'?o <{PRESENTED}> true .' if presented_only else ""
         #  THROUGH THE DOOR (#645): a debt past its window is handed to nobody, so what still
         #  stands is what the door hands at this instant.
-        return bindings(self.agent.beliefs.query_at(f"""
+        return bindings(self.agent.beliefs.query(f"""
 SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{
   ?o <{OWED_TO}> ?to ; <{FOR_CLAIM}> ?jti ;
      <{PRESENTED}> ?presented ; <{OWED_AT}> ?at .
   OPTIONAL {{ ?o <{OREXIS}expiresAt> ?expires }}
   {extra}
-  FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?done }} }} ORDER BY DESC(?at)"""))
+  FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?done }} }} ORDER BY DESC(?at)""",
+            self.agent.beliefs.graphs_of(*KNOWN, at=clock.now())))
 
     def settled(self) -> list[dict]:
         """What this agent's debts came to (#645): each paid or lapsed, in the untimed record
         — the verdict the ledger keeps once a debt's own graph is gone. Askable by the sovereign."""
-        return bindings(self.agent.beliefs.query_union(f"""
+        return bindings(self.agent.beliefs.query_over(f"""
 SELECT ?o ?to ?jti ?paid ?lapsed WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
   ?o <{OWED_TO}> ?to ; <{FOR_CLAIM}> ?jti .
   OPTIONAL {{ ?o <{DISCHARGED_AT}> ?paid }} OPTIONAL {{ ?o <{LAPSED_AT}> ?lapsed }}
-  FILTER(BOUND(?paid) || BOUND(?lapsed)) }} }} ORDER BY ?jti"""))
+  FILTER(BOUND(?paid) || BOUND(?lapsed)) }} }} ORDER BY ?jti""", obligations_graph(self.agent.id)))
 
     def outdated(self, graph: str) -> None:
         """A debt's window has closed and the one sweep is about to drop its graph (#645): the
@@ -275,10 +279,10 @@ SELECT ?o ?to ?jti ?paid ?lapsed WHERE {{ GRAPH <{obligations_graph(self.agent.i
         not the want. The vessel's drift read the debt as an arrival, so it predicts again."""
         if not graph.startswith(obligations_graph(self.agent.id) + "/"):
             return
-        rows = bindings(self.agent.beliefs.query_union(f"""
+        rows = bindings(self.agent.beliefs.query_over(f"""
 SELECT ?o ?to ?jti ?a ?at ?paid WHERE {{ GRAPH <{graph}> {{
   ?o <{OWED_TO}> ?to ; <{FOR_CLAIM}> ?jti ; <{OWED_AT}> ?at .
-  OPTIONAL {{ ?o <{AMOUNT_L}> ?a }} OPTIONAL {{ ?o <{DISCHARGED_AT}> ?paid }} }} }}"""))
+  OPTIONAL {{ ?o <{AMOUNT_L}> ?a }} OPTIONAL {{ ?o <{DISCHARGED_AT}> ?paid }} }} }}""", graph))
         for row in rows:
             verdict = (f'<{DISCHARGED_AT}> "{row["paid"]}"^^xsd:dateTime' if row.get("paid")
                        else f'<{LAPSED_AT}> "{clock.now().isoformat()}"^^xsd:dateTime')
@@ -313,11 +317,13 @@ SELECT ?o ?to ?jti ?a ?at ?paid WHERE {{ GRAPH <{graph}> {{
         and no lapse in view gets the lapse the ledger would write today — wherever the debt
         is, its own graph or the untimed record of one written before debts had graphs. The
         met-test it used to carry is the DESIRE's now and is left where it lies."""
-        rows = bindings(self.agent.beliefs.query_union(f"""
+        #  THE TEXT NAMES ITS GRAPHS by joining the catalogue — every obligations graph,
+        #  whatever its period — so it is handed no default graph at all.
+        rows = bindings(self.agent.beliefs.query(f"""
 SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS}expiresAt> ?expires .
   FILTER NOT EXISTS {{ ?o <{DISCHARGED_AT}> ?paid }} FILTER NOT EXISTS {{ ?o <{LAPSED_AT}> ?lapsed }} }}
   GRAPH <{self.agent.beliefs.catalogue}> {{ ?g a <{NS}ObligationsGraph> }}
-  FILTER NOT EXISTS {{ GRAPH ?p {{ ?o <{LAPSES_AT}> ?w }} }} }}"""))
+  FILTER NOT EXISTS {{ GRAPH ?p {{ ?o <{LAPSES_AT}> ?w }} }} }}""", ()))
         for row in rows:
             lapse = lapse_graph(self.agent.id, row["jti"])
             self.agent.beliefs.update(f"""INSERT DATA {{
@@ -368,7 +374,7 @@ SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS
         out = []
         #  `$root` THROUGH THE BINDER, not the engine's substitutions: those reach only a
         #  variable the query projects at its top level, and this one is a token in a pattern.
-        for row in bindings(self.agent.desires.query_union(
+        for row in bindings(self.agent.desires.query(
                 bind(_DUTIES_Q, root=f"{self.agent.me.uri}.no_overdue_debts"))):
             demanded = row.get("presented") == "true"
             lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])

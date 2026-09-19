@@ -18,6 +18,8 @@ from orexis_agent_progression.ontology import PLAN_FAILED, PLAN_FINISHED
 from orexis_agent_progression.store import bindings
 from orexis_capability_actuation.terms import DOSING
 from conftest import MOISTURE, build_agent, genesis_store, predicted_reading, reading_of, stake_of, write_reading
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import PREDICTION
 
 IN_REGION = "http://example.org/orexis/sensing#InRegion"
 BELOW = "http://example.org/orexis/sensing#BelowRegion"
@@ -32,7 +34,7 @@ def _two_doses(agent, band: str = BELOW):
     """A two-step plan adopted by hand — a dose, then a dose — standing at the first, each
     step predicting the pot's reading to be `band`."""
     pump = bindings(agent.beliefs.query(
-        f"SELECT ?p WHERE {{ <{agent.me.uri}> actuation:hasActuator ?p }}"))[0]["p"]
+        f"SELECT ?p WHERE {{ <{agent.me.uri}> actuation:hasActuator ?p }}", agent.beliefs.graphs_of(PUBLIC)))[0]["p"]
     want = stake_of(agent).uri
     #  Each step carries what it predicts, as a search-made one does: a small dose that leaves
     #  the pot below its floor — so the actor taking the second can open a watch on it.
@@ -51,9 +53,9 @@ def _bands_at(agent, seconds_ahead: float) -> set:
     """The families the prediction holding that far ahead types the pot's reading with."""
     at = clock.now() + timedelta(seconds=seconds_ahead)
     out = set()
-    for graph in agent.beliefs.prediction_graphs(at=at):
+    for graph in agent.beliefs.graphs_of(PREDICTION, at=at):
         out |= {r["t"] for r in bindings(agent.beliefs.query(f"""
-SELECT ?t WHERE {{ GRAPH <{graph}> {{ ?o sosa:observedProperty <{MOISTURE}> ; a ?t }} }}"""))}
+SELECT ?t WHERE {{ GRAPH <{graph}> {{ ?o sosa:observedProperty <{MOISTURE}> ; a ?t }} }}""", agent.beliefs.graphs_of(PUBLIC)))}
     return out
 
 

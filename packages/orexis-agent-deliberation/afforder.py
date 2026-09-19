@@ -40,8 +40,7 @@ class Afforder:
         self._me = agent_uri
         self._picks = picks
 
-    def offered(self, affordances=None, *, at=None, world: str | None = None,
-                only=None) -> list[Affordance]:
+    def offered(self, affordances=None, *, graphs=None, only=None) -> list[Affordance]:
         """Every row this agent has in one world, name-ordered.
 
         THE WORLD IS A PARAMETER OF THE ASK and of nothing else — not of this service, and not
@@ -73,6 +72,6 @@ class Afforder:
             if only is not None and action.uri not in only:
                 continue
             rows += (affordances or self._affordances).find_all_by_action(
-                action, about_of, self._me, self._picks, at=at, world=world)
+                action, about_of, self._me, self._picks, graphs=graphs)
         #  Sorted because per-action order is no order.
         return sorted(rows, key=lambda a: (a.want or "", a.action, a.for_agent or ""))

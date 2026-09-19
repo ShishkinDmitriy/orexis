@@ -21,6 +21,7 @@ from onboarding.keygen import (create_agent_signing_keypair, create_keypair,
                                create_sealing_keypair)
 
 from conftest import build_agent, genesis_store, wired_actuator_for, wired_hosted_markets, wired_markets
+from orexis_agent_progression.ontology import PUBLIC
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
 
@@ -180,7 +181,7 @@ def test_the_roster_attests_keys_against_each_agents_real_node(tmp_path, monkeyp
 
     st = Store()
     genesis.refresh_public(st, worlds / "sim2")
-    rows = bindings(st.query("""SELECT ?a WHERE { ?a orexis:signingKey ?k }"""))
+    rows = bindings(st.query("""SELECT ?a WHERE { ?a orexis:signingKey ?k }""", st.graphs_of(PUBLIC)))
     subjects = {r["a"] for r in rows}
     assert "http://example.org/orexis/world/simulation#supplier" in subjects
     assert "http://example.org/orexis/world/simulation#fern_agent" in subjects

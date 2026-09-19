@@ -15,6 +15,7 @@ from orexis_agent_progression.ontology import ACTIONS_GRAPH, STATE_GRAPH, picks_
 from orexis_agent_progression.store import bindings, Raw
 
 from conftest import stake_of, MOISTURE, build_agent, genesis_store, predicted_bands
+from orexis_agent_progression.ontology import PUBLIC
 
 OBSERVING = "http://example.org/orexis/sensing#Observing"
 DOSING = "http://example.org/orexis/actuation#Dosing"
@@ -277,7 +278,7 @@ def _valve_ceiling_s() -> float:
     st = _loner({("zz", MOISTURE): 0.04})
     row = bindings(st.query("""SELECT ?cap ?rate WHERE {
         ?lever <http://example.org/orexis/actuation#maxDoseMl> ?cap ;
-               <http://example.org/orexis/actuation#mlPerSecond> ?rate }"""))[0]
+               <http://example.org/orexis/actuation#mlPerSecond> ?rate }""", st.graphs_of(PUBLIC)))[0]
     return float(row["cap"]) / float(row["rate"])
 
 

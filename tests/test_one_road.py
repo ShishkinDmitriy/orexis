@@ -23,6 +23,8 @@ from orexis_agent_deliberation.derive_wants import derive_wants
 from orexis_agent_deliberation.judge_desires import judge_desires, witnesses_of
 from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import bindings
+from orexis_agent_progression.ontology import PREDICTION
+from orexis_agent_progression import clock
 
 HOUR = 3600.0
 
@@ -63,7 +65,7 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_road_mints_the_
 
     #  A LAPSE IS NOT IN VIEW YET — the prediction holds from the deadline, and the desire's
     #  select names the debt at that instant and at no other
-    assert agent.beliefs.prediction_graphs() == []
+    assert agent.beliefs.graphs_of(PREDICTION, at=clock.now()) == []
     [w] = witnesses_of(agent, root)
     assert w.instance == debt and w.about == debt, "the row is about the debt itself (sh:this)"
     assert abs(w.at.timestamp() - deadline) < 1.0

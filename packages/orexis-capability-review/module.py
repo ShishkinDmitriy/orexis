@@ -78,6 +78,7 @@ from .graphs import REVIEW, evidence_graph, revisions_graph
 from .summary import Summaries
 from .terms import RECKONING
 from orexis_agent_progression import clock
+from orexis_agent_progression.ontology import PUBLIC
 
 log = logging.getLogger("review")
 
@@ -234,11 +235,11 @@ class ReviewModule(Module):
         separate predicates because a mandate is a governance fact and this is a fact about a
         board, and a revision refused by one should not read as refused by the other.
         """
-        out = world_ranges(self.agent.beliefs.query)
+        out = world_ranges(self.agent.beliefs.reader(PUBLIC))
         for row in bindings(self.agent.beliefs.query(f"""
 SELECT ?term ?below ?above WHERE {{
   <{self.agent.me.uri}> review:commits|review:limitedTo ?c . ?c review:onTerm ?term .
-  OPTIONAL {{ ?c review:notBelow ?below }} OPTIONAL {{ ?c review:notAbove ?above }} }}""")):
+  OPTIONAL {{ ?c review:notBelow ?below }} OPTIONAL {{ ?c review:notAbove ?above }} }}""", self.agent.beliefs.graphs_of(PUBLIC))):
             held = out.get(row["term"])
             if held is None:
                 # A commitment about a term nothing declares revisable. Said out loud rather
@@ -255,7 +256,7 @@ SELECT ?term ?below ?above WHERE {{
     def current(self, belief_term: str) -> float | None:
         rows = bindings(self.agent.beliefs.query(f"""
 SELECT ?v WHERE {{ GRAPH <{picks_graph(self.agent.id)}> {{
-  <{self.agent.me.uri}> <{belief_term}> ?v }} }} LIMIT 1"""))
+  <{self.agent.me.uri}> <{belief_term}> ?v }} }} LIMIT 1""", self.agent.beliefs.graphs_of(PUBLIC)))
         return float(rows[0]["v"]) if rows else None
 
     # --- what it saw ---------------------------------------------------------------------
@@ -323,7 +324,7 @@ SELECT ?action ?p ?o ?b ?t WHERE {
                      .replace(EVIDENCE, evidence_graph(self.agent.id))
                      .replace(PICKS, picks_graph(self.agent.id)))
             try:
-                rows = bindings(self.agent.beliefs.query(query))
+                rows = bindings(self.agent.beliefs.query(query, self.agent.beliefs.graphs_of(PUBLIC)))
             except Exception as exc:
                 # A rule that will not run is a broken package, not a broken agent.
                 log.error("%s: %s would not run: %s", self.agent.id, path.name, exc)
@@ -414,7 +415,7 @@ SELECT ?action ?p ?o ?b ?t WHERE {
         was re-picked (#518), so the literal follows the record rather than the number."""
         rows = bindings(self.agent.beliefs.query(f"""
 SELECT (DATATYPE(?old) AS ?dt) WHERE {{ GRAPH <{graph}> {{
-  <{self.agent.me.uri}> <{belief_term}> ?old }} }} LIMIT 1"""))
+  <{self.agent.me.uri}> <{belief_term}> ?old }} }} LIMIT 1""", self.agent.beliefs.graphs_of(PUBLIC)))
         integer = bool(rows) and str(rows[0].get("dt", "")).endswith("integer")
         literal = _literal(value) if integer or isinstance(value, bool) else \
             f'"{float(value)}"^^xsd:decimal'
@@ -467,7 +468,7 @@ INSERT DATA {{ GRAPH <{revisions_graph(self.agent.id)}> {{
         return {r["term"] for r in bindings(self.agent.beliefs.query(f"""
 SELECT DISTINCT ?term WHERE {{ GRAPH <{revisions_graph(self.agent.id)}> {{
   ?r a review:Revision ; review:revisedTerm ?term ; review:dueAt ?due .
-  FILTER(?due > "{now}"^^xsd:dateTime) }} }}"""))}
+  FILTER(?due > "{now}"^^xsd:dateTime) }} }}""", self.agent.beliefs.graphs_of(PUBLIC)))}
 
     def next_wake_s(self) -> float:
         """When to arise again: the soonest outstanding decision, floored by the stated interval.
@@ -478,7 +479,7 @@ SELECT DISTINCT ?term WHERE {{ GRAPH <{revisions_graph(self.agent.id)}> {{
         """
         rows = bindings(self.agent.beliefs.query(f"""
 SELECT (MIN(?due) AS ?soonest) WHERE {{ GRAPH <{revisions_graph(self.agent.id)}> {{
-  ?r a review:Revision ; review:dueAt ?due }} }}"""))
+  ?r a review:Revision ; review:dueAt ?due }} }}""", self.agent.beliefs.graphs_of(PUBLIC)))
         soonest = rows[0].get("soonest") if rows else None
         if not soonest:
             return float(self.interval_s)

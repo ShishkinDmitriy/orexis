@@ -13,6 +13,7 @@ from pathlib import Path
 from agent import genesis
 from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import Store, bindings
+from orexis_agent_progression.ontology import PUBLIC
 
 NS = "http://example.org/orexis/world/simulation#"
 MARKET = "http://example.org/orexis/market#"
@@ -34,7 +35,7 @@ def world_with(tmp_path: Path, beliefs: str) -> Path:
 
 def value_of(st: Store, term: str) -> list[str]:
     rows = bindings(st.query(
-        f"SELECT ?v WHERE {{ GRAPH <{picks_graph('dealer')}> {{ ?s <{term}> ?v }} }}"))
+        f"SELECT ?v WHERE {{ GRAPH <{picks_graph('dealer')}> {{ ?s <{term}> ?v }} }}", st.graphs_of(PUBLIC)))
     return sorted(r["v"] for r in rows)
 
 
@@ -74,7 +75,7 @@ def test_a_structure_arrives_whole(tmp_path):
     rows = bindings(st.query(f"""
         SELECT ?p ?v WHERE {{ GRAPH <{picks_graph('dealer')}> {{
             ?s <{SENSING}aims> ?aim . ?aim <http://www.w3.org/ns/ssn/forProperty> ?p ;
-               <https://schema.org/value> ?v }} }}"""))
+               <https://schema.org/value> ?v }} }}""", st.graphs_of(PUBLIC)))
     assert rows and float(rows[0]["v"]) == 3.0, "the closure travels with the pair"
 
 
@@ -109,7 +110,7 @@ def test_a_volume_written_under_the_old_name_is_moved_once_at_boot(tmp_path):
     genesis._move_pick_record(st, "dealer")
     assert not st.has_graph(old) and [float(v) for v in value_of(st, MARKET + "reservePricePerL")] == [0.35]
     classified = {r["g"] for r in bindings(st.query(
-        f"SELECT ?g WHERE {{ GRAPH <{st.catalogue}> {{ ?g a <{OREXIS}PickRecordGraph> }} }}"))}
+        f"SELECT ?g WHERE {{ GRAPH <{st.catalogue}> {{ ?g a <{OREXIS}PickRecordGraph> }} }}", st.graphs_of(PUBLIC)))}
     assert classified == {picks_graph("dealer")}, "what was said of the old name is said of the new"
     genesis._move_pick_record(st, "dealer")
     assert not genesis.birth(st, world, "dealer"), "already born: the moved record is the answer"

@@ -16,12 +16,13 @@ from orexis_agent_progression.ontology import (OREXIS, STATE_GRAPH, WORLD_GRAPH,
 from orexis_agent_progression.store import bindings
 
 from conftest import build_agent, genesis_store
+from orexis_agent_progression.ontology import PUBLIC
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 
 
 def _graphs_in(desires) -> set[str]:
-    return {r["g"] for r in bindings(desires.query_union(
+    return {r["g"] for r in bindings(desires.query(
         "SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o } }"))}
 
 
@@ -56,7 +57,7 @@ def test_a_region_is_readable_from_the_desires_store_alone(monkeypatch):
     #  is a standing desire and says so by its type now, and states no binding at all
     #  (a-kind-is-a-type-not-a-binding). Walking the type on purpose, for the same reason the
     #  binding was walked before: a derivation that stops typing what it writes goes red here.
-    rows = bindings(agent.desires.query_union(f"""
+    rows = bindings(agent.desires.query(f"""
         SELECT ?below ?above WHERE {{
           ?desire a orexis:Desire ; orexis:metWhen ?region .
           ?region ssn:forProperty <{MOISTURE}> ; sh:property ?below , ?above .
@@ -89,15 +90,15 @@ def test_recomputation_is_the_only_write_path(monkeypatch):
     edited the new one in place."""
     st = genesis_store(world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    stale = agent.desires.query_union   # the surface as it stands before the premise moves
+    stale = agent.desires.query   # the surface as it stands before the premise moves
 
     marker = f"<{OREXIS}test_premise> a <{OREXIS}Desire> ."
     st.update(f"INSERT DATA {{ GRAPH <{picks_graph('gardener')}> {{ {marker} }} }}")
 
     ask = f"ASK {{ <{OREXIS}test_premise> ?p ?o }}"
-    assert not agent.desires.query_union(ask)["boolean"], "a copy must not see later writes"
+    assert not agent.desires.query(ask)["boolean"], "a copy must not see later writes"
     agent.desires.rebuild()
-    assert agent.desires.query_union(ask)["boolean"], \
+    assert agent.desires.query(ask)["boolean"], \
         "a rebuild reads the premises as they now stand"
     assert not stale(ask)["boolean"], \
         "the copy a rebuild replaced is unchanged — replaced, never edited"
@@ -142,9 +143,9 @@ GRAPH <{ASSERTED_GRAPH}> {{
     agent = build_agent("gardener", st, monkeypatch)
 
     ask = f"ASK {{ <{GARDENER}> orexis:holds <{ROOT}> }}"
-    assert agent.desires.query_union(ask)["boolean"], \
+    assert agent.desires.query(ask)["boolean"], \
         "the root desire must reach the desire modality"
-    assert st.query(f"ASK {{ <{ASSERTED_GRAPH}> orexis:arrivedBy orexis:Asserted }}")["boolean"], \
+    assert st.query(f"ASK {{ <{ASSERTED_GRAPH}> orexis:arrivedBy orexis:Asserted }}", st.graphs_of(PUBLIC))["boolean"], \
         "and the kernel's own declaration says who put it there — a world file needs no typing line"
 
     # The amendment: the sovereign stops stating it, and the want is no longer implied —
@@ -152,7 +153,7 @@ GRAPH <{ASSERTED_GRAPH}> {{
     (dst / "desire.ttl").unlink()
     genesis.refresh_public(st, dst)
     agent.desires.rebuild()
-    assert not agent.desires.query_union(ask)["boolean"], \
+    assert not agent.desires.query(ask)["boolean"], \
         "a want the ratification dropped must not survive it"
 
 

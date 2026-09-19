@@ -21,6 +21,7 @@ from onboarding import influx as influx_admin, mqtt as mqtt_admin
 from orexis_agent_progression.ontology import OREXIS, WORLD_GRAPH
 from onboarding.namespaces import MARKET, MQTT, SENSING
 from conftest import build_agent, genesis_store, shipped_worlds
+from orexis_agent_progression.ontology import PUBLIC
 
 #  Found by looking, never listed (`conftest.shipped_worlds`): this was a hand-written
 #  pair that stopped growing the day `world/loner` landed.
@@ -63,7 +64,7 @@ def test_every_subscription_a_module_makes_is_granted(world, monkeypatch):
     agents, _ = mqtt_admin.grants(world)
     store = genesis_store(world=world)
     from orexis_agent_progression.store import bindings as _b
-    if not _b(store.query("SELECT ?b WHERE { ?b <http://example.org/orexis/mqtt#brokerPort> ?p }")):
+    if not _b(store.query("SELECT ?b WHERE { ?b <http://example.org/orexis/mqtt#brokerPort> ?p }", store.graphs_of(PUBLIC))):
         pytest.skip(f"{world} declares no bus: a wire-less world makes no subscriptions, "
                     "and its agents compose no transport for the builder to wire")
 

@@ -31,7 +31,7 @@ WORLDS = [("tower", "mover"), ("courier", "courier"), ("hanoi", "hanoi"), ("lone
 def _held(world: str, agent_id: str):
     beliefs = Beliefs(genesis_store(world=world), agent_id)
     desires, wants = Desires(beliefs), Wants(beliefs)
-    held = {r["w"] for r in bindings(desires.query_union(
+    held = {r["w"] for r in bindings(desires.query(
         f"SELECT ?w WHERE {{ <{beliefs.agent_uri}> orexis:holds ?w . ?w a ?t . "
         f"FILTER(?t IN (orexis:Desire, orexis:Want)) }}"))}
     return held, {w.uri for w in wants.find_all()}, {d.uri for d in desires.find_all()}
@@ -66,6 +66,6 @@ def test_nothing_states_a_time_semantics_of_its_own(world, agent_id, monkeypatch
     monkeypatch.setenv("OREXIS_WORLD", world)
     beliefs = Beliefs(genesis_store(world=world), agent_id)
 
-    loose = bindings(Desires(beliefs).query_union(
+    loose = bindings(Desires(beliefs).query(
         "SELECT ?n ?p WHERE { ?n ?p ?o . VALUES ?p { orexis:bindsWhen } }"))
     assert not loose, f"the binding is back: {[(r['n'], r['p']) for r in loose]}"
