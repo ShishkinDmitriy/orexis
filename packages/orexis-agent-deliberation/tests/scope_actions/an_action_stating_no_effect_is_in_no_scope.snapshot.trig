@@ -12,7 +12,6 @@
 @prefix deliberation: <http://example.org/orexis/deliberation#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix graph: <http://example.org/orexis/graph/> .
 @prefix scopes: <http://example.org/orexis/graph/scopes/> .
 
 GRAPH :actions {
@@ -26,7 +25,7 @@ GRAPH :actions {
 GRAPH :catalogue {
   :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
-  graph:ontology a orexis:OntologyGraph .
+  :ontology a orexis:OntologyGraph .
   scopes:keeper a deliberation:ScopeGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
@@ -35,7 +34,13 @@ GRAPH :catalogue {
 
 # --- WRITTEN (the first snapshot also holds the loader's own vocabulary stub) ---
 
-GRAPH graph:ontology {
+GRAPH scopes:keeper {
+  :fill deliberation:inScope :keeper.scope.1 .
+  :keeper.scope.1 a deliberation:Scope .
+  :level deliberation:inScope :keeper.scope.1 .
+}
+
+GRAPH :ontology {
   deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
   deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
   deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
@@ -46,10 +51,4 @@ GRAPH graph:ontology {
   orexis:PublicGraph rdfs:subClassOf orexis:Graph .
   orexis:WantGraph rdfs:subClassOf orexis:Graph .
   orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
-}
-
-GRAPH scopes:keeper {
-  :fill deliberation:inScope :keeper.scope.1 .
-  :keeper.scope.1 a deliberation:Scope .
-  :level deliberation:inScope :keeper.scope.1 .
 }

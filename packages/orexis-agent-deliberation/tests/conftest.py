@@ -24,7 +24,7 @@ from rdflib import BNode, Graph, Literal, URIRef
 from rdflib.compare import to_canonical_graph
 
 from orexis_agent_progression import clock
-from orexis_agent_progression.ontology import ONTOLOGY_GRAPH, picks_graph
+from orexis_agent_progression.ontology import OREXIS, picks_graph
 from orexis_agent_progression.store import Store
 
 from orexis_agent_deliberation import pursuit
@@ -50,11 +50,17 @@ def stand_in(case: Path, text: str | None = None):
     st.agent_id, st.agent_uri, st.graph = AGENT, ME, picks_graph(AGENT)
     #  THE CASE SAYS WHAT ITS GRAPHS ARE, in a catalogue it names — `:catalogue` — found by what
     #  it says of itself, never by its spelling: which graphs are public, which graph is the
-    #  vocabulary. The stub adds only the vocabulary graph itself, whose axioms say what every
-    #  graph class the road asks by is beneath; a case with no catalogue is refused, since a
-    #  store that says nothing of its graphs has no public knowledge to read.
+    #  vocabulary. The stub adds only the axioms, into whichever graph the case types as the
+    #  vocabulary's, and they say what every graph class the road asks by is beneath; a case
+    #  with no catalogue is refused, since a store that says nothing of its graphs has no
+    #  public knowledge to read, and one typing no vocabulary graph the same, since the axioms
+    #  would have nowhere to go. No name in a case is the kernel's but the state graph's, which
+    #  the door spells (a-graph-holds-during-a-stretch); every other graph is called what the
+    #  case likes and found by what the catalogue says of it.
     assert st.catalogue is not None, f"{case.name} names no graph that describes itself as the catalogue"
-    st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
+    (ontology,) = st.graphs_of(OREXIS + "OntologyGraph") or [None]
+    assert ontology is not None, f"{case.name} types no graph as the vocabulary's"
+    st.update(f"""INSERT DATA {{ GRAPH <{ontology}> {{
         orexis:PublicGraph rdfs:subClassOf orexis:Graph . orexis:OntologyGraph rdfs:subClassOf orexis:PublicGraph .
         orexis:CatalogueGraph rdfs:subClassOf orexis:Graph . orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
         orexis:PredictionGraph rdfs:subClassOf orexis:Graph . orexis:DesireGraph rdfs:subClassOf orexis:Graph .

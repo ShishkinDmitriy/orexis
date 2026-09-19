@@ -18,13 +18,9 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix graph: <http://example.org/orexis/graph/> .
-@prefix roots: <http://example.org/orexis/graph/roots/> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
-@prefix judgments: <http://example.org/orexis/graph/judgments/> .
-@prefix scopes: <http://example.org/orexis/graph/scopes/> .
 
-GRAPH roots:keeper {
+GRAPH :roots {
   :in_range a sh:NodeShape ;
       sh:property [ orexis:about :level ;
           sh:minInclusive 10 ;
@@ -42,7 +38,7 @@ GRAPH roots:keeper {
       rdfs:label "every tank in range" .
 }
 
-GRAPH scopes:keeper {
+GRAPH :scopes {
   :fill deliberation:inScope :keeper.scope.1 .
   :heat deliberation:inScope :keeper.scope.2 .
   :keeper.scope.1 a deliberation:Scope .
@@ -64,7 +60,7 @@ GRAPH pursued:keeper.in_range.pursued.tank1.level {
       sh:targetNode :tank1 .
 }
 
-GRAPH judgments:keeper {
+GRAPH :judgments {
   :keeper.in_range.judgment a deliberation:Judgment ;
       deliberation:judges :keeper.in_range ;
       prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
@@ -78,16 +74,16 @@ GRAPH judgments:keeper {
 
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
-  graph:ontology a orexis:OntologyGraph .
-  judgments:keeper a deliberation:JudgmentGraph ;
+  :ontology a orexis:OntologyGraph .
+  :judgments a deliberation:JudgmentGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
   pursued:keeper.in_range.pursued.tank1.level a deliberation:PursuedGraph ;
       dcterms:temporal [ a dcterms:PeriodOfTime ;
           orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] ;
       orexis:arrivedBy orexis:Recorded .
-  roots:keeper a orexis:DesireGraph .
-  scopes:keeper a deliberation:ScopeGraph ;
+  :roots a orexis:DesireGraph .
+  :scopes a deliberation:ScopeGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
 }
