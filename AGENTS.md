@@ -332,6 +332,14 @@ it is a record wearing a bullet.
   their own texts, whose a judgment is they read off `orexis:holds`, and the present is the
   clock's; the wrapper caching a view of the store cannot see a write it did not make, so
   asking it for the engine (`Store.engine`) is what makes it forget.
+- **A met-test asked by band names which way it broke, and tests no topology** — a reading is
+  the band it is in, so a desire says *it should be inside* once per way of failing and each
+  block declares its side, which the judgment carries (`orexis:violationIs`: below, above,
+  unmeasured, stale) because that is what decides the repair — a look answers the unmeasured
+  one and no lever does. A test that walked the topology instead would be satisfiable by
+  moving the sample off the subject or by re-pointing what counts as ideal, which is the goal
+  repaired by editing its own premises; a structural repair stays reachable because the
+  closure walks back from what the want reads to whatever changes it.
 - **Only the judge takes predictions into account, and it takes them as given** — it
   enumerates the states, the present and every instant a prediction reaches, and judges the
   desire at each; what it read is written down, so a crossing is a filter over the judgment
@@ -806,7 +814,12 @@ fails if pyshacl ever entails something the closure does not. See
   query** (#508): it uses the same names, says `sh:prefixes orexis:` on the node that carries
   it, and the store's `DECLARATION` — the dictionary in SHACL's words, assembled and never
   authored — travels with every shapes graph either engine is handed. A select spelling an
-  IRI in full that the store has a name for fails the same test.
+  IRI in full that the store has a name for fails the same test. **A select speaking words the
+  store never loaded declares them itself**, `PREFIX name: <iri>` above its `SELECT` as SPARQL
+  says it, and the compiler writes them at the head of the query it produces; a name the store
+  already spells differently, or two selects spelling one name two ways, is refused. No shape
+  shipped here needs one — a package's namespace is one the store discovered from that
+  package's own ontology — and a test case speaking its own words does.
 - **A test that asserts inside a loop can assert nothing.** An empty result set is not an error,
   so the body never runs and the test is green. The repo-root `conftest.py` traces the at-risk
   tests — an `assert` inside a loop over something that could be empty — and fails the run if a

@@ -29,11 +29,11 @@ JUDGMENT_GRAPH = DELIBERATION + "JudgmentGraph"
 #  graph: a judgment is written per holder and the wants it implies are written where that
 #  holder's belong.
 JUDGMENTS_Q = """
-SELECT ?holder ?desire ?at ?met ?focus ?about ?k WHERE {
+SELECT ?holder ?desire ?at ?met ?focus ?about ?k ?side WHERE {
   GRAPH ?g { ?j a deliberation:Judgment ; deliberation:judges ?desire ; sh:conforms ?met .
     OPTIONAL { ?j orexis:holdsAt ?at }
     OPTIONAL { ?j sh:result ?r . ?r sh:focusNode ?focus ; deliberation:constraint ?k .
-               OPTIONAL { ?r orexis:about ?about } } }
+               OPTIONAL { ?r orexis:about ?about } OPTIONAL { ?r orexis:violationIs ?side } } }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a deliberation:JudgmentGraph ;
                orexis:beliefsOf ?holder } }"""
 
@@ -54,9 +54,15 @@ def save_judgments(store: ox.Store, holder: str,
     situation has moved by the next run, so nothing of the last run is worth keeping
     beside this one. Each judgment is named for its desire and its instant, so the same
     situation writes the same text — which is what a snapshot of the store is held to. A
-    row is the compiled select's own binding (`this`, `_constraint`, `_about`,
+    row is the compiled select's own binding (`this`, `_constraint`, `_about`, `_side`,
     `_offending`) as the engine's terms, and the offending value is written back AS THE
     TERM it was — a bare string would lose whether it was an IRI or a typed literal.
+
+    WHICH WAY IT FAILED, where the met-test says: a desire asked by band states the same
+    thing once per side — no reading of this property is a below one, and none is an above
+    one — so the desire says *it should be inside* and the judgment says *but it was below*,
+    `orexis:violationIs` on the result. The block declared it all along and no reader could
+    reach it; the row said only which block, by index, which is a number nobody can read.
 
     ONE UPDATE OVER THE ENGINE, and the writer names nothing it did not create: the
     holder's standing judgment graphs are asked of the catalogue by class and owner and
@@ -79,6 +85,7 @@ def save_judgments(store: ox.Store, holder: str,
             f" ;\n      sh:result [ a sh:ValidationResult ; sh:focusNode {r['this']} ;"
             f" deliberation:constraint {int(r['_constraint'].value)}"
             + (f" ; orexis:about {r['_about']}" if "_about" in r else "")
+            + (f" ; orexis:violationIs {r['_side']}" if "_side" in r else "")
             + (f" ; sh:value {term}" if (term := _term(r.get("_offending"))) else "") + " ]"
             for r in results)
         blocks.append(f"  <{node}> a deliberation:Judgment ; deliberation:judges <{desire}>{when} ;\n"

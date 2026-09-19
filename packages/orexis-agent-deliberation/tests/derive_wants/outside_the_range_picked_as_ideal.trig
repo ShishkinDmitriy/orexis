@@ -1,0 +1,138 @@
+# outside_the_range_picked_as_ideal
+#
+# THE DESIRE IS GENERIC AND THE WANTS ARE SPECIFIC. One desire says a single thing about every
+# watched property of every sample around every plant — that its reading is INSIDE the range its
+# plant has picked as ideal for the period — and says it once per way of failing, so each block
+# declares which way. Three are in trouble, and in three different ways: the fern's soil warmth
+# has never been READ, its soil moisture reads BELOW the picked range, and its air warmth reads
+# ABOVE it. The judgment says which of the three each is, `orexis:violationIs`, because that is
+# what decides the repair: a look answers the first and no lever does, water answers the second
+# and drowns on the third.
+#
+# What is derived is one want PER WATCHED PROPERTY, never one about the fern. The results say
+# `orexis:about sh:this`, so each is about the node that failed; three nodes are three instances,
+# three clusters and three wants, each carrying the desire's own shape narrowed to its own node —
+# `sh:targetNode` the one watched property, so a plan for the soil is not refused for the air.
+#
+# EACH WANT KEEPS ALL THREE WAYS, and that is not slack. A want that said only "too low" would
+# read met on a pot a plan had flooded, and one that dropped the unmeasured block would be met by
+# a sensor going silent. What is WANTED is the band; which way it is broken right now is what
+# the JUDGMENT says, and it is the judgment a repair is chosen from.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+#
+# THE JUDGMENTS AS `judge_desires` LEFT THEM on this situation
+# (judge_desires/outside_the_range_picked_as_ideal.trig), and the scopes `scope_actions` made of
+# its levers: the desires, the scopes, whatever stands, the judgment graph, and the catalogue
+# that says what each is — no world, no readings, no predictions, no levers. `derive_wants`
+# reads the store and nothing in hand.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix water: <http://example.org/orexis/water#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+
+GRAPH :desires {
+  :keeper orexis:holds :keeper.ideal .
+  :keeper.ideal a orexis:Desire ;
+      rdfs:label "every watched property of every sample around a plant reads inside the range picked as ideal" ;
+      orexis:metWhen :inside_the_picked_range .
+
+  #  ONE SHAPE FOR EVERY WATCHED PROPERTY THERE IS, and it names no plant, no sample, no
+  #  property and no number: it targets whatever is watched and says that none of its readings
+  #  is a below one and none is an above one. Add a plant, a sample, a property or a period and
+  #  it says the same thing about it.
+  #
+  #  ONE BLOCK PER WAY OF FAILING, which is how sensing's own stakes are written: "no
+  #  conforming reading exists" is true of a drowning plant and a dying one alike, and watering
+  #  repairs one of them. Each block says which way it is, so the judgment can too — and a
+  #  property nothing has read is a third thing again, which no lever repairs and a look does.
+  #
+  #  `orexis:about sh:this` is what makes the wants specific: the row is about the focus node
+  #  itself — the one watched property that failed — so two failing properties are two
+  #  instances and two wants, and never one want about "the fern".
+  :inside_the_picked_range a sh:NodeShape ;
+      sh:targetClass sosa:ObservableProperty ;
+      sh:property [
+          sh:path [ sh:inversePath sosa:observedProperty ] ;
+          orexis:about sh:this ;
+          orexis:violationIs orexis:Unmeasured ;
+          sh:qualifiedMinCount 1 ;
+          sh:qualifiedValueShape [
+              sh:or ( [ sh:class sensing:BelowRegion ] [ sh:class sensing:InRegion ]
+                      [ sh:class sensing:AboveRegion ] ) ] ;
+          sh:message "a watched property has never been read" ] ;
+      sh:property [
+          sh:path [ sh:inversePath sosa:observedProperty ] ;
+          orexis:about sh:this ;
+          orexis:violationIs orexis:Below ;
+          sh:qualifiedMaxCount 0 ;
+          sh:qualifiedValueShape [ sh:class sensing:BelowRegion ] ;
+          sh:message "a watched property reads below the range picked as ideal for it" ] ;
+      sh:property [
+          sh:path [ sh:inversePath sosa:observedProperty ] ;
+          orexis:about sh:this ;
+          orexis:violationIs orexis:Above ;
+          sh:qualifiedMaxCount 0 ;
+          sh:qualifiedValueShape [ sh:class sensing:AboveRegion ] ;
+          sh:message "a watched property reads above the range picked as ideal for it" ] .
+}
+
+#  THE PARTITION a world with a waterer and a heater leaves. It decides nothing here: a result
+#  about `sh:this` is about the node that failed, not about a predicate, so no scope holds it
+#  and the split is per INSTANCE — which is the finer answer and the one this desire wants.
+GRAPH :scopes {
+  :keeper.scope.1 a deliberation:Scope .
+  :keeper.scope.2 a deliberation:Scope .
+  water:SoilMoisture deliberation:inScope :keeper.scope.1 .
+  :dose deliberation:inScope :keeper.scope.1 .
+  water:AirTemperature deliberation:inScope :keeper.scope.2 .
+  :heat deliberation:inScope :keeper.scope.2 .
+}
+
+GRAPH :judgments {
+  :keeper.ideal.judgment a deliberation:Judgment ;
+      deliberation:judges :keeper.ideal ;
+      prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
+      sh:conforms false ;
+      sh:result [ a sh:ValidationResult ;
+          deliberation:constraint 0 ;
+          orexis:about :soil_warmth_of_fern ;
+          orexis:violationIs orexis:Unmeasured ;
+          sh:focusNode :soil_warmth_of_fern ] ;
+      sh:result [ a sh:ValidationResult ;
+          deliberation:constraint 1 ;
+          orexis:about :soil_moisture_of_fern ;
+          orexis:violationIs orexis:Below ;
+          sh:focusNode :soil_moisture_of_fern ;
+          sh:value :soil_reading ] ;
+      sh:result [ a sh:ValidationResult ;
+          deliberation:constraint 2 ;
+          orexis:about :air_warmth_of_fern ;
+          orexis:violationIs orexis:Above ;
+          sh:focusNode :air_warmth_of_fern ;
+          sh:value :warmth_reading ] .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph , orexis:Graph .
+  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
+  :judgments a deliberation:JudgmentGraph , orexis:WorkingGraph , orexis:Graph ;
+      orexis:arrivedBy orexis:Derived ;
+      orexis:beliefsOf :keeper .
+  :desires a orexis:DesireGraph , orexis:Graph .
+  :scopes a deliberation:ScopeGraph , orexis:WorkingGraph , orexis:Graph ;
+      orexis:arrivedBy orexis:Derived ;
+      orexis:beliefsOf :keeper .
+}

@@ -49,6 +49,9 @@ from .store import NAMESPACES, Raw, bind
 #  Longest namespace first, so a prefix whose namespace extends another's wins.
 _PREFIX_OF = dict(sorted(NAMESPACES.items(), key=lambda kv: -len(kv[1])))
 
+#  `PREFIX name: <iri>` as SPARQL writes it, the empty name included.
+_PREFIX_LINE = re.compile(r"PREFIX\s+([A-Za-z][\w.\-]*)?\s*:\s*<([^>]*)>", re.I)
+
 SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 OREXIS = rdflib.Namespace("http://example.org/orexis#")
 
@@ -134,7 +137,7 @@ def report_selects(shapes: rdflib.Graph, focus_node=None) -> dict:
             continue
         branches = c.report_branches(shape, focus_node)
         if branches:
-            out[shape] = ("SELECT DISTINCT ?this ?_constraint ?_offending WHERE { "
+            out[shape] = (c.preamble() + "SELECT DISTINCT ?this ?_constraint ?_offending WHERE { "
                           + " UNION ".join(branches) + " }")
     return out
 
@@ -151,9 +154,35 @@ class _Compiler:
     def __init__(self, g: rdflib.Graph):
         self.g = g
         self._vars = itertools.count()
+        #  A SELECT MAY BRING ITS OWN WORDS. SPARQL declares a prefix with `PREFIX`, and a
+        #  `sh:select` is a query like any other; what a shape's body says in prefixed names
+        #  is kept here and written at the head of whatever this compiler produces. Almost
+        #  every select needs none — a package's namespace is one the store discovered from
+        #  its ontology — and one that speaks a vocabulary the store never loaded says so
+        #  itself, rather than spelling every IRI in full.
+        self.prefixes: dict = {}
 
     def fresh(self) -> str:
         return f"?v{next(self._vars)}"
+
+    def declare(self, name: str, iri: str) -> None:
+        """Keep one prefix a select declared, and refuse a name that already means something
+        else — to this compiler, or to the store. Two spellings of one name is the confusion
+        prefixes exist to prevent, and the engine would silently take whichever came last."""
+        known = NAMESPACES.get(name)
+        if known is not None and known != iri:
+            raise Unsupported(f"a select declares {name}: as <{iri}>, and the store calls that "
+                              f"prefix <{known}>")
+        if self.prefixes.get(name, iri) != iri:
+            raise Unsupported(f"two selects declare {name}: differently — <{iri}> and "
+                              f"<{self.prefixes[name]}>")
+        if known is None:
+            self.prefixes[name] = iri
+
+    def preamble(self) -> str:
+        """What the selects brought, at the head of the compiled query. Empty for every shape
+        that speaks the store's own words, which is every shape shipped."""
+        return "".join(f"PREFIX {name}: <{iri}> " for name, iri in sorted(self.prefixes.items()))
 
     # --- the whole ----------------------------------------------------------------------------
 
@@ -163,7 +192,9 @@ class _Compiler:
             return None
         #  `?_about` is unbound on a row whose constraint's block says nothing, and that is the
         #  reader's signal to fall back to the desire's own `orexis:about`.
-        return "SELECT DISTINCT ?this ?_constraint ?_offending ?_about WHERE { " + " UNION ".join(branches) + " }"
+        return (self.preamble()
+                + "SELECT DISTINCT ?this ?_constraint ?_offending ?_about ?_side WHERE { "
+                + " UNION ".join(branches) + " }")
 
     def targeted(self, shape) -> bool:
         return any((shape, t, None) in self.g for t in (
@@ -179,12 +210,13 @@ class _Compiler:
             target = f"VALUES ?this {{ {self.term(focus_node)} }} " + target
         severity = self.g.value(shape, SH.severity) or SH.Violation
         branches = []
-        for k, (text, value, about) in enumerate(self.alternatives(shape, "?this", severity, SH.Violation)):
+        for k, (text, value, about, side) in enumerate(
+                self.alternatives(shape, "?this", severity, SH.Violation)):
             #  Projected under UNDERSCORED names, reserved for the report — an authored body
             #  says `?shape`, and one that says `?_shape` is refused: a BIND onto a variable
             #  the branch already binds is a parse error the engine reports, never a quiet
             #  wrong row.
-            for projected in ("?_constraint", "?_offending", "?_about"):
+            for projected in ("?_constraint", "?_offending", "?_about", "?_side"):
                 if projected in text or projected in target:
                     raise Unsupported(f"{shape}: a select body binds {projected}, which the report projects")
             bound = f" BIND({value} AS ?_offending)" if value else ""
@@ -194,6 +226,10 @@ class _Compiler:
                 bound += " BIND(?this AS ?_about)"
             elif about is not None:
                 bound += f" BIND({self.term(about)} AS ?_about)"
+            #  WHICH WAY IT FAILED, where the block says: a desire asked by band says the same
+            #  thing once per side, and this is how the row knows which one refused.
+            if side is not None:
+                bound += f" BIND({self.term(side)} AS ?_side)"
             branches.append(f"{{ {target} {text} BIND({k} AS ?_constraint){bound} }}")
         return branches
 
@@ -204,9 +240,10 @@ class _Compiler:
             raise Unsupported(f"{shape} states no constraint this compiler knows — a want "
                               "with nothing to violate would read as met for ever")
         if entered:
-            return f"SELECT DISTINCT ?this WHERE {{ {target} {self.conforms(shape, '?this')} }}"
+            return (self.preamble()
+                    + f"SELECT DISTINCT ?this WHERE {{ {target} {self.conforms(shape, '?this')} }}")
         branches = " UNION ".join(f"{{ {target} {alt} }}" for alt in alternatives)
-        return f"SELECT DISTINCT ?this WHERE {{ {branches} }}"
+        return self.preamble() + f"SELECT DISTINCT ?this WHERE {{ {branches} }}"
 
     def target(self, shape) -> str:
         nodes = list(self.g.objects(shape, SH.targetNode))
@@ -236,11 +273,11 @@ class _Compiler:
     # --- a node shape's violations, each an alternative --------------------------------------
 
     def violations(self, shape, focus: str) -> list[str]:
-        return [text for text, _, _ in self.alternatives(shape, focus)]
+        return [text for text, *_ in self.alternatives(shape, focus)]
 
     def alternatives(self, shape, focus: str, severity=None, only=None) -> list[tuple]:
         """Each way `focus` can violate `shape`, as (pattern, the offending value's variable
-        or None, what the constraint is ABOUT or None).
+        or None, what the constraint is ABOUT or None, which SIDE it is or None).
 
         THE THIRD MEMBER is `orexis:about` stated on the property block — the one kernel word a
         block may carry beside SHACL's own. A desire universal over several properties states it
@@ -276,22 +313,23 @@ class _Compiler:
                 #  A SPARQL constraint may say what it is about, as a property block may — the
                 #  ledger's desire says each of its is about the debt itself, `sh:this`.
                 out.append((self.sparql_body(constraint, focus), None,
-                            self.g.value(constraint, OREXIS.about)))
-            out.extend((t, v, None) for t, v in self.value_violations(shape, focus))
+                            self.g.value(constraint, OREXIS.about),
+                            self.g.value(constraint, OREXIS.violationIs)))
+            out.extend((t, v, None, None) for t, v in self.value_violations(shape, focus))
             for negated in self.g.objects(shape, SH["not"]):
                 #  Violated exactly where the negated shape is CONFORMED to.
-                out.append((self.conforms(negated, focus), None, None))
+                out.append((self.conforms(negated, focus), None, None, None))
             for members in self.g.objects(shape, SH["or"]):
                 #  Violated where NO member is conformed to: every member violated.
                 out.append((" ".join(f"FILTER({self.violated(m, focus)})"
-                                     for m in Collection(self.g, members)), None, None))
+                                     for m in Collection(self.g, members)), None, None, None))
             for members in self.g.objects(shape, SH.xone):
                 shapes = list(Collection(self.g, members))
                 if len(shapes) != 2:
                     raise Unsupported(f"{shape}: sh:xone over {len(shapes)} shapes — only two")
                 a, b = (self.violated(m, focus) for m in shapes)
                 #  Violated where both or neither conform: exactly one is what xone means.
-                out.append((f"FILTER(({a} && {b}) || (!({a}) && !({b})))", None, None))
+                out.append((f"FILTER(({a} && {b}) || (!({a}) && !({b})))", None, None, None))
         return out
 
     def value_violations(self, shape, focus: str) -> list[tuple[str, str | None]]:
@@ -341,11 +379,18 @@ class _Compiler:
 
     def _about_each(self, block, alternatives) -> list[tuple]:
         """Every alternative of one property block, tagged with what the block says it is
-        about — `orexis:about` on the block, or None. `orexis:about sh:this` means the focus
-        node ITSELF: a desire universal over instances — every debt of mine — says each
-        constraint is about the instance it failed on, and the row carries that instance."""
-        about = self.g.value(block, OREXIS.about)
-        return [(text, value, about) for text, value in alternatives]
+        about and WHICH SIDE it is — `orexis:about` and `orexis:violationIs` on the block, or
+        None. `orexis:about sh:this` means the focus node ITSELF: a desire universal over
+        instances — every debt of mine — says each constraint is about the instance it failed
+        on, and the row carries that instance.
+
+        THE SIDE is what a desire asked BY BAND already states and no reader could reach. A
+        stake says the same thing twice, once per side — no reading of this property is a
+        `sensing:BelowRegion` one, and none is an `AboveRegion` one — so the desire says *it
+        should be inside* and each block says which way it can fail. Carried to the row, the
+        judgment says *but it was below*, where before it said only which block, by index."""
+        about, side = self.g.value(block, OREXIS.about), self.g.value(block, OREXIS.violationIs)
+        return [(text, value, about, side) for text, value in alternatives]
 
     def property_violations(self, prop, focus: str) -> list[tuple[str, str | None]]:
         path = self.path(self.g.value(prop, SH.path))
@@ -435,6 +480,12 @@ class _Compiler:
         head, brace, rest = text.partition("{")
         if "SELECT" not in head.upper() or "WHERE" not in head.upper() or not brace:
             raise Unsupported(f"{node}: a select must be SELECT … WHERE {{ … }}")
+        #  WHAT THE SELECT DECLARED FOR ITSELF, kept for the compiled query: only the body is
+        #  inlined below, so a `PREFIX` line would otherwise be dropped and its names left
+        #  unresolvable — the reason a shape speaking a vocabulary the store never loaded had
+        #  to spell every IRI in full.
+        for name, iri in _PREFIX_LINE.findall(head):
+            self.declare(name, iri)
         body = rest[:rest.rfind("}")]
         for forbidden in ("$PATH", "$value", "$currentShape", "$shapesGraph"):
             if forbidden in body:
