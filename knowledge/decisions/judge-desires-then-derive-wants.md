@@ -73,15 +73,19 @@ stored thing is the judgment.
 
 **Writing the urgency now.** A judgment has two halves: what the met-test read, and how badly
 the thing is wanted. The first is written; the second is still the choir's answer, assembled
-per pass by `agent.judgments`. Folding them is the seam below, and the reason the store's row
-is called a `Verdict` until then — the name `Judgment` is the choir's assembly's.
+per pass by `agent.judgments`. Folding them is the seam below.
+
+**A Python object for a stored judgment.** The first cut had one, and a collection over it,
+named apart from the choir's `Judgment` to avoid the clash — a second word for one thing. The
+sovereign asked whether it was needed at all, and it is not: `judge_desires` hands the
+engine's own rows to `save_judgments`, and `derive_wants` reads the graph back with one
+SELECT (`judgments.py`). Nothing stands between the two functions but the store.
 
 # Seams left open
 
 - **The urgency half.** A package's urgency written on the judgment it belongs to, and the
   container's `Judgments` reading the store rather than asking the choir — which flips the
-  principle that a collection over contributed answers is handed the agent, on purpose. The
-  `Verdict` row and the `Judgment` object fold into one then.
+  principle that a collection over contributed answers is handed the agent, on purpose.
 - **`derive_wants` as one update**, once the scope partition is data, which is what is left of
   the trial the update record proposed.
 - **Every desire, on every call.** A pass standing on one root, and the ledger writing one debt,

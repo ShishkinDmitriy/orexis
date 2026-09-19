@@ -30,11 +30,9 @@ knowledge/decisions/an-intention-is-a-plan-committed-to.md.
 from __future__ import annotations
 
 import logging
-import json
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 
-from .verdict import Result, Verdict
 from .want import Want
 from .plan import SATISFIED
 
@@ -92,13 +90,13 @@ def handed(agent, judgment):
     return presented if presented is not None else replace(judgment, uri=child, derived_from=judgment.uri)
 
 
-def judge_desires(agent) -> list[Verdict]:
+def judge_desires(agent) -> None:
     """Judge every desire at the present and at every foreseen instant, and write the
     judgments to the store — the first of the road's two functions (judge-desires-then-
     derive-wants). After it, the store says what each desire's met-test read: met or unmet,
     and where unmet the results, one `deliberation:Judgment` per desire per instant in the
-    agent's judgment graph, replaced whole. Nothing of this run is kept anywhere else, so
-    `derive_wants` reads the store and nothing in hand.
+    agent's judgment graph, replaced whole. Nothing of this run is kept anywhere else — no
+    object comes back — so `derive_wants` reads the store and nothing in hand.
 
     ONE SELECT PER DESIRE PER INSTANT, and not one union of them: the compiler measured a
     single UNION of every shape at thirteen times the cost of the selects asked one by one,
@@ -109,19 +107,19 @@ def judge_desires(agent) -> list[Verdict]:
     and carries no result: it derives its one want about everything it is about, as every
     want was before the road.
     """
-    from .verdicts import Verdicts
+    from .judgments import save_judgments
 
     roots = sorted({d.uri for d in agent.desires.find_all()})
     now = clock.now()
     starts = sorted({start for _g, start, _end in agent.beliefs.prediction_windows() if start is not None})
-    verdicts: list[Verdict] = []
+    judged: list[tuple[str, datetime | None, bool, list[dict]]] = []
     for root in roots:
         select = _unmet_select_of(agent, root)
         if select is None:
             pursuing = getattr(agent, "pursuing", None)
             row = next((d for d in pursuing() if d.uri == root), None) if pursuing is not None else None
             if row is not None:
-                verdicts.append(Verdict(desire=root, holds_at=None, met=row.is_met))
+                judged.append((root, None, row.is_met, []))
             continue
         for at in [None, *starts]:
             try:
@@ -129,43 +127,23 @@ def judge_desires(agent) -> list[Verdict]:
             except Exception as exc:                                    # noqa: BLE001
                 log.error("%s: could not be judged at %s: %s", root.rsplit("#", 1)[-1], at or "now", exc)
                 continue
-            results = tuple(sorted({_result(sol) for sol in answer.get("results", {}).get("bindings", [])},
-                                   key=lambda r: (r.focus, r.constraint, r.about or "")))
-            verdicts.append(Verdict(desire=root, holds_at=at, met=not results, results=results))
-    Verdicts(agent.beliefs).save(agent.id, agent.me.uri, verdicts)
-    return verdicts
-
-
-def _result(sol: dict) -> Result:
-    """One row of a desire's report select as a result: the focus node, which block refused
-    it, what the block is about, and the offending value AS A TERM — the engine's JSON binding
-    rendered back, since a bare string would lose whether it was an IRI or a typed literal."""
-    return Result(focus=sol["this"]["value"], constraint=int(sol["_constraint"]["value"]),
-                  about=sol["_about"]["value"] if "_about" in sol else None,
-                  value=_term(sol["_offending"]) if "_offending" in sol else None)
-
-
-def _term(binding: dict) -> str | None:
-    if binding["type"] == "uri":
-        return f"<{binding['value']}>"
-    if binding["type"] != "literal":
-        return None
-    text = json.dumps(binding["value"])
-    if binding.get("datatype"):
-        return f"{text}^^<{binding['datatype']}>"
-    if binding.get("xml:lang"):
-        return f"{text}@{binding['xml:lang']}"
-    return text
+            #  The engine's bindings as they are, one per distinct row — two predictions
+            #  holding at one instant give one node two offending values, and both are told.
+            rows = {tuple(sorted((k, v["value"]) for k, v in r.items())): r
+                    for r in answer.get("results", {}).get("bindings", [])}
+            judged.append((root, at, not rows, [rows[k] for k in sorted(rows)]))
+    save_judgments(agent.beliefs, agent.id, agent.me.uri, judged)
 
 
 def derive_wants(agent) -> list[str]:
     """Mint a want under every desire for every cluster of its judgments' results that has
     none, and return what was minted — the second of the road's two functions, reading the
-    judgments `judge_desires` wrote and nothing in hand (judge-desires-then-derive-wants).
-    Run whenever a pass stands on a root or on any want under it, and by a package that has
-    just written an instance, since a claim arriving should be a want arriving and not a want
-    on the next tick. A package that calls this mints nothing; it says an instance is there
-    and the road does the rest (one-road-derives-every-want).
+    judgments `judge_desires` wrote with one select and nothing in hand
+    (judge-desires-then-derive-wants). Run whenever a pass stands on a root or on any want
+    under it, and by a package that has just written an instance, since a claim arriving
+    should be a want arriving and not a want on the next tick. A package that calls this
+    mints nothing; it says an instance is there and the road does the rest
+    (one-road-derives-every-want).
 
     The instant is EACH CLUSTER'S OWN. A desire unmet at the present derives wants with none.
     One met at the present derives them at the instants it foresees unmet — and two debts
@@ -176,39 +154,40 @@ def derive_wants(agent) -> list[str]:
     with no result — a met-test the compiler refused, judged by the choir — which is what
     every want was before the road.
     """
-    from .verdicts import Verdicts
+    from .judgments import find_judgments
 
-    by_desire: dict[str, list[Verdict]] = {}
-    for verdict in Verdicts(agent.beliefs).find_all():
-        by_desire.setdefault(verdict.desire, []).append(verdict)
+    by_desire: dict[str, list[dict]] = {}
+    for row in find_judgments(agent.beliefs):
+        by_desire.setdefault(row["desire"], []).append(row)
     minted: list[str] = []
-    for root, judged in sorted(by_desire.items()):
-        minted += _derive_under(agent, root, judged)
+    for root, rows in sorted(by_desire.items()):
+        minted += _derive_under(agent, root, rows)
     return minted
 
 
-def _derive_under(agent, root: str, judged: list[Verdict]) -> list[str]:
-    """The wants one desire's judgments imply, minted where none stands."""
-    present = next((v for v in judged if v.holds_at is None), None)
-    if present is None:
-        return []
+def _derive_under(agent, root: str, rows: list[dict]) -> list[str]:
+    """The wants one desire's judgments imply, minted where none stands. `rows` are the
+    judgment graph's: one per result, a met judgment's row naming no focus."""
     now = clock.now()
-    if not present.met:
+    present = [r for r in rows if not r.get("at")]
+    if not present:
+        return []
+    if present[0]["met"] != "true":
         unmet_now, ahead = True, None
-        found = [Witness(instance=r.focus, constraint=str(r.constraint), about=r.about, at=now)
-                 for r in present.results]
+        found = [Witness(instance=r["focus"], constraint=r["k"], about=r.get("about"), at=now)
+                 for r in present if r.get("focus")]
     else:
         unmet_now, ahead = False, foresees_of(agent, root)
         if ahead is None:
             return []
-        seen: dict[tuple[str, int], Witness] = {}
-        for verdict in sorted((v for v in judged if v.holds_at is not None and not v.met),
-                              key=lambda v: v.holds_at):
-            if (verdict.holds_at - now).total_seconds() > ahead:
+        seen: dict[tuple[str, str], Witness] = {}
+        for r in sorted((r for r in rows if r.get("at") and r["met"] != "true" and r.get("focus")),
+                        key=lambda r: r["at"]):
+            at = datetime.fromisoformat(r["at"])
+            if (at - now).total_seconds() > ahead:
                 continue
-            for r in verdict.results:
-                seen.setdefault((r.focus, r.constraint), Witness(
-                    instance=r.focus, constraint=str(r.constraint), about=r.about, at=verdict.holds_at))
+            seen.setdefault((r["focus"], r["k"]), Witness(
+                instance=r["focus"], constraint=r["k"], about=r.get("about"), at=at))
         found = sorted(seen.values(), key=lambda w: (w.at, w.instance, w.constraint))
         if not found:
             return []

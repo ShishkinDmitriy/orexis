@@ -92,12 +92,12 @@ def test_a_host_that_foresees_the_crossing_plans_the_refill_from_the_present(mon
     #  EVERY DESIRE IS DERIVED THE MOMENT A CLAIM ARRIVES (judge-desires-then-derive-wants):
     #  the stock root was judged met at the present and unmet at the crossing, the want stands
     #  already, and the container presents the root under it.
-    from orexis_agent_deliberation.verdicts import Verdicts
+    from orexis_agent_deliberation.judgments import find_judgments
     child = _stock(agent, derived=True)
     root = child.derived_from
-    judged = Verdicts(agent.beliefs).find_all_by_desire(root)
-    assert next(v.met for v in judged if v.holds_at is None), "met at the present"
-    assert any(not v.met for v in judged if v.holds_at is not None), "unmet at a crossing"
+    judged = [r for r in find_judgments(agent.beliefs) if r["desire"] == root]
+    assert next(r["met"] for r in judged if not r.get("at")) == "true", "met at the present"
+    assert any(r["met"] == "false" for r in judged if r.get("at")), "unmet at a crossing"
     plan = agent.deliberator.decide(child)
     assert plan is not None and [s.action for s in plan.steps] == [ACQUIRING], plan
     assert plan.placed_at is None, "found from the present, where the round is: taken now"
