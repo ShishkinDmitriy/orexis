@@ -39,6 +39,7 @@ from .want import Want
 from .plan import SATISFIED
 
 from orexis_agent_progression.execution import carry_out
+from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import bindings
 from orexis_agent_reactive.loop import loop
 from orexis_agent_progression import clock
@@ -335,8 +336,10 @@ def _unmet_select_of(agent, root: str) -> str | None:
     if rows:
         shape = rows[0]["s"]
         try:
-            shapes = graph_from(agent.beliefs, *agent.beliefs.public_graphs(),
-                                *agent.beliefs.recorded_graphs())
+            #  FROM THE GRAPHS THAT HOLD DESIRES, asked by class — a root's shape and its
+            #  blank-node closure live there whole, and the whole belief base parsed into
+            #  rdflib cost half a second per root for a closure of forty triples (#711).
+            shapes = graph_from(agent.beliefs, *agent.beliefs.graphs_of(OREXIS + "DesireGraph"))
             select = report_select(shapes.cbd(URIRef(shape)), URIRef(shape))
         except Unsupported as exc:
             log.warning("%s: its met-test cannot be compiled, so no crossing is read for it: %s",
@@ -570,8 +573,8 @@ def narrowed(agent, shape: str, own: str, instance: str | None, abouts: tuple) -
 
     about_p = URIRef("http://example.org/orexis#about")
     targets = {SH.targetNode, SH.targetClass, SH.targetSubjectsOf, SH.targetObjectsOf, SH.target}
-    cbd = graph_from(agent.beliefs, *agent.beliefs.public_graphs(),
-                     *agent.beliefs.recorded_graphs()).cbd(URIRef(shape))
+    #  From the graphs that hold desires, asked by class, as `_unmet_select_of` carves (#711).
+    cbd = graph_from(agent.beliefs, *agent.beliefs.graphs_of(OREXIS + "DesireGraph")).cbd(URIRef(shape))
     keep = {URIRef(a) for a in abouts}
     out, dropped = Graph(), Graph()
     for p, o in cbd.predicate_objects(URIRef(shape)):
@@ -697,6 +700,5 @@ def _because(plan, judgment) -> str:
 
 def _promised(agent, want: str) -> bool:
     """Is this want a promise some step raised for this level (`progression:promisedBy`)?"""
-    from orexis_agent_progression.store import bindings
     return bool(bindings(agent.desires.query_union(
         f"SELECT ?s WHERE {{ <{want}> progression:promisedBy ?s }} LIMIT 1")))

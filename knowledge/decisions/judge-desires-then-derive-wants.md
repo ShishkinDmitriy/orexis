@@ -85,5 +85,9 @@ is called a `Verdict` until then — the name `Judgment` is the choir's assembly
 - **`derive_wants` as one update**, once the scope partition is data, which is what is left of
   the trial the update record proposed.
 - **Every desire, on every call.** A pass standing on one root, and the ledger writing one debt,
-  judge and derive every desire — one select per desire per instant, milliseconds each. A
-  world with many desires and many predictions pays that per pass; nothing measured it yet.
+  judge and derive every desire — one select per desire per instant, milliseconds each. The
+  first measurement found the cost elsewhere: the two carves of a shape parsed the whole
+  belief base once per root and once per want, half a second each, which judging every desire
+  multiplied by the number of desires; they parse the desire graphs alone now, and a fresh
+  agent's first judge and derive fell from 4.8 s to 0.6 s. What a world with many desires and
+  many predictions pays per pass in the selects themselves is still unmeasured.
