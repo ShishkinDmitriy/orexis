@@ -1,6 +1,8 @@
 [project]
 name = "orexis"
 version = "0.1.0"
+license = "MIT"
+license-files = ["LICENSE"]
 description = "Orexis — a market society of agents that bid for a scarce resource"
 requires-python = ">=3.10"
 
