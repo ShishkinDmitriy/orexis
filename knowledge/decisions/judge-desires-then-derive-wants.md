@@ -198,11 +198,16 @@ the mind cannot ask for. `clock.now()` is the one read outside the store.
 - **The urgency half.** A package's urgency written on the judgment it belongs to, and the
   container's `Judgments` reading the store rather than asking the choir — which flips the
   principle that a collection over contributed answers is handed the agent, on purpose.
-- **A reading that surprises nobody leaves the judgments behind.** Sensing rewrites the
-  prediction ladder on every reading; a reading inside the bands wakes no pass, so the
-  judgments still describe the previous ladder until one runs. That is consistent with the
-  mind waking on contradiction rather than on time, and it is not measured: whether a reader
-  between a quiet reading and the next pass is ever wrong about a crossing is open.
+- **A reading that surprises nobody leaves the judgments behind, and that is the choice.**
+  Sensing rewrites the prediction ladder after every reading; a reading inside the bands wakes
+  no pass, so the judgments still describe the previous ladder until one runs. Asked whether
+  writing a ladder should run the judge, the sovereign left it to the next pass: a reading
+  that surprises schedules deliberation, which judges before it asks, and a quiet reading's
+  new ladder is nearly the old one. It is also what the handler can afford — judging and
+  deriving for one agent of the loner world, six roots and three predictions each, measured
+  at 60 ms and 10 ms on the bench Pi, in a reactive handler this repository holds to
+  milliseconds. Refused with it: judging from progression on a task of its own, which keeps
+  the handler fast and buys a scheduled task and a staleness window of its own.
 - **A write through the engine announces nothing.** `Wants.save` tells its listeners and the
   desire modality rebuilds; the road writes through `wants.save_want` and tells nobody, so
   `pursuit.derived` rebuilds the projection when something was minted. One caller does it
