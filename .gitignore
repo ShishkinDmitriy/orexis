@@ -58,3 +58,5 @@ world/*/wiring.svg
 world/*/wiring.png
 world/*/wiring.html
 world/*/wiring.bom.tsv
+# what a road case's store actually held when its snapshot disagreed — for `diff`, never committed
+*.actual.trig
