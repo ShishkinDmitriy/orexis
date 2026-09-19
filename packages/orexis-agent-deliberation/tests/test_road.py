@@ -5,7 +5,7 @@ desire ranges over, the levers whose effects say which properties move together,
 with its met-test, what the instruments read now, what is foreseen and from when, and what
 already stands. This file loads a case into a bare store, stands a stand-in agent on it — the
 real `Desires` and `Wants` collections over that store, nothing else — runs `pursuit.top_up`,
-and compares EVERY quad the store then holds with `road/<case>.nq`, the snapshot beside the
+and compares EVERY quad the store then holds with `road/<case>.snapshot.trig`, the snapshot beside the
 case. A case costs milliseconds; the four world files that covered the road end to end
 (`tests/test_greenhouse.py`, `test_foreseen.py`, `test_one_road.py`, `test_pursued.py`) each
 stood a whole agent up to show one of these.
@@ -21,8 +21,11 @@ snapshot, reviewed by eyes, and never as a check somebody forgot to widen. Regen
 `pytest packages/orexis-agent-deliberation/tests --update-snapshots`; a case without a
 snapshot fails rather than passing on nothing.
 
-Sorted N-Quads, one line per quad, blank nodes labelled canonically per graph and prefixed
-with the graph's tail so two graphs' nodes do not share a spelling. The clock stands at
+TriG, in the case's own prefixes, written by a small serializer of this file's that orders
+everything — graphs, subjects, predicates, objects — and inlines a blank node used once, so
+a shape reads as the shape it is and the same store writes the same text on every run.
+Compared STRUCTURALLY: the snapshot is parsed back and both sides are canonicalised to the
+same quad lines, so a label or a layout is never what fails a case. The clock stands at
 2026-01-01T12:00:00Z, so a file can say an instant and mean it, and a period the road writes
 is the same on every run. What the store needs beyond the case is five triples: which three
 graphs are public, and that the two graph classes a case uses exist at all — the door asks
@@ -41,7 +44,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from rdflib import Graph
+from rdflib import BNode, Graph, Literal, URIRef
 from rdflib.compare import to_canonical_graph
 
 from orexis_agent_progression import clock
@@ -56,7 +59,7 @@ NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 AGENT, ME = "keeper", "http://example.org/test#keeper"
 WORLD, ACTIONS = "http://example.org/test#world", "http://example.org/test#actions"
 ROAD = Path(__file__).parent / "road"
-CASES = sorted(ROAD.glob("*.trig"))
+CASES = sorted(p for p in ROAD.glob("*.trig") if not p.name.endswith(".snapshot.trig"))
 UPDATE = "pytest packages/orexis-agent-deliberation/tests --update-snapshots"
 
 
@@ -75,32 +78,121 @@ def stand_in(case: Path):
                            wants=wants, ask=lambda *a, **k: [], keeper=None)
 
 
-def snapshot_of(st: Store) -> list[str]:
-    """Every quad the store holds, as sorted N-Quads lines — the same text whether the store
-    was just written or the snapshot was read back, so the two compare line by line."""
-    lines = []
-    for graph in st.graph_names():
-        tail = re.sub(r"\W", "_", graph.rsplit("/", 1)[-1])
-        canonical = to_canonical_graph(Graph().parse(data=st.dump_nt(graph), format="nt"))
-        #  N-Triples from the serializer, not `n3()`: a rule text with a newline in it is one
-        #  escaped line there and a triple-quoted block here. The canonical labels are stable
-        #  but long where two nodes are alike (`cb` and a hash), so each graph's are renamed
-        #  `b1..bn` in label order, prefixed with the graph's tail, outside the literals — the
-        #  even segments between unescaped quotes.
-        text = canonical.serialize(format="nt")
-        labels = {label: f"{tail}_b{n}" for n, label in enumerate(sorted(set(re.findall(r"_:(\w+)", text))), 1)}
-        for line in text.splitlines():
-            if not line.strip():
-                continue
-            assert line.endswith(" ."), line
-            parts = re.split(r'(?<!\\)"', line[:-2])
-            parts[::2] = [re.sub(r"_:(\w+)", lambda m: "_:" + labels[m.group(1)], part) for part in parts[::2]]
-            lines.append('"'.join(parts) + f" <{graph}> .")
-    return sorted(lines)
+RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+BARE = {URIRef(f"http://www.w3.org/2001/XMLSchema#{t}") for t in ("integer", "decimal", "boolean")}
+
+
+def canonical_graphs(graphs: dict[str, str]) -> dict[str, Graph]:
+    """Each graph — IRI to N-Triples text — canonicalised, its blank nodes renamed `b1..bn` in
+    the order of their canonical labels: the same graph gives the same nodes on every run,
+    whether it came from the store or was read back from a snapshot."""
+    out = {}
+    for iri, text in graphs.items():
+        canonical = to_canonical_graph(Graph().parse(data=text, format="nt"))
+        labels = {node: BNode(f"b{n}") for n, node in enumerate(
+            sorted({t for triple in canonical for t in triple if isinstance(t, BNode)}), 1)}
+        graph = Graph()
+        for s_, p_, o_ in canonical:
+            graph.add((labels.get(s_, s_), p_, labels.get(o_, o_)))
+        out[iri] = graph
+    return out
+
+
+def quad_lines(graphs: dict[str, Graph]) -> set[str]:
+    """One line per quad, the blank nodes' labels prefixed with the graph's tail — what two
+    snapshots are compared as, and what a mismatch is reported in."""
+    lines = set()
+    for iri, graph in graphs.items():
+        tail = re.sub(r"\W", "_", iri.rsplit("/", 1)[-1])
+        for s_, p_, o_ in graph:
+            term = lambda t: f"_:{tail}_{t}" if isinstance(t, BNode) else t.n3()
+            lines.add(f"{term(s_)} {term(p_)} {term(o_)} <{iri}> .")
+    return lines
+
+
+def prefixes_of(case: Path) -> dict[str, str]:
+    """The case's own `@prefix` lines — the snapshot speaks the names the case does."""
+    return dict(re.findall(r"^@prefix (\w*): <([^>]*)> \.", case.read_text(), flags=re.M))
+
+
+def trig_of(graphs: dict[str, Graph], prefixes: dict[str, str], header: str) -> str:
+    """The store as TriG a reader can read: graphs in IRI order, subjects in rendered order
+    (IRIs, then the blank nodes nothing inlined), predicates and objects sorted, `a` for the
+    type, a blank node used once inlined where it is used, an RDF list as `( … )`. rdflib's
+    own TriG writer is not held to an order, and a snapshot that moved when nothing changed
+    would hide the change that mattered."""
+    longest = sorted(prefixes.items(), key=lambda kv: -len(kv[1]))
+
+    def name(term) -> str:
+        if isinstance(term, URIRef):
+            if term == URIRef(RDF + "type"):
+                return "a"
+            for prefix, ns in longest:
+                if term.startswith(ns) and re.fullmatch(r"[\w.\-]*", term[len(ns):]) and not term.endswith("."):
+                    return f"{prefix}:{term[len(ns):]}"
+            return f"<{term}>"
+        if isinstance(term, Literal):
+            if term.datatype in BARE and re.fullmatch(r"[-+]?\d+(\.\d+)?|true|false", str(term)):
+                return str(term)                  # Turtle's own short form
+            text = term.n3()
+            for prefix, ns in longest:
+                if f"^^<{ns}" in text:
+                    return text.replace(f"^^<{ns}", f"^^{prefix}:")[:-1]
+            return text
+        return f"_:{term}"
+
+    out = [header]
+    for prefix, ns in sorted(prefixes.items(), key=lambda kv: (kv[0] != "", kv[0])):
+        out.append(f"@prefix {prefix}: <{ns}> .")
+    for iri in sorted(graphs):
+        graph = graphs[iri]
+        as_object = {}
+        for _, _, o_ in graph:
+            if isinstance(o_, BNode):
+                as_object[o_] = as_object.get(o_, 0) + 1
+        inlined = {b for b, n in as_object.items() if n == 1}
+
+        def render(term, depth: int) -> str:
+            if isinstance(term, BNode) and term in inlined:
+                pairs = list(graph.predicate_objects(term))
+                keys = {p_ for p_, _ in pairs}
+                if keys == {URIRef(RDF + "first"), URIRef(RDF + "rest")}:
+                    items, node = [], term
+                    while node != URIRef(RDF + "nil"):
+                        items.append(render(graph.value(node, URIRef(RDF + "first")), depth))
+                        node = graph.value(node, URIRef(RDF + "rest"))
+                    return "( " + " ".join(items) + " )"
+                pad = "      " + "    " * (depth + 1)
+                body = f" ;\n{pad}".join(f"{name(p_)} {render(o_, depth + 1)}"
+                                          for p_, o_ in sorted(pairs, key=lambda po: (name(po[0]), render(po[1], depth + 1))))
+                return f"[ {body} ]"
+            return name(term)
+
+        out.append(f"\nGRAPH {name(URIRef(iri))} {{")
+        subjects = sorted({s_ for s_, _, _ in graph if not (isinstance(s_, BNode) and s_ in inlined)},
+                          key=lambda t: (isinstance(t, BNode), name(t)))
+        for s_ in subjects:
+            pairs = sorted(graph.predicate_objects(s_), key=lambda po: (name(po[0]), render(po[1], 0)))
+            body = " ;\n      ".join(f"{name(p_)} {render(o_, 0)}" for p_, o_ in pairs)
+            out.append(f"  {name(s_)} {body} .")
+        out.append("}")
+    return "\n".join(out) + "\n"
+
+
+def snapshot_of(st: Store) -> dict[str, Graph]:
+    return canonical_graphs({g: st.dump_nt(g) for g in st.graph_names()})
+
+
+def snapshot_read(path: Path) -> dict[str, Graph]:
+    """The snapshot read back through the same door a case is loaded by — the store's own
+    engine — so what is compared is what that engine makes of the text, on both sides."""
+    st = Store()
+    st.put_graph(WORLD, path.read_text(), dataset=True)
+    return canonical_graphs({g: st.dump_nt(g) for g in st.graph_names()})
 
 
 def snapshot_path(case: Path) -> Path:
-    return case.with_suffix(".nq")
+    return case.with_suffix(".snapshot.trig")
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c.stem for c in CASES])
@@ -112,12 +204,12 @@ def test_the_road_leaves_the_store_as_the_snapshot_says(case, monkeypatch, reque
     actual = snapshot_of(agent.beliefs)
     path = snapshot_path(case)
     if request.config.getoption("--update-snapshots"):
-        path.write_text(f"# The whole store after the road ran on {case.name}, as sorted N-Quads.\n"
-                        f"# Regenerated by `{UPDATE}` — review the diff; it is the claim.\n"
-                        + "\n".join(actual) + "\n")
+        path.write_text(trig_of(actual, prefixes_of(case),
+                                f"# The whole store after the road ran on {case.name}.\n"
+                                f"# Regenerated by `{UPDATE}` — review the diff; it is the claim."))
     assert path.exists(), f"{case.name} has no snapshot: run `{UPDATE}` and review {path.name}"
-    expected = [line for line in path.read_text().splitlines() if line and not line.startswith("#")]
-    left, missing = sorted(set(actual) - set(expected)), sorted(set(expected) - set(actual))
+    actual, expected = quad_lines(actual), quad_lines(snapshot_read(path))
+    left, missing = sorted(actual - expected), sorted(expected - actual)
     assert not left and not missing, (
         f"{case.name}: the store the road left differs from {path.name}\n"
         + "".join(f"  the road left, unexpected:  {l}\n" for l in left)
@@ -129,5 +221,6 @@ def test_every_case_is_read_and_no_snapshot_is_orphaned():
     """A glob that stopped matching would pass every case by running none; a snapshot whose
     case was deleted or renamed would keep saying something nobody checks."""
     assert len(CASES) >= 11, [c.name for c in CASES]
-    orphans = sorted(p.name for p in ROAD.glob("*.nq") if not p.with_suffix(".trig").exists())
+    orphans = sorted(p.name for p in ROAD.glob("*.snapshot.trig")
+                     if not ROAD.joinpath(p.name.removesuffix(".snapshot.trig") + ".trig").exists())
     assert not orphans, f"snapshots without a case: {orphans}"

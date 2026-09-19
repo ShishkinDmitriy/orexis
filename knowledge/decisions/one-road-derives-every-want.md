@@ -158,7 +158,8 @@ the ledger.
 levers, the desire with its met-test, the present, the foreseen, what stands — loaded into a
 bare store and run through `top_up` in milliseconds, where the four world files that covered
 the road each stood an agent up to show one case. What the road leaves is held to a SNAPSHOT
-of the whole store beside the case (`<case>.nq`, sorted N-Quads), never to a reading of it:
+of the whole store beside the case (`<case>.snapshot.trig`, in the case's own prefixes,
+blank nodes inlined, every graph and subject in order), never to a reading of it:
 the first cut compared five things per want and a want writes nineteen quads, so a label, a
 link, a period or an owner could be wrong with every case green — under-reporting, the
 sovereign's word for it — and a change in the road's behaviour is now a diff of the snapshot,
