@@ -13,8 +13,8 @@
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix graph: <http://example.org/orexis/graph/> .
-@prefix roots: <http://example.org/orexis/graph/roots/> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix judgments: <http://example.org/orexis/graph/judgments/> .
 
 GRAPH :world {
   :tank1 a :Tank .
@@ -32,7 +32,7 @@ GRAPH :actions {
         CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
 }
 
-GRAPH roots:keeper {
+GRAPH :desires {
   :keeper orexis:holds :keeper.in_range .
   :keeper.in_range a orexis:Desire ;
       rdfs:label "every tank in range" ;
@@ -55,10 +55,10 @@ GRAPH :predicted-0 { :tank1 :level 5 . }
 # What each graph IS, and when it holds — said once each, beside the data.
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
-  graph:ontology a orexis:OntologyGraph .
+  :ontology a orexis:OntologyGraph .
   :world a orexis:PublicGraph .
   :actions a orexis:PublicGraph .
-  roots:keeper a orexis:DesireGraph .
+  :desires a orexis:DesireGraph .
   :predicted-0 a orexis:PredictionGraph .
   :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T14:00:00Z"^^xsd:dateTime ] .
 }

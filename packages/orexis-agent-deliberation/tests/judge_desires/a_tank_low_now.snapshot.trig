@@ -17,8 +17,8 @@
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix graph: <http://example.org/orexis/graph/> .
-@prefix roots: <http://example.org/orexis/graph/roots/> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix judgments: <http://example.org/orexis/graph/judgments/> .
 
 GRAPH :world {
   :tank1 a :Tank .
@@ -36,7 +36,7 @@ GRAPH :actions {
         CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
 }
 
-GRAPH roots:keeper {
+GRAPH :desires {
   :keeper orexis:holds :keeper.in_range .
   :keeper.in_range a orexis:Desire ;
       rdfs:label "every tank in range" ;
@@ -59,18 +59,18 @@ GRAPH graph:sensed {
 GRAPH :catalogue {
   :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
+  :desires a orexis:DesireGraph .
+  :ontology a orexis:OntologyGraph .
   :world a orexis:PublicGraph .
-  <http://example.org/orexis/graph/judgments/keeper> a deliberation:JudgmentGraph ;
+  judgments:keeper a deliberation:JudgmentGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
-  graph:ontology a orexis:OntologyGraph .
-  roots:keeper a orexis:DesireGraph .
 }
 
 
 # --- WRITTEN (the first snapshot also holds the loader's own vocabulary stub) ---
 
-GRAPH <http://example.org/orexis/graph/judgments/keeper> {
+GRAPH judgments:keeper {
   :keeper.in_range.judgment a deliberation:Judgment ;
       deliberation:judges :keeper.in_range ;
       prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
@@ -82,7 +82,7 @@ GRAPH <http://example.org/orexis/graph/judgments/keeper> {
           sh:value 5 ] .
 }
 
-GRAPH graph:ontology {
+GRAPH :ontology {
   deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
   deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
   deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .

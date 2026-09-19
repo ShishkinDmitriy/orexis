@@ -9,7 +9,6 @@
 @prefix deliberation: <http://example.org/orexis/deliberation#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix graph: <http://example.org/orexis/graph/> .
 @prefix scopes: <http://example.org/orexis/graph/scopes/> .
 
 GRAPH :actions {
@@ -21,6 +20,6 @@ GRAPH :actions {
 
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
-  graph:ontology a orexis:OntologyGraph .
+  :ontology a orexis:OntologyGraph .
   :actions a orexis:PublicGraph .
 }

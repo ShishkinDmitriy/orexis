@@ -22,13 +22,9 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix graph: <http://example.org/orexis/graph/> .
-@prefix roots: <http://example.org/orexis/graph/roots/> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
-@prefix judgments: <http://example.org/orexis/graph/judgments/> .
-@prefix scopes: <http://example.org/orexis/graph/scopes/> .
 
-GRAPH roots:keeper {
+GRAPH :desires {
   :in_range a sh:NodeShape ;
       sh:property [ orexis:about :level ;
           sh:minInclusive 10 ;
@@ -46,14 +42,14 @@ GRAPH roots:keeper {
       rdfs:label "every tank in range" .
 }
 
-GRAPH scopes:keeper {
+GRAPH :scopes {
   :fix deliberation:inScope :keeper.scope.1 .
   :keeper.scope.1 a deliberation:Scope .
   :level deliberation:inScope :keeper.scope.1 .
   :temperature deliberation:inScope :keeper.scope.1 .
 }
 
-GRAPH judgments:keeper {
+GRAPH :judgments {
   :keeper.in_range.judgment a deliberation:Judgment ;
       deliberation:judges :keeper.in_range ;
       prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
@@ -73,8 +69,12 @@ GRAPH judgments:keeper {
 # CHANGED, re-rendered:
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
-  graph:ontology a orexis:OntologyGraph .
-  judgments:keeper a deliberation:JudgmentGraph ;
+  :desires a orexis:DesireGraph .
+  :judgments a deliberation:JudgmentGraph ;
+      orexis:arrivedBy orexis:Derived ;
+      orexis:beliefsOf :keeper .
+  :ontology a orexis:OntologyGraph .
+  :scopes a deliberation:ScopeGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
   pursued:keeper.in_range.pursued.tank1 a deliberation:PursuedGraph ;
@@ -82,27 +82,10 @@ GRAPH :catalogue {
           orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] ;
       orexis:arrivedBy orexis:Recorded ;
       orexis:beliefsOf :keeper .
-  roots:keeper a orexis:DesireGraph .
-  scopes:keeper a deliberation:ScopeGraph ;
-      orexis:arrivedBy orexis:Derived ;
-      orexis:beliefsOf :keeper .
 }
 
 
 # --- WRITTEN (the first snapshot also holds the loader's own vocabulary stub) ---
-
-GRAPH graph:ontology {
-  deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
-  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
-  deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
-  orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
-  orexis:DesireGraph rdfs:subClassOf orexis:Graph .
-  orexis:OntologyGraph rdfs:subClassOf orexis:PublicGraph .
-  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
-  orexis:PublicGraph rdfs:subClassOf orexis:Graph .
-  orexis:WantGraph rdfs:subClassOf orexis:Graph .
-  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
-}
 
 GRAPH pursued:keeper.in_range.pursued.tank1 {
   :keeper orexis:holds :keeper.in_range.pursued.tank1 .
@@ -120,4 +103,17 @@ GRAPH pursued:keeper.in_range.pursued.tank1 {
           sh:maxInclusive 30 ;
           sh:path :temperature ] ;
       sh:targetNode :tank1 .
+}
+
+GRAPH :ontology {
+  deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
+  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
+  deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
+  orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
+  orexis:DesireGraph rdfs:subClassOf orexis:Graph .
+  orexis:OntologyGraph rdfs:subClassOf orexis:PublicGraph .
+  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:PublicGraph rdfs:subClassOf orexis:Graph .
+  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
 }
