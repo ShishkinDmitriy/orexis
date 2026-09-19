@@ -63,6 +63,28 @@ everything is in the store.
   is a function of the actions the store holds and the derivations loaded, and every agent
   reading one store would compute the same one, so there is nobody to name it after.
 
+**Only the judge takes predictions into account, and it takes them as given.** The sovereign,
+on the shape of the road: *it sees present and future states, and for each state judges the
+desire*. `judge_desires` enumerates the states — the present, then every instant a prediction
+reaches, read off the periods the catalogue carries — and runs the met-test once per state.
+It computes no prediction; sensing and the ledger write them. What it read is written down, so
+every other reader reads the judgments: `derive_wants` to mint the wants, and
+`judgments.witnesses_of` to say where a crossing is. That second one used to re-run the
+compiled met-test at every prediction start on every call — the same question asked twice, by
+two paths that could disagree — and it is a filter over the judgment rows now.
+
+**A crossing is therefore what the last judging found.** During a pass that is what is true
+now, since `pursuit` judges before it asks. Elsewhere, whoever moves a premise says so: the
+ledger already asked the road when a claim arrived, and asks it when a debt is paid, since the
+prediction that debt would lapse has gone. A reader that has never judged is handed nothing
+rather than a second opinion, which is why the tests that ask cold judge first and say so.
+
+**A want takes its desire's witnesses, narrowed.** A judgment is about a DESIRE; the container
+asks for a crossing of a WANT, to present it met or unmet at its instant. A want is the desire
+instantiated at a cluster of its results, so its witnesses are exactly those rows — kept to
+what the want is about and, where its met-test names one node, to that node. Which is what
+compiling the want's own narrowed shape computed, from the same facts.
+
 **The derivations' edges are in the store, put there by genesis.** The partition joins
 predicates wherever one action *or one derivation* reads or writes both; the actions were rows
 in the store all along and the derivations were rule texts on disk, which `scope_actions` read
@@ -171,6 +193,11 @@ the mind cannot ask for. `clock.now()` is the one read outside the store.
 - **The urgency half.** A package's urgency written on the judgment it belongs to, and the
   container's `Judgments` reading the store rather than asking the choir — which flips the
   principle that a collection over contributed answers is handed the agent, on purpose.
+- **A reading that surprises nobody leaves the judgments behind.** Sensing rewrites the
+  prediction ladder on every reading; a reading inside the bands wakes no pass, so the
+  judgments still describe the previous ladder until one runs. That is consistent with the
+  mind waking on contradiction rather than on time, and it is not measured: whether a reader
+  between a quiet reading and the next pass is ever wrong about a crossing is open.
 - **A write through the engine announces nothing.** `Wants.save` tells its listeners and the
   desire modality rebuilds; the road writes through `wants.save_want` and tells nobody, so
   `pursuit.derived` rebuilds the projection when something was minted. One caller does it

@@ -34,7 +34,8 @@ from dataclasses import replace
 from datetime import datetime
 
 from .derive_wants import derive_wants
-from .judge_desires import judge_desires, witnesses_of
+from .judge_desires import judge_desires
+from .judgments import witnesses_of
 from .plan import SATISFIED
 
 from orexis_agent_progression.execution import carry_out

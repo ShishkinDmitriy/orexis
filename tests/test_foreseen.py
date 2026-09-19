@@ -40,7 +40,13 @@ def _stake(agent):
 
 
 def _crossing_of(agent):
-    """The crossing the water package states, from the reading the agent holds."""
+    """The crossing the water package states, from the reading the agent holds.
+
+    JUDGED FIRST, because a crossing is what the last judging found: `judge_desires` is the
+    one thing that takes predictions into account, and every other reader reads what it wrote.
+    A pass judges before it asks; a test asking cold says so here.
+    """
+    judge_desires(agent.beliefs.engine)
     return pursuit.crossing_of(agent, _stake(agent).derived_from or _stake(agent).uri)
 
 
@@ -50,11 +56,12 @@ def test_the_drift_says_when_the_reading_leaves_its_region(monkeypatch):
     where the window that reaches the day opens — five hours after the reading, not sixteen,
     the safe direction the ladder gives."""
     agent = _gardener(monkeypatch, FALLING)
-    crossing = pursuit.crossing_of(agent, _stake(agent).uri)
+    crossing = _crossing_of(agent)
     assert crossing is not None
     ahead = (crossing - datetime.now(timezone.utc)).total_seconds()
     assert abs(ahead - 18000.0) < 120, ahead
     under = _gardener(monkeypatch, 0.05)
+    judge_desires(under.beliefs.engine)
     below = pursuit.crossing_of(under, _stake(under).uri)
     assert below is not None and 0.0 <= (below - datetime.now(timezone.utc)).total_seconds() < 3600.0, \
         "a reading already below reads unmet at the first prediction, the next expected observation; a root unmet now is pursued as itself"
@@ -150,6 +157,7 @@ def test_a_reading_that_lifts_the_prediction_reads_the_want_met_and_withdraws_it
     child = _stake(agent)
     assert child.state == "unmet"
     write_reading(agent, CONTENT)
+    judge_desires(agent.beliefs.engine)   # the reading moved the predictions; the judge reads them
     now = _stake(agent)
     assert now.uri == child.uri and now.state == "met"
     assert agent.deliberator.decide(now) is None

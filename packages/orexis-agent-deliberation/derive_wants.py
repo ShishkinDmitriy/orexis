@@ -29,8 +29,7 @@ from orexis_agent_progression.keeper import PATIENCE_S
 from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import NAMESPACES, bind, instant, rows
 
-from .judge_desires import Witness
-from .judgments import find_judgments
+from .judgments import Witness, find_judgments
 from .want import Want
 from .wants import save_want
 

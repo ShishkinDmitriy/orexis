@@ -246,6 +246,11 @@ class Ower(Module):
         self.agent.beliefs.drop_graph(lapse_graph(self.agent.id, claim_jti))
         self.agent.desires.rebuild()   # a paid debt is history, and the want is no longer implied
         self.agent.tell(REPREDICT)      # the ledger is a premise the vessel's drift reads (#643)
+        #  AND THE ROAD IS ASKED, as it is when a claim arrives: a judgment is what this agent
+        #  believes its desires read, and the one this debt's lapse wrote is now about a
+        #  prediction that has gone. Nothing re-judges on a reader's behalf, so the writer of
+        #  the premise says it moved (judge-desires-then-derive-wants).
+        self._road()
 
     def owed(self, presented_only: bool = False) -> list[dict]:
         """What still stands, newest first — what an agent owes, askable by the sovereign."""

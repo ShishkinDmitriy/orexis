@@ -332,6 +332,10 @@ it is a record wearing a bullet.
   their own texts, whose a judgment is they read off `orexis:holds`, and the present is the
   clock's; the wrapper caching a view of the store cannot see a write it did not make, so
   asking it for the engine (`Store.engine`) is what makes it forget.
+- **Only the judge takes predictions into account, and it takes them as given** — it
+  enumerates the states, the present and every instant a prediction reaches, and judges the
+  desire at each; what it read is written down, so a crossing is a filter over the judgment
+  rows rather than the met-test run a second time, and whoever moves a premise asks the road.
 - **A derivation is a decomposition of the judgments and asks nothing they do not answer** —
   a foresight filtered a foreseen failure the judgment already dated, and was two states in
   practice, unbounded and absent; how far ahead the agent sees is the horizons each drift
