@@ -508,14 +508,14 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
     def _tokens(self, intention_uri: str, step) -> dict:
         """What a wait template may say instead of an instance: the rule's own tokens."""
-        from .ontology import beliefs_graph
+        from .ontology import picks_graph
         from .store import Raw
         adopted = next((s.adopted_at for s in self.standing() if s.uri == intention_uri), None)
         since = (adopted or clock.now()).isoformat()
         return {"me": self.me.uri, "via": step.via or "urn:nothing",
                 "about": self._about(intention_uri) or "urn:nothing",
                 "subject": self.me.acts_for or "urn:nobody", "want": step.want or "urn:nothing",
-                "beliefs": beliefs_graph(self.agent.id),
+                "picks": picks_graph(self.agent.id),
                 "since": Raw(f'"{since}"^^xsd:dateTime')}      # when this intention was adopted
 
     # --- a promise the level beneath keeps (#523) ----------------------------------------------
@@ -530,10 +530,10 @@ SELECT ?bridge ?construct ?estimate WHERE {{
     def _translated(self, standing, bridge: dict) -> list[tuple]:
         """The step's promised facts in the vocabulary beneath: the bridge's construct, bound
         as $via and $about with the world at $state, as (s, p, o) IRIs and literals."""
-        from .ontology import beliefs_graph, STATE_GRAPH
+        from .ontology import picks_graph, STATE_GRAPH
         text = bind(bridge["construct"], me=self.me.uri, via=standing.step.via or "urn:nothing",
                     about=standing.step.about or "urn:nothing", subject=self.me.acts_for or "urn:nobody",
-                    beliefs=beliefs_graph(self.agent.id), state=STATE_GRAPH)
+                    picks=picks_graph(self.agent.id), state=STATE_GRAPH)
         out = []
         for t in self.agent.beliefs.construct(text):
             out.append((str(t.subject.value), str(t.predicate.value),

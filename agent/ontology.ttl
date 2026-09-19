@@ -217,7 +217,7 @@ orexis:Graph a owl:Class ; rdfs:label "Named graph" .
 
 
 orexis:BeliefGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Belief graph" ;
-    rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, and what instruments report. NOT the graph historically called `beliefs`, which holds picks and no beliefs at all — that misnaming is what naming the axis exposed." .
+    rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, and what instruments report. NOT the graph historically called `beliefs` — `picks/<agent>` now — which holds picks and no beliefs at all; that misnaming is what naming the axis exposed." .
 
 
 
@@ -226,11 +226,13 @@ orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range or
     rdfs:label "beliefs of" ;
     rdfs:comment "Which agent owns this graph — said by the owner in the classification it writes when it creates the graph, beside what the graph is and how it arrived, so a reader that means its OWN graphs of a kind asks by owner as well as by class. In a deployed volume every graph is the one agent's; the world-wide validation and the tests stand several agents in one store, and this is what keeps one agent's roots and picks apart from the next's there — the name used to, and a name is for eyes." .
 
-orexis:AssertedDesireGraph a owl:Class ; rdfs:subClassOf orexis:PublicGraph ; rdfs:label "Asserted desire graph" ;
-    rdfs:comment "The one public graph that holds WANTS: what a world ratifies directly — the courier's, hanoi's — beside the topology it states. A class of its own so that a reader meaning it asks by class, as it asks for every other graph, and names no instance; the graph's IRI is the world's to write." .
+orexis:AssertedDesireGraph a owl:Class ; rdfs:subClassOf orexis:PublicGraph , orexis:DesireGraph , orexis:WantGraph ; rdfs:label "Asserted desire graph" ;
+    rdfs:comment "The one public graph that holds what a world ratifies DIRECTLY of what its agents want, beside the topology it states: a standing want (the courier's, hanoi's, the tower's) or a desire the road derives under (the greenhouse's) — so it is a graph of both kinds, under `orexis:DesireGraph` and `orexis:WantGraph` alike, and its name says which modality projects it rather than which kind it holds, since no one content word fits four worlds. A class of its own so that a reader meaning it asks by class, as it asks for every other graph, and names no instance; the graph's IRI is the world's to write." .
 
-orexis:RootsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Roots graph" ;
-    rdfs:comment "ONE agent's DESIRES — every `orexis:Desire` it holds for its whole life: the stake per property, the freshness desire per sensor, with their met-tests — DECLARED once at genesis from the ranges and the wiring the world states, by the packages' desire rules run at birth, and endowed on amendment: a never-held root arrives, a held one stays (a-root-holds-always-and-an-outdated-graph-is-dropped). NO PERIOD, so it holds at every instant as the T-Box does, and no rebuild of the desire modality touches it; the modality projects it beside the records. Received, never authored by the agent: the sovereign's ranges are the source." .
+orexis:DesireGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Desire graph" ;
+    rdfs:comment "A graph of `orexis:Desire` rows — named for what it HOLDS, as every graph class is since a-graph-class-is-named-for-what-it-holds, and NOT the modality class of the same spelling that #312 retired (a-store-is-a-modality): a modality is a store now, and this says only which kind of row a graph carries. The roots graph is one, `roots/<agent>` for eyes: ONE agent's desires, every `orexis:Desire` it holds for its whole life: the stake per property, the freshness desire per sensor, with their met-tests — DECLARED once at genesis from the ranges and the wiring the world states, by the packages' desire rules run at birth, and endowed on amendment: a never-held root arrives, a held one stays (a-root-holds-always-and-an-outdated-graph-is-dropped). NO PERIOD, so it holds at every instant as the T-Box does, and no rebuild of the desire modality touches it; the modality projects it beside the records. Received, never authored by the agent: the sovereign's ranges are the source. The promises are another (`progression:PromisesGraph`), desires the bridge raised. Called `orexis:RootsGraph` until the class was named for the road's role instead of the rows, a synonym in the T-Box." .
+orexis:WantGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Want graph" ;
+    rdfs:comment "A graph of `orexis:Want` rows — what a desire came to when a situation made it bite (orexis:Want). The pursued graphs are these (`deliberation:PursuedGraph`), one per want the road minted, each holding during its period; the world's asserted graph is one too where a world ratifies a standing want directly. Named for what it holds, like `orexis:DesireGraph` beside it, and no subclass of it: a want is not a desire (orexis:Want)." .
 orexis:PickRecordGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Pick record graph" ;
     rdfs:comment "ONE agent's record of picking: what birth authored and review has since re-picked, one value per term, plus the belief-proper terms (conversions, the wallet) the #297 sort left beside them. A RECORD class, not a modality — the desire modality derives its wants and projects this record in as a premise-and-content, so what used to need a modality typing to be copied is now read by name, the one construction from an agent's own id the rules allow. The write boundary is the volume: one agent, one store." .
 
@@ -383,8 +385,9 @@ orexis:PeriodGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Peri
 ##  and it has to land somewhere READABLE — a reader asks what a graph IS and must resolve
 ##  it without naming any graph instance, which is the rule that keeps a query from silently
 ##  reading part of the truth. (The example this comment carried, a modality-scoped
-##  `?d a orexis:DesireGraph`, retired with the modality classes: the desire modality is a STORE
-##  now, and inside a store the graphs say only who put the fact there — #312.)
+##  `?d a orexis:DesireGraph`, retired with the modality classes — the desire modality is a STORE
+##  now, and inside a store the graphs say only who put the fact there, #312 — and the spelling
+##  is back as a CONTENT class, a graph of desire rows, which a reader asks exactly that way.)
 ##
 ##  Public and belief-modality, because a classification is a fact about what a graph IS —
 ##  and the static graphs above have always been classified in the ontology graph, which is
@@ -571,7 +574,7 @@ NOT A SUBCLASS OF orexis:Desire, and it was one until the axis was measured. The
 
 HOW IT CAME TO BE IS NOT THE AXIS. Most wants are derived — `prov:wasDerivedFrom` names the desire — but a world may ratify one directly, and three do: hanoi's every disk home, the courier's every parcel delivered, the tower's. Those are wants, authored rather than deduced, and they are handed to a search like any other. Standing versus occasioned is the axis; who wrote it is provenance.
 
-NOT a second modality and not a second store. Both live in the desire modality; what differs is which graph family holds them — `orexis:RootsGraph` for the desires, holding at every instant, and `deliberation:PursuedGraph` for one graph per want, each with its period (#618, #645). See knowledge/domain/desire.md.""" .
+NOT a second modality and not a second store. Both live in the desire modality; what differs is which graph family holds them — `orexis:DesireGraph` for the desires, holding at every instant, and `deliberation:PursuedGraph` for one graph per want, each with its period (#618, #645). See knowledge/domain/desire.md.""" .
 
 orexis:metWhen a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range sh:NodeShape ;
     rdfs:label "met when" ;
@@ -833,7 +836,7 @@ orexis:available a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range
 #  by its effect and its cost. The keeper expands a step of such an action at adoption into
 #  its method's steps, the last inheriting the prediction, and steps through them on feedback
 #  as it steps through any plan. Each step's action may declare what it WAITS for, as query
-#  templates with the rule's own tokens ($me, $via, $about, $subject, $beliefs), bound when
+#  templates with the rule's own tokens ($me, $via, $about, $subject, $picks), bound when
 #  the step becomes current: `orexis:readyWhen` holds it before it is taken, `orexis:doneWhen`
 #  holds it after, and `orexis:lapsesAt` says when either wait is over. The protocol that was
 #  a chain of reactions in the bidder's Python — an offer, a bid, a claim, a hold, a redeem —

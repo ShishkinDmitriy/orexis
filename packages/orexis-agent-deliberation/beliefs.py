@@ -21,7 +21,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import get_type_hints
 
-from orexis_agent_progression.ontology import beliefs_graph
+from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import bindings
 
 
@@ -100,7 +100,7 @@ class Beliefs:
     def __init__(self, store, agent_id: str):
         self._store = store
         self.agent_id = agent_id
-        self.graph = beliefs_graph(agent_id)
+        self.graph = picks_graph(agent_id)
         #  `a orexis:Agent` is load-bearing, not decoration: a plant, a sensor and a valve carry
         #  `orexis:localId` too, and a world names its subject after its agent — so the bare
         #  pattern matches two things and LIMIT 1 picks by the store's internal order, which

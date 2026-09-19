@@ -70,7 +70,7 @@ actuation:Dosing
             ?lever actuation:actuates $subject ; actuation:drawsFrom ?source .
             ?source market:offeredBy $me ; market:supplies ?good .
             ?term market:ofGood ?good ; market:aboutProperty $about .
-            GRAPH $beliefs { $me ?term ?conversion }
+            GRAPH $picks { $me ?term ?conversion }
             FILTER(?conversion > 0)
             #  THE BAND A DOSE REACHES: in the region, of this subject's property — the member genesis
             #  minted from the range the subject states — from below it or from inside it.

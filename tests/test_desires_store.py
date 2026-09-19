@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from orexis_agent_progression.ontology import (OREXIS, STATE_GRAPH, WORLD_GRAPH, beliefs_graph)
+from orexis_agent_progression.ontology import (OREXIS, STATE_GRAPH, WORLD_GRAPH, picks_graph)
 from orexis_agent_progression.store import bindings
 
 from conftest import build_agent, genesis_store
@@ -27,8 +27,8 @@ def _graphs_in(desires) -> set[str]:
 
 def test_the_desires_store_holds_wants_and_only_wants(monkeypatch):
     """Selection is by CLASS, not by list: every graph the catalog types with a desire
-    modality is copied — the derived regions, and the picks, since the pick record is typed
-    `orexis:DesireGraph` and the sovereign's ruling made that literal — and nothing else is.
+    modality is copied — the derived regions, and the picks, since the pick record is
+    projected in by its class and the sovereign's ruling made picks wants — and nothing else is.
     A reading or a world fact in the desires store would be the modality split failing on
     day one."""
     agent = build_agent("gardener", genesis_store(world="loner"), monkeypatch)
@@ -36,7 +36,7 @@ def test_the_desires_store_holds_wants_and_only_wants(monkeypatch):
     graphs = _graphs_in(agent.desires)
     assert any(g.endswith("roots/gardener") for g in graphs), \
         "the roots are PROJECTED here — authored at genesis, never rebuilt (#644)"
-    assert beliefs_graph("gardener") in graphs, "the pick record is projected: picks are wants"
+    assert picks_graph("gardener") in graphs, "the pick record is projected: picks are wants"
     assert WORLD_GRAPH not in graphs, "topology is a premise, dropped after the derivation"
     assert STATE_GRAPH not in graphs, "a reading is a belief, not a want"
 
@@ -92,7 +92,7 @@ def test_recomputation_is_the_only_write_path(monkeypatch):
     stale = agent.desires.query_union   # the surface as it stands before the premise moves
 
     marker = f"<{OREXIS}test_premise> a <{OREXIS}Desire> ."
-    st.update(f"INSERT DATA {{ GRAPH <{beliefs_graph('gardener')}> {{ {marker} }} }}")
+    st.update(f"INSERT DATA {{ GRAPH <{picks_graph('gardener')}> {{ {marker} }} }}")
 
     ask = f"ASK {{ <{OREXIS}test_premise> ?p ?o }}"
     assert not agent.desires.query_union(ask)["boolean"], "a copy must not see later writes"

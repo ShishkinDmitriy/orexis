@@ -16,7 +16,7 @@
 #
 #  A rule with too few residuals says nothing: `review:residualWindow` is the society's
 #  count, and one surprising dose is noise where three are a model. Nothing here names an
-#  agent or a graph of one: `$me`, `$evidence` and `$beliefs` are the reviewer's substitutions.
+#  agent or a graph of one: `$me`, `$evidence` and `$picks` are the reviewer's substitutions.
 #  The ratios are cast to xsd:double first: a ZERO decimal numerator divided by a decimal binds
 #  nothing in this engine (measured, pinned in tests/test_desires.py), and a residual of exactly
 #  zero is the ordinary case of a dose landing where it was promised.
@@ -30,8 +30,8 @@ SELECT ?term ?value WHERE {
     GRAPH ?g { review:ReviewCapability review:residualWindow ?window }
     $me market:bidsIn ?m . ?m market:marketFor ?src . ?src market:supplies ?good .
     ?term market:ofGood ?good ; market:aboutProperty ?about .
-    GRAPH <$beliefs> { $me ?term ?conversion }
-    OPTIONAL { GRAPH <$beliefs> { $me market:tolerance ?mine } }
+    GRAPH <$picks> { $me ?term ?conversion }
+    OPTIONAL { GRAPH <$picks> { $me market:tolerance ?mine } }
     GRAPH ?g2 { market:Bidding market:tolerance ?default }
     GRAPH <$evidence> { ?rg a review:Range ; review:onTerm ?term ;
                            review:notBelow ?floor ; review:notAbove ?ceiling }
@@ -47,7 +47,7 @@ SELECT ?term ?value WHERE {
         VALUES ?step { market:Acquiring market:Tendering market:Presenting } }
         FILTER(?p != ?b) } }
     GRAPH ?g { review:ReviewCapability review:residualWindow ?window }
-    OPTIONAL { GRAPH <$beliefs> { $me market:tolerance ?mine } }
+    OPTIONAL { GRAPH <$picks> { $me market:tolerance ?mine } }
     GRAPH ?g2 { market:Bidding market:tolerance ?default }
     GRAPH <$evidence> { ?rg a review:Range ; review:onTerm market:tolerance ;
                            review:notBelow ?floor ; review:notAbove ?ceiling }

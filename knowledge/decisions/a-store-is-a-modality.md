@@ -70,8 +70,13 @@ dissolved — genesis derives no wants, the modality's own build runs the packag
 against the world and the records on every rebuild, and the belief base keeps records only,
 typed for what they are (`orexis:PickRecordGraph`, `market:ObligationsGraph`). Amended by
 [a-root-holds-always-and-an-outdated-graph-is-dropped](/decisions/a-root-holds-always-and-an-outdated-graph-is-dropped.md):
-the ROOTS are authored at genesis into `orexis:RootsGraph` and the build projects them, deducing
-nothing — the rules run at birth and at boot to endow. That build was also
+the ROOTS are authored at genesis into a graph the build projects, deducing
+nothing — the rules run at birth and at boot to endow. Amended again by
+[a-graph-class-is-named-for-what-it-holds](/decisions/a-graph-class-is-named-for-what-it-holds.md):
+the spelling `orexis:DesireGraph` is back as a CONTENT class — a graph of `orexis:Desire` rows,
+the roots and the promises, beside `orexis:WantGraph` for the pursued — which is a different
+claim from the modality class retired here: what rows a graph carries, said by its owner, and
+not which store it belongs to. That build was also
 [#263](https://github.com/ShishkinDmitriy/orexis/issues/263)'s mechanism: re-derivation during
 a life is any rebuild, and a want whose premise has ceased is no longer implied. Everything
 in the beliefs
@@ -97,7 +102,7 @@ and every crossing already has a native shape in the house:
 - **The affordance walks take the desired properties as a parameter.** Three `affordances.rq`
   files join wiring with *which properties I hold desires in* — a small set, injected as a
   `VALUES` block by the same collector that already substitutes `$me`.
-- **Effect rules already take their inputs as parameters.** `GRAPH $beliefs { … ?conversion }`
+- **Effect rules already take their inputs as parameters.** `GRAPH $picks { … ?conversion }`
   becomes `$conversion`, the move
   [#247](https://github.com/ShishkinDmitriy/orexis/issues/247) made for `$value` when the
   baseline stopped being a store lookup — and for the same reason: a rule is a function of
@@ -172,7 +177,7 @@ it always was in these records: the sitting's phrase for the frame, not a compon
 ## The sort, term by term
 
 What [#297](https://github.com/ShishkinDmitriy/orexis/issues/297) asked for: every term
-authored into `graph/beliefs/<agent>` across the shipped worlds, classified by what its
+authored into `graph/picks/<agent>` across the shipped worlds, classified by what its
 triple asserts. The test that decides each row: **can the world contradict it?** A belief can
 be WRONG — a later reading, a ledger, a drained pot can refute it. A pick can only be
 ill-chosen; nothing in the world makes 600 seconds of patience false. Falsifiable goes to

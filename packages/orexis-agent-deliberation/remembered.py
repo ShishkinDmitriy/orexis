@@ -33,7 +33,7 @@ from datetime import datetime, timezone
 
 from orexis_agent_progression.act import (Step, predicts_from_json, predicts_json, precondition_from_json,
                                           precondition_json)
-from orexis_agent_progression.ontology import OREXIS, PROGRESSION, STATE_GRAPH, beliefs_graph
+from orexis_agent_progression.ontology import OREXIS, PROGRESSION, STATE_GRAPH, picks_graph
 from orexis_agent_progression.store import bindings
 
 from .ontology import DELIBERATION

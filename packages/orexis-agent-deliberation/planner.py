@@ -51,8 +51,7 @@ from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import Raw, bind, bindings
 from .ontology import DELIBERATION
-from orexis_agent_progression.ontology import (CLASSIFICATION_GRAPH, OREXIS, PROGRESSION,
-                            STATE_GRAPH)
+from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, OREXIS, STATE_GRAPH
 from orexis_agent_deliberation.conformance import graph_from, held_shapes, legality_selects
 from orexis_agent_deliberation.judge import crossed_text
 from orexis_agent_progression import clock
@@ -1247,12 +1246,13 @@ class Planner:
         #  for it — the loner masked that, its child judged by sensing's measure instead.
         #  The ledger too (#635): a debt carries its met-test as every authored want does,
         #  and the snapshot is where `_avoided_pattern` looks for it.
-        #  ASKED BY CLASS, never named (#705): the roots, the world's asserted wants, the
-        #  promises, every pursued want and every debt — each graph classified by its owner,
-        #  whatever it is called, and the children holding now among them since #645.
+        #  ASKED BY CLASS, never named (#705), and by what a graph HOLDS: every graph of
+        #  desires (the roots, the promises, the world's asserted one), every graph of wants
+        #  (each pursued want, the asserted one again) and the debts record — each classified
+        #  by its owner, whatever it is called, the children holding now among them (#645).
         self._compiled.want_graphs = tuple(self.agent.beliefs.graphs_of(
-            OREXIS + "RootsGraph", OREXIS + "AssertedDesireGraph", PROGRESSION + "PromisesGraph",
-            DELIBERATION + "PursuedGraph", "http://example.org/orexis/market#ObligationsGraph"))
+            OREXIS + "DesireGraph", OREXIS + "WantGraph",
+            "http://example.org/orexis/market#ObligationsGraph"))
         self.imaginarium.copy_in(self.agent.desires, *self._compiled.want_graphs)
         self._compiled.shapes = effects.applied((), self.agent.desires.construct(
             f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ "
@@ -1642,7 +1642,7 @@ class Planner:
             #  nodes. One schema needs the channel: $via is the row's lever, symmetric with
             #  $about, and a rule that ignores it loses nothing.
             "via": row.via if row is not None else "urn:nothing",
-            "beliefs": self.agent.beliefs.graph,
+            "picks": self.agent.beliefs.graph,
             #  NOT SIZED (#579). The search plans on what a reading IS, and an effect declares
             #  the band it reaches; how much to pour or bid is progression's, computed from
             #  the reading in hand when the step is taken. The token stays bound at nothing

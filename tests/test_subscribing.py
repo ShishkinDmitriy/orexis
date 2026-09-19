@@ -806,7 +806,7 @@ def test_a_repicked_jolt_threshold_rearms_the_watch(monkeypatch):
     """The whole reason the delta is a belief and not a compile-time figure: a review moves it,
     the module re-aims, and the corrected threshold reaches the board in the next retained
     command — being wrong about the estimate costs a message, never a reflash."""
-    from orexis_agent_progression.ontology import beliefs_graph
+    from orexis_agent_progression.ontology import picks_graph
     from orexis_capability_sensing.terms import term as sensing_term
 
     fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
@@ -817,9 +817,9 @@ def test_a_repicked_jolt_threshold_rearms_the_watch(monkeypatch):
 
     delta = sensing_term("alarmDeltaFraction")
     fern.beliefs.update(f"""
-DELETE {{ GRAPH <{beliefs_graph(fern.id)}> {{ ?a <{delta}> ?old }} }}
-INSERT {{ GRAPH <{beliefs_graph(fern.id)}> {{ ?a <{delta}> 0.5 }} }}
-WHERE  {{ GRAPH <{beliefs_graph(fern.id)}> {{ ?a <{delta}> ?old }} }}""")
+DELETE {{ GRAPH <{picks_graph(fern.id)}> {{ ?a <{delta}> ?old }} }}
+INSERT {{ GRAPH <{picks_graph(fern.id)}> {{ ?a <{delta}> 0.5 }} }}
+WHERE  {{ GRAPH <{picks_graph(fern.id)}> {{ ?a <{delta}> ?old }} }}""")
     fern.desires.rebuild()   # what review does between recording and notifying
     p.on_belief_revised(delta, 0.5)
 
@@ -834,11 +834,11 @@ def test_an_agent_with_no_pick_commands_band_only_alarms(monkeypatch):
     from orexis_capability_sensing.beliefs import ALARM_PICKS
     from orexis_capability_sensing.module import SubscribingModule
     from orexis_capability_sensing.terms import term as sensing_term
-    from orexis_agent_progression.ontology import beliefs_graph
+    from orexis_agent_progression.ontology import picks_graph
 
     fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
     fern.beliefs.update(f"""
-DELETE WHERE {{ GRAPH <{beliefs_graph(fern.id)}> {{
+DELETE WHERE {{ GRAPH <{picks_graph(fern.id)}> {{
   ?a <{sensing_term("alarmDeltaFraction")}> ?old }} }}""")
     fern.desires.rebuild()   # the record moved; the modality recomputes, as it always does
     assert fern.desires.read_optional(ALARM_PICKS) is None

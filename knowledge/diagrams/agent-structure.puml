@@ -28,7 +28,7 @@ database "**Beliefs** · what IS\nvolume · reset by rebirth only" as BEL {
   folder "graph/sensed" as g4
   folder "graph/provenance\nwhich FILES each public graph came from" as g6
   folder "graph/classification\nwhat this agent's own graphs ARE" as g7
-  folder "graph/beliefs/{agent} · the picks" as g8
+  folder "graph/picks/{agent} · the picks" as g8
   folder "graph/obligations/{agent} · LIVE debts" as g9
   folder "graph/instruments · sensing's" as p1 #FFFCF2
   folder "graph/evidence/{agent} · review's\na derived view, so it stays" as p2 #FFFCF2

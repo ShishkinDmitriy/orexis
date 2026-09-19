@@ -11,7 +11,7 @@ import pytest
 from agent import genesis
 
 from assembly import loader
-from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, OREXIS, PROVENANCE_GRAPH, beliefs_graph
+from orexis_agent_progression.ontology import CLASSIFICATION_GRAPH, OREXIS, PROVENANCE_GRAPH, picks_graph
 from orexis_agent_progression.store import bindings
 
 from conftest import genesis_store
@@ -19,6 +19,9 @@ from conftest import genesis_store
 #  The desire modality's graph classes (DesireGraph, ConstraintGraph, BoundsGraph) retired
 #  with #312: its carrier is a STORE, and inside a store the graphs say only who put the fact
 #  there. The classes below remain graph vocabulary until their modalities' stores land.
+#  `orexis:DesireGraph` is back as a CONTENT class — a graph of desire rows, beside
+#  `orexis:WantGraph` — which is a different claim from the modality one #312 retired, and
+#  is why neither is in this set: a graph is classified by its owner for what it holds.
 MODALITIES = {"BeliefGraph", "MenuGraph", "IntentionGraph", "HistoryGraph"}
 ARRIVALS = {"Asserted", "Derived", "Entailed", "Recorded", "Received"}
 
@@ -85,13 +88,13 @@ def test_an_agents_own_graphs_classify_themselves(tmp_path, monkeypatch):
     genesis.classify_kernel_graphs(st, "fern")   # and saying so again is saying it once
     resolved = {r["g"] for r in bindings(st.query(
         f"SELECT ?g WHERE {{ ?g a <{OREXIS}PickRecordGraph> }}"))}
-    assert beliefs_graph("fern") in resolved, (
+    assert picks_graph("fern") in resolved, (
         "an unscoped, instance-free query must find what this agent's graphs are")
-    kinds = types_of(st, beliefs_graph("fern"))
+    kinds = types_of(st, picks_graph("fern"))
     assert "PickRecordGraph" in kinds, (
         "the graph called `beliefs` is the RECORD of picking — what birth authored and review "
         "re-picked — typed for what it IS since the modality classes retired (#312)")
-    assert arrival_of(st, beliefs_graph("fern")) == {"Asserted"}
+    assert arrival_of(st, picks_graph("fern")) == {"Asserted"}
 
 
 def test_the_modality_vocabulary_is_closed():
@@ -148,7 +151,7 @@ def test_a_working_graph_is_the_agents_and_not_carried(monkeypatch):
 
     fern = build_agent("fern", genesis_store(), monkeypatch)
     carried = set(fern.beliefs.recorded_graphs())
-    for g in (beliefs_graph("fern"), promises_graph("fern")):
+    for g in (picks_graph("fern"), promises_graph("fern")):
         assert g in carried
     for g in (summaries_graph("fern"), evidence_graph("fern"), revisions_graph("fern")):
         assert g not in carried, "a working graph is mine, and not that"

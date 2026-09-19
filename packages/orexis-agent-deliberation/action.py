@@ -27,6 +27,6 @@ class Action:
     """
 
     uri: str
-    #  The SELECT whose rows are this action's affordances, with `$me`, `$wants` and `$beliefs`
+    #  The SELECT whose rows are this action's affordances, with `$me`, `$wants` and `$picks`
     #  still in it — a template, bound by whoever asks and against whichever world.
     available: str = ""

@@ -14,7 +14,7 @@ from agent import genesis, inference
 
 from assembly import loader
 from orexis_agent_progression.ontology import (ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH, WORLD_GRAPH,
-                            beliefs_graph)
+                            picks_graph)
 from agent.validate import conforms as validate_conforms
 from orexis_agent_progression.store import Store
 
@@ -142,28 +142,28 @@ def test_genesis_conforms():
 
 def test_polling_agent_must_state_a_cadence():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:fastSleepS ?v }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:fastSleepS ?v }} }}"""))
+        DELETE {{ GRAPH <{picks_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:fastSleepS ?v }} }}
+        WHERE  {{ GRAPH <{picks_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:fastSleepS ?v }} }}"""))
 
 
 def test_polling_agent_must_state_a_freshness_limit():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:readingGraceS ?v }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:readingGraceS ?v }} }}"""))
+        DELETE {{ GRAPH <{picks_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:readingGraceS ?v }} }}
+        WHERE  {{ GRAPH <{picks_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:readingGraceS ?v }} }}"""))
 
 
 def test_cadence_may_not_be_slower_when_thirsty():
     # watching LESS closely exactly when in trouble inverts the whole policy
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:fastSleepS 30 }} }}
-        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:fastSleepS 800 }} }}
+        DELETE {{ GRAPH <{picks_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:fastSleepS 30 }} }}
+        INSERT {{ GRAPH <{picks_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:fastSleepS 800 }} }}
         WHERE  {{}}"""))
 
 
 def test_nobody_may_sleep_past_the_constitutional_ceiling():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:slowSleepS 600 }} }}
-        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:slowSleepS 5000 }} }}
+        DELETE {{ GRAPH <{picks_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:slowSleepS 600 }} }}
+        INSERT {{ GRAPH <{picks_graph("fern")}> {{ <http://example.org/orexis/world/simulation#fern_agent> sensing:slowSleepS 5000 }} }}
         WHERE  {{}}"""))
 
 
@@ -173,9 +173,9 @@ def test_a_bidder_with_no_aim_in_the_priced_property_is_refused():
     bids are priced in has no deficit to value. Deleting fern's whole aim leaves a bidder that
     could only invent a number, and it must not start instead."""
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{
+        DELETE {{ GRAPH <{picks_graph("fern")}> {{
                  <http://example.org/orexis/world/simulation#fern_agent> sensing:aims ?aim . ?aim ?p ?o }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{
+        WHERE  {{ GRAPH <{picks_graph("fern")}> {{
                  <http://example.org/orexis/world/simulation#fern_agent> sensing:aims ?aim . ?aim ?p ?o }} }}"""))
 
 
@@ -183,7 +183,7 @@ def test_an_aim_in_a_property_with_no_region_is_refused():
     """A pick with nothing to pick inside. Fern holds no humidity region — its plant states no
     humidity range — so an aim there is a number with nothing behind it, whatever its value."""
     assert not _conforms(_mutate(f"""
-        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{
+        INSERT {{ GRAPH <{picks_graph("fern")}> {{
             <http://example.org/orexis/world/simulation#fern_agent> sensing:aims [
                 ssn:forProperty <http://example.org/orexis/water#AirHumidity> ;
                 schema:value 0.5 ] }} }}
@@ -192,15 +192,15 @@ def test_an_aim_in_a_property_with_no_region_is_refused():
 
 def test_bidder_must_have_a_valuation():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("tomato")}> {{ <http://example.org/orexis/world/simulation#tomato_agent> water:maxValuePerL ?v }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("tomato")}> {{ <http://example.org/orexis/world/simulation#tomato_agent> water:maxValuePerL ?v }} }}"""))
+        DELETE {{ GRAPH <{picks_graph("tomato")}> {{ <http://example.org/orexis/world/simulation#tomato_agent> water:maxValuePerL ?v }} }}
+        WHERE  {{ GRAPH <{picks_graph("tomato")}> {{ <http://example.org/orexis/world/simulation#tomato_agent> water:maxValuePerL ?v }} }}"""))
 
 
 def test_host_must_say_how_long_it_waits_for_bids():
     # without a window a round never closes
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("supplier")}> {{ <http://example.org/orexis/world/simulation#supplier> market:bidWindowS ?v }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("supplier")}> {{ <http://example.org/orexis/world/simulation#supplier> market:bidWindowS ?v }} }}"""))
+        DELETE {{ GRAPH <{picks_graph("supplier")}> {{ <http://example.org/orexis/world/simulation#supplier> market:bidWindowS ?v }} }}
+        WHERE  {{ GRAPH <{picks_graph("supplier")}> {{ <http://example.org/orexis/world/simulation#supplier> market:bidWindowS ?v }} }}"""))
 
 
 def test_the_supplier_is_not_asked_for_a_cadence():
@@ -713,9 +713,9 @@ def test_an_aim_outside_the_agents_region_is_refused():
     the world it booted with and its own beliefs. Nothing outside the agent ever sees the number.
     """
     data = _mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim schema:value 0.55 }} }}
-        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim schema:value 0.90 }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{
+        DELETE {{ GRAPH <{picks_graph("fern")}> {{ ?aim schema:value 0.55 }} }}
+        INSERT {{ GRAPH <{picks_graph("fern")}> {{ ?aim schema:value 0.90 }} }}
+        WHERE  {{ GRAPH <{picks_graph("fern")}> {{
                  <http://example.org/orexis/world/simulation#fern_agent> sensing:aims ?aim . ?aim schema:value 0.55 }} }}""")
     assert not _conforms(data)
     assert "pick within a range" in _report(data)

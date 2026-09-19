@@ -136,7 +136,7 @@ Say you want `orchard/` — two trees on a shared tank, no market yet.
 3. **Write one `beliefs/<agent>.ttl` per agent**, with only the blocks for the capabilities the
    wiring will give it. Unsure which? Seed and read what derivation decided.
 4. **Register each beliefs graph** in the catalog inside `world.ttl`:
-   `<.../graph/beliefs/fern> a orexis:DesireGraph ; orexis:beliefsOf orexis:fern_agent .`
+   `<.../graph/picks/fern> a orexis:PickRecordGraph ; orexis:beliefsOf orexis:fern_agent .`
 5. **Validate, and read what it derived.** `orexis-validate orchard` builds the world from the
    files and prints `tree_north  Subscribing`. An agent that derived nothing has wiring
    implying no ability — usually a missing `sensing:senseMode`, or a device that is not a kind of
@@ -341,7 +341,7 @@ recorded observation cites the world version it was made under, so the version i
 stored in, since a version number alone cannot distinguish two worlds that are both v1.)
 
 A start replaces `:ontology` and `:world` in each agent's own store, because those are not the
-agent's to keep. It does **not** touch `:beliefs/*` or `:sensed` — those are the agent's, and
+agent's to keep. It does **not** touch `:picks/*` or `:sensed` — those are the agent's, and
 only an explicit re-birth discards them.
 
 # Two things that bite

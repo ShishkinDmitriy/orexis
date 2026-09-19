@@ -82,8 +82,8 @@ still named in the present tense after the change that record argues for derived
 - **The historical list is still a list.** Nothing checks that an entry's record still narrates
   its path, so an entry outlives the sentence that justified it. Every one carries the sentence in
   a comment, which is a reader's guard rather than a machine's.
-- **A per-agent graph's agent is unchecked.** `:beliefs/nobody` passes: the prefix is declared and
-  the suffix is whatever agents a world holds, and a document naming `:beliefs/fern` as an example
+- **A per-agent graph's agent is unchecked.** `:picks/nobody` passes: the prefix is declared and
+  the suffix is whatever agents a world holds, and a document naming `:picks/fern` as an example
   is not claiming that world exists. The half that can rot is the half before the slash.
 - **Prose outside backticks is invisible to both.** A document that writes *world/society* without
   backticks says the same false thing and nothing sees it. Widening the pattern would sweep up

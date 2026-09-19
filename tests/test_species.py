@@ -18,7 +18,7 @@ import pytest
 import rdflib
 
 from agent import genesis, inference
-from orexis_agent_progression.ontology import beliefs_graph
+from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import Store, bindings
 from orexis_agent_progression.store import PREFIXES
 from agent.validate import conforms

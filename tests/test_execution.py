@@ -20,7 +20,7 @@ from orexis_agent_deliberation.affordances import Affordances
 from assembly import loader
 from orexis_agent_deliberation.planner import Planner
 
-from orexis_agent_progression.ontology import beliefs_graph
+from orexis_agent_progression.ontology import picks_graph
 
 from conftest import MOISTURE, build_agent, genesis_store, open_round_for, wired_markets
 
@@ -137,7 +137,7 @@ def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monk
         monkeypatch.setenv("OREXIS_WORLD", world)
         agent = build_agent(agent_id, genesis_store(world=world), monkeypatch)
         open_round_for(agent, agent_id)
-        for row in Afforder(Actions(agent.beliefs), Affordances(agent.beliefs), agent.desires, agent.me.uri, beliefs_graph(agent.id)).offered():
+        for row in Afforder(Actions(agent.beliefs), Affordances(agent.beliefs), agent.desires, agent.me.uri, picks_graph(agent.id)).offered():
             rows_seen += 1
             from orexis_agent_progression.act import takers_of
             takers = [m.name for m in takers_of(agent, row.action)]

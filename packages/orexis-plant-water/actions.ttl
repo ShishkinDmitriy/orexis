@@ -46,7 +46,7 @@ water:Drying
                      ?p ?o .
             #  THE RATE IS PUBLIC KNOWLEDGE, unqualified: a pot's physics is how the WORLD
             #  behaves and the world graph is public, so an ordinary pattern reads it. Scoped
-            #  to `$beliefs` it matched nothing, silently, and a pot that never dried is
+            #  to `$picks` it matched nothing, silently, and a pot that never dried is
             #  exactly the empty result this project keeps having to guard against.
             ?pot water:driesPerDay ?rate .
             FILTER(?rate > 0 && $elapsed > 0)

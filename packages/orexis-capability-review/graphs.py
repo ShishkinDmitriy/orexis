@@ -5,7 +5,7 @@ in it is true of *every* capability, and these are true of one. A graph an agent
 mandate never has is not kernel furniture.
 
 Each is built from the agent's own id — the single instance identifier the rules allow a process
-to name — exactly as `beliefs_graph` is. The prefix comes from the kernel because where a graph
+to name — exactly as `picks_graph` is. The prefix comes from the kernel because where a graph
 lives in the IRI space is not this package's business; what it holds is.
 """
 

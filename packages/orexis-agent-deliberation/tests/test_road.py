@@ -14,7 +14,7 @@ The clock stands at 2026-01-01T12:00:00Z, so a file can say an instant and mean 
 store needs beyond the case is five triples: which three graphs are public, and that the two
 graph classes a case uses exist at all — the door asks for predictions and for the agent's own
 graphs by `rdfs:subClassOf*`, and a zero-length path matches a class only where the class is
-a term of the graph asked. A case classifies its roots graph as boot does, `orexis:RootsGraph`:
+a term of the graph asked. A case classifies its roots graph as boot does, `orexis:DesireGraph`:
 the road finds a root's shape by asking which graphs are the agent's, never by spelling the
 graph's name. See knowledge/decisions/one-road-derives-every-want.md.
 """
@@ -28,7 +28,7 @@ from types import SimpleNamespace
 import pytest
 
 from orexis_agent_progression import clock
-from orexis_agent_progression.ontology import ONTOLOGY_GRAPH, beliefs_graph
+from orexis_agent_progression.ontology import ONTOLOGY_GRAPH, picks_graph
 from orexis_agent_progression.store import Store, bindings
 
 from orexis_agent_deliberation import pursuit
@@ -45,10 +45,10 @@ CASES = sorted((Path(__file__).parent / "road").glob("*.trig"))
 def stand_in(case: Path):
     """An agent standing on the case: the store the file describes, and the two collections."""
     st = Store()
-    st.agent_id, st.agent_uri, st.graph = AGENT, ME, beliefs_graph(AGENT)
+    st.agent_id, st.agent_uri, st.graph = AGENT, ME, picks_graph(AGENT)
     st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
       <{ONTOLOGY_GRAPH}> a orexis:PublicGraph . <{WORLD}> a orexis:PublicGraph . <{ACTIONS}> a orexis:PublicGraph .
-      orexis:PredictionGraph rdfs:subClassOf orexis:Graph . orexis:RootsGraph rdfs:subClassOf orexis:Graph . }} }}""")
+      orexis:PredictionGraph rdfs:subClassOf orexis:Graph . orexis:DesireGraph rdfs:subClassOf orexis:Graph . }} }}""")
     st.put_graph(WORLD, case.read_text(), dataset=True)
     desires, wants = Desires(st), Wants(st)
     wants.on_saved.append(lambda _: desires.rebuild())

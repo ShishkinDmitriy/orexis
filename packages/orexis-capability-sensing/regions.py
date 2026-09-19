@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
+from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
 from orexis_agent_progression.store import bindings
 from orexis_agent_progression import clock
 
@@ -42,7 +42,7 @@ DESIRES_QUERY = (Path(__file__).parent / "desires.rq").read_text()
 # graph is named: an unqualified pattern reads public knowledge, and an aim is exactly what must
 # never arrive that way.
 _AIMS_Q = """
-SELECT ?property ?value WHERE {{ GRAPH <{beliefs}> {{
+SELECT ?property ?value WHERE {{ GRAPH <{picks}> {{
   <{me}> sensing:aims ?aim .
   ?aim ssn:forProperty ?property ;
        schema:value ?value .
@@ -57,7 +57,7 @@ def aims_of(query, agent_id: str, agent_uri: str) -> dict[str, float]:
     """
     return {row["property"]: float(row["value"])
             for row in bindings(query(_AIMS_Q.format(
-                beliefs=beliefs_graph(agent_id), me=agent_uri)))}
+                picks=picks_graph(agent_id), me=agent_uri)))}
 
 
 #  THE READING OF THE SENSED GRAPH — sosa and nothing else: what was read, of what,

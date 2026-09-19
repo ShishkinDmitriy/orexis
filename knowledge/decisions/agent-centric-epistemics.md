@@ -84,7 +84,7 @@ gateway-specific — every writer uses it for its own scope:
 ```
 agent → what it read      → :sensed             (RDF) + influx   [its own, as opinion]
 agent → what it concludes → :classification     (RDF) + influx   [band, verdict]
-agent → what it holds     → :beliefs/<agent>    (RDF) + influx   [picks, wallet, own scope]
+agent → what it holds     → :picks/<agent>      (RDF) + influx   [picks, wallet, own scope]
 ```
 
 **AMENDED — the writers collapsed into one.** This block read `gateway → :attested/<plant>`,

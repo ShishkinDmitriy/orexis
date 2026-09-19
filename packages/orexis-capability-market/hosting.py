@@ -347,11 +347,11 @@ SELECT (SUM(?a) AS ?owed) WHERE {{
         None for anything that is not a call."""
         if not judgment.uri.startswith(f"{calls.NS}call_"):
             return None
-        from orexis_agent_progression.ontology import beliefs_graph
+        from orexis_agent_progression.ontology import picks_graph
 
         rows = bindings(query(f"""
 SELECT ?r WHERE {{
-  GRAPH <{beliefs_graph(self.agent.id)}> {{ <{judgment.uri}> market:calledOn ?via }}
+  GRAPH <{picks_graph(self.agent.id)}> {{ <{judgment.uri}> market:calledOn ?via }}
   {{ ?via market:hasRound ?r . ?r market:closesAt ?c }}
   UNION {{ GRAPH <{state}> {{ ?via market:hasRound ?r }} }}
 }} LIMIT 1"""))

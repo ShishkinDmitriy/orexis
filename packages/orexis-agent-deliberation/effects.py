@@ -276,7 +276,7 @@ def precondition(store, action: str, keyed=(), **bind) -> list:
         text = _precondition_template(rule["available"], tuple(keyed), ("via", "about", "want"))
         if text:
             read += _run(store, text, {
-                "me": bind["me"], "beliefs": bind["beliefs"],
+                "me": bind["me"], "picks": bind["picks"],
                 "wants": Raw(f"(<{bind.get('want', 'urn:nothing')}> "
                              f"<{bind.get('about', 'urn:nothing')}>)"),
                 "via": bind.get("via") or "urn:nothing", "about": bind.get("about") or "urn:nothing",

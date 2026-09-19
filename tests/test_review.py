@@ -11,7 +11,7 @@ import pytest
 
 from agent import genesis
 from orexis_capability_review.graphs import evidence_graph, revisions_graph
-from orexis_agent_progression.ontology import STATE_GRAPH, WORLD_GRAPH, beliefs_graph, term
+from orexis_agent_progression.ontology import STATE_GRAPH, WORLD_GRAPH, picks_graph, term
 from onboarding.namespaces import SENSING
 from orexis_capability_review import RECKONING, REVIEW
 from orexis_capability_review.module import Range, world_ranges
@@ -329,10 +329,10 @@ def test_a_review_writes_only_its_own_beliefs_and_never_the_world_or_the_record(
 def test_a_review_touches_no_other_agents_beliefs(fern):
     """It cannot reach one — but the fixture births every agent in the world, so unlike a
     deployed store this one actually contains somebody else's to reach for."""
-    other = fern.beliefs.get_graph(beliefs_graph("tomato"))
+    other = fern.beliefs.get_graph(picks_graph("tomato"))
     feed(fern, [0.500, 0.502] * (window(fern) // 2 + 1))
     fern.reviewing().review()
-    assert fern.beliefs.get_graph(beliefs_graph("tomato")) == other
+    assert fern.beliefs.get_graph(picks_graph("tomato")) == other
 
 
 def _decisions(agent) -> list[dict]:

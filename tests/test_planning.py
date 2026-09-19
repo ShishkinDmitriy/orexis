@@ -135,17 +135,17 @@ def test_a_possible_world_is_computed_and_nothing_is_written(monkeypatch):
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): DRY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
+    from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
     from agent.validate import graph_from
 
-    before = graph_from(st, *st.public_graphs(), beliefs_graph("gardener"), STATE_GRAPH)
+    before = graph_from(st, *st.public_graphs(), picks_graph("gardener"), STATE_GRAPH)
     world = effects.world_after(
         before, st, "http://example.org/orexis/actuation#Dosing",
         me=f"<{GARDENER}>", subject="<http://example.org/orexis/world/loner#zz>",
         about=f"<{MOISTURE}>", litres=0.3, value=DRY,
-        beliefs=f"<{beliefs_graph('gardener')}>")
+        picks=f"<{picks_graph('gardener')}>")
 
-    after = graph_from(st, *st.public_graphs(), beliefs_graph("gardener"), STATE_GRAPH)
+    after = graph_from(st, *st.public_graphs(), picks_graph("gardener"), STATE_GRAPH)
     assert len(after) == len(before), "the store is untouched by having imagined something"
     assert world is not before and len(world) > 0
 

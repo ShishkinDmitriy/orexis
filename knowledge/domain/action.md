@@ -35,7 +35,7 @@ Six ship: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `market:O
 the buyer's hold on a won claim, which has no availability and no effect because no plan
 chooses it: the claim arriving is the adoption, and it is a node so the hold can be a
 commitment and an urgency. A premise may
-read `$beliefs` (the agent's own graph — an open round) and `$sensed` (the readings of the
+read `$picks` (the agent's own graph — an open round) and `$sensed` (the readings of the
 world being asked about, so a row an earlier step made available appears in that step's
 world and not in this one).
 

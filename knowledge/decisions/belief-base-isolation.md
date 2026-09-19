@@ -24,7 +24,7 @@ channels. One process per agent means a peer's valuation is not even in the same
 space — which is what forced the auction to become a protocol.
 
 None of that *was* enforced. `store.py` used a single admin credential for every agent, so
-`:beliefs/tomato` was one SPARQL call away from any process that cared to make it — privacy by
+`:picks/tomato` was one SPARQL call away from any process that cared to make it — privacy by
 construction and convention, not by enforcement. Good enough for a trusted-agent deployment
 ([trusted-agent-mode](/decisions/trusted-agent-mode.md)); not good enough for the adversarial
 society the rest of the design keeps a seam open for.

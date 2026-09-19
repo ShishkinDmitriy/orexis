@@ -30,7 +30,7 @@ Structure and identity are seeded by **genesis**, a sovereign act in four steps:
 4. **Write** — the ratified draft is Turtle in `world/<world>/`, and that is the end of
    genesis. There is nothing to load: each agent reads those files at boot, copies the wiring
    into its own `:world` (which it never rewires) and writes its opening beliefs into its own
-   `:beliefs/<agent>` once, at birth. The sovereign authors the world in the same vocabulary
+   `:picks/<agent>` once, at birth. The sovereign authors the world in the same vocabulary
    the agents read — no config file, no translation layer, and no store to provision. See
    [world-graph](/decisions/world-graph.md),
    [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md).
@@ -93,7 +93,7 @@ What looks like flat config is the *ratified output* of genesis, and each fact h
 
 - **topology / wiring / device calibration** → the **`:world`** graph (sovereign-declared;
   agents read, never rewire — see [market](/domain/market.md)).
-- **target / endowment / value curve** → each agent's own **`:beliefs/<agent>`** (internal to
+- **target / endowment / value curve** → each agent's own **`:picks/<agent>`** (internal to
   the agent — see [agent](/domain/agent.md)).
 - **bands / cadence / freshness limit** → also the agent's: desire-relative judgments, not
   ground truth (see [agent-centric-epistemics](/decisions/agent-centric-epistemics.md)).

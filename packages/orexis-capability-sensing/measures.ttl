@@ -22,7 +22,7 @@
 #  ONE declaration for the KIND, not a text per desire: `sensing:measureOf
 #  sosa:ObservableProperty` says "a want about an observable property is measured by this
 #  SELECT", and the module answers for a desire by asking the store what its
-#  `ssn:forProperty` object IS. Nothing is compiled anywhere: the aim is read out of $beliefs
+#  `ssn:forProperty` object IS. Nothing is compiled anywhere: the aim is read out of $picks
 #  by the query itself, and the region's numbers arrive as substituted parameters read off
 #  the deduced shapes at answer time — so a re-pick or a re-derivation moves the answer with
 #  no text rebuilt.
@@ -124,7 +124,7 @@ sensing:AimDistanceMeasure
                 OPTIONAL { ?obs a sensing:BelowRegion . BIND(0.75 AS ?u3) }
                 OPTIONAL { ?obs a sensing:AboveRegion . BIND(0.75 AS ?u4) }
                 OPTIONAL { ?obs a sensing:InRegion . BIND(0.0 AS ?u5) }  }
-            OPTIONAL { GRAPH $beliefs {
+            OPTIONAL { GRAPH $picks {
                 $me sensing:aims ?aim .
                 ?aim ssn:forProperty $property ;
                      schema:value ?picked } }

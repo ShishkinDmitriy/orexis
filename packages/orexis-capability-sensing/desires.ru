@@ -303,7 +303,7 @@ WHERE  {
     BIND((?low + ?high) / 2 AS ?centre)
 
     #  The aim, if one is already picked — for the LABEL only. The measure never bakes it: it
-    #  reads $beliefs at query time, which is what lets a re-pick move the urgency between
+    #  reads $picks at query time, which is what lets a re-pick move the urgency between
     #  rebuilds. The label is refreshed on rebuild, which every recorded re-pick triggers.
     #  NO AIM IN THE LABEL either: the aim is a pick the measure reads at query time, and a
     #  root authored once must not bake the pick of the day it was born (#644).

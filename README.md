@@ -35,7 +35,7 @@ the graph; the one instance identifier a process gets is its own agent id.
 
 Agents are configured by **belief, not by file**. `:world` holds the public wiring — and from
 that wiring genesis *derives* what each agent can do, so a scheduled sensor gives its agent a
-cadence to own and a push-mode one does not. `:beliefs/<agent>` holds what each privately
+cadence to own and a push-mode one does not. `:picks/<agent>` holds what each privately
 wants. See [`capability-packages`](knowledge/decisions/capability-packages.md) and
 [`world-graph`](knowledge/decisions/world-graph.md).
 

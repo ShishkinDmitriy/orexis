@@ -73,8 +73,7 @@ class Projection(Store):
     """
 
     def __init__(self, beliefs):
-        from orexis_agent_progression.ontology import OREXIS, PROGRESSION
-        from .ontology import DELIBERATION
+        from orexis_agent_progression.ontology import OREXIS
 
         super().__init__()
         publics = list(beliefs.public_graphs())
@@ -88,13 +87,14 @@ class Projection(Store):
         #  (#645): every one the door hands at this instant is projected, under the untimed
         #  record it sits beneath, so a lapsed debt and a child past its instant are absent
         #  from this store as they are from every reader.
-        #  ASKED BY CLASS, never named: the roots, the pick record, the obligations record
-        #  and every debt's graph under it, the promises, and every pursued want — whatever
-        #  each is called. The owners classified them; this reads the classification.
-        records = beliefs.graphs_of(
-            OREXIS + "RootsGraph", OREXIS + "PickRecordGraph",
-            "http://example.org/orexis/market#ObligationsGraph",
-            PROGRESSION + "PromisesGraph", DELIBERATION + "PursuedGraph")
+        #  ASKED BY CLASS, never named, and by what a graph HOLDS: every graph of desires (the
+        #  roots, the promises), every graph of wants (each pursued child), the pick record,
+        #  the obligations record and every debt's graph under it — whatever each is called.
+        #  The owners classified them; this reads the classification. The world's asserted
+        #  graph is a desire and a want graph too, and public: it rides in with the publics.
+        records = [g for g in beliefs.graphs_of(
+            OREXIS + "DesireGraph", OREXIS + "WantGraph", OREXIS + "PickRecordGraph",
+            "http://example.org/orexis/market#ObligationsGraph") if g not in publics]
         asserted = set(beliefs.graphs_of(OREXIS + "AssertedDesireGraph"))
         for iri in publics + records:
             for quad in beliefs.quads(iri):

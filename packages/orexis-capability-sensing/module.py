@@ -53,7 +53,7 @@ if TYPE_CHECKING:
 from .driver import driver_for
 from agent.module import Module, contributes
 from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, FORESIGHT, PREDICTED, REPREDICT, WITNESS
-from orexis_agent_progression.ontology import STATE_GRAPH, beliefs_graph
+from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
 from orexis_agent_progression.store import bindings
 
 
@@ -235,7 +235,7 @@ class SensingModule(Module):
         flat rdflib copy pySHACL reads — so one stored query is never answered by two
         engines, which is how I already evaluate everything else. The region's numbers are
         substituted at answer time, read off the deduced shapes I hold myself,
-        and the aim is read from $beliefs by the query itself: nothing baked, so a re-pick or
+        and the aim is read from $picks by the query itself: nothing baked, so a re-pick or
         a re-derivation moves the next answer.
 
         TWO KINDS OF WANT, both mine, and the second arrived when the freshness want moved
@@ -289,7 +289,7 @@ class SensingModule(Module):
                          f"<{self.me.acts_for}>" if self.me.acts_for else "<urn:nobody>")
                 .replace("$property", f"<{about}>")
                 .replace("$state", f"<{state}>")
-                .replace("$beliefs", f"<{beliefs_graph(self.agent.id)}>")
+                .replace("$picks", f"<{picks_graph(self.agent.id)}>")
                 #  A WORLD IS JUDGED BY BAND (#579): with no number handed in, the reading's
                 #  own number is not read — `?unread` binds nothing, the numeric branch falls
                 #  through, and the band says how urgent — so the world the agent is in and a
@@ -933,7 +933,7 @@ SELECT ?about WHERE {{ <{self.me.uri}> orexis:holds <{root}> .
         if not mine:
             return None
         rows = bindings(self.agent.beliefs.query(f"""
-SELECT ?f WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ <{self.me.uri}> sensing:foresightS ?f }} }} LIMIT 1"""))
+SELECT ?f WHERE {{ GRAPH <{picks_graph(self.agent.id)}> {{ <{self.me.uri}> sensing:foresightS ?f }} }} LIMIT 1"""))
         return float(rows[0]["f"]) if rows and rows[0].get("f") is not None else None
 
     @contributes(REPREDICT)

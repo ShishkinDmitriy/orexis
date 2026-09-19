@@ -16,7 +16,7 @@ import pyoxigraph as ox
 from orexis_agent_deliberation import effects
 from orexis_agent_progression.store import Raw
 from orexis_agent_deliberation.imaginarium import Imaginarium
-from orexis_agent_progression.ontology import (ONTOLOGY_GRAPH, STATE_GRAPH, WORLD_GRAPH, beliefs_graph)
+from orexis_agent_progression.ontology import (ONTOLOGY_GRAPH, STATE_GRAPH, WORLD_GRAPH, picks_graph)
 
 from conftest import MOISTURE, genesis_store
 
@@ -33,12 +33,12 @@ LANDS_AT = Raw('"2026-09-10T12:00:00+00:00"^^xsd:dateTime')
 
 def _imaginarium(value=0.04):
     st = genesis_store({("zz", MOISTURE): value}, world="loner")
-    return st, Imaginarium(st, beliefs_graph("gardener"), STATE_GRAPH)
+    return st, Imaginarium(st, picks_graph("gardener"), STATE_GRAPH)
 
 
 def _dose(im, sensed, litres=0.05, value=0.04):
     return effects.apply(im, DOSING, me=f"<{GARDENER}>", subject=f"<{ZZ}>",
-                         about=f"<{MOISTURE}>", beliefs=f"<{beliefs_graph('gardener')}>",
+                         about=f"<{MOISTURE}>", picks=f"<{picks_graph('gardener')}>",
                          state=f"<{sensed}>", litres=repr(litres), value=repr(value),
                          lands=LANDS_AT)
 
@@ -125,17 +125,17 @@ def test_the_snapshot_is_public_knowledge_and_the_named_private_graphs_and_nothi
     #  A world with FOUR agents in it, because the claim is about what was left behind and a
     #  world holding one agent could not tell.
     st = genesis_store({("fern", MOISTURE): 0.30})
-    im = Imaginarium(st, beliefs_graph("fern"), STATE_GRAPH)
+    im = Imaginarium(st, picks_graph("fern"), STATE_GRAPH)
 
     #  Through the store it HOLDS: what counts as public is a fact about how the imaginarium
     #  was built, not a door anything asks it through, so it is not among the verbs it offers.
     assert im._store.public_graphs() == st.public_graphs(), \
         "public knowledge means the same thing in both, or an unqualified pattern does not"
-    for graph in (ONTOLOGY_GRAPH, WORLD_GRAPH, beliefs_graph("fern"), STATE_GRAPH):
+    for graph in (ONTOLOGY_GRAPH, WORLD_GRAPH, picks_graph("fern"), STATE_GRAPH):
         assert im.get_graph(graph).strip(), f"{graph} is empty in the imaginarium"
     for other in ("supplier", "tomato", "succulent"):
-        assert st.get_graph(beliefs_graph(other)).strip(), f"{other} has beliefs to leave out"
-        assert not im.get_graph(beliefs_graph(other)).strip(), \
+        assert st.get_graph(picks_graph(other)).strip(), f"{other} has beliefs to leave out"
+        assert not im.get_graph(picks_graph(other)).strip(), \
             "nobody else's beliefs were asked for, so nobody else's are here"
 
 

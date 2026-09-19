@@ -161,7 +161,7 @@ def deliberable(st, desires: dict) -> bool:
     from orexis_capability_sensing.regions import regions_of
     from agent.world import load_self
 
-    from orexis_agent_progression.ontology import beliefs_graph
+    from orexis_agent_progression.ontology import picks_graph
     from orexis_agent_progression.store import bindings
 
     faults = 0

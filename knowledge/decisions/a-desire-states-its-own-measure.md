@@ -67,7 +67,7 @@ KIND, at a measure the kernel never authors.
   a literal, the same mechanic a means' effect rule uses for `sh:construct`. Our own Python
   runs it — the capability's own, after the split below — and pySHACL is never asked to. The
   contract: one binding, `?urgency`, in 0..1, parameterised by substitution like an effect
-  rule (`$me`, `$subject`, `$property`, `$sensed`, `$beliefs`, `$value`, and the region's
+  rule (`$me`, `$subject`, `$property`, `$sensed`, `$picks`, `$value`, and the region's
   numbers) and evaluated AGAINST A WORLD — the belief base for the live number, or a
   candidate possible world inside the planner. One measure, asked of whichever world is being
   judged.
@@ -109,7 +109,7 @@ it for open expectations):
 - **Still declared per KIND, still nothing compiled**: `sensing:measureOf
   sosa:ObservableProperty` says "a want about an observable property is measured by this
   SELECT"; the module resolves a desire by asking the store what its `ssn:forProperty` object
-  IS; the aim is read out of `$beliefs` by the query itself, and the region's numbers arrive
+  IS; the aim is read out of `$picks` by the query itself, and the region's numbers arrive
   as substituted parameters read off the deduced shapes at answer time — the `$litres`
   discipline, so a re-pick or a re-derivation moves the answer with no text rebuilt.
 - **The fallback is defined, not implied, and unchanged in behaviour**: a want no module

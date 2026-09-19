@@ -66,7 +66,7 @@ GRAPH pursued:keeper.in_range.pursued.tank1.level {
 
 # What each graph IS, and when it holds — said once each, beside the data.
 GRAPH graph:classification {
-  roots:keeper a orexis:RootsGraph .
+  roots:keeper a orexis:DesireGraph .
   pursued:keeper.in_range.pursued.tank1.level a deliberation:PursuedGraph ; orexis:arrivedBy orexis:Recorded .
 }
 GRAPH graph:periods {

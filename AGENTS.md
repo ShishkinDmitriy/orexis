@@ -303,6 +303,11 @@ it is a record wearing a bullet.
   readable convention nothing depends on; boot used to type every per-agent graph by matching
   its name against a prefix its class declared, the planner and the projection named five,
   and asked which graphs could be renamed freely the answer was none — it is all of them now.
+- **A graph class is named for the rows it holds, and a retired spelling may return with a
+  different claim** — `RootsGraph` named the road's role for rows `orexis:Desire` already
+  typed, the asserted graph said desire and held wants, and `orexis:DesireGraph`, retired as a
+  modality class, returns as a content one, because a second spelling for a graph of desires
+  would be the synonym the dictionary refuses.
 - **A repository holds a store and nothing else, because an agent id is another aggregate
   root's identity** — which store is the agent's decision since it owns the stores and the
   collections; identity travels as a query criterion, and the reads need none at all, since one

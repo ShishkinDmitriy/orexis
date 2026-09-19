@@ -55,8 +55,8 @@ option assumed. Every shipped effect rule, by the graphs its two queries touch:
 | rule | its `sh:construct` reads | its `orexis:retracts` reads |
 |---|---|---|
 | `sensing:ObserveEffect` | `$sensed` | `$sensed` |
-| `actuation:ActuateEffect` | the world graph, `$beliefs` | `$sensed` |
-| `market:AcquireEffect` | the world graph, `$beliefs` | `$sensed` |
+| `actuation:ActuateEffect` | the world graph, `$picks` | `$sensed` |
+| `market:AcquireEffect` | the world graph, `$picks` | `$sensed` |
 
 **Exactly one graph they read is mutable under a plan, and it is the same one every time.** The
 world graph is authored and derived at genesis; beliefs are the agent's and no plan step writes
@@ -355,7 +355,7 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
 
   It is violated today, in exactly one place, and it is already filed as
   [#264](https://github.com/ShishkinDmitriy/orexis/issues/264): `sensing:aims` is a WANT and it lives
-  in `graph/beliefs/<agent>`, beside `patienceS`, `fastSleepS` and `maxValuePerL`, which are
+  in `graph/picks/<agent>`, beside `patienceS`, `fastSleepS` and `maxValuePerL`, which are
   settings. Under a store per modality that triple could not be written at all — an aim is not a
   belief and there would be nowhere to put it. A defect becomes an unrepresentable state, which
   is worth more than the 109 ms.

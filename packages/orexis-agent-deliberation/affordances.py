@@ -38,7 +38,7 @@ class Affordances:
         self._store = store
 
     def find_all_by_action(self, action: Action, about_of: dict[str, tuple[str, ...]],
-                           me: str, beliefs: str, *, at=None,
+                           me: str, picks: str, *, at=None,
                            world: str | None = None) -> list[Affordance]:
         """Every row this action affords in one world — zero, one or many.
 
@@ -60,13 +60,13 @@ class Affordances:
         desires has no menu.
         """
         wants = " ".join(f"(<{w}> <{a}>)" for w, abouts in sorted(about_of.items()) for a in abouts)
-        #  `$beliefs` names the agent's OWN graph, as it does for an effect rule: a premise may be
+        #  `$picks` names the agent's OWN graph, as it does for an effect rule: a premise may be
         #  something only this agent was told — an open round is one (#358) — and the default
         #  graph is public knowledge, so a walk that needs it must say so. `$wants` is a VALUES
         #  block — rows, not a term — and goes in as `Raw`; the rest are IRIs the binder renders.
         #  A precondition carrying a token nobody binds refuses rather than reaching the engine as
         #  a free variable (#500).
-        q = bind(action.available, me=me, wants=Raw(wants), beliefs=beliefs)
+        q = bind(action.available, me=me, wants=Raw(wants), picks=picks)
         #  THE ROW SAYS WHICH about IT MATCHED where its select projects one — every action that
         #  filters on the want's about does now — and the want's own answers where it does not,
         #  which is only legible while the want names exactly one (#566).

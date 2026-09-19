@@ -29,7 +29,7 @@ from datetime import datetime, timedelta
 
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import (CLASSIFICATION_GRAPH, GRAPH_PREFIX, PERIODS_GRAPH,
-                                               STATE_GRAPH, beliefs_graph)
+                                               STATE_GRAPH, picks_graph)
 from orexis_agent_progression.store import Raw, bind, bindings
 
 from .sensed_writer import _slug
@@ -101,7 +101,7 @@ def write(agent, me_uri: str, subject_uri: str, observed_property: str, reading,
         elapsed = (closes - taken).total_seconds()
         tokens = {"me": me_uri, "subject": subject_uri, "about": observed_property,
                   "want": "urn:nothing", "via": "urn:nothing", "claim": Raw('"urn:nobody"'),
-                  "beliefs": beliefs_graph(agent.id), "state": STATE_GRAPH, "litres": 0.0,
+                  "picks": picks_graph(agent.id), "state": STATE_GRAPH, "litres": 0.0,
                   "lands": Raw(f'"{closes.isoformat()}"^^xsd:dateTime'), "elapsed": elapsed}
         triples: list[str] = []
         for rule in rules:

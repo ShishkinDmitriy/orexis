@@ -55,7 +55,7 @@ GRAPH :predicted-0 { :tank1 :level 5 . }
 
 # What each graph IS, and when it holds — said once each, beside the data.
 GRAPH graph:classification {
-  roots:keeper a orexis:RootsGraph .
+  roots:keeper a orexis:DesireGraph .
   :predicted-0 a orexis:PredictionGraph .
 }
 GRAPH graph:periods {

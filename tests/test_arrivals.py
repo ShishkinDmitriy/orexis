@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from orexis_agent_deliberation import pursuit
-from orexis_agent_progression.ontology import beliefs_graph, obligations_graph
+from orexis_agent_progression.ontology import picks_graph, obligations_graph
 from orexis_agent_progression.store import bindings
 from orexis_capability_market.terms import ACQUIRING
 from conftest import build_agent, genesis_store, open_round_for
@@ -28,7 +28,7 @@ def _supplier(monkeypatch, level=3.0, foresight: float | None = None):
     """The simulation's supplier, its barrel at `level` litres inside its region of one to five."""
     st = genesis_store({("barrel1", STORED): level})
     if foresight is not None:
-        st.update(f"""INSERT DATA {{ GRAPH <{beliefs_graph("supplier")}> {{
+        st.update(f"""INSERT DATA {{ GRAPH <{picks_graph("supplier")}> {{
             <{SUPPLIER}> <{FORESIGHT}> {foresight} }} }}""")
     return build_agent("supplier", st, monkeypatch)
 

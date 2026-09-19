@@ -51,7 +51,7 @@ from orexis_agent_deliberation.judgment import Judgment
 
 
 from orexis_agent_progression.ontology import (OREXIS, DELIBERATION_GRAPH, PLAN_FAILED, PLAN_FINISHED,
-                                                  SERIES, STATE_GRAPH, STEP_DONE, beliefs_graph)
+                                                  SERIES, STATE_GRAPH, STEP_DONE, picks_graph)
 from .planner import Planner
 from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED,
                    REMEMBERED, SATISFIED)

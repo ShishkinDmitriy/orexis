@@ -221,7 +221,7 @@ def _unmet_select_of(agent, root: str) -> str | None:
     which constraint, and `?_about` where the constraint's block says what it is about — from
     public knowledge and the graphs the agent owns, ASKED by their classification and never
     named (a root's shape lives in the roots graph since #644, and the roots graph is
-    `orexis:RootsGraph` in the classification boot writes). Cached per root on the agent: a
+    `orexis:DesireGraph` in the classification boot writes). Cached per root on the agent: a
     root never changes while the agent runs. None where the root states no shape or the
     compiler refuses.
 

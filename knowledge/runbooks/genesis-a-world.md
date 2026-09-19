@@ -61,7 +61,7 @@ asked for is the *target*, and it must sit inside that region or the agent will 
 Register each in the catalog inside `world.ttl`:
 
 ```turtle
-<http://example.org/orexis/graph/beliefs/fern> a orexis:DesireGraph ; orexis:beliefsOf :fern_agent .
+<http://example.org/orexis/graph/picks/fern> a orexis:PickRecordGraph ; orexis:arrivedBy orexis:Asserted ; orexis:beliefsOf :fern_agent .
 ```
 
 **A world's individuals live in the world's own namespace, not in `orexis:`.** Declare it once at

@@ -29,7 +29,7 @@ An agent's identity is a bundle of durable, external parts, never chat history:
 - **Charter** — two halves, deliberately different in kind: its **wiring** from the public
   [world](/decisions/world-graph.md) (what it acts for, what it may poll, which market, and
   the capabilities all of that *derives*) and its **own beliefs** (desire, endowment, limits,
-  cadence, value curve) from `:beliefs/<agent>`. It reads both from its id and needs nothing
+  cadence, value curve) from `:picks/<agent>`. It reads both from its id and needs nothing
   else. See [capability-modules](/decisions/capability-modules.md).
 - **Certificate** — the signed proof of *who it is*; issued with the charter in v1. See
   [authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
@@ -62,7 +62,7 @@ Interpretation and initiative belong to the agent, not infra (see
 - **Its own [band](/domain/band.md).** "Am I `:LOW`?" is the agent's to answer, from the reading
   and the region its subject states. The record holds the number, never the verdict.
 - **Its private state.** Its moisture (need-to-know), value curve, desire, and limits are the
-  agent's, and live in its own `:beliefs/<agent>` graph. It shares its *bid*, not its state.
+  agent's, and live in its own `:picks/<agent>` graph. It shares its *bid*, not its state.
   What is *public* is only the wiring — see [world-graph](/decisions/world-graph.md).
 - **Its sensing.** Where the hardware allows it, the agent drives sensing and decides how
   often — it can even tell the sensor to sleep — paying for it (sensing is a priced
@@ -125,7 +125,7 @@ The three privileged powers are never granted to an agent, no matter how spotles
 reputation or valid its cert — because a single defection here does irreversible real-world
 harm:
 
-1. **Author facts about others** — an agent writes only its own `:beliefs/<agent>` and its
+1. **Author facts about others** — an agent writes only its own `:picks/<agent>` and its
    own reading; it never writes the [world](/decisions/world-graph.md) (the sovereign's) or
    another agent's graph. Under an adversarial assumption a witness authors readings too —
    see [trusted-agent-mode](/decisions/trusted-agent-mode.md).
