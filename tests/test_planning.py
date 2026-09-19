@@ -108,6 +108,14 @@ def test_met_is_the_label_and_the_aim_is_the_target_with_a_deadband_at_the_pick(
     is what the ACTOR sizes its dose against when it takes a step, and what the measure reads
     where a caller hands a number in. What changed is who reads it and when: steering inside
     the region is progression's, and the search plans the band.
+
+    AND THE DELIBERATOR NOW PROPOSES A DOSE HERE, which is not steering. A pot at 0.12 falling
+    is judged to leave its region some hours out, so a want is derived holding AT that
+    crossing and its dose is PLACED there rather than taken now (#619) — the behaviour every
+    world gained when the foresight stopped gating it
+    (judge-desires-then-derive-wants). The deadband is intact: what the search plans is the
+    band the pot will be in, never the pick, and at 0.18 below there is no crossing inside the
+    ladder and nothing is proposed at all.
     """
     agent, plan, desire = _gardener(monkeypatch, 0.12)
     assert desire.state == "met" and desire.urgency > 0, \
@@ -116,7 +124,11 @@ def test_met_is_the_label_and_the_aim_is_the_target_with_a_deadband_at_the_pick(
         "about worlds and gets the band"
     assert plan.outcome == search.SATISFIED
     assert plan.steps == (), "inside the region and off the pick, no move is planned"
-    assert agent.deliberator.propose_for(desire) is None
+    placed = agent.deliberator.decide(desire)
+    assert [s.action for s in placed.steps] == [DOSING], \
+        "the crossing is what is planned for, and it is a dose"
+    assert placed.placed_at is not None, \
+        "held for the crossing, not taken now: inside the region nothing is due yet"
 
     at_pick, plan2, desire2 = _gardener(monkeypatch, AT_PICK)
     assert desire2.urgency == 0.0

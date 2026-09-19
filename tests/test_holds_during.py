@@ -49,7 +49,7 @@ def test_a_store_that_states_no_range_is_the_store_it_always_was():
     now = _now()
     st = _store()
     assert st.periods() == {}
-    assert len(st.graphs_of(PUBLIC, at=now)) == 7     # the classification was the eighth; it is the catalogue now, and not public
+    assert len(st.graphs_of(PUBLIC, at=now)) == 8     # the eighth is the derivations graph: what the loaded rules read and write
     assert st.graphs_of(PUBLIC, at=now) == st.graphs_of(PUBLIC, at=now + timedelta(days=365))
 
 
@@ -130,4 +130,4 @@ def test_a_range_on_a_graph_nobody_types_adds_nothing():
     st = _store()
     _say(st, "http://example.org/orexis/graph/nowhere", until=now + timedelta(days=1))
 
-    assert len(st.graphs_of(PUBLIC, at=now)) == 7     # the classification was the eighth; it is the catalogue now, and not public
+    assert len(st.graphs_of(PUBLIC, at=now)) == 8     # the eighth is the derivations graph: what the loaded rules read and write
