@@ -1,0 +1,21 @@
+# two_properties_two_levers
+#
+# Two levers, each writing one property and reading nothing of the other's, so the two
+# properties are two scopes, largest first and then by name, each lever in its own.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graph: <http://example.org/orexis/graph/> .
+@prefix scopes: <http://example.org/orexis/graph/scopes/> .
+
+GRAPH :actions {
+  :fill a orexis:Action ;
+      sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?t :level ?x . } WHERE { ?t a :Tank }""" .
+  :heat a orexis:Action ;
+      sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
+}

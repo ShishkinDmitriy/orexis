@@ -119,27 +119,27 @@ def _clusters(agent, witnesses: list) -> list[list]:
     """The witnesses grouped by SCOPE — which of them some action can move together — so a
     want is minted per group. Two in one scope are one want and one cone; two in different
     scopes are two, planned apart and concatenated, which is the mechanism `scope.md` says the
-    concept exists for. A witness naming no property joins every group it could belong to, which
-    with one scope is the one group.
+    concept exists for. A witness naming no property, or one no scope holds, joins every group
+    it could belong to, which with one scope is the one group.
+
+    THE SCOPES ARE READ, NEVER COMPUTED: `scope_actions` wrote them (scope-actions),
+    and a store holding no scope graph is refused rather than clustered as one scope — the
+    loud direction, since one want about everything is what a missing partition would have
+    quietly minted.
 
     Measured on every shipped world: one scope, so one group. The code path is the same the
     day a world splits, and a scope is over PREDICATES — two debts to two hosts are one scope,
     correctly, since they may draw from one vessel."""
     if not witnesses:
         return []
-    from . import relevance
-    parts = agent.beliefs.remember("deliberation:scopes", lambda: relevance.scopes(
-        relevance.actions_of(agent.beliefs.query), relevance.rule_edges()))
-    def scope_of(about):
-        return next((i for i, part in enumerate(parts) if about in part), None)
+    from .scopes import find_scopes
+    scopes = find_scopes(agent.beliefs)
+    if scopes is None:
+        raise RuntimeError(f"{agent.id}: the store holds no scope graph — scope_actions has not run")
     groups: dict = {}
     loose = []
     for w in witnesses:
-        #  KEYED BY INSTANCE TOO: a desire whose shape targets the agent has one instance and
-        #  one group per scope; one whose shape targets each debt has one group per debt, so
-        #  a Serving step can name its claim. A witness about the instance itself — the block
-        #  said `sh:this` — is its own group by construction.
-        scope = scope_of(w.about) if w.about else None
+        scope = scopes.get(w.about) if w.about else None
         key = (scope, w.instance) if scope is not None or w.about == w.instance else None
         (groups.setdefault(key, []) if key is not None else loose).append(w)
     if not groups:

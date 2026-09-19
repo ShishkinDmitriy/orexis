@@ -9,9 +9,10 @@
 #
 # The clock stands at 2026-01-01T12:00:00Z when the road runs.
 #
-# THE JUDGMENTS AS `judge_desires` LEFT THEM on this situation (judge_desires/two_properties_one_lever.trig):
-# the desires, the levers, whatever stands, and the judgment graph — no world, no readings,
-# no predictions. `derive_wants` reads the judgments and nothing in hand.
+# THE JUDGMENTS AS `judge_desires` LEFT THEM on this situation (judge_desires/two_properties_one_lever.trig),
+# and the scopes `scope_actions` made of its levers: the desires, the scopes, whatever
+# stands, and the judgment graph — no world, no readings, no predictions, no levers.
+# `derive_wants` reads the judgments and the scopes, and nothing in hand.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
@@ -25,6 +26,7 @@
 @prefix roots: <http://example.org/orexis/graph/roots/> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
 @prefix judgments: <http://example.org/orexis/graph/judgments/> .
+@prefix scopes: <http://example.org/orexis/graph/scopes/> .
 
 GRAPH roots:keeper {
   :in_range a sh:NodeShape ;
@@ -44,10 +46,11 @@ GRAPH roots:keeper {
       rdfs:label "every tank in range" .
 }
 
-GRAPH :actions {
-  :fix a orexis:Action ;
-      sh:construct """PREFIX : <http://example.org/test#>
-        CONSTRUCT { ?t :level ?x . ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
+GRAPH scopes:keeper {
+  :fix deliberation:inScope :keeper.scope.1 .
+  :keeper.scope.1 a deliberation:Scope .
+  :level deliberation:inScope :keeper.scope.1 .
+  :temperature deliberation:inScope :keeper.scope.1 .
 }
 
 GRAPH judgments:keeper {
@@ -76,6 +79,9 @@ GRAPH graph:classification {
       orexis:arrivedBy orexis:Recorded ;
       orexis:beliefsOf :keeper .
   roots:keeper a orexis:DesireGraph .
+  scopes:keeper a deliberation:ScopeGraph ;
+      orexis:arrivedBy orexis:Derived ;
+      orexis:beliefsOf :keeper .
 }
 
 
@@ -85,6 +91,7 @@ GRAPH graph:ontology {
   :actions a orexis:PublicGraph .
   :world a orexis:PublicGraph .
   deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
+  deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
   graph:ontology a orexis:PublicGraph .
   orexis:DesireGraph rdfs:subClassOf orexis:Graph .
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .

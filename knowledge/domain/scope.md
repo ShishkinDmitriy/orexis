@@ -73,3 +73,14 @@ VALUE. That world is what will measure a scope over variables the day one is com
 
 - [relevance](/domain/relevance.md) — the closure a want's view is built from.
 - [identification](/domain/identification.md) — the view, as the cone already uses it.
+
+# In the store
+
+`scope_actions` writes the partition to the agent's scope graph at boot — a
+`deliberation:Scope` per part, each predicate and each action `deliberation:inScope` its own —
+and `derive_wants` clusters a desire's results by reading it, never by recomputing it
+([judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md)). The
+partition is `relevance.scopes`' as it always was; what changed is that it is data, replaced
+whole when the actions are, and a store holding no scope graph is refused rather than
+clustered as one scope. The cases in `packages/orexis-agent-deliberation/tests/scope_actions/`
+hold the function to a snapshot of what it writes.

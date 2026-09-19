@@ -133,9 +133,9 @@ is the price of hearing an empty result.
   [judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md): the
   judgments are written to the store by `judge_desires` — the loud select made durable, the
   dataset per instant chosen by the door in Python — so `derive_wants` is a function of the
-  judgment graph alone and needs no view per instant. What is left of the trial is that
-  function as one update, once the scope partition is data. A/B alternated within one session,
-  as this bench requires.
+  judgment graph alone and needs no view per instant; and `scope_actions` writes the
+  scope partition to the store at boot, so it is data. What is left of the trial is the
+  derivation itself as one update. A/B alternated within one session, as this bench requires.
 
 # Seams left open
 

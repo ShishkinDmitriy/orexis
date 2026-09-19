@@ -96,6 +96,7 @@ GRAPH graph:ontology {
   :actions a orexis:PublicGraph .
   :world a orexis:PublicGraph .
   deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
+  deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
   graph:ontology a orexis:PublicGraph .
   orexis:DesireGraph rdfs:subClassOf orexis:Graph .
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
