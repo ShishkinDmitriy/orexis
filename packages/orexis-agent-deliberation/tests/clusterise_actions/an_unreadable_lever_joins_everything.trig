@@ -1,0 +1,25 @@
+# an_unreadable_lever_joins_everything
+#
+# The two levers of two_properties_two_levers, and a third whose effect names its predicate
+# by a variable: what it writes cannot be read, so it might touch anything, and it joins
+# every predicate into one scope — with all three levers in it.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graph: <http://example.org/orexis/graph/> .
+@prefix scopes: <http://example.org/orexis/graph/scopes/> .
+
+GRAPH :actions {
+  :fill a orexis:Action ;
+      sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?t :level ?x . } WHERE { ?t a :Tank }""" .
+  :heat a orexis:Action ;
+      sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
+  :tweak a orexis:Action ;
+      sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?t ?p ?x . } WHERE { ?t a :Tank ; ?p ?x }""" .
+}

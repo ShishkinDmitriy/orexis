@@ -5,9 +5,10 @@
 #
 # The clock stands at 2026-01-01T12:00:00Z when the road runs.
 #
-# THE JUDGMENTS AS `judge_desires` LEFT THEM on this situation (judge_desires/a_tank_low_now.trig):
-# the desires, the levers, whatever stands, and the judgment graph — no world, no readings,
-# no predictions. `derive_wants` reads the judgments and nothing in hand.
+# THE JUDGMENTS AS `judge_desires` LEFT THEM on this situation (judge_desires/a_tank_low_now.trig),
+# and the scopes `clusterise_actions` made of its levers: the desires, the scopes, whatever
+# stands, and the judgment graph — no world, no readings, no predictions, no levers.
+# `derive_wants` reads the judgments and the scopes, and nothing in hand.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
@@ -21,6 +22,7 @@
 @prefix roots: <http://example.org/orexis/graph/roots/> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
 @prefix judgments: <http://example.org/orexis/graph/judgments/> .
+@prefix scopes: <http://example.org/orexis/graph/scopes/> .
 
 GRAPH roots:keeper {
   :in_range a sh:NodeShape ;
@@ -40,13 +42,13 @@ GRAPH roots:keeper {
       rdfs:label "every tank in range" .
 }
 
-GRAPH :actions {
-  :fill a orexis:Action ;
-      sh:construct """PREFIX : <http://example.org/test#>
-        CONSTRUCT { ?t :level ?x . } WHERE { ?t a :Tank }""" .
-  :heat a orexis:Action ;
-      sh:construct """PREFIX : <http://example.org/test#>
-        CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
+GRAPH scopes:keeper {
+  :fill deliberation:inScope :keeper.scope.1 .
+  :heat deliberation:inScope :keeper.scope.2 .
+  :keeper.scope.1 a deliberation:Scope .
+  :keeper.scope.2 a deliberation:Scope .
+  :level deliberation:inScope :keeper.scope.1 .
+  :temperature deliberation:inScope :keeper.scope.2 .
 }
 
 GRAPH judgments:keeper {
@@ -66,4 +68,7 @@ GRAPH graph:classification {
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
   roots:keeper a orexis:DesireGraph .
+  scopes:keeper a deliberation:ScopeGraph ;
+      orexis:arrivedBy orexis:Derived ;
+      orexis:beliefsOf :keeper .
 }

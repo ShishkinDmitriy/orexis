@@ -27,7 +27,7 @@ everything is in the store.
 
 # The decision
 
-**Two functions, each a file of its own — `judge_desires.py`, `derive_wants.py` — one contract each.**
+**Two functions, each a file of its own — `judge_desires.py`, `derive_wants.py` — one contract each**, and a third beside them since, `clusterise_actions.py`, which writes the scopes the derivation clusters by.
 
 - `judge_desires(agent)`: every desire's compiled met-test run through the door at the present
   and at every prediction's start, and the answers written as one `deliberation:Judgment` per
@@ -89,8 +89,9 @@ SELECT (`judgments.py`). Nothing stands between the two functions but the store.
 - **The urgency half.** A package's urgency written on the judgment it belongs to, and the
   container's `Judgments` reading the store rather than asking the choir — which flips the
   principle that a collection over contributed answers is handed the agent, on purpose.
-- **`derive_wants` as one update**, once the scope partition is data, which is what is left of
-  the trial the update record proposed.
+- **`derive_wants` as one update.** The scope partition is data now — `clusterise_actions`, a
+  third function, writes it at boot as the scope graph, and `derive_wants` reads it — so what
+  is left of the trial the update record proposed is the derivation itself as an update.
 - **Every desire, on every call.** A pass standing on one root, and the ledger writing one debt,
   judge and derive every desire — one select per desire per instant, milliseconds each. The
   first measurement found the cost elsewhere: the two carves of a shape parsed the whole

@@ -36,3 +36,14 @@ def judgments_graph(agent_id: str) -> str:
     """ONE agent's judgments, replaced whole on every run of `judge_desires`: a working
     graph, read by `derive_wants` and by eyes, carried by no plan and recorded by nothing."""
     return "http://example.org/orexis/graph/judgments/" + agent_id
+
+
+#  A SCOPE (clusterise-actions): which predicates some one action or derivation moves together.
+SCOPE = DELIBERATION + "Scope"
+IN_SCOPE = DELIBERATION + "inScope"
+
+
+def scopes_graph(agent_id: str) -> str:
+    """ONE agent's scopes, replaced whole on every run of `clusterise_actions`: a working
+    graph, read by `derive_wants` and by eyes, carried by no plan and recorded by nothing."""
+    return "http://example.org/orexis/graph/scopes/" + agent_id

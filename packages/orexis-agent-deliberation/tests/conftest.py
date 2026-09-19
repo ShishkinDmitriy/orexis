@@ -50,7 +50,8 @@ def stand_in(case: Path, text: str | None = None):
     st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
       <{ONTOLOGY_GRAPH}> a orexis:PublicGraph . <{WORLD}> a orexis:PublicGraph . <{ACTIONS}> a orexis:PublicGraph .
       orexis:PredictionGraph rdfs:subClassOf orexis:Graph . orexis:DesireGraph rdfs:subClassOf orexis:Graph .
-      deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph . orexis:WorkingGraph rdfs:subClassOf orexis:Graph . }} }}""")
+      deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph . orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+      deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph . }} }}""")
     st.put_graph(WORLD, text if text is not None else case.read_text(), dataset=True)
     desires, wants = Desires(st), Wants(st)
     wants.on_saved.append(lambda _: desires.rebuild())
