@@ -336,10 +336,12 @@ def _unmet_select_of(agent, root: str) -> str | None:
     if rows:
         shape = rows[0]["s"]
         try:
-            #  FROM THE GRAPHS THAT HOLD DESIRES, asked by class — a root's shape and its
-            #  blank-node closure live there whole, and the whole belief base parsed into
-            #  rdflib cost half a second per root for a closure of forty triples (#711).
-            shapes = graph_from(agent.beliefs, *agent.beliefs.graphs_of(OREXIS + "DesireGraph"))
+            #  FROM THE GRAPHS THAT HOLD DESIRES AND WANTS, asked by class — a root's shape and
+            #  its blank-node closure live in a desire graph whole, a derived want's own in its
+            #  want graph (the container reads a want's crossing off that one), and the whole
+            #  belief base parsed into rdflib cost half a second per shape for a closure of
+            #  forty triples (#711).
+            shapes = graph_from(agent.beliefs, *agent.beliefs.graphs_of(OREXIS + "DesireGraph", OREXIS + "WantGraph"))
             select = report_select(shapes.cbd(URIRef(shape)), URIRef(shape))
         except Unsupported as exc:
             log.warning("%s: its met-test cannot be compiled, so no crossing is read for it: %s",
@@ -573,8 +575,8 @@ def narrowed(agent, shape: str, own: str, instance: str | None, abouts: tuple) -
 
     about_p = URIRef("http://example.org/orexis#about")
     targets = {SH.targetNode, SH.targetClass, SH.targetSubjectsOf, SH.targetObjectsOf, SH.target}
-    #  From the graphs that hold desires, asked by class, as `_unmet_select_of` carves (#711).
-    cbd = graph_from(agent.beliefs, *agent.beliefs.graphs_of(OREXIS + "DesireGraph")).cbd(URIRef(shape))
+    #  From the graphs that hold desires and wants, asked by class, as `_unmet_select_of` carves (#711).
+    cbd = graph_from(agent.beliefs, *agent.beliefs.graphs_of(OREXIS + "DesireGraph", OREXIS + "WantGraph")).cbd(URIRef(shape))
     keep = {URIRef(a) for a in abouts}
     out, dropped = Graph(), Graph()
     for p, o in cbd.predicate_objects(URIRef(shape)):
