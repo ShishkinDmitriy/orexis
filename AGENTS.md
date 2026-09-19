@@ -332,6 +332,14 @@ it is a record wearing a bullet.
   their own texts, whose a judgment is they read off `orexis:holds`, and the present is the
   clock's; the wrapper caching a view of the store cannot see a write it did not make, so
   asking it for the engine (`Store.engine`) is what makes it forget.
+- **A met-test asked by band names which way it broke, and tests no topology** — a reading is
+  the band it is in, so a desire says *it should be inside* once per way of failing and each
+  block declares its side, which the judgment carries (`orexis:violationIs`: below, above,
+  unmeasured, stale) because that is what decides the repair — a look answers the unmeasured
+  one and no lever does. A test that walked the topology instead would be satisfiable by
+  moving the sample off the subject or by re-pointing what counts as ideal, which is the goal
+  repaired by editing its own premises; a structural repair stays reachable because the
+  closure walks back from what the want reads to whatever changes it.
 - **Only the judge takes predictions into account, and it takes them as given** — it
   enumerates the states, the present and every instant a prediction reaches, and judges the
   desire at each; what it read is written down, so a crossing is a filter over the judgment
