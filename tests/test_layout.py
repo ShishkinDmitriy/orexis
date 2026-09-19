@@ -670,7 +670,8 @@ def test_no_reader_names_a_per_agent_graph():
     asked which graphs could be renamed freely, and this is what makes it all of them.
     """
     helpers = {"picks_graph", "roots_graph", "promises_graph", "obligations_graph", "intentions_graph",
-               "pursued_graph", "remembered_graph", "revisions_graph", "evidence_graph", "summaries_graph"}
+               "pursued_graph", "remembered_graph", "revisions_graph", "evidence_graph", "summaries_graph",
+               "judgments_graph"}
     readers = ["packages/orexis-agent-deliberation/planner.py", "packages/orexis-agent-deliberation/desires.py",
                "packages/orexis-agent-deliberation/imaginarium.py", "packages/orexis-agent-deliberation/pursuit.py",
                "packages/orexis-agent-deliberation/afforder.py", "packages/orexis-agent-deliberation/affordances.py",

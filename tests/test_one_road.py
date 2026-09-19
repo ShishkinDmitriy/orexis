@@ -54,7 +54,7 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_road_mints_the_
     assert not bindings(agent.beliefs.query_union(
         f"SELECT ?t WHERE {{ <{debt}> a ?t . FILTER(STRSTARTS(STR(?t), '{OREXIS}')) }}")), \
         "the debt row carries no kernel type — it is not a want"
-    [want] = agent.wants.find_all_pursued()
+    [want] = agent.wants.find_all_by_desire(root)          # every desire derives; this one's
     assert want.desire == root and want.about == (debt,)
     assert want.uri.startswith(root + ".pursued.obligation.")
     assert abs(datetime.fromisoformat(want.holds_at).timestamp() - deadline) < 1.0
@@ -78,7 +78,8 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_road_mints_the_
 def test_presenting_makes_the_roads_want_pursuable_and_paying_withdraws_its_ground(monkeypatch):
     agent, ledger, root = _host(monkeypatch)
     ledger.owe("fern", "jti-2", expires_at=time.time() + HOUR, amount_l=1.0)
-    pursuit.top_up(agent, root)
+    pursuit.judge_desires(agent)
+    pursuit.derive_wants(agent)
     ledger.demanded("jti-2")
     [judged] = ledger.obligations()
     assert judged.state == "demanded" and judged.pursuable, "the holder asked"
@@ -103,8 +104,9 @@ def test_a_second_claim_is_a_second_want_and_the_first_stands(monkeypatch):
 
     presented = next(j for j in agent.pursuing() if j.uri == first.uri)
     assert pursuit.handed(agent, presented).uri == first.uri
-    assert pursuit.top_up(agent, root) == [], "nothing new to mint"
-    assert {w.uri for w in agent.wants.find_all_pursued()} == {first.uri, second.uri}
+    pursuit.judge_desires(agent)
+    assert pursuit.derive_wants(agent) == [], "nothing new to mint"
+    assert {w.uri for w in agent.wants.find_all_by_desire(root)} == {first.uri, second.uri}
 
 
 def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(monkeypatch):
@@ -127,7 +129,8 @@ def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(mon
     [now] = agent.wants.find_all_pursued()
     assert now.uri == foreseen.uri and now.about == (debt,), "the same want, re-minted"
     assert now.holds_at is None, "at no instant: the holder is waiting"
-    assert pursuit.top_up(agent, root) == [], "and the road is idle again"
+    pursuit.judge_desires(agent)
+    assert pursuit.derive_wants(agent) == [], "and the road is idle again"
 
     presented = next(j for j in agent.pursuing() if j.uri == now.uri)
     assert presented.holds_at is None and presented.pursuable

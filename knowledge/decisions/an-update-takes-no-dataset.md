@@ -75,7 +75,7 @@ does not bite, and the select the compiler emits is unchanged. A copy per instan
 already does; forking was measured at a tenth of a percent of a pass
 ([the-mutable-slice-was-narrowed-and-not-taken](/decisions/the-mutable-slice-was-narrowed-and-not-taken.md)).
 
-With both, `top_up` is two updates and no Python object: the views, then one
+With both, the road is two updates and no Python object: the views, then one
 `INSERT { the want } WHERE { SELECT ?scope ?instance (MIN(?at)) (GROUP_CONCAT(STR(?about))) …
 GROUP BY ?scope ?instance }` with `$now` and the instants bound in by the same binder every
 rule takes its tokens through. What stays in Python is rendering that text — which is not a
@@ -129,10 +129,13 @@ is the price of hearing an empty result.
 
 # What is left
 
-- The trial, on the road alone: the partition materialised at genesis, the view per instant
-  materialised by one update, `top_up` as two updates, `witnesses_of` kept as the loud select in
-  front of them. A/B alternated within one session, as this bench requires. Nothing of it is
-  built.
+- The trial, on the road alone, reshaped by
+  [judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md): the
+  judgments are written to the store by `judge_desires` — the loud select made durable, the
+  dataset per instant chosen by the door in Python — so `derive_wants` is a function of the
+  judgment graph alone and needs no view per instant. What is left of the trial is that
+  function as one update, once the scope partition is data. A/B alternated within one session,
+  as this bench requires.
 
 # Seams left open
 

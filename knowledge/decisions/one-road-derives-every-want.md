@@ -156,9 +156,12 @@ the ledger.
 **The road's contract is a table, and the table found a defect on its first run.**
 `packages/orexis-agent-deliberation/tests/road/` holds one TriG file per case — the world, the
 levers, the desire with its met-test, the present, the foreseen, what stands — loaded into a
-bare store and run through `top_up` in milliseconds, where the four world files that covered
-the road each stood an agent up to show one case. What the road leaves is held to a SNAPSHOT
-of the whole store beside the case (`<case>.snapshot.trig`, the case's own text with the
+bare store and run through the road's two functions, `judge_desires` then `derive_wants`
+([judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md)), in
+milliseconds, where the four world files that covered the road each stood an agent up to
+show one case. What the road leaves is held to a SNAPSHOT
+of the whole store beside the case (one per function, `<case>.judge_desires.trig` and
+`<case>.derive_wants.trig`, each the input's own text with the
 road's changes in it — an unchanged graph verbatim, a changed one re-rendered in place, what
 the road wrote after — so `diff` of case against snapshot is what the road did), never to a
 reading of it:

@@ -1,12 +1,20 @@
-"""The road, one case per file, held to a SNAPSHOT of the whole store it leaves behind.
+"""The road as two functions over the store, one case per file, each function held to a
+SNAPSHOT of the whole store it leaves behind.
 
 **No world, no genesis, no agent.** Each `road/<case>.trig` is one case, whole — the world the
 desire ranges over, the levers whose effects say which properties move together, the desire
 with its met-test, what the instruments read now, what is foreseen and from when, and what
 already stands. This file loads a case into a bare store, stands a stand-in agent on it — the
-real `Desires` and `Wants` collections over that store, nothing else — runs `pursuit.top_up`,
-and compares EVERY quad the store then holds with `road/<case>.snapshot.trig`, the snapshot beside the
-case. A case costs milliseconds; the four world files that covered the road end to end
+real `Desires` and `Wants` collections over that store, nothing else — and runs the road's two
+functions in turn (judge-desires-then-derive-wants):
+
+- `judge_desires`: every desire judged at the present and at each foreseen instant, the
+  judgments written to the store. Held to `road/<case>.judge_desires.trig`.
+- `derive_wants`: the wants those judgments imply, minted under their desires, reading the
+  store and nothing else. Held to `road/<case>.derive_wants.trig`, which is written against
+  the judged state, so its diff against the first snapshot is the derivation alone.
+
+A case costs milliseconds; the four world files that covered the road end to end
 (`tests/test_greenhouse.py`, `test_foreseen.py`, `test_one_road.py`, `test_pursued.py`) each
 stood a whole agent up to show one of these.
 
@@ -15,23 +23,23 @@ graph and compared five things per want — name, what it is about, the instant,
 node, the constraint blocks — and a want writes nineteen quads: the holder's link, the label,
 the provenance link, its graph's classification and owner, its period. Any of those could be
 wrong with every case green, and the road could write into a graph it was handed to read and
-nothing would say so. A snapshot of the store compared whole is exact — what the road left,
-and nothing else, in every graph — so a change in the road's behaviour shows as a diff of the
-snapshot, reviewed by eyes, and never as a check somebody forgot to widen. Regenerate with
+nothing would say so. A snapshot of the store compared whole is exact — what the function left,
+and nothing else, in every graph — so a change in behaviour shows as a diff of the snapshot,
+reviewed by eyes, and never as a check somebody forgot to widen. Regenerate with
 `pytest packages/orexis-agent-deliberation/tests --update-snapshots`; a case without a
 snapshot fails rather than passing on nothing.
 
-TriG, IN THE CASE'S OWN ORDER, so `diff <case>.trig <case>.snapshot.trig` is the change: a
-graph the road left as it found it is copied from the case verbatim, comments and all; one it
-changed is re-rendered in its place, its comment kept; one it dropped leaves a note; and what
-it wrote comes after, under a marker. The rendering is a small serializer of this file's that
-orders everything — subjects, predicates, objects — and inlines a blank node used once, so a
-shape reads as the shape it is and the same store writes the same text on every run.
-Compared STRUCTURALLY: the snapshot is parsed back and both sides are canonicalised to the
-same quad lines, so a label or a layout is never what fails a case. The clock stands at
+TriG, IN THE CASE'S OWN ORDER, so `diff` of the input against the snapshot is the change: a
+graph the function left as it found it is copied from the input verbatim, comments and all;
+one it changed is re-rendered in its place, its comment kept; one it dropped leaves a note;
+and what it wrote comes after, under a marker. The rendering is a small serializer of this
+file's that orders everything — subjects, predicates, objects — and inlines a blank node used
+once, so a shape reads as the shape it is and the same store writes the same text on every
+run. Compared STRUCTURALLY: the snapshot is parsed back and both sides are canonicalised to
+the same quad lines, so a label or a layout is never what fails a case. The clock stands at
 2026-01-01T12:00:00Z, so a file can say an instant and mean it, and a period the road writes
-is the same on every run. What the store needs beyond the case is five triples: which three
-graphs are public, and that the two graph classes a case uses exist at all — the door asks
+is the same on every run. What the store needs beyond the case is seven triples: which three
+graphs are public, and that the graph classes the road asks by exist at all — the door asks
 for predictions and for the agent's own graphs by `rdfs:subClassOf*`, and a zero-length path
 matches a class only where the class is a term of the graph asked. A case classifies its
 roots graph as boot does, `orexis:DesireGraph`: the road finds a root's shape by asking which
@@ -62,18 +70,20 @@ NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 AGENT, ME = "keeper", "http://example.org/test#keeper"
 WORLD, ACTIONS = "http://example.org/test#world", "http://example.org/test#actions"
 ROAD = Path(__file__).parent / "road"
-CASES = sorted(p for p in ROAD.glob("*.trig") if not p.name.endswith((".snapshot.trig", ".actual.trig")))
+CASES = sorted(p for p in ROAD.glob("*.trig") if "." not in p.stem)    # a snapshot is <case>.<function>.trig
 UPDATE = "pytest packages/orexis-agent-deliberation/tests --update-snapshots"
 
 
-def stand_in(case: Path):
-    """An agent standing on the case: the store the file describes, and the two collections."""
+def stand_in(case: Path, text: str | None = None):
+    """An agent standing on the case — or on `text`, a snapshot of one: the store the file
+    describes, and the two collections."""
     st = Store()
     st.agent_id, st.agent_uri, st.graph = AGENT, ME, picks_graph(AGENT)
     st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
       <{ONTOLOGY_GRAPH}> a orexis:PublicGraph . <{WORLD}> a orexis:PublicGraph . <{ACTIONS}> a orexis:PublicGraph .
-      orexis:PredictionGraph rdfs:subClassOf orexis:Graph . orexis:DesireGraph rdfs:subClassOf orexis:Graph . }} }}""")
-    st.put_graph(WORLD, case.read_text(), dataset=True)
+      orexis:PredictionGraph rdfs:subClassOf orexis:Graph . orexis:DesireGraph rdfs:subClassOf orexis:Graph .
+      deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph . orexis:WorkingGraph rdfs:subClassOf orexis:Graph . }} }}""")
+    st.put_graph(WORLD, text if text is not None else case.read_text(), dataset=True)
     desires, wants = Desires(st), Wants(st)
     wants.on_saved.append(lambda _: desires.rebuild())
     wants.on_deleted.append(lambda _: desires.rebuild())
@@ -121,11 +131,12 @@ def prefixes_of(case: Path) -> dict[str, str]:
 BLOCK = re.compile(r"(?:^#[^\n]*\n)*^GRAPH (\S+) \{[ \t]*\}?\n?(?:.*?^\}\n)?\n*", flags=re.S | re.M)
 
 
-def segments_of(case: Path) -> tuple[str, list[tuple[str, str]]]:
-    """The case's text as its preamble — the header comment and the prefixes — and one segment
-    per `GRAPH` block: the graph's IRI and the block's text with the comment lines above it,
-    in the order the author wrote them. What the writer copies verbatim, and the order it keeps."""
-    text, prefixes = case.read_text(), prefixes_of(case)
+def segments_of(text: str) -> tuple[str, list[tuple[str, str]]]:
+    """A case's text — or a snapshot's, which is a case's with changes in it — as its preamble,
+    the header comment and the prefixes, and one segment per `GRAPH` block: the graph's IRI and
+    the block's text with the comment lines above it, in the order written. What the writer
+    copies verbatim, and the order it keeps."""
+    prefixes = dict(re.findall(r"^@prefix (\w*): <([^>]*)> \.", text, flags=re.M))
     blocks = [(m.group(1), m.group(0)) for m in BLOCK.finditer(text)]
     assert blocks, case.name
     preamble = text[:text.index(blocks[0][1])]
@@ -198,10 +209,11 @@ def renderer(prefixes: dict[str, str]):
     return render
 
 
-def trig_of(case: Path, before: dict[str, Graph], after: dict[str, Graph], header: str) -> str:
-    """The store after the road, as the case's text with the road's changes in it."""
-    preamble, segments = segments_of(case)
-    render = renderer(prefixes_of(case))
+def trig_of(base: str, before: dict[str, Graph], after: dict[str, Graph], header: str) -> str:
+    """The store after a function ran, as the base text — the case's, or the previous
+    snapshot's — with the function's changes in it."""
+    preamble, segments = segments_of(base)
+    render = renderer(dict(re.findall(r"^@prefix (\w*): <([^>]*)> \.", base, flags=re.M)))
     same = lambda iri: quad_lines({iri: before[iri]}) == quad_lines({iri: after[iri]})
     out = [header + "\n" + preamble]
     for iri, block in segments:
@@ -209,14 +221,14 @@ def trig_of(case: Path, before: dict[str, Graph], after: dict[str, Graph], heade
         graph_name = re.search(r"^GRAPH (\S+)", block, flags=re.M).group(1)
         spacing = block[len(block.rstrip("\n")):]          # the blank lines the author left after it
         if iri not in after:
-            out.append(f"{comments}# DROPPED by the road: {graph_name}\n{spacing}")
+            out.append(f"{comments}# DROPPED: {graph_name}\n{spacing}")
         elif iri in before and same(iri):
             out.append(block)
         else:
-            out.append(f"{comments}# CHANGED by the road, re-rendered:\n" + render(iri, after[iri]) + spacing)
+            out.append(f"{comments}# CHANGED, re-rendered:\n" + render(iri, after[iri]) + spacing)
     written = [iri for iri in sorted(after) if iri not in {iri for iri, _ in segments}]
     if written:
-        out.append("\n# --- WRITTEN by the road (and the loader's own vocabulary stub) ---\n\n")
+        out.append("\n# --- WRITTEN (the first snapshot also holds the loader's own vocabulary stub) ---\n\n")
         out.append("\n".join(render(iri, after[iri]) for iri in written))
     return "".join(out)
 
@@ -233,44 +245,67 @@ def snapshot_read(path: Path) -> dict[str, Graph]:
     return canonical_graphs({g: st.dump_nt(g) for g in st.graph_names()})
 
 
-def snapshot_path(case: Path) -> Path:
-    return case.with_suffix(".snapshot.trig")
+def held_to(case: Path, request, function: str, base: str, before: dict, after: dict) -> str:
+    """Hold what `function` left to `road/<case>.<function>.trig`, writing it from `base` under
+    `--update-snapshots`; on a mismatch, what was actually left goes to `<case>.<function>.actual.trig`
+    for `diff`. Returns the snapshot's text, the base the next function's snapshot is written from."""
+    path = ROAD / f"{case.stem}.{function}.trig"
+    header = (f"# The whole store after `{function}` ran on {case.name}, in the input's own order:\n"
+              f"# `diff` of the previous file against this one is what `{function}` did. Regenerated by\n"
+              f"# `{UPDATE}` — review the diff; it is the claim.")
+    text = trig_of(base, before, after, header)
+    if request.config.getoption("--update-snapshots"):
+        path.write_text(text)
+    assert path.exists(), f"{case.name} has no snapshot for {function}: run `{UPDATE}` and review {path.name}"
+    lines, expected = quad_lines(after), quad_lines(snapshot_read(path))
+    left, missing = sorted(lines - expected), sorted(expected - lines)
+    if left or missing:
+        received = ROAD / f"{case.stem}.{function}.actual.trig"
+        received.write_text(trig_of(base, before, after, f"# What `{function}` actually left on {case.name}."))
+    assert not left and not missing, (
+        f"{case.name}: the store `{function}` left differs from {path.name}\n"
+        + "".join(f"  left, unexpected:           {l}\n" for l in left)
+        + "".join(f"  the snapshot says, missing: {l}\n" for l in missing)
+        + f"  what was left is in {received.name}: `diff {path.name} {received.name}`;\n"
+        + f"  if the change is on purpose: `{UPDATE}`, then review the diff")
+    return path.read_text() if path.exists() else text
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c.stem for c in CASES])
-def test_the_road_leaves_the_store_as_the_snapshot_says(case, monkeypatch, request):
+def test_judge_desires_leaves_the_store_as_the_snapshot_says(case, monkeypatch, request):
     monkeypatch.setattr(clock, "now", lambda: NOW)
     agent = stand_in(case)
     before = snapshot_of(agent.beliefs)
-    [root] = {d.uri for d in agent.desires.find_all()}    # a row per `about`, one desire
-    pursuit.top_up(agent, root)
-    actual = snapshot_of(agent.beliefs)
-    path = snapshot_path(case)
-    if request.config.getoption("--update-snapshots"):
-        path.write_text(trig_of(case, before, actual,
-                                f"# The whole store after the road ran on {case.name}, in the case's own order:\n"
-                                f"# `diff {case.name} {path.name}` is what the road did. Regenerated by\n"
-                                f"# `{UPDATE}` — review the diff; it is the claim."))
-    assert path.exists(), f"{case.name} has no snapshot: run `{UPDATE}` and review {path.name}"
-    lines, expected = quad_lines(actual), quad_lines(snapshot_read(path))
-    left, missing = sorted(lines - expected), sorted(expected - lines)
-    if left or missing:
-        #  WHAT THE ROAD LEFT, written beside the snapshot for `diff` — the same text a
-        #  regenerate would write, so accepting it is a regenerate. Ignored by git.
-        received = case.with_suffix(".actual.trig")
-        received.write_text(trig_of(case, before, actual, f"# What the road actually left on {case.name}."))
-    assert not left and not missing, (
-        f"{case.name}: the store the road left differs from {path.name}\n"
-        + "".join(f"  the road left, unexpected:  {l}\n" for l in left)
-        + "".join(f"  the snapshot says, missing: {l}\n" for l in missing)
-        + f"  what the road left is in {received.name}: `diff {path.name} {received.name}`;\n"
-        + f"  if the road changed on purpose: `{UPDATE}`, then review the diff")
+    pursuit.judge_desires(agent)
+    held_to(case, request, "judge_desires", case.read_text(), before, snapshot_of(agent.beliefs))
+
+
+@pytest.mark.parametrize("case", CASES, ids=[c.stem for c in CASES])
+def test_derive_wants_leaves_the_store_as_the_snapshot_says(case, monkeypatch, request):
+    """Run after `judge_desires` in the same store, and written against the judged state, so
+    the diff of the two snapshots is the derivation alone — and reading the judged snapshot
+    back into a bare store and deriving from THAT leaves the same store, which is the
+    contract: `derive_wants` reads the store and nothing in hand."""
+    monkeypatch.setattr(clock, "now", lambda: NOW)
+    agent = stand_in(case)
+    loaded = snapshot_of(agent.beliefs)
+    pursuit.judge_desires(agent)
+    judged = snapshot_of(agent.beliefs)
+    judged_text = trig_of(case.read_text(), loaded, judged, "")
+    pursuit.derive_wants(agent)
+    derived = snapshot_of(agent.beliefs)
+    held_to(case, request, "derive_wants", judged_text, judged, derived)
+    #  FROM THE STORE ALONE: the judged snapshot read back, and derived from with nothing in hand.
+    other = stand_in(case, text=judged_text)
+    pursuit.derive_wants(other)
+    assert quad_lines(snapshot_of(other.beliefs)) == quad_lines(derived), \
+        "deriving from the judged store read back differs from deriving in the same store"
 
 
 def test_every_case_is_read_and_no_snapshot_is_orphaned():
     """A glob that stopped matching would pass every case by running none; a snapshot whose
     case was deleted or renamed would keep saying something nobody checks."""
     assert len(CASES) >= 11, [c.name for c in CASES]
-    orphans = sorted(p.name for p in ROAD.glob("*.snapshot.trig")
-                     if not ROAD.joinpath(p.name.removesuffix(".snapshot.trig") + ".trig").exists())
+    orphans = sorted(p.name for p in ROAD.glob("*.*.trig")
+                     if not p.name.endswith(".actual.trig") and not (ROAD / (p.stem.split(".")[0] + ".trig")).exists())
     assert not orphans, f"snapshots without a case: {orphans}"

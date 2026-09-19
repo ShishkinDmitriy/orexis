@@ -317,9 +317,15 @@ it is a record wearing a bullet.
   collections; identity travels as a query criterion, and the reads need none at all, since one
   agent, one volume means the store IS the scope.
 - **A capability that asks the road is not minting** — the ledger, having written a debt and
-  what it predicts of it, calls `pursuit.top_up` for its desire so a claim arriving is a want
-  arriving and not a want on the next tick; what it writes is the instance and the prediction,
-  and what stands afterwards is the road's, in deliberation's family, about that debt.
+  what it predicts of it, calls `judge_desires` and `derive_wants` so a claim arriving is a
+  want arriving and not a want on the next tick; what it writes is the instance and the
+  prediction, and what stands afterwards is the road's, in deliberation's family, about that
+  debt — and every other desire's, since the road is about all of them.
+- **The road is two functions over the store, and a judgment is written down** —
+  `judge_desires` judges every desire at the present and at each foreseen instant and writes
+  the judgments as SHACL reports to a working graph, replaced whole; `derive_wants` mints the
+  wants from that graph and nothing in hand; each is held to a snapshot of the store it
+  leaves, and the eleven cases leave the wants the one-function road left.
 - **What was foreseen may arrive early, and the present outranks the instant** — a want
   minted at a predicted crossing or lapse says *hold at T* and its plan is placed to land at
   T, so when the holder presented an hour early the serve was placed at the deadline; a

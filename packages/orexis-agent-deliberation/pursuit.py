@@ -30,9 +30,11 @@ knowledge/decisions/an-intention-is-a-plan-committed-to.md.
 from __future__ import annotations
 
 import logging
+import json
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 
+from .verdict import Result, Verdict
 from .want import Want
 from .plan import SATISFIED
 
@@ -69,13 +71,16 @@ def handed(agent, judgment):
         #  have gained instances since — a second claim — so the road tops up first; and where
         #  that re-minted THIS want — what it foresaw has arrived — the judgment in hand still
         #  carries the old instant, so it is presented again.
-        if judgment.derived_from is not None and judgment.uri in top_up(agent, judgment.derived_from):
-            return next((d for d in agent.pursuing() if d.uri == judgment.uri), judgment)
+        if judgment.derived_from is not None:
+            judge_desires(agent)
+            if judgment.uri in derive_wants(agent):
+                return next((d for d in agent.pursuing() if d.uri == judgment.uri), judgment)
         return judgment
-    #  THE PASS STANDS ON THE ROOT, so the container's judgment of its present is in hand and
-    #  the road is told it rather than reading it again — which is also what lets a root whose
-    #  met-test the compiler refused, judged unmet by the choir, still derive its one want.
-    top_up(agent, judgment.uri, unmet_now=not judgment.is_met)
+    #  THE PASS STANDS ON THE ROOT: every desire is judged into the store and the wants derived
+    #  from what the store says — a root whose met-test the compiler refused is judged by the
+    #  choir there, and still derives its one want.
+    judge_desires(agent)
+    derive_wants(agent)
     child = child_of(agent, judgment.uri)
     if child is None:
         return None
@@ -86,39 +91,127 @@ def handed(agent, judgment):
     return presented if presented is not None else replace(judgment, uri=child, derived_from=judgment.uri)
 
 
-def top_up(agent, root: str, *, unmet_now: bool | None = None) -> list[str]:
-    """Mint a want under `root` for every cluster of its witnesses that has none, and return
-    what was minted. The whole of the road's writing, run whenever a pass stands on the root
-    or on any want under it — and by a package that has just written an instance, since a
-    claim arriving should be a want arriving, not a want on the next tick. A package that
-    calls this mints nothing; it says an instance is there and the road does the rest
-    (one-road-derives-every-want).
+def judge_desires(agent) -> list[Verdict]:
+    """Judge every desire at the present and at every foreseen instant, and write the
+    judgments to the store — the first of the road's two functions (judge-desires-then-
+    derive-wants). After it, the store says what each desire's met-test read: met or unmet,
+    and where unmet the results, one `deliberation:Judgment` per desire per instant in the
+    agent's judgment graph, replaced whole. Nothing of this run is kept anywhere else, so
+    `derive_wants` reads the store and nothing in hand.
 
-    `unmet_now` is the root's present as the caller judged it — the container's verdict,
-    where a pass stands on the root — and is read off the root's own select where nobody
-    says. The instant is EACH CLUSTER'S OWN. A root unmet now derives wants with none. A
-    root met now derives them at the crossings it foresees — and two debts cross at two
-    deadlines, so the second is not filtered away by the first's; each cluster holds at its
-    earliest witness, and one past the foresight is not derived. A root met now with nothing
-    foreseen derives NOTHING: there is nothing to pursue, and a want about everything the
-    desire is about is minted only for a root unmet now whose select yields no rows — a
-    met-test the compiler refused, or a shape naming nothing per block — which is what every
+    ONE SELECT PER DESIRE PER INSTANT, and not one union of them: the compiler measured a
+    single UNION of every shape at thirteen times the cost of the selects asked one by one,
+    so this iterates where the contract is the whole. The present is the door's `now`; the
+    foreseen instants are every prediction's start, where the door hands the prediction
+    holding then beside the present (#643). A desire whose met-test the compiler refuses is
+    judged by the choir — the container's judgment of its present, where one is in hand —
+    and carries no result: it derives its one want about everything it is about, as every
     want was before the road.
     """
-    present = witnesses_of(agent, root, now=True)
-    if unmet_now is None:
-        unmet_now = bool(present)
-    if unmet_now:
-        found, ahead = present, None
+    from .verdicts import Verdicts
+
+    roots = sorted({d.uri for d in agent.desires.find_all()})
+    now = clock.now()
+    starts = sorted({start for _g, start, _end in agent.beliefs.prediction_windows() if start is not None})
+    verdicts: list[Verdict] = []
+    for root in roots:
+        select = _unmet_select_of(agent, root)
+        if select is None:
+            pursuing = getattr(agent, "pursuing", None)
+            row = next((d for d in pursuing() if d.uri == root), None) if pursuing is not None else None
+            if row is not None:
+                verdicts.append(Verdict(desire=root, holds_at=None, met=row.is_met))
+            continue
+        for at in [None, *starts]:
+            try:
+                answer = agent.beliefs.query_at(select, at=at or now)
+            except Exception as exc:                                    # noqa: BLE001
+                log.error("%s: could not be judged at %s: %s", root.rsplit("#", 1)[-1], at or "now", exc)
+                continue
+            results = tuple(sorted({_result(sol) for sol in answer.get("results", {}).get("bindings", [])},
+                                   key=lambda r: (r.focus, r.constraint, r.about or "")))
+            verdicts.append(Verdict(desire=root, holds_at=at, met=not results, results=results))
+    Verdicts(agent.beliefs).save(agent.id, agent.me.uri, verdicts)
+    return verdicts
+
+
+def _result(sol: dict) -> Result:
+    """One row of a desire's report select as a result: the focus node, which block refused
+    it, what the block is about, and the offending value AS A TERM — the engine's JSON binding
+    rendered back, since a bare string would lose whether it was an IRI or a typed literal."""
+    return Result(focus=sol["this"]["value"], constraint=int(sol["_constraint"]["value"]),
+                  about=sol["_about"]["value"] if "_about" in sol else None,
+                  value=_term(sol["_offending"]) if "_offending" in sol else None)
+
+
+def _term(binding: dict) -> str | None:
+    if binding["type"] == "uri":
+        return f"<{binding['value']}>"
+    if binding["type"] != "literal":
+        return None
+    text = json.dumps(binding["value"])
+    if binding.get("datatype"):
+        return f"{text}^^<{binding['datatype']}>"
+    if binding.get("xml:lang"):
+        return f"{text}@{binding['xml:lang']}"
+    return text
+
+
+def derive_wants(agent) -> list[str]:
+    """Mint a want under every desire for every cluster of its judgments' results that has
+    none, and return what was minted — the second of the road's two functions, reading the
+    judgments `judge_desires` wrote and nothing in hand (judge-desires-then-derive-wants).
+    Run whenever a pass stands on a root or on any want under it, and by a package that has
+    just written an instance, since a claim arriving should be a want arriving and not a want
+    on the next tick. A package that calls this mints nothing; it says an instance is there
+    and the road does the rest (one-road-derives-every-want).
+
+    The instant is EACH CLUSTER'S OWN. A desire unmet at the present derives wants with none.
+    One met at the present derives them at the instants it foresees unmet — and two debts
+    cross at two deadlines, so the second is not filtered away by the first's; each cluster
+    holds at its earliest result, and one past the foresight is not derived. A desire met at
+    the present with nothing foreseen derives NOTHING: there is nothing to pursue, and a want
+    about everything the desire is about is minted only for a desire unmet at the present
+    with no result — a met-test the compiler refused, judged by the choir — which is what
+    every want was before the road.
+    """
+    from .verdicts import Verdicts
+
+    by_desire: dict[str, list[Verdict]] = {}
+    for verdict in Verdicts(agent.beliefs).find_all():
+        by_desire.setdefault(verdict.desire, []).append(verdict)
+    minted: list[str] = []
+    for root, judged in sorted(by_desire.items()):
+        minted += _derive_under(agent, root, judged)
+    return minted
+
+
+def _derive_under(agent, root: str, judged: list[Verdict]) -> list[str]:
+    """The wants one desire's judgments imply, minted where none stands."""
+    present = next((v for v in judged if v.holds_at is None), None)
+    if present is None:
+        return []
+    now = clock.now()
+    if not present.met:
+        unmet_now, ahead = True, None
+        found = [Witness(instance=r.focus, constraint=str(r.constraint), about=r.about, at=now)
+                 for r in present.results]
     else:
-        ahead = foresees_of(agent, root)
+        unmet_now, ahead = False, foresees_of(agent, root)
         if ahead is None:
             return []
-        found = [w for w in witnesses_of(agent, root)
-                 if (w.at - clock.now()).total_seconds() <= ahead]
+        seen: dict[tuple[str, int], Witness] = {}
+        for verdict in sorted((v for v in judged if v.holds_at is not None and not v.met),
+                              key=lambda v: v.holds_at):
+            if (verdict.holds_at - now).total_seconds() > ahead:
+                continue
+            for r in verdict.results:
+                seen.setdefault((r.focus, r.constraint), Witness(
+                    instance=r.focus, constraint=str(r.constraint), about=r.about, at=verdict.holds_at))
+        found = sorted(seen.values(), key=lambda w: (w.at, w.instance, w.constraint))
         if not found:
             return []
-    #  ONE WANT PER SCOPE OF WHAT IS IN TROUBLE, and per INSTANCE: the witnesses clustered by
+    #  ONE WANT PER SCOPE OF WHAT IS IN TROUBLE, and per INSTANCE: the results clustered by
     #  which of them some action can move together, and a want minted per cluster about
     #  exactly those, holding at the earliest instant among them. Every shipped world is one
     #  scope, so two properties of one bed are one want; two debts are two instances and two

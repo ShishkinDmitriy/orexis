@@ -159,12 +159,13 @@ def test_a_pot_that_crosses_before_the_drift_said_is_wanted_now_and_not_at_the_c
     root = _stake(agent)
     agent.deliberator.decide(root)
     child = _stake(agent)
-    [minted] = agent.wants.find_all_pursued()
+    [minted] = agent.wants.find_all_by_desire(root.uri)     # every desire derives; the stake's
     assert minted.uri == child.uri and minted.holds_at is not None, "minted at the crossing"
 
     write_reading(agent, 0.05)                                       # below the floor, now
     assert pursuit.handed(agent, child).holds_at is None, \
         "handed the want as it stands now, not as the pass first read it"
-    [again] = agent.wants.find_all_pursued()
+    [again] = agent.wants.find_all_by_desire(root.uri)
     assert again.uri == minted.uri and again.holds_at is None, "the same want, at no instant"
-    assert pursuit.top_up(agent, root.uri) == [], "and once is enough"
+    pursuit.judge_desires(agent)
+    assert pursuit.derive_wants(agent) == [], "and once is enough"

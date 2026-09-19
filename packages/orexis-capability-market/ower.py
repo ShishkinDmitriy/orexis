@@ -311,7 +311,8 @@ SELECT ?o ?to ?jti ?a ?at ?paid WHERE {{ GRAPH <{graph}> {{
         the want under it is the road's to mint. The one thing the ledger asks of deliberation,
         and it asks rather than does — nothing here writes a want."""
         from orexis_agent_deliberation import pursuit
-        pursuit.top_up(self.agent, f"{self.agent.me.uri}.no_overdue_debts")
+        pursuit.judge_desires(self.agent)
+        pursuit.derive_wants(self.agent)
 
     def endow(self) -> int:
         """A debt written while the ledger minted its own want carried no PREDICTION beside it,
