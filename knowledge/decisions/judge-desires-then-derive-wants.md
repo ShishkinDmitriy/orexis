@@ -5,10 +5,11 @@ description: >-
   The sovereign's shape for the road - functions over the triple store, each reading what it
   needs and writing its own graph with provenance and time, and the SHACL results in the
   store too. Two functions, one contract each - after the call, all of it is in the store.
-  `judge_desires` judges every desire at the present and at every foreseen instant and writes
-  the judgments as SHACL validation reports to a working graph, replaced whole; `derive_wants`
-  mints the wants from that graph and nothing in hand; `scope_actions` writes the partition
-  they cluster by. All three are handed the engine, a pyoxigraph store, and nothing else. Refused - a view per instant, which the judgment's own instant
+  `derive_wants` judges every desire at the present and at every foreseen instant, writes the
+  judgments as SHACL validation reports to a working graph replaced whole, and mints the wants
+  that graph implies; `scope_actions` writes the partition they cluster by. Both are handed the
+  engine, a pyoxigraph store, and nothing else. It was two functions and the split was undone:
+  no caller ever took one half. Refused - a view per instant, which the judgment's own instant
   makes needless; one union query over every desire, measured at thirteen times the cost;
   the verb "check", where the dictionary says judge; writing the urgency half now, which is
   the seam left open; a wrapper between any of the three and the engine; the choir's judgment
@@ -32,7 +33,13 @@ everything is in the store.
 
 # The decision
 
-**Two functions, each a file of its own — `judge_desires.py`, `derive_wants.py` — one contract each**, and a third beside them since, `scope_actions.py`, which writes the scopes the derivation clusters by.
+**ONE function now, `derive_wants`, and one contract** — it was two, and this record is kept
+as the argument for both. Beside it, `scope_actions`, which writes the scopes the derivation
+clusters by.
+
+What it does, in order: judge every desire at the present and at every instant its holder
+foresees, write the judgments, then mint the wants those judgments imply. What it leaves: a
+store that says what every desire read and holds every want that follows from it.
 
 - `judge_desires(store)`: every desire's compiled met-test run over the graphs holding at the present
   and at every prediction's start, and the answers written as one `deliberation:Judgment` per
@@ -121,14 +128,27 @@ world and never a record, and it earns its place the way the trace does: it is t
 reader outside the process cannot recompute, since the belief base is locked by the process
 holding it, and what the snapshots show beside the wants.
 
-**Each function has its own cases and is held to a snapshot** of the store it leaves. A case
-in `packages/orexis-agent-deliberation/tests/judge_desires/` is a world as an agent finds it;
-one in `packages/orexis-agent-deliberation/tests/derive_wants/` is the judged state alone — the judgments, the desires, the levers whose effects say what a
-scope is, whatever stands — and nothing of the world that was judged, so a case that gave the
-function more would not be testing its contract. Beside each, `<case>.snapshot.trig` is the
-whole store afterwards in the case's own order, and `diff` of case against snapshot is what the
-function did. All eleven cases leave the wants, classifications and periods the one-function
-road left.
+**It has one set of cases and is held to a snapshot** of the store it leaves. A case in
+`packages/orexis-agent-deliberation/tests/derive_wants/` is a world as an agent finds it — the
+topology, the desire with its met-test, what the instruments read, what is foreseen, the scopes
+its levers make, whatever already stands. Beside each, `<case>.snapshot.trig` is the whole
+store afterwards in the case's own order, and `diff` of case against snapshot is what the
+function did: the judgments it wrote and the wants it minted, in one picture.
+
+**The split was undone.** For a while it was two functions, and the case for two was real:
+a contract and a snapshot each, and a named intermediate a reader could inspect. What decided
+against it is that no caller ever took one without the other — three call sites, each writing
+both lines, each able to write only the first. The sovereign, asked: *why do we have 2
+functions, not one?*
+
+What the merge did NOT touch is the judgment graph. It is written exactly as it was, and
+`judgments.witnesses_of` still reads it without deriving anything, which is what made the
+split look necessary and was never the same question. The graph is load-bearing; the function
+boundary was not.
+
+The cases merged with the functions. There were two sets, one per contract — a world to judge,
+then the judged state to derive from — with the same thirteen names in each, since each pair
+was one scenario told twice. They are one set of worlds now, and a snapshot shows both halves.
 
 # What was refused
 

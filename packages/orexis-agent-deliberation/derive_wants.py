@@ -1,35 +1,42 @@
-"""`derive_wants`: the wants every desire's judgments imply, minted under their desires — the
-second of the road's two functions (judge-desires-then-derive-wants), reading the judgment
-graph with one select and nothing in hand — and the minting beside it: which results cluster
-into one want (a scope), what the want is named, and the desire's met-test narrowed to the
-want's.
+"""`derive_wants`: every desire judged, and the wants those judgments imply minted under them
+(judge-desires-then-derive-wants). ONE FUNCTION, `derive_wants`, and one contract — after the
+call the store says what every desire read and holds every want that follows from it.
 
-A FUNCTION OVER THE STORE, like the one before it: handed the engine, a `pyoxigraph.Store`,
-and nothing else. The judgments say what each desire read and whose they are, the scope graph
-says which results cluster, the graphs of desires say what a desire is about and what its
-met-test is, the graphs of wants say what already stands, and the pick record says how long a
-plan is given after its instant. The present is the clock's, the one read outside the store.
+It was two, `judge_desires` then `derive_wants`, and no caller ever took one without the
+other: three call sites each wrote both lines and each could have written only the first. What
+the split bought was a contract and a snapshot per half; what it cost was a seam a caller
+could stop at. The judgment graph is untouched by the merge — it is written as it always
+was, and `judgments.witnesses_of` reads it without deriving anything.
 
-After the call, every want the store's judgments imply stands in the store; what was minted
-this time comes back for the caller that asked whether its own want was re-minted. A caller
-holding a projection of the wants refreshes it on a non-empty answer — announcing a write is
-the repository's contract, and a road that writes past the repository leaves the refresh to
-whoever holds one.
+A FUNCTION OVER THE STORE: handed the engine, a `pyoxigraph.Store`, and nothing else. Which
+graphs hold desires, which are predictions and which hold at an instant, the catalogue says;
+who holds a desire, the desire's own graph says; what a met-test means, its shape says; the
+scope graph says which results cluster, the graphs of wants say what already stands, and the
+pick record says how long a plan is given after its instant. The present is the clock's, the
+one read outside the store.
+
+What was minted this time comes back for the caller that asked whether its own want was
+re-minted. A caller holding a projection of the wants refreshes it on a non-empty answer —
+announcing a write is the repository's contract, and a function that writes past it
+leaves the refresh to whoever holds one.
 """
 
 from __future__ import annotations
 
+import io
 import logging
 from datetime import datetime, timedelta
 
 import pyoxigraph as ox
+import rdflib
 
 from orexis_agent_progression import clock
 from orexis_agent_progression.keeper import PATIENCE_S
 from orexis_agent_progression.ontology import OREXIS
-from orexis_agent_progression.store import NAMESPACES, bind, instant, rows
+from orexis_agent_progression.ontology import FORESEEN
+from orexis_agent_progression.store import NAMESPACES, bind, graphs_holding, instant, rows
 
-from .judgments import Witness, find_judgments
+from .judgments import Witness, find_judgments, save_judgments
 from .want import Want
 from .wants import save_want
 
@@ -38,6 +45,40 @@ log = logging.getLogger("derive_wants")
 DESIRE_GRAPH = OREXIS + "DesireGraph"
 WANT_GRAPH = OREXIS + "WantGraph"
 OREXIS_MET_WHEN = OREXIS + "metWhen"
+
+#  EVERY DESIRE THE STORE HOLDS, who holds it and its met-test, from the graphs of desires
+#  holding at the present — the roots graph states no period, the world's asserted graph
+#  none, and a graph of desires with one is read while it holds. A desire, its holder and its
+#  met-test are written together — one rule derives them, one file ratifies them — so the
+#  pattern matches within one graph.
+_ROOTS_Q = """
+SELECT DISTINCT ?holder ?desire ?shape WHERE {
+  GRAPH ?g { ?holder orexis:holds ?desire . ?desire a orexis:Desire .
+             OPTIONAL { ?desire orexis:metWhen ?shape } }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:DesireGraph .
+               OPTIONAL { ?g dcterms:temporal ?period .
+                          OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?end } }
+               FILTER(!BOUND(?start) || $now >= ?start) FILTER(!BOUND(?end) || $now < ?end) } }
+ORDER BY ?holder ?desire"""
+
+#  WHEN THE HOLDER FORESEES: the start of every prediction of theirs, whatever its window —
+#  the future states this judges at, given to it and never computed here (#643).
+_STARTS_Q = """
+SELECT DISTINCT ?start WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+               ?g a orexis:PredictionGraph ; dcterms:temporal/orexis:start ?start .
+               OPTIONAL { ?g orexis:beliefsOf ?owner } FILTER(!BOUND(?owner) || ?owner = $holder) } }
+ORDER BY ?start"""
+
+#  WHERE THE SHAPES LIVE: every graph of desires and of wants, whatever its period — a root's
+#  shape and its blank-node closure sit in a desire graph whole, a derived want's own in its
+#  want graph, and the whole belief base parsed into rdflib cost half a second per shape (#711).
+_SHAPE_GRAPHS_Q = """
+SELECT DISTINCT ?g WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind . FILTER(isIRI(?g))
+               VALUES ?kind { orexis:DesireGraph orexis:WantGraph } } }
+ORDER BY ?g"""
+
 
 #  WHAT A DESIRE SAYS, from the graphs of desires and wants asked by class: what it is about,
 #  what it points at, its label and its met-test. The OBJECT'S TYPE matters — a blank node
@@ -61,7 +102,7 @@ SELECT ?s WHERE {
   GRAPH ?g { $holder $patience ?s }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:PickRecordGraph } } LIMIT 1"""
 
-#  WHAT ALREADY STANDS under one desire: every want derived from it that the road minted and
+#  WHAT ALREADY STANDS under one desire: every want derived from it that was minted here and
 #  whose graph still holds. A want IS its graph (#645), so which family it is in and whether it
 #  holds are the graph's questions, asked of the catalogue in the text as `Wants` asks them.
 _STANDING_Q = """
@@ -78,15 +119,14 @@ ORDER BY ?w"""
 
 def derive_wants(store: ox.Store) -> list[str]:
     """Mint a want under every desire for every cluster of its judgments' results that has
-    none, and return what was minted — the second of the road's two functions, reading the
-    judgments `judge_desires` wrote with one select and nothing in hand
-    (judge-desires-then-derive-wants). Run whenever a pass stands on a root or on any want
+    none, and return what was minted, reading the judgments this function wrote with one
+    select and nothing in hand (judge-desires-then-derive-wants). Run whenever a pass stands on a root or on any want
     under it, and by a package that has just written an instance, since a claim arriving
     should be a want arriving and not a want on the next tick. A package that calls this
-    mints nothing; it says an instance is there and the road does the rest
+    mints nothing; it says an instance is there and this does the rest
     (one-road-derives-every-want).
 
-    IT IS THE DECOMPOSITION OF THE JUDGMENTS AND NOTHING ELSE. `judge_desires` judges each
+    THE MINTING IS THE DECOMPOSITION OF THE JUDGMENTS AND NOTHING ELSE. `_judge` above judges each
     desire at the present and at every instant a prediction reaches, and writes what it read;
     this turns those judgments into wants, and asks no question the judgments do not answer.
     A FORESIGHT once stood here — a per-agent pick that discarded a foreseen failure further
@@ -100,13 +140,14 @@ def derive_wants(store: ox.Store) -> list[str]:
     cross at two deadlines, so the second is not filtered away by the first's; each cluster
     holds at its earliest result. A desire met at every instant judged derives NOTHING: there
     is nothing to pursue, and a want about everything the desire is about is minted only for a
-    desire unmet at the present with no result, which is what every want was before the road.
+    desire unmet at the present with no result, which is what every want once was.
 
     WHOSE, FROM THE JUDGMENT: each judgment graph says whose it is, so the wants a holder's
     judgments imply are written to graphs that holder owns. One agent, one volume, so the
     holder is the agent.
     """
     now = clock.now()
+    _judge(store, now)
     minted: list[str] = []
     for holder, judged in sorted(find_judgments(store).items()):
         by_desire: dict[str, list[dict]] = {}
@@ -115,6 +156,50 @@ def derive_wants(store: ox.Store) -> list[str]:
         for root, judgments in sorted(by_desire.items()):
             minted += _derive_under(store, holder, root, judgments, now)
     return minted
+
+
+def _judge(store: ox.Store, now: datetime) -> None:
+    """Judge every desire the store holds at the present and at every instant its holder
+    foresees, and write the judgments — this function's first half, and the only thing here that
+    reads a PREDICTION. After it the store says what each desire's met-test read: met or
+    unmet, and where unmet the results, one `deliberation:Judgment` per desire per instant in
+    the holder's judgment graph, replaced whole. Nothing is kept in hand; the derivation below
+    reads the graph, as every other reader of what a desire read does.
+
+    The desires and who holds them are asked of the graphs of desires, the instants of the
+    predictions' periods, the dataset at each instant of the catalogue — the texts above, each
+    naming what it reads. One agent, one volume, so the holder is the agent; a store holding
+    several agents' desires is judged for each, over what each holds and what nobody does.
+
+    ONE SELECT PER DESIRE PER INSTANT, and not one union of them: the compiler measured a
+    single UNION of every shape at thirteen times the cost of the selects asked one by one,
+    so this iterates where the contract is the whole. The foreseen instants are every
+    prediction's start, where the dataset holds the prediction beside the present (#643).
+    A desire whose met-test the compiler refuses is not judged, and the log says so: it was
+    judged by the choir once, and a function over the store has no choir to ask — nor a
+    shipped desire whose met-test is refused.
+    """
+    now = clock.now()
+    shapes = shapes_in(store)
+    by_holder: dict[str, list[tuple[str, str | None]]] = {}
+    for row in store.query(bind(_ROOTS_Q, now=instant(now)), prefixes=NAMESPACES):
+        by_holder.setdefault(row["holder"].value, []).append(
+            (row["desire"].value, row["shape"].value if row["shape"] is not None else None))
+    for holder, roots in by_holder.items():
+        starts = _starts(store, holder)
+        judged: list[tuple[str, datetime | None, bool, list[dict]]] = []
+        for root, shape in roots:
+            select = _compiled(shapes, shape, root)
+            if select is None:
+                continue
+            for at in [None, *starts]:
+                rows = _violations(store, select, holder, at or now, now)
+                if rows is None:
+                    log.error("%s: could not be judged at %s", root.rsplit("#", 1)[-1], at or "now")
+                    continue
+                judged.append((root, at, not rows, rows))
+        save_judgments(store, holder, judged)
+
 
 
 def _derive_under(store: ox.Store, holder: str, root: str, judged: list[dict],
@@ -130,7 +215,7 @@ def _derive_under(store: ox.Store, holder: str, root: str, judged: list[dict],
                  for r in present if r.get("focus")]
     else:
         #  MET NOW, AND JUDGED UNMET LATER: each (instance, constraint) at the FIRST instant
-        #  it fails. Every instant here is one `judge_desires` was asked about, which is every
+        #  it fails. Every instant here is one the judging was asked about, which is every
         #  instant a prediction reaches — so what bounds the lookahead is what the drifts
         #  predict, and nothing filters them again.
         seen: dict[tuple[str, str], Witness] = {}
@@ -153,7 +238,7 @@ def _derive_under(store: ox.Store, holder: str, root: str, judged: list[dict],
     #  still says T — the holder asked before the claim lapsed, the pot crossed before the
     #  drift said it would — is re-minted with no instant, under the same name, so the
     #  trace, a remembered plan and the keeper meet the want they kept and a plan is found
-    #  from the present. The instant was the road's reading of the predictions; the present
+    #  from the present. The instant was this function's reading of the predictions; the present
     #  outranks it, as it does everywhere else here.
     #  STANDING IS BY NAME, and the name is the cluster's: what it is about, and which instance
     #  where the desire ranges over several (`name_of`). Two tanks low about their level are
@@ -237,11 +322,11 @@ def name_of(store: ox.Store, root: str, said, about: tuple, instance: str | None
 
     NAMED FOR WHAT IT IS ABOUT where that is NARROWER than the desire, so two wants under one
     desire — soil now, air later — are two nodes; and for the desire alone where it is not,
-    which is every want there was before the road: a desire about one property mints
+    which is every want there once was: a desire about one property mints
     `<desire>.pursued` exactly as it always did. AND FOR THE INSTANCE where the desire ranges
     over several — its shape targets a class, or whatever bears a property, rather than one
     node — since two tanks low about their level are two clusters, two plans, and would be one
-    name otherwise (found by the road's own table, `tests/road/`); a desire whose shape names
+    name otherwise (found by the cases in `tests/derive_wants/`); a desire whose shape names
     its one node (`sh:targetNode`, sensing's and the greenhouse's) keeps its names, and an
     instance the want is already about (a debt, `orexis:about sh:this`) is not said twice.
     """
@@ -304,7 +389,7 @@ def mint(store: ox.Store, holder: str, root: str, said=None, holds_at: datetime 
     #  THE WANT, AND THE REPOSITORY WRITES IT (#677). What is derived is decided here — the
     #  binding, the label, what it points at — and where a want is kept, how its graph is
     #  classified and what period it holds during are `wants.py`'s, whether a collection or
-    #  this road asks for the write.
+    #  this function asks for the write.
     ends = None
     if holds_at is not None:
         ends = (holds_at + timedelta(seconds=_patience(store, holder))).isoformat()
@@ -325,9 +410,62 @@ def _patience(store: ox.Store, holder: str) -> float:
 
 
 def _local(holder: str) -> str:
-    """The holder's local name — what a graph this road writes is called, for eyes."""
+    """The holder's local name — what a graph this function writes is called, for eyes."""
     return holder.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
 
+
+def shapes_in(store: ox.Store) -> rdflib.Graph:
+    """Every graph of desires and of wants, parsed once — where a root's shape lives with its
+    blank-node closure, and a derived want's own. N-Triples, since it concatenates and rdflib
+    parses it in a fraction of Turtle's time; the engine's blank-node labels are its own, so
+    two graphs' nodes never collide in one text."""
+    out = io.BytesIO()
+    for row in store.query(_SHAPE_GRAPHS_Q, prefixes=NAMESPACES):
+        store.dump(output=out, format=ox.RdfFormat.N_TRIPLES, from_graph=row["g"])
+    shapes = rdflib.Graph()
+    if out.tell():
+        shapes.parse(data=out.getvalue().decode(), format="nt")
+    return shapes
+
+
+def _compiled(shapes: rdflib.Graph, shape: str | None, root: str) -> str | None:
+    """`shape` compiled to its report select out of `shapes`, or None — and a word in the log
+    — where the root states none or the compiler refuses it."""
+    from orexis_agent_progression.violation import Unsupported, report_select
+
+    if shape is None:
+        return None
+    try:
+        return report_select(shapes.cbd(rdflib.URIRef(shape)), rdflib.URIRef(shape))
+    except Unsupported as exc:
+        log.warning("%s: its met-test cannot be compiled, so it is not judged: %s",
+                    root.rsplit("#", 1)[-1], exc)
+        return None
+
+
+def _starts(store: ox.Store, holder: str) -> list[datetime]:
+    return [datetime.fromisoformat(row["start"].value)
+            for row in store.query(bind(_STARTS_Q, holder=holder), prefixes=NAMESPACES)]
+
+
+def _violations(store: ox.Store, select: str, holder: str, at: datetime,
+                now: datetime) -> list[dict] | None:
+    """The select's rows over the graphs `holder`'s desire is judged over at `at`, each a
+    dict of the engine's own terms by variable name, one per distinct row — two predictions
+    holding at one instant give one node two offending values, and both are told. None where
+    the engine refuses the text."""
+    graphs = [ox.NamedNode(g) for g in graphs_holding(store, FORESEEN, holder=holder, at=at, now=now)]
+    try:
+        answer = store.query(select, prefixes=NAMESPACES, default_graph=graphs)
+        names = [v.value for v in answer.variables]
+        rows: dict[tuple, dict] = {}
+        for solution in answer:
+            row = {name: solution[name] for name in names if solution[name] is not None}
+            rows.setdefault(tuple(sorted((k, str(v)) for k, v in row.items())), row)
+    except Exception as exc:                                        # noqa: BLE001
+        log.error("the met-test could not be read at %s: %s", at, exc)
+        return None
+    return [rows[key] for key in sorted(rows)]
 
 def narrowed(store: ox.Store, shape: str, own: str, instance: str | None, abouts: tuple) -> tuple[str, ...]:
     """The desire's met-test as THIS want's: the same shape under the want's own name, its
@@ -344,8 +482,6 @@ def narrowed(store: ox.Store, shape: str, own: str, instance: str | None, abouts
     """
     from rdflib import Graph, URIRef
     from rdflib.namespace import SH
-
-    from .judge_desires import shapes_in
 
     about_p = URIRef(OREXIS + "about")
     targets = {SH.targetNode, SH.targetClass, SH.targetSubjectsOf, SH.targetObjectsOf, SH.target}

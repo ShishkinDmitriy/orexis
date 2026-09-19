@@ -321,12 +321,13 @@ it is a record wearing a bullet.
   want arriving and not a want on the next tick; what it writes is the instance and the
   prediction, and what stands afterwards is the road's, in deliberation's family, about that
   debt — and every other desire's, since the road is about all of them.
-- **The road is two functions over the store, and a judgment is written down** —
-  `judge_desires` judges every desire at the present and at each foreseen instant and writes
-  the judgments as SHACL reports to a working graph, replaced whole; `derive_wants` mints the
-  wants from that graph and nothing in hand; each is held to a snapshot of the store it
-  leaves, and the eleven cases leave the wants the one-function road left. A third,
-  `scope_actions`, writes the scopes at boot, so the derivation reads no action.
+- **`derive_wants` is one function over the store, and a judgment is written down** — it
+  judges every desire at the present and at each foreseen instant, writes the judgments as
+  SHACL reports to a working graph replaced whole, and mints the wants that graph implies; it
+  is held to a snapshot of the store it leaves. `scope_actions` writes the scopes at boot, so
+  the derivation reads no action. It was two functions and the split was undone: no caller
+  ever took one half, and the judgment graph — which other readers do take on its own — is
+  written either way.
 - **A function over the store is handed the engine and nothing else** — the road's three
   take `pyoxigraph.Store` and no wrapper: which graphs they read they ask of the catalogue in
   their own texts, whose a judgment is they read off `orexis:holds`, and the present is the

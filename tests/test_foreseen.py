@@ -17,7 +17,6 @@ from datetime import datetime, timedelta, timezone
 
 from orexis_agent_deliberation import pursuit
 from orexis_agent_deliberation.derive_wants import derive_wants
-from orexis_agent_deliberation.judge_desires import judge_desires
 from orexis_agent_deliberation.planner import Planner
 from orexis_agent_progression.store import bindings
 from conftest import build_agent, genesis_store, write_reading
@@ -42,11 +41,12 @@ def _stake(agent):
 def _crossing_of(agent):
     """The crossing the water package states, from the reading the agent holds.
 
-    JUDGED FIRST, because a crossing is what the last judging found: `judge_desires` is the
-    one thing that takes predictions into account, and every other reader reads what it wrote.
-    A pass judges before it asks; a test asking cold says so here.
+    DERIVED FIRST, because a crossing is what the last judging found, and judging is what
+    `derive_wants` does before it mints. A pass runs it before it asks; a test asking cold
+    says so here. The desire is asked for, never the want derived under it: a judgment is
+    about a desire.
     """
-    judge_desires(agent.beliefs.engine)
+    derive_wants(agent.beliefs.engine)
     return pursuit.crossing_of(agent, _stake(agent).derived_from or _stake(agent).uri)
 
 
@@ -61,8 +61,7 @@ def test_the_drift_says_when_the_reading_leaves_its_region(monkeypatch):
     ahead = (crossing - datetime.now(timezone.utc)).total_seconds()
     assert abs(ahead - 18000.0) < 120, ahead
     under = _gardener(monkeypatch, 0.05)
-    judge_desires(under.beliefs.engine)
-    below = pursuit.crossing_of(under, _stake(under).uri)
+    below = _crossing_of(under)
     assert below is not None and 0.0 <= (below - datetime.now(timezone.utc)).total_seconds() < 3600.0, \
         "a reading already below reads unmet at the first prediction, the next expected observation; a root unmet now is pursued as itself"
 
@@ -157,7 +156,7 @@ def test_a_reading_that_lifts_the_prediction_reads_the_want_met_and_withdraws_it
     child = _stake(agent)
     assert child.state == "unmet"
     write_reading(agent, CONTENT)
-    judge_desires(agent.beliefs.engine)   # the reading moved the predictions; the judge reads them
+    derive_wants(agent.beliefs.engine)   # the reading moved the predictions; the judge reads them
     now = _stake(agent)
     assert now.uri == child.uri and now.state == "met"
     assert agent.deliberator.decide(now) is None
@@ -182,5 +181,5 @@ def test_a_pot_that_crosses_before_the_drift_said_is_wanted_now_and_not_at_the_c
         "handed the want as it stands now, not as the pass first read it"
     [again] = agent.wants.find_all_by_desire(root.uri)
     assert again.uri == minted.uri and again.holds_at is None, "the same want, at no instant"
-    judge_desires(agent.beliefs.engine)
+    derive_wants(agent.beliefs.engine)
     assert derive_wants(agent.beliefs.engine) == [], "and once is enough"

@@ -1,14 +1,14 @@
-"""The deliberation package's own test options, and the snapshot machinery its two road
-tests share (`test_judge_desires.py`, `test_derive_wants.py`).
+"""The deliberation package's own test options, and the snapshot machinery its case-based
+tests share (`test_derive_wants.py`, `test_scope_actions.py`).
 
-`--update-snapshots` rewrites every road case's snapshot (`road/<case>.nq`) from what the road
-actually left in the store, instead of holding the store to it. Registered here, beside the
+`--update-snapshots` rewrites every case's snapshot (`<case>.snapshot.trig`) from what the
+function actually left in the store, instead of holding the store to it. Registered here, beside the
 tests that read it, so it is recognised when these tests are named on the command line:
 
     pytest packages/orexis-agent-deliberation/tests --update-snapshots
 
 A regenerated snapshot is reviewed by eyes before it is committed — the diff IS the claim
-that the road's behaviour changed on purpose.
+that the behaviour changed on purpose.
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ def stand_in(case: Path, text: str | None = None):
     #  THE CASE SAYS WHAT ITS GRAPHS ARE, in a catalogue it names — `:catalogue` — found by what
     #  it says of itself, never by its spelling: which graphs are public, which graph is the
     #  vocabulary. The stub adds only the axioms, into whichever graph the case types as the
-    #  vocabulary's, and they say what every graph class the road asks by is beneath — with
+    #  vocabulary's, and they say what every graph class is beneath — with
     #  what the closure entails of them, as a volume's entailed graph carries it, since a
     #  writer over the engine asks one `rdfs:subClassOf` step for every kind a row bears; a case
     #  with no catalogue is refused, since a store that says nothing of its graphs has no
@@ -279,4 +279,4 @@ def snapshots():
 
 def pytest_addoption(parser):
     parser.addoption("--update-snapshots", action="store_true", default=False,
-                     help="rewrite the road cases' snapshots from what the road left, then review the diff")
+                     help="rewrite each case's snapshot from what the function left, then review the diff")

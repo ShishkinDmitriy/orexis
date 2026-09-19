@@ -154,7 +154,7 @@ the keeper's, and stands until its lapse or a surprise (#527) — the road does 
 the ledger.
 
 **The road's contract is a table, and the table found a defect on its first run.**
-`packages/orexis-agent-deliberation/tests/judge_desires/` holds one TriG file per case — the
+`packages/orexis-agent-deliberation/tests/derive_wants/` holds one TriG file per case — the
 world, the levers, the desire with its met-test, the present, the foreseen, what stands —
 loaded into a bare store and judged, and `packages/orexis-agent-deliberation/tests/derive_wants/`
 one per case of the judged state alone — the judgments, the desires, the levers, what stands — derived from

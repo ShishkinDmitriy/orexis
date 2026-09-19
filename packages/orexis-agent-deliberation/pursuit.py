@@ -34,7 +34,6 @@ from dataclasses import replace
 from datetime import datetime
 
 from .derive_wants import derive_wants
-from .judge_desires import judge_desires
 from .judgments import witnesses_of
 from .plan import SATISFIED
 
@@ -67,19 +66,17 @@ def handed(agent, judgment):
     derived under it, minted if the root reads unmet and none stands; None for a met root
     with nothing derived under it, which is nothing to pursue and runs no pass."""
     if judgment.derived_from is not None or not _is_root(agent, judgment.uri):
-        #  A WANT THE ROAD MINTED, or one a package speaks for: handed as it is. Its root may
-        #  have gained instances since — a second claim — so the road tops up first; and where
+        #  A WANT ALREADY MINTED, or one a package speaks for: handed as it is. Its root may
+        #  have gained instances since — a second claim — so the derivation tops up first; and where
         #  that re-minted THIS want — what it foresaw has arrived — the judgment in hand still
         #  carries the old instant, so it is presented again.
         if judgment.derived_from is not None:
-            judge_desires(agent.beliefs.engine)
             if judgment.uri in derived(agent):
                 return next((d for d in agent.pursuing() if d.uri == judgment.uri), judgment)
         return judgment
     #  THE PASS STANDS ON THE ROOT: every desire is judged into the store and the wants derived
     #  from what the store says — a root whose met-test the compiler refused is judged by the
     #  choir there, and still derives its one want.
-    judge_desires(agent.beliefs.engine)
     derived(agent)
     child = child_of(agent, judgment.uri)
     if child is None:
@@ -94,7 +91,7 @@ def handed(agent, judgment):
 def derived(agent) -> list[str]:
     """`derive_wants` over this agent's store, and the projection refreshed where it minted.
 
-    THE ROAD IS A FUNCTION OVER THE STORE and holds no collection, so a want it writes
+    IT IS A FUNCTION OVER THE STORE and holds no collection, so a want it writes
     announces itself to nobody — where `Wants.save` would have told the desire modality to
     rebuild. Saying so is the caller's, and this is the caller every pass goes through: one
     place, and the rebuild is paid only when something was actually minted.
