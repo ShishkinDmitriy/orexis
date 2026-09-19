@@ -1,10 +1,13 @@
-# a_crossing_beyond_the_foresight
+# a_crossing_hours_out
 #
-# The crossing is at 14:00 and the desire foresees an hour: nothing is derived yet.
+# The crossing is at 14:00, two hours out: the want is minted holding AT it. A foresight used
+# to stand between the judgment and the want — a per-agent pick discarding a crossing further
+# out than N seconds — and it is gone: the judgments say which instants fail, and how far ahead
+# the agent sees is said by the drifts, each declaring the horizons it predicts at.
 #
 # The clock stands at 2026-01-01T12:00:00Z when the road runs.
 #
-# THE JUDGMENTS AS `judge_desires` LEFT THEM on this situation (judge_desires/a_crossing_beyond_the_foresight.trig),
+# THE JUDGMENTS AS `judge_desires` LEFT THEM on this situation (judge_desires/a_crossing_hours_out.trig),
 # and the scopes `scope_actions` made of its levers: the desires, the scopes, whatever
 # stands, the judgment graph, and the catalogue that says what each is — no world, no
 # readings, no predictions, no levers. `derive_wants` reads the store and nothing in hand.
@@ -32,7 +35,6 @@ GRAPH :desires {
   :keeper.in_range a orexis:Desire ;
       orexis:about :level ;
       orexis:about :temperature ;
-      orexis:foresees 3600 ;
       orexis:metWhen :in_range ;
       rdfs:label "every tank in range" .
 }

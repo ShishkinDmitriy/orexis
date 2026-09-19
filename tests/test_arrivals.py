@@ -4,7 +4,7 @@ a-claim-is-water-at-a-time, held to the code.
 Every claim the host issued is a debt in its ledger, and since #625 a debt says from when its
 holder may come. The vessel's drift reads those windows: its level at a future instant is what
 it holds less what it owes to holders whose windows have opened by then, and the first window
-at which that takes the level under the floor is the crossing. A host that foresees it derives
+at which that takes the level under the floor is the crossing. The host derives
 the want and plans the refill from the present, where the upstream round is.
 """
 from __future__ import annotations
@@ -20,18 +20,14 @@ from orexis_agent_progression.ontology import FORESEEN
 from orexis_agent_progression import clock
 
 STORED = "http://example.org/orexis/water#StoredLitres"
-FORESIGHT = "http://example.org/orexis/sensing#foresightS"
 OWED_FROM = "http://example.org/orexis/market#owedFrom"
 SUPPLIER = "http://example.org/orexis/world/simulation#supplier"
 HOURS = 3600.0
 
 
-def _supplier(monkeypatch, level=3.0, foresight: float | None = None):
+def _supplier(monkeypatch, level=3.0):
     """The simulation's supplier, its barrel at `level` litres inside its region of one to five."""
     st = genesis_store({("barrel1", STORED): level})
-    if foresight is not None:
-        st.update(f"""INSERT DATA {{ GRAPH <{picks_graph("supplier")}> {{
-            <{SUPPLIER}> <{FORESIGHT}> {foresight} }} }}""")
     return build_agent("supplier", st, monkeypatch)
 
 
@@ -83,11 +79,11 @@ def test_the_vessel_crosses_its_floor_at_the_window_that_empties_it(monkeypatch)
 
 
 def test_a_host_that_foresees_the_crossing_plans_the_refill_from_the_present(monkeypatch):
-    """Foreseeing six hours, the stock root derives a want met at the crossing; the pass at the
+    """The stock root derives a want met at the crossing; the pass at the
     latest start finds no upstream round holding then, stands at the present where one is open,
     and plans Acquiring from the city — the refill ahead of the arrivals, from the claims alone,
     with nothing presented yet."""
-    agent = _supplier(monkeypatch, level=3.0, foresight=6 * HOURS)
+    agent = _supplier(monkeypatch, level=3.0)
     now = datetime.now(timezone.utc)
     _promise(agent, "fern", "j1", 1.5, now + timedelta(hours=1))
     _promise(agent, "tomato", "j2", 1.0, now + timedelta(hours=2))
@@ -98,7 +94,7 @@ def test_a_host_that_foresees_the_crossing_plans_the_refill_from_the_present(mon
     from orexis_agent_deliberation.judgments import find_judgments
     child = _stock(agent, derived=True)
     root = child.derived_from
-    judged = [r for r in find_judgments(agent.beliefs) if r["desire"] == root]
+    judged = [r for r in find_judgments(agent.beliefs.engine)[agent.me.uri] if r["desire"] == root]
     assert next(r["met"] for r in judged if not r.get("at")) == "true", "met at the present"
     assert any(r["met"] == "false" for r in judged if r.get("at")), "unmet at a crossing"
     plan = agent.deliberator.decide(child)

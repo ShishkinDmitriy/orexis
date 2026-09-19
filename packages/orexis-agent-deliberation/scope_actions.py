@@ -1,47 +1,64 @@
-"""`scope_actions`: the actions an agent holds, clustered into the scopes their effects
-join, written to the store — the function that makes the scope partition data
-(scope-actions). After the call, the store says which predicates some one action or
-derivation reads or writes together, and which scope each predicate and each action is in;
-`derive_wants` clusters a desire's results by it and reads no action.
+"""`scope_actions`: the actions the store holds, clustered into the scopes their effects join,
+written back to the store — the function that makes the scope partition data (scope-actions),
+and a FUNCTION OVER THE STORE: handed the engine, a `pyoxigraph.Store`, and nothing else.
+After the call, the store says which predicates some one action or derivation reads or writes
+together, and which scope each predicate and each action is in; `derive_wants` clusters a
+desire's results by it and reads no action.
 
-The partition, `scopes` below, is computed from what the shipped rules actually do — never
-read off namespaces, the derivations loaded joining predicates as the actions do — over the
-edges `relevance` reads off an action, which the planner's closure reads too. It is a function
-of the actions loaded, which do not change while the agent runs, so this runs at boot, once,
-and whenever the actions are rebuilt; it used to run inside every derivation.
+The partition is computed from what the shipped rules actually do — never read off namespaces
+— over the edges `relevance` reads off an action, which the planner's closure reads too, and
+the edges each loaded derivation makes, which genesis put in the store beside the actions
+(`describe_derivations`). It is a function of the actions and the rules loaded, neither of
+which changes while the agent runs, so this runs at boot, once, and whenever they are rebuilt;
+it used to run inside every derivation.
 """
 
 from __future__ import annotations
 
 import logging
 
-from . import relevance
-from .relevance import ANYTHING
-from .scopes import save_scopes
+import pyoxigraph as ox
+
+from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.store import answer, graphs_holding
+
+from . import relevance
+from .ontology import DERIVATION_GRAPH
+from .relevance import ANYTHING
+from .scopes import save_scopes, scope_name
 
 log = logging.getLogger("scope_actions")
 
 
-def scope_actions(agent) -> None:
+def scope_actions(store: ox.Store) -> None:
     """Cluster every action the store holds into scopes and write them, replacing what stood.
 
     An action is in the scope its reads and writes lie in — one by construction, since an
     action touching two would have joined them. An action stating no effect is in no scope, as
     it is on no menu; one whose effect cannot be read joins everything and is in the one scope
-    that holds everything. A scope is named for the agent and its place in the partition,
-    largest first, so the same actions write the same text."""
-    actions = relevance.actions_of(agent.beliefs.reader(PUBLIC))
-    parts = scopes(actions, relevance.rule_edges())
+    that holds everything. A scope is named for the graph it is written in and its place in the
+    partition, largest first (`scopes.py` names both), so the same actions write the same text.
+
+    A FUNCTION OVER THE ENGINE, and it names no agent: the actions come from the public graphs
+    the catalogue describes, the derivations' edges from the graph genesis wrote them into, and
+    the partition that comes out is the STORE's — every agent reading one store would compute
+    the same one from the same rows, so there is nobody to name it after (`scopes.py`).
+    """
+    now = clock.now()
+    publics = graphs_holding(store, (PUBLIC,), at=now)
+    actions = relevance.actions_of(lambda text: answer(store, text, publics))
+    edges = relevance.stored_edges(store, graphs_holding(store, (DERIVATION_GRAPH,)))
+    parts = scopes(actions, edges)
     written = []
     for n, part in enumerate(parts, 1):
-        scope = f"{agent.me.uri}.scope.{n}"
+        scope = scope_name(n)
         members = {action for action, (reads, writes) in actions.items()
                    if reads is ANYTHING or writes is ANYTHING
                    or any(str(p) in part for p in set(reads) | set(writes))}
         written.append((scope, set(part), members))
-    save_scopes(agent.beliefs, agent.id, agent.me.uri, written)
-    log.info("%s: %d action(s) in %d scope(s)", agent.id, len(actions), len(parts))
+    save_scopes(store, written)
+    log.info("%d action(s) in %d scope(s)", len(actions), len(parts))
 
 
 def scopes(actions: dict[str, tuple], rules: tuple = ()) -> tuple[frozenset, ...]:

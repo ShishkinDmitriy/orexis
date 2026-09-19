@@ -6,13 +6,15 @@ description: >-
   needs and writing its own graph with provenance and time, and the SHACL results in the
   store too. Two functions, one contract each - after the call, all of it is in the store.
   `judge_desires` judges every desire at the present and at every foreseen instant and writes
-  the judgments as SHACL validation reports to a working graph, replaced whole - handed the
-  engine, a pyoxigraph store, and nothing else; `derive_wants` mints the wants from that
-  graph and nothing in hand. Refused - a view per instant, which the judgment's own instant
+  the judgments as SHACL validation reports to a working graph, replaced whole; `derive_wants`
+  mints the wants from that graph and nothing in hand; `scope_actions` writes the partition
+  they cluster by. All three are handed the engine, a pyoxigraph store, and nothing else. Refused - a view per instant, which the judgment's own instant
   makes needless; one union query over every desire, measured at thirteen times the cost;
   the verb "check", where the dictionary says judge; writing the urgency half now, which is
-  the seam left open; a wrapper between the judge and the engine; the choir's judgment for a
-  met-test the compiler refuses; and the present as an argument or a row. Each function is
+  the seam left open; a wrapper between any of the three and the engine; the choir's judgment
+  for a met-test the compiler refuses; a holder argument; and the present as an argument or a
+  row. The FORESIGHT is deleted: the judgments already say which instants fail, and the
+  drifts' horizons say how far ahead the agent sees. Each function is
   held to a snapshot of the store it leaves, and the eleven cases leave the wants the
   one-function road left.
 status: accepted
@@ -46,10 +48,72 @@ everything is in the store.
   once from the graphs of desires and wants; and the present is the clock's, the layer's one
   read of time. A store holding several agents' desires — the test fixture's, never a
   volume's — is judged for each holder over what that holder owns and what nobody does.
-- `derive_wants(agent)`: the judgments read back — and nothing in hand — grouped by scope and
+- `derive_wants(store)`: the judgments read back — and nothing in hand — grouped by scope and
   instance under each desire, the earliest instant per cluster, and a want minted where none
-  stands, by the same `mint` as before. A desire unmet at the present derives wants at no
-  instant; one met at the present derives them at the instants it foresees unmet.
+  stands. A desire unmet at the present derives wants at no instant; one met at the present
+  derives them at the instants it is judged unmet. **The engine and nothing else**, like the
+  function before it: each judgment graph says whose it is, so the wants a holder's judgments
+  imply are written where that holder's belong; what a desire is about and what its met-test
+  says come from the graphs of desires, what already stands from the graphs of wants, and how
+  long a plan is given after its instant from the pick record. Where `Wants.save` wrote a want,
+  `wants.save_want` writes it over the engine and the collection calls the same function, so
+  where a want is kept stays in one file (#677).
+- `scope_actions(store)`: the actions clustered into the scopes their effects join, written as
+  one scope graph. **The engine and nothing else**, and it names no agent at all: the partition
+  is a function of the actions the store holds and the derivations loaded, and every agent
+  reading one store would compute the same one, so there is nobody to name it after.
+
+**Only the judge takes predictions into account, and it takes them as given.** The sovereign,
+on the shape of the road: *it sees present and future states, and for each state judges the
+desire*. `judge_desires` enumerates the states — the present, then every instant a prediction
+reaches, read off the periods the catalogue carries — and runs the met-test once per state.
+It computes no prediction; sensing and the ledger write them. What it read is written down, so
+every other reader reads the judgments: `derive_wants` to mint the wants, and
+`judgments.witnesses_of` to say where a crossing is. That second one used to re-run the
+compiled met-test at every prediction start on every call — the same question asked twice, by
+two paths that could disagree — and it is a filter over the judgment rows now.
+
+**A crossing is therefore what the last judging found.** During a pass that is what is true
+now, since `pursuit` judges before it asks. Elsewhere, whoever moves a premise says so: the
+ledger already asked the road when a claim arrived, and asks it when a debt is paid, since the
+prediction that debt would lapse has gone. A reader that has never judged is handed nothing
+rather than a second opinion, which is why the tests that ask cold judge first and say so.
+
+**A crossing is a desire's, and a want has none.** The sovereign, on the first cut of this:
+*the want has no crossing; the want is created as a result of a found crossing*. A prediction
+is a corridor the value is expected to move along; where it leaves the region the desire
+states, the desire is judged unmet at that instant, and that judgment IS the crossing. The
+want is what the crossing produced, and what it carries is the instant it must hold at. So
+`witnesses_of` takes a desire and nothing else, and the question the container actually asks
+when it presents a want — is this still in trouble by the instant it must hold at — has its
+own name, `unmet_by`: the DESIRE's judgments, narrowed to the results the want was minted
+from, which is what it is about and the one node its met-test targets where it has one. Which
+is what compiling the want's own narrowed shape and judging it computed, from the same facts.
+
+**The derivations' edges are in the store, put there by genesis.** The partition joins
+predicates wherever one action *or one derivation* reads or writes both; the actions were rows
+in the store all along and the derivations were rule texts on disk, which `scope_actions` read
+through the loader. `genesis.describe_derivations` now computes each loaded rule's read and
+write predicates where the rules are already being read and run, and writes them to a public
+graph — public because the loaded rule set is the same for everyone reading the store, exactly
+as the actions are, and computed, so it is cleared and rewritten on every refresh. A side whose
+predicates cannot be read says `deliberation:Anything` and joins everything, as it always did.
+The edges the store gives back are the edges the files give, measured as multisets on the
+simulation world.
+
+**The foresight is gone.** A desire met now and judged unmet at a foreseen instant derived a
+want only if that instant was nearer than `sensing:foresightS` — a per-agent pick, asked of
+the choir at derivation time. The sovereign, on being shown what the function reached for:
+*derive_wants should accept only judgments; it is just decomposition of judgments into wants*.
+The judgments already say which instants fail and when, and how far ahead the agent sees is
+said by the drifts, each declaring the horizons it predicts at (1 hour, 5 hours, 24 hours in
+every shipped package). The pick was measured to have exactly two states in practice —
+unbounded for the market's root and absent everywhere else, absent meaning *never derive a
+foreseen want* — so it was an on/off switch wearing a horizon's name, and no shipped world set
+it. Deleted with it: `orexis:foresight` the extension point, `orexis:foresees` the kernel
+property, `sensing:foresightS` the pick, both packages' answers, and the injection in seven
+test files. What replaces it is nothing: a want is derived at every instant a judgment says a
+desire fails.
 
 **The judgment graph is a working graph**, like the deliberation trace. The bundle keeps only
 testimony as record and a judgment is a conclusion; so it is never carried into a possible
@@ -111,6 +175,19 @@ fallback stood for no desire; such a desire is not judged now, and the log says 
 matching branch in `derive_wants` — a present judgment unmet with no result — is dead until
 that function is treated the same way.
 
+**A holder argument, so a store with several agents' desires derives for one.** A volume
+holds one agent (rule 4), so the question only arises in a test fixture that births a whole
+world into one store — and there the answer is that every holder's judgments are judged and
+every holder's wants derived, each into graphs that holder owns. What the fixture exposed
+instead was a reader that had stopped saying whose it meant: `Wants` names its own graphs in
+its own text and so lost the owner clause `graphs_of` applies to every read that goes through
+it. It asks for its own again, which is what one agent, one volume always meant.
+
+**Keeping the foresight by writing it down.** The first cut had sensing own a graph of
+`orexis:foresees` rows, rewritten whenever the pick moved, and the market state a constant in
+its rule — a graph class, a writer, a revision hook and a rule clause to express *never* and
+*no filter*. It was built and then deleted when the sovereign asked what the number was for.
+
 **The present as a second argument, or as a row.** One argument was the ask, and the instant
 is not the store's to state: a row saying *now* is the interpreter asserting what it already
 knows (model-it-only-if-a-plan-would-branch-on-it), and the paced clock is a deployment fact
@@ -121,10 +198,21 @@ the mind cannot ask for. `clock.now()` is the one read outside the store.
 - **The urgency half.** A package's urgency written on the judgment it belongs to, and the
   container's `Judgments` reading the store rather than asking the choir — which flips the
   principle that a collection over contributed answers is handed the agent, on purpose.
-- **`derive_wants` and `scope_actions` over the engine.** Both still take the agent, and
-  `find_judgments` reads through the wrapper; the second function writes wants, which the
-  keeper's conditions read, so whether a write through the engine should reach `on_write`
-  is decided when it goes.
+- **A reading that surprises nobody leaves the judgments behind, and that is the choice.**
+  Sensing rewrites the prediction ladder after every reading; a reading inside the bands wakes
+  no pass, so the judgments still describe the previous ladder until one runs. Asked whether
+  writing a ladder should run the judge, the sovereign left it to the next pass: a reading
+  that surprises schedules deliberation, which judges before it asks, and a quiet reading's
+  new ladder is nearly the old one. It is also what the handler can afford — judging and
+  deriving for one agent of the loner world, six roots and three predictions each, measured
+  at 60 ms and 10 ms on the bench Pi, in a reactive handler this repository holds to
+  milliseconds. Refused with it: judging from progression on a task of its own, which keeps
+  the handler fast and buys a scheduled task and a staleness window of its own.
+- **A write through the engine announces nothing.** `Wants.save` tells its listeners and the
+  desire modality rebuilds; the road writes through `wants.save_want` and tells nobody, so
+  `pursuit.derived` rebuilds the projection when something was minted. One caller does it
+  today. Whether the store should emit an event for a write it did not make — `on_write` has
+  the same gap — is not settled here.
 - **`derive_wants` as one update.** The scope partition is data now — `scope_actions`, a
   third function, writes it at boot as the scope graph, and `derive_wants` reads it — so what
   is left of the trial the update record proposed is the derivation itself as an update.

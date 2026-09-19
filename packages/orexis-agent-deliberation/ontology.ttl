@@ -30,10 +30,32 @@ deliberation:judges a owl:ObjectProperty ; rdfs:domain deliberation:Judgment ; r
 deliberation:constraint a owl:DatatypeProperty ; rdfs:domain sh:ValidationResult ; rdfs:range xsd:integer ; rdfs:label "constraint" ;
     rdfs:comment "Which of the met-test's blocks refused the focus node, in the compiler's order — the block is a blank node of the roots graph and cannot be named, so the report counts. Read to tell two refusals of one node apart, and for nothing else." .
 
+deliberation:DerivationGraph a owl:Class ; rdfs:subClassOf orexis:PublicGraph , orexis:BeliefGraph ; rdfs:label "Derivation graph" ;
+    rdfs:comment "What every loaded package's derivation rules READ and WRITE, one `deliberation:Derivation` per INSERT, written whole at every refresh of public knowledge. The scope partition joins predicates wherever one action OR one derivation touches both, and the actions are in the store while the rules are texts on disk — so the edges the rules make are put in the store beside them, and `scope_actions` is a function of the store alone. PUBLIC, because the loaded rule set is the same for everyone reading this store, exactly as the actions graph is; computed, so it is cleared and rewritten rather than added to. A BELIEF graph, as the vocabulary graph is and for the same reason: what a loaded rule reads and writes is a fact about this build, believed, and a public graph that named no modality would leave a reader guessing at its content." .
+deliberation:Derivation a owl:Class ; rdfs:label "Derivation" ;
+    rdfs:comment "One INSERT of one loaded derivation rule, as the edge it makes: the predicates its WHERE reads and the predicates its template writes. Named for the rule file it came from and its place in it, so the same rules write the same text. A side whose predicates cannot be read — a variable predicate, a text the parser refuses — says `deliberation:Anything` and joins every predicate there is, since a rule that might touch anything cannot be proven not to." .
+deliberation:reads a owl:ObjectProperty ; rdfs:domain deliberation:Derivation ; rdfs:label "reads" ;
+    rdfs:comment "A predicate this derivation's WHERE reads, or `deliberation:Anything` where the text does not say." .
+deliberation:writes a owl:ObjectProperty ; rdfs:domain deliberation:Derivation ; rdfs:label "writes" ;
+    rdfs:comment "A predicate this derivation's template writes, or `deliberation:Anything` where the text does not say." .
+deliberation:Anything a owl:Thing ; rdfs:label "Anything" ;
+    rdfs:comment "Said where a side's predicates cannot be read off the text: the derivation might read or write any predicate, so it joins them all. relevance's own ANYTHING, in the store." .
+
+##  What the loaded derivations read and write — computed at every refresh of public knowledge
+##  from the rule files, and read by `scope_actions`, which names no file.
+<http://example.org/orexis/graph/derivations> a deliberation:DerivationGraph ;
+    orexis:arrivedBy orexis:Derived .
+
 deliberation:ScopeGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Scope graph" ;
-    rdfs:comment "ONE agent's scopes, written whole by `scope_actions` from the actions it holds and the derivations loaded: which predicates some one action or derivation reads or writes together, as `deliberation:Scope` nodes, and which scope each predicate and each action is in. The partition is a function of the actions loaded, which do not change while the agent runs; it was recomputed in Python on every derivation and is data now, so `derive_wants` reads it and clusters the results by it. A working graph like the judgment graph: a conclusion, replaced per run, carried by no plan." .
+    rdfs:comment "THE STORE's scopes — nobody's, and one graph rather than one per agent, since every agent reading one store would compute the same partition from the same rows — written whole by `scope_actions` from the actions the store holds and the derivations loaded: which predicates some one action or derivation reads or writes together, as `deliberation:Scope` nodes, and which scope each predicate and each action is in. The partition is a function of the actions loaded, which do not change while the agent runs; it was recomputed in Python on every derivation and is data now, so `derive_wants` reads it and clusters the results by it. A working graph like the judgment graph: a conclusion, replaced per run, carried by no plan." .
+##  The store's scopes — written whole by `scope_actions` from the actions the store holds and
+##  the derivations loaded, and read by `derive_wants`. Declared here because it is named: one
+##  graph for the store, belonging to no agent, so there is no id to build it from.
+<http://example.org/orexis/graph/scopes> a deliberation:ScopeGraph ;
+    orexis:arrivedBy orexis:Derived .
+
 deliberation:Scope a owl:Class ; rdfs:label "Scope" ;
-    rdfs:comment "A set of predicates joined wherever one action or one derivation reads or writes both, and separate where nothing does — a bulkhead in the vocabulary (knowledge/domain/scope.md). Two wants in different scopes cannot contradict, because no action of one writes a fact the other reads. Named for its agent and its place in the partition, largest first." .
+    rdfs:comment "A set of predicates joined wherever one action or one derivation reads or writes both, and separate where nothing does — a bulkhead in the vocabulary (knowledge/domain/scope.md). Two wants in different scopes cannot contradict, because no action of one writes a fact the other reads. Named for the graph it is written in and its place in the partition, largest first." .
 deliberation:inScope a owl:ObjectProperty ; rdfs:range deliberation:Scope ; rdfs:label "in scope" ;
     rdfs:comment "The scope a predicate is in, and the scope an action's reads and writes lie in — by construction one, since an action touching two would have joined them. No domain: said of a property and of an action alike. An action stating no effect is in no scope, as it is on no menu; one whose effect cannot be read is in the one scope that joins everything." .
 

@@ -82,8 +82,11 @@ AND the instant after it, judged one second past `orexis:holdsAt`, because a cro
 last instant a reading is inside an inclusive floor and what the want prevents is the first
 outside — PDDL3's `hold-after`, with the root's Always as what holds after that. Its room is
 the stretch from `prov:generatedAtTime` to the instant. The crossing is the drift's own to
-state, `orexis:crossesAfter` beside it, read from the reading in hand; how far ahead a root acts
-on one is `orexis:foresees`, beside the want, and a root stating none foresees nothing.
+state, `orexis:crossesAfter` beside it, read from the reading in hand. How far ahead a root
+acted on one was `orexis:foresees` beside the want, and that number is gone: a want is derived
+at every instant a judgment says the desire fails, and how far ahead the agent sees is the
+horizons each drift predicts at
+([judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md)).
 
 **Two things the build found.** The reading's AGE is the root's to drift: every drift counts
 `$elapsed` from the pass's clock, the engine turns the stretch between two instants into no

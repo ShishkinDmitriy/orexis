@@ -83,7 +83,10 @@ prediction's lifecycle.
    per-agent graph with no period; `genesis.author_roots` runs the packages' desire rules at
    birth and, at every boot, copies in only a root the volume never held; the modality's
    build is `Projection` and runs no rule; foresight left the root for the choir
-   (`orexis:foresight`, sensing answering from its belief) and the aim left the label.
+   (`orexis:foresight`, sensing answering from its belief) and the aim left the label. The
+   foresight has since left the agent altogether — a want is derived at every instant a
+   judgment says the desire fails
+   ([judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md)).
 2. **Staleness as the first prediction's end**, inside the move of the drift
    ([#642](https://github.com/ShishkinDmitriy/orexis/issues/642)).
 3. **Every want sourced at a time as a graph with a period, and one sweep**

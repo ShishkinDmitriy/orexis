@@ -52,7 +52,7 @@ if TYPE_CHECKING:
     from orexis_agent_deliberation.judgment import Judgment
 from .driver import driver_for
 from agent.module import Module, contributes
-from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, FORESIGHT, PREDICTED, REPREDICT, WITNESS
+from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, PREDICTED, REPREDICT, WITNESS
 from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
 from orexis_agent_progression.store import bindings
 
@@ -921,22 +921,6 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
                 keeper.answered(p.intention, False, f"the step landed and the reading of "
                                                f"{observed_property.rsplit('#', 1)[-1]} is not {band} — "
                                                f"the world did not answer as the graph promised")
-
-    @contributes(FORESIGHT)
-    def foresight(self, root: str) -> float | None:
-        """How far ahead a stake I hold foresees, in seconds: my `sensing:foresightS` belief,
-        read when a child is derived and never baked onto the root (#644). None for a root
-        that is not a stake of mine, and None where the belief is unstated — a root stating
-        nothing foresees nothing, so a world that says nothing plans exactly as before."""
-        mine = bindings(self.agent.desires.query(f"""
-SELECT ?about WHERE {{ <{self.me.uri}> orexis:holds <{root}> .
-  <{root}> a orexis:Desire ; orexis:about ?about .
-  FILTER NOT EXISTS {{ <{root}> a sensing:Freshness }} }} LIMIT 1"""))
-        if not mine:
-            return None
-        rows = bindings(self.agent.beliefs.query(f"""
-SELECT ?f WHERE {{ GRAPH <{picks_graph(self.agent.id)}> {{ <{self.me.uri}> sensing:foresightS ?f }} }} LIMIT 1""", self.agent.beliefs.graphs_of(PUBLIC)))
-        return float(rows[0]["f"]) if rows and rows[0].get("f") is not None else None
 
     @contributes(REPREDICT)
     def repredict(self) -> None:

@@ -7,18 +7,17 @@ says; who holds a desire, the desire's own graph says; what a met-test means, it
 — and what it concludes it writes back. The one thing not in the store is the present, which
 is the clock's, the layer's one read of time.
 
-Beside it, the readers of a desire's met-test: the compiled select whose rows are its
-violations, and the witnesses a desire has at the first instant it fails. After the call, the
-store says what each desire read; nothing comes back and nothing is kept in hand.
-`derive_wants` reads the judgment graph. `pursuit` calls the two in turn when a pass stands
-on a root or a want, and the ledger when a claim arrives.
+IT IS THE ONLY THING HERE THAT READS A PREDICTION. What a desire read at a foreseen instant
+is written down, so every other reader of it reads the judgments — `derive_wants` to mint the
+wants, `judgments.witnesses_of` to say where a crossing is. After the call, the store says what
+each desire read; nothing comes back and nothing is kept in hand. `pursuit` calls the two in
+turn when a pass stands on a root or a want, and the ledger when a claim arrives.
 """
 
 from __future__ import annotations
 
 import io
 import logging
-from dataclasses import dataclass
 from datetime import datetime
 
 import pyoxigraph as ox
@@ -26,13 +25,11 @@ import rdflib
 
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import FORESEEN
-from orexis_agent_progression.store import NAMESPACES, Raw, bind
+from orexis_agent_progression.store import NAMESPACES, bind, graphs_holding, instant
 
 from .judgments import save_judgments
 
 log = logging.getLogger("judge_desires")
-
-_XSD_DATETIME = ox.NamedNode("http://www.w3.org/2001/XMLSchema#dateTime")
 
 #  EVERY DESIRE THE STORE HOLDS, who holds it and its met-test, from the graphs of desires
 #  holding at the present — the roots graph states no period, the world's asserted graph
@@ -49,35 +46,8 @@ SELECT DISTINCT ?holder ?desire ?shape WHERE {
                FILTER(!BOUND(?start) || $now >= ?start) FILTER(!BOUND(?end) || $now < ?end) } }
 ORDER BY ?holder ?desire"""
 
-#  ONE desire or want — `witnesses_of` is asked about either — its holder and its met-test,
-#  from whichever graph of desires or of wants holds it.
-_ROOT_Q = """
-SELECT ?holder ?shape WHERE {
-  GRAPH ?g { ?holder orexis:holds $root . OPTIONAL { $root orexis:metWhen ?shape } }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
-               VALUES ?kind { orexis:DesireGraph orexis:WantGraph } } }
-ORDER BY ?holder"""
-
-#  THE GRAPHS A DESIRE IS JUDGED OVER, asked of the catalogue in one text: every graph of the
-#  kinds a rule is answered over at an instant — FORESEEN, named here as at every runner, and
-#  every row carries every kind its class is beneath, so no path is walked — that is the
-#  holder's or nobody's, holding at the instant the judge stands at. A record is handed as it
-#  stands at the present whatever instant is asked about (#645), which is the one thing the
-#  kind means and the one thing this text knows.
-_GRAPHS_Q = """
-SELECT DISTINCT ?g WHERE {
-  GRAPH ?cat {
-    ?cat a orexis:CatalogueGraph .
-    ?g a ?kind . FILTER(isIRI(?g)) VALUES ?kind { $kinds }
-    OPTIONAL { ?g orexis:beliefsOf ?owner } FILTER(!BOUND(?owner) || ?owner = $holder)
-    OPTIONAL { ?g dcterms:temporal ?period .
-               OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?end } }
-    BIND(IF(EXISTS { ?g a orexis:RecordGraph }, $now, $at) AS ?when)
-    FILTER(!BOUND(?start) || ?when >= ?start) FILTER(!BOUND(?end) || ?when < ?end) } }
-ORDER BY ?g"""
-
 #  WHEN THE HOLDER FORESEES: the start of every prediction of theirs, whatever its window —
-#  what a crossing is read off (#643).
+#  the future states this judges at, given to it and never computed here (#643).
 _STARTS_Q = """
 SELECT DISTINCT ?start WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
@@ -122,7 +92,7 @@ def judge_desires(store: ox.Store) -> None:
     now = clock.now()
     shapes = shapes_in(store)
     by_holder: dict[str, list[tuple[str, str | None]]] = {}
-    for row in store.query(bind(_ROOTS_Q, now=_instant(now)), prefixes=NAMESPACES):
+    for row in store.query(bind(_ROOTS_Q, now=instant(now)), prefixes=NAMESPACES):
         by_holder.setdefault(row["holder"].value, []).append(
             (row["desire"].value, row["shape"].value if row["shape"] is not None else None))
     for holder, roots in by_holder.items():
@@ -139,21 +109,6 @@ def judge_desires(store: ox.Store) -> None:
                     continue
                 judged.append((root, at, not rows, rows))
         save_judgments(store, holder, judged)
-
-
-def unmet_select_of(store: ox.Store, root: str) -> str | None:
-    """The root's own met-test, compiled to the select whose rows are its VIOLATIONS — `?this`,
-    which constraint, and `?_about` where the constraint's block says what it is about — from
-    the graphs of desires and wants, asked by their classification and never named. None where
-    the root states no shape or the compiler refuses.
-
-    THE REPORT AND NOT THE FOCUS NODES (one-road-derives-every-want): a desire universal over
-    several properties fails per property, and the rows are what say which. The planner
-    compiles the same shape the same way for the law it holds candidates to."""
-    found = _root(store, root)
-    if found is None:
-        return None
-    return _compiled(shapes_in(store), found[1], root)
 
 
 def shapes_in(store: ox.Store) -> rdflib.Graph:
@@ -185,22 +140,6 @@ def _compiled(shapes: rdflib.Graph, shape: str | None, root: str) -> str | None:
         return None
 
 
-def _root(store: ox.Store, root: str) -> tuple[str, str | None] | None:
-    """Who holds `root` and its met-test, or None where no graph of desires or wants holds it."""
-    rows = list(store.query(bind(_ROOT_Q, root=root), prefixes=NAMESPACES))
-    if not rows:
-        return None
-    return rows[0]["holder"].value, rows[0]["shape"].value if rows[0]["shape"] is not None else None
-
-
-def graphs_holding(store: ox.Store, kinds, holder: str, at: datetime, now: datetime) -> list[str]:
-    """Every graph of `kinds` that is `holder`'s or nobody's and holds at `at` — a record as it
-    stands at `now` — asked of the catalogue in one text (a-reader-states-the-kinds-it-reads)."""
-    text = bind(_GRAPHS_Q, kinds=Raw(" ".join(f"<{k}>" for k in kinds)), holder=holder,
-                at=_instant(at), now=_instant(now))
-    return [row["g"].value for row in store.query(text, prefixes=NAMESPACES)]
-
-
 def _starts(store: ox.Store, holder: str) -> list[datetime]:
     return [datetime.fromisoformat(row["start"].value)
             for row in store.query(bind(_STARTS_Q, holder=holder), prefixes=NAMESPACES)]
@@ -212,7 +151,7 @@ def _violations(store: ox.Store, select: str, holder: str, at: datetime,
     dict of the engine's own terms by variable name, one per distinct row — two predictions
     holding at one instant give one node two offending values, and both are told. None where
     the engine refuses the text."""
-    graphs = [ox.NamedNode(g) for g in graphs_holding(store, FORESEEN, holder, at, now)]
+    graphs = [ox.NamedNode(g) for g in graphs_holding(store, FORESEEN, holder=holder, at=at, now=now)]
     try:
         answer = store.query(select, prefixes=NAMESPACES, default_graph=graphs)
         names = [v.value for v in answer.variables]
@@ -224,53 +163,3 @@ def _violations(store: ox.Store, select: str, holder: str, at: datetime,
         log.error("the met-test could not be read at %s: %s", at, exc)
         return None
     return [rows[key] for key in sorted(rows)]
-
-
-def _instant(at: datetime) -> ox.Literal:
-    """An instant as the term a text compares it as."""
-    return ox.Literal(at.isoformat(), datatype=_XSD_DATETIME)
-
-
-@dataclass(frozen=True)
-class Witness:
-    """One way a desire is failing, and when it first does: the focus node that failed, the
-    constraint it failed, what that constraint is about where its block says, and the instant.
-    A universal is refuted by a witness, and the want minted under it is the universal
-    instantiated at that witness (one-road-derives-every-want)."""
-
-    instance: str
-    constraint: str
-    about: str | None
-    at: datetime
-
-
-def witnesses_of(store: ox.Store, root: str) -> list[Witness]:
-    """Every (instance, constraint) under which `root` reads unmet, each at the FIRST instant it
-    does — the start of the earliest prediction where it fails.
-
-    The root's own met-test asked at each prediction's start over the graphs holding then,
-    the prediction beside the present (#643). A prediction typed with the region band and the
-    one below reads unmet, so the safe direction (#633) falls out of the bands, and no kernel
-    line knows a rate. One select per desire is the whole of the decomposition: its rows ARE
-    the instances in trouble, and `?_about` says which property where the desire's shape
-    states it per block.
-    """
-    found = _root(store, root)
-    if found is None:
-        return []
-    holder, shape = found
-    select = _compiled(shapes_in(store), shape, root)
-    if select is None:
-        return []
-    now = clock.now()
-    seen: dict[tuple[str, str], Witness] = {}
-    for at in _starts(store, holder):
-        rows = _violations(store, select, holder, at, now)
-        if rows is None:
-            return []
-        for row in rows:
-            key = (row["this"].value, row["_constraint"].value if "_constraint" in row else "")
-            if key not in seen:
-                seen[key] = Witness(instance=key[0], constraint=key[1],
-                                    about=row["_about"].value if "_about" in row else None, at=at)
-    return sorted(seen.values(), key=lambda w: (w.at, w.instance, w.constraint))

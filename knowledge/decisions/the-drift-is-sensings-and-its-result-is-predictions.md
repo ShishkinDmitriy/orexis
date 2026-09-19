@@ -170,8 +170,11 @@ a dose land.
   stretch of its own plan, minutes to hours against bands that take days; measured in the
   runbook when item 2 lands, before it is believed.
 - **A package's horizons.** The ladder is the package's; a package listing none predicts
-  only the next reading's window, and whether `sensing:foresightS` should bound the ladder
-  is left to the first package that needs a longer one.
+  only the next reading's window. The horizons ARE how far ahead the agent sees, since the
+  pursuit road derives a want at every instant a judgment says a desire fails and nothing
+  filters them again
+  ([judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md)), so a
+  package that wants a longer lead lists a longer horizon.
 - **Two steps landing inside one window** are judged by the last step's band.
 - **A reading between the taking and the landing** is compared with the do-nothing branch
   and says nothing of the step; a world that answers early is absorbed.

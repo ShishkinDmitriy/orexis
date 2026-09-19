@@ -36,7 +36,7 @@ instant a witness is read (the door,
 [a-rule-is-asked-about-a-world-not-about-a-store](/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md)),
 which witnesses one action could move together (the [scope](/domain/scope.md) partition,
 a union-find in `relevance.scopes` memoised on the agent), what the choir answers for
-`orexis:foresight`, and what time it is. A repository is not what the question is about; a
+`orexis:foresight` — a question since deleted — and what time it is. A repository is not what the question is about; a
 repository is a NAME for a collection
 ([a-repository-is-named-for-what-it-holds](/decisions/a-repository-is-named-for-what-it-holds.md)),
 not a claim that an object must exist between a read and a write.
@@ -142,8 +142,9 @@ is the price of hearing an empty result.
 - **A view per instant is a copy of the world per prediction start.** An agent holding many
   predictions holds as many views; the bound is the count of starts, which sensing and the ledger
   keep small today and nothing caps.
-- **The choir's foresight is Python**, a package answering a question at derivation time. A
-  rule road would read it as a belief instead; whether a pick and a choir answer are the same
-  thing is the question `orexis:foresight` already carries.
+- **The choir's foresight is Python**, a package answering a question at derivation time.
+  Closed by deletion rather than by a rule: the foresight filtered judgments that already
+  carry their instants, and how far ahead the agent sees is the horizons each drift predicts
+  at ([judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md)).
 - **A scope over variables** (#565, #663) changes the partition and not the mechanism: a
   finer partition is more groups in the same `GROUP BY`.

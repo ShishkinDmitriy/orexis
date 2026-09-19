@@ -31,7 +31,6 @@ from orexis_agent_progression.store import bind, bindings
 from .terms import (AMOUNT_L, DISCHARGED_AT, FOR_CLAIM, LAPSED_AT, LAPSES_AT, NS, OWED_AT, OWED_FROM,
                     OWED_TO, PRESENTED)
 from orexis_agent_progression import clock
-from orexis_agent_deliberation.derive_wants import derive_wants
 from orexis_agent_deliberation.judge_desires import judge_desires
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import KNOWN, RECORD
@@ -247,6 +246,11 @@ class Ower(Module):
         self.agent.beliefs.drop_graph(lapse_graph(self.agent.id, claim_jti))
         self.agent.desires.rebuild()   # a paid debt is history, and the want is no longer implied
         self.agent.tell(REPREDICT)      # the ledger is a premise the vessel's drift reads (#643)
+        #  AND THE ROAD IS ASKED, as it is when a claim arrives: a judgment is what this agent
+        #  believes its desires read, and the one this debt's lapse wrote is now about a
+        #  prediction that has gone. Nothing re-judges on a reader's behalf, so the writer of
+        #  the premise says it moved (judge-desires-then-derive-wants).
+        self._road()
 
     def owed(self, presented_only: bool = False) -> list[dict]:
         """What still stands, newest first — what an agent owes, askable by the sovereign."""
@@ -308,7 +312,7 @@ SELECT ?o ?to ?jti ?a ?at ?paid WHERE {{ GRAPH <{graph}> {{
         and it asks rather than does — nothing here writes a want."""
         from orexis_agent_deliberation import pursuit
         judge_desires(self.agent.beliefs.engine)
-        derive_wants(self.agent)
+        pursuit.derived(self.agent)
 
     def endow(self) -> int:
         """A debt written while the ledger minted its own want carried no PREDICTION beside it,
@@ -334,15 +338,6 @@ SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS
             self.agent.desires.rebuild()
             self._road()
         return len(rows)
-
-    def foresight(self, root: str) -> float | None:
-        """How far ahead "no overdue debts" derives a want from a prediction: EVERY deadline a
-        host has been given. A region desire foresees as far as its drift is worth believing;
-        a debt's deadline is not a forecast but a term of the claim, and a host that only
-        noticed a debt some hours before it lapsed would be a host that never planned to serve.
-        Unbounded, for this root and no other. Reached through the module that holds the
-        ledger, since the ledger is no longer a module of its own in the choir."""
-        return float("inf") if root == f"{self.agent.me.uri}.no_overdue_debts" else None
 
     def obligations(self, now: datetime | None = None) -> list[Judgment]:
         """What this agent owes, as desires — hottest first, and hot means CLOSE TO EXPIRY.

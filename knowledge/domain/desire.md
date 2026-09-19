@@ -430,8 +430,8 @@ lookup and a mark by either name meet the same want. It is withdrawn when its pl
 when it reads met with nothing standing for it; a desire still unmet derives it again. A met desire
 with nothing derived under it is nothing to pursue, and no pass runs for it.
 
-A desire that reads met may still foresee: where it states `orexis:foresees` and a drift's
-crossing falls within that stretch, the want derived under it must hold AT the crossing
+A desire that reads met may still foresee: where a drift's crossing says it fails at some
+instant ahead, the want derived under it must hold AT the crossing
 — met at the instant and the instant after, its room the stretch to it — and the search for it
 begins where the present's own drift stands at the instant less the longest landing on the
 menu, so the plan's first step is placed at the instant less the plan's own duration and held

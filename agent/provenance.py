@@ -41,6 +41,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from assembly import loader
+from orexis_agent_deliberation.ontology import DERIVATIONS_GRAPH
 from .config import REPO_ROOT
 from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
                        ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
@@ -122,6 +123,11 @@ def _turtle(world: Path, attribution: tuple[str, str] | None = None,
     action_files = " , ".join(f"<{file_iri(p)}>" for p in loader.action_files())
     lines.append(f"<{ACTIONS_GRAPH}> a prov:Entity"
                  + (f" ; prov:wasDerivedFrom {action_files} ." if action_files else " ."))
+    #  And what those rules READ and WRITE, computed from the same files by
+    #  `genesis.describe_derivations` so the scope partition is a function of the store
+    #  (scope-actions). Derived from the rule files, which is what it is a reading of.
+    lines.append(f"<{DERIVATIONS_GRAPH}> a prov:Entity"
+                 + (f" ; prov:wasDerivedFrom {' , '.join(f'<{r}>' for r in rules)} ." if rules else " ."))
     if world_files_:
         lines.append(f"<{WORLD_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {world_files_} .")
         #  The asserted-desire graph is fed by the same ratified files — a world's TriG block

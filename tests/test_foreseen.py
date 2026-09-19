@@ -2,37 +2,36 @@
 an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it, held to the code.
 
 The loner's pot at 0.12 is inside its region and falling at 0.03 a day: the drift says it
-leaves the region in sixteen hours. A gardener that foresees a day derives a want under the
-root that must hold AT that instant, plans the dose it would have planned once the pot was
-dry, and holds the dose until the crossing less the valve's own ceiling. A gardener that
-foresees nothing plans exactly as before.
+leaves the region in sixteen hours. The gardener derives a want under the root that must hold
+AT the crossing, plans the dose it would have planned once the pot was dry, and holds the dose
+until the crossing less the valve's own ceiling. A pot with no crossing in view derives nothing.
+
+A FORESIGHT once stood between the judgment and the want — `sensing:foresightS`, a per-agent
+pick discarding a crossing further out than N seconds — and it is gone: `judge_desires` judges
+each desire at every instant a prediction reaches and says which fail, and how far ahead the
+agent sees is what the drifts predict at. No shipped world ever set the pick.
 """
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
 from orexis_agent_deliberation import pursuit
-from orexis_agent_deliberation.derive_wants import derive_wants, foresees_of
+from orexis_agent_deliberation.derive_wants import derive_wants
 from orexis_agent_deliberation.judge_desires import judge_desires
 from orexis_agent_deliberation.planner import Planner
-from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import bindings
 from conftest import build_agent, genesis_store, write_reading
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 DOSING = "http://example.org/orexis/actuation#Dosing"
-FORESIGHT = "http://example.org/orexis/sensing#foresightS"
 FALLING, CONTENT = 0.12, 0.20          # 0.12 at 0.03/day is below the loner's floor of 0.10 a day out, not five hours out
 DAY = 86400.0
 
 
-def _gardener(monkeypatch, moisture, foresight: float | None = None):
+def _gardener(monkeypatch, moisture):
     monkeypatch.setenv("OREXIS_WORLD", "loner")
-    st = genesis_store({("zz", MOISTURE): moisture}, world="loner")
-    if foresight is not None:
-        st.update(f"""INSERT DATA {{ GRAPH <{picks_graph("gardener")}> {{
-            <http://example.org/orexis/world/loner#gardener> <{FORESIGHT}> {foresight} }} }}""")
-    return build_agent("gardener", st, monkeypatch)
+    return build_agent("gardener", genesis_store({("zz", MOISTURE): moisture}, world="loner"),
+                       monkeypatch)
 
 
 def _stake(agent):
@@ -41,7 +40,13 @@ def _stake(agent):
 
 
 def _crossing_of(agent):
-    """The crossing the water package states, from the reading the agent holds."""
+    """The crossing the water package states, from the reading the agent holds.
+
+    JUDGED FIRST, because a crossing is what the last judging found: `judge_desires` is the
+    one thing that takes predictions into account, and every other reader reads what it wrote.
+    A pass judges before it asks; a test asking cold says so here.
+    """
+    judge_desires(agent.beliefs.engine)
     return pursuit.crossing_of(agent, _stake(agent).derived_from or _stake(agent).uri)
 
 
@@ -51,32 +56,34 @@ def test_the_drift_says_when_the_reading_leaves_its_region(monkeypatch):
     where the window that reaches the day opens — five hours after the reading, not sixteen,
     the safe direction the ladder gives."""
     agent = _gardener(monkeypatch, FALLING)
-    crossing = pursuit.crossing_of(agent, _stake(agent).uri)
+    crossing = _crossing_of(agent)
     assert crossing is not None
     ahead = (crossing - datetime.now(timezone.utc)).total_seconds()
     assert abs(ahead - 18000.0) < 120, ahead
     under = _gardener(monkeypatch, 0.05)
+    judge_desires(under.beliefs.engine)
     below = pursuit.crossing_of(under, _stake(under).uri)
     assert below is not None and 0.0 <= (below - datetime.now(timezone.utc)).total_seconds() < 3600.0, \
         "a reading already below reads unmet at the first prediction, the next expected observation; a root unmet now is pursued as itself"
 
 
-def test_a_root_that_foresees_nothing_derives_nothing_from_a_prediction(monkeypatch):
-    """Every shipped world says no `sensing:foresightS`, so a content root stays nothing to
-    pursue — the first child's road, unchanged."""
-    agent = _gardener(monkeypatch, FALLING)
+def test_a_root_with_no_crossing_in_view_derives_nothing(monkeypatch):
+    """A pot at 0.20 falling at 0.03 a day is inside its region at every horizon a drift
+    predicts at, so no judgment says it fails and there is nothing to pursue — the first
+    child's road, unchanged."""
+    agent = _gardener(monkeypatch, CONTENT)
     root = _stake(agent)
-    assert root.is_met and foresees_of(agent, root.uri) is None
+    assert root.is_met and _crossing_of(agent) is None
     assert agent.deliberator.decide(root) is None
     assert pursuit.child_of(agent, root.uri) is None
 
 
-def test_a_crossing_within_the_foresight_derives_a_want_met_at_that_instant(monkeypatch):
-    """The claim. Content now, crossing in sixteen hours, foreseeing a day: the root derives a
+def test_a_crossing_derives_a_want_met_at_that_instant(monkeypatch):
+    """The claim. Content now, crossing in view: the root derives a
     want bound AT the crossing, presented in its place — unmet, since the newest prediction
     says the reading will have crossed, its urgency the fraction of the stretch run — and the
     search, judged at the instant, plans the dose the dry pot would have got."""
-    agent = _gardener(monkeypatch, FALLING, foresight=DAY)
+    agent = _gardener(monkeypatch, FALLING)
     root = _stake(agent)
     assert root.is_met
     plan = agent.deliberator.decide(root)
@@ -96,18 +103,23 @@ def test_a_crossing_within_the_foresight_derives_a_want_met_at_that_instant(monk
     assert "http://example.org/orexis#holdsAt" in said and "http://www.w3.org/ns/prov#generatedAtTime" in said
 
 
-def test_a_crossing_beyond_the_foresight_derives_nothing(monkeypatch):
-    """Five hours out, foreseeing one: not yet."""
-    agent = _gardener(monkeypatch, FALLING, foresight=3600.0)
+def test_a_crossing_derives_a_want_however_far_out_it_is(monkeypatch):
+    """The crossing the loner's pot has is five hours out, and there is no second number to
+    say whether five hours is too far: the want is minted at it. What bounds the lookahead is
+    the horizons the drift predicts at — beyond the furthest, nothing is judged and nothing is
+    derived, which is the test above."""
+    agent = _gardener(monkeypatch, FALLING)
     root = _stake(agent)
-    assert agent.deliberator.decide(root) is None
-    assert pursuit.child_of(agent, root.uri) is None
+    assert agent.deliberator.decide(root) is not None
+    child = pursuit.child_of(agent, root.uri)
+    assert child is not None
+    assert _stake(agent).holds_at == _crossing_of(agent)
 
 
 def test_the_search_judges_a_candidate_at_the_instant(monkeypatch):
     """Handed the want directly, the planner reads the root as UNMET at the instant — the
     present drifted sixteen hours is below the region — and a dose's world as met there."""
-    agent = _gardener(monkeypatch, FALLING, foresight=DAY)
+    agent = _gardener(monkeypatch, FALLING)
     agent.deliberator.decide(_stake(agent))
     child = _stake(agent)
     planner = Planner(agent, agent.me)
@@ -121,7 +133,7 @@ def test_the_dose_is_placed_at_the_instant_less_its_own_duration(monkeypatch):
     """Pursued, the plan's first step is held `notBefore` the crossing less the dose's
     duration: the intention stands, nothing is commanded now, and its patience does not run
     against a step that is waiting for its instant."""
-    agent = _gardener(monkeypatch, FALLING, foresight=DAY)
+    agent = _gardener(monkeypatch, FALLING)
     root = _stake(agent)
     uri = pursuit.pursue(agent, root)
     assert uri is not None
@@ -139,12 +151,13 @@ def test_the_dose_is_placed_at_the_instant_less_its_own_duration(monkeypatch):
 def test_a_reading_that_lifts_the_prediction_reads_the_want_met_and_withdraws_it(monkeypatch):
     """The world moved — the pot was watered by someone — so the newest prediction crosses
     after the instant: the derived want reads met and, with nothing standing for it, is gone."""
-    agent = _gardener(monkeypatch, FALLING, foresight=DAY)
+    agent = _gardener(monkeypatch, FALLING)
     root = _stake(agent)
     agent.deliberator.decide(root)
     child = _stake(agent)
     assert child.state == "unmet"
     write_reading(agent, CONTENT)
+    judge_desires(agent.beliefs.engine)   # the reading moved the predictions; the judge reads them
     now = _stake(agent)
     assert now.uri == child.uri and now.state == "met"
     assert agent.deliberator.decide(now) is None
@@ -157,7 +170,7 @@ def test_a_pot_that_crosses_before_the_drift_said_is_wanted_now_and_not_at_the_c
     floor. The root is unmet NOW, and a want still saying "hold at the crossing" would have
     the dose placed hours out. The road re-mints it with no instant under the same name, and
     the pass that stood on the old judgment is handed the new one."""
-    agent = _gardener(monkeypatch, FALLING, foresight=DAY)
+    agent = _gardener(monkeypatch, FALLING)
     root = _stake(agent)
     agent.deliberator.decide(root)
     child = _stake(agent)
@@ -170,4 +183,4 @@ def test_a_pot_that_crosses_before_the_drift_said_is_wanted_now_and_not_at_the_c
     [again] = agent.wants.find_all_by_desire(root.uri)
     assert again.uri == minted.uri and again.holds_at is None, "the same want, at no instant"
     judge_desires(agent.beliefs.engine)
-    assert derive_wants(agent) == [], "and once is enough"
+    assert derive_wants(agent.beliefs.engine) == [], "and once is enough"

@@ -213,9 +213,9 @@ class Judgments:
         its derivation to the instant, the fraction run being its urgency, never less than
         the root's own — and it reads met exactly where the newest prediction says the
         reading still holds at the instant, unmet where it says it will have crossed. The
-        crossing is read off the want's OWN met-test (`node`), so a want about one tank is
-        not held to another's prediction."""
-        from orexis_agent_deliberation import pursuit
+        question is asked of the want's OWN results — the cluster it was minted from — so a
+        want about one tank is not held to another's prediction."""
+        from orexis_agent_deliberation.judgments import unmet_by
         now = now or clock.now()
         urgency = row.urgency
         if since is not None and holds_at > since:
@@ -223,15 +223,16 @@ class Judgments:
             urgency = max(urgency, min(1.0, max(0.0, run)))
         state, read_at = row.state, row.read_at
         if state == "met":
-            #  The newest prediction, from the reading in hand: still crossing by the instant
-            #  is unmet; a reading a dose has lifted predicts a later crossing, and that is met.
-            found = pursuit.crossing_row_of(self._agent, node)
-            state = "unmet" if found is not None and found[0] <= holds_at else "met"
+            #  IS IT STILL IN TROUBLE BY THEN? The want was minted because its desire was
+            #  judged unmet at this instant; a reading that lifted the corridor leaves the
+            #  desire met by then, and the want reads met. The judgment answers, since a
+            #  judgment is about a desire and the want says which instant and which results.
+            found = unmet_by(self._agent.beliefs.engine, node, holds_at)
+            state = "unmet" if found is not None else "met"
             #  A want nobody's row dates — an asserted one the kernel lifts — takes the instant
-            #  of the reading the crossing was predicted from, which is what a pass for it
-            #  must be clocked from.
+            #  it is judged unmet at, which is what a pass for it must be clocked from.
             if read_at is None and found is not None:
-                read_at = found[1]
+                read_at = found
         return replace(row, holds_at=holds_at, urgency=urgency, state=state, read_at=read_at)
 
     def _unmet_select(self, want: str, shape: str, entered: bool = False) -> str:

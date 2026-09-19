@@ -20,15 +20,12 @@ from orexis_agent_progression.ontology import FORESEEN
 from orexis_agent_progression import clock
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
-FORESIGHT = "http://example.org/orexis/sensing#foresightS"
 FALLING = 0.47          # 0.02 above the simulation fern's floor of 0.45, at 0.12 a day: below by five hours, so the crossing is an hour out
 HOURS = 3600.0
 
 
-def _fern(monkeypatch, moisture=FALLING, foresight=6 * HOURS):
+def _fern(monkeypatch, moisture=FALLING):
     st = genesis_store({("fern", MOISTURE): moisture})
-    st.update(f"""INSERT DATA {{ GRAPH <{picks_graph("fern")}> {{
-        <http://example.org/orexis/world/simulation#fern_agent> <{FORESIGHT}> {foresight} }} }}""")
     return build_agent("fern", st, monkeypatch)
 
 

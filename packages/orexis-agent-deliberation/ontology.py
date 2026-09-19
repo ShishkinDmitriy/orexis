@@ -40,12 +40,29 @@ def judgments_graph(holder: str) -> str:
     return "http://example.org/orexis/graph/judgments/" + holder
 
 
+#  A DERIVATION (scope-actions): one INSERT of one loaded rule, as the edge it makes. Written
+#  at every refresh of public knowledge, so the partition is a function of the store and not of
+#  the files — the actions are in the store already and the rules were not.
+DERIVATION = DELIBERATION + "Derivation"
+READS = DELIBERATION + "reads"
+WRITES = DELIBERATION + "writes"
+ANYTHING = DELIBERATION + "Anything"
+DERIVATION_GRAPH = DELIBERATION + "DerivationGraph"
+
+#  THE ONE GRAPH INSTANCE THIS LAYER NAMES, and it is named because the vocabulary declares it
+#  and genesis writes it: a public graph, spelled in the T-Box beside the class, as the world's
+#  and the actions' are. Every reader asks the class.
+DERIVATIONS_GRAPH = "http://example.org/orexis/graph/derivations"
+
+
 #  A SCOPE (scope-actions): which predicates some one action or derivation moves together.
 SCOPE = DELIBERATION + "Scope"
 IN_SCOPE = DELIBERATION + "inScope"
 
 
-def scopes_graph(agent_id: str) -> str:
-    """ONE agent's scopes, replaced whole on every run of `scope_actions`: a working
-    graph, read by `derive_wants` and by eyes, carried by no plan and recorded by nothing."""
-    return "http://example.org/orexis/graph/scopes/" + agent_id
+def scopes_graph() -> str:
+    """THE STORE's scopes, replaced whole on every run of `scope_actions`: a working graph,
+    read by `derive_wants` and by eyes, carried by no plan and recorded by nothing. Nobody's,
+    and takes no id: the partition is a function of the actions the store holds and the
+    derivations loaded, which are the same rows for everyone reading one store."""
+    return "http://example.org/orexis/graph/scopes"

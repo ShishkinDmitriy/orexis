@@ -1,7 +1,9 @@
-"""The judgments in the store, as SPARQL and nothing else.
+"""The judgments in the store, as SPARQL and nothing else — and the WITNESS, which is what one
+result of one judgment says.
 
 `judge_desires` hands the engine's own rows here and they are written as judgments;
-`derive_wants` reads them back with one SELECT. No Python object stands for a judgment in
+`derive_wants` reads them back with one SELECT, and so does every other reader of what a
+desire read: the judgment is written down so that nobody judges twice. No Python object stands for a judgment in
 between — the sovereign's question, and the answer is no: the next function reads the
 graph. This module owns the judgment graph: its name for eyes (`judgments/<holder>`), its
 classification with owner, and that a holder's judgments are replaced whole on every run,
@@ -10,24 +12,30 @@ exactly as `Wants` owns the pursued graphs. A reader that means the graph asks i
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 
 import pyoxigraph as ox
 
 from orexis_agent_progression import clock
-from orexis_agent_progression.store import NAMESPACES, bind, bindings
+from orexis_agent_progression.store import NAMESPACES, answer, bind, bindings, rows
 
 from .ontology import DELIBERATION, judgments_graph
 
 JUDGMENT_GRAPH = DELIBERATION + "JudgmentGraph"
 
-#  EVERY JUDGMENT HELD, one row per result — a met one has a row with no focus.
+#  EVERY JUDGMENT HELD AND WHOSE IT IS, one row per result — a met one has a row with no
+#  focus. The graph says whose, so the text joins the catalogue and is handed no default
+#  graph: a judgment is written per holder and the wants it implies are written where that
+#  holder's belong.
 JUDGMENTS_Q = """
-SELECT ?desire ?at ?met ?focus ?about ?k WHERE {
-  ?j a deliberation:Judgment ; deliberation:judges ?desire ; sh:conforms ?met .
-  OPTIONAL { ?j orexis:holdsAt ?at }
-  OPTIONAL { ?j sh:result ?r . ?r sh:focusNode ?focus ; deliberation:constraint ?k .
-             OPTIONAL { ?r orexis:about ?about } } }"""
+SELECT ?holder ?desire ?at ?met ?focus ?about ?k WHERE {
+  GRAPH ?g { ?j a deliberation:Judgment ; deliberation:judges ?desire ; sh:conforms ?met .
+    OPTIONAL { ?j orexis:holdsAt ?at }
+    OPTIONAL { ?j sh:result ?r . ?r sh:focusNode ?focus ; deliberation:constraint ?k .
+               OPTIONAL { ?r orexis:about ?about } } }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a deliberation:JudgmentGraph ;
+               orexis:beliefsOf ?holder } }"""
 
 #  THE HOLDER'S STANDING JUDGMENT GRAPHS, asked of the catalogue by class and owner — what a
 #  run replaces, whatever each is called.
@@ -60,11 +68,11 @@ def save_judgments(store: ox.Store, holder: str,
     genesis and one step is every step (one-graph-both-engines-read) — so a text asks `?g a
     orexis:WorkingGraph` and walks no path. The graph and its description land together or
     not at all."""
-    standing = [row["g"].value for row in store.query(bind(_STANDING_Q, holder=holder), prefixes=NAMESPACES)]
+    standing = [row["g"] for row in rows(store, _STANDING_Q, holder=holder)]
     graph = judgments_graph(holder.rsplit("#", 1)[-1].rsplit("/", 1)[-1])
     now = clock.now().isoformat()
     blocks = []
-    for desire, at, met, rows in judged:
+    for desire, at, met, results in judged:
         node = desire + ".judgment" + (at.strftime(".%Y%m%dT%H%M%SZ") if at is not None else "")
         when = f' ; orexis:holdsAt "{at.isoformat()}"^^xsd:dateTime' if at is not None else ""
         results = "".join(
@@ -72,7 +80,7 @@ def save_judgments(store: ox.Store, holder: str,
             f" deliberation:constraint {int(r['_constraint'].value)}"
             + (f" ; orexis:about {r['_about']}" if "_about" in r else "")
             + (f" ; sh:value {term}" if (term := _term(r.get("_offending"))) else "") + " ]"
-            for r in rows)
+            for r in results)
         blocks.append(f"  <{node}> a deliberation:Judgment ; deliberation:judges <{desire}>{when} ;\n"
                       f'      prov:generatedAtTime "{now}"^^xsd:dateTime ;\n'
                       f"      sh:conforms {'true' if met else 'false'}{results} .")
@@ -92,11 +100,110 @@ WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:Ontol
         GRAPH ?vocabulary {{ deliberation:JudgmentGraph rdfs:subClassOf ?kind }} }}""", prefixes=NAMESPACES)
 
 
-def find_judgments(store) -> list[dict]:
-    """Every judgment's rows, from the judgment graph asked by class: `desire`, `at` (absent
-    for the present), `met` (`"true"`/`"false"`), and per result `focus`, `about`, `k`."""
-    graphs = store.graphs_of(JUDGMENT_GRAPH)
-    return bindings(store.query_over(JUDGMENTS_Q, *graphs)) if graphs else []
+def find_judgments(engine: ox.Store) -> dict[str, list[dict]]:
+    """Every judgment's rows, by HOLDER — the judgment graphs asked by class and by whose they
+    are, in the text's own `GRAPH` clauses. Each row: `desire`, `at` (absent for the present),
+    `met` (`"true"`/`"false"`), and per result `focus`, `about`, `k`."""
+    from orexis_agent_progression.store import rows
+
+    out: dict[str, list[dict]] = {}
+    for row in rows(engine, JUDGMENTS_Q):
+        out.setdefault(row["holder"], []).append(row)
+    return out
+
+
+@dataclass(frozen=True)
+class Witness:
+    """One way a desire is failing, and when it first does: the focus node that failed, the
+    constraint it failed, what that constraint is about where its block says, and the instant.
+    A universal is refuted by a witness, and the want minted under it is the universal
+    instantiated at that witness (one-road-derives-every-want).
+
+    It is one `sh:result` of one judgment, read back — which is why it lives beside them."""
+
+    instance: str
+    constraint: str
+    about: str | None
+    at: datetime
+
+
+def witnesses_of(engine: ox.Store, desire: str) -> list[Witness]:
+    """Every (instance, constraint) under which `desire` was judged unmet at a FORESEEN
+    instant, each at the earliest instant it was — read off the judgments, and off nothing
+    else. A CROSSING is the earliest of them: the instant the world a desire is about is
+    judged to leave what the desire wants.
+
+    ONLY THE JUDGE TAKES PREDICTIONS INTO ACCOUNT. A prediction is a corridor the value is
+    expected to move along; where it leaves the region the desire states, the desire is
+    judged unmet at that instant, and that judgment IS the crossing. `judge_desires`
+    enumerates the states — the present, then every instant a prediction reaches — and judges
+    the desire at each; what it read is written down, and this reads it. It used to re-run the
+    compiled met-test at every prediction start on every call, which is the same question
+    asked twice by two paths that could disagree.
+
+    So a crossing is what the last judging found. During a pass that is what is true now,
+    since `pursuit` judges before it asks, and whoever moves a premise says so — the ledger
+    asks the road when a claim arrives and when a debt is paid.
+
+    A DESIRE, NEVER A WANT. A want has no crossing: it is what a crossing produced, and it
+    carries the instant it must hold at. What is still in trouble by then is `unmet_by`.
+
+    The present is excluded, as it always was: a desire unmet NOW is pursued as itself, and a
+    crossing is a thing in the future.
+    """
+    return _witnesses(find_judgments(engine), desire)
+
+
+#  WHAT A WANT NARROWS ITS DESIRE TO: the desire it was derived from, what it is about, and
+#  the one node its met-test targets where it has one — the cluster of results it was minted
+#  from, said in the want's own row.
+_NARROWS_Q = """
+SELECT ?desire (GROUP_CONCAT(STR(?about); separator=" ") AS ?abouts) ?target WHERE {
+  GRAPH ?g { $want prov:wasDerivedFrom ?desire .
+             OPTIONAL { $want orexis:about ?about }
+             OPTIONAL { $want orexis:metWhen ?shape . ?shape sh:targetNode ?target } }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:WantGraph } }
+GROUP BY ?desire ?target"""
+
+
+def unmet_by(engine: ox.Store, want: str, instant: datetime) -> datetime | None:
+    """The earliest instant at or before `instant` at which this WANT's desire is still judged
+    unmet among the results the want was minted from, or None where it is not.
+
+    THE QUESTION THE CONTAINER ASKS when it presents a want that must hold at an instant: the
+    want was minted because the desire was judged unmet there, and a later reading may have
+    moved the corridor so that it no longer is — a dose lifts the pot, and the want its
+    crossing produced reads met. The want supplies the instant and the narrowing; the judgment
+    is its desire's, since a judgment is about a desire.
+
+    Narrowed as the want is: to what it is about and, where its met-test names one node, to
+    that node — so a want about one tank is not held to another's prediction. Which is what
+    compiling the want's own shape and judging it computed, from the same facts.
+    """
+    narrowed = bindings(answer(engine, bind(_NARROWS_Q, want=want)))
+    if not narrowed or not narrowed[0].get("desire"):
+        return None
+    abouts = set(narrowed[0]["abouts"].split()) if narrowed[0].get("abouts") else set()
+    target = narrowed[0].get("target")
+    found = _witnesses(find_judgments(engine), narrowed[0]["desire"], abouts, target)
+    return next((w.at for w in found if w.at <= instant), None)
+
+
+def _witnesses(judgments: dict[str, list[dict]], desire: str,
+               abouts: set | None = None, target: str | None = None) -> list[Witness]:
+    """The judgment rows of one desire as witnesses — unmet, at a foreseen instant, each at
+    the earliest it was — kept to `abouts` and `target` where a want narrows them."""
+    seen: dict[tuple[str, str], Witness] = {}
+    for judged in judgments.values():
+        rows = [r for r in judged if r["desire"] == desire and r.get("at")
+                and r["met"] != "true" and r.get("focus")
+                and (target is None or r["focus"] == target)
+                and (not abouts or not r.get("about") or r["about"] in abouts)]
+        for r in sorted(rows, key=lambda r: r["at"]):
+            seen.setdefault((r["focus"], r["k"]), Witness(
+                instance=r["focus"], constraint=r["k"], about=r.get("about"),
+                at=datetime.fromisoformat(r["at"])))
+    return sorted(seen.values(), key=lambda w: (w.at, w.instance, w.constraint))
 
 
 def _term(term) -> str | None:

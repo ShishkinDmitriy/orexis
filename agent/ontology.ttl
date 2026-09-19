@@ -643,9 +643,6 @@ orexis:about a owl:ObjectProperty ; rdfs:domain orexis:Desire ;
 orexis:holdsAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ;
     rdfs:label "holds at" ;
     rdfs:comment "The instant an `orexis:At` want must hold at — a predicted crossing — the start of the earliest prediction at which the root reads unmet (#643). The keeper holds the plan's first step `progression:notBefore` this instant less the plan's own duration, so acting early is placed rather than immediate (#619)." .
-orexis:foresees a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:decimal ;
-    rdfs:label "foresees" ;
-    rdfs:comment "How far ahead, in seconds, a predicted crossing derives a want under this root — stated by an ASSERTED want. A root authored at genesis states none: the belief that says how far it foresees is the agent's (`sensing:foresightS`, a pick), and a root is not a function of the agent's state (#644), so pursuit asks `orexis:foresight` of the choir when it derives and reads this only where no voice answers. The policy of how much lead is too much sits beside the want, and not in the kernel (#619)." .
 orexis:expiresAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ;
     rdfs:label "expires at" ;
     rdfs:comment """When the venue stops holding the claim this debt came from — the claim's own `exp`, kept as the debt's. Absent where the market stated no window, and such a debt never becomes urgent, which is right: nobody is waiting on it.
@@ -676,9 +673,6 @@ orexis:predicted a assembly:Extension ;
     assembly:signature "(predicted, standing) -> None" ; orexis:row orexis:Progression ; rdfs:label "predicted" ;
     rdfs:comment "The keeper says which branch the agent intends (#639): an expectation opened on a step — the keyed fact it predicts (its class, its key, the bands it is predicted to be, or a number a caller stated), from when a reading may answer it, the instant it lands and the deadline — and, `standing` false, that expectation closed. Told to whoever predicts: sensing folds the step's band into the predictions it writes from the landing on, compares every reading of the key with it once at arrival, and answers the keeper with the verdict — met in the band, unmet outside it at or after the landing. No shape is built per step, and no kernel line knows what a reading is." .
 
-orexis:foresight a assembly:Extension ;
-    assembly:signature "(root) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "foresight" ;
-    rdfs:comment "How far ahead, in seconds, does this ROOT foresee — a predicted crossing nearer than that derives a want met at the crossing's instant (#619). Asked by pursuit when it derives, of whoever holds the belief that says (sensing, from `sensing:foresightS`), so a root authored at genesis carries no foresight of its own and a re-pick reaches the next derivation without a rebuild (#644). An asserted want may still state `orexis:foresees`, which is read where no voice answers." .
 
 orexis:repredict a assembly:Extension ;
     assembly:signature "() -> None" ; orexis:row orexis:Progression ; rdfs:label "repredict" ;

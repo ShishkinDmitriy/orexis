@@ -33,8 +33,9 @@ import logging
 from dataclasses import replace
 from datetime import datetime
 
-from .derive_wants import derive_wants, foresees_of
-from .judge_desires import judge_desires, witnesses_of
+from .derive_wants import derive_wants
+from .judge_desires import judge_desires
+from .judgments import witnesses_of
 from .plan import SATISFIED
 
 from orexis_agent_progression.execution import carry_out
@@ -72,14 +73,14 @@ def handed(agent, judgment):
         #  carries the old instant, so it is presented again.
         if judgment.derived_from is not None:
             judge_desires(agent.beliefs.engine)
-            if judgment.uri in derive_wants(agent):
+            if judgment.uri in derived(agent):
                 return next((d for d in agent.pursuing() if d.uri == judgment.uri), judgment)
         return judgment
     #  THE PASS STANDS ON THE ROOT: every desire is judged into the store and the wants derived
     #  from what the store says — a root whose met-test the compiler refused is judged by the
     #  choir there, and still derives its one want.
     judge_desires(agent.beliefs.engine)
-    derive_wants(agent)
+    derived(agent)
     child = child_of(agent, judgment.uri)
     if child is None:
         return None
@@ -88,6 +89,20 @@ def handed(agent, judgment):
     #  which the root's row knows; an at-end want is the root's row under the derived name.
     presented = next((d for d in agent.pursuing() if d.uri == child and d.holds_at is not None), None)
     return presented if presented is not None else replace(judgment, uri=child, derived_from=judgment.uri)
+
+
+def derived(agent) -> list[str]:
+    """`derive_wants` over this agent's store, and the projection refreshed where it minted.
+
+    THE ROAD IS A FUNCTION OVER THE STORE and holds no collection, so a want it writes
+    announces itself to nobody — where `Wants.save` would have told the desire modality to
+    rebuild. Saying so is the caller's, and this is the caller every pass goes through: one
+    place, and the rebuild is paid only when something was actually minted.
+    """
+    minted = derive_wants(agent.beliefs.engine)
+    if minted:
+        agent.desires.rebuild()
+    return minted
 
 
 def _is_root(agent, want: str) -> bool:
@@ -111,31 +126,25 @@ def child_of(agent, root: str) -> str | None:
 
 
 def crossing_of(agent, root: str) -> datetime | None:
-    """The earliest predicted crossing for `root`, or None — see `crossing_row_of`."""
-    found = crossing_row_of(agent, root)
-    return found[0] if found else None
+    """When the world a DESIRE is about is judged to leave what the desire wants, or None: the
+    earliest instant its judgments read unmet. The rows are `judgments.witnesses_of`.
 
-
-def crossing_row_of(agent, root: str) -> tuple[datetime, datetime] | None:
-    """When the world a root is about is PREDICTED to leave what the root wants, or None: the
-    earliest witness among the predictions. The second instant is the same start — what a pass
-    for the derived want is clocked from. Kept for its readers; the rows are `witnesses_of`."""
+    A desire's, never a want's. A want has no crossing — it is what a crossing produced, and
+    it carries the instant it must hold at; whether it is still in trouble by then is
+    `judgments.unmet_by`.
+    """
     found = witnesses_of(agent.beliefs.engine, root)
-    return (found[0].at, found[0].at) if found else None
+    return found[0].at if found else None
 
 
 def foreseen(agent, root: str) -> datetime | None:
-    """The instant a want derived under `root` must hold at, or None: the predicted
-    crossing, where the root foresees that far ahead."""
-    ahead = foresees_of(agent, root)
-    if ahead is None:
-        return None
-    crossing = crossing_of(agent, root)
-    if crossing is None:
-        return None
-    if (crossing - clock.now()).total_seconds() > ahead:
-        return None
-    return crossing
+    """The instant a want derived under `root` must hold at, or None: the predicted crossing.
+
+    A FORESIGHT once gated this — a per-agent pick discarding a crossing further out than N
+    seconds — and it is gone with the one in `derive_wants`: what bounds the lookahead is the
+    horizons each drift predicts at, so a crossing there is at all is one worth a want.
+    """
+    return crossing_of(agent, root)
 
 
 def root_of(agent, want: str) -> str | None:

@@ -41,7 +41,7 @@ from datetime import datetime
 
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import OREXIS, WANT
-from orexis_agent_progression.store import bindings
+from orexis_agent_progression.store import NAMESPACES, bindings
 
 from .ontology import DELIBERATION, pursued_graph
 from .want import Want
@@ -55,6 +55,56 @@ log = logging.getLogger("wants")
 #  a market with a busy ledger mints one per claim and a stuck sweep leaves them standing.
 #  Generous enough that no correct caller meets it, small enough that meeting it is survivable.
 PAGE = 100
+
+
+def graph_of(agent_id: str, uri: str) -> str:
+    """The graph one DERIVED want lives in. Named for the want so a second episode of the same
+    desire reuses it, and everything keyed by the want finds what it kept."""
+    return f"{pursued_graph(agent_id)}/{uri.rsplit('#', 1)[-1]}"
+
+
+def save_want(engine, agent_id: str, want: Want) -> None:
+    """Write one derived want over the ENGINE: its graph, replaced whole, and the catalogue's
+    account of that graph — its family, how it arrived, whose it is and the period it holds
+    during — in one update, so a want and what is said about it land together or not at all.
+
+    THE KNOWLEDGE STAYS IN THIS FILE, which is the point of it being here (#677): the road
+    decides what a want IS — its name, its label, what it points at, when it must hold — and
+    where a want is kept is this module's, whether the collection below or the road asks. The
+    catalogue is found by its own row and every kind the vocabulary puts a pursued graph
+    beneath is written from one `rdfs:subClassOf` step, the closure being materialised at
+    genesis (one-graph-both-engines-read).
+    """
+    graph = graph_of(agent_id, want.uri)
+    points = " ".join(f"<{want.uri}> <{p}> <{o}> ." for p, o in want.points)
+    shape = "\n  ".join(want.shape)
+    timed = (f' ; orexis:holdsAt "{want.holds_at}"^^xsd:dateTime'
+             f' ; prov:generatedAtTime "{want.derived_at}"^^xsd:dateTime'
+             if want.holds_at is not None else "")
+    about = "".join(f" ; orexis:about <{a}>" for a in want.about)
+    period = f' ; orexis:start "{clock.now().isoformat()}"^^xsd:dateTime' + (
+        f' ; orexis:end "{want.ends}"^^xsd:dateTime' if want.ends else "")
+    engine.update(f"""
+DROP SILENT GRAPH <{graph}> ;
+DELETE {{ GRAPH ?cat {{ <{graph}> ?p ?o . ?period ?pp ?po }} }}
+WHERE  {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{graph}> ?p ?o .
+          OPTIONAL {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }} }} ;
+INSERT {{
+  GRAPH <{graph}> {{
+  <{want.holder}> orexis:holds <{want.uri}> .
+  <{want.uri}> a orexis:Want{timed}{about} ;
+      prov:wasDerivedFrom <{want.desire}> ;
+      rdfs:label {json.dumps(want.label)} .
+  {points}
+  {shape} }}
+  GRAPH ?cat {{ <{graph}> a deliberation:PursuedGraph ; orexis:arrivedBy orexis:Recorded ;
+      orexis:beliefsOf <{want.holder}> ;
+      dcterms:temporal [ a dcterms:PeriodOfTime{period} ] . }} }}
+WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
+INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} }}
+WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
+        GRAPH ?vocabulary {{ deliberation:PursuedGraph rdfs:subClassOf ?kind }} }}""",
+                  prefixes=NAMESPACES)
 
 
 class Wants:
@@ -145,33 +195,20 @@ class Wants:
     def save(self, agent_id: str, want: Want) -> None:
         """Write a DERIVED want, then say so.
 
-        THE GRAPH IS THIS REPOSITORY'S TO NAME, and so is what is said ABOUT it: one graph per
+        THE GRAPH IS THIS MODULE'S TO NAME, and so is what is said ABOUT it: one graph per
         want, classified as the family it belongs to and given the period it holds during
         (#645), so the door hides an ended one from every reader and one sweep drops it. A
-        caller naming any of that would hold the knowledge this class exists to hold — and
+        caller naming any of that would hold the knowledge this file exists to hold — and
         would have to remember all three, which is the shape of an omission nobody notices
         until a want outlives its window.
+
+        THE WRITE ITSELF IS `save_want`, over the engine. The pursuit road is a function over
+        the store and holds no collection, so where a want is kept had to be sayable without
+        one; what this collection adds is what a collection adds — that a write announces
+        itself. A road writing through the module announces nothing, and its callers refresh
+        what they hold.
         """
-        graph = self.graph_of(agent_id, want.uri)
-        points = " ".join(f"<{want.uri}> <{p}> <{o}> ." for p, o in want.points)
-        shape = "\n  ".join(want.shape)
-        timed = (f' ; orexis:holdsAt "{want.holds_at}"^^xsd:dateTime'
-                 f' ; prov:generatedAtTime "{want.derived_at}"^^xsd:dateTime'
-                 if want.holds_at is not None else "")
-        about = "".join(f" ; orexis:about <{a}>" for a in want.about)
-        self._store.drop_graph(graph)
-        self._store.update(f"""
-INSERT DATA {{
-  GRAPH <{graph}> {{
-  <{want.holder}> orexis:holds <{want.uri}> .
-  <{want.uri}> a orexis:Want{timed}{about} ;
-      prov:wasDerivedFrom <{want.desire}> ;
-      rdfs:label {json.dumps(want.label)} .
-  {points}
-  {shape} }}
-  {self._store.entry(graph, DELIBERATION + "PursuedGraph", OREXIS + "Recorded", want.holder,
-                     start=clock.now(), end=want.ends)}
-}}""")
+        save_want(self._store.engine, agent_id, want)
         for listener in self.on_saved:
             listener(want)
 
@@ -185,9 +222,8 @@ INSERT DATA {{
     # --- where they live ------------------------------------------------------------------
 
     def graph_of(self, agent_id: str, uri: str) -> str:
-        """The graph one DERIVED want lives in. Named for the want so a second episode of the
-        same desire reuses it, and everything keyed by the want finds what it kept."""
-        return f"{pursued_graph(agent_id)}/{uri.rsplit('#', 1)[-1]}"
+        """The graph one DERIVED want lives in — `graph_of` above, which the road asks too."""
+        return graph_of(agent_id, uri)
 
     def _select(self, where: str, at: datetime | None = None,
                 limit: int = PAGE, offset: int = 0, family: str = "") -> list[Want]:
@@ -218,8 +254,19 @@ INSERT DATA {{
         #  SAID IN THE TEXT, since a want lives in one graph: which kinds, by the catalogue's
         #  rows — every kind a graph is stands on its row — and which instant, by the period
         #  on the same row. The text is handed no default graph; it names what it reads.
+        #
+        #  AND WHOSE, where the store has been told: a reader that means its own gets its own,
+        #  which is what `graphs_of` does for every read that goes through it and what this
+        #  text had to say for itself once it named its own graphs. Rule 4 makes the two the
+        #  same in a volume — one agent, one store — and they are not the same in a store
+        #  built with a whole world in it, where the pursuit road derives under every holder's
+        #  desires and this collection would otherwise hand back another agent's wants. A
+        #  graph saying no owner is anyone's, and a store told nothing keeps every graph.
         now = (at or clock.now()).isoformat()
         kinds = " ".join(f"<{k}>" for k in ((family,) if family else (WANT, RECORD)))
+        mine = (f'    OPTIONAL {{ ?g orexis:beliefsOf ?owner }}\n'
+                f'    FILTER(!BOUND(?owner) || ?owner = <{self._store.agent_uri}>)'
+                if self._store.agent_uri else "")
         rows = bindings(self._store.query(f"""
 SELECT ?w ?desire ?label ?holdsAt ?since (GROUP_CONCAT(STR(?about); separator=" ") AS ?abouts) WHERE {{
   GRAPH ?g {{
@@ -233,6 +280,7 @@ SELECT ?w ?desire ?label ?holdsAt ?since (GROUP_CONCAT(STR(?about); separator=" 
   GRAPH ?catalogue {{
     ?catalogue a orexis:CatalogueGraph .
     ?g a ?kind . VALUES ?kind {{ {kinds} }}
+{mine}
     OPTIONAL {{ ?g dcterms:temporal ?period . OPTIONAL {{ ?period orexis:start ?start }} OPTIONAL {{ ?period orexis:end ?end }} }} }}
   FILTER(!BOUND(?start) || ?start <= "{now}"^^xsd:dateTime)
   FILTER(!BOUND(?end) || ?end > "{now}"^^xsd:dateTime)

@@ -56,7 +56,7 @@ def test_a_pursued_child_and_a_prediction_past_their_ends_are_swept(monkeypatch)
     ladder predicted from a reading two days old."""
     agent = build_agent("gardener", genesis_store({("zz", MOISTURE): 0.12}, world="loner"), monkeypatch)
     root = stake_of(agent).uri
-    child = mint(agent, root, holds_at=clock.now() - timedelta(days=1))
+    child = mint(agent.beliefs.engine, agent.me.uri, root, holds_at=clock.now() - timedelta(days=1))
     assert child is not None
     write_reading(agent, 0.12, MOISTURE, age_s=2 * 86400)
     reading = readings.current_reading(agent.beliefs.reader(PUBLIC), agent.me.acts_for, MOISTURE)

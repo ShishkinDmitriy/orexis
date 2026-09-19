@@ -16,9 +16,8 @@ that binds, with its met-tests, authored once and holding at every instant. At e
 the same rules run into a scratch and only a root the volume has never held is copied in: an
 amendment endows, a held root stays whatever the world now says, and removal is a rebirth
 ([a-root-holds-always-and-an-outdated-graph-is-dropped](/decisions/a-root-holds-always-and-an-outdated-graph-is-dropped.md)).
-Nothing of the agent's state enters a root — no foresight, no aim in the label — because a pick
-is the agent's and a root is not a function of it; pursuit asks the choir how far a root
-foresees when it derives a child.
+Nothing of the agent's state enters a root — no aim in the label — because a pick is the
+agent's and a root is not a function of it.
 
 **The repository's build is a projection.** `Projection` in `desire.py` copies the roots graph and
 the records — picks, obligations, promises, pursued children — and runs no rule. It was the

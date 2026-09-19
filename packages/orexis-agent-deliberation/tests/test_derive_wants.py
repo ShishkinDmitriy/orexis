@@ -30,7 +30,7 @@ def test_derive_wants_leaves_the_store_as_the_snapshot_says(case, monkeypatch, r
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     agent = snapshots.stand_in(case)
     before = snapshots.snapshot_of(agent.beliefs)
-    derive_wants(agent)
+    derive_wants(agent.beliefs.engine)
     snapshots.held_to(case, request, "derive_wants", before, snapshots.snapshot_of(agent.beliefs))
 
 

@@ -138,7 +138,7 @@ class Agent:
                                  self.desires, self.me.uri, picks_graph(agent_id))
         #  THE SCOPES, written once the actions are here: a function of the actions loaded,
         #  which do not change while the agent runs, and what every derivation clusters by.
-        scope_actions(self)
+        scope_actions(self.beliefs.engine)
         # The intention modality: the ledger's own store, in its own room of the volume — a
         # commitment survives a restart, so it persists where the imaginarium never does. A
         # pathless mind (every test agent) has no rooms and the ledger stays beside the

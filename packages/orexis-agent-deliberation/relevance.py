@@ -347,13 +347,48 @@ def subproperties_of(query) -> dict:
 
 
 def rule_edges() -> tuple:
-    """Every derivation rule in every loaded package, as (reads, writes) edges."""
+    """Every derivation rule in every loaded package, as (reads, writes) edges.
+
+    READ OFF THE FILES, and the one caller is genesis, which puts the answer in the store:
+    `scope_actions` is a function over the store and reads `stored_edges` instead, since the
+    actions it joins these with have been in the store all along and a partition computed half
+    from the store and half from a directory listing is one nobody can check by asking."""
     from assembly import loader
 
     edges = []
     for path in loader.rule_files():
         edges.extend(edges_of_update(path.read_text()))
     return tuple(edges)
+
+
+#  THE EDGES AS THE STORE HOLDS THEM: one `deliberation:Derivation` per INSERT, its sides as
+#  predicates or as `deliberation:Anything`. Asked of the graphs of derivations by class.
+_EDGES_Q = """
+SELECT ?d ?reads ?writes WHERE {
+  ?d a deliberation:Derivation .
+  OPTIONAL { ?d deliberation:reads ?reads }
+  OPTIONAL { ?d deliberation:writes ?writes } }"""
+
+
+def stored_edges(engine, graphs) -> tuple:
+    """The derivations' (reads, writes) edges, read back from `graphs` — what genesis wrote
+    from the rule files. A side saying `deliberation:Anything` is ANYTHING; a side saying
+    nothing at all is empty, which is what a rule reading or writing no named predicate is."""
+    from orexis_agent_progression.store import rows
+
+    from .ontology import ANYTHING as ANYTHING_IRI
+
+    sides: dict = {}
+    for row in rows(engine, _EDGES_Q, graphs):
+        reads, writes = sides.setdefault(row["d"], (set(), set()))
+        for side, key in ((reads, "reads"), (writes, "writes")):
+            if row.get(key):
+                side.add(row[key])
+    out = []
+    for _name, (reads, writes) in sorted(sides.items()):
+        out.append((ANYTHING if ANYTHING_IRI in reads else frozenset(URIRef(p) for p in reads),
+                    ANYTHING if ANYTHING_IRI in writes else frozenset(URIRef(p) for p in writes)))
+    return tuple(out)
 
 
 _BRIDGES_Q = """
