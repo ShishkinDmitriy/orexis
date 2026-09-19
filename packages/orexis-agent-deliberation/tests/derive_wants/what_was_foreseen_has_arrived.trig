@@ -6,7 +6,7 @@
 # The clock stands at 2026-01-01T12:00:00Z when the road runs.
 #
 # THE JUDGMENTS AS `judge_desires` LEFT THEM on this situation (judge_desires/what_was_foreseen_has_arrived.trig),
-# and the scopes `clusterise_actions` made of its levers: the desires, the scopes, whatever
+# and the scopes `scoping_actions` made of its levers: the desires, the scopes, whatever
 # stands, and the judgment graph — no world, no readings, no predictions, no levers.
 # `derive_wants` reads the judgments and the scopes, and nothing in hand.
 

@@ -42,7 +42,7 @@ from assembly.inject import attribute_for, opened
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.ontology import DESIRE_URGENCY, picks_graph
 
-from orexis_agent_deliberation.clusterise_actions import clusterise_actions
+from orexis_agent_deliberation.scoping_actions import scoping_actions
 from orexis_agent_deliberation.deliberator import KEEPING_PICKS, Deliberator
 from orexis_agent_deliberation.judgment import Judgment
 from orexis_agent_deliberation.desires import Desires
@@ -137,7 +137,7 @@ class Agent:
                                  self.desires, self.me.uri, picks_graph(agent_id))
         #  THE SCOPES, written once the actions are here: a function of the actions loaded,
         #  which do not change while the agent runs, and what every derivation clusters by.
-        clusterise_actions(self)
+        scoping_actions(self)
         # The intention modality: the ledger's own store, in its own room of the volume — a
         # commitment survives a restart, so it persists where the imaginarium never does. A
         # pathless mind (every test agent) has no rooms and the ledger stays beside the
