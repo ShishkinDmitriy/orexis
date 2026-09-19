@@ -27,9 +27,18 @@ def fern(monkeypatch):
     return build_agent("fern", monkeypatch=monkeypatch)
 
 
+def _bare() -> Store:
+    """A store nobody has told anything to, except what its graphs are: the summaries classify
+    the graph they create, and a classification is a row of the catalogue, which genesis
+    creates (one-catalogue-describes-every-graph-and-itself)."""
+    st = Store()
+    genesis.ensure_catalogue(st)
+    return st
+
+
 @pytest.fixture
 def summaries():
-    return Summaries(Store(), "fern")
+    return Summaries(_bare(), "fern")
 
 
 # --- what it keeps ---------------------------------------------------------------------------
@@ -61,7 +70,7 @@ def test_a_barely_moving_instrument_spreads_slightly(summaries):
 def test_the_spread_is_unit_free(summaries):
     """One agent's property is a fraction and another's is degrees; a threshold in either unit
     would be nonsense in the other, so the same proportional wobble reads the same either way."""
-    other = Summaries(Store(), "fern")
+    other = Summaries(_bare(), "fern")
     for value in (0.100, 0.102):
         summaries.record(FERN, MOISTURE, value)
     for value in (100.0, 102.0):
