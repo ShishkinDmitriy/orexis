@@ -1,8 +1,10 @@
 """`judge_desires`, one case per file, held to a snapshot of the whole store it leaves.
 
-A case in `judge_desires/` is the world as an agent finds it — the topology, the levers, the
-desire with its met-test, what the instruments read now, what is foreseen and from when, and
-whatever stands — loaded into a bare store. The function judges every desire at the present
+A case in `judge_desires/` is the world as an agent finds it — the topology, the desire with
+its met-test, what the instruments read now, what is foreseen and from when, and whatever
+stands — loaded into a bare store. NO LEVERS: judging reads no action, so a case that stated
+some would be giving the function more than its contract; they live in `scope_actions/`, which
+is the function that reads them. The function judges every desire at the present
 and at every foreseen instant and writes the judgments; `<case>.snapshot.trig` beside the
 case is the whole store afterwards, in the case's own order, so `diff` of case against
 snapshot is exactly what judging did. The machinery is the conftest's: compared structurally,

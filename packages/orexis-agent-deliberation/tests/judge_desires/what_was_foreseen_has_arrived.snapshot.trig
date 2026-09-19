@@ -24,17 +24,6 @@ GRAPH :world {
   :tank2 a :Tank .
 }
 
-# The levers loaded. A rule text is parsed with the store's prefixes, not this file's, so
-# each says its own — an unreadable lever joins every property into one scope.
-GRAPH :actions {
-  :fill a orexis:Action ;
-      sh:construct """PREFIX : <http://example.org/test#>
-        CONSTRUCT { ?t :level ?x . } WHERE { ?t a :Tank }""" .
-  :heat a orexis:Action ;
-      sh:construct """PREFIX : <http://example.org/test#>
-        CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
-}
-
 GRAPH :desires {
   :keeper orexis:holds :keeper.in_range .
   :keeper.in_range a orexis:Desire ;
@@ -68,8 +57,6 @@ GRAPH pursued:keeper.in_range.pursued.tank1.level {
 # What each graph IS, and when it holds — said once each, beside the data.
 # CHANGED, re-rendered:
 GRAPH :catalogue {
-  :actions a orexis:Graph ;
-      a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph ;
       a orexis:Graph .
   :desires a orexis:DesireGraph ;
