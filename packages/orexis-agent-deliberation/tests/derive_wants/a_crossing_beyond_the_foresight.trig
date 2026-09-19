@@ -19,7 +19,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
 
-GRAPH :roots {
+GRAPH :desires {
   :in_range a sh:NodeShape ;
       sh:property [ orexis:about :level ;
           sh:minInclusive 10 ;
@@ -69,7 +69,7 @@ GRAPH :catalogue {
   :judgments a deliberation:JudgmentGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
-  :roots a orexis:DesireGraph .
+  :desires a orexis:DesireGraph .
   :scopes a deliberation:ScopeGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .

@@ -32,7 +32,7 @@ GRAPH :actions {
         CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
 }
 
-GRAPH :roots {
+GRAPH :desires {
   :keeper orexis:holds :keeper.in_range .
   :keeper.in_range a orexis:Desire ;
       rdfs:label "every tank in range" ;
@@ -56,5 +56,5 @@ GRAPH :catalogue {
   :ontology a orexis:OntologyGraph .
   :world a orexis:PublicGraph .
   :actions a orexis:PublicGraph .
-  :roots a orexis:DesireGraph .
+  :desires a orexis:DesireGraph .
 }

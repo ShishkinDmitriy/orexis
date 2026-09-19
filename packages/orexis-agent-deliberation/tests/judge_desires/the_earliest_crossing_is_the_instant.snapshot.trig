@@ -35,7 +35,7 @@ GRAPH :actions {
         CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
 }
 
-GRAPH :roots {
+GRAPH :desires {
   :keeper orexis:holds :keeper.in_range .
   :keeper.in_range a orexis:Desire ;
       rdfs:label "every tank in range" ;
@@ -61,6 +61,7 @@ GRAPH :predicted-1 { :tank1 :level 8 . }
 GRAPH :catalogue {
   :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
+  :desires a orexis:DesireGraph .
   :ontology a orexis:OntologyGraph .
   :predicted-0 a orexis:PredictionGraph ;
       dcterms:temporal [ a dcterms:PeriodOfTime ;
@@ -68,7 +69,6 @@ GRAPH :catalogue {
   :predicted-1 a orexis:PredictionGraph ;
       dcterms:temporal [ a dcterms:PeriodOfTime ;
           orexis:start "2026-01-01T12:20:00+00:00"^^xsd:dateTime ] .
-  :roots a orexis:DesireGraph .
   :world a orexis:PublicGraph .
   judgments:keeper a deliberation:JudgmentGraph ;
       orexis:arrivedBy orexis:Derived ;
