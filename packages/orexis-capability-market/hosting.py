@@ -39,7 +39,7 @@ from orexis_agent_deliberation.judgment import Judgment
 from .ower import Ower
 from agent.module import Module, contributes
 from orexis_agent_progression.timer import Timer
-from orexis_agent_progression.ontology import FORESIGHT, HANDLE, OUTDATED, SUBSCRIPTIONS
+from orexis_agent_progression.ontology import HANDLE, OUTDATED, SUBSCRIPTIONS
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
 from orexis_agent_progression.act import Step
@@ -332,12 +332,6 @@ SELECT (SUM(?a) AS ?owed) WHERE {{
         #  what it contributed to the choir arrives through the module that holds it.
         return ([Judgment(uri=c.uri, urgency=1.0) for c in calls.calls_of(self.agent)]
                 + self.ledger.desires(now))
-
-    @contributes(FORESIGHT)
-    def foresight(self, root: str) -> float | None:
-        """How far ahead the ledger's desire looks — the ledger's answer, through the module
-        that holds it, as its desires arrive: every deadline a host has been given."""
-        return self.ledger.foresight(root)
 
     def series(self) -> list[tuple[str, dict, dict]]:
         """What I owe, as figures — the ledger's, through the module that holds it."""

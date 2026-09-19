@@ -30,20 +30,19 @@ GRAPH :catalogue {
   :ontology a orexis:Graph ;
       a orexis:OntologyGraph ;
       a orexis:PublicGraph .
-  scopes:keeper a deliberation:ScopeGraph ;
+  <http://example.org/orexis/graph/scopes> a deliberation:ScopeGraph ;
       a orexis:Graph ;
       a orexis:WorkingGraph ;
-      orexis:arrivedBy orexis:Derived ;
-      orexis:beliefsOf :keeper .
+      orexis:arrivedBy orexis:Derived .
 }
 
 
 # --- WRITTEN (the first snapshot also holds the loader's own vocabulary stub) ---
 
-GRAPH scopes:keeper {
-  :fill deliberation:inScope :keeper.scope.1 .
-  :keeper.scope.1 a deliberation:Scope .
-  :level deliberation:inScope :keeper.scope.1 .
+GRAPH <http://example.org/orexis/graph/scopes> {
+  :fill deliberation:inScope scopes:1 .
+  :level deliberation:inScope scopes:1 .
+  scopes:1 a deliberation:Scope .
 }
 
 GRAPH :ontology {

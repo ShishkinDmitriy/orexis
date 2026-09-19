@@ -22,7 +22,6 @@ from orexis_agent_progression.timer import Timer
 from conftest import build_agent, genesis_store, wired_sensors, write_reading
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
-FORESIGHT = "http://example.org/orexis/sensing#foresightS"
 
 
 @pytest.fixture
@@ -75,8 +74,6 @@ def test_the_simulation_fern_foresees_and_places_under_the_worlds_pace(monkeypat
     #  tolerance was absorbing that rather than measuring anything. Under enough parallel load
     #  it stopped fitting: boot alone is 4.18s of a 6.25s budget on this bench, measured.
     made = clock.now()
-    st.update(f"""INSERT DATA {{ GRAPH <{picks_graph("fern")}> {{
-        <http://example.org/orexis/world/simulation#fern_agent> <{FORESIGHT}> 21600 }} }}""")
     agent = build_agent("fern", st, monkeypatch)
     root = next(d for d in agent.pursuing() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
     crossing = pursuit.crossing_of(agent, root.uri)

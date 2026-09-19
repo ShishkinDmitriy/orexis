@@ -38,13 +38,15 @@ from .config import REPO_ROOT
 from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, CATALOGUE_GRAPH, GRAPH_PREFIX, OREXIS, roots_graph, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, STATE_GRAPH,
                        WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, picks_graph)
+from orexis_agent_deliberation.ontology import DERIVATIONS_GRAPH
 from orexis_agent_progression.store import NAMESPACES, Raw, Store, bind, bindings
 from orexis_agent_progression.ontology import PUBLIC
 
 # Everything public that is computed rather than read from a file. Emptied before each recompute
 # so the answer is the files' and not last boot's — a fact that stops being entailed, or a rule
 # that stops firing, must stop being present.
-COMPUTED_GRAPHS = (ONTOLOGY_ENTAILED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_DERIVED_GRAPH)
+COMPUTED_GRAPHS = (ONTOLOGY_ENTAILED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_DERIVED_GRAPH,
+                   DERIVATIONS_GRAPH)
 
 log = logging.getLogger("genesis")
 
@@ -305,6 +307,7 @@ def refresh_public(st: Store, world: Path) -> None:
     inference.materialise(st)
     for rule in loader.rule_files():
         st.update(substitute(rule.read_text(), st))
+    describe_derivations(st)
     # Last, because it describes the result: which graph holds what, in PROV-O, so the
     # store answers that rather than this file's comments. See orexis/provenance.py.
     provenance.describe(st, world, targets)
@@ -319,6 +322,37 @@ def ensure_catalogue(st: Store) -> str:
         st.update(f"""INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{
   <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph ; orexis:arrivedBy orexis:Derived . }} }}""")
     return st.catalogue
+
+
+def describe_derivations(st: Store) -> None:
+    """Put what the loaded derivations READ and WRITE into the store, one row per INSERT.
+
+    THE PARTITION IS A FUNCTION OF THE STORE, and this is the half that was not in it. Scopes
+    join predicates wherever one action or one derivation touches both (scope-actions); the
+    actions have always been in the store, as `orexis:Action` rows a package's `actions.ttl`
+    ratifies, while the derivations were rule texts on disk that `scope_actions` read through
+    the loader. So the edges the texts make are computed once here, where the rules are already
+    being read and run, and `scope_actions` is handed the engine and asks.
+
+    PUBLIC, because the loaded rule set is the same for everyone reading this store, exactly as
+    the actions are; computed, so the graph is cleared with the rest of `COMPUTED_GRAPHS` on
+    every refresh and never accumulates. Each row is named for the rule file it came from and
+    its place in it, so the same rules write the same text — and the name is a file IRI, which
+    is this module's to build and not a layer's: `relevance` says what an update's edges ARE
+    and would have had to import the container to say where one came from.
+    """
+    from orexis_agent_deliberation import relevance
+    from orexis_agent_deliberation.ontology import ANYTHING, DERIVATION, READS, WRITES
+
+    lines = []
+    for path in sorted(loader.rule_files()):
+        for n, (reads, writes) in enumerate(relevance.edges_of_update(path.read_text()), 1):
+            said = "".join(
+                f" ;\n      <{term}> " + (f"<{ANYTHING}>" if side is relevance.ANYTHING
+                                          else " , ".join(f"<{p}>" for p in sorted(map(str, side))))
+                for term, side in ((READS, reads), (WRITES, writes)) if side is relevance.ANYTHING or side)
+            lines.append(f"  <{provenance.file_iri(path)}#{n}> a <{DERIVATION}>{said} .")
+    st.update(f"INSERT DATA {{ GRAPH <{DERIVATIONS_GRAPH}> {{\n{chr(10).join(lines)}\n}} }}")
 
 
 def catalogue_public(st: Store) -> None:

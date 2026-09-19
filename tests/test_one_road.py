@@ -83,7 +83,7 @@ def test_presenting_makes_the_roads_want_pursuable_and_paying_withdraws_its_grou
     agent, ledger, root = _host(monkeypatch)
     ledger.owe("fern", "jti-2", expires_at=time.time() + HOUR, amount_l=1.0)
     judge_desires(agent.beliefs.engine)
-    derive_wants(agent)
+    derive_wants(agent.beliefs.engine)
     ledger.demanded("jti-2")
     [judged] = ledger.obligations()
     assert judged.state == "demanded" and judged.pursuable, "the holder asked"
@@ -109,7 +109,7 @@ def test_a_second_claim_is_a_second_want_and_the_first_stands(monkeypatch):
     presented = next(j for j in agent.pursuing() if j.uri == first.uri)
     assert pursuit.handed(agent, presented).uri == first.uri
     judge_desires(agent.beliefs.engine)
-    assert derive_wants(agent) == [], "nothing new to mint"
+    assert derive_wants(agent.beliefs.engine) == [], "nothing new to mint"
     assert {w.uri for w in agent.wants.find_all_by_desire(root)} == {first.uri, second.uri}
 
 
@@ -134,7 +134,7 @@ def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(mon
     assert now.uri == foreseen.uri and now.about == (debt,), "the same want, re-minted"
     assert now.holds_at is None, "at no instant: the holder is waiting"
     judge_desires(agent.beliefs.engine)
-    assert derive_wants(agent) == [], "and the road is idle again"
+    assert derive_wants(agent.beliefs.engine) == [], "and the road is idle again"
 
     presented = next(j for j in agent.pursuing() if j.uri == now.uri)
     assert presented.holds_at is None and presented.pursuable

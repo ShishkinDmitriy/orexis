@@ -1,11 +1,20 @@
 """`derive_wants`: the wants every desire's judgments imply, minted under their desires — the
 second of the road's two functions (judge-desires-then-derive-wants), reading the judgment
 graph with one select and nothing in hand — and the minting beside it: which results cluster
-into one want (a scope), what the want is named, the desire's met-test narrowed to the want's,
-and how far ahead a desire foresees.
+into one want (a scope), what the want is named, and the desire's met-test narrowed to the
+want's.
+
+A FUNCTION OVER THE STORE, like the one before it: handed the engine, a `pyoxigraph.Store`,
+and nothing else. The judgments say what each desire read and whose they are, the scope graph
+says which results cluster, the graphs of desires say what a desire is about and what its
+met-test is, the graphs of wants say what already stands, and the pick record says how long a
+plan is given after its instant. The present is the clock's, the one read outside the store.
 
 After the call, every want the store's judgments imply stands in the store; what was minted
-this time comes back for the caller that asked whether its own want was re-minted.
+this time comes back for the caller that asked whether its own want was re-minted. A caller
+holding a projection of the wants refreshes it on a non-empty answer — announcing a write is
+the repository's contract, and a road that writes past the repository leaves the refresh to
+whoever holds one.
 """
 
 from __future__ import annotations
@@ -13,18 +22,62 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 
+import pyoxigraph as ox
+
 from orexis_agent_progression import clock
+from orexis_agent_progression.keeper import PATIENCE_S
 from orexis_agent_progression.ontology import OREXIS
-from orexis_agent_progression.store import bindings
+from orexis_agent_progression.store import NAMESPACES, bind, instant, rows
 
 from .judge_desires import Witness
 from .judgments import find_judgments
 from .want import Want
+from .wants import save_want
 
 log = logging.getLogger("derive_wants")
 
+DESIRE_GRAPH = OREXIS + "DesireGraph"
+WANT_GRAPH = OREXIS + "WantGraph"
+OREXIS_MET_WHEN = OREXIS + "metWhen"
 
-def derive_wants(agent) -> list[str]:
+#  WHAT A DESIRE SAYS, from the graphs of desires and wants asked by class: what it is about,
+#  what it points at, its label and its met-test. The OBJECT'S TYPE matters — a blank node
+#  cannot be pointed at from another graph — so the caller reads the engine's own terms.
+_SAID_Q = """
+SELECT ?p ?o WHERE {
+  GRAPH ?g { $root ?p ?o
+    FILTER(?p IN (orexis:metWhen, orexis:unmetWhen, orexis:estimates, orexis:about, rdfs:label)) }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
+               VALUES ?kind { orexis:DesireGraph orexis:WantGraph } } }"""
+
+#  DOES THE MET-TEST NAME ITS ONE NODE (`sh:targetNode`)?
+_TARGETS_ONE_Q = """
+ASK { GRAPH ?g { $root orexis:metWhen ?s . ?s sh:targetNode ?n }
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:DesireGraph } }"""
+
+#  HOW LONG A PLAN IS GIVEN after the instant its want must hold at — the keeper's pick, from
+#  the record where review writes it. Progression's word, which this layer reads downward.
+_PATIENCE_Q = """
+SELECT ?s WHERE {
+  GRAPH ?g { $holder $patience ?s }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:PickRecordGraph } } LIMIT 1"""
+
+#  WHAT ALREADY STANDS under one desire: every want derived from it that the road minted and
+#  whose graph still holds. A want IS its graph (#645), so which family it is in and whether it
+#  holds are the graph's questions, asked of the catalogue in the text as `Wants` asks them.
+_STANDING_Q = """
+SELECT ?w ?holdsAt WHERE {
+  GRAPH ?g { ?w a orexis:Want ; prov:wasDerivedFrom $root .
+             OPTIONAL { ?w orexis:holdsAt ?holdsAt } }
+  GRAPH ?cat {
+    ?cat a orexis:CatalogueGraph . ?g a deliberation:PursuedGraph .
+    OPTIONAL { ?g dcterms:temporal ?period .
+               OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?end } } }
+  FILTER(!BOUND(?start) || ?start <= $now) FILTER(!BOUND(?end) || ?end > $now) }
+ORDER BY ?w"""
+
+
+def derive_wants(store: ox.Store) -> list[str]:
     """Mint a want under every desire for every cluster of its judgments' results that has
     none, and return what was minted — the second of the road's two functions, reading the
     judgments `judge_desires` wrote with one select and nothing in hand
@@ -34,48 +87,59 @@ def derive_wants(agent) -> list[str]:
     mints nothing; it says an instance is there and the road does the rest
     (one-road-derives-every-want).
 
+    IT IS THE DECOMPOSITION OF THE JUDGMENTS AND NOTHING ELSE. `judge_desires` judges each
+    desire at the present and at every instant a prediction reaches, and writes what it read;
+    this turns those judgments into wants, and asks no question the judgments do not answer.
+    A FORESIGHT once stood here — a per-agent pick that discarded a foreseen failure further
+    out than N seconds — and it is gone: the judgments already say which instants fail and
+    when, and how far ahead the agent sees is said by the drifts, each declaring the horizons
+    it predicts at. A second number gating the first was an on/off switch wearing a horizon's
+    name, and no shipped world set it.
+
     The instant is EACH CLUSTER'S OWN. A desire unmet at the present derives wants with none.
-    One met at the present derives them at the instants it foresees unmet — and two debts
+    One met at the present derives them at the instants it is judged unmet — and two debts
     cross at two deadlines, so the second is not filtered away by the first's; each cluster
-    holds at its earliest result, and one past the foresight is not derived. A desire met at
-    the present with nothing foreseen derives NOTHING: there is nothing to pursue, and a want
-    about everything the desire is about is minted only for a desire unmet at the present
-    with no result, which is what every want was before the road; the case that wrote such
-    a judgment — a met-test the compiler refused, judged by the choir — went when
-    `judge_desires` became a function over the store, and nothing writes one now.
+    holds at its earliest result. A desire met at every instant judged derives NOTHING: there
+    is nothing to pursue, and a want about everything the desire is about is minted only for a
+    desire unmet at the present with no result, which is what every want was before the road.
+
+    WHOSE, FROM THE JUDGMENT: each judgment graph says whose it is, so the wants a holder's
+    judgments imply are written to graphs that holder owns. One agent, one volume, so the
+    holder is the agent.
     """
-    by_desire: dict[str, list[dict]] = {}
-    for row in find_judgments(agent.beliefs):
-        by_desire.setdefault(row["desire"], []).append(row)
+    now = clock.now()
     minted: list[str] = []
-    for root, rows in sorted(by_desire.items()):
-        minted += _derive_under(agent, root, rows)
+    for holder, judged in sorted(find_judgments(store).items()):
+        by_desire: dict[str, list[dict]] = {}
+        for row in judged:
+            by_desire.setdefault(row["desire"], []).append(row)
+        for root, judgments in sorted(by_desire.items()):
+            minted += _derive_under(store, holder, root, judgments, now)
     return minted
 
 
-def _derive_under(agent, root: str, rows: list[dict]) -> list[str]:
-    """The wants one desire's judgments imply, minted where none stands. `rows` are the
-    judgment graph's: one per result, a met judgment's row naming no focus."""
-    now = clock.now()
-    present = [r for r in rows if not r.get("at")]
+def _derive_under(store: ox.Store, holder: str, root: str, judged: list[dict],
+                  now: datetime) -> list[str]:
+    """The wants one desire's judgments imply, minted where none stands. `judged` are the
+    judgment graph's rows: one per result, a met judgment's row naming no focus."""
+    present = [r for r in judged if not r.get("at")]
     if not present:
         return []
-    if present[0]["met"] != "true":
-        unmet_now, ahead = True, None
+    unmet_now = present[0]["met"] != "true"
+    if unmet_now:
         found = [Witness(instance=r["focus"], constraint=r["k"], about=r.get("about"), at=now)
                  for r in present if r.get("focus")]
     else:
-        unmet_now, ahead = False, foresees_of(agent, root)
-        if ahead is None:
-            return []
+        #  MET NOW, AND JUDGED UNMET LATER: each (instance, constraint) at the FIRST instant
+        #  it fails. Every instant here is one `judge_desires` was asked about, which is every
+        #  instant a prediction reaches — so what bounds the lookahead is what the drifts
+        #  predict, and nothing filters them again.
         seen: dict[tuple[str, str], Witness] = {}
-        for r in sorted((r for r in rows if r.get("at") and r["met"] != "true" and r.get("focus")),
+        for r in sorted((r for r in judged if r.get("at") and r["met"] != "true" and r.get("focus")),
                         key=lambda r: r["at"]):
-            at = datetime.fromisoformat(r["at"])
-            if (at - now).total_seconds() > ahead:
-                continue
             seen.setdefault((r["focus"], r["k"]), Witness(
-                instance=r["focus"], constraint=r["k"], about=r.get("about"), at=at))
+                instance=r["focus"], constraint=r["k"], about=r.get("about"),
+                at=datetime.fromisoformat(r["at"])))
         found = sorted(seen.values(), key=lambda w: (w.at, w.instance, w.constraint))
         if not found:
             return []
@@ -96,27 +160,28 @@ def _derive_under(agent, root: str, rows: list[dict]) -> list[str]:
     #  where the desire ranges over several (`name_of`). Two tanks low about their level are
     #  two clusters and two names; keyed by what they were about alone, the second read the
     #  first as standing, and by construction the second mint had overwritten the first.
-    standing = {w.uri: w for w in agent.wants.find_all_by_desire(root)}
+    standing = {r["w"]: r.get("holdsAt") for r in rows(store, _STANDING_Q, (), root=root,
+                                                      now=instant(now))}
+    said = _said(store, root)
     minted = []
-    for cluster in _clusters(agent, found) or [[]]:
+    for cluster in _clusters(store, found) or [[]]:
         about = tuple(sorted({w.about for w in cluster if w.about}))
         instances = {w.instance for w in cluster}
         instance = next(iter(instances)) if len(instances) == 1 else None
-        child = name_of(agent, root, about, instance)
-        stood = standing.get(child)
-        if stood is not None and not (unmet_now and stood.holds_at):
+        child = name_of(store, root, said, about, instance)
+        if child in standing and not (unmet_now and standing[child]):
             continue
-        if stood is not None:
-            log.info("%s: what was foreseen at %s has arrived", stood.uri.rsplit("#", 1)[-1],
-                     stood.holds_at)
-        instant = min((w.at for w in cluster), default=None) if ahead is not None else None
-        child = mint(agent, root, holds_at=instant, about=about, instance=instance)
+        if child in standing:
+            log.info("%s: what was foreseen at %s has arrived", child.rsplit("#", 1)[-1],
+                     standing[child])
+        at = None if unmet_now else min((w.at for w in cluster), default=None)
+        child = mint(store, holder, root, said, holds_at=at, about=about, instance=instance)
         if child is not None:
             minted.append(child)
     return minted
 
 
-def _clusters(agent, witnesses: list) -> list[list]:
+def _clusters(store: ox.Store, witnesses: list) -> list[list]:
     """The witnesses grouped by SCOPE — which of them some action can move together — so a
     want is minted per group. Two in one scope are one want and one cone; two in different
     scopes are two, planned apart and concatenated, which is the mechanism `scope.md` says the
@@ -134,9 +199,9 @@ def _clusters(agent, witnesses: list) -> list[list]:
     if not witnesses:
         return []
     from .scopes import find_scopes
-    scopes = find_scopes(agent.beliefs)
+    scopes = find_scopes(store)
     if scopes is None:
-        raise RuntimeError(f"{agent.id}: the store holds no scope graph — scope_actions has not run")
+        raise RuntimeError("the store holds no scope graph — scope_actions has not run")
     groups: dict = {}
     loose = []
     for w in witnesses:
@@ -151,29 +216,22 @@ def _clusters(agent, witnesses: list) -> list[list]:
     return list(groups.values())
 
 
-def foresees_of(agent, root: str) -> float | None:
-    """How far ahead this root derives a want from a prediction, in seconds, or None.
+def _said(store: ox.Store, root: str) -> list[tuple[str, object]]:
+    """What the desire says, as `(predicate, the engine's own term)` — the TYPE is load-bearing,
+    since a blank node has no name another graph could point at."""
+    solutions = store.query(bind(_SAID_Q, root=root), prefixes=NAMESPACES)
+    return sorted(((str(s["p"].value), s["o"]) for s in solutions), key=lambda pair: (pair[0], str(pair[1])))
 
-    ASKED OF THE CHOIR (#644): a root authored at genesis states no foresight, because the
-    belief that says how far the agent looks ahead is a pick, and a root is not a function of
-    the agent's state — whoever holds that belief answers `orexis:foresight` at the moment a
-    child is derived, so a re-pick reaches the next derivation with no rebuild. An asserted want
-    may still state `orexis:foresees`, read where no voice answers."""
-    from orexis_agent_progression.ontology import FORESIGHT
 
-    for answer in agent.ask(FORESIGHT, root):
-        if answer is not None:
-            return float(answer)
-    rows = bindings(agent.desires.query(
-        f"SELECT ?f WHERE {{ <{root}> orexis:foresees ?f }} LIMIT 1"))
-    return float(rows[0]["f"]) if rows else None
+def _abouts(said) -> tuple:
+    return tuple(sorted(str(o.value) for p, o in said if p.endswith("#about")))
 
 
 def _tail(iri: str) -> str:
     return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
 
 
-def name_of(agent, root: str, about: tuple, instance: str | None) -> str:
+def name_of(store: ox.Store, root: str, said, about: tuple, instance: str | None) -> str:
     """The name of the want minted under `root` for one cluster of its witnesses: the root's,
     suffixed, so a second episode of the same cluster pursues the same node and everything
     keyed by it — the planner, a remembered plan, the trace, the keeper — finds what it kept.
@@ -188,71 +246,56 @@ def name_of(agent, root: str, about: tuple, instance: str | None) -> str:
     its one node (`sh:targetNode`, sensing's and the greenhouse's) keeps its names, and an
     instance the want is already about (a debt, `orexis:about sh:this`) is not said twice.
     """
-    desire_abouts = tuple(sorted(
-        r["a"] for r in bindings(agent.desires.query(
-            f"SELECT ?a WHERE {{ <{root}> orexis:about ?a }}"))))
-    tails = [_tail(a) for a in about] if about and set(about) != set(desire_abouts) else []
-    if instance is not None and instance not in about and not _targets_one_node(agent, root):
+    tails = [_tail(a) for a in about] if about and set(about) != set(_abouts(said)) else []
+    if instance is not None and instance not in about and not _targets_one_node(store, root):
         tails.insert(0, _tail(instance))
     return root + ".pursued" + "".join(f".{t}" for t in tails)
 
 
-def _targets_one_node(agent, root: str) -> bool:
-    """Does the root's met-test name the one node it is about (`sh:targetNode`)? Cached per
-    root on the agent: a root never changes while the agent runs."""
-    cache = agent.__dict__.setdefault("_root_targets_one", {})
-    if root not in cache:
-        cache[root] = bool(bindings(agent.desires.query(
-            f"SELECT ?n WHERE {{ <{root}> orexis:metWhen ?s . ?s sh:targetNode ?n }} LIMIT 1")))
-    return cache[root]
+def _targets_one_node(store: ox.Store, root: str) -> bool:
+    """Does the root's met-test name the one node it is about (`sh:targetNode`)?"""
+    return store.query(bind(_TARGETS_ONE_Q, root=root), prefixes=NAMESPACES)
 
 
-def mint(agent, root: str, holds_at: datetime | None = None, about: tuple = (),
-         instance: str | None = None) -> str | None:
+def mint(store: ox.Store, holder: str, root: str, said=None, holds_at: datetime | None = None,
+         about: tuple = (), instance: str | None = None) -> str | None:
     """Derive the want pursued under `root` and write it to the pursued graph, named by
     `name_of`. None, and the root stays the goal, where the root states its met-test inline:
     a blank node has no name another graph could point at, and copying it would make a second
     owner of the claim."""
-    desire_abouts = tuple(sorted(
-        r["a"] for r in bindings(agent.desires.query(
-            f"SELECT ?a WHERE {{ <{root}> orexis:about ?a }}"))))
+    said = _said(store, root) if said is None else said
+    desire_abouts = _abouts(said)
     abouts = about or desire_abouts
-    child = name_of(agent, root, about, instance)
-    points_said = []
-    #  The raw SPARQL-JSON rows, because the TYPE of the object matters here and
-    #  `bindings` flattens it away: a blank node cannot be pointed at from another graph.
-    said = agent.desires.query(f"""
-SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
-  FILTER(?p IN (orexis:metWhen, orexis:unmetWhen, orexis:estimates, orexis:about)) }}""")
+    child = name_of(store, root, said, about, instance)
+    points = []
     met_test = None
-    for sol in said.get("results", {}).get("bindings", []):
-        if sol["o"]["type"] == "bnode":
+    for p, o in said:
+        if isinstance(o, ox.BlankNode):
             log.warning("%s states its %s inline; it is pursued itself", root.rsplit("#", 1)[-1],
-                        sol["p"]["value"].rsplit("#", 1)[-1])
+                        p.rsplit("#", 1)[-1])
             return None
         #  WHAT IT IS ABOUT is the witnesses' where the shape named them per block, and the
         #  desire's whole where it did not; the avoided state and the estimate are pointed at
-        #  as ever, and the met-test is carried, instantiated, below.
-        if sol["p"]["value"].endswith("#about"):
+        #  as ever, and the met-test is carried, instantiated, below. The label is read here
+        #  too and is not a point: a want's is made from it.
+        if p.endswith("#about") or p.endswith("#label"):
             continue
-        if sol["p"]["value"].endswith("#metWhen"):
-            met_test = sol["o"]["value"]
+        if p == OREXIS_MET_WHEN:
+            met_test = str(o.value)
             continue
-        points_said.append(sol)
+        points.append((p, str(o.value)))
     #  THE MET-TEST IS THE DESIRE'S INSTANTIATED AT THE WITNESS: carved from where the root's
     #  shape lives and narrowed to this cluster — the instance as its target, the blocks about
     #  what the want is about — and written into the want's own graph under its own name, so
     #  the want is judged on its instance and a plan for one tank is not refused for another's.
     shape_lines: tuple = ()
-    points = [(sol["p"]["value"], sol["o"]["value"]) for sol in points_said]
     if met_test is not None:
         own = child + ".met"
-        shape_lines = narrowed(agent, met_test, own, instance, abouts)
+        shape_lines = narrowed(store, met_test, own, instance, abouts)
         points.append((OREXIS_MET_WHEN, own))
 
-    labels = bindings(agent.desires.query(
-        f"SELECT ?l WHERE {{ <{root}> rdfs:label ?l }} LIMIT 1"))
-    label = "pursued: " + (labels[0]["l"] if labels else root.rsplit("#", 1)[-1])
+    labels = [str(o.value) for p, o in said if p.endswith("#label")]
+    label = "pursued: " + (labels[0] if labels else root.rsplit("#", 1)[-1])
     #  AT AN INSTANT (#619): bound `orexis:At`, holding at the crossing, its room opening now.
     if holds_at is not None:
         label = f"foreseen: {label[len('pursued: '):]} at {holds_at.isoformat(timespec='minutes')}"
@@ -261,13 +304,13 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
     #  and is open for a want met at its plan's end (#645).
     #  THE WANT, AND THE REPOSITORY WRITES IT (#677). What is derived is decided here — the
     #  binding, the label, what it points at — and where a want is kept, how its graph is
-    #  classified and what period it holds during are `Wants`'.
+    #  classified and what period it holds during are `wants.py`'s, whether a collection or
+    #  this road asks for the write.
     ends = None
     if holds_at is not None:
-        patience = float(getattr(getattr(agent.keeper, "beliefs", None), "patience_s", 0) or 0)
-        ends = (holds_at + timedelta(seconds=patience)).isoformat()
-    agent.wants.save(agent.id, Want(
-        uri=child, holder=agent.me.uri, desire=root, label=label, ends=ends,
+        ends = (holds_at + timedelta(seconds=_patience(store, holder))).isoformat()
+    save_want(store, _local(holder), Want(
+        uri=child, holder=holder, desire=root, label=label, ends=ends,
         holds_at=holds_at.isoformat() if holds_at is not None else None,
         derived_at=clock.now().isoformat() if holds_at is not None else None,
         about=abouts, points=tuple(points), shape=shape_lines))
@@ -275,31 +318,40 @@ SELECT ?p ?o WHERE {{ <{root}> ?p ?o .
     return child
 
 
-OREXIS_MET_WHEN = "http://example.org/orexis#metWhen"
+def _patience(store: ox.Store, holder: str) -> float:
+    """The seconds a plan is given after the instant its want must hold at — the keeper's pick,
+    or none where the holder states none."""
+    found = rows(store, _PATIENCE_Q, (), holder=holder, patience=PATIENCE_S)
+    return float(found[0]["s"]) if found and found[0].get("s") else 0.0
 
 
-def narrowed(agent, shape: str, own: str, instance: str | None, abouts: tuple) -> tuple[str, ...]:
+def _local(holder: str) -> str:
+    """The holder's local name — what a graph this road writes is called, for eyes."""
+    return holder.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
+
+
+def narrowed(store: ox.Store, shape: str, own: str, instance: str | None, abouts: tuple) -> tuple[str, ...]:
     """The desire's met-test as THIS want's: the same shape under the want's own name, its
     target the one instance the want is about where the cluster had one, and only the property
     blocks and `sh:sparql` constraints about what the want is about — the universal instantiated
     at its witness (a-desire-is-universal-and-a-want-is-existential). A block or constraint
     saying nothing about what it is about is kept, as is one about `sh:this`, which is the
-    instance. The triples, as N-Triples lines the collection writes into the want's graph.
+    instance. The triples, as N-Triples lines the write puts into the want's graph.
 
-    Carved from public knowledge and the agent's own graphs, asked by classification, where a
-    root's shape lives; a shape that names its one node (`sh:targetNode`) narrows to the same
-    node, so sensing's wants and the greenhouse's keep their target and lose only the blocks
-    they are not about.
+    Carved from the graphs of desires and wants, asked by classification, where a root's shape
+    lives; a shape that names its one node (`sh:targetNode`) narrows to the same node, so
+    sensing's wants and the greenhouse's keep their target and lose only the blocks they are
+    not about.
     """
     from rdflib import Graph, URIRef
     from rdflib.namespace import SH
 
-    from .conformance import graph_from
+    from .judge_desires import shapes_in
 
-    about_p = URIRef("http://example.org/orexis#about")
+    about_p = URIRef(OREXIS + "about")
     targets = {SH.targetNode, SH.targetClass, SH.targetSubjectsOf, SH.targetObjectsOf, SH.target}
     #  From the graphs that hold desires and wants, asked by class, as `unmet_select_of` carves (#711).
-    cbd = graph_from(agent.beliefs, *agent.beliefs.graphs_of(OREXIS + "DesireGraph", OREXIS + "WantGraph")).cbd(URIRef(shape))
+    cbd = shapes_in(store).cbd(URIRef(shape))
     keep = {URIRef(a) for a in abouts}
     out, dropped = Graph(), Graph()
     for p, o in cbd.predicate_objects(URIRef(shape)):

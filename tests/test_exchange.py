@@ -4,27 +4,29 @@ night foreseen derives a want the heater serves, the second half of #619.
 The greenhouse states one diffusion node — its air temperature toward the outside at one degree
 an hour — and says nothing
 else about heat. From that the climate package's drift moves the bed toward the outside, and
-says when the bed leaves its region; a grower that foresees six hours derives a want bound at
+says when the bed leaves its region; the grower derives a want bound at
 the crossing, and the search, judged at that instant, plans the heater and refuses the vent
-onto the cold — where a warm afternoon foresees nothing at all.
+onto the cold — where a warm afternoon crosses nothing at all.
 """
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
 from orexis_agent_deliberation import pursuit, trace
-from orexis_agent_progression.ontology import DESIRE_ASSERTED_GRAPH, REPREDICT
+from orexis_agent_progression.ontology import REPREDICT
 from test_greenhouse import AIR, COMFORT, HEATING, VENTING, _comfort, _grower, _outside_as_periods
 
 HOURS = 3600.0
 
 
-def _foreseeing(monkeypatch, seconds: float, **kw):
-    """A grower whose asserted want states how far ahead it acts on a prediction."""
+def _foreseeing(monkeypatch, **kw):
+    """A grower standing on what it holds, its predictions written.
+
+    It used to state `orexis:foresees` here — how far ahead it acts on a prediction — and no
+    such number exists now: a want is derived at every instant a judgment says the desire
+    fails, and the drifts' horizons are what bound how far that reaches.
+    """
     agent, _ = _grower(monkeypatch, **kw)
-    agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{DESIRE_ASSERTED_GRAPH}> {{
-        <{COMFORT}> orexis:foresees {seconds} }} }}""")
-    agent.desires.rebuild()
     agent.tell(REPREDICT)             # what `start()` does for a booted agent: predict from what it holds (#643)
     return agent
 
@@ -57,7 +59,7 @@ def test_a_cold_night_foreseen_derives_a_want_the_heater_serves_and_the_vent_can
     foreseeing six hours: the want derived under the root holds AT the crossing, the search is
     judged there, the heater's world is met and the vent's — opened onto the cold at the
     instant — is not."""
-    agent = _foreseeing(monkeypatch, 6 * HOURS, moisture=0.45, air=20.0, outside=8.0)
+    agent = _foreseeing(monkeypatch, moisture=0.45, air=20.0, outside=8.0)
     root = _comfort(agent)
     assert root.is_met
     plan = agent.deliberator.decide(root)
@@ -74,9 +76,9 @@ def test_a_cold_night_foreseen_derives_a_want_the_heater_serves_and_the_vent_can
 
 
 def test_a_warm_afternoon_foresees_nothing(monkeypatch):
-    """The same bed toward an outside at 21 never leaves its region: no crossing within the
-    foresight, nothing derived, nothing planned — the first child's road, unchanged."""
-    agent = _foreseeing(monkeypatch, 6 * HOURS, moisture=0.45, air=20.0, outside=21.0)
+    """The same bed toward an outside at 21 never leaves its region: no crossing at any
+    horizon a drift predicts at, nothing derived, nothing planned."""
+    agent = _foreseeing(monkeypatch, moisture=0.45, air=20.0, outside=21.0)
     root = _comfort(agent)
     assert agent.deliberator.decide(root) is None
     assert pursuit.child_of(agent, COMFORT) is None
@@ -87,7 +89,7 @@ def test_the_drift_reads_the_surroundings_holding_at_the_instant(monkeypatch):
     prediction is for. A cold evening the forecast says turns warm within the hour: every
     prediction past that reads the warm outside, the bed never reaches its floor, and no
     crossing is foreseen — nothing is planned (#643)."""
-    agent = _foreseeing(monkeypatch, 6 * HOURS, moisture=0.45, air=20.0, outside=8.0)
+    agent = _foreseeing(monkeypatch, moisture=0.45, air=20.0, outside=8.0)
     now = datetime.now(timezone.utc)
     _outside_as_periods(agent, (8.0, now - timedelta(hours=1), now + timedelta(minutes=30)),
                         (21.0, now + timedelta(minutes=30), now + timedelta(hours=6)))

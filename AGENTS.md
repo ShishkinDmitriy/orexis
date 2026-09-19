@@ -327,11 +327,20 @@ it is a record wearing a bullet.
   wants from that graph and nothing in hand; each is held to a snapshot of the store it
   leaves, and the eleven cases leave the wants the one-function road left. A third,
   `scope_actions`, writes the scopes at boot, so the derivation reads no action.
-- **A function over the store is handed the engine and nothing else** — `judge_desires`
-  takes `pyoxigraph.Store` and no wrapper: which graphs it reads it asks of the catalogue in
-  its own texts, whose a judgment is it reads off `orexis:holds`, and the present is the
+- **A function over the store is handed the engine and nothing else** — the road's three
+  take `pyoxigraph.Store` and no wrapper: which graphs they read they ask of the catalogue in
+  their own texts, whose a judgment is they read off `orexis:holds`, and the present is the
   clock's; the wrapper caching a view of the store cannot see a write it did not make, so
   asking it for the engine (`Store.engine`) is what makes it forget.
+- **A derivation is a decomposition of the judgments and asks nothing they do not answer** —
+  a foresight filtered a foreseen failure the judgment already dated, and was two states in
+  practice, unbounded and absent; how far ahead the agent sees is the horizons each drift
+  predicts at, and the pick, the extension point and the kernel property are gone.
+- **A partition of the vocabulary belongs to the store, not to an agent** — the scopes are a
+  function of the actions the store holds and the derivations loaded, so every agent reading
+  one store computes the same one and there is nobody to name it after; genesis puts the
+  derivations' read and write predicates in the store beside the actions, which were there
+  all along.
 - **What was foreseen may arrive early, and the present outranks the instant** — a want
   minted at a predicted crossing or lapse says *hold at T* and its plan is placed to land at
   T, so when the holder presented an hour early the serve was placed at the deadline; a

@@ -6,10 +6,10 @@ effects join and writes the scopes; `<case>.snapshot.trig` beside the case is th
 afterwards, in the case's own order, so `diff` of case against snapshot is exactly what
 clustering did. The machinery is the conftest's. See knowledge/domain/scope.md.
 
-THE DERIVATIONS ARE NONE HERE. In a running agent the partition also joins what every loaded
-package's derivation rules read and write; a bare store loads no package, so the rules on disk
-— every package's, the runtime's reading and not a case's — are patched out, and a case says
-what its levers alone make.
+THE DERIVATIONS ARE THE CASE'S. In a running agent the partition also joins what every loaded
+package's derivation rules read and write, and genesis puts those edges in the store beside the
+actions; a case that states no derivation graph states no derivations, so a case says what its
+levers alone make, and nothing on disk reaches it.
 """
 
 from __future__ import annotations
@@ -20,7 +20,6 @@ import pytest
 
 from orexis_agent_progression import clock
 
-from orexis_agent_deliberation import relevance
 from orexis_agent_deliberation.scope_actions import scope_actions
 
 CASES_DIR = Path(__file__).parent / "scope_actions"
@@ -30,10 +29,9 @@ CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 @pytest.mark.parametrize("case", CASES, ids=[c.stem for c in CASES])
 def test_scope_actions_leaves_the_store_as_the_snapshot_says(case, monkeypatch, request, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
-    monkeypatch.setattr(relevance, "rule_edges", lambda: ())
     agent = snapshots.stand_in(case)
     before = snapshots.snapshot_of(agent.beliefs)
-    scope_actions(agent)
+    scope_actions(agent.beliefs.engine)
     snapshots.held_to(case, request, "scope_actions", before, snapshots.snapshot_of(agent.beliefs))
 
 

@@ -358,6 +358,80 @@ def decimal(value: float) -> str:
     return f'"{value:.{PLACES}f}"^^xsd:decimal'
 
 
+#  --- reading the catalogue over the ENGINE ------------------------------------------------
+#
+#  What a function over the store asks, where there is no `Store` to ask. The road's three
+#  functions are handed `pyoxigraph.Store` itself (judge-desires-then-derive-wants), so the
+#  lookups the class above offers as methods are offered here as functions over the engine:
+#  the same questions, the same catalogue, no wrapper and no policy. A reader still states the
+#  kinds it reads and the instant it stands at (a-reader-states-the-kinds-it-reads); these add
+#  nothing to that and hide nothing from it.
+
+_XSD_DATETIME = ox.NamedNode(_XSD + "dateTime")
+
+#  WHICH GRAPHS, asked of the catalogue in one text: those of any of the kinds named — every
+#  row carries every kind its class is beneath, so no path is walked — the holder's or
+#  nobody's where a holder is named, and holding at the instant where one is given. A record
+#  is handed as it stands at the present whatever instant is asked about (#645), which is the
+#  one thing the kind means.
+_GRAPHS_Q = """
+SELECT DISTINCT ?g WHERE {
+  GRAPH ?cat {
+    ?cat a orexis:CatalogueGraph .
+    ?g a ?kind . FILTER(isIRI(?g)) VALUES ?kind { $kinds }
+    $owned
+    $holding } }
+ORDER BY ?g"""
+
+_OWNED = """OPTIONAL { ?g orexis:beliefsOf ?owner } FILTER(!BOUND(?owner) || ?owner = $holder)"""
+
+_HOLDING = """OPTIONAL { ?g dcterms:temporal ?period .
+               OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?end } }
+    BIND(IF(EXISTS { ?g a orexis:RecordGraph }, $now, $at) AS ?when)
+    FILTER(!BOUND(?start) || ?when >= ?start) FILTER(!BOUND(?end) || ?when < ?end)"""
+
+
+def instant(at: datetime) -> ox.Literal:
+    """An instant as the term a query compares it as."""
+    return ox.Literal(at.isoformat(), datatype=_XSD_DATETIME)
+
+
+def graphs_holding(engine, kinds, *, holder: str | None = None,
+                   at: datetime | None = None, now: datetime | None = None) -> list[str]:
+    """Every graph of `kinds` the engine's catalogue describes — `Store.graphs_of` as a
+    function over the engine, and the same answer.
+
+    `holder` keeps the list to what that holder owns and what nobody does, which is what the
+    class does from `agent_uri`; omitted, every graph of the kinds answers. `at` keeps it to
+    what holds then, a record excepted, and `now` is the present a record is read at —
+    defaulting to `at`, since a reader standing at one instant means that one. No clock is
+    read here: the instant is the reader's, as it is everywhere else.
+    """
+    text = bind(_GRAPHS_Q, kinds=Raw(" ".join(f"<{k}>" for k in kinds)),
+                owned=Raw(bind(_OWNED, holder=holder) if holder is not None else ""),
+                holding=Raw(bind(_HOLDING, at=instant(at), now=instant(now or at))
+                            if at is not None else ""))
+    return [str(row["g"].value) for row in engine.query(text, prefixes=NAMESPACES)]
+
+
+def answer(engine, sparql: str, graphs=(), **values) -> dict:
+    """`sparql` read over `graphs` as its default graph, as SPARQL-JSON — `Store.query` as a
+    function over the engine, with `$tokens` bound by the one binder. A text that names its
+    own graphs is handed none, and reads them through its `GRAPH` clauses."""
+    out = io.BytesIO()
+    engine.query(bind(sparql, **values) if values else sparql, prefixes=NAMESPACES,
+                 default_graph=[ox.NamedNode(g) for g in graphs]).serialize(
+        output=out, format=ox.QueryResultsFormat.JSON)
+    return json.loads(out.getvalue())
+
+
+def rows(engine, sparql: str, graphs=(), **values) -> list[dict]:
+    """`answer`, flattened to {var: value-string} — what a reader wanting values takes. A
+    reader that needs the TERMS a row holds takes `engine.query` itself and reads the
+    solutions, as `judge_desires` does to write them back."""
+    return bindings(answer(engine, sparql, graphs, **values))
+
+
 def bindings(results: dict) -> list[dict]:
     """The rows of a SPARQL-JSON result, flattened to {var: value-string}."""
     rows = results.get("results", {}).get("bindings", [])

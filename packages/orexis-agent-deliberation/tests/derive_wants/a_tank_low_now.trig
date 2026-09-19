@@ -33,7 +33,6 @@ GRAPH :desires {
   :keeper.in_range a orexis:Desire ;
       orexis:about :level ;
       orexis:about :temperature ;
-      orexis:foresees 3600 ;
       orexis:metWhen :in_range ;
       rdfs:label "every tank in range" .
 }

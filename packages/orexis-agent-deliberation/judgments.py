@@ -15,19 +15,24 @@ from datetime import datetime
 import pyoxigraph as ox
 
 from orexis_agent_progression import clock
-from orexis_agent_progression.store import NAMESPACES, bind, bindings
+from orexis_agent_progression.store import NAMESPACES, bind, rows
 
 from .ontology import DELIBERATION, judgments_graph
 
 JUDGMENT_GRAPH = DELIBERATION + "JudgmentGraph"
 
-#  EVERY JUDGMENT HELD, one row per result — a met one has a row with no focus.
+#  EVERY JUDGMENT HELD AND WHOSE IT IS, one row per result — a met one has a row with no
+#  focus. The graph says whose, so the text joins the catalogue and is handed no default
+#  graph: a judgment is written per holder and the wants it implies are written where that
+#  holder's belong.
 JUDGMENTS_Q = """
-SELECT ?desire ?at ?met ?focus ?about ?k WHERE {
-  ?j a deliberation:Judgment ; deliberation:judges ?desire ; sh:conforms ?met .
-  OPTIONAL { ?j orexis:holdsAt ?at }
-  OPTIONAL { ?j sh:result ?r . ?r sh:focusNode ?focus ; deliberation:constraint ?k .
-             OPTIONAL { ?r orexis:about ?about } } }"""
+SELECT ?holder ?desire ?at ?met ?focus ?about ?k WHERE {
+  GRAPH ?g { ?j a deliberation:Judgment ; deliberation:judges ?desire ; sh:conforms ?met .
+    OPTIONAL { ?j orexis:holdsAt ?at }
+    OPTIONAL { ?j sh:result ?r . ?r sh:focusNode ?focus ; deliberation:constraint ?k .
+               OPTIONAL { ?r orexis:about ?about } } }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a deliberation:JudgmentGraph ;
+               orexis:beliefsOf ?holder } }"""
 
 #  THE HOLDER'S STANDING JUDGMENT GRAPHS, asked of the catalogue by class and owner — what a
 #  run replaces, whatever each is called.
@@ -60,11 +65,11 @@ def save_judgments(store: ox.Store, holder: str,
     genesis and one step is every step (one-graph-both-engines-read) — so a text asks `?g a
     orexis:WorkingGraph` and walks no path. The graph and its description land together or
     not at all."""
-    standing = [row["g"].value for row in store.query(bind(_STANDING_Q, holder=holder), prefixes=NAMESPACES)]
+    standing = [row["g"] for row in rows(store, _STANDING_Q, holder=holder)]
     graph = judgments_graph(holder.rsplit("#", 1)[-1].rsplit("/", 1)[-1])
     now = clock.now().isoformat()
     blocks = []
-    for desire, at, met, rows in judged:
+    for desire, at, met, results in judged:
         node = desire + ".judgment" + (at.strftime(".%Y%m%dT%H%M%SZ") if at is not None else "")
         when = f' ; orexis:holdsAt "{at.isoformat()}"^^xsd:dateTime' if at is not None else ""
         results = "".join(
@@ -72,7 +77,7 @@ def save_judgments(store: ox.Store, holder: str,
             f" deliberation:constraint {int(r['_constraint'].value)}"
             + (f" ; orexis:about {r['_about']}" if "_about" in r else "")
             + (f" ; sh:value {term}" if (term := _term(r.get("_offending"))) else "") + " ]"
-            for r in rows)
+            for r in results)
         blocks.append(f"  <{node}> a deliberation:Judgment ; deliberation:judges <{desire}>{when} ;\n"
                       f'      prov:generatedAtTime "{now}"^^xsd:dateTime ;\n'
                       f"      sh:conforms {'true' if met else 'false'}{results} .")
@@ -92,11 +97,16 @@ WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:Ontol
         GRAPH ?vocabulary {{ deliberation:JudgmentGraph rdfs:subClassOf ?kind }} }}""", prefixes=NAMESPACES)
 
 
-def find_judgments(store) -> list[dict]:
-    """Every judgment's rows, from the judgment graph asked by class: `desire`, `at` (absent
-    for the present), `met` (`"true"`/`"false"`), and per result `focus`, `about`, `k`."""
-    graphs = store.graphs_of(JUDGMENT_GRAPH)
-    return bindings(store.query_over(JUDGMENTS_Q, *graphs)) if graphs else []
+def find_judgments(engine: ox.Store) -> dict[str, list[dict]]:
+    """Every judgment's rows, by HOLDER — the judgment graphs asked by class and by whose they
+    are, in the text's own `GRAPH` clauses. Each row: `desire`, `at` (absent for the present),
+    `met` (`"true"`/`"false"`), and per result `focus`, `about`, `k`."""
+    from orexis_agent_progression.store import rows
+
+    out: dict[str, list[dict]] = {}
+    for row in rows(engine, JUDGMENTS_Q):
+        out.setdefault(row["holder"], []).append(row)
+    return out
 
 
 def _term(term) -> str | None:

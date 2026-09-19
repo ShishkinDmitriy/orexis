@@ -259,9 +259,8 @@ INSERT { GRAPH $derived {
             sh:message ?overCeiling ] } }
 $given
 WHERE  {
-    #  NO FORESIGHT HERE (#644): how far ahead this agent acts on a predicted crossing is a
-    #  belief it may re-pick, and a root is not a function of its state — pursuit asks the
-    #  choir (`orexis:foresight`) when it derives, and sensing answers from the belief then.
+    #  NO FORESIGHT HERE, and none anywhere: a stake derives a want at every instant its
+    #  met-test is judged unmet, and how far ahead that reaches is what the drifts predict at.
     { SELECT ?property ?subject (MAX(?min) AS ?low) (MIN(?max) AS ?high) WHERE {
         $me a orexis:Agent ; orexis:actsFor ?subject .
         ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?need .

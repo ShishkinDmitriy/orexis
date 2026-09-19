@@ -26,13 +26,11 @@ import rdflib
 
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import FORESEEN
-from orexis_agent_progression.store import NAMESPACES, Raw, bind
+from orexis_agent_progression.store import NAMESPACES, bind, graphs_holding, instant
 
 from .judgments import save_judgments
 
 log = logging.getLogger("judge_desires")
-
-_XSD_DATETIME = ox.NamedNode("http://www.w3.org/2001/XMLSchema#dateTime")
 
 #  EVERY DESIRE THE STORE HOLDS, who holds it and its met-test, from the graphs of desires
 #  holding at the present — the roots graph states no period, the world's asserted graph
@@ -57,24 +55,6 @@ SELECT ?holder ?shape WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
                VALUES ?kind { orexis:DesireGraph orexis:WantGraph } } }
 ORDER BY ?holder"""
-
-#  THE GRAPHS A DESIRE IS JUDGED OVER, asked of the catalogue in one text: every graph of the
-#  kinds a rule is answered over at an instant — FORESEEN, named here as at every runner, and
-#  every row carries every kind its class is beneath, so no path is walked — that is the
-#  holder's or nobody's, holding at the instant the judge stands at. A record is handed as it
-#  stands at the present whatever instant is asked about (#645), which is the one thing the
-#  kind means and the one thing this text knows.
-_GRAPHS_Q = """
-SELECT DISTINCT ?g WHERE {
-  GRAPH ?cat {
-    ?cat a orexis:CatalogueGraph .
-    ?g a ?kind . FILTER(isIRI(?g)) VALUES ?kind { $kinds }
-    OPTIONAL { ?g orexis:beliefsOf ?owner } FILTER(!BOUND(?owner) || ?owner = $holder)
-    OPTIONAL { ?g dcterms:temporal ?period .
-               OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?end } }
-    BIND(IF(EXISTS { ?g a orexis:RecordGraph }, $now, $at) AS ?when)
-    FILTER(!BOUND(?start) || ?when >= ?start) FILTER(!BOUND(?end) || ?when < ?end) } }
-ORDER BY ?g"""
 
 #  WHEN THE HOLDER FORESEES: the start of every prediction of theirs, whatever its window —
 #  what a crossing is read off (#643).
@@ -122,7 +102,7 @@ def judge_desires(store: ox.Store) -> None:
     now = clock.now()
     shapes = shapes_in(store)
     by_holder: dict[str, list[tuple[str, str | None]]] = {}
-    for row in store.query(bind(_ROOTS_Q, now=_instant(now)), prefixes=NAMESPACES):
+    for row in store.query(bind(_ROOTS_Q, now=instant(now)), prefixes=NAMESPACES):
         by_holder.setdefault(row["holder"].value, []).append(
             (row["desire"].value, row["shape"].value if row["shape"] is not None else None))
     for holder, roots in by_holder.items():
@@ -193,14 +173,6 @@ def _root(store: ox.Store, root: str) -> tuple[str, str | None] | None:
     return rows[0]["holder"].value, rows[0]["shape"].value if rows[0]["shape"] is not None else None
 
 
-def graphs_holding(store: ox.Store, kinds, holder: str, at: datetime, now: datetime) -> list[str]:
-    """Every graph of `kinds` that is `holder`'s or nobody's and holds at `at` — a record as it
-    stands at `now` — asked of the catalogue in one text (a-reader-states-the-kinds-it-reads)."""
-    text = bind(_GRAPHS_Q, kinds=Raw(" ".join(f"<{k}>" for k in kinds)), holder=holder,
-                at=_instant(at), now=_instant(now))
-    return [row["g"].value for row in store.query(text, prefixes=NAMESPACES)]
-
-
 def _starts(store: ox.Store, holder: str) -> list[datetime]:
     return [datetime.fromisoformat(row["start"].value)
             for row in store.query(bind(_STARTS_Q, holder=holder), prefixes=NAMESPACES)]
@@ -212,7 +184,7 @@ def _violations(store: ox.Store, select: str, holder: str, at: datetime,
     dict of the engine's own terms by variable name, one per distinct row — two predictions
     holding at one instant give one node two offending values, and both are told. None where
     the engine refuses the text."""
-    graphs = [ox.NamedNode(g) for g in graphs_holding(store, FORESEEN, holder, at, now)]
+    graphs = [ox.NamedNode(g) for g in graphs_holding(store, FORESEEN, holder=holder, at=at, now=now)]
     try:
         answer = store.query(select, prefixes=NAMESPACES, default_graph=graphs)
         names = [v.value for v in answer.variables]
@@ -224,11 +196,6 @@ def _violations(store: ox.Store, select: str, holder: str, at: datetime,
         log.error("the met-test could not be read at %s: %s", at, exc)
         return None
     return [rows[key] for key in sorted(rows)]
-
-
-def _instant(at: datetime) -> ox.Literal:
-    """An instant as the term a text compares it as."""
-    return ox.Literal(at.isoformat(), datatype=_XSD_DATETIME)
 
 
 @dataclass(frozen=True)
