@@ -47,11 +47,14 @@ world and never a record, and it earns its place the way the trace does: it is t
 reader outside the process cannot recompute, since the belief base is locked by the process
 holding it, and what the snapshots show beside the wants.
 
-**Each function is held to a snapshot** of the store it leaves, `road/<case>.judge_desires.trig`
-and `road/<case>.derive_wants.trig`, the second written against the judged state so its diff
-is the derivation alone — and the second is also proved from the judged snapshot read back into
-a bare store, which is the contract made a test. All eleven cases leave the wants,
-classifications and periods the one-function road left.
+**Each function has its own cases and is held to a snapshot** of the store it leaves. A case
+in `packages/orexis-agent-deliberation/tests/judge_desires/` is a world as an agent finds it;
+one in `packages/orexis-agent-deliberation/tests/derive_wants/` is the judged state alone — the judgments, the desires, the levers whose effects say what a
+scope is, whatever stands — and nothing of the world that was judged, so a case that gave the
+function more would not be testing its contract. Beside each, `<case>.snapshot.trig` is the
+whole store afterwards in the case's own order, and `diff` of case against snapshot is what the
+function did. All eleven cases leave the wants, classifications and periods the one-function
+road left.
 
 # What was refused
 

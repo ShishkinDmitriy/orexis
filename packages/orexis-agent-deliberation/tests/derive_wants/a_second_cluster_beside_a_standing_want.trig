@@ -1,0 +1,94 @@
+# a_second_cluster_beside_a_standing_want
+#
+# The level's want stands; now the temperature is out too, in another scope: the second is minted
+# beside the first.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+#
+# THE JUDGMENTS AS `judge_desires` LEFT THEM on this situation (judge_desires/a_second_cluster_beside_a_standing_want.trig):
+# the desires, the levers, whatever stands, and the judgment graph — no world, no readings,
+# no predictions. `derive_wants` reads the judgments and nothing in hand.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix graph: <http://example.org/orexis/graph/> .
+@prefix roots: <http://example.org/orexis/graph/roots/> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix judgments: <http://example.org/orexis/graph/judgments/> .
+
+GRAPH roots:keeper {
+  :in_range a sh:NodeShape ;
+      sh:property [ orexis:about :level ;
+          sh:minInclusive 10 ;
+          sh:path :level ] ;
+      sh:property [ orexis:about :temperature ;
+          sh:maxInclusive 30 ;
+          sh:path :temperature ] ;
+      sh:targetClass :Tank .
+  :keeper orexis:holds :keeper.in_range .
+  :keeper.in_range a orexis:Desire ;
+      orexis:about :level ;
+      orexis:about :temperature ;
+      orexis:foresees 3600 ;
+      orexis:metWhen :in_range ;
+      rdfs:label "every tank in range" .
+}
+
+GRAPH :actions {
+  :fill a orexis:Action ;
+      sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?t :level ?x . } WHERE { ?t a :Tank }""" .
+  :heat a orexis:Action ;
+      sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
+}
+
+GRAPH pursued:keeper.in_range.pursued.tank1.level {
+  :keeper orexis:holds :keeper.in_range.pursued.tank1.level .
+  :keeper.in_range.pursued.tank1.level a orexis:Want ;
+      orexis:about :level ;
+      orexis:metWhen :keeper.in_range.pursued.tank1.level.met ;
+      prov:wasDerivedFrom :keeper.in_range ;
+      rdfs:label "pursued: every tank in range" .
+  :keeper.in_range.pursued.tank1.level.met a sh:NodeShape ;
+      sh:property [ sh:minInclusive 10 ;
+          sh:path :level ] ;
+      sh:targetNode :tank1 .
+}
+
+GRAPH judgments:keeper {
+  :keeper.in_range.judgment a deliberation:Judgment ;
+      deliberation:judges :keeper.in_range ;
+      prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
+      sh:conforms false ;
+      sh:result [ a sh:ValidationResult ;
+          deliberation:constraint 0 ;
+          orexis:about :level ;
+          sh:focusNode :tank1 ;
+          sh:value 5 ] ;
+      sh:result [ a sh:ValidationResult ;
+          deliberation:constraint 1 ;
+          orexis:about :temperature ;
+          sh:focusNode :tank1 ;
+          sh:value 40 ] .
+}
+
+GRAPH graph:classification {
+  judgments:keeper a deliberation:JudgmentGraph ;
+      orexis:arrivedBy orexis:Derived ;
+      orexis:beliefsOf :keeper .
+  pursued:keeper.in_range.pursued.tank1.level a deliberation:PursuedGraph ;
+      orexis:arrivedBy orexis:Recorded .
+  roots:keeper a orexis:DesireGraph .
+}
+
+GRAPH graph:periods {
+  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ;
+          orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
+}

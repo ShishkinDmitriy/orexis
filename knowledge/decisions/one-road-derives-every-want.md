@@ -154,14 +154,15 @@ the keeper's, and stands until its lapse or a surprise (#527) — the road does 
 the ledger.
 
 **The road's contract is a table, and the table found a defect on its first run.**
-`packages/orexis-agent-deliberation/tests/road/` holds one TriG file per case — the world, the
-levers, the desire with its met-test, the present, the foreseen, what stands — loaded into a
-bare store and run through the road's two functions, `judge_desires` then `derive_wants`
-([judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md)), in
+`packages/orexis-agent-deliberation/tests/judge_desires/` holds one TriG file per case — the
+world, the levers, the desire with its met-test, the present, the foreseen, what stands —
+loaded into a bare store and judged, and `packages/orexis-agent-deliberation/tests/derive_wants/`
+one per case of the judged state alone — the judgments, the desires, the levers, what stands — derived from
+([judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md)), each in
 milliseconds, where the four world files that covered the road each stood an agent up to
 show one case. What the road leaves is held to a SNAPSHOT
-of the whole store beside the case (one per function, `<case>.judge_desires.trig` and
-`<case>.derive_wants.trig`, each the input's own text with the
+of the whole store beside the case (`<case>.snapshot.trig` in each function's directory,
+the case's own text with the
 road's changes in it — an unchanged graph verbatim, a changed one re-rendered in place, what
 the road wrote after — so `diff` of case against snapshot is what the road did), never to a
 reading of it:
