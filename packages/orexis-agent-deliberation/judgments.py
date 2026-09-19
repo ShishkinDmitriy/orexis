@@ -127,45 +127,74 @@ class Witness:
     at: datetime
 
 
-#  WHAT A WANT NARROWS ITS DESIRE TO: the desire it was derived from, what it is about, and
-#  the one node its met-test targets where it has one. A want is not judged — a judgment is
-#  about a DESIRE — so a want's witnesses are its desire's, kept to the rows the want was
-#  minted from. Nothing for a node that is no want, which is then a desire and takes its own.
-_NARROWS_Q = """
-SELECT ?desire (GROUP_CONCAT(STR(?about); separator=" ") AS ?abouts) ?target WHERE {
-  GRAPH ?g { $node prov:wasDerivedFrom ?desire .
-             OPTIONAL { $node orexis:about ?about }
-             OPTIONAL { $node orexis:metWhen ?shape . ?shape sh:targetNode ?target } }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:WantGraph } }
-GROUP BY ?desire ?target"""
+def witnesses_of(engine: ox.Store, desire: str) -> list[Witness]:
+    """Every (instance, constraint) under which `desire` was judged unmet at a FORESEEN
+    instant, each at the earliest instant it was — read off the judgments, and off nothing
+    else. A CROSSING is the earliest of them: the instant the world a desire is about is
+    judged to leave what the desire wants.
 
+    ONLY THE JUDGE TAKES PREDICTIONS INTO ACCOUNT. A prediction is a corridor the value is
+    expected to move along; where it leaves the region the desire states, the desire is
+    judged unmet at that instant, and that judgment IS the crossing. `judge_desires`
+    enumerates the states — the present, then every instant a prediction reaches — and judges
+    the desire at each; what it read is written down, and this reads it. It used to re-run the
+    compiled met-test at every prediction start on every call, which is the same question
+    asked twice by two paths that could disagree.
 
-def witnesses_of(engine: ox.Store, node: str) -> list[Witness]:
-    """Every (instance, constraint) under which `node` was judged unmet at a FORESEEN instant,
-    each at the earliest instant it was — read off the judgments, and off nothing else.
+    So a crossing is what the last judging found. During a pass that is what is true now,
+    since `pursuit` judges before it asks, and whoever moves a premise says so — the ledger
+    asks the road when a claim arrives and when a debt is paid.
 
-    ONLY THE JUDGE TAKES PREDICTIONS INTO ACCOUNT. `judge_desires` enumerates the states — the
-    present, then every instant a prediction reaches — and judges the desire at each; what it
-    read is written down, and this reads it. It used to re-run the compiled met-test at every
-    prediction start on every call, which is the same question asked twice and answered by two
-    paths. So a crossing is what the last judging found: during a pass that is what is true
-    now, since `pursuit` judges before it asks, and whoever moves a premise says so — the
-    ledger asks the road when a claim arrives and when a debt is paid.
-
-    A WANT TAKES ITS DESIRE'S, NARROWED. A judgment is about a desire; a want is the desire
-    instantiated at a cluster of its results, so the want's witnesses are exactly those rows —
-    kept to what it is about and, where its met-test names one node, to that node. Which is
-    what compiling the want's own narrowed shape used to compute, from the same facts.
+    A DESIRE, NEVER A WANT. A want has no crossing: it is what a crossing produced, and it
+    carries the instant it must hold at. What is still in trouble by then is `unmet_by`.
 
     The present is excluded, as it always was: a desire unmet NOW is pursued as itself, and a
     crossing is a thing in the future.
     """
-    narrowed = bindings(answer(engine, bind(_NARROWS_Q, node=node)))
-    desire = narrowed[0]["desire"] if narrowed else node
-    abouts = set(narrowed[0]["abouts"].split()) if narrowed and narrowed[0].get("abouts") else set()
-    target = narrowed[0].get("target") if narrowed else None
+    return _witnesses(find_judgments(engine), desire)
+
+
+#  WHAT A WANT NARROWS ITS DESIRE TO: the desire it was derived from, what it is about, and
+#  the one node its met-test targets where it has one — the cluster of results it was minted
+#  from, said in the want's own row.
+_NARROWS_Q = """
+SELECT ?desire (GROUP_CONCAT(STR(?about); separator=" ") AS ?abouts) ?target WHERE {
+  GRAPH ?g { $want prov:wasDerivedFrom ?desire .
+             OPTIONAL { $want orexis:about ?about }
+             OPTIONAL { $want orexis:metWhen ?shape . ?shape sh:targetNode ?target } }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:WantGraph } }
+GROUP BY ?desire ?target"""
+
+
+def unmet_by(engine: ox.Store, want: str, instant: datetime) -> datetime | None:
+    """The earliest instant at or before `instant` at which this WANT's desire is still judged
+    unmet among the results the want was minted from, or None where it is not.
+
+    THE QUESTION THE CONTAINER ASKS when it presents a want that must hold at an instant: the
+    want was minted because the desire was judged unmet there, and a later reading may have
+    moved the corridor so that it no longer is — a dose lifts the pot, and the want its
+    crossing produced reads met. The want supplies the instant and the narrowing; the judgment
+    is its desire's, since a judgment is about a desire.
+
+    Narrowed as the want is: to what it is about and, where its met-test names one node, to
+    that node — so a want about one tank is not held to another's prediction. Which is what
+    compiling the want's own shape and judging it computed, from the same facts.
+    """
+    narrowed = bindings(answer(engine, bind(_NARROWS_Q, want=want)))
+    if not narrowed or not narrowed[0].get("desire"):
+        return None
+    abouts = set(narrowed[0]["abouts"].split()) if narrowed[0].get("abouts") else set()
+    target = narrowed[0].get("target")
+    found = _witnesses(find_judgments(engine), narrowed[0]["desire"], abouts, target)
+    return next((w.at for w in found if w.at <= instant), None)
+
+
+def _witnesses(judgments: dict[str, list[dict]], desire: str,
+               abouts: set | None = None, target: str | None = None) -> list[Witness]:
+    """The judgment rows of one desire as witnesses — unmet, at a foreseen instant, each at
+    the earliest it was — kept to `abouts` and `target` where a want narrows them."""
     seen: dict[tuple[str, str], Witness] = {}
-    for judged in find_judgments(engine).values():
+    for judged in judgments.values():
         rows = [r for r in judged if r["desire"] == desire and r.get("at")
                 and r["met"] != "true" and r.get("focus")
                 and (target is None or r["focus"] == target)

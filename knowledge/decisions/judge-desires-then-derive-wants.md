@@ -79,11 +79,16 @@ ledger already asked the road when a claim arrived, and asks it when a debt is p
 prediction that debt would lapse has gone. A reader that has never judged is handed nothing
 rather than a second opinion, which is why the tests that ask cold judge first and say so.
 
-**A want takes its desire's witnesses, narrowed.** A judgment is about a DESIRE; the container
-asks for a crossing of a WANT, to present it met or unmet at its instant. A want is the desire
-instantiated at a cluster of its results, so its witnesses are exactly those rows — kept to
-what the want is about and, where its met-test names one node, to that node. Which is what
-compiling the want's own narrowed shape computed, from the same facts.
+**A crossing is a desire's, and a want has none.** The sovereign, on the first cut of this:
+*the want has no crossing; the want is created as a result of a found crossing*. A prediction
+is a corridor the value is expected to move along; where it leaves the region the desire
+states, the desire is judged unmet at that instant, and that judgment IS the crossing. The
+want is what the crossing produced, and what it carries is the instant it must hold at. So
+`witnesses_of` takes a desire and nothing else, and the question the container actually asks
+when it presents a want — is this still in trouble by the instant it must hold at — has its
+own name, `unmet_by`: the DESIRE's judgments, narrowed to the results the want was minted
+from, which is what it is about and the one node its met-test targets where it has one. Which
+is what compiling the want's own narrowed shape and judging it computed, from the same facts.
 
 **The derivations' edges are in the store, put there by genesis.** The partition joins
 predicates wherever one action *or one derivation* reads or writes both; the actions were rows

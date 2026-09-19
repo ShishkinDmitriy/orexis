@@ -126,17 +126,15 @@ def child_of(agent, root: str) -> str | None:
 
 
 def crossing_of(agent, root: str) -> datetime | None:
-    """The earliest predicted crossing for `root`, or None — see `crossing_row_of`."""
-    found = crossing_row_of(agent, root)
-    return found[0] if found else None
+    """When the world a DESIRE is about is judged to leave what the desire wants, or None: the
+    earliest instant its judgments read unmet. The rows are `judgments.witnesses_of`.
 
-
-def crossing_row_of(agent, root: str) -> tuple[datetime, datetime] | None:
-    """When the world a root is about is PREDICTED to leave what the root wants, or None: the
-    earliest witness among the predictions. The second instant is the same start — what a pass
-    for the derived want is clocked from. Kept for its readers; the rows are `witnesses_of`."""
+    A desire's, never a want's. A want has no crossing — it is what a crossing produced, and
+    it carries the instant it must hold at; whether it is still in trouble by then is
+    `judgments.unmet_by`.
+    """
     found = witnesses_of(agent.beliefs.engine, root)
-    return (found[0].at, found[0].at) if found else None
+    return found[0].at if found else None
 
 
 def foreseen(agent, root: str) -> datetime | None:
