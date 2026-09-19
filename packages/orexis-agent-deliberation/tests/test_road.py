@@ -21,9 +21,12 @@ snapshot, reviewed by eyes, and never as a check somebody forgot to widen. Regen
 `pytest packages/orexis-agent-deliberation/tests --update-snapshots`; a case without a
 snapshot fails rather than passing on nothing.
 
-TriG, in the case's own prefixes, written by a small serializer of this file's that orders
-everything — graphs, subjects, predicates, objects — and inlines a blank node used once, so
-a shape reads as the shape it is and the same store writes the same text on every run.
+TriG, IN THE CASE'S OWN ORDER, so `diff <case>.trig <case>.snapshot.trig` is the change: a
+graph the road left as it found it is copied from the case verbatim, comments and all; one it
+changed is re-rendered in its place, its comment kept; one it dropped leaves a note; and what
+it wrote comes after, under a marker. The rendering is a small serializer of this file's that
+orders everything — subjects, predicates, objects — and inlines a blank node used once, so a
+shape reads as the shape it is and the same store writes the same text on every run.
 Compared STRUCTURALLY: the snapshot is parsed back and both sides are canonicalised to the
 same quad lines, so a label or a layout is never what fails a case. The clock stands at
 2026-01-01T12:00:00Z, so a file can say an instant and mean it, and a period the road writes
@@ -59,7 +62,7 @@ NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 AGENT, ME = "keeper", "http://example.org/test#keeper"
 WORLD, ACTIONS = "http://example.org/test#world", "http://example.org/test#actions"
 ROAD = Path(__file__).parent / "road"
-CASES = sorted(p for p in ROAD.glob("*.trig") if not p.name.endswith(".snapshot.trig"))
+CASES = sorted(p for p in ROAD.glob("*.trig") if not p.name.endswith((".snapshot.trig", ".actual.trig")))
 UPDATE = "pytest packages/orexis-agent-deliberation/tests --update-snapshots"
 
 
@@ -115,12 +118,32 @@ def prefixes_of(case: Path) -> dict[str, str]:
     return dict(re.findall(r"^@prefix (\w*): <([^>]*)> \.", case.read_text(), flags=re.M))
 
 
-def trig_of(graphs: dict[str, Graph], prefixes: dict[str, str], header: str) -> str:
-    """The store as TriG a reader can read: graphs in IRI order, subjects in rendered order
-    (IRIs, then the blank nodes nothing inlined), predicates and objects sorted, `a` for the
-    type, a blank node used once inlined where it is used, an RDF list as `( … )`. rdflib's
-    own TriG writer is not held to an order, and a snapshot that moved when nothing changed
-    would hide the change that mattered."""
+BLOCK = re.compile(r"(?:^#[^\n]*\n)*^GRAPH (\S+) \{[ \t]*\}?\n?(?:.*?^\}\n)?\n*", flags=re.S | re.M)
+
+
+def segments_of(case: Path) -> tuple[str, list[tuple[str, str]]]:
+    """The case's text as its preamble — the header comment and the prefixes — and one segment
+    per `GRAPH` block: the graph's IRI and the block's text with the comment lines above it,
+    in the order the author wrote them. What the writer copies verbatim, and the order it keeps."""
+    text, prefixes = case.read_text(), prefixes_of(case)
+    blocks = [(m.group(1), m.group(0)) for m in BLOCK.finditer(text)]
+    assert blocks, case.name
+    preamble = text[:text.index(blocks[0][1])]
+
+    def iri(name: str) -> str:
+        if name.startswith("<"):
+            return name[1:-1]
+        prefix, local = name.split(":", 1)
+        return prefixes[prefix] + local
+    return preamble, [(iri(name), block) for name, block in blocks]
+
+
+def renderer(prefixes: dict[str, str]):
+    """A `render(iri, graph)` for one graph as a TriG block: subjects in rendered order (IRIs,
+    then the blank nodes nothing inlined), predicates and objects sorted, `a` for the type,
+    bare numbers where Turtle has them, a blank node used once inlined where it is used, an
+    RDF list as `( … )`. rdflib's own TriG writer is held to no order, and a snapshot that
+    moved when nothing changed would hide the change that mattered."""
     longest = sorted(prefixes.items(), key=lambda kv: -len(kv[1]))
 
     def name(term) -> str:
@@ -141,42 +164,61 @@ def trig_of(graphs: dict[str, Graph], prefixes: dict[str, str], header: str) -> 
             return text
         return f"_:{term}"
 
-    out = [header]
-    for prefix, ns in sorted(prefixes.items(), key=lambda kv: (kv[0] != "", kv[0])):
-        out.append(f"@prefix {prefix}: <{ns}> .")
-    for iri in sorted(graphs):
-        graph = graphs[iri]
+    def render(iri: str, graph: Graph) -> str:
         as_object = {}
         for _, _, o_ in graph:
             if isinstance(o_, BNode):
                 as_object[o_] = as_object.get(o_, 0) + 1
         inlined = {b for b, n in as_object.items() if n == 1}
 
-        def render(term, depth: int) -> str:
-            if isinstance(term, BNode) and term in inlined:
-                pairs = list(graph.predicate_objects(term))
-                keys = {p_ for p_, _ in pairs}
-                if keys == {URIRef(RDF + "first"), URIRef(RDF + "rest")}:
-                    items, node = [], term
+        def term(t, depth: int) -> str:
+            if isinstance(t, BNode) and t in inlined:
+                pairs = list(graph.predicate_objects(t))
+                if {p_ for p_, _ in pairs} == {URIRef(RDF + "first"), URIRef(RDF + "rest")}:
+                    items, node = [], t
                     while node != URIRef(RDF + "nil"):
-                        items.append(render(graph.value(node, URIRef(RDF + "first")), depth))
+                        items.append(term(graph.value(node, URIRef(RDF + "first")), depth))
                         node = graph.value(node, URIRef(RDF + "rest"))
                     return "( " + " ".join(items) + " )"
                 pad = "      " + "    " * (depth + 1)
-                body = f" ;\n{pad}".join(f"{name(p_)} {render(o_, depth + 1)}"
-                                          for p_, o_ in sorted(pairs, key=lambda po: (name(po[0]), render(po[1], depth + 1))))
+                body = f" ;\n{pad}".join(f"{name(p_)} {term(o_, depth + 1)}" for p_, o_ in sorted(
+                    pairs, key=lambda po: (name(po[0]), term(po[1], depth + 1))))
                 return f"[ {body} ]"
-            return name(term)
+            return name(t)
 
-        out.append(f"\nGRAPH {name(URIRef(iri))} {{")
+        lines = [f"GRAPH {name(URIRef(iri))} {{"]
         subjects = sorted({s_ for s_, _, _ in graph if not (isinstance(s_, BNode) and s_ in inlined)},
                           key=lambda t: (isinstance(t, BNode), name(t)))
         for s_ in subjects:
-            pairs = sorted(graph.predicate_objects(s_), key=lambda po: (name(po[0]), render(po[1], 0)))
-            body = " ;\n      ".join(f"{name(p_)} {render(o_, 0)}" for p_, o_ in pairs)
-            out.append(f"  {name(s_)} {body} .")
-        out.append("}")
-    return "\n".join(out) + "\n"
+            pairs = sorted(graph.predicate_objects(s_), key=lambda po: (name(po[0]), term(po[1], 0)))
+            body = " ;\n      ".join(f"{name(p_)} {term(o_, 0)}" for p_, o_ in pairs)
+            lines.append(f"  {name(s_)} {body} .")
+        lines.append("}\n")
+        return "\n".join(lines)
+    return render
+
+
+def trig_of(case: Path, before: dict[str, Graph], after: dict[str, Graph], header: str) -> str:
+    """The store after the road, as the case's text with the road's changes in it."""
+    preamble, segments = segments_of(case)
+    render = renderer(prefixes_of(case))
+    same = lambda iri: quad_lines({iri: before[iri]}) == quad_lines({iri: after[iri]})
+    out = [header + "\n" + preamble]
+    for iri, block in segments:
+        comments = "".join(re.findall(r"^#[^\n]*\n", block, flags=re.M))
+        graph_name = re.search(r"^GRAPH (\S+)", block, flags=re.M).group(1)
+        spacing = block[len(block.rstrip("\n")):]          # the blank lines the author left after it
+        if iri not in after:
+            out.append(f"{comments}# DROPPED by the road: {graph_name}\n{spacing}")
+        elif iri in before and same(iri):
+            out.append(block)
+        else:
+            out.append(f"{comments}# CHANGED by the road, re-rendered:\n" + render(iri, after[iri]) + spacing)
+    written = [iri for iri in sorted(after) if iri not in {iri for iri, _ in segments}]
+    if written:
+        out.append("\n# --- WRITTEN by the road (and the loader's own vocabulary stub) ---\n\n")
+        out.append("\n".join(render(iri, after[iri]) for iri in written))
+    return "".join(out)
 
 
 def snapshot_of(st: Store) -> dict[str, Graph]:
@@ -199,22 +241,30 @@ def snapshot_path(case: Path) -> Path:
 def test_the_road_leaves_the_store_as_the_snapshot_says(case, monkeypatch, request):
     monkeypatch.setattr(clock, "now", lambda: NOW)
     agent = stand_in(case)
+    before = snapshot_of(agent.beliefs)
     [root] = {d.uri for d in agent.desires.find_all()}    # a row per `about`, one desire
     pursuit.top_up(agent, root)
     actual = snapshot_of(agent.beliefs)
     path = snapshot_path(case)
     if request.config.getoption("--update-snapshots"):
-        path.write_text(trig_of(actual, prefixes_of(case),
-                                f"# The whole store after the road ran on {case.name}.\n"
-                                f"# Regenerated by `{UPDATE}` — review the diff; it is the claim."))
+        path.write_text(trig_of(case, before, actual,
+                                f"# The whole store after the road ran on {case.name}, in the case's own order:\n"
+                                f"# `diff {case.name} {path.name}` is what the road did. Regenerated by\n"
+                                f"# `{UPDATE}` — review the diff; it is the claim."))
     assert path.exists(), f"{case.name} has no snapshot: run `{UPDATE}` and review {path.name}"
-    actual, expected = quad_lines(actual), quad_lines(snapshot_read(path))
-    left, missing = sorted(actual - expected), sorted(expected - actual)
+    lines, expected = quad_lines(actual), quad_lines(snapshot_read(path))
+    left, missing = sorted(lines - expected), sorted(expected - lines)
+    if left or missing:
+        #  WHAT THE ROAD LEFT, written beside the snapshot for `diff` — the same text a
+        #  regenerate would write, so accepting it is a regenerate. Ignored by git.
+        received = case.with_suffix(".actual.trig")
+        received.write_text(trig_of(case, before, actual, f"# What the road actually left on {case.name}."))
     assert not left and not missing, (
         f"{case.name}: the store the road left differs from {path.name}\n"
         + "".join(f"  the road left, unexpected:  {l}\n" for l in left)
         + "".join(f"  the snapshot says, missing: {l}\n" for l in missing)
-        + f"  (if the road changed on purpose: `{UPDATE}`, then review the diff)")
+        + f"  what the road left is in {received.name}: `diff {path.name} {received.name}`;\n"
+        + f"  if the road changed on purpose: `{UPDATE}`, then review the diff")
 
 
 def test_every_case_is_read_and_no_snapshot_is_orphaned():
