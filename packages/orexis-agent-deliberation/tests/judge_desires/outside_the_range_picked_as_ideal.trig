@@ -1,0 +1,118 @@
+# outside_the_range_picked_as_ideal
+#
+# THE DESIRE IS GENERIC AND THE WANTS ARE SPECIFIC, which is the shape the road exists for.
+#
+# A plant is surrounded by samples — its soil, its air — and each sample has properties somebody
+# watches. The plant states several ranges for each: what it SURVIVES, what it OPERATES in, what
+# it BLOOMS in; one of them is picked as ideal for the period the plant is in. The desire says
+# one thing about all of that, universal over every watched property there is: whatever is
+# watched reads inside the range picked as ideal for its property.
+#
+# The pick is what makes it bite. The soil reads 22 and the air 26: both are inside what the
+# fern SURVIVES and inside what it OPERATES in, and both are outside what it BLOOMS in — and
+# blooming is what is picked for this period, so the desire reads unmet at each. The air's
+# humidity at 55 is inside its blooming band and says nothing, so the case shows a silent
+# property beside the two in trouble.
+#
+# Judging names the watched property that failed and nothing coarser: `orexis:about sh:this`,
+# so each row is about the very node in trouble. Two nodes, two rows — and two wants under one
+# desire, each about one watched property (derive_wants/).
+#
+# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix judgments: <http://example.org/orexis/graph/judgments/> .
+
+GRAPH :world {
+  #  A plant, and the samples around it.
+  :fern a :Plant .
+  :soil_of_fern a :Sample ; :around :fern .
+  :air_of_fern a :Sample ; :around :fern .
+
+  #  WHAT IS WATCHED is a node of its own — one per sample and property — so the thing in
+  #  trouble has a name. A row about "the fern" could not say which of its properties failed,
+  #  and a row about "moisture" could not say whose.
+  :soil_moisture_of_fern a :Watched ; :of :soil_of_fern ; :forProperty :moisture .
+  :air_warmth_of_fern a :Watched ; :of :air_of_fern ; :forProperty :warmth .
+  :air_humidity_of_fern a :Watched ; :of :air_of_fern ; :forProperty :humidity .
+
+  #  THREE RANGES PER PROPERTY, and one of them picked for the period the plant is in. Each
+  #  range says a band per property; nothing here is a preference, it is what the plant states.
+  :fern :range :fern_survival , :fern_operating , :fern_blooming ;
+      :idealRange :fern_blooming .
+
+  :fern_survival a :SurvivalRange ;
+      :band [ :forProperty :moisture ; :low 5 ; :high 60 ] ,
+            [ :forProperty :warmth ; :low 2 ; :high 40 ] ,
+            [ :forProperty :humidity ; :low 10 ; :high 95 ] .
+  :fern_operating a :OperatingRange ;
+      :band [ :forProperty :moisture ; :low 15 ; :high 50 ] ,
+            [ :forProperty :warmth ; :low 12 ; :high 32 ] ,
+            [ :forProperty :humidity ; :low 25 ; :high 85 ] .
+  :fern_blooming a :BloomingRange ;
+      :band [ :forProperty :moisture ; :low 30 ; :high 45 ] ,
+            [ :forProperty :warmth ; :low 18 ; :high 24 ] ,
+            [ :forProperty :humidity ; :low 40 ; :high 70 ] .
+}
+
+GRAPH :desires {
+  :keeper orexis:holds :keeper.ideal .
+  :keeper.ideal a orexis:Desire ;
+      rdfs:label "every watched property of every sample around a plant reads inside the range picked as ideal" ;
+      orexis:metWhen :inside_the_picked_range .
+
+  #  ONE SHAPE FOR EVERY WATCHED PROPERTY THERE IS. It names no plant, no sample and no
+  #  property: it targets whatever is watched, walks from there to the plant the sample is
+  #  around, reads whichever range that plant has picked, and takes the band that range states
+  #  FOR THAT PROPERTY. Add a plant, a sample, a property or a period and this says the same
+  #  thing about it.
+  #
+  #  `orexis:about sh:this` is what makes the wants specific: the row is about the focus node
+  #  itself — the one watched property that failed — so two failing properties are two
+  #  instances and two wants, and never one want about "the fern".
+  #
+  #  IN FULL IRIs, because a compiled select is run with the store's own prefixes and this
+  #  case's namespace is not one of them; `sh:prefixes` names the dictionary the store carries.
+  :inside_the_picked_range a sh:NodeShape ;
+      sh:targetClass :Watched ;
+      sh:sparql [
+          sh:prefixes orexis: ;
+          orexis:about sh:this ;
+          sh:message "a watched property reads outside the range picked as ideal for it" ;
+          sh:select """SELECT $this WHERE {
+            $this <http://example.org/test#of> ?sample ;
+                  <http://example.org/test#forProperty> ?property ;
+                  <http://example.org/test#reads> ?value .
+            ?sample <http://example.org/test#around> ?plant .
+            ?plant <http://example.org/test#idealRange> ?range .
+            ?range <http://example.org/test#band> ?band .
+            ?band <http://example.org/test#forProperty> ?property ;
+                  <http://example.org/test#low> ?low ;
+                  <http://example.org/test#high> ?high .
+            FILTER(?value < ?low || ?value > ?high) }""" ] .
+}
+
+GRAPH :sensed {
+  #  Soil and warmth are inside what the fern survives and operates in, and outside what it
+  #  blooms in. The humidity is inside blooming and says nothing.
+  :soil_moisture_of_fern :reads 22 .
+  :air_warmth_of_fern :reads 26 .
+  :air_humidity_of_fern :reads 55 .
+}
+
+# What each graph IS, and when it holds — said once each, beside the data.
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph , orexis:Graph .
+  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
+  :world a orexis:PublicGraph , orexis:Graph .
+  :sensed a orexis:StateGraph , orexis:BeliefGraph , orexis:Graph .
+  :desires a orexis:DesireGraph , orexis:Graph .
+}

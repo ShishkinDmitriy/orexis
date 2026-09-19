@@ -1,0 +1,92 @@
+# outside_the_range_picked_as_ideal
+#
+# THE DESIRE IS GENERIC AND THE WANTS ARE SPECIFIC. One desire says a single thing about every
+# watched property of every sample around every plant — that it reads inside the range its plant
+# has picked as ideal for the period — and two of them are in trouble: the fern's soil moisture
+# and its air warmth, each outside the blooming band that is picked, each inside what the fern
+# survives and operates in.
+#
+# What is derived is one want PER WATCHED PROPERTY, never one about the fern. The results say
+# `orexis:about sh:this`, so each is about the node that failed; two nodes are two instances,
+# two clusters and two wants, each carrying the desire's own shape narrowed to its own node —
+# `sh:targetNode` the one watched property, so a plan for the soil is not refused for the air.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+#
+# THE JUDGMENTS AS `judge_desires` LEFT THEM on this situation
+# (judge_desires/outside_the_range_picked_as_ideal.trig), and the scopes `scope_actions` made of
+# its levers: the desires, the scopes, whatever stands, the judgment graph, and the catalogue
+# that says what each is — no world, no readings, no predictions, no levers. `derive_wants`
+# reads the store and nothing in hand.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+
+GRAPH :desires {
+  :keeper orexis:holds :keeper.ideal .
+  :keeper.ideal a orexis:Desire ;
+      orexis:metWhen :inside_the_picked_range ;
+      rdfs:label "every watched property of every sample around a plant reads inside the range picked as ideal" .
+  :inside_the_picked_range a sh:NodeShape ;
+      sh:sparql [ orexis:about sh:this ;
+          sh:message "a watched property reads outside the range picked as ideal for it" ;
+          sh:prefixes orexis: ;
+          sh:select """SELECT $this WHERE {
+            $this <http://example.org/test#of> ?sample ;
+                  <http://example.org/test#forProperty> ?property ;
+                  <http://example.org/test#reads> ?value .
+            ?sample <http://example.org/test#around> ?plant .
+            ?plant <http://example.org/test#idealRange> ?range .
+            ?range <http://example.org/test#band> ?band .
+            ?band <http://example.org/test#forProperty> ?property ;
+                  <http://example.org/test#low> ?low ;
+                  <http://example.org/test#high> ?high .
+            FILTER(?value < ?low || ?value > ?high) }""" ] ;
+      sh:targetClass :Watched .
+}
+
+#  THE PARTITION a world with a waterer and a heater leaves. It decides nothing here: a result
+#  about `sh:this` is about the node that failed, not about a predicate, so no scope holds it
+#  and the split is per INSTANCE — which is the finer answer and the one this desire wants.
+GRAPH :scopes {
+  :keeper.scope.1 a deliberation:Scope .
+  :keeper.scope.2 a deliberation:Scope .
+  :moisture deliberation:inScope :keeper.scope.1 .
+  :water deliberation:inScope :keeper.scope.1 .
+  :warmth deliberation:inScope :keeper.scope.2 .
+  :heat deliberation:inScope :keeper.scope.2 .
+}
+
+GRAPH :judgments {
+  :keeper.ideal.judgment a deliberation:Judgment ;
+      deliberation:judges :keeper.ideal ;
+      prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
+      sh:conforms false ;
+      sh:result [ a sh:ValidationResult ;
+          deliberation:constraint 0 ;
+          orexis:about :air_warmth_of_fern ;
+          sh:focusNode :air_warmth_of_fern ] ;
+      sh:result [ a sh:ValidationResult ;
+          deliberation:constraint 0 ;
+          orexis:about :soil_moisture_of_fern ;
+          sh:focusNode :soil_moisture_of_fern ] .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph , orexis:Graph .
+  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
+  :judgments a deliberation:JudgmentGraph , orexis:WorkingGraph , orexis:Graph ;
+      orexis:arrivedBy orexis:Derived ;
+      orexis:beliefsOf :keeper .
+  :desires a orexis:DesireGraph , orexis:Graph .
+  :scopes a deliberation:ScopeGraph , orexis:WorkingGraph , orexis:Graph ;
+      orexis:arrivedBy orexis:Derived ;
+      orexis:beliefsOf :keeper .
+}
