@@ -175,6 +175,25 @@ fallback stood for no desire; such a desire is not judged now, and the log says 
 matching branch in `derive_wants` — a present judgment unmet with no result — is dead until
 that function is treated the same way.
 
+**A want minted from judgments alone.** Asked twice whether the judgments are enough —
+*I expected we make judge, it creates Judgments, and then we map Judgments into Wants* — and
+they are not, for one reason worth naming. A judgment row says which desire, which instant,
+met or unmet, which focus node failed, what it was about, and WHICH constraint failed, by its
+index. It never says what that constraint IS. A want carries its own met-test, the desire's
+narrowed to this instance and these properties, so it is judged on its instance and a plan for
+one tank is not refused for another's — and that shape has to be read from the desire. The
+rest of what `derive_wants` reads there is small: the avoided state and the estimate it points
+at, the label, and the desire's `orexis:about` as a fallback and for naming.
+
+So a JUDGMENT says what was READ and a DESIRE says what is WANTED, and a want is built from
+both. Two ways to make the judgment sufficient were weighed and refused. The want could POINT
+at its desire's shape and name its instance, which makes the derivation a pure map — but the
+narrowing has to happen somewhere, so it would happen at every read instead of once at mint
+(the planner on each pass, the container's own-state check, `unmet_by`), and a want's graph
+would stop standing on its own. Or the JUDGMENT could carry the narrowed shape, which copies
+part of the desire into every judgment of every desire at every instant, and stops the judgment
+being a report of what was read.
+
 **A holder argument, so a store with several agents' desires derives for one.** A volume
 holds one agent (rule 4), so the question only arises in a test fixture that births a whole
 world into one store — and there the answer is that every holder's judgments are judged and
