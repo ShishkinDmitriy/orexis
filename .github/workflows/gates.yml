@@ -18,17 +18,27 @@
 #                   there, not here.
 #
 # Green here means "nothing obviously broke". It does not mean a world runs.
+#
+# ON THE PULL REQUEST, and not on every push as well: a private repository's minutes are
+# metered, and a push that has a pull request open ran the same suite twice. The sovereign's
+# flow is push the draft, wait for this, mark it ready (judge-desires-then-derive-wants's
+# session); a push with no pull request is a branch nobody has asked about yet. A newer push
+# cancels the run in progress on the same branch, for the same reason.
 
 name: gates
 
 on:
-  push:
-    branches: ["**"]
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: gates-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   gates:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -37,10 +47,14 @@ jobs:
           python-version: "3.13"      # what the agent image runs; see Containerfile
           cache: pip
 
+      # Every package is its own distribution (every-package-is-a-project), so every one is
+      # installed, found by looking as the loader finds them; `.[dev]` alone left 24 of 25
+      # uninstalled once the packages became projects, and the step went stale unnoticed
+      # while the workflow was disabled.
       - name: install
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -e ".[dev]" $(ls -d packages/*/)
 
       # Each world is built from its files and held to every package's shapes.
       #
@@ -59,11 +73,21 @@ jobs:
             echo "::endgroup::"
           done
 
-      - name: pytest
-        # Bare, not `pytest tests`: a package may carry its own tests as plain files beside
-        # its code, and naming a path here would silently stop running them. testpaths in
-        # pyproject.toml is what decides the roots, so this command cannot drift from them.
-        run: pytest -q
+      # IN TWO HALVES PLUS THE PACKAGES, at two workers: the whole suite at `-n auto` was
+      # killed for memory on a 16 GB machine, and a private repository's runner has 7 GB.
+      # The halves are the Pi's own recipe. The packages' tests are named, not reached
+      # through `pytest tests`: a package carries its own beside its code, and the halves
+      # split the root tree alone.
+      - name: pytest, first half
+        run: |
+          N=$(ls tests/test_*.py | wc -l); H=$(( (N + 1) / 2 ))
+          pytest -q -n 2 $(ls tests/test_*.py | head -$H)
+      - name: pytest, second half
+        run: |
+          N=$(ls tests/test_*.py | wc -l); H=$(( (N + 1) / 2 ))
+          pytest -q -n 2 $(ls tests/test_*.py | tail -n +$((H + 1)))
+      - name: pytest, the packages' own
+        run: pytest -q -n 2 packages
 
       # The layering the flat layout gave up a packaging split to assert: onboarding may import
       # agent, agent may never import onboarding, and no capability or transport may touch
