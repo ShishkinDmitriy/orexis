@@ -51,8 +51,8 @@ The same argument in reverse is why the [action](/domain/action.md) *is* stored 
 ![the rows one agent has, and what they are read from](../diagrams/service-afforder.svg)
 
 **The world a row is true in is a PARAMETER, and that is the whole of why nothing is stored.**
-`Affordances` is handed a door — `beliefs.query_at` for what is, the
-[imaginarium](/domain/imaginarium.md)'s for a world a plan is imagining — so stock after a refill
+`Affordances` is handed the graphs a row is asked about — what a rule reads as it holds now,
+or the [imaginarium](/domain/imaginarium.md)'s list for a world a plan is imagining — so stock after a refill
 appears among that world's rows and not among this one's. A stored answer has one world; a search
 needs one per node.
 

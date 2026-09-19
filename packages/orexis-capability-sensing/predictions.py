@@ -32,6 +32,8 @@ from orexis_agent_progression.ontology import GRAPH_PREFIX, STATE_GRAPH, picks_g
 from orexis_agent_progression.store import Raw, bind, bindings
 
 from .sensed_writer import _slug
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import KNOWN
 
 log = logging.getLogger("sensing.predictions")
 
@@ -61,7 +63,7 @@ def graphs_of(store, agent_id: str, feature_id: str, observed_property: str) -> 
     stem = graph_of(agent_id, feature_id, observed_property, 0)[:-1]
     rows = bindings(store.query(f"""
 SELECT ?g WHERE {{ GRAPH <{store.catalogue}> {{ ?g a <{_PREDICTION_GRAPH}> }}
-  FILTER(STRSTARTS(STR(?g), "{stem}")) }}"""))
+  FILTER(STRSTARTS(STR(?g), "{stem}")) }}""", store.graphs_of(PUBLIC)))
     return sorted((r["g"] for r in rows), key=lambda g: int(g.rsplit("/", 1)[-1]))
 
 
@@ -82,7 +84,7 @@ def write(agent, me_uri: str, subject_uri: str, observed_property: str, reading,
     taken = reading.result_time
     feature_id = subject_uri.rsplit("#", 1)[-1]
     drop(store, graphs_of(store, agent.id, feature_id, observed_property))
-    rules = bindings(store.query(_DRIFTS_Q))
+    rules = bindings(store.query(_DRIFTS_Q, store.graphs_of(PUBLIC)))
     ladder = sorted({float(h) for r in rules for h in (r.get("horizons") or "").split()
                      if float(h) > horizon})
     #  THE FIRST WINDOW is the freshness horizon: due when the cadence in force makes the next
@@ -105,7 +107,7 @@ def write(agent, me_uri: str, subject_uri: str, observed_property: str, reading,
         triples: list[str] = []
         for rule in rules:
             try:
-                added = list(store.construct(bind(rule["construct"], **tokens), at=closes))
+                added = list(store.construct(bind(rule["construct"], **tokens), store.graphs_of(*KNOWN, at=closes)))
             except Exception as exc:                                    # noqa: BLE001
                 log.error("drift %s would not run for a prediction: %s", rule["drift"], exc)
                 continue
@@ -183,5 +185,5 @@ _key_cache: dict = {}
 def _nodes_of_key(store, subject_uri: str, observed_property: str) -> set[str]:
     rows = bindings(store.query(f"""
 SELECT ?obs WHERE {{ GRAPH <{STATE_GRAPH}> {{
-  ?obs sosa:hasFeatureOfInterest <{subject_uri}> ; sosa:observedProperty <{observed_property}> }} }}"""))
+  ?obs sosa:hasFeatureOfInterest <{subject_uri}> ; sosa:observedProperty <{observed_property}> }} }}""", store.graphs_of(PUBLIC)))
     return {f"<{r['obs']}>" for r in rows}

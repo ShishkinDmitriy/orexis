@@ -16,7 +16,6 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix graph: <http://example.org/orexis/graph/> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
 @prefix judgments: <http://example.org/orexis/graph/judgments/> .
 
@@ -49,7 +48,7 @@ GRAPH :desires {
       sh:property [ sh:path :temperature ; sh:maxInclusive 30 ; orexis:about :temperature ] .
 }
 
-GRAPH graph:sensed {
+GRAPH :sensed {
   :tank1 :level 5 ; :temperature 40 .
   :tank2 :level 20 ; :temperature 20 .
 }
@@ -57,12 +56,23 @@ GRAPH graph:sensed {
 # What each graph IS, and when it holds — said once each, beside the data.
 # CHANGED, re-rendered:
 GRAPH :catalogue {
-  :actions a orexis:PublicGraph .
-  :catalogue a orexis:CatalogueGraph .
-  :desires a orexis:DesireGraph .
-  :ontology a orexis:OntologyGraph .
-  :world a orexis:PublicGraph .
+  :actions a orexis:Graph ;
+      a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph ;
+      a orexis:Graph .
+  :desires a orexis:DesireGraph ;
+      a orexis:Graph .
+  :ontology a orexis:Graph ;
+      a orexis:OntologyGraph ;
+      a orexis:PublicGraph .
+  :sensed a orexis:BeliefGraph ;
+      a orexis:Graph ;
+      a orexis:StateGraph .
+  :world a orexis:Graph ;
+      a orexis:PublicGraph .
   judgments:keeper a deliberation:JudgmentGraph ;
+      a orexis:Graph ;
+      a orexis:WorkingGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
 }
@@ -91,11 +101,14 @@ GRAPH :ontology {
   deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
   deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
   deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
   orexis:DesireGraph rdfs:subClassOf orexis:Graph .
   orexis:OntologyGraph rdfs:subClassOf orexis:PublicGraph .
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:PublicGraph rdfs:subClassOf orexis:Graph .
+  orexis:RecordGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:WantGraph rdfs:subClassOf orexis:Graph .
   orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
 }

@@ -52,6 +52,8 @@ from .beliefs import BIDDING_PICKS
 from .terms import (BIDDING, CLAIM, CLAIMED_AT, CLAIM_DEBIT, CLAIM_ID, CLAIM_L, HOLDS_CLAIM, NS,
                     ON_VENUE, PRESENTED_AT, PRESENTING, SENSING, TENDERING, USABLE_FROM, USABLE_UNTIL)
 from orexis_agent_progression import clock
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import KNOWN
 
 # What my bids are priced in, found THROUGH MY VENUE AND MY STAKE (#198) rather than by
 # naming any term: the market I bid in is for a source, the source states its good (entailed
@@ -128,7 +130,7 @@ class BiddingModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        self.markets = bidding_markets_of(agent.beliefs.query, self.me.uri)
+        self.markets = bidding_markets_of(agent.beliefs.reader(PUBLIC), self.me.uri)
         self._asked: set = set()          # (want, instant) asked for ahead (#627)
         self.beliefs = agent.desires.read(BIDDING_PICKS)
         #  THE WALLET IS A BELIEF (#395): what is left lives in this agent's own graph, so a
@@ -157,7 +159,7 @@ class BiddingModule(Module):
         whichever reading arrived last, which is the confusion this exists to end. An agent
         that will not start is a visible fault; one pricing water off a humidity is not.
         """
-        rows = bindings(self.agent.beliefs.query(_ABOUT_Q % self.me.uri))
+        rows = bindings(self.agent.beliefs.query(_ABOUT_Q % self.me.uri, self.agent.beliefs.graphs_of(PUBLIC)))
         if not rows:
             raise RuntimeError(
                 f"{self.agent.id} bids, but no valuation connects its venue's good to a "
@@ -187,7 +189,7 @@ class BiddingModule(Module):
         the domain's shapes say the same thing at the gate, where the failure is cheaper.
         """
         rows = bindings(self.agent.beliefs.query(
-            _CONV_Q % (self.agent.beliefs.graph, self.me.uri, self._valuation_term)))
+            _CONV_Q % (self.agent.beliefs.graph, self.me.uri, self._valuation_term), self.agent.beliefs.graphs_of(PUBLIC)))
         if not rows or rows[0].get("v") is None:
             raise RuntimeError(
                 f"{self.agent.id} bids in a venue priced in <{self.about}> but holds no "
@@ -484,7 +486,7 @@ class BiddingModule(Module):
         if not litres:
             return
         topic = next((r["t"] for r in bindings(self.agent.beliefs.query(
-            f"SELECT ?t WHERE {{ <{self.me.uri}> mqtt:eventTopic ?t }} LIMIT 1"))), None)
+            f"SELECT ?t WHERE {{ <{self.me.uri}> mqtt:eventTopic ?t }} LIMIT 1", self.agent.beliefs.graphs_of(PUBLIC)))), None)
         if not topic:
             return
         for market in self.markets:
@@ -647,10 +649,11 @@ INSERT DATA {{ GRAPH <{claim_graph(self.agent.id, claim["id"])}> {{
         #  A CLAIM IS A GRAPH HOLDING DURING ITS WINDOW (#645): the door hands back only one
         #  still usable, so a claim left over past its window is not held, and nothing here
         #  sweeps it.
-        rows = bindings(self.agent.beliefs.query_at(f"""
+        rows = bindings(self.agent.beliefs.query(f"""
 SELECT ?c ?id ?l ?at ?p WHERE {{
   <{self.me.uri}> <{HOLDS_CLAIM}> ?c . ?c <{CLAIM_ID}> ?id ; <{CLAIM_L}> ?l ; <{ON_VENUE}> <{venue_uri}> ;
-     <{CLAIMED_AT}> ?at . OPTIONAL {{ ?c <{PRESENTED_AT}> ?p }} }} ORDER BY DESC(?at) LIMIT 1"""))
+     <{CLAIMED_AT}> ?at . OPTIONAL {{ ?c <{PRESENTED_AT}> ?p }} }} ORDER BY DESC(?at) LIMIT 1""",
+            self.agent.beliefs.graphs_of(*KNOWN, at=clock.now())))
         if not rows:
             return None
         return {"uri": rows[0]["c"], "id": rows[0]["id"], "litres": float(rows[0]["l"]),

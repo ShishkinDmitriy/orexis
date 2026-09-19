@@ -15,6 +15,7 @@ from pyshacl import validate as shacl_validate
 
 
 from conftest import sensing_of, open_round_for, desires_build, MOISTURE, build_agent, genesis_store
+from orexis_agent_progression.ontology import PUBLIC
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
@@ -71,7 +72,7 @@ def test_the_horizon_the_shape_reads_is_the_one_the_module_computes(monkeypatch)
     sensing = next(m for m in agent.modules if m.name == "subscribing")
 
     published = {r["s"]: int(r["h"]) for r in bindings(st.query(
-        f"SELECT ?s ?h WHERE {{ GRAPH <{INSTRUMENTS_GRAPH}> {{ ?s <{STALE_AFTER_S}> ?h }} }}"))}
+        f"SELECT ?s ?h WHERE {{ GRAPH <{INSTRUMENTS_GRAPH}> {{ ?s <{STALE_AFTER_S}> ?h }} }}", st.graphs_of(PUBLIC)))}
     assert published, "a sensor with no published horizon is a want that can never fire"
     for sensor in sensing.sensors:
         assert published[sensor.uri] == sensing.stale_after_s(sensor.subject, sensor.observes)
@@ -129,7 +130,7 @@ def test_the_want_fires_as_a_shape_and_does_not_refuse_the_boot(monkeypatch):
 
     agent, st = _fern(monkeypatch, value=0.55)
     _age_the_reading(st)
-    data = graph_from(st, *st.public_graphs(), STATE_GRAPH,
+    data = graph_from(st, *st.graphs_of(PUBLIC), STATE_GRAPH,
                       INSTRUMENTS_GRAPH)
     from orexis_agent_deliberation import effects
     for triple in desires_build(st, "fern").construct(
@@ -209,7 +210,7 @@ def test_a_want_about_knowing_fires_on_a_world_that_has_read_nothing(monkeypatch
     st.update(f"DELETE WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:hasSimpleResult ?v }} }} ;"
               f"DELETE WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:madeBySensor ?s }} }}")
 
-    data = graph_from(st, *st.public_graphs(), STATE_GRAPH, INSTRUMENTS_GRAPH)
+    data = graph_from(st, *st.graphs_of(PUBLIC), STATE_GRAPH, INSTRUMENTS_GRAPH)
     for triple in desires_build(st, "fern").construct(
             "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):
         data.add(effects._triple(triple))
@@ -238,7 +239,7 @@ def test_a_property_with_no_sensor_holds_no_freshness_want(monkeypatch):
 
     st = genesis_store(world="loner")
     wants = desires_build(st, "gardener")
-    rows = bindings(wants.query_union("""
+    rows = bindings(wants.query("""
         SELECT ?property WHERE {
           ?agent <http://example.org/orexis#holds> ?shape .
           ?shape <http://example.org/orexis#violationIs> <http://example.org/orexis#Stale> ;
@@ -246,7 +247,7 @@ def test_a_property_with_no_sensor_holds_no_freshness_want(monkeypatch):
     wanted = {r["property"].rsplit("#", 1)[-1] for r in rows}
     polled = {r["p"].rsplit("#", 1)[-1] for r in bindings(st.query("""
         SELECT ?p WHERE { ?agent <http://example.org/orexis/sensing#polls> ?s .
-                          ?s <http://www.w3.org/ns/sosa/observes> ?p }"""))}
+                          ?s <http://www.w3.org/ns/sosa/observes> ?p }""", st.graphs_of(PUBLIC)))}
     assert wanted, "the gardener polls sensors, so it wants their readings fresh"
     assert wanted == polled, \
         "and wants freshness in exactly what it can look at — no want it could never satisfy"

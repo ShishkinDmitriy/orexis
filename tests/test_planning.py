@@ -27,6 +27,7 @@ from orexis_agent_deliberation.planner import Planner
 
 from orexis_capability_sensing.regions import ObservedJudgment
 from conftest import stake_of, build_agent, genesis_store, open_round_for, write_reading
+from orexis_agent_progression.ontology import PUBLIC
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
@@ -138,14 +139,14 @@ def test_a_possible_world_is_computed_and_nothing_is_written(monkeypatch):
     from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
     from agent.validate import graph_from
 
-    before = graph_from(st, *st.public_graphs(), picks_graph("gardener"), STATE_GRAPH)
+    before = graph_from(st, *st.graphs_of(PUBLIC), picks_graph("gardener"), STATE_GRAPH)
     world = effects.world_after(
         before, st, "http://example.org/orexis/actuation#Dosing",
         me=f"<{GARDENER}>", subject="<http://example.org/orexis/world/loner#zz>",
         about=f"<{MOISTURE}>", litres=0.3, value=DRY,
         picks=f"<{picks_graph('gardener')}>")
 
-    after = graph_from(st, *st.public_graphs(), picks_graph("gardener"), STATE_GRAPH)
+    after = graph_from(st, *st.graphs_of(PUBLIC), picks_graph("gardener"), STATE_GRAPH)
     assert len(after) == len(before), "the store is untouched by having imagined something"
     assert world is not before and len(world) > 0
 
@@ -206,7 +207,7 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
     def band_at(node):
         rows = bindings(planner.imaginarium.query(f"""
 SELECT ?c WHERE {{ GRAPH <{node.graph}> {{ ?o sosa:hasFeatureOfInterest <{agent.me.acts_for}> ;
-  sosa:observedProperty <{MOISTURE}> ; a ?c }} FILTER(STRSTARTS(STR(?c), "http://example.org/orexis#band.")) }}"""))
+  sosa:observedProperty <{MOISTURE}> ; a ?c }} FILTER(STRSTARTS(STR(?c), "http://example.org/orexis#band.")) }}""", ()))
         return {r["c"].rsplit(".", 1)[-1] for r in rows}
     assert band_at(here) == {"below"}
     assert band_at(step) == {"inside"}, "the dose moved the world it was simulated into (#579)"
@@ -439,7 +440,7 @@ def _last_predicted(planner, desire, plan) -> str | None:
     rows = bindings(planner.imaginarium.query(f"""
 SELECT ?c WHERE {{ GRAPH <{node.graph}> {{ ?o sosa:hasFeatureOfInterest <{planner.me.acts_for}> ;
   sosa:observedProperty <{desire.observed_property}> ; a ?c }}
-  FILTER(STRSTARTS(STR(?c), "http://example.org/orexis#band.")) }}"""))
+  FILTER(STRSTARTS(STR(?c), "http://example.org/orexis#band.")) }}""", ()))
     return rows[0]["c"] if rows else None
 
 
@@ -656,7 +657,7 @@ def test_no_ontology_graph_carries_a_law_so_the_carve_may_leave_the_vocabulary_o
     carries a violation-severity node shape. The day one does, the narrowing fails here
     rather than judging a plan legal against a law it never read."""
     st = genesis_store()
-    vocabulary = {r["g"] for r in bindings(st.query("SELECT ?g WHERE { ?g a orexis:OntologyGraph }"))}
+    vocabulary = {r["g"] for r in bindings(st.query("SELECT ?g WHERE { ?g a orexis:OntologyGraph }", st.graphs_of(PUBLIC)))}
     assert len(vocabulary) >= 2, "the ontology graphs stopped being typed — this checks nothing"
     laws = bindings(st.query_union("""
 SELECT ?g ?s WHERE { GRAPH ?g { ?s a sh:NodeShape ; sh:severity sh:Violation } }"""))

@@ -16,6 +16,9 @@ from orexis_agent_progression.ontology import WORLD_GRAPH
 from orexis_agent_progression.store import bindings
 from orexis_capability_sensing import predictions
 from conftest import build_agent, genesis_store, sensing_of, wired_sensors, write_reading
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import PREDICTION
+from orexis_agent_progression.ontology import FORESEEN, RECORD
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 BELOW = "http://example.org/orexis/sensing#BelowRegion"
@@ -30,7 +33,7 @@ def _predicted(agent, subject=FERN, observed_property=MOISTURE):
     out = []
     for g in graphs:
         kinds = {r["k"] for r in bindings(agent.beliefs.query(
-            f"SELECT ?k WHERE {{ GRAPH <{g}> {{ ?o a ?band }} ?band rdfs:subClassOf ?k }}"))
+            f"SELECT ?k WHERE {{ GRAPH <{g}> {{ ?o a ?band }} ?band rdfs:subClassOf ?k }}", agent.beliefs.graphs_of(PUBLIC)))
             if r["k"].startswith("http://example.org/orexis/sensing#")}
         out.append((g, periods.get(g, (None, None)), kinds))
     return out
@@ -54,7 +57,7 @@ def test_a_reading_writes_one_prediction_per_horizon_the_first_being_the_next_wi
     ends = [c for _, (_, c), _ in rows]
     assert ends == sorted(ends) and abs((ends[-1] - taken).total_seconds() - 86400) < 3.0, "the ladder ends a day out"
     assert all(o == prev for (_, (o, _), _), prev in zip(rows[1:], ends)), "each window opens where the last closed"
-    assert bindings(agent.beliefs.query(f"SELECT ?v WHERE {{ GRAPH <{first}> {{ <http://example.org/orexis#obs_fern_SoilMoisture> sosa:hasSimpleResult ?v }} }}")), \
+    assert bindings(agent.beliefs.query(f"SELECT ?v WHERE {{ GRAPH <{first}> {{ <http://example.org/orexis#obs_fern_SoilMoisture> sosa:hasSimpleResult ?v }} }}", agent.beliefs.graphs_of(PUBLIC))), \
         "keyed as the present's reading is, with the centre the rate reaches"
 
 
@@ -62,13 +65,14 @@ def test_the_door_hands_the_prediction_holding_at_an_instant_and_the_records_nev
     agent = build_agent("fern", genesis_store({("fern", MOISTURE): 0.55}), monkeypatch)
     write_reading(agent, 0.55)
     rows = _predicted(agent)
-    assert agent.beliefs.prediction_graphs() == [], "nothing holds now: the first window opens at the next reading's due"
+    assert agent.beliefs.graphs_of(PREDICTION, at=clock.now()) == [], "nothing holds now: the first window opens at the next reading's due"
     inside = rows[1][1][0] + timedelta(seconds=1)
-    assert agent.beliefs.prediction_graphs(at=inside) == [rows[1][0]]
-    assert agent.beliefs.query_at(f"ASK {{ ?o sosa:hasFeatureOfInterest <{FERN}> ; sosa:resultTime ?t . FILTER(?t > NOW()) }}", at=inside)["boolean"], \
+    assert agent.beliefs.graphs_of(PREDICTION, at=inside) == [rows[1][0]]
+    assert agent.beliefs.query(f"ASK {{ ?o sosa:hasFeatureOfInterest <{FERN}> ; sosa:resultTime ?t . FILTER(?t > NOW()) }}",
+                               agent.beliefs.graphs_of(*FORESEEN, at=inside))["boolean"], \
         "a reader standing inside the window is handed the predicted reading"
-    assert not set(rows[0][0] for _ in [0]) & set(agent.beliefs.recorded_graphs()), "a prediction is never a record of the agent's"
-    assert not any("predicted/" in g for g in agent.beliefs.recorded_graphs())
+    assert not set(rows[0][0] for _ in [0]) & set(agent.beliefs.graphs_of(RECORD)), "a prediction is never a record of the agent's"
+    assert not any("predicted/" in g for g in agent.beliefs.graphs_of(RECORD))
 
 
 def test_a_spread_beside_the_rate_and_the_instruments_noise_widen_the_bands(monkeypatch):
@@ -76,7 +80,7 @@ def test_a_spread_beside_the_rate_and_the_instruments_noise_widen_the_bands(monk
     first window may be below: the drift types its prediction with both bands, and no width
     leaves the rule."""
     st = genesis_store({("fern", MOISTURE): 0.47})
-    sensor = bindings(st.query(f"SELECT ?s WHERE {{ ?s sosa:observes <{MOISTURE}> ; a sosa:Sensor }} LIMIT 1"))[0]["s"]
+    sensor = bindings(st.query(f"SELECT ?s WHERE {{ ?s sosa:observes <{MOISTURE}> ; a sosa:Sensor }} LIMIT 1", st.graphs_of(PUBLIC)))[0]["s"]
     st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
         <{FERN}> water:driesPerDaySpread 0.05 . <{sensor}> sensing:noise 0.05 }} }}""")
     agent = build_agent("fern", st, monkeypatch)
@@ -111,7 +115,7 @@ def test_a_property_no_drift_moves_is_predicted_to_stay(monkeypatch):
     graphs = predictions.graphs_of(agent.beliefs, agent.id, "water_butt", STORED)
     assert len(graphs) == 1, "the next window alone: no package lists a horizon for it"
     rows = bindings(agent.beliefs.query(f"""SELECT ?v ?t WHERE {{ GRAPH <{graphs[0]}> {{
-        ?o sosa:hasFeatureOfInterest <{BUTT}> ; sosa:hasSimpleResult ?v ; sosa:resultTime ?t }} }}"""))
+        ?o sosa:hasFeatureOfInterest <{BUTT}> ; sosa:hasSimpleResult ?v ; sosa:resultTime ?t }} }}""", agent.beliefs.graphs_of(PUBLIC)))
     assert rows and float(rows[0]["v"]) == 2.5, "the reading, unmoved"
     _, (_, closes), _ = _predicted(agent, BUTT, STORED)[0]
     assert rows[0]["t"].startswith(closes.isoformat()[:19]), "stamped at the window's far end"

@@ -24,8 +24,8 @@ the periods table
 ([a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md)). The row's
 presence within its period is the openness, exactly as
 [a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a-fact-and-offering-is-an-action.md)
-said of the row alone, and no rule asks the clock: the door hands the round to a reader asking
-about an instant inside the period and to nobody asking about one past it. A search rooted at
+said of the row alone, and no rule asks the clock: a reader asking about an instant inside the
+period is handed the round, and one asking about an instant past it is not. A search rooted at
 a predicted crossing (#619) therefore never plans a bid into a round that will have closed. The
 host's word still ends it (`close_round` drops the graph); the sweep drops what outlived its
 period. This is the retrofit the period record deferred until measured, and the measurement is
@@ -114,10 +114,10 @@ foreseeing six, derives the instant-bound want. Three passes, before the round h
 The round's writer and readers, and one door. `rounds.open_round` writes the graph, its
 classification and its period; `close_round` drops all three; `rounds_of` asks at an instant;
 the market's rule texts read `market:hasRound` from the default graph rather than from the
-beliefs graph they used to name, so the door decides. A rule's SELECT reads as its CONSTRUCT
-always has — public knowledge and the agent's own — and the store gained that door for selects
-(`Store.query_at`, with the instant), which the afforder and the urgency choir now take with
-the instant a node stands at. One defect found beside it: a tender bid into the first open
+beliefs graph they used to name, so the reader's list decides. A rule's SELECT reads as its CONSTRUCT
+always has — public knowledge and the agent's own — handed the same graphs, of the kinds a
+rule reads at the instant a node stands at, which the afforder and the urgency choir now build
+per node. One defect found beside it: a tender bid into the first open
 round the store listed, and with a claim that named no round the old one still stood; it bids
 into the round closing last, the newest offer.
 

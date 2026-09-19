@@ -22,8 +22,8 @@ it was discharged. **A graph of its own, holding from its issue to the claim's e
 PREDICTION beside it — `market:lapsesAt`, a graph holding from the deadline on — which is what
 the pursuit road reads to mint the want under *no overdue debts*, about this debt and holding at
 that instant; the debt itself is an instance and no want
-([one-road-derives-every-want](/decisions/one-road-derives-every-want.md)). Past its expiry the
-door hands it to nobody, and the one sweep drops
+([one-road-derives-every-want](/decisions/one-road-derives-every-want.md)). Past its expiry no
+reader is handed it, and the one sweep drops
 it — after the ledger's keeper writes into the untimed obligations record what it came to,
 `market:dischargedAt` carried over for a debt paid or `market:lapsedAt` for one the holder
 never presented. **The verdict is kept, not the want**, because a debt paid and a debt

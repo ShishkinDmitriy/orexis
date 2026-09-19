@@ -38,6 +38,7 @@ from orexis_agent_progression.store import bindings
 from .terms import (CLOSES_AT, COOLING_UNTIL, HAS_ROUND, LOT_L, NS, RESERVE_PER_L,
                     ROUND, ROUND_ID)
 from orexis_agent_progression import clock
+from orexis_agent_progression.ontology import KNOWN
 
 _XSD = "http://www.w3.org/2001/XMLSchema#"
 
@@ -110,11 +111,11 @@ def rounds_of(agent, venue_uri: str | None = None, at: datetime | None = None) -
     its period, and the door hands back only those. `is_open` still answers for a caller
     holding a row from earlier."""
     venue = f"FILTER(?v = <{venue_uri}>)" if venue_uri else ""
-    rows = bindings(agent.beliefs.query_at(f"""
+    rows = bindings(agent.beliefs.query(f"""
 SELECT ?r ?v ?id ?lot ?reserve ?closes WHERE {{
   ?v <{HAS_ROUND}> ?r .
   ?r <{ROUND_ID}> ?id ; <{LOT_L}> ?lot ; <{RESERVE_PER_L}> ?reserve ; <{CLOSES_AT}> ?closes .
-  {venue} }}""", at=at))
+  {venue} }}""", agent.beliefs.graphs_of(*KNOWN, at=at or clock.now())))
     return [Round(uri=r["r"], venue=r["v"], auction_id=r["id"], lot_l=float(r["lot"]),
                   reserve_per_l=float(r["reserve"]),
                   closes_at=datetime.fromisoformat(r["closes"])) for r in rows]

@@ -21,6 +21,8 @@ from orexis_agent_progression.store import Raw, bind, bindings
 
 from .action import Action
 from .affordance import Affordance
+from orexis_agent_progression.ontology import FORESEEN
+from orexis_agent_progression import clock
 
 
 class Affordances:
@@ -38,11 +40,11 @@ class Affordances:
         self._store = store
 
     def find_all_by_action(self, action: Action, about_of: dict[str, tuple[str, ...]],
-                           me: str, picks: str, *, at=None,
-                           world: str | None = None) -> list[Affordance]:
+                           me: str, picks: str, *, graphs=None) -> list[Affordance]:
         """Every row this action affords in one world — zero, one or many.
 
-        WHICH WORLD IS A CRITERION, `at` and `world`, and was the constructor's until the
+        WHICH WORLD IS A CRITERION — `graphs`, the world asked about as the list of graphs
+        the caller built for it, an instant and a place in one — and was the constructor's until the
         sovereign asked why the planner was building collections: it built one per node, because
         the world was in the constructor and the world is the thing that moves. A world is part
         of the QUESTION — *what could I do there* — not part of what this collection is. So is
@@ -73,7 +75,10 @@ class Affordances:
         return [Affordance(action=action.uri, via=r["via"], want=r.get("want"),
                            about=r.get("about") or _sole(about_of.get(r.get("want"))),
                            direction=r.get("direction"), for_agent=r.get("for_agent"))
-                for r in bindings(self._store.query_at(q, at=at, world=world))]
+                for r in bindings(self._store.query(q, graphs if graphs is not None else
+                                                     #  THE PRESENT, where no world is handed in: what a rule
+                                                     #  reads and what is expected, as this store holds them now.
+                                                     self._store.graphs_of(*FORESEEN, at=clock.now())))]
 
 
 def _sole(abouts) -> str | None:

@@ -21,6 +21,7 @@ from __future__ import annotations
 from orexis_agent_progression.store import bindings
 
 from .action import Action
+from orexis_agent_progression.ontology import PUBLIC
 
 _ACTIONS_Q = """SELECT ?action ?available WHERE {
   ?action a orexis:Action ; orexis:available ?available }"""
@@ -55,4 +56,4 @@ class Actions:
         """
         return self._beliefs.remember(_MEMO, lambda: sorted(
             (Action(uri=r["action"], available=r["available"])
-             for r in bindings(self._beliefs.query(_ACTIONS_Q))), key=lambda a: a.uri))
+             for r in bindings(self._beliefs.query(_ACTIONS_Q, self._beliefs.graphs_of(PUBLIC)))), key=lambda a: a.uri))

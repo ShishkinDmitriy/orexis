@@ -64,16 +64,26 @@ GRAPH :judgments {
 
 # CHANGED, re-rendered:
 GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :desires a orexis:DesireGraph .
+  :catalogue a orexis:CatalogueGraph ;
+      a orexis:Graph .
+  :desires a orexis:DesireGraph ;
+      a orexis:Graph .
   :judgments a deliberation:JudgmentGraph ;
+      a orexis:Graph ;
+      a orexis:WorkingGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
-  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:Graph ;
+      a orexis:OntologyGraph ;
+      a orexis:PublicGraph .
   :scopes a deliberation:ScopeGraph ;
+      a orexis:Graph ;
+      a orexis:WorkingGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
   pursued:keeper.in_range.pursued.tank1.level a deliberation:PursuedGraph ;
+      a orexis:Graph ;
+      a orexis:WantGraph ;
       dcterms:temporal [ a dcterms:PeriodOfTime ;
           orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] ;
       orexis:arrivedBy orexis:Recorded ;
@@ -101,11 +111,14 @@ GRAPH :ontology {
   deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
   deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
   deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
   orexis:DesireGraph rdfs:subClassOf orexis:Graph .
   orexis:OntologyGraph rdfs:subClassOf orexis:PublicGraph .
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:PublicGraph rdfs:subClassOf orexis:Graph .
+  orexis:RecordGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:WantGraph rdfs:subClassOf orexis:Graph .
   orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
 }

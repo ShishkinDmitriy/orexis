@@ -19,6 +19,7 @@ from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import bindings
 from test_planning import _thirsty_with_a_nearly_empty_butt, MOISTURE
 from test_violation import CASES, _agent
+from orexis_agent_progression.ontology import PUBLIC
 
 ACTUATION = "http://example.org/orexis/actuation#"
 HANOI = "http://example.org/orexis/hanoi#"
@@ -127,9 +128,9 @@ def test_an_optional_the_world_leaves_unbound_states_no_premise(monkeypatch):
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     agent.beliefs.update(f"""DELETE {{ GRAPH <{STATE_GRAPH}> {{ ?obs ?p ?o }} }}
         WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?obs <{SOSA}observedProperty> <{MOISTURE}> ; ?p ?o }} }}""")
-    keys = signature.keys_of(agent.beliefs.query)
+    keys = signature.keys_of(agent.beliefs.reader(PUBLIC))
     pump = bindings(agent.beliefs.query(
-        f"SELECT ?p WHERE {{ <{agent.me.uri}> actuation:hasActuator ?p }}"))[0]["p"]
+        f"SELECT ?p WHERE {{ <{agent.me.uri}> actuation:hasActuator ?p }}", agent.beliefs.graphs_of(PUBLIC)))[0]["p"]
     read = effects.precondition(agent.beliefs, ACTUATION + "Dosing", keyed=tuple(keys),
                             me=agent.me.uri, subject=agent.me.acts_for, about=MOISTURE,
                             state=STATE_GRAPH, picks=picks_graph("gardener"), litres=0.1,

@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from orexis_agent_progression.ontology import PUBLIC
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONTAINERFILE = REPO_ROOT / "Containerfile"
 
@@ -429,7 +431,7 @@ def test_the_society_repeats_every_limit_the_wiring_states():
 
     def floors(st):
         out = {}
-        for row in bindings(st.query(_WHAT_IT_CAN_HONOUR)):
+        for row in bindings(st.query(_WHAT_IT_CAN_HONOUR, st.graphs_of(PUBLIC))):
             out.setdefault(row["subject"], set()).add(int(row["seconds"]))
         return out
 
@@ -458,12 +460,12 @@ def test_the_society_repeats_every_limit_the_wiring_states():
         # the first break hid the second.
         composed = {}
         for row in bindings(society.query(
-                "SELECT ?part ?sensor WHERE { ?part sosa:hosts|ssn:hasSubSystem ?sensor }")):
+                "SELECT ?part ?sensor WHERE { ?part sosa:hosts|ssn:hasSubSystem ?sensor }", society.graphs_of(PUBLIC))):
             composed.setdefault(row["part"], set()).add(row["sensor"])
 
         for part, stated in floors(built(hardware)).items():
             for sensor in composed.get(part) or {part}:
-                if not bindings(society.query(f"SELECT ?p WHERE {{ <{sensor}> ?p ?o }} LIMIT 1")):
+                if not bindings(society.query(f"SELECT ?p WHERE {{ <{sensor}> ?p ?o }} LIMIT 1", society.graphs_of(PUBLIC))):
                     continue  # the society does not mention it, so it repeats nothing
                 compared += 1
                 assert said.get(sensor, set()) >= stated, (

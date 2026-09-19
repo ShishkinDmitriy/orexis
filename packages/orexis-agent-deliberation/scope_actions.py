@@ -18,6 +18,7 @@ import logging
 from . import relevance
 from .relevance import ANYTHING
 from .scopes import save_scopes
+from orexis_agent_progression.ontology import PUBLIC
 
 log = logging.getLogger("scope_actions")
 
@@ -30,7 +31,7 @@ def scope_actions(agent) -> None:
     it is on no menu; one whose effect cannot be read joins everything and is in the one scope
     that holds everything. A scope is named for the agent and its place in the partition,
     largest first, so the same actions write the same text."""
-    actions = relevance.actions_of(agent.beliefs.query)
+    actions = relevance.actions_of(agent.beliefs.reader(PUBLIC))
     parts = scopes(actions, relevance.rule_edges())
     written = []
     for n, part in enumerate(parts, 1):

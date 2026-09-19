@@ -56,7 +56,7 @@ and a step's own prediction, which the keeper holds the world to, carries none o
 the overlay stood in for another reading is the package's promise, not the step's. A
 pass for a want met at an instant stands at that instant and reads what is predicted there.
 The crossing is generic: an `orexis:At` want is derived at the start of the earliest
-prediction at which the root reads UNMET, the root's own met-test asked through the door — a
+prediction at which the root reads UNMET, the root's own met-test asked over the graphs holding then — a
 predicted reading typed with the region band and the one below reads unmet, so the safe
 direction ([#633](https://github.com/ShishkinDmitriy/orexis/issues/633)) falls out of the
 bands and no kernel line knows a rate.

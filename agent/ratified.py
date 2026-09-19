@@ -29,6 +29,7 @@ from orexis_agent_progression.store import Store
 # Re-exported, because every tool that reads a ratified world reaches for these in the same
 # breath as `dataset()` and should not have to know that one lives in `genesis`.
 from .genesis import world_dir, world_files, worlds  # noqa: F401
+from orexis_agent_progression.ontology import PUBLIC
 
 
 def dataset(world: str) -> rdflib.Dataset:
@@ -60,7 +61,7 @@ def dataset(world: str) -> rdflib.Dataset:
     genesis.refresh_public(st, world_dir(world))
 
     ds = rdflib.Dataset(default_union=True)
-    for iri in st.public_graphs():
+    for iri in st.graphs_of(PUBLIC):
         turtle = st.get_graph(iri)
         if turtle.strip():
             ds.graph(rdflib.URIRef(iri)).parse(data=turtle, format="turtle")

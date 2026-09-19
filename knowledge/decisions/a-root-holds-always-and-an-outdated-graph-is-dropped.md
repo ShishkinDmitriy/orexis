@@ -22,7 +22,7 @@ sensor — is a declaration for the agent's whole life, and the modality re-deri
 beliefs at every rebuild, carrying a foresight read off a pick. That made a root a function of
 the agent's current state, which a root is not. It is authored once, at genesis, into a graph of
 the agent's own with no period (`orexis:DesireGraph`), and a graph with no period holds at every
-instant exactly as the T-Box does: the door hands it to a reader asking about any instant. It is
+instant exactly as the T-Box does: a reader asking about any instant is handed it. It is
 endowed on amendment — a never-held root arrives, a held one stays
 ([an-amendment-endows-what-it-grants](/decisions/an-amendment-endows-what-it-grants.md)) — and a
 rebuild never touches it. Foresight leaves the root and is read by the child's derivation at the
@@ -71,8 +71,8 @@ prediction's lifecycle.
   declaration; the identity was stable by accident and the content moved with a pick.
 - **A horizon and a timer of staleness's own**, beside the prediction's window that says the
   same thing. Two mechanisms for one event is how the two drift apart.
-- **A sweep per kind.** Each was correct and each was a copy; the door decides for every reader
-  at once, and dropping what the door already hides needs no knowledge of the kind.
+- **A sweep per kind.** Each was correct and each was a copy; the lookup by period decides for
+  every reader at once, and dropping what no reader is handed needs no knowledge of the kind.
 - **Dropping without a verdict.** Refused with the stretch record: forgetting is a decision, and
   what is forgotten here is the want, never what it taught.
 

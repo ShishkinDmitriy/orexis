@@ -19,6 +19,7 @@ from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import bindings
 
 from .terms import BALANCE, HAS_ENDOWMENT
+from orexis_agent_progression.ontology import PUBLIC
 
 _XSD = "http://www.w3.org/2001/XMLSchema#"
 
@@ -39,7 +40,7 @@ def balance_of(agent) -> float:
     """What this agent has left. The endowment until it has won anything."""
     graph = picks_graph(agent.id)
     rows = bindings(agent.beliefs.query(
-        _BALANCE_Q % (graph, agent.me.uri, BALANCE, agent.me.uri, HAS_ENDOWMENT)))
+        _BALANCE_Q % (graph, agent.me.uri, BALANCE, agent.me.uri, HAS_ENDOWMENT), agent.beliefs.graphs_of(PUBLIC)))
     if not rows:
         return 0.0
     row = rows[0]

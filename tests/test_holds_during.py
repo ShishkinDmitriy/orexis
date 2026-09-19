@@ -18,6 +18,7 @@ import pytest
 
 from conftest import genesis_store
 from orexis_agent_progression.ontology import ACTIONS_GRAPH, WORLD_GRAPH
+from orexis_agent_progression.ontology import PUBLIC
 
 def _now() -> datetime:
     """Read per test, never once per module: an instant captured at import is a minute old by
@@ -48,8 +49,8 @@ def test_a_store_that_states_no_range_is_the_store_it_always_was():
     now = _now()
     st = _store()
     assert st.periods() == {}
-    assert len(st.public_graphs()) == 7     # the classification was the eighth; it is the catalogue now, and not public
-    assert st.public_graphs() == st.public_graphs(at=now + timedelta(days=365))
+    assert len(st.graphs_of(PUBLIC, at=now)) == 7     # the classification was the eighth; it is the catalogue now, and not public
+    assert st.graphs_of(PUBLIC, at=now) == st.graphs_of(PUBLIC, at=now + timedelta(days=365))
 
 
 def test_a_graph_outside_its_range_is_not_merged():
@@ -57,15 +58,15 @@ def test_a_graph_outside_its_range_is_not_merged():
     the graph holds, because what an unqualified pattern reads IS the merge."""
     now = _now()
     st = _store()
-    before = len(st.query("SELECT ?s WHERE { ?s a orexis:Agent }")["results"]["bindings"])
+    before = len(st.query("SELECT ?s WHERE { ?s a orexis:Agent }", st.graphs_of(PUBLIC, at=now))["results"]["bindings"])
     assert before, "the world names an agent while it is worth believing"
 
     _say(st, WORLD_GRAPH, until=now - timedelta(seconds=1))
 
-    assert WORLD_GRAPH not in st.public_graphs()
-    assert st.query("SELECT ?s WHERE { ?s a orexis:Agent }")["results"]["bindings"] == [], \
+    assert WORLD_GRAPH not in st.graphs_of(PUBLIC, at=now)
+    assert st.query("SELECT ?s WHERE { ?s a orexis:Agent }", st.graphs_of(PUBLIC, at=now))["results"]["bindings"] == [], \
         "a graph past its range still answered an ordinary query"
-    assert st.query(f"SELECT ?s WHERE {{ GRAPH <{WORLD_GRAPH}> {{ ?s a orexis:Agent }} }}"
+    assert st.query(f"SELECT ?s WHERE {{ GRAPH <{WORLD_GRAPH}> {{ ?s a orexis:Agent }} }}", st.graphs_of(PUBLIC, at=now)
                     )["results"]["bindings"], \
         "naming a graph still reads it — lapsing is not forgetting, and a sweep is a decision"
 
@@ -78,10 +79,10 @@ def test_the_instant_is_the_askers_and_a_pass_says_which():
     st = _store()
     _say(st, ACTIONS_GRAPH, until=now + timedelta(minutes=1))
 
-    assert ACTIONS_GRAPH in st.public_graphs()
-    assert ACTIONS_GRAPH in st.public_graphs(at=now)
-    assert ACTIONS_GRAPH not in st.public_graphs(at=now + timedelta(minutes=2))
-    assert ACTIONS_GRAPH in st.public_graphs(at=now - timedelta(days=1)), \
+    assert ACTIONS_GRAPH in st.graphs_of(PUBLIC, at=now)
+    assert ACTIONS_GRAPH in st.graphs_of(PUBLIC, at=now)
+    assert ACTIONS_GRAPH not in st.graphs_of(PUBLIC, at=now + timedelta(minutes=2))
+    assert ACTIONS_GRAPH in st.graphs_of(PUBLIC, at=now - timedelta(days=1)), \
         "an open start means always, so yesterday is inside the range too"
 
 
@@ -92,9 +93,9 @@ def test_a_graph_not_yet_valid_is_not_merged_either():
     st = _store()
     _say(st, ACTIONS_GRAPH, since=now + timedelta(hours=3), until=now + timedelta(hours=6))
 
-    assert ACTIONS_GRAPH not in st.public_graphs()
-    assert ACTIONS_GRAPH in st.public_graphs(at=now + timedelta(hours=4))
-    assert ACTIONS_GRAPH not in st.public_graphs(at=now + timedelta(hours=7))
+    assert ACTIONS_GRAPH not in st.graphs_of(PUBLIC, at=now)
+    assert ACTIONS_GRAPH in st.graphs_of(PUBLIC, at=now + timedelta(hours=4))
+    assert ACTIONS_GRAPH not in st.graphs_of(PUBLIC, at=now + timedelta(hours=7))
 
 
 def test_the_table_is_remembered_and_a_write_drops_it():
@@ -118,7 +119,7 @@ def test_a_bound_nobody_can_read_does_not_drop_a_graph():
         [ a dcterms:PeriodOfTime ; orexis:end "whenever"^^xsd:dateTime ] }} }}""")
 
     assert st.periods()[ACTIONS_GRAPH] == (None, None)
-    assert ACTIONS_GRAPH in st.public_graphs()
+    assert ACTIONS_GRAPH in st.graphs_of(PUBLIC)
 
 
 def test_a_range_on_a_graph_nobody_types_adds_nothing():
@@ -129,4 +130,4 @@ def test_a_range_on_a_graph_nobody_types_adds_nothing():
     st = _store()
     _say(st, "http://example.org/orexis/graph/nowhere", until=now + timedelta(days=1))
 
-    assert len(st.public_graphs()) == 7     # the classification was the eighth; it is the catalogue now, and not public
+    assert len(st.graphs_of(PUBLIC, at=now)) == 7     # the classification was the eighth; it is the catalogue now, and not public

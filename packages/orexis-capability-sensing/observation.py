@@ -29,6 +29,7 @@ from . import choir
 from .sensed_writer import SensedWriter
 from .wiring import event_topic_of
 from orexis_agent_progression import clock
+from orexis_agent_progression.ontology import PUBLIC
 
 
 def _short(uri: str) -> str:
@@ -43,7 +44,7 @@ class Observations:
     """One agent's record of what it has observed. Held by whichever module does the observing."""
 
     def __init__(self, agent, sensors=()):
-        self.event_topic = event_topic_of(agent.beliefs.query, agent.me.uri)
+        self.event_topic = event_topic_of(agent.beliefs.reader(PUBLIC), agent.me.uri)
         self.agent = agent
         self.me = agent.me
         self.log = agent.log if hasattr(agent, "log") else None

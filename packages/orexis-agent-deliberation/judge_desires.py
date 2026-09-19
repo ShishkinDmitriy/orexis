@@ -20,6 +20,7 @@ from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import bindings
 
 from .judgments import save_judgments
+from orexis_agent_progression.ontology import FORESEEN, PREDICTION
 
 log = logging.getLogger("judge_desires")
 
@@ -43,7 +44,7 @@ def judge_desires(agent) -> None:
     """
     roots = sorted({d.uri for d in agent.desires.find_all()})
     now = clock.now()
-    starts = sorted({start for _g, start, _end in agent.beliefs.prediction_windows() if start is not None})
+    starts = sorted({start for _g, start, _end in agent.beliefs.windows_of(PREDICTION) if start is not None})
     judged: list[tuple[str, datetime | None, bool, list[dict]]] = []
     for root in roots:
         select = unmet_select_of(agent, root)
@@ -55,7 +56,7 @@ def judge_desires(agent) -> None:
             continue
         for at in [None, *starts]:
             try:
-                answer = agent.beliefs.query_at(select, at=at or now)
+                answer = agent.beliefs.query(select, agent.beliefs.graphs_of(*FORESEEN, at=at or now))
             except Exception as exc:                                    # noqa: BLE001
                 log.error("%s: could not be judged at %s: %s", root.rsplit("#", 1)[-1], at or "now", exc)
                 continue
@@ -88,7 +89,7 @@ def unmet_select_of(agent, root: str) -> str | None:
     cache = agent.__dict__.setdefault("_root_selects", {})
     if root in cache:
         return cache[root]
-    rows = bindings(agent.desires.query_union(f"SELECT ?s WHERE {{ <{root}> orexis:metWhen ?s }} LIMIT 1"))
+    rows = bindings(agent.desires.query(f"SELECT ?s WHERE {{ <{root}> orexis:metWhen ?s }} LIMIT 1"))
     select = None
     if rows:
         shape = rows[0]["s"]
@@ -136,11 +137,11 @@ def witnesses_of(agent, root: str, *, now: bool = False) -> list[Witness]:
     if select is None:
         return []
     instants = [clock.now()] if now else [
-        start for _graph, start, _end in agent.beliefs.prediction_windows() if start is not None]
+        start for _graph, start, _end in agent.beliefs.windows_of(PREDICTION) if start is not None]
     seen: dict[tuple[str, str], Witness] = {}
     for at in instants:
         try:
-            rows = bindings(agent.beliefs.query_at(select, at=at))
+            rows = bindings(agent.beliefs.query(select, agent.beliefs.graphs_of(*FORESEEN, at=at)))
         except Exception as exc:                                    # noqa: BLE001
             log.error("%s: the crossing could not be read at %s: %s", root.rsplit("#", 1)[-1], at, exc)
             return []

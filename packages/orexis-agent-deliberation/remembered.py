@@ -43,6 +43,8 @@ from .ontology import DELIBERATION
 from .ontology import (FOR_WANT, LIFTED, MEASURED_COST, REMEMBERED_AT, REMEMBERED_PLAN,
                        remembered_graph)
 from orexis_agent_progression import clock
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import KNOWN
 
 log = logging.getLogger("remembered")
 _RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -77,7 +79,7 @@ def missing(agent, facts) -> list:
     holds. Asked of the belief base as ONE query first (the whole pattern, LIMIT 1), and
     only on a miss fact by fact, so the report names what is absent and the common case
     costs one select. A keyed fact — a reading — is asked by class and key, never by value."""
-    graphs = (*agent.beliefs.public_graphs(), *agent.beliefs.recorded_graphs())
+    graphs = agent.beliefs.graphs_of(*KNOWN, at=clock.now())
 
     def holds(subset) -> bool:
         text = _pattern_select(subset)
@@ -244,7 +246,7 @@ def remembered_for(agent, want: str) -> list:
     rows = bindings(agent.beliefs.query(f"""
 SELECT ?r ?cost ?at WHERE {{ GRAPH <{graph}> {{
   ?r a <{REMEMBERED_PLAN}> ; <{FOR_WANT}> <{want}> ; <{REMEMBERED_AT}> ?at .
-  OPTIONAL {{ ?r <{MEASURED_COST}> ?cost }} }} }} ORDER BY DESC(?at)"""))
+  OPTIONAL {{ ?r <{MEASURED_COST}> ?cost }} }} }} ORDER BY DESC(?at)""", agent.beliefs.graphs_of(PUBLIC)))
     out = []
     for row in rows:
         steps = _steps_of(agent, row["r"], want)
@@ -263,9 +265,9 @@ SELECT ?node ?first ?rest ?action ?via ?about ?quantity ?predicts ?precondition 
   OPTIONAL {{ ?first <{OREXIS}about> ?about }}
   OPTIONAL {{ ?first <{PROGRESSION}quantity> ?quantity }}
   OPTIONAL {{ ?first <{PROGRESSION}predicts> ?predicts }}
-  OPTIONAL {{ ?first <{PROGRESSION}precondition> ?precondition }} }} }}"""))
+  OPTIONAL {{ ?first <{PROGRESSION}precondition> ?precondition }} }} }}""", agent.beliefs.graphs_of(PUBLIC)))
     by_node = {r["node"]: r for r in steps}
-    head = bindings(agent.beliefs.query(f"SELECT ?h WHERE {{ GRAPH <{graph}> {{ <{uri}> <{LIFTED}> ?h }} }}"))
+    head = bindings(agent.beliefs.query(f"SELECT ?h WHERE {{ GRAPH <{graph}> {{ <{uri}> <{LIFTED}> ?h }} }}", agent.beliefs.graphs_of(PUBLIC)))
     out, node = [], head[0]["h"] if head else None
     while node in by_node:
         r = by_node[node]

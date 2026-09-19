@@ -44,6 +44,7 @@ from assembly import loader
 from .config import REPO_ROOT
 from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
                        ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
+from orexis_agent_progression.ontology import PUBLIC
 
 # A file, as something a graph can be derived FROM. Minted under our own namespace rather than
 # `file:` on purpose: an absolute path bakes one machine into the store, and the world sits at
@@ -198,7 +199,7 @@ def attribution_of(st) -> tuple[str, str] | None:
     """
     from orexis_agent_progression.store import bindings
 
-    rows = bindings(st.query(_ATTRIBUTION_Q))
+    rows = bindings(st.query(_ATTRIBUTION_Q, st.graphs_of(PUBLIC)))
     return (rows[0]["user"], rows[0]["role"]) if rows else None
 
 

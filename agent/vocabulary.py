@@ -47,6 +47,7 @@ import logging
 
 from orexis_agent_progression.ontology import OREXIS, ONTOLOGY_GRAPH
 from orexis_agent_progression.store import bindings
+from orexis_agent_progression.ontology import PUBLIC
 
 log = logging.getLogger("vocabulary")
 
@@ -83,7 +84,7 @@ def _local(iri: str) -> str:
 
 def declared(st) -> set[str]:
     """Every project term this vocabulary declares."""
-    return {r["t"] for r in bindings(st.query(_DECLARED))}
+    return {r["t"] for r in bindings(st.query(_DECLARED, st.graphs_of(PUBLIC)))}
 
 
 #  Moves this project has actually made, written down because they cannot be computed.
@@ -282,13 +283,13 @@ def stale(st) -> dict[str, dict[str, str | list[str] | None]]:
     from the ratified files on every start, so they are current by construction and a stale term
     in one would mean the files themselves are wrong.
     """
-    public = set(st.public_graphs())
+    public = set(st.graphs_of(PUBLIC))
     known = declared(st)
     by_local: dict[str, list[str]] = {}
     for term in sorted(known):
         by_local.setdefault(_local(term), []).append(term)
     out: dict[str, dict[str, str | list[str] | None]] = {}
-    for row in bindings(st.query(_USED)):
+    for row in bindings(st.query(_USED, st.graphs_of(PUBLIC))):
         graph, term, position = row["g"], row["t"], row["position"]
         if graph in public or term in known:
             continue
@@ -353,7 +354,7 @@ def migrate(st, found: dict[str, dict[str, str | list[str] | None]] | None = Non
             "decided rather than computed:\n"
             + "\n".join(f"    {t}  ->  {_became(v)}" for t, v in sorted(undecidable.items()))
         )
-    public = ", ".join(f"<{g}>" for g in st.public_graphs())
+    public = ", ".join(f"<{g}>" for g in st.graphs_of(PUBLIC))
     moved: dict[str, str] = {t: became for g in found.values()
                              for t, became in g.items() if isinstance(became, str)}
     for old, new in sorted(moved.items()):

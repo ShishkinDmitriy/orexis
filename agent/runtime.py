@@ -63,6 +63,7 @@ from orexis_agent_reactive.loop import loop
 from .validate import validate_agent
 from .world import Self, World, load_self, load_world
 from orexis_agent_progression import clock
+from orexis_agent_progression.ontology import PUBLIC
 
 log = logging.getLogger("agent")
 
@@ -109,8 +110,8 @@ class Agent:
         # isolation is structural, one process, one volume.
         st = st or genesis.open_belief_base(
             genesis.current_world(), agent_id, config.env("OREXIS_STORE"))
-        self.world: World = load_world(st.query)
-        self.me: Self = load_self(st.query, agent_id)
+        self.world: World = load_world(st.reader(PUBLIC))
+        self.me: Self = load_self(st.reader(PUBLIC), agent_id)
         self.beliefs = Beliefs(st, agent_id)
         # The desire modality, rebuilt from the beliefs it is deduced from. Each modality
         # decides its own store and its own writability — this one exposes no writer — and
@@ -182,13 +183,13 @@ class Agent:
         untaken = loader.untaken_actions(
             self.me.capabilities,
             lambda c: [r["f"] for r in bindings(self.beliefs.query(
-                f"SELECT ?f WHERE {{ <{c}> a ?f . ?f a owl:Class }}"))] + [c],
+                f"SELECT ?f WHERE {{ <{c}> a ?f . ?f a owl:Class }}", self.beliefs.graphs_of(PUBLIC)))] + [c],
             self.modules,
             [c for p in self._packages for c in p.provides() if isinstance(c, type)])
         if untaken:
             raise RuntimeError(f"{agent_id} would stand with nobody to act: " + "; ".join(untaken))
         from orexis_agent_deliberation.relevance import unkeepable_bridges
-        if (unkept := unkeepable_bridges(self.beliefs.query)):
+        if (unkept := unkeepable_bridges(self.beliefs.reader(PUBLIC))):
             raise RuntimeError(f"{agent_id} holds a promise nobody could keep: " + "; ".join(unkept))
 
         # Check myself before acting. A shape applies only to capabilities I actually derived,
@@ -330,7 +331,7 @@ class Agent:
         exactly as written. Which is why this is a list and not a better tie-break: there is no
         right one to pick, and the question was never singular.
         """
-        members = {r["capability"] for r in bindings(self.beliefs.query(_family_q(family)))}
+        members = {r["capability"] for r in bindings(self.beliefs.query(_family_q(family), self.beliefs.graphs_of(PUBLIC)))}
         return [m for m in self.modules if m.CAPABILITY in members]
 
     def pursuing(self, now: datetime | None = None) -> list[Judgment]:

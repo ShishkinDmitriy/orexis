@@ -38,6 +38,7 @@ from orexis_agent_progression.store import Store, bindings, decimal
 
 from .graphs import REVIEW, summaries_graph
 from orexis_agent_progression import clock
+from orexis_agent_progression.ontology import PUBLIC
 
 # How many completed windows an agent keeps behind the one it is filling. Constant, so the
 # belief base stays a fixed size — and more than one, so a rule can tell "steady since I last
@@ -182,7 +183,7 @@ WHERE  {{ {live} ?p ?o }}""")
         rows = bindings(self.store.query(f"""
 SELECT (MAX(?n) AS ?seq) WHERE {{ GRAPH <{self.graph}> {{
   ?s a review:ObservationSummary ; sosa:hasFeatureOfInterest <{subject_uri}> ;
-     sosa:observedProperty <{observed_property}> ; review:windowSeq ?n }} }}"""))
+     sosa:observedProperty <{observed_property}> ; review:windowSeq ?n }} }}""", self.store.graphs_of(PUBLIC)))
         held = rows[0].get("seq") if rows else None
         return (int(held) + 1) if held is not None else 1
 
@@ -226,7 +227,7 @@ WHERE {{ GRAPH <{self.graph}> {{
      review:sampleSum ?sum ; review:sampleSumSquares ?squares ;
      review:firstAt ?first ; review:lastAt ?last .
   {extra}
-}} }}"""))
+}} }}""", self.store.graphs_of(PUBLIC)))
         return [Window(
             subject=r["subject"], observed_property=r["property"],
             count=int(r["count"]), minimum=float(r["min"]), maximum=float(r["max"]),
@@ -240,7 +241,7 @@ WHERE {{ GRAPH <{self.graph}> {{
 SELECT ?count ?min ?max ?sum ?squares ?first ?last WHERE {{ GRAPH <{self.graph}> {{
   {node} review:sampleCount ?count ; review:sampleMin ?min ; review:sampleMax ?max ;
          review:sampleSum ?sum ; review:sampleSumSquares ?squares ;
-         review:firstAt ?first ; review:lastAt ?last }} }} LIMIT 1"""))
+         review:firstAt ?first ; review:lastAt ?last }} }} LIMIT 1""", self.store.graphs_of(PUBLIC)))
         if not rows:
             return None
         r = rows[0]

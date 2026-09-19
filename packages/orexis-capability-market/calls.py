@@ -17,6 +17,7 @@ from orexis_agent_progression.store import bindings
 
 from .terms import CALL, CALLED_AT, CALLED_BY, CALLED_ON, NS
 from orexis_agent_progression import clock
+from orexis_agent_progression.ontology import PUBLIC
 
 _XSD = "http://www.w3.org/2001/XMLSchema#"
 
@@ -63,6 +64,6 @@ def calls_of(agent, venue_uri: str | None = None) -> list[Call]:
     venue = f"FILTER(?v = <{venue_uri}>)" if venue_uri else ""
     rows = bindings(agent.beliefs.query(f"""
 SELECT ?c ?v ?by ?at WHERE {{ GRAPH <{picks_graph(agent.id)}> {{
-  ?c a <{CALL}> ; <{CALLED_ON}> ?v ; <{CALLED_BY}> ?by ; <{CALLED_AT}> ?at . {venue} }} }}"""))
+  ?c a <{CALL}> ; <{CALLED_ON}> ?v ; <{CALLED_BY}> ?by ; <{CALLED_AT}> ?at . {venue} }} }}""", agent.beliefs.graphs_of(PUBLIC)))
     return [Call(uri=r["c"], venue=r["v"], called_by=r["by"],
                  called_at=datetime.fromisoformat(r["at"])) for r in rows]

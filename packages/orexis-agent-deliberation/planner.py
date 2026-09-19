@@ -59,6 +59,8 @@ from .cone import _Compiled, _Node
 from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED,
                    REMEMBERED, SATISFIED)
 from .trace import SURPRISE_EXOGENOUS, SURPRISE_WITHHELD
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import DESIRE, KNOWN, PREDICTION, RECORD, STATE, WANT
 
 log = logging.getLogger("search")
 
@@ -145,8 +147,8 @@ class Planner:
         Anything else unmeasured scores 1.0, the not-knowing answer.
         """
         answer = self.agent.desire_urgency(
-            judgment, partial(self.imaginarium.query_at, at=self._at(node),
-                            world=self._judged_at(node, judgment)),
+            judgment, partial(self.imaginarium.query,
+                                graphs=self._dataset(self._at(node), self._judged_at(node, judgment))),
             self._judged_at(node, judgment))
         if answer is not None:
             return answer
@@ -242,8 +244,8 @@ class Planner:
             #  whoever measures it says it is: zero urgency in the world being judged. Asked
             #  of the imaginarium at the node's graph, as `_urgency_in` asks.
             answer = self.agent.desire_urgency(
-                judgment, partial(self.imaginarium.query_at, at=self._at(node),
-                                world=self._judged_at(node, judgment)),
+                judgment, partial(self.imaginarium.query,
+                                graphs=self._dataset(self._at(node), self._judged_at(node, judgment))),
                 self._judged_at(node, judgment))
             if answer is not None:
                 return answer <= 0.0
@@ -274,9 +276,8 @@ class Planner:
         if text is None:
             return None
         try:
-            rows = bindings(self.imaginarium.query_at(
-                bind(str(text), this=self.me.uri), at=self._at(node),
-                world=self._graph(node)))
+            rows = bindings(self.imaginarium.query(
+                bind(str(text), this=self.me.uri), self._dataset(self._at(node), self._graph(node))))
         except Exception as exc:
             log.error("estimate failed to run for %s: %s", judgment.uri, exc)
             return None
@@ -311,7 +312,7 @@ class Planner:
         if text is not None:
             return str(text)
         rows = bindings(self.agent.beliefs.query(
-            f"SELECT ?text WHERE {{ <{node}> sh:select ?text }} LIMIT 1"))
+            f"SELECT ?text WHERE {{ <{node}> sh:select ?text }} LIMIT 1", self.agent.beliefs.graphs_of(PUBLIC)))
         return str(rows[0]["text"]) if rows and rows[0].get("text") else None
 
     def _pattern_binds(self, text: str, graph: str) -> bool:
@@ -330,7 +331,7 @@ class Planner:
         """
         try:
             text = bind(text, this=self.me.uri)
-            return bool(bindings(self.imaginarium.query_at(text, world=graph, at=self._clock)))
+            return bool(bindings(self.imaginarium.query(text, self._dataset(self._clock, graph))))
         except Exception as exc:
             log.error("avoided-state pattern failed to run: %s", exc)
             return True
@@ -373,9 +374,9 @@ class Planner:
         self._reads = reads
         if reads is relevance.ANYTHING:
             return None
-        return relevance.relevant(reads, relevance.actions_of(self.agent.beliefs.query),
+        return relevance.relevant(reads, relevance.actions_of(self.agent.beliefs.reader(PUBLIC)),
                                   relevance.rule_edges(),
-                                  relevance.subproperties_of(self.agent.beliefs.query))
+                                  relevance.subproperties_of(self.agent.beliefs.reader(PUBLIC)))
 
     def _shape_root(self, judgment: Judgment):
         """The node the desire's shape hangs from, or None where it has none."""
@@ -759,6 +760,20 @@ class Planner:
         #  whole of the identity, and the worlds beneath the node — computed from bands, each
         #  carrying its own — stand. The cell-only re-root of #573, which dropped a subtree
         #  computed from a number the present did not hold, has nothing left to drop.
+        #  A LEVER ON THE MENU NOW AND NOT WHEN THE CONE WAS MADE — a round opened since — is
+        #  a timed graph, which the invariant half leaves out on purpose (#589): the cone
+        #  survives it, and a kept root already expanded would never offer the lever. So the
+        #  present's menu is asked once more, over the graphs the present holds now, and a cone
+        #  whose root gained a lever is forgotten — a fresh pass is what finds the chain
+        #  through it, as it found the refill through a round nobody had opened before.
+        beliefs = self.agent.beliefs
+        self.imaginarium.refresh(beliefs, beliefs.catalogue, *beliefs.graphs_of(*KNOWN))
+        if node.expanded:
+            offered = frozenset((r.action, r.via, r.about, r.want) for r in self.agent.afforder.offered(
+                self._imagined, graphs=self._dataset(clock.now(), STATE_GRAPH), only=self._compiled.asked))
+            if offered - node.menu:
+                self.reset()
+                return False
         self._reroot(node, present, subtree=True, judgment=judgment)
         return True
 
@@ -779,6 +794,12 @@ class Planner:
         #  matched diff — the two agree exactly here, and the observed one is the one that
         #  says what the present is.
         self.imaginarium.observe(self.agent.beliefs, STATE_GRAPH)
+        #  AND EVERY OTHER GRAPH A RULE READS, as the present holds it now, with the catalogue
+        #  that says what they are: a round opened or a claim arrived since the cone was made
+        #  is a timed graph, which the invariant half leaves out on purpose (#589) — the cone
+        #  survives it, and the resumed pass has to read it.
+        beliefs = self.agent.beliefs
+        self.imaginarium.refresh(beliefs, beliefs.catalogue, *beliefs.graphs_of(*KNOWN))
         depth, cost0, landing0 = len(node.taken), node.cost, node.landing
         for m in keep:
             dplus, dminus = m.diff
@@ -861,7 +882,7 @@ class Planner:
         if reads is relevance.ANYTHING or self._compiled.relevant is None:
             return None
         view = set(reads)
-        table = relevance.actions_of(self.agent.beliefs.query)
+        table = relevance.actions_of(self.agent.beliefs.reader(PUBLIC))
         for action in self._compiled.relevant:
             r, w = table.get(action, (frozenset(), frozenset()))
             if r is relevance.ANYTHING or w is relevance.ANYTHING:
@@ -888,8 +909,16 @@ class Planner:
         #  says what it is there, so a signed classification would kill every kept world on a
         #  change no lever caused, which is the thing this exclusion exists to prevent.
         out = set(store.periods())
-        return [iri for iri in [*store.public_graphs(), *store.recorded_graphs()]
-                if iri not in out]
+        return [iri for iri in store.graphs_of(*KNOWN) if iri not in out]
+
+    def _dataset(self, at, world: str) -> list[str]:
+        """What a rule is answered over in one imagined world: every graph of the kinds a rule
+        reads, holding at `at`, with `world` — the node's readings — standing where the
+        present's stand. Built here and handed to the imaginarium's `query`, so the instant
+        and the place a rule is asked about are one list the search made, and a rule says
+        neither (#666)."""
+        readings = set(self.imaginarium.graphs_of(STATE))
+        return [g for g in self.imaginarium.graphs_of(*KNOWN, at=at) if g not in readings] + [world]
 
     def _key(self, diff: tuple) -> frozenset:
         """The key the present is matched to a kept world by: the WORLD the diff reaches,
@@ -1135,7 +1164,7 @@ class Planner:
             if keeper is not None and keeper.refused_below(wanted.action, wanted.via, wanted.about):
                 return trace.REFUSED, forks
             row = next((r for r in self.agent.afforder.offered(
-                self._imagined, at=self._at(cur), world=self._graph(cur),
+                self._imagined, graphs=self._dataset(self._at(cur), self._graph(cur)),
                 only=frozenset({wanted.action}))
                 if r.is_own and r.via == wanted.via and (r.about or None) == (wanted.about or None)),
                 None)
@@ -1180,9 +1209,13 @@ class Planner:
         #  "acquire, then offer" is a plan only if the menu of the world after the first step
         #  shows the second. The root node's graph is the agent's own readings, so at depth 0
         #  this is the ordinary menu, exactly as before.
-        for row in self.agent.afforder.offered(
-                self._imagined, at=self._at(node), world=self._graph(node),
-                only=self._compiled.asked):
+        rows = self.agent.afforder.offered(
+            self._imagined, graphs=self._dataset(self._at(node), self._graph(node)),
+            only=self._compiled.asked)
+        #  WHAT THE MENU WAS when this node was expanded, so a resumed pass can tell a lever
+        #  that is on it now and was not then (`_resume`).
+        node.menu = frozenset((r.action, r.via, r.about, r.want) for r in rows)
+        for row in rows:
             #  A ROW THAT NAMES A WANT SERVES THAT WANT — Dosing for this pot and not the next,
             #  and a look for this instrument. A row owed to someone serves the want it names
             #  and no other: the market joined it to the debt the want is about, so a debt is
@@ -1228,7 +1261,7 @@ class Planner:
             #  empty-result failure this file's own docstring warns about, arriving through
             #  a graph nobody had copied. Read-only like everything else copied in: no
             #  effect touches it, and a plan cannot re-command a cadence.
-            *self.agent.beliefs.recorded_graphs())
+            *self.agent.beliefs.graphs_of(*KNOWN))
         #  The rows an imagined world affords, over the store those worlds live in — built here
         #  beside the imaginarium and once for the pass.
         self._imagined = Affordances(self.imaginarium)
@@ -1251,8 +1284,7 @@ class Planner:
         #  (each pursued want, the asserted one again) and the debts record — each classified
         #  by its owner, whatever it is called, the children holding now among them (#645).
         self._compiled.want_graphs = tuple(self.agent.beliefs.graphs_of(
-            OREXIS + "DesireGraph", OREXIS + "WantGraph",
-            "http://example.org/orexis/market#ObligationsGraph"))
+            DESIRE, WANT, RECORD, at=self._clock))
         self.imaginarium.copy_in(self.agent.desires, *self._compiled.want_graphs)
         self._compiled.shapes = effects.applied((), self.agent.desires.construct(
             f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ "
@@ -1280,7 +1312,7 @@ class Planner:
         #  (`orexis:keyedBy`, `orexis:carries` on the node's class), read once per pass so the signature
         #  canonicalises a reading without this file knowing what one looks like.
         self._compiled.about_of = self.agent.desires.abouts(self.me.uri)
-        self._compiled.keys = signature.keys_of(store.query)
+        self._compiled.keys = signature.keys_of(store.reader(PUBLIC))
         #  THE LAW THIS PASS PRUNES BY (#468): the violation-severity shapes the DATA
         #  carries — a world-authored MUST NOT over a runtime state — collected once, held
         #  against every candidate at expansion rather than against the winner alone. The
@@ -1308,9 +1340,9 @@ class Planner:
         #  are what a step changes, and each node carries its own — plus the wants, which the
         #  flat world carried before and `_offer` still needs. Asked rather than named, like
         #  everything else about which graphs exist.
+        readings = set(self.agent.beliefs.graphs_of(STATE))
         self._compiled.invariant_graphs = tuple(
-            iri for iri in list(self.agent.beliefs.public_graphs())
-            + list(self.agent.beliefs.recorded_graphs()) if iri != STATE_GRAPH)
+            iri for iri in self.agent.beliefs.graphs_of(*KNOWN, at=self._clock) if iri not in readings)
         #  SKOLEMIZED AT THE BORDER (#485), by the scheme `judge.crossed` uses for a graph: a
         #  blank focus node is then legal in rudof's VALUES pre-binding, and the legality
         #  check below reads this text as it is, with no rdflib graph in between.
@@ -1380,8 +1412,7 @@ class Planner:
         if latest:
             longest = 0.0
             for row in self._candidates(here, judgment):
-                lands = effects.lands_after(self.imaginarium, row.action, when=self._clock,
-                                            world=self._world(here),
+                lands = effects.lands_after(self.imaginarium, row.action, graphs=self._dataset(self._clock, self._world(here)),
                                             **self._bind(judgment, here, row))
                 longest = max(longest, lands or 0.0)
             lead = max(0.0, (judgment.holds_at - self._clock).total_seconds() - longest)
@@ -1410,8 +1441,8 @@ class Planner:
         #  trace costs, against one per node before this.
         self._passed_over = [] if self._compiled.relevant is None else \
             self.agent.afforder.offered(
-                self._imagined, at=self._clock,
-                only=frozenset(relevance.actions_of(self.agent.beliefs.query))
+                self._imagined, graphs=self.imaginarium.graphs_of(*KNOWN, at=self._clock),
+                only=frozenset(relevance.actions_of(self.agent.beliefs.reader(PUBLIC)))
                 - self._compiled.relevant)
         self._base_forbidden = (self._forbidden_keys(here)
                                 if self._compiled.law is not None else frozenset())
@@ -1463,15 +1494,13 @@ class Planner:
         #  THEN — a forecast among them, once a world states one — and knows nothing about
         #  which those are. The clock is the pass's, read once at its root.
         taken_at = self._at(node)
-        lands = effects.lands_after(self.imaginarium, row.action, when=taken_at,
-                                    world=self._world(node), **self._bind(judgment, node, row))
+        lands = effects.lands_after(self.imaginarium, row.action, graphs=self._dataset(taken_at, self._world(node)), **self._bind(judgment, node, row))
         bind = self._bind(judgment, node, row, lands=lands)
         #  WHAT IT SPENDS, ASKED FIRST — `orexis:costs`, the landing's twin (#466), and None is
         #  free. It is asked before the rule is run because that is what makes the bound worth
         #  having: a candidate already dearer than a plan in hand is dropped without simulating
         #  its effect or forking its world, which are the two expensive things a step does.
-        spent = effects.cost_of(self.imaginarium, row.action, when=taken_at,
-                                world=self._world(node), **bind)
+        spent = effects.cost_of(self.imaginarium, row.action, graphs=self._dataset(taken_at, self._world(node)), **bind)
         cost = node.cost + (spent or 0.0)
         if bound is not None and cost > bound:
             return TOO_DEAR
@@ -1480,8 +1509,7 @@ class Planner:
             #  DESCRIBES: a vent opened now but completing after dusk is judged against the
             #  dusk the forecast states, not against this afternoon.
             added, retracted = effects.apply(self.imaginarium, row.action,
-                                             when=self._at(node, lands),
-                                             world=self._world(node), **bind)
+                                             graphs=self._dataset(self._at(node, lands), self._world(node)), **bind)
         except Exception as exc:                 # a package's rule is not an agent's problem
             log.error("could not simulate %s: %s", row.action, exc)
             return None
@@ -1545,7 +1573,7 @@ class Planner:
         search runs no rule that knows a rate.
         """
         beliefs = self.agent.beliefs
-        holding = beliefs.prediction_graphs(at=instant)
+        holding = beliefs.graphs_of(PREDICTION, at=instant)
         if not holding:
             return list(added), list(retracted)
         if changed is None:
@@ -1700,9 +1728,8 @@ class Planner:
         """
         store = self.agent.beliefs
         vocabulary = {r["g"] for r in bindings(store.query(
-            "SELECT ?g WHERE { ?g a orexis:OntologyGraph }"))}
-        base = graph_from(store, *(g for g in store.public_graphs() if g not in vocabulary),
-                          *store.recorded_graphs())
+            "SELECT ?g WHERE { ?g a orexis:OntologyGraph }", store.graphs_of(PUBLIC)))}
+        base = graph_from(store, *(g for g in store.graphs_of(*KNOWN, at=self._clock) if g not in vocabulary))
         #  The vocabulary's shapes, as subgraphs: every triple of a node shape, and of every
         #  blank node reachable from it — a property shape, a qualified value shape, a list.
         #  The path walks through IRIs too, and the filter keeps only what is the shape's
@@ -1711,7 +1738,7 @@ class Planner:
 CONSTRUCT { ?x ?p ?o } WHERE {
   ?g a orexis:OntologyGraph .
   GRAPH ?g { ?s a sh:NodeShape . ?s (!<urn:none>)* ?x . ?x ?p ?o }
-  FILTER(?x = ?s || isBlank(?x)) }"""), ()):
+  FILTER(?x = ?s || isBlank(?x)) }""", store.graphs_of(PUBLIC)), ()):
             base.add(triple)
         return base
 

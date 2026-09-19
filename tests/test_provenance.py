@@ -30,6 +30,7 @@ from orexis_agent_progression.ontology import (OREXIS, ONTOLOGY_ENTAILED_GRAPH, 
 from orexis_agent_progression.store import Store, bindings
 from agent.validate import conforms, graph_from
 from conftest import shipped_worlds
+from orexis_agent_progression.ontology import PUBLIC
 
 #  Found by looking, never listed (`conftest.shipped_worlds`): this was a hand-written
 #  pair that stopped growing the day `world/loner` landed.
@@ -44,7 +45,7 @@ def _public(world: str) -> Store:
 
 
 def _in_graph(st: Store, graph: str, sparql: str) -> list[dict]:
-    return bindings(st.query(f"SELECT * WHERE {{ GRAPH <{graph}> {{ {sparql} }} }}"))
+    return bindings(st.query(f"SELECT * WHERE {{ GRAPH <{graph}> {{ {sparql} }} }}", st.graphs_of(PUBLIC)))
 
 
 # --- each kind of fact lands where it says it does --------------------------------------------
@@ -72,7 +73,7 @@ def test_the_ratified_world_is_exactly_what_the_files_say(world):
 
     def count(store):
         return int(bindings(store.query(
-            f"SELECT (COUNT(*) AS ?n) WHERE {{ GRAPH <{WORLD_GRAPH}> {{ ?s ?p ?o }} }}"))[0]["n"])
+            f"SELECT (COUNT(*) AS ?n) WHERE {{ GRAPH <{WORLD_GRAPH}> {{ ?s ?p ?o }} }}", store.graphs_of(PUBLIC)))[0]["n"])
 
     assert count(plain) == count(st)
 
@@ -91,8 +92,8 @@ def _sizes(st: Store) -> dict[str, int]:
     """Triples per public graph. Counted, not measured off the serialisation — a Turtle dump
     renumbers blank nodes, so its LENGTH differs between two identical graphs."""
     return {g: int(bindings(st.query(
-        f"SELECT (COUNT(*) AS ?n) WHERE {{ GRAPH <{g}> {{ ?s ?p ?o }} }}"))[0]["n"])
-        for g in st.public_graphs()}
+        f"SELECT (COUNT(*) AS ?n) WHERE {{ GRAPH <{g}> {{ ?s ?p ?o }} }}", st.graphs_of(PUBLIC)))[0]["n"])
+        for g in st.graphs_of(PUBLIC)}
 
 
 # --- the split costs a reader nothing ----------------------------------------------------------
@@ -107,13 +108,13 @@ def test_an_ordinary_pattern_spans_every_public_graph(world):
     the default graph exists to close, and it is why queries here name no graph at all.
     """
     st = _public(world)
-    if not bindings(st.query("SELECT ?a WHERE { ?a sensing:polls ?s }")):
+    if not bindings(st.query("SELECT ?a WHERE { ?a sensing:polls ?s }", st.graphs_of(PUBLIC))):
         #  The spanning pattern is sensing-shaped on purpose (polls is asserted, the System
         #  type entailed) — a world with no sensing wiring (hanoi: a pure mind) has no such
         #  split to span, and asserting over it would test nothing.
         pytest.skip(f"{world} wires no sensing — the asserted/entailed split has no instance here")
     spanning = bindings(st.query(
-        "SELECT ?agent WHERE { ?agent sensing:polls ?s . ?s a ssn:System ; sensing:senseMode ?m }"))
+        "SELECT ?agent WHERE { ?agent sensing:polls ?s . ?s a ssn:System ; sensing:senseMode ?m }", st.graphs_of(PUBLIC)))
     assert spanning, "a pattern spanning the asserted/entailed split found nothing"
 
     narrowed = _in_graph(st, WORLD_GRAPH,
@@ -129,7 +130,7 @@ def test_private_graphs_are_not_in_the_default_graph():
     st = _public("simulation")
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
     assert _in_graph(st, picks_graph("fern"), "?a sensing:slowSleepS ?v")
-    assert not bindings(st.query("SELECT * WHERE { ?a sensing:slowSleepS ?v }"))
+    assert not bindings(st.query("SELECT * WHERE { ?a sensing:slowSleepS ?v }", st.graphs_of(PUBLIC)))
 
 
 # --- the store says what each graph is, not just what it is called -----------------------------
@@ -146,7 +147,7 @@ def test_every_public_graph_accounts_for_itself(world):
     described = {r["g"] for r in _in_graph(
         st, st.catalogue,
         "?g a prov:Entity ; ?p ?o FILTER(?p IN (prov:wasDerivedFrom, prov:wasGeneratedBy))")}
-    public = set(st.public_graphs())
+    public = set(st.graphs_of(PUBLIC))
     assert public <= described, (
         f"undescribed: {public - described} — add it to orexis/provenance.py")
 
@@ -171,7 +172,7 @@ def test_the_graph_names_could_be_opaque_and_nothing_would_be_lost():
         "?agent a prov:SoftwareAgent")}
 
     # Every public graph accounts for itself, one way or the other.
-    assert from_files | computed == set(st.public_graphs())
+    assert from_files | computed == set(st.graphs_of(PUBLIC))
 
     # And a machine made the computed ones, while a PERSON stands behind what was read from
     # files — recovered from the kind of agent the activity was associated with, not from a name.
@@ -197,7 +198,7 @@ def test_a_graph_that_explains_nothing_is_refused():
     st = _public("simulation")
     st.update(f"""INSERT DATA {{ GRAPH <{st.catalogue}> {{
         <http://example.org/orexis/graph/mystery> a prov:Entity }} }}""")
-    data = graph_from(st, *st.public_graphs(), st.catalogue)
+    data = graph_from(st, *st.graphs_of(PUBLIC), st.catalogue)
     ok, report = conforms(data)
     assert not ok and "mystery" in report
 
@@ -217,7 +218,7 @@ def test_a_sixth_public_graph_needs_no_python():
     instance the vocabulary declares does — that is what marks it as a graph and not a term.
     """
     st = _public("simulation")
-    before = set(st.public_graphs())
+    before = set(st.graphs_of(PUBLIC))
 
     st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
         <http://example.org/orexis/graph/sixth> a orexis:PublicGraph ;
@@ -226,10 +227,10 @@ def test_a_sixth_public_graph_needs_no_python():
     st.update("""INSERT DATA { GRAPH <http://example.org/orexis/graph/sixth> {
         <http://example.org/orexis/world/simulation#fern_agent> orexis:somethingNew "yes" } }""")
 
-    assert set(st.public_graphs()) - before == {"http://example.org/orexis/graph/sixth"}
+    assert set(st.graphs_of(PUBLIC)) - before == {"http://example.org/orexis/graph/sixth"}
     # And an unqualified pattern reads it, which is the whole point: a reader asks what the
     # society knows and never learns which graph the answer came from.
-    assert bindings(st.query('SELECT ?v WHERE { <http://example.org/orexis/world/simulation#fern_agent> orexis:somethingNew ?v }'))
+    assert bindings(st.query('SELECT ?v WHERE { <http://example.org/orexis/world/simulation#fern_agent> orexis:somethingNew ?v }', st.graphs_of(PUBLIC)))
 
 
 def test_a_rule_names_the_class_of_graph_it_writes_to_and_never_the_graph():
@@ -258,7 +259,7 @@ def test_a_rule_names_the_class_of_graph_it_writes_to_and_never_the_graph():
     given = genesis.substitute("$given", st)
     for target in targets:
         assert f"USING <{target}>" not in given
-    for public in set(st.public_graphs()) - targets:
+    for public in set(st.graphs_of(PUBLIC)) - targets:
         assert f"USING <{public}>" in given
 
     # And no rule names a graph, which is what the placeholder exists to make possible. What is
@@ -293,8 +294,8 @@ def test_a_graph_typed_privately_stays_out_of_the_default_graph():
     st = _public("simulation")
     st.update("""INSERT DATA { GRAPH <http://example.org/orexis/graph/private> {
         <http://example.org/orexis/world/simulation#fern_agent> orexis:aSecret "shh" } }""")
-    assert "http://example.org/orexis/graph/private" not in st.public_graphs()
-    assert not bindings(st.query('SELECT ?v WHERE { <http://example.org/orexis/world/simulation#fern_agent> orexis:aSecret ?v }'))
+    assert "http://example.org/orexis/graph/private" not in st.graphs_of(PUBLIC)
+    assert not bindings(st.query('SELECT ?v WHERE { <http://example.org/orexis/world/simulation#fern_agent> orexis:aSecret ?v }', st.graphs_of(PUBLIC)))
     assert _in_graph(st, "http://example.org/orexis/graph/private", "?s orexis:aSecret ?v")
 
 
@@ -307,7 +308,7 @@ def test_provenance_is_not_in_the_default_graph():
     a subject in a society that otherwise contains only things a society has.
     """
     st = _public("simulation")
-    assert not bindings(st.query("SELECT * WHERE { ?s a prov:Activity }"))
+    assert not bindings(st.query("SELECT * WHERE { ?s a prov:Activity }", st.graphs_of(PUBLIC)))
     assert _in_graph(st, st.catalogue, "?s a prov:Activity")
 
 
@@ -344,7 +345,7 @@ def test_there_is_no_sovereign_agent_only_a_sovereign_role():
     ever also typed as an agent, "who is the sovereign" would become a permanent property of a
     person rather than a fact about one ratification, and a second user could not exist."""
     st = _public("simulation")
-    kinds = {r["t"] for r in bindings(st.query(f"SELECT ?t WHERE {{ <{OREXIS}Sovereign> a ?t }}"))}
+    kinds = {r["t"] for r in bindings(st.query(f"SELECT ?t WHERE {{ <{OREXIS}Sovereign> a ?t }}", st.graphs_of(PUBLIC)))}
     assert "http://www.w3.org/ns/prov#Role" in kinds
     assert not {k for k in kinds if k.endswith(("Agent", "Person", "SoftwareAgent"))}
 
@@ -355,8 +356,8 @@ def test_the_world_references_a_user_and_declares_nothing_about_them():
     introspects. Saying more here would be a world asserting facts about the installation."""
     st = _public("simulation")
     user = bindings(st.query(
-        "SELECT ?u WHERE { ?w a orexis:World ; prov:qualifiedAttribution [ prov:agent ?u ] }"))[0]["u"]
-    said = bindings(st.query(f"SELECT ?p WHERE {{ <{user}> ?p ?o }}"))
+        "SELECT ?u WHERE { ?w a orexis:World ; prov:qualifiedAttribution [ prov:agent ?u ] }", st.graphs_of(PUBLIC)))[0]["u"]
+    said = bindings(st.query(f"SELECT ?p WHERE {{ <{user}> ?p ?o }}", st.graphs_of(PUBLIC)))
     assert not said, f"the world declares {[r['p'] for r in said]} about a user it only references"
 
 
@@ -411,7 +412,7 @@ def test_both_engines_derive_the_same_world(world):
     """
     st = _public(world)
     from_store = {(r["id"], r["cap"]) for r in bindings(st.query(
-        "SELECT ?id ?cap WHERE { ?a a orexis:Agent ; orexis:localId ?id ; orexis:hasCapability ?cap }"))}
+        "SELECT ?id ?cap WHERE { ?a a orexis:Agent ; orexis:localId ?id ; orexis:hasCapability ?cap }", st.graphs_of(PUBLIC)))}
 
     ds = ratified.dataset(world)
     from_rdflib = {(r["id"], r["cap"]) for r in ratified.rows(ds, f"""

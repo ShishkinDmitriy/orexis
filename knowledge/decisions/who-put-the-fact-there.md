@@ -86,7 +86,7 @@ registry**, correctly, per rule, or the derivation silently returned nothing.
 
 So the instances moved into the kernel's ontology (`agent/ontology.ttl`), typed by class, and code asks:
 
-- `orexis:PublicGraph` is the term. `store.public_graphs()` returns whatever is an instance of it.
+- `orexis:PublicGraph` is the term. `store.graphs_of(PUBLIC)` returns whatever is an instance of it.
 - A rule writes `$given` and `$derived`; the loader substitutes. No `rules.ru` names a graph.
 - Adding a public graph is a **vocabulary edit that touches no Python**, and there is a test
   that says so.

@@ -205,7 +205,7 @@ it is a record wearing a bullet.
   a deadline** — a bid placed at the crossing less the plan's duration landed in a round that
   had closed; the bid is taken while the round is open, and what waits for the instant is the
   claim's presenting, which the claim's own window places (#625).
-- **What a search may see at a future instant is the door's to say** — a round row with no
+- **What a search may see at a future instant is the instant's to say, and the reader names it** — a round row with no
   period was still open to a root standing hours ahead, and a bid was placed into a round that
   had closed; a round is a graph holding during its period now, and the rule never learned the
   time (#620).
@@ -248,7 +248,7 @@ it is a record wearing a bullet.
   next reading is held to — and "watch" was sensing's own, the instrument's, already (#640).
 - **What ends by the clock is a graph with a period, and one sweep drops it** — four
   sweeps each knew its kind and each was a copy, a cooling row kept a timer a restart lost, and
-  a claim past its window was let go by hand; the door hides an ended graph from every reader,
+  a claim past its window was let go by hand; a reader asking at an instant is handed no ended graph,
   upkeep drops whatever has ended on its tick and at boot, and what the ending MEANS stays
   the owner's, told `orexis:outdated` before the drop — which is where a debt's verdict is
   written, since the ledger keeps the verdict and not the want (#645).
@@ -276,7 +276,7 @@ it is a record wearing a bullet.
   hanoi's Move walks a tower it has not touched inside `GRAPH $state`; narrowing took a padded
   solve from 58% of its time forking to 2% and was not taken, because a real pass forks for
   0.1% of it and reads for fifteen (#662).
-- **A rule does not say which world it reads, and the door is told instead** — naming it
+- **A rule does not say which world it reads, and the list the runner builds says it instead** — naming it
   (`GRAPH $state` for a fact a plan can change, unqualified for one it cannot) is one package
   claiming what every OTHER package's actions can change, including packages that do not exist
   yet; climate's outside read carried the scar (#589), and taking the choice away deleted five
@@ -376,6 +376,12 @@ it is a record wearing a bullet.
   catalogue is found by its own row, `a orexis:CatalogueGraph`, genesis alone spells its name
   because genesis creates it, and it is neither public nor the agent's own, so a mention of a
   graph is never a fact in a world.
+- **A reader states the kinds it reads, and the store decides nothing** — four doors each
+  assembled a dataset by a rule of the store's, and which graphs were the agent's own was five
+  classes it excluded and a tree it walked, so a package chose its treatment by a superclass
+  and a caller never said what it read; a query is handed its graphs now, `graphs_of` answers
+  by kind and instant, every row carries every kind, and the union of everything was refused
+  as the default because it reads every sibling world and next hour's readings as the present.
 
 ## The rules the code lives by
 
@@ -725,7 +731,7 @@ fails if pyshacl ever entails something the closure does not. See
 [one-graph-both-engines-read](knowledge/decisions/one-graph-both-engines-read.md).
 
 - **Name the graph CLASS, never an instance — and scope by MODALITY when you leave belief.**
-  `?d a orexis:DesireGraph` unions every instance of that class, exactly as `store.public_graphs()`
+  `?d a orexis:DesireGraph` unions every instance of that class, exactly as `store.graphs_of(PUBLIC)`
   does, so a scoped query keeps the property the rule below exists to protect. A MODALITY
   class is a legitimate thing to name; a graph instance never is. (This first carried a
   sharper warning — that a want and a fact would share their shape, so an unscoped query would
@@ -735,8 +741,8 @@ fails if pyshacl ever entails something the closure does not. See
   See [a-desire-is-a-shape](knowledge/decisions/a-desire-is-a-shape.md).
 - **Never wrap `GRAPH <…>` around a SELECT.** Public knowledge is SEVERAL graphs — asserted,
   derived and entailed, for the vocabulary and for the world, plus whichever a package owns —
-  and `store.query` merges them as the default graph, so an ordinary pattern reads all of them.
-  Never count them: `orexis:PublicGraph` is a class and `store.public_graphs()` asks. A basic graph
+  and a reader hands `store.query` the list `store.graphs_of(PUBLIC)` answers, merged as the default graph, so an ordinary pattern reads all of them.
+  Never count them: `orexis:PublicGraph` is a class and `graphs_of` asks. A basic graph
   pattern inside one `GRAPH` clause must match entirely *within* that graph, so narrowing it
   returns **nothing** the moment a fact you wanted lives elsewhere, silently, because an empty
   result is not an error. Updates are the exception and must name their target; a `rules.ru`
@@ -746,29 +752,34 @@ fails if pyshacl ever entails something the closure does not. See
   [who-put-the-fact-there](knowledge/decisions/who-put-the-fact-there.md).
 - **An update's WHERE reads the unnamed default graph unless `USING` says otherwise**, and the
   engine's `query` the same unless `default_graph` is passed — so a rule text run raw against
-  the engine binds nothing, silently, though every graph it names is there. The store's doors
-  (`query`, `construct`, `entail`) assemble the public graphs as the default; a rule run any
-  other way says which graphs it reads.
+  the engine binds nothing, silently, though every graph it names is there. `store.query` and
+  `store.construct` are HANDED their graphs — the reader states the kinds it means and the
+  instant it stands at, `graphs_of` answers with the list, and the store adds nothing to it
+  (a-reader-states-the-kinds-it-reads); a text that reads one graph names its kinds in its
+  own `GRAPH` clauses by joining the catalogue, and is handed no default at all.
 - **A graph IRI is an instance, so rule 1 applies to it.** `orexis:WorldGraph` is the term code may
-  name; `…/graph/world` is not, any more than a world's `:fern_agent` is. Ask `store.public_graphs()`.
+  name; `…/graph/world` is not, any more than a world's `:fern_agent` is. Ask `store.graphs_of(PUBLIC)`.
   Two things are still named and both are writes or the bootstrap root, never a reader
   enumerating what to read — adding a public graph is a vocabulary edit that touches no Python.
-  **A PER-AGENT graph is asked for the same way**: `store.recorded_graphs()` answers with every
-  graph this agent owns — its picks, its debts, whatever a package records — and
-  `store.graphs_of(<class>)` with the ones of a kind, by reading the classification each
+  **A PER-AGENT graph is asked for the same way**: `store.graphs_of(<kind>)` answers with every
+  graph this agent owns of a kind — its records, its desires, its wants, whatever a package
+  puts under a kernel kind — by reading the classification each
   graph's OWNER wrote when it created the graph (`Store.classify`): the ledger its record, the
   keeper its promises, review its three, the road each want, sensing each prediction, genesis
   the pick record and the roots. A graph that does not exist until its agent does cannot be
   declared in a T-Box, and boot used to type them by matching names against a prefix each
-  class declared — the one reader that depended on a name. `orexis:WorkingGraph` is how a
-  package says its graph is its own and not carried. And a reader that means its OWN gets
+  class declared — the one reader that depended on a name. A kind no runner asks for —
+  review's three, the judgments, the scopes — is read by its package alone, and no class
+  hides anything from anyone. And a reader that means its OWN gets
   its own: the belief base tells the store whose it is, the classification says whose each
   graph is, and every list of the agent's graphs is kept to that owner — a graph saying no
   owner is anyone's. A graph's NAME is for eyes: the helpers
   spell a readable convention for writers, and `tests/test_layout.py` refuses a reader that
   imports one — a reader asks the class. Every one of those answers comes from ONE graph, the
-  catalogue, which describes itself and is asked for from the door (`store.catalogue`) by a
+  catalogue, which describes itself and is asked for from the store (`store.catalogue`) by a
   reader that must name it in a `GRAPH` clause — never spelled, since genesis alone creates it.
+  Every row carries every kind its class is beneath, so a text asks `?g a orexis:WantGraph`
+  and walks no path.
 - **SPARQL prefixes.** Only what `store.NAMESPACES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in
   production. `tests/test_store.py` checks this by scanning the source text — and asserts each

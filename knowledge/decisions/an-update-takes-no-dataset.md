@@ -6,8 +6,8 @@ description: >-
   has no schema and a derivation is an INSERT WHERE. The round-trip is smaller than it looks
   - a repository here is four selects and a dataclass - and the Python that matters chooses
   rather than copies. Measured against the engine, one thing separates the two. A query is
-  handed its dataset per call, which is how the door hands a reader the graphs holding at an
-  instant; an update names its graphs only in its own text. So the pursuit road, whose
+  handed its dataset per call, which is how a reader hands a query the graphs of the kinds
+  it means holding at an instant; an update names its graphs only in its own text. So the pursuit road, whose
   every step is a function of the data, may become two updates once the scope partition and
   the view per instant are materialised as graphs; the search, whose every step is a choice
   - an order, a budget, a stop - may not, and was refused. The line is stated once - a rule
@@ -45,9 +45,9 @@ not a claim that an object must exist between a read and a write.
 
 Measured against pyoxigraph 0.5.9, which is the engine every agent runs:
 
-- `Store.query` takes `default_graph=[…]` **per call**. That is the door: `query_at` assembles
-  public knowledge, the agent's records and the predictions holding at `at`, and hands the
-  list to the engine. A rule text never learns which graphs it read (#666).
+- `Store.query` takes `default_graph=[…]` **per call**. That is the dataset: the reader asks
+  `graphs_of` for the graphs of the kinds it means holding at `at` and hands the list to
+  `query`, which hands it to the engine. A rule text never learns which graphs it read (#666).
 - `Store.update` takes **no dataset**. An update names graphs only inside its own text —
   `WITH`, `USING`, `GRAPH` — and a pattern inside one `GRAPH` clause matches entirely within
   that graph, which is the trap the door exists to keep out of rule text: the doubled clauses

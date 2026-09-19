@@ -13,6 +13,7 @@ from orexis_agent_deliberation.ontology import remembered_graph
 from orexis_agent_deliberation.plan import REMEMBERED
 from orexis_agent_progression.store import bindings
 from test_courier import C, STATE_GRAPH, W, WANT, _driver, _goal
+from orexis_agent_progression.ontology import PUBLIC
 
 
 def _answer(agent, predicts):
@@ -52,7 +53,7 @@ def test_a_plan_that_worked_is_remembered_and_adopted_again_without_a_search(mon
     walked = agent.keeper.walked(first)
     _walk(agent, first)
     assert agent.keeper.standing() == [], "walked to its end"
-    kept = bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan ; deliberation:forWant <{WANT}> }} }}"))
+    kept = bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan ; deliberation:forWant <{WANT}> }} }}", agent.beliefs.graphs_of(PUBLIC)))
     assert len(kept) == 1, "lifted into the agent's own graph, for the want"
     assert _goal(agent).state == "met"
     # the same world again
@@ -62,10 +63,10 @@ def test_a_plan_that_worked_is_remembered_and_adopted_again_without_a_search(mon
     assert [s.action for s in agent.keeper.walked(again)] == [s.action for s in walked]
     from orexis_agent_progression.ontology import DELIBERATION_GRAPH
     verdicts = bindings(agent.beliefs.query(f"""
-SELECT ?v WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?d a deliberation:Deliberation ; deliberation:verdict ?v }} }}"""))
+SELECT ?v WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?d a deliberation:Deliberation ; deliberation:verdict ?v }} }}""", agent.beliefs.graphs_of(PUBLIC)))
     assert REMEMBERED in {r["v"] for r in verdicts}, "and the trace says it was remembered"
     _walk(agent, again)
-    assert len(bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}"))) == 1, \
+    assert len(bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}", agent.beliefs.graphs_of(PUBLIC)))) == 1, \
         "a remembered plan finishing again is not remembered twice"
     # another world
     _repose(agent, "c3_3", "c1_2")
@@ -79,10 +80,10 @@ def test_a_remembered_plan_that_fails_a_step_is_forgotten(monkeypatch):
     _walk(agent, first)
     _repose(agent, "c0_0", "c1_2")
     again = pursuit.pursue(agent, _goal(agent))
-    assert bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}"))
+    assert bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}", agent.beliefs.graphs_of(PUBLIC)))
     agent.keeper.expect(again, "show me", not_after=datetime.now(timezone.utc) + timedelta(hours=1))
     agent.keeper.lapse(again)                                   # the world did not answer
-    assert not bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}")), \
+    assert not bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}", agent.beliefs.graphs_of(PUBLIC))), \
         "forgotten: a plan that failed a step is not remembered"
 
 
@@ -90,7 +91,7 @@ def test_a_remembered_plan_that_fails_a_step_is_forgotten(monkeypatch):
 
 
 def _remembered_uri(agent):
-    rows = bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan ; deliberation:forWant <{WANT}> }} }}"))
+    rows = bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan ; deliberation:forWant <{WANT}> }} }}", agent.beliefs.graphs_of(PUBLIC)))
     assert len(rows) == 1
     return rows[0]["r"]
 
@@ -102,7 +103,7 @@ SELECT ?take ?verdict ?chosen ?missing WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
   ?d a deliberation:Deliberation ; deliberation:considered ?c .
   ?c deliberation:wouldTake ?take ; deliberation:verdict ?verdict .
   OPTIONAL {{ ?c deliberation:missing ?missing }}
-  OPTIONAL {{ ?d deliberation:chose ?chosen }} }} }}"""))
+  OPTIONAL {{ ?d deliberation:chose ?chosen }} }} }}""", agent.beliefs.graphs_of(PUBLIC)))
 
 
 def test_a_stray_fact_no_longer_forces_a_search(monkeypatch):
@@ -198,7 +199,7 @@ def test_a_remembered_route_adopted_on_its_precondition_that_fails_is_forgotten(
     again = pursuit.pursue(agent, _goal(agent))
     agent.keeper.expect(again, "show me", not_after=datetime.now(timezone.utc) + timedelta(hours=1))
     agent.keeper.lapse(again)
-    assert not bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}")), \
+    assert not bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}", agent.beliefs.graphs_of(PUBLIC))), \
         "forgotten, whichever road adopted it"
 
 

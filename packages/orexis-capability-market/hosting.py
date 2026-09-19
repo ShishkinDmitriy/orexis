@@ -57,6 +57,8 @@ from .beliefs import HOSTING_PICKS
 from .terms import (ACTUATION, SENSING, SERVING, HOSTING, BID_MATCHING,
                     OFFERING)
 from orexis_agent_progression import clock
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import KNOWN
 
 
 def _event_topics_q(market_uri: str) -> str:
@@ -108,18 +110,18 @@ class HostingModule(Module):
         #  — the same arrangement sensing has with `graph/sensed` — so the obligation modality
         #  stays the mind's while incurring one is the market's.
         self.ledger = Ower(agent)
-        self.markets = hosted_markets_of(agent.beliefs.query, self.me.uri)
+        self.markets = hosted_markets_of(agent.beliefs.reader(PUBLIC), self.me.uri)
         self.participants = {
-            m.uri: participants(agent.beliefs.query, m) for m in self.markets
+            m.uri: participants(agent.beliefs.reader(PUBLIC), m) for m in self.markets
         }
         # Derived at genesis from the world, so it is read once rather than per round. A
         # participant absent from this map has no stated ceiling and is not checked; see #270.
         self.ceilings = {
-            m.uri: allocation_ceilings(agent.beliefs.query, m) for m in self.markets
+            m.uri: allocation_ceilings(agent.beliefs.reader(PUBLIC), m) for m in self.markets
         }
         self.event_topics = {}  # topic -> market
         for market in self.markets:
-            for row in bindings(agent.beliefs.query(_event_topics_q(market.uri))):
+            for row in bindings(agent.beliefs.query(_event_topics_q(market.uri), agent.beliefs.graphs_of(PUBLIC))):
                 self.event_topics[row["eventTopic"]] = market
 
         # Empty when no valuation of the venue's good meets any participant's stake — a
@@ -131,7 +133,7 @@ class HostingModule(Module):
         # the two.
         self.about = {}
         for market in self.markets:
-            rows = bindings(agent.beliefs.query(_ABOUT_Q % (market.uri, market.uri)))
+            rows = bindings(agent.beliefs.query(_ABOUT_Q % (market.uri, market.uri), agent.beliefs.graphs_of(PUBLIC)))
             self.about[market.uri] = {r["property"] for r in rows}
 
         # My witness on each venue's source, where I have one (#the-planner): the sensor I
@@ -144,7 +146,7 @@ class HostingModule(Module):
             rows = bindings(agent.beliefs.query(f"""
 SELECT ?p WHERE {{
   <{self.me.uri}> sensing:polls ?s .
-  ?s sensing:monitors <{market.resource}> ; sosa:observes ?p }} LIMIT 1"""))
+  ?s sensing:monitors <{market.resource}> ; sosa:observes ?p }} LIMIT 1""", agent.beliefs.graphs_of(PUBLIC)))
             self.stock_property[market.uri] = rows[0]["p"] if rows else None
         self.open_auction: dict | None = None
         self._timer: Timer | None = None
@@ -267,12 +269,13 @@ SELECT ?p WHERE {{
         if stock is None:
             return False
         #  THROUGH THE DOOR (#645): every debt standing now, each a graph of its own.
-        rows = bindings(self.agent.beliefs.query_at(f"""
+        rows = bindings(self.agent.beliefs.query(f"""
 SELECT (SUM(?a) AS ?owed) WHERE {{
   ?debt market:forClaim ?jti ; market:amountL ?a ; market:owedAt ?issued .
   OPTIONAL {{ ?debt market:owedFrom ?from }}
   FILTER NOT EXISTS {{ ?debt market:dischargedAt ?d }}
-  FILTER(COALESCE(?from, ?issued) <= \"{wanted_at.isoformat()}\"^^xsd:dateTime) }}"""))
+  FILTER(COALESCE(?from, ?issued) <= \"{wanted_at.isoformat()}\"^^xsd:dateTime) }}""",
+            self.agent.beliefs.graphs_of(*KNOWN, at=clock.now())))
         owed = float(rows[0]["owed"]) if rows and rows[0].get("owed") else 0.0
         floor = 0.0
         sensing = self.agent.provider(SENSING)
@@ -293,7 +296,7 @@ SELECT (SUM(?a) AS ?owed) WHERE {{
                       debit=round(litres * float(self.beliefs.reserve_price_per_l), 4),
                       auction_id=f"ask-{jti[:8]}", jti=jti, exp=expires, usable_from=opens,
                       step=Step(action=SERVING, via=market.uri, quantity=litres,
-                                for_agent=node_of(self.agent.beliefs.query, who),
+                                for_agent=node_of(self.agent.beliefs.reader(PUBLIC), who),
                                 not_after=(datetime.fromtimestamp(expires, tz=timezone.utc)
                                            if expires is not None else None)))
         self.log.info("granting %s %.3f L usable from %s on its ask — no round", who, litres,
@@ -543,7 +546,7 @@ SELECT ?r WHERE {{
         #  presentation is what asks me to take it, and the taking is the act.
         def serving(line, expires):
             return Step(action=SERVING, via=market.uri, quantity=line.qty_l,
-                       for_agent=node_of(self.agent.beliefs.query, line.agent),
+                       for_agent=node_of(self.agent.beliefs.reader(PUBLIC), line.agent),
                        not_after=(datetime.fromtimestamp(expires, tz=timezone.utc)
                                   if expires is not None else None))
 
@@ -613,7 +616,7 @@ SELECT ?r WHERE {{
         # takes the BROKER out of the trust boundary: the ACL becomes defence in depth, not
         # the proof. No published key means the pre-#144 era, and the ACL stands alone as it
         # always did.
-        rows = bindings(self.agent.beliefs.query(_KEY_Q % (presenter, "signingKey")))
+        rows = bindings(self.agent.beliefs.query(_KEY_Q % (presenter, "signingKey"), self.agent.beliefs.graphs_of(PUBLIC)))
         if rows:
             sig = claim.get("sig", "")
             payload = {k: v for k, v in claim.items() if k != "sig"}
@@ -770,7 +773,7 @@ SELECT ?r WHERE {{
             payload["usable_from"] = datetime.fromtimestamp(claim.usable_from, tz=timezone.utc).isoformat()
         if claim.exp is not None:
             payload["usable_until"] = datetime.fromtimestamp(claim.exp, tz=timezone.utc).isoformat()
-        rows = bindings(self.agent.beliefs.query(_KEY_Q % (claim.sub, "sealingKey")))
+        rows = bindings(self.agent.beliefs.query(_KEY_Q % (claim.sub, "sealingKey"), self.agent.beliefs.graphs_of(PUBLIC)))
         if rows:
             sealed = signing.seal(signing.sealing_public_from_b64(rows[0]["key"]),
                                   signing.canonical(payload))

@@ -83,10 +83,12 @@ The reason to be careful is that three changes just took the clock out of every 
 deliberation evaluates ([#598](https://github.com/ShishkinDmitriy/orexis/issues/598)), and
 "valid until" is a clock read wearing a new coat unless it is placed exactly.
 
-**The door filters, never the rule.** `Store.public_graphs()` already ASKS the store which
-graphs to merge and remembers the answer until a write. Validity makes that answer depend on
-when it is asked — one clock read, in Python, at the one place that already decides what a query
-reads. A rule still reads triples and asks nothing.
+**The lookup filters, never the rule.** `Store.graphs_of` already ASKS the store which graphs
+are of a kind and remembers the table until a write. Validity makes that answer depend on
+when it is asked — the instant the reader hands in, since
+[a-reader-states-the-kinds-it-reads](/decisions/a-reader-states-the-kinds-it-reads.md) took the
+clock read out of the store — at the one place that already decides what a query reads. A
+rule still reads triples and asks nothing.
 
 **Inside a pass it is the pass's clock.** A search that filtered graphs by the wall clock would
 watch a graph expire between one fork and the next, and two worlds would differ by how long the

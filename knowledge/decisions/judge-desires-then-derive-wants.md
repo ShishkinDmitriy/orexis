@@ -29,7 +29,7 @@ everything is in the store.
 
 **Two functions, each a file of its own — `judge_desires.py`, `derive_wants.py` — one contract each**, and a third beside them since, `scope_actions.py`, which writes the scopes the derivation clusters by.
 
-- `judge_desires(agent)`: every desire's compiled met-test run through the door at the present
+- `judge_desires(agent)`: every desire's compiled met-test run over the graphs holding at the present
   and at every prediction's start, and the answers written as one `deliberation:Judgment` per
   desire per instant — a `sh:ValidationReport`: `sh:conforms` true is met, false is unmet, and
   only an unmet one carries `sh:result`s, each naming the focus node, what it is about, which

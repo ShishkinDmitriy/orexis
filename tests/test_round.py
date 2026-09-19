@@ -17,6 +17,8 @@ from orexis_capability_market.ower import OwedJudgment
 from orexis_capability_market.terms import TENDERING
 
 from conftest import sensing_of, HUMIDITY, MOISTURE, build_agent, genesis_store, open_round_for, wired_actuator_for, wired_hosted_markets, wired_markets, wired_sensors
+from orexis_agent_progression.ontology import FORESEEN
+from orexis_agent_progression import clock
 
 
 @pytest.fixture
@@ -1044,7 +1046,7 @@ def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):
     obligation = next(g for g in host.pursuing() if isinstance(g, OwedJudgment))
     move = host.deliberator.propose_for(obligation)
     assert move == "http://example.org/orexis/market#Acquiring", \
-        "the plan's first step is the refill — the search found the chain the reflex never could"
+        f"the plan's first step is the refill — the search found the chain the reflex never could; got {move}"
 
 
 def test_a_host_holding_enough_serves_the_presented_claim_by_the_same_search(host):
@@ -1131,7 +1133,8 @@ def test_the_rows_presence_is_the_openness_and_no_rule_asks_the_clock(make):
         from orexis_agent_deliberation.afforder import Afforder
         from orexis_agent_deliberation.affordances import Affordances
         from orexis_agent_progression.ontology import picks_graph
-        return any(row.action == ACQUIRING for row in Afforder(Actions(fern.beliefs), Affordances(fern.beliefs), fern.desires, fern.me.uri, picks_graph(fern.id)).offered(at=at))
+        return any(row.action == ACQUIRING for row in Afforder(Actions(fern.beliefs), Affordances(fern.beliefs), fern.desires, fern.me.uri, picks_graph(fern.id)).offered(
+            graphs=fern.beliefs.graphs_of(*FORESEEN, at=at or clock.now())))
 
     assert not buying(), "past its period the round reaches no rule, and buying is off the menu"
     assert buying(at=now - timedelta(seconds=10)), \
@@ -1156,7 +1159,8 @@ def test_the_venue_cools_by_a_fact_that_holds_during_the_cooldown(host):
     from orexis_agent_progression.store import bindings
 
     def cooling(at=None) -> list:
-        return bindings(host.beliefs.query_at(f"SELECT ?until WHERE {{ ?v <{COOLING_UNTIL}> ?until }}", at=at))
+        return bindings(host.beliefs.query(f"SELECT ?until WHERE {{ ?v <{COOLING_UNTIL}> ?until }}",
+                                           host.beliefs.graphs_of(*FORESEEN, at=at or clock.now())))
 
     open_auction(host)
     assert cooling() == [], "a venue with a round open is not cooling"

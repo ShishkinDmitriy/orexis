@@ -46,6 +46,7 @@ from .beliefs import ACTUATION_PICKS
 from .terms import ACTUATION, DOSING
 from .wiring import actuator_for, actuators_of
 from orexis_agent_progression import clock
+from orexis_agent_progression.ontology import PUBLIC
 
 SENSING = "http://example.org/orexis/sensing#SensingCapability"  # whoever can look, asked by family
 
@@ -95,7 +96,7 @@ class ActuationModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        self.actuators = actuators_of(agent.beliefs.query, self.me.uri)
+        self.actuators = actuators_of(agent.beliefs.reader(PUBLIC), self.me.uri)
         self.settled: set[str] = set()
         # Commanded and not yet confirmed: jti -> (deadline, plant, ml). A dose leaves here on
         # the device's report, or on the sweep deciding nobody is going to send one.
@@ -127,7 +128,7 @@ class ActuationModule(Module):
         """
         rows = bindings(self.agent.beliefs.query(
             f'SELECT ?sid WHERE {{ ?a orexis:localId "{winner_id}" ; orexis:actsFor ?s . '
-            f'?s orexis:localId ?sid }} LIMIT 1'))
+            f'?s orexis:localId ?sid }} LIMIT 1', self.agent.beliefs.graphs_of(PUBLIC)))
         return rows[0]["sid"] if rows else winner_id
 
     def _subject_uri_of(self, winner_id: str) -> str | None:
@@ -143,7 +144,7 @@ class ActuationModule(Module):
         rows = bindings(self.agent.beliefs.query(
             f'SELECT ?s WHERE {{ {{ ?a orexis:localId "{winner_id}" ; orexis:actsFor ?s }} '
             f'UNION {{ ?s orexis:localId "{winner_id}" . FILTER NOT EXISTS {{ ?s orexis:actsFor ?x }} }} }} '
-            f'LIMIT 1'))
+            f'LIMIT 1', self.agent.beliefs.graphs_of(PUBLIC)))
         return rows[0]["s"] if rows else None
 
     def command_for(self, claim) -> tuple[Command, object]:
@@ -281,7 +282,7 @@ SELECT ?source ?p WHERE {{
   <{self.me.uri}> orexis:actsFor ?subject ; actuation:hasActuator ?lever ;
       sensing:polls ?s .
   ?lever actuation:actuates ?subject ; actuation:drawsFrom ?source .
-  ?s sensing:monitors ?source ; sosa:observes ?p }} LIMIT 1"""))
+  ?s sensing:monitors ?source ; sosa:observes ?p }} LIMIT 1""", self.agent.beliefs.graphs_of(PUBLIC)))
         if not rows:
             return None
         sensing = self.agent.provider(SENSING)
@@ -291,7 +292,7 @@ SELECT ?source ?p WHERE {{
     def _conversion_for(self, observed_property: str) -> float | None:
         rows = bindings(self.agent.beliefs.query(_CONVERSION_Q % (
             self.me.uri, self.me.uri, observed_property,
-            self.agent.beliefs.graph, self.me.uri)))
+            self.agent.beliefs.graph, self.me.uri), self.agent.beliefs.graphs_of(PUBLIC)))
         return float(rows[0]["v"]) if rows and rows[0].get("v") is not None else None
 
     def redeem(self, claim) -> Command:

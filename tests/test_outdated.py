@@ -20,6 +20,9 @@ from orexis_capability_market.bidding import claim_graph
 from orexis_capability_market.ower import obligation_graph
 from orexis_capability_sensing import predictions, readings
 from conftest import (MOISTURE, build_agent, genesis_store, stake_of, wired_markets, write_reading)
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import PREDICTION
+from orexis_agent_progression.ontology import KNOWN
 
 STORED = "http://example.org/orexis/water#StoredLitres"
 
@@ -41,7 +44,7 @@ def test_one_sweep_drops_a_round_a_claim_and_a_cooling_row_past_their_ends(monke
              claim_graph(fern.id, "j-old")}
     assert ended <= set(fern.beliefs.periods()), "held, though ended — nothing has swept yet"
     assert ended <= set(fern.beliefs.outdated())
-    assert not (ended & set(fern.beliefs.recorded_graphs())), "and the door hands none of them to anybody"
+    assert not (ended & set(fern.beliefs.graphs_of(*KNOWN, at=clock.now()))), "and a reader at this instant is handed none of them"
     assert rounds.rounds_of(fern) == [] and fern.bidding()._claim_on(market.uri) is None
     assert fern.upkeep.sweep() >= 3
     assert not (ended & set(fern.beliefs.periods())), "gone, classification and period with them"
@@ -56,13 +59,13 @@ def test_a_pursued_child_and_a_prediction_past_their_ends_are_swept(monkeypatch)
     child = mint(agent, root, holds_at=clock.now() - timedelta(days=1))
     assert child is not None
     write_reading(agent, 0.12, MOISTURE, age_s=2 * 86400)
-    reading = readings.current_reading(agent.beliefs.query, agent.me.acts_for, MOISTURE)
+    reading = readings.current_reading(agent.beliefs.reader(PUBLIC), agent.me.acts_for, MOISTURE)
     ladder = predictions.write(agent, agent.me.uri, agent.me.acts_for, MOISTURE, reading, 600.0, 45.0)
     assert ladder
     ended = {agent.wants.graph_of(agent.id, child), *ladder}
     assert ended <= set(agent.beliefs.outdated())
     assert pursuit.child_of(agent, root) is None, "a child past its instant is pursued by nobody"
-    assert agent.beliefs.prediction_graphs() == []
+    assert agent.beliefs.graphs_of(PREDICTION, at=clock.now()) == []
     assert agent.upkeep.sweep() >= len(ended)
     assert not (ended & set(agent.beliefs.periods()))
 

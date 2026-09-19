@@ -20,6 +20,7 @@ from orexis_agent_progression.ontology import ACTIONS_GRAPH, ONTOLOGY_GRAPH
 from onboarding.validate import deliberable, ids_are_unique
 
 from conftest import genesis_store
+from orexis_agent_progression.ontology import PUBLIC
 
 
 def desires_of(st):
@@ -99,7 +100,7 @@ def test_an_action_states_both_texts_or_neither(monkeypatch, caplog):
     wants = desires_of(st)
     assert deliberable(st, wants), "the shipped world, Presenting included, passes"
     for agent_id, agent_wants in wants.items():
-        me = load_self(st.query, agent_id)
+        me = load_self(st.reader(PUBLIC), agent_id)
         rows = Afforder(Actions(st), Affordances(st), agent_wants, me.uri, picks_graph(agent_id)).offered()
         assert not any(r.action.endswith("Presenting") for r in rows), \
             f"{agent_id}: an action with neither text is on no menu"
@@ -184,12 +185,12 @@ def test_load_self_refuses_rather_than_picking_one(monkeypatch):
     from agent.world import WorldError, load_self
 
     st = genesis_store(world="simulation")
-    me = load_self(st.query, "fern")
+    me = load_self(st.reader(PUBLIC), "fern")
     assert me.agent_id == "fern"
 
     _clone_agent_under_the_same_id(st, "fern")
     with pytest.raises(WorldError, match="answer to localId"):
-        load_self(st.query, "fern")
+        load_self(st.reader(PUBLIC), "fern")
 
 
 

@@ -21,10 +21,16 @@ GRAPH :actions {
 
 # CHANGED, re-rendered:
 GRAPH :catalogue {
-  :actions a orexis:PublicGraph .
-  :catalogue a orexis:CatalogueGraph .
-  :ontology a orexis:OntologyGraph .
+  :actions a orexis:Graph ;
+      a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph ;
+      a orexis:Graph .
+  :ontology a orexis:Graph ;
+      a orexis:OntologyGraph ;
+      a orexis:PublicGraph .
   scopes:keeper a deliberation:ScopeGraph ;
+      a orexis:Graph ;
+      a orexis:WorkingGraph ;
       orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf :keeper .
 }
@@ -43,11 +49,14 @@ GRAPH :ontology {
   deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
   deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
   deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
   orexis:DesireGraph rdfs:subClassOf orexis:Graph .
   orexis:OntologyGraph rdfs:subClassOf orexis:PublicGraph .
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:PublicGraph rdfs:subClassOf orexis:Graph .
+  orexis:RecordGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:WantGraph rdfs:subClassOf orexis:Graph .
   orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
 }

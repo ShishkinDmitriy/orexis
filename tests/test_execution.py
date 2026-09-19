@@ -191,7 +191,7 @@ def test_an_impulse_within_patience_writes_no_row(monkeypatch):
     assert len(keeper.standing()) == n
     from orexis_agent_progression.store import bindings
     everything = bindings(keeper.agent.intentions.query(
-        "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a <http://example.org/orexis/progression#Intention> } }"))
+        "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a <http://example.org/orexis/progression#Intention> } }", ()))
     assert int(everything[0]["n"]) == n, "no dropped rows either"
 
 

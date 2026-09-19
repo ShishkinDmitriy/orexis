@@ -22,6 +22,7 @@ from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import Store, bindings
 from orexis_agent_progression.store import PREFIXES
 from agent.validate import conforms
+from orexis_agent_progression.ontology import PUBLIC
 
 ZZ = "http://example.org/orexis/zamioculcas#ZamioculcasZamiifolia"
 
@@ -88,7 +89,7 @@ def test_one_triple_plants_it_and_the_species_supplies_the_rest():
               <http://example.org/orexis/world/simulation#fern> ?rel ?range .
               VALUES ?rel { ssn-system:hasOperatingRange ssn-system:hasSurvivalRange }
               ?range a ?kind ; ssn-system:inCondition ?c .
-              ?c ssn:forProperty ?property ; schema:minValue ?min ; schema:maxValue ?max }"""))
+              ?c ssn:forProperty ?property ; schema:minValue ?min ; schema:maxValue ?max }""", _store(w).graphs_of(PUBLIC)))
 
         got = {(r["kind"].rsplit("/", 1)[-1], r["property"].rsplit("#", 1)[-1]) for r in rows}
         # Illuminance among them although nothing measures light: a range is a fact about the
@@ -109,7 +110,7 @@ def test_a_ferns_desire_will_not_do_for_a_zamioculcas(zz_world):
     st = _store(zz_world)
     genesis.birth(st, zz_world, "fern")
     data = rdflib.Graph()
-    for iri in st.public_graphs():
+    for iri in st.graphs_of(PUBLIC):
         ttl = st.get_graph(iri)
         if ttl.strip():
             data.parse(data=ttl, format="turtle")

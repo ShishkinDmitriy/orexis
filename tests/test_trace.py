@@ -20,6 +20,7 @@ from orexis_agent_deliberation import planner as search, trace
 from orexis_agent_deliberation.planner import Planner
 
 from conftest import build_agent, genesis_store
+from orexis_agent_progression.ontology import PUBLIC
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 KERNEL = "http://example.org/orexis#"
@@ -153,9 +154,9 @@ def test_what_it_weighed_is_private(monkeypatch):
     agent, planner, desire = _gardener(monkeypatch, DRY)
     planner.plan(desire)
 
-    assert DELIBERATION_GRAPH not in agent.beliefs.public_graphs()
+    assert DELIBERATION_GRAPH not in agent.beliefs.graphs_of(PUBLIC)
     assert bindings(agent.beliefs.query(
-        f"SELECT ?s WHERE {{ ?s a <{TRACE_NS}Deliberation> }}")) == [], \
+        f"SELECT ?s WHERE {{ ?s a <{TRACE_NS}Deliberation> }}", agent.beliefs.graphs_of(PUBLIC))) == [], \
         "a public query must not reach what an agent thought about doing"
     assert _trace(agent, agent.beliefs.query_union), \
         "and the sovereign, who asks over the union, must"
@@ -210,7 +211,7 @@ def test_a_shape_want_shows_the_select_it_was_judged_by_and_the_shape_stays_clea
 
     road, text = _judged(agent)
     assert road == trace.COMPILED
-    public = graph_from(agent.beliefs, *agent.beliefs.public_graphs())
+    public = graph_from(agent.beliefs, *agent.beliefs.graphs_of(PUBLIC))
     shape = public.value(URIRef(want.uri), URIRef(f"{KERNEL}metWhen"))
     #  MODULO VARIABLE NUMBERING. The compiler names variables in the order it meets the
     #  shape's blank nodes, and rdflib hands a cbd's blank nodes in an order that differs
@@ -222,7 +223,7 @@ def test_a_shape_want_shows_the_select_it_was_judged_by_and_the_shape_stays_clea
         "the trace must show the select the pass actually ran, not a paraphrase of it"
     assert "SELECT" in text
     #  Never written INTO the shape, in any store the agent holds.
-    for query in (agent.beliefs.query_union, agent.desires.query_union):
+    for query in (agent.beliefs.query_union, agent.desires.query):
         assert not bindings(query(
             f"SELECT ?c WHERE {{ <{shape}> sh:sparql ?c }}")), \
             "the compiled select is an explanation in the trace, never a constraint on the shape"

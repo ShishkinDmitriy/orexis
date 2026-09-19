@@ -14,6 +14,7 @@ import re
 from orexis_capability_sensing.regions import regions_of
 
 from conftest import sensing_of, MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
+from orexis_agent_progression.ontology import PUBLIC
 
 
 def _judged(st, *extra):
@@ -22,7 +23,7 @@ def _judged(st, *extra):
     from orexis_agent_deliberation import effects
     from agent.validate import graph_from
 
-    data = graph_from(st, *st.public_graphs(), *extra)
+    data = graph_from(st, *st.graphs_of(PUBLIC), *extra)
     for triple in desires_build(st, "fern").construct(
             "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):
         data.add(effects._triple(triple))
@@ -46,7 +47,7 @@ def test_the_query_and_the_module_are_one_definition(query_with_readings, monkey
     declared query is held to at exactly that fallback."""
     st = genesis_store({("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0})
     gaps = _gaps(st, FERN, monkeypatch=monkeypatch)
-    regions = regions_of(st.query, FERN)
+    regions = regions_of(st.reader(PUBLIC), FERN)
     assert set(gaps) == {MOISTURE, TEMPERATURE}
     for prop, gap in gaps.items():
         assert abs(gap.gap) == round(regions[prop].urgency(gap.value), 6) or \

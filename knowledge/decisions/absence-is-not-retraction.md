@@ -71,7 +71,7 @@ background refresh.
 - ~~**The round sweep runs on one agent's one event.**~~ Closed (#398), and closed again
   (#645). Retracting what the clock has ended was a choir hook, `orexis:sweep`, asked of every
   module on the agent's own housekeeping tick; everything sourced at a time is a graph
-  holding during a period now, the door hides one past its end from every reader, and ONE
+  holding during a period now, a reader asking at an instant is handed none past its end, and ONE
   sweep in upkeep drops such graphs whatever their kind — on the tick, and at boot. What
   stays with the owner is what the ending MEANS: the kernel tells `orexis:outdated` before
   the drop, and the owner writes the verdict the graph leaves. What the tick guarantees is

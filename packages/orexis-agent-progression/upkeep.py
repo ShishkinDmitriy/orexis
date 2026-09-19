@@ -38,6 +38,7 @@ from pathlib import Path
 from .timer import Timer
 from orexis_agent_progression.ontology import OUTDATED
 from orexis_agent_progression.store import bindings
+from orexis_agent_progression.ontology import PUBLIC
 
 log = logging.getLogger("upkeep")
 
@@ -86,7 +87,7 @@ class BeliefBaseUpkeep:
 
     def __init__(self, agent):
         self.agent = agent
-        rows = bindings(agent.beliefs.query(_RATIO_Q))
+        rows = bindings(agent.beliefs.query(_RATIO_Q, agent.beliefs.graphs_of(PUBLIC)))
         if not rows:
             raise RuntimeError(
                 "the ontology states no orexis:maxBytesPerTriple — this build's vocabulary is older "

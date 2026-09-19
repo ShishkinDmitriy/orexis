@@ -10,6 +10,7 @@ from orexis_agent_progression.act import method_of, takers_of
 from orexis_agent_progression.store import bindings
 from orexis_capability_market.terms import ACQUIRING, PRESENTING, TENDERING
 from conftest import MOISTURE, build_agent, genesis_store, predicted_reading, stake_of
+from orexis_agent_progression.ontology import PUBLIC
 
 
 def _fern(monkeypatch, moisture=0.30):
@@ -18,8 +19,8 @@ def _fern(monkeypatch, moisture=0.30):
 
 def test_the_method_is_read_in_order_and_the_takers_follow_it(monkeypatch):
     fern = _fern(monkeypatch)
-    assert method_of(fern.beliefs.query, ACQUIRING) == [TENDERING, PRESENTING]
-    assert method_of(fern.beliefs.query, TENDERING) == [], "a step of a method is its own one step"
+    assert method_of(fern.beliefs.reader(PUBLIC), ACQUIRING) == [TENDERING, PRESENTING]
+    assert method_of(fern.beliefs.reader(PUBLIC), TENDERING) == [], "a step of a method is its own one step"
     assert [m.name for m in takers_of(fern, ACQUIRING)] == ["bidding"], \
         "an abstract action is taken through its steps, so its taker is theirs"
 

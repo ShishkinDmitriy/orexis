@@ -16,6 +16,7 @@ from orexis_capability_reporting import sovereign
 from onboarding import mqtt as mqtt_admin
 
 from conftest import build_agent, genesis_store
+from orexis_agent_progression.ontology import PUBLIC
 
 
 @pytest.fixture
@@ -53,12 +54,12 @@ def test_a_select_is_answered_from_the_live_store(fern):
 
 def test_an_update_is_refused_by_the_engine_not_a_filter(fern):
     before = fern.beliefs.query(
-        "SELECT ?v WHERE { ?a <http://example.org/orexis/sensing#slowSleepS> ?v }")
+        "SELECT ?v WHERE { ?a <http://example.org/orexis/sensing#slowSleepS> ?v }", fern.beliefs.graphs_of(PUBLIC))
     _ask(fern, 'INSERT DATA { <http://example.org/x> <http://example.org/y> "stolen" }')
     answer = _answer(fern)
     assert "error" in answer, "an update must come back as the engine's own refusal"
     assert fern.beliefs.query(
-        "SELECT ?v WHERE { ?a <http://example.org/orexis/sensing#slowSleepS> ?v }") == before
+        "SELECT ?v WHERE { ?a <http://example.org/orexis/sensing#slowSleepS> ?v }", fern.beliefs.graphs_of(PUBLIC)) == before
 
 
 def test_a_question_for_another_agent_is_not_taken(fern):

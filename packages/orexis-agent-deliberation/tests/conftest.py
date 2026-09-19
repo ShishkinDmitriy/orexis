@@ -54,19 +54,21 @@ def stand_in(case: Path, text: str | None = None):
     #  vocabulary's, and they say what every graph class the road asks by is beneath; a case
     #  with no catalogue is refused, since a store that says nothing of its graphs has no
     #  public knowledge to read, and one typing no vocabulary graph the same, since the axioms
-    #  would have nowhere to go. No name in a case is the kernel's but the state graph's, which
-    #  the door spells (a-graph-holds-during-a-stretch); every other graph is called what the
-    #  case likes and found by what the catalogue says of it.
+    #  would have nowhere to go. No name in a case is the kernel's: every graph is called what
+    #  the case likes and found by what the catalogue says of it, the readings included.
     assert st.catalogue is not None, f"{case.name} names no graph that describes itself as the catalogue"
     (ontology,) = st.graphs_of(OREXIS + "OntologyGraph") or [None]
     assert ontology is not None, f"{case.name} types no graph as the vocabulary's"
     st.update(f"""INSERT DATA {{ GRAPH <{ontology}> {{
         orexis:PublicGraph rdfs:subClassOf orexis:Graph . orexis:OntologyGraph rdfs:subClassOf orexis:PublicGraph .
+        orexis:BeliefGraph rdfs:subClassOf orexis:Graph . orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
+        orexis:RecordGraph rdfs:subClassOf orexis:Graph .
         orexis:CatalogueGraph rdfs:subClassOf orexis:Graph . orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
         orexis:PredictionGraph rdfs:subClassOf orexis:Graph . orexis:DesireGraph rdfs:subClassOf orexis:Graph .
         orexis:WantGraph rdfs:subClassOf orexis:Graph . deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
         deliberation:JudgmentGraph rdfs:subClassOf orexis:WorkingGraph .
         deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph . }} }}""")
+    st.close_catalogue()      # a case's rows say one class each; every kind stands on them now, as on a volume's
     desires, wants = Desires(st), Wants(st)
     wants.on_saved.append(lambda _: desires.rebuild())
     wants.on_deleted.append(lambda _: desires.rebuild())

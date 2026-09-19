@@ -135,7 +135,7 @@ package's own, until every timed graph was dropped by one function). The general
 when the cooldown runs out, which is TRUE the whole time the row is written — so its presence
 said nothing and every reader did the arithmetic. A row whose presence is meant to BE a fact
 has to be named for the state: `market:coolingUntil`, present while the venue is cooling —
-since #645 a graph holding during the cooldown, which the door hands to nobody once it ran out
+since #645 a graph holding during the cooldown, which no reader is handed once it ran out
 and the one sweep drops, with no timer of its own and nothing left behind by a restart. So the premise asks
 whether the row is there and compares nothing, and this package's rules read no clock at all —
 held to it by `tests/test_clockless.py`, which names the two that are left, both sensing's.

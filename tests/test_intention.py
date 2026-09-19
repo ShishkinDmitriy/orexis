@@ -25,6 +25,7 @@ from orexis_capability_market.terms import ACQUIRING, TENDERING
 from orexis_capability_sensing.terms import OBSERVING
 
 from conftest import sensing_of, stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading
+from orexis_agent_progression.ontology import PUBLIC
 
 FERN = "http://example.org/orexis#fern_agent"
 
@@ -162,7 +163,7 @@ def test_past_its_patience_a_new_adoption_supersedes(make):
     from orexis_agent_progression.store import bindings
     rows = bindings(fern.beliefs.query(
         "SELECT ?why WHERE { GRAPH <%s> { <%s> progression:outcome \"dropped\" ; "
-        "progression:becauseOf ?why } }" % (intentions_graph("fern"), first)))
+        "progression:becauseOf ?why } }" % (intentions_graph("fern"), first), fern.beliefs.graphs_of(PUBLIC)))
     assert any("outwaited" in r["why"] for r in rows)
 
 
@@ -177,10 +178,10 @@ def test_intentions_are_nobody_elses_to_read(make):
     An unqualified pattern — what any peer's query amounts to — finds nothing."""
     fern = make("fern", _reading(0.10))
     fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
-    assert intentions_graph("fern") not in fern.beliefs.public_graphs()
+    assert intentions_graph("fern") not in fern.beliefs.graphs_of(PUBLIC)
     from orexis_agent_progression.store import bindings
     assert bindings(fern.beliefs.query(
-        "SELECT ?i WHERE { ?i a progression:Intention }")) == []
+        "SELECT ?i WHERE { ?i a progression:Intention }", fern.beliefs.graphs_of(PUBLIC))) == []
 
 
 def test_the_agent_reports_what_stands_and_how_old(make):

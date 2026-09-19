@@ -15,6 +15,8 @@ from orexis_agent_progression.ontology import OREXIS, picks_graph
 from orexis_agent_progression.store import bindings
 
 from conftest import genesis_store
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import KNOWN
 
 #  The desire modality's graph classes (DesireGraph, ConstraintGraph, BoundsGraph) retired
 #  with #312: its carrier is a STORE, and inside a store the graphs say only who put the fact
@@ -44,7 +46,7 @@ def test_every_public_graph_declares_a_modality_and_an_arrival():
     whose content a reader must guess at — which is how a region spent months being called a
     desire."""
     st = genesis_store()
-    for graph in st.public_graphs():
+    for graph in st.graphs_of(PUBLIC):
         kinds = types_of(st, graph)
         if graph.endswith("desire/asserted"):
             #  The one public graph whose modality is a STORE (#312): the desire modality has
@@ -67,7 +69,7 @@ def test_the_regions_live_in_the_desire_modality_and_nowhere_else():
     assert "http://example.org/orexis/graph/constraint" not in set(st.graph_names()), \
         "genesis must derive no wants — the modality's build is the one place they come to exist"
     wants = desires_build(st, "fern")
-    assert wants.query_union(
+    assert wants.query(
         "ASK { ?region <http://example.org/orexis#violationIs> "
         "<http://example.org/orexis#Below> }")["boolean"], \
         "and the build must hold the derived regions"
@@ -97,10 +99,10 @@ def test_the_modality_vocabulary_is_closed():
     arrival is a design decision, not a term someone adds in passing."""
     st = genesis_store()
     declared = {r["m"].rsplit("#", 1)[-1] for r in bindings(st.query(
-        f"SELECT ?m WHERE {{ ?m rdfs:subClassOf <{OREXIS}Graph> }}"))}
+        f"SELECT ?m WHERE {{ ?m rdfs:subClassOf <{OREXIS}Graph> }}", st.graphs_of(PUBLIC)))}
     assert MODALITIES <= declared
     arrivals = {r["a"].rsplit("#", 1)[-1] for r in bindings(st.query(
-        f"SELECT ?a WHERE {{ ?a a <{OREXIS}Arrival> }}"))}
+        f"SELECT ?a WHERE {{ ?a a <{OREXIS}Arrival> }}", st.graphs_of(PUBLIC)))}
     assert arrivals == ARRIVALS
 
 
@@ -126,12 +128,12 @@ def test_the_agents_graphs_are_classified_by_their_owners_and_review_s_three_are
         assert cls in types_of(st, graph) and arrival_of(st, graph) == {"Recorded"}, \
             f"{cls}: its owner classified it at construction"
         assert graph in st.graphs_of(ns + cls), "and a reader asking by class is handed it"
-    #  Review's three are WORKING graphs — the agent's own and not carried — so the door that
-    #  hands a reader what the agent owns hides them by design; the keeper's promises it hands.
-    assert promises_graph("fern") in st.recorded_graphs()
-    assert not set(st.recorded_graphs()) & {summaries_graph("fern"), evidence_graph("fern"),
+    #  Review's three are of no kind a rule reads — the agent's own and nobody else's business —
+    #  so a reader asking for what a rule reads is handed none of them; the keeper's promises it is.
+    assert promises_graph("fern") in st.graphs_of(*KNOWN)
+    assert not set(st.graphs_of(*KNOWN)) & {summaries_graph("fern"), evidence_graph("fern"),
                                             revisions_graph("fern")}
-    assert not bindings(st.query("SELECT ?c WHERE { ?c orexis:graphPrefix ?p }")), \
+    assert not bindings(st.query("SELECT ?c WHERE { ?c orexis:graphPrefix ?p }", st.graphs_of(PUBLIC))), \
         "no class declares where its graphs live — a name is for eyes, code asks the class"
 
 
@@ -144,7 +146,7 @@ def test_a_working_graph_is_the_agents_and_not_carried(monkeypatch):
     from orexis_agent_progression.ontology import promises_graph
 
     fern = build_agent("fern", genesis_store(), monkeypatch)
-    carried = set(fern.beliefs.recorded_graphs())
+    carried = set(fern.beliefs.graphs_of(*KNOWN))
     for g in (picks_graph("fern"), promises_graph("fern")):
         assert g in carried
     for g in (summaries_graph("fern"), evidence_graph("fern"), revisions_graph("fern")):

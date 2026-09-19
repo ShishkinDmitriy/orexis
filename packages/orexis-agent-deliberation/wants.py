@@ -40,11 +40,12 @@ import logging
 from datetime import datetime
 
 from orexis_agent_progression import clock
-from orexis_agent_progression.ontology import OREXIS
+from orexis_agent_progression.ontology import OREXIS, WANT
 from orexis_agent_progression.store import bindings
 
 from .ontology import DELIBERATION, pursued_graph
 from .want import Want
+from orexis_agent_progression.ontology import RECORD
 
 log = logging.getLogger("wants")
 
@@ -111,7 +112,7 @@ class Wants:
         this collection, which is where `root_of` and the abouts went before it.
         """
         return self._select("?w a orexis:Want .", at, limit, offset,
-                            family="deliberation:PursuedGraph")
+                            family=DELIBERATION + "PursuedGraph")
 
     def find_all_by_desire(self, desire: str, at: datetime | None = None, *,
                            limit: int = PAGE, offset: int = 0) -> list[Want]:
@@ -132,7 +133,7 @@ class Wants:
         """
         found = self._select(
             f"?w a orexis:Want ; prov:wasDerivedFrom <{desire}> .", at, limit=1,
-            family="deliberation:PursuedGraph")
+            family=DELIBERATION + "PursuedGraph")
         return found[0] if found else None
 
     def find_first_by_uri(self, uri: str, at: datetime | None = None) -> Want | None:
@@ -190,18 +191,18 @@ INSERT DATA {{
 
     def _select(self, where: str, at: datetime | None = None,
                 limit: int = PAGE, offset: int = 0, family: str = "") -> list[Want]:
-        """Read every graph this store holds, keep the door THIS repository owns, and hand
-        back one ordered page.
+        """Read the graphs of wants holding at `at` — of one family where a finder names it —
+        and hand back one ordered page.
 
-        The union rather than `query_at`, because that door resolves a graph's class through
-        the vocabulary — so asking it would mean this collection could only be read out of a
-        store with an ontology loaded, which is a whole world to stand up a query. The union
-        needs nothing, and the part of the door that matters here is one filter: a graph whose
-        period has ENDED is not handed out (#645), which is exactly the question
-        `find_first_by_desire` is asking. A want IS its graph, so binding `?g` is what lets
-        this class ask about the graph while its callers ask about the want.
+        A WANT IS ITS GRAPH, so which family it belongs to and whether it still holds are
+        questions about the graph — the classification its writer set and the period it set
+        with it, never a property on the want — and a want lives in ONE graph, so the text
+        asks both of the catalogue itself, by the kinds it names and the instant it stands at
+        (a-reader-states-the-kinds-it-reads). No name, and no graph list handed in. It
+        replaced a filter on `orexis:bindsWhen`, which named a kind where a graph class
+        already said it (#681).
 
-        **ORDERED BEFORE IT IS CUT, and that is not decoration.** SPARQL leaves an unordered
+        **ORDERED BEFORE IT IS CUT, AND CAPPED BY DEFAULT.** SPARQL returns a
         result in whatever order the engine reached it, so a `LIMIT` over one is a pick by
         internal layout — the trap `beliefs.py` records, where a bare `LIMIT 1` read the PLANT
         for every pick until a load order changed. Ordering by the want's own name makes a page
@@ -212,12 +213,14 @@ INSERT DATA {{
         a cap: the caller gets a plausible answer and no way to know it was cut. Whoever meets
         the bound either pages or has a leak, and either way someone should see it.
         """
+        #  EVERY GRAPH A WANT MAY LIVE IN, where no family is named: the graphs of wants, and
+        #  the records — the ledger writes its debts as wants into its own record.
+        #  SAID IN THE TEXT, since a want lives in one graph: which kinds, by the catalogue's
+        #  rows — every kind a graph is stands on its row — and which instant, by the period
+        #  on the same row. The text is handed no default graph; it names what it reads.
         now = (at or clock.now()).isoformat()
-        #  A WANT IS ITS GRAPH, so asking which FAMILY it belongs to is asking of the graph —
-        #  the classification the writer set, not a property on the want. It replaced a filter
-        #  on `orexis:bindsWhen`, which named a kind where a graph class already said it (#681).
-        family = (f"\n  GRAPH <{self._store.catalogue}> {{ ?g a {family} }}" if family else "")
-        rows = bindings(self._store.query_union(f"""
+        kinds = " ".join(f"<{k}>" for k in ((family,) if family else (WANT, RECORD)))
+        rows = bindings(self._store.query(f"""
 SELECT ?w ?desire ?label ?holdsAt ?since (GROUP_CONCAT(STR(?about); separator=" ") AS ?abouts) WHERE {{
   GRAPH ?g {{
     {where}
@@ -226,11 +229,14 @@ SELECT ?w ?desire ?label ?holdsAt ?since (GROUP_CONCAT(STR(?about); separator=" 
     OPTIONAL {{ ?w orexis:holdsAt ?holdsAt }}
     OPTIONAL {{ ?w prov:generatedAtTime ?since }}
     OPTIONAL {{ ?w orexis:about ?about }}
-  }}{family}
-  FILTER NOT EXISTS {{
-    GRAPH <{self._store.catalogue}> {{ ?g dcterms:temporal ?period . ?period orexis:end ?end }}
-    FILTER(?end <= "{now}"^^xsd:dateTime) }}
-}} GROUP BY ?w ?desire ?label ?holdsAt ?since ORDER BY ?w LIMIT {int(limit)} OFFSET {int(offset)}"""))
+  }}
+  GRAPH ?catalogue {{
+    ?catalogue a orexis:CatalogueGraph .
+    ?g a ?kind . VALUES ?kind {{ {kinds} }}
+    OPTIONAL {{ ?g dcterms:temporal ?period . OPTIONAL {{ ?period orexis:start ?start }} OPTIONAL {{ ?period orexis:end ?end }} }} }}
+  FILTER(!BOUND(?start) || ?start <= "{now}"^^xsd:dateTime)
+  FILTER(!BOUND(?end) || ?end > "{now}"^^xsd:dateTime)
+}} GROUP BY ?w ?desire ?label ?holdsAt ?since ORDER BY ?w LIMIT {int(limit)} OFFSET {int(offset)}""", ()))
         #  A PAGE OF ONE IS ALWAYS FULL: `find_first_by_x` asks for one, and one standing is
         #  the ordinary answer, not a leak.
         if limit > 1 and len(rows) == limit:

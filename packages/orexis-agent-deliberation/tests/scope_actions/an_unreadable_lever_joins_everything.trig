@@ -24,7 +24,7 @@ GRAPH :actions {
 }
 
 GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :ontology a orexis:OntologyGraph .
-  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph , orexis:Graph .
+  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
+  :actions a orexis:PublicGraph , orexis:Graph .
 }

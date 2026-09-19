@@ -46,7 +46,7 @@ def take_standing(agent, standing, judgment) -> bool:
     """
     #  The act is the ledger's, read whole — action, lever, quantity, window — plus what the
     #  want is ABOUT (`orexis:about`, read back off the want), which is the want's and not the act's.
-    rows = bindings(agent.desires.query_union(
+    rows = bindings(agent.desires.query(
         f"SELECT ?about WHERE {{ <{standing.want}> orexis:about ?about }}"))
     act = replace(standing.step, about=rows[0]["about"] if rows else None)
     return carry_out(agent, act, judgment, standing.uri)

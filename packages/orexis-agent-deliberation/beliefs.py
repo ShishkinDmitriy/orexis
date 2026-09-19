@@ -23,6 +23,7 @@ from typing import get_type_hints
 
 from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import bindings
+from orexis_agent_progression.ontology import PUBLIC
 
 
 class BeliefError(RuntimeError):
@@ -106,7 +107,7 @@ class Beliefs:
         #  pattern matches two things and LIMIT 1 picks by the store's internal order, which
         #  a change to load order silently flips. It did: every pick read asked the PLANT.
         rows = bindings(store.query(
-            f'SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1'))
+            f'SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1', store.graphs_of(PUBLIC)))
         if not rows:
             raise BeliefError(
                 f"no agent with localId '{agent_id}' in this store — "
@@ -133,7 +134,8 @@ class Beliefs:
         record's own consumers — validation, review's revert — and as the machinery both
         share.
         """
-        return read_picks(self.query, self.agent_uri, self.graph, self.agent_id, picks)
+        #  The picks query names the graph it reads, so it is handed no default graph.
+        return read_picks(self.reader(), self.agent_uri, self.graph, self.agent_id, picks)
 
     def read_optional(self, picks: Picks):
         """The picks, or None if the agent said nothing about it at all.
@@ -147,7 +149,7 @@ class Beliefs:
         Only for picks whose absence is meaningful and harmless. A capability's parameters are
         neither: an agent missing those must not start.
         """
-        return read_picks_optional(self.query, self.agent_uri, self.graph,
+        return read_picks_optional(self.reader(), self.agent_uri, self.graph,
                                    self.agent_id, picks)
 
 

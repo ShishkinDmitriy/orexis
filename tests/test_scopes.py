@@ -15,12 +15,13 @@ from conftest import genesis_store
 from orexis_agent_deliberation import relevance as R
 from orexis_agent_deliberation.scope_actions import scopes, spans
 from orexis_agent_deliberation.planner import Planner
+from orexis_agent_progression.ontology import PUBLIC
 
 WORLDS = ("loner", "simulation", "courier", "hanoi")
 
 
 def _parts(store):
-    return scopes(R.actions_of(store.query), R.rule_edges())
+    return scopes(R.actions_of(store.reader(PUBLIC)), R.rule_edges())
 
 
 @pytest.mark.parametrize("world", WORLDS)
@@ -36,7 +37,7 @@ def test_every_shipped_world_is_one_scope(world):
     parts = _parts(store)
     assert len(parts) == 1, [sorted(p)[:4] for p in parts]
     assert len(parts[0]) > 50, "and it is the whole vocabulary, not a lone pair"
-    actions_alone = scopes(R.actions_of(store.query))
+    actions_alone = scopes(R.actions_of(store.reader(PUBLIC)))
     assert len(actions_alone) == 1, "the actions join it without the derivations' help"
 
 

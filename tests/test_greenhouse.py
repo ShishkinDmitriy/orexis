@@ -20,6 +20,8 @@ from orexis_agent_deliberation import relevance as R
 from orexis_agent_deliberation.scope_actions import scopes
 from orexis_agent_deliberation.planner import Planner
 from orexis_agent_progression.store import Raw
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import KNOWN
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 AIR = "http://example.org/orexis/water#AirTemperature"
@@ -114,7 +116,7 @@ def test_both_regimes_are_one_scope_which_is_the_predicate_level_limit(monkeypat
     _, apart = _grower(monkeypatch, dries=False)
     _, coupled = _grower(monkeypatch, dries=True)
     for store, regime in ((apart, "independent"), (coupled, "coupled")):
-        parts = scopes(R.actions_of(store.query), R.rule_edges())
+        parts = scopes(R.actions_of(store.reader(PUBLIC)), R.rule_edges())
         assert len(parts) == 1, f"{regime}: {len(parts)} scopes"
 
 
@@ -212,11 +214,11 @@ def test_the_outside_is_read_as_a_number_because_no_lever_moves_it(monkeypatch):
     agent, st = _grower(monkeypatch, outside=8.0)
     rows = bindings(st.query(f"""
 SELECT ?c WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:hasFeatureOfInterest <{WORLD}outside> ; a ?c }}
-  FILTER(CONTAINS(STR(?c), "band.")) }}"""))
+  FILTER(CONTAINS(STR(?c), "band.")) }}""", st.graphs_of(PUBLIC)))
     assert rows == [], "the outside is nobody's want, so it is in no band"
     values = bindings(st.query(f"""
 SELECT ?v WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:hasFeatureOfInterest <{WORLD}outside> ;
-  sosa:hasSimpleResult ?v }} }}"""))
+  sosa:hasSimpleResult ?v }} }}""", st.graphs_of(PUBLIC)))
     assert [float(r["v"]) for r in values] == [8.0], "and it keeps the number the instrument gave"
 
 
@@ -250,7 +252,7 @@ def _vented_band(agent, when) -> set:
     from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
 
     added, _ = effects.apply(
-        agent.beliefs, VENTING, when=when, me=f"<{agent.me.uri}>",
+        agent.beliefs, VENTING, graphs=agent.beliefs.graphs_of(*KNOWN, at=when), me=f"<{agent.me.uri}>",
         subject=f"<{agent.me.acts_for}>", about=f"<{AIR}>", state=f"<{STATE_GRAPH}>",
         picks=f"<{picks_graph('grower')}>", litres="0.0", lands=LANDS_AT)
     return {t.object.value.rsplit(".", 1)[-1] for t in added

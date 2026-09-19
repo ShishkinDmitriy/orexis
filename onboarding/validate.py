@@ -28,6 +28,7 @@ import sys
 from agent import genesis
 from orexis_agent_progression.store import Store, bindings
 from agent.validate import conforms, graph_from
+from orexis_agent_progression.ontology import PUBLIC
 
 log = logging.getLogger("validate")
 
@@ -52,7 +53,7 @@ def ids_are_unique(st) -> bool:
     a broker credential — rule 3's per-principal isolation defeated by a name collision — and
     `load_self` would hand whichever matched first a self assembled from both.
     """
-    rows = bindings(st.query(_DUPLICATE_IDS_Q))
+    rows = bindings(st.query(_DUPLICATE_IDS_Q, st.graphs_of(PUBLIC)))
     for row in rows:
         log.error("two agents answer to localId %r — %s. An id is the wire name for a broker "
                   "principal, a bucket, a volume and a private graph, so a collision is a "
@@ -102,7 +103,7 @@ def validate_world(world: str) -> bool:
     # the sovereign's check builds per agent exactly what the agent's own boot builds, and
     # judges the world against it. The pick records travel the same road and only that road —
     # flattened beside their projections they would split every blank-node aim in two.
-    data = graph_from(st, *st.public_graphs(), st.catalogue)
+    data = graph_from(st, *st.graphs_of(PUBLIC), st.catalogue)
     from orexis_agent_deliberation.beliefs import Beliefs
     from orexis_agent_deliberation.desires import Desires
 
@@ -178,7 +179,7 @@ def deliberable(st, desires: dict) -> bool:
               ?action a orexis:Action .
               OPTIONAL { ?action orexis:available ?available }
               OPTIONAL { ?action sh:construct ?construct }
-              FILTER(BOUND(?available) != BOUND(?construct)) }""")):
+              FILTER(BOUND(?available) != BOUND(?construct)) }""", st.graphs_of(PUBLIC))):
         faults += 1
         missing = "precondition" if not action.get("available") else "effect"
         log.error("%s states an action's %s and no %s — no loaded package says %s, and a "
@@ -189,11 +190,11 @@ def deliberable(st, desires: dict) -> bool:
     from orexis_agent_deliberation.relevance import unkeepable_bridges
     #  A BRIDGE INTO NOTHING (#532): a promise the level beneath could never keep, since no
     #  action writes the facts it translates into — refused once for the world, not per agent.
-    for fault in unkeepable_bridges(st.query):
+    for fault in unkeepable_bridges(st.reader(PUBLIC)):
         faults += 1
         log.error("%s", fault)
     for agent_id, wants in desires.items():
-        me = load_self(st.query, agent_id)
+        me = load_self(st.reader(PUBLIC), agent_id)
         #  Asked of the CLASSES this agent's grants would load, never of a built agent: an
         #  agent needs credentials onboarding has not minted yet, and a gate that had to run
         #  the runtime would be checking the thing it exists to run before.
@@ -203,7 +204,7 @@ def deliberable(st, desires: dict) -> bool:
         #  rather than found as an intention standing forever with nobody to carry it out.
         reach = [c for p in loader.packages_for(me.capabilities) for c in p.provides()
                  if isinstance(c, type)]
-        for fault in loader.untaken_actions(me.capabilities, lambda c: _families_of(st.query, c),
+        for fault in loader.untaken_actions(me.capabilities, lambda c: _families_of(st.reader(PUBLIC), c),
                                             list(answering), reach):
             faults += 1
             log.error("%s: %s", agent_id, fault)
@@ -211,9 +212,9 @@ def deliberable(st, desires: dict) -> bool:
         #  and the bands are public — asked of the desire modality this answered with nothing
         #  and the measure check below silently stopped running for every agent, which is the
         #  empty-loop failure this repo's own conftest exists to catch.
-        for observed_property in sorted(regions_of(st.query, me.uri)):
+        for observed_property in sorted(regions_of(st.reader(PUBLIC), me.uri)):
             if any(getattr(cls, "measures", None) is not None
-                   and cls.measures(st.query, observed_property) for cls in answering):
+                   and cls.measures(st.reader(PUBLIC), observed_property) for cls in answering):
                 continue
             faults += 1
             log.error("%s holds a stake in %s and nothing it composed can measure one — "

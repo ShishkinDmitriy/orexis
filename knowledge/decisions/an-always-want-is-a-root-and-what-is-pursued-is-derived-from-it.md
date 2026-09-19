@@ -67,7 +67,7 @@ a node of the same tree — the present advanced by every declared drift to the 
 duration, a happening edge in the sense of
 [planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md),
 reached by nobody choosing — with the pass's clock set there, so every step's rule reads the
-forecast holding at its own landing through the door that already honours a period. **What is
+forecast holding at its own landing, handed the graphs holding then. **What is
 chosen backward is the instant of each step, never a state.** Effects are constructs run forward
 at their instants as they are today, the goal stays a shape, and nothing declares an inverse.
 Where a step's instant is fixed by the world's schedule rather than by subtraction — a round
@@ -90,7 +90,7 @@ on one is `orexis:foresees`, beside the want, and a root stating none foresees n
 number (measured — only `HOURS`, `MINUTES` and `SECONDS` of a dateTime bind), so a pass that
 drifted from now would leave the seconds since the reading undrifted and judge the crossing
 inside. For a day the pass was clocked from the reading's instant instead, and #625 found the
-cost: a round opened after the reading did not hold at that instant, and the door hid it. The
+cost: a round opened after the reading did not hold at that instant, and no reader was handed it. The
 clock is now, and the kernel hands the age to the drift once, at the root. And a step placed
 at an instant waits on the clock
 alone — a deadline on the scheduler with nothing to re-ask, taken when it lapses — which is the
