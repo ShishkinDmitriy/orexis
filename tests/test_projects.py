@@ -113,8 +113,11 @@ def imported(paths: list[Path]) -> set[str]:
 def sources(root: Path) -> list[Path]:
     #  A package's own `test_*.py` is dev-time (a-package-may-test-itself). It imports pytest,
     #  which is the ROOT's dev extra and not a runtime dependency of anything shipped.
+    #  A package's own `tests/` is test code, its conftest included: what it imports —
+    #  pytest, above all — is the test runner's and not the distribution's to declare.
     return sorted(p for p in root.rglob("*.py")
-                  if "__pycache__" not in p.parts and not p.name.startswith("test_"))
+                  if "__pycache__" not in p.parts and "tests" not in p.parts
+                  and not p.name.startswith("test_"))
 
 
 def needed(root: Path, own_import_root: str | None) -> set[str]:

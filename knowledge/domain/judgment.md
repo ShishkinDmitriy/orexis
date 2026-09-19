@@ -2,11 +2,15 @@
 type: Domain Concept
 title: Judgment
 description: >-
-  How badly one desire is wanted right now, decided fresh on every pass and written down
-  nowhere. A capability makes it - the ledger from a claim's redeem window, sensing from the
-  survival envelope - and hands back a unit-free urgency, what the thing currently reads, and
-  when it runs out. It is the mind's VIEW of a desire, never the desire, and the difference is
-  that one is a row in a graph and the other is an answer to a question nobody stored.
+  What one desire reads at one instant, and how badly it is wanted. Two halves. The met
+  half is what the desire's own met-test read - met, or unmet with the results that say
+  which instances fail and why - judged at the present and at every foreseen instant and
+  written to the agent's judgment graph, whole, on every run of `judge_desires`; the wants
+  are derived from that graph and nothing in hand. The urgency half a capability makes fresh
+  on every pass - the ledger from a claim's redeem window, sensing from the survival
+  envelope - and hands back unit-free, with what the thing currently reads and when it runs
+  out. It is the mind's VIEW of a desire, never the desire.
+term: http://example.org/orexis/deliberation#Judgment
 ---
 
 # What it is
@@ -19,17 +23,24 @@ It carries the desire's name, an **urgency** between content and the edge of wha
 what the thing currently reads where anybody has a number for it, and the instant it stops
 being satisfiable. `Agent.pursuing()` hands back every one this agent is making, hottest first.
 
-# Nothing writes one down
+# The met half is written, the urgency half is not
 
-This is the whole of what separates it from the two kinds beside it. A desire is a node in the
-roots graph and a want is a graph of its own with a period; both are read back by whoever asks,
-and both survive a restart. A judgment exists for the length of one pass. Ask twice and you get
-two, made from whatever the world looked like each time — which is correct, because urgency is
-a function of a situation and a situation moves.
+A desire is a node in the roots graph and a want is a graph of its own with a period; both
+survive a restart. A judgment exists for one run. Its MET half — what the desire's met-test
+read, and the results where unmet, in SHACL's own words for a report, `sh:conforms` and
+`sh:result` — is written to the agent's judgment graph by `judge_desires`, one judgment per
+desire per instant, the present and every foreseen one, and the graph is replaced whole on
+the next run. That is what makes the road two functions over the store
+([judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md)): the
+wants are derived from the judgments and nothing in hand, and the judgments are there for
+eyes, for the snapshots and for `orexis-ask` to answer *why do I want this*. The graph is a
+WORKING one, like the deliberation trace: a conclusion, never carried into a possible world
+and never a record, kept because a reader outside the process cannot recompute it.
 
-So there is no term for it. The T-Box carries `orexis:Desire` and `orexis:Want` because those
-are written; it carries no word for this, and adding one would be
-[a term nobody reads](/decisions/capability-packages.md), stated by nothing.
+The URGENCY half is still made fresh on every pass and written nowhere. Ask twice and you get
+two, made from whatever the world looked like each time — which is correct, because urgency
+is a function of a situation and a situation moves. The term `deliberation:Judgment` is the
+written half's; the urgency joins it when the choir's answer is written beside it.
 
 # The measure is the package's, the scale is the kernel's
 

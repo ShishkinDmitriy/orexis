@@ -12,6 +12,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from orexis_agent_deliberation import pursuit
+from orexis_agent_deliberation.derive_wants import derive_wants, foresees_of
+from orexis_agent_deliberation.judge_desires import judge_desires
 from orexis_agent_deliberation.planner import Planner
 from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import bindings
@@ -64,7 +66,7 @@ def test_a_root_that_foresees_nothing_derives_nothing_from_a_prediction(monkeypa
     pursue — the first child's road, unchanged."""
     agent = _gardener(monkeypatch, FALLING)
     root = _stake(agent)
-    assert root.is_met and pursuit.foresees_of(agent, root.uri) is None
+    assert root.is_met and foresees_of(agent, root.uri) is None
     assert agent.deliberator.decide(root) is None
     assert pursuit.child_of(agent, root.uri) is None
 
@@ -159,12 +161,13 @@ def test_a_pot_that_crosses_before_the_drift_said_is_wanted_now_and_not_at_the_c
     root = _stake(agent)
     agent.deliberator.decide(root)
     child = _stake(agent)
-    [minted] = agent.wants.find_all_pursued()
+    [minted] = agent.wants.find_all_by_desire(root.uri)     # every desire derives; the stake's
     assert minted.uri == child.uri and minted.holds_at is not None, "minted at the crossing"
 
     write_reading(agent, 0.05)                                       # below the floor, now
     assert pursuit.handed(agent, child).holds_at is None, \
         "handed the want as it stands now, not as the pass first read it"
-    [again] = agent.wants.find_all_pursued()
+    [again] = agent.wants.find_all_by_desire(root.uri)
     assert again.uri == minted.uri and again.holds_at is None, "the same want, at no instant"
-    assert pursuit.top_up(agent, root.uri) == [], "and once is enough"
+    judge_desires(agent)
+    assert derive_wants(agent) == [], "and once is enough"

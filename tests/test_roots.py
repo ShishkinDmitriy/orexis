@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from agent import genesis
 from orexis_agent_deliberation import pursuit
+from orexis_agent_deliberation.derive_wants import foresees_of
 from orexis_agent_progression.ontology import picks_graph, roots_graph
 from orexis_agent_progression.store import bindings
 from conftest import build_agent, genesis_store
@@ -82,11 +83,11 @@ def test_a_re_pick_of_the_foresight_reaches_the_next_derivation_without_a_rebuil
     answers, not the belief of the day the root was born."""
     st, agent = _gardener(monkeypatch)
     root = "http://example.org/orexis#desire.gardener.SoilMoisture"
-    assert pursuit.foresees_of(agent, root) is None, "the loner states no foresight"
+    assert foresees_of(agent, root) is None, "the loner states no foresight"
     st.update(f"""INSERT DATA {{ GRAPH <{picks_graph("gardener")}> {{ <{GARDENER}> <{FORESIGHT}> 3600 }} }}""")
-    assert pursuit.foresees_of(agent, root) == 3600.0, "read from the belief, with no rebuild"
+    assert foresees_of(agent, root) == 3600.0, "read from the belief, with no rebuild"
     fresh = next(r for r in _roots(st) if r.startswith("http://example.org/orexis#fresh."))
-    assert pursuit.foresees_of(agent, fresh) is None, "an epistemic root foresees nothing"
+    assert foresees_of(agent, fresh) is None, "an epistemic root foresees nothing"
 
 
 def test_a_root_the_volume_never_held_is_endowed_at_boot_and_a_held_one_stays(monkeypatch):

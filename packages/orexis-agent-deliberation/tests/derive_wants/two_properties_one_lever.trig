@@ -1,0 +1,72 @@
+# two_properties_one_lever
+#
+# Level and temperature both out on tank1, and ONE lever moving both: one scope, one want about
+# both — the greenhouse's bed in miniature. About everything the desire is about, so named for the
+# tank alone.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+#
+# THE JUDGMENTS AS `judge_desires` LEFT THEM on this situation (judge_desires/two_properties_one_lever.trig):
+# the desires, the levers, whatever stands, and the judgment graph — no world, no readings,
+# no predictions. `derive_wants` reads the judgments and nothing in hand.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix graph: <http://example.org/orexis/graph/> .
+@prefix roots: <http://example.org/orexis/graph/roots/> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix judgments: <http://example.org/orexis/graph/judgments/> .
+
+GRAPH roots:keeper {
+  :in_range a sh:NodeShape ;
+      sh:property [ orexis:about :level ;
+          sh:minInclusive 10 ;
+          sh:path :level ] ;
+      sh:property [ orexis:about :temperature ;
+          sh:maxInclusive 30 ;
+          sh:path :temperature ] ;
+      sh:targetClass :Tank .
+  :keeper orexis:holds :keeper.in_range .
+  :keeper.in_range a orexis:Desire ;
+      orexis:about :level ;
+      orexis:about :temperature ;
+      orexis:foresees 3600 ;
+      orexis:metWhen :in_range ;
+      rdfs:label "every tank in range" .
+}
+
+GRAPH :actions {
+  :fix a orexis:Action ;
+      sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?t :level ?x . ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
+}
+
+GRAPH judgments:keeper {
+  :keeper.in_range.judgment a deliberation:Judgment ;
+      deliberation:judges :keeper.in_range ;
+      prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
+      sh:conforms false ;
+      sh:result [ a sh:ValidationResult ;
+          deliberation:constraint 0 ;
+          orexis:about :level ;
+          sh:focusNode :tank1 ;
+          sh:value 5 ] ;
+      sh:result [ a sh:ValidationResult ;
+          deliberation:constraint 1 ;
+          orexis:about :temperature ;
+          sh:focusNode :tank1 ;
+          sh:value 40 ] .
+}
+
+GRAPH graph:classification {
+  judgments:keeper a deliberation:JudgmentGraph ;
+      orexis:arrivedBy orexis:Derived ;
+      orexis:beliefsOf :keeper .
+  roots:keeper a orexis:DesireGraph .
+}

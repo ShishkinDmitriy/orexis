@@ -13,6 +13,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from orexis_agent_deliberation import pursuit
+from orexis_agent_deliberation.derive_wants import mint
 from orexis_agent_progression import clock
 from orexis_capability_market import rounds
 from orexis_capability_market.bidding import claim_graph
@@ -52,7 +53,7 @@ def test_a_pursued_child_and_a_prediction_past_their_ends_are_swept(monkeypatch)
     ladder predicted from a reading two days old."""
     agent = build_agent("gardener", genesis_store({("zz", MOISTURE): 0.12}, world="loner"), monkeypatch)
     root = stake_of(agent).uri
-    child = pursuit.mint(agent, root, holds_at=clock.now() - timedelta(days=1))
+    child = mint(agent, root, holds_at=clock.now() - timedelta(days=1))
     assert child is not None
     write_reading(agent, 0.12, MOISTURE, age_s=2 * 86400)
     reading = readings.current_reading(agent.beliefs.query, agent.me.acts_for, MOISTURE)

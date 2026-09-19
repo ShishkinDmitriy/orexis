@@ -23,3 +23,16 @@ def pursued_graph(agent_id: str) -> str:
     """ONE agent's pursued wants (#618): the wants derived under its `orexis:Desire` roots while
     they read unmet — a recorded graph the desire modality projects, disclosed like the ledger."""
     return "http://example.org/orexis/graph/pursued/" + agent_id
+
+
+#  A JUDGMENT (judge-desires-then-derive-wants): what a desire's met-test read at an instant,
+#  in SHACL's words for a report, `deliberation:judges` the desire.
+JUDGMENT = DELIBERATION + "Judgment"
+JUDGES = DELIBERATION + "judges"
+CONSTRAINT = DELIBERATION + "constraint"
+
+
+def judgments_graph(agent_id: str) -> str:
+    """ONE agent's judgments, replaced whole on every run of `judge_desires`: a working
+    graph, read by `derive_wants` and by eyes, carried by no plan and recorded by nothing."""
+    return "http://example.org/orexis/graph/judgments/" + agent_id

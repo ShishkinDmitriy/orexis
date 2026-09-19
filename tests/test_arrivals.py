@@ -38,9 +38,12 @@ def _ower(agent):
     return agent.hosting().ledger
 
 
-def _stock(agent):
+def _stock(agent, derived: bool = False):
+    """The stock ROOT, or with `derived` the want standing under it — since every desire is
+    derived the moment a claim arrives, both may be pursued at once."""
     return next(d for d in agent.pursuing()
-                if getattr(d, "observed_property", None) == STORED and not d.is_epistemic)
+                if getattr(d, "observed_property", None) == STORED and not d.is_epistemic
+                and (d.derived_from is not None) == derived)
 
 
 def _promise(agent, to: str, jti: str, litres: float, opens: datetime) -> None:
@@ -86,13 +89,20 @@ def test_a_host_that_foresees_the_crossing_plans_the_refill_from_the_present(mon
     _promise(agent, "fern", "j1", 1.5, now + timedelta(hours=1))
     _promise(agent, "tomato", "j2", 1.0, now + timedelta(hours=2))
     open_round_for(agent, "supplier", seconds=60.0)
-    root = _stock(agent)
-    assert root.is_met
-    plan = agent.deliberator.decide(root)
+    #  EVERY DESIRE IS DERIVED THE MOMENT A CLAIM ARRIVES (judge-desires-then-derive-wants):
+    #  the stock root was judged met at the present and unmet at the crossing, the want stands
+    #  already, and the container presents the root under it.
+    from orexis_agent_deliberation.judgments import find_judgments
+    child = _stock(agent, derived=True)
+    root = child.derived_from
+    judged = [r for r in find_judgments(agent.beliefs) if r["desire"] == root]
+    assert next(r["met"] for r in judged if not r.get("at")) == "true", "met at the present"
+    assert any(r["met"] == "false" for r in judged if r.get("at")), "unmet at a crossing"
+    plan = agent.deliberator.decide(child)
     assert plan is not None and [s.action for s in plan.steps] == [ACQUIRING], plan
     assert plan.placed_at is None, "found from the present, where the round is: taken now"
-    child = _stock(agent)
-    assert child.derived_from == root.uri and child.state == "unmet"
+    child = _stock(agent, derived=True)
+    assert child.derived_from == root and child.state == "unmet"
 
 
 def test_a_discharged_debt_is_not_an_arrival(monkeypatch):
