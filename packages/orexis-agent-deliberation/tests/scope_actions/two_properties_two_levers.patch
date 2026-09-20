@@ -1,0 +1,47 @@
+--- case
++++ expected
+@@ -8,9 +8,11 @@
+ 
+ 
+ GRAPH :ontology {
+-  deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph , orexis:Graph .
++  deliberation:ScopeGraph rdfs:subClassOf orexis:Graph ;
++      rdfs:subClassOf orexis:WorkingGraph .
+   orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+ }
++
+ 
+ GRAPH :actions {
+   :fill a orexis:Action ;
+@@ -21,8 +23,28 @@
+         CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
+ }
+ 
++
+ GRAPH :catalogue {
+-  :catalogue a orexis:CatalogueGraph , orexis:Graph .
+-  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
+-  :actions a orexis:PublicGraph , orexis:Graph .
++  :actions a orexis:Graph ;
++      a orexis:PublicGraph .
++  :catalogue a orexis:CatalogueGraph ;
++      a orexis:Graph .
++  :ontology a orexis:Graph ;
++      a orexis:OntologyGraph ;
++      a orexis:PublicGraph .
++  <http://example.org/orexis/graph/scopes> a deliberation:ScopeGraph ;
++      a orexis:Graph ;
++      a orexis:WorkingGraph ;
++      orexis:arrivedBy orexis:Derived .
+ }
++
++
++
++GRAPH <http://example.org/orexis/graph/scopes> {
++  :fill deliberation:inScope scopes:1 .
++  :heat deliberation:inScope scopes:2 .
++  :level deliberation:inScope scopes:1 .
++  :temperature deliberation:inScope scopes:2 .
++  scopes:1 a deliberation:Scope .
++  scopes:2 a deliberation:Scope .
++}
