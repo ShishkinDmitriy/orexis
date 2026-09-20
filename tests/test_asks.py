@@ -150,7 +150,7 @@ def test_a_stranger_is_not_answered(monkeypatch):
 
 
 def _placed_instant_comes(agent, intention_uri: str) -> None:
-    """The scheduler's road, without the wait: the step's placed instant rewritten as past,
+    """The scheduler's path, without the wait: the step's placed instant rewritten as past,
     and the deadline taken as the scheduler would take it."""
     g = agent.keeper.graph
     past = (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat()

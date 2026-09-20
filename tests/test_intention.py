@@ -403,8 +403,8 @@ def test_an_intention_held_until_a_condition_is_released_by_a_write_and_lapses_b
     condition — a select over the agent's beliefs — and a deadline. A write that leaves the
     condition unmet leaves the hold; the write that meets it releases the act, and the hold
     is gone from the ledger while the intention still stands. A hold whose deadline passes
-    first is dropped when the adopter said drop. The market's held claim is this road with
-    the watch as its condition; a plan's next step will be this road with the previous
+    first is dropped when the adopter said drop. The market's held claim is this path with
+    the watch as its condition; a plan's next step will be this path with the previous
     step's prediction (#510)."""
     from datetime import datetime, timedelta, timezone
 

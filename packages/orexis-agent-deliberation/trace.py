@@ -58,8 +58,8 @@ INAPPLICABLE = "a remembered plan's precondition does not hold here"
 SURPRISE_WITHHELD = "withheld"
 SURPRISE_EXOGENOUS = "exogenous"
 
-#  HOW A WANT WAS JUDGED in every world the pass weighed (#502) — the road, always said, and
-#  the text where the road is a text. The compiled select lives nowhere else: computed once per
+#  HOW A WANT WAS JUDGED in every world the pass weighed (#502) — the way, always said, and
+#  the text where the way is a text. The compiled select lives nowhere else: computed once per
 #  pass by the rule that what the interpreter already knows is never asserted, which is right
 #  for the store and wrong for the person asking "why did this want read as unmet" — so the
 #  trace, the record's one sanctioned exception, shows it.
@@ -179,7 +179,7 @@ def _write(store, agent_id: str, judgment, plan, considered, stands_at: float,
     #  The select as a LITERAL, escaped by the engine's own writer: a compiled text carries
     #  quotes, backslashes and newlines, and a hand-quoted f-string would be the injection the
     #  binder exists to refuse (#500).
-    road, text = judged
+    way, text = judged
     surprised = "" if surprise is None else \
         f'        deliberation:surprise {_quoted(surprise[0] + ": " + surprise[1])} ;\n'
     by = "" if text is None else \
@@ -188,7 +188,7 @@ def _write(store, agent_id: str, judgment, plan, considered, stands_at: float,
     <{node}> a deliberation:Deliberation ;
         deliberation:deliberatedOn <{judgment.uri}> ;
         deliberation:verdict "{plan.outcome}" ;
-        deliberation:judgedThrough {ox.Literal(road)} ;
+        deliberation:judgedThrough {ox.Literal(way)} ;
 {by}        deliberation:standsAt {stands_at:.6f} ;
         deliberation:tookSeconds {took_s:.6f} ;
         deliberation:keptWorlds {kept} ;

@@ -504,7 +504,7 @@ class BiddingModule(Module):
         A round is a fact THIS agent holds, written when the host announced it. What ends it
         used to be arithmetic — my own clock against the `closesAt` I computed from the window
         the offer stated — because a bidder that lost was told nothing. Now the venue says so,
-        and the fact is retracted by the same road it arrived on: something another agent DID,
+        and the fact is retracted by the same path it arrived on: something another agent DID,
         through translation and the belief-revision seam.
 
         The clock is not gone, it is the BACKSTOP: a message can be lost and a host can die,
@@ -515,7 +515,7 @@ class BiddingModule(Module):
         if self.pending and self.pending.get("auction_id") == auction_id:
             #  Exactly what the deadline landing does, and earlier: the tender is dropped, the
             #  look stays owed, and `pending` is cleared. Reused rather than repeated, so the
-            #  two roads out of a round cannot drift apart.
+            #  two paths out of a round cannot drift apart.
             self.give_up()
             return
         rounds.close_round(self.agent, auction_id)
@@ -780,7 +780,7 @@ SELECT ?c ?id ?l ?at ?p WHERE {{
         Nothing is adopted here — the tender standing on this venue is done when the fact
         appears (`market:Tendering`'s `orexis:doneWhen`), the keeper advances to Presenting
         and holds it until my watch is live, and `present` takes it. A market with no redeem
-        channel has already redeemed; the claim is written all the same, so the same road
+        channel has already redeemed; the claim is written all the same, so the same path
         presents nothing and opens the watch."""
         if claim.get("auction_id"):
             rounds.close_round(self.agent, claim["auction_id"])   # over for me: I won

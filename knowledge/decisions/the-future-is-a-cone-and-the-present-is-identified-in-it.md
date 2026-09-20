@@ -72,7 +72,7 @@ Most of the model exists in diff form. Every [step](/domain/step.md) carries its
 canonical facts on the ledger, so the diff chain half of a method exists. A node's diff is
 already relative to the root and the algebra to re-base it exists. The keeper already holds one
 committed step to a band computed from the actuator's pick, so the primitive that identification
-generalises to every child exists. The cone-dead road — an unmet verdict, the tail dropped, a
+generalises to every child exists. The cone-dead path — an unmet verdict, the tail dropped, a
 fresh search — exists. Two things differ, and one sentence of the sovereign's first picture was
 refused on the way.
 

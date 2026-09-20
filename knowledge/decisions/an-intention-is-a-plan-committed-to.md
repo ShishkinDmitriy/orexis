@@ -4,7 +4,7 @@ title: An intention is a plan committed to, and an affordance names the code tha
 description: >-
   Execution was split by trigger: the keeper's tick carried out Observe alone, the bidder
   re-decided when a round knocked, the actuator decided on its own reading, and each adopted
-  its own intention. Now there is ONE road — plan, commit the head as an intention, hand it to
+  its own intention. Now there is ONE path — plan, commit the head as an intention, hand it to
   the actor the means names — and the link from a row to the code that takes it is a triple,
   `orexis:takenBy`, stated by the package that ships the row. What changed is who carries a
   decision out, never how one is reached.
@@ -18,12 +18,12 @@ timestamp: 2026-08-24T18:00:00Z
 > nobody has seen, so the tail is trace, not ledger" is answered by
 > [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/progression-steps-through-a-plan-on-confirmed-feedback.md):
 > the tail rides on the intention as its expected continuation and is advanced only when each
-> step's prediction is confirmed by the feedback the keeper already checks. The one road, the
+> step's prediction is confirmed by the feedback the keeper already checks. The one path, the
 > head committed as an intention, and `orexis:takenBy` all stand.
 
 # What was true before
 
-The search was one road and execution was three. `Keeper.deliberate_on_gaps` asked the
+The search was one path and execution was three. `Keeper.deliberate_on_gaps` asked the
 deliberator about every want and then carried out only `Observe` — the docstring said so, and
 said why: an Acquire needs a round nobody may convene from the buy side. The bidder waited for a
 round to knock, looked, and asked the deliberator *again* inside `submit`, so a pass whose

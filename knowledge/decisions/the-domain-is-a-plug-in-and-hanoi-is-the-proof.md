@@ -13,7 +13,7 @@ description: >-
   the optimal solution is nobody's algorithm: with depth eight admitting eight-move plans,
   the seven-move classic wins because achievers are ranked by cost alone. Measured: 2^n−1
   at n=2 and n=3, seven steps found in 5.8 s on the bench. Building it found TWO latent
-  kernel bugs — the world gate's two-road join doubled every asserted string literal, and
+  kernel bugs — the world gate's two-path join doubled every asserted string literal, and
   the imaginarium named sibling worlds of one schema action into a single merged graph,
   which six ground actions had been hiding. The urgency question
   #257 expected to break was already answered by the deontic sitting: binary is
@@ -98,7 +98,7 @@ the tree; the optimum is the deontic sitting's two-stage ranking doing what it s
   the full act, (action, via, about). A domain with one action and many targets is what it
   took to make the collision reachable.
 - **A latent kernel bug, caught by the first maxCount that ever had a focus.** The world
-  gate joins two data roads — the store's serialisation parse and `effects._triple` — and
+  gate joins two data paths — the store's serialisation parse and `effects._triple` — and
   the two disagreed about a plain string's identity: pyoxigraph reports `xsd:string` on
   every simple literal, rdflib holds the plain and the explicitly-typed forms as DISTINCT
   terms, so every asserted string in the join was silently doubled. Nothing ever noticed

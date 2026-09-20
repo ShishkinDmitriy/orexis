@@ -360,7 +360,7 @@ def decimal(value: float) -> str:
 
 #  --- reading the catalogue over the ENGINE ------------------------------------------------
 #
-#  What a function over the store asks, where there is no `Store` to ask. The road's three
+#  What a function over the store asks, where there is no `Store` to ask. The derivation's three
 #  functions are handed `pyoxigraph.Store` itself (judge-desires-then-derive-wants), so the
 #  lookups the class above offers as methods are offered here as functions over the engine:
 #  the same questions, the same catalogue, no wrapper and no policy. A reader still states the
@@ -805,7 +805,7 @@ WHERE  {{
 
         A store that can hand out quads and not take them was only half a store: a reader
         copying one graph into another had to reach past this class for the other half, which
-        is what let a variant store grow by inheriting the whole of one. Text is not the road
+        is what let a variant store grow by inheriting the whole of one. Text is not the way
         (`quads` says why): a serialise-and-reparse relabels blank nodes.
 
         `forget=False` says the caller KNOWS this write cannot change which graphs are public,

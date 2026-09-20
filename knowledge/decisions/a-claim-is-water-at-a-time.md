@@ -121,7 +121,7 @@ per node. One defect found beside it: a tender bid into the first open
 round the store listed, and with a claim that named no round the old one still stood; it bids
 into the round closing last, the newest offer.
 
-The ask road touched the two market modules and one action. The bidder asks on the reading
+The ask path touched the two market modules and one action. The bidder asks on the reading
 recorded, through the event topic sensing announces on, and wakes the mind when a claim
 arrives with no tender standing; the host routes an event carrying `asks` and `wanted_at` to
 its grant-or-convene, where covering is one query over its ledger and the region its stock

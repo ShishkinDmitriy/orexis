@@ -88,7 +88,7 @@ reflex is gone and the enforcement is distributed, which is if anything the stro
 a bidder holding no aim in the property its bids are priced in is refused by a shape at boot;
 an actuator with no aim sizes every dose at nothing, so the effect predicts the world it is
 already in and the step is discarded; and a property with no lever at all is proposed nothing
-about because there is nothing to propose. Three roads, no motivation on any of them.
+about because there is nothing to propose. Three paths, no motivation on any of them.
 
 What the two pairs of numbers differ in is SEVERITY, not modality: leaving the operating
 region is legitimate and temporary (it is what a gap IS), leaving the survival envelope is the

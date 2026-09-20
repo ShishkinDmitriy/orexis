@@ -57,7 +57,7 @@ arriving from the other side.
 
 **And the binding has almost no readers left.** After #680 there are two, and both filter
 `IN (orexis:AtEnd, orexis:At)` meaning *not a debt* — a provenance test wearing temporal clothes,
-which is the same defect one layer down. What they mean is the pursuit road's own family, and
+which is the same defect one layer down. What they mean is the derivation's own family, and
 that is classified on the graph already.
 
 # One thing the period cannot carry
@@ -116,7 +116,7 @@ can state a window at all. Only the last is work; the rest is subtraction.
 
 What the removal turned up is worth keeping: the four things the binding was saying each had an
 owner already, and the two live readers wanted a FOURTH thing it was not saying at all. They
-filtered on `orexis:AtEnd, orexis:At` to mean *not a debt* — whose road a want came by, which is
+filtered on `orexis:AtEnd, orexis:At` to mean *not a debt* — whose path a want came by, which is
 the graph's classification. `Wants.find_first_by_desire` scopes to `deliberation:PursuedGraph`
 now, and `_CHILDREN_Q`'s filter turned out to be redundant twice over: the ledger writes no
 `orexis:holds`, so a debt never matched it, and a promise carries no `prov:wasDerivedFrom`.

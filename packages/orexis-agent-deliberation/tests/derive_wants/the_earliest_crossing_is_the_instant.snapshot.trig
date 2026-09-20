@@ -5,7 +5,7 @@
 #
 # Two predictions of tank1's level, 12:45 and 12:20: the want holds at the earliest.
 #
-# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .

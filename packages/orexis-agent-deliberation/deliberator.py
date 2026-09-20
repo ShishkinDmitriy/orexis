@@ -2,7 +2,7 @@
 
 **This is the mind's WHETHER, and it is the kernel's because a mind is not plug-in-able.** It
 was `deliberation:Reflex` and `deliberation:Planning`, two members of a family, then one class
-with two roads through it, and it is one class with ONE road now: every desire is answered by
+with two paths through it, and it is one class with ONE path now: every desire is answered by
 the search.
 
 **The reflex is gone, and it was ABSORBED rather than retired.** It asked whether a lever
@@ -15,7 +15,7 @@ search saying *I cannot answer* — a lever whose package states no effect, a wa
 measures, and no candidate at all. The first two are now refused at the GATES
 (`orexis-validate`), because both are facts about ratified files rather than about a moment;
 the third is a want with no lever, which is legitimate, legible, and answered by proposing
-nothing. A second road kept for the cases the first cannot answer is a second road that
+nothing. A second path kept for the cases the first cannot answer is a second path that
 decides them all silently.
 
 **Consulting survives as a seam, and a better one.** Asking a model what next is a genuine
@@ -164,7 +164,7 @@ class Deliberator:
                 self.agent.reviser.note(judgment.uri, judgment)
 
     def deliberate_on_gaps(self) -> None:
-        """Every want, through pursuit, NOW. Noticing is plural; deciding is not; doing is one road.
+        """Every want, through pursuit, NOW. Noticing is plural; deciding is not; doing is one path.
 
         The synchronous form of the tick — what a test calls to have the consequences before it
         asserts, and what the reviser's drain amounts to once every mark is taken. Deliberation
@@ -231,7 +231,7 @@ class Deliberator:
         elif decided is not None and decided[0] is not None and decided[0].steps:
             #  A plan the search found may BE a remembered route — walked as a candidate
             #  where the world differed (#469, second form) and chosen — so what failed is
-            #  forgotten by its steps, whichever road adopted it.
+            #  forgotten by its steps, whichever way adopted it.
             remembered.forget_matching(self.agent, want, decided[0].steps, "a step of it failed")
             self._decided.pop(want, None)
         self.agent.reviser.note(want)
@@ -379,7 +379,7 @@ class Deliberator:
         #  saying the want out loud: freshness is a shape (there exists a reading of this, and
         #  it was taken recently enough to be about now), Observe's effect predicts a reading
         #  stamped now, and the search finds that the shape holds in the world a look would
-        #  make. Same first move, reached by the one road. The plan record set exactly this as
+        #  make. Same first move, reached by the one path. The plan record set exactly this as
         #  its own acceptance test: a widening that leaves the special case beside it has not
         #  widened anything.
         #  WANTED IS NOT ACTIONABLE. A want nobody may act on yet is visible, rankable and left
@@ -406,7 +406,7 @@ class Deliberator:
         #  A ROW OWED TO SOMEONE THAT NAMES THIS WANT is taken without a search. The search
         #  speaks for a debt only when it FOUND a path — a vessel nobody has read binds no
         #  premise, and a premise that cannot bind proves nothing about serving — so anything
-        #  short of a plan falls through to the pre-#255 road, unchanged: the row the market
+        #  short of a plan falls through to the pre-#255 path, unchanged: the row the market
         #  joined to this want, and the actuation boundary judges the vessel when it pours.
         #  Handed back as a one-row plan labelled OBLIGATION, which is not a search outcome and
         #  is not written to the trace. A stake has no such row, and nothing here asks what

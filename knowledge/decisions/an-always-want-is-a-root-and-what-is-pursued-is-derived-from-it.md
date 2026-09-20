@@ -56,7 +56,7 @@ definition of done.** Two kinds, by what implies them:
   backward from the instant, and it too is gone when met.
   [#619](https://github.com/ShishkinDmitriy/orexis/issues/619).
 
-Both are minted at runtime, as the promise road mints a want for a taker-less step and withdraws
+Both are minted at runtime, as the promise path mints a want for a taker-less step and withdraws
 it on the verdict ([bridge](/domain/bridge.md)). Neither is authored, and a world file names
 neither. The desires modality holds the roots, the children while they live, and nothing else
 that is pursued.

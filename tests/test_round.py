@@ -259,7 +259,7 @@ def test_a_bidder_waiting_for_a_reading_ignores_one_of_another_property(make):
     wrong unit, which is exactly what the market cannot detect, because a bid is private and
     this one is perfectly well-formed.
 
-    THE TWO HALVES ARRIVE DIFFERENTLY, and each by the only honest road available. Fern has no
+    THE TWO HALVES ARRIVE DIFFERENTLY, and each by the only honest path available. Fern has no
     humidity instrument — that is the whole hazard, a number in the wrong unit reaching a
     module that was waiting for another — so the humidity is handed to the hook directly,
     which is where the confusion would happen and needs no store behind it. The MOISTURE is
@@ -1002,7 +1002,7 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     #  A CLAIM THAT NAMED NO DEADLINE is a want when its holder ASKS and not before — nobody
     #  is waiting until then — so the debt stands in the record with nothing pursued for it,
     #  and presenting it derives the want, about that debt, under the city's one desire
-    #  (one-road-derives-every-want).
+    #  (one-function-mints-every-want).
     assert not any(isinstance(g, OwedWant) for g in city.pursuing()), "recorded, and nobody waiting"
     ledger.demanded("j-city-1")
     assert any(isinstance(g, OwedWant) and g.desire == root for g in city.pursuing()), \

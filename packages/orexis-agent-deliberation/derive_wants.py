@@ -66,7 +66,7 @@ SELECT ?s WHERE {
   GRAPH ?g { $holder $patience ?s }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:PickRecordGraph } } LIMIT 1"""
 
-#  WHAT ALREADY STANDS under one desire: every want derived from it that the road minted and
+#  WHAT ALREADY STANDS under one desire: every want derived from it that the derivation minted and
 #  whose graph still holds. A want IS its graph (#645), so which family it is in and whether it
 #  holds are the graph's questions, asked of the catalogue in the text as `Wants` asks them.
 _STANDING_Q = """
@@ -86,7 +86,7 @@ def derive_wants(store: ox.Store) -> list[str]:
     return what was minted. Run whenever a pass stands on a desire or on any want under it,
     and by a package that has just written an instance, since a claim arriving should be a
     want arriving and not a want on the next tick. A package that calls this mints nothing; it
-    says an instance is there and this does the rest (one-road-derives-every-want).
+    says an instance is there and this does the rest (one-function-mints-every-want).
 
     IT IS THE DECOMPOSITION OF WHAT THE MET-TESTS READ. A desire is judged at the present and,
     where it reads met there, at every instant a prediction reaches; what comes back is
@@ -136,7 +136,7 @@ def _derive_under(store: ox.Store, holder: str, root: str, found: list[Witness],
     #  still says T — the holder asked before the claim lapsed, the pot crossed before the
     #  drift said it would — is re-minted with no instant, under the same name, so the
     #  trace, a remembered plan and the keeper meet the want they kept and a plan is found
-    #  from the present. The instant was the road's reading of the predictions; the present
+    #  from the present. The instant was the derivation's reading of the predictions; the present
     #  outranks it, as it does everywhere else here.
     #  STANDING IS BY NAME, and the name is the cluster's: what it is about, and which instance
     #  where the desire ranges over several (`name_of`). Two tanks low about their level are
@@ -224,11 +224,11 @@ def name_of(store: ox.Store, root: str, said, about: tuple, instance: str | None
 
     NAMED FOR WHAT IT IS ABOUT where that is NARROWER than the desire, so two wants under one
     desire — soil now, air later — are two nodes; and for the desire alone where it is not,
-    which is every want there was before the road: a desire about one property mints
+    which is every want there was before this: a desire about one property mints
     `<desire>.pursued` exactly as it always did. AND FOR THE INSTANCE where the desire ranges
     over several — its shape targets a class, or whatever bears a property, rather than one
     node — since two tanks low about their level are two clusters, two plans, and would be one
-    name otherwise (found by the road's own table, `tests/road/`); a desire whose shape names
+    name otherwise (found by the derivation's own table, `tests/derive_wants/`); a desire whose shape names
     its one node (`sh:targetNode`, sensing's and the greenhouse's) keeps its names, and an
     instance the want is already about (a debt, `orexis:about sh:this`) is not said twice.
     """
@@ -291,7 +291,7 @@ def mint(store: ox.Store, holder: str, root: str, said=None, holds_at: datetime 
     #  THE WANT, AND THE REPOSITORY WRITES IT (#677). What is derived is decided here — the
     #  binding, the label, what it points at — and where a want is kept, how its graph is
     #  classified and what period it holds during are `wants.py`'s, whether a collection or
-    #  this road asks for the write.
+    #  this derivation asks for the write.
     ends = None
     if holds_at is not None:
         ends = (holds_at + timedelta(seconds=_patience(store, holder))).isoformat()
@@ -312,7 +312,7 @@ def _patience(store: ox.Store, holder: str) -> float:
 
 
 def _local(holder: str) -> str:
-    """The holder's local name — what a graph this road writes is called, for eyes."""
+    """The holder's local name — what a graph this derivation writes is called, for eyes."""
     return holder.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
 
 

@@ -1,10 +1,10 @@
-"""Pursuit: plan, commit the head as an intention, hand it down to be carried out. One road.
+"""Pursuit: plan, commit the head as an intention, hand it down to be carried out. One path.
 
 **This is what happens to a want, and it is deliberation's because the first step is the
 search.** It used to be three things by trigger: the keeper's tick carried out Observe alone,
 the bidder re-asked the deliberator inside `submit` when a round knocked, and the actuator
 asked on its own reading — each adopting its own intention with its own reason. The search
-was one road and execution was three, and a plan's `via` — WHICH lever, half of what a step
+was one path and execution was three, and a plan's `via` — WHICH lever, half of what a step
 says — was dropped between the planner and the ledger.
 
 Now every trigger arrives here and none of them decides. `pursue(agent, desire)`:
@@ -66,8 +66,8 @@ def handed(agent, judgment):
     derived under it, minted if the root reads unmet and none stands; None for a met root
     with nothing derived under it, which is nothing to pursue and runs no pass."""
     if judgment.desire is not None or not _is_root(agent, judgment.uri):
-        #  A WANT THE ROAD MINTED, or one a package speaks for: handed as it is. Its root may
-        #  have gained instances since — a second claim — so the road tops up first; and where
+        #  A DERIVED WANT, or one a package speaks for: handed as it is. Its root may
+        #  have gained instances since — a second claim — so the derivation tops up first; and where
         #  that re-minted THIS want — what it foresaw has arrived — the judgment in hand still
         #  carries the old instant, so it is presented again.
         if judgment.desire is not None:
@@ -91,7 +91,7 @@ def handed(agent, judgment):
 def derived(agent) -> list[str]:
     """`derive_wants` over this agent's store, and the projection refreshed where it minted.
 
-    THE ROAD IS A FUNCTION OVER THE STORE and holds no collection, so a want it writes
+    THE DERIVATION IS A FUNCTION OVER THE STORE and holds no collection, so a want it writes
     announces itself to nobody — where `Wants.save` would have told the desire modality to
     rebuild. Saying so is the caller's, and this is the caller every pass goes through: one
     place, and the rebuild is paid only when something was actually minted.

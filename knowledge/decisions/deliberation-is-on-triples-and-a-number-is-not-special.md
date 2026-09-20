@@ -104,7 +104,7 @@ one world.
 - **An effect with two possible outcome classes**, and the look that tells them apart — the
   dose-look-dose plan the interval record wanted, restated as a disjunctive effect. Not built.
 - **The interval as the package's own tool** for sizing under a learned tolerance, inside
-  progression and never on the core's road. The tolerance term and its residual review stay,
+  progression and never on the core's path. The tolerance term and its residual review stay,
   reading the numbers progression records at execution.
 - **The law's ceiling and a pick's aim as classes** — each a reader's claim stated once, and each
   held to the test that something plans on it.
@@ -116,7 +116,7 @@ The plant domain's choice, built in two parts:
 [#576](https://github.com/ShishkinDmitriy/orexis/issues/576) minted the classes and classified a
 reading, retiring the kernel partition; [#579](https://github.com/ShishkinDmitriy/orexis/issues/579)
 made the effect declare its band and moved sizing to execution. #556, #557 and #558 are closed as
-superseded; PR #575's branch stays as the numeric road refused.
+superseded; PR #575's branch stays as the numeric path refused.
 
 # What building it taught
 

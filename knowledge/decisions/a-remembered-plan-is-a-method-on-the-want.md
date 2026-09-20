@@ -57,7 +57,7 @@ step was on its menu; where it still achieves the want, its cost is the bound th
 pass is refused by, and among achievers tying on cost the route already walked wins. The trace
 names it as what would be taken and, when chosen, as what was chosen — as the route, not as the
 first of its steps. A step off the menu is the plan not applying here, said as a verdict rather
-than guessed around. A route that fails when walked is forgotten by its steps, whichever road
+than guessed around. A route that fails when walked is forgotten by its steps, whichever way
 adopted it, and a route the search finds again is not remembered twice.
 
 **What stands from the first form, and why.** The exact hit — the same want in a world of the
@@ -101,5 +101,5 @@ dose must go — the availability select's filters carry, and the first step is 
 
 - **Lifting to variables**, the same instance across steps becoming one variable, so a plan
   applies in a world of the same shape rather than the same instances.
-- **Review as the forgetter**, the habit record's road: a remembered plan that stops working
+- **Review as the forgetter**, the habit record's path: a remembered plan that stops working
   should be retired on evidence, the way a tolerance is re-picked.

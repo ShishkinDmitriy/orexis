@@ -6,7 +6,7 @@
 # Two tanks low about their level: per INSTANCE, two wants, each named for its tank. The case the
 # table found first — they were one name, and the second mint overwrote the first.
 #
-# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .

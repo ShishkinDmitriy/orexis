@@ -1,9 +1,9 @@
-"""Every judgment this agent is making right now, as a collection.
+"""Everything this agent is pursuing right now, as a collection.
 
 **THE ONE COLLECTION THAT IS MADE RATHER THAN HELD, and the exception is stated because the
 convention asks for it.** Every other repository here reads rows somebody wrote: `Wants` and
-`Desires` hand back what is in a graph. Nothing ever writes a judgment. This one ASSEMBLES —
-it asks every module what it is pursuing and how badly, runs an avoided state's own select to
+`Desires` hand back what is in a graph. Nothing ever writes these. This one ASSEMBLES — it
+asks every module what it is pursuing and how badly, runs an avoided state's own select to
 see whether the world has entered it, compiles a shape into the select whose rows are its
 violations, and ranks what comes back by an urgency each contributor computed its own way.
 
@@ -11,13 +11,14 @@ That makes it a repository by its name and a service by its work, which is a lin
 usually holds (`a-repository-is-not-a-service`). It is kept on the collection side for the
 reason `Affordances` is: what it hands back is a collection of domain objects, derived on every ask
 and never stored, and a caller asking "what am I pursuing" is asking for the contents rather
-than for a decision. See knowledge/decisions/a-desire-is-declared-and-a-judgment-is-made.md.
+than for a decision.
 
-**It is handed the AGENT, and unlike `Wants` that is not a failure to narrow.** A judgment is
-CONTRIBUTED — the ledger judges a debt by its redeem window, sensing judges a stake by the
-survival envelope — so the collection has to reach the choir, and the choir is the agent. A
-repository over stored rows needs a store; a repository over contributed answers needs the
-contributors. That asymmetry is the clearest statement of what the two kinds of collection are.
+**It is handed the AGENT, and unlike `Wants` that is not a failure to narrow.** What a want
+reads as here is CONTRIBUTED — the ledger reads a debt against its redeem window, sensing
+reads a stake against the survival envelope — so the collection has to reach the choir, and
+the choir is the agent. A repository over stored rows needs a store; a repository over
+contributed answers needs the contributors. That asymmetry is the clearest statement of what
+the two kinds of collection are.
 """
 
 from __future__ import annotations
@@ -35,7 +36,7 @@ from orexis_agent_progression.store import bind, bindings
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import FORESEEN, KNOWN
 
-log = logging.getLogger("judgments")
+log = logging.getLogger("pursuing")
 
 #  The avoided-pattern wants the kernel lifts into pursuit itself (#468) — see `pursuing`.
 #  The select is OPTIONAL here because the node a want points at may be the DOMAIN's — declared
@@ -60,8 +61,8 @@ SELECT ?me ?want ?shape WHERE {
 }"""
 
 
-class Pursued:
-    """Every judgment this agent is making, hottest first."""
+class Pursuing:
+    """Everything this agent is pursuing, hottest first."""
 
     def __init__(self, agent):
         self._agent = agent
@@ -89,16 +90,16 @@ class Pursued:
         for w in self._agent.wants.find_all_pursued(now):
             children.setdefault(w.desire, []).append(w)
         derived = {w.uri for ws in children.values() for w in ws}
-        #  A CAPABILITY MAY SPEAK FOR A WANT THE ROAD MINTED — the ledger judges the want
-        #  under "no overdue debts" by its claim's redeem window, and names the claim — and
-        #  its judgment wins over the root's copy below, keeping the road's provenance.
+        #  A CAPABILITY MAY SPEAK FOR A DERIVED WANT — the ledger reads the want under
+        #  "no overdue debts" against its claim's redeem window, and names the claim — and its
+        #  word wins over the root's copy below, keeping the derivation's provenance.
         spoken_for: dict = {}
         for wants in self._agent.ask(DESIRES, now):
-            for judgment in wants:
-                if judgment.uri in derived:
-                    spoken_for.setdefault(judgment.uri, judgment)
+            for want in wants:
+                if want.uri in derived:
+                    spoken_for.setdefault(want.uri, want)
                 else:
-                    seen.setdefault(judgment.uri, judgment)
+                    seen.setdefault(want.uri, want)
         #  THE WANTS NO MODULE SPEAKS FOR (#468): a world may ratify a desire DIRECTLY — the
         #  asserted block — and wanting is the kernel's, so the kernel is who lifts such a
         #  want into pursuit rather than a capability minted to re-say it. Scoped to the
@@ -111,7 +112,7 @@ class Pursued:
             #  THE DESIRE OWNS THE TERM AND THE PACKAGE OWNS THE MEASURE: a world may write
             #  the pattern inline beside its asserted want, or point at a node the domain
             #  package declares. The first rides in the modality; the second is public
-            #  knowledge and is asked of the belief base — one text, either road.
+            #  knowledge and is asked of the belief base — one text, both paths.
             select = row.get("select")
             if not select:
                 found = bindings(self._agent.beliefs.query(_SELECT_Q, self._agent.beliefs.graphs_of(PUBLIC), {"node": row["avoided"]}))
@@ -161,11 +162,11 @@ class Pursued:
             seen[row["want"]] = Want(uri=row["want"],
                                        urgency=1.0 if violated else 0.0,
                                        state="unmet" if violated else "met")
-        #  A ROOT WITH WANTS UNDER IT IS PRESENTED AS THEM — one judgment per want, each
+        #  A ROOT WITH WANTS UNDER IT IS PRESENTED AS THEM — one row per want, each
         #  carrying the root's own measure under the want's name, and ITS OWN STATE: a want's
         #  met-test is the root's instantiated at its witness, so a want about one tank reads
         #  met when that tank is in range, whatever the others read. Several where the
-        #  witnesses fell in several scopes (one-road-derives-every-want); one everywhere shipped.
+        #  witnesses fell in several scopes (one-function-mints-every-want); one everywhere shipped.
         for root, wants in children.items():
             if root not in seen:
                 continue
@@ -224,12 +225,12 @@ class Pursued:
         if state == "met":
             #  IS IT STILL IN TROUBLE BY THEN? The want was minted because its desire was
             #  judged unmet at this instant; a reading that lifted the corridor leaves the
-            #  desire met by then, and the want reads met. The judgment answers, since a
-            #  judgment is about a desire and the want says which instant and which results.
+            #  desire met by then, and the want reads met. The want's own met-test answers,
+            #  asked at the instant it was minted for and over the results it was minted from.
             found = unmet_by(self._agent.beliefs.engine, node, holds_at)
             state = "unmet" if found is not None else "met"
             #  A want nobody's row dates — an asserted one the kernel lifts — takes the instant
-            #  it is judged unmet at, which is what a pass for it must be clocked from.
+            #  it reads unmet at, which is what a pass for it must be clocked from.
             if read_at is None and found is not None:
                 read_at = found
         return replace(row, holds_at=holds_at, urgency=urgency, state=state, read_at=read_at)

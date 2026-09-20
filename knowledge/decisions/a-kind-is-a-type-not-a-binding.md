@@ -75,7 +75,7 @@ collection of desires had to filter on a binding to find its own contents.
 want is *derived*, and three worlds ratify a want directly in a `desire.ttl` — authored,
 standing, and handed to a search. They were not violations; the page had named the wrong
 distinction. The axis is **standing versus occasioned**, the type carries it, and how a node came
-to be — authored by a world, derived by the pursuit road, minted by the ledger — is provenance
+to be — authored by a world, derived by the derivation, minted by the ledger — is provenance
 rather than kind.
 
 Everything follows from that. `Desires.find_all` asks `?d a orexis:Desire`. `Wants.find_all`

@@ -66,8 +66,8 @@ market:Acquiring
     #  the domain, because it is physics. The valuation joins through the venue's good (#198):
     #  property alone put both directions on both rows the day two venues priced one property.
     #
-    #  NAMED FOR THE WANT IT SERVES, and a debt is one (one-road-derives-every-want): the want
-    #  the road mints under *no overdue debts* is about a debt, and a debt owed to a buyer in
+    #  NAMED FOR THE WANT IT SERVES, and a debt is one (one-function-mints-every-want): the want
+    #  the derivation mints under *no overdue debts* is about a debt, and a debt owed to a buyer in
     #  a venue I host is served from the vessel my valve there draws from — the very subject
     #  this venue's winnings reach. So the refill is named for that want too, which is how
     #  "refill, then serve" is found by a search that takes only rows named for its want; the
@@ -183,7 +183,7 @@ market:Acquiring
             #  better than one that does not, so a content plant would buy water to find out
             #  how wet it is (#137, the guard the zero-size filter used to carry). Requiring
             #  the reading leaves such a world untouched and the step discarded as somewhere
-            #  already seen, which is the road every other "this does not help" arrives by;
+            #  already seen, which is the path every other "this does not help" arrives by;
             #  a look comes first, as it always did.
              ?standing sosa:hasFeatureOfInterest $subject ;
                              sosa:observedProperty $about .
@@ -430,8 +430,8 @@ market:Serving
     #  AVAILABLE as a DUTY — ?for_agent bound — for each WANT this agent holds about a debt,
     #  to a buyer this venue admits who acts for a subject my valve serves: the ACL's shape
     #  applied to obligation, so a presentation from anyone else is a forgery before it is a
-    #  duty. THE ROW NAMES THE WANT IT SERVES: the want the road mints under *no overdue
-    #  debts* is about the debt (one-road-derives-every-want), the debt names whom it is owed
+    #  duty. THE ROW NAMES THE WANT IT SERVES: the want the derivation mints under *no overdue
+    #  debts* is about the debt (one-function-mints-every-want), the debt names whom it is owed
     #  to, and joining the two here is what lets the search treat a serve as it treats any row
     #  that names a want — the kernel never learns what a counterparty is. The valuation is
     #  tied by the RECIPIENT's stated need, not the good alone (#198 from the other side): a

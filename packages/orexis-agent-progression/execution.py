@@ -1,10 +1,10 @@
-"""Execution, the doing half: hand a committed act to whoever takes it, on the loop. One road.
+"""Execution, the doing half: hand a committed act to whoever takes it, on the loop. One path.
 
 **This is what happens to a decision once it is made, and it is progression's.** It used to be
 one file with the deciding half — `pursue` planned, committed the head and took it, and every
 trigger arrived there. The split along the layers put the two halves where they belong: the
 plan and the commit are the search's (`orexis_agent_deliberation.pursuit`, which calls down
-into here), and what is left is the road from a committed act to its actor, which searches
+into here), and what is left is the path from a committed act to its actor, which searches
 nothing and may run for a committed act that nobody re-decided.
 
 **Every act is taken on the reactive loop.** `carry_out` runs inline when the caller is

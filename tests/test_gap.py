@@ -32,7 +32,7 @@ def _judged(st, *extra):
 
 def _gaps(st, uri, agent_id="fern", monkeypatch=None):
     """Through a REAL agent, because the magnitude is a capability's answer now: sensing
-    hands `gaps_of` the choir road (`Agent.desire_urgency`) and sensing answers from its own
+    hands `gaps_of` the choir's own (`Agent.desire_urgency`) and sensing answers from its own
     declaration — a hand-built join would fake away exactly the contribution under test."""
     return sensing_of(build_agent(agent_id, st, monkeypatch)).gaps()
 

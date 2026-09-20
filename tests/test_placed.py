@@ -35,7 +35,7 @@ def _stake(agent):
 
 
 def test_a_pass_that_finds_nothing_at_the_latest_start_stands_at_the_present(monkeypatch):
-    """The third row of #620's table, as the search's own road: the projected root sees no round
+    """The third row of #620's table, as the search's own path: the projected root sees no round
     — the one open now is a graph holding during its period, and the root stands past it — so
     the pass runs again from the present, finds Acquiring, and the plan is not placed, since
     the bid is taken now."""

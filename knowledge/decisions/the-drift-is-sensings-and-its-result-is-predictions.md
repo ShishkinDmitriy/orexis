@@ -98,7 +98,7 @@ identifies the present by the same look (#576).
 
 Effects, landings, costs and availability, which read a predicted reading at a node as they
 read the present's. The residual, suspicion and the remembered plan: the verdict is the same
-fact by one road. Every hold that is not a wait for a reading. The periods door and the
+fact by one path. Every hold that is not a wait for a reading. The periods door and the
 forecast, which a prediction generalises to what the agent predicts of itself.
 `sensing:noise` and `water:driesPerDaySpread` as facts the package's rule reads.
 
@@ -153,7 +153,7 @@ a dose land.
 4. **The reviser wakes on a surprise and a missed window, and on nothing else**
    ([#632](https://github.com/ShishkinDmitriy/orexis/issues/632), built): one comparison at
    arrival, in sensing, and the reviser's rule on the two sets of bands; the pass names the
-   surprise, and the patience tick is the only other road to a pass.
+   surprise, and the patience tick is the only other path to a pass.
 5. **Every want sourced at a time as a graph with a period, and one sweep**
    ([#645](https://github.com/ShishkinDmitriy/orexis/issues/645), built): a round, a claim,
    a cooling row, a debt and a pursued child beside the prediction, one `upkeep.sweep`, the
@@ -171,7 +171,7 @@ a dose land.
   runbook when item 2 lands, before it is believed.
 - **A package's horizons.** The ladder is the package's; a package listing none predicts
   only the next reading's window. The horizons ARE how far ahead the agent sees, since the
-  pursuit road derives a want at every instant a judgment says a desire fails and nothing
+  derivation derives a want at every instant a judgment says a desire fails and nothing
   filters them again
   ([judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md)), so a
   package that wants a longer lead lists a longer horizon.

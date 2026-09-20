@@ -18,7 +18,7 @@
 
 
 progression:PromisesGraph a owl:Class ; rdfs:subClassOf orexis:DesireGraph ; rdfs:label "Promises graph" ;
-    rdfs:comment "ONE agent's promises (#523, a-level-is-a-vocabulary-and-a-bridge): when the keeper reaches a step of an action nobody takes, the step's predicted fact is translated through the bridge into the vocabulary beneath and written here as an `orexis:Desire` the agent holds — `progression:promisedBy` the step — with the bridge's estimate, so the ordinary road plans it over the actions that ARE taken. The step waits on the same fact; when its verdict lands the promise is withdrawn. A record, projected into the desire modality like the debts." .
+    rdfs:comment "ONE agent's promises (#523, a-level-is-a-vocabulary-and-a-bridge): when the keeper reaches a step of an action nobody takes, the step's predicted fact is translated through the bridge into the vocabulary beneath and written here as an `orexis:Desire` the agent holds — `progression:promisedBy` the step — with the bridge's estimate, so the ordinary path plans it over the actions that ARE taken. The step waits on the same fact; when its verdict lands the promise is withdrawn. A record, projected into the desire modality like the debts." .
 
 progression:IntentionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Intention graph" ;
     rdfs:comment "What the agent is DOING: commitments adopted and not yet resolved. Small and live, because what is finished belongs to history." .
@@ -99,8 +99,8 @@ progression:outcome a owl:DatatypeProperty ; rdfs:domain progression:Intention ;
 #  beliefs and a deadline; it re-asks the shape whenever a belief lands and keeps the deadline
 #  on its scheduler; when the shape conforms the step is handed to whoever takes it, and when
 #  the deadline passes first it is taken as lapsed or dropped, as the adopter said. The
-#  market's held claim was this road, written inside the bidder with a private timer and a
-#  per-reading check; a plan's next step is this road with the previous step's prediction as
+#  market's held claim was this path, written inside the bidder with a private timer and a
+#  per-reading check; a plan's next step is this path with the previous step's prediction as
 #  the condition (#510). The condition is DATA, so a sovereign asking the ledger sees what a
 #  step waits for.
 progression:step a owl:ObjectProperty ; rdfs:domain progression:Intention ; rdfs:range progression:Step ;

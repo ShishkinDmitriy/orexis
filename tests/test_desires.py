@@ -32,7 +32,7 @@ def _fern(readings, monkeypatch):
 
 def test_the_query_and_the_module_agree_with_the_diff(query_with_readings, monkeypatch):
     """One definition, three readers. The ranking and the diff both ask the same declared
-    measure through the same choir road, so the urgency a desire carries must equal the |gap|
+    measure through the same choir path, so the urgency a desire carries must equal the |gap|
     the diff reports, to the store's own precision.
 
     Both properties, and both signs: fern below its moisture region and above its temperature
@@ -90,8 +90,8 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them(mo
     what the choice was made about: cool at issue, maximal at the deadline.
 
     The debt is written by hand, with the fixed instants the curve is read against, and
-    endowed as boot would — which asks the road for its want, the node the ledger judges
-    (one-road-derives-every-want).
+    endowed as boot would — which asks the derivation for its want, the node the ledger reads
+    (one-function-mints-every-want).
     """
     from agent import genesis
     from orexis_agent_progression.ontology import obligations_graph
@@ -171,7 +171,7 @@ def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_
 
 def test_the_measure_answers_one_for_a_world_with_no_reading(monkeypatch):
     """The COALESCE the engine's silent arithmetic demands, exercised through the whole choir
-    road: asked of a world holding no observation, sensing's answer is 1.0 and never unbound —
+    path: asked of a world holding no observation, sensing's answer is 1.0 and never unbound —
     an unmeasured want must not read as no urgency, and this store binds NOTHING for
     arithmetic over an unbound value rather than failing."""
     from orexis_agent_deliberation.want import Want
@@ -278,12 +278,12 @@ def test_an_obligation_row_typed_before_the_class_retired_still_serves(monkeypat
     """#471 folded the Obligation class, and readers match premises, never a type.
     A live volume written before the fold holds rows typed with the retired IRI, and beliefs
     are never reset — so the guarantee has to be a reader that does not care. This authors
-    exactly such a row and asserts the ledger still serves it, on both the desire road and the
-    ask road; the day a type-match regrows in `_DUTIES_Q` or `owed`, this goes red.
+    exactly such a row and asserts the ledger still serves it, on both the desire path and the
+    ask path; the day a type-match regrows in `_DUTIES_Q` or `owed`, this goes red.
 
-    AND ENDOWED what the road needs (one-road-derives-every-want): a debt written before the
-    ledger predicted its lapse predicts nothing, and the road derives nothing from it — so
-    boot writes the lapse the ledger would write today, once, and asks the road."""
+    AND ENDOWED what the derivation needs (one-function-mints-every-want): a debt written before the
+    ledger predicted its lapse predicts nothing, and the derivation derives nothing from it — so
+    boot writes the lapse the ledger would write today, once, and asks the derivation."""
     from agent import genesis
     from orexis_agent_progression.ontology import obligations_graph
     stored = "http://example.org/orexis/water#StoredLitres"
@@ -309,14 +309,14 @@ def test_an_obligation_row_typed_before_the_class_retired_still_serves(monkeypat
         "the legacy debt now predicts its lapse, as one written today would"
     assert any(g.claim == "legacy-1" for g in ledger.desires(now=owed)), \
         "a pre-fold row must still be served: readers match premises, never the type"
-    assert any(r["jti"] == "legacy-1" for r in ledger.owed()), "and on the ask road too"
+    assert any(r["jti"] == "legacy-1" for r in ledger.owed()), "and on the ask path too"
 
 
 def test_an_obligation_is_judged_by_the_met_test_the_ledger_wrote(monkeypatch):
     """#635: the ledger's words are the market's, and the planner names none of them. The
     host's desire carries a shape the ledger authored — its violations are the debts presented
     or lapsing and not discharged, in the record and in the world being judged — and the want
-    the road mints under it points at that shape, so the search reads a world where Serving
+    the derivation mints under it points at that shape, so the search reads a world where Serving
     ran as met by the ledger's own test, compiled exactly as every shaped want is, and the
     branch that named the discharge inside the kernel is gone."""
     import inspect
@@ -331,12 +331,12 @@ def test_an_obligation_is_judged_by_the_met_test_the_ledger_wrote(monkeypatch):
     ledger = supplier.hosting().ledger
     debt = ledger.owe("fern", "m1", amount_l=0.5)
     ledger.demanded("m1")
-    #  THE MET-TEST IS THE DESIRE'S, and the want the road minted POINTS at it
-    #  (one-road-derives-every-want): a `sh:sparql` in the ledger's own words, whose
+    #  THE MET-TEST IS THE DESIRE'S, and the want the derivation minted POINTS at it
+    #  (one-function-mints-every-want): a `sh:sparql` in the ledger's own words, whose
     #  violation is a debt presented or lapsing and not discharged — so a world where a
     #  serve wrote the discharge reads met. AND IT NAMES NO WORLD (#666).
     want = next(d for d in supplier.pursuing() if getattr(d, "claim", None) == "m1")
-    assert want.uri != debt, "the want is the road's, not the debt"
+    assert want.uri != debt, "the want is the derivation's, not the debt"
     rows = bindings(supplier.beliefs.query_union(f"""SELECT ?t WHERE {{
         <{want.uri}> orexis:metWhen ?shape . ?shape sh:sparql ?c . ?c sh:select ?t }}"""))
     assert rows and all("market:dischargedAt" in r["t"] and "$state" not in r["t"] for r in rows), \

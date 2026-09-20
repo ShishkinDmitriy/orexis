@@ -6,7 +6,7 @@
 # Every tank fine now; a prediction says tank1's level is low from 12:30. Foresight is an hour, so
 # the want holds AT 12:30.
 #
-# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .

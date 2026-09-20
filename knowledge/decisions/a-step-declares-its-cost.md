@@ -34,7 +34,7 @@ An action may carry **`orexis:costs`** exactly as it carries `orexis:landsAfter`
 owning package ships, substituted like an effect rule and answered about whichever world is
 being judged, one binding (`?cost`), in the wallet's unit — euros, the unit of account bids
 are already priced in. `effects.cost_of` runs it through the rules' own store door (public
-knowledge plus this agent's records, the road #472 corrected for `landsAfter`), each search
+knowledge plus this agent's records, the path #472 corrected for `landsAfter`), each search
 node carries its path's cumulative cost, and **an action that declares none costs nothing —
 which is a statement, not a gap**, the same reading an omitted effect or an omitted timing
 gets.

@@ -188,7 +188,7 @@ def _term(x):
         #  on every simple literal, and rdflib holds a plain Literal and an explicitly
         #  string-typed one as DISTINCT terms - so a triple arriving once through a
         #  serialisation parse and once through this constructor landed twice, and every
-        #  asserted string in the world gate's two-road join was silently doubled. Invisible
+        #  asserted string in the world gate's two-path join was silently doubled. Invisible
         #  until a shape counted one: hanoi's avoided-pattern node was the first focus any
         #  maxCount here ever had.
         dt = x.datatype.value if x.datatype else None
@@ -250,7 +250,7 @@ def precondition(store, action: str, keyed=(), **bind) -> list:
     in the log and quietly here, as `apply` does.
 
     THE ENGINE INSTANTIATES. A CONSTRUCT whose template is the WHERE's own triple patterns
-    hands back, per solution, the triples those patterns matched — the same road the effect
+    hands back, per solution, the triples those patterns matched — the same path the effect
     itself takes, no bindings read through JSON, no terms rebuilt. Patterns under
     OPTIONAL and UNION are in the template and simply drop where unbound; a pattern under
     FILTER NOT EXISTS is an ABSENCE and is left to the regression (#551), and a subtracted

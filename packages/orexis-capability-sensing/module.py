@@ -104,7 +104,7 @@ _DECLARED_MEASURES = _declared_measures()
 def _measure_of_kind(kind: str) -> str:
     """The declared SELECT for one kind of want, by IRI — and a loud absence.
 
-    The freshness road resolves by KIND rather than by asking a world what a property is, so
+    The freshness path resolves by KIND rather than by asking a world what a property is, so
     it looks its text up here. Raising rather than returning None is the point: a declaration
     silently missing would make every freshness want unmeasurable, which reads as maximally
     urgent everywhere and looks exactly like a society that has stopped seeing.
@@ -344,7 +344,7 @@ class SensingModule(Module):
         to be caught at runtime by deferring to the reflex; there is no reflex to defer to, so
         it is caught at the gates instead — and a gate cannot build an agent to ask.
 
-        Same road as the instance's, which is the point of it being a classmethod rather than
+        Same path as the instance's, which is the point of it being a classmethod rather than
         a second walk: `_declared_measure` is what `desire_urgency` resolves through too.
         """
         return _declared_measure(query, observed_property) is not None
@@ -925,7 +925,7 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
     @contributes(REPREDICT)
     def repredict(self) -> None:
         """A premise a prediction reads has moved (#643): every reading I hold is predicted
-        again from where it stands, through the same road a reading arriving takes — the
+        again from where it stands, through the same path a reading arriving takes — the
         horizon re-armed, the ladder rewritten."""
         for sensor in self.sensors:
             if readings.current_reading(self.agent.beliefs.reader(PUBLIC), sensor.subject, sensor.observes) is not None:
@@ -950,7 +950,7 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
     def urgency(self, subject_uri: str, observed_property: str,
                 value: float | None) -> float | None:
         """How close this reading puts the agent to trouble, from the declared measure — the
-        same road `desire_urgency` answers, asked about a number the caller has in hand or is
+        same path `desire_urgency` answers, asked about a number the caller has in hand or is
         predicting. `None` for the value asks how urgent NOT KNOWING is, and that is maximal:
         the first current reading ends it, which is "the first intention is always to look" in
         its cadence-shaped form."""
@@ -968,7 +968,7 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
         return 1.0 if answer is None else answer
 
     def _measured(self, judgment, value: float | None = None) -> float | None:
-        """The choir road, asked of the LIVE belief base — through the agent rather than
+        """The choir's own, asked of the LIVE belief base — through the agent rather than
         straight to `desire_urgency`, so a second module that measures the same want (none
         ships) would be heard, and so one question has one asker."""
         return self.agent.desire_urgency(judgment, self.agent.beliefs.reader(*FORESEEN, at=clock.now()), STATE_GRAPH, value)
@@ -982,7 +982,7 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
 
     def current(self) -> dict[str, Gap]:
         """The gaps whose reading is still evidence — the eyes that are open: a gap whose
-        property has a MET freshness want. Issue #124's case holds by the same road: a dead
+        property has a MET freshness want. Issue #124's case holds by the same path: a dead
         probe's last observation is upserted and never expires, but its freshness want goes
         cold, and the gap stops counting as seen."""
         fresh = {getattr(d, "observed_property", None) for d in self.agent.pursuing()

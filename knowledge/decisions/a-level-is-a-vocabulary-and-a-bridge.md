@@ -75,9 +75,9 @@ world chooses between the butt and the venue at a single level.
 
 # What was built, the day after
 
-The promise road, exactly as above, with one simplification the code found: a promise is an
+The promise path, exactly as above, with one simplification the code found: a promise is an
 ordinary want. The keeper writes the translated fact as an `orexis:Desire` the agent holds
-(its promises graph, projected into the desire modality), the ordinary road lifts and plans
+(its promises graph, projected into the desire modality), the ordinary path lifts and plans
 it, and the abstract step waits on the same fact; the verdict withdraws the want and writes
 the coarse fact. Nothing is spliced — the sub-plan is an intention of its own for the promise
 want, and `progression:promisedBy` links the two. The tower world runs seven Moves planned once

@@ -11,7 +11,7 @@ stand on.
 see a-plan-is-a-path-of-graph-diffs.md. So the assertions here are about the BEHAVIOUR the
 reflex used to carry rather than about the reflex: a thirsty plant buys, a sated one does not,
 an obligation is never proposed as a choice, and an agent whose search cannot answer proposes
-nothing instead of finding a second road.
+nothing instead of finding a second path.
 """
 
 from __future__ import annotations
@@ -134,7 +134,7 @@ def test_below_the_aim_means_pursue_and_above_means_nothing(make):
     pursuing only past the band would leave the agent permanently short of where it decided
     to sit.
 
-    Asked of the search, which is the only road there is. The chain that used to answer this
+    Asked of the search, which is the only path there is. The chain that used to answer this
     compared the gap's sign to the lever's stated direction; the search builds the world a
     purchase would reach and takes it only if that world scores better. The two agree at every
     value below the aim and at every value above it, which is what made deleting the first one
@@ -483,13 +483,13 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     a stake: the honoured row exists because somebody else holds paper, and serving it is not
     a move this agent may choose for its own reasons. The search enforces it by filtering to
     chosen rows for anything that is not an obligation — the same filter the chain applied, for the
-    same reason, one road further along.
+    same reason, one step further along.
     """
     from orexis_agent_deliberation.want import Want
 
     supplier = make("supplier")
     #  A ROW OWED TO SOMEONE EXISTS FOR A WANT ABOUT A DEBT, and names it: the market joins
-    #  its serve to the want the road minted under *no overdue debts*, so with nothing owed
+    #  its serve to the want the derivation minted under *no overdue debts*, so with nothing owed
     #  there is nothing honoured among the affordances, and with a claim presented there is.
     ledger = supplier.hosting().ledger
     afforder = Afforder(Actions(supplier.beliefs), Affordances(supplier.beliefs), supplier.desires,
@@ -534,8 +534,8 @@ def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
     from orexis_capability_market.ower import OwedWant
 
     supplier = make("supplier")
-    #  THE WANT THE ROAD MINTED for a presented claim, which is what the market's serve names
-    #  (one-road-derives-every-want); a judgment written by hand names no debt, so no row
+    #  THE WANT THE DERIVATION MINTED for a presented claim, which is what the market's serve names
+    #  (one-function-mints-every-want); a judgment written by hand names no debt, so no row
     #  names it, which is the stranger below.
     ledger = supplier.hosting().ledger
     ledger.owe("fern", "j-1", amount_l=0.5)
@@ -564,11 +564,11 @@ def test_an_unpresented_duty_is_hot_and_still_not_acted_on(make):
 
 
 def test_a_search_that_answers_nothing_proposes_nothing(make, monkeypatch):
-    """There is ONE road, and this is the assertion that says so.
+    """There is ONE path, and this is the assertion that says so.
 
     It replaces an equivalence test — `propose_for` against the bare-value door, at three
-    values — which could only ever say that the two roads agreed. They did. What matters now
-    is that there is no second road to fall back to when the first one comes up empty: a
+    values — which could only ever say that the two paths agreed. They did. What matters now
+    is that there is no second path to fall back to when the first one comes up empty: a
     search that finds no candidate returns NOTHING, and the honest answer to that is to
     propose nothing, not to consult a chain that would have steered by the gap's sign.
 
@@ -720,7 +720,7 @@ def test_a_plan_landing_after_the_wants_expiry_is_not_one(make):
     debt = ledger.owe("fern", "w1", amount_l=0.5)
     assert debt == "http://example.org/orexis#obligation.w1"
     ledger.demanded("w1")
-    #  THE WANT IS THE ROAD'S, not the debt (one-road-derives-every-want): presented, the
+    #  THE WANT IS THE DERIVATION'S, not the debt (one-function-mints-every-want): presented, the
     #  debt is a want under "no overdue debts", about that debt, and it is the want the
     #  search is handed — pointing at the desire's met-test, which reads a serve as met.
     uri = next(j.uri for j in ledger.obligations() if j.claim == "w1")

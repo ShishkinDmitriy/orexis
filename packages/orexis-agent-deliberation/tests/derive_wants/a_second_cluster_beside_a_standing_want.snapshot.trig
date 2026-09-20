@@ -6,7 +6,7 @@
 # The level's want stands; now the temperature is out too, in another scope: the second is minted
 # beside the first.
 #
-# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .

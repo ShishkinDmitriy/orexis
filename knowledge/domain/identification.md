@@ -67,7 +67,7 @@ a change inside the view.
 - It is not the [keeper](/domain/keeper.md)'s verdict, which holds the committed step to its
   prediction and advances the ledger. Identification is what happens to the tree afterwards.
 - It is not a tolerance of its own. The interval's width is the tolerance.
-- It is not yet the bridge's road: a kept promise still writes its predicted facts into the
+- It is not yet the bridge's path: a kept promise still writes its predicted facts into the
   readings graph until the level above derives them by a saturation rule
   ([#569](https://github.com/ShishkinDmitriy/orexis/issues/569)).
 

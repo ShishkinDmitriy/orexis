@@ -140,7 +140,7 @@ def test_the_warm_half_alone_is_planned_when_only_the_air_is_cold(monkeypatch):
 
 
 def test_the_want_minted_for_a_dry_warm_bed_is_about_the_soil_alone(monkeypatch):
-    """ONE ROAD, and what it narrows (one-road-derives-every-want). The desire is about both
+    """ONE DERIVATION, and what it narrows (one-function-mints-every-want). The desire is about both
     properties; the want minted under it is about what is IN TROUBLE. Its shape states one
     constraint per property, each saying `orexis:about` which, so the compiled select's rows
     name the property that failed — and a dry, warm bed fails one. The want is about the soil,

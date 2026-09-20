@@ -43,12 +43,12 @@ from orexis_agent_progression.ontology import KNOWN, RECORD
 #  OVER THE MODALITY'S UNION (#645): a debt is a graph of its own, holding from its issue to
 #  its expiry, and the projection copies every one holding now; a settled row — paid or
 #  lapsed — in the untimed record carries no `presented`, so it never reads as a duty.
-#  THE ROAD'S WANT, judged by the ledger. A want under "no overdue debts" is minted by the
-#  pursuit road about ONE debt — `orexis:about` names it — and what the ledger contributes is
+#  THE DERIVATION'S WANT, read by the ledger. A want under "no overdue debts" is minted by the
+#  derivation about ONE debt — `orexis:about` names it — and what the ledger contributes is
 #  the judgment of that want: how far its claim's redeem window has run, whom it is owed to,
 #  when it expires, whether the holder has asked. The ledger used to mint the want itself and
-#  judge its own; it writes debts and predictions now, and speaks for what the road derives
-#  (one-road-derives-every-want). `$root` is this agent's desire.
+#  judge its own; it writes debts and predictions now, and speaks for what the derivation derives
+#  (one-function-mints-every-want). `$root` is this agent's desire.
 @dataclass(frozen=True)
 class OwedWant(Want):
     """The ledger's judgment of an obligation: the kernel's, and the market's two words beside
@@ -84,7 +84,7 @@ def lapse_graph(agent_id: str, claim_jti: str) -> str:
     """The PREDICTION beside one debt: that it lapses at its deadline, a graph holding from that
     instant on. What makes "overdue" askable — the door hands it at the deadline and not before,
     so the desire's met-test reads met while a debt has time to run and unmet at the instant it
-    would not, with no rule reading a clock (one-road-derives-every-want)."""
+    would not, with no rule reading a clock (one-function-mints-every-want)."""
     return f"{obligation_graph(agent_id, claim_jti)}/lapse"
 
 
@@ -184,8 +184,8 @@ class Ower(Module):
         now = clock.now()
         ends = datetime.fromtimestamp(expires_at, timezone.utc).isoformat() if expires_at is not None else None
         #  THE DEBT, AND WHAT THE LEDGER PREDICTS OF IT — never the want. The want under "no
-        #  overdue debts" is the road's to mint from this, the way a want under a region desire
-        #  is minted from a reading and the drift's prediction (one-road-derives-every-want).
+        #  overdue debts" is the derivation's to mint from this, the way a want under a region desire
+        #  is minted from a reading and the drift's prediction (one-function-mints-every-want).
         #  The prediction is a graph holding FROM the deadline: at that instant the debt is
         #  unserved unless something is done, which is exactly what a drift says of a reading.
         lapse = ""
@@ -210,7 +210,7 @@ class Ower(Module):
         self.agent.desires.rebuild()
         self.log.info("owed to %s for claim %s", to_agent_id, claim_jti)
         self.agent.tell(REPREDICT)      # the ledger is a premise the vessel's drift reads (#643)
-        self._road()                    # an instance arrived; the road mints, the ledger does not
+        self._road()                    # an instance arrived; the derivation mints, the ledger does not
         return uri
 
     def demanded(self, claim_jti: str) -> None:
@@ -245,9 +245,9 @@ class Ower(Module):
         self.agent.beliefs.drop_graph(lapse_graph(self.agent.id, claim_jti))
         self.agent.desires.rebuild()   # a paid debt is history, and the want is no longer implied
         self.agent.tell(REPREDICT)      # the ledger is a premise the vessel's drift reads (#643)
-        #  AND THE ROAD IS ASKED, as it is when a claim arrives: a judgment is what this agent
-        #  believes its desires read, and the one this debt's lapse wrote is now about a
-        #  prediction that has gone. Nothing re-judges on a reader's behalf, so the writer of
+        #  AND THE DERIVATION IS ASKED, as it is when a claim arrives: a want is what this
+        #  agent believes its desires read, and the one this debt's lapse wrote is now about
+        #  a prediction that has gone. Nothing re-judges on a reader's behalf, so the writer of
         #  the premise says it moved (judge-desires-then-derive-wants).
         self._road()
 
@@ -306,15 +306,15 @@ SELECT ?o ?to ?jti ?a ?at ?paid WHERE {{ GRAPH <{graph}> {{
         self.endow()
 
     def _road(self) -> None:
-        """Run the pursuit road for this agent's desire: an instance was written or moved, and
-        the want under it is the road's to mint. The one thing the ledger asks of deliberation,
+        """Run the derivation for this agent's desire: an instance was written or moved, and
+        the want under it is the derivation's to mint. The one thing the ledger asks of deliberation,
         and it asks rather than does — nothing here writes a want."""
         from orexis_agent_deliberation import pursuit
         pursuit.derived(self.agent)
 
     def endow(self) -> int:
         """A debt written while the ledger minted its own want carried no PREDICTION beside it,
-        and the road derives nothing from a debt that predicts nothing: never-held structures
+        and the derivation derives nothing from a debt that predicts nothing: never-held structures
         arrive with the volume (an-amendment-endows-what-it-grants). Each debt with a deadline
         and no lapse in view gets the lapse the ledger would write today — wherever the debt
         is, its own graph or the untimed record of one written before debts had graphs. The

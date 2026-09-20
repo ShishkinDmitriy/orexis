@@ -141,7 +141,7 @@ def test_the_derived_want_borrows_the_roots_measure(monkeypatch):
 
 def test_a_mark_by_either_name_pursues_the_same_want(monkeypatch):
     """A reading's actor marks the want it means, and it may hold the root's name from before
-    the derived want stood: the pursuit road meets the same want by either name, and the
+    the derived want stood: the derivation meets the same want by either name, and the
     intention it adopts names the derived want."""
     agent = _gardener(monkeypatch, DRY)
     root = _stake(agent)
@@ -158,7 +158,7 @@ def test_a_mark_by_either_name_pursues_the_same_want(monkeypatch):
 
 
 def test_the_pursued_graph_is_this_agents_own_and_recorded(monkeypatch):
-    """Classified by the ROAD when it mints the want — each want a graph of its own since
+    """Classified by the DERIVATION when it mints the want — each want a graph of its own since
     #645, typed `deliberation:PursuedGraph` where it is written and never by its name — so
     the sweep, the ask channel and the imaginarium's copy of the records all see it."""
     agent = _gardener(monkeypatch, DRY)
@@ -166,5 +166,5 @@ def test_the_pursued_graph_is_this_agents_own_and_recorded(monkeypatch):
     agent.deliberator.decide(root)
     child = _stake(agent)
     graph = agent.wants.graph_of(agent.id, child.uri)
-    assert graph in agent.beliefs.graphs_of(WANT), "the road classified what it wrote"
+    assert graph in agent.beliefs.graphs_of(WANT), "the derivation classified what it wrote"
     assert graph in agent.beliefs.graphs_of("http://example.org/orexis/deliberation#PursuedGraph")

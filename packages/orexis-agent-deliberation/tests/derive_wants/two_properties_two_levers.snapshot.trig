@@ -6,7 +6,7 @@
 # Level and temperature both out on tank1, and two levers each moving one: two scopes, two wants,
 # two cones.
 #
-# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .

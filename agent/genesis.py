@@ -580,7 +580,7 @@ def classify_kernel_graphs(st: Store, agent_id: str) -> None:
     """Say what the two graphs the KERNEL writes for an agent are — its pick record and its
     roots — at every start, so a volume written before owners classified their own graphs
     says so too. An owner classifies what it writes (`Store.classify`): the ledger its
-    record, the keeper its promises, review its three, the road each want, sensing each
+    record, the keeper its promises, review its three, the derivation each want, sensing each
     prediction — each at construction or at the write, by the class it declares, whatever
     the graph is called. Boot used to type every per-agent graph by matching names against
     a prefix each class declared (`orexis:graphPrefix`), and was the one reader that

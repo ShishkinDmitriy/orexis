@@ -53,7 +53,7 @@ from orexis_agent_deliberation.affordances import Affordances
 from orexis_agent_deliberation.wants import Wants
 from orexis_agent_progression.intentions import Intentions
 
-from .pursued import Pursued
+from .pursuing import Pursuing
 from orexis_agent_progression.keeper import Keeper
 from .metrics import Metrics
 from orexis_agent_progression.upkeep import BeliefBaseUpkeep
@@ -128,7 +128,7 @@ class Agent:
         #  The judgments this agent is making, as a collection. Handed the WHOLE agent, and
         #  that is the point rather than an omission: a judgment is contributed by whichever
         #  capability holds the stake, so the collection has to reach the choir.
-        self.pursued = Pursued(self)
+        self._pursuing = Pursuing(self)
         #  ONE AFFORDER, and the sovereign asked how many there were: there had been one per
         #  search pass, one per deliberator call and one per remembered candidate, because the
         #  service held a memo and so became a thing to keep. It is stateless; each collection
@@ -340,10 +340,10 @@ class Agent:
 
         The word stays here because it is the domain's: what an agent PURSUES is what it is
         for, and seventy-nine callers ask it of the agent. What was here was the assembling —
-        three selects, a compile cache and the judging of an avoided state — which is the
-        collection's work and is `Pursued`' now.
+        three selects, a compile cache and the reading of an avoided state — which is the
+        collection's work and is `Pursuing`'s now.
         """
-        return self.pursued.find_all(now)
+        return self._pursuing.find_all(now)
 
     def ask(self, point: str, *args, **kwargs) -> list:
         """Every module's answer to one question, in module order, None left out.

@@ -67,7 +67,7 @@ from its stock before it answers with a round: where what it holds, less what it
 to holders whose windows open by then, covers the ask inside its vessel's region, it grants a
 [claim](/domain/claim.md) usable from that instant and owes it like any won one; where it does
 not, it convenes a [round](/domain/round.md), as a LOW convenes one. The round is the allocation
-under scarcity and not the only road to water
+under scarcity and not the only path to water
 ([a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md)). State still opens
 rounds: an ask the stock cannot cover is state.
 

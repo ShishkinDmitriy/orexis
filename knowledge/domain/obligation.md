@@ -20,9 +20,9 @@ recorded as a first-class thing rather than inferred from the claim whenever som
 It carries the counterparty, the claim that caused it, whether it has been demanded yet, and when
 it was discharged. **A graph of its own, holding from its issue to the claim's expiry** (#645), with a
 PREDICTION beside it — `market:lapsesAt`, a graph holding from the deadline on — which is what
-the pursuit road reads to mint the want under *no overdue debts*, about this debt and holding at
+the derivation reads to mint the want under *no overdue debts*, about this debt and holding at
 that instant; the debt itself is an instance and no want
-([one-road-derives-every-want](/decisions/one-road-derives-every-want.md)). Past its expiry no
+([one-function-mints-every-want](/decisions/one-function-mints-every-want.md)). Past its expiry no
 reader is handed it, and the one sweep drops
 it — after the ledger's keeper writes into the untimed obligations record what it came to,
 `market:dischargedAt` carried over for a debt paid or `market:lapsedAt` for one the holder
@@ -46,9 +46,9 @@ scored, ranked and pursued by the same machinery an agent's own wants are: it ha
 on the same scale.
 
 Since [#471](https://github.com/ShishkinDmitriy/orexis/issues/471) that is structural rather
-than taxonomic: there is **no Obligation class** — and since the road, no kernel type on the row
-at all. The debt is what the host's desire is ABOUT, one instance of *no overdue debts*; the
-road mints a want under that desire about this debt, and the ledger speaks for that want —
+than taxonomic: there is **no Obligation class** — and since the derivation, no kernel type on the
+row at all. The debt is what the host's desire is ABOUT, one instance of *no overdue debts*;
+the derivation mints a want under that desire about this debt, and the ledger speaks for that want —
 the claim, the counterparty, how far the window has run. The kind is read off the record's
 premises, never off a type, and rows written before the fold keep the retired type
 harmlessly, because no reader asks.

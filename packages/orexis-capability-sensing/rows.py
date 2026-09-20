@@ -37,7 +37,7 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Want]:
     an observation: a region a reading should sit inside, and an instrument that should have
     spoken recently. Two handles since the dataset split (#298): `desires` answers what is
     WANTED (`desires.rq`, this package's), `beliefs` what IS (the sensed graph), and the join
-    is here. The MAGNITUDE is nobody's arithmetic here: `measure` is the choir road
+    is here. The MAGNITUDE is nobody's arithmetic here: `measure` is the choir's own
     (`_measured_urgency`), so the ranking and the gap cannot disagree.
 
     A want whose reading is missing is maximally urgent: not knowing whether the pot is dying
@@ -89,7 +89,7 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Want]:
                 #  that is sensing's; not knowing is the freshness want's business now — hot,
                 #  and answered first by `want_about` — and the stake says how the last
                 #  number sits, which is what it knows.
-                #  Whichever capability MEASURES such wants, asked through the choir road the
+                #  Whichever capability MEASURES such wants, asked through the choir's own the
                 #  caller handed in — the same question the planner asks of a candidate
                 #  world, which is the whole point of one measure. The STATE stays the
                 #  region's: met is the shape's verdict, urgency is the measure's, and since

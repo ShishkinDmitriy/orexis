@@ -80,7 +80,7 @@ class StoringModule(Module):
 
         The sovereign asks a modality, not a shard and not a union: a-store-is-a-modality's
         third ruling, which is "there is no default world" applied to a mind. A payload that
-        names none is refused with the road spelled out, because a fallback would answer a
+        names none is refused with the path spelled out, because a fallback would answer a
         question the asker did not ask.
         """
         try:

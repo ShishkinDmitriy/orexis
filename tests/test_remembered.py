@@ -148,7 +148,7 @@ def test_a_missing_premise_refuses_the_plan_and_the_trace_names_the_fact(monkeyp
 
 
 def test_where_it_applies_a_remembered_plan_is_still_walked_as_one_candidate_by_a_bare_search(monkeypatch):
-    """The walk road (#469, second form) survives for a search entered without the
+    """The walk path (#469, second form) survives for a search entered without the
     adoption in front of it: the remembered route is weighed as ONE candidate, walked in
     the imaginarium, found to achieve the want and chosen — the trace names it as what
     would be taken and as what was chosen."""
@@ -200,7 +200,7 @@ def test_a_remembered_route_adopted_on_its_precondition_that_fails_is_forgotten(
     agent.keeper.expect(again, "show me", not_after=datetime.now(timezone.utc) + timedelta(hours=1))
     agent.keeper.lapse(again)
     assert not bindings(agent.beliefs.query(f"SELECT ?r WHERE {{ GRAPH <{remembered_graph(agent.id)}> {{ ?r a deliberation:RememberedPlan }} }}", agent.beliefs.graphs_of(PUBLIC))), \
-        "forgotten, whichever road adopted it"
+        "forgotten, whichever way adopted it"
 
 
 def test_the_regression_subtracts_what_the_chain_produces():

@@ -91,7 +91,7 @@ class Witness:
     broke where the block says that, and the instant.
 
     A universal is refuted by a witness, and the want minted under it is the universal
-    instantiated at that witness (one-road-derives-every-want). It is what a
+    instantiated at that witness (one-function-mints-every-want). It is what a
     `deliberation:Judgment`'s result was, and it is computed rather than stored: a want is
     where any of this is kept.
     """
@@ -201,7 +201,7 @@ def compiled(shapes: rdflib.Graph, shape: str | None, of: str) -> str | None:
     constraint, `?_about` and `?_side` where the constraint's block says them — or None, with
     a word in the log, where there is no shape or the compiler refuses it.
 
-    THE REPORT AND NOT THE FOCUS NODES (one-road-derives-every-want): a desire universal over
+    THE REPORT AND NOT THE FOCUS NODES (one-function-mints-every-want): a desire universal over
     several properties fails per property, and the rows are what say which. The planner
     compiles the same shape the same way for the law it holds candidates to."""
     from orexis_agent_progression.violation import Unsupported, report_select

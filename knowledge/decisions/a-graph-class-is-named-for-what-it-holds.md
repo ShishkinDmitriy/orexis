@@ -7,7 +7,7 @@ description: >-
   plural of what it holds - `orexis:DesireGraph` for graphs of desire rows (the roots, the
   promises), `orexis:WantGraph` for graphs of want rows (each pursued want), and the world's
   asserted graph under both, since one world ratifies a desire and three ratify a want.
-  Three things were refused - naming a class for the road's role in the rows, a fresh
+  Three things were refused - naming a class for the derivation's role in the rows, a fresh
   spelling to keep clear of the retired modality class, and a want name for the asserted
   graph - and the pick record's name for eyes says picks, moved once at boot for a volume
   that still says beliefs.
@@ -32,14 +32,14 @@ the misnomer the vocabulary's own comment on `orexis:BeliefGraph` records.
 names a collection for the plural of its element. A reader asks by class
 ([who-put-the-fact-there](/decisions/who-put-the-fact-there.md), amended by #708), so the
 class is what a reader means, and a reader means *the graphs of desires* or *the graphs of
-wants* — never *the roots*, which is what those rows are TO THE ROAD. Two content classes in
+wants* — never *the roots*, which is what those rows are TO THE DERIVATION. Two content classes in
 `agent/ontology.ttl`:
 
 - `orexis:DesireGraph` — a graph of `orexis:Desire` rows. The roots graph is one, and
   `progression:PromisesGraph` is beneath it, since a promise the bridge raises is written as
   a desire the agent holds.
 - `orexis:WantGraph` — a graph of `orexis:Want` rows. `deliberation:PursuedGraph` is beneath
-  it, one graph per want the road minted.
+  it, one graph per want the derivation minted.
 
 The planner's want graphs and the desire projection ask for both and for the obligations
 record, and nothing names a role. A want is not a desire (`orexis:Want` says so, measured in
@@ -47,10 +47,10 @@ record, and nothing names a role. A want is not a desire (`orexis:Want` says so,
 
 # What was refused
 
-**A class named for the role.** `RootsGraph` said what the rows are on the road — a root is
+**A class named for the role.** `RootsGraph` said what the rows are to the derivation — a root is
 what a want is derived under — and the rows were `orexis:Desire` all along. Two names for one
 kind of row in the T-Box is the synonym the dictionary refuses between pages: a reader meets
-both, looks for the difference, and the meanings drift. The road keeps the word *root* in its
+both, looks for the difference, and the meanings drift. The derivation keeps the word *root* in its
 prose, as the role a desire plays there, and the graph's name for eyes stays `roots/<agent>`.
 
 **A fresh spelling.** `orexis:DesireGraph` had existed and was retired by #312

@@ -31,7 +31,7 @@ what a step can wait on. See [method](/domain/method.md).
   as steps. Their effects are nothing the want reads — a bid row, a redeem message — and the
   protocol is not a choice: once Acquiring is chosen, the moves are fixed. Simulating them
   would spend the budget on worlds that differ in nothing the measure sees.
-- **One search per protocol move.** The old road re-decided at every knock: an offer woke the
+- **One search per protocol move.** The old path re-decided at every knock: an offer woke the
   deliberator, a claim adopted Presenting on its own. A bid adopted on the keeper's tick is
   answered by the market's knock without a second search, which the amortisation always
   promised; the method makes it literal.

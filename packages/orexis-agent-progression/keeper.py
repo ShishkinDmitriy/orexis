@@ -415,7 +415,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
         True is the AMORTISATION: the same means toward the same want already stands and is
         younger than the patience, so the impulse is not re-decided. False is the caller's
-        road clear — either nothing stood, or what stood was outwaited and has been dropped
+        way clear — either nothing stood, or what stood was outwaited and has been dropped
         here with the reason recorded, because honouring a commitment forever is as wrong as
         honouring it not at all.
         """
@@ -547,7 +547,7 @@ SELECT ?bridge ?construct ?estimate WHERE {{
         as a want for the level beneath and wait on it. The predicted fact, translated through
         the bridge, becomes an `orexis:Desire` this agent holds — in its promises graph, and
         in the desire modality at once — with the bridge's estimate, so `pursuing` lifts it
-        and the ordinary road plans it over the actions that are taken. The step is held on
+        and the ordinary path plans it over the actions that are taken. The step is held on
         the same translated fact as its completion; the verdict withdraws the promise. False
         where the action has no bridge: a promise nobody could keep, said loudly (#532)."""
         from .ontology import promises_graph
@@ -937,7 +937,7 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
             self._reconsidering = False
 
     def _claim(self, intention_uri: str) -> bool:
-        """End this hold, once. Two roads reach a hold — a write on the writer's thread and
+        """End this hold, once. Two paths reach a hold — a write on the writer's thread and
         the deadline on the loop's — and both may find it still held; the first to claim it
         ends it, the second finds it gone. The lock covers the claim and the ledger's
         unhold only, never a release or a verdict, which is what deadlocked before."""
@@ -975,8 +975,8 @@ SELECT ?i ?p ?node WHERE {{ GRAPH <{self.graph}> {{
 
     def lapse(self, intention_uri: str) -> None:
         """The deadline passed before the condition answered: take as lapsed, drop, or — for
-        a completion wait — the verdict unmet. The scheduler's road; `reconsider` takes the
-        same road on a write that lands past the deadline."""
+        a completion wait — the verdict unmet. The scheduler's path; `reconsider` takes the
+        same one on a write that lands past the deadline."""
         for holder, _, predicate in self.held():
             if holder.uri == intention_uri:
                 self._lapse(holder, predicate)
@@ -1020,7 +1020,7 @@ SELECT ?when WHERE {{ GRAPH <{self.graph}> {{
     def _release(self, standing: Standing, because: str) -> None:
         from .execution import carry_out
         #  RELEASED IS TAKEN: a readiness wait that lapsed is taken anyway (a held claim
-        #  redeems blind rather than never), so `ready` is not asked again on this road.
+        #  redeems blind rather than never), so `ready` is not asked again on this path.
         self._released.add(standing.uri)
 
         self.agent.intentions.update(f"""
@@ -1310,7 +1310,7 @@ SELECT ?step ?predicts WHERE {{ GRAPH <{self.graph}> {{
     def answered(self, intention_uri: str, met: bool, because: str) -> bool:
         """The predictor's verdict on an expectation (#639): a reading of the key arrived in the
         band the step predicted (met), or outside it at or after the landing (unmet). The
-        first road to reach the expectation — this or the deadline — ends it; the second finds it
+        first path to reach the expectation — this or the deadline — ends it; the second finds it
         gone and answers False. The verdict runs unchanged from here: residual, suspicion,
         advance or drop, and what is said upward."""
         expectation = next((w for w in self.open_expectations(every=True) if w.uri == intention_uri), None)

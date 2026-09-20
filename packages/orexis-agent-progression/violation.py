@@ -283,7 +283,7 @@ class _Compiler:
         block may carry beside SHACL's own. A desire universal over several properties states it
         per block, and a violation row can then say WHICH property is in trouble, which is what
         lets a want be minted about that and not about everything the desire covers
-        (one-road-derives-every-want). A block that states none yields None, and a reader falls
+        (one-function-mints-every-want). A block that states none yields None, and a reader falls
         back to the desire's own `orexis:about`. With `only`, an alternative whose severity is not `only` is left out; a
         conformance check passes neither.
 

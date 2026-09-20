@@ -259,7 +259,7 @@ was refused, correctly, by the sovereign asking whether it was needed at all.** 
 action states a precondition, an implementation and an EFFECT; a plan is a path through world
 space; and what a look does is something its effect already says, since it predicts the value it
 found. The world it reaches therefore carries its parent's signature and the cycle check
-discards it — the same road a zero-size bid arrives at "this does not help" by, which
+discards it — the same path a zero-size bid arrives at "this does not help" by, which
 `market:AcquireEffect`'s own comment was already arguing for.
 
 Measured with the guard deleted outright, on three worlds including a first look with nothing

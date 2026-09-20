@@ -68,7 +68,7 @@ def test_the_drift_says_when_the_reading_leaves_its_region(monkeypatch):
 def test_a_root_with_no_crossing_in_view_derives_nothing(monkeypatch):
     """A pot at 0.20 falling at 0.03 a day is inside its region at every horizon a drift
     predicts at, so no judgment says it fails and there is nothing to pursue — the first
-    child's road, unchanged."""
+    child's path, unchanged."""
     agent = _gardener(monkeypatch, CONTENT)
     root = _stake(agent)
     assert root.is_met and _crossing_of(agent) is None
@@ -166,7 +166,7 @@ def test_a_pot_that_crosses_before_the_drift_said_is_wanted_now_and_not_at_the_c
     """What was foreseen has arrived. The want was minted AT the predicted crossing, and a plan
     for it is placed to land there (#619); then a reading shows the pot already below its
     floor. The root is unmet NOW, and a want still saying "hold at the crossing" would have
-    the dose placed hours out. The road re-mints it with no instant under the same name, and
+    the dose placed hours out. The derivation re-mints it with no instant under the same name, and
     the pass that stood on the old judgment is handed the new one."""
     agent = _gardener(monkeypatch, FALLING)
     root = _stake(agent)

@@ -3,7 +3,7 @@ type: Domain Concept
 title: Shape
 description: >-
   SHACL, and the one language this project says both "you may not" and "I want" in — the
-  difference used to be a third severity and is now the ROAD (#472): a violation refuses, a
+  difference used to be a third severity and is now the PATH (#472): a violation refuses, a
   warning is worth a look, and a want's met-test — known by hanging off its desire through
   `orexis:metWhen` — enters no validation pass at all, so nothing has to mark it survivable. The
   severity split is ours: the spec defines conformance as no results AT ALL, so a warning would

@@ -237,7 +237,7 @@ SELECT ?p WHERE {{
         the ask at that instant — what I hold, less what I already owe to holders whose
         windows open by then, less the ask, still inside my vessel's region — and convene a
         round where it does not. The auction is the allocation under scarcity, not the only
-        road to water; a claim granted is water at a time, a debt in my ledger, and an
+        path to water; a claim granted is water at a time, a debt in my ledger, and an
         arrival my vessel's drift reads."""
         who = ask.get("agent")
         if who not in self.participants[market.uri]:

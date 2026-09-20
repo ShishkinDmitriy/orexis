@@ -87,7 +87,7 @@ actuation:Dosing
             #  better than one that does not, so a content plant would buy water to find out
             #  how wet it is (#137, the guard the zero-size filter used to carry). Requiring
             #  the reading leaves such a world untouched and the step discarded as somewhere
-            #  already seen, which is the road every other "this does not help" arrives by;
+            #  already seen, which is the path every other "this does not help" arrives by;
             #  a look comes first, as it always did.
              ?standing sosa:hasFeatureOfInterest $subject ;
                              sosa:observedProperty $about .

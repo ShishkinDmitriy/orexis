@@ -252,7 +252,7 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str, measure=None) -> di
 
     Two handles since the dataset split (#298): `desires` answers what is WANTED and `beliefs`
     what IS, and the join is here — `desires.rq` and `readings.rq` are the two texts. The
-    MAGNITUDE is nobody's arithmetic here: `measure` is the choir road the sensing module hands in
+    MAGNITUDE is nobody's arithmetic here: `measure` is the choir's own the sensing module hands in
     (see `_measured_urgency`), so the diff and the ranking cannot disagree because both ask the
     same capability the same question. `agent_id` names the pick record the sign's aim is read
     from. A property with no observation yet is absent rather than zero: at birth every desire
@@ -292,11 +292,11 @@ def _measured_urgency(measure, row: dict, value: float | None) -> float:
 
     It was `_stake_urgency` while a stake was the only kind anything declared a measure for.
     Freshness has one now — sensing's, since the want became sensing's — and it takes the same
-    road, which is the point of the road: the kernel asks, a capability answers, and this
+    path, which is the point of it: the kernel asks, a capability answers, and this
     function does not learn which kind it just asked about. `value` may be None, because the
     question *how urgent is not knowing* is exactly the one a freshness want asks.
 
-    `measure` is the choir road, handed in by the sensing module — `(desire, value) -> float | None`,
+    `measure` is the choir's own, handed in by the sensing module — `(desire, value) -> float | None`,
     behind which `Agent.desire_urgency` asks every module and sensing answers for
     observation-backed wants against the live belief base. A free function cannot hold the
     agent, so the join takes the question as a parameter; the KERNEL evaluates nothing
