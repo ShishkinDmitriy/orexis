@@ -1471,7 +1471,7 @@ class Planner:
         #  from nothing, nothing spent. Without its row the record reads as a forest whose
         #  trees begin nowhere, and a reader taking the next iteration could not tell the
         #  world the search started from apart from one it has never heard of.
-        self._note(here, None, None)
+        self._note(here, None, None, None)
         return here
 
     def _projected(self, here, judgment: Want, latest: bool = True):
@@ -1636,10 +1636,10 @@ class Planner:
         #  THE STEP CARRIES WHAT IT PREDICTED (#510): the same canonical facts the signature
         #  is made of, so the keeper can hold the world to this step without an imaginarium.
         step.taken = node.taken + (replace(act, urgency_after=step.urgency, predicts=own),)
-        self._note(step, self._graph(node), act)
+        self._note(step, self._graph(node), act, lands)
         return step
 
-    def _note(self, node, parent: str, act) -> None:
+    def _note(self, node, parent: str, act, lands: float | None) -> None:
         """Say in the STORE what this pass knows about the world it just made.
 
         What the search knew about a world was a Python object: its parent, what the path had
@@ -1676,14 +1676,19 @@ class Planner:
             return ox.Quad(s_, ox.NamedNode(p_), o_, g)
         def dec(v):
             return ox.Literal(f"{v:.6f}", datatype=ox.NamedNode(XSD + "decimal"))
-        out = [q(me, RDF_TYPE, ox.NamedNode(D + "World")),
+        out = [q(me, RDF_TYPE, ox.NamedNode(D + "PossibleWorld")),
                q(me, D + "spent", dec(node.cost)),
                q(me, D + "remaining", dec(node.estimate or 0.0)),
                q(me, D + "wouldReach", dec(node.urgency)),
                q(me, D + "takes", dec(node.landing)),
                q(me, D + "atDepth", ox.Literal(str(len(node.taken)),
                                                datatype=ox.NamedNode(XSD + "integer"))),
-               q(me, D + "signature", ox.Literal(_signature_of(node)))]
+               q(me, D + "signature", ox.Literal(_signature_of(node))),
+               #  WHEN this world is, written and not derived: the engine binds nothing for
+               #  duration arithmetic, so no query can add a path's seconds to the pass's
+               #  clock. The root's instant is that clock, which is how it reaches the store.
+               q(me, D + "atInstant", ox.Literal(self._at(node).isoformat(),
+                                                 datatype=ox.NamedNode(XSD + "dateTime")))]
         #  THE ROOT HAS NO PARENT AND NO STEP: it is where the pass stands, reached by nothing.
         if parent is not None:
             out.append(q(me, D + "from", ox.NamedNode(parent)))
@@ -1692,6 +1697,12 @@ class Planner:
             out += [q(me, P + "by", step),
                     q(step, RDF_TYPE, ox.NamedNode(P + "Step")),
                     q(step, P + "fills", ox.NamedNode(act.action))]
+            #  HOW LONG THE ACTION ITSELF TAKES — the step's own `orexis:landsAfter`, asked in
+            #  the world it is taken in. The world's `takes` is the path's total, so a step's
+            #  own would be a subtraction, and a duration this pass computed once is worth
+            #  keeping where the step that has it is written down.
+            if lands:
+                out.append(q(step, D + "takes", dec(lands)))
             if act.via:
                 out.append(q(step, P + "through", ox.NamedNode(act.via)))
             if act.about:

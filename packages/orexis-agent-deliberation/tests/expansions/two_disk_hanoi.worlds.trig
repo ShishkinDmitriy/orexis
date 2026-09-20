@@ -129,16 +129,18 @@ GRAPH possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC {
 
 #  What the pass knows about every world it made.
 GRAPH graph:pass {
-  graph:sensed a deliberation:World ;
+  graph:sensed a deliberation:PossibleWorld ;
       deliberation:atDepth 0 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
       deliberation:remaining 2.0 ;
       deliberation:signature "bb7208bc9b5d7c04" ;
       deliberation:spent 0.0 ;
       deliberation:takes 0.0 ;
       deliberation:wouldReach 1.0 .
-  possible:Move-disk_1-PegB a deliberation:World ;
+  possible:Move-disk_1-PegB a deliberation:PossibleWorld ;
       deliberation:atDepth 1 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
       deliberation:from graph:sensed ;
       deliberation:remaining 2.0 ;
@@ -147,8 +149,9 @@ GRAPH graph:pass {
       deliberation:takes 0.0 ;
       deliberation:wouldReach 1.0 ;
       progression:by possible:Move-disk_1-PegB.step .
-  possible:Move-disk_1-PegB.Move-disk_1-PegA a deliberation:World ;
+  possible:Move-disk_1-PegB.Move-disk_1-PegA a deliberation:PossibleWorld ;
       deliberation:atDepth 2 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegB ;
       deliberation:remaining 2.0 ;
       deliberation:signature "bb7208bc9b5d7c04" ;
@@ -160,8 +163,9 @@ GRAPH graph:pass {
       orexis:about hanoi:PegA ;
       progression:fills hanoi:Move ;
       progression:through :disk_1 .
-  possible:Move-disk_1-PegB.Move-disk_1-PegC a deliberation:World ;
+  possible:Move-disk_1-PegB.Move-disk_1-PegC a deliberation:PossibleWorld ;
       deliberation:atDepth 2 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegB ;
       deliberation:remaining 1.0 ;
       deliberation:signature "426192855af0ca99" ;
@@ -173,8 +177,9 @@ GRAPH graph:pass {
       orexis:about hanoi:PegC ;
       progression:fills hanoi:Move ;
       progression:through :disk_1 .
-  possible:Move-disk_1-PegB.Move-disk_2-PegC a deliberation:World ;
+  possible:Move-disk_1-PegB.Move-disk_2-PegC a deliberation:PossibleWorld ;
       deliberation:atDepth 2 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
       deliberation:from possible:Move-disk_1-PegB ;
       deliberation:remaining 1.0 ;
@@ -183,8 +188,9 @@ GRAPH graph:pass {
       deliberation:takes 0.0 ;
       deliberation:wouldReach 1.0 ;
       progression:by possible:Move-disk_1-PegB.Move-disk_2-PegC.step .
-  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA a deliberation:World ;
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA a deliberation:PossibleWorld ;
       deliberation:atDepth 3 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC ;
       deliberation:remaining 1.0 ;
       deliberation:signature "96238be7239f92b9" ;
@@ -196,8 +202,9 @@ GRAPH graph:pass {
       orexis:about hanoi:PegA ;
       progression:fills hanoi:Move ;
       progression:through :disk_1 .
-  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC a deliberation:World ;
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC a deliberation:PossibleWorld ;
       deliberation:atDepth 3 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC ;
       deliberation:remaining 0.0 ;
       deliberation:signature "9159fbb0fdee38d6" ;
@@ -209,8 +216,9 @@ GRAPH graph:pass {
       orexis:about hanoi:PegC ;
       progression:fills hanoi:Move ;
       progression:through :disk_1 .
-  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA a deliberation:World ;
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA a deliberation:PossibleWorld ;
       deliberation:atDepth 3 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC ;
       deliberation:remaining 2.0 ;
       deliberation:signature "0deedbaa40d7cc37" ;
@@ -230,8 +238,9 @@ GRAPH graph:pass {
       orexis:about hanoi:PegB ;
       progression:fills hanoi:Move ;
       progression:through :disk_1 .
-  possible:Move-disk_1-PegC a deliberation:World ;
+  possible:Move-disk_1-PegC a deliberation:PossibleWorld ;
       deliberation:atDepth 1 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
       deliberation:from graph:sensed ;
       deliberation:remaining 1.0 ;
@@ -240,8 +249,9 @@ GRAPH graph:pass {
       deliberation:takes 0.0 ;
       deliberation:wouldReach 1.0 ;
       progression:by possible:Move-disk_1-PegC.step .
-  possible:Move-disk_1-PegC.Move-disk_1-PegA a deliberation:World ;
+  possible:Move-disk_1-PegC.Move-disk_1-PegA a deliberation:PossibleWorld ;
       deliberation:atDepth 2 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegC ;
       deliberation:remaining 2.0 ;
       deliberation:signature "bb7208bc9b5d7c04" ;
@@ -253,8 +263,9 @@ GRAPH graph:pass {
       orexis:about hanoi:PegA ;
       progression:fills hanoi:Move ;
       progression:through :disk_1 .
-  possible:Move-disk_1-PegC.Move-disk_1-PegB a deliberation:World ;
+  possible:Move-disk_1-PegC.Move-disk_1-PegB a deliberation:PossibleWorld ;
       deliberation:atDepth 2 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegC ;
       deliberation:remaining 2.0 ;
       deliberation:signature "0deedbaa40d7cc37" ;
@@ -266,8 +277,9 @@ GRAPH graph:pass {
       orexis:about hanoi:PegB ;
       progression:fills hanoi:Move ;
       progression:through :disk_1 .
-  possible:Move-disk_1-PegC.Move-disk_2-PegB a deliberation:World ;
+  possible:Move-disk_1-PegC.Move-disk_2-PegB a deliberation:PossibleWorld ;
       deliberation:atDepth 2 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
       deliberation:from possible:Move-disk_1-PegC ;
       deliberation:remaining 1.0 ;
@@ -276,8 +288,9 @@ GRAPH graph:pass {
       deliberation:takes 0.0 ;
       deliberation:wouldReach 1.0 ;
       progression:by possible:Move-disk_1-PegC.Move-disk_2-PegB.step .
-  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA a deliberation:World ;
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA a deliberation:PossibleWorld ;
       deliberation:atDepth 3 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB ;
       deliberation:remaining 2.0 ;
       deliberation:signature "096c26bac8a6dc74" ;
@@ -289,8 +302,9 @@ GRAPH graph:pass {
       orexis:about hanoi:PegA ;
       progression:fills hanoi:Move ;
       progression:through :disk_1 .
-  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB a deliberation:World ;
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB a deliberation:PossibleWorld ;
       deliberation:atDepth 3 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB ;
       deliberation:remaining 2.0 ;
       deliberation:signature "f43e75219a6a5ae8" ;
@@ -302,8 +316,9 @@ GRAPH graph:pass {
       orexis:about hanoi:PegB ;
       progression:fills hanoi:Move ;
       progression:through :disk_1 .
-  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA a deliberation:World ;
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA a deliberation:PossibleWorld ;
       deliberation:atDepth 3 ;
+      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB ;
       deliberation:remaining 1.0 ;
       deliberation:signature "426192855af0ca99" ;

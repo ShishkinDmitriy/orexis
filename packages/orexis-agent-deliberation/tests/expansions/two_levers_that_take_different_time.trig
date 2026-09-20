@@ -1,0 +1,111 @@
+# two_levers_that_take_different_time
+#
+# AN ACTION TAKES TIME, and a possible world is a set of facts AT AN INSTANT. Two levers reach
+# the same want and neither is better on both axes: a pour is quick and dear, a trickle is slow
+# and cheap. The first iteration forks two worlds from the same parent, differing in what the
+# tank reads AND in when the world is.
+#
+# WHAT THE ROWS SAY. Each step carries `deliberation:takes`, its action's own
+# `orexis:landsAfter` evaluated where it is taken — the only place that number survives the
+# pass. Each world carries `deliberation:atInstant`, the pass's clock plus every landing on the
+# path to it. The instant is WRITTEN and not derived, which is forced rather than chosen: this
+# engine binds nothing for duration arithmetic, so no query can add a path's seconds to a clock.
+#
+# TIME AND COST ARE DIFFERENT AXES and this case is built so they disagree. The search orders by
+# what a path SPENDS, so the cheap slow trickle is preferred to the dear quick pour, and the
+# world it reaches stands ten minutes later than the other. A search that confused the two would
+# pick the pour and this snapshot would say so.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix progression: <http://example.org/orexis/progression#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix graph: <http://example.org/orexis/graph/> .
+@prefix possible: <http://example.org/orexis/graph/possible/> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+
+GRAPH :world {
+  :tank1 a :Tank .
+  :pump a :Pump .
+  :dripper a :Dripper .
+  :keeper progression:patienceS 300 .
+}
+
+GRAPH :actions {
+  #  IRIs in full: the search rewrites a precondition into a CONSTRUCT keeping the WHERE body
+  #  and dropping the text's own PREFIX head, so a name declared here would be lost.
+  :Pouring a orexis:Action ;
+      rdfs:label "fill the tank from the pump — quick, and dear" ;
+      orexis:available """SELECT ?via ?about WHERE {
+        ?via a <http://example.org/test#Pump> .
+        BIND(<http://example.org/test#level> AS ?about) }""" ;
+      orexis:costs """SELECT ?cost WHERE { BIND(9.0 AS ?cost) }""" ;
+      orexis:landsAfter """SELECT ?seconds WHERE { BIND(30 AS ?seconds) }""" ;
+      sh:construct """CONSTRUCT { ?t <http://example.org/test#level> 20 }
+        WHERE { ?t a <http://example.org/test#Tank> }""" ;
+      orexis:retracts """CONSTRUCT { ?t <http://example.org/test#level> ?was }
+        WHERE { ?t a <http://example.org/test#Tank> ; <http://example.org/test#level> ?was }""" .
+
+  :Trickling a orexis:Action ;
+      rdfs:label "let the dripper bring it just inside — slow, and cheap" ;
+      orexis:available """SELECT ?via ?about WHERE {
+        ?via a <http://example.org/test#Dripper> .
+        BIND(<http://example.org/test#level> AS ?about) }""" ;
+      orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+      orexis:landsAfter """SELECT ?seconds WHERE { BIND(600 AS ?seconds) }""" ;
+      sh:construct """CONSTRUCT { ?t <http://example.org/test#level> 12 }
+        WHERE { ?t a <http://example.org/test#Tank> }""" ;
+      orexis:retracts """CONSTRUCT { ?t <http://example.org/test#level> ?was }
+        WHERE { ?t a <http://example.org/test#Tank> ; <http://example.org/test#level> ?was }""" .
+}
+
+GRAPH graph:sensed {
+  :tank1 :level 5 .
+}
+
+GRAPH :desires {
+  :keeper orexis:holds :in_range .
+  :in_range a orexis:Desire ;
+      rdfs:label "every tank in range" ;
+      orexis:about :level ;
+      orexis:metWhen :in_range.shape .
+  :in_range.shape a sh:NodeShape ; sh:targetClass :Tank ;
+      sh:property [ sh:path :level ; sh:minInclusive 10 ; orexis:about :level ] .
+}
+
+GRAPH pursued:in_range.pursued.tank1 {
+  :keeper orexis:holds :in_range.pursued.tank1 .
+  :in_range.pursued.tank1 a orexis:Want ;
+      prov:wasDerivedFrom :in_range ;
+      orexis:metWhen :in_range.pursued.tank1.met ;
+      orexis:about :level ;
+      rdfs:label "pursued: every tank in range" .
+  :in_range.pursued.tank1.met a sh:NodeShape ; sh:targetNode :tank1 ;
+      sh:property [ sh:path :level ; sh:minInclusive 10 ] .
+}
+
+GRAPH :scopes {
+  :keeper.scope.1 a deliberation:Scope .
+  :level deliberation:inScope :keeper.scope.1 .
+  :Pouring deliberation:inScope :keeper.scope.1 .
+  :Trickling deliberation:inScope :keeper.scope.1 .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph , orexis:Graph .
+  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
+  :world a orexis:PublicGraph , orexis:Graph .
+  :actions a orexis:PublicGraph , orexis:Graph .
+  graph:sensed a orexis:StateGraph , orexis:BeliefGraph , orexis:Graph .
+  :desires a orexis:DesireGraph , orexis:Graph .
+  :scopes a deliberation:ScopeGraph , orexis:WorkingGraph , orexis:Graph ;
+      orexis:arrivedBy orexis:Derived ; orexis:beliefsOf :keeper .
+  pursued:in_range.pursued.tank1 a deliberation:PursuedGraph , orexis:WantGraph , orexis:Graph ;
+      orexis:arrivedBy orexis:Recorded ; orexis:beliefsOf :keeper .
+}

@@ -105,7 +105,7 @@ def test_the_store_alone_says_what_the_pass_decided(monkeypatch, snapshots):
 
     #  THE WORLD WHERE NOTHING REMAINS, and the path back to the one forked from nothing.
     solved = bindings(im.query_over(
-        "SELECT ?w WHERE { ?w a deliberation:World ; deliberation:remaining 0.0 ; "
+        "SELECT ?w WHERE { ?w a deliberation:PossibleWorld ; deliberation:remaining 0.0 ; "
         "deliberation:atDepth ?d } ORDER BY ?d LIMIT 1", PASS_GRAPH))
     assert solved, "no world in the store reaches the goal"
     walked, here = [], solved[0]["w"]
@@ -124,10 +124,52 @@ def test_the_store_alone_says_what_the_pass_decided(monkeypatch, snapshots):
 
     #  AND THE OPEN LIST, ordered as `_priority` orders it, asked of the store.
     frontier = bindings(im.query_over(
-        "SELECT ?w ?spent ?left WHERE { ?w a deliberation:World ; deliberation:spent ?spent ; "
+        "SELECT ?w ?spent ?left WHERE { ?w a deliberation:PossibleWorld ; deliberation:spent ?spent ; "
         "deliberation:remaining ?left ; deliberation:wouldReach ?u . "
         "FILTER NOT EXISTS { ?w deliberation:expanded true } } "
         "ORDER BY (?spent + ?left) ?u ?spent", PASS_GRAPH))
     assert frontier, "every world expanded and none left open — nothing to resume from"
     keys = [float(r["spent"]) + float(r["left"]) for r in frontier]
     assert keys == sorted(keys), keys
+
+
+def test_a_world_says_when_it_is_and_a_step_says_how_long_it_took(monkeypatch, snapshots):
+    """AN ACTION TAKES TIME, so a possible world is facts AT AN INSTANT.
+
+    Two levers reach the same want, one quick and dear and one slow and cheap. The first
+    iteration forks both; they differ in what the tank reads and in WHEN the world is, and
+    each step carries its own duration — the action's `orexis:landsAfter` evaluated where it
+    is taken, which exists nowhere else once the pass ends.
+
+    THE INSTANT IS WRITTEN AND NOT DERIVED, and that is forced rather than chosen: this engine
+    binds nothing for duration arithmetic, so no query can add a path's seconds to the pass's
+    clock. A reader handed only `deliberation:takes` could not say when the world is.
+
+    AND TIME IS NOT COST. The search orders by what a path spends, so the slow cheap trickle is
+    preferred to the quick dear pour — an assertion that would fail the day the two axes were
+    confused for one.
+    """
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    agent = snapshots.stand_in(CASES_DIR / "two_levers_that_take_different_time.trig")
+    (want,) = agent.wants.find_all_pursued()
+    planner = Planner(agent, agent.me)
+    plan = planner.plan(want)
+    rows = {r["w"].rsplit("/", 1)[-1]: r for r in bindings(planner.imaginarium.query_over(
+        "SELECT ?w ?at ?takes ?spent ?fills WHERE { ?w a deliberation:PossibleWorld ; "
+        "deliberation:atInstant ?at ; deliberation:takes ?takes ; deliberation:spent ?spent ; "
+        "progression:by ?s . ?s <http://example.org/orexis/progression#fills> ?fills }", PASS_GRAPH))}
+    quick, slow = rows["Pouring-pump-level"], rows["Trickling-dripper-level"]
+
+    assert quick["at"].startswith("2026-01-01T12:00:30"), quick["at"]
+    assert slow["at"].startswith("2026-01-01T12:10:00"), slow["at"]
+    assert (float(quick["takes"]), float(slow["takes"])) == (30.0, 600.0)
+
+    #  THE ROOT IS THE PASS'S CLOCK, which is how the clock reaches the store at all.
+    (root,) = bindings(planner.imaginarium.query_over(
+        "SELECT ?at WHERE { ?w a deliberation:PossibleWorld ; deliberation:atInstant ?at . "
+        "FILTER NOT EXISTS { ?w deliberation:from ?p } }", PASS_GRAPH))
+    assert root["at"].startswith("2026-01-01T12:00:00"), root["at"]
+
+    assert float(slow["spent"]) < float(quick["spent"]), "the trickle is the cheaper path"
+    assert [st.action.rsplit("#", 1)[-1] for st in plan.steps] == ["Trickling"], \
+        "cost decides, not duration — the slow cheap lever is the one taken"
