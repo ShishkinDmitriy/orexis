@@ -86,9 +86,10 @@ def test_a_node_forks_its_parents_readings_and_leaves_them_alone():
     st, im = _imaginarium()
     added, retracted = _dose(im, STATE_GRAPH)
 
-    class _Row:                    # what `_Node.taken` holds: action, lever and about
-        action, via = DOSING, "http://example.org/orexis/world/loner#pump"
-        about = "http://example.org/orexis/world/loner#fern"
+    class _Row:                    # what `_Node.taken` holds: an action and what filled it
+        action = DOSING
+        binding = (("http://example.org/orexis/actuation#valve",
+                    "http://example.org/orexis/world/loner#pump"),)
 
     child = im.reached(STATE_GRAPH, (_Row(),), added, retracted)
 
@@ -108,8 +109,9 @@ def test_nothing_imagined_reaches_the_store_it_was_imagined_from():
     added, retracted = _dose(im, STATE_GRAPH)
 
     class _Row:
-        action, via = DOSING, "http://example.org/orexis/world/loner#pump"
-        about = "http://example.org/orexis/world/loner#fern"
+        action = DOSING
+        binding = (("http://example.org/orexis/actuation#valve",
+                    "http://example.org/orexis/world/loner#pump"),)
 
     im.reached(STATE_GRAPH, (_Row(),), added, retracted)
 
