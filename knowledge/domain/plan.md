@@ -4,8 +4,10 @@ title: Plan
 description: >-
   What one pass of the search returns for one want — its steps in order, each with the world it
   was predicted to reach, the outcome, what it was scored to spend, and which candidate of the
-  root's menu it came through. Never executed and never stored as such: an intention commits to
-  its steps and the world verifies each as it is taken; a plan that worked may be remembered.
+  root's menu it came through. Never executed: an intention commits to its steps and the world
+  verifies each as it is taken; a plan that worked may be remembered. It IS written down now -
+  `deliberation:Plan` in the deliberation graph, one per want and replaced whole, its steps in
+  the ledger's own words so committing to one is reading what is there.
 ---
 
 # What it is

@@ -49,9 +49,9 @@ from orexis_agent_deliberation.want import Want
 from .affordances import Affordances
 from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
-from orexis_agent_progression.store import Raw, bind, bindings
+from orexis_agent_progression.store import NAMESPACES, Raw, bind, bindings
 from .ontology import DELIBERATION
-from orexis_agent_progression.ontology import OREXIS, STATE_GRAPH
+from orexis_agent_progression.ontology import DELIBERATION_GRAPH, OREXIS, PROGRESSION, STATE_GRAPH
 from orexis_agent_deliberation.conformance import graph_from, held_shapes, legality_selects
 from orexis_agent_deliberation.judge import crossed_text
 from orexis_agent_progression import clock
@@ -79,6 +79,59 @@ class _Remembered:
     direction: str | None = None
     for_agent: str | None = None
     is_own: bool = True
+
+
+def write_plan(engine, want: str, plan) -> str | None:
+    """Write down what a pass found, and hand back the plan's node — or None where it found
+    no steps, which is a pass that decided nothing and has nothing to record.
+
+    THE PLANNER DECIDES A PLAN, SO THE PLANNER WRITES IT, as `derive_wants` writes the wants
+    it decides. What a plan IS — its steps, their order, how long it comes to — is settled
+    here; where it is kept is the deliberation graph, which is cleared at boot because a plan
+    about a world that has moved is stale.
+
+    ITS STEPS ARE THE LEDGER'S OWN WORDS. `progression:Step`, `progression:fills`,
+    `progression:through`, chained by `progression:by` and `progression:then` — exactly the
+    shape `keeper.adopt` writes and `keeper.standing` reads. That is the point: a plan crossing
+    from deliberation to progression is then triples rather than a `tuple[Step]` handed over in
+    Python, and a sovereign asking what was decided reads it with one query. Read DOWNWARD, as
+    a layer may.
+
+    ONE PLAN PER WANT, named for it and replaced whole, so a second pass over the same want
+    leaves one plan and never two — the same rule a want's own graph follows.
+
+    `takes` is the number the search computes and nothing else can recover: an action's
+    `orexis:landsAfter` is a SPARQL expression about the world the act is taken in, so the
+    summed landing of a path exists only inside the pass that walked it. It was discarded
+    here, which is why a plan could not be placed from its deadline.
+    """
+    if not plan.steps:
+        return None
+    node = f"{want}.plan"
+    steps = [f"{node}.{n}" for n in range(len(plan.steps))]
+    blocks = [f'  <{node}> a deliberation:Plan ; deliberation:forWant <{want}> ;\n'
+              f'      deliberation:verdict "{plan.outcome}" ;\n'
+              + (f'      deliberation:takes {plan.landing:.6f} ;\n' if plan.landing is not None else "")
+              + f'      <{PROGRESSION}by> <{steps[0]}> .']
+    for n, (uri, step) in enumerate(zip(steps, plan.steps)):
+        facts = [f'a <{PROGRESSION}Step>', f'<{PROGRESSION}fills> <{step.action}>']
+        if step.via:
+            facts.append(f'<{PROGRESSION}through> <{step.via}>')
+        if step.about:
+            facts.append(f'<{OREXIS}about> <{step.about}>')
+        if step.quantity is not None:
+            facts.append(f'<{PROGRESSION}quantity> {step.quantity}')
+        if n + 1 < len(steps):
+            facts.append(f'<{PROGRESSION}then> <{steps[n + 1]}>')
+        blocks.append(f'  <{uri}> ' + " ; ".join(facts) + " .")
+    engine.update(f"""
+DELETE {{ GRAPH <{DELIBERATION_GRAPH}> {{ <{node}> ?p ?o . ?s <{PROGRESSION}then> ?t . ?s ?sp ?so }} }}
+WHERE  {{ GRAPH <{DELIBERATION_GRAPH}> {{ <{node}> ?p ?o .
+          OPTIONAL {{ <{node}> <{PROGRESSION}by>/<{PROGRESSION}then>* ?s . ?s ?sp ?so
+                      OPTIONAL {{ ?s <{PROGRESSION}then> ?t }} }} }} }} ;
+INSERT DATA {{ GRAPH <{DELIBERATION_GRAPH}> {{
+{chr(10).join(blocks)} }} }}""", prefixes=NAMESPACES)
+    return node
 
 
 class Planner:
