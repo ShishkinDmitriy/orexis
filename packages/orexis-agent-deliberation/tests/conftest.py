@@ -192,34 +192,23 @@ def renderer(prefixes: dict[str, str]):
         return f"_:{term}"
 
     def render(iri: str, graph: Graph) -> str:
-        as_object = {}
-        for _, _, o_ in graph:
-            if isinstance(o_, BNode):
-                as_object[o_] = as_object.get(o_, 0) + 1
-        inlined = {b for b, n in as_object.items() if n == 1}
+        """One graph as a TriG block, ONE QUAD A LINE, sorted.
 
-        def term(t, depth: int) -> str:
-            if isinstance(t, BNode) and t in inlined:
-                pairs = list(graph.predicate_objects(t))
-                if {p_ for p_, _ in pairs} == {URIRef(RDF + "first"), URIRef(RDF + "rest")}:
-                    items, node = [], t
-                    while node != URIRef(RDF + "nil"):
-                        items.append(term(graph.value(node, URIRef(RDF + "first")), depth))
-                        node = graph.value(node, URIRef(RDF + "rest"))
-                    return "( " + " ".join(items) + " )"
-                pad = "      " + "    " * (depth + 1)
-                body = f" ;\n{pad}".join(f"{name(p_)} {term(o_, depth + 1)}" for p_, o_ in sorted(
-                    pairs, key=lambda po: (name(po[0]), term(po[1], depth + 1))))
-                return f"[ {body} ]"
-            return name(t)
+        FLAT TRIG — the same thing N-Quads is, said in names a reader knows. Turtle's `;` and
+        `,` make every line depend on the one after it: adding a quad flips its neighbour's
+        `;` to `.`, so a one-quad change is a three-line diff and no diff over grouped Turtle
+        can ever be minimal. Written flat, a quad is a line, and adding one adds a line.
 
+        IT IS ALSO SHORTER, which was not the reason and is worth saying: 1,768 lines against
+        2,143 across every snapshot, because continuation lines and inlined blank-node
+        brackets cost more than repeating a subject.
+
+        The price is a blank node written as `_:b1` where it used to be inlined — readable
+        enough, since `canonical_graphs` has already renamed them by their canonical labels,
+        so `_:b1` is the same node on every run and in every file.
+        """
         lines = [f"GRAPH {name(URIRef(iri))} {{"]
-        subjects = sorted({s_ for s_, _, _ in graph if not (isinstance(s_, BNode) and s_ in inlined)},
-                          key=lambda t: (isinstance(t, BNode), name(t)))
-        for s_ in subjects:
-            pairs = sorted(graph.predicate_objects(s_), key=lambda po: (name(po[0]), term(po[1], 0)))
-            body = " ;\n      ".join(f"{name(p_)} {term(o_, 0)}" for p_, o_ in pairs)
-            lines.append(f"  {name(s_)} {body} .")
+        lines += sorted(f"  {name(s_)} {name(p_)} {name(o_)} ." for s_, p_, o_ in graph)
         lines.append("}\n")
         return "\n".join(lines)
     return render
@@ -241,7 +230,11 @@ def trig_of(base: str, before: dict[str, Graph], after: dict[str, Graph], header
         elif iri in before and same(iri):
             out.append(block)
         else:
-            out.append(f"{comments}# CHANGED, re-rendered:\n" + render(iri, after[iri]) + spacing)
+            #  `rstrip` because `render` ends its block with a newline and `spacing` IS the
+            #  newlines the author left after it — added raw, every re-rendered graph gained a
+            #  blank line the case did not have, and every diff carried it.
+            out.append(f"{comments}# CHANGED, re-rendered:\n"
+                       + render(iri, after[iri]).rstrip("\n") + spacing)
     written = [iri for iri in sorted(after) if iri not in {iri for iri, _ in segments}]
     if written:
         out.append("\n# --- WRITTEN (the first snapshot also holds the loader's own vocabulary stub) ---\n\n")

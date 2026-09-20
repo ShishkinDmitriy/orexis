@@ -63,96 +63,96 @@ GRAPH possible:Move-disk_1-PegC.Move-disk_1-PegB {
 
 #  What the pass knows about every world it made.
 GRAPH graph:pass {
-  graph:sensed a deliberation:PossibleWorld ;
-      deliberation:atDepth 0 ;
-      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
-      deliberation:minted 0 ;
-      deliberation:signature "bb7208bc9b5d7c04" ;
-      deliberation:spent 0.0 ;
-      deliberation:takes 0.0 ;
-      deliberation:weighed graph:sensed.for.every_disk_home .
-  graph:sensed.for.every_disk_home a deliberation:Weighing ;
-      deliberation:expanded true ;
-      deliberation:forWant :every_disk_home ;
-      deliberation:remaining 2.0 ;
-      deliberation:wouldReach 1.0 .
-  possible:Move-disk_1-PegB a deliberation:PossibleWorld ;
-      deliberation:atDepth 1 ;
-      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
-      deliberation:fails :every_disk_home ;
-      deliberation:from graph:sensed ;
-      deliberation:minted 1 ;
-      deliberation:signature "0deedbaa40d7cc37" ;
-      deliberation:spent 1.0 ;
-      deliberation:takes 0.0 ;
-      deliberation:weighed possible:Move-disk_1-PegB.for.every_disk_home ;
-      progression:by possible:Move-disk_1-PegB.step .
-  possible:Move-disk_1-PegB.for.every_disk_home a deliberation:Weighing ;
-      deliberation:forWant :every_disk_home ;
-      deliberation:open true ;
-      deliberation:remaining 2.0 ;
-      deliberation:wouldReach 1.0 .
-  possible:Move-disk_1-PegB.step a progression:Step ;
-      orexis:about hanoi:PegB ;
-      progression:fills hanoi:Move ;
-      progression:through :disk_1 .
-  possible:Move-disk_1-PegC a deliberation:PossibleWorld ;
-      deliberation:atDepth 1 ;
-      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
-      deliberation:fails :every_disk_home ;
-      deliberation:from graph:sensed ;
-      deliberation:lawful true ;
-      deliberation:minted 2 ;
-      deliberation:signature "426192855af0ca99" ;
-      deliberation:spent 1.0 ;
-      deliberation:takes 0.0 ;
-      deliberation:weighed possible:Move-disk_1-PegC.for.every_disk_home ;
-      progression:by possible:Move-disk_1-PegC.step .
-  possible:Move-disk_1-PegC.Move-disk_1-PegA a deliberation:PossibleWorld ;
-      deliberation:atDepth 2 ;
-      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
-      deliberation:fails :every_disk_home ;
-      deliberation:from possible:Move-disk_1-PegC ;
-      deliberation:minted 3 ;
-      deliberation:signature "bb7208bc9b5d7c04" ;
-      deliberation:spent 2.0 ;
-      deliberation:takes 0.0 ;
-      deliberation:weighed possible:Move-disk_1-PegC.Move-disk_1-PegA.for.every_disk_home ;
-      progression:by possible:Move-disk_1-PegC.Move-disk_1-PegA.step .
-  possible:Move-disk_1-PegC.Move-disk_1-PegA.for.every_disk_home a deliberation:Weighing ;
-      deliberation:forWant :every_disk_home ;
-      deliberation:remaining 2.0 ;
-      deliberation:wouldReach 1.0 .
-  possible:Move-disk_1-PegC.Move-disk_1-PegA.step a progression:Step ;
-      orexis:about hanoi:PegA ;
-      progression:fills hanoi:Move ;
-      progression:through :disk_1 .
-  possible:Move-disk_1-PegC.Move-disk_1-PegB a deliberation:PossibleWorld ;
-      deliberation:atDepth 2 ;
-      deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
-      deliberation:fails :every_disk_home ;
-      deliberation:from possible:Move-disk_1-PegC ;
-      deliberation:minted 4 ;
-      deliberation:signature "0deedbaa40d7cc37" ;
-      deliberation:spent 2.0 ;
-      deliberation:takes 0.0 ;
-      deliberation:weighed possible:Move-disk_1-PegC.Move-disk_1-PegB.for.every_disk_home ;
-      progression:by possible:Move-disk_1-PegC.Move-disk_1-PegB.step .
-  possible:Move-disk_1-PegC.Move-disk_1-PegB.for.every_disk_home a deliberation:Weighing ;
-      deliberation:forWant :every_disk_home ;
-      deliberation:remaining 2.0 ;
-      deliberation:wouldReach 1.0 .
-  possible:Move-disk_1-PegC.Move-disk_1-PegB.step a progression:Step ;
-      orexis:about hanoi:PegB ;
-      progression:fills hanoi:Move ;
-      progression:through :disk_1 .
-  possible:Move-disk_1-PegC.for.every_disk_home a deliberation:Weighing ;
-      deliberation:expanded true ;
-      deliberation:forWant :every_disk_home ;
-      deliberation:remaining 1.0 ;
-      deliberation:wouldReach 1.0 .
-  possible:Move-disk_1-PegC.step a progression:Step ;
-      orexis:about hanoi:PegC ;
-      progression:fills hanoi:Move ;
-      progression:through :disk_1 .
+  graph:sensed a deliberation:PossibleWorld .
+  graph:sensed deliberation:atDepth 0 .
+  graph:sensed deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  graph:sensed deliberation:minted 0 .
+  graph:sensed deliberation:signature "bb7208bc9b5d7c04" .
+  graph:sensed deliberation:spent 0.0 .
+  graph:sensed deliberation:takes 0.0 .
+  graph:sensed deliberation:weighed graph:sensed.for.every_disk_home .
+  graph:sensed.for.every_disk_home a deliberation:Weighing .
+  graph:sensed.for.every_disk_home deliberation:expanded true .
+  graph:sensed.for.every_disk_home deliberation:forWant :every_disk_home .
+  graph:sensed.for.every_disk_home deliberation:remaining 2.0 .
+  graph:sensed.for.every_disk_home deliberation:wouldReach 1.0 .
+  possible:Move-disk_1-PegB a deliberation:PossibleWorld .
+  possible:Move-disk_1-PegB deliberation:atDepth 1 .
+  possible:Move-disk_1-PegB deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegB deliberation:fails :every_disk_home .
+  possible:Move-disk_1-PegB deliberation:from graph:sensed .
+  possible:Move-disk_1-PegB deliberation:minted 1 .
+  possible:Move-disk_1-PegB deliberation:signature "0deedbaa40d7cc37" .
+  possible:Move-disk_1-PegB deliberation:spent 1.0 .
+  possible:Move-disk_1-PegB deliberation:takes 0.0 .
+  possible:Move-disk_1-PegB deliberation:weighed possible:Move-disk_1-PegB.for.every_disk_home .
+  possible:Move-disk_1-PegB progression:by possible:Move-disk_1-PegB.step .
+  possible:Move-disk_1-PegB.for.every_disk_home a deliberation:Weighing .
+  possible:Move-disk_1-PegB.for.every_disk_home deliberation:forWant :every_disk_home .
+  possible:Move-disk_1-PegB.for.every_disk_home deliberation:open true .
+  possible:Move-disk_1-PegB.for.every_disk_home deliberation:remaining 2.0 .
+  possible:Move-disk_1-PegB.for.every_disk_home deliberation:wouldReach 1.0 .
+  possible:Move-disk_1-PegB.step a progression:Step .
+  possible:Move-disk_1-PegB.step orexis:about hanoi:PegB .
+  possible:Move-disk_1-PegB.step progression:fills hanoi:Move .
+  possible:Move-disk_1-PegB.step progression:through :disk_1 .
+  possible:Move-disk_1-PegC a deliberation:PossibleWorld .
+  possible:Move-disk_1-PegC deliberation:atDepth 1 .
+  possible:Move-disk_1-PegC deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegC deliberation:fails :every_disk_home .
+  possible:Move-disk_1-PegC deliberation:from graph:sensed .
+  possible:Move-disk_1-PegC deliberation:lawful true .
+  possible:Move-disk_1-PegC deliberation:minted 2 .
+  possible:Move-disk_1-PegC deliberation:signature "426192855af0ca99" .
+  possible:Move-disk_1-PegC deliberation:spent 1.0 .
+  possible:Move-disk_1-PegC deliberation:takes 0.0 .
+  possible:Move-disk_1-PegC deliberation:weighed possible:Move-disk_1-PegC.for.every_disk_home .
+  possible:Move-disk_1-PegC progression:by possible:Move-disk_1-PegC.step .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA a deliberation:PossibleWorld .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:atDepth 2 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:fails :every_disk_home .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:from possible:Move-disk_1-PegC .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:minted 3 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:signature "bb7208bc9b5d7c04" .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:spent 2.0 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:takes 0.0 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:weighed possible:Move-disk_1-PegC.Move-disk_1-PegA.for.every_disk_home .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA progression:by possible:Move-disk_1-PegC.Move-disk_1-PegA.step .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.for.every_disk_home a deliberation:Weighing .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.for.every_disk_home deliberation:forWant :every_disk_home .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.for.every_disk_home deliberation:remaining 2.0 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.for.every_disk_home deliberation:wouldReach 1.0 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.step a progression:Step .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.step orexis:about hanoi:PegA .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.step progression:fills hanoi:Move .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.step progression:through :disk_1 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB a deliberation:PossibleWorld .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:atDepth 2 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:fails :every_disk_home .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:from possible:Move-disk_1-PegC .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:minted 4 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:signature "0deedbaa40d7cc37" .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:spent 2.0 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:takes 0.0 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:weighed possible:Move-disk_1-PegC.Move-disk_1-PegB.for.every_disk_home .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB progression:by possible:Move-disk_1-PegC.Move-disk_1-PegB.step .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.for.every_disk_home a deliberation:Weighing .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.for.every_disk_home deliberation:forWant :every_disk_home .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.for.every_disk_home deliberation:remaining 2.0 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.for.every_disk_home deliberation:wouldReach 1.0 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.step a progression:Step .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.step orexis:about hanoi:PegB .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.step progression:fills hanoi:Move .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.step progression:through :disk_1 .
+  possible:Move-disk_1-PegC.for.every_disk_home a deliberation:Weighing .
+  possible:Move-disk_1-PegC.for.every_disk_home deliberation:expanded true .
+  possible:Move-disk_1-PegC.for.every_disk_home deliberation:forWant :every_disk_home .
+  possible:Move-disk_1-PegC.for.every_disk_home deliberation:remaining 1.0 .
+  possible:Move-disk_1-PegC.for.every_disk_home deliberation:wouldReach 1.0 .
+  possible:Move-disk_1-PegC.step a progression:Step .
+  possible:Move-disk_1-PegC.step orexis:about hanoi:PegC .
+  possible:Move-disk_1-PegC.step progression:fills hanoi:Move .
+  possible:Move-disk_1-PegC.step progression:through :disk_1 .
 }

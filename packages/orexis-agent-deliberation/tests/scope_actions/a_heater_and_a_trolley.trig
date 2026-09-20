@@ -10,29 +10,33 @@
 @prefix deliberation: <http://example.org/orexis/deliberation#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graph: <http://example.org/orexis/graph/> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix scopes: <http://example.org/orexis/graph/scopes/> .
 
 
 GRAPH :ontology {
-  #  WHAT A WRITER ASKS ONE STEP OF. Classifying the scope graph writes every kind
-  #  `deliberation:ScopeGraph` is beneath, read from here.
-  deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph , orexis:Graph .
+  deliberation:ScopeGraph rdfs:subClassOf orexis:Graph .
+  deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
   orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :actions {
-  #  A rule text is parsed with the store's prefixes, not this file's, so each says its own.
-  :heat a orexis:Action ;
-      sh:construct """PREFIX sosa: <http://www.w3.org/ns/sosa/>
+  :heat a orexis:Action .
+  :heat sh:construct """PREFIX sosa: <http://www.w3.org/ns/sosa/>
         CONSTRUCT { ?o sosa:hasSimpleResult ?x . } WHERE { ?o a sosa:Observation }""" .
-  :move a orexis:Action ;
-      sh:construct """PREFIX : <http://example.org/test#>
+  :move a orexis:Action .
+  :move sh:construct """PREFIX : <http://example.org/test#>
         PREFIX water: <http://example.org/orexis/water#>
         CONSTRUCT { ?p :standsIn ?room . } WHERE { ?p a water:Plant }""" .
 }
 
 GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph , orexis:Graph .
-  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
-  :actions a orexis:PublicGraph , orexis:Graph .
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
 }

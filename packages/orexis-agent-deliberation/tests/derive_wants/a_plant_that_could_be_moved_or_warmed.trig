@@ -32,70 +32,81 @@
 
 
 GRAPH :ontology {
-  #  WHAT A WRITER ASKS ONE STEP OF. Classifying a want's graph writes every kind
-  #  `deliberation:PursuedGraph` is beneath, read from here — a real store has these because
-  #  genesis materialises the closure; this case has them because it says so.
-  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph , orexis:Graph .
+  deliberation:PursuedGraph rdfs:subClassOf orexis:Graph .
+  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
   orexis:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
-  #  Where the fern stands, and another room with air of its own.
-  :fern a water:Plant ; :standsIn :cold_room .
-
-  :cold_room a :Room ; :hasAir :air_of_cold_room .
-  :warm_room a :Room ; :hasAir :air_of_warm_room .
-
-  :air_of_cold_room a sosa:Sample ; sosa:isSampleOf :cold_room .
-  :air_of_warm_room a sosa:Sample ; sosa:isSampleOf :warm_room .
+  :air_of_cold_room a sosa:Sample .
+  :air_of_cold_room sosa:isSampleOf :cold_room .
+  :air_of_warm_room a sosa:Sample .
+  :air_of_warm_room sosa:isSampleOf :warm_room .
+  :cold_room :hasAir :air_of_cold_room .
+  :cold_room a :Room .
+  :fern :standsIn :cold_room .
+  :fern a water:Plant .
+  :warm_room :hasAir :air_of_warm_room .
+  :warm_room a :Room .
 }
 
 GRAPH :desires {
   :keeper orexis:holds :keeper.warm_enough .
-  :keeper.warm_enough a orexis:Desire ;
-      rdfs:label "every plant stands where the air is inside the range it wants" ;
-      orexis:about water:AirTemperature ;
-      orexis:metWhen :warm_where_it_stands .
-
-  #  THE WHOLE CHAIN. `:standsIn` is the plant's room, `:hasAir` is that room's air, and the
-  #  inverse of `sosa:hasFeatureOfInterest` reaches the readings of it. What the desire is
-  #  about is the air where the plant stands, which is not a fact about any one room, so the
-  #  shape walks to it rather than naming the room the fern is in today.
-  #
-  #  One block per way of failing, each saying which way, as every met-test asked by band does.
-  :warm_where_it_stands a sh:NodeShape ;
-      sh:targetClass water:Plant ;
-      sh:property [
-          sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-          orexis:about water:AirTemperature ;
-          orexis:violationIs orexis:Below ;
-          sh:qualifiedMaxCount 0 ;
-          sh:qualifiedValueShape [
-              sh:property [ sh:path sosa:observedProperty ; sh:hasValue water:AirTemperature ] ;
-              sh:class sensing:BelowRegion ] ;
-          sh:message "the air where this plant stands reads below the range it wants" ] ;
-      sh:property [
-          sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-          orexis:about water:AirTemperature ;
-          orexis:violationIs orexis:Above ;
-          sh:qualifiedMaxCount 0 ;
-          sh:qualifiedValueShape [
-              sh:property [ sh:path sosa:observedProperty ; sh:hasValue water:AirTemperature ] ;
-              sh:class sensing:AboveRegion ] ;
-          sh:message "the air where this plant stands reads above the range it wants" ] .
+  :keeper.warm_enough a orexis:Desire .
+  :keeper.warm_enough orexis:about water:AirTemperature .
+  :keeper.warm_enough orexis:metWhen :warm_where_it_stands .
+  :keeper.warm_enough rdfs:label "every plant stands where the air is inside the range it wants" .
+  :warm_where_it_stands a sh:NodeShape .
+  :warm_where_it_stands sh:property _:b6 .
+  :warm_where_it_stands sh:property _:b9 .
+  :warm_where_it_stands sh:targetClass water:Plant .
+  _:b1 sh:class sensing:AboveRegion .
+  _:b1 sh:property _:b2 .
+  _:b10 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b7 .
+  _:b10 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> .
+  _:b11 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> :hasAir .
+  _:b11 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b10 .
+  _:b12 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b3 .
+  _:b12 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> .
+  _:b13 sh:class sensing:BelowRegion .
+  _:b13 sh:property _:b14 .
+  _:b14 sh:hasValue water:AirTemperature .
+  _:b14 sh:path sosa:observedProperty .
+  _:b2 sh:hasValue water:AirTemperature .
+  _:b2 sh:path sosa:observedProperty .
+  _:b3 sh:inversePath sosa:hasFeatureOfInterest .
+  _:b4 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> :standsIn .
+  _:b4 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b11 .
+  _:b5 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> :standsIn .
+  _:b5 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b8 .
+  _:b6 orexis:about water:AirTemperature .
+  _:b6 orexis:violationIs orexis:Above .
+  _:b6 sh:message "the air where this plant stands reads above the range it wants" .
+  _:b6 sh:path _:b4 .
+  _:b6 sh:qualifiedMaxCount 0 .
+  _:b6 sh:qualifiedValueShape _:b1 .
+  _:b7 sh:inversePath sosa:hasFeatureOfInterest .
+  _:b8 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> :hasAir .
+  _:b8 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b12 .
+  _:b9 orexis:about water:AirTemperature .
+  _:b9 orexis:violationIs orexis:Below .
+  _:b9 sh:message "the air where this plant stands reads below the range it wants" .
+  _:b9 sh:path _:b5 .
+  _:b9 sh:qualifiedMaxCount 0 .
+  _:b9 sh:qualifiedValueShape _:b13 .
 }
 
 GRAPH :sensed {
-  #  The room the fern is in reads BELOW; the room it is not in reads inside. The desire is
-  #  violated through the first, and only because of where the fern stands.
-  :cold_reading a sosa:Observation , sensing:BelowRegion ;
-      sosa:hasFeatureOfInterest :air_of_cold_room ;
-      sosa:observedProperty water:AirTemperature ;
-      sosa:hasSimpleResult 11 .
-  :warm_reading a sosa:Observation , sensing:InRegion ;
-      sosa:hasFeatureOfInterest :air_of_warm_room ;
-      sosa:observedProperty water:AirTemperature ;
-      sosa:hasSimpleResult 21 .
+  :cold_reading a sensing:BelowRegion .
+  :cold_reading a sosa:Observation .
+  :cold_reading sosa:hasFeatureOfInterest :air_of_cold_room .
+  :cold_reading sosa:hasSimpleResult 11 .
+  :cold_reading sosa:observedProperty water:AirTemperature .
+  :warm_reading a sensing:InRegion .
+  :warm_reading a sosa:Observation .
+  :warm_reading sosa:hasFeatureOfInterest :air_of_warm_room .
+  :warm_reading sosa:hasSimpleResult 21 .
+  :warm_reading sosa:observedProperty water:AirTemperature .
 }
 
 #  WHAT `scope_actions` MADE OF THE TWO LEVERS (scope_actions/a_heater_and_a_trolley.trig): a
@@ -106,19 +117,28 @@ GRAPH :scopes {
   :heat deliberation:inScope scopes:2 .
   :move deliberation:inScope scopes:1 .
   :standsIn deliberation:inScope scopes:1 .
-  sosa:hasSimpleResult deliberation:inScope scopes:2 .
   scopes:1 a deliberation:Scope .
   scopes:2 a deliberation:Scope .
+  sosa:hasSimpleResult deliberation:inScope scopes:2 .
 }
 
 # What each graph IS, and when it holds — said once each, beside the data.
 GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph , orexis:Graph .
-  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
-  :world a orexis:PublicGraph , orexis:Graph .
-  :sensed a orexis:StateGraph , orexis:BeliefGraph , orexis:Graph .
-  :desires a orexis:DesireGraph , orexis:Graph .
-  :scopes a deliberation:ScopeGraph , orexis:WorkingGraph , orexis:Graph ;
-      orexis:arrivedBy orexis:Derived ;
-      orexis:beliefsOf :keeper .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:DesireGraph .
+  :desires a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a deliberation:ScopeGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
 }

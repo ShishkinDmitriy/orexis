@@ -27,9 +27,15 @@ GRAPH :sensed {
 }
 
 GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph , orexis:Graph .
-  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
-  :world a orexis:PublicGraph , orexis:Graph .
-  :sensed a orexis:StateGraph , orexis:BeliefGraph , orexis:Graph ;
-      orexis:beliefsOf :keeper .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :sensed orexis:beliefsOf :keeper .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
 }

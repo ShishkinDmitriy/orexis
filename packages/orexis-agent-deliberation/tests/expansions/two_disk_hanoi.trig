@@ -41,26 +41,30 @@
 
 
 GRAPH :ontology {
-  #  WHAT A WRITER ASKS ONE STEP OF. Classifying a want's graph writes every kind
-  #  `deliberation:PursuedGraph` is beneath, read from here — a real store has these because
-  #  genesis materialises the closure; this case has them because it says so.
-  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph , orexis:Graph .
+  deliberation:PursuedGraph rdfs:subClassOf orexis:Graph .
+  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
   orexis:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
-  hanoi:PegA a hanoi:Peg . hanoi:PegB a hanoi:Peg . hanoi:PegC a hanoi:Peg .
-  :disk_1 a hanoi:Disk ; hanoi:size 1 ; rdfs:label "the small disk" .
-  :disk_2 a hanoi:Disk ; hanoi:size 2 ; rdfs:label "the large disk" .
-  #  A legal agent: one holding a want must say how patient it is (`orexis:KeeperShape`),
-  #  or every candidate world is one the society refuses and the pass ends REFUSED.
+  :disk_1 a hanoi:Disk .
+  :disk_1 hanoi:size 1 .
+  :disk_1 rdfs:label "the small disk" .
+  :disk_2 a hanoi:Disk .
+  :disk_2 hanoi:size 2 .
+  :disk_2 rdfs:label "the large disk" .
   :keeper progression:patienceS 300 .
+  hanoi:PegA a hanoi:Peg .
+  hanoi:PegB a hanoi:Peg .
+  hanoi:PegC a hanoi:Peg .
 }
 
 GRAPH :actions {
-  hanoi:Move a orexis:Action ;
-      rdfs:label "move a movable disk onto a legal peg" ;
-      orexis:available """
+  _:b1 sh:oneOrMorePath hanoi:on .
+  _:b2 sh:hasValue hanoi:PegC .
+  _:b2 sh:path _:b1 .
+  hanoi:Move a orexis:Action .
+  hanoi:Move orexis:available """
         SELECT ?via ?about WHERE {
             ?via hanoi:on ?below .
             FILTER NOT EXISTS { ?x hanoi:on ?via }
@@ -70,66 +74,79 @@ GRAPH :actions {
             FILTER NOT EXISTS {
                 ?s (hanoi:on)+ ?about .
                 ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
-        }""" ;
-      orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-      orexis:retracts """CONSTRUCT { $via hanoi:on ?old } WHERE { $via hanoi:on ?old . }""" ;
-      sh:construct """
+        }""" .
+  hanoi:Move orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  hanoi:Move orexis:retracts "CONSTRUCT { $via hanoi:on ?old } WHERE { $via hanoi:on ?old . }" .
+  hanoi:Move rdfs:label "move a movable disk onto a legal peg" .
+  hanoi:Move sh:construct """
         CONSTRUCT { $via hanoi:on ?dest } WHERE {
             OPTIONAL { ?t (hanoi:on)+ $about . FILTER NOT EXISTS { ?z hanoi:on ?t } }
             BIND(COALESCE(?t, $about) AS ?dest)
         }""" .
-
-  hanoi:solved a sh:NodeShape ;
-      rdfs:label "every disk's chain bottoms out on peg C" ;
-      sh:targetSubjectsOf hanoi:on ;
-      sh:property [ sh:path [ sh:oneOrMorePath hanoi:on ] ; sh:hasValue hanoi:PegC ] .
-
   hanoi:disksAstray sh:select """
         SELECT (COUNT(DISTINCT ?d) AS ?estimate) WHERE {
             ?d hanoi:on ?rest . ?d (hanoi:on)+ ?p .
             ?p a hanoi:Peg .
             FILTER(?p != hanoi:PegC)
         }""" .
+  hanoi:solved a sh:NodeShape .
+  hanoi:solved rdfs:label "every disk's chain bottoms out on peg C" .
+  hanoi:solved sh:property _:b2 .
+  hanoi:solved sh:targetSubjectsOf hanoi:on .
 }
 
 #  THE ON-STATE IS RUNTIME, seeded by whoever poses the puzzle, exactly as readings are — so
 #  it lives in the kernel's named state graph, which is where a search stands its root world.
 GRAPH graph:sensed {
-  :disk_2 hanoi:on hanoi:PegA .
   :disk_1 hanoi:on :disk_2 .
+  :disk_2 hanoi:on hanoi:PegA .
 }
 
 GRAPH :desires {
+  :every_disk_home_root a orexis:Desire .
+  :every_disk_home_root orexis:metWhen hanoi:solved .
+  :every_disk_home_root rdfs:label "every disk home on peg C" .
   :keeper orexis:holds :every_disk_home_root .
-  :every_disk_home_root a orexis:Desire ;
-      rdfs:label "every disk home on peg C" ;
-      orexis:metWhen hanoi:solved .
 }
 
 GRAPH pursued:every_disk_home {
+  :every_disk_home a orexis:Want .
+  :every_disk_home orexis:estimates hanoi:disksAstray .
+  :every_disk_home orexis:metWhen hanoi:solved .
+  :every_disk_home prov:wasDerivedFrom :every_disk_home_root .
+  :every_disk_home rdfs:label "every disk home on peg C — the sentence the puzzle is" .
   :keeper orexis:holds :every_disk_home .
-  :every_disk_home a orexis:Want ;
-      prov:wasDerivedFrom :every_disk_home_root ;
-      rdfs:label "every disk home on peg C — the sentence the puzzle is" ;
-      orexis:metWhen hanoi:solved ;
-      orexis:estimates hanoi:disksAstray .
 }
 
 GRAPH :scopes {
   :keeper.scope.1 a deliberation:Scope .
-  hanoi:on deliberation:inScope :keeper.scope.1 .
   hanoi:Move deliberation:inScope :keeper.scope.1 .
+  hanoi:on deliberation:inScope :keeper.scope.1 .
 }
 
 GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph , orexis:Graph .
-  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
-  :world a orexis:PublicGraph , orexis:Graph .
-  :actions a orexis:PublicGraph , orexis:Graph .
-  graph:sensed a orexis:StateGraph , orexis:BeliefGraph , orexis:Graph .
-  :desires a orexis:DesireGraph , orexis:Graph .
-  :scopes a deliberation:ScopeGraph , orexis:WorkingGraph , orexis:Graph ;
-      orexis:arrivedBy orexis:Derived ; orexis:beliefsOf :keeper .
-  pursued:every_disk_home a deliberation:PursuedGraph , orexis:WantGraph , orexis:Graph ;
-      orexis:arrivedBy orexis:Recorded ; orexis:beliefsOf :keeper .
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:DesireGraph .
+  :desires a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a deliberation:ScopeGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+  graph:sensed a orexis:BeliefGraph .
+  graph:sensed a orexis:Graph .
+  graph:sensed a orexis:StateGraph .
+  pursued:every_disk_home a deliberation:PursuedGraph .
+  pursued:every_disk_home a orexis:Graph .
+  pursued:every_disk_home a orexis:WantGraph .
+  pursued:every_disk_home orexis:arrivedBy orexis:Recorded .
+  pursued:every_disk_home orexis:beliefsOf :keeper .
 }

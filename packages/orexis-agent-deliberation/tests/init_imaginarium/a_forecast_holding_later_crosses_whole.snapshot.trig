@@ -32,11 +32,17 @@ GRAPH :forecast {
 }
 
 GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph , orexis:Graph .
-  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
-  :world a orexis:PublicGraph , orexis:Graph .
-  :forecast a orexis:PublicGraph , orexis:Graph ;
-      dcterms:temporal [ a dcterms:PeriodOfTime ;
-          orexis:start "2026-01-01T15:00:00Z"^^xsd:dateTime ;
-          orexis:end "2026-01-01T18:00:00Z"^^xsd:dateTime ] .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :forecast a orexis:Graph .
+  :forecast a orexis:PublicGraph .
+  :forecast dcterms:temporal _:b1 .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+  _:b1 a dcterms:PeriodOfTime .
+  _:b1 orexis:end "2026-01-01T18:00:00+00:00"^^xsd:dateTime .
+  _:b1 orexis:start "2026-01-01T15:00:00+00:00"^^xsd:dateTime .
 }

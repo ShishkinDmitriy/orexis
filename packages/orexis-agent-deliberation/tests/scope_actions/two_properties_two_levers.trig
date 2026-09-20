@@ -8,27 +8,31 @@
 @prefix deliberation: <http://example.org/orexis/deliberation#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graph: <http://example.org/orexis/graph/> .
 @prefix scopes: <http://example.org/orexis/graph/scopes/> .
 
 
 GRAPH :ontology {
-  #  WHAT A WRITER ASKS ONE STEP OF. Classifying the scope graph writes every kind
-  #  `deliberation:ScopeGraph` is beneath, read from here.
-  deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph , orexis:Graph .
+  deliberation:ScopeGraph rdfs:subClassOf orexis:Graph .
+  deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
   orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :actions {
-  :fill a orexis:Action ;
-      sh:construct """PREFIX : <http://example.org/test#>
+  :fill a orexis:Action .
+  :fill sh:construct """PREFIX : <http://example.org/test#>
         CONSTRUCT { ?t :level ?x . } WHERE { ?t a :Tank }""" .
-  :heat a orexis:Action ;
-      sh:construct """PREFIX : <http://example.org/test#>
+  :heat a orexis:Action .
+  :heat sh:construct """PREFIX : <http://example.org/test#>
         CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
 }
 
 GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph , orexis:Graph .
-  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
-  :actions a orexis:PublicGraph , orexis:Graph .
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
 }

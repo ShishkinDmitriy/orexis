@@ -1,47 +1,21 @@
 --- case
 +++ expected
-@@ -8,9 +8,11 @@
- 
- 
- GRAPH :ontology {
--  deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph , orexis:Graph .
-+  deliberation:ScopeGraph rdfs:subClassOf orexis:Graph ;
-+      rdfs:subClassOf orexis:WorkingGraph .
-   orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
- }
-+
- 
- GRAPH :actions {
-   :heat a orexis:Action ;
-@@ -22,8 +24,28 @@
-         CONSTRUCT { ?p :standsIn ?room . } WHERE { ?p a water:Plant }""" .
- }
- 
-+
- GRAPH :catalogue {
--  :catalogue a orexis:CatalogueGraph , orexis:Graph .
--  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
--  :actions a orexis:PublicGraph , orexis:Graph .
-+  :actions a orexis:Graph ;
-+      a orexis:PublicGraph .
-+  :catalogue a orexis:CatalogueGraph ;
-+      a orexis:Graph .
-+  :ontology a orexis:Graph ;
-+      a orexis:OntologyGraph ;
-+      a orexis:PublicGraph .
-+  <http://example.org/orexis/graph/scopes> a deliberation:ScopeGraph ;
-+      a orexis:Graph ;
-+      a orexis:WorkingGraph ;
-+      orexis:arrivedBy orexis:Derived .
+@@ -33,4 +33,18 @@
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+   :ontology a orexis:PublicGraph .
++  graph:scopes a deliberation:ScopeGraph .
++  graph:scopes a orexis:Graph .
++  graph:scopes a orexis:WorkingGraph .
++  graph:scopes orexis:arrivedBy orexis:Derived .
  }
 +
 +
-+
-+GRAPH <http://example.org/orexis/graph/scopes> {
++GRAPH graph:scopes {
 +  :heat deliberation:inScope scopes:2 .
 +  :move deliberation:inScope scopes:1 .
 +  :standsIn deliberation:inScope scopes:1 .
-+  <http://www.w3.org/ns/sosa/hasSimpleResult> deliberation:inScope scopes:2 .
 +  scopes:1 a deliberation:Scope .
 +  scopes:2 a deliberation:Scope .
++  sosa:hasSimpleResult deliberation:inScope scopes:2 .
 +}

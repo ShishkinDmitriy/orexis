@@ -20,10 +20,8 @@
 
 
 GRAPH :ontology {
-  #  WHAT A WRITER ASKS ONE STEP OF. Classifying a want's graph writes every kind
-  #  `deliberation:PursuedGraph` is beneath, read from here — a real store has these because
-  #  genesis materialises the closure; this case has them because it says so.
-  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph , orexis:Graph .
+  deliberation:PursuedGraph rdfs:subClassOf orexis:Graph .
+  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
   orexis:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
@@ -33,23 +31,34 @@ GRAPH :world {
 }
 
 GRAPH :desires {
+  :in_range a sh:NodeShape .
+  :in_range sh:property _:b1 .
+  :in_range sh:property _:b2 .
+  :in_range sh:targetClass :Tank .
   :keeper orexis:holds :keeper.in_range .
-  :keeper.in_range a orexis:Desire ;
-      rdfs:label "every tank in range" ;
-      orexis:about :level , :temperature ;
-      orexis:metWhen :in_range .
-  :in_range a sh:NodeShape ;
-      sh:targetClass :Tank ;
-      sh:property [ sh:path :level ; sh:minInclusive 10 ; orexis:about :level ] ;
-      sh:property [ sh:path :temperature ; sh:maxInclusive 30 ; orexis:about :temperature ] .
+  :keeper.in_range a orexis:Desire .
+  :keeper.in_range orexis:about :level .
+  :keeper.in_range orexis:about :temperature .
+  :keeper.in_range orexis:metWhen :in_range .
+  :keeper.in_range rdfs:label "every tank in range" .
+  _:b1 orexis:about :temperature .
+  _:b1 sh:maxInclusive 30 .
+  _:b1 sh:path :temperature .
+  _:b2 orexis:about :level .
+  _:b2 sh:minInclusive 10 .
+  _:b2 sh:path :level .
 }
 
 GRAPH :sensed {
-  :tank1 :level 20 ; :temperature 20 .
-  :tank2 :level 20 ; :temperature 20 .
+  :tank1 :level 20 .
+  :tank1 :temperature 20 .
+  :tank2 :level 20 .
+  :tank2 :temperature 20 .
 }
 
-GRAPH :predicted-0 { :tank1 :level 5 . }
+GRAPH :predicted-0 {
+  :tank1 :level 5 .
+}
 
 GRAPH :scopes {
   :fill deliberation:inScope :keeper.scope.1 .
@@ -63,52 +72,54 @@ GRAPH :scopes {
 # What each graph IS, and when it holds — said once each, beside the data.
 # CHANGED, re-rendered:
 GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph ;
-      a orexis:Graph .
-  :desires a orexis:DesireGraph ;
-      a orexis:Graph .
-  :ontology a orexis:Graph ;
-      a orexis:OntologyGraph ;
-      a orexis:PublicGraph .
-  :predicted-0 a orexis:Graph ;
-      a orexis:PredictionGraph ;
-      dcterms:temporal [ a dcterms:PeriodOfTime ;
-          orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
-  :scopes a deliberation:ScopeGraph ;
-      a orexis:Graph ;
-      a orexis:WorkingGraph ;
-      orexis:arrivedBy orexis:Derived ;
-      orexis:beliefsOf :keeper .
-  :sensed a orexis:BeliefGraph ;
-      a orexis:Graph ;
-      a orexis:StateGraph .
-  :world a orexis:Graph ;
-      a orexis:PublicGraph .
-  pursued:keeper.in_range.pursued.tank1.level a deliberation:PursuedGraph ;
-      a orexis:Graph ;
-      a orexis:WantGraph ;
-      dcterms:temporal [ a dcterms:PeriodOfTime ;
-          orexis:end "2026-01-01T14:00:00+00:00"^^xsd:dateTime ;
-          orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] ;
-      orexis:arrivedBy orexis:Recorded ;
-      orexis:beliefsOf :keeper .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:DesireGraph .
+  :desires a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :predicted-0 a orexis:Graph .
+  :predicted-0 a orexis:PredictionGraph .
+  :predicted-0 dcterms:temporal _:b1 .
+  :scopes a deliberation:ScopeGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+  _:b1 a dcterms:PeriodOfTime .
+  _:b1 orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime .
+  _:b2 a dcterms:PeriodOfTime .
+  _:b2 orexis:end "2026-01-01T14:00:00+00:00"^^xsd:dateTime .
+  _:b2 orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  pursued:keeper.in_range.pursued.tank1.level a deliberation:PursuedGraph .
+  pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
+  pursued:keeper.in_range.pursued.tank1.level a orexis:WantGraph .
+  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal _:b2 .
+  pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Recorded .
+  pursued:keeper.in_range.pursued.tank1.level orexis:beliefsOf :keeper .
 }
-
 
 # --- WRITTEN (the first snapshot also holds the loader's own vocabulary stub) ---
 
 GRAPH pursued:keeper.in_range.pursued.tank1.level {
   :keeper orexis:holds :keeper.in_range.pursued.tank1.level .
-  :keeper.in_range.pursued.tank1.level a orexis:Want ;
-      orexis:about :level ;
-      orexis:holdsAt "2026-01-01T14:00:00+00:00"^^xsd:dateTime ;
-      orexis:metWhen :keeper.in_range.pursued.tank1.level.met ;
-      prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
-      prov:wasDerivedFrom :keeper.in_range ;
-      rdfs:label "foreseen: every tank in range at 2026-01-01T14:00+00:00" .
-  :keeper.in_range.pursued.tank1.level.met a sh:NodeShape ;
-      sh:property [ orexis:about :level ;
-          sh:minInclusive 10 ;
-          sh:path :level ] ;
-      sh:targetNode :tank1 .
+  :keeper.in_range.pursued.tank1.level a orexis:Want .
+  :keeper.in_range.pursued.tank1.level orexis:about :level .
+  :keeper.in_range.pursued.tank1.level orexis:holdsAt "2026-01-01T14:00:00+00:00"^^xsd:dateTime .
+  :keeper.in_range.pursued.tank1.level orexis:metWhen :keeper.in_range.pursued.tank1.level.met .
+  :keeper.in_range.pursued.tank1.level prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
+  :keeper.in_range.pursued.tank1.level rdfs:label "foreseen: every tank in range at 2026-01-01T14:00+00:00" .
+  :keeper.in_range.pursued.tank1.level.met a sh:NodeShape .
+  :keeper.in_range.pursued.tank1.level.met sh:property _:b1 .
+  :keeper.in_range.pursued.tank1.level.met sh:targetNode :tank1 .
+  _:b1 orexis:about :level .
+  _:b1 sh:minInclusive 10 .
+  _:b1 sh:path :level .
 }
