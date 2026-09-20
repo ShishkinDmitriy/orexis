@@ -529,6 +529,9 @@ class Planner:
         self._nodes = []
         self._by_name = {}
         self._minted = 0
+        #  WHICH WANT THIS CONE IS ABOUT. A world meets a want or fails it — never
+        #  simply 'meets' — so restating what a re-root kept needs the want in hand.
+        self._want = None
         self._by_diff = {}
         self._kept_worlds = 0
         self._from_now = False
@@ -729,9 +732,17 @@ class Planner:
             if (step.urgency, _near(step), step.cost) < (
                     self._best.urgency, _near(self._best), self._best.cost):
                 self._best = step
-        if (novel or not met_now) and self._met_in(step, judgment):
+        asked = novel or not met_now
+        if asked and self._met_in(step, judgment):
             step.met = True
-            self._about(step, "meets", _TRUE)
+            self._about(step, "meets", ox.NamedNode(judgment.uri))
+        elif asked:
+            #  AND THE OTHER HALF, because a world judged is a world nobody need judge again:
+            #  a pass resumed here, or one for a different want sharing this imaginarium, is
+            #  told what this world was already found to be. Absent on both counts means the
+            #  question was never put, which is not the same as the answer being no.
+            self._about(step, "fails", ox.NamedNode(judgment.uri))
+        if step.met:
             self._weighed.append((depth, row, step.urgency, trace.MET))
             if met_now:
                 #  Already met and still steering: the first novel step that
@@ -1484,6 +1495,7 @@ class Planner:
         here.estimate = self._estimate_in(here, judgment)
         here.urgency = self._urgency_in(here, judgment)
         self._root = here
+        self._want = judgment.uri
         self._at_root(here)
         #  THE ROOT IS A WORLD TOO, and says so in the store: where the pass stands, forked
         #  from nothing, nothing spent. Without its row the record reads as a forest whose
@@ -1855,9 +1867,9 @@ ORDER BY {order} LIMIT 1""", PASS_GRAPH))
             #  it puts back on the frontier and keeps the rest, so the account says of each
             #  world what is still true of it — `met` and `lawful` are about the world and do
             #  not move, a verdict is about a pass and the resumed one has not reached it yet.
-            if m.met:
+            if m.met and self._want is not None:
                 out.append(ox.Quad(ox.NamedNode(m.graph), ox.NamedNode(DELIBERATION + "meets"),
-                                   _TRUE, ox.NamedNode(PASS_GRAPH)))
+                                   ox.NamedNode(self._want), ox.NamedNode(PASS_GRAPH)))
             if m.legal is not None:
                 out.append(ox.Quad(ox.NamedNode(m.graph), ox.NamedNode(DELIBERATION + "lawful"),
                                    _TRUE if m.legal else _FALSE, ox.NamedNode(PASS_GRAPH)))
