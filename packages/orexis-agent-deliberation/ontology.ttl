@@ -92,6 +92,14 @@ deliberation:remaining a owl:DatatypeProperty ; rdfs:domain deliberation:Possibl
     rdfs:label "remaining" ;
     rdfs:comment "What the want's `orexis:estimates` reads IN this world — how far it still is, in the unit the search spends, never overstated. With `deliberation:spent` it is the A* key the open list is ordered by, which is what lets the frontier be a query rather than a heap." .
 
+deliberation:meets a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:boolean ;
+    rdfs:label "meets" ;
+    rdfs:comment "That the want is MET in this world — an achiever, and what the search is looking for. Said of the world and not of the pass, so it survives a re-root: whether a want holds somewhere does not change because the agent has since moved. The cheapest achiever is the plan, and the bound the rest are refused against." .
+
+deliberation:lawful a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:boolean ;
+    rdfs:label "lawful" ;
+    rdfs:comment "Whether the society would accept this world — every shape a package declares about this agent, compiled to the selects whose rows are its violations and asked of the world (#548). ABSENT until asked, which is not the same as false: legality is worked out for a world the search is about to offer, not for every world it makes, and a plan is refused rather than a fork. Said of the world, so it survives a re-root." .
+
 deliberation:minted a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:integer ;
     rdfs:label "minted" ;
     rdfs:comment "Where this world came in the order the pass made them, counting from the root. THE TIE-BREAK, and not decoration: a want that declares no `orexis:estimates` scores every world alike — same spent, same remaining, same urgency — so what breaks the tie IS the order the search runs in, and arrival order is what makes it go layer by layer rather than dive. It was the heap's mint counter, and moving the open list into the store without it sent a greenhouse pass alphabetically into Dosing until all 128 worlds of its budget were spent, never weighing the Heating branch its plan needed. Re-numbered by a re-root from the order of what it kept, which is the order they were made in." .
@@ -138,7 +146,7 @@ deliberation:chose a owl:ObjectProperty ; rdfs:domain deliberation:Deliberation 
 #  closure type every candidate a Deliberation, which is worse than saying nothing.
 deliberation:verdict a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "verdict" ;
-    rdfs:comment "Why it ended as it did. On a pass: satisfied, improved, no candidate, exhausted, not better, refused — six answers where a planner returning a move or None could give two. On a candidate: whether it met the goal, improved on standing still, was worse, or landed in a world already seen." .
+    rdfs:comment "Why it ended as it did. On a pass: satisfied, improved, no candidate, exhausted, not better, refused — six answers where a planner returning a move or None could give two. On a candidate: whether it met the goal, improved on standing still, was worse, or landed in a world already seen. On a POSSIBLE WORLD: what stopped the search planning THROUGH it, where something did — and unlike `deliberation:meets` and `deliberation:lawful`, which are about the world, this is about a pass, so a re-root clears it from every world it puts back on the frontier: the resumed pass has not reached them yet." .
 deliberation:missing a owl:DatatypeProperty ; rdfs:domain deliberation:Candidate ; rdfs:range xsd:string ; rdfs:label "missing" ;
     rdfs:comment "The fact whose absence in the present made a remembered plan inapplicable here (#551), stated as the signature states it — so the trace says which fact, not only that one was." .
 

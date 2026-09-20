@@ -90,6 +90,8 @@ class _Remembered:
 PASS_GRAPH = GRAPH_PREFIX + "pass"
 RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 XSD = "http://www.w3.org/2001/XMLSchema#"
+_TRUE = ox.Literal("true", datatype=ox.NamedNode(XSD + "boolean"))
+_FALSE = ox.Literal("false", datatype=ox.NamedNode(XSD + "boolean"))
 
 
 def _signature_of(node) -> str:
@@ -729,6 +731,7 @@ class Planner:
                 self._best = step
         if (novel or not met_now) and self._met_in(step, judgment):
             step.met = True
+            self._about(step, "meets", _TRUE)
             self._weighed.append((depth, row, step.urgency, trace.MET))
             if met_now:
                 #  Already met and still steering: the first novel step that
@@ -759,6 +762,7 @@ class Planner:
         state is exactly the recovery never-newly-enter keeps."""
         step.verdict = verdict
         self._keep(step)
+        self._about(step, "verdict", ox.Literal(verdict))
         self._weighed.append((depth, row, step.urgency, verdict))
         return None
 
@@ -1138,6 +1142,7 @@ class Planner:
         #  rounds of trimming (#485, #547); the selects cost 60, and the judge stays at the
         #  gates, where the authored report prose is for a person.
         node.legal = not self._illegal(node, self._compiled.legal)
+        self._about(node, "lawful", _TRUE if node.legal else _FALSE)
         if node.legal:
             return plan
         log.warning("the world this plan would reach is one the society refuses — not taken")
@@ -1651,6 +1656,21 @@ class Planner:
         step.taken = node.taken + (replace(act, urgency_after=step.urgency, predicts=own),)
         return step
 
+    def _about(self, node, predicate: str, value) -> None:
+        """One more thing the pass has worked out about a world, said where it lives.
+
+        A world's row is written when the world is made, and what the search CONCLUDES about
+        it is worked out afterwards — whether the want is met there, whether the society
+        refuses it, and the verdict that settled it. Each is added as it is reached rather
+        than held for a rewrite, so the store says what the search knows at the moment it
+        knows it.
+        """
+        if self.imaginarium is None:
+            return
+        self.imaginarium.note([ox.Quad(
+            ox.NamedNode(node.graph), ox.NamedNode(DELIBERATION + predicate), value,
+            ox.NamedNode(PASS_GRAPH))])
+
     def _open_row(self, node, standing: bool) -> None:
         """Say in the store whether this world is on the frontier, or take it back.
 
@@ -1661,8 +1681,7 @@ class Planner:
         if self.imaginarium is None:
             return
         quad = [ox.Quad(ox.NamedNode(node.graph), ox.NamedNode(DELIBERATION + "open"),
-                        ox.Literal("true", datatype=ox.NamedNode(XSD + "boolean")),
-                        ox.NamedNode(PASS_GRAPH))]
+                        _TRUE, ox.NamedNode(PASS_GRAPH))]
         (self.imaginarium.note if standing else self.imaginarium.unnote)(quad)
 
     def _next_open(self, met_now: bool):
@@ -1830,9 +1849,21 @@ ORDER BY {order} LIMIT 1""", PASS_GRAPH))
         for n, m in enumerate(self._nodes):
             out += self._rows_for(m, n)
             if m in self._pending:
-                out += [ox.Quad(ox.NamedNode(m.graph), ox.NamedNode(DELIBERATION + "open"),
-                                ox.Literal("true", datatype=ox.NamedNode(XSD + "boolean")),
-                                ox.NamedNode(PASS_GRAPH))]
+                out.append(ox.Quad(ox.NamedNode(m.graph), ox.NamedNode(DELIBERATION + "open"),
+                                   _TRUE, ox.NamedNode(PASS_GRAPH)))
+            #  WHAT WAS CONCLUDED SURVIVES THE REWRITE. A re-root clears the verdicts of what
+            #  it puts back on the frontier and keeps the rest, so the account says of each
+            #  world what is still true of it — `met` and `lawful` are about the world and do
+            #  not move, a verdict is about a pass and the resumed one has not reached it yet.
+            if m.met:
+                out.append(ox.Quad(ox.NamedNode(m.graph), ox.NamedNode(DELIBERATION + "meets"),
+                                   _TRUE, ox.NamedNode(PASS_GRAPH)))
+            if m.legal is not None:
+                out.append(ox.Quad(ox.NamedNode(m.graph), ox.NamedNode(DELIBERATION + "lawful"),
+                                   _TRUE if m.legal else _FALSE, ox.NamedNode(PASS_GRAPH)))
+            if m.verdict is not None:
+                out.append(ox.Quad(ox.NamedNode(m.graph), ox.NamedNode(DELIBERATION + "verdict"),
+                                   ox.Literal(m.verdict), ox.NamedNode(PASS_GRAPH)))
         self._minted = len(self._nodes)
         self.imaginarium.note(out, whole=True)
 

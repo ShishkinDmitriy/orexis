@@ -122,6 +122,16 @@ def test_the_store_alone_says_what_the_pass_decided(monkeypatch, snapshots):
     assert [a for a, _ in walked] == [s.action for s in plan.steps], walked
     assert [b for _, b in walked] == [s.about for s in plan.steps], walked
 
+    #  AND WHAT THE SEARCH CONCLUDED, not only what it did: the world the plan ends in is the
+    #  one the want is MET in, and the society accepts it. Both are about the WORLD rather than
+    #  about the pass, which is why they survive a re-root where a verdict does not.
+    achievers = {r["w"] for r in bindings(im.query_over(
+        "SELECT ?w WHERE { ?w a deliberation:PossibleWorld ; deliberation:meets true }", PASS_GRAPH))}
+    assert solved[0]["w"] in achievers, "the world with nothing remaining is an achiever"
+    assert bindings(im.query_over(
+        f"SELECT ?l WHERE {{ <{solved[0]['w']}> deliberation:lawful ?l }}", PASS_GRAPH)), \
+        "and the pass asked whether the society would accept it"
+
     #  AND THE OPEN LIST, ordered as `_priority` orders it, asked of the store.
     frontier = bindings(im.query_over(
         "SELECT ?w ?spent ?left WHERE { ?w a deliberation:PossibleWorld ; deliberation:spent ?spent ; "

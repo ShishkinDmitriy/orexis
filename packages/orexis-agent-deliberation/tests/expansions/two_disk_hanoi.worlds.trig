@@ -212,6 +212,8 @@ GRAPH graph:pass {
       deliberation:atDepth 3 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC ;
+      deliberation:lawful true ;
+      deliberation:meets true ;
       deliberation:minted 14 ;
       deliberation:remaining 0.0 ;
       deliberation:signature "9159fbb0fdee38d6" ;
