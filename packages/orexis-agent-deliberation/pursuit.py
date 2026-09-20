@@ -89,17 +89,18 @@ def handed(agent, judgment):
 
 
 def derived(agent) -> list[str]:
-    """`derive_wants` over this agent's store, and the projection refreshed where it minted.
+    """`derive_wants` over this agent's store, and the projection refreshed where it changed.
 
     THE DERIVATION IS A FUNCTION OVER THE STORE and holds no collection, so a want it writes
     announces itself to nobody — where `Wants.save` would have told the desire modality to
     rebuild. Saying so is the caller's, and this is the caller every pass goes through: one
-    place, and the rebuild is paid only when something was actually minted.
+    place, and the rebuild is paid only when something actually changed — a want minted OR
+    one withdrawn, both of which move what the projection holds.
     """
-    minted = derive_wants(agent.beliefs.engine)
-    if minted:
+    changed = derive_wants(agent.beliefs.engine)
+    if changed:
         agent.desires.rebuild()
-    return minted
+    return changed
 
 
 def _is_root(agent, want: str) -> bool:

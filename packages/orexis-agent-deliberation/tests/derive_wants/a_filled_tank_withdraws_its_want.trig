@@ -1,0 +1,73 @@
+# a_filled_tank_withdraws_its_want
+#
+# The want for tank1's level stands, and the tank has since filled: the desire reads MET, so the
+# decomposition no longer implies that want and it is WITHDRAWN — graph and catalogue row alike.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+
+GRAPH :world {
+  :tank1 a :Tank .
+  :tank2 a :Tank .
+}
+
+GRAPH :desires {
+  :keeper orexis:holds :keeper.in_range .
+  :keeper.in_range a orexis:Desire ;
+      rdfs:label "every tank in range" ;
+      orexis:about :level , :temperature ;
+      orexis:metWhen :in_range .
+  :in_range a sh:NodeShape ;
+      sh:targetClass :Tank ;
+      sh:property [ sh:path :level ; sh:minInclusive 10 ; orexis:about :level ] ;
+      sh:property [ sh:path :temperature ; sh:maxInclusive 30 ; orexis:about :temperature ] .
+}
+
+GRAPH :sensed {
+  :tank1 :level 20 ; :temperature 20 .
+  :tank2 :level 20 ; :temperature 20 .
+}
+
+GRAPH pursued:keeper.in_range.pursued.tank1.level {
+  :keeper orexis:holds :keeper.in_range.pursued.tank1.level .
+  :keeper.in_range.pursued.tank1.level a orexis:Want ;
+      prov:wasDerivedFrom :keeper.in_range ;
+      orexis:metWhen :keeper.in_range.pursued.tank1.level.met ;
+      orexis:about :level ;
+      rdfs:label "pursued: every tank in range" .
+  :keeper.in_range.pursued.tank1.level.met a sh:NodeShape ; sh:targetNode :tank1 ;
+      sh:property [ sh:path :level ; sh:minInclusive 10 ] .
+}
+
+GRAPH :scopes {
+  :fill deliberation:inScope :keeper.scope.1 .
+  :heat deliberation:inScope :keeper.scope.2 .
+  :keeper.scope.1 a deliberation:Scope .
+  :keeper.scope.2 a deliberation:Scope .
+  :level deliberation:inScope :keeper.scope.1 .
+  :temperature deliberation:inScope :keeper.scope.2 .
+}
+
+# What each graph IS, and when it holds — said once each, beside the data.
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph , orexis:Graph .
+  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
+  :world a orexis:PublicGraph , orexis:Graph .
+  :sensed a orexis:StateGraph , orexis:BeliefGraph , orexis:Graph .
+  :desires a orexis:DesireGraph , orexis:Graph .
+  :scopes a deliberation:ScopeGraph , orexis:WorkingGraph , orexis:Graph ;
+      orexis:arrivedBy orexis:Derived ;
+      orexis:beliefsOf :keeper .
+  pursued:keeper.in_range.pursued.tank1.level a deliberation:PursuedGraph , orexis:WantGraph , orexis:Graph ;
+      orexis:arrivedBy orexis:Recorded .
+  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00Z"^^xsd:dateTime ] .
+}

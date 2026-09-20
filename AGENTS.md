@@ -326,6 +326,12 @@ it is a record wearing a bullet.
   unmet, in one function and one contract; `scope_actions` writes the scopes at boot, so the
   derivation reads no action. It was two functions with a written judgment between them, and
   no caller ever took one half.
+- **A want exists because its desire read unmet, so the same rows withdraw it** — a want the
+  decomposition no longer produces is met, and running the want's own met-test to discover
+  that asked twice what one pass had already concluded; withdrawal is against the WHOLE
+  decomposition, present and foreseen, since a presented debt's rows do not mention the
+  unpresented debt whose want was minted at its lapse, and dropping on the present alone took
+  it. A want a plan is walking is kept whatever its desire reads.
 - **A function over the store is handed the engine and nothing else** — `derive_wants` and
   `scope_actions` take `pyoxigraph.Store` and no wrapper: which graphs they read they ask of
   the catalogue in their own texts, whose a desire is they read off `orexis:holds`, and the

@@ -74,6 +74,31 @@ def graph_of(agent_id: str, uri: str) -> str:
     return f"{pursued_graph(agent_id)}/{uri.rsplit('#', 1)[-1]}"
 
 
+def _forget(graph: str) -> str:
+    """The update that removes one want — its graph, and everything the catalogue says of it.
+
+    Shared, because there are two ways a want goes and they must leave the same nothing:
+    `save_want` replaces one whole and puts it back, and `forget_want` does not. A want IS
+    its graph (#645), so there is no second place to tidy — but the catalogue's account of
+    that graph is not in it, and a row left pointing at an empty graph is litter every
+    reader asking by class would still be handed.
+    """
+    return f"""DROP SILENT GRAPH <{graph}> ;
+DELETE {{ GRAPH ?cat {{ <{graph}> ?p ?o . ?period ?pp ?po }} }}
+WHERE  {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{graph}> ?p ?o .
+          OPTIONAL {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }} }}"""
+
+
+def forget_want(engine, agent_id: str, uri: str) -> None:
+    """Remove one derived want over the ENGINE, for a caller that holds no collection.
+
+    `Wants.delete_by_uri` is the collection's door and announces itself; this is the
+    derivation's, which announces nothing and whose caller says what changed — the same
+    asymmetry `save_want` has beside `Wants.save`.
+    """
+    engine.update(_forget(graph_of(agent_id, uri)), prefixes=NAMESPACES)
+
+
 def save_want(engine, agent_id: str, want: Want) -> None:
     """Write one derived want over the ENGINE: its graph, replaced whole, and the catalogue's
     account of that graph — its family, how it arrived, whose it is and the period it holds
@@ -101,11 +126,7 @@ def save_want(engine, agent_id: str, want: Want) -> None:
     side = f" ; orexis:violationIs <{want.side}>" if want.side else ""
     period = f' ; orexis:start "{clock.now().isoformat()}"^^xsd:dateTime' + (
         f' ; orexis:end "{_moment(want.ends)}"^^xsd:dateTime' if want.ends else "")
-    engine.update(f"""
-DROP SILENT GRAPH <{graph}> ;
-DELETE {{ GRAPH ?cat {{ <{graph}> ?p ?o . ?period ?pp ?po }} }}
-WHERE  {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{graph}> ?p ?o .
-          OPTIONAL {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }} }} ;
+    engine.update(_forget(graph) + f""" ;
 INSERT {{
   GRAPH <{graph}> {{
   <{want.holder}> orexis:holds <{want.uri}> .

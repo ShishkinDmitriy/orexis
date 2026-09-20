@@ -36,7 +36,7 @@ from orexis_agent_progression.store import NAMESPACES, bind, instant, rows
 
 from .judging import Witness, desires_in, read_ahead, read_now, shapes_in
 from .want import Want
-from .wants import save_want
+from .wants import forget_want, save_want
 
 log = logging.getLogger("derive_wants")
 
@@ -69,6 +69,16 @@ SELECT ?s WHERE {
 #  WHAT ALREADY STANDS under one desire: every want derived from it that the derivation minted and
 #  whose graph still holds. A want IS its graph (#645), so which family it is in and whether it
 #  holds are the graph's questions, asked of the catalogue in the text as `Wants` asks them.
+#  A WANT A PLAN STANDS FOR is not withdrawn, however its desire now reads: the keeper is
+#  walking it, and dropping the want under a running plan would leave the plan pursuing
+#  nothing. `orexis:pursues` is the ledger's link and `orexis:resolvedAt` is how it ends —
+#  progression's words, read downward, which is the direction a layer may read.
+_PURSUED_Q = """
+SELECT ?w WHERE {
+  GRAPH ?g { ?i orexis:pursues ?w . FILTER NOT EXISTS { ?i orexis:resolvedAt ?done } }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a progression:IntentionGraph } }"""
+
+
 _STANDING_Q = """
 SELECT ?w ?holdsAt WHERE {
   GRAPH ?g { ?w a orexis:Want ; prov:wasDerivedFrom $root .
@@ -82,8 +92,8 @@ ORDER BY ?w"""
 
 
 def derive_wants(store: ox.Store) -> list[str]:
-    """Mint a want under every desire for every cluster of what its met-test reads unmet, and
-    return what was minted. Run whenever a pass stands on a desire or on any want under it,
+    """Mint a want under every desire for every cluster of what its met-test reads unmet,
+    withdraw every want those rows no longer imply, and return what changed either way. Run whenever a pass stands on a desire or on any want under it,
     and by a package that has just written an instance, since a claim arriving should be a
     want arriving and not a want on the next tick. A package that calls this mints nothing; it
     says an instance is there and this does the rest (one-function-mints-every-want).
@@ -91,6 +101,13 @@ def derive_wants(store: ox.Store) -> list[str]:
     IT IS THE DECOMPOSITION OF WHAT THE MET-TESTS READ. A desire is judged at the present and,
     where it reads met there, at every instant a prediction reaches; what comes back is
     witnesses, and a want is minted per cluster of them. Nothing is written between the two.
+
+    AND THE DECOMPOSITION IS THE WHOLE OF WHAT SHOULD STAND, which is why the same rows
+    withdraw. A want exists because its desire read unmet; a want those rows no longer produce
+    is met, and dropping it here is free, where asking its own met-test about it again was a
+    second evaluation of what this function had just concluded. What it returns is therefore
+    every want that CHANGED — minted or withdrawn — since a caller that refreshes a projection
+    on a mint must refresh it on a withdrawal too.
 
     The instant is EACH CLUSTER'S OWN. A desire unmet at the present derives wants with none.
     One met at the present derives them at the instants it reads unmet — and two debts cross
@@ -105,19 +122,20 @@ def derive_wants(store: ox.Store) -> list[str]:
     """
     now = clock.now()
     shapes = shapes_in(store)
-    minted: list[str] = []
+    changed: list[str] = []
     for holder, desire, shape in desires_in(store, now):
         #  WHAT IT READS NOW, and what it reads ahead only where now is met: a desire in
         #  trouble already is pursued as it stands, and a crossing is a thing in the future.
         present = read_now(store, shapes, holder, desire, shape, now)
         if present is None:
+            #  NOT JUDGED IS NOT MET. A desire whose met-test could not be run says nothing
+            #  about its wants, and withdrawing on silence would drop a want on a bad shape.
             continue
         unmet_now = bool(present)
         found = present if unmet_now else read_ahead(store, shapes, holder, desire, shape, now)
-        if not found:
-            continue
-        minted += _derive_under(store, holder, desire, found, unmet_now, now)
-    return minted
+        changed += _derive_under(store, holder, desire, found, unmet_now, now)
+        changed += _withdraw_under(store, shapes, holder, desire, shape, found, unmet_now, now)
+    return changed
 
 
 def _derive_under(store: ox.Store, holder: str, root: str, found: list[Witness],
@@ -145,8 +163,15 @@ def _derive_under(store: ox.Store, holder: str, root: str, found: list[Witness],
     standing = {r["w"]: r.get("holdsAt") for r in rows(store, _STANDING_Q, (), root=root,
                                                       now=instant(now))}
     said = _said(store, root)
+    #  THE FALLBACK IS FOR A DESIRE UNMET NOW AND NOTHING ELSE: one want about everything the
+    #  desire is about, for a root whose select yields no rows. A desire that reads MET now
+    #  and foresees nothing must reach the same loop with NO clusters, so that what stands
+    #  under it is withdrawn — which is why this is a condition and no longer `or [[]]`.
+    clusters = _clusters(store, found)
+    if not clusters and unmet_now:
+        clusters = [[]]
     minted = []
-    for cluster in _clusters(store, found) or [[]]:
+    for cluster in clusters:
         about = tuple(sorted({w.about for w in cluster if w.about}))
         instances = {w.instance for w in cluster}
         instance = next(iter(instances)) if len(instances) == 1 else None
@@ -165,6 +190,59 @@ def _derive_under(store: ox.Store, holder: str, root: str, found: list[Witness],
         if child is not None:
             minted.append(child)
     return minted
+
+
+def _named(store: ox.Store, root: str, said, found: list[Witness]) -> set[str]:
+    """The names the clusters of `found` come to — what minting would call them.
+
+    One namer for both halves: `_derive_under` mints under these names and `_withdraw_under`
+    keeps what is under them, so the two can never disagree about which want a cluster is.
+    """
+    out = set()
+    for cluster in _clusters(store, found):
+        about = tuple(sorted({w.about for w in cluster if w.about}))
+        instances = {w.instance for w in cluster}
+        out.add(name_of(store, root, said, about,
+                        next(iter(instances)) if len(instances) == 1 else None))
+    return out
+
+
+def _withdraw_under(store: ox.Store, shapes, holder: str, root: str, shape: str,
+                    found: list[Witness], unmet_now: bool, now: datetime) -> list[str]:
+    """Drop every want under this desire that its met-test no longer implies, and return them.
+
+    A WANT EXISTS BECAUSE ITS DESIRE READ UNMET, so a want the decomposition no longer
+    produces is met, and the rows that say so are the ones this pass already read. Nothing
+    re-runs a met-test to find out whether a want is met: asking twice is what this removes.
+
+    AGAINST THE WHOLE DECOMPOSITION, present AND foreseen, which is the correction the suite
+    made: `found` is the present alone where the desire is unmet now, since a crossing is not
+    minted for while there is trouble already — so a want minted at a foreseen instant is
+    absent from it and would be withdrawn the moment any OTHER instance went unmet now. A
+    presented debt did exactly that to an unpresented one. The foreseen half is read only
+    where something would otherwise be dropped, so a pass that withdraws nothing pays nothing.
+
+    A want a plan is WALKING is kept whatever its desire reads — see `_PURSUED_Q`. A want IS
+    its graph (#645), so withdrawing is `forget_want` and there is nothing left behind.
+    """
+    standing = {r["w"] for r in rows(store, _STANDING_Q, (), root=root, now=instant(now))}
+    if not standing:
+        return []
+    said = _said(store, root)
+    wanted = _named(store, root, said, found)
+    stale = standing - wanted
+    if not stale:
+        return []
+    if unmet_now:
+        stale -= _named(store, root, said,
+                        read_ahead(store, shapes, holder, root, shape, now))
+    pursued = {r["w"] for r in rows(store, _PURSUED_Q, ())} if stale else set()
+    gone = []
+    for want in sorted(stale - pursued):
+        forget_want(store, _local(holder), want)
+        log.info("%s withdrawn: its desire no longer reads it unmet", want.rsplit("#", 1)[-1])
+        gone.append(want)
+    return gone
 
 
 def _clusters(store: ox.Store, witnesses: list) -> list[list]:
