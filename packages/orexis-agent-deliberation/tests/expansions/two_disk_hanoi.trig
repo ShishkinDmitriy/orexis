@@ -1,0 +1,126 @@
+# two_disk_hanoi
+#
+# WHAT ONE ITERATION OF THE SEARCH DOES, on the smallest problem that has more than one answer.
+#
+# Two disks on three pegs: nine states, three moves to solve. The small disk sits on the big
+# one, the big one on peg A, and every disk must end on peg C.
+#
+# An ITERATION takes one node off the open list and forks a world per lever the node's own
+# world affords — here the small disk is the only movable one, and it may go to B or to C, so
+# the first iteration makes TWO worlds and not one. Each is a NAMED GRAPH in the imaginarium,
+# named for how it was reached, and holds only that node's own readings: what the move added
+# and what it retracted, never a copy of the world. `<case>.worlds.trig` beside this file is
+# every world forked, in the order they were made.
+#
+# THE WORLDS DO NOT SURVIVE THE PASS. A node's graph is dropped once it is expanded and again
+# when the pass ends, to be re-made from the nearest kept graph when a rule next runs against
+# it — so a snapshot of the store afterwards shows none of this, which is why they are caught
+# as they are made.
+#
+# THE PUZZLE IS THE DOMAIN'S, NOT THIS FILE'S. `hanoi:Move`, `hanoi:solved` and
+# `hanoi:disksAstray` are copied verbatim from `packages/orexis-tool-hanoi/`, because a case
+# loads no package — and their rule texts speak `hanoi:`, a name the store discovered from that
+# package's own ontology, so they survive the rewrite a locally-declared prefix would not.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix progression: <http://example.org/orexis/progression#> .
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix graph: <http://example.org/orexis/graph/> .
+#  Where a forked world lands. Nothing in the case says this graph; the imaginarium
+#  names each world it makes, and the prefix is here so `<case>.worlds.trig` reads.
+@prefix possible: <http://example.org/orexis/graph/possible/> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+
+GRAPH :world {
+  hanoi:PegA a hanoi:Peg . hanoi:PegB a hanoi:Peg . hanoi:PegC a hanoi:Peg .
+  :disk_1 a hanoi:Disk ; hanoi:size 1 ; rdfs:label "the small disk" .
+  :disk_2 a hanoi:Disk ; hanoi:size 2 ; rdfs:label "the large disk" .
+  #  A legal agent: one holding a want must say how patient it is (`orexis:KeeperShape`),
+  #  or every candidate world is one the society refuses and the pass ends REFUSED.
+  :keeper progression:patienceS 300 .
+}
+
+GRAPH :actions {
+  hanoi:Move a orexis:Action ;
+      rdfs:label "move a movable disk onto a legal peg" ;
+      orexis:available """
+        SELECT ?via ?about WHERE {
+            ?via hanoi:on ?below .
+            FILTER NOT EXISTS { ?x hanoi:on ?via }
+            ?via hanoi:size ?ds .
+            ?about a hanoi:Peg .
+            FILTER NOT EXISTS { ?via (hanoi:on)+ ?about . }
+            FILTER NOT EXISTS {
+                ?s (hanoi:on)+ ?about .
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+        }""" ;
+      orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+      orexis:retracts """CONSTRUCT { $via hanoi:on ?old } WHERE { $via hanoi:on ?old . }""" ;
+      sh:construct """
+        CONSTRUCT { $via hanoi:on ?dest } WHERE {
+            OPTIONAL { ?t (hanoi:on)+ $about . FILTER NOT EXISTS { ?z hanoi:on ?t } }
+            BIND(COALESCE(?t, $about) AS ?dest)
+        }""" .
+
+  hanoi:solved a sh:NodeShape ;
+      rdfs:label "every disk's chain bottoms out on peg C" ;
+      sh:targetSubjectsOf hanoi:on ;
+      sh:property [ sh:path [ sh:oneOrMorePath hanoi:on ] ; sh:hasValue hanoi:PegC ] .
+
+  hanoi:disksAstray sh:select """
+        SELECT (COUNT(DISTINCT ?d) AS ?estimate) WHERE {
+            ?d hanoi:on ?rest . ?d (hanoi:on)+ ?p .
+            ?p a hanoi:Peg .
+            FILTER(?p != hanoi:PegC)
+        }""" .
+}
+
+#  THE ON-STATE IS RUNTIME, seeded by whoever poses the puzzle, exactly as readings are — so
+#  it lives in the kernel's named state graph, which is where a search stands its root world.
+GRAPH graph:sensed {
+  :disk_2 hanoi:on hanoi:PegA .
+  :disk_1 hanoi:on :disk_2 .
+}
+
+GRAPH :desires {
+  :keeper orexis:holds :every_disk_home_root .
+  :every_disk_home_root a orexis:Desire ;
+      rdfs:label "every disk home on peg C" ;
+      orexis:metWhen hanoi:solved .
+}
+
+GRAPH pursued:every_disk_home {
+  :keeper orexis:holds :every_disk_home .
+  :every_disk_home a orexis:Want ;
+      prov:wasDerivedFrom :every_disk_home_root ;
+      rdfs:label "every disk home on peg C — the sentence the puzzle is" ;
+      orexis:metWhen hanoi:solved ;
+      orexis:estimates hanoi:disksAstray .
+}
+
+GRAPH :scopes {
+  :keeper.scope.1 a deliberation:Scope .
+  hanoi:on deliberation:inScope :keeper.scope.1 .
+  hanoi:Move deliberation:inScope :keeper.scope.1 .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph , orexis:Graph .
+  :ontology a orexis:OntologyGraph , orexis:PublicGraph , orexis:Graph .
+  :world a orexis:PublicGraph , orexis:Graph .
+  :actions a orexis:PublicGraph , orexis:Graph .
+  graph:sensed a orexis:StateGraph , orexis:BeliefGraph , orexis:Graph .
+  :desires a orexis:DesireGraph , orexis:Graph .
+  :scopes a deliberation:ScopeGraph , orexis:WorkingGraph , orexis:Graph ;
+      orexis:arrivedBy orexis:Derived ; orexis:beliefsOf :keeper .
+  pursued:every_disk_home a deliberation:PursuedGraph , orexis:WantGraph , orexis:Graph ;
+      orexis:arrivedBy orexis:Recorded ; orexis:beliefsOf :keeper .
+}
