@@ -13,6 +13,7 @@ that the derivation's behaviour changed on purpose.
 
 from __future__ import annotations
 
+import difflib
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -191,7 +192,20 @@ def renderer(prefixes: dict[str, str]):
         return f"_:{term}"
 
     def render(iri: str, graph: Graph) -> str:
-        as_object = {}
+        """One graph as a TriG block: ONE LINE PER STATEMENT, sorted, nested nodes inlined.
+
+        FLAT AT THE TOP, because Turtle's `;` and `,` make every line depend on the one after
+        it — adding a statement flips its neighbour's `;` to `.`, so a one-statement change is a
+        three-line diff and no diff over grouped Turtle can ever be minimal. Written one to a
+        line, adding a statement adds a line.
+
+        AND NESTED WHERE NESTING IS THE MEANING. A blank node used once is inlined `[ … ]` and
+        an RDF list is `( … )`, as they were: a shape is a TREE of blank nodes, and flattening
+        one gives `_:b11 rdf:rest _:b1` sorted lexically so `_:b10` precedes `_:b2` — every
+        quad on its own line and the shape unreadable. One quad a line is worth having where a
+        subject has a name a reader can hold, and worth nothing where it does not.
+        """
+        as_object: dict = {}
         for _, _, o_ in graph:
             if isinstance(o_, BNode):
                 as_object[o_] = as_object.get(o_, 0) + 1
@@ -206,19 +220,15 @@ def renderer(prefixes: dict[str, str]):
                         items.append(term(graph.value(node, URIRef(RDF + "first")), depth))
                         node = graph.value(node, URIRef(RDF + "rest"))
                     return "( " + " ".join(items) + " )"
-                pad = "      " + "    " * (depth + 1)
-                body = f" ;\n{pad}".join(f"{name(p_)} {term(o_, depth + 1)}" for p_, o_ in sorted(
+                body = " ; ".join(f"{name(p_)} {term(o_, depth + 1)}" for p_, o_ in sorted(
                     pairs, key=lambda po: (name(po[0]), term(po[1], depth + 1))))
                 return f"[ {body} ]"
             return name(t)
 
         lines = [f"GRAPH {name(URIRef(iri))} {{"]
-        subjects = sorted({s_ for s_, _, _ in graph if not (isinstance(s_, BNode) and s_ in inlined)},
-                          key=lambda t: (isinstance(t, BNode), name(t)))
-        for s_ in subjects:
-            pairs = sorted(graph.predicate_objects(s_), key=lambda po: (name(po[0]), term(po[1], 0)))
-            body = " ;\n      ".join(f"{name(p_)} {term(o_, 0)}" for p_, o_ in pairs)
-            lines.append(f"  {name(s_)} {body} .")
+        lines += sorted(f"  {name(s_)} {name(p_)} {term(o_, 0)} ."
+                        for s_, p_, o_ in graph
+                        if not (isinstance(s_, BNode) and s_ in inlined))
         lines.append("}\n")
         return "\n".join(lines)
     return render
@@ -240,7 +250,11 @@ def trig_of(base: str, before: dict[str, Graph], after: dict[str, Graph], header
         elif iri in before and same(iri):
             out.append(block)
         else:
-            out.append(f"{comments}# CHANGED, re-rendered:\n" + render(iri, after[iri]) + spacing)
+            #  `rstrip` because `render` ends its block with a newline and `spacing` IS the
+            #  newlines the author left after it — added raw, every re-rendered graph gained a
+            #  blank line the case did not have, and every diff carried it.
+            out.append(f"{comments}# CHANGED, re-rendered:\n"
+                       + render(iri, after[iri]).rstrip("\n") + spacing)
     written = [iri for iri in sorted(after) if iri not in {iri for iri, _ in segments}]
     if written:
         out.append("\n# --- WRITTEN (the first snapshot also holds the loader's own vocabulary stub) ---\n\n")
@@ -252,38 +266,98 @@ def snapshot_of(st: Store) -> dict[str, Graph]:
     return canonical_graphs({g: st.dump_nt(g) for g in st.graph_names()})
 
 
-def snapshot_read(path: Path) -> dict[str, Graph]:
-    """The snapshot read back through the same door a case is loaded by — the store's own
+def text_read(text: str) -> dict[str, Graph]:
+    """One TriG document read through the same door a case is loaded by — the store's own
     engine — so what is compared is what that engine makes of the text, on both sides."""
     st = Store()
-    st.put_graph(WORLD, path.read_text(), dataset=True)
+    st.put_graph(WORLD, text, dataset=True)
     return canonical_graphs({g: st.dump_nt(g) for g in st.graph_names()})
 
 
-def held_to(case: Path, request, function: str, before: dict, after: dict) -> None:
-    """Hold what `function` left on `case` to `<case>.snapshot.trig` beside it, writing it from
-    the case's text under `--update-snapshots`; on a mismatch, what was actually left goes to
-    `<case>.actual.trig` for `diff`."""
-    path = case.with_suffix(".snapshot.trig")
-    base = case.read_text()
-    header = (f"# The whole store after `{function}` ran on {case.name}, in the case's own order:\n"
-              f"# `diff {case.name} {path.name}` is what `{function}` did. Regenerated by\n"
-              f"# `{UPDATE}` — review the diff; it is the claim.")
-    text = trig_of(base, before, after, header)
+def snapshot_read(path: Path) -> dict[str, Graph]:
+    """A snapshot file, read the same way."""
+    return text_read(path.read_text())
+
+
+def without_comments(text: str) -> str:
+    """The lines that say something, for a patch to be about.
+
+    A case is mostly prose — the header this machinery writes, and the argument the case makes
+    for itself — and none of it is what a function did. Stripped from both sides, a patch
+    carries data and nothing else; the comparison is over quads either way, so a comment is
+    never what a case is held to.
+    """
+    return "".join(l for l in text.splitlines(True) if not l.lstrip().startswith("#"))
+
+
+def patch_of(case: str, expected: str) -> str:
+    """The unified diff that turns one into the other, comments left out of both.
+
+    Stored INSTEAD of the whole expected store, for a directory where the diff is the thing a
+    reader wants: `<case>.trig` and `<case>.patch`, and what the function must leave is what
+    applying one to the other gives. The other directories keep their snapshots — opening a
+    file and reading the store is worth having where a case is large, and this is the
+    experiment that says whether it is worth having everywhere.
+    """
+    return "".join(difflib.unified_diff(
+        without_comments(case).splitlines(True), without_comments(expected).splitlines(True),
+        "case", "expected", n=3))
+
+
+def patched(case: str, patch: str) -> str:
+    """`case` with `patch` applied — a strict applier, by line number and nothing else.
+
+    No fuzz and no context search, deliberately: this only ever applies a patch this module
+    wrote, against the case it was written from, so a hunk that does not land where it says it
+    lands is a stale patch rather than something to guess at. `patch(1)` and `git apply` would
+    both do it; neither is a dependency worth taking for thirty lines that cannot drift.
+    """
+    lines = without_comments(case).splitlines(True)
+    out, at, started = [], 0, False
+    for line in patch.splitlines(True):
+        head = re.match(r"^@@ -(\d+)(?:,\d+)? \+\d+(?:,\d+)? @@", line)
+        if head:
+            started = True
+            start = int(head.group(1)) - 1
+            out += lines[at:start]
+            at = start
+            continue
+        if not started:                      # the `---`/`+++` file names
+            continue
+        if line.startswith("+"):
+            out.append(line[1:])
+        elif line.startswith(("-", " ")):
+            assert lines[at] == line[1:], f"stale patch at line {at + 1}: {lines[at]!r}"
+            if line.startswith(" "):
+                out.append(lines[at])
+            at += 1
+    return "".join(out + lines[at:])
+
+
+def held_to_patch(case: Path, request, function: str, after: dict) -> None:
+    """Hold what `function` left to `<case>.patch` beside it — the case plus the patch
+    IS the expected store, and the comparison is over every quad, as it is for a snapshot.
+    """
+    path = case.with_suffix(".patch")
+    rendered = trig_of(case.read_text(), {}, after, f"# what `{function}` leaves on {case.name}")
     if request.config.getoption("--update-snapshots"):
-        path.write_text(text)
-    assert path.exists(), f"{case.name} has no snapshot: run `{UPDATE}` and review {path.name}"
-    lines, expected = quad_lines(after), quad_lines(snapshot_read(path))
+        path.write_text(patch_of(case.read_text(), rendered))
+    assert path.exists(), f"{case.name} has no patch: run `{UPDATE}` and review {path.name}"
+    expected = quad_lines(text_read(patched(case.read_text(), path.read_text())))
+    lines = quad_lines(after)
     left, missing = sorted(lines - expected), sorted(expected - lines)
     if left or missing:
-        received = case.with_suffix(".actual.trig")
-        received.write_text(trig_of(base, before, after, f"# What `{function}` actually left on {case.name}."))
+        #  WHAT WAS ACTUALLY LEFT, on a mismatch and never otherwise. The quads above say what
+        #  DIFFERS and this says what the store IS, which is what somebody fixing it wants to
+        #  diff against. A green run leaves nothing behind, and `.gitignore` refuses the file
+        #  either way.
+        case.with_suffix(".actual.trig").write_text(rendered)
     assert not left and not missing, (
-        f"{case.name}: the store `{function}` left differs from {path.name}\n"
+        f"{case.name}: the store `{function}` left differs from case + {path.name}\n"
         + "".join(f"  left, unexpected:           {l}\n" for l in left)
-        + "".join(f"  the snapshot says, missing: {l}\n" for l in missing)
-        + f"  what was left is in {received.name}: `diff {path.name} {received.name}`;\n"
-        + f"  if the change is on purpose: `{UPDATE}`, then review the diff")
+        + "".join(f"  the patch says, missing:    {l}\n" for l in missing)
+        + f"  what was left is in {case.stem}.actual.trig: `diff {case.name} {case.stem}.actual.trig`;\n"
+        + f"  if the change is on purpose: `{UPDATE}`, then review the patch")
 
 
 def held_worlds_to(case: Path, request, forks: list, knows: dict) -> None:
@@ -325,10 +399,91 @@ def held_worlds_to(case: Path, request, forks: list, knows: dict) -> None:
         f"  if the change is on purpose: `{UPDATE}`, then review the diff")
 
 
-def orphans_in(directory: Path) -> list[str]:
-    """Snapshots whose case was deleted or renamed — a file that keeps saying something nobody checks."""
-    return sorted(p.name for p in directory.glob("*.snapshot.trig")
-                  if not (directory / (p.stem.split(".")[0] + ".trig")).exists())
+def without_comments(text: str) -> str:
+    """The lines that say something, for a patch to be about.
+
+    A case is mostly prose — the header this machinery writes, and the argument the case makes
+    for itself — and none of it is what a function did. Stripped from both sides, a patch
+    carries data and nothing else; the comparison is over quads either way, so a comment is
+    never what a case is held to.
+    """
+    return "".join(l for l in text.splitlines(True) if not l.lstrip().startswith("#"))
+
+
+def patch_of(case: str, expected: str) -> str:
+    """The unified diff that turns one into the other, comments left out of both.
+
+    Stored INSTEAD of the whole expected store, for a directory where the diff is the thing a
+    reader wants: `<case>.trig` and `<case>.patch`, and what the function must leave is what
+    applying one to the other gives. The other directories keep their snapshots — opening a
+    file and reading the store is worth having where a case is large, and this is the
+    experiment that says whether it is worth having everywhere.
+    """
+    return "".join(difflib.unified_diff(
+        without_comments(case).splitlines(True), without_comments(expected).splitlines(True),
+        "case", "expected", n=3))
+
+
+def patched(case: str, patch: str) -> str:
+    """`case` with `patch` applied — a strict applier, by line number and nothing else.
+
+    No fuzz and no context search, deliberately: this only ever applies a patch this module
+    wrote, against the case it was written from, so a hunk that does not land where it says it
+    lands is a stale patch rather than something to guess at. `patch(1)` and `git apply` would
+    both do it; neither is a dependency worth taking for thirty lines that cannot drift.
+    """
+    lines = without_comments(case).splitlines(True)
+    out, at, started = [], 0, False
+    for line in patch.splitlines(True):
+        head = re.match(r"^@@ -(\d+)(?:,\d+)? \+\d+(?:,\d+)? @@", line)
+        if head:
+            started = True
+            start = int(head.group(1)) - 1
+            out += lines[at:start]
+            at = start
+            continue
+        if not started:                      # the `---`/`+++` file names
+            continue
+        if line.startswith("+"):
+            out.append(line[1:])
+        elif line.startswith(("-", " ")):
+            assert lines[at] == line[1:], f"stale patch at line {at + 1}: {lines[at]!r}"
+            if line.startswith(" "):
+                out.append(lines[at])
+            at += 1
+    return "".join(out + lines[at:])
+
+
+def held_to_patch(case: Path, request, function: str, after: dict) -> None:
+    """Hold what `function` left to `<case>.patch` beside it — the case plus the patch
+    IS the expected store, and the comparison is over every quad, as it is for a snapshot.
+    """
+    path = case.with_suffix(".patch")
+    rendered = trig_of(case.read_text(), {}, after, f"# what `{function}` leaves on {case.name}")
+    if request.config.getoption("--update-snapshots"):
+        path.write_text(patch_of(case.read_text(), rendered))
+    assert path.exists(), f"{case.name} has no patch: run `{UPDATE}` and review {path.name}"
+    expected = quad_lines(text_read(patched(case.read_text(), path.read_text())))
+    lines = quad_lines(after)
+    left, missing = sorted(lines - expected), sorted(expected - lines)
+    if left or missing:
+        #  WHAT WAS ACTUALLY LEFT, on a mismatch and never otherwise. The quads below say what
+        #  DIFFERS; this says what the store IS, which is what somebody fixing it wants to diff
+        #  against. A green run leaves nothing behind, and `.gitignore` refuses the file anyway.
+        case.with_suffix(".actual.trig").write_text(rendered)
+    assert not left and not missing, (
+        f"{case.name}: the store `{function}` left differs from case + {path.name}\n"
+        + "".join(f"  left, unexpected:           {l}\n" for l in left)
+        + "".join(f"  the patch says, missing:    {l}\n" for l in missing)
+        + f"  what was left is in {case.stem}.actual.trig: "
+          f"`diff {case.name} {case.stem}.actual.trig`;\n"
+        + f"  if the change is on purpose: `{UPDATE}`, then review the patch")
+
+
+def orphans_in(directory: Path, suffix: str = ".patch") -> list[str]:
+    """Files whose case was deleted or renamed — one that keeps saying something nobody checks."""
+    return sorted(p.name for p in directory.glob("*" + suffix)
+                  if not (directory / (p.name[:-len(suffix)] + ".trig")).exists())
 
 
 @pytest.fixture
