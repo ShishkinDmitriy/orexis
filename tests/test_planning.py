@@ -477,8 +477,8 @@ def test_a_whole_search_writes_nothing_to_the_belief_base(monkeypatch):
     assert set(agent.beliefs.graph_names()) - names <= {DELIBERATION_GRAPH}, \
         "a possible world escaped into the store that keeps things"
     assert planner.imaginarium is not None, "the cone is kept for the next pass (#553)"
-    assert all(not n.materialised for n in planner._nodes if n is not planner._root), \
-        "and every imagined graph but the root's is dropped when the pass ends"
+    assert all(planner.imaginarium.holds(n.graph) for n in planner._nodes), \
+        "and every world it imagined is still there — in the imaginarium, never in the store"
 
 
 def test_two_paths_to_the_same_world_still_collide(monkeypatch):

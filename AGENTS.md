@@ -332,6 +332,14 @@ it is a record wearing a bullet.
   decomposition, present and foreseen, since a presented debt's rows do not mention the
   unpresented debt whose want was minted at its lapse, and dropping on the present alone took
   it. A want a plan is walking is kept whatever its desire reads.
+- **A possible world is kept, and its diff was a memo** — a world's graph was dropped once
+  its node was expanded and re-made from the nearest kept ancestor, so a node carried the two
+  lists its step's rules had answered; two measurements retired that, since a world's readings
+  are 2 quads on the courier and 26 on the greenhouse against the ~5,000 shared quads a pass
+  copies once, and the diff is derivable anyway — it is what a step's own rules produce from
+  its parent, and the step's row already names the action and every binding they take. The
+  memory argument was made when a node ALSO carried a flat rdflib copy of the whole world
+  (#481), and did not outlive it.
 - **The one function over TWO stores is the filling of a possible world** — `init_imaginarium` takes
   the beliefs and an empty store the caller made, copies every public graph whatever its
   period and the catalogue with them, and hands the second back; everything that happens to

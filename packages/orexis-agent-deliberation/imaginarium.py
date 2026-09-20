@@ -358,12 +358,6 @@ class Imaginarium:
         return self._store.contains_graph(name)
 
 
-def name_of(path) -> str:
-    """The graph a path of steps from this pass's root reaches — `_name`, for a caller that
-    walks a plan back after the search to ask each step's parent world (#550)."""
-    return _name(path)
-
-
 def _name(path) -> str:
     """One graph per node, named by the path that reached it.
 

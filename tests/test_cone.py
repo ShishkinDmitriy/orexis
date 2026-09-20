@@ -171,24 +171,36 @@ def test_a_moved_invariant_half_forgets_the_cone(monkeypatch):
     assert begins == [1] and _kept_worlds(agent) == 0
 
 
-def test_graphs_are_dropped_when_the_pass_ends_and_remade_when_asked(monkeypatch):
+def test_every_world_a_pass_made_is_still_there_when_it_ends(monkeypatch):
+    """WORLDS ARE KEPT, and this is the assertion that says so.
+
+    They were dropped once expanded and re-made from the nearest kept ancestor when a rule
+    next ran against one — which is why a node carried the two lists its step's rules had
+    answered, and why a world could be silently renamed when a re-root shortened its path.
+    Two measurements retired all of that: a world's readings are 2 quads on the courier and 26
+    on the greenhouse, so keeping every one costs 1.5x an imaginarium against the ~5,000
+    shared quads a pass copies once; and the diff was derivable anyway, being what a step's
+    own rules produce from its parent, which the step's row already names.
+
+    The memory argument `drop` was built on was made when a node ALSO carried a flat rdflib
+    copy of the whole world — 198,144 `Graph.add` calls, 55% of a hanoi solve — and that copy
+    went with #481. What is left per world is its readings.
+    """
     agent = _driver(monkeypatch, "c0_0", "c1_2")
     planner = Planner(agent, agent.me)
     planner.plan(_goal(agent))
     im = planner.imaginarium
     assert im is not None and len(planner._nodes) > 1
-    others = [n for n in planner._nodes if n is not planner._root]
-    assert all(not n.materialised and not im.holds(n.graph) for n in others), \
-        "every imagined graph but the root's is gone when the pass ends"
-    deepest = max(others, key=lambda n: len(n.taken))
-    name = planner._graph(deepest)
-    assert im.holds(name) and deepest.materialised
-    chain, m = [], deepest
-    while m is not None:
-        chain.append(m)
-        m = m.parent
-    assert all(n.materialised for n in chain), "re-made from the root down, each from its parent"
+    assert all(im.holds(n.graph) for n in planner._nodes), \
+        "every world the pass kept is still in the imaginarium"
     assert planner._root.graph == STATE_GRAPH and im.holds(STATE_GRAPH)
+
+    #  AND A NAME IS A NAME. Nothing re-makes a world, so nothing renames one: `_graph` hands
+    #  back what the node has always been called, and everything written ABOUT that world —
+    #  its row, its weighing — stays findable under it.
+    deepest = max((n for n in planner._nodes if n is not planner._root),
+                  key=lambda n: len(n.taken))
+    assert planner._graph(deepest) == deepest.graph
 
 
 def test_a_retract_of_a_keyed_fact_matches_by_key():
