@@ -77,14 +77,17 @@ class _Node:
     #  THE CONE (#553): a node is its parent plus its two lists, and the graph is a cache.
     #  `added`/`retracted` are the raw triples the step's rules answered — identity and
     #  datatypes intact, which is what re-making the graph needs and what the canonical
-    #  `diff` deliberately drops. `materialised` says whether `graph` exists in the store
-    #  now; `expanded` whether the search has taken every row from here; `met` whether this
-    #  world met the want when it was settled.
+    #  `diff` deliberately drops. `expanded` says whether the search has taken every row from
+    #  here; `met` whether this world met the want when it was settled.
+    #
+    #  `added`, `retracted` and `materialised` were here because a world's graph was DROPPED
+    #  once expanded and re-made from the nearest kept ancestor — the two lists were what
+    #  re-made it. Worlds are kept now (`Planner._release`), so a graph is there for as long
+    #  as the node is and the lists had nothing left to do. They were a memo either way: a
+    #  step's diff is what its own rules produce from its parent, and the step's row in the
+    #  store already names the action and every binding they take.
     parent: object = None
-    added: list = field(default_factory=list)
-    retracted: list = field(default_factory=list)
     changed: frozenset = frozenset()     # the PLACES the steps on this path changed (#643)
-    materialised: bool = True
     expanded: bool = False
     menu: frozenset = frozenset()        # the rows this node was expanded with, for a resumed pass to compare
     met: bool = False

@@ -50,7 +50,6 @@ from orexis_agent_deliberation.want import Want
 
 
 from .affordances import Affordances
-from . import imaginarium
 from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import NAMESPACES, Raw, bind, bindings
@@ -914,20 +913,17 @@ class Planner:
             #  present's, not the world's to predict, and is not carried into the diff.
             m.diff = (self._project(world - present), self._project(present - world))
             m.taken = m.taken[depth:]
-            #  AND ITS NAME FOLLOWS ITS PATH. A world is named by the path that reached it, so
-            #  a re-root that shortens the path renames the world — `_graph` would have done it
-            #  silently the next time the readings were re-made, leaving whatever had been
-            #  written ABOUT the world under a name nothing would find again. Said here, where
-            #  the path changes, so the name is true from the moment it changes.
-            if m is not node:
-                m.graph = imaginarium.name_of(m.taken)
+            #  ITS NAME NO LONGER FOLLOWS ITS PATH, and does not need to: a world is named
+            #  by the path that reached it AT THE MOMENT IT IS MADE, and since it is never
+            #  re-made there is nothing to rename. The name outlives the path, which is what a
+            #  name is for — and everything written about the world stays findable.
             m.cost -= cost0
             m.landing -= landing0
             m.origin = m.taken[0].action if m.taken else None
         #  THE NEW ROOT IS THE PRESENT, so the pass's clock is now: a kept world's landing
         #  is re-based below, and both halves of a node's instant move with the root (#588).
         self._clock = clock.now()
-        node.parent, node.graph, node.materialised = None, STATE_GRAPH, True
+        node.parent, node.graph = None, STATE_GRAPH
         #  The root stands nowhere but the present. Re-based by set algebra it would carry
         #  the number it predicted against the number the present holds; by cell they are
         #  one world, and that is what made it the root.
@@ -973,24 +969,32 @@ class Planner:
         return False
 
     def _release(self, node) -> None:
-        """Drop this world's graph, keeping the node; the root's readings are never dropped."""
+        """Drop the scratch world this node was JUDGED in, and forget its border text.
+
+        A WORLD'S OWN GRAPH IS NOT DROPPED any more. It was, and the node kept the two lists
+        its step's rules answered so `_graph` could re-make it — which is why `added`,
+        `retracted` and `materialised` were fields at all. Two measurements retired that: a
+        world's readings are 2 quads on the courier and 26 on the greenhouse, so keeping every
+        one costs 1.5x an imaginarium against the ~5,000 shared quads a pass copies once
+        without anyone minding; and the diff was derivable anyway, being what the step's own
+        rules produce from the parent, which the step's row already names. The memory argument
+        `drop` was built on was made when a node ALSO carried a flat rdflib copy of the whole
+        world — 198,144 `Graph.add` calls, 55% of a hanoi solve — and that copy went with #481.
+
+        What still goes is `judged`: a world drifted to a want's instant, forked per node for
+        one question and answered."""
         if node.judged is not None and node.judged != node.graph:
             self.imaginarium.drop(node.judged)
         node.judged = None
-        if node is not self._root and node.materialised:
-            self.imaginarium.drop(node.graph)
-            node.materialised = False
-            node.readings = None
+        node.readings = None
 
     def _graph(self, node) -> str:
-        """This node's graph in the imaginarium, re-made from the nearest kept ancestor's if it
-        was dropped — the parent's graph, forked, the node's two lists applied. A world is
-        its parent plus its diff, and the graph is a cache of that (#553)."""
-        if node is self._root or node.materialised:
-            return node.graph
-        parent = self._graph(node.parent)
-        node.graph = self.imaginarium.reached(parent, node.taken, node.added, node.retracted)
-        node.materialised = True
+        """This node's graph in the imaginarium — its name, which is all it ever was.
+
+        It used to RE-MAKE the world where it had been dropped, forking the parent's graph and
+        applying the node's two lists; worlds are not dropped now (`_release`), so a name is a
+        name. The re-making is also why a world could be silently RENAMED — a re-root shortens
+        a path and the path is the name — which nothing has to guard against any more."""
         return node.graph
 
     def _view_of(self, judgment: Want) -> frozenset | None:
@@ -1547,9 +1551,7 @@ class Planner:
         fork = self.imaginarium.reached(STATE_GRAPH, (_PROJECTED,), added, retracted)
         added = list(added) + self.imaginarium.entailed(fork, added, self._compiled.keys)
         root = _Node(graph=fork)
-        root.materialised = True
         root.landing = lead
-        root.added, root.retracted = list(added), list(retracted)
         root.diff = signature.advance(signature.EMPTY, signature.facts(added, self._compiled.keys),
                                       signature.facts(retracted, self._compiled.keys), self._base_facts)
         return root
@@ -1675,7 +1677,7 @@ class Planner:
         #  ground is a HAPPENING edge's to do, and nothing draws one yet (#589).
         step = _Node(graph=graph, diff=diff, landing=landing, cost=cost, ground=node.ground,
                      origin=node.origin if node.origin is not None else row.action,
-                     parent=node, added=list(added), retracted=list(retracted), changed=changed)
+                     parent=node, changed=changed)
         step.urgency = self._urgency_in(step, judgment)
         step.estimate = self._estimate_in(step, judgment)
         #  THE STEP CARRIES WHAT IT PREDICTED (#510): the same canonical facts the signature

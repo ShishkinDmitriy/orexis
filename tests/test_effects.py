@@ -321,7 +321,11 @@ def test_a_predicted_reading_is_stamped_when_its_step_lands(monkeypatch):
         plan = planner.plan(desire)
         assert plan.outcome == "satisfied", plan.outcome
         dosed = min((m for m in planner._nodes if m.met), key=lambda m: m.cost)
-        stamps = [x.object.value for x in dosed.added if x.predicate.value == RESULT_TIME]
+        #  ASKED OF THE WORLD THE DOSE REACHES, which is where the predicted reading is. It
+        #  used to be read off the node's `added` list — a Python copy of the diff, kept so a
+        #  dropped world could be re-made; worlds are kept now, so the world itself answers.
+        stamps = [r["t"] for r in bindings(planner.imaginarium.query_over(
+            f"SELECT ?t WHERE {{ ?o <{RESULT_TIME}> ?t }}", dosed.graph))]
         assert len(stamps) == 1, f"one predicted reading, one instant: {stamps}"
         return (datetime.fromisoformat(stamps[0]) - planner._clock).total_seconds(), dosed.landing
 
