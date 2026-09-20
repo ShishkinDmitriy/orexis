@@ -18,6 +18,15 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
 
+
+GRAPH :ontology {
+  #  WHAT A WRITER ASKS ONE STEP OF. Classifying a want's graph writes every kind
+  #  `deliberation:PursuedGraph` is beneath, read from here — a real store has these because
+  #  genesis materialises the closure; this case has them because it says so.
+  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph , orexis:Graph .
+  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
 GRAPH :world {
   :tank1 a :Tank .
   :tank2 a :Tank .
@@ -114,23 +123,4 @@ GRAPH pursued:keeper.in_range.pursued.tank2.level {
           sh:minInclusive 10 ;
           sh:path :level ] ;
       sh:targetNode :tank2 .
-}
-
-GRAPH :ontology {
-  deliberation:PursuedGraph rdfs:subClassOf orexis:Graph ;
-      rdfs:subClassOf orexis:WantGraph .
-  deliberation:ScopeGraph rdfs:subClassOf orexis:Graph ;
-      rdfs:subClassOf orexis:WorkingGraph .
-  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-  orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
-  orexis:DesireGraph rdfs:subClassOf orexis:Graph .
-  orexis:OntologyGraph rdfs:subClassOf orexis:Graph ;
-      rdfs:subClassOf orexis:PublicGraph .
-  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
-  orexis:PublicGraph rdfs:subClassOf orexis:Graph .
-  orexis:RecordGraph rdfs:subClassOf orexis:Graph .
-  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph ;
-      rdfs:subClassOf orexis:Graph .
-  orexis:WantGraph rdfs:subClassOf orexis:Graph .
-  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
 }

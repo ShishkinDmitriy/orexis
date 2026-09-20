@@ -12,6 +12,14 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix scopes: <http://example.org/orexis/graph/scopes/> .
 
+
+GRAPH :ontology {
+  #  WHAT A WRITER ASKS ONE STEP OF. Classifying the scope graph writes every kind
+  #  `deliberation:ScopeGraph` is beneath, read from here.
+  deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph , orexis:Graph .
+  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+}
+
 GRAPH :actions {
   #  A rule text is parsed with the store's prefixes, not this file's, so each says its own.
   :heat a orexis:Action ;

@@ -34,6 +34,7 @@
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
 
 
+
 #  1. from sensed
 GRAPH possible:Pouring-pump-level {
   :tank1 :level 20 .
