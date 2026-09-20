@@ -133,6 +133,7 @@ GRAPH graph:pass {
       deliberation:atDepth 0 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
+      deliberation:minted 0 ;
       deliberation:remaining 2.0 ;
       deliberation:signature "bb7208bc9b5d7c04" ;
       deliberation:spent 0.0 ;
@@ -143,6 +144,7 @@ GRAPH graph:pass {
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
       deliberation:from graph:sensed ;
+      deliberation:minted 1 ;
       deliberation:remaining 2.0 ;
       deliberation:signature "0deedbaa40d7cc37" ;
       deliberation:spent 1.0 ;
@@ -153,6 +155,7 @@ GRAPH graph:pass {
       deliberation:atDepth 2 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegB ;
+      deliberation:minted 6 ;
       deliberation:remaining 2.0 ;
       deliberation:signature "bb7208bc9b5d7c04" ;
       deliberation:spent 2.0 ;
@@ -167,6 +170,7 @@ GRAPH graph:pass {
       deliberation:atDepth 2 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegB ;
+      deliberation:minted 7 ;
       deliberation:remaining 1.0 ;
       deliberation:signature "426192855af0ca99" ;
       deliberation:spent 2.0 ;
@@ -182,6 +186,7 @@ GRAPH graph:pass {
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
       deliberation:from possible:Move-disk_1-PegB ;
+      deliberation:minted 8 ;
       deliberation:remaining 1.0 ;
       deliberation:signature "d2f175aae3ef3caa" ;
       deliberation:spent 2.0 ;
@@ -192,6 +197,7 @@ GRAPH graph:pass {
       deliberation:atDepth 3 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC ;
+      deliberation:minted 13 ;
       deliberation:remaining 1.0 ;
       deliberation:signature "96238be7239f92b9" ;
       deliberation:spent 3.0 ;
@@ -206,6 +212,7 @@ GRAPH graph:pass {
       deliberation:atDepth 3 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC ;
+      deliberation:minted 14 ;
       deliberation:remaining 0.0 ;
       deliberation:signature "9159fbb0fdee38d6" ;
       deliberation:spent 3.0 ;
@@ -220,6 +227,7 @@ GRAPH graph:pass {
       deliberation:atDepth 3 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC ;
+      deliberation:minted 12 ;
       deliberation:remaining 2.0 ;
       deliberation:signature "0deedbaa40d7cc37" ;
       deliberation:spent 3.0 ;
@@ -243,6 +251,7 @@ GRAPH graph:pass {
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
       deliberation:from graph:sensed ;
+      deliberation:minted 2 ;
       deliberation:remaining 1.0 ;
       deliberation:signature "426192855af0ca99" ;
       deliberation:spent 1.0 ;
@@ -253,6 +262,7 @@ GRAPH graph:pass {
       deliberation:atDepth 2 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegC ;
+      deliberation:minted 3 ;
       deliberation:remaining 2.0 ;
       deliberation:signature "bb7208bc9b5d7c04" ;
       deliberation:spent 2.0 ;
@@ -267,6 +277,7 @@ GRAPH graph:pass {
       deliberation:atDepth 2 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegC ;
+      deliberation:minted 4 ;
       deliberation:remaining 2.0 ;
       deliberation:signature "0deedbaa40d7cc37" ;
       deliberation:spent 2.0 ;
@@ -282,6 +293,7 @@ GRAPH graph:pass {
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
       deliberation:from possible:Move-disk_1-PegC ;
+      deliberation:minted 5 ;
       deliberation:remaining 1.0 ;
       deliberation:signature "c398dfc17fb3e55a" ;
       deliberation:spent 2.0 ;
@@ -292,6 +304,8 @@ GRAPH graph:pass {
       deliberation:atDepth 3 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB ;
+      deliberation:minted 10 ;
+      deliberation:open true ;
       deliberation:remaining 2.0 ;
       deliberation:signature "096c26bac8a6dc74" ;
       deliberation:spent 3.0 ;
@@ -306,6 +320,8 @@ GRAPH graph:pass {
       deliberation:atDepth 3 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB ;
+      deliberation:minted 11 ;
+      deliberation:open true ;
       deliberation:remaining 2.0 ;
       deliberation:signature "f43e75219a6a5ae8" ;
       deliberation:spent 3.0 ;
@@ -320,6 +336,7 @@ GRAPH graph:pass {
       deliberation:atDepth 3 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB ;
+      deliberation:minted 9 ;
       deliberation:remaining 1.0 ;
       deliberation:signature "426192855af0ca99" ;
       deliberation:spent 3.0 ;

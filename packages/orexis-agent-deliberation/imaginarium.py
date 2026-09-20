@@ -195,6 +195,15 @@ class Imaginarium:
                 self._store.clear_graph(name)
         self._store.add_quads(quads, forget=False)
 
+    def unnote(self, quads) -> None:
+        """Take back one of `note`'s rows — the mirror, and the same `forget=False` reason.
+
+        A world leaves the frontier when it is opened, and the row that said it was there has
+        to go with it: a frontier asked of the store is only the frontier if what it names is
+        still open.
+        """
+        self._store.remove_quads(quads, forget=False)
+
     def remember(self, key, compute):
         return self._store.remember(key, compute)
 
