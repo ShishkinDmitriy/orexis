@@ -12,6 +12,8 @@
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 GRAPH :world {
   :tank1 a :Tank .
