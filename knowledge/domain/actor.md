@@ -77,7 +77,7 @@ always was — `value_bid`, `dose_for`, `redeem` — and none of them moved.
 a dose with no fresh reading, a serve with no claim in hand: the actor declines, the intention stands, and the trigger that
 changes the answer — an offer, a reading, a presentation — runs execution again, which finds
 the standing row and takes it without re-deciding. That is what makes an intention an
-amortised deliberation for every means and not only for the ones that happened to stand.
+amortised deliberation for every action and not only for the ones that happened to stand.
 
 # What it is not
 

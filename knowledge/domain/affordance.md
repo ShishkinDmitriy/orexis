@@ -2,7 +2,7 @@
 type: Domain Concept
 title: Affordance
 description: >-
-  One row of what an agent could do NOW — an action whose precondition holds: a means, the
+  One row of what an agent could do NOW — an action whose precondition holds, with the
   property it is about, the lever it goes through, which way that moves it, and whom it
   serves if not the agent itself. Always DERIVED and never stored, because a stored row can
   outlive the plumbing it was concluded from; each row comes from an action's `orexis:available`
@@ -40,7 +40,7 @@ change what it knows.
 A row is a **conclusion whose premises are stored** — regions, wiring, denominations, all facts
 that exist for their own reasons. Storing the conclusion would let it outlive them: unplumb the
 valve and an authored row still says you can dose. So they are computed on every ask, and the
-[menu graph](/decisions/the-mind-is-six-graphs.md) holds rules about means but never rows about
+[menu graph](/decisions/the-mind-is-six-graphs.md) holds rules about actions but never rows about
 levers.
 
 The same argument in reverse is why the [action](/domain/action.md) *is* stored — a node in
@@ -108,14 +108,14 @@ is a decision, and a deliberator that ranged over it would be choosing whether t
 
 That one column is the whole of the distinction — there is no mode term
 ([an-action-is-one-node](/decisions/an-action-is-one-node.md)). It is also what lets an obligation find
-its means: the row that answers is the one the market joined to the want about that debt, and
+its action: the row that answers is the one the market joined to the want about that debt, and
 it carries whom the debt is owed to.
 
 # The row that is not there
 
 A want with no row is a real answer and a legible one. Fern holds a desire in air temperature
 and can see it, but nothing it owns or can buy moves it: three Observe rows, no lever. That is a
-**want with no means** — legitimate, not a misconfiguration — and the search reports it as
+**want with no lever** — legitimate, not a misconfiguration — and the search reports it as
 `no candidate` rather than as failure. It is the difference between *equip me* and *my doses are
 too coarse*, which is a distinction a planner that reported them alike would destroy.
 
