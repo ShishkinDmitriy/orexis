@@ -326,6 +326,19 @@ it is a record wearing a bullet.
   unmet, in one function and one contract; `scope_actions` writes the scopes at boot, so the
   derivation reads no action. It was two functions with a written judgment between them, and
   no caller ever took one half.
+- **A want exists because its desire read unmet, so the same rows withdraw it** — a want the
+  decomposition no longer produces is met, and running the want's own met-test to discover
+  that asked twice what one pass had already concluded; withdrawal is against the WHOLE
+  decomposition, present and foreseen, since a presented debt's rows do not mention the
+  unpresented debt whose want was minted at its lapse, and dropping on the present alone took
+  it. A want a plan is walking is kept whatever its desire reads.
+- **The one function over TWO stores is the filling of a possible world** — `init_imaginarium` takes
+  the beliefs and an empty store the caller made, copies every public graph whatever its
+  period and the catalogue with them, and hands the second back; everything that happens to
+  that world afterwards happens to it the ordinary way, so this is the seam rather than a
+  wrapper. Narrowing what crosses — four named graphs, or the graphs of one scope — was
+  measured at 10.4 ms against 0.6 on a pass costing over a second, and fails silently: a
+  pattern reaching a graph nobody copied returns an EMPTY RESULT, not an error.
 - **A function over the store is handed the engine and nothing else** — `derive_wants` and
   `scope_actions` take `pyoxigraph.Store` and no wrapper: which graphs they read they ask of
   the catalogue in their own texts, whose a desire is they read off `orexis:holds`, and the
@@ -388,6 +401,12 @@ it is a record wearing a bullet.
 - **A collection over stored rows is handed a store, and one over contributed answers is handed
   the agent** — `Wants` reads graphs so it takes somewhere to search, `Pursuing` asks the choir
   so it must reach the choir, and the asymmetry is what tells the two kinds of collection apart.
+- **The function that decides a thing owns writing it, and a collection only reads** — `Wants`
+  carried `save`/`delete_by_uri` beside the module functions the derivation called, plus
+  `on_saved`/`on_deleted` so a write could announce itself; the announcement had one live
+  producer and one live consumer and both were rebuilding the desire projection, and the
+  collection's own writers had no caller but their tests. A want's graph, its catalogue row
+  and its period are decided where the want is, and whoever wrote says what changed.
 - **A singular file holds the model and its plural holds the collection** — `desire.py` and
   `desires.py`, `want.py` and `wants.py`, so neither reader has to open the other's file.
 - **An update takes no dataset** — `Store.query` is handed its graphs per call, which is the

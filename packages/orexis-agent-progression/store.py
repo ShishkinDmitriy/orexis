@@ -414,6 +414,21 @@ def graphs_holding(engine, kinds, *, holder: str | None = None,
     return [str(row["g"].value) for row in engine.query(text, prefixes=NAMESPACES)]
 
 
+def catalogue_of(engine) -> str | None:
+    """The graph that describes every graph and itself — `Store.catalogue` as a function over
+    the engine, and the same answer, asked rather than kept.
+
+    The class caches it because nothing moves it and it is asked on every read; a function
+    over the engine holds nothing, so a caller that asks in a loop should keep what it got.
+    None for a store nobody has told anything to. Two is refused, as it is there: a store with
+    two catalogues has two truths about what its graphs are.
+    """
+    found = sorted(str(row["g"].value) for row in engine.query(_CATALOGUES, prefixes=NAMESPACES))
+    if len(found) > 1:
+        raise RuntimeError(f"two graphs describe themselves as the catalogue: {', '.join(found)}")
+    return found[0] if found else None
+
+
 def answer(engine, sparql: str, graphs=(), **values) -> dict:
     """`sparql` read over `graphs` as its default graph, as SPARQL-JSON — `Store.query` as a
     function over the engine, with `$tokens` bound by the one binder. A text that names its

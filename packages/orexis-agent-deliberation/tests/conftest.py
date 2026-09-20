@@ -74,8 +74,6 @@ def stand_in(case: Path, text: str | None = None):
         deliberation:ScopeGraph rdfs:subClassOf orexis:Graph . }} }}""")
     st.close_catalogue()      # a case's rows say one class each; every kind stands on them now, as on a volume's
     desires, wants = Desires(st), Wants(st)
-    wants.on_saved.append(lambda _: desires.rebuild())
-    wants.on_deleted.append(lambda _: desires.rebuild())
     return SimpleNamespace(id=AGENT, me=SimpleNamespace(uri=ME), beliefs=st, desires=desires,
                            wants=wants, ask=lambda *a, **k: [], keeper=None)
 

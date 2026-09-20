@@ -146,20 +146,25 @@ def test_the_dose_is_placed_at_the_instant_less_its_own_duration(monkeypatch):
         pursuit.pursue(agent, root) == uri, "a placed plan is not re-decided while it waits"
 
 
-def test_a_reading_that_lifts_the_prediction_reads_the_want_met_and_withdraws_it(monkeypatch):
+def test_a_reading_that_lifts_the_prediction_withdraws_the_want(monkeypatch):
     """The world moved — the pot was watered by someone — so the newest prediction crosses
-    after the instant: the derived want reads met and, with nothing standing for it, is gone."""
+    after the instant: the desire no longer reads that cluster unmet, so THE DERIVATION drops
+    the want it implied, with nothing standing for it.
+
+    It used to read met here and be withdrawn by the next `decide`, which meant the want's own
+    met-test was run a second time to conclude what the desire's rows had already said. The
+    derivation withdraws from the rows it read, and the withdrawn want is in what it returns —
+    so a caller refreshing on a change refreshes on a withdrawal too."""
     agent = _gardener(monkeypatch, FALLING)
     root = _stake(agent)
     agent.deliberator.decide(root)
     child = _stake(agent)
     assert child.state == "unmet"
     write_reading(agent, CONTENT)
-    derive_wants(agent.beliefs.engine)   # the reading moved the predictions; the judge reads them
-    now = _stake(agent)
-    assert now.uri == child.uri and now.state == "met"
-    assert agent.deliberator.decide(now) is None
+    changed = derive_wants(agent.beliefs.engine)   # the reading moved the predictions
+    assert child.uri in changed, "the derivation withdrew it, and said so"
     assert pursuit.child_of(agent, root.uri) is None
+    assert agent.deliberator.decide(_stake(agent)) is None, "a met root is nothing to pursue"
 
 
 def test_a_pot_that_crosses_before_the_drift_said_is_wanted_now_and_not_at_the_crossing(monkeypatch):

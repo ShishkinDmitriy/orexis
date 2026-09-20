@@ -681,10 +681,15 @@ def test_no_reader_names_a_per_agent_graph():
                "packages/orexis-agent-deliberation/scope_actions.py",
                "packages/orexis-agent-deliberation/afforder.py", "packages/orexis-agent-deliberation/affordances.py",
                "packages/orexis-agent-deliberation/reviser.py", "agent/pursuing.py", "agent/validate.py"]
+    #  A WRITER MAY SPELL THE FAMILY IT WRITES, and nothing else. `derive_wants` is on the list
+    #  because it reads the mind's graphs and must ask by class for all of them — and it is the
+    #  one that WRITES a want, so `pursued_graph` is its own convention to spell. Held to that
+    #  one helper rather than dropped from the gate: the other ten are still somebody else's.
+    writes = {"packages/orexis-agent-deliberation/derive_wants.py": {"pursued_graph"}}
     offenders = []
     for path in readers:
         text = (REPO_ROOT / path).read_text()
-        for name in sorted(helpers):
+        for name in sorted(helpers - writes.get(path, set())):
             if re.search(rf"\b{name}\(", text):
                 offenders.append(f"{path} names a graph through {name}()")
     assert not offenders, "\n".join(offenders)

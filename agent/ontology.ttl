@@ -640,6 +640,20 @@ orexis:about a owl:ObjectProperty ; rdfs:domain orexis:Desire ;
 #  `agent/vocabulary.py` carries the rename for a volume that holds the old spelling. What
 #  stays here is what any Within want reads: its deadline.
 
+#  WHAT AN INTENTION IS FOR, AND WHEN IT STOPPED. Both are the ledger's links and both were
+#  written and read by the keeper without being declared anywhere: it builds the IRIs through
+#  `kernel(...)`, so no literal appeared in any source text and the dangling-reference gate,
+#  which scans text, never saw them. `derive_wants` naming `orexis:pursues` in a query it
+#  writes out in full is what surfaced them. Kernel words, by the rule above — an intention is
+#  what a mind contains, and the lingua franca is not a package's to keep.
+orexis:pursues a owl:ObjectProperty ; rdfs:domain progression:Intention ; rdfs:range orexis:Want ;
+    rdfs:label "pursues" ;
+    rdfs:comment "The want one intention was adopted for. What makes a commitment answerable to something: the keeper asks it to find whether a means toward this want already stands, and the derivation asks it before withdrawing a want its desire no longer reads unmet — a plan walking a want keeps it, whatever the world now says, because dropping it would leave the plan pursuing nothing and the plan's own end is what ends it." .
+
+orexis:resolvedAt a owl:DatatypeProperty ; rdfs:domain progression:Intention ; rdfs:range xsd:dateTime ;
+    rdfs:label "resolved at" ;
+    rdfs:comment "When this intention stopped standing — taken to its end, lapsed, or dropped. Its ABSENCE is what makes an intention current, so every reader asking what stands asks `FILTER NOT EXISTS`; a row whose presence is meant to be a fact is named for the state, and here the state is over." .
+
 orexis:holdsAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ;
     rdfs:label "holds at" ;
     rdfs:comment "The instant an `orexis:At` want must hold at — a predicted crossing — the start of the earliest prediction at which the root reads unmet (#643). The keeper holds the plan's first step `progression:notBefore` this instant less the plan's own duration, so acting early is placed rather than immediate (#619)." .
