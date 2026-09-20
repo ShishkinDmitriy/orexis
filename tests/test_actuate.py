@@ -19,6 +19,7 @@ from orexis_capability_sensing.terms import OBSERVING
 from orexis_agent_progression.ontology import picks_graph
 from orexis_capability_sensing.regions import ObservedWant
 from conftest import sensing_of, stake_of, build_agent, genesis_store, desires_build, open_round_for, write_reading, predicted_bands
+from conftest import DIRECTION
 from orexis_agent_progression.ontology import PUBLIC
 
 MOIST = "http://example.org/orexis/water#SoilMoisture"
@@ -49,7 +50,7 @@ def test_the_menu_offers_actuate_where_both_chains_are_mine():
     beside Observe, with the domain's one stated physics atom as its direction."""
     st = genesis_store(world="loner")
     rows = Afforder(Actions(st), Affordances(st), desires_build(st, "gardener"), GARDENER, picks_graph("gardener")).offered()
-    assert [(r.action.rsplit("#", 1)[-1], r.direction and r.direction.rsplit("#", 1)[-1])
+    assert [(r.action.rsplit("#", 1)[-1], (r.value_of(DIRECTION) or "").rsplit("#", 1)[-1] or None)
             for r in rows if r.about == MOIST] == [
         ("Dosing", "Raises"), ("Observing", None)]
 

@@ -17,7 +17,7 @@ description: >-
 and [act](/domain/act.md) sit on, a [method](/domain/method.md) is a template of several steps
 and a plan is a method filled; a remembered plan is a filling kept. When a plan the search found
 is walked to its end — the deliberator hears the plan finished and the keeper says what was
-walked — its steps, with their predictions, their [preconditions](/domain/precondition.md), lever
+walked — its steps, with their predictions, their [preconditions](/domain/precondition.md), action
 and subject, are written into the agent's remembered graph with `deliberation:forWant` the
 want and `deliberation:measuredCost` what the search scored it at. Nothing about WHEN it
 applies is written: that is computed from the steps each time it is asked.
@@ -59,6 +59,6 @@ across passes (#553) — a different thing, kept for a different reason: a remem
 survives a restart in the agent's own graph, a kept world lives only while its premises stand.
 
 **Not general yet.** Filled, it applies wherever the facts its steps read hold — the same
-lever, the same subject, the same standing facts, whatever else the world says. Lifting to
+action, the same subject, the same standing facts, whatever else the world says. Lifting to
 variables (the same instance across steps becoming one variable) is the seam after this. The
 tower is where it will pay: the same seven moves every time the stack stands on peg A.

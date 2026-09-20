@@ -2,7 +2,7 @@
 
 A repository over situational data: given an [action](action.py) and what this agent holds, run
 that action's own precondition against the world this collection was handed and shape each
-binding into an `Affordance`. Nothing is stored — a row is a conclusion whose premises are stored
+binding into an `Affordance` — one pair per parameter the action declares it takes. Nothing is stored — a row is a conclusion whose premises are stored
 and would outlive them (a-situated-instance-is-kept-only-when-it-is-testimony).
 
 **THE WORLD IS ASKED ABOUT, NOT HELD.** Every question here names one — `at` and `world` — so
@@ -21,7 +21,7 @@ from orexis_agent_progression.store import Raw, bind, bindings
 
 from .action import Action
 from .affordance import Affordance
-from orexis_agent_progression.ontology import FORESEEN
+from orexis_agent_progression.ontology import FORESEEN, local_of
 from orexis_agent_progression import clock
 
 
@@ -69,19 +69,18 @@ class Affordances:
         #  A precondition carrying a token nobody binds refuses rather than reaching the engine as
         #  a free variable (#500).
         q = bind(action.available, me=me, wants=Raw(wants), picks=picks)
-        #  THE ROW SAYS WHICH about IT MATCHED where its select projects one — every action that
-        #  filters on the want's about does now — and the want's own answers where it does not,
-        #  which is only legible while the want names exactly one (#566).
-        return [Affordance(action=action.uri, via=r["via"], want=r.get("want"),
-                           about=r.get("about") or _sole(about_of.get(r.get("want"))),
-                           direction=r.get("direction"), for_agent=r.get("for_agent"))
+        #  THE ROW IS WHAT THE PRECONDITION BOUND, held to what the action says it TAKES: one
+        #  pair per declared parameter the select projected, sorted so identity is the binding
+        #  and nothing downstream has to agree on an order. A projected variable the action
+        #  does not declare is ignored, and a declared parameter the row left unbound is
+        #  absent — an action with an OPTIONAL hop affords rows of two shapes, and both are
+        #  honest.
+        params = {local_of(p): p for p in action.takes}
+        return [Affordance(action=action.uri,
+                           binding=tuple(sorted((iri, r[local]) for local, iri in params.items()
+                                                if r.get(local))),
+                           want=r.get("want"), for_agent=r.get("for_agent"))
                 for r in bindings(self._store.query(q, graphs if graphs is not None else
                                                      #  THE PRESENT, where no world is handed in: what a rule
                                                      #  reads and what is expected, as this store holds them now.
                                                      self._store.graphs_of(*FORESEEN, at=clock.now())))]
-
-
-def _sole(abouts) -> str | None:
-    """The one thing a want is about, or None where it names none — or several, which only a
-    row's own binding can tell apart."""
-    return abouts[0] if abouts and len(abouts) == 1 else None

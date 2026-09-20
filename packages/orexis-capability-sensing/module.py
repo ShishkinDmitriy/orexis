@@ -54,6 +54,10 @@ from .driver import driver_for
 from agent.module import Module, contributes
 from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, PREDICTED, REPREDICT, WITNESS
 from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
+from orexis_agent_progression.ontology import OREXIS
+
+#  What a look is ABOUT — one of the parameters sensing:Observing declares it takes.
+ABOUT = OREXIS + "about"
 from orexis_agent_progression.store import bindings
 
 
@@ -1428,7 +1432,7 @@ class SubscribingModule(SensingModule):
         """
         nudged = False
         for sensor in self.sensors:
-            if act.about in (sensor.observes, sensor.uri) and self.drivers[sensor.uri]:
+            if act.value_of(ABOUT) in (sensor.observes, sensor.uri) and self.drivers[sensor.uri]:
                 self.drivers[sensor.uri].sense_now(sensor)
                 nudged = True
         return nudged

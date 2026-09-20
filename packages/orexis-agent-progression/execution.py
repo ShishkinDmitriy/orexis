@@ -44,12 +44,11 @@ def take_standing(agent, standing, judgment) -> bool:
     commitment was made on the tick and the actor could not act then. Nothing is re-decided;
     the standing row is rebuilt from the ledger and handed over.
     """
-    #  The act is the ledger's, read whole — action, lever, quantity, window — plus what the
-    #  want is ABOUT (`orexis:about`, read back off the want), which is the want's and not the act's.
-    rows = bindings(agent.desires.query(
-        f"SELECT ?about WHERE {{ <{standing.want}> orexis:about ?about }}"))
-    act = replace(standing.step, about=rows[0]["about"] if rows else None)
-    return carry_out(agent, act, judgment, standing.uri)
+    #  The act is the ledger's, read whole — action, binding, quantity, window. It used to be
+    #  patched here with what the want is ABOUT, because the kernel's own `about` column was
+    #  not written down and the taker read it; a step now writes every parameter its action
+    #  declares, so what the ledger holds IS the filling and nothing is added back.
+    return carry_out(agent, standing.step, judgment, standing.uri)
 
 
 def carry_out(agent, act: Step, judgment, intention: str) -> bool:
@@ -91,8 +90,9 @@ def _take(agent, act: Step, judgment, intention: str) -> bool:
     if took and keeper is not None:
         keeper.after_take(intention)
     if not took:
-        log.info("%s through %s: no actor could take it now — standing",
-                 act.action.rsplit("#", 1)[-1], (act.via or "?").rsplit("#", 1)[-1])
+        log.info("%s filled %s: no actor could take it now — standing",
+                 act.action.rsplit("#", 1)[-1],
+                 ", ".join(v.rsplit("#", 1)[-1] for _, v in act.binding) or "with nothing")
     #  SAID UPWARD. Deliberation may want to know a step was taken, and progression may not
     #  import it — so this is an event through the choir, on the executing thread, and
     #  whoever above fills `orexis:stepDone` hears it (#452).

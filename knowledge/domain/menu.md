@@ -31,17 +31,17 @@ kind of thing written into it and one kind derived out.
 # The two things inside it, and neither is called this
 
 **Written in**: [actions](/domain/action.md). One node per way of acting, shipped by the package
-that owns the lever, carrying the precondition that says when it is possible and the effect that
+that owns the action, carrying the precondition that says when it is possible and the effect that
 says what taking it would make true. Stored, and safely — a schema outlives nothing. Their
 collection in the code is `Actions`.
 
 **Derived out**: [affordances](/domain/affordance.md). What one action comes to for one agent in
-one world, which is where the lever, the want and the direction get bound. Never written: a row
+one world, which is where its parameters and the want get bound. Never written: a row
 is a conclusion whose premises are stored, and an authored one could outlive them. Their
 collection is `Affordances`, and the service that puts the two together is the
 [afforder](/domain/afforder.md).
 
-So this modality holds rules about means and never rows about levers — which reads as a puzzle
+So this modality holds rules about actions and never rows about what fills them — which reads as a puzzle
 until the modality and its contents are told apart.
 
 # Why the word needed pinning down

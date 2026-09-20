@@ -49,27 +49,26 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [desire](/domain/desire.md) - Two kinds: a desire stands and is never pursued; a want is deduced from one when the world makes it bite, and carries a period.
 
 
-* [intention](/domain/intention.md) - A commitment to reduce a named gap by a named action, kept in a private ledger. Granted by a stake AND a lever.
+* [intention](/domain/intention.md) - A commitment to reduce a named gap by a named action, kept in a private ledger. Granted by a stake AND an action.
 
-* [deliberation](/domain/deliberator.md) - The whether: name the next move by building the world each lever would make and keeping the one worth reaching. One path.
+* [deliberation](/domain/deliberator.md) - The whether: name the next move by building the world each action would make and keeping the one worth reaching. One path.
 
 
 # Means — actions, steps, and what taking one comes to
 
 * [action](/domain/action.md) - One way of acting as one node — and the kind of act itself: precondition, effect, taker. A package adds one node and one `take()`.
-* [step](/domain/step.md) - A planned instance of an action: lever, quantity, window, prediction, what it waits for. A plan is steps; not yet done.
+* [step](/domain/step.md) - A planned instance of an action: action, quantity, window, prediction, what it waits for. A plan is steps; not yet done.
 * [plan](/domain/plan.md) - What one pass returns for one want: steps in order, an outcome, a cost, the candidate it came through. Never executed, never stored.
 * [precondition](/domain/precondition.md) - The facts a step's rule read, instantiated; a plan's is their regression; checked by asking the present, never by re-running the rule.
 * [tolerance](/domain/tolerance.md) - How close the world must land to a step's predicted value: a fraction of the movement, a bounded revisable pick, never a kernel constant.
 * [act](/domain/act.md) - The record that a step was taken: which step, when, whether anyone took it. History, and only history.
 * [history](/domain/history.md) - The chain of presents left behind, each an act and the diff that happened, kept as diffs, bounded as a ring.
 
-* [relevance](/domain/relevance.md) - Which levers could serve a want: read off the actions, closed backward through preconditions, never declared; unreadable keeps every lever.
+* [relevance](/domain/relevance.md) - Which actions could serve a want: read off the actions, closed backward through preconditions, never declared; unreadable keeps every action.
 * [scope](/domain/scope.md) - Predicates joined wherever one action or derivation touches both; wants in different scopes cannot contradict.
 * [affordance](/domain/affordance.md) - One row of what an agent could do now — an action whose precondition holds. Derived and never stored; whom it serves is a column.
 * [afforder](/domain/afforder.md) - The service between two collections: it decides what to ask, they know how to fetch.
 
-* [lever](/domain/lever.md) - The INSTRUMENT an act goes through, always an instance. Its absence is what removes a row, with nothing edited.
 * [transport](/domain/transport.md) - How an agent reaches its society: a capability the bus grants, holding the connection and three choir hooks. Not a driver.
 
 * [remembered plan](/domain/remembered-plan.md) - A plan that worked, kept on its want and keyed by what its steps read: adopted where that holds, forgotten when it fails.

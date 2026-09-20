@@ -759,7 +759,24 @@ orexis:Action a owl:Class ; rdfs:label "Action" ;
 #  that "neither" be said on purpose, and a term nobody reads is annotation.
 orexis:available a owl:DatatypeProperty ; rdfs:domain orexis:Action ; rdfs:range xsd:string ;
     rdfs:label "available" ;
-    rdfs:comment """The precondition, as a SELECT over the world binding `?property ?via ?direction` and — where the row is a duty owed to someone rather than the agent's own option — `?for_agent`. `$me` and `$properties` (the properties the agent holds desires in) are substituted by the collector; prefixes are the store's. A row exists only where every hop of the walk holds, which is why the menu is the precondition language and chaining needs no `requires` of its own.""" .
+    rdfs:comment """The precondition, as a SELECT over the world binding one variable per parameter the action `orexis:takes` — named for the parameter's local part — and, where the row is owed to someone rather than the agent's own option, `?for_agent`; a row that serves one want binds `?want` too. `$me`, `$wants` and `$picks` are substituted by the collector; prefixes are the store's. A row exists only where every hop of the walk holds, which is why the menu is the precondition language and chaining needs no `requires` of its own.""" .
+
+
+#  WHAT AN ACTION IS FILLED WITH. One triple per parameter, declared by the package that
+#  declared the action and named in that package's own words: `hanoi:disk`, `actuation:valve`,
+#  `market:venue`. The precondition projects `?disk`; the effect rules read `$disk`; a step
+#  writes `hanoi:disk <the disk>` — one spelling in three places, and nothing maps between them.
+#
+#  THE KERNEL INTERPRETS NONE OF THEM. It holds a row to this list, makes the binding the
+#  step's identity, and hands the pairs to the package's own rules. It carried five named
+#  columns once — a lever, what the row was about, which way it moved it — which is how a
+#  disk came to be called a lever and a peg a property: a domain with two parameters had
+#  nowhere to put the second but the slot named for the first, and hanoi first shipped six
+#  ground actions to avoid having to. `$via` was then bolted on as a second name, which
+#  bought one parameter and not N.
+orexis:takes a owl:ObjectProperty ; rdfs:domain orexis:Action ;
+    rdfs:label "takes" ;
+    rdfs:comment """A parameter this action is filled with, by IRI. Its local part is the variable its precondition projects, the `$token` its rules read and the predicate a step writes it under. An action may take none — it is then filled with nothing and affords at most one row.""" .
 
 
 #################  An act: an action filled in  #################

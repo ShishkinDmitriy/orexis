@@ -2,13 +2,14 @@
 type: Domain Concept
 title: Affordance
 description: >-
-  One row of what an agent could do NOW — an action whose precondition holds, with the
-  property it is about, the lever it goes through, which way that moves it, and whom it
-  serves if not the agent itself. Always DERIVED and never stored, because a stored row can
-  outlive the plumbing it was concluded from; each row comes from an action's `orexis:available`
-  query, so a new way of acting is a new node rather than an edit to a registry. They are the precondition language too —
-  a row whose premises cannot hold does not exist, so chaining needs no separate `requires`.
-  The row that is ABSENT is a finding too: a desire with no lever is legitimate and legible.
+  One row of what an agent could do NOW — an action whose precondition holds, with every
+  parameter that action declares it takes bound to something, and whom it serves if not the
+  agent itself. Always DERIVED and never stored, because a stored row can outlive the plumbing
+  it was concluded from; each row comes from an action's `orexis:available` query, so a new way
+  of acting is a new node rather than an edit to a registry. They are the precondition language
+  too — a row whose premises cannot hold does not exist, so chaining needs no separate
+  `requires`. The row that is ABSENT is a finding too: a want nothing reaches is legitimate and
+  legible.
 ---
 
 # What it is
@@ -18,30 +19,41 @@ written into it:
 
 | | |
 |---|---|
-| `action` | the [action](/domain/action.md) — the kind of act: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `market:Offering` |
-| `want` | the [desire](/domain/desire.md) it serves — the node, which is the kernel's only key. Empty on a row that serves any want (a host's Offering); on a row owed to someone, the want about the debt it serves |
-| `about` | what that want is about — `orexis:about`, said by whoever derived the want and opaque to the kernel: a property for a stake, an instrument for a freshness want. Carried to the effect as `$about` |
-| `via` | the lever it goes through: this probe, this valve, this venue |
-| `direction` | which way it moves the property, or **empty** for a look |
+| `action` | the [action](/domain/action.md) — the kind of act: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `hanoi:Move` |
+| `binding` | one pair per parameter the action declares it `orexis:takes`, bound by the precondition. `hanoi:Move` binds a disk and a peg; `actuation:Dosing` a valve, the property it is about and which way it moves it; `market:Serving` a venue and a valve both |
+| `want` | the [desire](/domain/desire.md) it serves — the node, the kernel's only key besides the binding. Empty on a row that serves any want (a host's Offering); on a row owed to someone, the want about the debt it serves |
 | `for_agent` | whom the row serves, where it is an obligation's — read off the debt the named want is about. Absent on the agent's own rows |
 
 `Afforder.offered` hands back every such row for one agent, in one world. For the
 simulation's fern: *look at moisture through the probe; look at temperature through the
 thermometer; raise moisture through the market.* For the loner world's gardener: *raise it
-through your own pump* — the Actuate rung, offered exactly where the lever chain and the
+through your own pump* — the Actuate rung, offered exactly where the wiring and the
 resource chain both end at the agent.
 
-**A row's emptiness is data.** Looking moves nothing, so Observe's `direction` column is blank,
-and a model reading the menu learns from that blank which moves change the world and which only
-change what it knows.
+**THE BINDING IS THE ROW'S IDENTITY, and the kernel reads no part of it.** What a pair means
+belongs to the package that declared the parameter, and the kernel uses the pairs for three
+things only: telling two rows of one action apart, naming the world a step reaches, and handing
+each value to that package's own rules as a `$token`. It held five NAMED columns once, two of
+them its own inventions — a *lever* for the thing an act went through, and what the row was
+*about*. An action needing a second parameter had nowhere to put it, which is why hanoi first
+shipped six ground actions for one move; and once one channel was opened, a disk was called a
+lever and a peg a property. See
+[an-action-takes-parameters](/decisions/an-action-takes-parameters.md).
+
+**A row that binds fewer pairs is saying something.** Looking moves nothing, so
+`sensing:Observing` declares no direction to take, where `market:Acquiring` declares one and
+binds it — and a reader of the menu learns from the declaration which acts change the world and
+which only change what it knows. The kernel used to keep a blank column for every action alike,
+so the same fact was said by ABSENCE — and a kind said by absence is one two readers disagree
+about.
 
 # It is derived, and that is not a performance choice
 
 A row is a **conclusion whose premises are stored** — regions, wiring, denominations, all facts
 that exist for their own reasons. Storing the conclusion would let it outlive them: unplumb the
 valve and an authored row still says you can dose. So they are computed on every ask, and the
-[menu graph](/decisions/the-mind-is-six-graphs.md) holds rules about actions but never rows about
-levers.
+[menu graph](/decisions/the-mind-is-six-graphs.md) holds rules about actions but never rows
+about what would be bound to them.
 
 The same argument in reverse is why the [action](/domain/action.md) *is* stored — a node in
 `actions.ttl` is a schema, and a schema cannot outlive anything.
@@ -80,13 +92,13 @@ is no row. So "is this act available?" and "does this row exist?" are the same q
 **chaining is the same query re-run in the simulated world**: an effect that makes a missing row
 appear is the step before it.
 
-`packages/orexis-agent-deliberation/planner.py` therefore consults no declaration of what a lever
-repairs. Simulation is the authority either way: trying a lever that turns out not to help costs
+`packages/orexis-agent-deliberation/planner.py` therefore consults no declaration of what an
+action repairs. Simulation is the authority either way: trying one that turns out not to help costs
 one validation; trusting a declaration that turns out to be wrong costs a plant.
 
 # Each package ships its own rows
 
-There is no menu file. Each package that owns a lever ships its [actions](/domain/action.md),
+There is no menu file. Each package that owns a way of acting ships its [actions](/domain/action.md),
 and `Afforder.offered` runs every action's `orexis:available` it finds in the store — sensing contributes
 Observe, actuation Actuate, the market Acquire and the host's Apply.
 
@@ -102,7 +114,7 @@ menu. Everything else is an unqualified pattern, because regions and wiring are 
 # Whom a row serves
 
 A row of the agent's **own** is an option a deliberator ranges over. A row that names
-`for_agent` is a **obligation's**: a lever the agent must exercise on a valid presentation and must
+`for_agent` is an **obligation's**: a row the agent must exercise on a valid presentation and must
 never *propose* for a gap of its own. A host holding a claim owes the dose; nothing about that
 is a decision, and a deliberator that ranged over it would be choosing whether to keep its word.
 
@@ -114,8 +126,8 @@ it carries whom the debt is owed to.
 # The row that is not there
 
 A want with no row is a real answer and a legible one. Fern holds a desire in air temperature
-and can see it, but nothing it owns or can buy moves it: three Observe rows, no lever. That is a
-**want with no lever** — legitimate, not a misconfiguration — and the search reports it as
+and can see it, but nothing it owns or can buy moves it: three Observe rows and nothing else.
+That is a **want nothing reaches** — legitimate, not a misconfiguration — and the search reports it as
 `no candidate` rather than as failure. It is the difference between *equip me* and *my doses are
 too coarse*, which is a distinction a planner that reported them alike would destroy.
 
@@ -123,7 +135,7 @@ too coarse*, which is a distinction a planner that reported them alike would des
 
 - [action](/domain/action.md) is the node a row is one instance of — its availability query, run now.
 - [deliberation](/domain/deliberator.md) ranges over the agent's own rows, scores them by simulation,
-  and holds what a lever DOES — a row says only that one is available.
+  and holds what an action DOES — a row says only that it is available.
 - [desire](/domain/desire.md) is the other half of a decision: a row answers *what could I do*, a
   gap answers *about what*.
 - [actor](/domain/actor.md) is the code a row is linked to: the module that contributes the row's action.

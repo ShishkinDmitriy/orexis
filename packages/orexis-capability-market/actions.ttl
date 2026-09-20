@@ -11,7 +11,7 @@
 @prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 
 #  THE ACTIONS THIS PACKAGE BRINGS — one node each, and the whole of one (knowledge/domain/action.md):
-#    orexis:available  its PRECONDITION — a SELECT over the world binding ?property ?via ?direction,
+#    orexis:available  its PRECONDITION — a SELECT binding one variable per parameter it `orexis:takes`,
 #                  and ?for_agent where the row is a duty owed to someone; `$me` and
 #                  `$properties` substituted by the collector, prefixes prepended by the store;
 #    sh:construct  its EFFECT, with orexis:retracts, orexis:landsAfter and orexis:confirmedBy beside it;
@@ -50,6 +50,7 @@
 
 market:Acquiring
     a orexis:Action ;
+    orexis:takes orexis:about, market:venue, market:direction ;
 
     #  THE METHOD (#523): Acquiring is the DECISION to enter this venue at a price, and the
     #  search chooses it by its effect and its cost. What taking it comes to is two steps the
@@ -73,7 +74,7 @@ market:Acquiring
     #  "refill, then serve" is found by a search that takes only rows named for its want; the
     #  chain is the market's to state, and it is stated here rather than known by the search.
     orexis:available """
-        SELECT DISTINCT ?want ?about ?via ?direction WHERE {
+        SELECT DISTINCT ?want ?about ?venue ?direction WHERE {
           {
             VALUES (?want ?about) { $wants }
           } UNION {
@@ -84,10 +85,10 @@ market:Acquiring
             ?valve actuation:drawsFrom ?subject .
           }
           $me orexis:actsFor ?subject .
-          $me market:bidsIn ?via .
-          ?via market:marketFor ?src .
+          $me market:bidsIn ?venue .
+          ?venue market:marketFor ?src .
           ?src market:supplies ?good .
-          ?host market:hosts ?via ;
+          ?host market:hosts ?venue ;
                 actuation:hasActuator ?lever .
           ?lever actuation:actuates ?subject .
           ?valuation market:ofGood ?good ;
@@ -112,9 +113,9 @@ market:Acquiring
           #  done by it, and the presenting is placed by its window. A want met AT an
           #  instant is NOT enough on its own: a pass standing at the latest start would
           #  place the whole plan there, past the round the host may convene now instead.
-          { ?via market:hasRound ?round . ?round market:closesAt ?closes }
+          { ?venue market:hasRound ?round . ?round market:closesAt ?closes }
           UNION
-          { $me market:holdsClaim ?claim . ?claim market:onVenue ?via .
+          { $me market:holdsClaim ?claim . ?claim market:onVenue ?venue .
             FILTER NOT EXISTS { ?claim market:presentedAt ?p } }
         }""" ;
 
@@ -127,8 +128,8 @@ market:Acquiring
     #  domain's to say.
     orexis:costs """
         SELECT ?cost WHERE {
-            $me market:bidsIn ?via .
-            ?via market:marketFor ?src .
+            $me market:bidsIn ?venue .
+            ?venue market:marketFor ?src .
             ?src market:supplies ?good .
             ?valuation market:ofGood ?good ;
                        market:aboutProperty $about .
@@ -160,10 +161,10 @@ market:Acquiring
                  sosa:observedProperty $about ;
                  sosa:resultTime ?now .
         } WHERE {
-            $me orexis:actsFor $subject ; market:bidsIn ?via .
-            ?via market:marketFor ?source .
+            $me orexis:actsFor $subject ; market:bidsIn ?venue .
+            ?venue market:marketFor ?source .
             ?source market:supplies ?good .
-            ?host market:hosts ?via ; actuation:hasActuator ?lever .
+            ?host market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:actuates $subject .
             ?term market:ofGood ?good ; market:aboutProperty $about .
             GRAPH $picks { $me ?term ?conversion }
@@ -218,9 +219,9 @@ market:Acquiring
     #  (`the-lot-is-the-hosts-standing-offer`), not a number to invent here.
     orexis:landsAfter """
         SELECT ?seconds WHERE {
-            $me market:bidsIn ?via .
-            ?via market:redeemWindowS ?window ; market:marketFor ?source .
-            ?host market:hosts ?via ; actuation:hasActuator ?lever .
+            $me market:bidsIn ?venue .
+            ?venue market:redeemWindowS ?window ; market:marketFor ?source .
+            ?host market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:actuates $subject ;
                    actuation:maxDoseMl ?cap ;
                    actuation:mlPerSecond ?rate .
@@ -269,6 +270,7 @@ market:Acquiring
 
 market:Offering
     a orexis:Action ;
+    orexis:takes orexis:about, market:venue ;
 
     #  AVAILABLE on a venue I host, while NO round stands on it (in what I hold, or in the
     #  world a plan is imagining — an Offer already taken in this plan leaves no room for a
@@ -282,9 +284,9 @@ market:Offering
     #  nothing — the row needs a name and the intention is keyed by it; no direction, because
     #  offering moves no water. The serve does.
     orexis:available """
-        SELECT DISTINCT ?about ?via WHERE {
-          $me market:hosts ?via .
-          ?via market:marketFor ?source .
+        SELECT DISTINCT ?about ?venue WHERE {
+          $me market:hosts ?venue .
+          ?venue market:marketFor ?source .
           ?source market:supplies ?good .
           ?valuation market:ofGood ?good ; market:aboutProperty ?goodProperty .
           OPTIONAL { $me sensing:polls ?witness .
@@ -296,13 +298,13 @@ market:Offering
           #  rule had to name the world it read and the two stood apart. They are one graph
           #  to a reader now, so a round opened by an earlier step of this very plan is seen
           #  by the same pattern — and there is no second clause to forget.
-          FILTER NOT EXISTS { ?via market:hasRound ?open }
+          FILTER NOT EXISTS { ?venue market:hasRound ?open }
           #  AND THE VENUE IS NOT COOLING (#598): the row's presence is the fact — a graph
           #  holding during its period since #645, so the door hands it to nobody once the
           #  cooldown ran out, and this reads the default graph. It asked `?may <= NOW()`
           #  while the term named the instant rather than the state, which is the last clock
           #  this package's rules read.
-          FILTER NOT EXISTS { ?via market:coolingUntil ?until }
+          FILTER NOT EXISTS { ?venue market:coolingUntil ?until }
           OPTIONAL {  ?reading sosa:hasFeatureOfInterest ?source ;
                                     sosa:observedProperty ?stock ;
                                     sosa:hasSimpleResult ?level . }
@@ -320,14 +322,14 @@ market:Offering
     #  leaned on — and `$lands` rather than NOW() since #588, an offering landing at once.
     sh:construct """
         CONSTRUCT {
-            ?via market:hasRound ?round .
+            ?venue market:hasRound ?round .
             ?round a market:Round ;
                    market:roundId "imagined" ;
                    market:lotL ?lot ;
                    market:reservePerL ?reserve ;
                    market:closesAt ?closes .
         } WHERE {
-            $me market:hosts ?via .
+            $me market:hosts ?venue .
             GRAPH $picks { $me market:offerQuantityL ?lot ;
                                  market:reservePricePerL ?reserve ;
                                  market:bidWindowS ?window }
@@ -363,6 +365,7 @@ market:Offering
 
 market:Tendering
     a orexis:Action ;
+    orexis:takes market:venue ;
     rdfs:label "tendering a bid into the open round" ;
     #  DONE when a claim on this venue cleared to me since this intention was adopted —
     #  never a claim left over from an earlier round — OR when I hold one not yet presented,
@@ -371,16 +374,17 @@ market:Tendering
     orexis:doneWhen """
         SELECT $this WHERE {
           $me market:holdsClaim ?claim .
-          ?claim market:onVenue $via ; market:claimedAt ?at .
+          ?claim market:onVenue $venue ; market:claimedAt ?at .
           OPTIONAL { ?claim market:presentedAt ?p }
           FILTER(!BOUND(?p) || ?at > $since) }""" ;
     #  ... or not by the time the round closes: a bidder is told the outcome or nothing.
     orexis:lapsesAt """
         SELECT (MAX(?t) AS ?at) WHERE {
-          $via market:hasRound ?round . ?round market:closesAt ?t }""" .
+          $venue market:hasRound ?round . ?round market:closesAt ?t }""" .
 
 market:Presenting
     a orexis:Action ;
+    orexis:takes market:venue ;
     rdfs:label "presenting a held claim" ;
     #  NOT BEFORE THE CLAIM IS USABLE (#625): the host granted a window from the instant the
     #  bid asked for, and the keeper holds this step on the scheduler until then — a winner
@@ -388,7 +392,7 @@ market:Presenting
     orexis:readyAt """
         SELECT ?at WHERE {
           $me market:holdsClaim ?claim .
-          ?claim market:onVenue $via ; market:claimedAt ?t ; market:usableFrom ?at .
+          ?claim market:onVenue $venue ; market:claimedAt ?t ; market:usableFrom ?at .
           FILTER(?t > $since) }""" ;
     #  READY when my watch on the property is provably live (#132, #135): the sensor
     #  monitoring my subject for what the lot moves says so, in sensing's words — or when
@@ -398,7 +402,7 @@ market:Presenting
         SELECT $this WHERE {
           { ?sensor sensing:monitors $subject ; sosa:observes $about ; sensing:watchLive true }
           UNION
-          { $me market:holdsClaim ?claim . ?claim market:onVenue $via ;
+          { $me market:holdsClaim ?claim . ?claim market:onVenue $venue ;
             market:claimedAt ?at ; market:presentedAt ?done . FILTER(?at > $since) } }""" ;
     #  ... and no longer than the sensor's own horizon: a dose delayed forever is worse than a
     #  dose unobserved, so the step lapses into being taken.
@@ -426,6 +430,7 @@ market:Presenting
 
 market:Serving
     a orexis:Action ;
+    orexis:takes orexis:about, market:venue, actuation:valve, market:direction ;
 
     #  AVAILABLE as a DUTY — ?for_agent bound — for each WANT this agent holds about a debt,
     #  to a buyer this venue admits who acts for a subject my valve serves: the ACL's shape
@@ -437,12 +442,12 @@ market:Serving
     #  tied by the RECIPIENT's stated need, not the good alone (#198 from the other side): a
     #  valve serving a pot must not also claim to move that pot's stored litres.
     orexis:available """
-        SELECT ?want ?about ?via ?direction ?for_agent WHERE {
+        SELECT ?want ?about ?venue ?valve ?direction ?for_agent WHERE {
           VALUES (?want ?debt) { $wants }
           ?debt market:owedTo ?for_agent .
-          $me market:hosts ?venue ; actuation:hasActuator ?via .
+          $me market:hosts ?venue ; actuation:hasActuator ?valve .
           ?venue market:marketFor ?source .
-          ?via actuation:drawsFrom ?source ;
+          ?valve actuation:drawsFrom ?source ;
                actuation:actuates ?subject .
           ?source market:supplies ?good .
           ?for_agent market:bidsIn ?venue ; orexis:actsFor ?subject .

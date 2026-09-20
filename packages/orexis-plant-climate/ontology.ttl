@@ -96,3 +96,18 @@ dose, and there is no such device here yet.""" .
 :opensOnto a owl:ObjectProperty ; rdfs:domain :Vent ; rdfs:range sosa:FeatureOfInterest ;
     rdfs:label "opens onto" ;
     rdfs:comment "What is on the OTHER side — the outside air, a corridor, a second bed. Its reading is what the venting rule reads to say where the subject would land, and it is a fact no lever of this agent moves, which is exactly why the rule may read it as a NUMBER: a plan cannot change it, so it is the same number all the way down a cone. What a plan CAN change is read as the band it is (#579)." .
+
+
+#  WHAT THIS PACKAGE'S ACTIONS ARE FILLED WITH. One property per parameter, named in this
+#  package's own words: the local part is the variable a precondition projects, the `$token`
+#  its rules read and the predicate a planned step is written under. The kernel holds a row
+#  to the list and reads none of them.
+
+:heater a owl:ObjectProperty ; rdfs:domain orexis:Action ;
+    rdfs:label "heater" ;
+    rdfs:comment "The heater a Heating warms through. Declared by climate:Heating as orexis:takes." .
+
+:vent a owl:ObjectProperty ; rdfs:domain orexis:Action ;
+    rdfs:label "vent" ;
+    rdfs:comment "The vent a Venting opens. Declared by climate:Venting as orexis:takes." .
+

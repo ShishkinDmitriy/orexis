@@ -34,7 +34,7 @@ from rdflib.plugins.sparql.algebra import translateQuery
 from rdflib.plugins.sparql.parser import parseQuery
 from rdflib.plugins.sparql.parserutils import CompValue
 
-from orexis_agent_progression.ontology import STATE_GRAPH
+from orexis_agent_progression.ontology import STATE_GRAPH, local_of
 from orexis_agent_progression.store import PREFIXES, Raw, bindings, bind as bind_text
 from .relevance import _TOKEN, parseable
 from orexis_agent_progression.ontology import PUBLIC
@@ -48,14 +48,16 @@ log = logging.getLogger("effects")
 #  clause names it (AGENTS.md: never wrap GRAPH around a SELECT). `?rule` is bound by
 #  SUBSTITUTION (#500), the engine's own parameter, projected. An action with no construct
 #  states no effect and is not returned.
+#  `STR(?takes)` because GROUP_CONCAT over an IRI binds nothing in this engine.
 _RULE_Q = """
-SELECT ?rule ?construct ?available ?retracts ?lands ?costs WHERE {
+SELECT ?rule ?construct ?available ?retracts ?lands ?costs (GROUP_CONCAT(DISTINCT STR(?p); separator=" ") AS ?takes) WHERE {
   ?rule a orexis:Action ; sh:construct ?construct .
+  OPTIONAL { ?rule orexis:takes ?p }
   OPTIONAL { ?rule orexis:available ?available }
   OPTIONAL { ?rule orexis:retracts ?retracts }
   OPTIONAL { ?rule orexis:landsAfter ?lands }
   OPTIONAL { ?rule orexis:costs ?costs }
-} LIMIT 1"""
+} GROUP BY ?rule ?construct ?available ?retracts ?lands ?costs LIMIT 1"""
 
 
 def rule_for(store, action: str) -> dict | None:
@@ -76,7 +78,7 @@ def rule_for(store, action: str) -> dict | None:
 
 
 def apply(store, action: str, graphs=None, **bind) -> tuple[list, list]:
-    """Run one means' effect: `(added, retracted)`, as triples, against nothing.
+    """Run one action's effect: `(added, retracted)`, as triples, against nothing.
 
     **`store` is whichever dataset the question is being asked ABOUT, and that is the whole of
     what #254 changed here.** An actuator asks about the world it is standing in and passes its
@@ -257,9 +259,9 @@ def precondition(store, action: str, keyed=(), **bind) -> list:
     MINUS pattern is not read at all. A pattern whose predicate is a property path is
     skipped: it reads a chain, not one fact.
 
-    The availability select is asked FOR THIS ROW — its `?via`, `?about` and `?want` held to
-    the step's — so the facts are the ones that put this step on the menu, not every row
-    the action could offer.
+    The availability select is asked FOR THIS ROW — every parameter the action declares it
+    takes, and `?want`, held to what this step bound them to — so the facts are the ones that
+    put this step on the menu, not every row the action could offer.
 
     `keyed` names the classes whose instances the signature states by KEY rather than by
     identity (`orexis:keyedBy` — an observation, keyed by feature and property). A rule
@@ -276,13 +278,22 @@ def precondition(store, action: str, keyed=(), **bind) -> list:
     if text:
         read += _run(store, text, bind)
     if rule.get("available"):
-        text = _precondition_template(rule["available"], tuple(keyed), ("via", "about", "want"))
+        #  HELD TO WHAT THIS STEP BOUND: the action's own parameters, by the local name its
+        #  precondition projects and its rules read. The kernel named three here once, two of
+        #  them its own inventions, so an action taking a third parameter had its precondition
+        #  re-asked unheld and read facts from rows it was not.
+        #  HELD TO WHAT IT WAS FILLED WITH, and only that: a parameter this step left unbound
+        #  restricts nothing, where holding the select to `urn:nothing` would kill every row
+        #  and the premises would read empty — which is not an error, just silence.
+        taken = tuple(name for name in (local_of(p) for p in (rule.get("takes") or "").split())
+                      if bind.get(name))
+        text = _precondition_template(rule["available"], tuple(keyed), (*taken, "want"))
         if text:
             read += _run(store, text, {
                 "me": bind["me"], "picks": bind["picks"],
                 "wants": Raw(f"(<{bind.get('want', 'urn:nothing')}> "
                              f"<{bind.get('about', 'urn:nothing')}>)"),
-                "via": bind.get("via") or "urn:nothing", "about": bind.get("about") or "urn:nothing",
+                **{name: bind.get(name) or "urn:nothing" for name in taken},
                 "want": bind.get("want") or "urn:nothing"})
     return read
 

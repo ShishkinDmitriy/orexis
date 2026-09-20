@@ -43,9 +43,15 @@ from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_agent_progression.store import bindings
 
 from .beliefs import ACTUATION_PICKS
+from orexis_agent_progression.ontology import OREXIS
 from .terms import ACTUATION, DOSING
 from .wiring import actuator_for, actuators_of
 from orexis_agent_progression import clock
+
+#  WHAT A DOSE IS ABOUT, as the parameter actuation:Dosing declares it takes. The kernel had a
+#  column of this name once and read nothing in it; the action names it now, and this is how
+#  the taker asks for what the row bound.
+ABOUT = OREXIS + "about"
 from orexis_agent_progression.ontology import PUBLIC
 
 SENSING = "http://example.org/orexis/sensing#SensingCapability"  # whoever can look, asked by family
@@ -175,7 +181,10 @@ class ActuationModule(Module):
         silent — and opens an expectation on the end. An unconfirmed self-dose is not a
         delivered one either; the REA event stands, it merely fulfils no exchange.
         """
-        observed_property = act.about
+        #  THE PROPERTY THIS DOSE IS ABOUT, off the step's own binding — `orexis:about` is
+        #  one of the parameters actuation:Dosing declares it takes, and the kernel carries it
+        #  here without reading it.
+        observed_property = act.value_of(ABOUT)
         sensing = self.agent.provider(SENSING)
         reading = sensing.current_reading(self.me.acts_for, observed_property) if sensing else None
         if reading is None:

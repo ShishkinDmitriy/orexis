@@ -23,6 +23,7 @@
 
 climate:Heating
     a orexis:Action ;
+    orexis:takes orexis:about, climate:heater ;
 
     rdfs:label "what warming makes true" ;
 
@@ -31,11 +32,11 @@ climate:Heating
     #  property (#566); this matches the air one and actuation's Dosing matches the soil one,
     #  which is the whole of how one want reaches two levers.
     orexis:available """
-        SELECT DISTINCT ?want ?about ?via WHERE {
+        SELECT DISTINCT ?want ?about ?heater WHERE {
           VALUES (?want ?about) { $wants }
           $me orexis:actsFor ?subject .
-          $me climate:hasHeater ?via .
-          ?via climate:warms ?subject ;
+          $me climate:hasHeater ?heater .
+          ?heater climate:warms ?subject ;
                climate:warmsProperty ?about .
         }""" ;
 
@@ -133,15 +134,16 @@ climate:Heating
 
 climate:Venting
     a orexis:Action ;
+    orexis:takes orexis:about, climate:vent ;
 
     rdfs:label "what opening a vent makes true" ;
 
     orexis:available """
-        SELECT DISTINCT ?want ?about ?via WHERE {
+        SELECT DISTINCT ?want ?about ?vent WHERE {
           VALUES (?want ?about) { $wants }
           $me orexis:actsFor ?subject .
-          $me climate:hasVent ?via .
-          ?via climate:ventilates ?subject ;
+          $me climate:hasVent ?vent .
+          ?vent climate:ventilates ?subject ;
                climate:ventilatesProperty ?about .
         }""" ;
 

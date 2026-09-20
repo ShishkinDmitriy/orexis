@@ -61,7 +61,7 @@ world, derived, entailed, beliefs — as "the graphs rules actually read". They 
 and the bid both walk `?term market:ofGood ?good`, and a valuation term is stated in a package's
 `ontology.ttl`, so it lands in the ontology graph beside the T-Box. With the lean set the
 CONSTRUCTs bind **nothing** — no rows, no exception, no red test, and a planner that quietly
-finds every lever useless. Enumerating four graphs by name was also the move rule 1 forbids
+finds every action useless. Enumerating four graphs by name was also the move rule 1 forbids
 everywhere else.
 
 # One graph per NODE, not one mutable graph

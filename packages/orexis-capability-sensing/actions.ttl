@@ -5,7 +5,7 @@
 @prefix sensing: <http://example.org/orexis/sensing#> .
 
 #  THE ACTIONS THIS PACKAGE BRINGS — one node each, and the whole of one (knowledge/domain/action.md):
-#    orexis:available  its PRECONDITION — a SELECT over the world binding ?property ?via ?direction,
+#    orexis:available  its PRECONDITION — a SELECT binding one variable per parameter it `orexis:takes`,
 #                  and ?for_agent where the row is a duty owed to someone; `$me` and
 #                  `$properties` substituted by the collector, prefixes prepended by the store;
 #    sh:construct  its EFFECT, with orexis:retracts, orexis:landsAfter and orexis:confirmedBy beside it;
@@ -39,20 +39,21 @@
 
 sensing:Observing
     a orexis:Action ;
+    orexis:takes orexis:about, sensing:sensor ;
 
     #  AVAILABLE where I may ASK an instrument that monitors my subject for this property —
     #  `sensing:mayAsk`, not `sensing:polls`, so a device that takes no orders offers no row
     #  (a-lever-an-agent-cannot-pull-is-not-a-lever). DISTINCT because a region carries three
     #  property shapes and all three are wants. Reads the whole default graph: wiring is public.
     orexis:available """
-        SELECT DISTINCT ?want ?about ?via ?direction WHERE {
+        SELECT DISTINCT ?want ?about ?sensor WHERE {
           VALUES (?want ?about) { $wants }
-          $me sensing:mayAsk ?via .
-          ?via sensing:monitors ?subject ; sosa:observes ?property .
+          $me sensing:mayAsk ?sensor .
+          ?sensor sensing:monitors ?subject ; sosa:observes ?property .
           # A want ABOUT AN INSTRUMENT — knowing, the freshness want — is looked for through
           # exactly that instrument, whatever it watches; a want ABOUT A PROPERTY — a stake —
           # through any instrument of this agent's that reads it on the subject it acts for.
-          FILTER(?via = ?about
+          FILTER(?sensor = ?about
                  || (?property = ?about && EXISTS { $me orexis:actsFor ?subject }))
         }""" ;
 

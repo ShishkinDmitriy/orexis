@@ -29,8 +29,8 @@ item on the executing thread.
    [plan](/domain/deliberator.md) as rows. No steps means nothing to execute, and that None is
    the deliberator's decision, not this process's.
 2. **Commit.** The whole plan goes to the keeper — every [step](/domain/step.md), the head stood at — and the head is taken; each further step is taken when the world confirms the one before it (#510):
-   `adopt(action, want, because, via=lever)`.
-   The [intention](/domain/intention.md) written carries the lever the plan chose. If one
+   `adopt(action, want, because, via=action)`.
+   The [intention](/domain/intention.md) written carries the action the plan chose. If one
    already stands within patience, `adopt` returns None and the process ends here — the same
    impulse, absorbed, and no row written. That is the whole of the patience, because every
    means stands until the world answers

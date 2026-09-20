@@ -44,7 +44,7 @@ a pass opens, asking where the real world arrived among the imagined ones. This 
 asked; identification is the asking.
 
 **Not a [scope](/domain/scope.md).** A scope partitions the vocabulary into compartments no
-lever couples across. What it settles is HOW MANY of these a want needs — one where the want's
+action couples across. What it settles is HOW MANY of these a want needs — one where the want's
 view falls inside a single compartment, several concatenated where it does not — so a scope
 counts cones without being one.
 

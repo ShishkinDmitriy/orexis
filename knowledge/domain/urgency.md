@@ -61,9 +61,9 @@ falling to one:
 
 | the want's shape | its measure |
 |---|---|
-| a number a lever moves incrementally | **distance** — partial progress must rank, or a dose too small to finish is refused |
+| a number an action moves incrementally | **distance** — partial progress must rank, or a dose too small to finish is refused |
 | no metric, but a deadline | **the clock** — when state has no dimension, time is the room being consumed |
-| no intermediate worlds at all — discharged-or-not, fresh-or-not | **binary**, and that is sufficiency rather than a stopgap: a gradient earns its place only where part-way worlds exist and a lever can reach them |
+| no intermediate worlds at all — discharged-or-not, fresh-or-not | **binary**, and that is sufficiency rather than a stopgap: a gradient earns its place only where part-way worlds exist and an action can reach them |
 | a composite pattern — *all my debts honoured* | **decomposition** — the forest's roll-up: how much becomes how many leaves, and how hot, each leaf bottoming out in a row above |
 
 Beneath all four sits the loud default: a want nobody measures scores maximal, logged.

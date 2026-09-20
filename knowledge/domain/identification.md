@@ -55,7 +55,7 @@ it is expanded and withheld nothing.
 On a miss, the pass completes before it gives up: at every kept node it forks the withheld
 rows, and every row of a node the budget stopped before it was expanded, then looks again.
 A match now is `withheld`, a world we chose not to imagine for cost, and the pass resumes
-there. No match after that is `exogenous`: no lever of ours produces this world — another
+there. No match after that is `exogenous`: no action of ours produces this world — another
 agent acted, the environment moved, or an action has an outcome it does not declare — and
 the pass starts from nothing. Either way the trace says which, as `deliberation:surprise`,
 with the facts within the view the present holds beyond every imagined world and lacks.
@@ -73,7 +73,7 @@ a change inside the view.
 
 # Not built yet
 
-A reading of another property that a relevant lever reads — the butt's level, which
+A reading of another property that a relevant action reads — the butt's level, which
 acquiring reads — is outside the view today, since relevance names predicates and every
 reading carries the same ones; a plan resumed across such a drift is caught at execution by
 the keeper's readiness, and would be caught at the re-root by the next step's

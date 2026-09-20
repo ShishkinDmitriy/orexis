@@ -21,3 +21,9 @@ ACTUATION = term("Actuation")  # holds the hardware, and may therefore touch the
 
 DOSING = term("Dosing")
 TOLERANCE = term("tolerance")    # how close the world must land to a predicted reading (#518)            # the dose — the action, and the kind of act it is
+
+
+#  WHAT A DOSING IS FILLED WITH — the actuator it acts through. The market's Serving takes the
+#  same parameter, being the same kind of filling, which is why it is declared here and not
+#  twice.
+VALVE = term("valve")

@@ -96,3 +96,22 @@ courier:drivesOwed sh:select """
     rdfs:comment """How far a delivery still is, in the unit a drive costs: Manhattan distance, because the grid is four-connected and a drive moves one cell — aboard the van it is the road to the door, standing somewhere it is the road to the parcel and then the parcel's road home. It counts drives and ignores the pick and the drop, so it NEVER OVERSTATES what is left, which is the promise the search ends on. The object of a want's orexis:estimates.
 
 EACH BRANCH REPEATS THE PREAMBLE, and the repetition is not clumsiness: a UNION's branches are evaluated on their own and joined with the surrounding pattern afterwards, so a BIND inside a branch cannot see a variable bound outside it. Written the tidy way, ?ox and ?oy were unbound where the arithmetic ran and the aggregate came back 0 for every world — a heuristic that said every world was already home.""" .
+
+
+#  WHAT THIS PACKAGE'S ACTIONS ARE FILLED WITH. One property per parameter, named in this
+#  package's own words: the local part is the variable a precondition projects, the `$token`
+#  its rules read and the predicate a planned step is written under. The kernel holds a row
+#  to the list and reads none of them.
+
+:van a owl:ObjectProperty ; rdfs:domain orexis:Action ;
+    rdfs:label "van" ;
+    rdfs:comment "The van a Drive moves, and the van a Pick loads into. Declared as orexis:takes by both." .
+
+:parcel a owl:ObjectProperty ; rdfs:domain orexis:Action ;
+    rdfs:label "parcel" ;
+    rdfs:comment "The parcel a Pick loads or a Drop sets down." .
+
+:to a owl:ObjectProperty ; rdfs:domain orexis:Action ;
+    rdfs:label "to" ;
+    rdfs:comment "Where a Drive drives or a Drop drops — a cell of the grid." .
+

@@ -6,7 +6,7 @@
 @prefix actuation: <http://example.org/orexis/actuation#> .
 
 #  THE ACTIONS THIS PACKAGE BRINGS — one node each, and the whole of one (knowledge/domain/action.md):
-#    orexis:available  its PRECONDITION — a SELECT over the world binding ?property ?via ?direction,
+#    orexis:available  its PRECONDITION — a SELECT binding one variable per parameter it `orexis:takes`,
 #                  and ?for_agent where the row is a duty owed to someone; `$me` and
 #                  `$properties` substituted by the collector, prefixes prepended by the store;
 #    sh:construct  its EFFECT, with orexis:retracts, orexis:landsAfter and orexis:confirmedBy beside it;
@@ -36,6 +36,7 @@
 
 actuation:Dosing
     a orexis:Action ;
+    orexis:takes orexis:about, actuation:valve, market:direction ;
 
     #  AVAILABLE where BOTH chains end at $me (#190, the ladder's second rung): the LEVER chain —
     #  an actuator I hold, plumbed to my own subject — and the RESOURCE chain — it draws from a
@@ -43,11 +44,11 @@ actuation:Dosing
     #  NOT EXISTS is the rule that keeps the rung honest: the market is about the resource, not
     #  the lever, so a pot-local pump on the shared barrel yields Acquire and only Acquire.
     orexis:available """
-        SELECT DISTINCT ?want ?about ?via ?direction WHERE {
+        SELECT DISTINCT ?want ?about ?valve ?direction WHERE {
           VALUES (?want ?about) { $wants }
           $me orexis:actsFor ?subject .
-          $me actuation:hasActuator ?via .
-          ?via actuation:actuates ?subject ;
+          $me actuation:hasActuator ?valve .
+          ?valve actuation:actuates ?subject ;
                actuation:drawsFrom ?source .
           ?source market:offeredBy $me .
           FILTER NOT EXISTS { ?venue market:marketFor ?source }

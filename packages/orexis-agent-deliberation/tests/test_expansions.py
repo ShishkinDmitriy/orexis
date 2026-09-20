@@ -252,7 +252,7 @@ ORDER BY (?spent + ?left) ?u ?spent ?m""", PASS_GRAPH))
     rows = agent.afforder.offered(Affordances(im),
                                   graphs=[next_world, *im.graphs_of(PUBLIC)])
     assert rows, f"nothing is afforded in {next_world.rsplit('/', 1)[-1]}"
-    assert all(r.action and r.via for r in rows), "and each names its action and its lever"
+    assert all(r.action and r.binding for r in rows), "and each names its action and what it is filled with"
     #  AND THEY ARE THIS WORLD'S. Hanoi affords a move per (movable disk, legal peg), and which
     #  those are depends on where the disks stand — so the rows here differ from the rows at
     #  the root, and a reader that had quietly asked the wrong world would show the root's.

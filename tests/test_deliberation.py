@@ -28,6 +28,7 @@ from orexis_capability_sensing.terms import OBSERVING
 from orexis_agent_progression.ontology import picks_graph
 from orexis_capability_sensing.regions import ObservedWant
 from conftest import stake_of, MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for, wired_markets, wired_sensors, write_reading
+from conftest import ABOUT, DIRECTION, VALVE, VENUE
 
 
 @pytest.fixture
@@ -298,8 +299,8 @@ def test_the_menu_is_derived_from_the_graph(make):
     st = genesis_store()
     open_round_for(st, "fern")
     rows = Afforder(Actions(st), Affordances(st), desires_build(st, "fern"), FERN, picks_graph("fern")).offered()
-    as_tuples = {(r.action.rsplit("#", 1)[-1], r.about.rsplit("#", 1)[-1],
-                  r.direction.rsplit("#", 1)[-1] if r.direction else None) for r in rows}
+    as_tuples = {(r.action.rsplit("#", 1)[-1], (r.value_of(ABOUT) or "").rsplit("#", 1)[-1],
+                  (r.value_of(DIRECTION) or "").rsplit("#", 1)[-1] or None) for r in rows}
     #  A row says which WANT it serves through what the want is about: a stake is about its
     #  property, a freshness want about its instrument (the-stake-is-sensings-want). So a look
     #  appears twice per probe — for the region it should sit in, and for knowing it recently.
@@ -312,7 +313,7 @@ def test_the_menu_is_derived_from_the_graph(make):
     }
     # and the row that is NOT there is the finding: fern wants a temperature it can see and
     # cannot move — a want with no lever, which is legitimate and now legible.
-    assert not any(r.action.endswith("Acquiring") and "Temperature" in r.about
+    assert not any(r.action.endswith("Acquiring") and "Temperature" in (r.value_of(ABOUT) or "")
                    for r in rows)
 
 
@@ -334,8 +335,8 @@ def test_the_dealers_menu_gained_its_lever(make):
     st = genesis_store()
     open_round_for(st, "supplier")
     rows = Afforder(Actions(st), Affordances(st), desires_build(st, "supplier"), "http://example.org/orexis/world/simulation#supplier", picks_graph("supplier")).offered()
-    assert {(r.action.rsplit("#", 1)[-1], r.about.rsplit("#", 1)[-1],
-             (r.direction or "").rsplit("#", 1)[-1] or None)
+    assert {(r.action.rsplit("#", 1)[-1], (r.value_of(ABOUT) or "").rsplit("#", 1)[-1],
+             (r.value_of(DIRECTION) or "").rsplit("#", 1)[-1] or None)
             for r in rows if r.is_own} == {("Acquiring", "StoredLitres", "Raises"),
                                             ("Offering", "StoredLitres", None)}, \
         "buy upstream while the city's round is open, and offer downstream (#359) — no direction " \
@@ -405,8 +406,8 @@ def test_two_denominations_make_two_rows_and_never_four(make):
     }} }}""")
     open_round_for(st, "fern")
     acquire = [r for r in Afforder(Actions(st), Affordances(st), desires_build(st, "fern"), FERN, picks_graph("fern")).offered()
-               if r.action == ACQUIRING and r.about.endswith("SoilMoisture")]
-    assert sorted((r.direction or "").rsplit("#", 1)[-1] for r in acquire) == \
+               if r.action == ACQUIRING and (r.value_of(ABOUT) or "").endswith("SoilMoisture")]
+    assert sorted((r.value_of(DIRECTION) or "").rsplit("#", 1)[-1] for r in acquire) == \
         ["Lowers", "Raises"], (
         "two opposite levers on one property must each carry their own direction — "
         "a cross-join would put both directions on both venues, four rows for two levers")
@@ -441,7 +442,8 @@ def test_the_search_finds_the_dealers_two_step_from_two_nodes_that_never_meet(ma
     want = next(d for d in supplier.pursuing() if d.uri.startswith(calls.NS + "call_"))
     plan = supplier.deliberator.decide(want)
     assert plan is not None
-    assert [(s.action.rsplit("#", 1)[-1], s.via.rsplit(".", 1)[-1]) for s in plan.steps] == [
+    assert [(s.action.rsplit("#", 1)[-1], (s.value_of(VENUE) or s.value_of(VALVE) or "").rsplit(".", 1)[-1])
+            for s in plan.steps] == [
         ("Acquiring", "city_mains"), ("Offering", "barrel1")]
     assert plan.urgency_after == 0.0, "and the world it reaches has the round the call wanted"
 # --- the menu is the union of package contributions (#207) ------------------
@@ -459,7 +461,8 @@ def test_a_new_kind_of_move_is_a_new_directory(make, tmp_path, monkeypatch):
 @prefix orexis: <http://example.org/orexis#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 orexis:Consulting a orexis:Action ; orexis:means orexis:Consult ;
-    orexis:available \"\"\"SELECT ?want ?via WHERE { VALUES (?want ?about) { $wants } BIND($me AS ?via) }\"\"\" ;
+    orexis:takes orexis:about, <urn:toy#lever> ;
+    orexis:available \"\"\"SELECT ?want ?about ?lever WHERE { VALUES (?want ?about) { $wants } BIND($me AS ?lever) }\"\"\" ;
     sh:construct "CONSTRUCT {} WHERE {}" .
 """)
     real = loader.action_files()
@@ -509,7 +512,7 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     #  filter that leaks.
     for row in obligations:
         for value in (0.0, 0.5, 5.0, 50.0):
-            stake = ObservedWant(uri="urn:w", urgency=0.5, observed_property=row.about,
+            stake = ObservedWant(uri="urn:w", urgency=0.5, observed_property=row.value_of(ABOUT),
                                  value=value)
             assert deliberator.propose_for(stake) not in duty_means, \
                 "an obligation was proposed as if it were a choice"
@@ -757,7 +760,8 @@ def test_of_two_worlds_the_same_urgency_apart_the_cheaper_is_the_plan(make, tmp_
     def toy(name, cost, mark):
         return f"""
 toy:{name} a orexis:Action ;
-    orexis:available \"\"\"SELECT ?want ?via WHERE {{ VALUES (?want ?about) {{ $wants }} BIND($me AS ?via) }}\"\"\" ;
+    orexis:takes orexis:about, <urn:toy#lever> ;
+    orexis:available \"\"\"SELECT ?want ?about ?lever WHERE {{ VALUES (?want ?about) {{ $wants }} BIND($me AS ?lever) }}\"\"\" ;
     orexis:costs \"\"\"SELECT ?cost WHERE {{ BIND({cost} AS ?cost) }}\"\"\" ;
     sh:construct \"\"\"CONSTRUCT {{
             ?obs a <http://www.w3.org/ns/sosa/Observation> ;
@@ -797,7 +801,8 @@ def test_among_plans_that_achieve_the_want_cost_alone_decides(make, tmp_path, mo
     def toy(name, cost, mark):
         return f"""
 toy:{name} a orexis:Action ;
-    orexis:available \"\"\"SELECT ?want ?via WHERE {{ VALUES (?want ?about) {{ $wants }} BIND($me AS ?via) }}\"\"\" ;
+    orexis:takes orexis:about, <urn:toy#lever> ;
+    orexis:available \"\"\"SELECT ?want ?about ?lever WHERE {{ VALUES (?want ?about) {{ $wants }} BIND($me AS ?lever) }}\"\"\" ;
     orexis:costs \"\"\"SELECT ?cost WHERE {{ BIND({cost} AS ?cost) }}\"\"\" ;
     orexis:retracts \"\"\"CONSTRUCT {{ ?old ?p ?o }} WHERE {{
             {{ ?old <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ;

@@ -11,6 +11,8 @@ import pyoxigraph as ox
 import pytest
 
 from conftest import build_agent, genesis_store
+TO = "http://example.org/orexis/courier#to"      # what courier:Drive declares it takes
+from conftest import DISK, ONTO
 from orexis_agent_deliberation import planner as search, pursuit
 from orexis_agent_deliberation.imaginarium import Imaginarium
 from orexis_agent_deliberation.planner import Planner
@@ -87,7 +89,7 @@ def test_a_pass_after_a_step_taken_as_predicted_resumes_the_cone_and_finds_the_t
     assert begins == [], "nothing was built from scratch: the present was a kept world"
     assert _kept_worlds(agent) > 0, "and the trace says how many worlds the pass began with"
     assert [s.action for s in again.steps] == [s.action for s in first.steps[1:]]
-    assert [(s.via, s.about) for s in again.steps] == [(s.via, s.about) for s in first.steps[1:]]
+    assert [s.binding for s in again.steps] == [s.binding for s in first.steps[1:]]
     assert planner._root.taken == () and planner._root.diff == search.signature.EMPTY, \
         "the new root stands nowhere but the present"
 
@@ -214,7 +216,7 @@ def test_a_retract_of_a_keyed_fact_matches_by_key():
                if q.predicate.value == "http://www.w3.org/ns/sosa/hasSimpleResult")
     pred = ox.NamedNode("http://www.w3.org/ns/sosa/hasSimpleResult")
     dec = ox.NamedNode("http://www.w3.org/2001/XMLSchema#decimal")
-    row = type("R", (), {"action": "urn:x:dose", "via": "urn:x:pump", "about": None})()
+    row = type("R", (), {"action": "urn:x:dose", "binding": (("urn:x:valve", "urn:x:pump"),)})()
     stale = [ox.Triple(obs, pred, ox.Literal("0.29", datatype=dec))]     # not what the node holds
     fresh = [ox.Triple(obs, pred, ox.Literal("0.55", datatype=dec))]
     child = im.reached(STATE_GRAPH, (row,), fresh, stale)
@@ -263,7 +265,8 @@ def test_a_world_that_landed_in_an_explored_sibling_continues_from_it(monkeypatc
     assert len(first.steps) == 7
     planned = first.steps[0]
     other = next(n for n in planner._nodes
-                 if len(n.taken) == 1 and n.taken[0].via == planned.via and n.taken[0].about != planned.about)
+                 if len(n.taken) == 1 and n.taken[0].value_of(DISK) == planned.value_of(DISK)
+                 and n.taken[0].value_of(ONTO) != planned.value_of(ONTO))
     assert other.expanded, "the sibling move was explored, not only forked"
     _take(agent, other.taken[0])
     fresh = Planner(agent, agent.me)
@@ -337,16 +340,16 @@ def test_a_move_the_budget_withheld_is_completed_and_the_surprise_is_read_as_wit
         #  A drive from this un-expanded world to a cell NO kept world holds the van at —
         #  a cell another path reached is a kept world, and the present would simply be it.
         row = next((r for r in planner._candidates(n, _goal(agent))
-                    if r.action == C + "Drive" and r.about not in imagined), None)
+                    if r.action == C + "Drive" and r.value_of(TO) not in imagined), None)
         if row is not None:
             node = n
             break
     assert node is not None, "a budget of eight leaves a reached world un-expanded, with a drive nobody imagined"
     for step in node.taken:
         _take(agent, step)                            # the van drives to that child's world
-    here = node.taken[-1].about
+    here = node.taken[-1].value_of(TO)
     agent.beliefs.update(f"DELETE DATA {{ GRAPH <{STATE_GRAPH}> {{ <{W}van> <{C}at> <{here}> . }} }}")
-    agent.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <{W}van> <{C}at> <{row.about}> . }} }}")
+    agent.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <{W}van> <{C}at> <{row.value_of(TO)}> . }} }}")
     again = planner.plan(_goal(agent))
     said = _surprise(agent)
     assert said is not None and said.startswith("withheld:"), said
@@ -376,7 +379,8 @@ def test_a_world_the_law_refused_is_kept_and_the_exit_is_planned_from_it(tmp_pat
     from test_planning import MOISTURE
     exit_toy = '''
 toy:Exit a orexis:Action ;
-    orexis:available """SELECT ?want ?via WHERE { VALUES (?want ?about) { $wants } BIND($me AS ?via) }""" ;
+    orexis:takes orexis:about, <urn:toy#lever> ;
+    orexis:available """SELECT ?want ?about ?lever WHERE { VALUES (?want ?about) { $wants } BIND($me AS ?lever) }""" ;
     orexis:retracts """CONSTRUCT { <urn:naughty> ?p ?o } WHERE {
             <urn:naughty> ?p ?o }""" ;
     sh:construct "CONSTRUCT {} WHERE {}" .

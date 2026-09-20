@@ -16,8 +16,8 @@ description: >-
 # What it is
 
 The one thing the three BDI-planning surfaces were always describing. An
-[affordance](/domain/affordance.md) says the action is available through a
-[lever](/domain/lever.md) now; an [effect](/domain/effect.md) says what it would make true; an
+[affordance](/domain/affordance.md) says the action is available now, with its parameters
+bound; an [effect](/domain/effect.md) says what it would make true; an
 [actor](/domain/actor.md) carries it out. An **action** is the node those hang off — and it is
 the KIND of act too, since [the-action-is-the-kind](/decisions/the-action-is-the-kind.md):
 there is no separate word for what a row offers, an intention commits to and a trace weighs.
@@ -73,10 +73,17 @@ is real and unbuilt; the day it is wanted, the slot is there.
 
 # What an author writes
 
-A node here, and a `@contributes(<the action>)` method on the module that takes it. Nothing else — no registry,
-no edit to the kernel, no second file. An action without `sh:construct` is legal to ship and
-refused at the gate the moment it puts a row on some agent's menu, because a lever the search
+A node here, a `orexis:takes` triple per parameter it is filled with, and a
+`@contributes(<the action>)` method on the module that takes it. Nothing else — no registry, no
+edit to the kernel, no second file. An action without `sh:construct` is legal to ship and
+refused at the gate the moment it puts a row on some agent's menu, because an act the search
 cannot simulate is one it must not conclude about.
+
+**What it takes is the action's to say.** `hanoi:Move orexis:takes hanoi:disk, hanoi:onto`, in
+the package's own words. What a parameter's name then serves, and why the kernel reads no value
+bound to one, is [affordance](/domain/affordance.md)'s — the row is where a parameter meets a
+value — and the argument is
+[an-action-takes-parameters](/decisions/an-action-takes-parameters.md).
 
 # Related
 
@@ -87,10 +94,10 @@ cannot simulate is one it must not conclude about.
 # It is a term code may name, and the ladder is its order
 
 An action is the exception rule 1 carves out: a T-Box term, so `bidding.py` may say
-`ACQUIRING` in Python while never naming a venue — the [lever](/domain/lever.md) beside it is
+`ACQUIRING` in Python while never naming a venue — every value its parameters are bound to is
 always an instance. Nothing enumerates the set: a sixth way of acting is a node in a new
 directory. The ladder — look, act with what is yours, buy what is not — is their *order*, not
-a ranking: `actuation:Dosing` is offered exactly where the lever and the resource are both the
+a ranking: `actuation:Dosing` is offered exactly where the valve and the resource are both the
 agent's own and `market:Acquiring` where the resource is someone else's, and what chooses
 between two rungs is which reaches the better world.
 

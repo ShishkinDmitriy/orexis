@@ -254,7 +254,7 @@ Three deliberate differences from the diff above:
 - **An unmeasured want is a row here, at urgency 1.0.** No row is right for a diff and wrong for
   a ranking: not knowing whether the pot is dying is at least as urgent as knowing it is
   uncomfortable, which is the answer `urgency(None)` has always given.
-- **`side` says which way out a stake sits.** For moisture only the low side has a lever, so a
+- **`side` says which way out a stake sits.** For moisture only the low side has an action, so a
   drowning plant and a dying one are both `unmet` at urgency 1.00 and mean opposite things. The
   shape says the same thing in `orexis:violationIs` now; the query still reaches it by comparing the
   value to the bounds, which is the same answer, and reading it off a validation report waits for
@@ -337,7 +337,7 @@ ratified data, authored directly in the asserted block, and NO capability is in 
 there is nothing to grant, so the kernel lifts it into pursuit and judges it — binary, by
 running the pattern with `$this` and `$state` substituted against whichever world is asked,
 the store's engine live and candidate alike. It usually states no `orexis:about`, and so
-ranges over every affordance as a call does: any lever might exit a state. Its hard twin is
+ranges over every affordance as a call does: any action might exit a state. Its hard twin is
 not a desire at all — a ratified violation shape, pruned in the search at every step. See
 [a-want-met-by-absence](/decisions/a-want-met-by-absence.md).
 
@@ -361,7 +361,7 @@ when not the marker" gets back the double negative the compiler takes away.
 over a focus node or a monotone rule from one — a met-test, an avoided state, a structural
 derivation — because then its predicates are data, the kernel can compile it, and relevance
 can read it. Author in SPARQL what enumerates, computes, aggregates or retracts — a
-precondition (rows: lever and target), an [effect](/domain/effect.md) (it retracts, and SHACL
+precondition (rows: action and target), an [effect](/domain/effect.md) (it retracts, and SHACL
 cannot), an estimate (arithmetic and a sum). The compiler runs one way, every shape in the
 fragment to a select and no select to a shape, so the choice is made at authoring and the
 direction is never ambiguous.

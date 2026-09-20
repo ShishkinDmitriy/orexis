@@ -127,11 +127,11 @@ Note what goes out on the event topic: the agent's **own verdict**, not its raw 
 voluntary disclosure — a host learns that scarcity has appeared without ever reading anyone's
 moisture.
 
-# Two levers, deliberately unequal
+# Two ways to hurry a board, deliberately unequal
 
 - **Interval** (`sleep_s`) is *standing policy*, published **retained**. A board that is deep
   asleep now still receives it the instant it wakes and subscribes. This is the reliable
-  lever, and the real one: to see sooner, tighten it. Only a subscribing agent has it.
+  one, and the real one: to see sooner, tighten it. Only a subscribing agent has it.
 
   It is a **sleep duration, not a period.** The observed gap between readings is `sleep_s`
   plus whatever the wake costs — boot, WiFi association, broker connect — which on an ESP32
@@ -173,7 +173,7 @@ cadence actually kept.
 # The band rides the same message, and gets the retention for free
 
 A [band](/domain/band.md) travels on the command topic beside `sleep_s`, for a device that can
-display it — a status LED. It is not a third lever and the board never acts on it.
+display it — a status LED. It is not a third way to hurry it and the board never acts on it.
 
 It goes here rather than on a topic of its own for the reason a control topic was never added
 either: **the channel already exists, the board is already subscribed, and the ACL already
@@ -230,13 +230,14 @@ Three things follow from where it lives. The horizon it is judged against is the
 `publish_horizon` writes, so nothing recomputes it. Its MEASURE is declared beside it in
 `measures.ttl`, so a candidate world can be scored on it. And what repairs it is Observe, whose
 effect predicts a reading stamped now and MADE BY that instrument — the clause that keeps this
-a want about knowing, because every lever that moves a number states the move as a predicted
+a want about knowing, because every action that moves a number states the move as a predicted
 reading, and only a look states who saw it.
 
 **Only where the agent can ask.** The Observe row hangs off `sensing:mayAsk`, derived from the
 device's sense mode beside the capability itself: a board keeping a schedule it was given can be
 interrupted, a board keeping its own cannot be addressed at all. A listener's freshness want
-therefore has no lever, stands hot, and is reported as one — the record beside this section has
+therefore has nothing that would repair it, stands hot, and is reported as one — the record
+beside this section has
 what that costs and why it is better than the silence it replaced.
 
 # It measures how badly an observation-backed want is unmet
@@ -375,7 +376,7 @@ the agent must steer attention, the sentinel where the world's own events are th
 - **Sensing is not yet priced.** The payoff of agent-owned attention is that looking costs
   energy, making observation an economic decision
   ([single-wallet-metabolic-cost](/decisions/single-wallet-metabolic-cost.md)). v1 sets
-  cadence from urgency alone; no wallet debit per `sense`. The lever exists, the price does not.
+  cadence from urgency alone; no wallet debit per `sense`. The way to ask exists, the price does not.
 - **Cadence is a reflex, not a deliberation.** `cadence_for` is deterministic code, like the
   bid. An LLM stance could later argue for more attention; the clamp still binds.
 

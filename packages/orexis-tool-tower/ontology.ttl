@@ -17,23 +17,23 @@
 hanoi:Disk rdfs:subClassOf courier:Parcel .
 
 #  THE BRIDGE. A Move promises `disk on peg`; on the grid that is the disk at the peg's cell.
-#  The construct is bound as $via (the disk) and $about (the peg) from the step, and reads
+#  The construct is bound as $disk and $onto from the step — hanoi's own parameters — and reads
 #  the peg's cell from the world; the estimate is the same tokens over the state — how far
 #  the van has to go to carry the disk there, a drive per cell, a pick and a drop.
 :MoveOnGrid a orexis:Bridge ;
     rdfs:label "a move is carrying the disk to the peg's cell" ;
     orexis:refines hanoi:Move ;
     sh:construct """
-        CONSTRUCT { $via courier:at ?cell } WHERE { $about courier:at ?cell }""" ;
+        CONSTRUCT { $disk courier:at ?cell } WHERE { $onto courier:at ?cell }""" ;
     orexis:estimates :drivesToPlace .
 
 :drivesToPlace sh:select """
         SELECT (?d AS ?estimate) WHERE {
-            $about courier:at ?target . ?target courier:x ?tx ; courier:y ?ty .
+            $onto courier:at ?target . ?target courier:x ?tx ; courier:y ?ty .
             ?van a courier:Van .
              ?van courier:at ?vc .
             ?vc courier:x ?vx ; courier:y ?vy .
-            OPTIONAL {  $via courier:at ?dc . ?dc courier:x ?dx ; courier:y ?dy }
+            OPTIONAL {  $disk courier:at ?dc . ?dc courier:x ?dx ; courier:y ?dy }
             BIND(IF(BOUND(?dx),
                     IF(sameTerm(?dc, ?target), 0,
                        ABS(?vx - ?dx) + ABS(?vy - ?dy) + ABS(?dx - ?tx) + ABS(?dy - ?ty) + 2),

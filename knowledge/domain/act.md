@@ -25,7 +25,7 @@ one of them was carried out (the sovereign's ruling, 2026-09-02).
 
 # What it is not
 
-**Not the [step](/domain/step.md).** The step carries the lever, the quantity, the window and the
+**Not the [step](/domain/step.md).** The step carries the action, the quantity, the window and the
 prediction; the act carries the fact of the attempt.
 
 **Not the [intention](/domain/intention.md).** The intention is the commitment to a want, with

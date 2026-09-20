@@ -22,6 +22,9 @@ def _pose(st, disks):
     st.update("INSERT DATA { GRAPH <%s> { %s } }" % (STATE_GRAPH, " . ".join(triples) + " . "))
 
 
+HANOI = "http://example.org/orexis/hanoi#"
+DISK, ONTO = HANOI + "disk", HANOI + "onto"     # what hanoi:Move declares it takes
+
 def _mover(monkeypatch, disks):
     """A plain Agent, not conftest's wired builder: the mover holds no bus, so there is no
     transport module for the builder's wire conveniences to find — and none is needed, since
@@ -85,11 +88,12 @@ def test_three_disks_solve_in_exactly_seven_moves(monkeypatch):
     agent = _mover(monkeypatch, ["disk_1", "disk_2", "disk_3"])
     plan = _solved(agent)
     assert plan.outcome == "satisfied", plan.outcome
-    moves = [(s.via.rsplit("_", 1)[-1], s.about.rsplit("#", 1)[-1])
+    moves = [(s.value_of(DISK).rsplit("_", 1)[-1], s.value_of(ONTO).rsplit("#", 1)[-1])
              for s in plan.steps]
     assert len(plan.steps) == 7, moves
     #  ONE schema, ground per ROW: every step is the same action, and the (disk, peg) pair
-    #  rides on via/about — which is what the kernel's $via channel exists for.
+    #  rides on the step's BINDING — the two parameters hanoi:Move declares it takes, in
+    #  hanoi's own words. They were a lever and a subject while the kernel named the columns.
     assert {s.action for s in plan.steps} == {H + "Move"}
     assert moves[0] == ("1", "PegC"), moves
 
@@ -125,11 +129,12 @@ KNOB = '''@prefix orexis: <http://example.org/orexis#> .
 #  no cost, nothing a solved puzzle reads. The runbook measured it at 2.8x the forks of a
 #  three-disk solve before anything could see it.
 knob:Flip a orexis:Action ;
-    orexis:available """SELECT ?via ?about WHERE {
-        ?via <urn:knob#at> ?here .
-        ?about a <urn:knob#Position> . FILTER(?about != ?here) }""" ;
-    orexis:retracts """CONSTRUCT { $via <urn:knob#at> ?old } WHERE { $via <urn:knob#at> ?old }""" ;
-    sh:construct """CONSTRUCT { $via <urn:knob#at> $about } WHERE { }""" .
+    orexis:takes knob:knob, knob:to ;
+    orexis:available """SELECT ?knob ?to WHERE {
+        ?knob <urn:knob#at> ?here .
+        ?to a <urn:knob#Position> . FILTER(?to != ?here) }""" ;
+    orexis:retracts """CONSTRUCT { $knob <urn:knob#at> ?old } WHERE { $knob <urn:knob#at> ?old }""" ;
+    sh:construct """CONSTRUCT { $knob <urn:knob#at> $to } WHERE { }""" .
 knob:left a knob:Position . knob:right a knob:Position .
 '''
 
@@ -253,7 +258,7 @@ def test_three_disks_are_solved_with_one_search_and_seven_answered_steps(monkeyp
         assert keeper.expect(uri, "moved — show me",
                              not_after=datetime.now(timezone.utc) + timedelta(hours=1))
         _answer(agent, step.predicts)                       # the world answers as predicted
-    assert len(taken) == 7 and len({s.about for s in taken} | {s.via for s in taken}) >= 1
+    assert len(taken) == 7 and len({s.binding for s in taken}) >= 1
     assert keeper.standing(want=WANT) == [], "the plan finished with its last step answered"
     assert keeper.in_progress(WANT) is None
     assert len(searches) == 1, "seven moves, one search"

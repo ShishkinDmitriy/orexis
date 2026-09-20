@@ -1,8 +1,8 @@
 """A step: a planned instance of an action. An act: the record that a step was taken.
 
-An `orexis:Action` is a template (a precondition, an effect, a taker). A STEP is one filling of
-it, planned and not yet done — the lever it goes through, the want it serves and what that want
-is about, how much, for whom where it is an obligation's, its window, what the search predicted
+An `orexis:Action` is a template (the parameters it takes, a precondition, an effect, a taker).
+A STEP is one filling of it, planned and not yet done — what its parameters are bound to, the
+want it serves, how much, for whom where it is an obligation's, its window, what the search predicted
 taking it would reach, what it waits for, what follows. A plan is steps; an intention commits to
 steps; a claim promises one. Nothing has happened yet. An ACT is the record that something did:
 which step, when, whether anyone took it, and in time the verdict — history, and only history
@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.ontology import OREXIS, PUBLIC
 
 
 @dataclass(frozen=True)
@@ -23,11 +23,12 @@ class Step:
     """One action, filled in and planned. Every step is an instance and no code names one."""
 
     action: str                       # which template — `market:Acquiring`, `actuation:Dosing`
-    via: str                          # the lever it goes through — this venue, this valve
+    #  WHAT IT IS FILLED WITH: one (parameter, value) pair per parameter the action declares
+    #  it `orexis:takes`, sorted, and opaque to everything here. It is also the step's
+    #  IDENTITY — two steps of one action are the same step when they are filled the same way.
+    binding: tuple[tuple[str, str], ...] = ()
     want: str | None = None           # the desire it serves, by node
-    about: str | None = None          # what that want is about (`orexis:about`), opaque here
     quantity: float | None = None     # how much, sized by the taker — nothing, for a look
-    direction: str | None = None      # which way it moves what it is about, where it moves
     for_agent: str | None = None      # whom it serves, where it is an obligation's
     #  The window: when taking it counts. Not-after is what every hand-kept timer was saying
     #  (a bid not after the round closes, a serve not after the claim's expiry); not-before is
@@ -42,14 +43,18 @@ class Step:
     part_of: object = None            # the step this one was expanded from (#523): a Step while
                                       # planned, the ledger's step IRI once read back
 
+    def value_of(self, parameter: str) -> str | None:
+        """What this step binds one parameter to, by its IRI. The taker's door, and only the
+        package that declared the parameter ever opens it."""
+        return next((v for p, v in self.binding if p == parameter), None)
+
     @classmethod
     def from_row(cls, row, quantity: float | None = None, not_after: datetime | None = None):
         """An affordance row, filled: sized, and windowed where the caller knows when. Handed
         a step already, it fills that one again — a search re-sizes a step it takes from a
         different world."""
-        return cls(action=row.action, via=row.via, want=row.want, about=row.about,
-                   quantity=quantity, direction=row.direction, for_agent=row.for_agent,
-                   not_after=not_after)
+        return cls(action=row.action, binding=row.binding, want=row.want,
+                   quantity=quantity, for_agent=row.for_agent, not_after=not_after)
 
 
 @dataclass(frozen=True)
@@ -61,6 +66,37 @@ class Act:
     step: str                         # the ledger's step node, by IRI
     taken_at: datetime
     took: bool                        # some actor took it, or none could now — standing
+
+
+#  READING A BINDING BACK. A step is written as one triple per parameter, under the parameter's
+#  own IRI, so a reader with no list of them recovers the filling by joining the step to what its
+#  ACTION says it takes — which is public knowledge, and why a read of the ledger is handed the
+#  public graphs beside its own. The pairs come back in one column because SPARQL has no tuples;
+#  `STR` on both halves because GROUP_CONCAT over an IRI binds nothing in this engine.
+BOUND = '(GROUP_CONCAT(DISTINCT CONCAT(STR(?param), " ", STR(?value)); separator="\t") AS ?bound)'
+
+
+def bound_clause(node: str, graph: str | None = None) -> str:
+    """The OPTIONAL that collects one node's binding, for a query that projects `BOUND`.
+
+    Joined to what ANY action declares a parameter, not to what THIS step's action declares.
+    A method's member is filled from the step it was expanded from, so it carries pairs its
+    own action never asked for — and a read-back held to its own declaration dropped them
+    silently: a Tendering expanded out of an Acquiring lost the property it was about, and the
+    bidder declined its own step for being about nothing. A step carries what it was filled
+    with, and the ledger gives it back whole.
+    """
+    inner = f"{node} ?param ?value"
+    return (f"OPTIONAL {{ [] <{OREXIS}takes> ?param . "
+            + (f"GRAPH <{graph}> {{ {inner} }} " if graph else f"{inner} ") + "}")
+
+
+def binding_from(concatenated: str | None) -> tuple[tuple[str, str], ...]:
+    """A step's binding out of that column: pairs separated by a tab, parameter and value by a
+    space. Sorted, because that is what makes two fillings of one action compare equal
+    wherever a binding is an identity."""
+    return tuple(sorted(tuple(pair.split(" ", 1))                       # type: ignore[misc]
+                        for pair in (concatenated or "").split("\t") if pair))
 
 
 def predicts_json(predicts) -> str:

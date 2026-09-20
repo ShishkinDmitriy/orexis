@@ -18,6 +18,7 @@ from orexis_agent_progression.ontology import PLAN_FAILED, PLAN_FINISHED
 from orexis_agent_progression.store import bindings
 from orexis_capability_actuation.terms import DOSING
 from conftest import MOISTURE, build_agent, genesis_store, predicted_reading, reading_of, stake_of, write_reading
+from conftest import ABOUT, VALVE, filled
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import PREDICTION
 
@@ -38,7 +39,7 @@ def _two_doses(agent, band: str = BELOW):
     want = stake_of(agent).uri
     #  Each step carries what it predicts, as a search-made one does: a small dose that leaves
     #  the pot below its floor — so the actor taking the second can open a watch on it.
-    dose = Step(action=DOSING, via=pump, want=want, about=MOISTURE, quantity=0.2,
+    dose = Step(action=DOSING, binding=filled((VALVE, pump), (ABOUT, MOISTURE)), want=want, quantity=0.2,
                 predicts=predicted_reading(agent.me.acts_for, MOISTURE, band=band))
     return agent.keeper.adopt([dose, dose], want, "two doses, the search's plan"), want
 

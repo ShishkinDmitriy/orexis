@@ -13,9 +13,9 @@ description: >-
 
 # What it is
 
-An [affordance](/domain/affordance.md) row says a [lever](/domain/lever.md) is available. It does
+An [affordance](/domain/affordance.md) row says an action is available, filled. It does
 not say what pulling it would achieve — and a desire that is a shape needs exactly that, because
-matching a desire to a lever means asking what the lever would make true.
+matching a desire to an action means asking what taking it would make true.
 
 So the effect sits on the [action](/domain/action.md) node itself, beside the availability
 query and the taker, loaded into the action graph at genesis. The vocabulary is SHACL Advanced Features' — `sh:construct` for the query yielding
@@ -89,7 +89,7 @@ valve open longer than a half-litre one. **Zero is a real answer** and the hones
 **There was a second term here, and it is gone.** `orexis:confirmedBy` named the route by which an
 effect becomes knowable — by construction, by report, by observation, or not at all — and every
 shipped effect answered *by observation*, so it discriminated nothing. The planner once read it to
-decide which acts end a plan, which meant every lever ended one and the search never reached its
+decide which acts end a plan, which meant every act ended one and the search never reached its
 second step; that reading was removed, and nothing replaced it. A term stated on every action and
 consulted by no one is annotation
 ([a-term-nobody-reads-is-annotation](/decisions/a-term-nobody-reads-is-annotation.md)).
@@ -102,14 +102,14 @@ where a watch is opened at all, which is each actor's own decision rather than a
 
 # Most means have no effect, and that is fine — unless somebody's menu offers it
 
-A lever whose consequences nobody has written down still works. What it cannot do is be
+An action whose consequences nobody has written down still works. What it cannot do is be
 simulated, and simulating is now the only way anything gets decided — so the absence is an
 ordinary answer to every caller (treating it as an error would make shipping a package a
 two-file obligation) and a REFUSAL at exactly one place: `orexis-validate` will not pass a
 world in which such a means puts a row on some agent's menu. Most means never do.
 
-What a search must NOT do is conclude from part of the affordances. A plan that passed over any lever is
-marked partial and defers, because the lever it could not simulate may be the one that works.
+What a search must NOT do is conclude from part of the affordances. A plan that passed over any row is
+marked partial and defers, because the one it could not simulate may be the one that works.
 
 # How long it takes, asked by two readers
 
@@ -204,7 +204,7 @@ reads what is on the other side and declares the band that implies (`world/green
 It is the first shipped effect whose declared outcome depends on a fact the agent cannot move,
 and that is exactly what makes it expressible. A rule may read the OUTSIDE as a number even
 though a possible world states what a reading IS rather than what it measures
-([band](/domain/band.md)): no lever of the agent's writes it, so it is the same number at the
+([band](/domain/band.md)): nothing the agent can do writes it, so it is the same number at the
 root of a cone and at every leaf — a constant of the plan rather than something a step might
 have changed. What the plan CAN change, the rule reads as the band it is.
 

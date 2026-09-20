@@ -11,6 +11,7 @@ from orexis_agent_progression.act import Step
 from orexis_agent_progression.ontology import ACTIONS_GRAPH, STATE_GRAPH, promises_graph
 from orexis_agent_progression.store import bindings
 from conftest import build_agent, genesis_store, stake_of
+from conftest import ABOUT, filled
 
 T = "urn:toy#"
 
@@ -19,17 +20,17 @@ def _fern_with_a_ferry(monkeypatch, bridged=True):
     fern = build_agent("fern", genesis_store({"fern": 0.30}), monkeypatch)
     bridge = f"""
       <{T}FerryOnFoot> a orexis:Bridge ; orexis:refines <{T}Ferry> ;
-          sh:construct "CONSTRUCT {{ $via <{T}at> $about }} WHERE {{ }}" ;
+          sh:construct "CONSTRUCT {{ $cargo <{T}at> $about }} WHERE {{ }}" ;
           orexis:estimates <{T}stepsAway> .
       <{T}stepsAway> sh:select "SELECT (1 AS ?estimate) WHERE {{ }}" .""" if bridged else ""
     fern.beliefs.update(f"""INSERT DATA {{ GRAPH <{ACTIONS_GRAPH}> {{
-      <{T}Ferry> a orexis:Action . {bridge} }} }}""")
+      <{T}Ferry> a orexis:Action ; orexis:takes <{T}cargo>, orexis:about . {bridge} }} }}""")
     fern.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <{T}box> <{T}on> <{T}pierA> }} }}")
     return fern
 
 
 def _ferry(want):
-    return Step(action=T + "Ferry", via=T + "box", about=T + "pierB", want=want, urgency_after=0.0,
+    return Step(action=T + "Ferry", binding=filled((T + "cargo", T + "box"), (ABOUT, T + "pierB")), want=want, urgency_after=0.0,
                 predicts=(frozenset({(T + "box", T + "on", T + "pierB")}),
                           frozenset({(T + "box", T + "on", T + "pierA")})))
 

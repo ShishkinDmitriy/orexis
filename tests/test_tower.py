@@ -12,6 +12,7 @@ import pytest
 
 from orexis_agent_progression.store import bindings
 from conftest import genesis_store
+from conftest import DISK, ONTO
 from orexis_agent_progression.ontology import PUBLIC
 
 H = "http://example.org/orexis/hanoi#"
@@ -130,16 +131,18 @@ def test_a_move_the_courier_cannot_make_is_refused_below_and_the_outer_level_sto
     failed = agent.deliberator._plans_failed
     assert pursuit.pursue(agent, promises[0]) is None, "the courier finds no way to peg C"
     assert agent.deliberator._plans_failed == failed + 1, "the refusal lapses the step at once"
+    #  THE PEG BY ITS OWN NAME: a step writes one triple per parameter its action declares, so
+    #  the refusal names `hanoi:onto` where it used to name the kernel's `orexis:about`.
     refused = bindings(agent.intentions.query_union(
-        f"SELECT ?s ?a WHERE {{ ?s progression:refusedBelow ?at ; orexis:about ?a }}"))
+        f"SELECT ?s ?a WHERE {{ ?s progression:refusedBelow ?at ; <{ONTO}> ?a }}"))
     assert len(refused) == 1 and refused[0]["a"] == H + "PegC", "the refusal is on the step, naming the peg"
     again = pursuit.pursue(agent, next(g for g in agent.pursuing() if g.uri == WANT))
     assert again is not None and again != outer, "the outer level decides again, around the refusal"
     head = keeper.current(again)
-    assert not (head.via == W + "disk_1" and head.about == H + "PegC"), \
+    assert not (head.value_of(DISK) == W + "disk_1" and head.value_of(ONTO) == H + "PegC"), \
         "the refused move is not chosen again while the refusal is younger than the patience"
     from orexis_agent_progression.ontology import DELIBERATION_GRAPH
     refusals = bindings(agent.beliefs.query(f"""
 SELECT ?c WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
-  ?c deliberation:verdict "{trace.REFUSED}" ; progression:through <{W}disk_1> }} }}""", agent.beliefs.graphs_of(PUBLIC)))
+  ?c deliberation:verdict "{trace.REFUSED}" ; <{DISK}> <{W}disk_1> }} }}""", agent.beliefs.graphs_of(PUBLIC)))
     assert refusals, "and the trace says why it was passed over"
