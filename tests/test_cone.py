@@ -92,6 +92,46 @@ def test_a_pass_after_a_step_taken_as_predicted_resumes_the_cone_and_finds_the_t
         "the new root stands nowhere but the present"
 
 
+def test_a_re_rooted_cone_says_the_whole_pass_again(monkeypatch):
+    """THE ROWS ARE THE NODES, so a re-root rewrites them whole.
+
+    A re-root keeps the subtree under the world the present landed in, DROPS the rest, and
+    re-bases everything it kept: new depths, new costs, a new clock, and a new root standing
+    nowhere. A `deliberation:PossibleWorld` row amended rather than rewritten would leave two
+    kinds of lie in the store — a world that is gone, offered to a reader asking what is still
+    open, and a kept world carrying the depth and cost it had under the old root.
+
+    So this asserts what the store says AFTER the second pass: exactly the worlds the planner
+    kept, no more; the root among them with no `deliberation:from` and depth 0; and the clock
+    moved to the new root's.
+    """
+    from orexis_agent_deliberation.planner import PASS_GRAPH
+    from orexis_agent_progression.store import bindings
+
+    agent = _driver(monkeypatch, "c0_0", "c1_2")
+    planner = Planner(agent, agent.me)
+    first = planner.plan(_goal(agent))
+    assert len(first.steps) == 8
+    before = {r["w"] for r in bindings(planner.imaginarium.query_over(
+        "SELECT ?w WHERE { ?w a deliberation:PossibleWorld }", PASS_GRAPH))}
+
+    _take(agent, first.steps[0])
+    planner.plan(_goal(agent))
+
+    rows = {r["w"]: r for r in bindings(planner.imaginarium.query_over(
+        "SELECT ?w ?d WHERE { ?w a deliberation:PossibleWorld ; deliberation:atDepth ?d }",
+        PASS_GRAPH))}
+    kept = {n.graph for n in planner._nodes}
+    assert set(rows) == kept, "the store describes exactly the worlds the pass kept"
+    assert before - set(rows), "and the dropped ones are gone, not merely re-stated"
+
+    roots = bindings(planner.imaginarium.query_over(
+        "SELECT ?w ?d WHERE { ?w a deliberation:PossibleWorld ; deliberation:atDepth ?d . "
+        "FILTER NOT EXISTS { ?w deliberation:from ?p } }", PASS_GRAPH))
+    assert len(roots) == 1 and roots[0]["d"] == "0", roots
+    assert roots[0]["w"] == planner._root.graph, "and it is the root the planner re-rooted on"
+
+
 def test_a_present_that_matches_no_kept_world_starts_from_nothing(monkeypatch):
     """The parcel is moved while the van drives: no imagined world holds that, so the cone is
     dead and the pass is built afresh — the path every pass took before #553."""

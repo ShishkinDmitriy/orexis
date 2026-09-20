@@ -164,7 +164,7 @@ class Imaginarium:
         #  EMPTY RESULT rather than an error (#666), so the search builds it in one place.
         return self._store.construct(sparql, graphs, substitutions)
 
-    def note(self, quads) -> None:
+    def note(self, quads, *, whole: bool = False) -> None:
         """Write into the imagined store — what a PASS knows about the worlds it made.
 
         The doors here are named one at a time and each because something asks it of a
@@ -182,7 +182,17 @@ class Imaginarium:
         nothing. `forget=False` because these rows are ABOUT worlds and classify nothing: they
         cannot change which graphs are public, whose they are, or what `remember` holds, which
         is exactly the assertion that flag asks for.
+
+        `whole` says these quads are the COMPLETE account of every graph they name, so what
+        was there is cleared first. A re-rooted cone keeps some of its nodes and drops the
+        rest, and re-bases every one it keeps — new depths, new costs, a new clock — so its
+        account is rewritten rather than amended, and a row for a world that is gone cannot
+        survive to be offered as somewhere to search from.
         """
+        quads = list(quads)
+        if whole:
+            for name in {q.graph_name.value for q in quads}:
+                self._store.clear_graph(name)
         self._store.add_quads(quads, forget=False)
 
     def remember(self, key, compute):
