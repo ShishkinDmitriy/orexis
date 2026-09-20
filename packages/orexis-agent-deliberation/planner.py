@@ -92,6 +92,21 @@ RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 XSD = "http://www.w3.org/2001/XMLSchema#"
 _TRUE = ox.Literal("true", datatype=ox.NamedNode(XSD + "boolean"))
 _FALSE = ox.Literal("false", datatype=ox.NamedNode(XSD + "boolean"))
+#  SAID OF THE WORLD ITSELF, whoever is asking: the met-test's two verdicts name
+#  their want already, and the law is about this agent rather than about a want.
+_OF_THE_WORLD = frozenset({"meets", "fails", "lawful"})
+
+
+def _weighing(world: str, want: str) -> str:
+    """The node where what a pass worked out about one world FOR ONE WANT is written.
+
+    A world's own facts — where it came from, what the path spent, when it is — are true of it
+    whoever is asking. How far a want still is there, what its measure reads, whether the
+    search has opened it: those are true of the world AND the want together, and one
+    imaginarium holds the worlds of every want in a scope. So they hang off a node naming
+    both, rather than off the world as if it had only one asker.
+    """
+    return f"{world}.for.{want.rsplit('#', 1)[-1].rsplit('/', 1)[-1]}"
 
 
 def _signature_of(node) -> str:
@@ -1679,8 +1694,9 @@ class Planner:
         """
         if self.imaginarium is None:
             return
+        subject = node.graph if predicate in _OF_THE_WORLD else _weighing(node.graph, self._want)
         self.imaginarium.note([ox.Quad(
-            ox.NamedNode(node.graph), ox.NamedNode(DELIBERATION + predicate), value,
+            ox.NamedNode(subject), ox.NamedNode(DELIBERATION + predicate), value,
             ox.NamedNode(PASS_GRAPH))])
 
     def _open_row(self, node, standing: bool) -> None:
@@ -1692,8 +1708,8 @@ class Planner:
         """
         if self.imaginarium is None:
             return
-        quad = [ox.Quad(ox.NamedNode(node.graph), ox.NamedNode(DELIBERATION + "open"),
-                        _TRUE, ox.NamedNode(PASS_GRAPH))]
+        quad = [ox.Quad(ox.NamedNode(_weighing(node.graph, self._want)),
+                        ox.NamedNode(DELIBERATION + "open"), _TRUE, ox.NamedNode(PASS_GRAPH))]
         (self.imaginarium.note if standing else self.imaginarium.unnote)(quad)
 
     def _next_open(self, met_now: bool):
@@ -1719,10 +1735,11 @@ class Planner:
         #  into Dosing and spent its whole budget without weighing the branch it needed.
         order = ("?depth" if met_now else "(?spent + ?left) ?urgency ?spent") + " ?minted"
         rows = bindings(self.imaginarium.query_over(f"""
-SELECT ?w WHERE {{ ?w a deliberation:PossibleWorld ; deliberation:open true ;
-    deliberation:spent ?spent ; deliberation:remaining ?left ;
-    deliberation:wouldReach ?urgency ; deliberation:atDepth ?depth ;
-    deliberation:minted ?minted . }}
+SELECT ?w WHERE {{ ?w a deliberation:PossibleWorld ;
+    deliberation:spent ?spent ; deliberation:atDepth ?depth ; deliberation:minted ?minted ;
+    deliberation:weighed ?x .
+  ?x deliberation:forWant <{self._want}> ; deliberation:open true ;
+     deliberation:remaining ?left ; deliberation:wouldReach ?urgency . }}
 ORDER BY {order} LIMIT 1""", PASS_GRAPH))
         return self._by_name.get(rows[0]["w"]) if rows else None
 
@@ -1796,11 +1813,19 @@ ORDER BY {order} LIMIT 1""", PASS_GRAPH))
             return ox.Literal(f"{v:.6f}", datatype=ox.NamedNode(XSD + "decimal"))
         out = [q(me, RDF_TYPE, ox.NamedNode(D + "PossibleWorld")),
                q(me, D + "spent", dec(node.cost)),
-               q(me, D + "remaining", dec(node.estimate or 0.0)),
-               q(me, D + "wouldReach", dec(node.urgency)),
                q(me, D + "takes", dec(node.landing)),
                q(me, D + "atDepth", ox.Literal(str(len(node.taken)),
                                                datatype=ox.NamedNode(XSD + "integer"))),
+               q(me, D + "weighed", ox.NamedNode(_weighing(node.graph, self._want))),
+               #  WHAT IS TRUE OF THIS WORLD AND THIS WANT TOGETHER, on a node naming both.
+               q(ox.NamedNode(_weighing(node.graph, self._want)), RDF_TYPE,
+                 ox.NamedNode(D + "Weighing")),
+               q(ox.NamedNode(_weighing(node.graph, self._want)), D + "forWant",
+                 ox.NamedNode(self._want)),
+               q(ox.NamedNode(_weighing(node.graph, self._want)), D + "remaining",
+                 dec(node.estimate or 0.0)),
+               q(ox.NamedNode(_weighing(node.graph, self._want)), D + "wouldReach",
+                 dec(node.urgency)),
                q(me, D + "signature", ox.Literal(_signature_of(node))),
                #  WHEN THIS WORLD WAS MADE, and it is not decoration: it is the tie-break the
                #  heap kept as its mint counter, and it is load-bearing. A pass whose want
@@ -1860,8 +1885,9 @@ ORDER BY {order} LIMIT 1""", PASS_GRAPH))
         #  re-numbering by that order keeps the tie-break saying what it said.
         for n, m in enumerate(self._nodes):
             out += self._rows_for(m, n)
+            weighing = ox.NamedNode(_weighing(m.graph, self._want))
             if m in self._pending:
-                out.append(ox.Quad(ox.NamedNode(m.graph), ox.NamedNode(DELIBERATION + "open"),
+                out.append(ox.Quad(weighing, ox.NamedNode(DELIBERATION + "open"),
                                    _TRUE, ox.NamedNode(PASS_GRAPH)))
             #  WHAT WAS CONCLUDED SURVIVES THE REWRITE. A re-root clears the verdicts of what
             #  it puts back on the frontier and keeps the rest, so the account says of each
@@ -1874,7 +1900,7 @@ ORDER BY {order} LIMIT 1""", PASS_GRAPH))
                 out.append(ox.Quad(ox.NamedNode(m.graph), ox.NamedNode(DELIBERATION + "lawful"),
                                    _TRUE if m.legal else _FALSE, ox.NamedNode(PASS_GRAPH)))
             if m.verdict is not None:
-                out.append(ox.Quad(ox.NamedNode(m.graph), ox.NamedNode(DELIBERATION + "verdict"),
+                out.append(ox.Quad(weighing, ox.NamedNode(DELIBERATION + "verdict"),
                                    ox.Literal(m.verdict), ox.NamedNode(PASS_GRAPH)))
         self._minted = len(self._nodes)
         self.imaginarium.note(out, whole=True)
@@ -1885,9 +1911,8 @@ ORDER BY {order} LIMIT 1""", PASS_GRAPH))
         `FILTER NOT EXISTS` over these rows."""
         if self.imaginarium is not None:
             self.imaginarium.note([ox.Quad(
-                ox.NamedNode(self._graph(node)), ox.NamedNode(DELIBERATION + "expanded"),
-                ox.Literal("true", datatype=ox.NamedNode(XSD + "boolean")),
-                ox.NamedNode(PASS_GRAPH))])
+                ox.NamedNode(_weighing(self._graph(node), self._want)),
+                ox.NamedNode(DELIBERATION + "expanded"), _TRUE, ox.NamedNode(PASS_GRAPH))])
 
     def _predicted(self, graph: str, node, instant, added=(), retracted=(), apply: bool = False,
                    changed: frozenset | None = None):

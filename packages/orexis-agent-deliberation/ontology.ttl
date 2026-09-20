@@ -39,7 +39,7 @@ deliberation:Anything a owl:Thing ; rdfs:label "Anything" ;
     orexis:arrivedBy orexis:Derived .
 
 deliberation:ScopeGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Scope graph" ;
-    rdfs:comment "THE STORE's scopes — nobody's, and one graph rather than one per agent, since every agent reading one store would compute the same partition from the same rows — written whole by `scope_actions` from the actions the store holds and the derivations loaded: which predicates some one action or derivation reads or writes together, as `deliberation:Scope` nodes, and which scope each predicate and each action is in. The partition is a function of the actions loaded, which do not change while the agent runs; it was recomputed in Python on every derivation and is data now, so `derive_wants` reads it and clusters the results by it. A working graph like the judgment graph: a conclusion, replaced per run, carried by no plan." .
+    rdfs:comment "THE STORE's scopes — nobody's, and one graph rather than one per agent, since every agent reading one store would compute the same partition from the same rows — written whole by `scope_actions` from the actions the store holds and the derivations loaded: which predicates some one action or derivation reads or writes together, as `deliberation:Scope` nodes, and which scope each predicate and each action is in. The partition is a function of the actions loaded, which do not change while the agent runs; it was recomputed in Python on every derivation and is data now, so `derive_wants` reads it and clusters the results by it. A working graph: a conclusion, replaced whole per run, carried into no possible world and read beside no state, since none of it is a fact about the world a shape is written against." .
 ##  The store's scopes — written whole by `scope_actions` from the actions the store holds and
 ##  the derivations loaded, and read by `derive_wants`. Declared here because it is named: one
 ##  graph for the store, belonging to no agent, so there is no id to build it from.
@@ -53,7 +53,6 @@ deliberation:inScope a owl:ObjectProperty ; rdfs:range deliberation:Scope ; rdfs
 
 deliberation:RememberedPlan a owl:Class ; rdfs:label "Remembered plan" ;
     rdfs:comment "A method on a want, lifted from a plan that worked (a-remembered-plan-is-a-method-on-the-want): `deliberation:forWant` the want, `deliberation:lifted` its steps in order with their predictions and premises, `deliberation:measuredCost` what the search said it would spend. Its applicability is COMPUTED from the steps — the regressed precondition (#551) — and never stored. Filled, not yet lifted to variables: a world where the precondition holds adopts it outright, and the world corrects it step by step once taken." .
-deliberation:forWant a owl:ObjectProperty ; rdfs:domain deliberation:RememberedPlan ; rdfs:label "for want" .
 deliberation:lifted a owl:ObjectProperty ; rdfs:domain deliberation:RememberedPlan ; rdfs:label "lifted" ;
     rdfs:comment "An rdf:List of the walked steps, each a node with the ledger's own words for a step: what it fills, through what, about what, how much, what it predicts and what it read (its premises)." .
 deliberation:measuredCost a owl:DatatypeProperty ; rdfs:domain deliberation:RememberedPlan ; rdfs:range xsd:decimal ; rdfs:label "measured cost" .
@@ -80,6 +79,13 @@ deliberation:atInstant a owl:DatatypeProperty ; rdfs:domain deliberation:Possibl
     rdfs:label "at instant" ;
     rdfs:comment "WHEN this world is. A possible world is not only a set of facts, it is a set of facts AT an instant — the pass's clock plus every landing on the path to it — and what a rule is told when it asks what time its own step happens at. Two worlds holding the same facts at different instants are judged against different forecasts. WRITTEN AND NOT DERIVED, which is forced: this engine binds NOTHING for duration arithmetic, so no query can add a path's seconds to the pass's clock, and a reader handed only `deliberation:takes` could not say when the world is. The root's instant is the pass's clock, which is how the clock reaches the store at all." .
 
+deliberation:Weighing a owl:Class ; rdfs:label "Weighing" ;
+    rdfs:comment "WHAT A PASS WORKED OUT ABOUT ONE WORLD FOR ONE WANT — the relationship between the two, reified because it carries numbers: a thing said not about a subject but about a subject AND what it is being asked against. A world's own facts are true of it whoever asks — where it came from, what the path spent, when it is — but how far a want still is there, what its measure reads, and whether the search has opened it are true of the world AND the want together. One imaginarium holds the worlds of every want in a scope, so a world has as many of these as there are wants asking about it, and writing them on the world would have been a world pretending to have one asker. Dies with the pass, as the worlds do." .
+
+deliberation:weighed a owl:ObjectProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range deliberation:Weighing ;
+    rdfs:label "weighed" ;
+    rdfs:comment "What this pass worked out about this world for one of the wants asking about it. One per want, and none before a want has asked: a world nobody has weighed is still a world." .
+
 deliberation:from a owl:ObjectProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range deliberation:PossibleWorld ;
     rdfs:label "from" ;
     rdfs:comment "The world this one was forked from. Absent on the root, which is where the pass stands and was forked from nothing. The graph's NAME carries the path too, and a name is for eyes: this is the link a query can follow." .
@@ -88,7 +94,7 @@ deliberation:spent a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWor
     rdfs:label "spent" ;
     rdfs:comment "What the path to this world cost — each step's `orexis:costs` summed. Its own word rather than the action's, which is a SPARQL text to evaluate where this is a number the path accumulated; the core's word has priority (#640)." .
 
-deliberation:remaining a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:decimal ;
+deliberation:remaining a owl:DatatypeProperty ; rdfs:domain deliberation:Weighing ; rdfs:range xsd:decimal ;
     rdfs:label "remaining" ;
     rdfs:comment "What the want's `orexis:estimates` reads IN this world — how far it still is, in the unit the search spends, never overstated. With `deliberation:spent` it is the A* key the open list is ordered by, which is what lets the frontier be a query rather than a heap." .
 
@@ -108,11 +114,11 @@ deliberation:minted a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWo
     rdfs:label "minted" ;
     rdfs:comment "Where this world came in the order the pass made them, counting from the root. THE TIE-BREAK, and not decoration: a want that declares no `orexis:estimates` scores every world alike — same spent, same remaining, same urgency — so what breaks the tie IS the order the search runs in, and arrival order is what makes it go layer by layer rather than dive. It was the heap's mint counter, and moving the open list into the store without it sent a greenhouse pass alphabetically into Dosing until all 128 worlds of its budget were spent, never weighing the Heating branch its plan needed. Re-numbered by a re-root from the order of what it kept, which is the order they were made in." .
 
-deliberation:open a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:boolean ;
+deliberation:open a owl:DatatypeProperty ; rdfs:domain deliberation:Weighing ; rdfs:range xsd:boolean ;
     rdfs:label "open" ;
     rdfs:comment "Whether this world is on the frontier — somewhere the search may still open. THE OPEN LIST IS THESE ROWS, ordered by spent plus remaining, which is the A* key the search used to keep a heap for; an iteration needs nothing carried over from the last one but the name the query hands back. OPEN IS NOT MERELY UNEXPANDED and cannot be inferred from `deliberation:expanded`: a world settled with a verdict — met, refused, too dear — is never put on the frontier at all, so its absence is said rather than deduced. Taken back when the world is opened, and put there again by a re-root for every world it kept that was still waiting." .
 
-deliberation:expanded a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:boolean ;
+deliberation:expanded a owl:DatatypeProperty ; rdfs:domain deliberation:Weighing ; rdfs:range xsd:boolean ;
     rdfs:label "expanded" ;
     rdfs:comment "Whether this world has been opened — its levers tried and its children forked. Its ABSENCE is what makes a world part of the frontier, so the open list is `FILTER NOT EXISTS` over these rows ordered by spent-plus-remaining." .
 
@@ -123,9 +129,9 @@ deliberation:signature a owl:DatatypeProperty ; rdfs:domain deliberation:Possibl
 deliberation:Plan a owl:Class ; rdfs:label "Plan" ;
     rdfs:comment "WHAT ONE PASS FOUND, written down: the steps it would take, in order, and how long they come to. It lived only as a Python object handed to the keeper and was then discarded, so nothing outside the process could see what had been decided and the duration the search computed — the summed `orexis:landsAfter` of its path — was recomputed by nobody because it was gone. One per want, named for it and replaced whole, in the deliberation graph, which is cleared at boot because a plan about a world that has moved is stale. ITS STEPS ARE THE LEDGER'S OWN: `progression:Step`, chained by `progression:by` and `progression:then`, each saying what it `progression:fills` and what it goes `progression:through` — the same shape an intention's steps have, so committing to a plan is reading what is already there rather than being handed a Python object across a layer." .
 
-deliberation:forWant a owl:ObjectProperty ; rdfs:domain deliberation:Plan ; rdfs:range orexis:Want ;
+deliberation:forWant a owl:ObjectProperty ; rdfs:range orexis:Want ;
     rdfs:label "for want" ;
-    rdfs:comment "The want this plan was found for. A plan is named for its want and replaced whole, so a second pass over the same want leaves one plan and not two — and a reader that holds a want asks for its plan by this rather than by the name, which is a convention." .
+    rdfs:comment "The want this was found for, or weighed against. Said by three things and so carrying NO domain: a REMEMBERED PLAN, which worked for it once; a PLAN, which is what a pass decided for it; and a WEIGHING, which is what a pass worked out about one world for it. It was declared twice with a domain each, which in RDFS is the intersection of the two — a property nothing could legally carry. A plan is named for its want and replaced whole, so a second pass over the same want leaves one plan and not two — and a reader that holds a want asks for its plan by this rather than by the name, which is a convention." .
 
 deliberation:takes a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:label "takes" ;
@@ -154,7 +160,7 @@ deliberation:verdict a owl:DatatypeProperty ; rdfs:range xsd:string ;
 deliberation:missing a owl:DatatypeProperty ; rdfs:domain deliberation:Candidate ; rdfs:range xsd:string ; rdfs:label "missing" ;
     rdfs:comment "The fact whose absence in the present made a remembered plan inapplicable here (#551), stated as the signature states it — so the trace says which fact, not only that one was." .
 
-deliberation:wouldReach a owl:DatatypeProperty ; rdfs:domain deliberation:Candidate ; rdfs:range xsd:decimal ;
+deliberation:wouldReach a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:label "would reach" ;
     rdfs:comment "The urgency of the world this lever would have made. The comparison the whole search turns on: a candidate is worth taking only if this is lower than where the agent already stands." .
 

@@ -105,8 +105,9 @@ def test_the_store_alone_says_what_the_pass_decided(monkeypatch, snapshots):
 
     #  THE WORLD WHERE NOTHING REMAINS, and the path back to the one forked from nothing.
     solved = bindings(im.query_over(
-        "SELECT ?w WHERE { ?w a deliberation:PossibleWorld ; deliberation:remaining 0.0 ; "
-        "deliberation:atDepth ?d } ORDER BY ?d LIMIT 1", PASS_GRAPH))
+        f"SELECT ?w WHERE {{ ?w a deliberation:PossibleWorld ; deliberation:atDepth ?d ; "
+        f"deliberation:weighed ?x . ?x deliberation:forWant <{want.uri}> ; "
+        f"deliberation:remaining 0.0 }} ORDER BY ?d LIMIT 1", PASS_GRAPH))
     assert solved, "no world in the store reaches the goal"
     walked, here = [], solved[0]["w"]
     while True:
@@ -141,10 +142,11 @@ def test_the_store_alone_says_what_the_pass_decided(monkeypatch, snapshots):
 
     #  AND THE OPEN LIST, ordered as `_priority` orders it, asked of the store.
     frontier = bindings(im.query_over(
-        "SELECT ?w ?spent ?left WHERE { ?w a deliberation:PossibleWorld ; deliberation:spent ?spent ; "
-        "deliberation:remaining ?left ; deliberation:wouldReach ?u . "
-        "FILTER NOT EXISTS { ?w deliberation:expanded true } } "
-        "ORDER BY (?spent + ?left) ?u ?spent", PASS_GRAPH))
+        f"SELECT ?w ?spent ?left WHERE {{ ?w a deliberation:PossibleWorld ; "
+        f"deliberation:spent ?spent ; deliberation:weighed ?x . "
+        f"?x deliberation:forWant <{want.uri}> ; deliberation:open true ; "
+        f"deliberation:remaining ?left ; deliberation:wouldReach ?u }} "
+        f"ORDER BY (?spent + ?left) ?u ?spent", PASS_GRAPH))
     assert frontier, "every world expanded and none left open — nothing to resume from"
     keys = [float(r["spent"]) + float(r["left"]) for r in frontier]
     assert keys == sorted(keys), keys
