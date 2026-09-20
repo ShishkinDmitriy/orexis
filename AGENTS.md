@@ -332,6 +332,13 @@ it is a record wearing a bullet.
   decomposition, present and foreseen, since a presented debt's rows do not mention the
   unpresented debt whose want was minted at its lapse, and dropping on the present alone took
   it. A want a plan is walking is kept whatever its desire reads.
+- **The one function over TWO stores is the filling of a possible world** — `imagine` takes
+  the beliefs and an empty store the caller made, copies every public graph whatever its
+  period and the catalogue with them, and hands the second back; everything that happens to
+  that world afterwards happens to it the ordinary way, so this is the seam rather than a
+  wrapper. Narrowing what crosses — four named graphs, or the graphs of one scope — was
+  measured at 10.4 ms against 0.6 on a pass costing over a second, and fails silently: a
+  pattern reaching a graph nobody copied returns an EMPTY RESULT, not an error.
 - **A function over the store is handed the engine and nothing else** — `derive_wants` and
   `scope_actions` take `pyoxigraph.Store` and no wrapper: which graphs they read they ask of
   the catalogue in their own texts, whose a desire is they read off `orexis:holds`, and the
