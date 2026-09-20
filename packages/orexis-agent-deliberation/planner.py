@@ -28,6 +28,10 @@ rather than refinements, and each is here because a question found the failure i
 
 from __future__ import annotations
 
+import hashlib
+
+import pyoxigraph as ox
+
 from functools import partial
 
 from datetime import datetime, timedelta, timezone
@@ -51,7 +55,7 @@ from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import NAMESPACES, Raw, bind, bindings
 from .ontology import DELIBERATION
-from orexis_agent_progression.ontology import DELIBERATION_GRAPH, OREXIS, PROGRESSION, STATE_GRAPH
+from orexis_agent_progression.ontology import DELIBERATION_GRAPH, GRAPH_PREFIX, OREXIS, PROGRESSION, STATE_GRAPH
 from orexis_agent_deliberation.conformance import graph_from, held_shapes, legality_selects
 from orexis_agent_deliberation.judge import crossed_text
 from orexis_agent_progression import clock
@@ -79,6 +83,22 @@ class _Remembered:
     direction: str | None = None
     for_agent: str | None = None
     is_own: bool = True
+
+
+#  WHERE A PASS SAYS WHAT IT KNOWS about the worlds it made — in the imaginarium, beside them,
+#  and gone when the pass is. Named once here because this is what creates it.
+PASS_GRAPH = GRAPH_PREFIX + "pass"
+RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+XSD = "http://www.w3.org/2001/XMLSchema#"
+
+
+def _signature_of(node) -> str:
+    """What makes two worlds the same world, as a name: the canonical facts this world differs
+    by, sorted and hashed. The facts ARE the world; this is only its name, and a query asking
+    whether a fork lands somewhere already seen compares names."""
+    adds, retracts = node.diff
+    text = "|".join(sorted(str(f) for f in adds)) + "!" + "|".join(sorted(str(f) for f in retracts))
+    return hashlib.sha256(text.encode()).hexdigest()[:16]
 
 
 def write_plan(engine, want: str, plan) -> str | None:
@@ -634,6 +654,7 @@ class Planner:
             #  would count twice — and `_record` drops every graph then (#487, #553); the next
             #  pass re-makes what it reads from the nearest kept graph.
             node.expanded = True
+            self._opened(node)
 
         return self._ended(judgment, met_now, saw_candidate)
 
@@ -1446,6 +1467,11 @@ class Planner:
         here.urgency = self._urgency_in(here, judgment)
         self._root = here
         self._at_root(here)
+        #  THE ROOT IS A WORLD TOO, and says so in the store: where the pass stands, forked
+        #  from nothing, nothing spent. Without its row the record reads as a forest whose
+        #  trees begin nowhere, and a reader taking the next iteration could not tell the
+        #  world the search started from apart from one it has never heard of.
+        self._note(here, None, None)
         return here
 
     def _projected(self, here, judgment: Want, latest: bool = True):
@@ -1610,7 +1636,79 @@ class Planner:
         #  THE STEP CARRIES WHAT IT PREDICTED (#510): the same canonical facts the signature
         #  is made of, so the keeper can hold the world to this step without an imaginarium.
         step.taken = node.taken + (replace(act, urgency_after=step.urgency, predicts=own),)
+        self._note(step, self._graph(node), act)
         return step
+
+    def _note(self, node, parent: str, act) -> None:
+        """Say in the STORE what this pass knows about the world it just made.
+
+        What the search knew about a world was a Python object: its parent, what the path had
+        spent, what the want read there, how far the want still was, whether it had been
+        opened. None of it was anywhere a query could reach, so a pass could not be stopped
+        and resumed from the store, and the frontier could not be asked for — which is the
+        whole of why the open list is a heap here and not an `ORDER BY`.
+
+        BESIDE THE WORLDS AND NOT IN THEM: a row is ABOUT a world, and a world's graph holds
+        that node's own readings and nothing else. Written into the imaginarium, which dies
+        with the pass, as these rows should — a world that no longer exists is not a frontier.
+
+        THE STEP IS THE LEDGER'S OWN WORDS, as a plan's is: `progression:Step`,
+        `progression:fills`, `progression:through`. One vocabulary for a planned step, wherever
+        it is written down.
+
+        WRITTEN AND NOT YET READ. The search still keeps its own nodes and its own heap; these
+        rows say the same thing where a query can reach it, and `test_expansions` holds the two
+        to each other. One thing must be settled before the loop reads them instead: a
+        re-rooted cone drops nodes and does not yet drop their rows, so a store-driven frontier
+        would offer worlds that are gone.
+
+        MEASURED, alternated within one session because this bench drifts twofold between
+        invocations: 1.9% of the two-disk pass, fourteen forks. It was 38.6% written as
+        `INSERT DATA` — two SPARQL texts parsed per fork, where the writing itself is nothing,
+        which is why `Imaginarium.note` takes quads. The cost is per FORK, so it scales with
+        how wide a search goes rather than with how long it runs.
+        """
+        if self.imaginarium is None:
+            return
+        D, P = DELIBERATION, PROGRESSION
+        me, g = ox.NamedNode(node.graph), ox.NamedNode(PASS_GRAPH)
+        def q(s_, p_, o_):
+            return ox.Quad(s_, ox.NamedNode(p_), o_, g)
+        def dec(v):
+            return ox.Literal(f"{v:.6f}", datatype=ox.NamedNode(XSD + "decimal"))
+        out = [q(me, RDF_TYPE, ox.NamedNode(D + "World")),
+               q(me, D + "spent", dec(node.cost)),
+               q(me, D + "remaining", dec(node.estimate or 0.0)),
+               q(me, D + "wouldReach", dec(node.urgency)),
+               q(me, D + "takes", dec(node.landing)),
+               q(me, D + "atDepth", ox.Literal(str(len(node.taken)),
+                                               datatype=ox.NamedNode(XSD + "integer"))),
+               q(me, D + "signature", ox.Literal(_signature_of(node)))]
+        #  THE ROOT HAS NO PARENT AND NO STEP: it is where the pass stands, reached by nothing.
+        if parent is not None:
+            out.append(q(me, D + "from", ox.NamedNode(parent)))
+        if act is not None:
+            step = ox.NamedNode(node.graph + ".step")
+            out += [q(me, P + "by", step),
+                    q(step, RDF_TYPE, ox.NamedNode(P + "Step")),
+                    q(step, P + "fills", ox.NamedNode(act.action))]
+            if act.via:
+                out.append(q(step, P + "through", ox.NamedNode(act.via)))
+            if act.about:
+                out.append(q(step, OREXIS + "about", ox.NamedNode(act.about)))
+            if act.quantity is not None:
+                out.append(q(step, P + "quantity", dec(act.quantity)))
+        self.imaginarium.note(out)
+
+    def _opened(self, node) -> None:
+        """Mark a world expanded — its levers tried, its children forked. The ABSENCE of this
+        is what makes a world part of the frontier, so a query for the open list is a
+        `FILTER NOT EXISTS` over these rows."""
+        if self.imaginarium is not None:
+            self.imaginarium.note([ox.Quad(
+                ox.NamedNode(self._graph(node)), ox.NamedNode(DELIBERATION + "expanded"),
+                ox.Literal("true", datatype=ox.NamedNode(XSD + "boolean")),
+                ox.NamedNode(PASS_GRAPH))])
 
     def _predicted(self, graph: str, node, instant, added=(), retracted=(), apply: bool = False,
                    changed: frozenset | None = None):

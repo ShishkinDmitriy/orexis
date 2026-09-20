@@ -290,7 +290,7 @@ def held_to(case: Path, request, function: str, before: dict, after: dict) -> No
         + f"  if the change is on purpose: `{UPDATE}`, then review the diff")
 
 
-def held_worlds_to(case: Path, request, forks: list) -> None:
+def held_worlds_to(case: Path, request, forks: list, knows: dict) -> None:
     """Hold the worlds a pass FORKED to `<case>.worlds.trig` beside it, in the order they were
     made — one `GRAPH` block per world, named as the imaginarium named it.
 
@@ -314,6 +314,12 @@ def held_worlds_to(case: Path, request, forks: list) -> None:
            + segments_of(base)[0]]
     for n, (frm, to, _) in enumerate(forks):
         out.append(f"#  {n + 1}. from {frm.rsplit('/', 1)[-1]}\n" + render(to, graphs[to]))
+    #  AND WHAT THE PASS KNOWS ABOUT THEM, which is the half that makes the rest usable: a
+    #  world's parent, what the path spent, what the want read there and how far it still is.
+    #  With this a reader coming to the store cold can ask for the frontier and take the next
+    #  iteration; without it the worlds are a heap of graphs with no edges between them.
+    for iri, graph in sorted(knows.items()):
+        out.append("#  What the pass knows about every world it made.\n" + render(iri, graph))
     text = "\n".join(out)
     if request.config.getoption("--update-snapshots"):
         path.write_text(text)
