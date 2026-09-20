@@ -74,11 +74,23 @@ def stand_in(case: Path, text: str | None = None):
         deliberation:ScopeGraph rdfs:subClassOf orexis:Graph . }} }}""")
     st.close_catalogue()      # a case's rows say one class each; every kind stands on them now, as on a volume's
     desires, wants = Desires(st), Wants(st)
-    return SimpleNamespace(id=AGENT, me=SimpleNamespace(uri=ME), beliefs=st, desires=desires,
-                           wants=wants, ask=lambda *a, **k: [], keeper=None)
+    #  ENOUGH TO RUN A SEARCH, and no more. `Afforder` takes collections over this store and
+    #  no agent, so a case can have one; `desire_urgency` is the CHOIR, which a case has no
+    #  members to ask — it answers None, and the planner then judges a compiled want the way
+    #  the puzzle worlds are judged, binary from the store: unmet 1, met 0 (`planner._urgency_in`).
+    #  A case whose goal is a shape therefore needs no capability loaded, and its whole
+    #  objective is in the store, which is what makes a search snapshot-shaped at all.
+    from orexis_agent_deliberation.actions import Actions
+    from orexis_agent_deliberation.affordances import Affordances
+    from orexis_agent_deliberation.afforder import Afforder
+    return SimpleNamespace(id=AGENT, me=SimpleNamespace(uri=ME, acts_for=None), beliefs=st, desires=desires,
+                           wants=wants, ask=lambda *a, **k: [], keeper=None,
+                           afforder=Afforder(Actions(st), Affordances(st), desires, ME, picks_graph(AGENT)),
+                           desire_urgency=lambda *a, **k: None)
 
 
 RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+DECIMAL = URIRef("http://www.w3.org/2001/XMLSchema#decimal")
 BARE = {URIRef(f"http://www.w3.org/2001/XMLSchema#{t}") for t in ("integer", "decimal", "boolean")}
 
 
@@ -156,11 +168,29 @@ def renderer(prefixes: dict[str, str]):
             return f"<{term}>"
         if isinstance(term, Literal):
             if term.datatype in BARE and re.fullmatch(r"[-+]?\d+(\.\d+)?|true|false", str(term)):
+                #  A DECIMAL KEEPS ITS POINT. Turtle's bare forms are typed by their spelling —
+                #  `1` is an integer and `1.0` a decimal — so a decimal whose value happens to
+                #  be whole came back from the snapshot as an INTEGER and the comparison saw a
+                #  quad that was never written. No case had one until a pass wrote `standsAt`
+                #  and a plan wrote `takes`.
+                if term.datatype == DECIMAL and "." not in str(term):
+                    return f"{term}.0"
                 return str(term)                  # Turtle's own short form
             text = term.n3()
-            for prefix, ns in longest:
-                if f"^^<{ns}" in text:
-                    return text.replace(f"^^<{ns}", f"^^{prefix}:")[:-1]
+            #  THE DATATYPE, NEVER THE CONTENT. This asked whether `^^<ns` appeared ANYWHERE
+            #  in the literal's text and replaced it there — so a literal whose content
+            #  mentions a datatype IRI had the mention rewritten instead of its own datatype,
+            #  and the `[:-1]` that was meant to drop the datatype IRI's `>` chopped the
+            #  literal's closing quote instead, leaving a snapshot no parser would read. The
+            #  trace's compiled select is exactly such a literal: a SELECT carrying
+            #  `"10"^^<…XMLSchema#integer>` inside it. Abbreviate what `term.datatype` says
+            #  and only where the text ends with it.
+            tail = f"^^<{term.datatype}>"
+            if term.datatype is not None and text.endswith(tail):
+                for prefix, ns in longest:
+                    local = str(term.datatype)[len(ns):]
+                    if str(term.datatype).startswith(ns) and re.fullmatch(r"[\w.\-]*", local):
+                        return text[:-len(tail)] + f"^^{prefix}:{local}"
             return text
         return f"_:{term}"
 
