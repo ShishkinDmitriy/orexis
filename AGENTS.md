@@ -386,7 +386,7 @@ it is a record wearing a bullet.
   urgency, the reading, which way it broke — a WANT carries, made fresh where it is made
   fresh and stored where it is stored.
 - **A collection over stored rows is handed a store, and one over contributed answers is handed
-  the agent** — `Wants` reads graphs so it takes somewhere to search, `Judgments` asks the choir
+  the agent** — `Wants` reads graphs so it takes somewhere to search, `Pursuing` asks the choir
   so it must reach the choir, and the asymmetry is what tells the two kinds of collection apart.
 - **A singular file holds the model and its plural holds the collection** — `desire.py` and
   `desires.py`, `want.py` and `wants.py`, so neither reader has to open the other's file.
@@ -797,7 +797,7 @@ fails if pyshacl ever entails something the closure does not. See
   the pick record and the roots. A graph that does not exist until its agent does cannot be
   declared in a T-Box, and boot used to type them by matching names against a prefix each
   class declared — the one reader that depended on a name. A kind no runner asks for —
-  review's three, the judgments, the scopes — is read by its package alone, and no class
+  review's three, the scopes — is read by its package alone, and no class
   hides anything from anyone. And a reader that means its OWN gets
   its own: the belief base tells the store whose it is, the classification says whose each
   graph is, and every list of the agent's graphs is kept to that owner — a graph saying no

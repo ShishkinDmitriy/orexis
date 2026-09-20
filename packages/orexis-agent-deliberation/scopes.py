@@ -2,8 +2,8 @@
 
 `scope_actions` hands the partition here and it is written as scopes; `derive_wants` reads it
 back with one SELECT. This module owns the scope graph: its name for eyes (`scopes`), its
-classification, and that it is replaced whole on every run, as `judgments.py` owns the
-judgment graph. A reader that means the graph asks its class.
+classification, and that it is replaced whole on every run, as `wants.py` owns a want's
+graph. A reader that means the graph asks its class.
 
 ONE GRAPH FOR THE STORE, and not one per agent. The partition is a function of the actions the
 store holds and the derivations loaded, and neither is anyone's in particular: every agent
