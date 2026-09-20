@@ -50,6 +50,7 @@ GRAPH graph:pass {
       deliberation:atDepth 0 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
+      deliberation:minted 0 ;
       deliberation:remaining 0.0 ;
       deliberation:signature "bb7208bc9b5d7c04" ;
       deliberation:spent 0.0 ;
@@ -59,6 +60,7 @@ GRAPH graph:pass {
       deliberation:atDepth 1 ;
       deliberation:atInstant "2026-01-01T12:00:30+00:00"^^xsd:dateTime ;
       deliberation:from graph:sensed ;
+      deliberation:minted 1 ;
       deliberation:remaining 0.0 ;
       deliberation:signature "bf505789bb150461" ;
       deliberation:spent 9.0 ;
@@ -74,6 +76,7 @@ GRAPH graph:pass {
       deliberation:atDepth 1 ;
       deliberation:atInstant "2026-01-01T12:10:00+00:00"^^xsd:dateTime ;
       deliberation:from graph:sensed ;
+      deliberation:minted 2 ;
       deliberation:remaining 0.0 ;
       deliberation:signature "bd09153f203e39af" ;
       deliberation:spent 1.0 ;

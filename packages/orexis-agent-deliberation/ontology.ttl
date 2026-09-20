@@ -92,6 +92,14 @@ deliberation:remaining a owl:DatatypeProperty ; rdfs:domain deliberation:Possibl
     rdfs:label "remaining" ;
     rdfs:comment "What the want's `orexis:estimates` reads IN this world — how far it still is, in the unit the search spends, never overstated. With `deliberation:spent` it is the A* key the open list is ordered by, which is what lets the frontier be a query rather than a heap." .
 
+deliberation:minted a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:integer ;
+    rdfs:label "minted" ;
+    rdfs:comment "Where this world came in the order the pass made them, counting from the root. THE TIE-BREAK, and not decoration: a want that declares no `orexis:estimates` scores every world alike — same spent, same remaining, same urgency — so what breaks the tie IS the order the search runs in, and arrival order is what makes it go layer by layer rather than dive. It was the heap's mint counter, and moving the open list into the store without it sent a greenhouse pass alphabetically into Dosing until all 128 worlds of its budget were spent, never weighing the Heating branch its plan needed. Re-numbered by a re-root from the order of what it kept, which is the order they were made in." .
+
+deliberation:open a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:boolean ;
+    rdfs:label "open" ;
+    rdfs:comment "Whether this world is on the frontier — somewhere the search may still open. THE OPEN LIST IS THESE ROWS, ordered by spent plus remaining, which is the A* key the search used to keep a heap for; an iteration needs nothing carried over from the last one but the name the query hands back. OPEN IS NOT MERELY UNEXPANDED and cannot be inferred from `deliberation:expanded`: a world settled with a verdict — met, refused, too dear — is never put on the frontier at all, so its absence is said rather than deduced. Taken back when the world is opened, and put there again by a re-root for every world it kept that was still waiting." .
+
 deliberation:expanded a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:boolean ;
     rdfs:label "expanded" ;
     rdfs:comment "Whether this world has been opened — its levers tried and its children forked. Its ABSENCE is what makes a world part of the frontier, so the open list is `FILTER NOT EXISTS` over these rows ordered by spent-plus-remaining." .

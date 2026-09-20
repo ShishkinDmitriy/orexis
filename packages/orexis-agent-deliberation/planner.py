@@ -36,7 +36,6 @@ from functools import partial
 
 from datetime import datetime, timedelta, timezone
 
-import heapq
 import logging
 import time
 from dataclasses import dataclass, field, replace
@@ -526,7 +525,8 @@ class Planner:
         self._compiled = _Compiled()
         self._root = None
         self._nodes = []
-        self._open = []
+        self._by_name = {}
+        self._minted = 0
         self._by_diff = {}
         self._kept_worlds = 0
         self._from_now = False
@@ -581,20 +581,22 @@ class Planner:
         #  THE OPEN LIST: on a fresh pass the root alone; on a resumed one the kept frontier
         #  under the new root, re-keyed — a priority reads the want's state, so it is minted
         #  here rather than at the re-root.
-        self._open = [(_priority(here, met_now), 0, here)] if not resumed else \
-            [(_priority(n, met_now), k, n) for k, n in enumerate(self._pending)]
-        heapq.heapify(self._open)
-        self._minted = len(self._open)   # heap entries so far: the tie-break, so nodes never compare
+        #  THE OPEN LIST IS IN THE STORE. On a fresh pass the root alone stands on it; on a
+        #  resumed one the kept frontier, which `_renote` put there when it rewrote the
+        #  account. A priority reads the want's state, which is why the ORDER BY is built per
+        #  pass rather than a number written per world.
+        if not resumed:
+            self._open_row(here, True)
         forked = 0                       # worlds THIS pass has imagined, against `self.budget`
         self._forked = 0
 
-        while self._open:
-            _, _, node = heapq.heappop(self._open)
+        while (node := self._next_open(met_now)) is not None:
             if forked >= self.budget:
-                #  Out of budget with the frontier open: the node goes back for the next pass.
-                heapq.heappush(self._open, (_priority(node, met_now), self._minted, node))
-                self._minted += 1
+                #  Out of budget with the frontier open: the node stays on it for the next
+                #  pass, which is now nothing to do rather than a push-back — it was never
+                #  taken off anything.
                 break
+            self._open_row(node, False)
             if self._bound is not None and node.cost + _near(node) > self._bound:
                 break
             depth = len(node.taken)
@@ -748,8 +750,7 @@ class Planner:
         self._weighed.append(
             (depth, row, step.urgency,
              trace.BETTER if step.urgency < self._root.urgency else trace.WORSE))
-        heapq.heappush(self._open, (_priority(step, met_now), self._minted, step))
-        self._minted += 1
+        self._open_row(step, True)
         return None
 
     def _refused(self, step, row, depth, verdict):
@@ -1650,6 +1651,50 @@ class Planner:
         step.taken = node.taken + (replace(act, urgency_after=step.urgency, predicts=own),)
         return step
 
+    def _open_row(self, node, standing: bool) -> None:
+        """Say in the store whether this world is on the frontier, or take it back.
+
+        OPEN IS NOT MERELY UNEXPANDED. A world settled with a verdict — met, refused, too dear
+        — is never put on the frontier at all, so its absence has to be said rather than
+        inferred from what has been opened.
+        """
+        if self.imaginarium is None:
+            return
+        quad = [ox.Quad(ox.NamedNode(node.graph), ox.NamedNode(DELIBERATION + "open"),
+                        ox.Literal("true", datatype=ox.NamedNode(XSD + "boolean")),
+                        ox.NamedNode(PASS_GRAPH))]
+        (self.imaginarium.note if standing else self.imaginarium.unnote)(quad)
+
+    def _next_open(self, met_now: bool):
+        """The world to open next, ASKED OF THE STORE rather than popped off a heap.
+
+        `_priority` is `(spent + remaining, urgency, spent)` for an unmet want and depth alone
+        for a met one, and those are exactly the columns a world's row carries — so the open
+        list IS this `ORDER BY`, and an iteration needs nothing carried over from the last one
+        but the name it gets back.
+
+        MEASURED BEFORE IT REPLACED THE HEAP, and the microbenchmark was the wrong number:
+        one query is 249 us against a heappop's 0.5, which is 544x and says nothing, because a
+        pass pops about as many times as it keeps worlds worth opening — 6 on the two-disk
+        puzzle, 22 on a courier delivery that keeps 79 worlds. Against the whole pass,
+        alternated within one session since this bench drifts twofold between invocations and
+        holding the same choice made in Python as the other side: +3.2% on the courier, same
+        plan both ways. Forking and reading are what a search spends its time on.
+        """
+        #  AND THE TIE-BREAK IS ARRIVAL, which is what the heap's mint counter was. Not
+        #  decoration: a want declaring no estimate scores every world alike, so the tie-break
+        #  IS the order, and arrival is what makes the search go layer by layer rather than
+        #  diving. Broken by the world's name instead, a greenhouse pass went alphabetically
+        #  into Dosing and spent its whole budget without weighing the branch it needed.
+        order = ("?depth" if met_now else "(?spent + ?left) ?urgency ?spent") + " ?minted"
+        rows = bindings(self.imaginarium.query_over(f"""
+SELECT ?w WHERE {{ ?w a deliberation:PossibleWorld ; deliberation:open true ;
+    deliberation:spent ?spent ; deliberation:remaining ?left ;
+    deliberation:wouldReach ?urgency ; deliberation:atDepth ?depth ;
+    deliberation:minted ?minted . }}
+ORDER BY {order} LIMIT 1""", PASS_GRAPH))
+        return self._by_name.get(rows[0]["w"]) if rows else None
+
     def _keep(self, node) -> None:
         """A forked world becomes a NODE of the cone — and says so in the store.
 
@@ -1690,11 +1735,16 @@ class Planner:
         which is why `Imaginarium.note` takes quads. The cost is per FORK, so it scales with
         how wide a search goes rather than with how long it runs.
         """
+        #  AND THE WAY BACK. A row names a world and the search still holds nodes, so
+        #  something must turn the one into the other; the index is kept where the row is
+        #  written, so a world the store names is a world the search can find.
+        self._by_name[node.graph] = node
         if self.imaginarium is None:
             return
-        self.imaginarium.note(self._rows_for(node))
+        self.imaginarium.note(self._rows_for(node, self._minted))
+        self._minted += 1
 
-    def _rows_for(self, node) -> list:
+    def _rows_for(self, node, minted: int) -> list:
         """One world's row, as quads — what `_note` writes and what `_renote` rebuilds the
         whole account from after a re-root.
 
@@ -1721,6 +1771,15 @@ class Planner:
                q(me, D + "atDepth", ox.Literal(str(len(node.taken)),
                                                datatype=ox.NamedNode(XSD + "integer"))),
                q(me, D + "signature", ox.Literal(_signature_of(node))),
+               #  WHEN THIS WORLD WAS MADE, and it is not decoration: it is the tie-break the
+               #  heap kept as its mint counter, and it is load-bearing. A pass whose want
+               #  declares no estimate scores every world alike — same spent, same remaining,
+               #  same urgency — so the tie-break IS the order, and arrival order is what
+               #  makes the search go layer by layer. Ordered by the world's NAME instead, a
+               #  greenhouse pass dived alphabetically into Dosing and spent all 128 worlds of
+               #  its budget without ever weighing the Heating branch the plan needed.
+               q(me, D + "minted", ox.Literal(str(minted),
+                                              datatype=ox.NamedNode(XSD + "integer"))),
                #  WHEN this world is, written and not derived: the engine binds nothing for
                #  duration arithmetic, so no query can add a path's seconds to the pass's
                #  clock. The root's instant is that clock, which is how it reaches the store.
@@ -1765,8 +1824,16 @@ class Planner:
         if self.imaginarium is None:
             return
         out: list = []
-        for m in self._nodes:
-            out += self._rows_for(m)
+        self._by_name = {m.graph: m for m in self._nodes}
+        #  ARRIVAL ORDER SURVIVES A RE-ROOT: `_nodes` is in the order the worlds were made, so
+        #  re-numbering by that order keeps the tie-break saying what it said.
+        for n, m in enumerate(self._nodes):
+            out += self._rows_for(m, n)
+            if m in self._pending:
+                out += [ox.Quad(ox.NamedNode(m.graph), ox.NamedNode(DELIBERATION + "open"),
+                                ox.Literal("true", datatype=ox.NamedNode(XSD + "boolean")),
+                                ox.NamedNode(PASS_GRAPH))]
+        self._minted = len(self._nodes)
         self.imaginarium.note(out, whole=True)
 
     def _opened(self, node) -> None:
