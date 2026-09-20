@@ -50,7 +50,7 @@ _POSSIBLE = GRAPH_PREFIX + "possible/"
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 
-def imagine(beliefs: ox.Store, into: ox.Store, *private: str) -> ox.Store:
+def init_imaginarium(beliefs: ox.Store, into: ox.Store, *private: str) -> ox.Store:
     """Fill an empty store with what no step may change, and hand it back — a FUNCTION OVER
     TWO STORES, which is the one thing here that cannot be one over a single store.
 
@@ -109,14 +109,14 @@ class Imaginarium:
     """
 
     def __init__(self, store: Store, *private: str):
-        """A store of its own, filled by `imagine` — which is all this ever was.
+        """A store of its own, filled by `init_imaginarium` — which is all this ever was.
 
         The copying is the function above, over two engines. What is left here is making the
         empty store and holding it, since this class exists to be the DOORS a rule is asked
         through and not to be the copy.
         """
         self._store = Store()                       # no path: memory, and not the belief base
-        imagine(store.engine, self._store.engine, *private)
+        init_imaginarium(store.engine, self._store.engine, *private)
 
     @property
     def _carried(self) -> frozenset:
@@ -129,7 +129,7 @@ class Imaginarium:
         is easier to keep true than two.
 
         ASKED ON FIRST USE and kept, rather than computed while filling the store: it is a
-        function of the public graphs, which nothing writes after `imagine` has run, and
+        function of the public graphs, which nothing writes after `init_imaginarium` has run, and
         leaving it out of the filling is what let the filling become a function over two
         stores with nothing of this class in it.
         """
