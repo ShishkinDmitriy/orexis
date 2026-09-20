@@ -164,6 +164,27 @@ class Imaginarium:
         #  EMPTY RESULT rather than an error (#666), so the search builds it in one place.
         return self._store.construct(sparql, graphs, substitutions)
 
+    def note(self, quads) -> None:
+        """Write into the imagined store — what a PASS knows about the worlds it made.
+
+        The doors here are named one at a time and each because something asks it of a
+        possible world; this one is asked by the search recording what it has worked out — a
+        world's parent, what it spent to reach it, what its want reads there. That belongs
+        beside the worlds and not in the belief base: it is this pass's, it dies with the
+        pass, and a reader that wants to take the next iteration needs both in one store.
+
+        Not a general escape. A caller that means to change a WORLD uses `amend` or `reached`,
+        which keep a node's readings a diff of its parent's; this writes about worlds rather
+        than in them.
+
+        QUADS AND NOT AN UPDATE, and the difference was measured: as `INSERT DATA` this cost
+        38% of a hanoi solve — two SPARQL texts parsed per fork, where the writing itself is
+        nothing. `forget=False` because these rows are ABOUT worlds and classify nothing: they
+        cannot change which graphs are public, whose they are, or what `remember` holds, which
+        is exactly the assertion that flag asks for.
+        """
+        self._store.add_quads(quads, forget=False)
+
     def remember(self, key, compute):
         return self._store.remember(key, compute)
 

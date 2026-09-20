@@ -73,6 +73,33 @@ And nothing may read it BACK: cycle detection lives in the search where it can b
 deliberation:Deliberation a owl:Class ; rdfs:label "Deliberation" ;
     rdfs:comment "One pass of the planner, about one goal. Replaced whenever that goal is planned again — the graph holds the last pass and never two, because a trace that outlives its pass is a conclusion sitting beside beliefs it can contradict." .
 
+deliberation:PossibleWorld a owl:Class ; rdfs:label "Possible world" ;
+    rdfs:comment "ONE world a pass IMAGINED — named for what it is, because it never happened: a possible world is what a lever WOULD reach, and a reader meeting `World` beside a belief base has to ask which kind it is. Described where it lives — in the imaginarium, beside the graph that holds its readings and named by it. What the search knew about a world was a Python object and nothing else: its parent, what the path had spent, what the want read there, how far the want still was, whether it had been opened. So a pass could not be stopped and resumed from the store, and nothing could ask what the search had considered while it was considering it. These rows are that object, written down. They die with the pass, as the worlds do." .
+
+deliberation:atInstant a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:dateTime ;
+    rdfs:label "at instant" ;
+    rdfs:comment "WHEN this world is. A possible world is not only a set of facts, it is a set of facts AT an instant — the pass's clock plus every landing on the path to it — and what a rule is told when it asks what time its own step happens at. Two worlds holding the same facts at different instants are judged against different forecasts. WRITTEN AND NOT DERIVED, which is forced: this engine binds NOTHING for duration arithmetic, so no query can add a path's seconds to the pass's clock, and a reader handed only `deliberation:takes` could not say when the world is. The root's instant is the pass's clock, which is how the clock reaches the store at all." .
+
+deliberation:from a owl:ObjectProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range deliberation:PossibleWorld ;
+    rdfs:label "from" ;
+    rdfs:comment "The world this one was forked from. Absent on the root, which is where the pass stands and was forked from nothing. The graph's NAME carries the path too, and a name is for eyes: this is the link a query can follow." .
+
+deliberation:spent a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:decimal ;
+    rdfs:label "spent" ;
+    rdfs:comment "What the path to this world cost — each step's `orexis:costs` summed. Its own word rather than the action's, which is a SPARQL text to evaluate where this is a number the path accumulated; the core's word has priority (#640)." .
+
+deliberation:remaining a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:decimal ;
+    rdfs:label "remaining" ;
+    rdfs:comment "What the want's `orexis:estimates` reads IN this world — how far it still is, in the unit the search spends, never overstated. With `deliberation:spent` it is the A* key the open list is ordered by, which is what lets the frontier be a query rather than a heap." .
+
+deliberation:expanded a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:boolean ;
+    rdfs:label "expanded" ;
+    rdfs:comment "Whether this world has been opened — its levers tried and its children forked. Its ABSENCE is what makes a world part of the frontier, so the open list is `FILTER NOT EXISTS` over these rows ordered by spent-plus-remaining." .
+
+deliberation:signature a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:string ;
+    rdfs:label "signature" ;
+    rdfs:comment "What makes two worlds the same world: the canonical facts this one differs by, hashed. A search discards a fork that lands somewhere already seen, and doing that from the store rather than from Python needs the sameness written down. A hash and not the facts, because the facts are the world and this is only its name." .
+
 deliberation:Plan a owl:Class ; rdfs:label "Plan" ;
     rdfs:comment "WHAT ONE PASS FOUND, written down: the steps it would take, in order, and how long they come to. It lived only as a Python object handed to the keeper and was then discarded, so nothing outside the process could see what had been decided and the duration the search computed — the summed `orexis:landsAfter` of its path — was recomputed by nobody because it was gone. One per want, named for it and replaced whole, in the deliberation graph, which is cleared at boot because a plan about a world that has moved is stale. ITS STEPS ARE THE LEDGER'S OWN: `progression:Step`, chained by `progression:by` and `progression:then`, each saying what it `progression:fills` and what it goes `progression:through` — the same shape an intention's steps have, so committing to a plan is reading what is already there rather than being handed a Python object across a layer." .
 
@@ -80,9 +107,9 @@ deliberation:forWant a owl:ObjectProperty ; rdfs:domain deliberation:Plan ; rdfs
     rdfs:label "for want" ;
     rdfs:comment "The want this plan was found for. A plan is named for its want and replaced whole, so a second pass over the same want leaves one plan and not two — and a reader that holds a want asks for its plan by this rather than by the name, which is a convention." .
 
-deliberation:takes a owl:DatatypeProperty ; rdfs:domain deliberation:Plan ; rdfs:range xsd:decimal ;
+deliberation:takes a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:label "takes" ;
-    rdfs:comment "How long this plan comes to, in seconds from its first step to its last landing — the path's summed `orexis:landsAfter`, which the search computes per fork and nothing else can recover, since an action's own is a SPARQL expression about the world the act is taken in. Its own word rather than the action's: what an action declares is a text to evaluate and this is a number, and the core's word has priority (#640). The number a latest start would be subtracted from, where something is not already holding the instant." .
+    rdfs:comment "How long this plan comes to, in seconds from its first step to its last landing — the path's summed `orexis:landsAfter`, which the search computes per fork and nothing else can recover, since an action's own is a SPARQL expression about the world the act is taken in. Its own word rather than the action's: what an action declares is a text to evaluate and this is a number, and the core's word has priority (#640). The number a latest start would be subtracted from, where something is not already holding the instant. SAID OF THREE THINGS and meaning one — how long this takes, in seconds: a PLAN takes its path's total, a possible WORLD takes what the path to it came to, and a STEP takes its own, which is the action's `orexis:landsAfter` evaluated in the world it is taken in and is the only place that number survives the pass." .
 
 deliberation:Candidate a owl:Class ; rdfs:label "Candidate" ;
     rdfs:comment "One lever, simulated. Carries the world it would have reached as a number and the reason it was or was not taken — the same lever may appear twice in one pass at different depths, because what a dose is worth depends on where it is taken from." .
