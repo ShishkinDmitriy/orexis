@@ -167,7 +167,7 @@ def test_the_legality_check_agrees_with_the_judge_on_a_shipped_world_and_a_broke
         assert root_compiled == root_judged
         #  A child that breaks a package shape about this agent: a subscribing interval
         #  below the constitutional floor. Both engines must refuse it, by the same shape.
-        row = type("R", (), {"action": "urn:x:break", "via": "urn:x:v", "about": None})()
+        row = type("R", (), {"action": "urn:x:break", "binding": (("urn:x:p", "urn:x:v"),)})()
         xsd_int = ox.NamedNode("http://www.w3.org/2001/XMLSchema#integer")
         broken = planner.imaginarium.reached(STATE_GRAPH, (row,), [ox.Triple(
             ox.NamedNode(agent.me.uri),

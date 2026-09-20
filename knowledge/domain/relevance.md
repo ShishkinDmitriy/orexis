@@ -2,10 +2,10 @@
 type: Domain Concept
 title: Relevance
 description: >-
-  Which of an agent's levers could serve one want — read off the actions themselves, never
+  Which of an agent's actions could serve one want — read off the actions themselves, never
   declared, and closed backward through preconditions to a fixed point. A pass simulates only
   relevant rows; the rest are recorded as touching nothing the want reads. Anything a parser
-  cannot name reads as anything and keeps every lever, so the filter can cost forks and never
+  cannot name reads as anything and keeps every action, so the filter can cost forks and never
   a plan.
 ---
 
@@ -34,15 +34,15 @@ fold it. See [relevance-is-read-off-the-actions-and-closed-backward](/decisions/
 they imply. A declared list of what each action touches would be a second statement of what the construct
 settles, and the search carries the scar of a guard that disagreed with the effect it described.
 
-**Read the trace.** A lever the filter passed over is written as `irrelevant` beside the rows
+**Read the trace.** An action the filter passed over is written as `irrelevant` beside the rows
 that were weighed — its precondition asked once per pass, at the root, and never at any other
 node (#504) — so "this was there and touched nothing the want reads" is visible, truthful, and
 distinct from "this was weighed and lost". An action stating no effect stays on the menu,
 outside the closure, so a pass that passes it over can still say it did not see everything. A menu of only such rows is the finding NOTHING —
-equip me — which is honest where no lever points at the want.
+equip me — which is honest where no action points at the want.
 
 **The rule it rests on: over-approximation is safe.** A `sh:sparql` body the parser refuses, an
-effect with a variable predicate — every plant lever's retraction of `?obs ?p ?o` — a want
+effect with a variable predicate — every plant action's retraction of `?obs ?p ?o` — a want
 with no shape and no pattern, an obligation, a call: each reads as *anything* and keeps every
 action. Predicates are a coarse key on purpose; two domains sharing one stay mutually relevant,
 which costs forks and never correctness. An action stating no effect is outside the closure
@@ -52,7 +52,7 @@ entirely, because the search never simulates it anyway.
 and every row serves the want. It bites where a world composes two domains, or where a
 package adds a free action the want never reads — measured in
 [measure-the-search](/runbooks/measure-the-search.md), where since the budget replaced depth
-such a lever does not slow a solve but spends the budget and leaves the puzzle unsolved.
+such an action does not slow a solve but spends the budget and leaves the puzzle unsolved.
 
 # What it is asked for beyond one pass
 

@@ -31,7 +31,7 @@ import re
 import uuid
 from datetime import datetime, timezone
 
-from orexis_agent_progression.act import (Step, predicts_from_json, predicts_json, precondition_from_json,
+from orexis_agent_progression.act import (Step, binding_from, predicts_from_json, predicts_json, precondition_from_json,
                                           precondition_json)
 from orexis_agent_progression.ontology import OREXIS, PROGRESSION, STATE_GRAPH, picks_graph
 from orexis_agent_progression.store import bindings
@@ -109,11 +109,10 @@ def applicable(agent, want: str, desires) -> tuple | None:
 
 
 def on_menu_now(agent, step, desires) -> bool:
-    """Whether the present's menu offers this very step: the action through the lever about
-    the thing — the availability select's own answer, filters and all."""
-    return any(
-        r.is_own and r.via == step.via and (r.about or None) == (step.about or None)
-        for r in agent.afforder.offered(only=frozenset({step.action})))
+    """Whether the present's menu offers this very step: the action filled exactly this way —
+    the availability select's own answer, filters and all."""
+    return any(r.is_own and r.binding == step.binding
+               for r in agent.afforder.offered(only=frozenset({step.action})))
 
 
 _SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
@@ -188,10 +187,10 @@ def _pattern_select(facts) -> str | None:
 
 
 def shape_of(steps) -> tuple:
-    """A plan's steps as what is compared between plans: which action, through which lever,
-    about what — in order. Quantity and prediction are how a step was FILLED here, not what
-    the plan is, so two walks of one route through different readings are one plan."""
-    return tuple((s.action, s.via or "", s.about or "") for s in steps)
+    """A plan's steps as what is compared between plans: which action, bound to what — in
+    order. Quantity and prediction are how MUCH a step was sized to here, not what the plan
+    is, so two walks of one route through different readings are one plan."""
+    return tuple((s.action, s.binding) for s in steps)
 
 
 def lift(agent, want: str, steps: list, cost: float | None) -> str:
@@ -213,10 +212,7 @@ def lift(agent, want: str, steps: list, cost: float | None) -> str:
     blocks = []
     for node, step in zip(nodes, steps):
         facts = [f'<{PROGRESSION}fills> <{step.action}>']
-        if step.via:
-            facts.append(f'<{PROGRESSION}through> <{step.via}>')
-        if step.about:
-            facts.append(f'<{OREXIS}about> <{step.about}>')
+        facts += [f'<{parameter}> <{value}>' for parameter, value in step.binding]
         if step.quantity is not None:
             facts.append(f'<{PROGRESSION}quantity> "{step.quantity}"^^<{_XSD}decimal>')
         if step.predicts is not None:
@@ -258,20 +254,25 @@ SELECT ?r ?cost ?at WHERE {{ GRAPH <{graph}> {{
 def _steps_of(agent, uri: str, want: str) -> list:
     graph = remembered_graph(agent.id)
     steps = bindings(agent.beliefs.query(f"""
-SELECT ?node ?first ?rest ?action ?via ?about ?quantity ?predicts ?precondition WHERE {{ GRAPH <{graph}> {{
-  <{uri}> <{LIFTED}> ?head . ?head <{_RDF}rest>* ?node . ?node <{_RDF}first> ?first ; <{_RDF}rest> ?rest .
-  ?first <{PROGRESSION}fills> ?action .
-  OPTIONAL {{ ?first <{PROGRESSION}through> ?via }}
-  OPTIONAL {{ ?first <{OREXIS}about> ?about }}
-  OPTIONAL {{ ?first <{PROGRESSION}quantity> ?quantity }}
-  OPTIONAL {{ ?first <{PROGRESSION}predicts> ?predicts }}
-  OPTIONAL {{ ?first <{PROGRESSION}precondition> ?precondition }} }} }}""", agent.beliefs.graphs_of(PUBLIC)))
+SELECT ?node ?first ?rest ?action ?quantity ?predicts ?precondition (GROUP_CONCAT(DISTINCT CONCAT(STR(?param), " ", STR(?value)); separator="\t") AS ?bound) WHERE {{
+  GRAPH <{graph}> {{
+    <{uri}> <{LIFTED}> ?head . ?head <{_RDF}rest>* ?node . ?node <{_RDF}first> ?first ; <{_RDF}rest> ?rest .
+    ?first <{PROGRESSION}fills> ?action .
+    OPTIONAL {{ ?first <{PROGRESSION}quantity> ?quantity }}
+    OPTIONAL {{ ?first <{PROGRESSION}predicts> ?predicts }}
+    OPTIONAL {{ ?first <{PROGRESSION}precondition> ?precondition }} }}
+  #  WHAT IT WAS FILLED WITH, read back the way it was written: one triple per parameter the
+  #  ACTION declares it takes, under the parameter's own IRI. The declaration is public and the
+  #  step is the agent's, so the join crosses the two graphs — which is the whole reason a
+  #  reader can recover a binding it has no list of.
+  OPTIONAL {{ [] <{OREXIS}takes> ?param . GRAPH <{graph}> {{ ?first ?param ?value }} }} }}
+GROUP BY ?node ?first ?rest ?action ?quantity ?predicts ?precondition""", agent.beliefs.graphs_of(PUBLIC)))
     by_node = {r["node"]: r for r in steps}
     head = bindings(agent.beliefs.query(f"SELECT ?h WHERE {{ GRAPH <{graph}> {{ <{uri}> <{LIFTED}> ?h }} }}", agent.beliefs.graphs_of(PUBLIC)))
     out, node = [], head[0]["h"] if head else None
     while node in by_node:
         r = by_node[node]
-        out.append(Step(action=r["action"], via=r.get("via") or "", want=want, about=r.get("about"),
+        out.append(Step(action=r["action"], want=want, binding=binding_from(r.get("bound")),
                         quantity=float(r["quantity"]) if r.get("quantity") else None,
                         predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None,
                         precondition=precondition_from_json(r["precondition"]) if r.get("precondition") else None))

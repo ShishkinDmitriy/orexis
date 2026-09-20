@@ -90,10 +90,12 @@ Three clauses make that workable, and each was learned by getting it wrong:
 - **A pointer that restates is a second owner.** A stub saying what the other page says has not
   moved the claim, it has copied it. Say what THIS page does with the thing, and link.
 - **A relationship can be the concept**, and the test is whether each half stands alone.
-  `means` and `lever` split because each had content of its own — a means was the joint three
-  subsystems met at; a lever is an instance whose absence removes a row. And when the three
-  subsystems became one node, `means` folded into `action`, because a joint between one thing
-  and itself is nothing (the-action-is-the-kind).
+  `means` and `lever` split because each looked like it had content of its own — a means was
+  the joint three subsystems met at; a lever was an instance whose absence removes a row. Both
+  folded in the end: `means` into `action` when the three subsystems became one node, because a
+  joint between one thing and itself is nothing (the-action-is-the-kind), and `lever` into the
+  BINDING when an action came to declare what it takes, because "the instance in the `via`
+  column" is not a concept once there is no `via` column (an-action-takes-parameters).
   `model-and-unit` does not split: its whole content is what a unit inherits from its model, so
   two pages would each have to restate the relationship, and the gate would refuse them.
 
@@ -148,10 +150,10 @@ it is a record wearing a bullet.
   its own trigger has rebuilt the middle layer inside a capability; adopt with a condition and
   a deadline, and say only what you wait for.
 - **A kind said by absence is a kind two readers disagree about** — an action with no effect
-  was "a lever the reflex may take" to one reader and "passed over, plan partial" to another,
+  was "an act the reflex may take" to one reader and "passed over, plan partial" to another,
   until the gate held every action to both texts or neither, and a class for the second kind
   was weighed and dropped as a term nobody would read.
-- **A lever that touches nothing the want reads is never simulated, and the closure is what
+- **An action that touches nothing the want reads is never simulated, and the closure is what
   makes that safe** — filtering to the goal's predicates deletes every chain; closing backward
   through preconditions keeps the bid that makes the dose possible.
 - **A want is authored positive and the kernel writes the negation** — rows are
@@ -167,6 +169,12 @@ it is a record wearing a bullet.
 - **A method is walked, never searched** — the steps an abstract action comes to are the
   package's protocol, not a choice, so the keeper expands them at adoption and each step says
   what it waits for; simulating them would spend the budget on worlds the measure cannot tell apart.
+- **An action declares what it is filled with, and the kernel names no column** — a parameter's
+  local part is the variable its precondition projects, the `$token` its rules read and the
+  predicate a step is written under, so one spelling serves three places; five named columns
+  stood here instead, two of them the kernel's own inventions and one read by nothing, which is
+  how a disk came to be called a lever and a peg a property, and how a venue and a valve came to
+  be written into one slot by two different writers (an-action-takes-parameters).
 - **An action is a point its taker contributes to** — `@contributes(<action>)` on a module says who
   and how in one place, a triple restating who was retired as a duplicate, and a gate in the
   repo, at onboarding and at boot holds a family to its actions, because a taker missing at
@@ -356,7 +364,7 @@ it is a record wearing a bullet.
   the band it is in, so a desire says *it should be inside* once per way of failing and each
   block declares its side, which the WANT carries (`orexis:violationIs`: below, above,
   unmeasured, stale) because that is what decides the repair — a look answers the unmeasured
-  one and no lever does. A test that walked the topology instead would be satisfiable by
+  one and no act of any kind does. A test that walked the topology instead would be satisfiable by
   moving the sample off the subject or by re-pointing what counts as ideal, which is the goal
   repaired by editing its own premises; a structural repair stays reachable because the
   closure walks back from what the want reads to whatever changes it.

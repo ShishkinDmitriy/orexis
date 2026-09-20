@@ -86,14 +86,17 @@ def test_a_lever_taken_says_so_and_names_the_thing_that_would_act(monkeypatch):
     plan = planner.plan(desire)
     assert plan.steps, "dry, with a pump: there is a plan"
 
+    #  THE VALVE BY ITS OWN NAME. A candidate carries one triple per parameter its action
+    #  declares, under the parameter's own IRI — `actuation:valve` here — where the kernel
+    #  used to write every filling under one `progression:through`.
     rows = bindings(agent.beliefs.query_union(f"""
-SELECT ?means ?via ?depth ?verdict WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
+SELECT ?action ?valve ?depth ?verdict WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
   ?d <{TRACE_NS}chose> ?c .
-  ?c <{TRACE_NS}wouldTake> ?means ; <{LEDGER_NS}through> ?via ;
+  ?c <{TRACE_NS}wouldTake> ?action ; <http://example.org/orexis/actuation#valve> ?valve ;
      <{TRACE_NS}atDepth> ?depth ; <{TRACE_NS}verdict> ?verdict }} }}"""))
     assert len(rows) == 1, "one chosen candidate, named once"
-    assert rows[0]["means"].endswith("Dosing")
-    assert rows[0]["via"].endswith("pump"), "the lever itself, not just the kind of move"
+    assert rows[0]["action"].endswith("Dosing")
+    assert rows[0]["valve"].endswith("pump"), "the valve itself, not just the kind of move"
     assert int(rows[0]["depth"]) == 0
     assert rows[0]["verdict"] in (trace.MET, trace.BETTER)
 

@@ -14,7 +14,7 @@ description: >-
 Three things, and none of them is a query.
 
 **Which actions are worth asking about at all.** A precondition is a query per action per world,
-and a lever that touches nothing the want reads was already never simulated; asked through here it
+and an action that touches nothing the want reads was already never simulated; asked through here it
 is never asked either, so a menu that grows by unrelated domains costs a pass nothing. That is the
 search's relevant set (#504), and it is a judgement about the search rather than something either
 collection could know.

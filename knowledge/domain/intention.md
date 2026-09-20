@@ -101,7 +101,7 @@ standing intention is what makes one affordable: committed means not re-consulte
 | `market:Acquiring` | bid for what would reduce a gap | a round is open and the search picks it — by the offer, or by the tick while it stands | the claim arrives (satisfied), or the round closes without one (dropped, whether told or by the clock) |
 | `market:Presenting` | spend a held claim against the world | the claim arrives — holding IS the intention | the claim is presented on the redeem channel (watch live, or the bounded wait) |
 | `market:Offering` | open a round on a hosted venue | the search plans it for a [call](/domain/call.md) — at once, or after the refill it also plans | the round opens (satisfied by construction) |
-| `actuation:Dosing` | move it myself — lever and resource both mine (#190) | the search finds this rung reaches a better world than buying | the watch on the end is judged — met or unmet — the row standing from the command until then (#353); the dose itself co-signed and confirmed like any other |
+| `actuation:Dosing` | move it myself — action and resource both mine (#190) | the search finds this rung reaches a better world than buying | the watch on the end is judged — met or unmet — the row standing from the command until then (#353); the dose itself co-signed and confirmed like any other |
 
 `Observe` is first for a structural reason: at birth there is a desired state and an empty
 sensed graph, so the first intention is always to look — see
@@ -170,11 +170,11 @@ own cooldown. Past it, a new adoption **supersedes**: the old one is resolved as
 the outwaiting recorded, because honouring a dead commitment forever is as wrong as honouring it
 not at all.
 
-# Granted by a stake AND a lever
+# Granted by a stake AND an action
 
 Each capability is granted by whatever fact makes it meaningful. A commitment is to reduce a
 named gap by a named means, so the premise is both halves: `orexis:actsFor` a subject that states
-needs (else nothing to commit *about* — the supplier, all levers and no stake, keeps no ledger)
+needs (else nothing to commit *about* — the supplier, all actions and no stake, keeps no ledger)
 and at least one of a market position, an actuator, or a schedulable sensor (else nothing to
 commit *to* — wanting without means is a wish). `world/sensing`'s agent fails the first half and
 records.
@@ -184,7 +184,7 @@ records.
 - **Not a decider.** Nothing here chooses what to commit to; [executor](/domain/executor.md)
   calls `adopt` with the head of a plan, and the *whether* lives in
   [deliberation](/domain/deliberator.md). A row written here names, `progression:by`, the [act](/domain/act.md) the
-  plan's head is — the action it fills, `progression:through` the lever, the quantity the taker sized,
+  plan's head is — the action it fills, one triple per parameter it is filled with, the quantity the taker sized,
   the window — so the [actor](/domain/actor.md) handed it later takes the same act. Keeping and deciding share a granting premise and stay two capabilities
   because their replaceable parts differ.
 - **Not public.** The ledger is a graph of the agent's own, like its beliefs and its revisions:

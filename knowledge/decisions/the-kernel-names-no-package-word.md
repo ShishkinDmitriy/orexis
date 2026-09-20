@@ -180,7 +180,7 @@ Under the strict rule the comment's original claim needs no defending: it says t
 name `market:bidsIn`, `actuation:hasActuator` and `sensing:polls`, and that is the rule. The shape
 is not the file's problem — the six rows above are.
 
-Its second argument stands too, and is [lever](/domain/lever.md)'s: a lever is an instance, so no
+Its second argument stands too, and was the retired `lever.md`'s: a lever is an instance, so no
 shape can target one.
 
 There is a third argument that neither half of the comment makes, and it is the strongest, because

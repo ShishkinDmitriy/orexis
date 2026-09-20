@@ -54,7 +54,7 @@ from .beliefs import HOSTING_PICKS
 #  The serving action, spelled rather than imported: the kernel owns the term and market's own
 #  honoured.rq binds it, and `intention/terms.py` holds the same string for the same reason —
 #  a package may not import another's Python.
-from .terms import (ACTUATION, SENSING, SERVING, HOSTING, BID_MATCHING,
+from .terms import (ACTUATION, SENSING, SERVING, HOSTING, BID_MATCHING, VENUE,
                     OFFERING)
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import PUBLIC
@@ -295,7 +295,7 @@ SELECT (SUM(?a) AS ?owed) WHERE {{
         claim = Claim(sub=who, permits=f"actuate:valve/{who}", amount_l=litres,
                       debit=round(litres * float(self.beliefs.reserve_price_per_l), 4),
                       auction_id=f"ask-{jti[:8]}", jti=jti, exp=expires, usable_from=opens,
-                      step=Step(action=SERVING, via=market.uri, quantity=litres,
+                      step=Step(action=SERVING, binding=((VENUE, market.uri),), quantity=litres,
                                 for_agent=node_of(self.agent.beliefs.reader(PUBLIC), who),
                                 not_after=(datetime.fromtimestamp(expires, tz=timezone.utc)
                                            if expires is not None else None)))
@@ -539,7 +539,7 @@ SELECT ?r WHERE {{
         #  this buyer, not after the window closes — planned, not done; the buyer's
         #  presentation is what asks me to take it, and the taking is the act.
         def serving(line, expires):
-            return Step(action=SERVING, via=market.uri, quantity=line.qty_l,
+            return Step(action=SERVING, binding=((VENUE, market.uri),), quantity=line.qty_l,
                        for_agent=node_of(self.agent.beliefs.reader(PUBLIC), line.agent),
                        not_after=(datetime.fromtimestamp(expires, tz=timezone.utc)
                                   if expires is not None else None))
@@ -700,7 +700,7 @@ SELECT ?r WHERE {{
         served. `announce` sizes the lot by the vessel and writes the round; the call is
         answered by the round existing. Satisfied at once — the round is the end, and it is
         there by construction."""
-        market = next((m for m in self.markets if m.uri == act.via), None)
+        market = next((m for m in self.markets if m.uri == act.value_of(VENUE)), None)
         if market is None:
             return False
         by = next((c.called_by for c in calls.calls_of(self.agent, market.uri)), "?")
@@ -731,7 +731,7 @@ SELECT ?r WHERE {{
         #  claim cannot be honoured, so it stays held for the reading that changes that. A
         #  vessel I have never read keeps the old arrangement and is judged by the pour.
         claim = self.held[jti]
-        market = next((m for m in self.markets if m.uri == act.via or
+        market = next((m for m in self.markets if m.uri == act.value_of(VENUE) or
                        self.stock_property.get(m.uri)), None)
         stock = self._stock_of(market) if market is not None else None
         if stock is not None and stock + EPS < claim.amount_l:

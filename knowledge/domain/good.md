@@ -23,7 +23,7 @@ valuation term states `market:ofGood` beside `market:aboutProperty` and `market:
 one sentence, three parts — a lot of THIS GOOD, priced in THIS PROPERTY, moves it THIS WAY.
 Every denomination join closes `venue → marketFor → source → supplies → good ← ofGood ←
 valuation`, plus the asker's own stake: the participation rule, the bidder, the effect rule,
-the menu and the host all walk it, so two opposite levers on one property each carry their own
+the menu and the host all walk it, so two opposite actions on one property each carry their own
 direction and never each other's. See
 [the-lot-states-its-good](/decisions/the-lot-states-its-good.md).
 

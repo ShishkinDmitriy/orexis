@@ -55,23 +55,25 @@ GRAPH :world {
 GRAPH :actions {
   hanoi:Move a orexis:Action .
   hanoi:Move orexis:available """
-        SELECT ?via ?about WHERE {
-            ?via hanoi:on ?below .
-            FILTER NOT EXISTS { ?x hanoi:on ?via }
-            ?via hanoi:size ?ds .
-            ?about a hanoi:Peg .
-            FILTER NOT EXISTS { ?via (hanoi:on)+ ?about . }
+        SELECT ?disk ?onto WHERE {
+            ?disk hanoi:on ?below .
+            FILTER NOT EXISTS { ?x hanoi:on ?disk }
+            ?disk hanoi:size ?ds .
+            ?onto a hanoi:Peg .
+            FILTER NOT EXISTS { ?disk (hanoi:on)+ ?onto . }
             FILTER NOT EXISTS {
-                ?s (hanoi:on)+ ?about .
+                ?s (hanoi:on)+ ?onto .
                 ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
         }""" .
   hanoi:Move orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  hanoi:Move orexis:retracts "CONSTRUCT { $via hanoi:on ?old } WHERE { $via hanoi:on ?old . }" .
+  hanoi:Move orexis:retracts "CONSTRUCT { $disk hanoi:on ?old } WHERE { $disk hanoi:on ?old . }" .
   hanoi:Move rdfs:label "move a movable disk onto a legal peg" .
+  hanoi:Move orexis:takes hanoi:disk .
+  hanoi:Move orexis:takes hanoi:onto .
   hanoi:Move sh:construct """
-        CONSTRUCT { $via hanoi:on ?dest } WHERE {
-            OPTIONAL { ?t (hanoi:on)+ $about . FILTER NOT EXISTS { ?z hanoi:on ?t } }
-            BIND(COALESCE(?t, $about) AS ?dest)
+        CONSTRUCT { $disk hanoi:on ?dest } WHERE {
+            OPTIONAL { ?t (hanoi:on)+ $onto . FILTER NOT EXISTS { ?z hanoi:on ?t } }
+            BIND(COALESCE(?t, $onto) AS ?dest)
         }""" .
   hanoi:disksAstray sh:select """
         SELECT (COUNT(DISTINCT ?d) AS ?estimate) WHERE {

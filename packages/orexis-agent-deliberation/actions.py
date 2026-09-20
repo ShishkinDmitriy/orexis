@@ -23,8 +23,14 @@ from orexis_agent_progression.store import bindings
 from .action import Action
 from orexis_agent_progression.ontology import PUBLIC
 
-_ACTIONS_Q = """SELECT ?action ?available WHERE {
-  ?action a orexis:Action ; orexis:available ?available }"""
+#  `STR(?takes)` because GROUP_CONCAT over an IRI binds NOTHING in this engine — no column at
+#  all, measured — where the string form binds; the same trap `Wants` reads a want's abouts
+#  through. An action declaring no parameter yields the empty string, which is a legal answer:
+#  it is filled with nothing and affords at most one row.
+_ACTIONS_Q = """SELECT ?action ?available (GROUP_CONCAT(DISTINCT STR(?takes); separator=" ") AS ?takes_) WHERE {
+  ?action a orexis:Action ; orexis:available ?available .
+  OPTIONAL { ?action orexis:takes ?takes }
+} GROUP BY ?action ?available"""
 
 #  The memo's key on the belief store. A constant, because two spellings would be two memos.
 _MEMO = "deliberation:actions"
@@ -55,5 +61,6 @@ class Actions:
         ONE. A collection knows when its own answer goes stale; a service does not.
         """
         return self._beliefs.remember(_MEMO, lambda: sorted(
-            (Action(uri=r["action"], available=r["available"])
+            (Action(uri=r["action"], available=r["available"],
+                     takes=tuple(sorted((r.get("takes_") or "").split())))
              for r in bindings(self._beliefs.query(_ACTIONS_Q, self._beliefs.graphs_of(PUBLIC)))), key=lambda a: a.uri))

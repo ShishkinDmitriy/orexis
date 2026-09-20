@@ -40,7 +40,7 @@ from urllib.parse import quote
 
 import pyoxigraph as ox
 
-from orexis_agent_progression.ontology import GRAPH_PREFIX, PUBLIC, STATE_GRAPH
+from orexis_agent_progression.ontology import GRAPH_PREFIX, PUBLIC, STATE_GRAPH, local_of
 from orexis_agent_progression.store import catalogue_of, graphs_holding, render, Store
 
 #  Where a node's readings sit. Under the same root as every other graph, because a graph IRI is
@@ -370,21 +370,16 @@ def _name(path) -> str:
     names, so determinism buys reproducibility in a log rather than findability in a store —
     but a name that moved between runs would make two traces of the same search incomparable,
     which is the one thing anybody reads them for.
+
+    EVERY VALUE THE ROW BOUND is in the segment, and all of them are load-bearing: a schema
+    action yields several rows differing in one parameter alone, and a name built from fewer
+    made two siblings COLLIDE — the second child's quads merged into the first's graph, a disk
+    resting on two supports at once, and the search saw a menu of duplicates pointing home.
+    That was found when the kernel carried two named columns and the name used one of them;
+    a binding cannot go stale the same way, because it is every parameter the action declares.
     """
     tail = ".".join(
-        f"{quote(_local(row.action), safe='')}-{quote(_local(row.via), safe='')}"
-        + (f"-{quote(_local(row.about), safe='')}" if row.about else "")
+        "-".join(quote(local_of(part), safe="")
+                 for part in (row.action, *(v for _, v in row.binding)))
         for row in path)
     return _POSSIBLE + (tail or "here")
-
-
-def _local(iri: str) -> str:
-    """The tail of an IRI — unique enough only inside the one plan that mints these names.
-
-    The segment carries (action, via, about), and the third is load-bearing since hanoi's
-    one-Move ruling: a schema action yields several rows per lever differing only in what
-    they are about, and named by (action, via) alone two siblings COLLIDED — the second
-    child's quads merged into the first's graph, a disk resting on two supports at once, and
-    the search saw a menu of duplicates pointing home. Six ground actions had been hiding
-    the collision by differing in the action tail."""
-    return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]

@@ -20,7 +20,7 @@ from dataclasses import dataclass
 class Action:
     """An action and the precondition it carries.
 
-    STORED FACTS ONLY, and only the two a menu needs. What it makes true is its EFFECT, read by
+    STORED FACTS ONLY, and only the three a menu needs. What it makes true is its EFFECT, read by
     `effects.py` from the same node; what it costs, who takes it and what steps it comes to are
     read by whoever needs them. A model carrying every column of its node would make every reader
     of one column depend on all of them.
@@ -30,3 +30,9 @@ class Action:
     #  The SELECT whose rows are this action's affordances, with `$me`, `$wants` and `$picks`
     #  still in it — a template, bound by whoever asks and against whichever world.
     available: str = ""
+    #  WHAT IT TAKES: the parameters it is filled with, by IRI, each declared by the package
+    #  that declared the action (`orexis:takes`). The precondition projects one variable per
+    #  parameter, named for the IRI's local part, and a rule reads the same name as a `$token`.
+    #  The kernel holds a row to this list and interprets no member of it — a disk, a peg, a
+    #  valve and a venue are all just parameters here.
+    takes: tuple[str, ...] = ()

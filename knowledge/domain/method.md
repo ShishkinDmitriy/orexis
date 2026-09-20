@@ -31,7 +31,7 @@ The [keeper](/domain/intention.md) expands at adoption, recursively: a [step](/d
 of an action with a method becomes one step per member, chained with `progression:then`, and a
 member with a method of its own expands in turn, so the ledger walks a flat chain. Each step is
 `progression:partOf` the filling it came from — the parent step stays in the ledger, off the chain,
-so a reader can recover the tree. Every member is a step of the parent's lever and subject —
+so a reader can recover the tree. Every member is a step of the parent's action and subject —
 a method is declared only for a PROTOCOL, whose steps share the parent's parameters; where a
 step's parameters would have to be worked out from the world, the step is not declared but
 planned (below). The last member inherits the parent's `progression:predicts` and predicted urgency, since

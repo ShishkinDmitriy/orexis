@@ -15,6 +15,7 @@ from __future__ import annotations
 import pytest
 
 from conftest import genesis_store
+from conftest import ABOUT
 from agent import genesis, runtime
 from orexis_agent_deliberation import relevance as R
 from orexis_agent_deliberation.scope_actions import scopes
@@ -75,7 +76,7 @@ def test_the_bed_holds_one_want_about_two_properties(monkeypatch):
     abouts = agent.desires.abouts(agent.me.uri)
     assert set(abouts[COMFORT]) == {MOISTURE, AIR}, "one want, about both properties"
     rows = [r for r in Afforder(Actions(st), Affordances(st), agent.desires, agent.me.uri, picks_graph("grower")).offered() if r.want == COMFORT]
-    assert {(r.action, r.about) for r in rows} >= {(DOSING, MOISTURE), (HEATING, AIR)}, \
+    assert {(r.action, r.value_of(ABOUT)) for r in rows} >= {(DOSING, MOISTURE), (HEATING, AIR)}, \
         "the dose is offered about the soil and the heating about the air, for the one want"
 
 

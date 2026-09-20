@@ -209,13 +209,13 @@ def test_the_regression_subtracts_what_the_chain_produces():
     and key, never by value."""
     from orexis_agent_progression.act import Step
     cls, key = "urn:Obs", (("urn:k", "urn:v"),)
-    first = Step(action="urn:a", via="urn:x", precondition=frozenset({("urn:s", "urn:p", "urn:o"), ("keyed", cls, key, "urn:c", 0.1)}),
+    first = Step(action="urn:a", binding=(("urn:param", "urn:x"),), precondition=frozenset({("urn:s", "urn:p", "urn:o"), ("keyed", cls, key, "urn:c", 0.1)}),
                  predicts=(frozenset({("keyed", cls, key, "urn:c", 0.5)}), frozenset()))
-    second = Step(action="urn:b", via="urn:x", precondition=frozenset({("keyed", cls, key, "urn:c", 0.5), ("urn:t", "urn:q", "urn:u")}),
+    second = Step(action="urn:b", binding=(("urn:param", "urn:x"),), precondition=frozenset({("keyed", cls, key, "urn:c", 0.5), ("urn:t", "urn:q", "urn:u")}),
                   predicts=(frozenset(), frozenset()))
     facts = remembered.regressed([first, second])
     assert facts == frozenset({("urn:s", "urn:p", "urn:o"), ("keyed", cls, key, "urn:c", 0.1), ("urn:t", "urn:q", "urn:u")})
-    assert remembered.regressed([first, Step(action="urn:b", via="urn:x")]) is None
+    assert remembered.regressed([first, Step(action="urn:b", binding=(("urn:param", "urn:x"),))]) is None
     select = remembered._pattern_select(facts)
     assert "<urn:s> <urn:p> <urn:o>" in select and "a <urn:Obs>" in select and "0.1" not in select, select
     #  A reading by what it IS (#576): the band fact renders as one triple on the node.

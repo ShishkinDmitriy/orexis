@@ -25,6 +25,7 @@ from orexis_capability_market.terms import ACQUIRING, TENDERING
 from orexis_capability_sensing.terms import OBSERVING
 
 from conftest import sensing_of, stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading
+from conftest import VENUE, filled
 from orexis_agent_progression.ontology import PUBLIC
 
 FERN = "http://example.org/orexis#fern_agent"
@@ -374,7 +375,16 @@ def test_an_old_row_naming_an_action_is_rebuilt_as_an_act(make):
             <{PROGRESSION}adoptedAt> "2026-08-01T00:00:00+00:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
     assert ledger.migrate_ledger_acts(keeper.agent.intentions, keeper.graph) == 1
     old = next(s for s in keeper.standing(action=ACQUIRING) if s.uri.endswith("old1"))
-    assert old.step.action == ACQUIRING and old.step.via == "urn:old-venue"
+    #  THE OLD PREDICATE STAYS OLD. `progression:through` was the kernel's one lever column;
+    #  nothing interprets it now that an action declares what it takes, so the migration moves
+    #  the triple onto the act and no reader turns it back into a filling. Such an intention
+    #  stands with nothing bound until it lapses and is planned again — the accepted cost of a
+    #  one-time migration for volumes older than an-act-is-a-filled-action.
+    assert old.step.action == ACQUIRING
+    from orexis_agent_progression.store import bindings
+    assert bindings(keeper.agent.intentions.query_over(
+        f"SELECT ?v WHERE {{ GRAPH <{keeper.graph}> {{ ?a <{PROGRESSION}through> ?v }} }}",
+        keeper.graph))[0]["v"] == "urn:old-venue"
     assert ledger.migrate_ledger_acts(keeper.agent.intentions, keeper.graph) == 0, \
         "idempotent — a row already naming an act is left alone"
 
@@ -389,10 +399,10 @@ def test_the_ledger_holds_the_act_sized_and_windowed(make):
     fern = make("fern")
     keeper = keeper_of(fern)
     closes = datetime(2026, 9, 1, 12, 0, tzinfo=timezone.utc)
-    act = Step(action=TENDERING, via="urn:venue", quantity=0.4, not_after=closes)
+    act = Step(action=TENDERING, binding=filled((VENUE, "urn:venue")), quantity=0.4, not_after=closes)
     keeper.adopt(act, stake_of(fern).uri, "bid 0.4L, not after the round closes")
     standing = keeper.standing(action=TENDERING)[0]
-    assert (standing.step.action, standing.step.via, standing.step.quantity,
+    assert (standing.step.action, standing.step.value_of(VENUE), standing.step.quantity,
             standing.step.not_after) == (TENDERING, "urn:venue", 0.4, closes)
 
 
@@ -509,7 +519,7 @@ def test_a_plan_is_committed_whole_advances_on_a_met_step_and_stops_on_an_unmet_
     fern = make("fern", genesis_store({"fern": 0.30}))          # a reading to baseline on
     keeper = fern.keeper
     want = stake_of(fern).uri
-    plan = tuple(Step(action=f"urn:toy#Go{n}", via="urn:toy#lever", urgency_after=0.5 - n * 0.1)
+    plan = tuple(Step(action=f"urn:toy#Go{n}", binding=filled((VENUE, "urn:toy#lever")), urgency_after=0.5 - n * 0.1)
                  for n in (1, 2, 3))
     uri = keeper.adopt(plan, want, "three steps, handed down whole")
     rows = bindings(fern.intentions.query_union(f"""SELECT ?head ?n (COUNT(?s) AS ?steps) WHERE {{

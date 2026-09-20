@@ -103,7 +103,7 @@ the **stake alone** — `orexis:actsFor` a subject that states what it needs.
 The old premises were a stake AND a lever, and **the lever half could not follow**. Saying it
 requires the kernel to name `market:bidsIn`, `actuation:hasActuator` and `sensing:polls` — three
 packages the kernel would then depend on, which is the layering this whole record exists to keep
-one-way. A [lever](/domain/lever.md) is an instance anyway: the `via` of a menu row derived from
+one-way. A lever is an instance anyway: the `via` of a menu row derived from
 each package's own `affordances.rq`, with no term to target on.
 
 Cost, stated: an agent with a stake and no lever would now state a patience it never spends. No

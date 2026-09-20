@@ -100,7 +100,8 @@ def test_the_search_exits_an_avoided_state_by_the_cheapest_path(tmp_path, monkey
     def toy(name, cost):
         return f'''
 toy:{name} a orexis:Action ;
-    orexis:available """SELECT ?want ?via WHERE {{ VALUES (?want ?about) {{ $wants }} BIND($me AS ?via) }}""" ;
+    orexis:takes orexis:about, <urn:toy#lever> ;
+    orexis:available """SELECT ?want ?about ?lever WHERE {{ VALUES (?want ?about) {{ $wants }} BIND($me AS ?lever) }}""" ;
     orexis:costs """SELECT ?cost WHERE {{ BIND({cost} AS ?cost) }}""" ;
     orexis:retracts """CONSTRUCT {{ <urn:naughty> ?p ?o }} WHERE {{
             <urn:naughty> ?p ?o }}""" ;
@@ -224,7 +225,8 @@ def _toy_pair(tempting_cost: float = 1.0, honest_cost: float = 2.0):
         marked = "<urn:naughty> <urn:p> <urn:o> ." if mark else ""
         return f'''
 toy:{name} a orexis:Action ;
-    orexis:available """SELECT ?want ?via WHERE {{ VALUES (?want ?about) {{ $wants }} BIND($me AS ?via) }}""" ;
+    orexis:takes orexis:about, <urn:toy#lever> ;
+    orexis:available """SELECT ?want ?about ?lever WHERE {{ VALUES (?want ?about) {{ $wants }} BIND($me AS ?lever) }}""" ;
     orexis:costs """SELECT ?cost WHERE {{ BIND({cost} AS ?cost) }}""" ;
     sh:construct """CONSTRUCT {{
             ?obs a <http://www.w3.org/ns/sosa/Observation> ;
@@ -293,7 +295,8 @@ def test_an_agent_already_inside_the_forbidden_state_keeps_its_exit(tmp_path, mo
                 "@prefix sh: <http://www.w3.org/ns/shacl#> .\n"
                 '''
 toy:Exit a orexis:Action ;
-    orexis:available """SELECT ?want ?via WHERE { VALUES (?want ?about) { $wants } BIND($me AS ?via) }""" ;
+    orexis:takes orexis:about, <urn:toy#lever> ;
+    orexis:available """SELECT ?want ?about ?lever WHERE { VALUES (?want ?about) { $wants } BIND($me AS ?lever) }""" ;
     orexis:retracts """CONSTRUCT { <urn:naughty> ?p ?o } WHERE {
             <urn:naughty> ?p ?o }""" ;
     sh:construct "CONSTRUCT {} WHERE {}" .

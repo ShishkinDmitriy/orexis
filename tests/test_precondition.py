@@ -11,6 +11,7 @@ from __future__ import annotations
 import pytest
 
 from conftest import build_agent, genesis_store
+from conftest import DISK, VALVE, VENUE, filled
 from orexis_agent_deliberation import effects, remembered
 from orexis_agent_deliberation.effects import _where_body
 from orexis_agent_deliberation.planner import Planner, _Node
@@ -71,7 +72,7 @@ def test_a_move_reads_what_put_it_on_the_menu(monkeypatch):
     assert move.precondition, "a planned move carries what put it on the menu"
     read = _predicates(move.precondition)
     assert {HANOI + "on", HANOI + "size", "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"} <= read, sorted(read)
-    assert any(f[0] == move.via and f[1] == HANOI + "on" for f in move.precondition), \
+    assert any(f[0] == move.value_of(DISK) and f[1] == HANOI + "on" for f in move.precondition), \
         "the moved disk's own support is a premise"
 
 
@@ -103,7 +104,7 @@ def test_a_methods_first_member_inherits_the_precondition(monkeypatch):
     acquiring = "http://example.org/orexis/market#Acquiring"
     assert keeper._method_of(acquiring), "the market's protocol is the shipped method"
     facts = frozenset({("urn:a", "urn:b", "urn:c")})
-    members = keeper._expanded([Step(action=acquiring, via="urn:venue", precondition=facts,
+    members = keeper._expanded([Step(action=acquiring, binding=filled((VENUE, "urn:venue")), precondition=facts,
                                      predicts=(frozenset(), frozenset()))])
     assert len(members) >= 2
     assert members[0].precondition == facts and all(m.precondition is None for m in members[1:])
@@ -134,7 +135,7 @@ def test_an_optional_the_world_leaves_unbound_states_no_premise(monkeypatch):
     read = effects.precondition(agent.beliefs, ACTUATION + "Dosing", keyed=tuple(keys),
                             me=agent.me.uri, subject=agent.me.acts_for, about=MOISTURE,
                             state=STATE_GRAPH, picks=picks_graph("gardener"), litres=0.1,
-                            via=pump, want=desire.uri)
+                            valve=pump, want=desire.uri)
     assert read, "the rule's chain is read"
     typed = [t for t in read if t.predicate.value.endswith("#type")
              and t.object.value == SOSA + "Observation"]

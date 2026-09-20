@@ -523,3 +523,14 @@ sensing:Aim a owl:Class ; rdfs:label "Aim" ;
 sensing:aims a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range sensing:Aim ;
     rdfs:label "aims" ;
     rdfs:comment "Reads as the point this agent is steering one property toward. In the agent's own beliefs graph, never the world: the region answers to the sovereign's facts, the pick inside it answers to nobody — which is what makes it the agent's. Stated with ssn:forProperty and schema:value, the same two terms a region and a condition already use, so a reader that can read either can read this." .
+
+
+#  WHAT THIS PACKAGE'S ACTIONS ARE FILLED WITH. One property per parameter, named in this
+#  package's own words: the local part is the variable a precondition projects, the `$token`
+#  its rules read and the predicate a planned step is written under. The kernel holds a row
+#  to the list and reads none of them.
+
+:sensor a owl:ObjectProperty ; rdfs:domain orexis:Action ;
+    rdfs:label "sensor" ;
+    rdfs:comment "The instrument an Observing looks through. Declared by sensing:Observing as orexis:takes; bound by its precondition to a sensor this agent may ask and which monitors the subject." .
+

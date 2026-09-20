@@ -41,12 +41,12 @@ from datetime import datetime, timedelta, timezone
 
 from assembly.contribute import answer as contribution, contributes
 from . import ledger
-from .act import Step, method_of, predicts_from_json, predicts_json, precondition_from_json, precondition_json
+from .act import BOUND, Step, binding_from, bound_clause, method_of, predicts_from_json, predicts_json, precondition_from_json, precondition_json
 from .store import bind, bindings
 
 from .graphs import intentions_graph
 from . import clock
-from .ontology import LAYER_OF, OREXIS, PLAN_FAILED, PLAN_FINISHED, PREDICTED, REPORTS, WITNESS, PROGRESSION
+from .ontology import LAYER_OF, OREXIS, local_of, PLAN_FAILED, PLAN_FINISHED, PREDICTED, REPORTS, WITNESS, PROGRESSION
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import KNOWN
 
@@ -158,7 +158,7 @@ class NoPatience(LookupError):
 class Standing:
     """One unresolved commitment, as a reader gets it back: the ACT committed to, and the want
     it pursues. `progression:by` names the STEP the intention stands at — planned, not done; the
-    action, the lever and the quantity are the step's, read through it."""
+    action, the binding and the quantity are the step's, read through it."""
 
     uri: str
     step: Step
@@ -171,8 +171,12 @@ class Standing:
         return self.step.action
 
     @property
-    def via(self) -> str | None:
-        return self.step.via or None
+    def binding(self) -> tuple[tuple[str, str], ...]:
+        return self.step.binding
+
+    def value_of(self, parameter: str) -> str | None:
+        """What the step it stands at bound one parameter to. The same door the step has."""
+        return self.step.value_of(parameter)
 
     def age_s(self, now: datetime | None = None) -> float:
         """How long it has stood AT THIS STEP — since adoption, or since the last advance:
@@ -321,15 +325,16 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{PROGRESSION + "by"}> ?s . FILTER NOT EXIS
 
     # --- the ledger, written -------------------------------------------------------------
 
-    def adopt(self, act, want: str, because: str, via: str | None = None,
+    def adopt(self, act, want: str, because: str, binding: tuple = (),
               until=None, until_not=None, not_after: datetime | None = None,
               when_lapsed: str = "take") -> str | None:
         """Commit to one ACT toward one want. Returns the intention's IRI, or None.
 
-        `act` is an `Act` — the plan's head, sized, through its lever — or, for an actor
-        committing on its own event with nothing sized (a held claim), the action's IRI and
-        the lever as `via`. Either way the ledger holds an act NODE: `progression:by` names it, and it
-        carries `progression:fills` the action, `progression:through` the lever, `progression:quantity` and the window
+        `act` is an `Act` — the plan's head, sized and filled — or, for an actor committing on
+        its own event with nothing sized (a held claim), the action's IRI and its `binding`.
+        Either way the ledger holds an act NODE: `progression:by` names it, and it carries
+        `progression:fills` the action, one triple per parameter the action takes,
+        `progression:quantity` and the window
         (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
 
         KEYED ON (ACTION, WANT) and nothing else: a want is its node, and the kernel no longer
@@ -337,9 +342,10 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{PROGRESSION + "by"}> ?s . FILTER NOT EXIS
         property but different wants were always distinct — a dealer owing water to fern and
         to tomato holds two Serving rows — and the property was only ever the coarser key.
 
-        `via` is the lever the plan's head goes through — written as `progression:through`, so the
-        ledger says which valve or venue and the actor handed the row later knows too.
-        Execution passes it; an actor adopting on its own event (a held claim) may not.
+        `binding` is what the head is filled with, written under each parameter's own IRI, so
+        the ledger says which valve or venue in the declaring package's words and the actor
+        handed the row later reads it the same way. A step carries its own; only an actor
+        adopting a bare action on its own event (a held claim) passes one here.
 
         `desire` is which end this serves — the bounds an agent is held to, or the obligation a
         claim raised. Optional, because the first three means predate desires having names; a
@@ -362,7 +368,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{PROGRESSION + "by"}> ?s . FILTER NOT EXIS
         if steps is not None:
             act = steps[0]
         if isinstance(act, str):
-            act = Step(action=act, via=via or "")
+            act = Step(action=act, binding=tuple(binding))
         action = act.action
         now = clock.now()
         if self._absorbed(want, action, steps, now):
@@ -435,7 +441,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         return False
 
     def _step_facts(self, step, filled: bool = True) -> list:
-        """One step as its OWN triples: what it fills, the lever it goes through, and what it
+        """One step as its OWN triples: what it fills, what it is filled WITH, and what it
         was planned to read and reach. Not the ones saying where it sits in the plan — `then`
         and `partOf` are the plan's to write, and only the caller knows them.
 
@@ -447,14 +453,13 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         """
         xsd = "http://www.w3.org/2001/XMLSchema#"
         facts = [f'<{PROGRESSION + "fills"}> <{step.action}>']
-        if step.via:
-            facts.append(f'<{PROGRESSION + "through"}> <{step.via}>')
+        #  ONE TRIPLE PER PARAMETER, under the parameter's own IRI — the declaring package's
+        #  word, which the kernel neither spells nor reads.
+        facts += [f'<{parameter}> <{value}>' for parameter, value in step.binding]
         if step.predicts is not None:
             facts.append(f'<{PREDICTS}> {_literal(predicts_json(step.predicts))}')
         if step.precondition is not None:
             facts.append(f'<{PRECONDITION}> {_literal(precondition_json(step.precondition))}')
-        if step.about:
-            facts.append(f'<{kernel("about")}> <{step.about}>')
         if not filled:
             return facts
         if step.for_agent:
@@ -514,8 +519,12 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         from .store import Raw
         adopted = next((s.adopted_at for s in self.standing() if s.uri == intention_uri), None)
         since = (adopted or clock.now()).isoformat()
-        return {"me": self.me.uri, "via": step.via or "urn:nothing",
+        #  THE STEP'S OWN FILLING OUTRANKS THE WANT'S: `$about` is the want's subject where the
+        #  step bound none, and the step's own parameter where it did — the more specific of
+        #  two that are the same value whenever the row bound it from `$wants`.
+        return {"me": self.me.uri,
                 "about": self._about(intention_uri) or "urn:nothing",
+                **{local_of(parameter): value for parameter, value in step.binding},
                 "subject": self.me.acts_for or "urn:nobody", "want": step.want or "urn:nothing",
                 "picks": picks_graph(self.agent.id),
                 "since": Raw(f'"{since}"^^xsd:dateTime')}      # when this intention was adopted
@@ -531,11 +540,12 @@ SELECT ?bridge ?construct ?estimate WHERE {{
 
     def _translated(self, standing, bridge: dict) -> list[tuple]:
         """The step's promised facts in the vocabulary beneath: the bridge's construct, bound
-        as $via and $about with the world at $state, as (s, p, o) IRIs and literals."""
+        with the step's own parameters and the world at $state, as (s, p, o) IRIs and
+        literals."""
         from .ontology import picks_graph, STATE_GRAPH
-        text = bind(bridge["construct"], me=self.me.uri, via=standing.step.via or "urn:nothing",
-                    about=standing.step.about or "urn:nothing", subject=self.me.acts_for or "urn:nobody",
-                    picks=picks_graph(self.agent.id), state=STATE_GRAPH)
+        text = bind(bridge["construct"], me=self.me.uri, subject=self.me.acts_for or "urn:nobody",
+                    picks=picks_graph(self.agent.id), state=STATE_GRAPH,
+                    **{local_of(p): v for p, v in standing.step.binding})
         out = []
         for t in self.agent.beliefs.construct(text, self.agent.beliefs.graphs_of(*KNOWN, at=clock.now())):
             out.append((str(t.subject.value), str(t.predicate.value),
@@ -581,8 +591,7 @@ SELECT ?bridge ?construct ?estimate WHERE {{
                 from .store import render
                 import re as _re
                 bound = texts[0]["t"]
-                for token, value in (("via", standing.step.via or "urn:nothing"),
-                                     ("about", standing.step.about or "urn:nothing"),
+                for token, value in (*((local_of(p), v) for p, v in standing.step.binding),
                                      ("me", self.me.uri)):
                     bound = _re.sub(rf"\${token}\b", render(value), bound)
                 estimate = f" ; orexis:estimates [ sh:select {_literal(bound)} ]"
@@ -662,9 +671,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                         f"SELECT ?s WHERE {{ GRAPH <{self.graph}> {{ <{standing.uri}> <{kernel('by')}> <{step_uri}> }} }}", self.graph)):
                 self.lapse(standing.uri)
 
-    def refused_below(self, action: str, via: str | None, about: str | None) -> bool:
-        """Was a step of this action, through this lever, about this subject, refused by the
-        level beneath within the patience (#533)? The search's question before it weighs the
+    def refused_below(self, action: str, binding: tuple = ()) -> bool:
+        """Was a step of this action, filled exactly this way, refused by the level beneath
+        within the patience (#533)? The search's question before it weighs the
         candidate: a move the courier could not carry out a minute ago is passed over, and
         tried again once the patience has passed, since the world may have changed."""
         try:
@@ -674,12 +683,16 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         since = clock.now() - timedelta(seconds=patience)
         def iri(x):
             return isinstance(x, str) and ":" in x and " " not in x and not x.startswith("urn:nothing")
-        lever = f'?s <{kernel("through")}> <{via}> .' if iri(via) else ""
-        subject = f'?s <{kernel("about")}> <{about}> .' if iri(about) else ""
+        #  HELD TO THE WHOLE FILLING: one hop per parameter, each under the parameter's own
+        #  IRI. Two named hops stood here, which is why an action taking a third parameter
+        #  had its refusals read as one another's.
+        filled = " ".join(f'?s <{parameter}> <{value}> .'
+                          for parameter, value in binding if iri(parameter) and iri(value))
+        lever = subject = ""
         try:
             return bool(bindings(self.agent.intentions.query_over(f"""
 SELECT ?s WHERE {{ GRAPH <{self.graph}> {{
-  ?s <{kernel("fills")}> <{action}> ; <{kernel("refusedBelow")}> ?at . {lever} {subject}
+  ?s <{kernel("fills")}> <{action}> ; <{kernel("refusedBelow")}> ?at . {filled}
   FILTER(?at > "{since.isoformat()}"^^xsd:dateTime) }} }} LIMIT 1""", self.graph)))
         except Exception as exc:                                    # noqa: BLE001
             self.log.error("could not ask whether %s was refused below: %s", action.rsplit("#", 1)[-1], exc)
@@ -1502,18 +1515,20 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{expectation.uri}> <{PROGRESSION + "by"}> ?wa
 SELECT ?cur WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?cur }} }}""", self.graph))
         current = at[0]["cur"] if at else None
         rows = bindings(self.agent.intentions.query_over(f"""
-SELECT ?s ?next ?action ?via ?about ?quantity ?predicts ?precondition WHERE {{ GRAPH <{self.graph}> {{
-  <{intention_uri}> <{kernel("step")}> ?s . ?s <{kernel("fills")}> ?action .
-  OPTIONAL {{ ?s <{kernel("then")}> ?next }} OPTIONAL {{ ?s <{kernel("through")}> ?via }}
-  OPTIONAL {{ ?s <{kernel("about")}> ?about }} OPTIONAL {{ ?s <{kernel("quantity")}> ?quantity }}
-  OPTIONAL {{ ?s <{kernel("predicts")}> ?predicts }} OPTIONAL {{ ?s <{PRECONDITION}> ?precondition }} }} }}""", self.graph))
+SELECT ?s ?next ?action ?quantity ?predicts ?precondition {BOUND} WHERE {{
+  GRAPH <{self.graph}> {{
+    <{intention_uri}> <{kernel("step")}> ?s . ?s <{kernel("fills")}> ?action .
+    OPTIONAL {{ ?s <{kernel("then")}> ?next }} OPTIONAL {{ ?s <{kernel("quantity")}> ?quantity }}
+    OPTIONAL {{ ?s <{kernel("predicts")}> ?predicts }} OPTIONAL {{ ?s <{PRECONDITION}> ?precondition }} }}
+  {bound_clause("?s", self.graph)} }}
+GROUP BY ?s ?next ?action ?quantity ?predicts ?precondition""", self.graph, *self.agent.beliefs.graphs_of(PUBLIC)))
         by = {r["s"]: r for r in rows}
         nexts = {r.get("next") for r in rows if r.get("next")}
         head = next((s for s in by if s not in nexts), None)
         out, node = [], head
         while node in by:
             r = by[node]
-            out.append(Step(action=r["action"], via=r.get("via") or "", about=r.get("about"),
+            out.append(Step(action=r["action"], binding=binding_from(r.get("bound")),
                             quantity=float(r["quantity"]) if r.get("quantity") else None,
                             predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None,
                             precondition=precondition_from_json(r["precondition"]) if r.get("precondition") else None))
@@ -1639,25 +1654,26 @@ SELECT ?n WHERE {{
             clauses.append(f"FILTER(?action = <{action}>)")
         if want:
             clauses.append("FILTER(?want IN (%s))" % ", ".join(f"<{n}>" for n in self._names(want)))
-        for term in ("through", "quantity", "forAgent", "notBefore", "notAfter", "predicts",
-                     "about", "partOf"):
+        for term in ("quantity", "forAgent", "notBefore", "notAfter", "predicts", "partOf"):
             clauses.append(f'OPTIONAL {{ ?act <{kernel(term)}> ?{term} }}')
         clauses.append(f'OPTIONAL {{ SELECT ?i (MAX(?v) AS ?advanced) WHERE {{ '
                        f'?i <{PROGRESSION + "step"}> ?done . ?done <{END_VERIFIED_AT}> ?v }} GROUP BY ?i }}')
+        #  AND WHAT EACH ACT IS FILLED WITH, joined to its action's own declaration — which is
+        #  public knowledge, so the read is handed the public graphs beside the ledger's.
+        #  A step taken from the ledger goes to its actor exactly as the head did from the
+        #  search: the actor reads its parameters off the step, and the kernel used to patch
+        #  the want's property in here because its own column was never written down.
+        projected = ("?i ?act ?action ?want ?at ?quantity ?forAgent ?notBefore ?notAfter "
+                     "?predicts ?partOf ?advanced")
         rows = bindings(self.agent.intentions.query_over(
-            "SELECT ?i ?act ?action ?want ?at ?through ?quantity ?forAgent ?notBefore ?notAfter "
-            "?predicts ?about ?partOf ?advanced WHERE { GRAPH <%s> { %s } }"
-            % (self.graph, " ".join(clauses)), self.graph))
-        #  WHAT THE WANT IS ABOUT rides along (#510): a step taken from the ledger — the
-        #  second of a plan, advanced to on feedback — goes to its actor exactly as the head
-        #  did from the search, and the actor reads the property off the step, not the want.
-        about_of = {w["want"]: w["about"] for w in bindings(self.agent.desires.query(
-            "SELECT ?want ?about WHERE { ?want orexis:about ?about }"))} if rows else {}
+            "SELECT %s %s WHERE { GRAPH <%s> { %s } %s } GROUP BY %s"
+            % (projected, BOUND, self.graph, " ".join(clauses),
+               bound_clause("?act", self.graph), projected),
+            self.graph, *self.agent.beliefs.graphs_of(PUBLIC)))
         return [Standing(
             uri=r["i"], want=r["want"], adopted_at=datetime.fromisoformat(r["at"]),
             advanced_at=datetime.fromisoformat(r["advanced"]) if r.get("advanced") else None,
-            step=Step(action=r["action"], via=r.get("through") or "", want=r["want"],
-                    about=r.get("about") or about_of.get(r["want"]),
+            step=Step(action=r["action"], want=r["want"], binding=binding_from(r.get("bound")),
                     part_of=r.get("partOf"),
                     predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None,
                     quantity=float(r["quantity"]) if r.get("quantity") else None,

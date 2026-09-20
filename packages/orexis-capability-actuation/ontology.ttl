@@ -87,3 +87,14 @@
 :maxTolerance a owl:DatatypeProperty ; rdfs:domain orexis:Capability ; rdfs:range xsd:decimal ; rdfs:label "max tolerance" .
 :tolerance a review:RevisableBelief ; review:revisableToward :minTolerance , :maxTolerance .
 :Actuation :tolerance 0.5 ; :minTolerance 0.05 ; :maxTolerance 1.0 .
+
+
+#  WHAT THIS PACKAGE'S ACTIONS ARE FILLED WITH. One property per parameter, named in this
+#  package's own words: the local part is the variable a precondition projects, the `$token`
+#  its rules read and the predicate a planned step is written under. The kernel holds a row
+#  to the list and reads none of them.
+
+:valve a owl:ObjectProperty ; rdfs:domain orexis:Action ;
+    rdfs:label "valve" ;
+    rdfs:comment "The actuator a Dosing acts through. Declared by actuation:Dosing as orexis:takes; bound by its precondition to an actuator this agent holds which actuates the subject. The market's Serving takes it too, being the same kind of filling." .
+

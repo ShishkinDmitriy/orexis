@@ -500,3 +500,21 @@ def predicted_readings(agent, step_uri: str) -> list[float]:
         return []
     adds, _ = predicts_from_json(rows[0]["p"])
     return [float(f[4]) for f in adds if f[0] == "keyed" and f[3].endswith("hasSimpleResult")]
+
+
+#  WHAT ACTIONS ARE FILLED WITH, for tests that build a step or read a row. Each is a parameter
+#  some package declares its action `orexis:takes`; the kernel has no column for any of them, so
+#  a test names the one it means exactly as the taker does.
+ABOUT = "http://example.org/orexis#about"
+VENUE = "http://example.org/orexis/market#venue"
+DIRECTION = "http://example.org/orexis/market#direction"
+VALVE = "http://example.org/orexis/actuation#valve"
+SENSOR = "http://example.org/orexis/sensing#sensor"
+DISK = "http://example.org/orexis/hanoi#disk"
+ONTO = "http://example.org/orexis/hanoi#onto"
+
+
+def filled(*pairs) -> tuple[tuple[str, str], ...]:
+    """A binding, out of (parameter, value) pairs — sorted, as every binding is, and dropping
+    any whose value is absent."""
+    return tuple(sorted((p, v) for p, v in pairs if v is not None))

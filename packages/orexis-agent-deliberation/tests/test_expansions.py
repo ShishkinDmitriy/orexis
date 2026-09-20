@@ -33,6 +33,8 @@ from orexis_agent_deliberation.affordances import Affordances
 from orexis_agent_deliberation.imaginarium import Imaginarium
 from orexis_agent_deliberation.planner import PASS_GRAPH, Planner
 
+HANOI = "http://example.org/orexis/hanoi#"     # what hanoi:Move declares it takes
+
 CASES_DIR = Path(__file__).parent / "expansions"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 
@@ -117,16 +119,16 @@ def test_the_store_alone_says_what_the_pass_decided(monkeypatch, snapshots):
     walked, here = [], solved[0]["w"]
     while True:
         row = bindings(im.query_over(
-            f"SELECT ?from ?fills ?about WHERE {{ <{here}> deliberation:from ?from ; "
+            f"SELECT ?from ?fills ?onto WHERE {{ <{here}> deliberation:from ?from ; "
             f"progression:by ?s . ?s <http://example.org/orexis/progression#fills> ?fills . "
-            f"OPTIONAL {{ ?s orexis:about ?about }} }}", PASS_GRAPH))
+            f"OPTIONAL {{ ?s <{HANOI}onto> ?onto }} }}", PASS_GRAPH))
         if not row:
             break
-        walked.append((row[0]["fills"], row[0].get("about")))
+        walked.append((row[0]["fills"], row[0].get("onto")))
         here = row[0]["from"]
     walked.reverse()
     assert [a for a, _ in walked] == [s.action for s in plan.steps], walked
-    assert [b for _, b in walked] == [s.about for s in plan.steps], walked
+    assert [b for _, b in walked] == [s.value_of(HANOI + "onto") for s in plan.steps], walked
 
     #  AND WHAT THE SEARCH CONCLUDED, not only what it did: the world the plan ends in is the
     #  one the want is MET in, and the society accepts it. Both are about the WORLD rather than
@@ -182,7 +184,7 @@ def test_a_world_says_when_it_is_and_a_step_says_how_long_it_took(monkeypatch, s
         "SELECT ?w ?at ?takes ?spent ?fills WHERE { ?w a deliberation:PossibleWorld ; "
         "deliberation:atInstant ?at ; deliberation:takes ?takes ; deliberation:spent ?spent ; "
         "progression:by ?s . ?s <http://example.org/orexis/progression#fills> ?fills }", PASS_GRAPH))}
-    quick, slow = rows["Pouring-pump-level"], rows["Trickling-dripper-level"]
+    quick, slow = rows["Pouring-level-pump"], rows["Trickling-level-dripper"]
 
     assert quick["at"].startswith("2026-01-01T12:00:30"), quick["at"]
     assert slow["at"].startswith("2026-01-01T12:10:00"), slow["at"]
@@ -252,13 +254,13 @@ ORDER BY (?spent + ?left) ?u ?spent ?m""", PASS_GRAPH))
     rows = agent.afforder.offered(Affordances(im),
                                   graphs=[next_world, *im.graphs_of(PUBLIC)])
     assert rows, f"nothing is afforded in {next_world.rsplit('/', 1)[-1]}"
-    assert all(r.action and r.via for r in rows), "and each names its action and its lever"
+    assert all(r.action and r.binding for r in rows), "and each names its action and what it is filled with"
     #  AND THEY ARE THIS WORLD'S. Hanoi affords a move per (movable disk, legal peg), and which
     #  those are depends on where the disks stand — so the rows here differ from the rows at
     #  the root, and a reader that had quietly asked the wrong world would show the root's.
     at_root = agent.afforder.offered(Affordances(im),
                                      graphs=[planner._root.graph, *im.graphs_of(PUBLIC)])
-    assert {(r.action, r.about) for r in rows} != {(r.action, r.about) for r in at_root}, \
+    assert {(r.action, r.binding) for r in rows} != {(r.action, r.binding) for r in at_root}, \
         "the affordances are read in the world the store named, not wherever the pass stood"
 
     #  THE BOUND a resumed pass would refuse against: what the cheapest achiever spent, or

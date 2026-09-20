@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -94,3 +94,32 @@
+@@ -96,3 +96,33 @@
    pursued:keeper.in_range.pursued.tank1 orexis:arrivedBy orexis:Recorded .
    pursued:keeper.in_range.pursued.tank1 orexis:beliefsOf :keeper .
  }
@@ -12,10 +12,10 @@
 +  :keeper.in_range.pursued.tank1.plan deliberation:takes 0.0 .
 +  :keeper.in_range.pursued.tank1.plan deliberation:verdict "satisfied" .
 +  :keeper.in_range.pursued.tank1.plan progression:by :keeper.in_range.pursued.tank1.plan.0 .
++  :keeper.in_range.pursued.tank1.plan.0 :through :valve .
 +  :keeper.in_range.pursued.tank1.plan.0 a progression:Step .
 +  :keeper.in_range.pursued.tank1.plan.0 orexis:about :level .
 +  :keeper.in_range.pursued.tank1.plan.0 progression:fills :Filling .
-+  :keeper.in_range.pursued.tank1.plan.0 progression:through :valve .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 a deliberation:Deliberation .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:asOf "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:chose orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 .
@@ -26,10 +26,11 @@
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:keptWorlds 0 .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:standsAt 1.0 .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:verdict "satisfied" .
++  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 :through :valve .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 a deliberation:Candidate .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 deliberation:atDepth 0 .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 deliberation:verdict "meets the desire" .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 deliberation:wouldReach 0.0 .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 deliberation:wouldTake :Filling .
-+  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 progression:through :valve .
++  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 orexis:about :level .
 +}

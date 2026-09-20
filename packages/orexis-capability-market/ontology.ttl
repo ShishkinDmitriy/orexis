@@ -315,3 +315,14 @@ The instant it carries is not for comparing. It is the HORIZON, exactly as a rou
     rdfs:comment "How much the claim is for, where the good is measured. Written by the ledger when a claim is recorded and read by Serving's effect and the vessel's drift, which will not discharge or drain by an obligation whose amount they cannot see." .
 :dischargedAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range xsd:dateTime ; rdfs:label "discharged at" ;
     rdfs:comment "Absent while it stands. The same two-timestamps-and-a-reason shape an intention and a revision already have, because a debt paid and a debt forgotten must never look alike. Serving's effect writes it in the imagined world, which is how the debt's own met-test reads a served world as met." .
+
+
+#  WHAT THIS PACKAGE'S ACTIONS ARE FILLED WITH. One property per parameter, named in this
+#  package's own words: the local part is the variable a precondition projects, the `$token`
+#  its rules read and the predicate a planned step is written under. The kernel holds a row
+#  to the list and reads none of them.
+
+:venue a owl:ObjectProperty ; rdfs:domain orexis:Action ;
+    rdfs:label "venue" ;
+    rdfs:comment "The venue a market action is taken in — bid in, hosted, claimed on. Declared by market:Acquiring, market:Offering, market:Tendering and market:Presenting as orexis:takes." .
+

@@ -6,7 +6,7 @@ description: >-
   modules carry it out. The KERNEL's and granted by nothing, because a mind is not
   plug-in-able: every agent builds one, and an agent with nothing to pursue proposes nothing
   and reports nothing rather than reporting zeros. ONE path through it — a bounded search
-  that builds the world each lever would make and keeps the one worth reaching. Asking a
+  that builds the world each action would make and keeps the one worth reaching. Asking a
   model what next remains a real alternative and becomes a PICK an agent may revise, not a
   capability its world derives.
 ---
@@ -28,7 +28,7 @@ so an obligation is ranked against a thirst rather than running down a second pa
 the first. The second door — an actor holding a fresh reading asking what to do about that
 property — is not the deliberator's any more: which wants a property carries is
 [sensing](/domain/sensing.md)'s to say, and its `want_about` chooses by a rule rather than by a
-ranking (an unmet epistemic want first, since no lever moves a number you cannot see; once the
+ranking (an unmet epistemic want first, since no action moves a number you cannot see; once the
 reading is current the stake answers on its merits) and hands the kernel the want's node
 through `execution.pursue_for`. The deliberator sees only wants
 ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
@@ -53,7 +53,7 @@ that produced the candidates.
 
 # Deciding by simulating it
 
-Where a lever's package has said what that lever DOES, the deliberator builds the world taking
+Where an action's package has said what that action DOES, the deliberator builds the world taking
 it would make — `(beliefs − retracts) + adds`, written nowhere — scores that world by the
 desire's own declared measure, the same text every consumer evaluates
 ([a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md)), and
@@ -62,7 +62,7 @@ met is the outcome's label, urgency is the motive, and near the pick the dose si
 a deadband nobody chose as a tolerance.
 
 The difference is not academic, and it is why this is the ONLY path. There used to be a second —
-a chain asking whether a lever POINTS the right way, cheapest rung first — and a plant sitting
+a chain asking whether an action POINTS the right way, cheapest rung first — and a plant sitting
 ABOVE its region passes every test that chain applied: the pump raises moisture, the aim is above
 the reading, direction matches sign. Both are true of a drowning plant, which is how a society
 floods one while every module behaves as written. Simulation reaches the opposite answer without
@@ -71,12 +71,12 @@ declines. *Not better* is a decision.
 
 Four things bound it, and each exists because building it found the failure:
 
-- **A search that could not see every lever may not conclude that nothing helps.** A means whose
+- **A search that could not see every action may not conclude that nothing helps.** A means whose
   package states no effect cannot be simulated — and a plant in `world/simulation` BUYS its
   water, so a search blind to Acquire would find correctly that looking does not wet soil and
   report that nothing does. The plant would stop bidding. That used to be survived by marking
   the plan PARTIAL and handing the question to the chain; it is refused at the
-  gates now, because which levers a world implies is a fact about ratified files
+  gates now, because which actions a world implies is a fact about ratified files
   ([a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md)).
 - **The dose is asked of the actuator, never computed here.** `dose_for` is the sizing the actor
   would use; a planner that sized its own would simulate an act nobody was going to take. The
@@ -92,7 +92,7 @@ Four things bound it, and each exists because building it found the failure:
   already seen. The loop ran twice and the search was depth 1, for every means that moves a
   measured property.
 
-**Every lever on a plant's menu states its effect now (#268), and until recently one did not.**
+**Every action on a plant's menu states its effect now (#268), and until recently one did not.**
 Only sensing and actuation shipped effect rules, so a plant that BUYS its water had a search
 that saw Observe alone: it correctly found that looking does not wet soil, marked the plan
 partial and handed the question over. `blind` was 1 for every plant and `better` was zero across
@@ -114,7 +114,7 @@ The second was found by fixing the first, and is why nobody had seen the two rea
 running society. **A sensing action ends a plan, and the search enforced that with a rule of its
 own** — it read the confirmation route, which every effect answered the same way, a dose and a
 bid included, because only a later reading says either arrived. So the guard matched every
-lever, the frontier was empty at every depth, and the search ran at depth 1 whatever `MAX_DEPTH`
+action, the frontier was empty at every depth, and the search ran at depth 1 whatever `MAX_DEPTH`
 said.
 
 **There is no guard now, and that is the fix rather than a shortcut.** What a look does is
@@ -135,7 +135,7 @@ as somewhere new would make "look, then look" a new world every time. Chaining p
 becomes a real question again exactly there, and nowhere earlier.
 
 **And a want ABOUT the look needed that arrangement not to prune the answer.** Freshness is a
-goal a look reaches and nothing else does, so the one lever that repairs it is the one whose
+goal a look reaches and nothing else does, so the one action that repairs it is the one whose
 world has its parent's signature — pruned, under the old order, before anything asked whether
 it repaired anything. What changed is the ORDER and not the signature: a step is asked whether
 it MEETS an unmet want before `seen` decides whether to expand from it, because cycle detection
@@ -144,7 +144,7 @@ to search onward from. A look still extends the frontier nowhere, so "look, then
 impossible as it was.
 
 **What limits depth now is the menu, not the machinery.** Fixing the baseline makes depth 2
-honest; it does not make depth 3 useful, because what decides that is whether the levers compose
+honest; it does not make depth 3 useful, because what decides that is whether the actions compose
 — [the-ladder-of-means](../decisions/the-ladder-of-means.md)' question rather than this one's.
 
 **Legality is checked once, on the winner.** Validating every candidate against everything the
@@ -168,7 +168,7 @@ SELECT ?desire ?verdict ?standsAt ?means ?via ?wouldReach ?why WHERE {
   GRAPH <http://example.org/orexis/graph/deliberation> {
     ?d a deliberation:Deliberation ; deliberation:deliberatedOn ?desire ; deliberation:verdict ?verdict ;
        deliberation:standsAt ?standsAt ; deliberation:considered ?c .
-    ?c deliberation:wouldTake ?means ; progression:through ?via ; deliberation:verdict ?why .
+    ?c deliberation:wouldTake ?action ; ?parameter ?value ; deliberation:verdict ?why .
     OPTIONAL { ?c deliberation:wouldReach ?wouldReach } } }
 ```
 
@@ -187,8 +187,9 @@ verdict on trust.
 **It is the record's one exception and not an exemption from the rule.** Possible worlds are
 computed and dropped, except where a reader outside the process needs one — and then: its own
 graph class, cleared at the start of every pass, PROV to what generated it, never public and
-never in belief. All four hold. `progression:through` is the PROV: a trace that said only `Actuate` would
-not answer *through which valve*, which stops being rhetorical the moment an agent holds two.
+never in belief. All four hold. The candidate's BINDING is the PROV — one triple per parameter,
+under the parameter's own IRI: a trace that said only `Actuate` would not answer *through which
+valve*, which stops being rhetorical the moment an agent holds two.
 
 Three things it must not become:
 
@@ -211,7 +212,7 @@ is where that person looks, through `orexis-ask` on the beliefs modality like th
 is an explanation of what a pass ran, never a property of the shape: written into the shape's
 `sh:sparql` slot it would be a second constraint the judge conjoins and reports twice.
 
-Not public, and the reason is not tidiness: which levers an agent weighed and rejected is a
+Not public, and the reason is not tidiness: which actions an agent weighed and rejected is a
 disclosure nobody decided to make, and a rival reading it would learn what its neighbour can
 nearly do. It is reachable the way an intention ledger is — the sovereign asks.
 
@@ -229,8 +230,8 @@ that slowed the thing it observes would be a poor trade.
 
 `agent_planning` carries the other half of the same trace: how long the pass took
 (`deliberation:tookSeconds`, the one figure the trace could not already answer), how many worlds it built,
-how deep it reached, and what it did with each lever — `met`, `better`, `worse`, `cycles`,
-`unsimulated`, and `blind` for the desires where some lever had no stated effect at all. Read back
+how deep it reached, and what it did with each action — `met`, `better`, `worse`, `cycles`,
+`unsimulated`, and `blind` for the desires where some action had no stated effect at all. Read back
 out of the trace rather than counted a second time, so the pass being measured is the pass that
 happened; measuring by re-planning would double the cost it reports. Reading them costs **0.4ms**,
 which is a tenth of one per cent of a pass.
@@ -241,7 +242,7 @@ rule's CONSTRUCTs running against the store rather than the world, and a cycle s
 was only the desire's own value, so a step that moved nothing else was indistinguishable from
 having gone nowhere. Both are closed (#254, #258); if it pins again, `cycles` climbing beside
 it says the search keeps arriving back at worlds already reached rather than being unable to
-go further. A package that never said what its lever does is a world `orexis-validate` refuses at the
+go further. A package that never said what its action does is a world `orexis-validate` refuses at the
 gate (#506: an action a plan may choose states both its texts, an action an event adopts
 neither), so the runtime carries no flag for it any more — `blind` and the partial plan went
 with the gate that made them unreachable — and does not quietly find another
@@ -269,9 +270,9 @@ Two were built; they became one class with two paths through it, and then one.
 SUBCLASSED `Reflex` and added one clause inert for any agent without a shop, which is a branch
 rather than an interchangeable implementation — rule 2's test is whether the HOW could differ,
 and here it differed by a condition on the data. That merge left one class asking two
-questions: does this lever point the right way, and does taking it leave me better off. The
+questions: does this action point the right way, and does taking it leave me better off. The
 second subsumes the first, so what kept the first alive was the cases the second could not
-answer — a lever with no stated effect, a want with no measure, no lever at all. The first two
+answer — an action with no stated effect, a want with no measure, no action at all. The first two
 are now refused at genesis and the third proposes nothing, honestly. See
 [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md), which set
 that deletion as its own acceptance test.
@@ -300,7 +301,7 @@ thing is the reason the seam exists and the T-Box should say so. What a reserved
 NOT be allowed to do is fixed before it exists, which is the point of declaring early.
 
 What the two retired terms carried, for a reader meeting the words in an older record.
-the retired deliberation package's `Reflex` was *cannot see → look; a gap on the side a lever moves → pursue;
+the retired deliberation package's `Reflex` was *cannot see → look; a gap on the side an action moves → pursue;
 otherwise nothing*, with WHICH side read off `market:direction` (#127) rather than hardcoded.
 its `Planning` was the same one level up (#205) — the search, granted by the DEALER
 premise, plus one deduced desire past the region: the hosted lot must be serveable. Both are
@@ -336,7 +337,7 @@ until the sovereign caught the overclaim.
 
 **Chaining therefore needs no precondition language**, and that is the one thing about the menu
 worth stating here rather than in [affordance](/domain/affordance.md), which owns why: the
-search's "would this lever even exist afterwards" is the ordinary menu query, run against the
+search's "would this action even exist afterwards" is the ordinary menu query, run against the
 simulated world instead of this one. What a row carries, what an absent one means, and the two
 modes are all over there.
 
@@ -350,7 +351,7 @@ which is why the gate refuses a choosable one without a rule (#506); the pass us
 PARTIAL, a flag that routed the question elsewhere and then only said what happened, and it is
 gone with the condition it flagged. Concluding from part of the affordances is concluding wrongly, and the row
 nobody could simulate may be the one that works — measured on fern, which buys its water. Which
-is why a world holding such a lever is refused before it can run.
+is why a world holding such an action is refused before it can run.
 
 # What deliberation does with an obligation (#218)
 

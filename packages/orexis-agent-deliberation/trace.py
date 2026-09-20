@@ -163,12 +163,13 @@ def _write(store, agent_id: str, judgment, plan, considered, stands_at: float,
             f'    <{node}> deliberation:considered <{candidate}> .\n'
             f'    <{candidate}> a deliberation:Candidate ;\n'
             f'        deliberation:wouldTake <{row.action}> ;\n'
-            f'        progression:through <{row.via}> ;\n'
+            + "".join(f'        <{parameter}> <{value}> ;\n' for parameter, value in row.binding)
+            +
             f'        deliberation:atDepth {depth} ;\n'
             f'{reached}{absent}'
             f'        deliberation:verdict "{verdict}" .\n')
     #  The chosen candidate is named rather than duplicated: a reader joining `deliberation:chose` to the
-    #  candidate gets its depth, its lever and the world it would reach, and the trace never
+    #  candidate gets its depth, what it was filled with and the world it would reach, and the trace never
     #  says the same number twice in two places where they could drift apart.
     took = ""
     if chosen is not None:

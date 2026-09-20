@@ -15,7 +15,7 @@
 #  Hanoi ever posed has exactly these three, so a world that owned its own pegs would be
 #  restating an invariant. (They first moved here for a second reason — six GROUND actions
 #  had to name them, and code may not name a world instance — and that reason retired with
-#  the grid when the sovereign ruled one Move and the kernel gained $via.) The DISKS are
+#  the grid when the sovereign ruled one Move and an effect could see its row.) The DISKS are
 #  the world's: a two-disk world and a three-disk world differ only there.
 
 :Peg a owl:Class ; rdfs:label "Peg" ;
@@ -34,6 +34,19 @@
 :on a owl:ObjectProperty ; rdfs:domain :Disk ;
     rdfs:label "on" ;
     rdfs:comment "What a disk rests on — another disk, or a peg. RUNTIME STATE, never authored in a world: it lives in the state graph, effects retract and add it, and the chain (hanoi:on)+ down to a peg is what 'on peg P' means everywhere in this package's queries." .
+
+#  WHAT A MOVE IS FILLED WITH. Two parameters, named for what they are: the disk that moves
+#  and the peg it moves onto. They are this package's words — the kernel holds a row to them
+#  and reads neither — and one spelling serves the precondition's `?disk`, the effect rules'
+#  `$disk` and the predicate a planned step is written under.
+
+:disk a owl:ObjectProperty ; rdfs:domain orexis:Action ;
+    rdfs:label "disk" ;
+    rdfs:comment "The disk a move moves. Declared by hanoi:Move as orexis:takes, bound by its precondition to whatever is on top of a stack." .
+
+:onto a owl:ObjectProperty ; rdfs:domain orexis:Action ;
+    rdfs:label "onto" ;
+    rdfs:comment "The peg a move moves its disk onto. Bound to a peg holding no smaller disk; the effect walks to the top of whatever rests there." .
 
 #  WHAT SOLVING MEANS, AND HOW FAR IT IS — the puzzle's, not a world's. A world asserts the
 #  want and points here; both used to sit inline in `world/hanoi/desire.ttl`, and the courier

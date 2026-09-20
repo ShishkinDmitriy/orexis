@@ -91,6 +91,12 @@ CLAIM_ID = term("claimId")
 CLAIM_L = term("claimL")
 CLAIM_DEBIT = term("claimDebit")
 ON_VENUE = term("onVenue")
+
+#  WHAT THIS PACKAGE'S ACTIONS ARE FILLED WITH — the parameters they declare `orexis:takes`,
+#  named here so Python can ask a row or a step what it bound without spelling an IRI. The
+#  kernel has no column for any of them: it carries the pairs and reads none.
+VENUE = term("venue")
+DIRECTION = term("direction")
 PRESENTED_AT = term("presentedAt")
 
 #  THE LEDGER'S WORDS (#635) — what a host owes, written by `ower.py` into the obligations

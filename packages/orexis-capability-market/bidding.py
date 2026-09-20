@@ -50,7 +50,13 @@ from . import rounds, wallet
 from .wiring import bidding_markets_of
 from .beliefs import BIDDING_PICKS
 from .terms import (BIDDING, CLAIM, CLAIMED_AT, CLAIM_DEBIT, CLAIM_ID, CLAIM_L, HOLDS_CLAIM, NS,
-                    ON_VENUE, PRESENTED_AT, PRESENTING, SENSING, TENDERING, USABLE_FROM, USABLE_UNTIL)
+                    ON_VENUE, PRESENTED_AT, PRESENTING, SENSING, TENDERING, USABLE_FROM,
+                    USABLE_UNTIL, VENUE)
+from orexis_agent_progression.ontology import OREXIS
+
+#  WHAT A ROW IS ABOUT, as the parameter every market action declares it takes. The kernel
+#  carries the pair and reads it no more than it reads the venue.
+ABOUT = OREXIS + "about"
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import KNOWN
@@ -614,10 +620,10 @@ class BiddingModule(Module):
         — my watch is live, or the sensor's horizon passed and a dose delayed forever is
         worse than a dose unobserved — since the step's readiness is the action's to declare
         and the keeper's to hold."""
-        claim = self._claim_on(act.via)
+        claim = self._claim_on(act.value_of(VENUE))
         if claim is None:
             return False
-        market = next((m for m in self.markets if m.uri == act.via), None)
+        market = next((m for m in self.markets if m.uri == act.value_of(VENUE)), None)
         if claim["presented"]:
             self.log.info("claim %s was redeemed by the host — nothing to present, a watch to open",
                           claim["id"])
@@ -669,7 +675,7 @@ SELECT ?c ?id ?l ?at ?p WHERE {{
         try:
             lands = effects.lands_after(
                 self.agent.beliefs, ACQUIRING, me=f"<{self.me.uri}>",
-                subject=f"<{self.me.acts_for}>", about=f"<{self.about}>", via=f"<{market.uri}>",
+                subject=f"<{self.me.acts_for}>", about=f"<{self.about}>", venue=f"<{market.uri}>",
                 litres=str(float(litres)), picks=f"<{picks_graph(self.agent.id)}>")
             if lands is not None:
                 pour = max(0.0, float(lands) - float(market.redeem_window_s or 0.0))
@@ -686,19 +692,19 @@ SELECT ?c ?id ?l ?at ?p WHERE {{
         is the one in hand: `on_offer` looked first, and a stale one is never bid on. Done
         when a claim arrives (`orexis:doneWhen`), lapsed at the round's close.
         """
-        if act.about != self.about:
+        if act.value_of(ABOUT) != self.about:
             return False
         #  A CLAIM HELD on this venue and not yet presented (#627) — granted on my ask, with
         #  no round — is what this tender is done by: there is nothing to bid, the step is
         #  taken, and the keeper's hold on `doneWhen` answers at once from the fact.
-        if (held := self._claim_on(act.via)) is not None and not held["presented"]:
+        if (held := self._claim_on(act.value_of(VENUE))) is not None and not held["presented"]:
             self.log.info("holding claim %s on this venue already — nothing to tender", held["id"])
             return True
         #  THE ROUND IS THE FACT, read off the row's own lever (#358): the row exists only
         #  while one is open on that venue, so this is a lookup and never a wait. `pending`
         #  survives only as "I asked for a look for this round" — the actor's own bookkeeping,
         #  not a second statement of whether a round is open.
-        open_ = [r for r in rounds.rounds_of(self.agent, act.via) if r.is_open()]
+        open_ = [r for r in rounds.rounds_of(self.agent, act.value_of(VENUE)) if r.is_open()]
         if not open_:
             return False
         #  THE NEWEST OFFER where several stand — the one closing last — rather than the
@@ -715,7 +721,7 @@ SELECT ?c ?id ?l ?at ?p WHERE {{
                    if sensing is not None else None)
         if reading is None:
             return False
-        market = next((m for m in self.markets if m.uri == act.via), None)
+        market = next((m for m in self.markets if m.uri == act.value_of(VENUE)), None)
         if market is None:
             return False
         return self._bid(reading.value, market, newest.auction_id,

@@ -13,6 +13,8 @@ and a pick removes `courier:at` outright, putting the parcel aboard under anothe
 import pytest
 
 from conftest import genesis_store
+TO = "http://example.org/orexis/courier#to"        # what a Drive drives to, a Drop drops at
+VAN = "http://example.org/orexis/courier#van"      # what a Pick loads into
 
 C = "http://example.org/orexis/courier#"
 W = "http://example.org/orexis/world/courier#"
@@ -65,7 +67,7 @@ def _counting_forks(monkeypatch):
 
 
 def _steps(plan):
-    return [(str(s.action).split("#")[-1], str(s.about).split("#")[-1])
+    return [(str(s.action).split("#")[-1], str(s.value_of(TO) or s.value_of(VAN) or "").split("#")[-1])
             for s in plan.steps]
 
 

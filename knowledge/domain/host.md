@@ -51,7 +51,7 @@ Its debts carry the windows it granted, and its vessel's drift reads them
 ([obligation](/domain/obligation.md)): what a host has promised is what it must hold, and it
 plans the refill ahead of the arrivals from the claims alone.
 
-A won [claim](/domain/claim.md) is a claim **on the host**, redeemed by presenting it. The lever
+A won [claim](/domain/claim.md) is a claim **on the host**, redeemed by presenting it. The action
 that answers sits on the host's menu as an [affordance](/domain/affordance.md) row owed to the presenter,
 exercised on a valid presentation and never proposed. Why an obligation is nonetheless deliberated about
 at all — and why that does not let a host wriggle out of one — is

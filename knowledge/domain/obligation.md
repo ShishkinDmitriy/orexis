@@ -81,7 +81,7 @@ the venue.
 
 # It is actionable because it names a creditor
 
-The counterparty is not decoration on the record — it is the key that finds the lever. The
+The counterparty is not decoration on the record — it is the key that finds the action. The
 market's serve joins its row to the want that is about the debt and reads whom the debt is owed
 to, so the row names the want it serves and whom for, and the search takes it by the want's
 name as it takes any row that names one; [affordance](/domain/affordance.md) has that mechanism,

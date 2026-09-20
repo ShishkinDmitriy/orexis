@@ -259,6 +259,17 @@ GRAPH_PREFIX = _GRAPH
 #  the class (`Store.graphs_of`, `recorded_graphs`). Rename one here and only the eyes notice.
 
 
+def local_of(iri: str) -> str:
+    """An IRI's local part — what a package's own prefix would write after the colon.
+
+    The name a parameter answers to in three places at once: the variable its action's
+    precondition projects, the `$token` its rules read, and the column a row binds. One
+    spelling, so a package that declares `hanoi:disk` writes `?disk` and `$disk` and nothing
+    maps between them.
+    """
+    return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
+
+
 def picks_graph(agent_id: str) -> str:
     """The graph holding ONE agent's picks — its record of picking (`orexis:PickRecordGraph`),
     birth's first entries and review's revisions. Also its write boundary.

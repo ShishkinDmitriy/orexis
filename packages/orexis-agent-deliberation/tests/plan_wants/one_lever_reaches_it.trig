@@ -41,11 +41,13 @@ GRAPH :world {
 
 GRAPH :actions {
   :Filling a orexis:Action .
-  :Filling orexis:available """SELECT ?via ?about WHERE {
-        ?via a <http://example.org/test#Valve> .
+  :Filling orexis:available """SELECT ?through ?about WHERE {
+        ?through a <http://example.org/test#Valve> .
         BIND(<http://example.org/test#level> AS ?about) }""" .
   :Filling orexis:retracts """CONSTRUCT { ?t <http://example.org/test#level> ?was }
         WHERE { ?t a <http://example.org/test#Tank> ; <http://example.org/test#level> ?was }""" .
+  :Filling orexis:takes :through .
+  :Filling orexis:takes orexis:about .
   :Filling sh:construct """CONSTRUCT { ?t <http://example.org/test#level> 20 }
         WHERE { ?t a <http://example.org/test#Tank> }""" .
 }

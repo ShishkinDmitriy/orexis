@@ -3,7 +3,8 @@ type: Domain Concept
 title: Step
 term: http://example.org/orexis/progression#Step
 description: >-
-  A planned instance of an action, not yet done: the lever, the quantity, the window, what the
+  A planned instance of an action, not yet done: what its parameters are bound to, the
+  quantity, the window, what the
   search predicted taking it would reach, what it waits for, what follows. A plan is steps, an
   intention commits to steps and stands at one, a claim promises one. Taking a step writes an
   act, the record; a step may be attempted more than once.
@@ -11,7 +12,7 @@ description: >-
 
 # What it is
 
-`progression:Step`. One [action](/domain/action.md) filled in and planned — which template, the lever
+`progression:Step`. One [action](/domain/action.md) filled in and planned — which template, what its parameters are bound to
 it goes through, the want it serves and what that want is about, how much, for whom where it is
 an obligation's, and its window — with what the search predicted it would reach. Nothing has
 happened yet, and that is the whole reason for the word: a plan is not executed, so its

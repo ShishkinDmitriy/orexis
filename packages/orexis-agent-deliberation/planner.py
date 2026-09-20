@@ -54,7 +54,7 @@ from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import NAMESPACES, Raw, bind, bindings
 from .ontology import DELIBERATION
-from orexis_agent_progression.ontology import DELIBERATION_GRAPH, GRAPH_PREFIX, OREXIS, PROGRESSION, STATE_GRAPH
+from orexis_agent_progression.ontology import DELIBERATION_GRAPH, GRAPH_PREFIX, OREXIS, PROGRESSION, STATE_GRAPH, local_of
 from orexis_agent_deliberation.conformance import graph_from, held_shapes, legality_selects
 from orexis_agent_deliberation.judge import crossed_text
 from orexis_agent_progression import clock
@@ -71,15 +71,13 @@ log = logging.getLogger("search")
 @dataclass(frozen=True)
 class _Remembered:
     """A remembered plan as a ROW of the menu (#469, second form): what the trace names it
-    by, and what the walk below fills. `via` is its first step's lever, so a reader joining
-    `progression:through` still lands on a real lever; its own node is what would be taken."""
+    by, and what the walk below fills. Its binding is its first step's, so a reader joining a
+    parameter still lands where that step landed; its own node is what would be taken."""
 
     action: str                 # the remembered plan's node
-    via: str
     want: str
     steps: tuple
-    about: str | None = None
-    direction: str | None = None
+    binding: tuple[tuple[str, str], ...] = ()
     for_agent: str | None = None
     is_own: bool = True
 
@@ -151,10 +149,10 @@ def write_plan(engine, want: str, plan) -> str | None:
               + f'      <{PROGRESSION}by> <{steps[0]}> .']
     for n, (uri, step) in enumerate(zip(steps, plan.steps)):
         facts = [f'a <{PROGRESSION}Step>', f'<{PROGRESSION}fills> <{step.action}>']
-        if step.via:
-            facts.append(f'<{PROGRESSION}through> <{step.via}>')
-        if step.about:
-            facts.append(f'<{OREXIS}about> <{step.about}>')
+        #  AND WHAT IT IS FILLED WITH, in the declaring package's own words: one triple per
+        #  parameter, under the parameter's own IRI. A reader that wants a step's disk asks
+        #  for `hanoi:disk`, and the kernel neither spells nor knows that predicate.
+        facts += [f'<{parameter}> <{value}>' for parameter, value in step.binding]
         if step.quantity is not None:
             facts.append(f'<{PROGRESSION}quantity> {step.quantity}')
         if n + 1 < len(steps):
@@ -287,7 +285,8 @@ class Planner:
             return graph
         #  NAMED BY THIS NODE'S OWN GRAPH, not its path: a step is scored before its path is
         #  set, and two judged worlds under one name would be written into each other.
-        fork = self.imaginarium.reached(graph, (Step(action="urn:orexis:at-instant", via=graph),),
+        fork = self.imaginarium.reached(graph, (Step(action="urn:orexis:at-instant",
+                                                     binding=((_AT_GRAPH, graph),)),),
                                         added, retracted)
         self.imaginarium.entailed(fork, added, self._compiled.keys)
         node.judged = fork
@@ -640,7 +639,7 @@ class Planner:
                         return ended
             for row in self._candidates(node, judgment):
                 keeper = getattr(self.agent, "keeper", None)
-                if keeper is not None and keeper.refused_below(row.action, row.via, row.about):
+                if keeper is not None and keeper.refused_below(row.action, row.binding):
                     #  REFUSED BELOW (#533): the level beneath found no way to keep this very
                     #  move's promise within the patience. Passed over, recorded, and tried
                     #  again when the patience has passed — the world may have changed.
@@ -874,7 +873,7 @@ class Planner:
         beliefs = self.agent.beliefs
         self.imaginarium.refresh(beliefs, beliefs.catalogue, *beliefs.graphs_of(*KNOWN))
         if node.expanded:
-            offered = frozenset((r.action, r.via, r.about, r.want) for r in self.agent.afforder.offered(
+            offered = frozenset((r.action, r.binding, r.want) for r in self.agent.afforder.offered(
                 self._imagined, graphs=self._dataset(clock.now(), STATE_GRAPH), only=self._compiled.asked))
             if offered - node.menu:
                 self.reset()
@@ -1252,8 +1251,8 @@ class Planner:
         if getattr(self, "_kept", None) is None:
             from . import remembered
             self._kept = [
-                _Remembered(action=uri, via=(steps[0].via or uri), want=judgment.uri,
-                            steps=tuple(steps), about=steps[0].about)
+                _Remembered(action=uri, want=judgment.uri, steps=tuple(steps),
+                            binding=steps[0].binding)
                 for uri, steps, _ in remembered.remembered_for(self.agent, judgment.uri)]
         return self._kept
 
@@ -1283,12 +1282,12 @@ class Planner:
         for wanted in kept.steps:
             if forks >= budget_left:
                 return trace.SPENT, forks
-            if keeper is not None and keeper.refused_below(wanted.action, wanted.via, wanted.about):
+            if keeper is not None and keeper.refused_below(wanted.action, wanted.binding):
                 return trace.REFUSED, forks
             row = next((r for r in self.agent.afforder.offered(
                 self._imagined, graphs=self._dataset(self._at(cur), self._graph(cur)),
                 only=frozenset({wanted.action}))
-                if r.is_own and r.via == wanted.via and (r.about or None) == (wanted.about or None)),
+                if r.is_own and r.binding == wanted.binding),
                 None)
             if row is None:
                 return trace.UNAVAILABLE, forks
@@ -1336,7 +1335,7 @@ class Planner:
             only=self._compiled.asked)
         #  WHAT THE MENU WAS when this node was expanded, so a resumed pass can tell a lever
         #  that is on it now and was not then (`_resume`).
-        node.menu = frozenset((r.action, r.via, r.about, r.want) for r in rows)
+        node.menu = frozenset((r.action, r.binding, r.want) for r in rows)
         for row in rows:
             #  A ROW THAT NAMES A WANT SERVES THAT WANT — Dosing for this pot and not the next,
             #  and a look for this instrument. A row owed to someone serves the want it names
@@ -1857,10 +1856,9 @@ ORDER BY {order} LIMIT 1""", PASS_GRAPH))
             #  keeping where the step that has it is written down.
             if lands:
                 out.append(q(step, D + "takes", dec(lands)))
-            if act.via:
-                out.append(q(step, P + "through", ox.NamedNode(act.via)))
-            if act.about:
-                out.append(q(step, OREXIS + "about", ox.NamedNode(act.about)))
+            #  AND WHAT IT IS FILLED WITH — one quad per parameter, under the parameter's
+            #  own IRI, which is the declaring package's word and not the kernel's.
+            out += [q(step, parameter, ox.NamedNode(value)) for parameter, value in act.binding]
             if act.quantity is not None:
                 out.append(q(step, P + "quantity", dec(act.quantity)))
         if node.expanded:
@@ -2016,17 +2014,15 @@ ORDER BY {order} LIMIT 1""", PASS_GRAPH))
         return {
             "me": self.me.uri,
             "subject": self.me.acts_for if self.me.acts_for else "urn:nobody",
-            #  THE WANT AND WHAT IT IS ABOUT, carried from the row to the rule and never read
-            #  here: `$about` is whatever the want's deriver said (`orexis:about`) — a property,
-            #  for a region want — and the rule joins on it in its own words.
+            #  THE WANT, carried from the row to the rule and never read here.
             "want": judgment.uri if judgment else "urn:nothing",
-            "about": row.about if row is not None and row.about else "urn:nothing",
-            #  THE LEVER, since the sovereign struck hanoi's ground-action grid: a row always
-            #  carried which lever a step goes through, and the effect could never see it —
-            #  so a two-parameter action was inexpressible and hanoi shipped six ground
-            #  nodes. One schema needs the channel: $via is the row's lever, symmetric with
-            #  $about, and a rule that ignores it loses nothing.
-            "via": row.via if row is not None else "urn:nothing",
+            #  AND WHAT THE ROW BOUND: one token per parameter the action declares it takes,
+            #  named for the parameter's local part, so `hanoi:disk` reaches its rules as
+            #  `$disk`. The kernel put five named columns here once — `$via` the lever, `$about`
+            #  what the row was about — which is why a two-parameter action was inexpressible
+            #  until `$via` was bolted on, and why hanoi first shipped six ground nodes. N
+            #  parameters need no channel: the action says what it takes and the row binds it.
+            **{local_of(parameter): value for parameter, value in (row.binding if row is not None else ())},
             "picks": self.agent.beliefs.graph,
             #  NOT SIZED (#579). The search plans on what a reading IS, and an effect declares
             #  the band it reaches; how much to pour or bid is progression's, computed from
@@ -2174,7 +2170,12 @@ TOO_DEAR = object()
 #  A row that is on no menu, so the imaginarium can name the world it reaches (#619): the
 #  present projected to an instant-bound want's start. A node's world AT the instant is named
 #  by the node's own graph, in `_judged_at`.
-_PROJECTED = Step(action="urn:orexis:projected", via="")
+#  THE ONE PARAMETER OF A SYNTHETIC STEP. Standing still to a later instant is not an action
+#  a package declares, so it declares no parameter either; the fork still needs an identity,
+#  and the graph it came from is what distinguishes one wait from another.
+_AT_GRAPH = "urn:orexis:at-instant-from"
+
+_PROJECTED = Step(action="urn:orexis:projected")
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 _AG = rdflib.Namespace(_AG_IRI)

@@ -22,6 +22,7 @@ from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import OREXIS, PROGRESSION
 
 from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading, predicted_bands
+from conftest import ABOUT, VALVE, filled
 from orexis_agent_progression.ontology import PUBLIC
 
 
@@ -471,7 +472,7 @@ def test_a_step_the_world_overshoots_finishes_the_plan_when_the_want_is_met(monk
     want = stake_of(gardener).uri
     pump = bindings(gardener.beliefs.query(
         f"SELECT ?p WHERE {{ <{gardener.me.uri}> actuation:hasActuator ?p }}", gardener.beliefs.graphs_of(PUBLIC)))[0]["p"]
-    dose = Step(action=_ACTUATE, via=pump, want=want, about=MOISTURE, quantity=0.2)
+    dose = Step(action=_ACTUATE, binding=filled((VALVE, pump), (ABOUT, MOISTURE)), want=want, quantity=0.2)
     uri = keeper.adopt([dose, dose], want, "two doses, the search's plan")
     assert uri is not None
     assert keeper.expect(uri, "the first dose", baseline=reading_of(gardener, MOISTURE),

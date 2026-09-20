@@ -13,7 +13,7 @@ description: >-
 # What it is
 
 Take every [action](/domain/action.md) and every derivation, and join the predicates each one
-reads or writes. What falls out is a partition of the vocabulary: within a scope, some lever
+reads or writes. What falls out is a partition of the vocabulary: within a scope, some action
 couples the words; across scopes, nothing does. A hull's compartments are the picture — flooding
 one does not flood the next, because nothing passes between them — and SCOPE is the word,
 because what this names is how far anything an agent does can reach.
@@ -38,7 +38,7 @@ Independence is computed from what the rules actually do. It is not read off nam
 two cases that look obvious are the reason:
 
 - A greenhouse's water words and climate words look like two vocabularies until a heater dries
-  the soil. One lever across both makes one scope.
+  the soil. One action across both makes one scope.
 - Two vans in one courier vocabulary look like one until you notice nothing they do touches the
   same van.
 
@@ -46,7 +46,7 @@ The second names the limit. A scope here is a set of PREDICATES, so it separates
 vocabulary and never two instances of one. Two vans are two scopes only over VARIABLES, a
 subject and a predicate together, which is what a mechanism that split a plan would need.
 
-An action whose reads or writes cannot be read from its text joins everything. A lever that
+An action whose reads or writes cannot be read from its text joins everything. An action that
 might touch any predicate cannot be proven not to, and a scope wrongly split would let two
 plans contradict each other.
 
