@@ -26,8 +26,10 @@ from pathlib import Path
 import pytest
 
 from orexis_agent_progression import clock
+from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.store import bindings
 
+from orexis_agent_deliberation.affordances import Affordances
 from orexis_agent_deliberation.imaginarium import Imaginarium
 from orexis_agent_deliberation.planner import PASS_GRAPH, Planner
 
@@ -51,7 +53,10 @@ def test_a_pass_forks_the_worlds_the_case_says(case, monkeypatch, request, snaps
     (want,) = agent.wants.find_all_pursued()
     planner = Planner(agent, agent.me)
     plan = planner.plan(want)
-    assert plan.steps, f"{case.name}: the pass found nothing, so there is nothing to look at"
+    #  A CASE EITHER FINDS SOMETHING OR SAYS WHY NOT. `exhausted` is a legitimate answer and
+    #  one case is about it; anything else that returns no steps has gone quiet, which is what
+    #  this guards — a case whose world stopped affording would otherwise pass by doing nothing.
+    assert plan.steps or plan.outcome == "exhausted", f"{case.name}: {plan.outcome}"
     assert forks, f"{case.name}: the pass forked no world"
     knows = snapshots.canonical_graphs({PASS_GRAPH: planner.imaginarium.dump_nt(PASS_GRAPH)})
     snapshots.held_worlds_to(case, request, forks, knows)
@@ -192,3 +197,73 @@ def test_a_world_says_when_it_is_and_a_step_says_how_long_it_took(monkeypatch, s
     assert float(slow["spent"]) < float(quick["spent"]), "the trickle is the cheaper path"
     assert [st.action.rsplit("#", 1)[-1] for st in plan.steps] == ["Trickling"], \
         "cost decides, not duration — the slow cheap lever is the one taken"
+
+
+def test_the_inputs_to_the_next_iteration_are_all_in_the_store(monkeypatch, snapshots):
+    """A PASS STOPPED WITH ITS FRONTIER OPEN, and everything the next iteration needs
+    read back from the store without a planner holding anything.
+
+    This is what the rows are for. An iteration is: take the best open world, read what it
+    affords, fork one world per lever. So the question "can it be resumed" is the question
+    "are those three in the store", and the answer is now yes:
+
+    - WHICH WORLD IS NEXT — the open weighings for this want, ordered by spent plus remaining,
+      which is the A* key `_priority` computes;
+    - WHAT IS TRUE THERE — the world's own graph, which is kept for as long as the node is;
+    - WHAT IT AFFORDS — each action's `orexis:available` run against that world, by the same
+      collections the search uses, which take stores and no agent;
+    - and THE BOUND to refuse against, which is what the cheapest achiever spent.
+
+    What is NOT in the store is the agent's own identity — and that is rule 1's one stated
+    exception, the single thing a process is handed at boot.
+    """
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    #  THE CASE SAYS ITS OWN BUDGET — `deliberation:budgetWorlds` in its pick record, read the
+    #  way every pick is — so what stops this pass is in the file rather than in this test.
+    agent = snapshots.stand_in(CASES_DIR / "a_budget_that_stops_the_search.trig")
+    (want,) = agent.wants.find_all_pursued()
+    planner = Planner(agent, agent.me)
+    assert planner.budget == 4, "the case's own budget, not this test's"
+    plan = planner.plan(want)
+    assert plan.outcome == "exhausted", plan.outcome
+    im = planner.imaginarium
+
+    #  FROM HERE, NOTHING OF THE PASS IS CONSULTED — only `im`, the want's IRI and the agent.
+    frontier = bindings(im.query_over(f"""
+SELECT ?world WHERE {{
+  ?world a deliberation:PossibleWorld ; deliberation:spent ?spent ; deliberation:minted ?m ;
+         deliberation:weighed ?x .
+  ?x deliberation:forWant <{want.uri}> ; deliberation:open true ;
+     deliberation:remaining ?left ; deliberation:wouldReach ?u . }}
+ORDER BY (?spent + ?left) ?u ?spent ?m""", PASS_GRAPH))
+    assert frontier, "a pass out of budget left nothing open to resume from"
+    next_world = frontier[0]["world"]
+
+    #  ITS READINGS ARE THERE TO BE READ, and they are ITS — not the root's. An open world was
+    #  never dropped even when worlds were, so presence alone would prove little; that they
+    #  DIFFER from where the pass started is what says the store holds this world and not just
+    #  a world. (That EXPANDED worlds survive too is `test_cone`'s assertion, and is what #740
+    #  changed.)
+    assert im.holds(next_world), "the world to open next is not in the imaginarium"
+    assert im.dump_nt(next_world).strip() != im.dump_nt(planner._root.graph).strip(), \
+        "the store holds this world's own readings"
+
+    #  AND WHAT IT AFFORDS, asked of that world by collections that hold stores and no agent.
+    rows = agent.afforder.offered(Affordances(im),
+                                  graphs=[next_world, *im.graphs_of(PUBLIC)])
+    assert rows, f"nothing is afforded in {next_world.rsplit('/', 1)[-1]}"
+    assert all(r.action and r.via for r in rows), "and each names its action and its lever"
+    #  AND THEY ARE THIS WORLD'S. Hanoi affords a move per (movable disk, legal peg), and which
+    #  those are depends on where the disks stand — so the rows here differ from the rows at
+    #  the root, and a reader that had quietly asked the wrong world would show the root's.
+    at_root = agent.afforder.offered(Affordances(im),
+                                     graphs=[planner._root.graph, *im.graphs_of(PUBLIC)])
+    assert {(r.action, r.about) for r in rows} != {(r.action, r.about) for r in at_root}, \
+        "the affordances are read in the world the store named, not wherever the pass stood"
+
+    #  THE BOUND a resumed pass would refuse against: what the cheapest achiever spent, or
+    #  none where nothing has achieved yet.
+    bound = bindings(im.query_over(
+        f"SELECT (MIN(?s) AS ?bound) WHERE {{ ?a deliberation:meets <{want.uri}> ; "
+        f"deliberation:spent ?s }}", PASS_GRAPH))
+    assert bound, "the bound is a query over the rows, whatever it answers"
