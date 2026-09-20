@@ -46,25 +46,29 @@ GRAPH :world {
 
 GRAPH :actions {
   :Pouring a orexis:Action .
-  :Pouring orexis:available """SELECT ?via ?about WHERE {
-        ?via a <http://example.org/test#Pump> .
+  :Pouring orexis:available """SELECT ?through ?about WHERE {
+        ?through a <http://example.org/test#Pump> .
         BIND(<http://example.org/test#level> AS ?about) }""" .
   :Pouring orexis:costs "SELECT ?cost WHERE { BIND(9.0 AS ?cost) }" .
   :Pouring orexis:landsAfter "SELECT ?seconds WHERE { BIND(30 AS ?seconds) }" .
   :Pouring orexis:retracts """CONSTRUCT { ?t <http://example.org/test#level> ?was }
         WHERE { ?t a <http://example.org/test#Tank> ; <http://example.org/test#level> ?was }""" .
   :Pouring rdfs:label "fill the tank from the pump — quick, and dear" .
+  :Pouring orexis:takes :through .
+  :Pouring orexis:takes orexis:about .
   :Pouring sh:construct """CONSTRUCT { ?t <http://example.org/test#level> 20 }
         WHERE { ?t a <http://example.org/test#Tank> }""" .
   :Trickling a orexis:Action .
-  :Trickling orexis:available """SELECT ?via ?about WHERE {
-        ?via a <http://example.org/test#Dripper> .
+  :Trickling orexis:available """SELECT ?through ?about WHERE {
+        ?through a <http://example.org/test#Dripper> .
         BIND(<http://example.org/test#level> AS ?about) }""" .
   :Trickling orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
   :Trickling orexis:landsAfter "SELECT ?seconds WHERE { BIND(600 AS ?seconds) }" .
   :Trickling orexis:retracts """CONSTRUCT { ?t <http://example.org/test#level> ?was }
         WHERE { ?t a <http://example.org/test#Tank> ; <http://example.org/test#level> ?was }""" .
   :Trickling rdfs:label "let the dripper bring it just inside — slow, and cheap" .
+  :Trickling orexis:takes :through .
+  :Trickling orexis:takes orexis:about .
   :Trickling sh:construct """CONSTRUCT { ?t <http://example.org/test#level> 12 }
         WHERE { ?t a <http://example.org/test#Tank> }""" .
 }

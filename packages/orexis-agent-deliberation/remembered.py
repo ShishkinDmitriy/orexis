@@ -31,7 +31,7 @@ import re
 import uuid
 from datetime import datetime, timezone
 
-from orexis_agent_progression.act import (Step, predicts_from_json, predicts_json, precondition_from_json,
+from orexis_agent_progression.act import (Step, binding_from, predicts_from_json, predicts_json, precondition_from_json,
                                           precondition_json)
 from orexis_agent_progression.ontology import OREXIS, PROGRESSION, STATE_GRAPH, picks_graph
 from orexis_agent_progression.store import bindings
@@ -251,13 +251,6 @@ SELECT ?r ?cost ?at WHERE {{ GRAPH <{graph}> {{
     return out
 
 
-def _bound(concatenated: str | None) -> tuple[tuple[str, str], ...]:
-    """A step's binding, out of the one column the read above concatenates it into: pairs
-    separated by a tab, parameter and value by a space. Sorted, because that is what makes two
-    fillings of one action compare equal wherever a binding is an identity."""
-    return tuple(sorted(tuple(pair.split(" ", 1)) for pair in (concatenated or "").split("\t") if pair))
-
-
 def _steps_of(agent, uri: str, want: str) -> list:
     graph = remembered_graph(agent.id)
     steps = bindings(agent.beliefs.query(f"""
@@ -279,7 +272,7 @@ GROUP BY ?node ?first ?rest ?action ?quantity ?predicts ?precondition""", agent.
     out, node = [], head[0]["h"] if head else None
     while node in by_node:
         r = by_node[node]
-        out.append(Step(action=r["action"], want=want, binding=_bound(r.get("bound")),
+        out.append(Step(action=r["action"], want=want, binding=binding_from(r.get("bound")),
                         quantity=float(r["quantity"]) if r.get("quantity") else None,
                         predicts=predicts_from_json(r["predicts"]) if r.get("predicts") else None,
                         precondition=precondition_from_json(r["precondition"]) if r.get("precondition") else None))

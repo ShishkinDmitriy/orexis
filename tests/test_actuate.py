@@ -19,6 +19,7 @@ from orexis_capability_sensing.terms import OBSERVING
 from orexis_agent_progression.ontology import picks_graph
 from orexis_capability_sensing.regions import ObservedWant
 from conftest import sensing_of, stake_of, build_agent, genesis_store, desires_build, open_round_for, write_reading, predicted_bands
+from conftest import ABOUT
 from conftest import DIRECTION
 from orexis_agent_progression.ontology import PUBLIC
 
@@ -51,7 +52,7 @@ def test_the_menu_offers_actuate_where_both_chains_are_mine():
     st = genesis_store(world="loner")
     rows = Afforder(Actions(st), Affordances(st), desires_build(st, "gardener"), GARDENER, picks_graph("gardener")).offered()
     assert [(r.action.rsplit("#", 1)[-1], (r.value_of(DIRECTION) or "").rsplit("#", 1)[-1] or None)
-            for r in rows if r.about == MOIST] == [
+            for r in rows if r.value_of(ABOUT) == MOIST] == [
         ("Dosing", "Raises"), ("Observing", None)]
 
 
@@ -91,7 +92,7 @@ def test_a_pot_local_pump_on_the_shared_barrel_still_yields_acquire_only():
     }} }}""")
     open_round_for(st, "fern")
     rows = [r for r in Afforder(Actions(st), Affordances(st), desires_build(st, "fern"), ns + "fern_agent", picks_graph("fern")).offered()
-            if r.about == MOIST]
+            if r.value_of(ABOUT) == MOIST]
     assert any(r.action == ACQUIRING for r in rows)
     assert not any(r.action == DOSING for r in rows), \
         "owning the pump does not exempt anyone from the auction when the water is common"

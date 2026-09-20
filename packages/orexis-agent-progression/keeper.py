@@ -519,9 +519,12 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         from .store import Raw
         adopted = next((s.adopted_at for s in self.standing() if s.uri == intention_uri), None)
         since = (adopted or clock.now()).isoformat()
+        #  THE STEP'S OWN FILLING OUTRANKS THE WANT'S: `$about` is the want's subject where the
+        #  step bound none, and the step's own parameter where it did — the more specific of
+        #  two that are the same value whenever the row bound it from `$wants`.
         return {"me": self.me.uri,
-                **{local_of(parameter): value for parameter, value in step.binding},
                 "about": self._about(intention_uri) or "urn:nothing",
+                **{local_of(parameter): value for parameter, value in step.binding},
                 "subject": self.me.acts_for or "urn:nobody", "want": step.want or "urn:nothing",
                 "picks": picks_graph(self.agent.id),
                 "since": Raw(f'"{since}"^^xsd:dateTime')}      # when this intention was adopted

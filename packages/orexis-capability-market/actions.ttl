@@ -384,7 +384,7 @@ market:Tendering
 
 market:Presenting
     a orexis:Action ;
-    orexis:takes market:venue ;
+    orexis:takes orexis:about, market:venue ;
     rdfs:label "presenting a held claim" ;
     #  NOT BEFORE THE CLAIM IS USABLE (#625): the host granted a window from the instant the
     #  bid asked for, and the keeper holds this step on the scheduler until then — a winner

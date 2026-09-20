@@ -93,9 +93,9 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegB.for.every_disk_home deliberation:remaining 2.0 .
   possible:Move-disk_1-PegB.for.every_disk_home deliberation:wouldReach 1.0 .
   possible:Move-disk_1-PegB.step a progression:Step .
-  possible:Move-disk_1-PegB.step orexis:about hanoi:PegB .
+  possible:Move-disk_1-PegB.step hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegB.step hanoi:onto hanoi:PegB .
   possible:Move-disk_1-PegB.step progression:fills hanoi:Move .
-  possible:Move-disk_1-PegB.step progression:through :disk_1 .
   possible:Move-disk_1-PegC a deliberation:PossibleWorld .
   possible:Move-disk_1-PegC deliberation:atDepth 1 .
   possible:Move-disk_1-PegC deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
@@ -124,9 +124,9 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegC.Move-disk_1-PegA.for.every_disk_home deliberation:remaining 2.0 .
   possible:Move-disk_1-PegC.Move-disk_1-PegA.for.every_disk_home deliberation:wouldReach 1.0 .
   possible:Move-disk_1-PegC.Move-disk_1-PegA.step a progression:Step .
-  possible:Move-disk_1-PegC.Move-disk_1-PegA.step orexis:about hanoi:PegA .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.step hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.step hanoi:onto hanoi:PegA .
   possible:Move-disk_1-PegC.Move-disk_1-PegA.step progression:fills hanoi:Move .
-  possible:Move-disk_1-PegC.Move-disk_1-PegA.step progression:through :disk_1 .
   possible:Move-disk_1-PegC.Move-disk_1-PegB a deliberation:PossibleWorld .
   possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:atDepth 2 .
   possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
@@ -143,16 +143,16 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegC.Move-disk_1-PegB.for.every_disk_home deliberation:remaining 2.0 .
   possible:Move-disk_1-PegC.Move-disk_1-PegB.for.every_disk_home deliberation:wouldReach 1.0 .
   possible:Move-disk_1-PegC.Move-disk_1-PegB.step a progression:Step .
-  possible:Move-disk_1-PegC.Move-disk_1-PegB.step orexis:about hanoi:PegB .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.step hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.step hanoi:onto hanoi:PegB .
   possible:Move-disk_1-PegC.Move-disk_1-PegB.step progression:fills hanoi:Move .
-  possible:Move-disk_1-PegC.Move-disk_1-PegB.step progression:through :disk_1 .
   possible:Move-disk_1-PegC.for.every_disk_home a deliberation:Weighing .
   possible:Move-disk_1-PegC.for.every_disk_home deliberation:expanded true .
   possible:Move-disk_1-PegC.for.every_disk_home deliberation:forWant :every_disk_home .
   possible:Move-disk_1-PegC.for.every_disk_home deliberation:remaining 1.0 .
   possible:Move-disk_1-PegC.for.every_disk_home deliberation:wouldReach 1.0 .
   possible:Move-disk_1-PegC.step a progression:Step .
-  possible:Move-disk_1-PegC.step orexis:about hanoi:PegC .
+  possible:Move-disk_1-PegC.step hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegC.step hanoi:onto hanoi:PegC .
   possible:Move-disk_1-PegC.step progression:fills hanoi:Move .
-  possible:Move-disk_1-PegC.step progression:through :disk_1 .
 }
