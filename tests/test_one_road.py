@@ -20,8 +20,7 @@ from datetime import datetime, timezone
 from conftest import build_agent, genesis_store
 from orexis_agent_deliberation import pursuit
 from orexis_agent_deliberation.derive_wants import derive_wants
-from orexis_agent_deliberation.judge_desires import judge_desires
-from orexis_agent_deliberation.judgments import witnesses_of
+from orexis_agent_deliberation.judging import witnesses_of
 from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import PREDICTION
@@ -62,7 +61,7 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_road_mints_the_
     [want] = agent.wants.find_all_by_desire(root)          # every desire derives; this one's
     assert want.desire == root and want.about == (debt,)
     assert want.uri.startswith(root + ".pursued.obligation.")
-    assert abs(datetime.fromisoformat(want.holds_at).timestamp() - deadline) < 1.0
+    assert abs(want.holds_at.timestamp() - deadline) < 1.0
 
     #  A LAPSE IS NOT IN VIEW YET — the prediction holds from the deadline, and the desire's
     #  select names the debt at that instant and at no other
@@ -76,14 +75,14 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_road_mints_the_
     assert judged.uri == want.uri and judged.claim == "jti-1"
     assert judged.state == "standing" and not judged.pursuable
     presented = next(j for j in agent.pursuing() if j.uri == want.uri)
-    assert presented.claim == "jti-1" and presented.derived_from == root, \
+    assert presented.claim == "jti-1" and presented.desire == root, \
         "the choir's judgment, under the road's provenance"
 
 
 def test_presenting_makes_the_roads_want_pursuable_and_paying_withdraws_its_ground(monkeypatch):
     agent, ledger, root = _host(monkeypatch)
     ledger.owe("fern", "jti-2", expires_at=time.time() + HOUR, amount_l=1.0)
-    judge_desires(agent.beliefs.engine)
+    derive_wants(agent.beliefs.engine)
     derive_wants(agent.beliefs.engine)
     ledger.demanded("jti-2")
     [judged] = ledger.obligations()
@@ -104,12 +103,12 @@ def test_a_second_claim_is_a_second_want_and_the_first_stands(monkeypatch):
     ledger.owe("fern", "jti-4", expires_at=time.time() + 2 * HOUR, amount_l=1.0)
     first, second = _want_for(agent, "jti-3"), _want_for(agent, "jti-4")
     assert first is not None and second is not None, "one want per debt"
-    assert datetime.fromisoformat(second.holds_at) > datetime.fromisoformat(first.holds_at), \
+    assert second.holds_at > first.holds_at, \
         "each at its own deadline"
 
     presented = next(j for j in agent.pursuing() if j.uri == first.uri)
     assert pursuit.handed(agent, presented).uri == first.uri
-    judge_desires(agent.beliefs.engine)
+    derive_wants(agent.beliefs.engine)
     assert derive_wants(agent.beliefs.engine) == [], "nothing new to mint"
     assert {w.uri for w in agent.wants.find_all_by_desire(root)} == {first.uri, second.uri}
 
@@ -134,7 +133,7 @@ def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(mon
     [now] = agent.wants.find_all_pursued()
     assert now.uri == foreseen.uri and now.about == (debt,), "the same want, re-minted"
     assert now.holds_at is None, "at no instant: the holder is waiting"
-    judge_desires(agent.beliefs.engine)
+    derive_wants(agent.beliefs.engine)
     assert derive_wants(agent.beliefs.engine) == [], "and the road is idle again"
 
     presented = next(j for j in agent.pursuing() if j.uri == now.uri)

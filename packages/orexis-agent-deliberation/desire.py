@@ -5,7 +5,7 @@ graph at genesis, saying what this agent stands for its whole life. It carries a
 and a met-test, it is never pursued itself, and what IS pursued is a `Want` derived under it
 (`wants.py`, whose `Want` subclasses the `Desire` below exactly as `orexis:Want rdfs:subClassOf
 orexis:Desire` says). Stored facts only: how urgent one is and what it currently reads are
-`Judgment`\'s, made every pass by whichever capability holds the stake.
+`Want`\'s, made every pass by whichever capability holds the stake.
 
 See knowledge/decisions/a-desire-is-declared-and-a-judgment-is-made.md and
 knowledge/domain/desire.md.
@@ -25,7 +25,7 @@ class Desire:
     that as a fourth statement, and it is gone (#681).
 
     STORED FACTS ONLY. What a capability judges ABOUT one — urgency, the reading, the window
-    left — is `Judgment`\'s and is never written down.
+    left — is `Want`\'s and is never written down.
     """
 
     uri: str

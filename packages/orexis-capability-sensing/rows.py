@@ -1,6 +1,6 @@
-"""The Judgment-shaped rows sensing mints — split from `regions.py` by #455.
+"""The Want-shaped rows sensing mints — split from `regions.py` by #455.
 
-A base class is an import: `ObservedJudgment` subclasses the mind's `Judgment`, so the file
+A base class is an import: `ObservedWant` subclasses the mind's `Want`, so the file
 defining it loads the deliberation layer the moment it is imported. The queries, the
 `Region`/`Gap` arithmetic and the derivation live in `regions.py`, which a sensing-only
 assembly may import freely; what lives here is exactly what only a RUNNING mind constructs,
@@ -11,14 +11,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from orexis_agent_deliberation.judgment import Judgment
+from orexis_agent_deliberation.want import Want
 
 from .regions import _desired, _known, _measured_urgency, regions_of, _subjects_of
 
 
 @dataclass(frozen=True)
-class ObservedJudgment(Judgment):
-    """A desire ABOUT AN OBSERVED PROPERTY — the kernel's `Judgment`, plus the one thing this
+class ObservedWant(Want):
+    """A desire ABOUT AN OBSERVED PROPERTY — the kernel's `Want`, plus the one thing this
     package knows about it that the kernel does not. A stake and a freshness want are both
     of this kind; an obligation and a call are not. The kernel ranks, plans for and commits to the
     base type by its node; whoever needs the property asks this package, which is where the
@@ -29,7 +29,7 @@ class ObservedJudgment(Judgment):
     observed_property: str | None = None
 
 
-def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Judgment]:
+def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Want]:
     """Sensing's wants, hottest first: every stake, and every freshness want.
 
     Was the kernel's `desires_of`, and it read the DUTIES too — the ledger reads its own now
@@ -98,7 +98,7 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Judgment]
                 #  situation, not a contradiction.
                 urgency = _measured_urgency(measure, row, value)
                 state = "unmet" if value < region.low or value > region.high else "met"
-        out.append(ObservedJudgment(uri=row["desire"], urgency=urgency, state=state,
+        out.append(ObservedWant(uri=row["desire"], urgency=urgency, state=state,
                         observed_property=row["property"], value=value,
                         read_at=item.at if item else None,
                         #  Only a freshness row binds one, which is what makes it the

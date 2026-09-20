@@ -24,10 +24,10 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    #  Annotation-only (#455): the base Module names Judgment in hook SIGNATURES and never
+    #  Annotation-only (#455): the base Module names Want in hook SIGNATURES and never
     #  touches it — a contract annotation is free, where an import would make every module
     #  that subclasses this load the deliberation layer at assembly.
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_agent_deliberation.want import Want
 
 import json
 import logging
@@ -125,7 +125,7 @@ class Module:
         return {}
 
     @contributes(DESIRES)
-    def desires(self, now: "datetime | None" = None) -> list["Judgment"]:
+    def desires(self, now: "datetime | None" = None) -> list["Want"]:
         """What this module contributes to what the agent is pursuing. Empty by default.
 
         A choir hook, like `annotate` and `series`: desires are the AGENT's, assembled from

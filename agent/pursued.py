@@ -28,7 +28,7 @@ from datetime import datetime
 
 from rdflib import URIRef
 
-from orexis_agent_deliberation.judgment import Judgment
+from orexis_agent_deliberation.want import Want
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import DESIRES
 from orexis_agent_progression.store import bind, bindings
@@ -60,13 +60,13 @@ SELECT ?me ?want ?shape WHERE {
 }"""
 
 
-class Judgments:
+class Pursued:
     """Every judgment this agent is making, hottest first."""
 
     def __init__(self, agent):
         self._agent = agent
 
-    def find_all(self, now: datetime | None = None) -> list[Judgment]:
+    def find_all(self, now: datetime | None = None) -> list[Want]:
         """Everything this agent is pursuing, hottest first, whoever sourced it.
 
         Assembled from the modules that hold wants rather than asked of one, because since the
@@ -78,7 +78,7 @@ class Judgments:
         #  ONE WANT, ONE NODE. Two modules may hold the same want — the gardener composes two
         #  sensing modules and each reads every region the agent holds — and a want is its
         #  node, so the second sighting is the same want and not a second one.
-        seen: dict[str, Judgment] = {}
+        seen: dict[str, Want] = {}
         #  A ROOT IS PRESENTED AS THE WANT DERIVED UNDER IT (#618), where one stands: the
         #  root's own row — its measure, its reading, its property — under the derived want's
         #  name, naming the root beside it. The derived want is never lifted on its own.
@@ -140,7 +140,7 @@ class Judgments:
             except Exception as exc:
                 log.error("%s: avoided-state pattern failed to run: %s", self._agent.id, exc)
                 entered = True
-            seen[row["want"]] = Judgment(uri=row["want"],
+            seen[row["want"]] = Want(uri=row["want"],
                                        urgency=1.0 if entered else 0.0,
                                        state="unmet" if entered else "met")
         #  A SHAPE WANT NO MODULE SPEAKS FOR (#497): the courier's and hanoi's, authored
@@ -158,7 +158,7 @@ class Judgments:
             except Exception as exc:
                 log.error("%s: could not judge %s by its shape: %s", self._agent.id, row["want"], exc)
                 violated = True
-            seen[row["want"]] = Judgment(uri=row["want"],
+            seen[row["want"]] = Want(uri=row["want"],
                                        urgency=1.0 if violated else 0.0,
                                        state="unmet" if violated else "met")
         #  A ROOT WITH WANTS UNDER IT IS PRESENTED AS THEM — one judgment per want, each
@@ -172,9 +172,9 @@ class Judgments:
             base = seen.pop(root)
             for want in wants:
                 if want.uri in spoken_for:
-                    presented = replace(spoken_for[want.uri], derived_from=root)
+                    presented = replace(spoken_for[want.uri], desire=root)
                 else:
-                    presented = replace(base, uri=want.uri, derived_from=root)
+                    presented = replace(base, uri=want.uri, desire=root)
                     #  THE STATE IS THE WANT'S OWN where its shape says met — its instance is
                     #  in range, whatever the root's others read — and the root's word
                     #  otherwise, since the choir's words are finer than a shape's two
@@ -185,8 +185,7 @@ class Judgments:
                         presented = replace(presented, state=own)
                 if want.holds_at:
                     presented = self._at_instant(
-                        presented, want.uri, datetime.fromisoformat(want.holds_at),
-                        datetime.fromisoformat(want.derived_at) if want.derived_at else None, now)
+                        presented, want.uri, want.holds_at, want.derived_at, now)
                 seen[want.uri] = presented
         return sorted(seen.values(), key=lambda g: -g.urgency)
 
@@ -207,15 +206,15 @@ class Judgments:
             return None
         return "unmet" if violated else "met"
 
-    def _at_instant(self, row: Judgment, node: str, holds_at: datetime, since: datetime | None,
-                    now: datetime | None) -> Judgment:
+    def _at_instant(self, row: Want, node: str, holds_at: datetime, since: datetime | None,
+                    now: datetime | None) -> Want:
         """A want met AT an instant, as presented (#619): its room is TIME — the stretch from
         its derivation to the instant, the fraction run being its urgency, never less than
         the root's own — and it reads met exactly where the newest prediction says the
         reading still holds at the instant, unmet where it says it will have crossed. The
         question is asked of the want's OWN results — the cluster it was minted from — so a
         want about one tank is not held to another's prediction."""
-        from orexis_agent_deliberation.judgments import unmet_by
+        from orexis_agent_deliberation.judging import unmet_by
         now = now or clock.now()
         urgency = row.urgency
         if since is not None and holds_at > since:

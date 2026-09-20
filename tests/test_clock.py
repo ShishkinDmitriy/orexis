@@ -15,7 +15,7 @@ from types import SimpleNamespace
 import pytest
 
 from orexis_agent_deliberation import pursuit
-from orexis_agent_deliberation.judge_desires import judge_desires
+from orexis_agent_deliberation.derive_wants import derive_wants
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.scheduler import Scheduler
@@ -77,7 +77,7 @@ def test_the_simulation_fern_foresees_and_places_under_the_worlds_pace(monkeypat
     made = clock.now()
     agent = build_agent("fern", st, monkeypatch)
     root = next(d for d in agent.pursuing() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
-    judge_desires(agent.beliefs.engine)   # a crossing is what the last judging found
+    derive_wants(agent.beliefs.engine)   # a crossing is what the last judging found
     crossing = pursuit.crossing_of(agent, root.uri)
     assert crossing is not None
     ahead = (crossing - made).total_seconds()

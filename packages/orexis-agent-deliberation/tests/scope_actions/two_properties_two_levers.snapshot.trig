@@ -50,8 +50,6 @@ GRAPH <http://example.org/orexis/graph/scopes> {
 }
 
 GRAPH :ontology {
-  deliberation:JudgmentGraph rdfs:subClassOf orexis:Graph ;
-      rdfs:subClassOf orexis:WorkingGraph .
   deliberation:PursuedGraph rdfs:subClassOf orexis:Graph ;
       rdfs:subClassOf orexis:WantGraph .
   deliberation:ScopeGraph rdfs:subClassOf orexis:Graph ;

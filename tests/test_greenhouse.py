@@ -148,7 +148,7 @@ def test_the_want_minted_for_a_dry_warm_bed_is_about_the_soil_alone(monkeypatch)
     from orexis_agent_deliberation import pursuit
     agent, _ = _grower(monkeypatch, moisture=0.20, air=21.0)
     handed = pursuit.handed(agent, _comfort(agent))
-    assert handed is not None and handed.derived_from == COMFORT
+    assert handed is not None and handed.desire == COMFORT
     minted = agent.wants.find_all_by_desire(COMFORT)         # every desire derives; the bed's
     assert [w.about for w in minted] == [(MOISTURE,)], "about the soil and nothing else"
     assert minted[0].uri.endswith(".pursued.SoilMoisture"), minted[0].uri

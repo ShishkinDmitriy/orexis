@@ -48,13 +48,13 @@ def test_a_root_is_never_handed_to_the_search_and_what_is_pursued_is_derived_und
     root's place, carrying the root's measure and naming the root."""
     agent = _gardener(monkeypatch, DRY)
     root = _stake(agent)
-    assert root.derived_from is None and not root.is_met
+    assert root.desire is None and not root.is_met
 
     plan = agent.deliberator.decide(root)
     assert [s.action for s in plan.steps] == [DOSING], "the derived want plans what the root would have"
 
     child = _stake(agent)
-    assert child.uri == root.uri + ".pursued" and child.derived_from == root.uri
+    assert child.uri == root.uri + ".pursued" and child.desire == root.uri
     assert child.urgency == root.urgency and child.observed_property == MOISTURE, \
         "the derived want is presented with the root's own row: its measure, its property"
     assert all(d.uri != root.uri for d in agent.pursuing()), \
@@ -118,7 +118,7 @@ def test_a_derived_want_that_reads_met_with_nothing_standing_is_withdrawn(monkey
     root = _stake(agent)
     agent.deliberator.decide(root)
     child = _stake(agent)
-    assert child.derived_from == root.uri
+    assert child.desire == root.uri
 
     write_reading(agent, CONTENT)
     now = _stake(agent)

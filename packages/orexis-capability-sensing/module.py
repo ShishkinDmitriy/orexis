@@ -49,7 +49,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     #  Annotation-only (#455): named in hook signatures, constructed nowhere at import.
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_agent_deliberation.want import Want
 from .driver import driver_for
 from agent.module import Module, contributes
 from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, PREDICTED, REPREDICT, WITNESS
@@ -958,11 +958,11 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
             return None
         if value is None:
             return 1.0
-        #  Deferred (#455): the row type subclasses the mind's Judgment, and a base class is
+        #  Deferred (#455): the row type subclasses the mind's Want, and a base class is
         #  an import — at assembly a sensing-only grant must not load the deliberation
         #  layer; in any running agent it is already loaded.
-        from .rows import ObservedJudgment
-        answer = self._measured(ObservedJudgment(uri="urn:asked", urgency=1.0,
+        from .rows import ObservedWant
+        answer = self._measured(ObservedWant(uri="urn:asked", urgency=1.0,
                                              observed_property=observed_property, value=value),
                                 value)
         return 1.0 if answer is None else answer
@@ -989,10 +989,10 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
                  if d.is_epistemic and d.is_met}
         return {prop: gap for prop, gap in self.gaps().items() if prop in fresh}
 
-    def desires(self, now: datetime | None = None) -> list[Judgment]:
+    def desires(self, now: datetime | None = None) -> list[Want]:
         """My contribution to what the agent is pursuing: its stakes and its freshness wants,
         the two kinds whose premise is an observation. The obligations are the ledger's."""
-        from .rows import desires_of  # deferred (#455): same reason as ObservedJudgment above
+        from .rows import desires_of  # deferred (#455): same reason as ObservedWant above
         return desires_of(self.agent.desires.query, self.agent.beliefs.reader(PUBLIC),
                           self.me.uri, measure=self._measured)
 

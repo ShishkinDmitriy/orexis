@@ -28,8 +28,8 @@ from orexis_agent_progression import clock
 
 log = logging.getLogger("sensing")
 
-#  `ObservedJudgment` LIVED HERE and is `rows.py`'s now (#455): it subclasses the mind's
-#  Judgment, and a base class is an import — see the module `__getattr__` at the bottom,
+#  `ObservedWant` LIVED HERE and is `rows.py`'s now (#455): it subclasses the mind's
+#  Want, and a base class is an import — see the module `__getattr__` at the bottom,
 #  which keeps every existing import path working.
 
 
@@ -314,8 +314,8 @@ def _measured_urgency(measure, row: dict, value: float | None) -> float:
     #  Deferred (#455): the row type is `rows.py`'s now — a base class is an import — and a
     #  top-level import here would be the cycle (rows imports this file's helpers). Runs only
     #  where a measure was handed in, which only a running mind ever does.
-    from .rows import ObservedJudgment
-    answer = measure(ObservedJudgment(uri=row["desire"], urgency=1.0,
+    from .rows import ObservedWant
+    answer = measure(ObservedWant(uri=row["desire"], urgency=1.0,
                             observed_property=row["property"], value=value,
                             instrument=row.get("instrument")),
                      value) if measure else None
@@ -384,15 +384,15 @@ def regions_of(query, agent_uri: str) -> dict[str, Region]:
 
 
 def __getattr__(name: str):
-    """The Judgment-shaped half lives in `rows` and loads on first touch (#455).
+    """The Want-shaped half lives in `rows` and loads on first touch (#455).
 
-    A base class is an import: `ObservedJudgment(Judgment)` made importing this file load the
+    A base class is an import: `ObservedWant(Want)` made importing this file load the
     deliberation layer, so a sensing-only assembly paid for row types only a running mind
-    constructs. Forwarding keeps every import path as it was — `regions.ObservedJudgment` and
+    constructs. Forwarding keeps every import path as it was — `regions.ObservedWant` and
     `regions.desires_of` resolve here, at the moment something touches them, which in any
     running agent is a moment the layer is already loaded.
     """
-    if name in ("ObservedJudgment", "desires_of"):
+    if name in ("ObservedWant", "desires_of"):
         from . import rows
         return getattr(rows, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -43,7 +43,7 @@ from rdflib import RDF, URIRef
 from . import effects, relevance, signature, trace
 from .beliefs import Picks
 from orexis_agent_progression.act import Step
-from orexis_agent_deliberation.judgment import Judgment
+from orexis_agent_deliberation.want import Want
 
 
 from .affordances import Affordances
@@ -121,7 +121,7 @@ class Planner:
 
     # --- what a world is worth ---------------------------------------------------------------
 
-    def _urgency_in(self, node, judgment: Judgment) -> float:
+    def _urgency_in(self, node, judgment: Want) -> float:
         """How bad this judgment is, in the world given. Lower is better; 1.0 is the worst there is.
 
         A CAPABILITY'S ANSWER, never this file's arithmetic: the choir is asked
@@ -173,7 +173,7 @@ class Planner:
         #  it, which `orexis-validate` refuses for a stake and cannot for anything else.
         return 1.0
 
-    def _judged_at(self, node, judgment: Judgment) -> str:
+    def _judged_at(self, node, judgment: Want) -> str:
         """The world this node is JUDGED in: its own, or — for a want met AT an instant
         (#619) — its own drifted to that instant, forked once per node and dropped with the
         pass. A dose that lands in the region and is dried out of it again by the instant
@@ -204,7 +204,7 @@ class Planner:
         node.judged = fork
         return fork
 
-    def _met_in(self, node, judgment: Judgment) -> bool:
+    def _met_in(self, node, judgment: Want) -> bool:
         """Whether the desire's OWN shape is satisfied in this world.
 
         Its own and no others, which is what makes a pass affordable. Measured on the bench:
@@ -257,7 +257,7 @@ class Planner:
         return not bindings(self.imaginarium.query_over(
             select, *self._compiled.invariant_graphs, self._judged_at(node, judgment)))
 
-    def _estimate_in(self, node, judgment: Judgment) -> float | None:
+    def _estimate_in(self, node, judgment: Want) -> float | None:
         """How far this world still is from meeting the want, by the want's own declaration.
 
         The desire's term and the action's twin: `orexis:costs` says what a step spends,
@@ -283,7 +283,7 @@ class Planner:
             return None
         return float(rows[0]["estimate"]) if rows and "estimate" in rows[0] else None
 
-    def _avoided_pattern(self, judgment: Judgment) -> str | None:
+    def _avoided_pattern(self, judgment: Want) -> str | None:
         """The `orexis:unmetWhen` select this want carries, or None — the negative twin."""
         node = self._compiled.shapes.value(URIRef(judgment.uri), _AG.unmetWhen)
         if node is None:
@@ -336,7 +336,7 @@ class Planner:
             log.error("avoided-state pattern failed to run: %s", exc)
             return True
 
-    def _shape_of(self, judgment: Judgment):
+    def _shape_of(self, judgment: Want):
         """The desire's shape, with everything hanging off it, or None if it has none.
 
         Asked of the DESIRE MODALITY, not of the world being judged (#298): what is pursued
@@ -355,7 +355,7 @@ class Planner:
         source = shapes if (root, RDF.type, _SH.NodeShape) in shapes else self._compiled.base
         return source.cbd(root)
 
-    def _relevant_actions(self, judgment: Judgment, shape) -> frozenset | None:
+    def _relevant_actions(self, judgment: Want, shape) -> frozenset | None:
         """The actions relevant to this want, or None for all of them — see `relevance.py`."""
         if shape is not None:
             reads = relevance.reads_of_shape(shape, self._shape_root(judgment))
@@ -378,7 +378,7 @@ class Planner:
                                   relevance.rule_edges(),
                                   relevance.subproperties_of(self.agent.beliefs.reader(PUBLIC)))
 
-    def _shape_root(self, judgment: Judgment):
+    def _shape_root(self, judgment: Want):
         """The node the desire's shape hangs from, or None where it has none."""
         node = URIRef(judgment.uri)
         #  The met-test hangs OFF the judgment node since the reification — a judgment is a node
@@ -395,7 +395,7 @@ class Planner:
 
     # --- the search --------------------------------------------------------------------------
 
-    def plan(self, judgment: Judgment, surprise: tuple | None = None) -> Plan:
+    def plan(self, judgment: Want, surprise: tuple | None = None) -> Plan:
         """The best bounded sequence of levers for one judgment, or the reason there is none.
 
         Every candidate weighed is remembered as it is weighed, and the pass is written down
@@ -457,7 +457,7 @@ class Planner:
         self._kept_worlds = 0
         self._from_now = False
 
-    def _search(self, judgment: Judgment, surprise: tuple | None = None) -> Plan:
+    def _search(self, judgment: Want, surprise: tuple | None = None) -> Plan:
         """The pass itself. Separate only so `plan` can guarantee the forgetting above.
         `surprise` is why the mind woke, where the mark said (#632) — written on the pass
         unless the cone finds a sharper one of its own below."""
@@ -688,7 +688,7 @@ class Planner:
 
     # --- the cone across passes (#553) ---------------------------------------------------------
 
-    def _resume(self, judgment: Judgment) -> bool:
+    def _resume(self, judgment: Want) -> bool:
         """Re-root the kept cone on the present, or say there is nothing to resume.
 
         Two questions, in the order that makes the second cheap. Has the INVARIANT half
@@ -876,7 +876,7 @@ class Planner:
         node.materialised = True
         return node.graph
 
-    def _view_of(self, judgment: Judgment) -> frozenset | None:
+    def _view_of(self, judgment: Want) -> frozenset | None:
         """The predicates this pass's worlds may differ in, or None for all of them."""
         reads = getattr(self, "_reads", relevance.ANYTHING)
         if reads is relevance.ANYTHING or self._compiled.relevant is None:
@@ -995,7 +995,7 @@ class Planner:
             self._release(node)
         return plan
 
-    def _judged(self, judgment: Judgment) -> tuple[str, str | None]:
+    def _judged(self, judgment: Want) -> tuple[str, str | None]:
         """Which road `_met_in` took for this want, and the text where the road is one (#502).
 
         The SAME order as `_met_in`, and only that order: an authored pattern first, then the
@@ -1012,7 +1012,7 @@ class Planner:
             return trace.COMPILED, self._compiled.unmet
         return trace.MEASURE, None
 
-    def _offer(self, plan: Plan, judgment: Judgment, node) -> Plan:
+    def _offer(self, plan: Plan, judgment: Want, node) -> Plan:
         """A plan, once it has been checked for legality — and only the winner is checked.
 
         Validating every candidate against the whole rulebook was the obvious reading and costs
@@ -1090,7 +1090,7 @@ class Planner:
         #  candidate, paid at every expansion in a world that ratifies a law.
         return frozenset(self._illegal(node, self._compiled.law_selects))
 
-    def _with_precondition(self, steps: tuple, judgment: Judgment, node) -> tuple:
+    def _with_precondition(self, steps: tuple, judgment: Want, node) -> tuple:
         """The steps with each one's precondition filled: the facts its rules read at its parent
         world, canonical, as `predicts` is. A step whose rules will not say is carried with
         None — the plan is not worse for it, and the log has the reason. `node` is the world
@@ -1125,7 +1125,7 @@ class Planner:
                 for shape, select in selects.items()
                 for row in bindings(self.imaginarium.query_over(select, *graphs))]
 
-    def _remembered_rows(self, judgment: Judgment) -> list:
+    def _remembered_rows(self, judgment: Want) -> list:
         """The plans remembered for this want, as rows — asked once per pass."""
         if getattr(self, "_kept", None) is None:
             from . import remembered
@@ -1143,7 +1143,7 @@ class Planner:
         facts = remembered.regressed(kept.steps)
         return [] if facts is None else remembered.missing(self.agent, facts)
 
-    def _walk(self, node, kept: _Remembered, judgment: Judgment, bound, budget_left: int):
+    def _walk(self, node, kept: _Remembered, judgment: Want, bound, budget_left: int):
         """A remembered plan walked from `node` as one candidate: the world its steps reach,
         or the verdict that stopped the walk, and how many worlds it forked either way.
 
@@ -1186,7 +1186,7 @@ class Planner:
         cur.origin = kept.action
         return cur, forks
 
-    def _candidates(self, node, judgment: Judgment):
+    def _candidates(self, node, judgment: Want):
         """The levers worth simulating from here — the menu, re-run in the world reached.
 
         AN AFFORDANCE IS THE PRECONDITION LANGUAGE, which is why chaining needs none of its own: a
@@ -1233,7 +1233,7 @@ class Planner:
                 continue
             yield row
 
-    def _begin(self, judgment: Judgment) -> _Node:
+    def _begin(self, judgment: Want) -> _Node:
         """This plan's imaginarium, and the root node standing in the world the agent is in.
 
         The imaginarium is built per PLAN and dropped with it — see `plan`, which does that in a
@@ -1395,7 +1395,7 @@ class Planner:
         self._at_root(here)
         return here
 
-    def _projected(self, here, judgment: Judgment, latest: bool = True):
+    def _projected(self, here, judgment: Want, latest: bool = True):
         """The root of a pass for a want met AT an instant (#619, #625, #643): the present as it
         is PREDICTED to be at the latest start — the instant less the longest landing on the
         root's menu, the latest a plan could begin — where `latest` asks for it: a node of the
@@ -1477,7 +1477,7 @@ class Planner:
             node.readings = crossed_text(self.imaginarium.border_text(self._graph(node)))
         return self._invariant + node.readings
 
-    def _step_from(self, node, row, judgment: Judgment, bound: float | None = None):
+    def _step_from(self, node, row, judgment: Want, bound: float | None = None):
         """The node one step on from here, or None where the rule would not run.
 
         The diff lands in ONE place — the imaginarium graph the next step's rule will read —
@@ -1617,7 +1617,7 @@ class Planner:
         there is no node (#666). Handed to the door; no rule text names it."""
         return self._graph(node) if node is not None else STATE_GRAPH
 
-    def _bind(self, judgment: Judgment | None, node=None, row=None, litres: float | None = None,
+    def _bind(self, judgment: Want | None, node=None, row=None, litres: float | None = None,
               lands: float | None = None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.
 

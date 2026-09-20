@@ -35,7 +35,7 @@ everything is in the store.
 **Two functions, each a file of its own — `judge_desires.py`, `derive_wants.py` — one contract each**, and a third beside them since, `scope_actions.py`, which writes the scopes the derivation clusters by.
 
 - `judge_desires(store)`: every desire's compiled met-test run over the graphs holding at the present
-  and at every prediction's start, and the answers written as one `deliberation:Judgment` per
+  and at every prediction's start, and the answers written, for a while, as one row per
   desire per instant — a `sh:ValidationReport`: `sh:conforms` true is met, false is unmet, and
   only an unmet one carries `sh:result`s, each naming the focus node, what it is about, which
   block refused it and the offending value. The instant rides on the judgment as
@@ -122,7 +122,7 @@ reader outside the process cannot recompute, since the belief base is locked by 
 holding it, and what the snapshots show beside the wants.
 
 **Each function has its own cases and is held to a snapshot** of the store it leaves. A case
-in `packages/orexis-agent-deliberation/tests/judge_desires/` is a world as an agent finds it;
+in `packages/orexis-agent-deliberation/tests/derive_wants/` is a world as an agent finds it;
 one in `packages/orexis-agent-deliberation/tests/derive_wants/` is the judged state alone — the judgments, the desires, the levers whose effects say what a
 scope is, whatever stands — and nothing of the world that was judged, so a case that gave the
 function more would not be testing its contract. Beside each, `<case>.snapshot.trig` is the
@@ -150,10 +150,10 @@ stored thing is the judgment.
 
 **Writing the urgency now.** A judgment has two halves: what the met-test read, and how badly
 the thing is wanted. The first is written; the second is still the choir's answer, assembled
-per pass by `agent.judgments`. Folding them is the seam below.
+per pass by `agent.pursued`, and it is a want's field now like every other.
 
 **A Python object for a stored judgment.** The first cut had one, and a collection over it,
-named apart from the choir's `Judgment` to avoid the clash — a second word for one thing. The
+named apart from the choir's per-pass type to avoid the clash — a second word for one thing. The
 sovereign asked whether it was needed at all, and it is not: `judge_desires` hands the
 engine's own rows to `save_judgments`, and `derive_wants` reads the graph back with one
 SELECT (`judgments.py`). Nothing stands between the two functions but the store.
@@ -211,6 +211,14 @@ its rule — a graph class, a writer, a revision hook and a rule clause to expre
 is not the store's to state: a row saying *now* is the interpreter asserting what it already
 knows (model-it-only-if-a-plan-would-branch-on-it), and the paced clock is a deployment fact
 the mind cannot ask for. `clock.now()` is the one read outside the store.
+
+**And then the written judgment went too, and the Python one with it.** The sovereign: no
+intermediate step, jump from Desire to Want, and all Judgment had, now has Want. What a
+met-test reads is a WITNESS, computed where it is needed and stored nowhere; which way a want
+broke is `orexis:violationIs` on the want; how badly it is wanted is a field on the want that
+whoever holds the stake fills when the choir is asked, and that nothing writes down. The seam
+this record left open — folding the urgency half onto the judgment — is closed by there being
+one type to fold it onto.
 
 # Seams left open
 

@@ -34,8 +34,7 @@ from dataclasses import replace
 from datetime import datetime
 
 from .derive_wants import derive_wants
-from .judge_desires import judge_desires
-from .judgments import witnesses_of
+from .judging import witnesses_of
 from .plan import SATISFIED
 
 from orexis_agent_progression.execution import carry_out
@@ -66,20 +65,18 @@ def handed(agent, judgment):
     """The want the search is handed for `desire`: itself, unless it is a ROOT — then the want
     derived under it, minted if the root reads unmet and none stands; None for a met root
     with nothing derived under it, which is nothing to pursue and runs no pass."""
-    if judgment.derived_from is not None or not _is_root(agent, judgment.uri):
+    if judgment.desire is not None or not _is_root(agent, judgment.uri):
         #  A WANT THE ROAD MINTED, or one a package speaks for: handed as it is. Its root may
         #  have gained instances since — a second claim — so the road tops up first; and where
         #  that re-minted THIS want — what it foresaw has arrived — the judgment in hand still
         #  carries the old instant, so it is presented again.
-        if judgment.derived_from is not None:
-            judge_desires(agent.beliefs.engine)
+        if judgment.desire is not None:
             if judgment.uri in derived(agent):
                 return next((d for d in agent.pursuing() if d.uri == judgment.uri), judgment)
         return judgment
     #  THE PASS STANDS ON THE ROOT: every desire is judged into the store and the wants derived
     #  from what the store says — a root whose met-test the compiler refused is judged by the
     #  choir there, and still derives its one want.
-    judge_desires(agent.beliefs.engine)
     derived(agent)
     child = child_of(agent, judgment.uri)
     if child is None:
@@ -88,7 +85,7 @@ def handed(agent, judgment):
     #  time room and the state the newest prediction gives it (`Agent.pursuing`), none of
     #  which the root's row knows; an at-end want is the root's row under the derived name.
     presented = next((d for d in agent.pursuing() if d.uri == child and d.holds_at is not None), None)
-    return presented if presented is not None else replace(judgment, uri=child, derived_from=judgment.uri)
+    return presented if presented is not None else replace(judgment, uri=child, desire=judgment.uri)
 
 
 def derived(agent) -> list[str]:
@@ -246,7 +243,7 @@ def pursue_for(agent, want: str, surprise: tuple | None = None) -> str | None:
     and hands the NODE here. None where the agent is not pursuing that want at all.
     """
     #  BY EITHER NAME (#618): a mark may name the root while the want derived under it stands.
-    judgment = next((d for d in agent.pursuing() if d.uri == want or d.derived_from == want), None)
+    judgment = next((d for d in agent.pursuing() if d.uri == want or d.desire == want), None)
     return pursue(agent, judgment, surprise=surprise) if judgment is not None else None
 
 

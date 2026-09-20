@@ -14,8 +14,8 @@ from datetime import datetime, timedelta, timezone
 import pyoxigraph as ox
 
 
-from orexis_capability_sensing.regions import ObservedJudgment
-from orexis_capability_market.ower import OwedJudgment
+from orexis_capability_sensing.regions import ObservedWant
+from orexis_capability_market.ower import OwedWant
 from conftest import sensing_of, MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
 from orexis_agent_progression.ontology import PUBLIC
 
@@ -112,7 +112,7 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them(mo
     ledger.endow()
     def duty_at(offset_s):
         return next(g for g in ledger.desires(now=owed + timedelta(seconds=offset_s))
-                    if isinstance(g, OwedJudgment))
+                    if isinstance(g, OwedWant))
     assert duty_at(0).urgency == 0.0
     assert abs(duty_at(450).urgency - 0.5) < 0.02
     assert duty_at(900).urgency == 1.0
@@ -174,11 +174,11 @@ def test_the_measure_answers_one_for_a_world_with_no_reading(monkeypatch):
     road: asked of a world holding no observation, sensing's answer is 1.0 and never unbound —
     an unmeasured want must not read as no urgency, and this store binds NOTHING for
     arithmetic over an unbound value rather than failing."""
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_agent_deliberation.want import Want
     from orexis_agent_progression.ontology import STATE_GRAPH
 
     st, fern = _fern(None, monkeypatch)       # no readings seeded at all
-    probe = ObservedJudgment(uri="urn:asked", urgency=1.0, observed_property=MOISTURE)
+    probe = ObservedWant(uri="urn:asked", urgency=1.0, observed_property=MOISTURE)
     assert fern.desire_urgency(probe, st.reader(PUBLIC), STATE_GRAPH) == 1.0
 
 
@@ -204,7 +204,7 @@ def test_every_shipped_stake_resolves_a_declared_measure(monkeypatch):
     shipped worlds holds a sensing module whose declaration measures its stakes, every stake
     property being a `sosa:ObservableProperty`. If this fails, a world has grown a want
     nothing loaded can weigh, and that is a genesis conversation rather than a silent 1.0."""
-    from orexis_agent_deliberation.judgment import Judgment
+    from orexis_agent_deliberation.want import Want
     from orexis_agent_progression.ontology import STATE_GRAPH
     from orexis_agent_progression.store import bindings
 
@@ -216,7 +216,7 @@ def test_every_shipped_stake_resolves_a_declared_measure(monkeypatch):
                 'SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }', st.graphs_of(PUBLIC))):
             agent = build_agent(row["id"], st, monkeypatch)
             for prop in sensing_of(agent).regions:
-                probe = ObservedJudgment(uri="urn:asked", urgency=1.0, observed_property=prop)
+                probe = ObservedWant(uri="urn:asked", urgency=1.0, observed_property=prop)
                 assert agent.desire_urgency(probe, st.reader(PUBLIC), STATE_GRAPH) is not None, \
                     f'{row["id"]} in {world}: a stake nothing loaded measures'
                 checked += 1

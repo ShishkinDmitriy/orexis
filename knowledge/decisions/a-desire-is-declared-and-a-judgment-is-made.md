@@ -6,7 +6,7 @@ description: >-
   expiry, it was built fresh by whichever capability held the stake - seven construction sites,
   four ways of computing urgency - and nothing ever wrote one down or read one back. The DESIRE
   is the row a package's rule writes at genesis, which had no type at all. Naming the second
-  thing `Judgment` is what let the first become data, `Want` subclass it as the ontology already
+  thing is what let the first become data, `Want` subclass it as the ontology already
   said, and a repository hand back either without meaning the other.
 status: superseded-in-part
 superseded-by: a-kind-is-a-type-not-a-binding
@@ -79,7 +79,14 @@ construction sites all judge and none read, that the word had to be freed before
 desires could exist — all of it stands, and the rename is what made the measurement above
 possible at all.
 
-# Judgment is the name, and it names work rather than a thing
+# Judging is the word, and it names work rather than a thing
+
+**And the type is gone, which the word survives.** For a while `Judgment` named a Python object
+made fresh each pass and a `deliberation:Judgment` row written between a desire and a want;
+neither exists now (judge-desires-then-derive-wants). What the two carried a WANT carries, and
+judging is what running a met-test against the world IS — an act, which is what this section
+said it was before either object was built.
+
 
 Not `Standing` (the keeper's word for an adopted intention), not `Urgency` (which is one field of
 it), not `Pursuit` (which is what the agent does with it). A judgment is what you make when you
@@ -90,7 +97,7 @@ window or an envelope — and it does not pretend to be a record. See
 # What it cost, and what came free
 
 The rename touched 18 files, and two guards caught what a regex could not:
-`tests/test_store.py` refused `orexis:Judgment` where a full IRI had been spelled with an
+`tests/test_store.py` refused the term where a full IRI had been spelled with an
 interpolated prefix, and the suite caught a `Want(desire=…)` keyword renamed to `judgment=`.
 Both were the same mistake — a substitution that preserves grammar while changing the claim —
 and both were found by gates rather than by reading.

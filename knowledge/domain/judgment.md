@@ -2,15 +2,13 @@
 type: Domain Concept
 title: Judgment
 description: >-
-  What one desire reads at one instant, and how badly it is wanted. Two halves. The met
-  half is what the desire's own met-test read - met, or unmet with the results that say
-  which instances fail and why - judged at the present and at every foreseen instant and
-  written to the agent's judgment graph, whole, on every run of `judge_desires`; the wants
-  are derived from that graph and nothing in hand. The urgency half a capability makes fresh
-  on every pass - the ledger from a claim's redeem window, sensing from the survival
-  envelope - and hands back unit-free, with what the thing currently reads and when it runs
-  out. It is the mind's VIEW of a desire, never the desire.
-term: http://example.org/orexis/deliberation#Judgment
+  Judging is what running a desire's met-test against the world IS, and nothing stands
+  between a desire and a want: what a met-test reads is a witness, computed where it is
+  needed and stored nowhere, and everything a stored judgment used to carry a want carries.
+  The other half, how badly the thing is wanted, a capability makes fresh on every pass -
+  the ledger from a claim's redeem window, sensing from the survival envelope - unit-free,
+  with what the thing currently reads and when it runs out. It is the mind's VIEW of a
+  desire, never the desire.
 ---
 
 # What it is
@@ -23,24 +21,21 @@ It carries the desire's name, an **urgency** between content and the edge of wha
 what the thing currently reads where anybody has a number for it, and the instant it stops
 being satisfiable. `Agent.pursuing()` hands back every one this agent is making, hottest first.
 
-# The met half is written, the urgency half is not
+# Nothing stands between a desire and a want
 
 A desire is a node in the roots graph and a want is a graph of its own with a period; both
-survive a restart. A judgment exists for one run. Its MET half — what the desire's met-test
-read, and the results where unmet, in SHACL's own words for a report, `sh:conforms` and
-`sh:result` — is written to the agent's judgment graph by `judge_desires`, one judgment per
-desire per instant, the present and every foreseen one, and the graph is replaced whole on
-the next run. That is what makes the road two functions over the store
-([judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md)): the
-wants are derived from the judgments and nothing in hand, and the judgments are there for
-eyes, for the snapshots and for `orexis-ask` to answer *why do I want this*. The graph is a
-WORKING one, like the deliberation trace: a conclusion, never carried into a possible world
-and never a record, kept because a reader outside the process cannot recompute it.
+survive a restart. What a met-test READS survives nothing, and for a while it was written down:
+one row per desire per instant, typed in the deliberation layer's own words, in SHACL's words
+for a report, to a working graph replaced whole. That class is gone, and so is the Python
+object beside it.
 
-The URGENCY half is still made fresh on every pass and written nowhere. Ask twice and you get
-two, made from whatever the world looked like each time — which is correct, because urgency
-is a function of a situation and a situation moves. The term `deliberation:Judgment` is the
-written half's; the urgency joins it when the choir's answer is written beside it.
+Everything it carried a WANT carries — which instance is in trouble, what the trouble is about,
+which way it broke (`orexis:violationIs`: below, above, unmeasured, stale) and the instant it
+must hold at. What is left of the reading itself is a WITNESS: one row of what a met-test read,
+computed where it is needed and stored nowhere, since the answer is about a situation and the
+situation has moved by the next pass. `derive_wants` asks for witnesses to mint; a reader
+asking where a crossing is asks the same code for the same answer, and neither reads a graph
+the other wrote.
 
 # The measure is the package's, the scale is the kernel's
 

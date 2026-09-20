@@ -381,8 +381,10 @@ it is a record wearing a bullet.
 - **A desire is declared and a judgment is made** — the class called `Desire` carried an
   urgency and an expiry, was built fresh by whichever capability held the stake and was never
   written down or read back, while the row a package's rule writes at genesis had no type at
-  all; naming the second thing let the first become data and `Want` subclass it as
-  `orexis:Want rdfs:subClassOf orexis:Desire` already said.
+  all; naming the second thing let the first become data. The name has since gone the way of
+  the thing: nothing stands between a desire and a want, and what a judgment carried — the
+  urgency, the reading, which way it broke — a WANT carries, made fresh where it is made
+  fresh and stored where it is stored.
 - **A collection over stored rows is handed a store, and one over contributed answers is handed
   the agent** — `Wants` reads graphs so it takes somewhere to search, `Judgments` asks the choir
   so it must reach the choir, and the asymmetry is what tells the two kinds of collection apart.

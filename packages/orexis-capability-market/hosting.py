@@ -34,7 +34,7 @@ import json
 from agent import signing
 from .auction import run_auction
 from .trade import EPS, Bid, Limits, MarketState, Offer
-from orexis_agent_deliberation.judgment import Judgment
+from orexis_agent_deliberation.want import Want
 
 from .ower import Ower
 from agent.module import Module, contributes
@@ -317,7 +317,7 @@ SELECT (SUM(?a) AS ?owed) WHERE {{
             if market is None or judgment.uri == calls.uri_for(market.uri):
                 reviser.wake_for(self.agent, judgment)
 
-    def desires(self, now=None) -> list[Judgment]:
+    def desires(self, now=None) -> list[Want]:
         """My contribution to what this agent pursues: the calls on the venues I host.
 
         A call is a want somebody else sourced, like a debt (owing contributes those); it is
@@ -330,7 +330,7 @@ SELECT (SUM(?a) AS ?owed) WHERE {{
         """
         #  AND THE DEBTS, delegated: the ledger is no longer a module in its own right, so
         #  what it contributed to the choir arrives through the module that holds it.
-        return ([Judgment(uri=c.uri, urgency=1.0) for c in calls.calls_of(self.agent)]
+        return ([Want(uri=c.uri, urgency=1.0) for c in calls.calls_of(self.agent)]
                 + self.ledger.desires(now))
 
     def series(self) -> list[tuple[str, dict, dict]]:
@@ -719,7 +719,7 @@ SELECT ?r WHERE {{
         serve, and only for a claim still held — an obligation whose claim was never presented
         is not this module's to invent.
         """
-        #  THE MARKET'S OWN JUDGMENT carries the claim (`OwedJudgment`); a judgment of any other kind
+        #  THE MARKET'S OWN JUDGMENT carries the claim (`OwedWant`); a judgment of any other kind
         #  names none, and a serve is not this module's to invent for it.
         jti = getattr(judgment, "claim", None)
         if not jti or jti not in self.held:

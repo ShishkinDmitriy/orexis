@@ -47,7 +47,7 @@ from orexis_agent_progression.timer import Timer
 
 from . import planner, pursuit, trace
 from orexis_agent_progression.act import Step
-from orexis_agent_deliberation.judgment import Judgment
+from orexis_agent_deliberation.want import Want
 
 
 from orexis_agent_progression.ontology import (OREXIS, DELIBERATION_GRAPH, PLAN_FAILED, PLAN_FINISHED,
@@ -107,7 +107,7 @@ class Deliberator:
         self._planners: dict = {}
         self._plans_failed = 0
 
-    def pursued(self) -> list[tuple[Judgment, str | None]]:
+    def pursued(self) -> list[tuple[Want, str | None]]:
         """Every desire this agent holds, with the move I propose for it — or None.
 
         Here because deciding what can be done is exactly what a deliberator is, and because
@@ -287,7 +287,7 @@ class Deliberator:
         for judgment, _ in pursued:
             #  A want pursued under a root is reported as the ROOT (#618): one series per
             #  desire the agent holds, whichever node the pass is currently handed.
-            about = (judgment.derived_from or judgment.uri).rsplit("#", 1)[-1]
+            about = (judgment.desire or judgment.uri).rsplit("#", 1)[-1]
             #  `agent_want` and its tag KEEP THE RETIRED WORD, deliberately. The noun "want"
             #  gave way to "desire" everywhere else when the vocabulary was ruled on
             #  (domain/desire.md), and a measurement name is the one place the rename costs more
@@ -329,7 +329,7 @@ class Deliberator:
                                             "plans_failed": self._plans_failed}))
         return rows
 
-    def propose_for(self, judgment: Judgment) -> str | None:
+    def propose_for(self, judgment: Want) -> str | None:
         """The MEANS of the move for one judgment, or None — `decide` projected to its head.
 
         Kept for every caller that wants only the kind of act; execution wants the row and
@@ -338,7 +338,7 @@ class Deliberator:
         plan = self.decide(judgment)
         return plan.first if plan is not None and plan.steps else None
 
-    def decide(self, judgment: Judgment, surprise: tuple | None = None) -> Plan | None:
+    def decide(self, judgment: Want, surprise: tuple | None = None) -> Plan | None:
         """The PLAN for one judgment, whoever sourced it — the deliberator's real question.
 
         Returns the plan as ROWS, because a step is a row and not a means: which lever it
@@ -366,7 +366,7 @@ class Deliberator:
             return None
         judgment = handed
         keeper = getattr(self.agent, "keeper", None)
-        if (judgment.derived_from is not None and judgment.is_met
+        if (judgment.desire is not None and judgment.is_met
                 and (keeper is None or not keeper.standing(want=judgment.uri))):
             pursuit.withdraw(self.agent, judgment.uri)
             return None
@@ -417,7 +417,7 @@ class Deliberator:
                 return Plan(OBLIGATION, ((Step.from_row(row)),))
         return None
 
-    def _planned(self, judgment: Judgment, surprise: tuple | None = None) -> Plan | None:
+    def _planned(self, judgment: Want, surprise: tuple | None = None) -> Plan | None:
         """The plan the search found for one judgment, or None — which is now always a DECISION.
 
         It used to hand back `(answered, move)`, because there were three answers and only two

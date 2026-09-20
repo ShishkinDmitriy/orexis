@@ -24,14 +24,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from orexis_agent_deliberation.judgment import Judgment
+from orexis_agent_deliberation.want import Want
 from agent.module import Module
 from orexis_agent_progression.ontology import OREXIS, REPREDICT, obligations_graph
 from orexis_agent_progression.store import bind, bindings
 from .terms import (AMOUNT_L, DISCHARGED_AT, FOR_CLAIM, LAPSED_AT, LAPSES_AT, NS, OWED_AT, OWED_FROM,
                     OWED_TO, PRESENTED)
 from orexis_agent_progression import clock
-from orexis_agent_deliberation.judge_desires import judge_desires
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import KNOWN, RECORD
 
@@ -51,10 +50,10 @@ from orexis_agent_progression.ontology import KNOWN, RECORD
 #  judge its own; it writes debts and predictions now, and speaks for what the road derives
 #  (one-road-derives-every-want). `$root` is this agent's desire.
 @dataclass(frozen=True)
-class OwedJudgment(Judgment):
+class OwedWant(Want):
     """The ledger's judgment of an obligation: the kernel's, and the market's two words beside
     it — the claim it came from and whom it is owed to. Named as sensing names its own
-    (`ObservedJudgment`, a judgment about an observed property): a judgment about what is
+    (`ObservedWant`, a judgment about an observed property): a judgment about what is
     owed, and no new concept — the concept is the obligation (knowledge/domain/obligation.md).
     Built here, read by hosting and by the tests; the kernel ranks it, asks whether it may be
     acted on and hands it to the search, and never learns the words. It used to be two
@@ -311,7 +310,6 @@ SELECT ?o ?to ?jti ?a ?at ?paid WHERE {{ GRAPH <{graph}> {{
         the want under it is the road's to mint. The one thing the ledger asks of deliberation,
         and it asks rather than does — nothing here writes a want."""
         from orexis_agent_deliberation import pursuit
-        judge_desires(self.agent.beliefs.engine)
         pursuit.derived(self.agent)
 
     def endow(self) -> int:
@@ -339,7 +337,7 @@ SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS
             self._road()
         return len(rows)
 
-    def obligations(self, now: datetime | None = None) -> list[Judgment]:
+    def obligations(self, now: datetime | None = None) -> list[Want]:
         """What this agent owes, as desires — hottest first, and hot means CLOSE TO EXPIRY.
 
         A stake's urgency is distance scaled by the survival envelope; an obligation has no envelope,
@@ -357,7 +355,7 @@ SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS
         """
         return self.desires(now)
 
-    def desires(self, now: datetime | None = None) -> list[Judgment]:
+    def desires(self, now: datetime | None = None) -> list[Want]:
         """MY contribution to what this agent is pursuing: its debts, and no stakes.
 
         The half of the choir the city had no way to contribute before, which is the whole of
@@ -373,7 +371,7 @@ SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS
                 bind(_DUTIES_Q, root=f"{self.agent.me.uri}.no_overdue_debts"))):
             demanded = row.get("presented") == "true"
             lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])
-            out.append(OwedJudgment(uri=row["desire"], urgency=_duty_urgency(row, now),
+            out.append(OwedWant(uri=row["desire"], urgency=_duty_urgency(row, now),
                               claim=row["claim"], owed_to=row["owedTo"],
                               expires=(datetime.fromisoformat(row["expires"])
                                        if row.get("expires") else None),
