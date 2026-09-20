@@ -53,9 +53,6 @@ GRAPH :world {
 }
 
 GRAPH :actions {
-  _:b1 sh:oneOrMorePath hanoi:on .
-  _:b2 sh:hasValue hanoi:PegC .
-  _:b2 sh:path _:b1 .
   hanoi:Move a orexis:Action .
   hanoi:Move orexis:available """
         SELECT ?via ?about WHERE {
@@ -84,7 +81,7 @@ GRAPH :actions {
         }""" .
   hanoi:solved a sh:NodeShape .
   hanoi:solved rdfs:label "every disk's chain bottoms out on peg C" .
-  hanoi:solved sh:property _:b2 .
+  hanoi:solved sh:property [ sh:hasValue hanoi:PegC ; sh:path [ sh:oneOrMorePath hanoi:on ] ] .
   hanoi:solved sh:targetSubjectsOf hanoi:on .
 }
 

@@ -57,43 +57,9 @@ GRAPH :desires {
   :keeper.warm_enough orexis:metWhen :warm_where_it_stands .
   :keeper.warm_enough rdfs:label "every plant stands where the air is inside the range it wants" .
   :warm_where_it_stands a sh:NodeShape .
-  :warm_where_it_stands sh:property _:b6 .
-  :warm_where_it_stands sh:property _:b9 .
+  :warm_where_it_stands sh:property [ orexis:about water:AirTemperature ; orexis:violationIs orexis:Above ; sh:message "the air where this plant stands reads above the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
+  :warm_where_it_stands sh:property [ orexis:about water:AirTemperature ; orexis:violationIs orexis:Below ; sh:message "the air where this plant stands reads below the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
   :warm_where_it_stands sh:targetClass water:Plant .
-  _:b1 sh:class sensing:AboveRegion .
-  _:b1 sh:property _:b2 .
-  _:b10 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b7 .
-  _:b10 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> .
-  _:b11 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> :hasAir .
-  _:b11 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b10 .
-  _:b12 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b3 .
-  _:b12 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> .
-  _:b13 sh:class sensing:BelowRegion .
-  _:b13 sh:property _:b14 .
-  _:b14 sh:hasValue water:AirTemperature .
-  _:b14 sh:path sosa:observedProperty .
-  _:b2 sh:hasValue water:AirTemperature .
-  _:b2 sh:path sosa:observedProperty .
-  _:b3 sh:inversePath sosa:hasFeatureOfInterest .
-  _:b4 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> :standsIn .
-  _:b4 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b11 .
-  _:b5 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> :standsIn .
-  _:b5 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b8 .
-  _:b6 orexis:about water:AirTemperature .
-  _:b6 orexis:violationIs orexis:Above .
-  _:b6 sh:message "the air where this plant stands reads above the range it wants" .
-  _:b6 sh:path _:b4 .
-  _:b6 sh:qualifiedMaxCount 0 .
-  _:b6 sh:qualifiedValueShape _:b1 .
-  _:b7 sh:inversePath sosa:hasFeatureOfInterest .
-  _:b8 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> :hasAir .
-  _:b8 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b12 .
-  _:b9 orexis:about water:AirTemperature .
-  _:b9 orexis:violationIs orexis:Below .
-  _:b9 sh:message "the air where this plant stands reads below the range it wants" .
-  _:b9 sh:path _:b5 .
-  _:b9 sh:qualifiedMaxCount 0 .
-  _:b9 sh:qualifiedValueShape _:b13 .
 }
 
 GRAPH :sensed {

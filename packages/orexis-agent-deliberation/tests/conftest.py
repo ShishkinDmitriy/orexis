@@ -192,23 +192,43 @@ def renderer(prefixes: dict[str, str]):
         return f"_:{term}"
 
     def render(iri: str, graph: Graph) -> str:
-        """One graph as a TriG block, ONE QUAD A LINE, sorted.
+        """One graph as a TriG block: ONE LINE PER STATEMENT, sorted, nested nodes inlined.
 
-        FLAT TRIG — the same thing N-Quads is, said in names a reader knows. Turtle's `;` and
-        `,` make every line depend on the one after it: adding a quad flips its neighbour's
-        `;` to `.`, so a one-quad change is a three-line diff and no diff over grouped Turtle
-        can ever be minimal. Written flat, a quad is a line, and adding one adds a line.
+        FLAT AT THE TOP, because Turtle's `;` and `,` make every line depend on the one after
+        it — adding a statement flips its neighbour's `;` to `.`, so a one-statement change is a
+        three-line diff and no diff over grouped Turtle can ever be minimal. Written one to a
+        line, adding a statement adds a line.
 
-        IT IS ALSO SHORTER, which was not the reason and is worth saying: 1,768 lines against
-        2,143 across every snapshot, because continuation lines and inlined blank-node
-        brackets cost more than repeating a subject.
-
-        The price is a blank node written as `_:b1` where it used to be inlined — readable
-        enough, since `canonical_graphs` has already renamed them by their canonical labels,
-        so `_:b1` is the same node on every run and in every file.
+        AND NESTED WHERE NESTING IS THE MEANING. A blank node used once is inlined `[ … ]` and
+        an RDF list is `( … )`, as they were: a shape is a TREE of blank nodes, and flattening
+        one gives `_:b11 rdf:rest _:b1` sorted lexically so `_:b10` precedes `_:b2` — every
+        quad on its own line and the shape unreadable. One quad a line is worth having where a
+        subject has a name a reader can hold, and worth nothing where it does not.
         """
+        as_object: dict = {}
+        for _, _, o_ in graph:
+            if isinstance(o_, BNode):
+                as_object[o_] = as_object.get(o_, 0) + 1
+        inlined = {b for b, n in as_object.items() if n == 1}
+
+        def term(t, depth: int) -> str:
+            if isinstance(t, BNode) and t in inlined:
+                pairs = list(graph.predicate_objects(t))
+                if {p_ for p_, _ in pairs} == {URIRef(RDF + "first"), URIRef(RDF + "rest")}:
+                    items, node = [], t
+                    while node != URIRef(RDF + "nil"):
+                        items.append(term(graph.value(node, URIRef(RDF + "first")), depth))
+                        node = graph.value(node, URIRef(RDF + "rest"))
+                    return "( " + " ".join(items) + " )"
+                body = " ; ".join(f"{name(p_)} {term(o_, depth + 1)}" for p_, o_ in sorted(
+                    pairs, key=lambda po: (name(po[0]), term(po[1], depth + 1))))
+                return f"[ {body} ]"
+            return name(t)
+
         lines = [f"GRAPH {name(URIRef(iri))} {{"]
-        lines += sorted(f"  {name(s_)} {name(p_)} {name(o_)} ." for s_, p_, o_ in graph)
+        lines += sorted(f"  {name(s_)} {name(p_)} {term(o_, 0)} ."
+                        for s_, p_, o_ in graph
+                        if not (isinstance(s_, BNode) and s_ in inlined))
         lines.append("}\n")
         return "\n".join(lines)
     return render

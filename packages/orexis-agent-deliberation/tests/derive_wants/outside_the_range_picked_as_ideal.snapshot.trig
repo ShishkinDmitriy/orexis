@@ -101,17 +101,17 @@ GRAPH :world {
   :fern <http://www.w3.org/ns/ssn/systems/hasOperatingRange> :fern_operating .
   :fern <http://www.w3.org/ns/ssn/systems/hasSurvivalRange> :fern_survival .
   :fern a water:Plant .
-  :fern_blooming <http://www.w3.org/ns/ssn/systems/inCondition> _:b4 .
-  :fern_blooming <http://www.w3.org/ns/ssn/systems/inCondition> _:b7 .
-  :fern_blooming <http://www.w3.org/ns/ssn/systems/inCondition> _:b9 .
+  :fern_blooming <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 24 ; schema:minValue 18 ; ssn:forProperty water:AirTemperature ] .
+  :fern_blooming <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 45 ; schema:minValue 30 ; ssn:forProperty water:SoilMoisture ] .
+  :fern_blooming <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 70 ; schema:minValue 40 ; ssn:forProperty water:AirHumidity ] .
   :fern_blooming a :BloomingRange .
-  :fern_operating <http://www.w3.org/ns/ssn/systems/inCondition> _:b2 .
-  :fern_operating <http://www.w3.org/ns/ssn/systems/inCondition> _:b5 .
-  :fern_operating <http://www.w3.org/ns/ssn/systems/inCondition> _:b6 .
+  :fern_operating <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 32 ; schema:minValue 12 ; ssn:forProperty water:AirTemperature ] .
+  :fern_operating <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 50 ; schema:minValue 15 ; ssn:forProperty water:SoilMoisture ] .
+  :fern_operating <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 85 ; schema:minValue 25 ; ssn:forProperty water:AirHumidity ] .
   :fern_operating a <http://www.w3.org/ns/ssn/systems/OperatingRange> .
-  :fern_survival <http://www.w3.org/ns/ssn/systems/inCondition> _:b1 .
-  :fern_survival <http://www.w3.org/ns/ssn/systems/inCondition> _:b3 .
-  :fern_survival <http://www.w3.org/ns/ssn/systems/inCondition> _:b8 .
+  :fern_survival <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 40 ; schema:minValue 2 ; ssn:forProperty water:AirTemperature ] .
+  :fern_survival <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 60 ; schema:minValue 5 ; ssn:forProperty water:SoilMoisture ] .
+  :fern_survival <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 95 ; schema:minValue 10 ; ssn:forProperty water:AirHumidity ] .
   :fern_survival a <http://www.w3.org/ns/ssn/systems/SurvivalRange> .
   :soil_moisture_of_fern a sosa:ObservableProperty .
   :soil_moisture_of_fern ssn:forProperty water:SoilMoisture .
@@ -121,78 +121,18 @@ GRAPH :world {
   :soil_warmth_of_fern a sosa:ObservableProperty .
   :soil_warmth_of_fern ssn:forProperty water:AirTemperature .
   :soil_warmth_of_fern ssn:isPropertyOf :soil_of_fern .
-  _:b1 schema:maxValue 60 .
-  _:b1 schema:minValue 5 .
-  _:b1 ssn:forProperty water:SoilMoisture .
-  _:b2 schema:maxValue 32 .
-  _:b2 schema:minValue 12 .
-  _:b2 ssn:forProperty water:AirTemperature .
-  _:b3 schema:maxValue 40 .
-  _:b3 schema:minValue 2 .
-  _:b3 ssn:forProperty water:AirTemperature .
-  _:b4 schema:maxValue 70 .
-  _:b4 schema:minValue 40 .
-  _:b4 ssn:forProperty water:AirHumidity .
-  _:b5 schema:maxValue 50 .
-  _:b5 schema:minValue 15 .
-  _:b5 ssn:forProperty water:SoilMoisture .
-  _:b6 schema:maxValue 85 .
-  _:b6 schema:minValue 25 .
-  _:b6 ssn:forProperty water:AirHumidity .
-  _:b7 schema:maxValue 45 .
-  _:b7 schema:minValue 30 .
-  _:b7 ssn:forProperty water:SoilMoisture .
-  _:b8 schema:maxValue 95 .
-  _:b8 schema:minValue 10 .
-  _:b8 ssn:forProperty water:AirHumidity .
-  _:b9 schema:maxValue 24 .
-  _:b9 schema:minValue 18 .
-  _:b9 ssn:forProperty water:AirTemperature .
 }
 
 GRAPH :desires {
   :inside_the_picked_range a sh:NodeShape .
-  :inside_the_picked_range sh:property _:b6 .
-  :inside_the_picked_range sh:property _:b7 .
-  :inside_the_picked_range sh:property _:b8 .
+  :inside_the_picked_range sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Above ; sh:message "a watched property reads above the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ] ] .
+  :inside_the_picked_range sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Below ; sh:message "a watched property reads below the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ] ] .
+  :inside_the_picked_range sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Unmeasured ; sh:message "a watched property has never been read" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMinCount 1 ; sh:qualifiedValueShape [ sh:or ( [ sh:class sensing:BelowRegion ] [ sh:class sensing:InRegion ] [ sh:class sensing:AboveRegion ] ) ] ] .
   :inside_the_picked_range sh:targetClass sosa:ObservableProperty .
   :keeper orexis:holds :keeper.ideal .
   :keeper.ideal a orexis:Desire .
   :keeper.ideal orexis:metWhen :inside_the_picked_range .
   :keeper.ideal rdfs:label "every watched property of every sample around a plant reads inside the range picked as ideal" .
-  _:b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b4 .
-  _:b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b5 .
-  _:b10 sh:class sensing:AboveRegion .
-  _:b11 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b2 .
-  _:b11 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b1 .
-  _:b12 sh:class sensing:BelowRegion .
-  _:b13 sh:inversePath sosa:observedProperty .
-  _:b14 sh:class sensing:AboveRegion .
-  _:b15 sh:inversePath sosa:observedProperty .
-  _:b2 sh:class sensing:BelowRegion .
-  _:b3 sh:inversePath sosa:observedProperty .
-  _:b4 sh:class sensing:InRegion .
-  _:b5 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b10 .
-  _:b5 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> .
-  _:b6 orexis:about sh:this .
-  _:b6 orexis:violationIs orexis:Above .
-  _:b6 sh:message "a watched property reads above the range picked as ideal for it" .
-  _:b6 sh:path _:b15 .
-  _:b6 sh:qualifiedMaxCount 0 .
-  _:b6 sh:qualifiedValueShape _:b14 .
-  _:b7 orexis:about sh:this .
-  _:b7 orexis:violationIs orexis:Unmeasured .
-  _:b7 sh:message "a watched property has never been read" .
-  _:b7 sh:path _:b13 .
-  _:b7 sh:qualifiedMinCount 1 .
-  _:b7 sh:qualifiedValueShape _:b9 .
-  _:b8 orexis:about sh:this .
-  _:b8 orexis:violationIs orexis:Below .
-  _:b8 sh:message "a watched property reads below the range picked as ideal for it" .
-  _:b8 sh:path _:b3 .
-  _:b8 sh:qualifiedMaxCount 0 .
-  _:b8 sh:qualifiedValueShape _:b12 .
-  _:b9 sh:or _:b11 .
 }
 
 GRAPH :sensed {
@@ -245,28 +185,22 @@ GRAPH :catalogue {
   :sensed a orexis:StateGraph .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
-  _:b1 a dcterms:PeriodOfTime .
-  _:b1 orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
-  _:b2 a dcterms:PeriodOfTime .
-  _:b2 orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
-  _:b3 a dcterms:PeriodOfTime .
-  _:b3 orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   pursued:keeper.ideal.pursued.air_warmth_of_fern a deliberation:PursuedGraph .
   pursued:keeper.ideal.pursued.air_warmth_of_fern a orexis:Graph .
   pursued:keeper.ideal.pursued.air_warmth_of_fern a orexis:WantGraph .
-  pursued:keeper.ideal.pursued.air_warmth_of_fern dcterms:temporal _:b2 .
+  pursued:keeper.ideal.pursued.air_warmth_of_fern dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   pursued:keeper.ideal.pursued.air_warmth_of_fern orexis:arrivedBy orexis:Recorded .
   pursued:keeper.ideal.pursued.air_warmth_of_fern orexis:beliefsOf :keeper .
   pursued:keeper.ideal.pursued.soil_moisture_of_fern a deliberation:PursuedGraph .
   pursued:keeper.ideal.pursued.soil_moisture_of_fern a orexis:Graph .
   pursued:keeper.ideal.pursued.soil_moisture_of_fern a orexis:WantGraph .
-  pursued:keeper.ideal.pursued.soil_moisture_of_fern dcterms:temporal _:b3 .
+  pursued:keeper.ideal.pursued.soil_moisture_of_fern dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   pursued:keeper.ideal.pursued.soil_moisture_of_fern orexis:arrivedBy orexis:Recorded .
   pursued:keeper.ideal.pursued.soil_moisture_of_fern orexis:beliefsOf :keeper .
   pursued:keeper.ideal.pursued.soil_warmth_of_fern a deliberation:PursuedGraph .
   pursued:keeper.ideal.pursued.soil_warmth_of_fern a orexis:Graph .
   pursued:keeper.ideal.pursued.soil_warmth_of_fern a orexis:WantGraph .
-  pursued:keeper.ideal.pursued.soil_warmth_of_fern dcterms:temporal _:b1 .
+  pursued:keeper.ideal.pursued.soil_warmth_of_fern dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   pursued:keeper.ideal.pursued.soil_warmth_of_fern orexis:arrivedBy orexis:Recorded .
   pursued:keeper.ideal.pursued.soil_warmth_of_fern orexis:beliefsOf :keeper .
 }
@@ -282,43 +216,10 @@ GRAPH pursued:keeper.ideal.pursued.air_warmth_of_fern {
   :keeper.ideal.pursued.air_warmth_of_fern prov:wasDerivedFrom :keeper.ideal .
   :keeper.ideal.pursued.air_warmth_of_fern rdfs:label "pursued: every watched property of every sample around a plant reads inside the range picked as ideal" .
   :keeper.ideal.pursued.air_warmth_of_fern.met a sh:NodeShape .
-  :keeper.ideal.pursued.air_warmth_of_fern.met sh:property _:b10 .
-  :keeper.ideal.pursued.air_warmth_of_fern.met sh:property _:b8 .
-  :keeper.ideal.pursued.air_warmth_of_fern.met sh:property _:b9 .
+  :keeper.ideal.pursued.air_warmth_of_fern.met sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Above ; sh:message "a watched property reads above the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ] ] .
+  :keeper.ideal.pursued.air_warmth_of_fern.met sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Below ; sh:message "a watched property reads below the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ] ] .
+  :keeper.ideal.pursued.air_warmth_of_fern.met sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Unmeasured ; sh:message "a watched property has never been read" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMinCount 1 ; sh:qualifiedValueShape [ sh:or ( [ sh:class sensing:BelowRegion ] [ sh:class sensing:InRegion ] [ sh:class sensing:AboveRegion ] ) ] ] .
   :keeper.ideal.pursued.air_warmth_of_fern.met sh:targetNode :air_warmth_of_fern .
-  _:b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b6 .
-  _:b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b7 .
-  _:b10 orexis:about sh:this .
-  _:b10 orexis:violationIs orexis:Above .
-  _:b10 sh:message "a watched property reads above the range picked as ideal for it" .
-  _:b10 sh:path _:b5 .
-  _:b10 sh:qualifiedMaxCount 0 .
-  _:b10 sh:qualifiedValueShape _:b12 .
-  _:b11 sh:class sensing:AboveRegion .
-  _:b12 sh:class sensing:AboveRegion .
-  _:b13 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b3 .
-  _:b13 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b1 .
-  _:b14 sh:or _:b13 .
-  _:b15 sh:class sensing:BelowRegion .
-  _:b2 sh:inversePath sosa:observedProperty .
-  _:b3 sh:class sensing:BelowRegion .
-  _:b4 sh:inversePath sosa:observedProperty .
-  _:b5 sh:inversePath sosa:observedProperty .
-  _:b6 sh:class sensing:InRegion .
-  _:b7 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b11 .
-  _:b7 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> .
-  _:b8 orexis:about sh:this .
-  _:b8 orexis:violationIs orexis:Unmeasured .
-  _:b8 sh:message "a watched property has never been read" .
-  _:b8 sh:path _:b2 .
-  _:b8 sh:qualifiedMinCount 1 .
-  _:b8 sh:qualifiedValueShape _:b14 .
-  _:b9 orexis:about sh:this .
-  _:b9 orexis:violationIs orexis:Below .
-  _:b9 sh:message "a watched property reads below the range picked as ideal for it" .
-  _:b9 sh:path _:b4 .
-  _:b9 sh:qualifiedMaxCount 0 .
-  _:b9 sh:qualifiedValueShape _:b15 .
 }
 
 GRAPH pursued:keeper.ideal.pursued.soil_moisture_of_fern {
@@ -330,43 +231,10 @@ GRAPH pursued:keeper.ideal.pursued.soil_moisture_of_fern {
   :keeper.ideal.pursued.soil_moisture_of_fern prov:wasDerivedFrom :keeper.ideal .
   :keeper.ideal.pursued.soil_moisture_of_fern rdfs:label "pursued: every watched property of every sample around a plant reads inside the range picked as ideal" .
   :keeper.ideal.pursued.soil_moisture_of_fern.met a sh:NodeShape .
-  :keeper.ideal.pursued.soil_moisture_of_fern.met sh:property _:b10 .
-  :keeper.ideal.pursued.soil_moisture_of_fern.met sh:property _:b8 .
-  :keeper.ideal.pursued.soil_moisture_of_fern.met sh:property _:b9 .
+  :keeper.ideal.pursued.soil_moisture_of_fern.met sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Above ; sh:message "a watched property reads above the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ] ] .
+  :keeper.ideal.pursued.soil_moisture_of_fern.met sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Below ; sh:message "a watched property reads below the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ] ] .
+  :keeper.ideal.pursued.soil_moisture_of_fern.met sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Unmeasured ; sh:message "a watched property has never been read" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMinCount 1 ; sh:qualifiedValueShape [ sh:or ( [ sh:class sensing:BelowRegion ] [ sh:class sensing:InRegion ] [ sh:class sensing:AboveRegion ] ) ] ] .
   :keeper.ideal.pursued.soil_moisture_of_fern.met sh:targetNode :soil_moisture_of_fern .
-  _:b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b5 .
-  _:b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b7 .
-  _:b10 orexis:about sh:this .
-  _:b10 orexis:violationIs orexis:Above .
-  _:b10 sh:message "a watched property reads above the range picked as ideal for it" .
-  _:b10 sh:path _:b15 .
-  _:b10 sh:qualifiedMaxCount 0 .
-  _:b10 sh:qualifiedValueShape _:b3 .
-  _:b11 sh:class sensing:BelowRegion .
-  _:b12 sh:class sensing:AboveRegion .
-  _:b13 sh:or _:b14 .
-  _:b14 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b4 .
-  _:b14 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b1 .
-  _:b15 sh:inversePath sosa:observedProperty .
-  _:b2 sh:inversePath sosa:observedProperty .
-  _:b3 sh:class sensing:AboveRegion .
-  _:b4 sh:class sensing:BelowRegion .
-  _:b5 sh:class sensing:InRegion .
-  _:b6 sh:inversePath sosa:observedProperty .
-  _:b7 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b12 .
-  _:b7 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> .
-  _:b8 orexis:about sh:this .
-  _:b8 orexis:violationIs orexis:Unmeasured .
-  _:b8 sh:message "a watched property has never been read" .
-  _:b8 sh:path _:b6 .
-  _:b8 sh:qualifiedMinCount 1 .
-  _:b8 sh:qualifiedValueShape _:b13 .
-  _:b9 orexis:about sh:this .
-  _:b9 orexis:violationIs orexis:Below .
-  _:b9 sh:message "a watched property reads below the range picked as ideal for it" .
-  _:b9 sh:path _:b2 .
-  _:b9 sh:qualifiedMaxCount 0 .
-  _:b9 sh:qualifiedValueShape _:b11 .
 }
 
 GRAPH pursued:keeper.ideal.pursued.soil_warmth_of_fern {
@@ -378,41 +246,8 @@ GRAPH pursued:keeper.ideal.pursued.soil_warmth_of_fern {
   :keeper.ideal.pursued.soil_warmth_of_fern prov:wasDerivedFrom :keeper.ideal .
   :keeper.ideal.pursued.soil_warmth_of_fern rdfs:label "pursued: every watched property of every sample around a plant reads inside the range picked as ideal" .
   :keeper.ideal.pursued.soil_warmth_of_fern.met a sh:NodeShape .
-  :keeper.ideal.pursued.soil_warmth_of_fern.met sh:property _:b10 .
-  :keeper.ideal.pursued.soil_warmth_of_fern.met sh:property _:b8 .
-  :keeper.ideal.pursued.soil_warmth_of_fern.met sh:property _:b9 .
+  :keeper.ideal.pursued.soil_warmth_of_fern.met sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Above ; sh:message "a watched property reads above the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ] ] .
+  :keeper.ideal.pursued.soil_warmth_of_fern.met sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Below ; sh:message "a watched property reads below the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ] ] .
+  :keeper.ideal.pursued.soil_warmth_of_fern.met sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Unmeasured ; sh:message "a watched property has never been read" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMinCount 1 ; sh:qualifiedValueShape [ sh:or ( [ sh:class sensing:BelowRegion ] [ sh:class sensing:InRegion ] [ sh:class sensing:AboveRegion ] ) ] ] .
   :keeper.ideal.pursued.soil_warmth_of_fern.met sh:targetNode :soil_warmth_of_fern .
-  _:b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b5 .
-  _:b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b7 .
-  _:b10 orexis:about sh:this .
-  _:b10 orexis:violationIs orexis:Below .
-  _:b10 sh:message "a watched property reads below the range picked as ideal for it" .
-  _:b10 sh:path _:b15 .
-  _:b10 sh:qualifiedMaxCount 0 .
-  _:b10 sh:qualifiedValueShape _:b13 .
-  _:b11 sh:class sensing:AboveRegion .
-  _:b12 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b4 .
-  _:b12 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:b1 .
-  _:b13 sh:class sensing:BelowRegion .
-  _:b14 sh:or _:b12 .
-  _:b15 sh:inversePath sosa:observedProperty .
-  _:b2 sh:class sensing:AboveRegion .
-  _:b3 sh:inversePath sosa:observedProperty .
-  _:b4 sh:class sensing:BelowRegion .
-  _:b5 sh:class sensing:InRegion .
-  _:b6 sh:inversePath sosa:observedProperty .
-  _:b7 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:b11 .
-  _:b7 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> .
-  _:b8 orexis:about sh:this .
-  _:b8 orexis:violationIs orexis:Unmeasured .
-  _:b8 sh:message "a watched property has never been read" .
-  _:b8 sh:path _:b6 .
-  _:b8 sh:qualifiedMinCount 1 .
-  _:b8 sh:qualifiedValueShape _:b14 .
-  _:b9 orexis:about sh:this .
-  _:b9 orexis:violationIs orexis:Above .
-  _:b9 sh:message "a watched property reads above the range picked as ideal for it" .
-  _:b9 sh:path _:b3 .
-  _:b9 sh:qualifiedMaxCount 0 .
-  _:b9 sh:qualifiedValueShape _:b2 .
 }

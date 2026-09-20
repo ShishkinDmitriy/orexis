@@ -79,12 +79,9 @@ GRAPH :desires {
   :in_range orexis:metWhen :in_range.shape .
   :in_range rdfs:label "every tank in range" .
   :in_range.shape a sh:NodeShape .
-  :in_range.shape sh:property _:b1 .
+  :in_range.shape sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
   :in_range.shape sh:targetClass :Tank .
   :keeper orexis:holds :in_range .
-  _:b1 orexis:about :level .
-  _:b1 sh:minInclusive 10 .
-  _:b1 sh:path :level .
 }
 
 GRAPH pursued:in_range.pursued.tank1 {
@@ -94,11 +91,9 @@ GRAPH pursued:in_range.pursued.tank1 {
   :in_range.pursued.tank1 prov:wasDerivedFrom :in_range .
   :in_range.pursued.tank1 rdfs:label "pursued: every tank in range" .
   :in_range.pursued.tank1.met a sh:NodeShape .
-  :in_range.pursued.tank1.met sh:property _:b1 .
+  :in_range.pursued.tank1.met sh:property [ sh:minInclusive 10 ; sh:path :level ] .
   :in_range.pursued.tank1.met sh:targetNode :tank1 .
   :keeper orexis:holds :in_range.pursued.tank1 .
-  _:b1 sh:minInclusive 10 .
-  _:b1 sh:path :level .
 }
 
 GRAPH :scopes {

@@ -32,8 +32,8 @@ GRAPH :world {
 
 GRAPH :desires {
   :in_range a sh:NodeShape .
-  :in_range sh:property _:b1 .
-  :in_range sh:property _:b2 .
+  :in_range sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:property [ orexis:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
   :in_range sh:targetClass :Tank .
   :keeper orexis:holds :keeper.in_range .
   :keeper.in_range a orexis:Desire .
@@ -41,12 +41,6 @@ GRAPH :desires {
   :keeper.in_range orexis:about :temperature .
   :keeper.in_range orexis:metWhen :in_range .
   :keeper.in_range rdfs:label "every tank in range" .
-  _:b1 orexis:about :temperature .
-  _:b1 sh:maxInclusive 30 .
-  _:b1 sh:path :temperature .
-  _:b2 orexis:about :level .
-  _:b2 sh:minInclusive 10 .
-  _:b2 sh:path :level .
 }
 
 GRAPH :sensed {
@@ -64,10 +58,8 @@ GRAPH pursued:keeper.in_range.pursued.tank1.level {
   :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
   :keeper.in_range.pursued.tank1.level rdfs:label "pursued: every tank in range" .
   :keeper.in_range.pursued.tank1.level.met a sh:NodeShape .
-  :keeper.in_range.pursued.tank1.level.met sh:property _:b1 .
+  :keeper.in_range.pursued.tank1.level.met sh:property [ sh:minInclusive 10 ; sh:path :level ] .
   :keeper.in_range.pursued.tank1.level.met sh:targetNode :tank1 .
-  _:b1 sh:minInclusive 10 .
-  _:b1 sh:path :level .
 }
 
 GRAPH :scopes {
@@ -99,19 +91,15 @@ GRAPH :catalogue {
   :sensed a orexis:StateGraph .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
-  _:b1 a dcterms:PeriodOfTime .
-  _:b1 orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
-  _:b2 a dcterms:PeriodOfTime .
-  _:b2 orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime .
   pursued:keeper.in_range.pursued.tank1.level a deliberation:PursuedGraph .
   pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
   pursued:keeper.in_range.pursued.tank1.level a orexis:WantGraph .
-  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal _:b2 .
+  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
   pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Recorded .
   pursued:keeper.in_range.pursued.tank1.temperature a deliberation:PursuedGraph .
   pursued:keeper.in_range.pursued.tank1.temperature a orexis:Graph .
   pursued:keeper.in_range.pursued.tank1.temperature a orexis:WantGraph .
-  pursued:keeper.in_range.pursued.tank1.temperature dcterms:temporal _:b1 .
+  pursued:keeper.in_range.pursued.tank1.temperature dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   pursued:keeper.in_range.pursued.tank1.temperature orexis:arrivedBy orexis:Recorded .
   pursued:keeper.in_range.pursued.tank1.temperature orexis:beliefsOf :keeper .
 }
@@ -126,11 +114,6 @@ GRAPH pursued:keeper.in_range.pursued.tank1.temperature {
   :keeper.in_range.pursued.tank1.temperature prov:wasDerivedFrom :keeper.in_range .
   :keeper.in_range.pursued.tank1.temperature rdfs:label "pursued: every tank in range" .
   :keeper.in_range.pursued.tank1.temperature.met a sh:NodeShape .
-  :keeper.in_range.pursued.tank1.temperature.met sh:property _:b1 .
+  :keeper.in_range.pursued.tank1.temperature.met sh:property [ orexis:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
   :keeper.in_range.pursued.tank1.temperature.met sh:targetNode :tank1 .
-  _:b1 orexis:about :temperature .
-  _:b1 sh:maxInclusive 30 .
-  _:b1 sh:minInclusive 10 .
-  _:b1 sh:path :level .
-  _:b1 sh:path :temperature .
 }

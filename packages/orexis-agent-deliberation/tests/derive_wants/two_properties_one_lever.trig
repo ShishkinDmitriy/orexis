@@ -30,8 +30,8 @@ GRAPH :world {
 
 GRAPH :desires {
   :in_range a sh:NodeShape .
-  :in_range sh:property _:b1 .
-  :in_range sh:property _:b2 .
+  :in_range sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:property [ orexis:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
   :in_range sh:targetClass :Tank .
   :keeper orexis:holds :keeper.in_range .
   :keeper.in_range a orexis:Desire .
@@ -39,12 +39,6 @@ GRAPH :desires {
   :keeper.in_range orexis:about :temperature .
   :keeper.in_range orexis:metWhen :in_range .
   :keeper.in_range rdfs:label "every tank in range" .
-  _:b1 orexis:about :temperature .
-  _:b1 sh:maxInclusive 30 .
-  _:b1 sh:path :temperature .
-  _:b2 orexis:about :level .
-  _:b2 sh:minInclusive 10 .
-  _:b2 sh:path :level .
 }
 
 GRAPH :sensed {

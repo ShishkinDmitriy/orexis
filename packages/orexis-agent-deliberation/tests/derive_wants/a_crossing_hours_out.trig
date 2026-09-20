@@ -29,8 +29,8 @@ GRAPH :world {
 
 GRAPH :desires {
   :in_range a sh:NodeShape .
-  :in_range sh:property _:b1 .
-  :in_range sh:property _:b2 .
+  :in_range sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:property [ orexis:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
   :in_range sh:targetClass :Tank .
   :keeper orexis:holds :keeper.in_range .
   :keeper.in_range a orexis:Desire .
@@ -38,12 +38,6 @@ GRAPH :desires {
   :keeper.in_range orexis:about :temperature .
   :keeper.in_range orexis:metWhen :in_range .
   :keeper.in_range rdfs:label "every tank in range" .
-  _:b1 orexis:about :temperature .
-  _:b1 sh:maxInclusive 30 .
-  _:b1 sh:path :temperature .
-  _:b2 orexis:about :level .
-  _:b2 sh:minInclusive 10 .
-  _:b2 sh:path :level .
 }
 
 GRAPH :sensed {
@@ -77,7 +71,7 @@ GRAPH :catalogue {
   :ontology a orexis:PublicGraph .
   :predicted-0 a orexis:Graph .
   :predicted-0 a orexis:PredictionGraph .
-  :predicted-0 dcterms:temporal _:b1 .
+  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
   :scopes a deliberation:ScopeGraph .
   :scopes a orexis:Graph .
   :scopes a orexis:WorkingGraph .
@@ -88,6 +82,4 @@ GRAPH :catalogue {
   :sensed a orexis:StateGraph .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
-  _:b1 a dcterms:PeriodOfTime .
-  _:b1 orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime .
 }
