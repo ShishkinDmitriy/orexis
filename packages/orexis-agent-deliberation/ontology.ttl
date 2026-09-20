@@ -92,9 +92,13 @@ deliberation:remaining a owl:DatatypeProperty ; rdfs:domain deliberation:Possibl
     rdfs:label "remaining" ;
     rdfs:comment "What the want's `orexis:estimates` reads IN this world — how far it still is, in the unit the search spends, never overstated. With `deliberation:spent` it is the A* key the open list is ordered by, which is what lets the frontier be a query rather than a heap." .
 
-deliberation:meets a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:boolean ;
+deliberation:meets a owl:ObjectProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range orexis:Want ;
     rdfs:label "meets" ;
-    rdfs:comment "That the want is MET in this world — an achiever, and what the search is looking for. Said of the world and not of the pass, so it survives a re-root: whether a want holds somewhere does not change because the agent has since moved. The cheapest achiever is the plan, and the bound the rest are refused against." .
+    rdfs:comment "WHICH WANT is met in this world — an achiever, and what a search is looking for. A LINK AND NOT A FLAG, because one imaginarium may hold the worlds of every want in a scope: a world reached by a lever that serves two wants is met for one and unmet for the other, and a boolean could say neither. Said of the world rather than of the pass, so it survives a re-root: whether a want holds somewhere does not change because the agent has since moved. The cheapest achiever is the plan, and the bound the rest are refused against." .
+
+deliberation:fails a owl:ObjectProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range orexis:Want ;
+    rdfs:label "fails" ;
+    rdfs:comment "WHICH WANT was asked of this world and not met. The other half of `deliberation:meets`, and worth writing for the same reason a met-test is worth not running twice: a world judged is a world nobody need judge again — by a pass resumed here, or by a pass for another want sharing the imaginarium. ABSENT ON BOTH COUNTS MEANS THE QUESTION WAS NEVER PUT, which is not the same as the answer being no: a world already reached more cheaply is not re-judged, and one the pass never opened was never asked." .
 
 deliberation:lawful a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:boolean ;
     rdfs:label "lawful" ;

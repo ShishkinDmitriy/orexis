@@ -143,6 +143,7 @@ GRAPH graph:pass {
       deliberation:atDepth 1 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
+      deliberation:fails :every_disk_home ;
       deliberation:from graph:sensed ;
       deliberation:minted 1 ;
       deliberation:remaining 2.0 ;
@@ -154,6 +155,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegB.Move-disk_1-PegA a deliberation:PossibleWorld ;
       deliberation:atDepth 2 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
+      deliberation:fails :every_disk_home ;
       deliberation:from possible:Move-disk_1-PegB ;
       deliberation:minted 6 ;
       deliberation:remaining 2.0 ;
@@ -169,6 +171,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegB.Move-disk_1-PegC a deliberation:PossibleWorld ;
       deliberation:atDepth 2 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
+      deliberation:fails :every_disk_home ;
       deliberation:from possible:Move-disk_1-PegB ;
       deliberation:minted 7 ;
       deliberation:remaining 1.0 ;
@@ -185,6 +188,7 @@ GRAPH graph:pass {
       deliberation:atDepth 2 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
+      deliberation:fails :every_disk_home ;
       deliberation:from possible:Move-disk_1-PegB ;
       deliberation:minted 8 ;
       deliberation:remaining 1.0 ;
@@ -196,6 +200,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA a deliberation:PossibleWorld ;
       deliberation:atDepth 3 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
+      deliberation:fails :every_disk_home ;
       deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC ;
       deliberation:minted 13 ;
       deliberation:remaining 1.0 ;
@@ -213,7 +218,7 @@ GRAPH graph:pass {
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC ;
       deliberation:lawful true ;
-      deliberation:meets true ;
+      deliberation:meets :every_disk_home ;
       deliberation:minted 14 ;
       deliberation:remaining 0.0 ;
       deliberation:signature "9159fbb0fdee38d6" ;
@@ -228,6 +233,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA a deliberation:PossibleWorld ;
       deliberation:atDepth 3 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
+      deliberation:fails :every_disk_home ;
       deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC ;
       deliberation:minted 12 ;
       deliberation:remaining 2.0 ;
@@ -252,6 +258,7 @@ GRAPH graph:pass {
       deliberation:atDepth 1 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
+      deliberation:fails :every_disk_home ;
       deliberation:from graph:sensed ;
       deliberation:minted 2 ;
       deliberation:remaining 1.0 ;
@@ -263,6 +270,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegC.Move-disk_1-PegA a deliberation:PossibleWorld ;
       deliberation:atDepth 2 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
+      deliberation:fails :every_disk_home ;
       deliberation:from possible:Move-disk_1-PegC ;
       deliberation:minted 3 ;
       deliberation:remaining 2.0 ;
@@ -278,6 +286,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegC.Move-disk_1-PegB a deliberation:PossibleWorld ;
       deliberation:atDepth 2 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
+      deliberation:fails :every_disk_home ;
       deliberation:from possible:Move-disk_1-PegC ;
       deliberation:minted 4 ;
       deliberation:remaining 2.0 ;
@@ -294,6 +303,7 @@ GRAPH graph:pass {
       deliberation:atDepth 2 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
       deliberation:expanded true ;
+      deliberation:fails :every_disk_home ;
       deliberation:from possible:Move-disk_1-PegC ;
       deliberation:minted 5 ;
       deliberation:remaining 1.0 ;
@@ -305,6 +315,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA a deliberation:PossibleWorld ;
       deliberation:atDepth 3 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
+      deliberation:fails :every_disk_home ;
       deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB ;
       deliberation:minted 10 ;
       deliberation:open true ;
@@ -321,6 +332,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB a deliberation:PossibleWorld ;
       deliberation:atDepth 3 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
+      deliberation:fails :every_disk_home ;
       deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB ;
       deliberation:minted 11 ;
       deliberation:open true ;
@@ -337,6 +349,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA a deliberation:PossibleWorld ;
       deliberation:atDepth 3 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
+      deliberation:fails :every_disk_home ;
       deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB ;
       deliberation:minted 9 ;
       deliberation:remaining 1.0 ;

@@ -126,8 +126,15 @@ def test_the_store_alone_says_what_the_pass_decided(monkeypatch, snapshots):
     #  one the want is MET in, and the society accepts it. Both are about the WORLD rather than
     #  about the pass, which is why they survive a re-root where a verdict does not.
     achievers = {r["w"] for r in bindings(im.query_over(
-        "SELECT ?w WHERE { ?w a deliberation:PossibleWorld ; deliberation:meets true }", PASS_GRAPH))}
-    assert solved[0]["w"] in achievers, "the world with nothing remaining is an achiever"
+        f"SELECT ?w WHERE {{ ?w a deliberation:PossibleWorld ; deliberation:meets <{want.uri}> }}",
+        PASS_GRAPH))}
+    assert solved[0]["w"] in achievers, "the world with nothing remaining meets THIS want"
+    #  AND THE OTHER HALF: a world judged and found wanting says so, naming the same want, so
+    #  a later pass — resumed, or for another want sharing the imaginarium — need not re-judge.
+    failed = {r["w"] for r in bindings(im.query_over(
+        f"SELECT ?w WHERE {{ ?w a deliberation:PossibleWorld ; deliberation:fails <{want.uri}> }}",
+        PASS_GRAPH))}
+    assert failed and not (failed & achievers), "judged both ways, and never both at once"
     assert bindings(im.query_over(
         f"SELECT ?l WHERE {{ <{solved[0]['w']}> deliberation:lawful ?l }}", PASS_GRAPH)), \
         "and the pass asked whether the society would accept it"
