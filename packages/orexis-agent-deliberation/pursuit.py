@@ -124,11 +124,11 @@ def child_of(agent, root: str) -> str | None:
 
 def crossing_of(agent, root: str) -> datetime | None:
     """When the world a DESIRE is about is judged to leave what the desire wants, or None: the
-    earliest instant its judgments read unmet. The rows are `judgments.witnesses_of`.
+    earliest instant its met-tests read unmet. The rows are `judging.witnesses_of`.
 
     A desire's, never a want's. A want has no crossing — it is what a crossing produced, and
     it carries the instant it must hold at; whether it is still in trouble by then is
-    `judgments.unmet_by`.
+    `judging.unmet_by`.
     """
     found = witnesses_of(agent.beliefs.engine, root)
     return found[0].at if found else None

@@ -125,9 +125,9 @@ class Agent:
         self.wants = Wants(self.beliefs)
         self.wants.on_saved.append(lambda _want: self.desires.rebuild())
         self.wants.on_deleted.append(lambda _uri: self.desires.rebuild())
-        #  The judgments this agent is making, as a collection. Handed the WHOLE agent, and
-        #  that is the point rather than an omission: a judgment is contributed by whichever
-        #  capability holds the stake, so the collection has to reach the choir.
+        #  Everything this agent is pursuing, as a collection. Handed the WHOLE agent, and
+        #  that is the point rather than an omission: what a want reads as is contributed by
+        #  whichever capability holds the stake, so the collection has to reach the choir.
         self._pursuing = Pursuing(self)
         #  ONE AFFORDER, and the sovereign asked how many there were: there had been one per
         #  search pass, one per deliberator call and one per remembered candidate, because the
