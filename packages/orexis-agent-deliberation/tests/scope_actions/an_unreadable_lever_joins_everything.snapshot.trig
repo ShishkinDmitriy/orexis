@@ -14,6 +14,14 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix scopes: <http://example.org/orexis/graph/scopes/> .
 
+
+GRAPH :ontology {
+  #  WHAT A WRITER ASKS ONE STEP OF. Classifying the scope graph writes every kind
+  #  `deliberation:ScopeGraph` is beneath, read from here.
+  deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph , orexis:Graph .
+  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+}
+
 GRAPH :actions {
   :fill a orexis:Action ;
       sh:construct """PREFIX : <http://example.org/test#>
@@ -51,23 +59,4 @@ GRAPH <http://example.org/orexis/graph/scopes> {
   :temperature deliberation:inScope scopes:1 .
   :tweak deliberation:inScope scopes:1 .
   scopes:1 a deliberation:Scope .
-}
-
-GRAPH :ontology {
-  deliberation:PursuedGraph rdfs:subClassOf orexis:Graph ;
-      rdfs:subClassOf orexis:WantGraph .
-  deliberation:ScopeGraph rdfs:subClassOf orexis:Graph ;
-      rdfs:subClassOf orexis:WorkingGraph .
-  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-  orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
-  orexis:DesireGraph rdfs:subClassOf orexis:Graph .
-  orexis:OntologyGraph rdfs:subClassOf orexis:Graph ;
-      rdfs:subClassOf orexis:PublicGraph .
-  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
-  orexis:PublicGraph rdfs:subClassOf orexis:Graph .
-  orexis:RecordGraph rdfs:subClassOf orexis:Graph .
-  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph ;
-      rdfs:subClassOf orexis:Graph .
-  orexis:WantGraph rdfs:subClassOf orexis:Graph .
-  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
 }

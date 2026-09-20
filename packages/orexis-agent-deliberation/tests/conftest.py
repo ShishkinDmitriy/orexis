@@ -48,6 +48,13 @@ def stand_in(case: Path, text: str | None = None):
     st = Store()
     st.put_graph(WORLD, text if text is not None else case.read_text(), dataset=True)
     st.agent_id, st.agent_uri, st.graph = AGENT, ME, picks_graph(AGENT)
+    #  AND WHAT ITS VOCABULARY SAYS, if it needs one to say anything. A writer that classifies
+    #  a graph asks ONE `rdfs:subClassOf` step for every kind the row it writes is beneath — a
+    #  real store has those because genesis materialises the closure into it, and a case has
+    #  them because the case declares them. They used to be injected here, which meant a case
+    #  did not say what it was loaded with and a reader of one could not tell what the
+    #  function had been given: the sovereign's word for it was a hack, and it was.
+    #
     #  THE CASE SAYS WHAT ITS GRAPHS ARE, in a catalogue it names — `:catalogue` — found by what
     #  it says of itself, never by its spelling: which graphs are public, which graph is the
     #  vocabulary. The stub adds only the axioms, into whichever graph the case types as the
@@ -61,17 +68,6 @@ def stand_in(case: Path, text: str | None = None):
     assert st.catalogue is not None, f"{case.name} names no graph that describes itself as the catalogue"
     (ontology,) = st.graphs_of(OREXIS + "OntologyGraph") or [None]
     assert ontology is not None, f"{case.name} types no graph as the vocabulary's"
-    st.update(f"""INSERT DATA {{ GRAPH <{ontology}> {{
-        orexis:PublicGraph rdfs:subClassOf orexis:Graph . orexis:OntologyGraph rdfs:subClassOf orexis:PublicGraph .
-        orexis:BeliefGraph rdfs:subClassOf orexis:Graph . orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
-        orexis:RecordGraph rdfs:subClassOf orexis:Graph .
-        orexis:CatalogueGraph rdfs:subClassOf orexis:Graph . orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
-        orexis:PredictionGraph rdfs:subClassOf orexis:Graph . orexis:DesireGraph rdfs:subClassOf orexis:Graph .
-        orexis:WantGraph rdfs:subClassOf orexis:Graph . deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
-        deliberation:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
-        orexis:OntologyGraph rdfs:subClassOf orexis:Graph . orexis:StateGraph rdfs:subClassOf orexis:Graph .
-        deliberation:PursuedGraph rdfs:subClassOf orexis:Graph .
-        deliberation:ScopeGraph rdfs:subClassOf orexis:Graph . }} }}""")
     st.close_catalogue()      # a case's rows say one class each; every kind stands on them now, as on a volume's
     desires, wants = Desires(st), Wants(st)
     #  ENOUGH TO RUN A SEARCH, and no more. `Afforder` takes collections over this store and

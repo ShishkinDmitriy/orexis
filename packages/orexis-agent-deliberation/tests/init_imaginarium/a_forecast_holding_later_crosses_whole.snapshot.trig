@@ -40,24 +40,3 @@ GRAPH :catalogue {
           orexis:start "2026-01-01T15:00:00Z"^^xsd:dateTime ;
           orexis:end "2026-01-01T18:00:00Z"^^xsd:dateTime ] .
 }
-
-# --- WRITTEN (the first snapshot also holds the loader's own vocabulary stub) ---
-
-GRAPH :ontology {
-  deliberation:PursuedGraph rdfs:subClassOf orexis:Graph ;
-      rdfs:subClassOf orexis:WantGraph .
-  deliberation:ScopeGraph rdfs:subClassOf orexis:Graph ;
-      rdfs:subClassOf orexis:WorkingGraph .
-  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-  orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
-  orexis:DesireGraph rdfs:subClassOf orexis:Graph .
-  orexis:OntologyGraph rdfs:subClassOf orexis:Graph ;
-      rdfs:subClassOf orexis:PublicGraph .
-  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
-  orexis:PublicGraph rdfs:subClassOf orexis:Graph .
-  orexis:RecordGraph rdfs:subClassOf orexis:Graph .
-  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph ;
-      rdfs:subClassOf orexis:Graph .
-  orexis:WantGraph rdfs:subClassOf orexis:Graph .
-  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
-}
