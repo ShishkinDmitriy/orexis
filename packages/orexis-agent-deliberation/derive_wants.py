@@ -24,6 +24,7 @@ refresh to whoever holds one.
 
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime, timedelta
 
@@ -35,8 +36,8 @@ from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import NAMESPACES, bind, instant, rows
 
 from .judging import Witness, desires_in, read_ahead, read_now, shapes_in
+from .ontology import pursued_graph
 from .want import Want
-from .wants import forget_want, save_want
 
 log = logging.getLogger("derive_wants")
 
@@ -319,6 +320,97 @@ def name_of(store: ox.Store, root: str, said, about: tuple, instance: str | None
 def _targets_one_node(store: ox.Store, root: str) -> bool:
     """Does the root's met-test name the one node it is about (`sh:targetNode`)?"""
     return store.query(bind(_TARGETS_ONE_Q, root=root), prefixes=NAMESPACES)
+
+
+# --- what a want IS on disk, and how one goes -------------------------------------------
+#
+#  THE DERIVATION OWNS ITS OWN WRITES. These were module functions in `wants.py` beside the
+#  collection, so the one function that mints wants had to reach into a repository to put one
+#  down. A want's graph, what the catalogue says of it and the period it holds during are
+#  decided where the want is decided; `wants.py` reads them back and names none of it.
+
+
+def _moment(value) -> str:
+    """One instant as the store keeps it. A string is passed through: a caller that already
+    has the literal has nothing to convert."""
+    return value if isinstance(value, str) else value.isoformat()
+
+
+def graph_of(agent_id: str, uri: str) -> str:
+    """The graph one DERIVED want lives in. Named for the want so a second episode of the same
+    desire reuses it, and everything keyed by the want finds what it kept."""
+    return f"{pursued_graph(agent_id)}/{uri.rsplit('#', 1)[-1]}"
+
+
+def _forget(graph: str) -> str:
+    """The update that removes one want — its graph, and everything the catalogue says of it.
+
+    Shared, because there are two ways a want goes and they must leave the same nothing:
+    `save_want` replaces one whole and puts it back, and `forget_want` does not. A want IS
+    its graph (#645), so there is no second place to tidy — but the catalogue's account of
+    that graph is not in it, and a row left pointing at an empty graph is litter every
+    reader asking by class would still be handed.
+    """
+    return f"""DROP SILENT GRAPH <{graph}> ;
+DELETE {{ GRAPH ?cat {{ <{graph}> ?p ?o . ?period ?pp ?po }} }}
+WHERE  {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{graph}> ?p ?o .
+          OPTIONAL {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }} }}"""
+
+
+def forget_want(engine, agent_id: str, uri: str) -> None:
+    """Remove one derived want over the ENGINE, for a caller that holds no collection.
+
+    `Wants.delete_by_uri` is the collection's door and announces itself; this is the
+    derivation's, which announces nothing and whose caller says what changed — the same
+    asymmetry `save_want` has beside `Wants.save`.
+    """
+    engine.update(_forget(graph_of(agent_id, uri)), prefixes=NAMESPACES)
+
+
+def save_want(engine, agent_id: str, want: Want) -> None:
+    """Write one derived want over the ENGINE: its graph, replaced whole, and the catalogue's
+    account of that graph — its family, how it arrived, whose it is and the period it holds
+    during — in one update, so a want and what is said about it land together or not at all.
+
+    THE KNOWLEDGE STAYS IN THIS FILE, which is the point of it being here (#677): the derivation
+    decides what a want IS — its name, its label, what it points at, when it must hold — and
+    where a want is kept is this module's, whether the collection below or the derivation asks. The
+    catalogue is found by its own row and every kind the vocabulary puts a pursued graph
+    beneath is written from one `rdfs:subClassOf` step, the closure being materialised at
+    genesis (one-graph-both-engines-read).
+    """
+    graph = graph_of(agent_id, want.uri)
+    points = " ".join(f"<{want.uri}> <{p}> <{o}> ." for p, o in want.points)
+    shape = "\n  ".join(want.shape)
+    #  INSTANTS CROSS HERE AND NOWHERE ELSE. A want carries them as instants, because what
+    #  reads them — the keeper placing a step, the container measuring the room left — works in
+    #  instants; the store keeps them as `xsd:dateTime` literals. This is the boundary, so it
+    #  is where the two forms meet, one line each way (`_moment` below, and `_instant` on read).
+    timed = (f' ; orexis:holdsAt "{_moment(want.holds_at)}"^^xsd:dateTime'
+             f' ; prov:generatedAtTime "{_moment(want.derived_at)}"^^xsd:dateTime'
+             if want.holds_at is not None else "")
+    about = "".join(f" ; orexis:about <{a}>" for a in want.about)
+    #  WHICH WAY IT BROKE, where the met-test's block said so (`orexis:violationIs`).
+    side = f" ; orexis:violationIs <{want.side}>" if want.side else ""
+    period = f' ; orexis:start "{clock.now().isoformat()}"^^xsd:dateTime' + (
+        f' ; orexis:end "{_moment(want.ends)}"^^xsd:dateTime' if want.ends else "")
+    engine.update(_forget(graph) + f""" ;
+INSERT {{
+  GRAPH <{graph}> {{
+  <{want.holder}> orexis:holds <{want.uri}> .
+  <{want.uri}> a orexis:Want{timed}{about}{side} ;
+      prov:wasDerivedFrom <{want.desire}> ;
+      rdfs:label {json.dumps(want.label)} .
+  {points}
+  {shape} }}
+  GRAPH ?cat {{ <{graph}> a deliberation:PursuedGraph ; orexis:arrivedBy orexis:Recorded ;
+      orexis:beliefsOf <{want.holder}> ;
+      dcterms:temporal [ a dcterms:PeriodOfTime{period} ] . }} }}
+WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
+INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} }}
+WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
+        GRAPH ?vocabulary {{ deliberation:PursuedGraph rdfs:subClassOf ?kind }} }}""",
+                  prefixes=NAMESPACES)
 
 
 def mint(store: ox.Store, holder: str, root: str, said=None, holds_at: datetime | None = None,

@@ -19,23 +19,22 @@ Now a want is there the moment it is written, and one whose period has CLOSED is
 all (#645) — the repository keeps that part of the door itself, in `_select`, because a want IS
 its graph and this class is the one that names it.
 
-**A write announces itself and re-derives nothing.** `on_saved` and `on_deleted` are lists
-whoever assembles the agent appends to; the desire modality's projection is rebuilt there,
-because deciding that a projection is now stale is the assembler's call and not a
-collection's. A repository that rebuilt on its own initiative would be reaching up a layer to
-do it.
+**THIS READS AND DOES NOT WRITE.** It used to carry `save` and `delete_by_uri` beside the
+module functions the derivation called, plus `on_saved`/`on_deleted` lists so that a write
+could announce itself — a mechanism with one live producer and one live consumer, both of
+which were rebuilding the desire projection. Writing a want is the derivation's, and lives
+where the want is decided (`derive_wants`); whoever wrote says what changed. What is left
+here is the question every reader actually asks: which wants stand, and which of them are
+under this desire.
 
-**Wants live in three graph families and this owns one.** Deliberation's derived children are
+**Wants live in three graph families and this reads one.** Deliberation's derived children are
 `deliberation:PursuedGraph`, one graph per want; the ledger's debts and the keeper's promises
-are their packages' and are read here but not written — and the keeper's are not yet read
-either, because it types a promise `orexis:Desire` alone. What `save` writes is a derived want.
-Widening that is the next step and is deliberately not taken here: a repository that wrote a
-debt would have to know the ledger's words, which are the ledger's (#635).
+are their packages' and are not read here — and the keeper's could not be anyway, because it
+types a promise `orexis:Desire` alone.
 """
 
 from __future__ import annotations
 
-import json
 import logging
 from datetime import datetime
 
@@ -43,7 +42,8 @@ from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import OREXIS, WANT
 from orexis_agent_progression.store import NAMESPACES, bindings
 
-from .ontology import DELIBERATION, pursued_graph
+from .derive_wants import graph_of
+from .ontology import DELIBERATION
 from .want import Want
 from orexis_agent_progression.ontology import RECORD
 
@@ -57,92 +57,9 @@ log = logging.getLogger("wants")
 PAGE = 100
 
 
-def _moment(value) -> str:
-    """One instant as the store keeps it. A string is passed through: a caller that already
-    has the literal has nothing to convert."""
-    return value if isinstance(value, str) else value.isoformat()
-
-
 def _instant(text: str | None) -> datetime | None:
     """One instant as a want carries it, or None where the store holds none."""
     return datetime.fromisoformat(text) if text else None
-
-
-def graph_of(agent_id: str, uri: str) -> str:
-    """The graph one DERIVED want lives in. Named for the want so a second episode of the same
-    desire reuses it, and everything keyed by the want finds what it kept."""
-    return f"{pursued_graph(agent_id)}/{uri.rsplit('#', 1)[-1]}"
-
-
-def _forget(graph: str) -> str:
-    """The update that removes one want — its graph, and everything the catalogue says of it.
-
-    Shared, because there are two ways a want goes and they must leave the same nothing:
-    `save_want` replaces one whole and puts it back, and `forget_want` does not. A want IS
-    its graph (#645), so there is no second place to tidy — but the catalogue's account of
-    that graph is not in it, and a row left pointing at an empty graph is litter every
-    reader asking by class would still be handed.
-    """
-    return f"""DROP SILENT GRAPH <{graph}> ;
-DELETE {{ GRAPH ?cat {{ <{graph}> ?p ?o . ?period ?pp ?po }} }}
-WHERE  {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{graph}> ?p ?o .
-          OPTIONAL {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }} }}"""
-
-
-def forget_want(engine, agent_id: str, uri: str) -> None:
-    """Remove one derived want over the ENGINE, for a caller that holds no collection.
-
-    `Wants.delete_by_uri` is the collection's door and announces itself; this is the
-    derivation's, which announces nothing and whose caller says what changed — the same
-    asymmetry `save_want` has beside `Wants.save`.
-    """
-    engine.update(_forget(graph_of(agent_id, uri)), prefixes=NAMESPACES)
-
-
-def save_want(engine, agent_id: str, want: Want) -> None:
-    """Write one derived want over the ENGINE: its graph, replaced whole, and the catalogue's
-    account of that graph — its family, how it arrived, whose it is and the period it holds
-    during — in one update, so a want and what is said about it land together or not at all.
-
-    THE KNOWLEDGE STAYS IN THIS FILE, which is the point of it being here (#677): the derivation
-    decides what a want IS — its name, its label, what it points at, when it must hold — and
-    where a want is kept is this module's, whether the collection below or the derivation asks. The
-    catalogue is found by its own row and every kind the vocabulary puts a pursued graph
-    beneath is written from one `rdfs:subClassOf` step, the closure being materialised at
-    genesis (one-graph-both-engines-read).
-    """
-    graph = graph_of(agent_id, want.uri)
-    points = " ".join(f"<{want.uri}> <{p}> <{o}> ." for p, o in want.points)
-    shape = "\n  ".join(want.shape)
-    #  INSTANTS CROSS HERE AND NOWHERE ELSE. A want carries them as instants, because what
-    #  reads them — the keeper placing a step, the container measuring the room left — works in
-    #  instants; the store keeps them as `xsd:dateTime` literals. This is the boundary, so it
-    #  is where the two forms meet, one line each way (`_moment` below, and `_instant` on read).
-    timed = (f' ; orexis:holdsAt "{_moment(want.holds_at)}"^^xsd:dateTime'
-             f' ; prov:generatedAtTime "{_moment(want.derived_at)}"^^xsd:dateTime'
-             if want.holds_at is not None else "")
-    about = "".join(f" ; orexis:about <{a}>" for a in want.about)
-    #  WHICH WAY IT BROKE, where the met-test's block said so (`orexis:violationIs`).
-    side = f" ; orexis:violationIs <{want.side}>" if want.side else ""
-    period = f' ; orexis:start "{clock.now().isoformat()}"^^xsd:dateTime' + (
-        f' ; orexis:end "{_moment(want.ends)}"^^xsd:dateTime' if want.ends else "")
-    engine.update(_forget(graph) + f""" ;
-INSERT {{
-  GRAPH <{graph}> {{
-  <{want.holder}> orexis:holds <{want.uri}> .
-  <{want.uri}> a orexis:Want{timed}{about}{side} ;
-      prov:wasDerivedFrom <{want.desire}> ;
-      rdfs:label {json.dumps(want.label)} .
-  {points}
-  {shape} }}
-  GRAPH ?cat {{ <{graph}> a deliberation:PursuedGraph ; orexis:arrivedBy orexis:Recorded ;
-      orexis:beliefsOf <{want.holder}> ;
-      dcterms:temporal [ a dcterms:PeriodOfTime{period} ] . }} }}
-WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
-INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} }}
-WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
-        GRAPH ?vocabulary {{ deliberation:PursuedGraph rdfs:subClassOf ?kind }} }}""",
-                  prefixes=NAMESPACES)
 
 
 class Wants:
@@ -166,8 +83,6 @@ class Wants:
         """
         self._store = store
         #  Announced, not acted on: whoever assembled this appends what a write invalidates.
-        self.on_saved: list = []
-        self.on_deleted: list = []
 
     # --- read ---------------------------------------------------------------------------
 
@@ -229,33 +144,6 @@ class Wants:
             f"BIND(<{uri}> AS ?w) ?w a orexis:Want .", at, limit=1)), None)
 
     # --- write --------------------------------------------------------------------------
-
-    def save(self, agent_id: str, want: Want) -> None:
-        """Write a DERIVED want, then say so.
-
-        THE GRAPH IS THIS MODULE'S TO NAME, and so is what is said ABOUT it: one graph per
-        want, classified as the family it belongs to and given the period it holds during
-        (#645), so the door hides an ended one from every reader and one sweep drops it. A
-        caller naming any of that would hold the knowledge this file exists to hold — and
-        would have to remember all three, which is the shape of an omission nobody notices
-        until a want outlives its window.
-
-        THE WRITE ITSELF IS `save_want`, over the engine. The derivation is a function over
-        the store and holds no collection, so where a want is kept had to be sayable without
-        one; what this collection adds is what a collection adds — that a write announces
-        itself. A caller writing through the module function announces nothing, and its
-        callers refresh what they hold.
-        """
-        save_want(self._store.engine, agent_id, want)
-        for listener in self.on_saved:
-            listener(want)
-
-    def delete_by_uri(self, agent_id: str, uri: str) -> None:
-        """Forget one want. Its graph goes whole — a want IS its graph since #645, so there is
-        nothing to leave behind and no second place to tidy."""
-        self._store.drop_graph(self.graph_of(agent_id, uri))
-        for listener in self.on_deleted:
-            listener(uri)
 
     # --- where they live ------------------------------------------------------------------
 

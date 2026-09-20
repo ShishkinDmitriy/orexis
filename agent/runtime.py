@@ -123,8 +123,6 @@ class Agent:
         #  collection's, which is why the rebuild is registered here and not taken on its own
         #  initiative.
         self.wants = Wants(self.beliefs)
-        self.wants.on_saved.append(lambda _want: self.desires.rebuild())
-        self.wants.on_deleted.append(lambda _uri: self.desires.rebuild())
         #  Everything this agent is pursuing, as a collection. Handed the WHOLE agent, and
         #  that is the point rather than an omission: what a want reads as is contributed by
         #  whichever capability holds the stake, so the collection has to reach the choir.

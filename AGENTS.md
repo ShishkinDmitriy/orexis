@@ -394,6 +394,12 @@ it is a record wearing a bullet.
 - **A collection over stored rows is handed a store, and one over contributed answers is handed
   the agent** — `Wants` reads graphs so it takes somewhere to search, `Pursuing` asks the choir
   so it must reach the choir, and the asymmetry is what tells the two kinds of collection apart.
+- **The function that decides a thing owns writing it, and a collection only reads** — `Wants`
+  carried `save`/`delete_by_uri` beside the module functions the derivation called, plus
+  `on_saved`/`on_deleted` so a write could announce itself; the announcement had one live
+  producer and one live consumer and both were rebuilding the desire projection, and the
+  collection's own writers had no caller but their tests. A want's graph, its catalogue row
+  and its period are decided where the want is, and whoever wrote says what changed.
 - **A singular file holds the model and its plural holds the collection** — `desire.py` and
   `desires.py`, `want.py` and `wants.py`, so neither reader has to open the other's file.
 - **An update takes no dataset** — `Store.query` is handed its graphs per call, which is the

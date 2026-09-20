@@ -33,7 +33,7 @@ import logging
 from dataclasses import replace
 from datetime import datetime
 
-from .derive_wants import derive_wants
+from .derive_wants import derive_wants, forget_want
 from .judging import witnesses_of
 from .plan import SATISFIED
 
@@ -159,8 +159,14 @@ def root_of(agent, want: str) -> str | None:
 def withdraw(agent, child: str) -> None:
     """The want derived under a root is gone: its plan finished, or it reads met with nothing
     standing for it. A root still unmet derives it again on the next pass, so a plan that fell
-    short re-plans through a fresh want rather than a stale one."""
-    agent.wants.delete_by_uri(agent.id, child)
+    short re-plans through a fresh want rather than a stale one.
+
+    THE REBUILD IS SAID HERE, as it is after `derived`: writing a want is the derivation's and
+    announces nothing, so the caller that moved something says the projection is stale. It was
+    an `on_deleted` listener the container registered, which fired for this one caller and for
+    nothing else."""
+    forget_want(agent.beliefs.engine, agent.id, child)
+    agent.desires.rebuild()
     log.info("%s withdrawn", child.rsplit("#", 1)[-1])
 
 
