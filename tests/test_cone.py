@@ -125,6 +125,13 @@ def test_a_re_rooted_cone_says_the_whole_pass_again(monkeypatch):
     assert set(rows) == kept, "the store describes exactly the worlds the pass kept"
     assert before - set(rows), "and the dropped ones are gone, not merely re-stated"
 
+    #  A WORLD PUT BACK ON THE FRONTIER CARRIES NO VERDICT. `meets` and `lawful` are about the
+    #  world and survive; a verdict is about a PASS, and the resumed one has not reached them.
+    reopened = bindings(planner.imaginarium.query_over(
+        "SELECT ?w WHERE { ?w a deliberation:PossibleWorld ; deliberation:open true ; "
+        "deliberation:verdict ?v }", PASS_GRAPH))
+    assert not reopened, [r["w"] for r in reopened]
+
     roots = bindings(planner.imaginarium.query_over(
         "SELECT ?w ?d WHERE { ?w a deliberation:PossibleWorld ; deliberation:atDepth ?d . "
         "FILTER NOT EXISTS { ?w deliberation:from ?p } }", PASS_GRAPH))
