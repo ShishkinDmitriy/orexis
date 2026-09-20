@@ -3,7 +3,7 @@ to stand, and saying what it read — as WITNESSES, computed and never stored.
 
 A desire is universal and a want is existential: the met-test's violation rows are the
 instances in trouble, each one a witness, and `derive_wants` mints a want per cluster of them.
-There is no third thing between the two. A `deliberation:Want` row used to stand there —
+There is no third thing between the two. A `deliberation:Judgment` row used to stand there —
 the met-test's answer per desire per instant, written to a working graph and read back — and
 it is gone: everything it carried a WANT carries now, and what it was for, telling the next
 step what the met-test read, is what a witness is.
@@ -92,7 +92,7 @@ class Witness:
 
     A universal is refuted by a witness, and the want minted under it is the universal
     instantiated at that witness (one-road-derives-every-want). It is what a
-    `deliberation:Want`'s result was, and it is computed rather than stored: a want is
+    `deliberation:Judgment`'s result was, and it is computed rather than stored: a want is
     where any of this is kept.
     """
 

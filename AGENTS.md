@@ -316,38 +316,38 @@ it is a record wearing a bullet.
   root's identity** — which store is the agent's decision since it owns the stores and the
   collections; identity travels as a query criterion, and the reads need none at all, since one
   agent, one volume means the store IS the scope.
-- **A capability that asks the road is not minting** — the ledger, having written a debt and
-  what it predicts of it, calls `judge_desires` and `derive_wants` so a claim arriving is a
-  want arriving and not a want on the next tick; what it writes is the instance and the
-  prediction, and what stands afterwards is the road's, in deliberation's family, about that
-  debt — and every other desire's, since the road is about all of them.
-- **The road is two functions over the store, and a judgment is written down** —
-  `judge_desires` judges every desire at the present and at each foreseen instant and writes
-  the judgments as SHACL reports to a working graph, replaced whole; `derive_wants` mints the
-  wants from that graph and nothing in hand; each is held to a snapshot of the store it
-  leaves, and the eleven cases leave the wants the one-function road left. A third,
-  `scope_actions`, writes the scopes at boot, so the derivation reads no action.
-- **A function over the store is handed the engine and nothing else** — the road's three
-  take `pyoxigraph.Store` and no wrapper: which graphs they read they ask of the catalogue in
-  their own texts, whose a judgment is they read off `orexis:holds`, and the present is the
-  clock's; the wrapper caching a view of the store cannot see a write it did not make, so
-  asking it for the engine (`Store.engine`) is what makes it forget.
+- **A capability that asks for a derivation is not minting** — the ledger, having written a
+  debt and what it predicts of it, calls `derive_wants` so a claim arriving is a want arriving
+  and not a want on the next tick; what it writes is the instance and the prediction, and what
+  stands afterwards is deliberation's, about that debt — and every other desire's, since the
+  derivation is about all of them.
+- **Nothing stands between a desire and a want** — `derive_wants` judges every desire at the
+  present and at each foreseen instant and mints a want per cluster of what the met-tests read
+  unmet, in one function and one contract; `scope_actions` writes the scopes at boot, so the
+  derivation reads no action. It was two functions with a written judgment between them, and
+  no caller ever took one half.
+- **A function over the store is handed the engine and nothing else** — `derive_wants` and
+  `scope_actions` take `pyoxigraph.Store` and no wrapper: which graphs they read they ask of
+  the catalogue in their own texts, whose a desire is they read off `orexis:holds`, and the
+  present is the clock's; the wrapper caching a view of the store cannot see a write it did
+  not make, so asking it for the engine (`Store.engine`) is what makes it forget.
 - **A met-test asked by band names which way it broke, and tests no topology** — a reading is
   the band it is in, so a desire says *it should be inside* once per way of failing and each
-  block declares its side, which the judgment carries (`orexis:violationIs`: below, above,
+  block declares its side, which the WANT carries (`orexis:violationIs`: below, above,
   unmeasured, stale) because that is what decides the repair — a look answers the unmeasured
   one and no lever does. A test that walked the topology instead would be satisfiable by
   moving the sample off the subject or by re-pointing what counts as ideal, which is the goal
   repaired by editing its own premises; a structural repair stays reachable because the
   closure walks back from what the want reads to whatever changes it.
-- **Only the judge takes predictions into account, and it takes them as given** — it
-  enumerates the states, the present and every instant a prediction reaches, and judges the
-  desire at each; what it read is written down, so a crossing is a filter over the judgment
-  rows rather than the met-test run a second time, and whoever moves a premise asks the road.
-- **A derivation is a decomposition of the judgments and asks nothing they do not answer** —
-  a foresight filtered a foreseen failure the judgment already dated, and was two states in
-  practice, unbounded and absent; how far ahead the agent sees is the horizons each drift
-  predicts at, and the pick, the extension point and the kernel property are gone.
+- **One module reads predictions, and it takes them as given** — `judging` enumerates the
+  states, the present and every instant a prediction reaches, and runs each desire's met-test
+  at each; what it reads is a WITNESS, computed where it is needed and stored nowhere, so the
+  minting and a crossing get the same answer from the same code rather than from two paths
+  that could disagree.
+- **A derivation asks nothing the met-tests do not answer** — a foresight filtered a foreseen
+  failure the reading already dated, and was two states in practice, unbounded and absent;
+  how far ahead the agent sees is the horizons each drift predicts at, and the pick, the
+  extension point and the kernel property are gone.
 - **A partition of the vocabulary belongs to the store, not to an agent** — the scopes are a
   function of the actions the store holds and the derivations loaded, so every agent reading
   one store computes the same one and there is nobody to name it after; genesis puts the

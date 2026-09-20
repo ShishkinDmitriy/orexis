@@ -1,22 +1,19 @@
 ---
 type: Decision
-title: The road is two functions over the store, and a judgment is written down
+title: Nothing stands between a desire and a want
 description: >-
-  The sovereign's shape for the road - functions over the triple store, each reading what it
-  needs and writing its own graph with provenance and time, and the SHACL results in the
-  store too. Two functions, one contract each - after the call, all of it is in the store.
-  `judge_desires` judges every desire at the present and at every foreseen instant and writes
-  the judgments as SHACL validation reports to a working graph, replaced whole; `derive_wants`
-  mints the wants from that graph and nothing in hand; `scope_actions` writes the partition
-  they cluster by. All three are handed the engine, a pyoxigraph store, and nothing else. Refused - a view per instant, which the judgment's own instant
-  makes needless; one union query over every desire, measured at thirteen times the cost;
-  the verb "check", where the dictionary says judge; writing the urgency half now, which is
-  the seam left open; a wrapper between any of the three and the engine; the choir's judgment
-  for a met-test the compiler refuses; a holder argument; and the present as an argument or a
-  row. The FORESIGHT is deleted: the judgments already say which instants fail, and the
-  drifts' horizons say how far ahead the agent sees. Each function is
-  held to a snapshot of the store it leaves, and the eleven cases leave the wants the
-  one-function road left.
+  The sovereign's shape for deriving wants - a function over the triple store, reading what it
+  needs and writing what it concludes, so that after the call all of it is in the store. It
+  was two functions with a written judgment between them and ended as one - `derive_wants`
+  judges every desire at the present and at every foreseen instant and mints a want per
+  cluster of what the met-tests read unmet; `scope_actions` writes the partition they cluster
+  by; both are handed the engine, a pyoxigraph store, and nothing else. Refused - a view per
+  instant; one union query over every desire, measured at thirteen times the cost; the verb
+  "check", where the dictionary says judge; a wrapper between either function and the engine;
+  the choir's judgment for a met-test the compiler refuses; a holder argument; the present as
+  an argument or a row; and, at the end, the intermediate itself. The FORESIGHT is deleted -
+  a met-test already says which instants fail, and the drifts' horizons say how far ahead the
+  agent sees. It is held to a snapshot of the store it leaves.
 status: accepted
 timestamp: 2026-09-19T18:00:00Z
 ---
@@ -32,9 +29,19 @@ everything is in the store.
 
 # The decision
 
-**Two functions, each a file of its own — `judge_desires.py`, `derive_wants.py` — one contract each**, and a third beside them since, `scope_actions.py`, which writes the scopes the derivation clusters by.
+**ONE function, `derive_wants`, and one contract**, beside `scope_actions`, which writes the
+scopes it clusters by. It was two — `judge_desires.py` then `derive_wants.py`, with a written
+judgment between them — and what follows describes both, because the argument for the split is
+what the merge had to answer. What is true now is stated first, and the history is kept because
+a record is amended rather than rewritten.
 
-- `judge_desires(store)`: every desire's compiled met-test run over the graphs holding at the present
+What it does, in order: judge every desire at the present and at every instant its holder
+foresees, and mint a want for every cluster of what the met-tests read unmet. What it leaves: a
+store holding every want its desires imply, and nothing between the two.
+
+**Then it was two, and here is why it was:**
+
+- `judge_desires(store)` — GONE: every desire's compiled met-test run over the graphs holding at the present
   and at every prediction's start, and the answers written, for a while, as one row per
   desire per instant — a `sh:ValidationReport`: `sh:conforms` true is met, false is unmet, and
   only an unmet one carries `sh:result`s, each naming the focus node, what it is about, which
@@ -48,12 +55,12 @@ everything is in the store.
   once from the graphs of desires and wants; and the present is the clock's, the layer's one
   read of time. A store holding several agents' desires — the test fixture's, never a
   volume's — is judged for each holder over what that holder owns and what nobody does.
-- `derive_wants(store)`: the judgments read back — and nothing in hand — grouped by scope and
+- `derive_wants(store)` — the survivor, which does both halves now: the readings grouped by scope and
   instance under each desire, the earliest instant per cluster, and a want minted where none
   stands. A desire unmet at the present derives wants at no instant; one met at the present
-  derives them at the instants it is judged unmet. **The engine and nothing else**, like the
-  function before it: each judgment graph says whose it is, so the wants a holder's judgments
-  imply are written where that holder's belong; what a desire is about and what its met-test
+  derives them at the instants it reads unmet. **The engine and nothing else**: the graph a
+  desire lives in says who holds it, so the wants it implies are written where that holder's
+  belong; what a desire is about and what its met-test
   says come from the graphs of desires, what already stands from the graphs of wants, and how
   long a plan is given after its instant from the pick record. Where `Wants.save` wrote a want,
   `wants.save_want` writes it over the engine and the collection calls the same function, so
@@ -63,12 +70,12 @@ everything is in the store.
   is a function of the actions the store holds and the derivations loaded, and every agent
   reading one store would compute the same one, so there is nobody to name it after.
 
-**Only the judge takes predictions into account, and it takes them as given.** The sovereign,
-on the shape of the road: *it sees present and future states, and for each state judges the
-desire*. `judge_desires` enumerates the states — the present, then every instant a prediction
-reaches, read off the periods the catalogue carries — and runs the met-test once per state.
-It computes no prediction; sensing and the ledger write them. What it read is written down, so
-every other reader reads the judgments: `derive_wants` to mint the wants, and
+**One module reads predictions, and it takes them as given.** The sovereign, on the shape of
+it: *it sees present and future states, and for each state judges the desire*. `judging`
+enumerates the states — the present, then every instant a prediction reaches, read off the
+periods the catalogue carries — and runs the met-test once per state. It computes no
+prediction; sensing and the ledger write them. What it reads is a witness, and every reader
+takes one from the same code: `derive_wants` to mint the wants, and
 `judgments.witnesses_of` to say where a crossing is. That second one used to re-run the
 compiled met-test at every prediction start on every call — the same question asked twice, by
 two paths that could disagree — and it is a filter over the judgment rows now.
@@ -115,11 +122,12 @@ property, `sensing:foresightS` the pick, both packages' answers, and the injecti
 test files. What replaces it is nothing: a want is derived at every instant a judgment says a
 desire fails.
 
-**The judgment graph is a working graph**, like the deliberation trace. The bundle keeps only
-testimony as record and a judgment is a conclusion; so it is never carried into a possible
-world and never a record, and it earns its place the way the trace does: it is the evidence a
-reader outside the process cannot recompute, since the belief base is locked by the process
-holding it, and what the snapshots show beside the wants.
+**The judgment graph WAS a working graph**, like the deliberation trace — the argument for
+keeping it, while it was kept. The bundle keeps only testimony as record and a judgment is a
+conclusion; so it was never carried into a possible world and never a record, and it earned
+its place the way the trace does, as the evidence a reader outside the process cannot
+recompute. What unseated it is that a witness is cheaper to recompute than to keep true, and
+that everything durable in it belongs to a want.
 
 **Each function has its own cases and is held to a snapshot** of the store it leaves. A case
 in `packages/orexis-agent-deliberation/tests/derive_wants/` is a world as an agent finds it;
@@ -134,9 +142,9 @@ road left.
 
 **A view per instant.** [an-update-takes-no-dataset](/decisions/an-update-takes-no-dataset.md)
 drew the road as updates on two conditions, one of them a copy of the world per foreseen
-instant so the met-test could run inside one `GRAPH`. The judgment carries its instant, so the
-dataset per instant is chosen where the record said choice must stay — the door, in Python —
-and the derivation is a function of the judgment graph alone. The view is not needed.
+instant so the met-test could run inside one `GRAPH`. A witness carries its instant, so the
+dataset per instant is chosen where the record said choice must stay — the door, in Python.
+The view is not needed.
 
 **One query over every desire.** The compiler's own measurement stands: a single UNION of
 every shape's select cost 843 ms on the simulation world where the selects asked one by one
