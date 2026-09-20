@@ -191,12 +191,12 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
 
     market = market_of(thirsty)
     keeper = keeper_of(thirsty)
-    #  THE ACKNOWLEDGEMENT ROAD, which is what this test is about. An alarm-armed board is
+    #  THE ACKNOWLEDGEMENT PATH, which is what this test is about. An alarm-armed board is
     #  a live watch the moment its thresholds go out (#151, its own test in
     #  test_subscribing), and the first reading below tightens the cadence and sends them —
     #  so with the alarm armed the claim would rightly go out there. The bidder's own check
     #  used to run before the tightening in the same hook and missed it; the keeper re-asks
-    #  after every write and does not (#512). Disarmed, so the stamp is the only road.
+    #  after every write and does not (#512). Disarmed, so the stamp is the only path.
     for sensor in thirsty.subscribing().sensors:
         object.__setattr__(sensor, "alarm", False)
     thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
@@ -224,7 +224,7 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
 
 
 def test_an_alarm_armed_watch_releases_the_claim_on_the_first_tightening(thirsty):
-    """The other road to a live watch (#151): an alarm-armed board announces a crossing
+    """The other path to a live watch (#151): an alarm-armed board announces a crossing
     itself, so the watch is live the moment its thresholds have gone out. The first reading
     after the win tightens the cadence and sends them; the sensing module writes
     `sensing:watchLive true` beside the horizon; the keeper, re-asking the hold's condition

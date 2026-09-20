@@ -33,8 +33,8 @@ def _age_the_reading(st, hours=3, agent=None):
     """Let the horizon pass — the clock moved AND the agent noticed, which since #598 are two
     things. A reading is stale because sensing says so on the reading, by a deadline landing on
     the loop; the timestamp alone is what it was written with and nothing reads it as an age.
-    Where the caller has the agent, the module's own road is taken; where it has only the store,
-    the fact is written as that road would write it."""
+    Where the caller has the agent, the module's own path is taken; where it has only the store,
+    the fact is written as that path would write it."""
     from orexis_agent_progression.ontology import STATE_GRAPH
 
     old = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
@@ -146,7 +146,7 @@ def test_the_want_fires_as_a_shape_and_does_not_refuse_the_boot(monkeypatch):
 def _fires(data) -> list:
     """The freshness results this data produces when the want's shape is validated DIRECTLY.
 
-    The planner's road (#472): a met-test enters no `conforms()` pass — the metWhen linkage
+    The planner's path (#472): a met-test enters no `conforms()` pass — the metWhen linkage
     keeps it out, which is what lets it carry no severity — so firing is proven here the way
     the planner asks: over the shapes the data holds, results at whatever severity the
     engine defaults to.

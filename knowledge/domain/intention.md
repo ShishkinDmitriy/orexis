@@ -33,8 +33,8 @@ the ledger (`progression:until`, or its twin
 and it is always a SHAPE — a condition that is naturally a query is a shape carrying a
 `sh:sparql` constraint, the form SHACL already has — which the keeper compiles to the select
 it runs (conformance for `until`, violation for `untilNot`) while the ledger keeps the shape,
-so a sovereign asking sees what an act waits for as it was written (#514). The market's held [claim](/domain/claim.md) is this road with the
-live watch as its condition, and a plan's next step is this road with the previous step's
+so a sovereign asking sees what an act waits for as it was written (#514). The market's held [claim](/domain/claim.md) is this path with the
+live watch as its condition, and a plan's next step is this path with the previous step's
 prediction as its condition. This is the middle layer's whole job in one call — adopt, wait,
 take on feedback — and it is why nothing above it needs a timer of its own.
 
@@ -65,7 +65,7 @@ of an action that declares a [method](/domain/method.md) is expanded at adoption
 method's steps (#523), and each of those may wait — before it is taken, or after — on what its
 action declares.
 
-Two roads adopt one. A plan's head, chosen by the search, is the ordinary road; an event
+Two paths adopt one. A plan's head, chosen by the search, is the ordinary path; an event
 adopts the other — the market's Presenting, an [action](/domain/action.md) stating neither a
 precondition nor an effect, which a claim arriving adopts and a watch going live triggers —
 with no search above it, and both stand in the same ledger and wait on the same kind of

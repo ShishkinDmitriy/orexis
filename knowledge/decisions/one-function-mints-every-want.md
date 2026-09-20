@@ -1,9 +1,9 @@
 ---
 type: Decision
-title: One road derives every want, and a package writes instances and predictions - never wants
+title: One function mints every want, and a package writes instances and predictions - never wants
 description: >-
   A desire is one and universal - all my properties inside their ranges, no debt of mine
-  overdue. Its wants are minted by one road for every kind of desire: the desire's met-test,
+  overdue. Its wants are minted by one function for every kind of desire: the desire's met-test,
   compiled to the select whose rows are its violations, run now and at the start of each
   prediction the agent holds, yields the instances in trouble and when; those are clustered by
   scope, and one want is minted per cluster, holding at the earliest crossing. A package that
@@ -14,25 +14,25 @@ status: accepted
 timestamp: 2026-09-18T15:00:00Z
 ---
 
-# Three roads, and why there were three
+# Three derivations, and why there were three
 
 A want is what a search is handed; a desire is what it is derived from. Three things derived
 them, and no two the same way:
 
-| road | class → instance | ∀t → an instant | who minted |
+| deriver | class → instance | ∀t → an instant | who minted |
 |---|---|---|---|
-| sensing | a genesis rule, one desire per (subject, property) | `crossing_row_of` over the predictions | the pursuit road |
+| sensing | a genesis rule, one desire per (subject, property) | `crossing_row_of` over the predictions | the derivation |
 | the market | by hand, in `owe`, when a claim arrived | by hand — the claim's expiry as the graph's period | the ledger |
 | a ratified want | not at all — authored as one want | unmet now | nobody |
 
-The reason is not a choice anybody made. Two different operations were fused in each road at a
+The reason is not a choice anybody made. Two different operations were fused in each of them at a
 different time: **decomposition** — which instances a universal is about — and **witnessing** —
 the instant at which the universal is about to fail. Sensing could decompose at genesis because
 the roster is ratified at birth; the market could not, because a debt arrives afterwards, so it
 skipped the tree and minted the leaf itself. Decomposition existed only as a genesis-time rule,
-and that is the whole of why the ledger grew a road of its own.
+and that is the whole of why the ledger grew a deriver of its own.
 
-# The road
+# The one function
 
 **A desire is one, and universal.** *All the properties of what I act for are inside their
 ranges.* *No debt I owe is overdue.* One per premise, declared by a package's `desires.ru` at
@@ -65,7 +65,7 @@ reaches it has fixed what needed fixing by when it was needed.
 prediction that it is undischarged at its deadline. Sensing, on a reading: the reading, and what
 the drift predicts of it. Neither writes a want. *No overdue debts* gets the met-test it never
 had — overdue was unaskable because it wanted the clock, and a prediction at the deadline is an
-instant a reader can ask at. The road does the rest, for both, the same way.
+instant a reader can ask at. The derivation does the rest, for both, the same way.
 
 # What was refused
 
@@ -75,19 +75,19 @@ debt's window as its period. The sovereign struck it: the instance is the WANT's
 desire's. A desire is one; what is per-instance is what gets minted under it. Cleaner, and it
 removes a stored node that only ever restated a row of the violation select.
 
-**The ledger's own road.** `owe` stops minting. The twenty-one `is_obligation` branches become
+**The ledger's own deriver.** `owe` stops minting. The twenty-one `is_obligation` branches become
 the choir judging a want by its redeem window — still subjective, still the market's measure
 ([a-situated-instance-is-kept-only-when-it-is-testimony](/decisions/a-situated-instance-is-kept-only-when-it-is-testimony.md))
 — and no longer a second deriver reaching the same graph family by a different door.
 
 **Sensing's per-property desires as THE decomposition.** They are one way of declaring — a
 genesis rule that pre-splits *all properties in range* per property because the roster is
-known. Under one road they are legitimate and unnecessary: one universal desire yields the same
+known. Under one function they are legitimate and unnecessary: one universal desire yields the same
 wants, and yields a soil-and-air want where per-property desires could not. Collapsing them is
 not required by this record and is its natural consequence.
 
 **Decomposition at rebuild.** A runtime instance arrives by a WRITE — a claim, a reading — and
-the road reads it on the next pass. Re-running derivations on every rebuild of the desire
+the derivation reads it on the next pass. Re-running derivations on every rebuild of the desire
 modality was tried and refused when a root was re-derived from a pick (#644); enumerating a
 universal's instances is a read, not a re-derivation, and the scar stands.
 
@@ -96,7 +96,7 @@ universal's instances is a read, not a re-derivation, and the scar stands.
 [a-desire-is-a-forest-of-derived-roots](/decisions/a-desire-is-a-forest-of-derived-roots.md)
 settled that an agent's desires are several trees, a root per premise, decomposed per instance,
 per property and per side. What this record changes is what the nodes below a root ARE: not
-derived desires, but WANTS. A root is a desire; everything under it is minted by the road above
+derived desires, but WANTS. A root is a desire; everything under it is minted by the function above
 from the instances the world presents, and is gone when met. `desire.md`'s own heading had it
 right before this record did — *a desire is the top of one tree of wants*.
 
@@ -120,8 +120,8 @@ want was before.
 met-test whose two violations are each about the debt itself (`orexis:about sh:this`, on a
 `sh:sparql` constraint so that a serve's discharge reads met in the imagined world): a lapse in
 view and unpaid, or presented and unpaid. `owe` writes the debt and a `market:lapsesAt`
-prediction holding from the deadline, then ASKS the road, which mints one want per debt at its
-own deadline; `discharge` and the sweep drop the prediction; the ledger speaks for the road's
+prediction holding from the deadline, then ASKS the derivation, which mints one want per debt at its
+own deadline; `discharge` and the sweep drop the prediction; the ledger speaks for the derivation's
 want by its claim's window; the host answers foresight for that root as every deadline it has
 been given; a debt written before the ledger predicted is endowed its prediction at boot. A
 debt with no deadline and nobody asking is nothing to pursue until its holder asks, and the
@@ -132,9 +132,9 @@ the tick marks what may be acted on (#700), and the kernel's `Want` carries no m
 word, the market's `OwedJudgment` carrying the claim and whom it is owed to. #675 is done.
 
 Stage two taught three things. **A root met now with nothing foreseen derives nothing** — the
-road's fallback, one want about everything the desire is about, is for a root unmet now whose
-select yields no rows, and it minted a want under a met root the first time the road ran
-without a pass's judgment in hand; the road is told the verdict where a pass stands on the
+fallback, one want about everything the desire is about, is for a root unmet now whose
+select yields no rows, and it minted a want under a met root the first time the derivation ran
+without a pass's verdict in hand; the derivation is told the verdict where a pass stands on the
 root and reads it off the select where a package asks. **A root's shape lives in the roots
 graph**, not in public knowledge, and the container compiling it from the public graphs alone
 found no target, raised, and read the root unmet every pass — silently, since an error reads
@@ -146,29 +146,25 @@ at a foreseen instant says *hold at T*, and a plan for it is placed to land at T
 holder presented an hour before the lapse; a reading showed the pot below its floor before
 the drift said it would. The cluster is unmet NOW and its want still said T, so a plan found
 from `pursuing()` was placed at the deadline less the pour while the buyer waited — hosting's
-own presentation path served now, and the two doors disagreed. The road re-mints such a want
+own presentation path served now, and the two doors disagreed. The derivation re-mints such a want
 with no instant, under the same name, so the trace, a remembered plan and the keeper meet the
 want they kept; and a pass that stood on the old judgment is handed the new one. The instant
-was only ever the road's reading of the predictions. A plan ALREADY placed at the instant is
-the keeper's, and stands until its lapse or a surprise (#527) — the road does not reach into
-the ledger.
+was only ever the derivation's reading of the predictions. A plan ALREADY placed at the instant is
+the keeper's, and stands until its lapse or a surprise (#527) — the derivation does not reach
+into the ledger.
 
-**The road's contract is a table, and the table found a defect on its first run.**
+**The derivation's contract is a table, and the table found a defect on its first run.**
 `packages/orexis-agent-deliberation/tests/derive_wants/` holds one TriG file per case — the
 world, the levers, the desire with its met-test, the present, the foreseen, what stands —
-loaded into a bare store and judged, and `packages/orexis-agent-deliberation/tests/derive_wants/`
-one per case of the judged state alone — the judgments, the desires, the levers, what stands — derived from
-([judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md)), each in
-milliseconds, where the four world files that covered the road each stood an agent up to
-show one case. What the road leaves is held to a SNAPSHOT
-of the whole store beside the case (`<case>.snapshot.trig` in each function's directory,
-the case's own text with the
-road's changes in it — an unchanged graph verbatim, a changed one re-rendered in place, what
-the road wrote after — so `diff` of case against snapshot is what the road did), never to a
-reading of it:
+loaded into a bare store and derived over, each in milliseconds, where the four world files
+that covered this each stood an agent up to show one case. What the function leaves is held to
+a SNAPSHOT of the whole store beside the case (`<case>.snapshot.trig` in each function's
+directory: the case's own text with the function's changes in it — an unchanged graph
+verbatim, a changed one re-rendered in place, what the function wrote after — so `diff` of
+case against snapshot is what it did), never to a reading of it:
 the first cut compared five things per want and a want writes nineteen quads, so a label, a
 link, a period or an owner could be wrong with every case green — under-reporting, the
-sovereign's word for it — and a change in the road's behaviour is now a diff of the snapshot,
+sovereign's word for it — and a change in the derivation's behaviour is now a diff of the snapshot,
 regenerated by a flag and reviewed by eyes. Two tanks low
 about their level are two clusters, per instance as two debts are, and were ONE name,
 `<desire>.pursued.level`; the second mint overwrote the first, and no shipped world could

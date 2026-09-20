@@ -129,7 +129,7 @@ orexis:DesireShape a sh:NodeShape ;
     rdfs:comment """What a deduced shape must be to be readable — a shape ABOUT shapes, which is the seam a-desire-is-a-shape names: SHACL has no containment operator, so anything said about what an agent pursues is said by treating its shapes as the RDF they are.
 
 Every figure here was computed, so this is arithmetic rather than authorship — but a check over derived data is worth exactly as much as one over authored data when the reader is code that will divide by the width.""" ;
-    #  Both roads to a held shape, since the desire was reified: a DESIRE's met-test hangs one
+    #  Both paths to a held shape, since the desire was reified: a DESIRE's met-test hangs one
     #  `orexis:metWhen` hop off the node the agent holds, while the envelope — and an asserted root
     #  desire in the old bare form — is still held directly. A target that knew only the second
     #  would have gone quietly blind to every deduced want the day the hop landed.
@@ -203,7 +203,7 @@ Every figure here was computed, so this is arithmetic rather than authorship —
 #  carriers, which after the kinds were split would have demanded a binding of every DESIRE.
 
 orexis:MetTestShape a sh:NodeShape ;
-    rdfs:comment "A want says when it is MET (a shape, conformance) or when it is UNMET (a pattern, rows) — one of the two and never both, because two verdicts on one want is a want two readers disagree about. Carriers of neither stay legal: an obligation's discharge-test and a call's measure live in the planner's own roads." ;
+    rdfs:comment "A want says when it is MET (a shape, conformance) or when it is UNMET (a pattern, rows) — one of the two and never both, because two verdicts on one want is a want two readers disagree about. Carriers of neither stay legal: an obligation's discharge-test and a call's measure live in the planner's own paths." ;
     sh:targetSubjectsOf orexis:metWhen , orexis:unmetWhen ;
     sh:property [ sh:path orexis:metWhen ; sh:maxCount 1 ;
                   sh:message "one met-test per want" ] ;

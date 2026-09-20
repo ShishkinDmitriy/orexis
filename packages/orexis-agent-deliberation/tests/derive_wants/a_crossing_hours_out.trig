@@ -3,7 +3,7 @@
 # The crossing is at 14:00, two hours out: the desire reads met now and unmet there, and is
 # judged at both — judging asks every instant a prediction reaches, and nothing else bounds it.
 #
-# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .

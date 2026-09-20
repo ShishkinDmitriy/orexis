@@ -39,7 +39,7 @@ PAGE = 100
 
 #  BOTH KINDS ON PURPOSE, and it is said out loud here because it used to be said by entailment.
 #  The planner keys this map by whatever node it is standing on, and that is USUALLY a want — the
-#  pursuit road hands it the one derived under a desire — but not always: where a root reads unmet
+#  derivation hands it the one derived under a desire — but not always: where a root reads unmet
 #  and nothing can be minted for it, the root itself is what gets planned for. While `orexis:Want`
 #  was a subclass, `?want a orexis:Desire` quietly matched both and nothing said so; the types are
 #  disjoint now (a-kind-is-a-type-not-a-binding), so the query names the two it means.

@@ -7,9 +7,10 @@ finding, because a collection that needed a whole agent to stand up would be a p
 took a fixture that built a real agent, and did not qualify.
 
 What is tested is the COLLECTION: that saving a want makes it findable, that finding one by its
-desire answers the pursuit road's question, that deleting it leaves nothing behind, that the
+desire answers the derivation's question, that deleting it leaves nothing behind, that the
 three things `save` writes are all written, and that a write ANNOUNCES itself rather than
-deciding what to re-derive. The road that uses it is covered end to end by `tests/test_pursued.py`.
+deciding what to re-derive. The derivation that uses it is covered end to end by
+`tests/test_pursuing.py`.
 
 See knowledge/decisions/a-repository-is-named-for-what-it-holds.md.
 """
@@ -50,7 +51,7 @@ def _want(uri="urn:test:want", desire=A_DESIRE, **kw):
 
 def _owe(wants, uri):
     """A debt, written the way the LEDGER writes one — its own graph, classified its own family.
-    It cannot be written through `save`, which classifies what it writes as the pursuit road's,
+    It cannot be written through `save`, which classifies what it writes as the derivation's,
     and that is the point of the case below."""
     graph = f"http://example.org/orexis/market#obligations/gardener/{uri.rsplit(':', 1)[-1]}"
     wants._store.update(f"""INSERT DATA {{
@@ -100,7 +101,7 @@ def test_a_want_about_several_things_reads_back_about_all_of_them(wants):
 
 
 def test_a_want_is_found_by_the_desire_it_was_derived_from(wants):
-    """The pursuit road's question, asked of the collection rather than written as a query."""
+    """The derivation's question, asked of the collection rather than written as a query."""
     wants.save(AGENT, _want())
 
     assert [w.uri for w in wants.find_all_by_desire(A_DESIRE)] == \
@@ -151,7 +152,7 @@ def test_a_debt_is_a_want_but_not_one_a_search_is_handed(wants):
 
     A debt IS a want, typed one, and it is derived from a desire like any other — the ledger
     mints it when a claim arrives rather than when a desire read unmet. What separates it is
-    WHOSE ROAD it came by, and the graph's classification is where that is written. It was a
+    WHOSE it is, and the graph's classification is where that is written. It was a
     binding, `orexis:Within` against `orexis:AtEnd`, which said the difference as a temporal
     fact when what it meant was a family (#681)."""
     wants.save(AGENT, _want(uri="urn:test:derived"))

@@ -197,7 +197,7 @@ instruments graph, whose name the kernel does not know — and genesis transcrib
 start; a per-agent graph is typed by its
 OWNER when it creates the graph, because it does not exist
 until its agent does: the ledger types its record, the keeper its promises, review its three,
-the road each want, sensing each prediction, genesis the pick record and the roots. Whatever
+the derivation each want, sensing each prediction, genesis the pick record and the roots. Whatever
 each is called — a name is for eyes, and a reader asks the class (`store.graphs_of`). Boot used
 to type them by matching names against a prefix each class declared, and was the one reader
 that depended on a name. The catalogue is the one graph that describes itself, which is how

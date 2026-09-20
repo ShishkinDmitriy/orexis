@@ -215,7 +215,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
 
     # KIND 3 IS PAID. `orexis_agent_progression/ontology.py`'s twelve namespace constants — consumed by onboarding's
     # generators and by nothing in the kernel — are `onboarding/namespaces.py`'s, beside `SOSA`,
-    # which showed the road (#378). #334's fourth bullet: they moved to their consumer.
+    # which showed the way (#378). #334's fourth bullet: they moved to their consumer.
 
     # KIND 5 IS PAID. The bus — `agent/world.py`'s `mqtt:MessageBus` query and the
     # reachability half of `sim:StandInShape` — is the transport's: reaching the society
@@ -302,7 +302,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
 
     # KIND 3 IS PAID. `orexis_agent_progression/ontology.py`'s twelve namespace constants — consumed by onboarding's
     # generators and by nothing in the kernel — are `onboarding/namespaces.py`'s, beside `SOSA`,
-    # which showed the road (#378). #334's fourth bullet: they moved to their consumer.
+    # which showed the way (#378). #334's fourth bullet: they moved to their consumer.
 
     # KIND 5 IS PAID. The bus — `agent/world.py`'s `mqtt:MessageBus` query and the
     # reachability half of `sim:StandInShape` — is the transport's: reaching the society

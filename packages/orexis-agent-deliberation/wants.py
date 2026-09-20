@@ -79,9 +79,9 @@ def save_want(engine, agent_id: str, want: Want) -> None:
     account of that graph — its family, how it arrived, whose it is and the period it holds
     during — in one update, so a want and what is said about it land together or not at all.
 
-    THE KNOWLEDGE STAYS IN THIS FILE, which is the point of it being here (#677): the road
+    THE KNOWLEDGE STAYS IN THIS FILE, which is the point of it being here (#677): the derivation
     decides what a want IS — its name, its label, what it points at, when it must hold — and
-    where a want is kept is this module's, whether the collection below or the road asks. The
+    where a want is kept is this module's, whether the collection below or the derivation asks. The
     catalogue is found by its own row and every kind the vocabulary puts a pursued graph
     beneath is written from one `rdfs:subClassOf` step, the closure being materialised at
     genesis (one-graph-both-engines-read).
@@ -165,7 +165,7 @@ class Wants:
 
     def find_all_pursued(self, at: datetime | None = None, *,
                          limit: int = PAGE, offset: int = 0) -> list[Want]:
-        """Every want the PURSUIT ROAD derived, whatever desire each came under.
+        """Every want the DERIVATION minted, whatever desire each came under.
 
         The family, not a criterion a caller could name: `deliberation:PursuedGraph` is this
         collection's own word for where it writes, and handing it out would be handing out the
@@ -190,10 +190,10 @@ class Wants:
             f"?w a orexis:Want ; prov:wasDerivedFrom <{desire}> .", at, limit, offset)
 
     def find_first_by_desire(self, desire: str, at: datetime | None = None) -> Want | None:
-        """The want standing under one desire now, or None — the pursuit road's question.
+        """The want standing under one desire now, or None — the derivation's question.
 
-        SCOPED TO THE PURSUIT ROAD'S OWN FAMILY. While the ledger minted its own wants, in a
-        family of its own, this had to say which road's it asked for; one road derives every
+        SCOPED TO THE DERIVATION'S OWN FAMILY. While the ledger minted its own wants, in a
+        family of its own, this had to say whose it asked for; one function mints every
         want now (#675) and the scope is simply the family every derived want is in. It asked
         the BINDING before, which named that difference in a property where the graph's
         classification already said it (#681).
@@ -219,11 +219,11 @@ class Wants:
         would have to remember all three, which is the shape of an omission nobody notices
         until a want outlives its window.
 
-        THE WRITE ITSELF IS `save_want`, over the engine. The pursuit road is a function over
+        THE WRITE ITSELF IS `save_want`, over the engine. The derivation is a function over
         the store and holds no collection, so where a want is kept had to be sayable without
         one; what this collection adds is what a collection adds — that a write announces
-        itself. A road writing through the module announces nothing, and its callers refresh
-        what they hold.
+        itself. A caller writing through the module function announces nothing, and its
+        callers refresh what they hold.
         """
         save_want(self._store.engine, agent_id, want)
         for listener in self.on_saved:
@@ -239,7 +239,7 @@ class Wants:
     # --- where they live ------------------------------------------------------------------
 
     def graph_of(self, agent_id: str, uri: str) -> str:
-        """The graph one DERIVED want lives in — `graph_of` above, which the road asks too."""
+        """The graph one DERIVED want lives in — `graph_of` above, which the derivation asks too."""
         return graph_of(agent_id, uri)
 
     def _select(self, where: str, at: datetime | None = None,
@@ -276,7 +276,7 @@ class Wants:
         #  which is what `graphs_of` does for every read that goes through it and what this
         #  text had to say for itself once it named its own graphs. Rule 4 makes the two the
         #  same in a volume — one agent, one store — and they are not the same in a store
-        #  built with a whole world in it, where the pursuit road derives under every holder's
+        #  built with a whole world in it, where the derivation derives under every holder's
         #  desires and this collection would otherwise hand back another agent's wants. A
         #  graph saying no owner is anyone's, and a store told nothing keeps every graph.
         now = (at or clock.now()).isoformat()

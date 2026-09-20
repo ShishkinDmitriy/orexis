@@ -513,7 +513,7 @@ def test_a_sensing_action_still_ends_a_plan_with_no_rule_of_its_own(monkeypatch)
     depth whatever MAX_DEPTH said. Replacing it with a truer term was the first fix and the
     wrong one. **What a look does is already stated by its EFFECT** — it predicts the value it
     found — so the world it reaches carries its parent's signature and `seen` discards it, by
-    the same road a zero-size bid arrives at "this does not help".
+    the same path a zero-size bid arrives at "this does not help".
 
     So there is no guard, and this is the test that says the constraint survives without one.
     THE HARD CASE IS THE FIRST LOOK, with nothing sensed at all: the construct emits an

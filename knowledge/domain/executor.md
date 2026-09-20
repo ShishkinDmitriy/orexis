@@ -3,7 +3,7 @@ type: Service
 title: Executor
 description: >-
   What happens to a decision — plan, commit the head as an intention, hand it to its actor.
-  ONE road for every trigger, cut at the line where deciding stops and doing starts —
+  ONE path for every trigger, cut at the line where deciding stops and doing starts —
   `pursuit.py` in the deliberation layer plans and commits, `execution.py` in progression
   takes, on the reactive loop: the deliberator's tick, a fresh reading, a round knocking and a
   claim presented all arrive here and none of them decides. A step already
@@ -13,12 +13,12 @@ description: >-
 
 # What it runs
 
-**Execution** — plan, commit the head, hand it to its actor. One road, whatever the trigger,
+**Execution** — plan, commit the head, hand it to its actor. One path, whatever the trigger,
 in two files since the kernel split along its layers
 ([a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md)):
 `packages/orexis-agent-deliberation/pursuit.py` holds `pursue` and `pursue_for` — the search
 and the commit — and `packages/orexis-agent-progression/execution.py` holds `carry_out`,
-`take_standing` and `taken_by`, the road from a committed act to its actor. The cut is at the
+`take_standing` and `taken_by`, the path from a committed act to its actor. The cut is at the
 one line where deciding stops and doing starts, which is also where the search's thread
 stops and the reactive loop begins: only a plan's HEAD crosses, committed and taken as one
 item on the executing thread.

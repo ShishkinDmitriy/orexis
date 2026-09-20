@@ -37,7 +37,7 @@ observation keyed (sensing, through `orexis:answer`), which answers with an obse
 than the baseline within the tolerance of the predicted value; a PLAIN fact is the kernel's,
 present for an addition and gone for a retraction, one query under a shape. The actor passes
 its [tolerance](/domain/tolerance.md) and nothing else. Hanoi's seven moves and the courier's
-eight drives are held to the world by the same road as a dose, with no actor at all.
+eight drives are held to the world by the same path as a dose, with no actor at all.
 
 # What was refused
 

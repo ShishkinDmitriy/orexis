@@ -14,7 +14,7 @@ description: >-
   name a consumer or fold back, and the two standing rules — never retracted, only recomputed;
   premises stored, conclusions earned — are what make the materialisation legitimate.
 status: superseded-in-part
-superseded-by: one-road-derives-every-want
+superseded-by: one-function-mints-every-want
 timestamp: 2026-08-24T14:30:00Z
 ---
 
@@ -24,8 +24,8 @@ timestamp: 2026-08-24T14:30:00Z
 
 # A desire is a forest of derived roots
 
-*(Amended by [one-road-derives-every-want](/decisions/one-road-derives-every-want.md): the
-forest stands, and its nodes below a root are WANTS, minted by one road from the instances the
+*(Amended by [one-function-mints-every-want](/decisions/one-function-mints-every-want.md): the
+forest stands, and its nodes below a root are WANTS, minted by one function from the instances the
 world presents, not derived desires materialised by a rule. A desire is one and universal; what
 is per instance, per property and per side is what gets minted under it. The hierarchy this
 record settled is right; what its nodes are was drawn one level too high.)*

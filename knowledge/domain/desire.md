@@ -51,7 +51,7 @@ three shipped worlds, until [a-kind-is-a-type-not-a-binding](/decisions/a-kind-i
 took the ambiguity out.
 
 **How it came to be is provenance, not kind.** Most wants are derived, and `prov:wasDerivedFrom`
-names the desire; the pursuit road recomputes, withdraws and derives them again as the world
+names the desire; the derivation recomputes, withdraws and derives them again as the world
 moves. But a world may ratify a want DIRECTLY, and three do — hanoi's *every disk home*, the
 courier's *every parcel delivered*, the tower's — authored once, standing there for the agent's
 whole life, and handed to a search like any other. A desire is likewise usually deduced at
@@ -64,10 +64,10 @@ one. OVERDUE rather than unpaid, deliberately: a host that owes water and has no
 is not in violation of anything, and a rule that said so would read unmet from the instant a
 claim cleared.
 
-**One road derives, for both.** The desire's own met-test, compiled to the select whose rows
+**One function mints, for both.** The desire's own met-test, compiled to the select whose rows
 are its violations, asked at the start of each prediction the agent holds; the rows are the
 instances in trouble and the first instant each appears is its witness
-([one-road-derives-every-want](/decisions/one-road-derives-every-want.md)). Sensing's region
+([one-function-mints-every-want](/decisions/one-function-mints-every-want.md)). Sensing's region
 desire is witnessed by what the drift predicts of a reading; *no overdue debts* by what the
 ledger predicts of a debt — that it lapses at its deadline, a prediction written beside the
 debt when the claim arrives. Neither package mints a want. The ledger wrote its own for a
@@ -351,7 +351,7 @@ pass, as `deliberation:judgedBy` in the [trace](/domain/deliberator.md) (#502). 
 worlds author their goals positively — `courier:delivered`, `hanoi:solved` — and nobody writes
 "a parcel astray" by hand. Coverage is the fragment the derivations emit and a shape outside it
 refuses, named, never compiling to something quiet; `tests/test_violation.py` holds every
-compiled select to the judge on the same world. An authored `orexis:unmetWhen` stays the road
+compiled select to the judge on the same world. An authored `orexis:unmetWhen` stays the way
 for an aversion, whose content IS the avoided state — and since #499 it too may be a shape,
 compiled to its conformance select, so both polarities read either form. The two terms are
 not folded: `unmetWhen S` is `metWhen [sh:not S]` in logic, and an author made to write "met
@@ -387,7 +387,7 @@ want points at — the estimate's and the avoided pattern's alike — is declare
 package's ontology beside the actions, and a world asserts the want and points at it
 (`world/courier/desire.ttl` says `orexis:estimates courier:drivesOwed`). A world may still
 write a select inline beside an asserted want, as the avoidance tests do, and the kernel
-reads either road; the domains ship theirs. The road after this one is derivation — the
+reads both paths; the domains ship theirs. The step after this one is derivation — the
 package deduces the want from what the world states, as
 [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)
 argues for plants — and then a world states parcels and nothing about wanting them delivered.
@@ -420,7 +420,7 @@ The want a search is handed for a desire that reads unmet is a node of its own, 
 the same shape, targeting the one instance in trouble, with the blocks about what the want is
 about, so *all properties in range* becomes *this tank's level from 10* and the want is judged
 on its own instance — POINTING at the desire's avoided state and estimate, one owner each, and
-restating the root's address, what it is about, which is what the affordances join a want by. It is minted by the pursuit road the first time the desire
+restating the root's address, what it is about, which is what the affordances join a want by. It is minted by the derivation the first time the desire
 reads unmet, into the agent's own pursued graph (`deliberation:PursuedGraph`, projected into the
 desire modality like the promises), and named for the desire with a suffix, so a second episode
 of the same desire pursues the same node and everything keyed by it finds what it kept. While it
@@ -450,7 +450,7 @@ over. The instances enter as WANTS: the met-test compiled to the select whose ro
 violations, run now and at each prediction's start, names every instance in trouble and when —
 this fern's moisture at 14:32, this debt at its deadline — and one want is minted per
 [scope](/domain/scope.md) of them
-([one-road-derives-every-want](/decisions/one-road-derives-every-want.md)). Code still names no
+([one-function-mints-every-want](/decisions/one-function-mints-every-want.md)). Code still names no
 instance anywhere: the world's files author them and the packages write them as they arrive, and
 a ratified desire's instance is authored there too. What holds at every level is the provenance
 discipline — deduced or ratified, never the agent's own authoring — rather than any rule about

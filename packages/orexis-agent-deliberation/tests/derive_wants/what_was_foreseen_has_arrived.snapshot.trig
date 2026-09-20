@@ -6,7 +6,7 @@
 # The want stands AT 12:30, foreseen at 11:00 from a prediction; the present now reads the level
 # low. What was foreseen has arrived: the same want, re-minted at no instant.
 #
-# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .

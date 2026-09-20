@@ -72,7 +72,7 @@ a want of the agent's own — the promise, raised through the [bridge](/domain/b
 the abstract step waits on the fact it brings about; the tower world is the instance.
 
 **Not a branch.** A method is a sequence. Winning or losing is not two branches in the plan
-but one step done or lapsed, and lapsing is the replanning road every plan takes.
+but one step done or lapsed, and lapsing is the replanning path every plan takes.
 
 **Not the reaction chain.** Before #523 the bidder's Python carried the protocol as
 reactions — an offer, a bid, a claim held in a dict, a redeem — invisible to the ledger. The
@@ -80,4 +80,4 @@ claim is a fact in the bidder's own graph now (`market:Claim`), which is what le
 wait on it.
 
 See [a-method-is-the-steps-an-action-comes-to](/decisions/a-method-is-the-steps-an-action-comes-to.md)
-and, for the planned road, [a-level-is-a-vocabulary-and-a-bridge](/decisions/a-level-is-a-vocabulary-and-a-bridge.md).
+and, for the planned path, [a-level-is-a-vocabulary-and-a-bridge](/decisions/a-level-is-a-vocabulary-and-a-bridge.md).

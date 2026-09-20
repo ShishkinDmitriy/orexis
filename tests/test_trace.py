@@ -186,13 +186,13 @@ def test_the_verdicts_reach_the_series_so_a_dashboard_can_watch(monkeypatch):
 # --- the select a want was judged by is shown, never stored (#502) ----------------------------
 
 def _judged(agent):
-    """(road, text) off the one deliberation node — text None where the road is not a text."""
+    """(way, text) off the one deliberation node — text None where the way is not a text."""
     rows = bindings(agent.beliefs.query_union(f"""
-SELECT ?road ?text WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
-  ?d a <{TRACE_NS}Deliberation> ; <{TRACE_NS}judgedThrough> ?road .
+SELECT ?way ?text WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
+  ?d a <{TRACE_NS}Deliberation> ; <{TRACE_NS}judgedThrough> ?way .
   OPTIONAL {{ ?d <{TRACE_NS}judgedBy> ?text }} }} }}"""))
-    assert len(rows) == 1, "one pass, one road"
-    return rows[0]["road"], rows[0].get("text")
+    assert len(rows) == 1, "one pass, one way"
+    return rows[0]["way"], rows[0].get("text")
 
 
 def test_a_shape_want_shows_the_select_it_was_judged_by_and_the_shape_stays_clean(monkeypatch):
@@ -209,8 +209,8 @@ def test_a_shape_want_shows_the_select_it_was_judged_by_and_the_shape_stays_clea
     want = _goal(agent)
     Planner(agent, agent.me).plan(want)
 
-    road, text = _judged(agent)
-    assert road == trace.COMPILED
+    way, text = _judged(agent)
+    assert way == trace.COMPILED
     public = graph_from(agent.beliefs, *agent.beliefs.graphs_of(PUBLIC))
     shape = public.value(URIRef(want.uri), URIRef(f"{KERNEL}metWhen"))
     #  MODULO VARIABLE NUMBERING. The compiler names variables in the order it meets the
@@ -230,24 +230,24 @@ def test_a_shape_want_shows_the_select_it_was_judged_by_and_the_shape_stays_clea
 
 
 def test_a_derived_want_is_judged_by_its_compiled_shape_and_measured_apart(monkeypatch):
-    """Two questions, two roads, and the trace names the one it answers. The gardener's
+    """Two questions, two paths, and the trace names the one it answers. The gardener's
     moisture want is a shape the deduction emits, so whether a world MEETS it is the compiled
     select — shown here — while how FAR a world is from it is sensing's measure, which is
     `deliberation:wouldReach` on every candidate and no text at all."""
     agent, planner, desire = _gardener(monkeypatch, WET)
     planner.plan(desire)
-    road, text = _judged(agent)
-    assert road == trace.COMPILED and text is not None and "SELECT" in text
+    way, text = _judged(agent)
+    assert way == trace.COMPILED and text is not None and "SELECT" in text
 
 
 def test_an_authored_pattern_is_shown_as_the_pattern(tmp_path, monkeypatch):
     """An aversion authored as a pattern (#468) is judged by that pattern, and the trace shows
-    the text the author wrote and names the road."""
+    the text the author wrote and names the way."""
     from test_avoidance import MARKER, STATE_GRAPH, _avoidance_row, _gardener as _avoider
 
     agent, st = _avoider(tmp_path, monkeypatch)
     st.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ {MARKER} }} }}")
     Planner(agent, agent.me).plan(_avoidance_row(agent))
-    road, text = _judged(agent)
-    assert road == trace.AUTHORED
+    way, text = _judged(agent)
+    assert way == trace.AUTHORED
     assert text is not None and MARKER.split()[0] in text

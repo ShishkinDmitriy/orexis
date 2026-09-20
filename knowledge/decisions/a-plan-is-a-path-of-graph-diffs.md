@@ -494,7 +494,7 @@ So the two are asked differently, and the split follows from what each is FOR. T
 is the search — asked of every candidate, because that is what choosing means. Legality is a
 guarantee about what an agent COMMITS to, so it is asked once, of the world the winning plan
 would actually reach. An agent that never commits to an illegitimate world is the property that
-was wanted; validating the roads not taken buys nothing and costs everything.
+was wanted; validating the paths not taken buys nothing and costs everything.
 
 The seam that leaves: a winner refused for illegality yields NO plan, rather than falling back to
 the best legal candidate. That is the safe direction and it is logged, but it means an agent that
@@ -527,7 +527,7 @@ those grounds.
 
 Both of the above landed, and then a third thing did — the one the test was really about. **The
 reflex is gone**: `propose`, the gap clause, the direction lookup and the dealer's shop clause,
-and with them the door that took a property and a value. There is one road through deliberation
+and with them the door that took a property and a value. There is one path through deliberation
 and it is the search.
 
 **It was ABSORBED, not retired beside.** That distinction is this section's whole point. The

@@ -17,12 +17,12 @@ its value, since the value is what the actor re-sizes against at execution and w
 verifies step by step — the same discipline that lets a plan be adopted on the world's word.
 
 The second form (the composed-effect seam, closed): a remembered plan whose precondition holds
-but was not adopted outright — a search entered by another road — is a candidate on the menu,
+but was not adopted outright — a search entered by another path — is a candidate on the menu,
 walked in the imaginarium at the root as one step and settled like any step. Lifting to
 variables is the seam after this.
 
 What is kept is never a possible world — only the steps to re-try — and every use is verified
-by the road #510 built: a step whose prediction fails drops the tail and the search takes over.
+by the path #510 built: a step whose prediction fails drops the tail and the search takes over.
 """
 from __future__ import annotations
 
@@ -198,7 +198,7 @@ def lift(agent, want: str, steps: list, cost: float | None) -> str:
     """Lift a walked plan into the agent's graph, for this want in this world.
 
     ONCE: a route already remembered for this want — the same steps in the same order — is
-    not lifted again, whichever world it was first lifted in and whichever road found it
+    not lifted again, whichever world it was first lifted in and whichever way found it
     this time, the search or the walk of the remembered plan itself. The one already kept is
     answered, so a caller may hold it as the plan's memory."""
     for uri, kept, _ in remembered_for(agent, want):
@@ -293,7 +293,7 @@ WHERE  {{ GRAPH <{graph}> {{
 
 def forget_matching(agent, want: str, steps, because: str) -> list:
     """Forget every plan remembered for this want that IS this route — the same steps in the
-    same order — whichever road adopted it: the exact hit, or the walk that weighed it as a
+    same order — whichever way adopted it: the exact hit, or the walk that weighed it as a
     candidate and won. Answers what was forgotten."""
     gone = []
     for uri, kept, _ in remembered_for(agent, want):

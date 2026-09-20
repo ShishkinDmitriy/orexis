@@ -5,7 +5,7 @@ description: >-
   A number with two ends. Not a concept of the core, by the sovereign's ruling of 2026-09-07 —
   the core deliberates on triples and interprets no literal, and how a reading is described is
   the domain's — and so a tool a package may keep for itself where it sizes an act under a
-  learned tolerance, inside progression. Built once on the core's road as PR #575 and refused there.
+  learned tolerance, inside progression. Built once on the core's path as PR #575 and refused there.
 ---
 
 # What it is
@@ -27,7 +27,7 @@ may reason with the width its [tolerance](/domain/tolerance.md) gives it, and th
 [review](/domain/review.md) that re-picks the tolerance reads the numbers progression records
 then. None of it reaches a canonical fact, a step's precondition or the keeper's shape.
 
-# What replaces it on the core's road
+# What replaces it on the core's path
 
 An effect with two possible outcome classes — a dose that may or may not cross the boundary —
 and the look that tells them apart: the dose-look-dose plan, restated in the domain's words. A

@@ -41,7 +41,7 @@ Where a fact the plan read is absent, the plan does not apply here and the pass 
 [planner](/domain/planner.md) asks the same precondition of the root world first and, on a miss,
 writes the verdict `a remembered plan's precondition does not hold here` with
 `deliberation:missing` naming the fact, before any of the plan's steps cost a fork. Where the
-precondition holds but a search runs anyway — entered by a road without the adoption in
+precondition holds but a search runs anyway — entered by a path without the adoption in
 front of it — the plan is on the menu as ONE candidate: its steps re-simulated in order, each
 taken only where the menu of the world the previous step reached offers that very row, and the
 world reached settled like any step's; ties among achievers fall to the route already walked.

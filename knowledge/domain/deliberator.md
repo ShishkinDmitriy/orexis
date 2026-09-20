@@ -5,7 +5,7 @@ description: >-
   The whether — given the gap and the standing commitments, name the next move; the acting
   modules carry it out. The KERNEL's and granted by nothing, because a mind is not
   plug-in-able: every agent builds one, and an agent with nothing to pursue proposes nothing
-  and reports nothing rather than reporting zeros. ONE road through it — a bounded search
+  and reports nothing rather than reporting zeros. ONE path through it — a bounded search
   that builds the world each lever would make and keeps the one worth reaching. Asking a
   model what next remains a real alternative and becomes a PICK an agent may revise, not a
   capability its world derives.
@@ -37,7 +37,7 @@ through `execution.pursue_for`. The deliberator sees only wants
 `if value is None: return OBSERVE`, and then `if desire.state in ("unmeasured", "stale"):
 return OBSERVE`, which said the same thing in the words it meant and still said it by hand.
 Both are gone. Knowing is a WANT — this reading exists, and it was taken recently enough to be
-about now — whose met-shape a look repairs, so the search finds Observe by the road it finds
+about now — whose met-shape a look repairs, so the search finds Observe by the path it finds
 everything else, and the oldest rule in deliberation is stated nowhere and holds anyway. That
 was the plan record's own acceptance test for the widening: a special case that survives beside
 the machinery means the machinery did not absorb it. See
@@ -61,7 +61,7 @@ takes the move only if the result beats doing nothing. A met desire off its pick
 met is the outcome's label, urgency is the motive, and near the pick the dose sizes to nothing —
 a deadband nobody chose as a tolerance.
 
-The difference is not academic, and it is why this is the ONLY road. There used to be a second —
+The difference is not academic, and it is why this is the ONLY path. There used to be a second —
 a chain asking whether a lever POINTS the right way, cheapest rung first — and a plant sitting
 ABOVE its region passes every test that chain applied: the pump raises moisture, the aim is above
 the reading, direction matches sign. Both are true of a drowning plant, which is how a society
@@ -119,7 +119,7 @@ said.
 
 **There is no guard now, and that is the fix rather than a shortcut.** What a look does is
 already stated by its EFFECT: it predicts the value it found, so the world it reaches carries
-its parent's signature and cycle detection discards it — by the same road a zero-size bid
+its parent's signature and cycle detection discards it — by the same path a zero-size bid
 arrives at "this does not help". Measured with the guard removed, on three worlds including a
 first look with nothing sensed: Observe is pruned as a world already reached, every time. A
 second statement of a fact the effect already settles is a fact that can disagree with it.
@@ -204,7 +204,7 @@ Three things it must not become:
 And one thing it shows that lives nowhere else (#502): **how the want was judged.** Every pass
 says `deliberation:judgedThrough` — the select compiled from its shape, the pattern it authors,
 the record of what was discharged, or a module's measure; or nothing, where a remembered plan
-was adopted — and where the road is a text, `deliberation:judgedBy` carries the SELECT the pass
+was adopted — and where the way is a text, `deliberation:judgedBy` carries the SELECT the pass
 ran at every world it weighed. The compiled select is computed once per pass and never asserted,
 which is right for the store and wrong for the person asking why a want read as unmet; the trace
 is where that person looks, through `orexis-ask` on the beliefs modality like the rest of it. It
@@ -259,13 +259,13 @@ since the epistemic want went through the search: nothing is answered before a s
 more, so an agent that has never looked plans and its trace says `satisfied` on a one-step plan
 to look, where it used to file nothing at all.
 
-# One road, and the two that were folded into it
+# One path, and the two that were folded into it
 
 There was a family of three: `Reflex` (a welded chain, depth 1), `Planning` (bounded search,
 depth 2, granted by the dealer premise) and `Consulting` (one model call, declared and reserved).
-Two were built; they became one class with two roads through it, and then one road.
+Two were built; they became one class with two paths through it, and then one.
 
-**The family did not survive its own evidence, and neither did the second road.** `Planning`
+**The family did not survive its own evidence, and neither did the second path.** `Planning`
 SUBCLASSED `Reflex` and added one clause inert for any agent without a shop, which is a branch
 rather than an interchangeable implementation — rule 2's test is whether the HOW could differ,
 and here it differed by a condition on the data. That merge left one class asking two

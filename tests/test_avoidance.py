@@ -1,7 +1,7 @@
 """A want met by absence, end to end (#468, rebuilt on the sovereign's ruling): the world
 ratifies the DESIRE itself in the asserted block — no capability, no derivation — its
 `orexis:unmetWhen` points at the avoided pattern, the kernel lifts it into pursuit and
-judges it binary, and the search steers out through the ordinary achiever road. Beside it,
+judges it binary, and the search steers out through the ordinary achiever path. Beside it,
 the law: a ratified sh:Violation shape pruned at expansion, never-newly-enter."""
 
 import shutil
@@ -90,8 +90,8 @@ def test_a_ratified_avoidance_is_pursued_with_no_capability_in_the_room(tmp_path
 
 
 @pytest.mark.parametrize("shaped", [False, True], ids=["select", "shape"])
-def test_the_search_exits_an_avoided_state_by_the_cheapest_road(tmp_path, monkeypatch, shaped):
-    """Steering out is the ordinary achiever road: a candidate world where the pattern no
+def test_the_search_exits_an_avoided_state_by_the_cheapest_path(tmp_path, monkeypatch, shaped):
+    """Steering out is the ordinary achiever path: a candidate world where the pattern no
     longer binds is MET by the same one text on the same one engine, joins the achievers,
     and cost decides between two exits."""
     from assembly import loader
@@ -126,7 +126,7 @@ toy:{name} a orexis:Action ;
     assert plan.outcome == "satisfied" and plan.steps, \
         "clearing the marker is achievable in one step, and the pass must say so"
     assert plan.steps[0].action == "urn:toy#Cleanse", \
-        "two roads out differ only in cost, and the cheaper wins"
+        "two paths out differ only in cost, and the cheaper wins"
 
 
 @pytest.mark.parametrize("shaped", [False, True], ids=["select", "shape"])

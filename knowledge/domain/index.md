@@ -51,7 +51,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [intention](/domain/intention.md) - A commitment to reduce a named gap by a named action, kept in a private ledger. Granted by a stake AND a lever.
 
-* [deliberation](/domain/deliberator.md) - The whether: name the next move by building the world each lever would make and keeping the one worth reaching. One road.
+* [deliberation](/domain/deliberator.md) - The whether: name the next move by building the world each lever would make and keeping the one worth reaching. One path.
 
 
 # Means — actions, steps, and what taking one comes to
@@ -83,7 +83,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [cone](/domain/cone.md) - The tree of possible worlds a pass builds under the present for one want; kept across passes, re-rooted where the present is one of them.
 * [identification](/domain/identification.md) - Which child of the root the present is in; the match becomes the root and its siblings die. Never asserting a prediction.
 
-* [executor](/domain/executor.md) - Plan, commit the head as an intention, hand it to its actor. One road for every trigger; a standing step is taken, not re-decided.
+* [executor](/domain/executor.md) - Plan, commit the head as an intention, hand it to its actor. One path for every trigger; a standing step is taken, not re-decided.
 
 * [actor](/domain/actor.md) - The module an affordance is linked to: whichever contributes the action. Takes a step; never decides one.
 

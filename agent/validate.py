@@ -71,11 +71,11 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities,
     #  so to no one — the silent direction to be wrong, which this file has met before.
     #  The pick record travels THROUGH the modality when one is given, never beside it: the
     #  flatten serialises and re-parses, which relabels blank nodes, so a record arriving by
-    #  both roads splits every aim into two nodes — and AimShape rightly calls two aims for
+    #  both paths splits every aim into two nodes — and AimShape rightly calls two aims for
     #  one property not steering.
     #  ASKED, never enumerated (#444): every graph this agent owns, the pick record among
     #  them. Which is why the record is SUBTRACTED where the modality carries it — naming it
-    #  to take it out is not the enumeration the rule forbids, it is saying which road it
+    #  to take it out is not the enumeration the rule forbids, it is saying which way it
     #  came by.
     graphs = st.graphs_of(*KNOWN, at=clock.now())
     if desires is not None:

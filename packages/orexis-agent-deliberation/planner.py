@@ -305,7 +305,7 @@ class Planner:
         is looked for in the wants snapshot first (a world may still write it inline beside an
         asserted want, and the avoidance tests do) and then in the belief base, whose default
         graph merges public knowledge — the desire modality drops the public graphs after its
-        rebuild, so it cannot answer for a package's node. One text, either road, and the
+        rebuild, so it cannot answer for a package's node. One text, both paths, and the
         same substitution after.
         """
         text = self._compiled.shapes.value(node, _SH.select)
@@ -625,7 +625,7 @@ class Planner:
         """One simulated world weighed: forbidden, dear, late, seen, met, or a place to
         search on from. The same for a primitive's world and for the world a remembered
         plan's walk reaches — which is what makes the remembered plan one candidate
-        among the rest rather than a road of its own. Answers a Plan only where the
+        among the rest rather than a path of its own. Answers a Plan only where the
         pass ends here: a steering keeper on an already-met want."""
         if self._compiled.law is not None:
             newly = self._forbidden_keys(step) - self._base_forbidden
@@ -904,7 +904,7 @@ class Planner:
         """
         store = self.agent.beliefs
         #  AND THE CLASSIFICATION, SUBTRACTED BY NAME, which rule 1 allows for exactly this:
-        #  saying which road a fact came by rather than enumerating what to read. What a graph
+        #  saying which way a fact came by rather than enumerating what to read. What a graph
         #  IS is a mention, not a fact a plan stands on — and a forecast arriving at runtime
         #  says what it is there, so a signed classification would kill every kept world on a
         #  change no lever caused, which is the thing this exclusion exists to prevent.
@@ -996,7 +996,7 @@ class Planner:
         return plan
 
     def _judged(self, judgment: Want) -> tuple[str, str | None]:
-        """Which road `_met_in` took for this want, and the text where the road is one (#502).
+        """Which way `_met_in` took for this want, and the text where the way is one (#502).
 
         The SAME order as `_met_in`, and only that order: an authored pattern first, then the
         select compiled in `_begin` — a shape want's violation select, or an avoided state's
@@ -1356,7 +1356,7 @@ class Planner:
                        if shape is not None else None)
         #  THE NEGATIVE TWIN AS A SHAPE (#499): an aversion under `orexis:unmetWhen` authored
         #  as the avoided state, compiled to its CONFORMANCE select — rows where the state
-        #  has been entered — and judged by the same road as a compiled positive want.
+        #  has been entered — and judged by the same path as a compiled positive want.
         avoided = self._compiled.shapes.value(URIRef(judgment.uri), _AG.unmetWhen)
         if avoided is not None and self._compiled.unmet is None:
             shapes, flat = self._compiled.shapes, self._compiled.base
@@ -1460,7 +1460,7 @@ class Planner:
     def _border(self, node) -> str:
         """This node's whole world as one N-Triples text, for the judge — which, since #548,
         nothing in the search asks: the parity tests do, holding the compiled selects the
-        search reads to the judge's verdict on the same world, and that road stays open at
+        search reads to the judge's verdict on the same world, and that path stays open at
         no cost to a pass that never takes it.
 
         The invariant half is every graph a judged world holds that no step can change —
@@ -1648,7 +1648,7 @@ class Planner:
         moves a measured property. Measured before it was fixed: value 0.04 at depth 0, the
         world at 0.18 after one step, and `_bind` still saying 0.04.
 
-        The DOSE moves with it for the same reason and by the same road: `dose_for` sizes an
+        The DOSE moves with it for the same reason and by the same path: `dose_for` sizes an
         act from where the property stands, so a second dose asked about the world the first
         one reached is the act the actor would actually take next — which is the whole of what
         makes "too small to finish in one" a plannable situation rather than an unreachable one.

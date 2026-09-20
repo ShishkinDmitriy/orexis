@@ -36,7 +36,7 @@ Three properties carry the design:
   named modality the answer is still its whole self — `query_union` over that store, private
   graphs included — because making the sovereign spell graph IRIs would be rule 1's own trap:
   a graph IRI is an instance. A payload naming no modality, or one this mind lacks, is
-  refused with the road spelled out.
+  refused with the path spelled out.
 
 The topic pair is the one channel an agent listens on that the world does not state
 (`packages/orexis-capability-reporting/sovereign.py` — `agent/sovereign.py` until [metrics-are-an-aspect](/decisions/metrics-are-an-aspect.md) — is its single source, imported by both the ACL generator and the

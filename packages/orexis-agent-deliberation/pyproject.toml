@@ -16,7 +16,7 @@ dependencies = [
     # asks the loader for the packages' shapes.
     "orexis",
     # The layer beneath: the ledger a plan's head is committed to, the act it fills, the timer
-    # its clock keeps, and the road a committed act is handed down.
+    # its clock keeps, and the path a committed act is handed down.
     "orexis-agent-progression",
     # The reactive loop, for one thing: a plan's head crosses onto it to be committed and taken.
     "orexis-agent-reactive",

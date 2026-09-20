@@ -301,7 +301,7 @@ def _urgency_panel(buckets: dict, y: int, panel_id: int) -> dict:
                        #  stored stays the name the graph knows it by.
                        #
                        #  The prefix is kept rather than dropped, because it is not always
-                       #  redundant: a want the road derived is tagged by its ROOT, so a debt
+                       #  redundant: a want the derivation minted is tagged by its ROOT, so a debt
                        #  reads `no_overdue_debts`, and whom it is owed to is `agent_debts`'s
                        #  per-counterparty row, not this panel's.
                        f'  |> map(fn: (r) => ({{ r with _field: "{agent_id}/" + '

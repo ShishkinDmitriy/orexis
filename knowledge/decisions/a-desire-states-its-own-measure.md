@@ -90,7 +90,7 @@ the kernel vocabulary, on the effects precedent. The sovereign refused that too 
 is still in core; at least don't add new into core, which is not belong to core"* — because
 every one of those was new core surface that is not BDI structure, whatever its contents.
 
-**The extraction that completes it** dissolves the machinery into the choir, the road the
+**The extraction that completes it** dissolves the machinery into the choir, the path the
 house already had (`urgency` was always a hook modules contribute; the keeper already answers
 it for open expectations):
 
@@ -164,7 +164,7 @@ unchanged — measurement names never split series.
   the arithmetic"*. Obligation urgency therefore stays Python's, one clock, exactly as
   [an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md)
   left it. Baking epochs was considered and refused: the derivation is SPARQL and cannot
-  convert a dateTime to a number either, so every road to a declared obligation measure runs through
+  convert a dateTime to a number either, so every path to a declared obligation measure runs through
   the same missing operation. Its future home is settled by the split above even so: the
   MARKET package's `measures.ttl`, by this same mechanic, the day the engine divides durations
   — so the kernel's measure story stays uniform, never knowing any measure's content, only how

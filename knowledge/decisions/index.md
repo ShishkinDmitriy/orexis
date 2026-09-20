@@ -80,7 +80,7 @@ What happens to a decision — committed as an intention, carried out by whoever
 * [a-method-is-the-steps-an-action-comes-to](/decisions/a-method-is-the-steps-an-action-comes-to.md) - An abstract action's package declares the steps it comes to; the keeper walks them, the search never does; the reaction chain refused.
 * [a-level-is-a-vocabulary-and-a-bridge](/decisions/a-level-is-a-vocabulary-and-a-bridge.md) - A search runs inside one vocabulary; a taker-less action is a promise the level beneath keeps, planned when reached through the bridge.
 * [a-remembered-plan-is-a-method-on-the-want](/decisions/a-remembered-plan-is-a-method-on-the-want.md) - A plan that worked is kept on its want, keyed by its regressed precondition and verified by feedback; re-simulation before reuse refused.
-* [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md) - The plan's head is what the keeper writes, execution is one kernel road, and `orexis:takenBy` links a row to the code that takes it.
+* [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md) - The plan's head is what the keeper writes, execution is one kernel path, and `orexis:takenBy` links a row to the code that takes it.
 * [an-intention-stands-until-the-world-answers](/decisions/an-intention-stands-until-the-world-answers.md) - An Actuate stands from the command to its verdict, so the standing rule is the whole patience and the `absorbs` hook is gone.
 * [an-action-is-one-node](/decisions/an-action-is-one-node.md) - Precondition, effect and taker are one `orexis:Action` node in `actions.ttl`; chosen/honoured is a column, and four surfaces became one.
 * [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) - `orexis:Means` read by nothing; the action node is what a row carries and an intention commits to, and the five means are gone.
@@ -126,7 +126,7 @@ Time in the search: an instant, a stretch, a graph holding during a period, a pr
 * [a-prediction-is-a-set-of-bands-that-widens-with-the-horizon](/decisions/a-prediction-is-a-set-of-bands-that-widens-with-the-horizon.md) - A prediction is a set of bands widening with the horizon; a state is a graph with a period, an event a fact about its window.
 * [a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md) - A round holds during its period, a claim is water at a time, a host predicts its arrivals, and a plant asks ahead of its crossing.
 * [a-drift-toward-the-surroundings-is-one-link-and-no-physics](/decisions/a-drift-toward-the-surroundings-is-one-link-and-no-physics.md) - A sample exchanges heat with what surrounds it: one link, a stated rate, the sign of the gap, no physics; the drift says when it crosses.
-* [one-road-derives-every-want](/decisions/one-road-derives-every-want.md) - A desire is one; its met-test's violations are the instances in trouble, clustered by scope into wants; packages write instances and predictions, never wants.
+* [one-function-mints-every-want](/decisions/one-function-mints-every-want.md) - A desire is one; its met-test's violations are the instances in trouble, clustered by scope into wants; packages write instances and predictions, never wants.
 * [an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it](/decisions/an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it.md) - An Always want is a root and law, never pursued; what is pursued is derived from it, and its binding roots the search.
 
 # The market
@@ -215,7 +215,7 @@ each is called, and what a name has to answer to.
 * [a-desire-is-declared-and-a-judgment-is-made](/decisions/a-desire-is-declared-and-a-judgment-is-made.md) - One word named a stored row and a per-pass answer; naming the second let the first become data.
 * [a-situated-instance-is-kept-only-when-it-is-testimony](/decisions/a-situated-instance-is-kept-only-when-it-is-testimony.md) - A long-lived object and situational data about it, three times; only testimony is stored.
 * [an-afforder-is-a-service-between-two-collections](/decisions/an-afforder-is-a-service-between-two-collections.md) - A repository does not ask another; the glue is a service, and it holds no query.
-* [an-update-takes-no-dataset](/decisions/an-update-takes-no-dataset.md) - A query is handed its graphs per call, an update is not: the road may become updates over materialised views; the search chooses, and stays Python.
+* [an-update-takes-no-dataset](/decisions/an-update-takes-no-dataset.md) - A query is handed its graphs per call, an update is not: the derivation may become updates over materialised views; the search chooses, and stays Python.
 * [judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md) - One function over the store, held to a snapshot: it judges every desire and mints the wants, with nothing written between them.
 * [the-service-is-the-page](/decisions/the-service-is-the-page.md) - A service page carries its process, repositories and graph types; the shared dictionary does not fold into it.
 

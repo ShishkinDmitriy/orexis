@@ -101,7 +101,7 @@ def validate_world(world: str) -> bool:
     #
     # Each agent's WANTS arrive through its desire modality (#312): genesis derives none, so
     # the sovereign's check builds per agent exactly what the agent's own boot builds, and
-    # judges the world against it. The pick records travel the same road and only that road —
+    # judges the world against it. The pick records travel the same path and only that one —
     # flattened beside their projections they would split every blank-node aim in two.
     data = graph_from(st, *st.graphs_of(PUBLIC), st.catalogue)
     from orexis_agent_deliberation.beliefs import Beliefs
@@ -139,7 +139,7 @@ def _families_of(query, capability: str | None) -> list[str]:
 def deliberable(st, desires: dict) -> bool:
     """Can every agent in this world actually be deliberated FOR? Refuse here if not.
 
-    There is one road through deliberation now — the search — and a search answers by
+    There is one path through deliberation now — the search — and a search answers by
     simulating each lever and ranking the world it would reach. Two things have to be true
     for that to mean anything, and neither is a fact about this world alone: every lever on
     an agent's menu must have an effect rule to simulate, and every stake it holds must have
@@ -148,7 +148,7 @@ def deliberable(st, desires: dict) -> bool:
     measures scores the same flat 1.0 in every candidate world, so "no move improves on doing
     nothing" comes back with confidence and the agent stops acting.
 
-    Both used to be survivable at runtime because there was a second road: a partial plan and
+    Both used to be survivable at runtime because there was a second path: a partial plan and
     an unmeasured want both deferred to the reflex, which decided by the gap's sign. Deleting
     the reflex is what makes this a gate. The choice was the sovereign's and it is the same
     one this project keeps taking — refuse at genesis rather than degrade silently — and it

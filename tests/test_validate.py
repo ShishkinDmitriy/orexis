@@ -4,7 +4,7 @@ Every other check in this project asks whether the world's own files hold togeth
 ask something the files cannot answer alone — whether the PACKAGES this checkout loads can
 actually deliberate for the agents this world declares. Both became gates when the reflex was
 deleted: each was a case where the search could not answer and handed the question to a second
-road, and with the second road gone the honest place to catch them is before a society starts.
+path, and with the second path gone the honest place to catch them is before a society starts.
 
 See knowledge/decisions/a-plan-is-a-path-of-graph-diffs.md.
 """
@@ -139,7 +139,7 @@ def test_the_gate_asks_the_packages_and_never_builds_an_agent(monkeypatch):
     An `Agent` refuses to construct without the series credentials `orexis-influx` mints — and
     onboarding mints them AFTER validating, so a gate that built one to interrogate it would
     require the thing it exists to run before. The class-level roll-call is what avoids that,
-    and this is the assertion that says the road stays open: with no credentials in the
+    and this is the assertion that says the path stays open: with no credentials in the
     environment at all, the gate still answers.
     """
     monkeypatch.delenv("INFLUX_BUCKET", raising=False)

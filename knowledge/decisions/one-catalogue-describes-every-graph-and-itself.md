@@ -46,7 +46,7 @@ anything to has none, and then has no public knowledge, no own graphs and no per
 it always was. Genesis creates it (`genesis.ensure_catalogue`) and is the one writer that
 spells its name, `graph/catalogue`, because the thing that creates a graph has to call it
 something. Every other reader and writer takes the name from the door, `store.catalogue`, and
-uses it in a `GRAPH` clause: the road asking which graphs are of a family, the ledger asking
+uses it in a `GRAPH` clause: the derivation asking which graphs are of a family, the ledger asking
 whether a claim's window has ended.
 
 **A writer classifies what it writes, in the same update.** `Store.classify` writes a row;

@@ -3,9 +3,9 @@
 # `pytest packages/orexis-agent-deliberation/tests --update-snapshots` — review the diff; it is the claim.
 # a_content_tank_wants_nothing
 #
-# Every tank inside its ranges, nothing foreseen: the road mints nothing.
+# Every tank inside its ranges, nothing foreseen: the derivation mints nothing.
 #
-# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .

@@ -37,10 +37,10 @@ INSERT { GRAPH $derived {
         rdfs:label "no overdue debts — every claim I issued honoured before its window closes" ;
         rdfs:comment "The standing rule a host holds over its own ledger. A claim arriving derives a want under it, to close that debt before its window closes; the desire itself is never pursued." ;
         #  THE MET-TEST, askable now that overdue is an instant the door can be asked at
-        #  (one-road-derives-every-want): the ledger writes, beside each debt, a PREDICTION
+        #  (one-function-mints-every-want): the ledger writes, beside each debt, a PREDICTION
         #  that it lapses at its deadline — a graph holding from that instant on. A debt with a
         #  lapse in view is the violation; asked at the prediction's start, the row names the
-        #  debt and the instant, and the road mints the want that must hold AT it. Asked now,
+        #  debt and the instant, and the derivation mints the want that must hold AT it. Asked now,
         #  no prediction holds yet and every debt with time to run reads met — which is what
         #  "no OVERDUE debts" was always supposed to say.
         orexis:metWhen ?honoured .
@@ -76,16 +76,16 @@ INSERT { GRAPH $derived {
         #  not askable without a clock today: the door already hides a debt whose window has
         #  closed (#645), so a select over what a reader sees cannot find one; and
         #  `market:lapsedAt`, which the record keeps, is PERMANENT — a desire tested on it
-        #  would read unmet for ever after a single miss, and the pursuit road would derive a
+        #  would read unmet for ever after a single miss, and the derivation would derive a
         #  want under it on every pass. A rule may not ask `NOW()` (#646): a possible world is
         #  judged at the instant a pass chose, and a rule that read the wall clock would answer
-        #  about a world nobody is in. What makes the test expressible is the crossing road —
+        #  about a world nobody is in. What makes the test expressible is the crossing —
         #  the desire asked at the start of each prediction the agent holds — which is #675,
         #  and the market already writes ledger-derived predictions (#626) for it to use.
         #
         #  Until then this desire is what the wants under it point AT: the standing rule that
         #  says why a debt is worth closing, and the node `prov:wasDerivedFrom` lands on. It is
-        #  never unmet, so nothing is ever derived under it by the road, and the ledger stays
+        #  never unmet, so nothing is ever derived under it, and the ledger stays
         #  the only deriver — which is what was chosen for now.
         rdfs:seeAlso <https://github.com/ShishkinDmitriy/orexis/issues/675> .
 } }

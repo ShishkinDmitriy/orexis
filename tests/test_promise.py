@@ -1,6 +1,6 @@
 """A promise the level beneath keeps (#523, a-level-is-a-vocabulary-and-a-bridge). A step of
 an action nobody takes, with a bridge declared for it, raises its predicted fact — translated
-through the bridge — as a want this agent holds, pursued by the ordinary road over the actions
+through the bridge — as a want this agent holds, pursued by the ordinary path over the actions
 that are taken; the step waits on the same fact, and its verdict withdraws the promise and
 writes the coarse fact the bridge says is the same thing."""
 from __future__ import annotations

@@ -11,7 +11,7 @@ description: >-
 
 # What it is
 
-`actuation:tolerance`, and its twin `market:tolerance` for a bought lot. **Not on the core's road
+`actuation:tolerance`, and its twin `market:tolerance` for a bought lot. **Not on the core's path
 since #579**: a step predicts the [band](/domain/band.md) its reading will be in, and the world
 either shows a reading that is one or does not, so nothing is widened at verification and the
 keeper takes no tolerance from any actor. What the term still governs is a package's own

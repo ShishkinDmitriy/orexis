@@ -20,8 +20,8 @@ timestamp: 2026-09-19T18:00:00Z
 
 # The question
 
-The sovereign, after the road's cases were held to snapshots of the whole store: make the road
-functions over the triple store. Each reads what it needs and inserts into a graph of its own,
+The sovereign, after the derivation's cases were held to snapshots of the whole store: make
+them functions over the triple store. Each reads what it needs and inserts into a graph of its own,
 with provenance and time; the SHACL results go to the store as well; and a judgment says
 satisfied or not, and only where not carries the results. A function is about ALL the desires
 — it may iterate inside where that is better — and the contract is only that after the call,
@@ -82,7 +82,7 @@ two paths that could disagree — and it is a filter over the judgment rows now.
 
 **A crossing is therefore what the last judging found.** During a pass that is what is true
 now, since `pursuit` judges before it asks. Elsewhere, whoever moves a premise says so: the
-ledger already asked the road when a claim arrived, and asks it when a debt is paid, since the
+ledger already asked the derivation when a claim arrived, and asks it when a debt is paid, since the
 prediction that debt would lapse has gone. A reader that has never judged is handed nothing
 rather than a second opinion, which is why the tests that ask cold judge first and say so.
 
@@ -135,13 +135,13 @@ one in `packages/orexis-agent-deliberation/tests/derive_wants/` is the judged st
 scope is, whatever stands — and nothing of the world that was judged, so a case that gave the
 function more would not be testing its contract. Beside each, `<case>.snapshot.trig` is the
 whole store afterwards in the case's own order, and `diff` of case against snapshot is what the
-function did. All eleven cases leave the wants, classifications and periods the one-function
-road left.
+function did. All eleven cases leave the wants, classifications and periods the earlier pair
+left.
 
 # What was refused
 
 **A view per instant.** [an-update-takes-no-dataset](/decisions/an-update-takes-no-dataset.md)
-drew the road as updates on two conditions, one of them a copy of the world per foreseen
+drew the derivation as updates on two conditions, one of them a copy of the world per foreseen
 instant so the met-test could run inside one `GRAPH`. A witness carries its instant, so the
 dataset per instant is chosen where the record said choice must stay — the door, in Python.
 The view is not needed.
@@ -244,7 +244,7 @@ one type to fold it onto.
   milliseconds. Refused with it: judging from progression on a task of its own, which keeps
   the handler fast and buys a scheduled task and a staleness window of its own.
 - **A write through the engine announces nothing.** `Wants.save` tells its listeners and the
-  desire modality rebuilds; the road writes through `wants.save_want` and tells nobody, so
+  desire modality rebuilds; the derivation writes through `wants.save_want` and tells nobody, so
   `pursuit.derived` rebuilds the projection when something was minted. One caller does it
   today. Whether the store should emit an event for a write it did not make — `on_write` has
   the same gap — is not settled here.

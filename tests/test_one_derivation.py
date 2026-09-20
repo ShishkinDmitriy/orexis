@@ -1,15 +1,15 @@
-"""One road derives every want, and the market's debts come by it too.
+"""One-function-mints-every-want, and the market's debts come by it too.
 
 The ledger used to mint the want beside the debt — a second deriver, with a second trigger,
 reaching the same graph family by a different door (#675). It writes the DEBT and a PREDICTION
 now: that the debt lapses at its deadline, a graph holding from that instant. The host's desire,
 *no overdue debts*, carries a met-test whose violations are debts with a lapse in view; asked at
-the prediction's start, its rows name the debt and the instant, and the pursuit road mints the
+the prediction's start, its rows name the debt and the instant, and the derivation mints the
 want that must hold AT it — exactly as a want under a region desire is minted from a reading and
-what the drift predicts of it. The ledger then speaks for the road's want: how far its claim's
+what the drift predicts of it. The ledger then speaks for the derivation's want: how far its claim's
 window has run, whom it is owed to, whether the holder has asked.
 
-See knowledge/decisions/one-road-derives-every-want.md.
+See knowledge/decisions/one-function-mints-every-want.md.
 """
 
 from __future__ import annotations
@@ -42,9 +42,9 @@ def _want_for(agent, jti):
                  if any(a.endswith(f"obligation.{jti}") for a in w.about)), None)
 
 
-def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_road_mints_the_want(monkeypatch):
+def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_derivation_mints_the_want(monkeypatch):
     """The whole of it: a claim arrives; the ledger writes the debt and predicts its lapse and
-    asks the road; the desire's select names the debt at that instant; the road mints one want
+    asks the derivation; the desire's select names the debt at that instant; it mints one want
     about that debt, holding at the deadline; and the ledger speaks for it."""
     agent, ledger, root = _host(monkeypatch)
     assert agent.wants.find_all_pursued() == []
@@ -52,8 +52,8 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_road_mints_the_
     debt = ledger.owe("fern", "jti-1", expires_at=deadline, amount_l=1.0)
     assert debt is not None
 
-    #  THE LEDGER WROTE NO WANT: the debt is an instance, typed as nothing the road reads,
-    #  and the want that stands is the ROAD's — in deliberation's family, derived from the
+    #  THE LEDGER WROTE NO WANT: the debt is an instance, typed as nothing the derivation
+    #  reads, and the want that stands is the DERIVATION's — in deliberation's family, from the
     #  desire, minted on the ledger's ask and not by its hand.
     assert not bindings(agent.beliefs.query_union(
         f"SELECT ?t WHERE {{ <{debt}> a ?t . FILTER(STRSTARTS(STR(?t), '{OREXIS}')) }}")), \
@@ -76,7 +76,7 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_road_mints_the_
     assert judged.state == "standing" and not judged.pursuable
     presented = next(j for j in agent.pursuing() if j.uri == want.uri)
     assert presented.claim == "jti-1" and presented.desire == root, \
-        "the choir's judgment, under the road's provenance"
+        "the choir's judgment, under the derivation's provenance"
 
 
 def test_presenting_makes_the_roads_want_pursuable_and_paying_withdraws_its_ground(monkeypatch):
@@ -97,7 +97,7 @@ def test_a_second_claim_is_a_second_want_and_the_first_stands(monkeypatch):
     """Per INSTANCE, which the greenhouse could not show: two debts are two focus nodes of the
     desire's shape, so two clusters and two wants, each holding at its own deadline — the
     second is not filtered away by the first's crossing. And standing on either want tops up
-    nothing: the road is idempotent over what already stands."""
+    nothing: the derivation is idempotent over what already stands."""
     agent, ledger, root = _host(monkeypatch)
     ledger.owe("fern", "jti-3", expires_at=time.time() + HOUR, amount_l=1.0)
     ledger.owe("fern", "jti-4", expires_at=time.time() + 2 * HOUR, amount_l=1.0)
@@ -114,12 +114,12 @@ def test_a_second_claim_is_a_second_want_and_the_first_stands(monkeypatch):
 
 
 def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(monkeypatch):
-    """A claim with a deadline is a want AT its lapse — the road read that off the prediction —
+    """A claim with a deadline is a want AT its lapse — the derivation read that off the prediction —
     and a plan for a want at an instant is placed to land at it (#619). Then the holder
     presents, an hour early. The debt is in violation NOW, and a want still saying "hold at
     the lapse" would have the serve placed at the deadline less the pour while the buyer
     waits: hosting's own presentation path served now, and a pass from `pursuing()` did
-    not. The road re-mints the want with no instant, under the same name, and a pass from
+    not. The derivation re-mints the want with no instant, under the same name, and a pass from
     either door serves now."""
     from orexis_agent_progression import clock
 
@@ -134,7 +134,7 @@ def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(mon
     assert now.uri == foreseen.uri and now.about == (debt,), "the same want, re-minted"
     assert now.holds_at is None, "at no instant: the holder is waiting"
     derive_wants(agent.beliefs.engine)
-    assert derive_wants(agent.beliefs.engine) == [], "and the road is idle again"
+    assert derive_wants(agent.beliefs.engine) == [], "and the derivation is idle again"
 
     presented = next(j for j in agent.pursuing() if j.uri == now.uri)
     assert presented.holds_at is None and presented.pursuable

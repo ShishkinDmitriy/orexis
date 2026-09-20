@@ -16,7 +16,7 @@
 # the fern is not in it, so the desire is violated through where the fern stands. The row names
 # the FERN — the focus node the shape targets — and says which way, `orexis:violationIs`.
 #
-# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .

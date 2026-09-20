@@ -1,6 +1,6 @@
 # outside_the_range_picked_as_ideal
 #
-# THE DESIRE IS GENERIC AND THE WANTS ARE SPECIFIC, which is the shape the road exists for.
+# THE DESIRE IS GENERIC AND THE WANTS ARE SPECIFIC, which is the shape the derivation exists for.
 #
 # A plant is surrounded by samples — its soil, its air — and each sample has properties somebody
 # watches. The plant states several ranges for each: what it SURVIVES, what it OPERATES in, what
@@ -59,7 +59,7 @@
 # per property exactly as the greenhouse's world file does. One word is nobody's yet and stays
 # this case's: which range is picked as ideal for the period the plant is in.
 #
-# The clock stands at 2026-01-01T12:00:00Z when the road runs.
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .

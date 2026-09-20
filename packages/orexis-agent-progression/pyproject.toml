@@ -9,7 +9,7 @@
 [project]
 name = "orexis-agent-progression"
 version = "0.1.0"
-description = "The progression layer — the store engine, the intention ledger, its patience, the scheduler and the road from a committed act to its actor"
+description = "The progression layer — the store engine, the intention ledger, its patience, the scheduler and the path from a committed act to its actor"
 requires-python = ">=3.10"
 dependencies = [
     # `assembly` — the store reads every package's namespaces off the loader, and the keeper

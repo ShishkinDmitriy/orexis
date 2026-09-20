@@ -94,7 +94,7 @@ def test_a_pass_after_a_step_taken_as_predicted_resumes_the_cone_and_finds_the_t
 
 def test_a_present_that_matches_no_kept_world_starts_from_nothing(monkeypatch):
     """The parcel is moved while the van drives: no imagined world holds that, so the cone is
-    dead and the pass is built afresh — the road every pass took before #553."""
+    dead and the pass is built afresh — the path every pass took before #553."""
     agent = _driver(monkeypatch, "c0_0", "c1_2")
     planner = Planner(agent, agent.me)
     first = planner.plan(_goal(agent))

@@ -1,4 +1,4 @@
-"""Execution: plan, commit the head as an intention, hand it to its actor — one road.
+"""Execution: plan, commit the head as an intention, hand it to its actor — one path.
 
 knowledge/decisions/an-intention-is-a-plan-committed-to.md. What these pin is the seam and
 not the search: an intention carries the lever the plan chose, every trigger goes through the

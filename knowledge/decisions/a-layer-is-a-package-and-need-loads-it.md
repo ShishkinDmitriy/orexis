@@ -100,7 +100,7 @@ kept for capabilities; see the struck seam below):
 
 - **`packages/orexis-agent-reactive/`** — the queue and the one loop that drains it. NEW,
   not moved: nothing in `agent/` was this. The author's definition is sharper than the
-  "execution — the acts and the actor road" the superseded record sketched and wins: reactive
+  "execution — the acts and the actor path" the superseded record sketched and wins: reactive
   "should contain only queue and constantly executing it". It imports nothing of ours.
 - **`packages/orexis-agent-progression/`** — the intention ledger and the keeper, the
   act and the commitment, the scheduler thread and the timer, the doing half of execution,

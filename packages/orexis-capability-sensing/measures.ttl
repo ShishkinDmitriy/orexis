@@ -34,7 +34,7 @@
 #  where it does not). The asymmetry is deliberate and old: how bad it is to be 0.05 out
 #  depends on how much room there is in that direction.
 
-#  TWO declarations now, and they resolve by different roads because they are measures of
+#  TWO declarations now, and they resolve by different paths because they are measures of
 #  different KINDS of thing. A region want is about a PROPERTY, and what that property is is a
 #  fact the world holds, so `sosa:ObservableProperty` is asked of whichever world is being
 #  judged. A freshness want is about KNOWING, and no world holds a type for that: the want

@@ -1,18 +1,18 @@
 ---
 type: Decision
-title: An update takes no dataset, so the road may become rules and the search may not
+title: An update takes no dataset, so the derivation may become rules and the search may not
 description: >-
   Asked why an agent reads objects out of its store and writes them back when a graph store
   has no schema and a derivation is an INSERT WHERE. The round-trip is smaller than it looks
   - a repository here is four selects and a dataclass - and the Python that matters chooses
   rather than copies. Measured against the engine, one thing separates the two. A query is
   handed its dataset per call, which is how a reader hands a query the graphs of the kinds
-  it means holding at an instant; an update names its graphs only in its own text. So the pursuit road, whose
+  it means holding at an instant; an update names its graphs only in its own text. So the derivation, whose
   every step is a function of the data, may become two updates once the scope partition and
   the view per instant are materialised as graphs; the search, whose every step is a choice
   - an order, a budget, a stop - may not, and was refused. The line is stated once - a rule
   for what is a function of the data, Python where a dataset is chosen or an order is - and
-  a rule road keeps the loud select in front of the silent insert.
+  a derivation written as rules keeps the loud select in front of the silent insert.
 status: accepted
 timestamp: 2026-09-18T20:00:00Z
 ---
@@ -20,7 +20,7 @@ timestamp: 2026-09-18T20:00:00Z
 # The question
 
 Asked by the sovereign after the ledger stopped minting wants
-([one-road-derives-every-want](/decisions/one-road-derives-every-want.md)): why read objects
+([one-function-mints-every-want](/decisions/one-function-mints-every-want.md)): why read objects
 out of the triple store into Python and move them back? A relational store limits a writer to
 its schema; a graph store does not, and a derivation is an `INSERT … WHERE` — new nodes and
 links from the ones there. Could one update mint the wants under a desire? Could one update fork
@@ -31,7 +31,7 @@ they rule executors that happen to hold a dataclass in the middle?
 
 `Wants` is four selects and a `Want`; `mint` is three selects and a `save`, which is itself an
 update. That is a few milliseconds and a few dozen lines, and nothing here defends it. The
-Python on the road that matters does not copy, it CHOOSES: which graphs are the world at the
+Python that matters does not copy, it CHOOSES: which graphs are the world at the
 instant a witness is read (the door,
 [a-rule-is-asked-about-a-world-not-about-a-store](/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md)),
 which witnesses one action could move together (the [scope](/domain/scope.md) partition,
@@ -53,7 +53,7 @@ Measured against pyoxigraph 0.5.9, which is the engine every agent runs:
   that graph, which is the trap the door exists to keep out of rule text: the doubled clauses
   and the `UNION` that #666 deleted.
 
-Everything else the road does is expressible. A want's name is `IRI(CONCAT(…))`; the instant
+Everything else the derivation does is expressible. A want's name is `IRI(CONCAT(…))`; the instant
 it holds at is `MIN(?at)` per cluster; what it is about is `GROUP_CONCAT(STR(?about))` (over
 the IRI it binds nothing — the trap AGENTS.md records); what already stands is
 `FILTER NOT EXISTS { ?w prov:wasDerivedFrom ?root ; orexis:about ?a }`; the label, the points
@@ -61,7 +61,7 @@ copied from the root, the period from the keeper's patience are all reads of the
 The dataset is a parameter of a query and a constant of an update, and that is the whole
 difference.
 
-# The road may become two updates, on two conditions
+# The derivation may become two updates, on two conditions
 
 **The scope partition is data.** It is a function of the actions loaded and the edges their
 rules read, neither of which changes while the agent runs; today it is recomputed in Python
@@ -75,7 +75,7 @@ does not bite, and the select the compiler emits is unchanged. A copy per instan
 already does; forking was measured at a tenth of a percent of a pass
 ([the-mutable-slice-was-narrowed-and-not-taken](/decisions/the-mutable-slice-was-narrowed-and-not-taken.md)).
 
-With both, the road is two updates and no Python object: the views, then one
+With both, the derivation is two updates and no Python object: the views, then one
 `INSERT { the want } WHERE { SELECT ?scope ?instance (MIN(?at)) (GROUP_CONCAT(STR(?about))) …
 GROUP BY ?scope ?instance }` with `$now` and the instants bound in by the same binder every
 rule takes its tokens through. What stays in Python is rendering that text — which is not a
@@ -118,12 +118,12 @@ refused above. The repository stays what it was named for
 ([a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md)), and its `save`
 is the update it always was.
 
-# The cost a rule carries, and how a rule road pays it
+# The cost a rule carries, and how a derivation written as rules pays it
 
 The most repeated bug class in this project is a query that binds nothing and says nothing —
 half the traps in AGENTS.md are one. An `INSERT … WHERE` that mints no want is silent in exactly
-that way, where the Python road logs the page it read and says which desire reads unmet and
-what it is pursuing. A rule road therefore runs its `WHERE` as a SELECT first — logged, and what
+that way, where the Python logs the page it read and says which desire reads unmet and
+what it is pursuing. A derivation written as rules therefore runs its `WHERE` as a SELECT first — logged, and what
 the tests assert on — and inserts second. That is a round-trip of rows, not of objects, and it
 is the price of hearing an empty result.
 

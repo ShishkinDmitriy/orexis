@@ -220,7 +220,7 @@ class Imaginarium:
                         f"WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}", forget=False)
         #  Retraction after the copy rather than during it, and by TERM rather than by text: a
         #  DELETE DATA would have to re-serialise every literal with its datatype, which is the
-        #  road `effects._triple` already got wrong once in the other direction. The lists are
+        #  mistake `effects._triple` already made once in the other direction. The lists are
         #  a handful of triples, so a loop here costs nothing.
         self.amend(name, added, retracted)
         return name

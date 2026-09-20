@@ -39,7 +39,7 @@ record overturns that seam — the acceptance, not the ruling it was a seam of.
   `agent/desire.py`, `agent/intentions.py`: the modalities every layer meets at, importing no
   layer. The layers mostly do not call each other; they meet at the belief base, which is why
   this tree is the floor rather than a peer (#451);
-- **execution** — the acts and the actor road: dumb carrying-out, returning what happened,
+- **execution** — the acts and the actor path: dumb carrying-out, returning what happened,
   asking nothing;
 - **progression** — the keeper, commitment, upkeep: timers, patience, verification, suspension;
 - **deliberation** — the deliberator, the planner, the imaginarium, the afforder, the effects:

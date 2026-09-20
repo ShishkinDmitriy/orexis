@@ -113,7 +113,7 @@ are built under it (#642, #643, #639, #632).
    ([#632](https://github.com/ShishkinDmitriy/orexis/issues/632), built): a reading inside
    the bands the first prediction typed is absorbed, one outside wakes a pass that names the
    surprise (`reviser.observed`, sensing handing it the two sets), a missed window takes the
-   freshness road, and the actuator's mark on every reading retired with it.
+   freshness path, and the actuator's mark on every reading retired with it.
 3. The crossing is taken in the safe direction
    ([#633](https://github.com/ShishkinDmitriy/orexis/issues/633), built inside #643): the
    crossing is the start of the earliest prediction at which the root reads unmet, and a
