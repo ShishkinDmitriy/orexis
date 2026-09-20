@@ -216,7 +216,7 @@ each is called, and what a name has to answer to.
 * [a-situated-instance-is-kept-only-when-it-is-testimony](/decisions/a-situated-instance-is-kept-only-when-it-is-testimony.md) - A long-lived object and situational data about it, three times; only testimony is stored.
 * [an-afforder-is-a-service-between-two-collections](/decisions/an-afforder-is-a-service-between-two-collections.md) - A repository does not ask another; the glue is a service, and it holds no query.
 * [an-update-takes-no-dataset](/decisions/an-update-takes-no-dataset.md) - A query is handed its graphs per call, an update is not: the road may become updates over materialised views; the search chooses, and stays Python.
-* [judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md) - The road is two functions over the store, each held to a snapshot; judgments are SHACL reports in a working graph, wants derived from them alone.
+* [judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md) - One function over the store, held to a snapshot: it judges every desire and mints the wants, with nothing written between them.
 * [the-service-is-the-page](/decisions/the-service-is-the-page.md) - A service page carries its process, repositories and graph types; the shared dictionary does not fold into it.
 
 # Hardware — boards, parts and wiring

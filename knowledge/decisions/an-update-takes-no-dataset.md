@@ -129,13 +129,12 @@ is the price of hearing an empty result.
 
 # What is left
 
-- The trial, on the road alone, reshaped by
-  [judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md): the
-  judgments are written to the store by `judge_desires` — the loud select made durable, the
-  dataset per instant chosen by the door in Python — so `derive_wants` is a function of the
-  judgment graph alone and needs no view per instant; and `scope_actions` writes the
-  scope partition to the store at boot, so it is data. What is left of the trial is the
-  derivation itself as one update. A/B alternated within one session, as this bench requires.
+- The trial, on the derivation alone, reshaped by
+  [judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md):
+  `derive_wants` chooses the dataset per instant at the door, in Python, so it needs no view
+  per instant; and `scope_actions` writes the scope partition to the store at boot, so it is
+  data. What is left of the trial is the derivation itself as one update. A/B alternated
+  within one session, as this bench requires.
 
 # Seams left open
 
