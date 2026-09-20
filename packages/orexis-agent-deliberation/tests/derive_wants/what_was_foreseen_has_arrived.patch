@@ -1,0 +1,28 @@
+--- case
++++ expected
+@@ -45,13 +45,11 @@
+   :keeper orexis:holds :keeper.in_range.pursued.tank1.level .
+   :keeper.in_range.pursued.tank1.level a orexis:Want .
+   :keeper.in_range.pursued.tank1.level orexis:about :level .
+-  :keeper.in_range.pursued.tank1.level orexis:holdsAt "2026-01-01T12:30:00+00:00"^^xsd:dateTime .
+   :keeper.in_range.pursued.tank1.level orexis:metWhen :keeper.in_range.pursued.tank1.level.met .
+-  :keeper.in_range.pursued.tank1.level prov:generatedAtTime "2026-01-01T11:00:00+00:00"^^xsd:dateTime .
+   :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
+   :keeper.in_range.pursued.tank1.level rdfs:label "pursued: every tank in range" .
+   :keeper.in_range.pursued.tank1.level.met a sh:NodeShape .
+-  :keeper.in_range.pursued.tank1.level.met sh:property [ sh:minInclusive 10 ; sh:path :level ] .
++  :keeper.in_range.pursued.tank1.level.met sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+   :keeper.in_range.pursued.tank1.level.met sh:targetNode :tank1 .
+ }
+ 
+@@ -83,6 +81,9 @@
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
+   pursued:keeper.in_range.pursued.tank1.level a deliberation:PursuedGraph .
+-  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
++  pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
++  pursued:keeper.in_range.pursued.tank1.level a orexis:WantGraph .
++  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+   pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Recorded .
++  pursued:keeper.in_range.pursued.tank1.level orexis:beliefsOf :keeper .
+ }

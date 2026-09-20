@@ -1,8 +1,8 @@
-"""`init_imaginarium`, one case per file, held to a snapshot of the store it FILLS.
+"""`init_imaginarium`, one case per file, held to a PATCH of the store it FILLS.
 
 A case in `init_imaginarium/` is a belief base: its graphs, and a catalogue saying what each one is.
 The function fills a second, empty store with what no step may change, and
-`<case>.snapshot.trig` is that second store — so `diff` of case against snapshot is exactly
+`<case>.patch` is that second store — so `diff` of case against snapshot is exactly
 what crossed and what did not.
 
 THE DIFF READS AS THE FAILURE MODE. A graph that did not make it shows as `# DROPPED:`, and
@@ -38,10 +38,9 @@ PRIVATE = {"a_named_private_graph_crosses_too": ("http://example.org/test#sensed
 def test_init_imaginarium_fills_the_store_as_the_snapshot_says(case, monkeypatch, request, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     agent = snapshots.stand_in(case)
-    before = snapshots.snapshot_of(agent.beliefs)
     into = Store()
     init_imaginarium(agent.beliefs.engine, into.engine, *PRIVATE.get(case.stem, ()))
-    snapshots.held_to(case, request, "init_imaginarium", before, snapshots.snapshot_of(into))
+    snapshots.held_to_patch(case, request, "init_imaginarium", snapshots.snapshot_of(into))
 
 
 def test_every_case_is_read_and_no_snapshot_is_orphaned(snapshots):

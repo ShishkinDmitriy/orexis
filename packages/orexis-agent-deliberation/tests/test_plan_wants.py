@@ -1,7 +1,7 @@
-"""One search per case file, held to a snapshot of the whole store it leaves.
+"""One search per case file, held to a PATCH of the store it leaves.
 
 A case in `plan_wants/` is a world with a want standing in it and the levers that could serve
-it — loaded into a bare store, searched, and the plan written down. `<case>.snapshot.trig`
+it — loaded into a bare store, searched, and the plan written down. `<case>.patch`
 beside it is the whole store afterwards, so `diff` of case against snapshot is exactly what
 one pass decided: the trace it left, and the plan it found.
 
@@ -37,13 +37,12 @@ TOOK = "http://example.org/orexis/deliberation#tookSeconds"
 def test_a_pass_leaves_the_store_as_the_snapshot_says(case, monkeypatch, request, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     agent = snapshots.stand_in(case)
-    before = snapshots.snapshot_of(agent.beliefs)
     for want in agent.wants.find_all_pursued():
         write_plan(agent.beliefs.engine, want.uri, Planner(agent, agent.me).plan(want))
     agent.beliefs.update(
         f"DELETE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?s <{TOOK}> ?v }} }} "
         f"WHERE  {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?s <{TOOK}> ?v }} }}")
-    snapshots.held_to(case, request, "a pass", before, snapshots.snapshot_of(agent.beliefs))
+    snapshots.held_to_patch(case, request, "a pass", snapshots.snapshot_of(agent.beliefs))
 
 
 def test_every_case_is_read_and_no_snapshot_is_orphaned(snapshots):

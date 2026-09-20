@@ -418,10 +418,10 @@ def held_to_patch(case: Path, request, function: str, after: dict) -> None:
         + f"  if the change is on purpose: `{UPDATE}`, then review the patch")
 
 
-def orphans_in(directory: Path) -> list[str]:
-    """Snapshots whose case was deleted or renamed — a file that keeps saying something nobody checks."""
-    return sorted(p.name for p in directory.glob("*.snapshot.trig")
-                  if not (directory / (p.stem.split(".")[0] + ".trig")).exists())
+def orphans_in(directory: Path, suffix: str = ".patch") -> list[str]:
+    """Files whose case was deleted or renamed — one that keeps saying something nobody checks."""
+    return sorted(p.name for p in directory.glob("*" + suffix)
+                  if not (directory / (p.name[:-len(suffix)] + ".trig")).exists())
 
 
 @pytest.fixture

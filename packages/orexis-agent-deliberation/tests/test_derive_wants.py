@@ -1,10 +1,10 @@
-"""`derive_wants`, one case per file, held to a snapshot of the whole store it leaves.
+"""`derive_wants`, one case per file, held to a PATCH of the store it leaves.
 
 A case in `derive_wants/` is the world as an agent finds it — the topology, the desire with its
 met-test, what the instruments read now, what is foreseen and from when, the scopes its levers
 make, and whatever already stands — loaded into a bare store. The function judges every desire
 at the present and, where it reads met there, at every instant a prediction reaches, and mints
-a want for each cluster of what the met-tests read unmet; `<case>.snapshot.trig` beside the
+a want for each cluster of what the met-tests read unmet; `<case>.patch` beside the
 case is the whole store afterwards, in the case's own order, so `diff` of case against snapshot
 is exactly what it did.
 
@@ -34,9 +34,8 @@ CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 def test_derive_wants_leaves_the_store_as_the_snapshot_says(case, monkeypatch, request, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     agent = snapshots.stand_in(case)
-    before = snapshots.snapshot_of(agent.beliefs)
     derive_wants(agent.beliefs.engine)
-    snapshots.held_to(case, request, "derive_wants", before, snapshots.snapshot_of(agent.beliefs))
+    snapshots.held_to_patch(case, request, "derive_wants", snapshots.snapshot_of(agent.beliefs))
 
 
 def test_every_case_is_read_and_no_snapshot_is_orphaned(snapshots):
