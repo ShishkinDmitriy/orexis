@@ -49,12 +49,15 @@ GRAPH graph:pass {
   graph:sensed a deliberation:PossibleWorld ;
       deliberation:atDepth 0 ;
       deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
-      deliberation:expanded true ;
       deliberation:minted 0 ;
-      deliberation:remaining 0.0 ;
       deliberation:signature "bb7208bc9b5d7c04" ;
       deliberation:spent 0.0 ;
       deliberation:takes 0.0 ;
+      deliberation:weighed graph:sensed.for.in_range.pursued.tank1 .
+  graph:sensed.for.in_range.pursued.tank1 a deliberation:Weighing ;
+      deliberation:expanded true ;
+      deliberation:forWant :in_range.pursued.tank1 ;
+      deliberation:remaining 0.0 ;
       deliberation:wouldReach 1.0 .
   possible:Pouring-pump-level a deliberation:PossibleWorld ;
       deliberation:atDepth 1 ;
@@ -62,12 +65,15 @@ GRAPH graph:pass {
       deliberation:from graph:sensed ;
       deliberation:meets :in_range.pursued.tank1 ;
       deliberation:minted 1 ;
-      deliberation:remaining 0.0 ;
       deliberation:signature "bf505789bb150461" ;
       deliberation:spent 9.0 ;
       deliberation:takes 30.0 ;
-      deliberation:wouldReach 0.0 ;
+      deliberation:weighed possible:Pouring-pump-level.for.in_range.pursued.tank1 ;
       progression:by possible:Pouring-pump-level.step .
+  possible:Pouring-pump-level.for.in_range.pursued.tank1 a deliberation:Weighing ;
+      deliberation:forWant :in_range.pursued.tank1 ;
+      deliberation:remaining 0.0 ;
+      deliberation:wouldReach 0.0 .
   possible:Pouring-pump-level.step a progression:Step ;
       deliberation:takes 30.0 ;
       orexis:about :level ;
@@ -80,12 +86,15 @@ GRAPH graph:pass {
       deliberation:lawful true ;
       deliberation:meets :in_range.pursued.tank1 ;
       deliberation:minted 2 ;
-      deliberation:remaining 0.0 ;
       deliberation:signature "bd09153f203e39af" ;
       deliberation:spent 1.0 ;
       deliberation:takes 600.0 ;
-      deliberation:wouldReach 0.0 ;
+      deliberation:weighed possible:Trickling-dripper-level.for.in_range.pursued.tank1 ;
       progression:by possible:Trickling-dripper-level.step .
+  possible:Trickling-dripper-level.for.in_range.pursued.tank1 a deliberation:Weighing ;
+      deliberation:forWant :in_range.pursued.tank1 ;
+      deliberation:remaining 0.0 ;
+      deliberation:wouldReach 0.0 .
   possible:Trickling-dripper-level.step a progression:Step ;
       deliberation:takes 600.0 ;
       orexis:about :level ;
