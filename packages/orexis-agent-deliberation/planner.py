@@ -51,6 +51,7 @@ from orexis_agent_deliberation.want import Want
 
 
 from .affordances import Affordances
+from . import imaginarium
 from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import NAMESPACES, Raw, bind, bindings
@@ -717,7 +718,7 @@ class Planner:
         #  from, but it may be an achiever — a look that changes nothing canonical is one —
         #  and a resumed pass must find it among the kept nodes. `_by_diff` keeps the
         #  cheapest node per world; `_nodes` keeps every settled one.
-        self._nodes.append(step)
+        self._keep(step)
         if novel:
             self._seen[where] = step.cost
             self._by_diff[where] = step
@@ -756,7 +757,7 @@ class Planner:
         Still a world the present may land in (#570), and the plan from inside a forbidden
         state is exactly the recovery never-newly-enter keeps."""
         step.verdict = verdict
-        self._nodes.append(step)
+        self._keep(step)
         self._weighed.append((depth, row, step.urgency, verdict))
         return None
 
@@ -813,7 +814,7 @@ class Planner:
                 for row in rows:
                     step = self._step_from(m, row, judgment, None)
                     if step is not None and step is not TOO_DEAR:
-                        self._nodes.append(step)
+                        self._keep(step)
                         at = signature.where(step.diff, step.ground)
                         if at not in self._seen:
                             self._seen[at] = step.cost
@@ -882,6 +883,13 @@ class Planner:
             #  present's, not the world's to predict, and is not carried into the diff.
             m.diff = (self._project(world - present), self._project(present - world))
             m.taken = m.taken[depth:]
+            #  AND ITS NAME FOLLOWS ITS PATH. A world is named by the path that reached it, so
+            #  a re-root that shortens the path renames the world — `_graph` would have done it
+            #  silently the next time the readings were re-made, leaving whatever had been
+            #  written ABOUT the world under a name nothing would find again. Said here, where
+            #  the path changes, so the name is true from the moment it changes.
+            if m is not node:
+                m.graph = imaginarium.name_of(m.taken)
             m.cost -= cost0
             m.landing -= landing0
             m.origin = m.taken[0].action if m.taken else None
@@ -920,6 +928,10 @@ class Planner:
         self._kept_worlds = len(keep)          # the present among them: one is a leaf resumed
         #  What `_begin` computes AT the root, for the new one.
         self._at_root(node)
+        #  AND THE STORE SAYS THE WHOLE PASS AGAIN. Everything above moved a number in every
+        #  kept row and dropped every row that is not kept; an account amended rather than
+        #  rewritten would offer a reader somewhere to search from that no longer exists.
+        self._renote()
 
     @staticmethod
     def _descends(m, node) -> bool:
@@ -1471,7 +1483,7 @@ class Planner:
         #  from nothing, nothing spent. Without its row the record reads as a forest whose
         #  trees begin nowhere, and a reader taking the next iteration could not tell the
         #  world the search started from apart from one it has never heard of.
-        self._note(here, None, None, None)
+        self._note(here)
         return here
 
     def _projected(self, here, judgment: Want, latest: bool = True):
@@ -1636,10 +1648,20 @@ class Planner:
         #  THE STEP CARRIES WHAT IT PREDICTED (#510): the same canonical facts the signature
         #  is made of, so the keeper can hold the world to this step without an imaginarium.
         step.taken = node.taken + (replace(act, urgency_after=step.urgency, predicts=own),)
-        self._note(step, self._graph(node), act, lands)
         return step
 
-    def _note(self, node, parent: str, act, lands: float | None) -> None:
+    def _keep(self, node) -> None:
+        """A forked world becomes a NODE of the cone — and says so in the store.
+
+        Not every fork does. One already reached more cheaply, or dearer than a plan in hand,
+        is weighed and let go; a row for one of those would be handed to a reader asking what
+        is still open, which is a place to search from the search itself refused. So the rows
+        say what `_nodes` says, and `_renote` can rebuild them from it after a re-root.
+        """
+        self._nodes.append(node)
+        self._note(node)
+
+    def _note(self, node) -> None:
         """Say in the STORE what this pass knows about the world it just made.
 
         What the search knew about a world was a Python object: its parent, what the path had
@@ -1670,6 +1692,21 @@ class Planner:
         """
         if self.imaginarium is None:
             return
+        self.imaginarium.note(self._rows_for(node))
+
+    def _rows_for(self, node) -> list:
+        """One world's row, as quads — what `_note` writes and what `_renote` rebuilds the
+        whole account from after a re-root.
+
+        WHERE IT CAME FROM AND WHAT IT TOOK are read off the node rather than handed in, so
+        the two writers cannot derive them differently: the parent's graph is its NAME and not
+        `self._graph(node.parent)`, which would MATERIALISE the world — a fork per row, for a
+        string. A step's own duration is the difference of two landings, which survives a
+        re-root because both halves are re-based by the same amount.
+        """
+        parent = None if node.parent is None else node.parent.graph
+        act = node.taken[-1] if node.taken else None
+        lands = None if node.parent is None else (node.landing - node.parent.landing)
         D, P = DELIBERATION, PROGRESSION
         me, g = ox.NamedNode(node.graph), ox.NamedNode(PASS_GRAPH)
         def q(s_, p_, o_):
@@ -1709,7 +1746,28 @@ class Planner:
                 out.append(q(step, OREXIS + "about", ox.NamedNode(act.about)))
             if act.quantity is not None:
                 out.append(q(step, P + "quantity", dec(act.quantity)))
-        self.imaginarium.note(out)
+        if node.expanded:
+            out.append(q(me, D + "expanded", ox.Literal("true", datatype=ox.NamedNode(XSD + "boolean"))))
+        return out
+
+    def _renote(self) -> None:
+        """Say the whole pass again, after a re-root has changed what is true of every node.
+
+        A re-root keeps the subtree under the matched world and DROPS the rest, then re-bases
+        what it kept: new depths, new costs, new landings, a new clock, and a new root that
+        stands nowhere. Every number in every row moves, and rows for the dropped worlds must
+        go — a store-driven frontier reading a stale one would offer somewhere to search from
+        that no longer exists.
+
+        `node.graph` and not `self._graph(node)`: the name is what a row says, and asking for
+        the graph MATERIALISES the world, which is a fork per kept node for nothing.
+        """
+        if self.imaginarium is None:
+            return
+        out: list = []
+        for m in self._nodes:
+            out += self._rows_for(m)
+        self.imaginarium.note(out, whole=True)
 
     def _opened(self, node) -> None:
         """Mark a world expanded — its levers tried, its children forked. The ABSENCE of this
