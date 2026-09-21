@@ -1828,7 +1828,7 @@ GROUP BY ?c ?action""", PASS_GRAPH, *self.imaginarium.graphs_of(PUBLIC)))
                 for r in rows]
 
     def _weigh(self, row, world: str, depth: int, verdict: str,
-               urgency: float | None = None, missing=None) -> None:
+               unmet: float | None = None, missing=None) -> None:
         """One candidate weighed, written where it is decided.
 
         IT WAS A PYTHON LIST — `_weighed`, appended to at twelve sites and handed to the trace
@@ -1855,9 +1855,9 @@ GROUP BY ?c ?action""", PASS_GRAPH, *self.imaginarium.graphs_of(PUBLIC)))
                         ox.Literal(str(depth), datatype=ox.NamedNode(XSD + "integer")), g),
                 ox.Quad(weighing, ox.NamedNode(DELIBERATION + "verdict"),
                         ox.Literal(verdict), g)]
-        if urgency is not None:
+        if unmet is not None:
             out.append(ox.Quad(weighing, ox.NamedNode(DELIBERATION + "wouldReach"),
-                               ox.Literal(f"{urgency:.6f}",
+                               ox.Literal(f"{unmet:.6f}",
                                           datatype=ox.NamedNode(XSD + "decimal")), g))
         #  WHAT WAS MISSING, where the verdict is that a remembered plan's precondition does
         #  not hold (#551): the fact, as the signature states it, so a reader is told which
