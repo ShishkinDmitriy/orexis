@@ -131,10 +131,17 @@ def clear(store, agent_id: str, desire_uri: str) -> None:
                     OPTIONAL {{ <{node}> deliberation:considered ?c . ?c ?cp ?co }} }} }}""")
 
 
-def write(store, agent_id: str, judgment, plan, imaginarium, want, stands_at: float,
+def write(store, agent_id: str, judgment, plan, stands_at: float,
           took_s: float = 0.0, judged: tuple[str, str | None] = (UNJUDGED, None),
-          kept: int = 0, surprise: tuple | None = None) -> None:
+          kept: int = 0, surprise: tuple | None = None,
+          *, imaginarium=None, want: str | None = None) -> None:
     """Record one pass: what was weighed, what each would have reached, and what was taken.
+
+    WHERE TO READ FROM IS KEYWORD-ONLY, and the reason is the sentence after this one. A pass
+    that searched passes its imaginarium and its want; a remembered adoption searched nothing
+    and passes neither. Positional, the two were silently filled by whatever the old signature's
+    caller had there — a deliberator handing `[]` and an urgency — and the read raised inside
+    the guard below, so the trace came back EMPTY and nothing said why.
 
     Never raises. A planner that fell over because its debugging aid did would be a poor trade
     for being able to watch it — so a failure here is logged and the decision stands, which is

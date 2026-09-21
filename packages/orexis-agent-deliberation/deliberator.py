@@ -455,8 +455,11 @@ class Deliberator:
         if kept is not None:
             uri, steps, cost = kept
             plan = Plan(REMEMBERED, tuple(steps), judgment.urgency, None, cost=cost)
-            trace.write(self.agent.beliefs, self.agent.id, judgment, plan, [], judgment.urgency, 0.0,
-                        (trace.UNJUDGED, None), surprise=surprise)
+            #  NO IMAGINARIUM AND NO WANT TO ASK ABOUT: nothing was searched, so the pass
+            #  graph holds nothing to read. The trace records the plan and the verdict, which
+            #  is the whole of what a remembered adoption has to say.
+            trace.write(self.agent.beliefs, self.agent.id, judgment, plan,
+                        judgment.urgency, 0.0, (trace.UNJUDGED, None), surprise=surprise)
             self._decided[judgment.uri] = (plan, uri)
             self.log.info("%s: remembered — %d step(s) whose precondition holds here",
                           _short(judgment.uri), len(steps))

@@ -1144,11 +1144,11 @@ class Planner:
         if (judgment.holds_at is not None and plan.steps and self._root is not None
                 and self._root.landing > 0):
             plan = replace(plan, placed_at=self._clock + timedelta(seconds=self._root.landing))
-        trace.write(self.agent.beliefs, self.agent.id, judgment, plan,
-                    self.imaginarium, self._want, stands_at,
+        trace.write(self.agent.beliefs, self.agent.id, judgment, plan, stands_at,
                     time.monotonic() - self._started, self._judged(judgment),
                     kept=getattr(self, "_kept_worlds", 0),
-                    surprise=getattr(self, "_surprise", None))
+                    surprise=getattr(self, "_surprise", None),
+                    imaginarium=self.imaginarium, want=self._want)
         #  THE PASS IS OVER: every imagined graph is dropped (#487, #553), the nodes stay.
         for node in getattr(self, "_nodes", ()):
             self._release(node)
