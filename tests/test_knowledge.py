@@ -22,7 +22,7 @@ because the thing it checks had already gone wrong:
 - an index entry that is an abstract. They averaged 82 words, which is why nothing could be
   found by scanning.
 
-WHY THE ASSERTS ARE AT THE END and never inside the loops: see the root `conftest.py`. A loop
+WHY THE ASSERTS ARE AT THE END and never inside the loops: see the desire `conftest.py`. A loop
 over an empty glob runs its body zero times and passes. Each test here asserts the corpus is
 non-empty FIRST, then asserts on a collected list — so an emptied glob fails loudly instead of
 going green.
@@ -41,7 +41,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parent.parent
 BUNDLE = REPO_ROOT / "knowledge"
 
-# What `type` may say. The bundle root and AGENTS.md both state this list in prose; this is the
+# What `type` may say. The bundle desire and AGENTS.md both state this list in prose; this is the
 # copy that fails when they disagree with the files.
 #
 # FIVE concept types where there were two, and the split was asked for by the pages themselves:
@@ -84,7 +84,7 @@ def frontmatter(path: Path) -> dict:
 
 
 def test_every_frontmatter_parses_as_yaml():
-    """The claim the bundle root makes about itself, held to a real parser rather than a grep."""
+    """The claim the bundle desire makes about itself, held to a real parser rather than a grep."""
     docs = concepts()
     broken = []
     for path in docs:
@@ -383,7 +383,7 @@ def test_no_document_names_a_path_that_is_not_there():
     docs = concepts() + [REPO_ROOT / "README.md", REPO_ROOT / "AGENTS.md"]
     known = _tracked()
     assert docs, "no concept documents found — the glob stopped matching"
-    assert all(d.exists() for d in docs), "a root document moved — README.md or AGENTS.md"
+    assert all(d.exists() for d in docs), "a desire document moved — README.md or AGENTS.md"
     assert known, "git tracks nothing — `git ls-files` stopped answering, and every path below "
     "would read as missing"
 
@@ -699,9 +699,9 @@ def _graphs() -> tuple[set[str], set[str]]:
     #  source, asked with a marker id.
     from orexis_agent_deliberation.ontology import pursued_graph, remembered_graph
     from orexis_agent_progression.graphs import intentions_graph
-    from orexis_agent_progression.ontology import picks_graph, obligations_graph, promises_graph, roots_graph
+    from orexis_agent_progression.ontology import picks_graph, obligations_graph, promises_graph, desires_graph
     from orexis_capability_review.graphs import evidence_graph, revisions_graph, summaries_graph
-    for helper in (picks_graph, roots_graph, promises_graph, obligations_graph, intentions_graph,
+    for helper in (picks_graph, desires_graph, promises_graph, obligations_graph, intentions_graph,
                    pursued_graph, remembered_graph, evidence_graph, revisions_graph, summaries_graph):
         name = helper("x")
         assert name.startswith(_GRAPH_BASE) and name.endswith("x")

@@ -41,7 +41,7 @@ from orexis_agent_progression.store import NAMESPACES, answer, bind, bindings, g
 log = logging.getLogger("judging")
 
 #  EVERY DESIRE THE STORE HOLDS, who holds it and its met-test, from the graphs of desires
-#  holding at the present — the roots graph states no period, the world's asserted graph
+#  holding at the present — the desires graph states no period, the world's asserted graph
 #  none, and a graph of desires with one is read while it holds. A desire, its holder and its
 #  met-test are written together — one rule derives them, one file ratifies them — so the
 #  pattern matches within one graph.

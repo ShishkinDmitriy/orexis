@@ -176,7 +176,7 @@ def test_the_legality_check_agrees_with_the_judge_on_a_shipped_world_and_a_broke
         compiled, judged = _both(planner, agent, broken)
         assert compiled == judged
         assert compiled and compiled != root_compiled, \
-            "the broken world must be refused where the root is not, or the parity proved nothing"
+            "the broken world must be refused where the desire is not, or the parity proved nothing"
     finally:
         planner.imaginarium = None
 

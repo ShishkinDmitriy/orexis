@@ -35,15 +35,15 @@ def _stake(agent):
 
 
 def test_a_pass_that_finds_nothing_at_the_latest_start_stands_at_the_present(monkeypatch):
-    """The third row of #620's table, as the search's own path: the projected root sees no round
-    — the one open now is a graph holding during its period, and the root stands past it — so
+    """The third row of #620's table, as the search's own path: the projected desire sees no round
+    — the one open now is a graph holding during its period, and the desire stands past it — so
     the pass runs again from the present, finds Acquiring, and the plan is not placed, since
     the bid is taken now."""
     agent = _fern(monkeypatch)
     open_round_for(agent, "fern", seconds=60.0)
-    root = _stake(agent)
-    assert root.is_met
-    plan = agent.deliberator.decide(root)
+    desire = _stake(agent)
+    assert desire.is_met
+    plan = agent.deliberator.decide(desire)
     assert plan is not None and [s.action for s in plan.steps] == [ACQUIRING], plan
     assert plan.placed_at is None, "found from the present: taken now, not placed"
     child = _stake(agent)
@@ -57,8 +57,8 @@ def test_the_bid_says_when_the_water_is_wanted(monkeypatch):
     agent = _fern(monkeypatch)
     market = wired_markets(agent)[0]
     open_round_for(agent, "fern", seconds=60.0)
-    root = _stake(agent)
-    assert pursuit.pursue(agent, root) is not None
+    desire = _stake(agent)
+    assert pursuit.pursue(agent, desire) is not None
     bids = agent.sent.to(f"{market.bid_topic}/fern")
     assert bids, "the bid went out now, while the round is open"
     child = _stake(agent)
@@ -74,8 +74,8 @@ def test_a_claim_with_a_window_places_the_presenting(monkeypatch):
     agent = _fern(monkeypatch)
     market = wired_markets(agent)[0]
     open_round_for(agent, "fern", seconds=60.0)
-    root = _stake(agent)
-    uri = pursuit.pursue(agent, root)
+    desire = _stake(agent)
+    uri = pursuit.pursue(agent, desire)
     assert uri is not None
     child = _stake(agent)
     opens = datetime.now(timezone.utc) + timedelta(hours=3)

@@ -1,7 +1,7 @@
 """Every desire this agent holds, as a collection — and the modality whose store holds them.
 
 `Desires` is BOTH, and they sit together because the store it owns IS the collection: a
-projection holding the roots and the records, rebuilt whenever a premise moves. The wants are
+projection holding the desires and the records, rebuilt whenever a premise moves. The wants are
 read straight off the store because the derivation WRITES there, and those writes stale this
 projection; nothing writes a
 declared desire at runtime — they are authored at genesis and projected, never rebuilt (#644) —
@@ -40,8 +40,8 @@ PAGE = 100
 
 #  BOTH KINDS ON PURPOSE, and it is said out loud here because it used to be said by entailment.
 #  The planner keys this map by whatever node it is standing on, and that is USUALLY a want — the
-#  derivation hands it the one derived under a desire — but not always: where a root reads unmet
-#  and nothing can be minted for it, the root itself is what gets planned for. While `orexis:Want`
+#  derivation hands it the one derived under a desire — but not always: where a desire reads unmet
+#  and nothing can be minted for it, the desire itself is what gets planned for. While `orexis:Want`
 #  was a subclass, `?want a orexis:Desire` quietly matched both and nothing said so; the types are
 #  disjoint now (a-kind-is-a-type-not-a-binding), so the query names the two it means.
 #
@@ -59,7 +59,7 @@ _ABOUT_Q = """SELECT ?me ?want ?about WHERE {
 #  rather than a want — but gap, menu and validation all read the two together, and the record
 #  files both under the desires store because what MAY be and what is PURSUED are the two
 #  halves of one question no belief answers.
-#  WHAT THIS MODALITY HOLDS, by kind: the desires (the roots, the promises), the wants (each
+#  WHAT THIS MODALITY HOLDS, by kind: the desires (the agent's own, the promises), the wants (each
 #  pursued child, the world's asserted ones) and the records (the picks, the obligations and
 #  every debt under them) — the picks ARE wants by the sovereign's ruling and a debt is served
 #  as the want it raises. Copied in by these kinds and read back by them.
@@ -67,16 +67,16 @@ HELD = (DESIRE, WANT, RECORD)
 
 
 class Projection(Store):
-    """One rebuild's worth of store: the roots and the records PROJECTED, and nothing else left
+    """One rebuild's worth of store: the desires and the records PROJECTED, and nothing else left
     standing — nothing deduced (#644). Memory, no path — the imaginarium's construction, one
-    lifecycle over. `Deducer` until the roots were seen to be re-derived from a pick.
+    lifecycle over. `Deducer` until the desires were seen to be re-derived from a pick.
 
-    Two moves. Every public graph and every record a want lives in is copied in — the roots
+    Two moves. Every public graph and every record a want lives in is copied in — the desires
     graph genesis authored, the pick record, the obligations, the promises, the pursued
     children — asked by CLASS of the classification each graph's owner wrote, and kept to
     this agent where the store knows whose it is; no name is constructed here (#705). Then
     the public premises that are NOT desire content are dropped, since a store answering
-    "what do I want" must not answer with the topology beside it — leaving the roots, the
+    "what do I want" must not answer with the topology beside it — leaving the desires, the
     world's asserted wants (`graph/desire/asserted`, a public graph a world's TriG may fill)
     and the records.
     """
@@ -88,18 +88,18 @@ class Projection(Store):
         super().__init__()
         now = clock.now()
         publics = list(beliefs.graphs_of(PUBLIC, at=now))
-        #  A PROJECTION, AND NO RULE (#644, a-root-holds-always-and-an-outdated-graph-is-dropped):
-        #  the roots — every Always desire, authored at genesis into the agent's own roots graph
+        #  A PROJECTION, AND NO RULE (#644, a-desire-holds-always-and-an-outdated-graph-is-dropped):
+        #  the desires — every Always desire, authored at genesis into the agent's own desires graph
         #  and holding at every instant — and the records sourced at a time: the picks, the
-        #  debts, the promises, the wants pursued under a root (#618). The packages' desire
-        #  rules ran here on every rebuild until a root was seen to be re-derived from a pick;
+        #  debts, the promises, the wants pursued under a desire (#618). The packages' desire
+        #  rules ran here on every rebuild until a desire was seen to be re-derived from a pick;
         #  they run at genesis now, and this build deduces nothing.
         #  A DEBT AND A PURSUED CHILD ARE GRAPHS OF THEIR OWN, holding during their periods
         #  (#645): every one the door hands at this instant is projected, under the untimed
         #  record it sits beneath, so a lapsed debt and a child past its instant are absent
         #  from this store as they are from every reader.
         #  ASKED BY CLASS, never named, and by what a graph HOLDS: every graph of desires (the
-        #  roots, the promises), every graph of wants (each pursued child), the pick record,
+        #  desires, the promises), every graph of wants (each pursued child), the pick record,
         #  the obligations record and every debt's graph under it — whatever each is called.
         #  The owners classified them; this reads the classification. The world's asserted
         #  graph is a desire and a want graph too, and public: it rides in with the publics.
@@ -131,7 +131,7 @@ class Desires:
 
     Since #312 there is no copy and no selection: genesis derives no wants, the belief base
     holds no desire-modality graphs, and this build is the one place the regions, envelopes,
-    freshness wants and asserted root desires come to exist — from the world, the records,
+    freshness wants and asserted desires come to exist — from the world, the records,
     and the packages' `desires.ru`. The pick record and the obligations record are projected in
     beside them, because the picks ARE wants by the sovereign's ruling and an obligation is this
     agent's debts record, served as the wants they raise.
@@ -182,7 +182,7 @@ class Desires:
     # --- the collection ---------------------------------------------------------------------
     #
     #  `Desires` is a repository as well as a modality, and the two sit together because the
-    #  store it owns IS the collection: a projection holding the roots and the records, rebuilt
+    #  store it owns IS the collection: a projection holding the desires and the records, rebuilt
     #  whenever a premise moves (a-repository-is-named-for-what-it-holds). The wants are read
     #  straight off the store because the derivation WRITES there and those writes stale this
     #  projection; nothing writes a declared
@@ -245,7 +245,7 @@ SELECT ?d ?label ?about WHERE {{
         contents.
 
         BOTH KINDS, spanning this collection and the wants. The planner keys the map by whatever
-        node it is standing on, usually a want and sometimes a root, so the map holds both —
+        node it is standing on, usually a want and sometimes a desire, so the map holds both —
         which is the one question here that is not answerable from `find_all` alone.
 
         SEVERAL PER NODE, because a want may be (#566): a greenhouse bed is comfortable when its

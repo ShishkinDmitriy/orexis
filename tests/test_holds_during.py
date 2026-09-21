@@ -73,7 +73,7 @@ def test_a_graph_outside_its_range_is_not_merged():
 
 def test_the_instant_is_the_askers_and_a_pass_says_which():
     """`at` is the whole of what keeps this out of a search's way. A pass reads one clock at
-    its root; without saying so it would watch a graph expire between two forks, and two worlds
+    its desire; without saying so it would watch a graph expire between two forks, and two worlds
     would differ by how long the agent had been thinking."""
     now = _now()
     st = _store()

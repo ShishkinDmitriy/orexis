@@ -50,23 +50,23 @@ log = logging.getLogger("pursuit")
 #  A DESIRE IS A ROOT AND IS NEVER PURSUED. It is the agent's for its whole life — the premise
 #  of what is pursued — and what the search is handed is a WANT derived under it, with a binding
 #  of its own, a lifetime and a definition of done: bound `orexis:AtEnd`, `prov:wasDerivedFrom`
-#  the root, minted here the first time the root reads unmet and withdrawn when its plan
+#  the desire, minted here the first time the desire reads unmet and withdrawn when its plan
 #  finishes or it reads met with nothing standing for it
-#  (an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it). It CARRIES the root's
+#  (an-always-want-is-a-desire-and-what-is-pursued-is-derived-from-it). It CARRIES the desire's
 #  met-test instantiated at its witness — the same shape, targeting the one instance in
-#  trouble, with the blocks about what the want is about (`narrowed`) — POINTS at the root's
-#  avoided state and estimate, one owner each, and restates the root's address,
+#  trouble, with the blocks about what the want is about (`narrowed`) — POINTS at the desire's
+#  avoided state and estimate, one owner each, and restates the desire's address,
 #  `orexis:about`, which is what a step's precondition joins a want by. The container presents it in
-#  the root's place with the root's own measure and its own state (`Agent.considering`), so a
+#  the desire's place with the desire's own measure and its own state (`Agent.considering`), so a
 #  keeper's verdict, a bidder's lookup and a mark by either name meet the same want.
 
 
 def handed(agent, judgment):
     """The want the search is handed for `desire`: itself, unless it is a ROOT — then the want
-    derived under it, minted if the root reads unmet and none stands; None for a met root
+    derived under it, minted if the desire reads unmet and none stands; None for a met desire
     with nothing derived under it, which is nothing to pursue and runs no pass."""
-    if judgment.desire is not None or not _is_root(agent, judgment.uri):
-        #  A DERIVED WANT, or one a package speaks for: handed as it is. Its root may
+    if judgment.desire is not None or not _is_desire(agent, judgment.uri):
+        #  A DERIVED WANT, or one a package speaks for: handed as it is. Its desire may
         #  have gained instances since — a second claim — so the derivation tops up first; and where
         #  that re-minted THIS want — what it foresaw has arrived — the judgment in hand still
         #  carries the old instant, so it is presented again.
@@ -75,7 +75,7 @@ def handed(agent, judgment):
                 return next((d for d in agent.considering() if d.uri == judgment.uri), judgment)
         return judgment
     #  THE PASS STANDS ON THE ROOT: every desire is judged into the store and the wants derived
-    #  from what the store says — a root whose met-test the compiler refused is judged by the
+    #  from what the store says — a desire whose met-test the compiler refused is judged by the
     #  choir there, and still derives its one want.
     derived(agent)
     child = child_of(agent, judgment.uri)
@@ -83,7 +83,7 @@ def handed(agent, judgment):
         return None
     #  AS THE CONTAINER PRESENTS IT: a want met at an instant carries its instant, its
     #  time room and the state the newest prediction gives it (`Agent.considering`), none of
-    #  which the root's row knows; an at-end want is the root's row under the derived name.
+    #  which the desire's row knows; an at-end want is the desire's row under the derived name.
     presented = next((d for d in agent.considering() if d.uri == child and d.holds_at is not None), None)
     return presented if presented is not None else replace(judgment, uri=child, desire=judgment.uri)
 
@@ -132,7 +132,7 @@ def derived(agent) -> list[str]:
     return changed
 
 
-def _is_root(agent, want: str) -> bool:
+def _is_desire(agent, want: str) -> bool:
     """Is this the standing kind — a desire, never handed to a search (#618)?
 
     BEING IN THE COLLECTION IS THE ANSWER. It read the binding, back when a want was a desire
@@ -142,19 +142,19 @@ def _is_root(agent, want: str) -> bool:
     return agent.desires.find_first_by_uri(want) is not None
 
 
-def child_of(agent, root: str) -> str | None:
-    """The want derived under `root` that stands now, or None.
+def child_of(agent, desire: str) -> str | None:
+    """The want derived under `desire` that stands now, or None.
 
     THROUGH THE MODULE THAT READS THEM (#677): which graphs hold wants and how one is asked
     for are `wants.py`'s, and this is the question rather than the query. `derived=True`
-    because what stands under a root is the derivation's child — a debt or a promise under the
+    because what stands under a desire is the derivation's child — a debt or a promise under the
     same name would be somebody else's want.
     """
-    found = find_want(agent.beliefs, desire=root, derived=True)
+    found = find_want(agent.beliefs, desire=desire, derived=True)
     return found.uri if found else None
 
 
-def root_of(agent, want: str) -> str | None:
+def desire_of(agent, want: str) -> str | None:
     """The desire `want` was derived under, or None where it was derived from no desire.
 
     THROUGH THE COLLECTION THAT HOLDS THE ANSWER. It was asked of `Wants` — find the want, read
@@ -166,8 +166,8 @@ def root_of(agent, want: str) -> str | None:
 
 
 def withdraw(agent, child: str) -> None:
-    """The want derived under a root is gone: its plan finished, or it reads met with nothing
-    standing for it. A root still unmet derives it again on the next pass, so a plan that fell
+    """The want derived under a desire is gone: its plan finished, or it reads met with nothing
+    standing for it. A desire still unmet derives it again on the next pass, so a plan that fell
     short re-plans through a fresh want rather than a stale one.
 
     THE REBUILD IS SAID HERE, as it is after `derived`: writing a want is the derivation's and
@@ -258,7 +258,7 @@ def pursue_for(agent, want: str, surprise: tuple | None = None) -> str | None:
     `want_about(property)` states the rule, an unmet epistemic want first and then the stake —
     and hands the NODE here. None where the agent is not considering that want at all.
     """
-    #  BY EITHER NAME (#618): a mark may name the root while the want derived under it stands.
+    #  BY EITHER NAME (#618): a mark may name the desire while the want derived under it stands.
     judgment = next((d for d in agent.considering() if d.uri == want or d.desire == want), None)
     return pursue(agent, judgment, surprise=surprise) if judgment is not None else None
 

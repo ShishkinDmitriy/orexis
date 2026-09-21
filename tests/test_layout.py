@@ -666,13 +666,13 @@ def test_no_reader_names_a_per_agent_graph():
 
     An owner classifies what it writes (`Store.classify`) and a reader asks by class
     (`Store.graphs_of`, `recorded_graphs`). The helpers that spell a readable name —
-    `roots_graph`, `pursued_graph`, the ledger's, review's — are the WRITERS' conventions, and
+    `desires_graph`, `pursued_graph`, the ledger's, review's — are the WRITERS' conventions, and
     a module that reads the mind's graphs may import none of them: the planner named five,
     the desires projection five and filtered the rest by string prefix, and boot typed every
     per-agent graph by matching its name against a prefix its class declared — the sovereign
     asked which graphs could be renamed freely, and this is what makes it all of them.
     """
-    helpers = {"picks_graph", "roots_graph", "promises_graph", "obligations_graph", "intentions_graph",
+    helpers = {"picks_graph", "desires_graph", "promises_graph", "obligations_graph", "intentions_graph",
                "pursued_graph", "remembered_graph", "revisions_graph", "evidence_graph", "summaries_graph",
                "judgments_graph"}
     readers = ["packages/orexis-agent-deliberation/planner.py", "packages/orexis-agent-deliberation/desires.py",

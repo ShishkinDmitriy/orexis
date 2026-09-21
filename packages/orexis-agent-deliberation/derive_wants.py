@@ -50,14 +50,14 @@ OREXIS_MET_WHEN = OREXIS + "metWhen"
 #  cannot be pointed at from another graph — so the caller reads the engine's own terms.
 _SAID_Q = """
 SELECT ?p ?o WHERE {
-  GRAPH ?g { $root ?p ?o
+  GRAPH ?g { $desire ?p ?o
     FILTER(?p IN (orexis:metWhen, orexis:unmetWhen, orexis:estimates, orexis:about, rdfs:label)) }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
                VALUES ?kind { orexis:DesireGraph orexis:WantGraph } } }"""
 
 #  DOES THE MET-TEST NAME ITS ONE NODE (`sh:targetNode`)?
 _TARGETS_ONE_Q = """
-ASK { GRAPH ?g { $root orexis:metWhen ?s . ?s sh:targetNode ?n }
+ASK { GRAPH ?g { $desire orexis:metWhen ?s . ?s sh:targetNode ?n }
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:DesireGraph } }"""
 
 #  HOW LONG A PLAN IS GIVEN after the instant its want must hold at — the keeper's pick, from
@@ -82,7 +82,7 @@ SELECT ?w WHERE {
 
 _STANDING_Q = """
 SELECT ?w ?holdsAt WHERE {
-  GRAPH ?g { ?w a orexis:Want ; prov:wasDerivedFrom $root .
+  GRAPH ?g { ?w a orexis:Want ; prov:wasDerivedFrom $desire .
              OPTIONAL { ?w orexis:holdsAt ?holdsAt } }
   GRAPH ?cat {
     ?cat a orexis:CatalogueGraph . ?g a deliberation:PursuedGraph .
@@ -139,7 +139,7 @@ def derive_wants(store: ox.Store) -> list[str]:
     return changed
 
 
-def _derive_under(store: ox.Store, holder: str, root: str, found: list[Witness],
+def _derive_under(store: ox.Store, holder: str, desire: str, found: list[Witness],
                   unmet_now: bool, now: datetime) -> list[str]:
     """The wants one desire's witnesses imply, minted where none stands. `found` is what its
     met-test read: at the present where it is unmet now, and otherwise each witness at the
@@ -161,11 +161,11 @@ def _derive_under(store: ox.Store, holder: str, root: str, found: list[Witness],
     #  where the desire ranges over several (`name_of`). Two tanks low about their level are
     #  two clusters and two names; keyed by what they were about alone, the second read the
     #  first as standing, and by construction the second mint had overwritten the first.
-    standing = {r["w"]: r.get("holdsAt") for r in rows(store, _STANDING_Q, (), root=root,
+    standing = {r["w"]: r.get("holdsAt") for r in rows(store, _STANDING_Q, (), desire=desire,
                                                       now=instant(now))}
-    said = _said(store, root)
+    said = _said(store, desire)
     #  THE FALLBACK IS FOR A DESIRE UNMET NOW AND NOTHING ELSE: one want about everything the
-    #  desire is about, for a root whose select yields no rows. A desire that reads MET now
+    #  desire is about, for a desire whose select yields no rows. A desire that reads MET now
     #  and foresees nothing must reach the same loop with NO clusters, so that what stands
     #  under it is withdrawn — which is why this is a condition and no longer `or [[]]`.
     clusters = _clusters(store, found)
@@ -176,7 +176,7 @@ def _derive_under(store: ox.Store, holder: str, root: str, found: list[Witness],
         about = tuple(sorted({w.about for w in cluster if w.about}))
         instances = {w.instance for w in cluster}
         instance = next(iter(instances)) if len(instances) == 1 else None
-        child = name_of(store, root, said, about, instance)
+        child = name_of(store, desire, said, about, instance)
         if child in standing and not (unmet_now and standing[child]):
             continue
         if child in standing:
@@ -186,14 +186,14 @@ def _derive_under(store: ox.Store, holder: str, root: str, found: list[Witness],
         #  ONE SIDE OR NONE: the witnesses of a cluster agree where the same block found them
         #  all, and two sides in one cluster is a want about two troubles, which says neither.
         sides = {w.side for w in cluster if w.side}
-        child = mint(store, holder, root, said, holds_at=at, about=about, instance=instance,
+        child = mint(store, holder, desire, said, holds_at=at, about=about, instance=instance,
                      side=next(iter(sides)) if len(sides) == 1 else None)
         if child is not None:
             minted.append(child)
     return minted
 
 
-def _named(store: ox.Store, root: str, said, found: list[Witness]) -> set[str]:
+def _named(store: ox.Store, desire: str, said, found: list[Witness]) -> set[str]:
     """The names the clusters of `found` come to — what minting would call them.
 
     One namer for both halves: `_derive_under` mints under these names and `_withdraw_under`
@@ -203,12 +203,12 @@ def _named(store: ox.Store, root: str, said, found: list[Witness]) -> set[str]:
     for cluster in _clusters(store, found):
         about = tuple(sorted({w.about for w in cluster if w.about}))
         instances = {w.instance for w in cluster}
-        out.add(name_of(store, root, said, about,
+        out.add(name_of(store, desire, said, about,
                         next(iter(instances)) if len(instances) == 1 else None))
     return out
 
 
-def _withdraw_under(store: ox.Store, shapes, holder: str, root: str, shape: str,
+def _withdraw_under(store: ox.Store, shapes, holder: str, desire: str, shape: str,
                     found: list[Witness], unmet_now: bool, now: datetime) -> list[str]:
     """Drop every want under this desire that its met-test no longer implies, and return them.
 
@@ -226,17 +226,17 @@ def _withdraw_under(store: ox.Store, shapes, holder: str, root: str, shape: str,
     A want a plan is WALKING is kept whatever its desire reads — see `_PURSUED_Q`. A want IS
     its graph (#645), so withdrawing is `forget_want` and there is nothing left behind.
     """
-    standing = {r["w"] for r in rows(store, _STANDING_Q, (), root=root, now=instant(now))}
+    standing = {r["w"] for r in rows(store, _STANDING_Q, (), desire=desire, now=instant(now))}
     if not standing:
         return []
-    said = _said(store, root)
-    wanted = _named(store, root, said, found)
+    said = _said(store, desire)
+    wanted = _named(store, desire, said, found)
     stale = standing - wanted
     if not stale:
         return []
     if unmet_now:
-        stale -= _named(store, root, said,
-                        read_ahead(store, shapes, holder, root, shape, now))
+        stale -= _named(store, desire, said,
+                        read_ahead(store, shapes, holder, desire, shape, now))
     pursued = {r["w"] for r in rows(store, _PURSUED_Q, ())} if stale else set()
     gone = []
     for want in sorted(stale - pursued):
@@ -281,10 +281,10 @@ def _clusters(store: ox.Store, witnesses: list) -> list[list]:
     return list(groups.values())
 
 
-def _said(store: ox.Store, root: str) -> list[tuple[str, object]]:
+def _said(store: ox.Store, desire: str) -> list[tuple[str, object]]:
     """What the desire says, as `(predicate, the engine's own term)` — the TYPE is load-bearing,
     since a blank node has no name another graph could point at."""
-    solutions = store.query(bind(_SAID_Q, root=root), prefixes=NAMESPACES)
+    solutions = store.query(bind(_SAID_Q, desire=desire), prefixes=NAMESPACES)
     return sorted(((str(s["p"].value), s["o"]) for s in solutions), key=lambda pair: (pair[0], str(pair[1])))
 
 
@@ -296,8 +296,8 @@ def _tail(iri: str) -> str:
     return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
 
 
-def name_of(store: ox.Store, root: str, said, about: tuple, instance: str | None) -> str:
-    """The name of the want minted under `root` for one cluster of its witnesses: the root's,
+def name_of(store: ox.Store, desire: str, said, about: tuple, instance: str | None) -> str:
+    """The name of the want minted under `desire` for one cluster of its witnesses: the desire's,
     suffixed, so a second episode of the same cluster pursues the same node and everything
     keyed by it — the planner, a remembered plan, the trace, the keeper — finds what it kept.
 
@@ -312,14 +312,14 @@ def name_of(store: ox.Store, root: str, said, about: tuple, instance: str | None
     instance the want is already about (a debt, `orexis:about sh:this`) is not said twice.
     """
     tails = [_tail(a) for a in about] if about and set(about) != set(_abouts(said)) else []
-    if instance is not None and instance not in about and not _targets_one_node(store, root):
+    if instance is not None and instance not in about and not _targets_one_node(store, desire):
         tails.insert(0, _tail(instance))
-    return root + ".pursued" + "".join(f".{t}" for t in tails)
+    return desire + ".pursued" + "".join(f".{t}" for t in tails)
 
 
-def _targets_one_node(store: ox.Store, root: str) -> bool:
-    """Does the root's met-test name the one node it is about (`sh:targetNode`)?"""
-    return store.query(bind(_TARGETS_ONE_Q, root=root), prefixes=NAMESPACES)
+def _targets_one_node(store: ox.Store, desire: str) -> bool:
+    """Does the desire's met-test name the one node it is about (`sh:targetNode`)?"""
+    return store.query(bind(_TARGETS_ONE_Q, desire=desire), prefixes=NAMESPACES)
 
 
 # --- what a want IS on disk, and how one goes -------------------------------------------
@@ -413,21 +413,21 @@ WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:Ontol
                   prefixes=NAMESPACES)
 
 
-def mint(store: ox.Store, holder: str, root: str, said=None, holds_at: datetime | None = None,
+def mint(store: ox.Store, holder: str, desire: str, said=None, holds_at: datetime | None = None,
          about: tuple = (), instance: str | None = None, side: str | None = None) -> str | None:
-    """Derive the want pursued under `root` and write it to the pursued graph, named by
-    `name_of`. None, and the root stays the goal, where the root states its met-test inline:
+    """Derive the want pursued under `desire` and write it to the pursued graph, named by
+    `name_of`. None, and the desire stays the goal, where the desire states its met-test inline:
     a blank node has no name another graph could point at, and copying it would make a second
     owner of the claim."""
-    said = _said(store, root) if said is None else said
+    said = _said(store, desire) if said is None else said
     desire_abouts = _abouts(said)
     abouts = about or desire_abouts
-    child = name_of(store, root, said, about, instance)
+    child = name_of(store, desire, said, about, instance)
     points = []
     met_test = None
     for p, o in said:
         if isinstance(o, ox.BlankNode):
-            log.warning("%s states its %s inline; it is pursued itself", root.rsplit("#", 1)[-1],
+            log.warning("%s states its %s inline; it is pursued itself", desire.rsplit("#", 1)[-1],
                         p.rsplit("#", 1)[-1])
             return None
         #  WHAT IT IS ABOUT is the witnesses' where the shape named them per block, and the
@@ -440,7 +440,7 @@ def mint(store: ox.Store, holder: str, root: str, said=None, holds_at: datetime 
             met_test = str(o.value)
             continue
         points.append((p, str(o.value)))
-    #  THE MET-TEST IS THE DESIRE'S INSTANTIATED AT THE WITNESS: carved from where the root's
+    #  THE MET-TEST IS THE DESIRE'S INSTANTIATED AT THE WITNESS: carved from where the desire's
     #  shape lives and narrowed to this cluster — the instance as its target, the blocks about
     #  what the want is about — and written into the want's own graph under its own name, so
     #  the want is judged on its instance and a plan for one tank is not refused for another's.
@@ -451,7 +451,7 @@ def mint(store: ox.Store, holder: str, root: str, said=None, holds_at: datetime 
         points.append((OREXIS_MET_WHEN, own))
 
     labels = [str(o.value) for p, o in said if p.endswith("#label")]
-    label = "pursued: " + (labels[0] if labels else root.rsplit("#", 1)[-1])
+    label = "pursued: " + (labels[0] if labels else desire.rsplit("#", 1)[-1])
     #  AT AN INSTANT (#619): bound `orexis:At`, holding at the crossing, its room opening now.
     if holds_at is not None:
         label = f"foreseen: {label[len('pursued: '):]} at {holds_at.isoformat(timespec='minutes')}"
@@ -466,11 +466,11 @@ def mint(store: ox.Store, holder: str, root: str, said=None, holds_at: datetime 
     if holds_at is not None:
         ends = (holds_at + timedelta(seconds=_patience(store, holder))).isoformat()
     save_want(store, _local(holder), Want(
-        uri=child, holder=holder, desire=root, label=label, ends=ends,
+        uri=child, holder=holder, desire=desire, label=label, ends=ends,
         holds_at=holds_at.isoformat() if holds_at is not None else None,
         derived_at=clock.now().isoformat() if holds_at is not None else None,
         about=abouts, points=tuple(points), shape=shape_lines, side=side))
-    log.info("%s reads unmet: pursuing %s", root.rsplit("#", 1)[-1], child.rsplit("#", 1)[-1])
+    log.info("%s reads unmet: pursuing %s", desire.rsplit("#", 1)[-1], child.rsplit("#", 1)[-1])
     return child
 
 
@@ -494,7 +494,7 @@ def narrowed(store: ox.Store, shape: str, own: str, instance: str | None, abouts
     saying nothing about what it is about is kept, as is one about `sh:this`, which is the
     instance. The triples, as N-Triples lines the write puts into the want's graph.
 
-    Carved from the graphs of desires and wants, asked by classification, where a root's shape
+    Carved from the graphs of desires and wants, asked by classification, where a desire's shape
     lives; a shape that names its one node (`sh:targetNode`) narrows to the same node, so
     sensing's wants and the greenhouse's keep their target and lose only the blocks they are
     not about.

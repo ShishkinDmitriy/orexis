@@ -88,9 +88,9 @@ class Considering:
         #  node, so the second sighting is the same want and not a second one.
         seen: dict[str, Want] = {}
         #  A ROOT IS PRESENTED AS THE WANT DERIVED UNDER IT (#618), where one stands: the
-        #  root's own row — its measure, its reading, its property — under the derived want's
-        #  name, naming the root beside it. The derived want is never lifted on its own.
-        #  ASKED OF THE MODULE THAT READS THEM (#618): the want derived under each root, and
+        #  desire's own row — its measure, its reading, its property — under the derived want's
+        #  name, naming the desire beside it. The derived want is never lifted on its own.
+        #  ASKED OF THE MODULE THAT READS THEM (#618): the want derived under each desire, and
         #  the instant it must hold at. This was a select here, keyed on the agent and on the
         #  parent being a desire — every column of which is a field of `Want`. `derived=True`
         #  is the family the derivation mints into, said here rather than spelled into a
@@ -101,7 +101,7 @@ class Considering:
         derived = {w.uri for ws in children.values() for w in ws}
         #  A CAPABILITY MAY SPEAK FOR A DERIVED WANT — the ledger reads the want under
         #  "no overdue debts" against its claim's redeem window, and names the claim — and its
-        #  word wins over the root's copy below, keeping the derivation's provenance.
+        #  word wins over the desire's copy below, keeping the derivation's provenance.
         spoken_for: dict = {}
         for wants in self._agent.ask(DESIRES, now):
             for want in wants:
@@ -170,30 +170,30 @@ class Considering:
             seen[row["want"]] = Want(uri=row["want"],
                                        state="unmet" if violated else "met")
         #  A ROOT WITH WANTS UNDER IT IS PRESENTED AS THEM — one row per want, each
-        #  carrying the root's own measure under the want's name, and ITS OWN STATE: a want's
-        #  met-test is the root's instantiated at its witness, so a want about one tank reads
+        #  carrying the desire's own measure under the want's name, and ITS OWN STATE: a want's
+        #  met-test is the desire's instantiated at its witness, so a want about one tank reads
         #  met when that tank is in range, whatever the others read. Several where the
         #  witnesses fell in several scopes (one-function-mints-every-want); one everywhere shipped.
-        for root, wants in children.items():
-            if root not in seen:
+        for desire, wants in children.items():
+            if desire not in seen:
                 continue
-            base = seen.pop(root)
+            base = seen.pop(desire)
             for want in wants:
                 #  WHAT IT IS ABOUT IS THE WANT'S OWN, and so is which way it broke. Both
-                #  rows below are somebody ELSE's — the root's copy, or a capability's word
+                #  rows below are somebody ELSE's — the desire's copy, or a capability's word
                 #  about the want — and neither carries the instance the derivation minted
                 #  this want for, so presenting one unchanged replaced `orexis:about` with
                 #  nothing. It went unnoticed while every want about an instance was one the
                 #  ledger spoke for and read by its claim instead; a call's want is read by
                 #  what it is about, and had nothing to be read by.
                 if want.uri in spoken_for:
-                    presented = replace(spoken_for[want.uri], desire=root)
+                    presented = replace(spoken_for[want.uri], desire=desire)
                 else:
-                    presented = replace(base, uri=want.uri, desire=root)
+                    presented = replace(base, uri=want.uri, desire=desire)
                 presented = replace(presented, about=want.about,
                                     side=want.side or presented.side)
                 #  THE STATE IS NOT RE-JUDGED HERE. It ran the want's own met-test to
-                #  correct the root's word — its instance may be in range while the root's
+                #  correct the desire's word — its instance may be in range while the desire's
                 #  others are not — and that is asking twice what one pass had already
                 #  concluded (AGENTS.md). It was needed because the derivation ran only where
                 #  a package wrote something a desire reads, so a row could go stale between
@@ -245,10 +245,10 @@ class Considering:
         cache = self.__dict__.setdefault("_compiled_wants", {})
         if (want, entered) not in cache:
             #  AND THE AGENT'S OWN GRAPHS, asked by classification: a package's desire and its
-            #  shape are authored into the roots graph at genesis (#644), not into public
+            #  shape are authored into the desires graph at genesis (#644), not into public
             #  knowledge — compiled from the public graphs alone the ledger's shape had no
-            #  target, raised, and the error path read the root as unmet every pass. It named
-            #  the roots graph for a while; which graphs are the agent's is what boot's
+            #  target, raised, and the error path read the desire as unmet every pass. It named
+            #  the desires graph for a while; which graphs are the agent's is what boot's
             #  classification says, and a reader asks it rather than spelling an instance.
             public = graph_from(self._agent.beliefs,
                                 *self._agent.beliefs.graphs_of(*KNOWN, at=clock.now()))

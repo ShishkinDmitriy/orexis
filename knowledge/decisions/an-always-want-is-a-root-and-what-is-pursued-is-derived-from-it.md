@@ -196,3 +196,15 @@ RDF for a month, and naming that lets the literature be read against the issues 
 - **A root that states its met-test inline.** A blank node has no name another graph can point
   at, and copying it would make a second owner of the claim, so such a root is pursued itself,
   logged. No shipped root does; the loner's, the greenhouse's and every derived stake's are IRIs.
+
+# Amendment: the word is retired, the claim is not
+
+A desire was called a **root** desire, and what the derivation produced under it a **child**.
+There is one kind of desire now and a want is derived FROM it, so `root` no longer names a
+desire anywhere in the code — `pursuit.desire_of`, `derive_wants`' parameters,
+`ontology.desires_graph`. What keeps the word is the search's own: `planner`'s `root` is the
+root WORLD a pass stands in, which is a different thing and a true one.
+
+Nothing here is withdrawn by that. This record's argument is about which node a search is
+handed and which one is authored; read it with "desire" wherever it says root, and the two
+graph names it mentions are spellings for eyes that a rename would have to migrate.

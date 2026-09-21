@@ -35,7 +35,7 @@ from agent import config, inference, provenance, vocabulary
 
 from assembly import loader
 from .config import REPO_ROOT
-from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, CATALOGUE_GRAPH, GRAPH_PREFIX, OREXIS, roots_graph, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, STATE_GRAPH,
+from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, CATALOGUE_GRAPH, GRAPH_PREFIX, OREXIS, desires_graph, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, STATE_GRAPH,
                        WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, picks_graph)
 from orexis_agent_deliberation.ontology import DERIVATIONS_GRAPH
@@ -441,8 +441,8 @@ def birth(st: Store, world: Path, agent_id: str, rebirth: bool = False) -> bool:
 def _roots_from_the_world(st: Store, agent_id: str) -> Store:
     """What the packages' desire rules make of the world and this agent's record, in a scratch
     store: the ROOTS — every Always desire with its met-tests — in a graph named as the volume's
-    roots graph is, so the scratch reads as the volume would. The premises are public knowledge
-    and the agent's own record; `$derived` is the roots graph, `$given` the premises, `$me` the
+    desires graph is, so the scratch reads as the volume would. The premises are public knowledge
+    and the agent's own record; `$derived` is the desires graph, `$given` the premises, `$me` the
     agent — the substitution the desire modality performed on every rebuild until #644."""
     from assembly import loader
 
@@ -461,7 +461,7 @@ def _roots_from_the_world(st: Store, agent_id: str) -> Store:
         out = []
         for line in rule.read_text().splitlines():
             if not line.lstrip().startswith("#"):
-                line = bind(line, derived=roots_graph(agent_id), given=Raw(given), me=me)
+                line = bind(line, derived=desires_graph(agent_id), given=Raw(given), me=me)
             out.append(line)
         scratch.update("\n".join(out))
     return scratch
@@ -474,9 +474,9 @@ def _held_in(store: Store, graph: str) -> list[str]:
 
 def _subgraph_of(scratch: Store, graph: str, top: str) -> list:
     """Every quad reachable from `top` inside `graph`, following objects that are subjects there
-    — a root and its met-test shapes, blank nodes and all — plus the triple that holds it.
+    — a desire and its met-test shapes, blank nodes and all — plus the triple that holds it.
     NEVER THROUGH THE HOLDER: every met-test shape targets the agent's own node, and the agent
-    holds every root, so a walk that crossed it would copy the whole graph twice."""
+    holds every desire, so a walk that crossed it would copy the whole graph twice."""
     HOLDS = "http://example.org/orexis#holds"
     quads = list(scratch.quads(graph))
     by_subject: dict[str, list] = {}
@@ -499,16 +499,16 @@ def _subgraph_of(scratch: Store, graph: str, top: str) -> list:
 
 
 def author_roots(st: Store, agent_id: str) -> list[str]:
-    """Write the agent's ROOT desires into its roots graph — at birth, all of them; at a later
+    """Write the agent's desires into its desires graph — at birth, all of them; at a later
     boot, only the ones it has never held (#644, a-root-holds-always-and-an-outdated-graph-is-dropped).
 
-    A root is a declaration for the agent's whole life, authored once from the ranges and the
+    A desire is a declaration for the agent's whole life, authored once from the ranges and the
     wiring the world states and holding at every instant, as the T-Box does: the desire
-    modality projects this graph and never rebuilds it. An amendment ENDOWS — a never-held root
+    modality projects this graph and never rebuilds it. An amendment ENDOWS — a never-held desire
     arrives with its met-tests, a held one stays whatever the world now says, and removal is a
-    rebirth (the record's seam). Returns the roots newly held, so boot can say what changed.
+    rebirth (the record's seam). Returns the desires newly held, so boot can say what changed.
     """
-    graph = roots_graph(agent_id)
+    graph = desires_graph(agent_id)
     scratch = _roots_from_the_world(st, agent_id)
     fresh = _held_in(scratch, graph)
     already = set(_held_in(st, graph)) if st.has_graph(graph) else set()
@@ -578,7 +578,7 @@ def agent_uri(st: Store, agent_id: str) -> str | None:
 
 def classify_kernel_graphs(st: Store, agent_id: str) -> None:
     """Say what the two graphs the KERNEL writes for an agent are — its pick record and its
-    roots — at every start, so a volume written before owners classified their own graphs
+    desires — at every start, so a volume written before owners classified their own graphs
     says so too. An owner classifies what it writes (`Store.classify`): the ledger its
     record, the keeper its promises, review its three, the derivation each want, sensing each
     prediction — each at construction or at the write, by the class it declares, whatever
@@ -589,7 +589,7 @@ def classify_kernel_graphs(st: Store, agent_id: str) -> None:
     me = agent_uri(st, agent_id)
     ensure_catalogue(st)
     st.classify(picks_graph(agent_id), OREXIS + "PickRecordGraph", OREXIS + "Asserted", me)
-    st.classify(roots_graph(agent_id), OREXIS + "DesireGraph", OREXIS + "Asserted", me)
+    st.classify(desires_graph(agent_id), OREXIS + "DesireGraph", OREXIS + "Asserted", me)
 
 
 def _belief_room(path: str | None) -> str | None:
