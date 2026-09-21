@@ -9,9 +9,14 @@ it is gone: everything it carried a WANT carries now, and what it was for, telli
 step what the met-test read, is what a witness is.
 
 THIS IS THE ONLY PLACE THAT READS A PREDICTION. What a desire reads at a foreseen instant is
-a question about the world, asked here and nowhere else: `derive_wants` asks it to mint,
-`witnesses_of` asks it for a crossing, and both get the same answer from the same code rather
+a question about the world, asked here and nowhere else: `derive_wants` asks it to mint and
+`crossing_of` asks it for an instant, and both get the same answer from the same code rather
 than from two paths that could disagree.
+
+WHAT A CALLER TAKES IS THE ANSWER TO ITS OWN QUESTION. A `Witness` is the grain a want is
+minted at and `derive_wants` clusters on it, so it lives here beside `read_ahead`, which
+dedups on two of its fields. Every other caller wants an INSTANT — the crossing, or whether
+a want is still unmet by one — and is handed that, rather than rows to reduce itself.
 
 A FUNCTION OVER THE STORE: handed the engine, a `pyoxigraph.Store`, and nothing else. Which
 graphs hold desires, which are predictions and which hold at an instant, the catalogue says;
@@ -142,15 +147,27 @@ def read_ahead(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
     return sorted(seen.values(), key=lambda w: (w.at, w.instance, w.constraint))
 
 
-def witnesses_of(store: ox.Store, desire: str) -> list[Witness]:
-    """The foreseen witnesses of one desire, for a reader that has only its name — the
-    crossing's own question, asked of a DESIRE and never of a want. A want has no crossing: it
-    is what a crossing produced, and it carries the instant it must hold at."""
+def crossing_of(store: ox.Store, desire: str) -> datetime | None:
+    """When the world this desire is about is judged to leave what the desire wants, or None:
+    the earliest instant its met-test reads unmet ahead of now.
+
+    ASKED OF A DESIRE AND NEVER OF A WANT. A want has no crossing — it is what a crossing
+    produced, and it carries the instant it must hold at; whether it is still in trouble by
+    then is `unmet_by`.
+
+    THE INSTANT, AND NOT THE ROWS IT IS READ FROM. This handed back its witnesses and was
+    called `witnesses_of`, and its one caller took `.at` off the first and dropped the rest —
+    through `pursuit.crossing_of`, which named the question this now answers, which
+    `pursuit.foreseen` then named a third time and nobody called. A `Witness` is the grain a
+    want is minted at (`derive_wants` clusters on it); a crossing is an instant, and a reader
+    that wants one should not have to know what the other is.
+    """
     found = _one(store, desire)
     if found is None:
-        return []
+        return None
     holder, shape = found
-    return read_ahead(store, shapes_in(store), holder, desire, shape, clock.now())
+    witnesses = read_ahead(store, shapes_in(store), holder, desire, shape, clock.now())
+    return witnesses[0].at if witnesses else None
 
 
 def unmet_by(store: ox.Store, want: str, until: datetime) -> datetime | None:

@@ -16,7 +16,7 @@ import pytest
 
 from agent import genesis, runtime
 from conftest import genesis_store
-from orexis_agent_deliberation import pursuit
+from orexis_agent_deliberation import judging, pursuit
 from orexis_agent_deliberation.derive_wants import derive_wants
 from orexis_agent_deliberation.planner import Planner
 from orexis_agent_progression import clock
@@ -88,7 +88,7 @@ def test_the_at_want_is_derived_at_the_first_prediction_that_reads_unmet(monkeyp
     agent = _gardener(monkeypatch, moisture=0.12)
     root = _stake(agent)
     derive_wants(agent.beliefs.engine)   # a crossing is what the last judging found
-    crossing = pursuit.crossing_of(agent, root.uri)
+    crossing = judging.crossing_of(agent.beliefs.engine, root.uri)
     assert crossing is not None
     windows = agent.beliefs.windows_of(PREDICTION)
     starts = [s for _, s, _ in windows]
@@ -96,5 +96,5 @@ def test_the_at_want_is_derived_at_the_first_prediction_that_reads_unmet(monkeyp
     assert abs((crossing - clock.now()).total_seconds() - 18000) < 120, "five hours: the window that reaches a day"
     content = _gardener(monkeypatch, 0.20)
     derive_wants(content.beliefs.engine)
-    assert pursuit.crossing_of(content, _stake(content).uri) is None, \
+    assert judging.crossing_of(content.beliefs.engine, _stake(content).uri) is None, \
         "a pot the ladder never predicts below has no crossing"

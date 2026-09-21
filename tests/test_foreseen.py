@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from orexis_agent_deliberation import pursuit
+from orexis_agent_deliberation import judging, pursuit
 from orexis_agent_deliberation.derive_wants import derive_wants
 from orexis_agent_deliberation.planner import Planner
 from orexis_agent_progression.store import bindings
@@ -47,7 +47,7 @@ def _crossing_of(agent):
     produced.
     """
     derive_wants(agent.beliefs.engine)
-    return pursuit.crossing_of(agent, _stake(agent).desire or _stake(agent).uri)
+    return judging.crossing_of(agent.beliefs.engine, _stake(agent).desire or _stake(agent).uri)
 
 
 def test_the_drift_says_when_the_reading_leaves_its_region(monkeypatch):

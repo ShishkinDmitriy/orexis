@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from conftest import build_agent, genesis_store
 from orexis_agent_deliberation import pursuit
 from orexis_agent_deliberation.derive_wants import derive_wants
-from orexis_agent_deliberation.judging import witnesses_of
+from orexis_agent_deliberation import judging
 from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import PREDICTION
@@ -67,9 +67,10 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_derivation_mint
     #  A LAPSE IS NOT IN VIEW YET — the prediction holds from the deadline, and the desire's
     #  select names the debt at that instant and at no other
     assert agent.beliefs.graphs_of(PREDICTION, at=clock.now()) == []
-    [w] = witnesses_of(agent.beliefs.engine, root)
-    assert w.instance == debt and w.about == debt, "the row is about the debt itself (sh:this)"
-    assert abs(w.at.timestamp() - deadline) < 1.0
+    #  ASKED AS THE CROSSING, which is the question a reader has. It read the met-test's ROWS
+    #  and asserted the instance, the about and the instant off them — all three of which the
+    #  want above already carries, since the want is the desire instantiated at that very row.
+    assert abs(judging.crossing_of(agent.beliefs.engine, root).timestamp() - deadline) < 1.0
 
     #  THE LEDGER SPEAKS FOR IT: its claim, standing and not yet askable
     [judged] = ledger.obligations()
@@ -91,7 +92,8 @@ def test_presenting_makes_the_roads_want_pursuable_and_paying_withdraws_its_grou
 
     ledger.discharge("jti-2")
     assert ledger.obligations() == [], "a paid debt is judged by nobody"
-    assert witnesses_of(agent.beliefs.engine, root) == [], "and will not lapse: the prediction went"
+    assert judging.crossing_of(agent.beliefs.engine, root) is None, \
+        "and will not lapse: the prediction went"
 
 
 def test_a_second_claim_is_a_second_want_and_the_first_stands(monkeypatch):

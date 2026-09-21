@@ -34,7 +34,6 @@ from dataclasses import replace
 from datetime import datetime
 
 from .derive_wants import derive_wants, forget_want
-from .judging import witnesses_of
 from .plan import SATISFIED
 from .wants import find_want
 
@@ -124,28 +123,6 @@ def child_of(agent, root: str) -> str | None:
     """
     found = find_want(agent.beliefs, desire=root, derived=True)
     return found.uri if found else None
-
-
-def crossing_of(agent, root: str) -> datetime | None:
-    """When the world a DESIRE is about is judged to leave what the desire wants, or None: the
-    earliest instant its met-tests read unmet. The rows are `judging.witnesses_of`.
-
-    A desire's, never a want's. A want has no crossing — it is what a crossing produced, and
-    it carries the instant it must hold at; whether it is still in trouble by then is
-    `judging.unmet_by`.
-    """
-    found = witnesses_of(agent.beliefs.engine, root)
-    return found[0].at if found else None
-
-
-def foreseen(agent, root: str) -> datetime | None:
-    """The instant a want derived under `root` must hold at, or None: the predicted crossing.
-
-    A FORESIGHT once gated this — a per-agent pick discarding a crossing further out than N
-    seconds — and it is gone with the one in `derive_wants`: what bounds the lookahead is the
-    horizons each drift predicts at, so a crossing there is at all is one worth a want.
-    """
-    return crossing_of(agent, root)
 
 
 def root_of(agent, want: str) -> str | None:

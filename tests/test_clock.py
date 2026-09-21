@@ -14,7 +14,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from orexis_agent_deliberation import pursuit
+from orexis_agent_deliberation import judging, pursuit
 from orexis_agent_deliberation.derive_wants import derive_wants
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import picks_graph
@@ -84,7 +84,7 @@ def test_the_simulation_fern_foresees_and_places_under_the_worlds_pace(monkeypat
     #  judged by — and used to be judged anyway, because the measure read the belief base live
     #  and needed no projection at all. See #766.
     agent.desires.rebuild()
-    crossing = pursuit.crossing_of(agent, root.uri)
+    crossing = judging.crossing_of(agent.beliefs.engine, root.uri)
     assert crossing is not None
     ahead = (crossing - made).total_seconds()
     assert abs(ahead - 3600.0) < 300.0, f"an hour of the agent's timeline from when the world was made: {ahead}"
