@@ -2,7 +2,7 @@
 type: Decision
 title: The judge speaks Rust
 description: >-
-  The SHACL verdict is computed by rudof behind one door, packages/orexis-agent-deliberation/judge.py,
+  The SHACL verdict is computed by rudof behind one door, packages/orexis-agent-deliberation/conformance.py,
   with the two gaps it ships closed there: SPARQL-based targets are resolved on our own
   engine and handed over as explicit target nodes, and an authored sh:message is put back
   where the engine wrote its own. Severity needed nothing — rudof honours it exactly where
@@ -39,7 +39,7 @@ things, and the two are what this record is actually about.
 **`sh:SPARQLTarget` binds nothing, silently.** The empty-result trap in a new coat: twenty-one
 shape families would simply have stopped applying, and no test would have gone red on the
 engine's account. Closed where the house rules already point: a target select is a QUERY, and
-queries here run on pyoxigraph — so `judge.py` resolves every SPARQL target itself against
+queries here run on pyoxigraph — so `conformance.py` resolves every SPARQL target itself against
 the data and appends explicit `sh:targetNode`s to the shape text. A shape must be named to
 carry a SPARQL target through that door, and a blank one fails loudly rather than losing its
 targets.

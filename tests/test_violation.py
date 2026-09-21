@@ -36,7 +36,7 @@ def _agent(monkeypatch, world, name, pose=None, readings=None):
 def _both_verdicts(agent):
     """For every shape-authored want the agent pursues: (want, compiled says unmet, judge says
     unmet). Wants that are not shapes — patterns, obligations, calls — are not this file's."""
-    from orexis_agent_deliberation.judge import judge
+    from orexis_agent_deliberation.conformance import judge
     from orexis_agent_deliberation.planner import Planner
     from orexis_agent_progression.store import bindings
 

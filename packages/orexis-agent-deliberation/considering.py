@@ -218,7 +218,7 @@ class Considering:
         kernel did rather than a capability, and is gone with the field. The
         question is asked of the want's OWN results — the cluster it was minted from — so a
         want about one tank is not held to another's prediction."""
-        from orexis_agent_deliberation.judging import unmet_by
+        from orexis_agent_deliberation.derive_wants import unmet_by
         now = now or clock.now()
         state, read_at = row.state, row.read_at
         if state == "met":

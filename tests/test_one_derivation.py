@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from conftest import build_agent, genesis_store
 from orexis_agent_deliberation import pursuit
 from orexis_agent_deliberation.derive_wants import derive_wants
-from orexis_agent_deliberation import judging
+from orexis_agent_deliberation import derive_wants as judging
 from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import PREDICTION

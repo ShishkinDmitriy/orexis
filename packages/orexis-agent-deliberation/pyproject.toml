@@ -22,10 +22,10 @@ dependencies = [
     "orexis-agent-reactive",
     # The imaginarium is a store of its own, and a signature hashes quads.
     "pyoxigraph>=0.4",
-    # The judge: SHACL in Rust, behind judge.py — the one door, gaps closed there.
+    # The judge: SHACL in Rust, behind conformance.py — the one door, gaps closed there.
     "pyrudof>=0.3.16",
     # Effects are applied to an rdflib graph before they are written back, and the judge's
-    # report crosses back as one; the judging itself is rudof, behind judge.py.
+    # report crosses back as one; the judging itself is rudof, behind conformance.py.
     "rdflib>=7",
 ]
 

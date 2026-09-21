@@ -289,7 +289,7 @@ remove.
 **The first version of this record chose an rdflib dataset**, on the reasoning that
 `world_after` already builds rdflib graphs and pyshacl already read them, so the planning path
 was rdflib's anyway — as it still is on the flat-view side, though the judge now crosses to
-Rust behind `judge.py` ([the-judge-speaks-rust](/decisions/the-judge-speaks-rust.md)). It stated the cost as a second SPARQL engine reading one query text — the
+Rust behind `conformance.py` ([the-judge-speaks-rust](/decisions/the-judge-speaks-rust.md)). It stated the cost as a second SPARQL engine reading one query text — the
 hazard [one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md) exists to name —
 and proposed to pay it with a both-engines test.
 

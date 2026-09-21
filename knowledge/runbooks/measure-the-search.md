@@ -278,7 +278,7 @@ Probed at `pyrudof 0.3.16`, every SHACL feature our shapes use, one expected vio
 
 Adoption is legitimate exactly when the full suite and every world's `orexis-validate` pass
 with the seam in place — the same gate every other change answers to. **A row below says so**:
-the judge is rudof, behind `packages/orexis-agent-deliberation/judge.py`, both gaps closed on
+the judge is rudof, behind `packages/orexis-agent-deliberation/conformance.py`, both gaps closed on
 our side of the door — see [the-judge-speaks-rust](/decisions/the-judge-speaks-rust.md).
 pySHACL remains the reference the inference-parity gate holds the closure against.
 

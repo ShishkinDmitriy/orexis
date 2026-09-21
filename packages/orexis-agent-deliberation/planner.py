@@ -56,7 +56,7 @@ from orexis_agent_progression.store import NAMESPACES, Raw, bind, bindings
 from .ontology import DELIBERATION
 from orexis_agent_progression.ontology import DELIBERATION_GRAPH, GRAPH_PREFIX, OREXIS, PROGRESSION, STATE_GRAPH, local_of
 from orexis_agent_deliberation.conformance import graph_from, held_shapes, legality_selects
-from orexis_agent_deliberation.judge import crossed_text
+from orexis_agent_deliberation.conformance import crossed_text
 from orexis_agent_progression import clock
 from .cone import _Compiled, _Node
 from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED,
