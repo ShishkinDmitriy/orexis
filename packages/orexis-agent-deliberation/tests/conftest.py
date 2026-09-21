@@ -388,7 +388,9 @@ def held_worlds_to(case: Path, request, forks: list, knows: dict) -> None:
     #  With this a reader coming to the store cold can ask for the frontier and take the next
     #  iteration; without it the worlds are a heap of graphs with no edges between them.
     for iri, graph in sorted(knows.items()):
-        out.append("#  What the pass knows about every world it made.\n" + render(iri, graph))
+        caption = ("#  The plan it decided on." if "/plan/" in iri
+                   else "#  What the pass knows about every world it made.")
+        out.append(caption + "\n" + render(iri, graph))
     text = "\n".join(out)
     if request.config.getoption("--update-snapshots"):
         path.write_text(text)

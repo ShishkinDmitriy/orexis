@@ -31,6 +31,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix graph: <http://example.org/orexis/graph/> .
 @prefix possible: <http://example.org/orexis/graph/possible/> .
+@prefix plan: <http://example.org/orexis/graph/plan/> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
 
 
@@ -47,17 +48,6 @@ GRAPH possible:Trickling-level-dripper {
 
 #  What the pass knows about every world it made.
 GRAPH graph:pass {
-  :in_range.pursued.tank1.plan a deliberation:Plan .
-  :in_range.pursued.tank1.plan deliberation:forWant :in_range.pursued.tank1 .
-  :in_range.pursued.tank1.plan deliberation:step :in_range.pursued.tank1.plan.0 .
-  :in_range.pursued.tank1.plan deliberation:takes 600.0 .
-  :in_range.pursued.tank1.plan deliberation:verdict "satisfied" .
-  :in_range.pursued.tank1.plan progression:by :in_range.pursued.tank1.plan.0 .
-  :in_range.pursued.tank1.plan.0 :through :dripper .
-  :in_range.pursued.tank1.plan.0 a progression:Step .
-  :in_range.pursued.tank1.plan.0 deliberation:of graph:sensed..Trickling-level-dripper .
-  :in_range.pursued.tank1.plan.0 orexis:about :level .
-  :in_range.pursued.tank1.plan.0 progression:fills :Trickling .
   graph:sensed a deliberation:PossibleWorld .
   graph:sensed deliberation:atDepth 0 .
   graph:sensed deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
@@ -124,4 +114,19 @@ GRAPH graph:pass {
   possible:Trickling-level-dripper.for.in_range.pursued.tank1 deliberation:remaining 0.0 .
   possible:Trickling-level-dripper.for.in_range.pursued.tank1 deliberation:weighs possible:Trickling-level-dripper .
   possible:Trickling-level-dripper.for.in_range.pursued.tank1 deliberation:wouldReach 0.0 .
+}
+
+#  The plan it decided on.
+GRAPH plan:in_range.pursued.tank1 {
+  :in_range.pursued.tank1.plan a deliberation:Plan .
+  :in_range.pursued.tank1.plan deliberation:forWant :in_range.pursued.tank1 .
+  :in_range.pursued.tank1.plan deliberation:step :in_range.pursued.tank1.plan.0 .
+  :in_range.pursued.tank1.plan deliberation:takes 600.0 .
+  :in_range.pursued.tank1.plan deliberation:verdict "satisfied" .
+  :in_range.pursued.tank1.plan progression:by :in_range.pursued.tank1.plan.0 .
+  :in_range.pursued.tank1.plan.0 :through :dripper .
+  :in_range.pursued.tank1.plan.0 a progression:Step .
+  :in_range.pursued.tank1.plan.0 deliberation:of graph:sensed..Trickling-level-dripper .
+  :in_range.pursued.tank1.plan.0 orexis:about :level .
+  :in_range.pursued.tank1.plan.0 progression:fills :Trickling .
 }

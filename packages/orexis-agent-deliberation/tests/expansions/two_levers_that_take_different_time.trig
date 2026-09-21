@@ -28,6 +28,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix graph: <http://example.org/orexis/graph/> .
 @prefix possible: <http://example.org/orexis/graph/possible/> .
+@prefix plan: <http://example.org/orexis/graph/plan/> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
 
 

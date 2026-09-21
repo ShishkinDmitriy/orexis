@@ -52,14 +52,18 @@ def test_a_pass_leaves_the_store_as_the_snapshot_says(case, monkeypatch, request
     #  AND THE PLAN IS IN THE IMAGINARIUM, with its steps in order and each naming the
     #  candidate it picked. Memory, not disk: what survives a pass is what progression copies
     #  down when it adopts, and that copy is not this layer's to make.
-    from orexis_agent_deliberation.imaginarium import PASS_GRAPH
+    from orexis_agent_deliberation.ontology import DELIBERATION
     from orexis_agent_progression.store import bindings
     for uri, planner in planners.items():
         if planner.imaginarium is None:
             continue
+        #  ASKED BY KIND, never by name: the plan's graph is found in the catalogue as a
+        #  `deliberation:PlanGraph`, which is what a reader is entitled to name.
+        graphs = planner.imaginarium.graphs_of(DELIBERATION + "PlanGraph")
+        assert graphs, "a pass leaves its plan in a graph the catalogue types"
         rows = bindings(planner.imaginarium.query_over(f"""
 SELECT ?s ?of WHERE {{ <{uri}.plan> a deliberation:Plan ; deliberation:step ?s .
-                       ?s deliberation:of ?of }}""", PASS_GRAPH))
+                       ?s deliberation:of ?of }}""", *graphs))
         assert rows, f"a plan for {uri} with steps that name their candidates"
         assert all(r["of"] for r in rows), rows
 

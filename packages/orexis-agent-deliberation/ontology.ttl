@@ -38,6 +38,13 @@ deliberation:Anything a owl:Thing ; rdfs:label "Anything" ;
 <http://example.org/orexis/graph/derivations> a deliberation:DerivationGraph ;
     orexis:arrivedBy orexis:Derived .
 
+deliberation:PlanGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Plan graph" ;
+    rdfs:comment """ONE WANT'S PLAN — what a pass decided, as a graph of its own, in the imaginarium beside the worlds and candidates it decided among. One per want and replaced whole, which is the first reason it is a graph rather than a corner of the pass graph: replacing a plan is clearing this, where before it was enumerating the names a plan's steps MIGHT have taken and removing those, a step count the writer had to guess at.
+
+The second reason is the crossing. A plan goes to progression to be executed, and a graph is what `init_imaginarium` showed the shape of: one function over two stores, copying what the other side needs. Copying a plan is then copying a graph, rather than walking `progression:then` and hoping the walk reaches everything a step carries.
+
+A WORKING graph, and memory: the imaginarium is not on disk. A plan is a pass's result and not yet a commitment; what survives is the intention progression mints when it adopts one.""" .
+
 deliberation:ScopeGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Scope graph" ;
     rdfs:comment "THE STORE's scopes — nobody's, and one graph rather than one per agent, since every agent reading one store would compute the same partition from the same rows — written whole by `scope_actions` from the actions the store holds and the derivations loaded: which predicates some one action or derivation reads or writes together, as `deliberation:Scope` nodes, and which scope each predicate and each action is in. The partition is a function of the actions loaded, which do not change while the agent runs; it was recomputed in Python on every derivation and is data now, so `derive_wants` reads it and clusters the results by it. A working graph: a conclusion, replaced whole per run, carried into no possible world and read beside no state, since none of it is a fact about the world a shape is written against." .
 ##  The store's scopes — written whole by `scope_actions` from the actions the store holds and
