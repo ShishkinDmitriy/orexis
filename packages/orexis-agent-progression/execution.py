@@ -41,8 +41,8 @@ def take_standing(agent, standing, judgment) -> bool:
     """Carry out a step that already stands — the trigger changed, the decision did not.
 
     An offer arriving while an Acquire stands, a reading arriving while an Actuate does: the
-    commitment was made on the tick and the actor could not act then. Nothing is re-decided;
-    the standing row is rebuilt from the ledger and handed over.
+    commitment was made on the mind's clock and the actor could not act then. Nothing is
+    re-decided; the standing row is rebuilt from the ledger and handed over.
     """
     #  The act is the ledger's, read whole — action, binding, quantity, window. It used to be
     #  patched here with what the want is ABOUT, because the kernel's own `about` column was

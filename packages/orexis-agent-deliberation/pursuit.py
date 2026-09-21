@@ -109,13 +109,38 @@ def consider(agent, now: datetime | None = None) -> None:
 
     IT MARKS AND DOES NOT SEARCH. The clock lands on the reactive loop, which must never be
     held for a pass, so what this does is note; `reviser` does the searching on a thread of
-    the mind's own. A want nobody may act on yet — a debt its holder has not presented — is
-    left standing and unmet: marking it would run a pass to decide nothing.
+    the mind's own. `consider_now` is the same pass taken on the caller's thread instead, and
+    the two share `_to_consider` so that neither can drift from the other.
+    """
+    for want in _to_consider(agent, now):
+        agent.reviser.note(want.uri, want)
+
+
+def consider_now(agent, now: datetime | None = None) -> None:
+    """THE SAME PASS, TAKEN RATHER THAN MARKED: what the reviser's drain amounts to once every
+    mark has been taken, done on the caller's thread.
+
+    It exists for a caller that needs the consequences before it looks — every test that
+    asserts on what a pass did, and nothing in production, where the clock marks and the
+    reviser's own thread searches. That is the ONLY difference between the two, and it is the
+    reason they share `_to_consider`: this was `Deliberator.deliberate_on_gaps`, which read
+    `agent.considering()` directly and so ran a pass WITHOUT the derivation — the staleness the
+    seam was built to remove, left in the path every test went down.
+    """
+    for want in _to_consider(agent, now):
+        pursue(agent, want)
+
+
+def _to_consider(agent, now: datetime | None):
+    """One pass, up to its ending: derive what is wanted, then yield what may be acted on.
+
+    A want nobody may act on yet — a debt its holder has not presented — is left standing and
+    unmet rather than yielded: a pass over it would decide nothing.
     """
     derived(agent)
     for want in agent.considering(now):
         if want.pursuable:
-            agent.reviser.note(want.uri, want)
+            yield want
 
 
 def derived(agent) -> list[str]:

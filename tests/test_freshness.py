@@ -8,6 +8,8 @@ unmet, and the reflex's `value is None` special case is gone with its behaviour 
 
 from __future__ import annotations
 
+from orexis_agent_deliberation import pursuit
+
 from datetime import datetime, timedelta, timezone
 
 import rdflib
@@ -273,7 +275,7 @@ def test_an_instrument_pointed_at_something_i_do_not_act_for_is_still_wanted_cur
                 if d.is_epistemic and d.observed_property.endswith("StoredLitres"))
     assert butt.state != "met", "the butt is polled, so its level is wanted current"
 
-    keeper.agent.deliberator.deliberate_on_gaps()
+    pursuit.consider_now(keeper.agent)
 
     #  The ledger names the want the search was handed — the one derived under the desire
     #  (#618) — and the container presents that one, with the property sensing gave it.

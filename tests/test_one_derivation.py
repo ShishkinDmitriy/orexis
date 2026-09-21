@@ -164,7 +164,7 @@ def test_a_pass_marks_a_presented_debt_and_leaves_an_unpresented_one_standing(mo
 
     pursued = []
     monkeypatch.setattr(deliberation.pursuit, "pursue", lambda a, j, **k: pursued.append(j.uri))
-    agent.deliberator.deliberate_on_gaps()
+    pursuit.consider_now(agent)
     assert asked["jti-7"].uri in pursued, "presented: reconsidered like any other want"
     assert asked["jti-6"].uri not in pursued, "unpresented: standing, hot, and not decided on"
 
