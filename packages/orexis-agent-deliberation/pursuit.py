@@ -36,6 +36,7 @@ from datetime import datetime
 from .derive_wants import derive_wants, forget_want
 from .judging import witnesses_of
 from .plan import SATISFIED
+from .wants import find_want
 
 from orexis_agent_progression.execution import carry_out
 from orexis_agent_progression.store import bindings
@@ -116,10 +117,12 @@ def _is_root(agent, want: str) -> bool:
 def child_of(agent, root: str) -> str | None:
     """The want derived under `root` that stands now, or None.
 
-    THROUGH THE REPOSITORY (#677): which graphs hold wants and what asks for one are `Wants`',
-    and this is the question rather than the query.
+    THROUGH THE MODULE THAT READS THEM (#677): which graphs hold wants and how one is asked
+    for are `wants.py`'s, and this is the question rather than the query. `derived=True`
+    because what stands under a root is the derivation's child — a debt or a promise under the
+    same name would be somebody else's want.
     """
-    found = agent.wants.find_first_by_desire(root)
+    found = find_want(agent.beliefs, desire=root, derived=True)
     return found.uri if found else None
 
 

@@ -117,8 +117,9 @@ can state a window at all. Only the last is work; the rest is subtraction.
 What the removal turned up is worth keeping: the four things the binding was saying each had an
 owner already, and the two live readers wanted a FOURTH thing it was not saying at all. They
 filtered on `orexis:AtEnd, orexis:At` to mean *not a debt* — whose path a want came by, which is
-the graph's classification. `Wants.find_first_by_desire` scopes to `deliberation:PursuedGraph`
-now, and `_CHILDREN_Q`'s filter turned out to be redundant twice over: the ledger writes no
+the graph's classification. The read scopes to `deliberation:PursuedGraph` now — it was
+`Wants.find_first_by_desire` and is `find_want(store, desire=…, derived=True)` — and
+`_CHILDREN_Q`'s filter turned out to be redundant twice over: the ledger writes no
 `orexis:holds`, so a debt never matched it, and a promise carries no `prov:wasDerivedFrom`.
 
 # Seams left open

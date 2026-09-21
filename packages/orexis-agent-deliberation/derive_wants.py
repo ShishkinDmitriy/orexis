@@ -69,7 +69,7 @@ SELECT ?s WHERE {
 
 #  WHAT ALREADY STANDS under one desire: every want derived from it that the derivation minted and
 #  whose graph still holds. A want IS its graph (#645), so which family it is in and whether it
-#  holds are the graph's questions, asked of the catalogue in the text as `Wants` asks them.
+#  holds are the graph's questions, asked of the catalogue in the text as `find_wants` asks them.
 #  A WANT A PLAN STANDS FOR is not withdrawn, however its desire now reads: the keeper is
 #  walking it, and dropping the want under a running plan would leave the plan pursuing
 #  nothing. `orexis:pursues` is the ledger's link and `orexis:resolvedAt` is how it ends —
@@ -360,9 +360,9 @@ WHERE  {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{graph}> ?p ?o .
 def forget_want(engine, agent_id: str, uri: str) -> None:
     """Remove one derived want over the ENGINE, for a caller that holds no collection.
 
-    `Wants.delete_by_uri` is the collection's door and announces itself; this is the
+    `Wants.delete_by_uri` was the collection's door and announced itself; this is the
     derivation's, which announces nothing and whose caller says what changed — the same
-    asymmetry `save_want` has beside `Wants.save`.
+    asymmetry `save_want` had beside `Wants.save`, and both doors are gone.
     """
     engine.update(_forget(graph_of(agent_id, uri)), prefixes=NAMESPACES)
 

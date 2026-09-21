@@ -1,7 +1,7 @@
 """Everything this agent is pursuing right now, as a collection.
 
 **THE ONE COLLECTION THAT IS MADE RATHER THAN HELD, and the exception is stated because the
-convention asks for it.** Every other repository here reads rows somebody wrote: `Wants` and
+convention asks for it.** Every other read here reads rows somebody wrote: `find_wants` and
 `Desires` hand back what is in a graph. Nothing ever writes these. This one ASSEMBLES — it
 asks every module what it is pursuing and how badly, runs an avoided state's own select to
 see whether the world has entered it, compiles a shape into the select whose rows are its
@@ -13,11 +13,11 @@ reason `Steps` is: what it hands back is a collection of domain objects, derived
 and never stored, and a caller asking "what am I pursuing" is asking for the contents rather
 than for a decision.
 
-**It is handed the AGENT, and unlike `Wants` that is not a failure to narrow.** What a want
-reads as here is CONTRIBUTED — the ledger reads a debt against its redeem window, sensing
+**It is handed the AGENT, and unlike `find_wants` that is not a failure to narrow.** What a
+want reads as here is CONTRIBUTED — the ledger reads a debt against its redeem window, sensing
 reads a stake against the survival envelope — so the collection has to reach the choir, and
-the choir is the agent. A repository over stored rows needs a store; a repository over
-contributed answers needs the contributors. That asymmetry is the clearest statement of what
+the choir is the agent. A read over stored rows needs a store; a read over contributed answers
+needs the contributors. That asymmetry is the clearest statement of what
 the two kinds of collection are.
 """
 
@@ -30,6 +30,7 @@ from datetime import datetime
 from rdflib import URIRef
 
 from orexis_agent_deliberation.want import Want
+from orexis_agent_deliberation.wants import find_wants
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import DESIRES
 from orexis_agent_progression.store import bind, bindings
@@ -83,11 +84,13 @@ class Pursuing:
         #  A ROOT IS PRESENTED AS THE WANT DERIVED UNDER IT (#618), where one stands: the
         #  root's own row — its measure, its reading, its property — under the derived want's
         #  name, naming the root beside it. The derived want is never lifted on its own.
-        #  ASKED OF THE COLLECTION THAT HOLDS THEM (#618): the want derived under each root,
-        #  and the instant it must hold at. This was a select here, keyed on the agent and on
-        #  the parent being a desire — every column of which is a field of `Want`.
+        #  ASKED OF THE MODULE THAT READS THEM (#618): the want derived under each root, and
+        #  the instant it must hold at. This was a select here, keyed on the agent and on the
+        #  parent being a desire — every column of which is a field of `Want`. `derived=True`
+        #  is the family the derivation mints into, said here rather than spelled into a
+        #  finder's name: what is wanted is the derivation's children, not a debt or a promise.
         children: dict = {}
-        for w in self._agent.wants.find_all_pursued(now):
+        for w in find_wants(self._agent.beliefs, now, derived=True):
             children.setdefault(w.desire, []).append(w)
         derived = {w.uri for ws in children.values() for w in ws}
         #  A CAPABILITY MAY SPEAK FOR A DERIVED WANT — the ledger reads the want under

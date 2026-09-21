@@ -421,16 +421,22 @@ it is a record wearing a bullet.
   the thing: nothing stands between a desire and a want, and what a judgment carried — the
   urgency, the reading, which way it broke — a WANT carries, made fresh where it is made
   fresh and stored where it is stored.
-- **A collection over stored rows is handed a store, and one over contributed answers is handed
-  the agent** — `Wants` reads graphs so it takes somewhere to search, `Pursuing` asks the choir
-  so it must reach the choir, and the asymmetry is what tells the two kinds of collection apart.
-- **The function that decides a thing owns writing it, and a collection only reads** — `Wants`
+- **A read over stored rows is handed a store, and one over contributed answers is handed the
+  agent** — `find_wants` reads graphs so it takes somewhere to search, `Pursuing` asks the choir
+  so it must reach the choir, and the asymmetry is what tells the two kinds of read apart.
+- **The function that decides a thing owns writing it, and a read only reads** — `Wants`
   carried `save`/`delete_by_uri` beside the module functions the derivation called, plus
   `on_saved`/`on_deleted` so a write could announce itself; the announcement had one live
   producer and one live consumer and both were rebuilding the desire projection, and the
   collection's own writers had no caller but their tests. A want's graph, its catalogue row
   and its period are decided where the want is, and whoever wrote says what changed.
-- **A singular file holds the model and its plural holds the collection** — `desire.py` and
+- **A criterion is an argument, never a name** — `Wants` was five finders over ONE query with a
+  `where` clause swapped, three of them called by nothing but their own test, because the Spring
+  Data spelling put each criterion in a method name and so charged a name per combination;
+  `find_wants(store, desire=…, derived=True)` says at the call site what `find_first_by_desire`
+  hid, and the one distinction worth a name of its own is the answer's SHAPE — a page against
+  one-or-None.
+- **A singular file holds the model and its plural holds the reads over it** — `desire.py` and
   `desires.py`, `want.py` and `wants.py`, so neither reader has to open the other's file.
 - **An update takes no dataset** — `Store.query` is handed its graphs per call, which is the
   door, and `Store.update` names them only in its own text; so what chooses which graphs are
@@ -912,7 +918,7 @@ fails if pyshacl ever entails something the closure does not. See
   And `a / b * c` is evaluated as `a / (b * c)` — measured, `0.02 / 0.375 * 1000000` gave
   five hundred-millionths — so parenthesise every chain of two operators. And `GROUP_CONCAT`
   over an IRI binds nothing — no column at all, measured — where `GROUP_CONCAT(STR(?x))`
-  binds; `Wants` reads a want's several abouts that way and `test_wants.py` pins it. It is the
+  binds; `find_wants` reads a want's several abouts that way and `test_wants.py` pins it. It is the
   same family as the empty-result trap above, arriving through arithmetic and aggregation: measure an unfamiliar operation on a
   literal before building a column on it, and pin what you measured — `tests/test_desires.py`
   does, so the day the engine grows the operation the guard says so.

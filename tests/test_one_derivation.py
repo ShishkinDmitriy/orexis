@@ -25,6 +25,7 @@ from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import PREDICTION
 from orexis_agent_progression import clock
+from orexis_agent_deliberation.wants import find_wants
 
 HOUR = 3600.0
 
@@ -38,7 +39,7 @@ def _host(monkeypatch, stock: float | None = None):
 
 
 def _want_for(agent, jti):
-    return next((w for w in agent.wants.find_all_pursued()
+    return next((w for w in find_wants(agent.beliefs, derived=True)
                  if any(a.endswith(f"obligation.{jti}") for a in w.about)), None)
 
 
@@ -47,7 +48,7 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_derivation_mint
     asks the derivation; the desire's select names the debt at that instant; it mints one want
     about that debt, holding at the deadline; and the ledger speaks for it."""
     agent, ledger, root = _host(monkeypatch)
-    assert agent.wants.find_all_pursued() == []
+    assert find_wants(agent.beliefs, derived=True) == []
     deadline = time.time() + HOUR
     debt = ledger.owe("fern", "jti-1", expires_at=deadline, amount_l=1.0)
     assert debt is not None
@@ -58,7 +59,7 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_derivation_mint
     assert not bindings(agent.beliefs.query_union(
         f"SELECT ?t WHERE {{ <{debt}> a ?t . FILTER(STRSTARTS(STR(?t), '{OREXIS}')) }}")), \
         "the debt row carries no kernel type — it is not a want"
-    [want] = agent.wants.find_all_by_desire(root)          # every desire derives; this one's
+    [want] = find_wants(agent.beliefs, desire=root)          # every desire derives; this one's
     assert want.desire == root and want.about == (debt,)
     assert want.uri.startswith(root + ".pursued.obligation.")
     assert abs(want.holds_at.timestamp() - deadline) < 1.0
@@ -110,7 +111,7 @@ def test_a_second_claim_is_a_second_want_and_the_first_stands(monkeypatch):
     assert pursuit.handed(agent, presented).uri == first.uri
     derive_wants(agent.beliefs.engine)
     assert derive_wants(agent.beliefs.engine) == [], "nothing new to mint"
-    assert {w.uri for w in agent.wants.find_all_by_desire(root)} == {first.uri, second.uri}
+    assert {w.uri for w in find_wants(agent.beliefs, desire=root)} == {first.uri, second.uri}
 
 
 def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(monkeypatch):
@@ -126,11 +127,11 @@ def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(mon
     agent, ledger, root = _host(monkeypatch, stock=3.0)
     deadline = time.time() + HOUR
     debt = ledger.owe("fern", "jti-5", expires_at=deadline, amount_l=0.5)
-    [foreseen] = agent.wants.find_all_pursued()
+    [foreseen] = find_wants(agent.beliefs, derived=True)
     assert foreseen.holds_at is not None, "minted at the lapse"
 
     ledger.demanded("jti-5")
-    [now] = agent.wants.find_all_pursued()
+    [now] = find_wants(agent.beliefs, derived=True)
     assert now.uri == foreseen.uri and now.about == (debt,), "the same want, re-minted"
     assert now.holds_at is None, "at no instant: the holder is waiting"
     derive_wants(agent.beliefs.engine)

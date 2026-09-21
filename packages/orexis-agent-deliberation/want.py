@@ -1,7 +1,8 @@
 """One want: a desire derived under another, carrying the temporals the parent has not.
 
-The MODEL. `Wants` beside this file is the collection of them, and the split is the file naming
-this package keeps — a singular file holds what a thing is, its plural holds where they are kept.
+The MODEL. `wants.py` beside this file holds the reads over them, and the split is the file
+naming this package keeps — a singular file holds what a thing is, its plural holds where they
+are kept and how they are asked for.
 
 See knowledge/domain/desire.md for what separates a want from the desire it comes from, and
 knowledge/decisions/a-repository-is-named-for-what-it-holds.md for why the two are separate files.

@@ -216,3 +216,35 @@ where facts are kept rather than to what they are called.
   deliberator deciding something is not a query and would read absurdly under it. The line is
   the one [a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md) already
   drew, and this convention stops at it.
+
+# Amendment: `Wants` is two functions, and the convention is being wound back
+
+The sovereign's ruling, on reading `find_steps` land as a function over a store: *a function
+over a triple store is more convenient — especially when we could have an update query that
+brings no data into Python and keeps everything in the triplestore.* The convention above is
+being dropped, and `Wants` — the exemplar this record was written around — went first.
+
+**What the repository bought is kept and costs no object.** The graph names and the query texts
+are still things a caller does not know: they live in `wants.py`, which now exports
+`find_wants(store, …)` and `find_want(store, …)`. What the class added on top of that was one
+instance per agent, assembled at boot, holding one attribute — the store it was handed. Nothing
+read the instance for anything else, so nothing was lost by deleting it.
+
+**Five finders were one question asked five ways.** `find_all`, `find_all_pursued`,
+`find_all_by_desire`, `find_first_by_desire` and `find_first_by_uri` ran ONE query with a
+`where` clause swapped and a graph family named or not; three of the five had no caller outside
+their own test. The Spring Data spelling put each criterion in a NAME, which is where the
+duplication came from: a new criterion meant a new method, and a combination of two meant a
+method per combination. They are keyword arguments now — `desire=`, `uri=`, `derived=` — said at
+the call site where a reader can see what is being asked.
+
+**The one distinction that survives as a name is the answer's SHAPE.** `find_wants` hands back a
+page and `find_want` hands back one or None, because a caller branches on that and on nothing
+else. That much of `find_all_by_x` versus `find_first_by_x` was always carrying its weight.
+
+**What the convention still covers, until it does not.** `Desires` and `Beliefs` are still
+classes, and the argument above still describes them. `Desires` is the next one, and it is not
+the same case: it is a PROJECTION with a rebuild, and whether the settings and the pick record
+are legitimately read through the desire modality is a question this record never asked. When it
+follows, this record is superseded rather than amended again, and the two principle lines in
+`AGENTS.md` that state the convention come out with it.
