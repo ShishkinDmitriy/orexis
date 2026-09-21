@@ -1,6 +1,6 @@
 """Every node an agent holds is in exactly one collection — the gate the split was missing.
 
-THIS IS THE TEST THAT WOULD HAVE CAUGHT IT. `Wants` asked `a orexis:Want` and `Desires` asked
+THIS IS THE TEST THAT WOULD HAVE CAUGHT IT. The wants read asked `a orexis:Want` and `Desires` asked
 `orexis:bindsWhen orexis:Always`, which are two different partitions assumed to be one — so a
 node typed a desire and bound `AtEnd` fell between them, and three of the four shipped worlds
 had their single desire, the whole point of the world, in NEITHER. Nothing failed, because
@@ -17,7 +17,7 @@ import pytest
 
 from orexis_agent_deliberation.beliefs import Beliefs
 from orexis_agent_deliberation.desires import Desires
-from orexis_agent_deliberation.wants import Wants
+from orexis_agent_deliberation.wants import find_wants
 from orexis_agent_progression.store import bindings
 
 from conftest import genesis_store
@@ -30,11 +30,11 @@ WORLDS = [("tower", "mover"), ("courier", "courier"), ("hanoi", "hanoi"), ("lone
 
 def _held(world: str, agent_id: str):
     beliefs = Beliefs(genesis_store(world=world), agent_id)
-    desires, wants = Desires(beliefs), Wants(beliefs)
+    desires = Desires(beliefs)
     held = {r["w"] for r in bindings(desires.query(
         f"SELECT ?w WHERE {{ <{beliefs.agent_uri}> orexis:holds ?w . ?w a ?t . "
         f"FILTER(?t IN (orexis:Desire, orexis:Want)) }}"))}
-    return held, {w.uri for w in wants.find_all()}, {d.uri for d in desires.find_all()}
+    return held, {w.uri for w in find_wants(beliefs)}, {d.uri for d in desires.find_all()}
 
 
 @pytest.mark.parametrize("world,agent_id", WORLDS)

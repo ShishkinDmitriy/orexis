@@ -1,8 +1,9 @@
 """Every desire this agent holds, as a collection — and the modality whose store holds them.
 
 `Desires` is BOTH, and they sit together because the store it owns IS the collection: a
-projection holding the roots and the records, rebuilt whenever a premise moves. `Wants` is
-handed a store because it WRITES, and its writes stale this projection; nothing writes a
+projection holding the roots and the records, rebuilt whenever a premise moves. The wants are
+read straight off the store because the derivation WRITES there, and those writes stale this
+projection; nothing writes a
 declared desire at runtime — they are authored at genesis and projected, never rebuilt (#644) —
 so this half reads and offers no `save`.
 
@@ -33,7 +34,7 @@ from orexis_agent_progression.ontology import DESIRE, RECORD, WANT
 
 log = logging.getLogger("desires")
 
-#  HOW MANY A `find_all` HANDS BACK unless the caller says otherwise — `Wants.PAGE`'s reason,
+#  HOW MANY A `find_all` HANDS BACK unless the caller says otherwise — `wants.PAGE`'s reason,
 #  and the same number: a collection whose size is the world's is one an author sizes by hoping.
 PAGE = 100
 
@@ -182,8 +183,9 @@ class Desires:
     #
     #  `Desires` is a repository as well as a modality, and the two sit together because the
     #  store it owns IS the collection: a projection holding the roots and the records, rebuilt
-    #  whenever a premise moves (a-repository-is-named-for-what-it-holds). `Wants` is handed a
-    #  store because it WRITES and its writes stale this projection; nothing writes a declared
+    #  whenever a premise moves (a-repository-is-named-for-what-it-holds). The wants are read
+    #  straight off the store because the derivation WRITES there and those writes stale this
+    #  projection; nothing writes a declared
     #  desire at runtime — they are authored at genesis and projected, never rebuilt (#644) —
     #  so this half reads and offers no `save`.
 
@@ -205,7 +207,7 @@ class Desires:
     def find_first_by_want(self, want: str) -> Desire | None:
         """The desire `want` was derived under, or None where it was derived from no desire.
 
-        THE QUESTION BELONGS HERE because the ANSWER is a desire. It was asked of `Wants` —
+        THE QUESTION BELONGS HERE because the ANSWER is a desire. It was asked of the wants —
         find the want by its uri, then read the name it kept — which walks through one
         collection to reach an element of another, and hands back a field rather than a thing.
         A want's provenance is the want's; what stands at the end of it is this collection's.
@@ -242,7 +244,7 @@ SELECT ?d ?label ?about WHERE {{
         same as fetching it, and a menu that fetched it knew a query text about somebody else's
         contents.
 
-        BOTH KINDS, spanning this collection and `Wants`. The planner keys the map by whatever
+        BOTH KINDS, spanning this collection and the wants. The planner keys the map by whatever
         node it is standing on, usually a want and sometimes a root, so the map holds both —
         which is the one question here that is not answerable from `find_all` alone.
 

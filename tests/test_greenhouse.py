@@ -23,6 +23,7 @@ from orexis_agent_deliberation.planner import Planner
 from orexis_agent_progression.store import Raw
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import KNOWN
+from orexis_agent_deliberation.wants import find_wants
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 AIR = "http://example.org/orexis/water#AirTemperature"
@@ -148,7 +149,7 @@ def test_the_want_minted_for_a_dry_warm_bed_is_about_the_soil_alone(monkeypatch)
     agent, _ = _grower(monkeypatch, moisture=0.20, air=21.0)
     handed = pursuit.handed(agent, _comfort(agent))
     assert handed is not None and handed.desire == COMFORT
-    minted = agent.wants.find_all_by_desire(COMFORT)         # every desire derives; the bed's
+    minted = find_wants(agent.beliefs, desire=COMFORT)         # every desire derives; the bed's
     assert [w.about for w in minted] == [(MOISTURE,)], "about the soil and nothing else"
     assert minted[0].uri.endswith(".pursued.SoilMoisture"), minted[0].uri
     plan = Planner(agent, agent.me).plan(handed)
@@ -162,7 +163,7 @@ def test_a_cold_dry_bed_mints_one_want_about_both(monkeypatch):
     from orexis_agent_deliberation import pursuit
     agent, _ = _grower(monkeypatch)
     pursuit.handed(agent, _comfort(agent))
-    minted = agent.wants.find_all_by_desire(COMFORT)
+    minted = find_wants(agent.beliefs, desire=COMFORT)
     assert len(minted) == 1 and set(minted[0].about) == {MOISTURE, AIR}
 
 

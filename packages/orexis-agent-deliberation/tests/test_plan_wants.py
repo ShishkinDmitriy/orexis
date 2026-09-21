@@ -26,6 +26,7 @@ from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import DELIBERATION_GRAPH
 
 from orexis_agent_deliberation.planner import Planner
+from orexis_agent_deliberation.wants import find_wants
 
 CASES_DIR = Path(__file__).parent / "plan_wants"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
@@ -41,7 +42,7 @@ def test_a_pass_leaves_the_store_as_the_snapshot_says(case, monkeypatch, request
     #  BELIEF BASE is left holding is the trace and the wants, and the plan is not in it. The
     #  plan is asserted where it lives, below.
     planners = {}
-    for want in agent.wants.find_all_pursued():
+    for want in find_wants(agent.beliefs, derived=True):
         planners[want.uri] = p = Planner(agent, agent.me)
         p.plan(want)
     agent.beliefs.update(

@@ -32,6 +32,7 @@ from orexis_agent_progression.store import bindings
 from orexis_agent_deliberation.steps import find_steps
 from orexis_agent_deliberation.imaginarium import Imaginarium
 from orexis_agent_deliberation.planner import PASS_GRAPH, Planner
+from orexis_agent_deliberation.wants import find_wants
 
 HANOI = "http://example.org/orexis/hanoi#"     # what hanoi:Move declares it takes
 
@@ -52,7 +53,7 @@ def test_a_pass_forks_the_worlds_the_case_says(case, monkeypatch, request, snaps
 
     monkeypatch.setattr(Imaginarium, "reached", spy)
     agent = snapshots.stand_in(case)
-    (want,) = agent.wants.find_all_pursued()
+    (want,) = find_wants(agent.beliefs, derived=True)
     planner = Planner(agent, agent.me)
     plan = planner.plan(want)
     #  A CASE EITHER FINDS SOMETHING OR SAYS WHY NOT. `exhausted` is a legitimate answer and
@@ -83,7 +84,7 @@ def test_the_first_iteration_of_the_two_disk_puzzle_makes_two_worlds(monkeypatch
     monkeypatch.setattr(Imaginarium, "reached", lambda self, p, path, a, r: (
         forks.append((p, reached(self, p, path, a, r))) or forks[-1][1]))
     agent = snapshots.stand_in(CASES_DIR / "two_disk_hanoi.trig")
-    (want,) = agent.wants.find_all_pursued()
+    (want,) = find_wants(agent.beliefs, derived=True)
     Planner(agent, agent.me).plan(want)
     root = forks[0][0]
     first = [made for parent, made in forks if parent == root]
@@ -111,7 +112,7 @@ def test_the_store_alone_says_what_the_pass_decided(monkeypatch, snapshots):
     """
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     agent = snapshots.stand_in(CASES_DIR / "two_disk_hanoi.trig")
-    (want,) = agent.wants.find_all_pursued()
+    (want,) = find_wants(agent.beliefs, derived=True)
     planner = Planner(agent, agent.me)
     plan = planner.plan(want)
     im = planner.imaginarium
@@ -183,7 +184,7 @@ def test_a_world_says_when_it_is_and_a_step_says_how_long_it_took(monkeypatch, s
     """
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     agent = snapshots.stand_in(CASES_DIR / "two_levers_that_take_different_time.trig")
-    (want,) = agent.wants.find_all_pursued()
+    (want,) = find_wants(agent.beliefs, derived=True)
     planner = Planner(agent, agent.me)
     plan = planner.plan(want)
     rows = {r["w"].rsplit("/", 1)[-1]: r for r in bindings(planner.imaginarium.query_over(
@@ -229,7 +230,7 @@ def test_the_inputs_to_the_next_iteration_are_all_in_the_store(monkeypatch, snap
     #  THE CASE SAYS ITS OWN BUDGET — `deliberation:budgetWorlds` in its pick record, read the
     #  way every pick is — so what stops this pass is in the file rather than in this test.
     agent = snapshots.stand_in(CASES_DIR / "a_budget_that_stops_the_search.trig")
-    (want,) = agent.wants.find_all_pursued()
+    (want,) = find_wants(agent.beliefs, derived=True)
     planner = Planner(agent, agent.me)
     assert planner.budget == 4, "the case's own budget, not this test's"
     plan = planner.plan(want)

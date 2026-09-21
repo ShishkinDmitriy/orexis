@@ -20,6 +20,7 @@ from orexis_agent_deliberation.derive_wants import derive_wants
 from orexis_agent_deliberation.planner import Planner
 from orexis_agent_progression.store import bindings
 from conftest import build_agent, genesis_store, write_reading
+from orexis_agent_deliberation.wants import find_wants
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 DOSING = "http://example.org/orexis/actuation#Dosing"
@@ -177,13 +178,13 @@ def test_a_pot_that_crosses_before_the_drift_said_is_wanted_now_and_not_at_the_c
     root = _stake(agent)
     agent.deliberator.decide(root)
     child = _stake(agent)
-    [minted] = agent.wants.find_all_by_desire(root.uri)     # every desire derives; the stake's
+    [minted] = find_wants(agent.beliefs, desire=root.uri)     # every desire derives; the stake's
     assert minted.uri == child.uri and minted.holds_at is not None, "minted at the crossing"
 
     write_reading(agent, 0.05)                                       # below the floor, now
     assert pursuit.handed(agent, child).holds_at is None, \
         "handed the want as it stands now, not as the pass first read it"
-    [again] = agent.wants.find_all_by_desire(root.uri)
+    [again] = find_wants(agent.beliefs, desire=root.uri)
     assert again.uri == minted.uri and again.holds_at is None, "the same want, at no instant"
     derive_wants(agent.beliefs.engine)
     assert derive_wants(agent.beliefs.engine) == [], "and once is enough"

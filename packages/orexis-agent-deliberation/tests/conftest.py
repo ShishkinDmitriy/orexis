@@ -30,7 +30,6 @@ from orexis_agent_progression.store import Store
 
 from orexis_agent_deliberation import pursuit
 from orexis_agent_deliberation.desires import Desires
-from orexis_agent_deliberation.wants import Wants
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 AGENT, ME = "keeper", "http://example.org/test#keeper"
@@ -70,7 +69,7 @@ def stand_in(case: Path, text: str | None = None):
     (ontology,) = st.graphs_of(OREXIS + "OntologyGraph") or [None]
     assert ontology is not None, f"{case.name} types no graph as the vocabulary's"
     st.close_catalogue()      # a case's rows say one class each; every kind stands on them now, as on a volume's
-    desires, wants = Desires(st), Wants(st)
+    desires = Desires(st)
     #  ENOUGH TO RUN A SEARCH, and no more. What a world affords is a function over a
     #  store, so a case needs no collections at all; `desire_urgency` is the CHOIR, which a case has no
     #  members to ask — it answers None, and the planner then judges a compiled want the way
@@ -79,7 +78,7 @@ def stand_in(case: Path, text: str | None = None):
     #  objective is in the store, which is what makes a search snapshot-shaped at all.
     from orexis_agent_deliberation.steps import find_steps
     return SimpleNamespace(id=AGENT, me=SimpleNamespace(uri=ME, acts_for=None), beliefs=st, desires=desires,
-                           wants=wants, ask=lambda *a, **k: [], keeper=None,
+                           ask=lambda *a, **k: [], keeper=None,
                            picks=picks_graph(AGENT),
                            desire_urgency=lambda *a, **k: None)
 

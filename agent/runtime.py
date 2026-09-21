@@ -47,7 +47,6 @@ from orexis_agent_deliberation.deliberator import KEEPING_PICKS, Deliberator
 from orexis_agent_deliberation.want import Want
 from orexis_agent_deliberation.desires import Desires
 from orexis_agent_deliberation.reviser import Reviser
-from orexis_agent_deliberation.wants import Wants
 from orexis_agent_progression.intentions import Intentions
 
 from .pursuing import Pursuing
@@ -114,12 +113,6 @@ class Agent:
         # decides its own store and its own writability — this one exposes no writer — and
         # the agent holds the modalities, never the stores, by the sovereign's ruling.
         self.desires = Desires(self.beliefs)
-        #  The wants this agent holds, as a collection (#677). It is handed a store to search
-        #  and writes to it; the desire modality is a PROJECTION of that store, so a write
-        #  makes it stale — and being told so is this assembler's job rather than the
-        #  collection's, which is why the rebuild is registered here and not taken on its own
-        #  initiative.
-        self.wants = Wants(self.beliefs)
         #  Everything this agent is pursuing, as a collection. Handed the WHOLE agent, and
         #  that is the point rather than an omission: what a want reads as is contributed by
         #  whichever capability holds the stake, so the collection has to reach the choir.

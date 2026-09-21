@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from orexis_agent_deliberation import pursuit
-from orexis_agent_deliberation.derive_wants import mint
+from orexis_agent_deliberation.derive_wants import graph_of, mint
 from orexis_agent_progression import clock
 from orexis_capability_market import rounds
 from orexis_capability_market.bidding import claim_graph
@@ -62,7 +62,7 @@ def test_a_pursued_child_and_a_prediction_past_their_ends_are_swept(monkeypatch)
     reading = readings.current_reading(agent.beliefs.reader(PUBLIC), agent.me.acts_for, MOISTURE)
     ladder = predictions.write(agent, agent.me.uri, agent.me.acts_for, MOISTURE, reading, 600.0, 45.0)
     assert ladder
-    ended = {agent.wants.graph_of(agent.id, child), *ladder}
+    ended = {graph_of(agent.id, child), *ladder}
     assert ended <= set(agent.beliefs.outdated())
     assert pursuit.child_of(agent, root) is None, "a child past its instant is pursued by nobody"
     assert agent.beliefs.graphs_of(PREDICTION, at=clock.now()) == []

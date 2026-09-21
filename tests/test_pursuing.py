@@ -16,6 +16,7 @@ from orexis_agent_progression.store import bindings
 from conftest import build_agent, genesis_store, write_reading
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import WANT
+from orexis_agent_deliberation.derive_wants import graph_of
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 DOSING = "http://example.org/orexis/actuation#Dosing"
@@ -165,6 +166,6 @@ def test_the_pursued_graph_is_this_agents_own_and_recorded(monkeypatch):
     root = _stake(agent)
     agent.deliberator.decide(root)
     child = _stake(agent)
-    graph = agent.wants.graph_of(agent.id, child.uri)
+    graph = graph_of(agent.id, child.uri)
     assert graph in agent.beliefs.graphs_of(WANT), "the derivation classified what it wrote"
     assert graph in agent.beliefs.graphs_of("http://example.org/orexis/deliberation#PursuedGraph")

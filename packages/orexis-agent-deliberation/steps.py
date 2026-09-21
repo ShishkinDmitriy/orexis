@@ -36,7 +36,7 @@ from orexis_agent_progression.ontology import PUBLIC
 #  There is nothing to traverse from — a step and a candidate are what this is about to make.
 #
 #  `STR(?takes)` because GROUP_CONCAT over an IRI binds NOTHING in this engine — no column at
-#  all, measured — where the string form binds; the same trap `Wants` reads a want's abouts
+#  all, measured — where the string form binds; the same trap `find_wants` reads a want's abouts
 #  through. An action declaring no parameter yields the empty string, which is a legal answer:
 #  it is filled with nothing and affords at most one row.
 _ACTIONS = """SELECT ?action ?available (GROUP_CONCAT(DISTINCT STR(?takes); separator=" ") AS ?takes_) WHERE {
