@@ -41,7 +41,7 @@ def _both_verdicts(agent):
     from orexis_agent_progression.store import bindings
 
     out = []
-    for desire in agent.pursuing():
+    for desire in agent.considering():
         p = Planner(agent, agent.me)
         node = p._begin(desire)
         shape = p._shape_of(desire)
@@ -94,7 +94,7 @@ def test_the_compiled_select_agrees_with_the_judge(monkeypatch, case):
         #  unmet; whatever the word, a want the module calls anything but met is one the
         #  compiled select must find violated, and a met one it must find clean.
         assert (state != "met") == compiled, \
-            f"{case}, {want}: pursuing() reports {state} against the compiled {compiled}"
+            f"{case}, {want}: considering() reports {state} against the compiled {compiled}"
 
 
 def test_both_answers_are_reached_so_the_parity_is_not_vacuous(monkeypatch):
@@ -116,7 +116,7 @@ def test_a_carried_parcel_is_astray_by_the_shape_alone(monkeypatch):
     select says so without anyone having written "astray"."""
     world, name, pose, readings = CASES["courier, parcel aboard"]
     agent = _agent(monkeypatch, world, name, pose, readings)
-    assert next(d for d in agent.pursuing()
+    assert next(d for d in agent.considering()
                 if d.uri.endswith("every_parcel_delivered")).state == "unmet"
 
 

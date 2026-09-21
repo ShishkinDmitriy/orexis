@@ -553,7 +553,7 @@ SELECT ?bridge ?construct ?estimate WHERE {{
         """The step this intention stands at is of an action nobody takes: raise its promise
         as a want for the level beneath and wait on it. The predicted fact, translated through
         the bridge, becomes an `orexis:Desire` this agent holds — in its promises graph, and
-        in the desire modality at once — with the bridge's estimate, so `pursuing` lifts it
+        in the desire modality at once — with the bridge's estimate, so `considering` lifts it
         and the ordinary path plans it over the actions that are taken. The step is held on
         the same translated fact as its completion; the verdict withdraws the promise. False
         where the action has no bridge: a promise nobody could keep, said loudly (#532)."""
@@ -1499,7 +1499,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{expectation.uri}> <{PROGRESSION + "by"}> ?wa
             return False
         self.log.info("advanced %s to %s", _short(expectation.uri), standing.action.rsplit("#", 1)[-1])
         self._tell("advanced", standing.action, expectation.want, "the previous step was answered")
-        judgment = next((d for d in self.agent.pursuing() if d.uri == expectation.want), None)
+        judgment = next((d for d in self.agent.considering() if d.uri == expectation.want), None)
         carry_out(self.agent, standing.step, judgment, expectation.uri)
         return True
 
@@ -1567,10 +1567,10 @@ GROUP BY ?s ?next ?action ?quantity ?predicts ?precondition""", self.graph, *sel
 
     def _want_met(self, want: str) -> bool:
         """Whether the want this intention pursues reads MET now, by whoever holds it — the
-        same question `pursuing()` answers the deliberator, asked of the container and never
+        same question `considering()` answers the deliberator, asked of the container and never
         of a store: what met means is the want's own (a shape, a measure, a pattern), and the
         ledger knows none of it."""
-        return any(d.state == "met" for d in self.agent.pursuing()
+        return any(d.state == "met" for d in self.agent.considering()
                    if d.uri == want or d.desire == want)
 
     def _next_of(self, intention_uri: str) -> str | None:

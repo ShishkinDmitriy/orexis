@@ -62,13 +62,13 @@ def test_every_shipped_want_falls_inside_one_scope(world, monkeypatch):
     for agent_id in agents:
         #  A PLAIN AGENT, not the wired builder: a world whose agent holds no bus has no
         #  transport module for the builder's conveniences to find, and nothing here speaks
-        #  to a wire — only to `pursuing` and the planner's view.
+        #  to a wire — only to `considering` and the planner's view.
         from agent import runtime
         st = genesis_store(world=world)
         genesis.classify_kernel_graphs(st, agent_id)
         agent = runtime.Agent(agent_id, st=st)
         planner = Planner(agent, agent.me)
-        for want in agent.pursuing():
+        for want in agent.considering():
             planner._begin(want)
             view = planner._view_of(want)
             seen += 1

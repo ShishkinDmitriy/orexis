@@ -1,4 +1,4 @@
-"""What an agent is pursuing — the split pair and its one join (#234, #298).
+"""What an agent holds, as its packages contribute it — the split pair and its one join (#234, #298).
 
 `desires.rq` asks the desire modality, `readings.rq` asks the belief modality, and `desires_of`
 is the join. It carried MAGNITUDES too — a stake's from the capability answering the choir, an
@@ -284,7 +284,7 @@ def test_an_obligation_is_judged_by_the_met_test_the_ledger_wrote(monkeypatch):
     #  (one-function-mints-every-want): a `sh:sparql` in the ledger's own words, whose
     #  violation is a debt presented or lapsing and not discharged — so a world where a
     #  serve wrote the discharge reads met. AND IT NAMES NO WORLD (#666).
-    want = next(d for d in supplier.pursuing() if getattr(d, "claim", None) == "m1")
+    want = next(d for d in supplier.considering() if getattr(d, "claim", None) == "m1")
     assert want.uri != debt, "the want is the derivation's, not the debt"
     rows = bindings(supplier.beliefs.query_union(f"""SELECT ?t WHERE {{
         <{want.uri}> orexis:metWhen ?shape . ?shape sh:sparql ?c . ?c sh:select ?t }}"""))
@@ -297,5 +297,5 @@ def test_an_obligation_is_judged_by_the_met_test_the_ledger_wrote(monkeypatch):
         "judged by the select compiled from the ledger's shape, not by a kernel branch"
     assert "dischargedAt" not in inspect.getsource(planner_module), "the kernel names no ledger word"
     ledger.discharge("m1")
-    assert not any(getattr(d, "claim", None) == "m1" for d in supplier.pursuing()), \
+    assert not any(getattr(d, "claim", None) == "m1" for d in supplier.considering()), \
         "paid: no longer pursued"

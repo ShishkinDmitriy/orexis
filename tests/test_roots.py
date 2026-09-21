@@ -71,7 +71,7 @@ def test_the_rebuild_runs_no_rule(monkeypatch):
         raise AssertionError("a rebuild asked for the desire rules")
     monkeypatch.setattr(loader, "desires_rule_files", refused)
     agent.desires.rebuild()
-    stake = next(d for d in agent.pursuing() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
+    stake = next(d for d in agent.considering() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
     assert stake.uri == "http://example.org/orexis#desire.gardener.SoilMoisture"
 
 

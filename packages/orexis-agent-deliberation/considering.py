@@ -1,17 +1,23 @@
-"""Everything this agent is pursuing right now, as a collection.
+"""Everything this agent is considering right now, as a collection.
 
 **THE ONE COLLECTION THAT IS MADE RATHER THAN HELD, and the exception is stated because the
 convention asks for it.** Every other read here reads rows somebody wrote: `find_wants` and
 `Desires` hand back what is in a graph. Nothing ever writes these. This one ASSEMBLES — it
-asks every module what it is pursuing and how badly, runs an avoided state's own select to
+asks every module what it holds, runs an avoided state's own select to
 see whether the world has entered it, compiles a shape into the select whose rows are its
 violations, and hands back what comes back — in no order, since nothing chose by one.
 
 That makes it a repository by its name and a service by its work, which is a line this repo
 usually holds (`a-repository-is-not-a-service`). It is kept on the collection side for the
 reason `Steps` is: what it hands back is a collection of domain objects, derived on every ask
-and never stored, and a caller asking "what am I pursuing" is asking for the contents rather
-than for a decision.
+and never stored, and a caller asking "what am I considering" is asking for the contents
+rather than for a decision.
+
+**CONSIDERING, NOT PURSUING, and the two are a pass apart.** `pursuit.consider` derives what
+is wanted and hands what may be acted on to the search; `pursuit.pursue` plans one of them,
+commits and takes. So this is everything the agent is WEIGHING — a want nobody may act on yet
+is in it, and a want being walked is in it too — and pursuing is what happens to one of them
+next. It was `Pursuing` while the container held it and the pass had no name of its own.
 
 **It is handed the AGENT, and unlike `find_wants` that is not a failure to narrow.** What a
 want reads as here is CONTRIBUTED — the ledger reads a debt against its redeem window, sensing
@@ -37,9 +43,9 @@ from orexis_agent_progression.store import bind, bindings
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import FORESEEN, KNOWN
 
-log = logging.getLogger("pursuing")
+log = logging.getLogger("considering")
 
-#  The avoided-pattern wants the kernel lifts into pursuit itself (#468) — see `pursuing`.
+#  The avoided-pattern wants the kernel lifts itself (#468) — see `find_all` below.
 #  The select is OPTIONAL here because the node a want points at may be the DOMAIN's — declared
 #  in a package's ontology, public knowledge the desire modality does not keep after its
 #  rebuild — and is then read from the belief base, whose default graph merges public knowledge.
@@ -62,14 +68,14 @@ SELECT ?me ?want ?shape WHERE {
 }"""
 
 
-class Pursuing:
-    """Everything this agent is pursuing, hottest first."""
+class Considering:
+    """Everything this agent is considering, hottest first."""
 
     def __init__(self, agent):
         self._agent = agent
 
     def find_all(self, now: datetime | None = None) -> list[Want]:
-        """Everything this agent is pursuing, hottest first, whoever sourced it.
+        """Everything this agent is considering, hottest first, whoever sourced it.
 
         Assembled from the modules that hold wants rather than asked of one, because since the
         ledger became its own capability no single module can see them all: desire contributes

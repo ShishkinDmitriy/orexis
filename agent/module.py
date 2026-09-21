@@ -126,13 +126,13 @@ class Module:
 
     @contributes(DESIRES)
     def desires(self, now: "datetime | None" = None) -> list["Want"]:
-        """What this module contributes to what the agent is pursuing. Empty by default.
+        """What this module contributes to what the agent is considering. Empty by default.
 
         A choir hook, like `annotate` and `series`: desires are the AGENT's, assembled from
         whichever of its modules hold wants, because no single module can see all of them any
         more. Sensing contributes stakes and owing contributes debts, and an agent may have
         either without the other — a plant wants for itself and owes nobody, a pure seller owes
-        and wants nothing for itself. Ranking them against each other is `agent.pursuing()`, which
+        and wants nothing for itself. Ranking them against each other is `agent.considering()`, which
         is where a currency common to both belongs.
         """
         return []

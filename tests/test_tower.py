@@ -83,7 +83,7 @@ def test_seven_moves_are_planned_once_above_and_each_is_planned_as_drives_below(
     monkeypatch.setattr(planner.Planner, "plan",
                         lambda self, d, **kw: (searches.append(d.uri), real(self, d, **kw))[1])
     keeper = agent.keeper
-    outer = pursuit.pursue(agent, next(g for g in agent.pursuing() if g.uri == WANT))
+    outer = pursuit.pursue(agent, next(g for g in agent.considering() if g.uri == WANT))
     assert outer is not None and searches == [WANT], "one search at hanoi's level"
     outer_steps = bindings(agent.intentions.query_union(
         f"SELECT ?s WHERE {{ <{outer}> progression:step ?s }}"))
@@ -91,7 +91,7 @@ def test_seven_moves_are_planned_once_above_and_each_is_planned_as_drives_below(
 
     moves_kept, drives = 0, []
     for _ in range(7):
-        promises = [d for d in agent.pursuing() if d.uri.startswith(PROMISE)]
+        promises = [d for d in agent.considering() if d.uri.startswith(PROMISE)]
         assert len(promises) == 1, "the Move that is current raised exactly one promise"
         inner = pursuit.pursue(agent, promises[0])
         assert inner is not None, "the courier's search found the drives"
@@ -101,7 +101,7 @@ def test_seven_moves_are_planned_once_above_and_each_is_planned_as_drives_below(
         drives.append(inner_steps)
         moves_kept += 1
     assert keeper.standing() == [], "every Move kept its promise and the plan finished"
-    goal = next(g for g in agent.pursuing() if g.uri == WANT)
+    goal = next(g for g in agent.considering() if g.uri == WANT)
     assert goal.state == "met", "the tower stands on peg C — in hanoi's words, written by the bridge"
     assert searches.count(WANT) == 1 and len([s for s in searches if s.startswith(PROMISE)]) == 7, \
         "one search above, one below per Move"
@@ -124,9 +124,9 @@ def test_a_move_the_courier_cannot_make_is_refused_below_and_the_outer_level_sto
     agent.beliefs.update(f"DELETE WHERE {{ GRAPH <{STATE_GRAPH}> {{ <{W}van> <{C}at> ?c }} }}")
     agent.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <{W}van> <{C}at> <{W}c1_0> }} }}")
     keeper = agent.keeper
-    outer = pursuit.pursue(agent, next(g for g in agent.pursuing() if g.uri == WANT))
+    outer = pursuit.pursue(agent, next(g for g in agent.considering() if g.uri == WANT))
     assert outer is not None, "the outer level plans without seeing a cell"
-    promises = [d for d in agent.pursuing() if d.uri.startswith(PROMISE)]
+    promises = [d for d in agent.considering() if d.uri.startswith(PROMISE)]
     assert len(promises) == 1
     failed = agent.deliberator._plans_failed
     assert pursuit.pursue(agent, promises[0]) is None, "the courier finds no way to peg C"
@@ -136,7 +136,7 @@ def test_a_move_the_courier_cannot_make_is_refused_below_and_the_outer_level_sto
     refused = bindings(agent.intentions.query_union(
         f"SELECT ?s ?a WHERE {{ ?s progression:refusedBelow ?at ; <{ONTO}> ?a }}"))
     assert len(refused) == 1 and refused[0]["a"] == H + "PegC", "the refusal is on the step, naming the peg"
-    again = pursuit.pursue(agent, next(g for g in agent.pursuing() if g.uri == WANT))
+    again = pursuit.pursue(agent, next(g for g in agent.considering() if g.uri == WANT))
     assert again is not None and again != outer, "the outer level decides again, around the refusal"
     head = keeper.current(again)
     assert not (head.value_of(DISK) == W + "disk_1" and head.value_of(ONTO) == H + "PegC"), \

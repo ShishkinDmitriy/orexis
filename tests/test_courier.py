@@ -43,7 +43,7 @@ def _driver(monkeypatch, van, parcel):
 
 
 def _goal(agent):
-    return next(g for g in agent.pursuing() if g.uri == WANT)
+    return next(g for g in agent.considering() if g.uri == WANT)
 
 
 def _plan(agent, budget=None):

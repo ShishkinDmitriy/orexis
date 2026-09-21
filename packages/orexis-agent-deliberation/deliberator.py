@@ -110,10 +110,10 @@ class Deliberator:
         """Every desire this agent holds, with the move I propose for it — or None.
 
         Here because deciding what can be done is exactly what a deliberator is, and because
-        the kernel may not name a capability's family: `agent.pursuing()` merges what the modules
+        the kernel may not name a capability's family: `agent.considering()` merges what the modules
         want, and this is the only place that can say whether anything answers.
         """
-        return [(judgment, self.propose_for(judgment)) for judgment in self.agent.pursuing()]
+        return [(judgment, self.propose_for(judgment)) for judgment in self.agent.considering()]
 
     def start(self) -> None:
         """Drop whatever the last process was thinking.
@@ -125,7 +125,7 @@ class Deliberator:
         """
         self.agent.beliefs.clear_graph(DELIBERATION_GRAPH)
         #  THE CLOCK IS THE CONTAINER'S. This module kept a `Timer` on the agent's patience
-        #  and its landing read `agent.pursuing()` back — a module keeping its own timer and
+        #  and its landing read `agent.considering()` back — a module keeping its own timer and
         #  checking its own trigger, which AGENTS.md names as the middle layer rebuilt inside
         #  a capability. The agent waits now and calls `pursuit.consider`, which is this
         #  package's one way in; what that pass does is unchanged, and it derives first.
@@ -145,7 +145,7 @@ class Deliberator:
 
         What nobody may act on yet is skipped, as the tick skips it — see `tick`.
         """
-        for judgment in self.agent.pursuing():
+        for judgment in self.agent.considering():
             if not judgment.pursuable:
                 continue
             pursuit.pursue(self.agent, judgment)

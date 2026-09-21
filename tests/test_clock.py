@@ -76,7 +76,7 @@ def test_the_simulation_fern_foresees_and_places_under_the_worlds_pace(monkeypat
     #  it stopped fitting: boot alone is 4.18s of a 6.25s budget on this bench, measured.
     made = clock.now()
     agent = build_agent("fern", st, monkeypatch)
-    root = next(d for d in agent.pursuing() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
+    root = next(d for d in agent.considering() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
     derive_wants(agent.beliefs.engine)   # a crossing is what the last judging found
     #  AND THE PROJECTION WITH IT, which every production caller of the derivation pairs with
     #  it (`pursuit.derived`) and this raw one must too. The planner compiles a want's met-test
@@ -92,5 +92,5 @@ def test_the_simulation_fern_foresees_and_places_under_the_worlds_pace(monkeypat
     open_round_for(agent, "fern", seconds=3600.0)   # an hour of the world: twenty-five real seconds
     uri = pursuit.pursue(agent, root)
     assert uri is not None, "a purchase that lands in nine hundred of the world's seconds is ahead of a crossing four hours out"
-    child = next(d for d in agent.pursuing() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
+    child = next(d for d in agent.considering() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
     assert child.holds_at is not None and abs((child.holds_at - crossing).total_seconds()) < 1.0

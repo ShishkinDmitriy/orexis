@@ -149,7 +149,7 @@ class SensingModule(Module):
         #  states it needs, read once here. They were the kernel's deducer's, and every
         #  question about them is a question about a reading, so they are mine now
         #  (the-stake-is-sensings-want). Every sensing module the agent composes reads the
-        #  same ones, and `Agent.pursuing` folds a want seen twice into one by its node.
+        #  same ones, and `Agent.considering` folds a want seen twice into one by its node.
         self.regions: dict[str, Region] = regions_of(self.agent.beliefs.reader(PUBLIC), self.me.uri)
         #  And the AIM inside each — the agent's own pick, a belief, which a review may move.
         self._aims: dict[str, float] = aims_of(self.agent.desires.query, self.agent.id,
@@ -554,9 +554,9 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
         subject, and the freshness want of each instrument that reads it.
 
         AS THE CONTAINER PRESENTS THEM (#618): while a want derived under a root stands, the
-        agent is pursuing THAT, under its own name, and an actor holding a reading must key
+        agent is considering THAT, under its own name, and an actor holding a reading must key
         its commitment, its expectation and its mark on the name the ledger holds."""
-        return [w for w in self.agent.pursuing()
+        return [w for w in self.agent.considering()
                 if getattr(w, "observed_property", None) == observed_property
                 and (w.is_epistemic or subject_uri in (None, self.me.acts_for))]
 
@@ -821,12 +821,12 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
         property has a MET freshness want. Issue #124's case holds by the same path: a dead
         probe's last observation is upserted and never expires, but its freshness want goes
         cold, and the gap stops counting as seen."""
-        fresh = {getattr(d, "observed_property", None) for d in self.agent.pursuing()
+        fresh = {getattr(d, "observed_property", None) for d in self.agent.considering()
                  if d.is_epistemic and d.is_met}
         return {prop: gap for prop, gap in self.gaps().items() if prop in fresh}
 
     def desires(self, now: datetime | None = None) -> list[Want]:
-        """My contribution to what the agent is pursuing: its stakes and its freshness wants,
+        """My contribution to what the agent is considering: its stakes and its freshness wants,
         the two kinds whose premise is an observation. The obligations are the ledger's."""
         from .rows import desires_of  # deferred (#455): same reason as ObservedWant above
         return desires_of(self.agent.desires.query, self.agent.beliefs.reader(PUBLIC),

@@ -45,7 +45,7 @@ def _border_and_planner(monkeypatch):
     from orexis_agent_deliberation.planner import Planner
     agent = build_agent("fern", genesis_store({"fern": 0.30}), monkeypatch)
     planner = Planner(agent, agent.me)
-    desire = next(d for d in agent.pursuing() if getattr(d, "observed_property", None))
+    desire = next(d for d in agent.considering() if getattr(d, "observed_property", None))
     here = planner._begin(desire)
     return agent, planner, here, planner._border(here)
 

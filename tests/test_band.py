@@ -135,7 +135,7 @@ def test_a_predicted_reading_carries_its_band_and_a_premise_states_the_standing_
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     agent = build_agent("gardener", genesis_store({("zz", MOISTURE): 0.05, ("water_butt", STORED): 3.0},
                                                   world="loner"), monkeypatch)
-    desire = next(g for g in agent.pursuing() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
+    desire = next(g for g in agent.considering() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     plan = Planner(agent, agent.me).plan(desire)
     assert plan.steps, "a dry gardener doses"
     adds, _ = plan.steps[0].predicts

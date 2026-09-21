@@ -35,7 +35,7 @@ def _foreseeing(monkeypatch, **kw):
 
 def _pursued(agent):
     """The want the container presents for the bed's comfort: the root, or what is derived under it."""
-    return next(d for d in agent.pursuing() if d.uri == COMFORT or d.desire == COMFORT)
+    return next(d for d in agent.considering() if d.uri == COMFORT or d.desire == COMFORT)
 
 
 def test_the_bed_crosses_toward_a_cold_outside_at_the_stated_rate(monkeypatch):

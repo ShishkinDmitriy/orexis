@@ -454,10 +454,13 @@ it is a record wearing a bullet.
   desire reads, so what fixed it was not a better re-judging but `pursuit.consider` deriving
   every pass — the third reading above, and the reason it existed, both gone with the seam.
 - **The layer that waits does the waiting, and a package has ONE way in** — deliberation kept
-  a `Timer` and its landing reached back into `agent.pursuing()`, so the container and the
-  mind each reached into the other and no single place was where a pass began; the container
-  holds the clock now and calls `pursuit.consider`, and what a want IS stays in the package
-  that has the word.
+  a `Timer` and its landing reached back into the container's collection, so the two reached
+  into each other and no single place was where a pass began; the container holds the clock
+  now and calls `pursuit.consider`, and what a want IS stays in the package that has the word.
+- **Considering and pursuing are a pass apart** — `consider` derives what is wanted and hands
+  what may be acted on to the search, `pursue` plans one of them and commits, so a want nobody
+  may act on yet is CONSIDERED and never pursued; the collection was `Pursuing` while the
+  container held it and the pass had no name of its own.
 - **A want somebody else sourced is still an INSTANCE under a standing desire** — a call was
   lifted per call by `hosting.desires()`, the one want here no derivation minted, so it had no
   provenance, no graph and no period, and the planner could judge it only by asking a

@@ -36,7 +36,7 @@ def keeper_of(agent):
 
 
 def stake_of(agent, prop=MOISTURE):
-    return next(d for d in agent.pursuing()
+    return next(d for d in agent.considering()
                 if not d.is_epistemic and getattr(d, "observed_property", None) == prop)
 
 

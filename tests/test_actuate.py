@@ -130,7 +130,7 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
     #  agent's own freshness want for the probe, which no reading has yet answered. A made-up
     #  region want with no reading correctly gets NOTHING: looking does not put a number
     #  inside a region, and nothing else the gardener holds moves a number it cannot see.
-    epistemic = next(d for d in gardener.pursuing()
+    epistemic = next(d for d in gardener.considering()
                      if d.is_epistemic and d.observed_property == MOIST)
     assert deliberator.propose_for(epistemic) == OBSERVING
     assert deliberator.propose_for(sensing_of(gardener).want_about(MOIST)) == OBSERVING, \

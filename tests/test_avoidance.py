@@ -66,7 +66,7 @@ def _gardener(tmp_path, monkeypatch, world=None, shaped=False):
 
 
 def _avoidance_row(agent):
-    return next(g for g in agent.pursuing() if g.uri == WANT)
+    return next(g for g in agent.considering() if g.uri == WANT)
 
 
 @pytest.mark.parametrize("shaped", [False, True], ids=["select", "shape"])
@@ -272,7 +272,7 @@ def test_the_law_prunes_at_expansion_and_the_next_legal_plan_wins(tmp_path, monk
     from orexis_agent_deliberation.planner import Planner
 
     agent, st = _lawful_gardener(tmp_path, monkeypatch, _toy_pair())
-    stake = next(g for g in agent.pursuing()
+    stake = next(g for g in agent.considering()
                  #  the REGION want — the epistemic twin is Observe's to achieve
                  if not g.is_epistemic
                  and getattr(g, "observed_property", None) == MOISTURE)
