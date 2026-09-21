@@ -207,6 +207,14 @@ def write_plan(imaginarium, want: str, plan, root: str) -> str | None:
         out += [q(uri, parameter, ox.NamedNode(value)) for parameter, value in step.binding]
         if step.quantity is not None:
             out.append(q(uri, P + "quantity", dec(step.quantity)))
+        #  WHAT THE SEARCH WORKED OUT ABOUT IT — the facts it said this step makes true and
+        #  false (#510), and the facts its rules READ where it was planned (#550) — is NOT
+        #  here, and the reason is what those two currently are: one JSON literal each,
+        #  holding triples as strings of full IRIs. A plan carrying them would be a graph
+        #  whose steps are unreadable and unqueryable, in a store whose whole point is that
+        #  they are neither. They belong here once they are triples (#759).
+        if step.for_agent:
+            out.append(q(uri, P + "forAgent", ox.NamedNode(step.for_agent)))
         if n + 1 < len(steps):
             out.append(q(uri, P + "then", ox.NamedNode(steps[n + 1])))
         world = world_of(plan.steps[:n + 1])
