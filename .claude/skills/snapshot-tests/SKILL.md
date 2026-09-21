@@ -44,6 +44,24 @@ Declare a case's prefixes at the top of its `.trig` as Turtle does, and use the 
 the rest of the repo uses (`orexis:`, `deliberation:`, `progression:`, `market:`, `sensing:`,
 `hanoi:`, `courier:`).
 
+### And check the REGENERATED file too
+
+A snapshot the renderer wrote is not canonical by construction. Where a local part will not
+abbreviate — anything outside word characters, dots and hyphens — the renderer **falls back to
+a full IRI, silently**.
+
+So **a full IRI in a regenerated snapshot is a finding, not a formatting detail.** It means an
+IRI was minted in a shape no prefix can cover, and the fix is the code that mints it, never the
+snapshot. Grep the regenerated files before committing:
+
+```bash
+grep -n "<http" packages/orexis-agent-deliberation/tests/<function>/*.trig | grep -v "@prefix"
+```
+
+Nothing should come back. This is not hypothetical: a candidate named `<parent>/<segment>`
+spelled 132 full IRIs across three cases, because a slash cannot appear in a prefixed name's
+local part. The separator changed; the snapshots did not need to.
+
 ## Canonical form, and why a case must already be in it
 
 The renderer writes **one statement per line, flat at the top**, subjects in rendered order,
