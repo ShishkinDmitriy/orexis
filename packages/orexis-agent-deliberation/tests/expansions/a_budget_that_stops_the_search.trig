@@ -35,8 +35,6 @@
 
 
 GRAPH :ontology {
-  deliberation:PursuedGraph rdfs:subClassOf orexis:Graph .
-  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
   orexis:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
@@ -147,9 +145,8 @@ GRAPH :catalogue {
   picks:keeper a orexis:Graph .
   picks:keeper a orexis:RecordGraph .
   picks:keeper orexis:beliefsOf :keeper .
-  pursued:every_disk_home a deliberation:PursuedGraph .
   pursued:every_disk_home a orexis:Graph .
   pursued:every_disk_home a orexis:WantGraph .
-  pursued:every_disk_home orexis:arrivedBy orexis:Recorded .
+  pursued:every_disk_home orexis:arrivedBy orexis:Derived .
   pursued:every_disk_home orexis:beliefsOf :keeper .
 }

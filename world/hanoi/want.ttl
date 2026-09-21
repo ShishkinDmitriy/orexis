@@ -11,7 +11,7 @@
 #  nothing erodes while the puzzle sits, the plan's end is the whole of what is asked. Binary
 #  urgency, judged by the kernel from the pattern; the optimal solution is the cheapest
 #  achiever, by no code of this world's.
-GRAPH <http://example.org/orexis/graph/desire/asserted> {
+GRAPH <http://example.org/orexis/graph/want/asserted> {
   :hanoi orexis:holds :every_disk_home .
   :every_disk_home a orexis:Want ;
       rdfs:label "every disk home on peg C — the sentence the puzzle is" ;

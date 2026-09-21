@@ -1,7 +1,7 @@
 --- case
 +++ expected
-@@ -96,3 +96,24 @@
-   pursued:keeper.in_range.pursued.tank1 orexis:arrivedBy orexis:Recorded .
+@@ -93,3 +93,24 @@
+   pursued:keeper.in_range.pursued.tank1 orexis:arrivedBy orexis:Derived .
    pursued:keeper.in_range.pursued.tank1 orexis:beliefsOf :keeper .
  }
 +

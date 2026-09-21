@@ -75,13 +75,16 @@ debt when the claim arrives. Neither package mints a want. The ledger wrote its 
 while, a second deriver reaching the same family by a different door, and stopped when its
 deadline became a prediction like any other.
 
-The two live in two graph families, and the names already said so before this page did:
+The two live in two graph classes, and the names already said so before this page did:
 `orexis:DesireGraph` holds the desires, authored at genesis and holding at every instant;
-`deliberation:PursuedGraph` holds one graph per want, each with its period.
+`orexis:WantGraph` holds one graph per want, each with its period. Whether a world or the
+derivation wrote either is the arrival axis, `orexis:arrivedBy`, and no class of its own.
 
-**The kind is `orexis:Desire` and a want is an `orexis:Want` under it**, which is a subclass —
-so every query asking `?d a orexis:Desire` still finds both through the materialised closure,
-and one that means the standing kind alone says so.
+**The kind is the TYPE, and the two types are disjoint.** `orexis:Want` was a subclass of
+`orexis:Desire` for a while, so `?d a orexis:Desire` matched both and a reader meaning the
+standing kind had to filter on a binding to find its own contents. It is not one now: the
+closure is materialised at genesis and a want is minted long after, so the entailment never
+reached one and every writer hand-wrote both types anyway.
 
 # It is deduced, not authored
 
@@ -389,7 +392,7 @@ exists, and nothing would go red.
 package's own actions and their costs, and only their declarer can keep it, so the node a
 want points at — the estimate's and the avoided pattern's alike — is declared in the domain
 package's ontology beside the actions, and a world asserts the want and points at it
-(`world/courier/desire.ttl` says `orexis:estimates courier:drivesOwed`). A world may still
+(`world/courier/want.ttl` says `orexis:estimates courier:drivesOwed`). A world may still
 write a select inline beside an asserted want, as the avoidance tests do, and the kernel
 reads both paths; the domains ship theirs. The step after this one is derivation — the
 package deduces the want from what the world states, as
@@ -425,8 +428,9 @@ the same shape, targeting the one instance in trouble, with the blocks about wha
 about, so *all properties in range* becomes *this tank's level from 10* and the want is judged
 on its own instance — POINTING at the desire's avoided state and estimate, one owner each, and
 restating the root's address, what it is about, which is what the steps join a want by. It is minted by the derivation the first time the desire
-reads unmet, into the agent's own pursued graph (`deliberation:PursuedGraph`, projected into the
-desire modality like the promises), and named for the desire with a suffix, so a second episode
+reads unmet, into a graph of wants of its own (`orexis:WantGraph`, `orexis:arrivedBy
+orexis:Derived`, projected into the desire modality like the promises), and named for the
+desire with a suffix, so a second episode
 of the same desire pursues the same node and everything keyed by it finds what it kept. While it
 stands the container presents IT in the desire's place, carrying the desire's own row — its
 measure, its reading, its property — and naming the desire, so a keeper's verdict, a bidder's

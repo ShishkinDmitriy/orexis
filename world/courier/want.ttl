@@ -10,7 +10,7 @@
 #  measure, because "never overstates" is a promise about the package's own actions that a
 #  world cannot keep. Scope is orexis:AtEnd — nothing erodes while the van sits, and the plan's
 #  end is the whole of what is asked.
-GRAPH <http://example.org/orexis/graph/desire/asserted> {
+GRAPH <http://example.org/orexis/graph/want/asserted> {
   :courier orexis:holds :every_parcel_delivered .
   :every_parcel_delivered a orexis:Want ;
       rdfs:label "every parcel where it is owed — the sentence the delivery is" ;

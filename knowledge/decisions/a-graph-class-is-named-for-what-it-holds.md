@@ -38,8 +38,9 @@ wants* — never *the roots*, which is what those rows are TO THE DERIVATION. Tw
 - `orexis:DesireGraph` — a graph of `orexis:Desire` rows. The roots graph is one, and
   `progression:PromisesGraph` is beneath it, since a promise the bridge raises is written as
   a desire the agent holds.
-- `orexis:WantGraph` — a graph of `orexis:Want` rows. `deliberation:PursuedGraph` is beneath
-  it, one graph per want the derivation minted.
+- `orexis:WantGraph` — a graph of `orexis:Want` rows: one graph per want the derivation
+  minted, and the world's asserted graph where a world ratifies a want directly. WHICH of the
+  two is the arrival axis, `orexis:arrivedBy`, and never a subclass — see below.
 
 The planner's want graphs and the desire projection ask for both and for the obligations
 record, and nothing names a role. A want is not a desire (`orexis:Want` says so, measured in
@@ -61,12 +62,25 @@ rows — and a second spelling for *a graph of desires* would be the same synony
 The record is amended to say the spelling returned with a content meaning, and the five pages
 that cited the retired example now read a true one.
 
-**A want name for the asserted graph.** `orexis:AssertedDesireGraph`, declared in #708, holds
+**A want name for the asserted graph.** `orexis:AssertedDesireGraph`, declared in #708, held
 what a world ratifies directly of what its agents want: a standing `orexis:Want` in the
 courier, hanoi and the tower, an `orexis:Desire` in the greenhouse. No content word fits four
-worlds, so the class sits beneath both content classes and keeps the name of the modality that
-projects it. The trigger for splitting it is a world that ratifies both and needs them told
-apart by class.
+worlds, so it sat beneath both content classes and kept the name of the modality that projects
+it.
+
+**Both names were wrong, and the rule that says so is the one above the classes.** A named
+graph is classified on three independent axes — what its content asserts, whose it is, and how
+it ARRIVED — and a content class may not encode the third. `AssertedDesireGraph` said its
+arrival in its name; `deliberation:PursuedGraph` said nothing else at all, since its whole
+content beyond `orexis:WantGraph` was that the derivation rather than a world wrote the rows.
+Both are retired, and each graph carries a content class per kind it holds plus
+`orexis:arrivedBy`.
+
+What the conflation cost was not tidiness. With the derivation's wants under a class of their
+own and a world's under another, no read could ask for *a graph of wants* and mean both — so
+the kernel read its own and judged the world's a SECOND time, at read time, in the collection
+that assembled what the agent was considering. Taking the arrival off the content axis is what
+let one judging pass answer for every want.
 
 # The pick record's name
 

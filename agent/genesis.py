@@ -35,7 +35,7 @@ from agent import config, inference, provenance, vocabulary
 
 from assembly import loader
 from .config import REPO_ROOT
-from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, CATALOGUE_GRAPH, GRAPH_PREFIX, OREXIS, desires_graph, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, STATE_GRAPH,
+from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, WANT_ASSERTED_GRAPH, ACTIONS_GRAPH, CATALOGUE_GRAPH, GRAPH_PREFIX, OREXIS, desires_graph, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, STATE_GRAPH,
                        WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, picks_graph)
 from orexis_agent_deliberation.ontology import DERIVATIONS_GRAPH
@@ -289,11 +289,13 @@ def refresh_public(st: Store, world: Path) -> None:
     #  runs, and keeping it in a graph of its own means a package that grows one is visible as
     #  a graph that grew rather than as vocabulary that moved.
     st.put_graph(ACTIONS_GRAPH, "\n".join(p.read_text() for p in loader.action_files()))
-    #  The asserted-desire graph is REPLACED FROM THE FILES like everything ratified — and
-    #  cleared here first, because `put_graph` can only replace graphs the new document still
-    #  NAMES: a world that deletes its desire.ttl names nothing, and the dropped want would
-    #  survive its own ratification. Named by the kernel as the bootstrap-root exception.
+    #  The asserted graphs are REPLACED FROM THE FILES like everything ratified — and cleared
+    #  here first, because `put_graph` can only replace graphs the new document still NAMES: a
+    #  world that deletes the file names nothing, and the dropped row would survive its own
+    #  ratification. Named by the kernel as the bootstrap-root exception, one per kind a world
+    #  may ratify.
     st.clear_graph(DESIRE_ASSERTED_GRAPH)
+    st.clear_graph(WANT_ASSERTED_GRAPH)
     st.put_graph(WORLD_GRAPH, "\n".join(p.read_text() for p in world_files(world)),
                  dataset=True)
     catalogue_public(st)

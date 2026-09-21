@@ -154,7 +154,7 @@ def test_the_world_asserts_the_want_and_the_package_owns_the_measure(monkeypatch
 
     agent = _driver(monkeypatch, "c0_0", "c1_2")
     inline = bindings(agent.desires.query(
-        "SELECT ?n WHERE { GRAPH <http://example.org/orexis/graph/desire/asserted> "
+        "SELECT ?n WHERE { GRAPH <http://example.org/orexis/graph/want/asserted> "
         "{ { ?n sh:select ?t } UNION { ?n a sh:NodeShape } } }"))
     assert not inline, f"the world file states no measure of its own: {inline}"
     where = bindings(agent.desires.query(

@@ -24,10 +24,13 @@ want IS its graph.
 want is decided (`derive_wants`); whoever wrote says what changed. Where a want LIVES is
 `derive_wants.graph_of`, asked of the module that writes it rather than re-exported here.
 
-**Wants live in three graph families and this reads one by default.** Deliberation's derived
-children are `deliberation:PursuedGraph`, one graph per want; the ledger's debts are in its
-record and are found by a read that names no family; the keeper's promises are not found at
-all, because it types a promise `orexis:Desire` alone.
+**Wants live in graphs of wants and in records, and this reads both.** The derivation's
+children are one graph of wants each, `orexis:arrivedBy orexis:Derived`; a world's ratified
+want is a graph of wants that is `orexis:Asserted`; the ledger's debts are in its record. Which
+writer put a want there is the ARRIVAL axis and `derived=True` is the only caller that cares —
+it was a graph CLASS of the derivation's own, which is arrival wearing content, and the cost
+was that a read for the world's wants could not be written at all. The keeper's promises are
+not found here, because it types a promise `orexis:Desire` alone.
 """
 
 from __future__ import annotations
@@ -36,10 +39,9 @@ import logging
 from datetime import datetime
 
 from orexis_agent_progression import clock
-from orexis_agent_progression.ontology import RECORD, WANT
+from orexis_agent_progression.ontology import OREXIS, RECORD, WANT
 from orexis_agent_progression.store import bindings
 
-from .ontology import DELIBERATION
 from .want import Want
 
 log = logging.getLogger("wants")
@@ -51,10 +53,12 @@ log = logging.getLogger("wants")
 #  Generous enough that no correct caller meets it, small enough that meeting it is survivable.
 PAGE = 100
 
-#  THE DERIVATION'S OWN FAMILY, which `derived=True` narrows to. A graph CLASS is a T-Box term
-#  and code may name one (rule 1); what it may never name is a graph instance, which is why
-#  every read below asks the catalogue what a graph IS rather than what it is called.
-PURSUED = DELIBERATION + "PursuedGraph"
+#  HOW THE DERIVATION'S WANTS ARRIVED, which `derived=True` narrows to. It was a graph CLASS
+#  of its own, `deliberation:PursuedGraph` under `orexis:WantGraph`, whose whole content was
+#  that the derivation rather than a world put the rows there — the ARRIVAL axis wearing a
+#  content class, which agent/ontology.ttl forbids in its own words. A want is in a graph of
+#  wants whoever wrote it, and which writer is `orexis:arrivedBy`.
+DERIVED = OREXIS + "Derived"
 
 
 def _instant(text: str | None) -> datetime | None:
@@ -84,7 +88,7 @@ def find_wants(store, at: datetime | None = None, *, uri: str = "", desire: str 
     if desire:
         patterns += f" ; prov:wasDerivedFrom <{desire}>"
     where = f"BIND(<{uri}> AS ?w) {patterns} ." if uri else f"{patterns} ."
-    found = _select(store, where, at, limit, offset, PURSUED if derived else "")
+    found = _select(store, where, at, limit, offset, DERIVED if derived else "")
     #  A PAGE OF ONE IS ALWAYS FULL: `find_want` asks for one, and one standing is the
     #  ordinary answer, not a leak.
     if limit > 1 and len(found) == limit:
@@ -108,8 +112,8 @@ def find_want(store, at: datetime | None = None, *, uri: str = "", desire: str =
 
 
 def _select(store, where: str, at: datetime | None, limit: int, offset: int,
-            family: str) -> list[Want]:
-    """Read the graphs of wants holding at `at` — of one family where a caller names it — and
+            arrival: str) -> list[Want]:
+    """Read the graphs of wants holding at `at` — of one arrival where a caller names it — and
     hand back one ordered page.
 
     A WANT IS ITS GRAPH, so which family it belongs to and whether it still holds are
@@ -139,7 +143,11 @@ def _select(store, where: str, at: datetime | None, limit: int, offset: int,
     #  desires and this read would otherwise hand back another agent's wants. A graph
     #  saying no owner is anyone's, and a store told nothing keeps every graph.
     now = (at or clock.now()).isoformat()
-    kinds = " ".join(f"<{k}>" for k in ((family,) if family else (WANT, RECORD)))
+    kinds = " ".join(f"<{k}>" for k in (WANT, RECORD))
+    #  AND HOW IT ARRIVED, where the caller said: the derivation's wants are the graphs of
+    #  wants it wrote, and a world's ratified want is a graph of wants the sovereign wrote.
+    #  One axis each, asked separately, because they ARE separate.
+    came = f"    ?g orexis:arrivedBy <{arrival}> .\n" if arrival else ""
     mine = (f'    OPTIONAL {{ ?g orexis:beliefsOf ?owner }}\n'
             f'    FILTER(!BOUND(?owner) || ?owner = <{store.agent_uri}>)'
             if store.agent_uri else "")
@@ -157,7 +165,7 @@ SELECT ?w ?desire ?label ?holdsAt ?since ?side (GROUP_CONCAT(STR(?about); separa
   GRAPH ?catalogue {{
     ?catalogue a orexis:CatalogueGraph .
     ?g a ?kind . VALUES ?kind {{ {kinds} }}
-{mine}
+{came}{mine}
     OPTIONAL {{ ?g dcterms:temporal ?period . OPTIONAL {{ ?period orexis:start ?start }} OPTIONAL {{ ?period orexis:end ?end }} }} }}
   FILTER(!BOUND(?start) || ?start <= "{now}"^^xsd:dateTime)
   FILTER(!BOUND(?end) || ?end > "{now}"^^xsd:dateTime)

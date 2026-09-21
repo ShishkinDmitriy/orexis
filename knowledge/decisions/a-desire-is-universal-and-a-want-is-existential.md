@@ -117,7 +117,8 @@ can state a window at all. Only the last is work; the rest is subtraction.
 What the removal turned up is worth keeping: the four things the binding was saying each had an
 owner already, and the two live readers wanted a FOURTH thing it was not saying at all. They
 filtered on `orexis:AtEnd, orexis:At` to mean *not a debt* — whose path a want came by, which is
-the graph's classification. The read scopes to `deliberation:PursuedGraph` now — it was
+the graph's classification. The read scopes by ARRIVAL now, to the graphs of wants the
+derivation itself wrote — it was
 `Wants.find_first_by_desire` and is `find_want(store, desire=…, derived=True)` — and
 `_CHILDREN_Q`'s filter turned out to be redundant twice over: the ledger writes no
 `orexis:holds`, so a debt never matched it, and a promise carries no `prov:wasDerivedFrom`.
@@ -129,9 +130,12 @@ the graph's classification. The read scopes to `deliberation:PursuedGraph` now �
   it. Whether a maintenance constraint should be judged at every state of a candidate plan — which
   is what `always` meant and what no reader ever implemented — is the first thing to measure when
   a Desire with a period is first written.
-- **A world cannot state a window on a want it ratifies.** Every authored desire and want shares
-  `graph/desire/asserted`, so per-want periods need per-want graphs, minted at genesis. That is the
-  only part of taking this model that is work rather than subtraction.
+- **A world cannot state a window on a want it ratifies.** Every want a world authors shares
+  `graph/want/asserted`, so per-want periods need per-want graphs, minted at genesis. That is the
+  only part of taking this model that is work rather than subtraction. (The authored desires and
+  the authored wants no longer share a graph: they were one graph classified as both kinds,
+  and are two — see
+  [a-graph-class-is-named-for-what-it-holds](/decisions/a-graph-class-is-named-for-what-it-holds.md).)
 - **The promise is still the odd writer.** It gives its want no graph of its own and no period at
   all, which reads correctly under this model — achieve once, no deadline — but leaves it the one
   want the #645 sweep cannot drop.

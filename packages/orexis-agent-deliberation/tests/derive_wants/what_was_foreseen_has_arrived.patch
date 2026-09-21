@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -45,13 +45,11 @@
+@@ -43,13 +43,11 @@
    :keeper orexis:holds :keeper.in_range.pursued.tank1.level .
    :keeper.in_range.pursued.tank1.level a orexis:Want .
    :keeper.in_range.pursued.tank1.level orexis:about :level .
@@ -15,12 +15,12 @@
    :keeper.in_range.pursued.tank1.level.met sh:targetNode :tank1 .
  }
  
-@@ -85,7 +83,7 @@
-   pursued:keeper.in_range.pursued.tank1.level a deliberation:PursuedGraph .
+@@ -82,7 +80,7 @@
+   :world a orexis:PublicGraph .
    pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
    pursued:keeper.in_range.pursued.tank1.level a orexis:WantGraph .
 -  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
 +  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-   pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Recorded .
+   pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
    pursued:keeper.in_range.pursued.tank1.level orexis:beliefsOf :keeper .
  }

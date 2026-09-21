@@ -17,8 +17,6 @@
 
 
 GRAPH :ontology {
-  deliberation:PursuedGraph rdfs:subClassOf orexis:Graph .
-  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
   orexis:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
@@ -87,9 +85,8 @@ GRAPH :catalogue {
   :sensed a orexis:StateGraph .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
-  pursued:keeper.in_range.pursued.tank1.level a deliberation:PursuedGraph .
   pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
   pursued:keeper.in_range.pursued.tank1.level a orexis:WantGraph .
   pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
-  pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Recorded .
+  pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
 }

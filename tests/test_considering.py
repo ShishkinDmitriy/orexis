@@ -160,12 +160,20 @@ def test_a_mark_by_either_name_pursues_the_same_want(monkeypatch):
 
 def test_the_pursued_graph_is_this_agents_own_and_recorded(monkeypatch):
     """Classified by the DERIVATION when it mints the want — each want a graph of its own since
-    #645, typed `deliberation:PursuedGraph` where it is written and never by its name — so
-    the sweep, the ask channel and the imaginarium's copy of the records all see it."""
+    #645, on BOTH axes where it is written and never by its name — so the sweep, the ask
+    channel and the imaginarium's copy of the records all see it.
+
+    Two axes, because a graph of wants the derivation wrote and a graph of wants a world
+    ratified differ in who wrote them and in nothing else. It was one class,
+    `deliberation:PursuedGraph`, and the cost was that no read could ask for the world's wants
+    at all — so the kernel judged those a second time instead of reading them."""
     agent = _gardener(monkeypatch, DRY)
     desire = _stake(agent)
     agent.deliberator.decide(desire)
     child = _stake(agent)
     graph = graph_of(agent.id, child.uri)
     assert graph in agent.beliefs.graphs_of(WANT), "the derivation classified what it wrote"
-    assert graph in agent.beliefs.graphs_of("http://example.org/orexis/deliberation#PursuedGraph")
+    assert bindings(agent.beliefs.query(
+        f"SELECT ?a WHERE {{ GRAPH <{agent.beliefs.catalogue}> {{ "
+        f"<{graph}> orexis:arrivedBy ?a }} }}", ()))[0]["a"].endswith("#Derived"), \
+        "and said on the other axis that the derivation, not a world, put the rows there"

@@ -32,8 +32,6 @@
 
 
 GRAPH :ontology {
-  deliberation:PursuedGraph rdfs:subClassOf orexis:Graph .
-  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
   orexis:WantGraph rdfs:subClassOf orexis:Graph .
 }
 

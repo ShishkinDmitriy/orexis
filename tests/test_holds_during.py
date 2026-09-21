@@ -49,7 +49,12 @@ def test_a_store_that_states_no_range_is_the_store_it_always_was():
     now = _now()
     st = _store()
     assert st.periods() == {}
-    assert len(st.graphs_of(PUBLIC, at=now)) == 8     # the eighth is the derivations graph: what the loaded rules read and write
+    #  NOT A COUNT. It was `== 8`, which meant "the public graphs, as many as there are today"
+    #  and went red the day the asserted graph became two — a graph of desires and a graph of
+    #  wants — for a test about periods. `orexis:PublicGraph` is a class and `graphs_of` asks
+    #  (AGENTS.md); what this needs is that the answer is not EMPTY, since the equality below
+    #  would hold between two empty sets and say nothing.
+    assert st.graphs_of(PUBLIC, at=now), "the door answers with the public graphs"
     assert st.graphs_of(PUBLIC, at=now) == st.graphs_of(PUBLIC, at=now + timedelta(days=365))
 
 
@@ -128,6 +133,10 @@ def test_a_range_on_a_graph_nobody_types_adds_nothing():
     nothing this door has to answer for."""
     now = _now()
     st = _store()
+    #  BEFORE AND AFTER, which is what "adds nothing" says. A literal count said it only for
+    #  as long as the number held, and the number is a fact about the vocabulary rather than
+    #  about periods — this test's subject.
+    before = st.graphs_of(PUBLIC, at=now)
     _say(st, "http://example.org/orexis/graph/nowhere", until=now + timedelta(days=1))
 
-    assert len(st.graphs_of(PUBLIC, at=now)) == 8     # the eighth is the derivations graph: what the loaded rules read and write
+    assert st.graphs_of(PUBLIC, at=now) == before
