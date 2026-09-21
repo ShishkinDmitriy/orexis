@@ -34,7 +34,8 @@ from dataclasses import replace
 from datetime import datetime
 
 from .derive_wants import derive_wants
-from .forget_wants import forget_want
+from .forget_wants import (DONE, FAILED, PLANNING, PURSUED, READY, UNREACHABLE,
+                           forget_want, forget_wants, mark)
 from .plan import SATISFIED
 from .desires import holds_desire
 from .wants import find_want
@@ -138,6 +139,10 @@ def _to_consider(agent, now: datetime | None):
     A want nobody may act on yet — a debt its holder has not presented — is left standing and
     unmet rather than yielded: a pass over it would decide nothing.
     """
+    #  COLLECT FIRST, then derive. A want finished on the last pass is taken away before this
+    #  one asks what is wanted, so nothing is handed a want whose work is over — and the
+    #  derivation, running next, mints afresh whatever is still unmet.
+    forget_wants(agent.beliefs.engine)
     derived(agent)
     for want in agent.considering(now):
         if want.pursuable:
@@ -224,6 +229,10 @@ def pursue(agent, judgment, surprise: tuple | None = None) -> str | None:
         #  confirms the one before it, and a lapse or a surprise is what brings the question
         #  back here. A search now would re-decide what nothing has contradicted.
         return going.uri
+    #  PLANNING. Transient, and written anyway: a want stuck here is a search that did not come
+    #  back, which is the kind of thing an operator should be able to see in the store.
+    engine = agent.beliefs.engine
+    mark(engine, judgment.uri, PLANNING)
     plan = agent.deliberator.decide(judgment, surprise=surprise)
     #  A PROMISE THE SEARCH CANNOT MEET IS REFUSED BELOW (#533): a want some step raised for
     #  this level, answered with no plan, or with a plan that does not reach it, is a promise
@@ -232,6 +241,7 @@ def pursue(agent, judgment, surprise: tuple | None = None) -> str | None:
     if keeper is not None and _promised(agent, judgment.uri) and \
             (plan is None or plan.outcome != SATISFIED):
         keeper.refuse_below(judgment.uri, plan.outcome if plan is not None else "nothing to do")
+        mark(engine, judgment.uri, UNREACHABLE)
         return None
     #  ALREADY DONE IS DONE. A search that reaches the want's met state in NO steps has run
     #  the met-test and found nothing to do — which is the one judging pass, asked where it
@@ -240,9 +250,12 @@ def pursue(agent, judgment, surprise: tuple | None = None) -> str | None:
     #  boot. Without this a want met before anything was planned for it sat in the store
     #  forever and was searched every pass, since only a FINISHED plan withdrew one.
     if plan is not None and plan.outcome == SATISFIED and not plan.steps:
-        withdraw(agent, judgment.uri)
+        mark(engine, judgment.uri, DONE)
         return None
     if plan is None or not plan.steps:
+        #  NOTHING REACHES IT FROM HERE — the sovereign's "can't". The trace says why; this
+        #  says so on the want, where whoever asks about the want will look.
+        mark(engine, judgment.uri, UNREACHABLE)
         return None
     #  PLACED AT THE INSTANT THE PASS STOOD AT (#619, #625): a plan found where the present's
     #  drift stands later than now has its first step held there — the keeper does the
@@ -251,6 +264,8 @@ def pursue(agent, judgment, surprise: tuple | None = None) -> str | None:
     #  presenting. Never by subtraction from the deadline.
     if plan.placed_at is not None and plan.placed_at > clock.now():
         plan = replace(plan, steps=(replace(plan.steps[0], not_before=plan.placed_at),) + plan.steps[1:])
+    #  READY: a plan was found and the ledger does not hold it yet.
+    mark(engine, judgment.uri, READY)
     act = plan.steps[0]
     if keeper is None:
         return None
@@ -273,6 +288,8 @@ def pursue(agent, judgment, surprise: tuple | None = None) -> str | None:
         #  THE STEP THE LEDGER STANDS AT, not the plan's head as the search wrote it: an
         #  action with a method was expanded at adoption (#523), and its first step is
         #  what there is to take.
+        #  PURSUED: progression holds the plan and is carrying it out. The agent pursues a want.
+        mark(engine, judgment.uri, PURSUED)
         carry_out(agent, keeper.current(uri) or act, judgment, uri)
         return uri
 

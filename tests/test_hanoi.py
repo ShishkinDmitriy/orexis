@@ -44,12 +44,14 @@ def _goal(agent):
     return next(g for g in agent.considering() if g.uri == WANT)
 
 
-def _still_wanted(agent) -> bool:
-    """Is the goal still in the store? A want is ONE-SHOT — it exists because something is
-    wanted, and it is gone once a plan for it has run — so its absence is how the agent says
-    the stack stands on the home peg. It used to say so by carrying `state == "met"`, computed
-    at read time by a second judging pass the derivation now does alone."""
-    return any(g.uri == WANT for g in agent.considering())
+def _finished(agent) -> bool:
+    """Has the goal been reached? A want is ONE-SHOT and carries where it has got to
+    (`orexis:state`): reaching it leaves the want `orexis:Done`, and `forget_wants` collects it
+    on the next pass. It used to say so by carrying `state == "met"`, computed at read time by
+    a second judging pass the derivation now does alone."""
+    from orexis_agent_progression.store import bindings
+    return bool(bindings(agent.beliefs.query(
+        f"SELECT ?s WHERE {{ GRAPH ?g {{ <{WANT}> orexis:state orexis:Done }} BIND(1 AS ?s) }}", ())))
 
 
 def _solved(agent, budget=None):
@@ -68,7 +70,7 @@ def test_the_goal_is_pursued_and_binary_with_no_module_in_the_room(monkeypatch):
     lifts and judges it: unmet while the stack sits on A, met once nothing is astray. Stage
     one of the two-stage cut, on a want that is not a number."""
     agent = _mover(monkeypatch, ["disk_1"])
-    assert _still_wanted(agent), "the disk is on the wrong peg, so the want stands"
+    assert not _finished(agent), "the disk is on the wrong peg, so nothing is finished"
 
     agent.beliefs.update(
         f"DELETE {{ GRAPH <{STATE_GRAPH}> {{ <{W}disk_1> <{H}on> <{H}PegA> }} }} "
@@ -78,7 +80,7 @@ def test_the_goal_is_pursued_and_binary_with_no_module_in_the_room(monkeypatch):
     #  is what retires it.
     from orexis_agent_deliberation import pursuit
     pursuit.pursue(agent, _goal(agent))
-    assert not _still_wanted(agent), "nothing is astray, so there is no want left"
+    assert _finished(agent), "nothing is astray, so the want is done"
 
 
 def test_two_disks_solve_in_exactly_three_moves(monkeypatch):
@@ -275,5 +277,5 @@ def test_three_disks_are_solved_with_one_search_and_seven_answered_steps(monkeyp
     assert keeper.standing(want=WANT) == [], "the plan finished with its last step answered"
     assert keeper.in_progress(WANT) is None
     assert len(searches) == 1, "seven moves, one search"
-    assert not _still_wanted(agent), "and the stack stands on the home peg, so the want is gone"
+    assert _finished(agent), "and the stack stands on the home peg, so the want is done"
     assert keeper.reports()["expectations_met"] == 7

@@ -146,6 +146,46 @@ can be short of independently — so everything that used to ask "the want about
 had one answer and now has two, and answering by whichever is hotter would decide between two
 different questions with a number that means the same thing in both.
 
+# A want's life, and a desire has none
+
+A want is ONE-SHOT. It exists because something is wanted, it passes through stages while
+something is done about it, and it is taken away when that is over. A desire has no stages at
+all: it stands for the agent's life and is either good or bad — met or unmet — at the instant
+it is asked about, computed from its met-test and stored nowhere.
+
+The stages are `orexis:state` on the want, seven values and no eighth:
+
+| | |
+|---|---|
+| `Recognized` | minted — its desire read unmet for this instance, or a world ratified it |
+| `Planning` | a search is running for it |
+| `Ready` | a plan was found and the ledger does not hold it yet |
+| `Pursued` | progression holds the plan and is carrying it out |
+| `Done` | the plan finished, or a search reached it in no steps |
+| `Failed` | a plan was carried out and did not reach it |
+| `Unreachable` | no plan reaches it from here |
+
+**Each is written by whoever DECIDES it, and nothing infers a stage from anything else.** They
+could have been computed — `Pursued` is an unresolved intention saying `progression:pursues`,
+`Unreachable` is a trace saying exhausted — and computing each from its own corner is how one
+question comes to have six answerers, none of which a reader knows to ask.
+
+**`Done` is terminal.** Nothing moves a want out of it, which is what lets the writers stay
+independent of the order they run in: the deliberator marks a want already reached `Done` and
+answers with no plan, and the caller that asked then sees no plan and would otherwise write
+`Unreachable` over it.
+
+**Done is not deleted.** `forget_wants` is garbage collection — it takes away every want that
+is `Done`, on the mind's pass, and nothing else deletes one. Deciding that something is
+finished and clearing it away are two acts, and one sweep is easier to reason about than a
+delete at each decision point; that is how the code got into trouble before, with each site
+that withdrew a want guarded on how the want had been written, so a want a WORLD authored was
+withdrawn at none of them and had to be judged a second time at read time to look met.
+
+`Failed` keeps the want, because it is still wanted. `Unreachable` keeps it too: what cannot be
+reached from here may be reachable from somewhere else, and the desire that minted it has not
+changed its mind.
+
 # State is carried, not inferred
 
 A desire states its own condition in its kind's vocabulary: `met`, `unmet` or `unmeasured` for a

@@ -1,12 +1,13 @@
 --- case
 +++ expected
-@@ -43,13 +43,11 @@
+@@ -43,13 +43,12 @@
    :keeper orexis:holds :keeper.in_range.pursued.tank1.level .
    :keeper.in_range.pursued.tank1.level a orexis:Want .
    :keeper.in_range.pursued.tank1.level orexis:about :level .
 -  :keeper.in_range.pursued.tank1.level orexis:holdsAt "2026-01-01T12:30:00+00:00"^^xsd:dateTime .
    :keeper.in_range.pursued.tank1.level orexis:metWhen :keeper.in_range.pursued.tank1.level.met .
 -  :keeper.in_range.pursued.tank1.level prov:generatedAtTime "2026-01-01T11:00:00+00:00"^^xsd:dateTime .
++  :keeper.in_range.pursued.tank1.level orexis:state orexis:Recognized .
    :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
    :keeper.in_range.pursued.tank1.level rdfs:label "pursued: every tank in range" .
    :keeper.in_range.pursued.tank1.level.met a sh:NodeShape .
@@ -15,7 +16,7 @@
    :keeper.in_range.pursued.tank1.level.met sh:targetNode :tank1 .
  }
  
-@@ -82,7 +80,7 @@
+@@ -82,7 +81,7 @@
    :world a orexis:PublicGraph .
    pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
    pursued:keeper.in_range.pursued.tank1.level a orexis:WantGraph .

@@ -352,7 +352,7 @@ def graph_of(agent_id: str, uri: str) -> str:
 #  is in, whether that graph holds others, what the catalogue still says of it. `save_want`
 #  below imports the one text they share, since replacing a want whole is removing it and
 #  putting it back.
-from .forget_wants import forget_graph, forget_want   # noqa: E402  (re-exported: see module)
+from .forget_wants import RECOGNIZED, forget_graph, forget_want   # noqa: E402  (re-exported: see module)
 
 
 def save_want(engine, agent_id: str, want: Want) -> None:
@@ -387,6 +387,7 @@ INSERT {{
   GRAPH <{graph}> {{
   <{want.holder}> orexis:holds <{want.uri}> .
   <{want.uri}> a orexis:Want{timed}{about}{side} ;
+      orexis:state <{RECOGNIZED}> ;
       prov:wasDerivedFrom <{want.desire}> ;
       rdfs:label {json.dumps(want.label)} .
   {points}
