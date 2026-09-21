@@ -479,8 +479,16 @@ it is a record wearing a bullet.
   `find_wants(store, desire=…, derived=True)` says at the call site what `find_first_by_desire`
   hid, and the one distinction worth a name of its own is the answer's SHAPE — a page against
   one-or-None.
-- **A singular file holds the model and its plural holds the reads over it** — `desire.py` and
-  `desires.py`, `want.py` and `wants.py`, so neither reader has to open the other's file.
+- **A model is a Python type only where something READS its fields** — `Want` is one:
+  nineteen modules import it, capabilities subclass it to add their own, and its state, its
+  instant and what it is about are all read. `Desire` was not: it was built from a query and
+  discarded, because the two callers wanted a boolean and a uri and the third wanted uris, so
+  the reads answer those and there is no type. A class that carries a uri out of a query is
+  the store duplicated in Python for the length of one expression.
+- **A model gets its OWN file when it is cheaper alone** — `want.py` imports nothing but the
+  standard library, so naming the type costs its nineteen importers nothing; folding it into
+  `wants.py` would make every one load progression's clock, ontology and store (#455, the
+  reason sensing's rows sit behind a touch).
 - **An update takes no dataset** — `Store.query` is handed its graphs per call, which is the
   door, and `Store.update` names them only in its own text; so what chooses which graphs are
   the world at an instant is Python or a materialised view, a derivation that needs neither

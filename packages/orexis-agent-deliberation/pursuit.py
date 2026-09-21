@@ -35,7 +35,7 @@ from datetime import datetime
 
 from .derive_wants import derive_wants, forget_want
 from .plan import SATISFIED
-from .desires import desire_behind, find_desire
+from .desires import holds_desire
 from .wants import find_want
 
 from orexis_agent_progression.execution import carry_out
@@ -165,7 +165,7 @@ def _is_desire(agent, want: str) -> bool:
     and only `orexis:Always` separated them; the types are disjoint now, so the question is
     simply whether the store holds it as a desire (a-kind-is-a-type-not-a-binding).
     """
-    return find_desire(agent.desires, want) is not None
+    return holds_desire(agent.desires, want)
 
 
 def child_of(agent, desire: str) -> str | None:
@@ -183,12 +183,13 @@ def child_of(agent, desire: str) -> str | None:
 def desire_of(agent, want: str) -> str | None:
     """The desire `want` was derived under, or None where it was derived from no desire.
 
-    ASKED WHERE THE ANSWER IS. It was asked of the wants — find the want, read the name it
-    kept — which walks one collection to reach an element of another and hands back a field
-    rather than a thing.
+    OFF THE WANT'S OWN ROW. `prov:wasDerivedFrom` is what the derivation wrote when it minted
+    this want, and `find_wants` already reads it into `Want.desire` — so the answer is a field,
+    not a second query in another module against another store. It went to the desires once on
+    the argument that the ANSWER is a desire; what is asked for is a name, and the want has it.
     """
-    found = desire_behind(agent.desires, want)
-    return found.uri if found else None
+    found = find_want(agent.beliefs, uri=want)
+    return found.desire if found else None
 
 
 def withdraw(agent, child: str) -> None:

@@ -21,7 +21,9 @@ class Want:
     """One want, as the store holds it: what it was derived from, when it must hold, and what
     it points at.
 
-    A SIBLING OF `Desire`, NOT A SUBCLASS. It was one, mirroring `orexis:Want rdfs:subClassOf
+    A SIBLING OF A DESIRE, NOT A SUBCLASS — and only one of the two is a Python type at all,
+    since a desire is read as rows and a want is what a capability fills in. It was a subclass,
+    mirroring `orexis:Want rdfs:subClassOf
     orexis:Desire` — and that axis is gone, because it bought nothing where it was supposed to
     pay. The closure is materialised once at genesis and a want is minted long after, so no
     runtime want was ever entailed to be a desire and every writer hand-wrote both types to

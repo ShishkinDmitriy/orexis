@@ -16,7 +16,7 @@ from __future__ import annotations
 import pytest
 
 from orexis_agent_deliberation.beliefs import Beliefs
-from orexis_agent_deliberation.desires import Desires, find_desires
+from orexis_agent_deliberation.desires import Desires
 from orexis_agent_deliberation.wants import find_wants
 from orexis_agent_progression.store import bindings
 
@@ -34,7 +34,12 @@ def _held(world: str, agent_id: str):
     held = {r["w"] for r in bindings(desires.query(
         f"SELECT ?w WHERE {{ <{beliefs.agent_uri}> orexis:holds ?w . ?w a ?t . "
         f"FILTER(?t IN (orexis:Desire, orexis:Want)) }}"))}
-    return held, {w.uri for w in find_wants(beliefs)}, {d.uri for d in find_desires(desires)}
+    #  THE DESIRES ARE ASKED OF THE STORE HERE, because nothing in the tree asks for them:
+    #  `find_desires` had this test as its only caller, which is a question with one asker and
+    #  no answerer. The test owns the query, as it already owns the one above it.
+    stated = {r["d"] for r in bindings(desires.query(
+        "SELECT ?d WHERE { ?d a orexis:Desire }"))}
+    return held, {w.uri for w in find_wants(beliefs)}, stated
 
 
 @pytest.mark.parametrize("world,agent_id", WORLDS)

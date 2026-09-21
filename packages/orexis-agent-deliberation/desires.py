@@ -7,14 +7,14 @@ projection; nothing writes a
 declared desire at runtime — they are authored at genesis and projected, never rebuilt (#644) —
 so this half reads and offers no `save`.
 
-The model is `desire.py` beside this file, which is the file naming this package keeps: a
-singular file holds what a thing is, its plural holds where they are kept. See
-knowledge/decisions/a-repository-is-named-for-what-it-holds.md.
+THERE IS NO `Desire` TYPE, and `desire.py` is gone with it. A desire is rows: the reads below
+hand back a boolean or a uri, which is what every caller asked for, and nothing anywhere read
+a label or an about off the frozen dataclass they used to build. See
+knowledge/decisions/a-read-is-a-function-over-a-store.md.
 """
 
 from __future__ import annotations
 
-from .desire import Desire
 
 #  --- the desire modality ---------------------------------------------------------------------
 #
@@ -138,7 +138,7 @@ class Desires:
 
     AND IT IS NOT A COLLECTION. It carried three finders — `find_all`, `find_first_by_uri`,
     `find_first_by_want` — which made it a repository by the convention
-    `a-repository-is-named-for-what-it-holds` set out, the second and last thing to follow it.
+    `a-read-is-a-function-over-a-store` retired, the second and last thing to follow it.
     They are functions over a store now (below), as the wants' went first, and what is left is
     a modality: a store, the rebuild that is the only way it changes, and the questions it can
     be asked. The convention has no instances.
@@ -186,15 +186,14 @@ class Desires:
         return read_picks_optional(self.query, self._beliefs.agent_uri,
                                    self._beliefs.graph, self._beliefs.agent_id, picks)
 
-    # --- the collection ---------------------------------------------------------------------
+    # --- what it can be asked -----------------------------------------------------------
     #
-    #  `Desires` is a repository as well as a modality, and the two sit together because the
-    #  store it owns IS the collection: a projection holding the desires and the records, rebuilt
-    #  whenever a premise moves (a-repository-is-named-for-what-it-holds). The wants are read
-    #  straight off the store because the derivation WRITES there and those writes stale this
-    #  projection; nothing writes a declared
-    #  desire at runtime — they are authored at genesis and projected, never rebuilt (#644) —
-    #  so this half reads and offers no `save`.
+    #  A MODALITY AND NOT A COLLECTION: the store it owns is a projection holding the desires
+    #  and the records, rebuilt whenever a premise moves, and the rebuild is the only way it
+    #  changes. The wants are read straight off the belief base because the derivation WRITES
+    #  there and those writes stale this projection; nothing writes a declared desire at
+    #  runtime — they are authored at genesis and projected, never rebuilt (#644) — so this
+    #  offers no `save`.
 
     def abouts(self, agent_uri: str) -> dict[str, tuple[str, ...]]:
         """What each thing this agent holds is ABOUT, node -> the IRIs it names.
@@ -229,54 +228,28 @@ class Desires:
         return self._built.remember(("abouts", agent_uri), compute)
 
 
-#  ---- reading the desires a store holds ------------------------------------------------
+#  ---- asking a store about its desires -------------------------------------------------
 #
-#  FUNCTIONS OVER THE STORE, and what is above is not one of them. `Desires` was the second
-#  repository in the DDD sense and these three methods were its convention — `find_all`,
-#  `find_first_by_x`, ordered before cut and capped by default. `Wants` went first and these
-#  follow, and what is LEFT is not a collection at all: a projection, its rebuild, and what it
-#  can be asked. The convention has no instances now.
+#  ONE QUESTION, AND IT IS THE ONLY ONE ANYTHING ASKS. There were three finders on a
+#  repository, then three functions handing back a `Desire` — a frozen dataclass of uri, label,
+#  about and points, built from a query and thrown away, since nothing anywhere read a label or
+#  an about off one. A repository earns its place where domain objects are loaded, changed and
+#  written back; nothing here is, so there is no `Desire` type and `desire.py` is gone.
+#
+#  TWO OF THE THREE WENT WITH IT, each for its own reason. `find_desires` had no caller but a
+#  test, whose invariant — everything held is in exactly one collection — is structural since
+#  the types became disjoint, and which asks the store itself now. `desire_behind` answered
+#  "which desire was this want derived from", which is the WANT's own `prov:wasDerivedFrom`
+#  and is on the row `find_wants` already reads: a want question asked in the desires.
 
 
-def find_desires(store, *, limit: int = PAGE, offset: int = 0) -> list[Desire]:
-    """Every desire this store holds — the standing rules an agent lives by.
+def holds_desire(store, uri: str) -> bool:
+    """Is this node one of the desires — as against a want, or a name the store does not hold?
 
-    THE TYPE IS THE WHOLE TEST. It was `orexis:bindsWhen orexis:Always`, because `orexis:Want`
-    was a subclass and the type alone could not tell the two apart — so a collection of desires
-    filtered on a binding to find its own contents, and a node typed a desire and bound `AtEnd`
-    fell out of both. The types are disjoint (a-kind-is-a-type-not-a-binding).
-
-    ORDERED BEFORE IT IS CUT, and capped: an unordered `LIMIT` picks by the engine's internal
-    layout, which is the trap `beliefs.py` records, and a silent truncation is the empty-result
-    trap wearing a cap.
+    AN ASK, because that is the question. It was a find returning a row that the one caller
+    tested for None, which built three fields to read none of them. The types are disjoint
+    (a-kind-is-a-type-not-a-binding), so being typed one IS the answer: it was
+    `orexis:bindsWhen orexis:Always` while `orexis:Want` was a subclass and the type alone
+    could not tell the two apart.
     """
-    return _read(store, "?d a orexis:Desire .", limit, offset)
-
-
-def find_desire(store, uri: str) -> Desire | None:
-    """One desire by name, or None where the name is a want's — the types are disjoint."""
-    return next(iter(_read(store, f"BIND(<{uri}> AS ?d) ?d a orexis:Desire .", 1, 0)), None)
-
-
-def desire_behind(store, want: str) -> Desire | None:
-    """The desire `want` was derived from, or None where it was derived from no desire.
-
-    THE ANSWER IS A DESIRE, which is why the walk ends here rather than in the wants: a want's
-    provenance is the want's, and what stands at the end of it is this store's to hand back.
-    """
-    rows = bindings(store.query(
-        f"SELECT ?d WHERE {{ <{want}> prov:wasDerivedFrom ?d . ?d a orexis:Desire }} LIMIT 1"))
-    return find_desire(store, rows[0]["d"]) if rows else None
-
-
-def _read(store, where: str, limit: int, offset: int) -> list[Desire]:
-    rows = bindings(store.query(f"""
-SELECT ?d ?label ?about WHERE {{
-  {where}
-  OPTIONAL {{ ?d rdfs:label ?label }}
-  OPTIONAL {{ ?d orexis:about ?about }}
-}} ORDER BY ?d LIMIT {int(limit)} OFFSET {int(offset)}"""))
-    if len(rows) == limit and limit != 1:
-        log.warning("desires: a full page of %d at offset %d — page or there is a leak",
-                    limit, offset)
-    return [Desire(uri=r["d"], label=r.get("label", ""), about=r.get("about")) for r in rows]
+    return bool(store.query(f"ASK {{ <{uri}> a orexis:Desire }}")["boolean"])
