@@ -368,7 +368,7 @@ def held_worlds_to(case: Path, request, forks: list, knows: dict) -> None:
     be re-made from the nearest kept graph when a rule next runs against it. So these are
     caught as they are made rather than read off the store at the end, and what is held is the
     SEQUENCE — which is the thing worth holding, since an iteration of the search is exactly
-    "one node off the open list, one world per lever its world affords".
+    "one node off the open list, one world per step its world admits".
 
     Each block holds that node's OWN readings and not a copy of the world: what the step added
     and what it retracted, against a parent the block names. That is the imaginarium's whole

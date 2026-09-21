@@ -3,46 +3,48 @@ type: Domain Concept
 title: Step
 term: http://example.org/orexis/progression#Step
 description: >-
-  One action filled in — what its parameters are bound to, the want it serves, and whom it
-  serves if not the agent itself. A world's steps are DERIVED on every ask and stored nowhere,
-  because a stored one can outlive the plumbing it was concluded from; a step a plan holds is
-  written down, with the quantity, the window, what the search predicted and what it waits for.
-  A plan is steps, an intention commits to them and stands at one, a claim promises one. Taking
-  one writes an act; a step may be attempted more than once.
+  An action PICKED for execution, with its variables — the sovereign's line. Planning finds a
+  plan, and every action in a plan is a step; what a step adds to the action is at least the
+  variables it was picked with, and then the quantity, the window, what the search predicted and
+  what it waits for. An intention commits to steps and stands at one, a claim promises one.
+  Taking one writes an act; a step may be attempted more than once.
 ---
 
 # What it is
 
-`progression:Step`. One [action](/domain/action.md) filled in:
+`progression:Step`. **An [action](/domain/action.md) picked for execution**, carrying what it was
+picked WITH:
 
 | | |
 |---|---|
 | `action` | the kind of act — `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `hanoi:Move` |
-| `binding` | one pair per parameter the action declares it `orexis:takes`, bound by its precondition. It is also the step's IDENTITY: two steps of one action are the same step when they are filled the same way |
-| `want` | the [desire](/domain/desire.md) it serves, by node. Empty on a step that serves any want (a host's Offering) |
+| `binding` | the variables: one pair per parameter the action declares it `orexis:takes`. It is also the step's IDENTITY — two steps of one action are the same step when they are filled the same way |
+| `want` | the [desire](/domain/desire.md) it serves, by node. Empty on one that serves any want (a host's Offering) |
 | `for_agent` | whom it serves, where it is an obligation's. Absent on the agent's own |
 
 and, once a search has planned with it, the quantity, the window, what it predicted, what it
 reads, and what it was expanded from.
 
-# A step a world affords and a step a plan holds are one thing
+# What a world admits, and what a plan picks
 
-This was two classes — an `Step` carrying the four columns above, and a `Step` carrying
-those plus the search's, with a `from_row` copying one into the other the moment anything wanted
-to plan with it. Two classes for one shape is how a reader comes to believe there are two
-concepts; what actually differs is the MOMENT, not the thing, and what a search adds is absent
-on a step nobody has planned yet — which is what `None` in those fields already meant.
+A world admits one of these per action per legal filling — `hanoi:Move` with this disk onto that
+peg, `actuation:Dosing` through this valve. **The search ranges over them and picks; the picked
+ones are the plan's steps.** Which is why the shape is one and not two: what a search adds is
+absent on one nobody has picked, and that is what `None` in those fields means.
 
-So: **a world AFFORDS steps, a plan HOLDS steps, an intention STANDS at one.** See
+It WAS two classes — an `Affordance` carrying the four columns above and a `Step` carrying those
+plus the search's, with a `from_row` copying one into the other the moment anything wanted to
+plan with it. Two classes for one shape is how a reader comes to believe there are two concepts,
+and the second word was doing no work the absent fields were not already doing. See
 [a-row-is-a-step](/decisions/a-row-is-a-step.md).
 
-Nothing has happened yet in any of those, and that is the reason the word is not
+Nothing has happened yet in any of this, and that is the reason the word is not
 [act](/domain/act.md): a plan is not executed, so its elements are not acts. The sovereign's
 ruling, 2026-09-02.
 
-# A world's steps are derived, and that is not a performance choice
+# What a world admits is derived, and that is not a performance choice
 
-A step a world affords is a **conclusion whose premises are stored** — regions, wiring,
+What a world admits is a **conclusion whose premises are stored** — regions, wiring,
 denominations, all facts that exist for their own reasons. Storing the conclusion would let it
 outlive them: unplumb the valve and an authored one still says you can dose. So they are computed
 on every ask, and the [menu graph](/decisions/the-mind-is-six-graphs.md) holds rules about
@@ -167,5 +169,5 @@ fills, so its place in the plan is the links from the intention and to the next 
   gap answers *about what*.
 - [actor](/domain/actor.md) is the code a step is linked to: the module that contributes its action.
 - [package](/domain/package.md) is how a contribution is found: a directory, and nothing lists it.
-- [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) places what a world affords in
+- [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) places what a world admits in
   the menu modality and explains why it is derived where a rule is asserted.

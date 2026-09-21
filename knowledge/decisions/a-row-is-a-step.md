@@ -24,20 +24,26 @@ Six call sites converted. `deliberator.py` wrapped one in a plan with
 added by the conversion that `None` in the absent fields had not already meant.
 
 **Two classes for one shape is how a reader comes to believe there are two concepts.** The
-dictionary had a page each, and both were right about their own half: a row is *derived and
-never stored*, a step is *planned and written to the ledger*. Neither noticed that what differs
-is the MOMENT — a world affords it, a plan holds it, an intention stands at it — and not the
-thing.
+dictionary had a page each, and both were right about their own half: a row is *derived and never
+stored*, a step is *planned and written to the ledger*. Neither noticed that the second word was
+doing no work the ABSENT FIELDS were not already doing.
+
+The sovereign's line settles what the one word then means: **a step is an action picked for
+execution.** Planning finds a plan, every action in a plan is a step, and what a step adds to
+the action is at least the variables it was picked with. So a world ADMITS one of these per
+action per legal filling, the search ranges over them, and the picked ones are the plan's
+steps — one shape, and the picking is what the extra fields record.
 
 # What we do instead
 
-One class, `progression:Step`, and one page. `Steps.find_all_by_action` yields steps; a plan
-holds steps; `from_row` is gone, and where a search re-sizes one it is `dataclasses.replace`.
+One class, `progression:Step`, and one page. `Steps.find_all_by_action` yields what a world
+admits; a plan holds the picked ones; `from_row` is gone, and where a search re-sizes one it is
+`dataclasses.replace`.
 
-The argument each page owned survives on the one that is left: a step a world affords is derived
-because a stored one can outlive the plumbing it was concluded from, and a step a plan holds IS
-written because it is no longer a conclusion about the world — it is a commitment, and the ledger
-is where a commitment belongs.
+The argument each page owned survives on the one that is left: what a world admits is derived,
+because a stored one can outlive the plumbing it was concluded from, and a PICKED one IS written,
+because it is no longer a conclusion about the world — it is a commitment, and the ledger is
+where a commitment belongs.
 
 # The service went with it
 
@@ -63,9 +69,9 @@ dictionary page and a decision record.
 
 # The alternative, and why it was refused
 
-**Keep `affordance` as the word for a step that is available now**, with no class behind it.
-This is what a reader would expect: the two states are genuinely different, and English has a
-word for each.
+**Keep `affordance` as the word for one that is available but unpicked**, with no class behind
+it. This is what a reader would expect: picked and unpicked are genuinely different, and English
+has a word for each.
 
 It was refused because it reintroduces exactly the thing the sovereign objected to — *"the same
 concept used differently based on situation"*. A reader meeting both words looks for the

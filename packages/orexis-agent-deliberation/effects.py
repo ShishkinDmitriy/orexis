@@ -135,7 +135,7 @@ def world_after(base, store, action: str, /, **bind):
 
     A new graph every time and nothing written anywhere, which is what makes a hypothesis safe
     to hold: the store never learns that anyone imagined this. Possible worlds are computed and
-    dropped for the reason a step a world affords is never stored — what is kept is premises, and a
+    dropped for the reason what a world admits is never stored — what is kept is premises, and a
     world is a conclusion from beliefs plus an effect, so keeping one would be keeping something
     that can outlive what it was concluded from.
 

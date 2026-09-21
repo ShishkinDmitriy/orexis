@@ -3,13 +3,15 @@
 A repository over situational data: given an [action](action.py) and what this agent holds, run
 that action's own precondition against the world this collection was handed and shape each
 binding into a `Step` — one pair per parameter the action declares it takes. Nothing is stored:
-a step a world affords is a conclusion whose premises are stored and would outlive them
+what a world admits is a conclusion whose premises are stored and would outlive them
 (a-situated-instance-is-kept-only-when-it-is-testimony).
 
-**A STEP A WORLD AFFORDS AND A STEP A PLAN HOLDS ARE ONE THING.** This yielded an `Affordance`
-once, which carried four of a step's fields and was copied into one by `Step.from_row` the
-moment anything wanted to plan with it. Two classes for one shape is how a reader comes to
-believe there are two concepts; what differs is the MOMENT, not the thing.
+**A STEP IS AN ACTION PICKED FOR EXECUTION**, and what a world admits is what the search picks
+FROM — one per action per legal filling. They are one class, because what a search adds when it
+picks is absent on one nobody picked, and that is what `None` in those fields means. This
+yielded an `Affordance` once, copied into a step by `Step.from_row` the moment anything wanted
+to plan with it: two classes for one shape, and a second word doing no work the absent fields
+were not already doing.
 
 **THE WORLD IS ASKED ABOUT, NOT HELD.** Every question here names one — `at` and `world` — so
 one of these serves as many worlds as the store has to be asked about, and the precondition

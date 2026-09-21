@@ -169,11 +169,13 @@ it is a record wearing a bullet.
 - **A method is walked, never searched** — the steps an abstract action comes to are the
   package's protocol, not a choice, so the keeper expands them at adoption and each step says
   what it waits for; simulating them would spend the budget on worlds the measure cannot tell apart.
-- **A world affords STEPS and a plan holds them, one class and one word** — an `Affordance`
-  carried four of a step's fields and a `from_row` copied them across, which is how a reader
-  comes to believe there are two concepts where what differs is the MOMENT; and the service
-  between the two collections fetched nothing and decided nothing once the word was gone, so the
-  loop is `Steps.find_all` and every identity it held is a criterion of the ask (a-row-is-a-step).
+- **A step is an action PICKED for execution, and what it adds is at least the variables** —
+  planning finds a plan and every action in a plan is a step, so a world merely ADMITS one per
+  action per legal filling and the search picks; an `Affordance` carried four of a step's fields
+  and a `from_row` copied them across, which is two classes for one shape and a second word doing
+  no work the absent fields were not. The service between the two collections fetched nothing and
+  decided nothing once the word was gone, so the loop is `Steps.find_all` and every identity it
+  held is a criterion of the ask (a-row-is-a-step).
 - **An action declares what it is filled with, and the kernel names no column** — a parameter's
   local part is the variable its precondition projects, the `$token` its rules read and the
   predicate a step is written under, so one spelling serves three places; five named columns
