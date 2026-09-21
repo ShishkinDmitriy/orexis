@@ -226,13 +226,19 @@ orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range or
     rdfs:label "beliefs of" ;
     rdfs:comment "Which agent owns this graph — said by the owner in the classification it writes when it creates the graph, beside what the graph is and how it arrived, so a reader that means its OWN graphs of a kind asks by owner as well as by class. In a deployed volume every graph is the one agent's; the world-wide validation and the tests stand several agents in one store, and this is what keeps one agent's roots and picks apart from the next's there — the name used to, and a name is for eyes." .
 
-orexis:AssertedDesireGraph a owl:Class ; rdfs:subClassOf orexis:PublicGraph , orexis:DesireGraph , orexis:WantGraph ; rdfs:label "Asserted desire graph" ;
-    rdfs:comment "The one public graph that holds what a world ratifies DIRECTLY of what its agents want, beside the topology it states: a standing want (the courier's, hanoi's, the tower's) or a desire the derivation derives under (the greenhouse's) — so it is a graph of both kinds, under `orexis:DesireGraph` and `orexis:WantGraph` alike, and its name says which modality projects it rather than which kind it holds, since no one content word fits four worlds. A class of its own so that a reader meaning it asks by class, as it asks for every other graph, and names no instance; the graph's IRI is the world's to write." .
+#  `orexis:AssertedDesireGraph` WAS HERE and is retired. It was `subClassOf orexis:PublicGraph,
+#  orexis:DesireGraph, orexis:WantGraph`, and its NAME said the ARRIVAL — the one thing the
+#  three axes above forbid a content class to say, in those words: the axes were separated
+#  precisely so a class would not have to encode how its facts got there. Its own comment had
+#  already conceded it ("its name says which modality projects it rather than which kind it
+#  holds, since no one content word fits four worlds"), and the cost was real: a reader could
+#  not ask for the world's wants without asking for its desires too, so the kernel judged the
+#  wants a second time rather than reading them. Classified on each axis directly now.
 
 orexis:DesireGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Desire graph" ;
     rdfs:comment "A graph of `orexis:Desire` rows — named for what it HOLDS, as every graph class is since a-graph-class-is-named-for-what-it-holds, and NOT the modality class of the same spelling that #312 retired (a-store-is-a-modality): a modality is a store now, and this says only which kind of row a graph carries. The roots graph is one, `roots/<agent>` for eyes: ONE agent's desires, every `orexis:Desire` it holds for its whole life: the stake per property, the freshness desire per sensor, with their met-tests — DECLARED once at genesis from the ranges and the wiring the world states, by the packages' desire rules run at birth, and endowed on amendment: a never-held root arrives, a held one stays (a-root-holds-always-and-an-outdated-graph-is-dropped). NO PERIOD, so it holds at every instant as the T-Box does, and no rebuild of the desire modality touches it; the modality projects it beside the records. Received, never authored by the agent: the sovereign's ranges are the source. The promises are another (`progression:PromisesGraph`), desires the bridge raised. Called `orexis:RootsGraph` until the class was named for the derivation's role instead of the rows, a synonym in the T-Box." .
 orexis:WantGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Want graph" ;
-    rdfs:comment "A graph of `orexis:Want` rows — what a desire came to when a situation made it bite (orexis:Want). The pursued graphs are these (`deliberation:PursuedGraph`), one per want the derivation minted, each holding during its period; the world's asserted graph is one too where a world ratifies a standing want directly. Named for what it holds, like `orexis:DesireGraph` beside it, and no subclass of it: a want is not a desire (orexis:Want)." .
+    rdfs:comment "A graph of `orexis:Want` rows — what a desire came to when a situation made it bite (orexis:Want). The derivation's are these, one per want it minted, each holding during its period and `orexis:arrivedBy orexis:Derived`; the world's asserted graph is one too where a world ratifies a standing want directly, and it is `orexis:Asserted`. Which of the two a reader means is the ARRIVAL axis and never a subclass of this one — `deliberation:PursuedGraph` was that subclass and is retired. Named for what it holds, like `orexis:DesireGraph` beside it, and no subclass of it: a want is not a desire (orexis:Want)." .
 orexis:PickRecordGraph a owl:Class ; rdfs:subClassOf orexis:Graph , orexis:RecordGraph ; rdfs:label "Pick record graph" ;
     rdfs:comment "ONE agent's record of picking: what birth authored and review has since re-picked, one value per term, plus the belief-proper terms (conversions, the wallet) the #297 sort left beside them. A RECORD class, not a modality — the desire modality derives its wants and projects this record in as a premise-and-content, so what used to need a modality typing to be copied is now read by name, the one construction from an agent's own id the rules allow. The write boundary is the volume: one agent, one store." .
 
@@ -382,12 +388,21 @@ orexis:CatalogueGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "C
 ##  above). A per-agent graph is said by its owner when it creates it; a public one below is
 ##  transcribed by genesis on every start.
 
-##  Where a world states a root desire: a TriG block in the world's own files, replaced from
-##  them on every boot exactly as the world graph is, projected into the desire modality by
-##  its build. Declared here so the ghost walk keeps it and so a world file needs no typing
-##  line — naming the graph is enough, and a world may name instances.
-<http://example.org/orexis/graph/desire/asserted>   a orexis:AssertedDesireGraph ;
-    orexis:arrivedBy orexis:Asserted .
+##  Where a world states what its agents want: a TriG block in the world's own files, replaced
+##  from them on every boot exactly as the world graph is, projected into the desire modality
+##  by its build. Declared here so the ghost walk keeps them and so a world file needs no
+##  typing line — naming the graph is enough, and a world may name instances.
+#  TWO GRAPHS, ONE CONTENT CLASS EACH, and each says its arrival on the arrival axis. It was
+#  ONE graph classified as a graph of desires AND a graph of wants, because four worlds put
+#  different kinds in it and no one content word fit them — but a graph that is both is a
+#  graph whose content no reader can predict, which is the conflation one level down from the
+#  one the classes above forbid. A world ratifying a desire names the first; a world ratifying
+#  a want names the second; the names are the worlds' to write, and a world file needs no
+#  typing line because both are declared here.
+<http://example.org/orexis/graph/desire/asserted>
+    a orexis:PublicGraph , orexis:DesireGraph ; orexis:arrivedBy orexis:Asserted .
+<http://example.org/orexis/graph/want/asserted>
+    a orexis:PublicGraph , orexis:WantGraph ; orexis:arrivedBy orexis:Asserted .
 
 
 
@@ -550,7 +565,7 @@ NOT A SUBCLASS OF orexis:Desire, and it was one until the axis was measured. The
 
 HOW IT CAME TO BE IS NOT THE AXIS. Most wants are derived — `prov:wasDerivedFrom` names the desire — but a world may ratify one directly, and three do: hanoi's every disk home, the courier's every parcel delivered, the tower's. Those are wants, authored rather than deduced, and they are handed to a search like any other. Standing versus occasioned is the axis; who wrote it is provenance.
 
-NOT a second modality and not a second store. Both live in the desire modality; what differs is which graph family holds them — `orexis:DesireGraph` for the desires, holding at every instant, and `deliberation:PursuedGraph` for one graph per want, each with its period (#618, #645). See knowledge/domain/desire.md.""" .
+NOT a second modality and not a second store. Both live in the desire modality; what differs is which graph class holds them — `orexis:DesireGraph` for the desires, holding at every instant, and `orexis:WantGraph` for one graph per want, each with its period (#618, #645). See knowledge/domain/desire.md.""" .
 
 orexis:metWhen a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range sh:NodeShape ;
     rdfs:label "met when" ;

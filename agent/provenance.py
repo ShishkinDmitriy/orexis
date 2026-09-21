@@ -43,7 +43,7 @@ from pathlib import Path
 from assembly import loader
 from orexis_agent_deliberation.ontology import DERIVATIONS_GRAPH
 from .config import REPO_ROOT
-from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
+from orexis_agent_progression.ontology import (DESIRE_ASSERTED_GRAPH, WANT_ASSERTED_GRAPH, ACTIONS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
                        ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
 from orexis_agent_progression.ontology import PUBLIC
 
@@ -136,7 +136,8 @@ def _turtle(world: Path, attribution: tuple[str, str] | None = None,
         #  even when no world states one: an empty graph honest about its source, exactly as
         #  the effects graph is.
         lines.append(
-            f"<{DESIRE_ASSERTED_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {world_files_} .")
+            f"<{DESIRE_ASSERTED_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {world_files_} . "
+            f"<{WANT_ASSERTED_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {world_files_} .")
         if attribution:
             user, role = attribution
             # A qualified association, because the interesting part is the ROLE. `prov:agent`

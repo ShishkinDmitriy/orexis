@@ -80,7 +80,7 @@ the whole store: the mind grew a graph per modality, and provenance grew one per
 full set is whatever `orexis:Graph` has instances of — ask, never count — but for orientation it is
 now `graph/picks/<agent>`, `graph/sensed`, `graph/world`, `graph/world/derived`,
 `graph/world/entailed`, `graph/ontology`, `graph/ontology/entailed`, `graph/catalogue`,
-`graph/desire/asserted`, `graph/obligations/<agent>`,
+`graph/desire/asserted`, `graph/want/asserted`, `graph/obligations/<agent>`,
 `graph/deliberation`, `graph/effects`, `graph/evidence/<agent>`, `graph/revisions/<agent>`,
 `graph/summaries/<agent>` and `graph/instruments`. See
 [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) for the three axes that classify
@@ -90,8 +90,9 @@ split by who authored the fact. Two caveats now that
 here at all — no constraint graph exists anywhere; the ROOTS are, in `graph/roots/<agent>`,
 authored at birth by the packages' `desires.ru` and endowed on amendment (#644), and the
 desire modality projects them with the records on every rebuild and derives nothing; and
-`graph/desire/asserted` above is the world's TriG block the build projects, replaced from the
-files each boot. And `graph/intentions/<agent>` has moved OUT of a deployed belief base into
+`graph/desire/asserted` and `graph/want/asserted` above are the world's TriG blocks the build
+projects, replaced from the files each boot — two graphs, because a graph is named for what it
+holds and a world may ratify either kind. And `graph/intentions/<agent>` has moved OUT of a deployed belief base into
 the intention modality's own room of the volume (`<state>/intentions`, beside
 `<state>/belief-base`) — a pathless test mind keeps it here, exactly as pre-split volumes
 did.

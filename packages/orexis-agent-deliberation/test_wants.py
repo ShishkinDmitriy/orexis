@@ -38,13 +38,13 @@ def store():
     another aggregate root's identity, which a read over a store has no business holding.
     Whose the wants are is the store's own (rule 4: one agent, one volume)."""
     st = Store()
-    #  A catalogue, and the vocabulary's word on what the families are beneath: the read
-    #  asks for graphs of WANTS and of RECORDS, and a pursued graph and an obligations graph
-    #  are those by the axioms the packages declare.
+    #  A catalogue, and the vocabulary's word on what a record is beneath: the read asks for
+    #  graphs of WANTS and of RECORDS, and an obligations graph is one by the axiom the market
+    #  declares. The derivation's own graphs need no axiom — they ARE graphs of wants, and
+    #  that the derivation wrote them is `orexis:arrivedBy` rather than a class.
     st.update("""INSERT DATA {
   GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph . <urn:test:ontology> a orexis:OntologyGraph }
-  GRAPH <urn:test:ontology> { deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
-                              market:ObligationsGraph rdfs:subClassOf orexis:RecordGraph } }""")
+  GRAPH <urn:test:ontology> { market:ObligationsGraph rdfs:subClassOf orexis:RecordGraph } }""")
     return st
 
 
@@ -134,8 +134,14 @@ def test_saving_writes_the_graph_the_classification_and_the_period(store):
     graph = graph_of(AGENT, "urn:test:want")
 
     kinds = bindings(store.query_union(
-        f"SELECT ?t WHERE {{ GRAPH <{store.catalogue}> {{ <{graph}> a ?t }} }}"))
-    assert any(r["t"].endswith("PursuedGraph") for r in kinds), "classified as the family it is"
+        f"SELECT ?t ?a WHERE {{ GRAPH <{store.catalogue}> {{ <{graph}> a ?t . "
+        f"OPTIONAL {{ <{graph}> orexis:arrivedBy ?a }} }} }}"))
+    assert any(r["t"].endswith("WantGraph") for r in kinds), "classified by what it HOLDS"
+    #  AND ON THE OTHER AXIS, separately: that the derivation rather than a world put the rows
+    #  there. It was one class saying both (`deliberation:PursuedGraph`), which is the thing
+    #  agent/ontology.ttl forbids a content class to do, and it cost a read for the world's
+    #  own wants — there was no way to ask for a graph of wants without asking whose it was.
+    assert any(r.get("a", "").endswith("#Derived") for r in kinds), "and by how it ARRIVED"
 
     period = bindings(store.query_union(
         f"SELECT ?s ?e WHERE {{ GRAPH <{store.catalogue}> {{ <{graph}> dcterms:temporal ?p . "

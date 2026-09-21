@@ -104,7 +104,12 @@ class Projection(Store):
         #  The owners classified them; this reads the classification. The world's asserted
         #  graph is a desire and a want graph too, and public: it rides in with the publics.
         records = [g for g in beliefs.graphs_of(*HELD, at=now) if g not in publics]
-        asserted = set(beliefs.graphs_of(OREXIS + "AssertedDesireGraph"))
+        #  BOTH ASSERTED GRAPHS: a world may ratify a desire or a want, and each is a public
+        #  graph of its own kind since they were split. Asked by what they HOLD, which is the
+        #  only thing this build needs to know about them.
+        asserted = {g for g in publics
+                    if g in set(beliefs.graphs_of(OREXIS + "DesireGraph"))
+                    | set(beliefs.graphs_of(OREXIS + "WantGraph"))}
         #  AND THE CATALOGUE, so this store answers by kind as the belief base does: what it
         #  holds is asked for as desires, wants and records, never as everything — which
         #  needs the vocabulary's axioms too, since a pursued graph is a graph of wants by

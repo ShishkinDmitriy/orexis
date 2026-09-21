@@ -24,7 +24,13 @@ from orexis_agent_progression.ontology import KNOWN
 #  `orexis:DesireGraph` is back as a CONTENT class — a graph of desire rows, beside
 #  `orexis:WantGraph` — which is a different claim from the modality one #312 retired, and
 #  is why neither is in this set: a graph is classified by its owner for what it holds.
-MODALITIES = {"BeliefGraph", "MenuGraph", "IntentionGraph", "HistoryGraph"}
+#  A graph says what its content IS. The desire modality became a STORE (#312) and left its
+#  two content classes behind — a graph of desires and a graph of wants — and the asserted
+#  graphs were exempted from this test rather than counted, because the one graph that then
+#  existed was classified as BOTH and so said neither. Two graphs now, one class each, and
+#  they answer this test like every other public graph.
+MODALITIES = {"BeliefGraph", "MenuGraph", "IntentionGraph", "HistoryGraph",
+              "DesireGraph", "WantGraph"}
 ARRIVALS = {"Asserted", "Derived", "Entailed", "Recorded", "Received"}
 
 
@@ -48,12 +54,11 @@ def test_every_public_graph_declares_a_modality_and_an_arrival():
     st = genesis_store()
     for graph in st.graphs_of(PUBLIC):
         kinds = types_of(st, graph)
-        if graph.endswith("desire/asserted"):
-            #  The one public graph whose modality is a STORE (#312): the desire modality has
-            #  no graph class to declare, so this one says only who put the fact there —
-            #  which is the whole ruling, arrived at its first instance.
-            assert arrival_of(st, graph) == {"Asserted"}
-            continue
+        #  THE ASSERTED GRAPHS USED TO BE EXEMPT HERE, and the exemption was the bug this
+        #  test describes. There was ONE of them, classified as a graph of desires AND a
+        #  graph of wants because three worlds ratify a want in it and one ratifies a desire
+        #  — so it declared no single content and a reader did have to guess. Two graphs now,
+        #  one content class each, and neither needs an exception.
         assert kinds & MODALITIES, f"{graph} declares no modality — only {sorted(kinds)}"
         assert arrival_of(st, graph) & ARRIVALS, f"{graph} does not say how it arrived"
 

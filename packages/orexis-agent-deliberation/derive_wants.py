@@ -88,7 +88,7 @@ SELECT ?w ?holdsAt WHERE {
   GRAPH ?g { ?w a orexis:Want ; prov:wasDerivedFrom $desire .
              OPTIONAL { ?w orexis:holdsAt ?holdsAt } }
   GRAPH ?cat {
-    ?cat a orexis:CatalogueGraph . ?g a deliberation:PursuedGraph .
+    ?cat a orexis:CatalogueGraph . ?g a orexis:WantGraph ; orexis:arrivedBy orexis:Derived .
     OPTIONAL { ?g dcterms:temporal ?period .
                OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?end } } }
   FILTER(!BOUND(?start) || ?start <= $now) FILTER(!BOUND(?end) || ?end > $now) }
@@ -406,13 +406,13 @@ INSERT {{
       rdfs:label {json.dumps(want.label)} .
   {points}
   {shape} }}
-  GRAPH ?cat {{ <{graph}> a deliberation:PursuedGraph ; orexis:arrivedBy orexis:Recorded ;
+  GRAPH ?cat {{ <{graph}> a orexis:WantGraph ; orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf <{want.holder}> ;
       dcterms:temporal [ a dcterms:PeriodOfTime{period} ] . }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
 INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
-        GRAPH ?vocabulary {{ deliberation:PursuedGraph rdfs:subClassOf ?kind }} }}""",
+        GRAPH ?vocabulary {{ orexis:WantGraph rdfs:subClassOf ?kind }} }}""",
                   prefixes=NAMESPACES)
 
 

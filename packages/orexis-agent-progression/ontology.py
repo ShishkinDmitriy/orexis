@@ -217,6 +217,11 @@ FORESEEN = (*KNOWN, PREDICTION)
 #  projects the second, and no reader ever enumerates either (reads go through the modality's
 #  union surface).
 DESIRE_ASSERTED_GRAPH = _GRAPH + "desire/asserted"
+#  AND ONE FOR THE WANTS, because a graph is named for what it HOLDS and these hold different
+#  kinds. They were one graph classified as both a graph of desires and a graph of wants,
+#  which is a graph no reader can predict the content of: three worlds ratify a want there and
+#  one ratifies a desire, and every read for either had to take both and sort them out.
+WANT_ASSERTED_GRAPH = _GRAPH + "want/asserted"
 # What the five above ARE, in PROV-O, so the store can say it rather than this file's comments.
 # Rename every graph to `g1`..`g5` and a reader could still work out which hold computed facts:
 # that is the test this graph exists to pass, and the reason the names above are a convenience
