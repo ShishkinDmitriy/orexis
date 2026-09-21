@@ -443,6 +443,13 @@ it is a record wearing a bullet.
   producer and one live consumer and both were rebuilding the desire projection, and the
   collection's own writers had no caller but their tests. A want's graph, its catalogue row
   and its period are decided where the want is, and whoever wrote says what changed.
+- **Two readings of one met-test are not a duplicate when the compiler, the source and the
+  cache all differ** — the derivation wants WITNESSES from the graphs of desires and wants and
+  caches nothing; the kernel lifting a ratified want wants a BOOLEAN from public knowledge,
+  where a package's shape lives, and caches per want because an asserted one cannot change
+  while the agent runs. Merging them was attempted and refused on all three counts; what DID
+  move is the one reading that shares every one of them, a derived want's own state, which is
+  `judging.unmet_now` and was `agent/pursuing.py`'s fourth compiler.
 - **A want somebody else sourced is still an INSTANCE under a standing desire** — a call was
   lifted per call by `hosting.desires()`, the one want here no derivation minted, so it had no
   provenance, no graph and no period, and the planner could judge it only by asking a

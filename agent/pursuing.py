@@ -29,6 +29,7 @@ from datetime import datetime
 
 from rdflib import URIRef
 
+from orexis_agent_deliberation import judging
 from orexis_agent_deliberation.want import Want
 from orexis_agent_deliberation.wants import find_wants
 from orexis_agent_progression import clock
@@ -208,19 +209,15 @@ class Pursuing:
     def _own_state(self, want: str) -> str | None:
         """What a derived want's OWN met-test says of the world now — `met` or `unmet` — or
         None where it carries none of its own and is judged as its root is (a want minted
-        before wants carried one). The shape lives in the want's graph, the agent's own."""
-        rows = bindings(self._agent.desires.query(
-            f"SELECT ?s WHERE {{ <{want}> orexis:metWhen ?s . FILTER(?s != <{want}>) }} LIMIT 1"))
-        if not rows or not rows[0]["s"].startswith(want):
-            return None
-        try:
-            text = self._unmet_select(want, rows[0]["s"])
-            violated = bool(bindings(self._agent.beliefs.query(
-                    text, self._agent.beliefs.graphs_of(*KNOWN, at=clock.now()))))
-        except Exception as exc:                                    # noqa: BLE001
-            log.error("%s: could not judge %s by its own shape: %s", self._agent.id, want, exc)
-            return None
-        return "unmet" if violated else "met"
+        before wants carried one).
+
+        ASKED OF `judging`, which is the module that runs met-tests: a DERIVED want's shape is
+        in its own want graph, which is where `shapes_in` reads, so this is the same question
+        the derivation asks of the same source. The two blocks above still compile their own,
+        and the reason is written there.
+        """
+        unmet = judging.unmet_now(self._agent.beliefs.engine, want)
+        return None if unmet is None else ("unmet" if unmet else "met")
 
     def _at_instant(self, row: Want, node: str, holds_at: datetime, since: datetime | None,
                     now: datetime | None) -> Want:
