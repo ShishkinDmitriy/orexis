@@ -153,6 +153,29 @@ about rules no effect could have broken — and a depth-2 pass would take twenty
 instead of under two. What must be true is that the agent never COMMITS to reaching a world the
 society refuses, so the expensive question is asked of the world it actually intends.
 
+# A candidate is the link between two worlds, reified
+
+An [action](/domain/action.md) is a library item. Planning makes INSTANCES of it, and a
+**candidate** is one: `deliberation:wouldTake` the action, one triple per parameter it was
+filled with, and `deliberation:from` the world it would be taken in. The world it reaches names
+it back, `deliberation:reachedBy`.
+
+**A possible world points at no other world.** The link between two of them IS the candidate,
+which is what leaves room for one world to be approached by different combinations of
+candidates — the search already identifies a world by its state (`signature.where`) rather than
+by the path that found it, and simply discards the second arrival. `deliberation:from` was a
+world's own property while a world had exactly one way in, which a tree has and a search over
+states does not.
+
+**A candidate that reached nothing is still a candidate.** The search weighs some and passes
+them over — irrelevant, refused below, too dear, out of budget — and those fork no world at all.
+That is why a candidate is named from the world it LEAVES: a name taken from its child could not
+exist for the ones that have no child, which is why the trace and the pass graph described the
+same fork under two names until #747, joined by nothing.
+
+What a candidate is WORTH is never on it. That is the weighing's, below, because worth is
+relative to a want and a candidate is not.
+
 # What a world is worth is asked per WANT
 
 A possible world is want-agnostic: it is a set of facts a path reached, and it would be the same

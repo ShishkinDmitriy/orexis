@@ -50,7 +50,7 @@ from orexis_agent_deliberation.want import Want
 
 
 from .steps import Steps
-from .imaginarium import Imaginarium
+from .imaginarium import Imaginarium, candidate_of
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import NAMESPACES, Raw, bind, bindings
 from .ontology import DELIBERATION
@@ -59,7 +59,7 @@ from orexis_agent_deliberation.conformance import graph_from, held_shapes, legal
 from orexis_agent_deliberation.judge import crossed_text
 from orexis_agent_progression import clock
 from .cone import _Compiled, _Node
-from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED,
+from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED, Weighed,
                    REMEMBERED, SATISFIED)
 from .trace import SURPRISE_EXOGENOUS, SURPRISE_WITHHELD
 from orexis_agent_progression.ontology import PUBLIC
@@ -595,7 +595,11 @@ class Planner:
         room = (max(0.0, (deadline - self._clock).total_seconds())
                 if deadline is not None else None)
         saw_candidate = bool(self._pending)
-        self._weighed = [(0, row, None, trace.IRRELEVANT) for row in self._passed_over]
+        #  A CANDIDATE IS NAMED FROM THE WORLD IT LEAVES (#747), so every entry carries one —
+        #  including the ones that reached nothing, which is the half the pass graph could not
+        #  name while a candidate was named after its child.
+        self._weighed = [Weighed(0, row, None, trace.IRRELEVANT, None, here.graph)
+                         for row in self._passed_over]
         #  THE OPEN LIST: on a fresh pass the root alone; on a resumed one the kept frontier
         #  under the new root, re-keyed — a priority reads the want's state, so it is minted
         #  here rather than at the re-root.
@@ -627,12 +631,12 @@ class Planner:
                     #  steps before the one that would have fallen off the menu.
                     absent = self._absent(kept)
                     if absent:
-                        self._weighed.append((0, kept, None, trace.INAPPLICABLE, absent[0]))
+                        self._weighed.append(Weighed(0, kept, None, trace.INAPPLICABLE, absent[0], here.graph))
                         continue
                     step, spent = self._walk(here, kept, judgment, self._bound, self.budget - forked)
                     forked += spent
                     if isinstance(step, str):
-                        self._weighed.append((0, kept, None, step))
+                        self._weighed.append(Weighed(0, kept, None, step, None, here.graph))
                         continue
                     ended = self._settle(kept, step, 0, judgment, met_now, room)
                     if ended is not None:
@@ -643,27 +647,27 @@ class Planner:
                     #  REFUSED BELOW (#533): the level beneath found no way to keep this very
                     #  move's promise within the patience. Passed over, recorded, and tried
                     #  again when the patience has passed — the world may have changed.
-                    self._weighed.append((depth, row, None, trace.REFUSED))
+                    self._weighed.append(Weighed(depth, row, None, trace.REFUSED, None, node.graph))
                     continue
                 if self._compiled.relevant is not None and row.action not in self._compiled.relevant:
                     #  A lever that touches nothing this want reads, by its own effect and
                     #  by nothing it could enable (#488). Recorded, never simulated, and not
                     #  a candidate seen: a menu of such rows is NOTHING — equip me — which is
                     #  the honest finding when no lever points at the want.
-                    self._weighed.append((depth, row, None, trace.IRRELEVANT))
+                    self._weighed.append(Weighed(depth, row, None, trace.IRRELEVANT, None, node.graph))
                     continue
                 saw_candidate = True
                 if forked >= self.budget:
-                    self._weighed.append((depth, row, None, trace.SPENT))
+                    self._weighed.append(Weighed(depth, row, None, trace.SPENT, None, node.graph))
                     node.withheld.append((row, trace.SPENT))
                     continue
                 step = self._step_from(node, row, judgment, self._bound)
                 if step is TOO_DEAR:
-                    self._weighed.append((depth, row, None, trace.COSTLY))
+                    self._weighed.append(Weighed(depth, row, None, trace.COSTLY, None, node.graph))
                     node.withheld.append((row, trace.COSTLY))
                     continue
                 if step is None:
-                    self._weighed.append((depth, row, None, trace.UNSIMULATED))
+                    self._weighed.append(Weighed(depth, row, None, trace.UNSIMULATED, None, node.graph))
                     continue
                 forked += 1              # a world exists now, whatever becomes of it below
                 ended = self._settle(row, step, depth, judgment, met_now, room)
@@ -756,7 +760,7 @@ class Planner:
             #  question was never put, which is not the same as the answer being no.
             self._about(step, "fails", ox.NamedNode(judgment.uri))
         if step.met:
-            self._weighed.append((depth, row, step.urgency, trace.MET))
+            self._weighed.append(Weighed(depth, row, step.urgency, trace.MET, None, step.parent.graph))
             if met_now:
                 #  Already met and still steering: the first novel step that
                 #  keeps it met stays the answer — re-picking among keepers by
@@ -772,11 +776,12 @@ class Planner:
             self._bound = step.cost if self._bound is None else min(self._bound, step.cost)
             return None
         if not novel:
-            self._weighed.append((depth, row, step.urgency, trace.SEEN))
+            self._weighed.append(Weighed(depth, row, step.urgency, trace.SEEN, None, step.parent.graph))
             return None
-        self._weighed.append(
-            (depth, row, step.urgency,
-             trace.BETTER if step.urgency < self._root.urgency else trace.WORSE))
+        self._weighed.append(Weighed(
+            depth, row, step.urgency,
+            trace.BETTER if step.urgency < self._root.urgency else trace.WORSE,
+            None, step.parent.graph))
         self._open_row(step, True)
         return None
 
@@ -787,7 +792,7 @@ class Planner:
         step.verdict = verdict
         self._keep(step)
         self._about(step, "verdict", ox.Literal(verdict))
-        self._weighed.append((depth, row, step.urgency, verdict))
+        self._weighed.append(Weighed(depth, row, step.urgency, verdict, None, step.parent.graph))
         return None
 
     # --- the cone across passes (#553) ---------------------------------------------------------
@@ -1856,25 +1861,34 @@ ORDER BY {order} LIMIT 1""", PASS_GRAPH))
                #  clock. The root's instant is that clock, which is how it reaches the store.
                q(me, D + "atInstant", ox.Literal(self._at(node).isoformat(),
                                                  datatype=ox.NamedNode(XSD + "dateTime")))]
-        #  THE ROOT HAS NO PARENT AND NO STEP: it is where the pass stands, reached by nothing.
-        if parent is not None:
-            out.append(q(me, D + "from", ox.NamedNode(parent)))
+        #  THE ROOT IS REACHED BY NOTHING: it is where the pass stands, and no candidate
+        #  names it, which is how a reader finds it.
         if act is not None:
-            step = ox.NamedNode(node.graph + ".step")
-            out += [q(me, P + "by", step),
-                    q(step, RDF_TYPE, ox.NamedNode(P + "Step")),
-                    q(step, P + "fills", ox.NamedNode(act.action))]
-            #  HOW LONG THE ACTION ITSELF TAKES — the step's own `orexis:landsAfter`, asked in
-            #  the world it is taken in. The world's `takes` is the path's total, so a step's
+            #  THE CANDIDATE: the reified link between the world this was taken FROM and the
+            #  one it reached. `deliberation:from` is the candidate's, not the world's — a
+            #  world points at no world, only at the candidates that reach it, which is what
+            #  leaves room for one world to be approached several ways (#747).
+            #
+            #  NOT `progression:Step` and not `progression:fills`: nothing has been picked
+            #  here. Every fork the search weighs and discards was typed a step until #747,
+            #  and `fills` would have the closure type each one a commitment — which is the
+            #  exact distinction `deliberation:wouldTake` exists to keep.
+            cand = ox.NamedNode(candidate_of(parent, act))
+            out += [q(me, D + "reachedBy", cand),
+                    q(cand, RDF_TYPE, ox.NamedNode(D + "Candidate")),
+                    q(cand, D + "from", ox.NamedNode(parent)),
+                    q(cand, D + "wouldTake", ox.NamedNode(act.action))]
+            #  HOW LONG THE ACTION ITSELF TAKES — its own `orexis:landsAfter`, asked in the
+            #  world it is taken in. The world's `takes` is the path's total, so a candidate's
             #  own would be a subtraction, and a duration this pass computed once is worth
-            #  keeping where the step that has it is written down.
+            #  keeping where the thing that has it is written down.
             if lands:
-                out.append(q(step, D + "takes", dec(lands)))
+                out.append(q(cand, D + "takes", dec(lands)))
             #  AND WHAT IT IS FILLED WITH — one quad per parameter, under the parameter's
             #  own IRI, which is the declaring package's word and not the kernel's.
-            out += [q(step, parameter, ox.NamedNode(value)) for parameter, value in act.binding]
+            out += [q(cand, parameter, ox.NamedNode(value)) for parameter, value in act.binding]
             if act.quantity is not None:
-                out.append(q(step, P + "quantity", dec(act.quantity)))
+                out.append(q(cand, P + "quantity", dec(act.quantity)))
         if node.expanded:
             out.append(q(me, D + "expanded", ox.Literal("true", datatype=ox.NamedNode(XSD + "boolean"))))
         return out

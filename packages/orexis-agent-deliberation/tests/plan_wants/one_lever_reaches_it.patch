@@ -16,21 +16,21 @@
 +  :keeper.in_range.pursued.tank1.plan.0 a progression:Step .
 +  :keeper.in_range.pursued.tank1.plan.0 orexis:about :level .
 +  :keeper.in_range.pursued.tank1.plan.0 progression:fills :Filling .
++  graph:sensed..Filling-level-valve :through :valve .
++  graph:sensed..Filling-level-valve a deliberation:Candidate .
++  graph:sensed..Filling-level-valve deliberation:atDepth 0 .
++  graph:sensed..Filling-level-valve deliberation:verdict "meets the desire" .
++  graph:sensed..Filling-level-valve deliberation:wouldReach 0.0 .
++  graph:sensed..Filling-level-valve deliberation:wouldTake :Filling .
++  graph:sensed..Filling-level-valve orexis:about :level .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 a deliberation:Deliberation .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:asOf "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
-+  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:chose orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 .
-+  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:considered orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 .
++  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:chose graph:sensed..Filling-level-valve .
++  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:considered graph:sensed..Filling-level-valve .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:deliberatedOn :keeper.in_range.pursued.tank1 .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:judgedBy "SELECT DISTINCT ?this WHERE { { VALUES ?this { <http://example.org/test#tank1> } ?this <http://example.org/test#level> ?v1 . FILTER(!(?v1 >= \"10\"^^<http://www.w3.org/2001/XMLSchema#integer>)) } }" .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:judgedThrough "the select compiled from its shape" .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:keptWorlds 0 .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:standsAt 1.0 .
 +  orexis:deliberation.keeper.keeper.in_range.pursued.tank1 deliberation:verdict "satisfied" .
-+  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 :through :valve .
-+  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 a deliberation:Candidate .
-+  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 deliberation:atDepth 0 .
-+  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 deliberation:verdict "meets the desire" .
-+  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 deliberation:wouldReach 0.0 .
-+  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 deliberation:wouldTake :Filling .
-+  orexis:deliberation.keeper.keeper.in_range.pursued.tank1.0 orexis:about :level .
 +}
