@@ -55,8 +55,8 @@ def test_a_pursued_child_and_a_prediction_past_their_ends_are_swept(monkeypatch)
     """The mind's own timed graphs: a child derived for an instant that has passed, and a
     ladder predicted from a reading two days old."""
     agent = build_agent("gardener", genesis_store({("zz", MOISTURE): 0.12}, world="loner"), monkeypatch)
-    root = stake_of(agent).uri
-    child = mint(agent.beliefs.engine, agent.me.uri, root, holds_at=clock.now() - timedelta(days=1))
+    desire = stake_of(agent).uri
+    child = mint(agent.beliefs.engine, agent.me.uri, desire, holds_at=clock.now() - timedelta(days=1))
     assert child is not None
     write_reading(agent, 0.12, MOISTURE, age_s=2 * 86400)
     reading = readings.current_reading(agent.beliefs.reader(PUBLIC), agent.me.acts_for, MOISTURE)
@@ -64,7 +64,7 @@ def test_a_pursued_child_and_a_prediction_past_their_ends_are_swept(monkeypatch)
     assert ladder
     ended = {graph_of(agent.id, child), *ladder}
     assert ended <= set(agent.beliefs.outdated())
-    assert pursuit.child_of(agent, root) is None, "a child past its instant is pursued by nobody"
+    assert pursuit.child_of(agent, desire) is None, "a child past its instant is pursued by nobody"
     assert agent.beliefs.graphs_of(PREDICTION, at=clock.now()) == []
     assert agent.upkeep.sweep() >= len(ended)
     assert not (ended & set(agent.beliefs.periods()))

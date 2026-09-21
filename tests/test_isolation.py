@@ -118,7 +118,7 @@ def test_no_agent_may_hear_a_neighbours_private_channel(world):
 
 @pytest.mark.parametrize("world", WORLDS)
 def test_nobody_is_granted_a_wildcard_over_the_whole_bus(world):
-    """`#`, or a bare `+` at the root, would hand back everything the rest of this buys."""
+    """`#`, or a bare `+` at the desire, would hand back everything the rest of this buys."""
     agents, devices = mqtt_admin.grants(world)
     for principal in list(agents.values()) + list(devices.values()):
         for _, topic in principal.grants:

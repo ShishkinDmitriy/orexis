@@ -1001,7 +1001,7 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     assert not sensing_of(city).gaps(), \
         "still no stake — a mains that states no ranges wants nothing, and that stays true"
     ledger = ledger_of(city)
-    root = f"{city.me.uri}.no_overdue_debts"
+    desire = f"{city.me.uri}.no_overdue_debts"
 
     assert ledger.owe("supplier", "j-city-1", expires_at=None) is not None
     owed = ledger.owed()
@@ -1013,7 +1013,7 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     #  (one-function-mints-every-want).
     assert not any(isinstance(g, OwedWant) for g in city.considering()), "recorded, and nobody waiting"
     ledger.demanded("j-city-1")
-    assert any(isinstance(g, OwedWant) and g.desire == root for g in city.considering()), \
+    assert any(isinstance(g, OwedWant) and g.desire == desire for g in city.considering()), \
         "presented: its debt is a want like anyone else's, derived under its desire"
 
     ledger.discharge("j-city-1")
@@ -1034,7 +1034,7 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     #  and "no unanswered calls" over its venues, and with nothing outstanding on either it
     #  wants nothing. The second arrived when a call became an instance under a desire rather
     #  than a want this package lifted.
-    assert {g.uri for g in standing} == {root, f"{city.me.uri}.no_unanswered_calls"}
+    assert {g.uri for g in standing} == {desire, f"{city.me.uri}.no_unanswered_calls"}
     assert all(g.is_met for g in standing), \
         "a pure seller with nothing outstanding holds its rules and wants nothing"
 

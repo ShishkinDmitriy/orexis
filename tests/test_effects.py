@@ -290,7 +290,7 @@ def test_a_predicted_reading_is_stamped_when_its_step_lands(monkeypatch):
     `orexis:landsAfter`, which the search asks BEFORE it runs the effect rather than after.
     Stamping `NOW()` said a pot had been read before a drop left the valve.
 
-    The clock is the PASS's, read once at its root: a rule asked twice in one pass gets one
+    The clock is the PASS's, read once at its desire: a rule asked twice in one pass gets one
     answer, and a search reading a wall clock per fork would describe two worlds differently
     for having taken longer to imagine them.
 

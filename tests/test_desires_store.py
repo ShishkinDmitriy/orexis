@@ -35,8 +35,11 @@ def test_the_desires_store_holds_wants_and_only_wants(monkeypatch):
     agent = build_agent("gardener", genesis_store(world="loner"), monkeypatch)
 
     graphs = _graphs_in(agent.desires)
+    #  THE NAME IS STILL `roots/`, which `ontology.desires_graph` says why: a graph's name is
+    #  for eyes and no reader depends on it, but renaming one an existing volume already holds
+    #  would give that volume TWO graphs of the class and both would be read.
     assert any(g.endswith("roots/gardener") for g in graphs), \
-        "the roots are PROJECTED here — authored at genesis, never rebuilt (#644)"
+        "the desires are PROJECTED here — authored at genesis, never rebuilt (#644)"
     assert picks_graph("gardener") in graphs, "the pick record is projected: picks are wants"
     assert WORLD_GRAPH not in graphs, "topology is a premise, dropped after the derivation"
     assert STATE_GRAPH not in graphs, "a reading is a belief, not a want"
@@ -112,7 +115,7 @@ ASSERTED_GRAPH = "http://example.org/orexis/graph/desire/asserted"
 def test_a_world_can_state_a_root_desire_and_an_amendment_can_retire_it(monkeypatch, tmp_path):
     """#264's ask, by the desires-store mechanism, plus the half that made it honest.
 
-    A world file is TriG, so a world states a root desire by naming the graph it lands in and
+    A world file is TriG, so a world states a desire by naming the graph it lands in and
     typing it in the same file — the catalog then calls it a desire graph arrived-by-Asserted,
     and the desires-store build copies it without any code learning the name. The second half
     is the amendment: a ratification that drops the desire must drop it EVERYWHERE, which is
@@ -144,7 +147,7 @@ GRAPH <{ASSERTED_GRAPH}> {{
 
     ask = f"ASK {{ <{GARDENER}> orexis:holds <{ROOT}> }}"
     assert agent.desires.query(ask)["boolean"], \
-        "the root desire must reach the desire modality"
+        "the desire must reach the desire modality"
     assert st.query(f"ASK {{ <{ASSERTED_GRAPH}> orexis:arrivedBy orexis:Asserted }}", st.graphs_of(PUBLIC))["boolean"], \
         "and the kernel's own declaration says who put it there — a world file needs no typing line"
 
@@ -160,7 +163,7 @@ GRAPH <{ASSERTED_GRAPH}> {{
 def test_a_commitment_survives_a_restart_in_its_own_room(monkeypatch, tmp_path):
     """The intention modality's row of the table, exercised where it is true: a volume.
 
-    A pre-split volume is one store at the root; the first boot with rooms moves the belief
+    A pre-split volume is one store at the desire; the first boot with rooms moves the belief
     base into its own, adopts any ledger written before intentions had a store, and a second
     opening finds the commitment still there — persistence is the volume's, whichever store
     holds the quads.
@@ -176,7 +179,7 @@ def test_a_commitment_survives_a_restart_in_its_own_room(monkeypatch, tmp_path):
     state = tmp_path / "state"
     world = genesis.world_dir("loner")
 
-    # a pre-split life: one store at the volume root, a ledger entry in the belief base
+    # a pre-split life: one store at the volume desire, a ledger entry in the belief base
     st = Store(str(state))
     genesis.refresh_public(st, world)
     genesis.birth(st, world, "gardener")

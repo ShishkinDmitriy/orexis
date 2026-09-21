@@ -2,7 +2,7 @@
 
 These claims used to be `import-linter` contracts, and three of them named `packages` as a
 single module. That worked while every package lived under one import root. It stopped working
-when a package became a top-level distribution: there is no shared root left to name, and a
+when a package became a top-level distribution: there is no shared desire left to name, and a
 wildcard cannot stand in for one — `grimp` rejects `orexis_*` outright, because its wildcards
 match whole segments and never part of one. Measured, not assumed.
 
@@ -13,7 +13,7 @@ do not. So the claims moved here, where the list is **discovered** — `loader.p
 same call the runtime makes — and a package added tomorrow is covered without anyone touching
 this file.
 
-What is still in `pyproject.toml` is the layering among the three trees of the root
+What is still in `pyproject.toml` is the layering among the three trees of the desire
 distribution. Those are fixed, few, and named honestly.
 
 THE KERNEL'S OWN LAYERING IS HERE TOO (#452). The kernel is three packages in the one tree — the
@@ -48,7 +48,7 @@ MODULES = {p.import_name for p in PACKAGES}
 #  it is not a layer and nothing imports it from below. What a lower layer has to say to a
 #  higher one it says as an EVENT through the choir, which is how the arrows stay one-way.
 #  `orexis-agent-<layer>`: the family `agent` groups the three in a listing, and the member is
-#  the row. Not to be confused with the root tree `agent/` — that is an import name, this a kind.
+#  the row. Not to be confused with the desire tree `agent/` — that is an import name, this a kind.
 LAYER_PACKAGES = tuple(p for p in PACKAGES if p.kind == LAYER_FAMILY and p.name in LAYERS)
 LAYER_MODULES = {p.import_name for p in LAYER_PACKAGES}
 
@@ -169,8 +169,8 @@ def test_a_layer_names_no_higher_layers_prefix():
     faults = []
     for k, layer in enumerate(order):
         higher = order[k + 1:]
-        root = pathlib.Path(f"packages/orexis-agent-{layer}")
-        for path in list(root.glob("*.py")) + list(root.glob("*.ttl")) + list(root.glob("*.rq")) + list(root.glob("*.ru")):
+        desire = pathlib.Path(f"packages/orexis-agent-{layer}")
+        for path in list(desire.glob("*.py")) + list(desire.glob("*.ttl")) + list(desire.glob("*.rq")) + list(desire.glob("*.ru")):
             text = path.read_text(errors="ignore")
             for h in higher:
                 if re.search(rf"\b{h}:[A-Za-z]|orexis/{h}#|\b{h.upper()}\b", text):

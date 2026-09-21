@@ -236,10 +236,13 @@ it is a record wearing a bullet.
   two plain triples that cancel nothing, and a node's diff claimed the old value beside the
   new until the drift kept the whole node it took (#619); the bug hid because novelty needs
   only a difference, and a world claiming two readings for one key is still a different world.
-- **A DESIRE is a root, and a search is never handed one** — what is pursued is a WANT derived
-  under it with a binding of its own; and the root is not the law, because a stake's region under
+- **A search is never handed a DESIRE** — what is pursued is a WANT derived from one, with a
+  binding of its own; and the desire is not the law, because a stake's region under
   never-newly-enter refused the very dose that repairs it: a replaced reading is a new node, so
   every standing violation re-read as newly entered (#618, measured before it was believed).
+  It was "a desire is a ROOT", from when there were root desires and children derived under
+  them; there is one kind of desire and wants are derived FROM it, so the word is retired
+  wherever it meant one — `planner`'s `root` is the root WORLD a pass stands in and stays.
 - **A round is the allocation under scarcity, and what makes buying available is a fact that
   holds at the instant the search stands at** — a host whose stock covers an ask grants a
   claim with no round, and a claim held, unlike a round, holds at every instant, so the plan
@@ -254,8 +257,9 @@ it is a record wearing a bullet.
   ledger's words — the debt's own from #635 until the one derivation put it on the desire —
   `market:dischargedAt` is the market's, and the kernel names no word of it (#635).
 - **A fallback is held to the case it was written for** — one want about everything a desire
-  is about was for a root UNMET now whose select yields no rows, and it minted a want under a
-  met root with nothing foreseen the first time the derivation ran without a judgment in hand.
+  is about was for a desire UNMET now whose select yields no rows, and it minted a want under
+  a met desire with nothing foreseen the first time the derivation ran without a judgment in
+  hand.
 - **A prediction is bands, and the width never leaves the rule** — a drift types the reading it
   predicts with every band the instrument's noise and the rate's spread reach, inside its own
   text; sensing writes what the drifts predict as graphs holding during their windows, the

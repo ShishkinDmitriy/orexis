@@ -206,10 +206,10 @@ def test_two_domains_in_one_world_and_a_delivery_pass_moves_no_disk(monkeypatch)
 def test_an_irrelevant_lever_is_never_even_asked(monkeypatch):
     """#504: relevance stopped the search SIMULATING a foreign row; the menu still ran
     every action's precondition at every node and threw the rows away. Now a lever outside
-    the relevant set is asked ONCE, at the root, so the trace can say truthfully that it was
+    the relevant set is asked ONCE, at the desire, so the trace can say truthfully that it was
     there — and never again at any of the 78 nodes. Move is in the vocabulary whether or not a
     disk is in the world, so both passes ask it exactly once and make exactly the same number
-    of queries; what differs is that with a disk the root ask yields rows, and the trace names
+    of queries; what differs is that with a disk the desire ask yields rows, and the trace names
     them."""
     from orexis_agent_deliberation import imaginarium, trace
     from orexis_agent_deliberation.planner import Planner
@@ -237,13 +237,13 @@ def test_an_irrelevant_lever_is_never_even_asked(monkeypatch):
     _, without, _ = pass_with(False)
     agent, with_disks, move_asked = pass_with(True)
     assert move_asked == 1, \
-        "Move's precondition — the only text reading hanoi:size — ran once, at the root"
+        "Move's precondition — the only text reading hanoi:size — ran once, at the desire"
     assert with_disks == without, \
         f"{with_disks} queries with a disk in the world, {without} without: none per node"
     rows = bindings(agent.beliefs.query_union(f"""SELECT (COUNT(?c) AS ?n) WHERE {{
         ?c <http://example.org/orexis/deliberation#wouldTake> <{HANOI}Move> ;
            <http://example.org/orexis/deliberation#verdict> "{trace.IRRELEVANT}" }}"""))
-    assert int(rows[0]["n"]) == 2, "one disk on a peg, two pegs to move it to: two rows, at the root"
+    assert int(rows[0]["n"]) == 2, "one disk on a peg, two pegs to move it to: two rows, at the desire"
 
 
 def test_a_want_that_declares_no_distance_is_unchanged(monkeypatch):

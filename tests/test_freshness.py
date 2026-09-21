@@ -173,7 +173,7 @@ def test_a_horizon_the_agent_cannot_state_leaves_the_want_unmet_not_met(monkeypa
     sensing module had not yet said what it treats as stale believed every reading current,
     for ever, with nothing red anywhere.
 
-    Saying what the agent WANTS instead of what would disappoint it fixed that at the root,
+    Saying what the agent WANTS instead of what would disappoint it fixed that at the desire,
     and the shape still says it: a reading of mine that is still evidence exists, or it does
     not. What moved (#598) is where the horizon is read. No shape reads it now — sensing
     marks the reading itself when the horizon runs out — so taking the published triple away
@@ -275,7 +275,7 @@ def test_an_instrument_pointed_at_something_i_do_not_act_for_is_still_wanted_cur
 
     keeper.agent.deliberator.deliberate_on_gaps()
 
-    #  The ledger names the want the search was handed — the one derived under the root
+    #  The ledger names the want the search was handed — the one derived under the desire
     #  (#618) — and the container presents that one, with the property sensing gave it.
     about = {w.uri: getattr(w, "observed_property", None) for w in gardener.considering()}
     watched = {about[s.want].rsplit("#", 1)[-1] for s in keeper.standing()

@@ -207,7 +207,7 @@ def test_a_vent_is_planned_onto_a_warm_afternoon_and_not_onto_a_cold_night(monke
 def test_the_outside_is_read_as_a_number_because_no_lever_moves_it(monkeypatch):
     """Why the rule may read a number at all, in a repository whose worlds state what a reading
     IS (#579). The outside states no range, so it mints no band and keeps its number; and no
-    lever of this agent writes it, so that number is the same at the root of a cone and at
+    lever of this agent writes it, so that number is the same at the desire of a cone and at
     every leaf. It is a constant of the plan rather than a value a step might have changed."""
     from orexis_agent_progression.store import bindings, Raw
     from orexis_agent_progression.ontology import STATE_GRAPH

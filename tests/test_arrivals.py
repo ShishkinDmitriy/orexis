@@ -69,17 +69,17 @@ def test_the_vessel_crosses_its_floor_at_the_window_that_empties_it(monkeypatch)
     half a litre (#643)."""
     agent = _supplier(monkeypatch, level=3.0)
     now = datetime.now(timezone.utc)
-    root = _stock(agent)
-    assert root.is_met and judging.crossing_of(agent.beliefs.engine, root.uri) is None, "nothing owed: no crossing"
+    desire = _stock(agent)
+    assert desire.is_met and judging.crossing_of(agent.beliefs.engine, desire.uri) is None, "nothing owed: no crossing"
     _promise(agent, "fern", "j1", 1.5, now + timedelta(hours=1))
     _promise(agent, "tomato", "j2", 1.0, now + timedelta(hours=2))
-    crossing = judging.crossing_of(agent.beliefs.engine, root.uri)
+    crossing = judging.crossing_of(agent.beliefs.engine, desire.uri)
     assert crossing is not None
     assert abs((crossing - (now + timedelta(hours=1))).total_seconds()) < 120, crossing
 
 
 def test_a_host_that_foresees_the_crossing_plans_the_refill_from_the_present(monkeypatch):
-    """The stock root derives a want met at the crossing; the pass at the
+    """The stock desire derives a want met at the crossing; the pass at the
     latest start finds no upstream round holding then, stands at the present where one is open,
     and plans Acquiring from the city — the refill ahead of the arrivals, from the claims alone,
     with nothing presented yet."""
@@ -93,27 +93,27 @@ def test_a_host_that_foresees_the_crossing_plans_the_refill_from_the_present(mon
     #  already, and the container presents the desire under it.
     from orexis_agent_deliberation.judging import shapes_in, read_ahead, read_now
     child = _stock(agent, derived=True)
-    root = child.desire
+    desire = child.desire
     engine, shapes = agent.beliefs.engine, None
     from orexis_agent_deliberation.judging import _one
-    holder, shape = _one(engine, root)
+    holder, shape = _one(engine, desire)
     shapes = shapes_in(engine)
-    assert read_now(engine, shapes, holder, root, shape, clock.now()) == [], "met at the present"
-    assert read_ahead(engine, shapes, holder, root, shape, clock.now()), "unmet at a crossing"
+    assert read_now(engine, shapes, holder, desire, shape, clock.now()) == [], "met at the present"
+    assert read_ahead(engine, shapes, holder, desire, shape, clock.now()), "unmet at a crossing"
     plan = agent.deliberator.decide(child)
     assert plan is not None and [s.action for s in plan.steps] == [ACQUIRING], plan
     assert plan.placed_at is None, "found from the present, where the round is: taken now"
     child = _stock(agent, derived=True)
-    assert child.desire == root and child.state == "unmet"
+    assert child.desire == desire and child.state == "unmet"
 
 
 def test_a_discharged_debt_is_not_an_arrival(monkeypatch):
     """A debt paid is history: the crossing moves out with it."""
     agent = _supplier(monkeypatch, level=3.0)
     now = datetime.now(timezone.utc)
-    root = _stock(agent)
+    desire = _stock(agent)
     _promise(agent, "fern", "j1", 1.5, now + timedelta(hours=1))
     _promise(agent, "tomato", "j2", 1.0, now + timedelta(hours=2))
-    assert judging.crossing_of(agent.beliefs.engine, root.uri) is not None
+    assert judging.crossing_of(agent.beliefs.engine, desire.uri) is not None
     _ower(agent).discharge("j1")
-    assert judging.crossing_of(agent.beliefs.engine, root.uri) is None, "one and a half litres paid: the second window leaves two"
+    assert judging.crossing_of(agent.beliefs.engine, desire.uri) is None, "one and a half litres paid: the second window leaves two"

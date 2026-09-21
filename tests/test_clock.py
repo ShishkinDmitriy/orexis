@@ -76,7 +76,7 @@ def test_the_simulation_fern_foresees_and_places_under_the_worlds_pace(monkeypat
     #  it stopped fitting: boot alone is 4.18s of a 6.25s budget on this bench, measured.
     made = clock.now()
     agent = build_agent("fern", st, monkeypatch)
-    root = next(d for d in agent.considering() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
+    desire = next(d for d in agent.considering() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
     derive_wants(agent.beliefs.engine)   # a crossing is what the last judging found
     #  AND THE PROJECTION WITH IT, which every production caller of the derivation pairs with
     #  it (`pursuit.derived`) and this raw one must too. The planner compiles a want's met-test
@@ -84,13 +84,13 @@ def test_the_simulation_fern_foresees_and_places_under_the_worlds_pace(monkeypat
     #  judged by — and used to be judged anyway, because the measure read the belief base live
     #  and needed no projection at all. See #766.
     agent.desires.rebuild()
-    crossing = judging.crossing_of(agent.beliefs.engine, root.uri)
+    crossing = judging.crossing_of(agent.beliefs.engine, desire.uri)
     assert crossing is not None
     ahead = (crossing - made).total_seconds()
     assert abs(ahead - 3600.0) < 300.0, f"an hour of the agent's timeline from when the world was made: {ahead}"
     from conftest import open_round_for
     open_round_for(agent, "fern", seconds=3600.0)   # an hour of the world: twenty-five real seconds
-    uri = pursuit.pursue(agent, root)
+    uri = pursuit.pursue(agent, desire)
     assert uri is not None, "a purchase that lands in nine hundred of the world's seconds is ahead of a crossing four hours out"
     child = next(d for d in agent.considering() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
     assert child.holds_at is not None and abs((child.holds_at - crossing).total_seconds()) < 1.0

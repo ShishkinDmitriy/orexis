@@ -97,7 +97,7 @@ def test_met_is_the_label_and_the_aim_is_the_target_with_a_deadband_at_the_pick(
     """The half a-desire-states-its-own-measure adds: a met desire with urgency still searches.
 
     zz at 0.12 is INSIDE its region (0.1-0.3) and below the gardener's 0.18 pick, so the shape
-    is met and the measure is not zero — the situation the old root short-circuit collapsed:
+    is met and the measure is not zero — the situation the old desire short-circuit collapsed:
     it returned SATISFIED without searching, the deliberator deferred to the reflex over a
     comment claiming the reflex would also propose nothing, and the reflex steered to the aim
     unsatisficed. Now the SEARCH steers to the pick: a dose is proposed, sized and simulated,
@@ -444,7 +444,7 @@ def test_legality_is_judged_on_the_world_the_plan_would_actually_reach(monkeypat
 
 
 def _last_predicted(planner, desire, plan) -> str | None:
-    """The band the plan's final step predicts, replayed step by step from the root (#579)."""
+    """The band the plan's final step predicts, replayed step by step from the desire (#579)."""
     from orexis_agent_progression.store import bindings
     node = planner._begin(desire)
     for step in plan.steps:

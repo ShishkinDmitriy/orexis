@@ -34,7 +34,7 @@ def _foreseeing(monkeypatch, **kw):
 
 
 def _pursued(agent):
-    """The want the container presents for the bed's comfort: the root, or what is derived under it."""
+    """The want the container presents for the bed's comfort: the desire, or what is derived under it."""
     return next(d for d in agent.considering() if d.uri == COMFORT or d.desire == COMFORT)
 
 
@@ -60,13 +60,13 @@ def test_the_bed_crosses_toward_a_cold_outside_at_the_stated_rate(monkeypatch):
 
 def test_a_cold_night_foreseen_derives_a_want_the_heater_serves_and_the_vent_cannot(monkeypatch):
     """The claim of #619's second half in the greenhouse's own terms. Content now and cooling,
-    foreseeing six hours: the want derived under the root holds AT the crossing, the search is
+    foreseeing six hours: the want derived under the desire holds AT the crossing, the search is
     judged there, the heater's world is met and the vent's — opened onto the cold at the
     instant — is not."""
     agent = _foreseeing(monkeypatch, moisture=0.45, air=20.0, outside=8.0)
-    root = _comfort(agent)
-    assert root.is_met
-    plan = agent.deliberator.decide(root)
+    desire = _comfort(agent)
+    assert desire.is_met
+    plan = agent.deliberator.decide(desire)
     assert plan is not None and [s.action for s in plan.steps] == [HEATING], plan
 
     child = _pursued(agent)
@@ -83,8 +83,8 @@ def test_a_warm_afternoon_foresees_nothing(monkeypatch):
     """The same bed toward an outside at 21 never leaves its region: no crossing at any
     horizon a drift predicts at, nothing derived, nothing planned."""
     agent = _foreseeing(monkeypatch, moisture=0.45, air=20.0, outside=21.0)
-    root = _comfort(agent)
-    assert agent.deliberator.decide(root) is None
+    desire = _comfort(agent)
+    assert agent.deliberator.decide(desire) is None
     assert pursuit.child_of(agent, COMFORT) is None
 
 
@@ -98,8 +98,8 @@ def test_the_drift_reads_the_surroundings_holding_at_the_instant(monkeypatch):
     _outside_as_periods(agent, (8.0, now - timedelta(hours=1), now + timedelta(minutes=30)),
                         (21.0, now + timedelta(minutes=30), now + timedelta(hours=6)))
     agent.tell(REPREDICT)             # the forecast is a premise the drift reads: predict again
-    root = _comfort(agent)
+    desire = _comfort(agent)
     derive_wants(agent.beliefs.engine)
     assert judging.crossing_of(agent.beliefs.engine, COMFORT) is None, "the predictions read the forecast holding at their instant: the bed warms first"
-    plan = agent.deliberator.decide(root)
+    plan = agent.deliberator.decide(desire)
     assert plan is None or plan.steps == (), "at the instant the forecast has warmed the bed: nothing to do"

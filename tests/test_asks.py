@@ -47,12 +47,12 @@ def _stake(agent):
 def _foresee(agent):
     """The pass that derives the want met at the crossing — and finds nothing on the menu:
     no round is open and no claim is held, so a purchase cannot be planned yet."""
-    root = _stake(agent)
-    assert root.is_met
-    assert agent.deliberator.decide(root) is None, "no round, no claim: nothing on the menu"
+    desire = _stake(agent)
+    assert desire.is_met
+    assert agent.deliberator.decide(desire) is None, "no round, no claim: nothing on the menu"
     child = _stake(agent)
-    assert child.desire == root.uri and child.holds_at is not None
-    return root, child
+    assert child.desire == desire.uri and child.holds_at is not None
+    return desire, child
 
 
 def _read(agent, value=FALLING):
@@ -81,7 +81,7 @@ def test_a_foreseen_crossing_is_asked_for_at_its_instant(monkeypatch):
     """The reading after the crossing was foreseen carries the ask out on the event topic: the
     litres a bid would be sized to, wanted at the want's instant less the pour."""
     agent = _fern(monkeypatch)
-    root, child = _foresee(agent)
+    desire, child = _foresee(agent)
     assert _asks_of(agent) == [], "nothing asked before the crossing was foreseen"
     _read(agent)
     (ask,) = _asks_of(agent)
@@ -100,11 +100,11 @@ def test_an_ask_goes_out_once_per_want_and_instant(monkeypatch):
 
 
 def test_a_plant_that_foresees_nothing_asks_for_nothing(monkeypatch):
-    """Met, with no crossing foreseen, the reading announces no ask — the root is never asked
+    """Met, with no crossing foreseen, the reading announces no ask — the desire is never asked
     for; only a want met at an instant is."""
     agent = _fern(monkeypatch, moisture=0.60)
-    root = _stake(agent)
-    assert root.is_met and agent.deliberator.decide(root) is None
+    desire = _stake(agent)
+    assert desire.is_met and agent.deliberator.decide(desire) is None
     assert _stake(agent).holds_at is None, "no crossing inside the foresight: no want at an instant"
     _read(agent, 0.60)
     assert _asks_of(agent) == []
@@ -167,13 +167,13 @@ def test_a_granted_claim_makes_the_plan_the_presenting_alone(monkeypatch):
     and the plan is placed there; at its instant the tender is done by the claim held — no bid
     goes out, there is no round — and the presenting is placed at the claim's window."""
     agent = _fern(monkeypatch)
-    root, child = _foresee(agent)
+    desire, child = _foresee(agent)
     market = wired_markets(agent)[0]
     opens = datetime.now(timezone.utc) + timedelta(hours=3)
     agent.deliver(f"{market.claim_topic}/fern", {
         "auction_id": "ask-1234abcd", "jti": "j-ask", "sub": "fern", "amount_l": 0.5, "debit": 0.2,
         "usable_from": opens.isoformat(), "usable_until": (opens + timedelta(seconds=900)).isoformat()})
-    uri = pursuit.pursue(agent, root)
+    uri = pursuit.pursue(agent, desire)
     assert uri is not None, "holding a claim, buying is on the menu with no round open"
     (tender,) = agent.keeper.standing(action=TENDERING, want=child.uri)
     assert tender.step.not_before is not None and tender.uri in agent.keeper._deadlines, \

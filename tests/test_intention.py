@@ -474,10 +474,10 @@ def test_a_hold_may_be_a_shape_and_may_release_when_a_condition_stops(make):
 
     SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
     shape = rdflib.Graph()
-    root, prop = rdflib.URIRef("urn:toy:hold:flag-raised"), rdflib.BNode()
-    shape.add((root, rdflib.RDF.type, SH.NodeShape))
-    shape.add((root, SH.targetNode, rdflib.URIRef("urn:flag")))
-    shape.add((root, SH.property, prop))
+    desire, prop = rdflib.URIRef("urn:toy:hold:flag-raised"), rdflib.BNode()
+    shape.add((desire, rdflib.RDF.type, SH.NodeShape))
+    shape.add((desire, SH.targetNode, rdflib.URIRef("urn:flag")))
+    shape.add((desire, SH.property, prop))
     shape.add((prop, SH.path, rdflib.URIRef("urn:p")))
     shape.add((prop, SH.hasValue, rdflib.Literal(1)))
     shaped = keeper.adopt("urn:toy#OnTheFlag", "urn:toy#other", "waiting for the flag, as a shape",
@@ -487,7 +487,7 @@ def test_a_hold_may_be_a_shape_and_may_release_when_a_condition_stops(make):
     assert "FILTER EXISTS" in held[0][1], "compiled to the conformance select"
     stored = bindings(fern.intentions.query_union(f"""SELECT ?n WHERE {{ GRAPH <{keeper.graph}> {{
         <{shaped}> progression:by ?step . ?step a progression:Step ; progression:until ?n . ?n a sh:NodeShape }} }}"""))
-    assert stored and stored[0]["n"] == str(root), \
+    assert stored and stored[0]["n"] == str(desire), \
         "the ledger keeps the shape as what the STEP waits for — planned, not yet done"
 
     fern.beliefs.update(f"INSERT DATA {{ GRAPH <{graph}> {{ <urn:flag> <urn:p> 1 }} }}")

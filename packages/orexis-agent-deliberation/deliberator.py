@@ -179,7 +179,7 @@ class Deliberator:
                 remembered.lift(self.agent, want, steps, decided[0].cost)
         #  THE WANT DERIVED UNDER A ROOT IS WITHDRAWN WHEN ITS PLAN FINISHES (#618): a root
         #  still unmet derives it again on the next pass, through a fresh want.
-        if pursuit.root_of(self.agent, want) is not None:
+        if pursuit.desire_of(self.agent, want) is not None:
             pursuit.withdraw(self.agent, want)
 
     @contributes(PLAN_FAILED)

@@ -5,8 +5,8 @@ A drift is a package's rule over `$elapsed`, sensing's word since #643: sensing 
 every reading at the horizons the package lists and writes predictions, graphs holding during
 their windows. The search reads the prediction holding at a node's instant — the predicted
 reading in place of the one the world holds, EXCEPT a key the path itself changed — and runs
-no rule that knows a rate. The crossing a root foresees is the start of the earliest prediction
-at which the root reads unmet.
+no rule that knows a rate. The crossing a desire foresees is the start of the earliest prediction
+at which the desire reads unmet.
 """
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ def test_a_fact_the_plan_changed_is_not_overridden_by_a_prediction(monkeypatch):
 
     agent = _gardener(monkeypatch, moisture=0.04)
     planner = Planner(agent, agent.me)
-    root = planner._begin(_stake(agent))
+    desire = planner._begin(_stake(agent))
     node = bindings(agent.beliefs.query(f"SELECT ?o WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:observedProperty <{MOISTURE}> }} }}", agent.beliefs.graphs_of(PUBLIC)))[0]["o"]
     later = clock.now() + timedelta(hours=3)
     #  A step's diff is the whole node, as every effect's retraction writes it (#619): the
@@ -73,9 +73,9 @@ def test_a_fact_the_plan_changed_is_not_overridden_by_a_prediction(monkeypatch):
     dosed = [t if t.predicate != result else
              ox.Triple(t.subject, result, ox.Literal("0.25", datatype=ox.NamedNode("http://www.w3.org/2001/XMLSchema#decimal")))
              for t in present]
-    added, retracted = planner._predicted(STATE_GRAPH, root, later, added=dosed, retracted=present)
+    added, retracted = planner._predicted(STATE_GRAPH, desire, later, added=dosed, retracted=present)
     assert added == dosed and retracted == present, "the moisture the step wrote is not overridden"
-    added, retracted = planner._predicted(STATE_GRAPH, root, later)
+    added, retracted = planner._predicted(STATE_GRAPH, desire, later)
     assert any(t.subject.value == node for t in added), "left alone, the prediction stands in for it"
     assert any(t.subject.value == node for t in retracted), "and takes the present's reading out, type and all"
 
@@ -86,9 +86,9 @@ def test_the_at_want_is_derived_at_the_first_prediction_that_reads_unmet(monkeyp
     window that reaches the day, the first instant the region MAY be left, and nothing in the
     kernel knew the rate."""
     agent = _gardener(monkeypatch, moisture=0.12)
-    root = _stake(agent)
+    desire = _stake(agent)
     derive_wants(agent.beliefs.engine)   # a crossing is what the last judging found
-    crossing = judging.crossing_of(agent.beliefs.engine, root.uri)
+    crossing = judging.crossing_of(agent.beliefs.engine, desire.uri)
     assert crossing is not None
     windows = agent.beliefs.windows_of(PREDICTION)
     starts = [s for _, s, _ in windows]

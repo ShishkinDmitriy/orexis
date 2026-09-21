@@ -292,10 +292,17 @@ def promises_graph(agent_id: str) -> str:
     return _GRAPH + "promises/" + agent_id
 
 
-def roots_graph(agent_id: str) -> str:
-    """One agent's ROOT desires, authored at genesis and holding at every instant — the name
-    `orexis:DesireGraph` declares the prefix of, built from the one id a process is handed
-    (#644). The desire modality projects it; nothing rebuilds it."""
+def desires_graph(agent_id: str) -> str:
+    """One agent's desires, authored at genesis and holding at every instant — built from the
+    one id a process is handed (#644). The desire modality projects it; nothing rebuilds it.
+
+    THE NAME STILL SAYS `roots/`, and deliberately. It was `desires_graph`, from when a desire
+    was called a root desire and the thing derived from it a child; there is only a DESIRE
+    now, and wants are derived from it, so the identifier says that. The NAME is for eyes and
+    no reader depends on it — but a writer does: an agent whose volume already holds
+    `roots/<id>`, classified `orexis:DesireGraph`, would gain a second graph of the same class
+    the first time anything endowed into a renamed one, and both would be read. A graph is
+    renamed with a migration or not at all."""
     return _GRAPH + "roots/" + agent_id
 
 
