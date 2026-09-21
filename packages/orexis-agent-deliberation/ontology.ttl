@@ -82,9 +82,9 @@ deliberation:atInstant a owl:DatatypeProperty ; rdfs:domain deliberation:Possibl
 deliberation:Weighing a owl:Class ; rdfs:label "Weighing" ;
     rdfs:comment "WHAT A PASS WORKED OUT ABOUT ONE WORLD FOR ONE WANT — the relationship between the two, reified because it carries numbers: a thing said not about a subject but about a subject AND what it is being asked against. A world's own facts are true of it whoever asks — where it came from, what the path spent, when it is — but how far a want still is there, what its measure reads, and whether the search has opened it are true of the world AND the want together. One imaginarium holds the worlds of every want in a scope, so a world has as many of these as there are wants asking about it, and writing them on the world would have been a world pretending to have one asker. Dies with the pass, as the worlds do." .
 
-deliberation:weighed a owl:ObjectProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range deliberation:Weighing ;
-    rdfs:label "weighed" ;
-    rdfs:comment "What this pass worked out about this world for one of the wants asking about it. One per want, and none before a want has asked: a world nobody has weighed is still a world." .
+deliberation:weighs a owl:ObjectProperty ; rdfs:domain deliberation:Weighing ;
+    rdfs:label "weighs" ;
+    rdfs:comment "What this weighing is about — a possible WORLD, or a CANDIDATE the search passed over. Said in one direction, from the weighing, exactly as `deliberation:forWant` is: a weighing names the pair it reifies, and the two halves read the same way round. It was `deliberation:weighed`, pointing the other way from a world, which could not be widened to candidates without a union domain no reader would check." .
 
 deliberation:from a owl:ObjectProperty ; rdfs:domain deliberation:Candidate ; rdfs:range deliberation:PossibleWorld ;
     rdfs:label "from" ;

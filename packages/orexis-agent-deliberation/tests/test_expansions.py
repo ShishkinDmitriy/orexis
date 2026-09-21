@@ -114,7 +114,7 @@ def test_the_store_alone_says_what_the_pass_decided(monkeypatch, snapshots):
     #  THE WORLD WHERE NOTHING REMAINS, and the path back to the one forked from nothing.
     solved = bindings(im.query_over(
         f"SELECT ?w WHERE {{ ?w a deliberation:PossibleWorld ; deliberation:atDepth ?d ; "
-        f"deliberation:weighed ?x . ?x deliberation:forWant <{want.uri}> ; "
+        f"^deliberation:weighs ?x . ?x deliberation:forWant <{want.uri}> ; "
         f"deliberation:remaining 0.0 }} ORDER BY ?d LIMIT 1", PASS_GRAPH))
     assert solved, "no world in the store reaches the goal"
     walked, here = [], solved[0]["w"]
@@ -151,7 +151,7 @@ def test_the_store_alone_says_what_the_pass_decided(monkeypatch, snapshots):
     #  AND THE OPEN LIST, ordered as `_priority` orders it, asked of the store.
     frontier = bindings(im.query_over(
         f"SELECT ?w ?spent ?left WHERE {{ ?w a deliberation:PossibleWorld ; "
-        f"deliberation:spent ?spent ; deliberation:weighed ?x . "
+        f"deliberation:spent ?spent ; ^deliberation:weighs ?x . "
         f"?x deliberation:forWant <{want.uri}> ; deliberation:open true ; "
         f"deliberation:remaining ?left ; deliberation:wouldReach ?u }} "
         f"ORDER BY (?spent + ?left) ?u ?spent", PASS_GRAPH))
@@ -235,7 +235,7 @@ def test_the_inputs_to_the_next_iteration_are_all_in_the_store(monkeypatch, snap
     frontier = bindings(im.query_over(f"""
 SELECT ?world WHERE {{
   ?world a deliberation:PossibleWorld ; deliberation:spent ?spent ; deliberation:minted ?m ;
-         deliberation:weighed ?x .
+         ^deliberation:weighs ?x .
   ?x deliberation:forWant <{want.uri}> ; deliberation:open true ;
      deliberation:remaining ?left ; deliberation:wouldReach ?u . }}
 ORDER BY (?spent + ?left) ?u ?spent ?m""", PASS_GRAPH))

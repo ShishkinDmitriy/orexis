@@ -71,7 +71,7 @@ def test_a_cold_night_foreseen_derives_a_want_the_heater_serves_and_the_vent_can
     child = _pursued(agent)
     assert child.desire == COMFORT and child.holds_at is not None and child.state == "unmet"
     assert child.read_at is not None, "a kernel-lifted want takes the instant of the reading the crossing came from"
-    weighed = agent.deliberator._planners[child.uri]._weighed
+    weighed = agent.deliberator._planners[child.uri]._weighed_rows()
     verdicts = {str(w.row.action).rsplit("#", 1)[-1]: w.verdict for w in weighed}
     assert verdicts.get("Heating") == trace.MET
     assert "Venting" in verdicts and verdicts["Venting"] != trace.MET, \
