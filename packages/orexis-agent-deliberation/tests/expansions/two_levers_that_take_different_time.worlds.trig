@@ -129,6 +129,4 @@ GRAPH plan:in_range.pursued.tank1 {
   :in_range.pursued.tank1.plan.0 deliberation:of graph:sensed..Trickling-level-dripper .
   :in_range.pursued.tank1.plan.0 orexis:about :level .
   :in_range.pursued.tank1.plan.0 progression:fills :Trickling .
-  :in_range.pursued.tank1.plan.0 progression:precondition "[]" .
-  :in_range.pursued.tank1.plan.0 progression:predicts "{\"adds\": [[\"http://example.org/test#tank1\", \"http://example.org/test#level\", 12.0]], \"retracts\": [[\"http://example.org/test#tank1\", \"http://example.org/test#level\", 5.0]]}" .
 }

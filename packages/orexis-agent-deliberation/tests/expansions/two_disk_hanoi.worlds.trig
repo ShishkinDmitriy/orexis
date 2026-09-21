@@ -518,22 +518,16 @@ GRAPH plan:every_disk_home {
   :every_disk_home.plan.0 hanoi:disk :disk_1 .
   :every_disk_home.plan.0 hanoi:onto hanoi:PegB .
   :every_disk_home.plan.0 progression:fills hanoi:Move .
-  :every_disk_home.plan.0 progression:precondition "[[\"http://example.org/orexis/hanoi#PegB\", \"http://www.w3.org/1999/02/22-rdf-syntax-ns#type\", \"http://example.org/orexis/hanoi#Peg\"], [\"http://example.org/test#disk_1\", \"http://example.org/orexis/hanoi#on\", \"http://example.org/test#disk_2\"], [\"http://example.org/test#disk_1\", \"http://example.org/orexis/hanoi#size\", 1.0]]" .
-  :every_disk_home.plan.0 progression:predicts "{\"adds\": [[\"http://example.org/test#disk_1\", \"http://example.org/orexis/hanoi#on\", \"http://example.org/orexis/hanoi#PegB\"]], \"retracts\": [[\"http://example.org/test#disk_1\", \"http://example.org/orexis/hanoi#on\", \"http://example.org/test#disk_2\"]]}" .
   :every_disk_home.plan.0 progression:then :every_disk_home.plan.1 .
   :every_disk_home.plan.1 a progression:Step .
   :every_disk_home.plan.1 deliberation:of possible:Move-disk_1-PegB..Move-disk_2-PegC .
   :every_disk_home.plan.1 hanoi:disk :disk_2 .
   :every_disk_home.plan.1 hanoi:onto hanoi:PegC .
   :every_disk_home.plan.1 progression:fills hanoi:Move .
-  :every_disk_home.plan.1 progression:precondition "[]" .
-  :every_disk_home.plan.1 progression:predicts "{\"adds\": [[\"http://example.org/test#disk_2\", \"http://example.org/orexis/hanoi#on\", \"http://example.org/orexis/hanoi#PegC\"]], \"retracts\": [[\"http://example.org/test#disk_2\", \"http://example.org/orexis/hanoi#on\", \"http://example.org/orexis/hanoi#PegA\"]]}" .
   :every_disk_home.plan.1 progression:then :every_disk_home.plan.2 .
   :every_disk_home.plan.2 a progression:Step .
   :every_disk_home.plan.2 deliberation:of possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_1-PegC .
   :every_disk_home.plan.2 hanoi:disk :disk_1 .
   :every_disk_home.plan.2 hanoi:onto hanoi:PegC .
   :every_disk_home.plan.2 progression:fills hanoi:Move .
-  :every_disk_home.plan.2 progression:precondition "[[\"http://example.org/orexis/hanoi#PegC\", \"http://www.w3.org/1999/02/22-rdf-syntax-ns#type\", \"http://example.org/orexis/hanoi#Peg\"], [\"http://example.org/test#disk_1\", \"http://example.org/orexis/hanoi#on\", \"http://example.org/test#disk_2\"], [\"http://example.org/test#disk_1\", \"http://example.org/orexis/hanoi#size\", 1.0]]" .
-  :every_disk_home.plan.2 progression:predicts "{\"adds\": [[\"http://example.org/test#disk_1\", \"http://example.org/orexis/hanoi#on\", \"http://example.org/test#disk_2\"]], \"retracts\": [[\"http://example.org/test#disk_1\", \"http://example.org/orexis/hanoi#on\", \"http://example.org/orexis/hanoi#PegB\"]]}" .
 }
