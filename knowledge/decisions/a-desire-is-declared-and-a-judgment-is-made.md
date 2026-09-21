@@ -110,12 +110,17 @@ than migrated, because `Wants.graph_of` already held the formula.
 
 # A file is named for what it holds, singular or plural
 
-The convention the sovereign drew out of this, and it is the same one
+The convention the sovereign drew out of this, and it was the same one
 [a-repository-is-named-for-what-it-holds](/decisions/a-repository-is-named-for-what-it-holds.md)
-states for classes, applied to files: **`desire.py` holds the model and `desires.py` holds the
-collection**, `want.py` and `wants.py` likewise, `judgment.py` and `judgments.py` likewise. A
-reader looking for what a thing IS opens the singular; a reader looking for where they are kept
-opens the plural, and neither has to read the other to find out which it wanted.
+stated for classes, applied to files: **`desire.py` holds the model and `desires.py` holds the
+collection**, `want.py` and `wants.py` likewise.
+
+**Both halves of that have since been paid for and only one earned it.** There are no
+collections ([a-read-is-a-function-over-a-store](/decisions/a-read-is-a-function-over-a-store.md)),
+and `Desire` is not a type at all: it was built from a query and discarded, because its two
+callers wanted a boolean and a uri. `want.py` keeps its own file for a reason the readability
+argument never named — it imports nothing but the standard library, so nineteen modules can
+name the type without loading the layer, which is what #455 protects.
 
 # Seams left open
 
