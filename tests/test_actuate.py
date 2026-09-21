@@ -9,8 +9,7 @@ deciding, committing and acting runs with no economy at all.
 
 import pytest
 
-from orexis_agent_deliberation.actions import Actions
-from orexis_agent_deliberation.steps import Steps
+from orexis_agent_deliberation.steps import find_steps
 from orexis_capability_market.terms import ACQUIRING
 from orexis_capability_actuation.terms import DOSING
 from orexis_capability_sensing.terms import OBSERVING
@@ -49,7 +48,7 @@ def test_the_menu_offers_actuate_where_both_chains_are_mine():
     mine and that no market offers as its lot. Both end at the gardener, so the rung appears —
     beside Observe, with the domain's one stated physics atom as its direction."""
     st = genesis_store(world="loner")
-    rows = Steps(st).find_all(Actions(st).find_all(), desires_build(st, "gardener").abouts(GARDENER), GARDENER, picks_graph("gardener"))
+    rows = find_steps(st, desires_build(st, "gardener").abouts(GARDENER), GARDENER, picks_graph("gardener"))
     assert [(r.action.rsplit("#", 1)[-1], (r.value_of(DIRECTION) or "").rsplit("#", 1)[-1] or None)
             for r in rows if r.value_of(ABOUT) == MOIST] == [
         ("Dosing", "Raises"), ("Observing", None)]
@@ -71,7 +70,7 @@ def test_opening_a_shop_on_your_own_bottle_costs_you_the_free_rung():
     st.clear_graph(WORLD_DERIVED_GRAPH)
     for rule in loader.rule_files():
         st.update(genesis.substitute(rule.read_text(), st))
-    rows = Steps(st).find_all(Actions(st).find_all(), desires_build(st, "gardener").abouts(GARDENER), GARDENER, picks_graph("gardener"))
+    rows = find_steps(st, desires_build(st, "gardener").abouts(GARDENER), GARDENER, picks_graph("gardener"))
     assert not any(r.action == DOSING for r in rows), \
         "a source a market offers is not yours to open free, whoever holds the pump"
 
@@ -90,7 +89,7 @@ def test_a_pot_local_pump_on_the_shared_barrel_still_yields_acquire_only():
             <http://example.org/orexis/actuation#drawsFrom> <{ns}barrel1> .
     }} }}""")
     open_round_for(st, "fern")
-    rows = [r for r in Steps(st).find_all(Actions(st).find_all(), desires_build(st, "fern").abouts(ns + "fern_agent"), ns + "fern_agent", picks_graph("fern"))
+    rows = [r for r in find_steps(st, desires_build(st, "fern").abouts(ns + "fern_agent"), ns + "fern_agent", picks_graph("fern"))
             if r.value_of(ABOUT) == MOIST]
     assert any(r.action == ACQUIRING for r in rows)
     assert not any(r.action == DOSING for r in rows), \

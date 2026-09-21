@@ -1,16 +1,16 @@
 """Where the queries live, and where they must not.
 
-Easy to state and easy to lose: a collection asks the question only IT can phrase, and runs
-nobody else's. The file these two were carved out of acquired a query text, then a second, then a
-question belonging to another collection, and nothing said so.
+Easy to state and easy to lose: the file that finds what a world affords must not become the
+place that says what CAN be afforded. The file this was carved out of acquired a query text,
+then a second, then a question belonging to another collection, and nothing said so.
 
 Asked of the syntax tree rather than of the text, so a docstring may discuss selects while the
-code holds none. Two claims, because a guard that only forbids proves nothing: one file AUTHORS
-a query and one RUNS a query it is handed.
+code holds none.
 
-A third stood here — that the SERVICE between them authored none — until the service turned out
-to fetch nothing and decide nothing, and became `Steps.find_all`. See
-knowledge/decisions/a-row-is-a-step.md.
+Two claims stood here once and are one now. `Actions` authored the enumeration and `Steps`
+authored nothing; both are `steps.py`, because a class whose content was one query and one memo
+was a file for a parameter. So the line moved from "authors none" to "authors one, and it names
+no action", which is the property #207 actually asked for.
 """
 
 from __future__ import annotations
@@ -40,18 +40,23 @@ def _names(tree: ast.Module) -> set[str]:
         n.attr for n in ast.walk(tree) if isinstance(n, ast.Attribute)}
 
 
-def test_the_collection_of_templates_authors_its_own():
-    """`Actions` asks the vocabulary what it declares, which is a question only it can phrase."""
-    assert _authored_queries(_parsed("actions.py")), "Actions stopped carrying its own query"
+def test_the_one_query_here_names_no_action():
+    """The sharp one, and it is why a step is not an action. `steps.py` authors ONE query —
+    the enumeration, which asks by CLASS — and the select it RUNS is the action's own
+    `orexis:available`, declared by whichever package ships the action, bound here and
+    answered against the world it was handed.
 
-
-def test_the_collection_of_steps_authors_none_and_runs_the_actions():
-    """The sharp one, and it is why a step is not an action. `Steps` writes NO query:
-    the select it runs is the action's own `orexis:available`, declared by whichever package ships
-    the action, bound here and answered against the world this collection was handed. A new way
-    of acting is a node in a new directory and never an edit here (#207) — which is exactly what
-    it would stop being if this file ever authored a select of its own."""
+    A new way of acting is a node in a new directory and never an edit here (#207), and that
+    is what this protects. It used to say the file authored NO query at all, which was a
+    sharper line and one file further out: the enumeration lived in `actions.py` behind a
+    collection whose whole content was this query and a memo. Merging them moved the query
+    in, so the claim is now about WHAT it may author rather than whether — and the property
+    that matters survives, because a query that asks by class names no action.
+    """
     tree = _parsed("steps.py")
-    assert not _authored_queries(tree), "Steps began writing its own query text"
+    authored = _authored_queries(tree)
+    assert len(authored) == 1, f"steps.py authors one query, the enumeration: {authored}"
+    assert "a orexis:Action" in authored[0], \
+        "and it asks by CLASS — a query naming an action is a registry, which is what #207 refused"
     assert {"bind", "bindings"} <= _names(tree), \
-        "Steps stopped binding and running the action's precondition"
+        "steps.py stopped binding and running the action's own precondition"

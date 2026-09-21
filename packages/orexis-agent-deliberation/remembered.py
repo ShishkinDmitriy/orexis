@@ -40,6 +40,7 @@ from .ontology import DELIBERATION
 
 
 
+from .steps import find_steps
 from .ontology import (FOR_WANT, LIFTED, MEASURED_COST, REMEMBERED_AT, REMEMBERED_PLAN,
                        remembered_graph)
 from orexis_agent_progression import clock
@@ -113,8 +114,8 @@ def on_menu_now(agent, step, desires) -> bool:
     the availability select's own answer, filters and all."""
     me = agent.me.uri
     return any(r.is_own and r.binding == step.binding
-               for r in agent.steps.find_all(agent.actions.find_all(), desires.abouts(me), me,
-                                             agent.picks, only=frozenset({step.action})))
+               for r in find_steps(agent.beliefs, desires.abouts(me), me, agent.picks,
+                                   only=frozenset({step.action})))
 
 
 _SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")

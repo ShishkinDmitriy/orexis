@@ -47,8 +47,6 @@ from orexis_agent_deliberation.deliberator import KEEPING_PICKS, Deliberator
 from orexis_agent_deliberation.want import Want
 from orexis_agent_deliberation.desires import Desires
 from orexis_agent_deliberation.reviser import Reviser
-from orexis_agent_deliberation.actions import Actions
-from orexis_agent_deliberation.steps import Steps
 from orexis_agent_deliberation.wants import Wants
 from orexis_agent_progression.intentions import Intentions
 
@@ -132,8 +130,9 @@ class Agent:
         #  were: one per search pass, one per deliberator call and one per remembered candidate,
         #  because it held a memo and so became a thing to keep. It fetched nothing and decided
         #  nothing, so the loop is `Steps.find_all` and every identity it held is a criterion.
-        self.actions = Actions(self.beliefs)
-        self.steps = Steps(self.beliefs)
+        #  NO COLLECTIONS TO HOLD. What a world affords is `find_steps(store, …)`, a function
+        #  over whichever store is being asked — the belief base for the present, an
+        #  imaginarium for a world nobody is in yet.
         #  The agent's own graph, spelled once: a criterion every ask of a collection carries.
         self.picks = picks_graph(agent_id)
         #  THE SCOPES, written once the actions are here: a function of the actions loaded,

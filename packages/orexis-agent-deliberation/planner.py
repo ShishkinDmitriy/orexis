@@ -49,7 +49,7 @@ from orexis_agent_progression.act import BOUND, Step, binding_from, bound_clause
 from orexis_agent_deliberation.want import Want
 
 
-from .steps import Steps
+from .steps import find_steps
 from .imaginarium import Imaginarium, PASS_GRAPH, candidate_of, plan_graph, world_of
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import NAMESPACES, Raw, bind, bindings
@@ -1099,16 +1099,15 @@ class Planner:
         out = set(store.periods())
         return [iri for iri in store.graphs_of(*KNOWN) if iri not in out]
 
-    def _offered(self, steps, *, graphs, only=None):
+    def _offered(self, store, *, graphs, only=None):
         """Every step a world admits, with this pass's criteria filled in.
 
-        The four an `Afforder` used to hold — the templates, what the agent holds and what each
-        want is about, and whose world this is. They are criteria of the ask now, and this
-        spells them once per pass rather than at each of the four places that ask.
+        What the agent holds, and whose world this is. A service held these once and then a
+        caller did; they are criteria of one function over a store now, and this spells them
+        in one place rather than at each of the four that ask.
         """
-        return steps.find_all(self.agent.actions.find_all(),
-                              self.agent.desires.abouts(self.me.uri),
-                              self.me.uri, self.agent.picks, graphs=graphs, only=only)
+        return find_steps(store, self.agent.desires.abouts(self.me.uri),
+                          self.me.uri, self.agent.picks, graphs=graphs, only=only)
 
     def _dataset(self, at, world: str) -> list[str]:
         """What a rule is answered over in one imagined world: every graph of the kinds a rule
@@ -1469,7 +1468,9 @@ class Planner:
             *self.agent.beliefs.graphs_of(*KNOWN))
         #  The rows an imagined world affords, over the store those worlds live in — built here
         #  beside the imaginarium and once for the pass.
-        self._imagined = Steps(self.imaginarium)
+        #  The store an imagined world is asked of — the imaginarium, since that is where
+        #  those worlds are. There is nothing to construct: a store IS the thing asked.
+        self._imagined = self.imaginarium
         #  What this agent PURSUES, snapshotted for the pass. The WANT graphs alone — derived,
         #  asserted, and the promises a bridge raised — never the record projections: the
         #  flat world below already carries the pick record through the belief flatten, and a
