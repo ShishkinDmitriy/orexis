@@ -50,7 +50,7 @@ from orexis_agent_deliberation.want import Want
 
 
 from .steps import Steps
-from .imaginarium import Imaginarium, PASS_GRAPH, candidate_of
+from .imaginarium import Imaginarium, PASS_GRAPH, candidate_of, world_of
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import NAMESPACES, Raw, bind, bindings
 from .ontology import DELIBERATION
@@ -139,56 +139,79 @@ def _signature_of(node) -> str:
     return hashlib.sha256(text.encode()).hexdigest()[:16]
 
 
-def write_plan(engine, want: str, plan) -> str | None:
+def write_plan(imaginarium, want: str, plan, root: str) -> str | None:
     """Write down what a pass found, and hand back the plan's node — or None where it found
     no steps, which is a pass that decided nothing and has nothing to record.
 
     THE PLANNER DECIDES A PLAN, SO THE PLANNER WRITES IT, as `derive_wants` writes the wants
-    it decides. What a plan IS — its steps, their order, how long it comes to — is settled
-    here; where it is kept is the deliberation graph, which is cleared at boot because a plan
-    about a world that has moved is stale.
+    it decides. What a plan IS — its steps, their order, which candidate each picked, how long
+    it comes to — is settled here.
 
-    ITS STEPS ARE THE LEDGER'S OWN WORDS. `progression:Step`, `progression:fills`,
-    `progression:through`, chained by `progression:by` and `progression:then` — exactly the
-    shape `keeper.adopt` writes and `keeper.standing` reads. That is the point: a plan crossing
-    from deliberation to progression is then triples rather than a `tuple[Step]` handed over in
-    Python, and a sovereign asking what was decided reads it with one query. Read DOWNWARD, as
-    a layer may.
+    INTO THE IMAGINARIUM, which is where a pass's own work lives and is the reason this is not
+    a durable record: the imaginarium is memory and dies with the process, the belief base and
+    the ledger are disk. A plan is the RESULT of a pass, so it is written beside the worlds and
+    the candidates the pass made; what survives is whatever progression copies down when the
+    plan is adopted. It was written into the belief base's deliberation graph, which made a
+    working note durable and a durable record a working note.
+
+    ITS STEPS ARE THE LEDGER'S OWN WORDS. `progression:Step`, `progression:fills`, the
+    parameters under their own IRIs, chained by `progression:by` and `progression:then` —
+    exactly the shape `keeper.adopt` writes and `keeper.standing` reads. That is the point: a
+    plan crossing from deliberation to progression is then triples to copy rather than a
+    `tuple[Step]` rebuilt on the other side. Read DOWNWARD, as a layer may.
+
+    AND EACH STEP NAMES THE CANDIDATE IT PICKED (`deliberation:of`), which is the joint the
+    store could not make: the trace says `deliberation:chose <candidate>` and the ledger says
+    `progression:by <step>`, and until now no triple said the two were about one filling. The
+    candidates are derivable from the path — a world IS its path, so the world a step is taken
+    in is the one the steps before it reached — and nothing has to be carried in Python.
 
     ONE PLAN PER WANT, named for it and replaced whole, so a second pass over the same want
     leaves one plan and never two — the same rule a want's own graph follows.
 
     `takes` is the number the search computes and nothing else can recover: an action's
     `orexis:landsAfter` is a SPARQL expression about the world the act is taken in, so the
-    summed landing of a path exists only inside the pass that walked it. It was discarded
-    here, which is why a plan could not be placed from its deadline.
+    summed landing of a path exists only inside the pass that walked it.
     """
     if not plan.steps:
         return None
     node = f"{want}.plan"
     steps = [f"{node}.{n}" for n in range(len(plan.steps))]
-    blocks = [f'  <{node}> a deliberation:Plan ; deliberation:forWant <{want}> ;\n'
-              f'      deliberation:verdict "{plan.outcome}" ;\n'
-              + (f'      deliberation:takes {plan.landing:.6f} ;\n' if plan.landing is not None else "")
-              + f'      <{PROGRESSION}by> <{steps[0]}> .']
+    D, P = DELIBERATION, PROGRESSION
+    g = ox.NamedNode(PASS_GRAPH)
+    def q(s_, p_, o_):
+        return ox.Quad(ox.NamedNode(s_) if isinstance(s_, str) else s_, ox.NamedNode(p_), o_, g)
+    def dec(v):
+        return ox.Literal(f"{v:.6f}", datatype=ox.NamedNode(XSD + "decimal"))
+    out = [q(node, RDF_TYPE, ox.NamedNode(D + "Plan")),
+           q(node, D + "forWant", ox.NamedNode(want)),
+           q(node, D + "verdict", ox.Literal(plan.outcome)),
+           q(node, P + "by", ox.NamedNode(steps[0]))]
+    if plan.landing is not None:
+        out.append(q(node, D + "takes", dec(plan.landing)))
+    #  THE WORLD EACH STEP IS TAKEN IN, walked forward from the root: a world IS its path, so
+    #  the world before step n is the one the steps before it reached, and the candidate is
+    #  named from it. Nothing is carried in Python to say which fork a step came from.
+    world = root
     for n, (uri, step) in enumerate(zip(steps, plan.steps)):
-        facts = [f'a <{PROGRESSION}Step>', f'<{PROGRESSION}fills> <{step.action}>']
+        out += [q(node, D + "step", ox.NamedNode(uri)),
+                q(uri, RDF_TYPE, ox.NamedNode(P + "Step")),
+                q(uri, D + "of", ox.NamedNode(candidate_of(world, step))),
+                q(uri, P + "fills", ox.NamedNode(step.action))]
         #  AND WHAT IT IS FILLED WITH, in the declaring package's own words: one triple per
         #  parameter, under the parameter's own IRI. A reader that wants a step's disk asks
         #  for `hanoi:disk`, and the kernel neither spells nor knows that predicate.
-        facts += [f'<{parameter}> <{value}>' for parameter, value in step.binding]
+        out += [q(uri, parameter, ox.NamedNode(value)) for parameter, value in step.binding]
         if step.quantity is not None:
-            facts.append(f'<{PROGRESSION}quantity> {step.quantity}')
+            out.append(q(uri, P + "quantity", dec(step.quantity)))
         if n + 1 < len(steps):
-            facts.append(f'<{PROGRESSION}then> <{steps[n + 1]}>')
-        blocks.append(f'  <{uri}> ' + " ; ".join(facts) + " .")
-    engine.update(f"""
-DELETE {{ GRAPH <{DELIBERATION_GRAPH}> {{ <{node}> ?p ?o . ?s <{PROGRESSION}then> ?t . ?s ?sp ?so }} }}
-WHERE  {{ GRAPH <{DELIBERATION_GRAPH}> {{ <{node}> ?p ?o .
-          OPTIONAL {{ <{node}> <{PROGRESSION}by>/<{PROGRESSION}then>* ?s . ?s ?sp ?so
-                      OPTIONAL {{ ?s <{PROGRESSION}then> ?t }} }} }} }} ;
-INSERT DATA {{ GRAPH <{DELIBERATION_GRAPH}> {{
-{chr(10).join(blocks)} }} }}""", prefixes=NAMESPACES)
+            out.append(q(uri, P + "then", ox.NamedNode(steps[n + 1])))
+        world = world_of(plan.steps[:n + 1])
+    #  REPLACED WHOLE, so a second pass over one want leaves one plan: the steps are named from
+    #  the plan's node, so clearing the old ones is clearing what that name reaches.
+    imaginarium.forget_plan(node, len(plan.steps))
+    imaginarium.note(out)
+    return node
     return node
 
 
@@ -1144,6 +1167,11 @@ class Planner:
         if (judgment.holds_at is not None and plan.steps and self._root is not None
                 and self._root.landing > 0):
             plan = replace(plan, placed_at=self._clock + timedelta(seconds=self._root.landing))
+        #  WHAT THE PASS DECIDED, beside the worlds it decided it among (#749). Into the
+        #  imaginarium, which is memory: a plan is a pass's result and what survives it is
+        #  whatever progression copies down at adoption.
+        if self.imaginarium is not None and self._root is not None:
+            write_plan(self.imaginarium, judgment.uri, plan, self._root.graph)
         trace.write(self.agent.beliefs, self.agent.id, judgment, plan, stands_at,
                     time.monotonic() - self._started, self._judged(judgment),
                     kept=getattr(self, "_kept_worlds", 0),

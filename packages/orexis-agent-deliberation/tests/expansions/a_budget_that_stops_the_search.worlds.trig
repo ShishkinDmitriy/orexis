@@ -63,6 +63,17 @@ GRAPH possible:Move-disk_1-PegC.Move-disk_1-PegB {
 
 #  What the pass knows about every world it made.
 GRAPH graph:pass {
+  :every_disk_home.plan a deliberation:Plan .
+  :every_disk_home.plan deliberation:forWant :every_disk_home .
+  :every_disk_home.plan deliberation:step :every_disk_home.plan.0 .
+  :every_disk_home.plan deliberation:takes 0.0 .
+  :every_disk_home.plan deliberation:verdict "exhausted" .
+  :every_disk_home.plan progression:by :every_disk_home.plan.0 .
+  :every_disk_home.plan.0 a progression:Step .
+  :every_disk_home.plan.0 deliberation:of graph:sensed..Move-disk_1-PegC .
+  :every_disk_home.plan.0 hanoi:disk :disk_1 .
+  :every_disk_home.plan.0 hanoi:onto hanoi:PegC .
+  :every_disk_home.plan.0 progression:fills hanoi:Move .
   graph:sensed a deliberation:PossibleWorld .
   graph:sensed deliberation:atDepth 0 .
   graph:sensed deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .

@@ -25,7 +25,7 @@ import pytest
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import DELIBERATION_GRAPH
 
-from orexis_agent_deliberation.planner import Planner, write_plan
+from orexis_agent_deliberation.planner import Planner
 
 CASES_DIR = Path(__file__).parent / "plan_wants"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
@@ -37,12 +37,31 @@ TOOK = "http://example.org/orexis/deliberation#tookSeconds"
 def test_a_pass_leaves_the_store_as_the_snapshot_says(case, monkeypatch, request, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     agent = snapshots.stand_in(case)
+    #  THE PLANNER WRITES ITS OWN PLAN NOW, and into the imaginarium (#749) — so what the
+    #  BELIEF BASE is left holding is the trace and the wants, and the plan is not in it. The
+    #  plan is asserted where it lives, below.
+    planners = {}
     for want in agent.wants.find_all_pursued():
-        write_plan(agent.beliefs.engine, want.uri, Planner(agent, agent.me).plan(want))
+        planners[want.uri] = p = Planner(agent, agent.me)
+        p.plan(want)
     agent.beliefs.update(
         f"DELETE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?s <{TOOK}> ?v }} }} "
         f"WHERE  {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?s <{TOOK}> ?v }} }}")
     snapshots.held_to_patch(case, request, "a pass", snapshots.snapshot_of(agent.beliefs))
+
+    #  AND THE PLAN IS IN THE IMAGINARIUM, with its steps in order and each naming the
+    #  candidate it picked. Memory, not disk: what survives a pass is what progression copies
+    #  down when it adopts, and that copy is not this layer's to make.
+    from orexis_agent_deliberation.imaginarium import PASS_GRAPH
+    from orexis_agent_progression.store import bindings
+    for uri, planner in planners.items():
+        if planner.imaginarium is None:
+            continue
+        rows = bindings(planner.imaginarium.query_over(f"""
+SELECT ?s ?of WHERE {{ <{uri}.plan> a deliberation:Plan ; deliberation:step ?s .
+                       ?s deliberation:of ?of }}""", PASS_GRAPH))
+        assert rows, f"a plan for {uri} with steps that name their candidates"
+        assert all(r["of"] for r in rows), rows
 
 
 def test_every_case_is_read_and_no_snapshot_is_orphaned(snapshots):

@@ -201,6 +201,20 @@ class Imaginarium:
                 self._store.clear_graph(name)
         self._store.add_quads(quads, forget=False)
 
+    def forget_plan(self, node: str, steps: int) -> None:
+        """Take back a plan and every step named from it — a pass writing its plan replaces the
+        one before it, so one want leaves one plan and never two.
+
+        By NAME rather than by walking `progression:then`, because the steps are named from the
+        plan's node (`<plan>.0`, `<plan>.1`) and a walk would miss a step the previous plan
+        wrote that this one does not reach. The count is generous on purpose: clearing a name
+        that holds nothing costs nothing, and a shorter plan must not leave the tail of a
+        longer one behind it.
+        """
+        named = {node, *(f"{node}.{n}" for n in range(max(steps, 64)))}
+        self._store.remove_quads(
+            [q for q in self._store.quads(PASS_GRAPH) if q.subject.value in named], forget=False)
+
     def unnote(self, quads) -> None:
         """Take back one of `note`'s rows — the mirror, and the same `forget=False` reason.
 
@@ -291,7 +305,7 @@ class Imaginarium:
         first, the addition would be removed by the retraction meant to precede it and the
         possible world would come back holding neither reading.
         """
-        name = _name(path)
+        name = world_of(path)
         node = ox.NamedNode(name)
         #  THE COPY IS THE ENGINE'S, not a Python loop over quads. The loop cost 4.75 ms per
         #  fork on a 1,000-triple world against 3.29 ms this way, and 59 ms against 44 at
@@ -364,7 +378,7 @@ class Imaginarium:
         return self._store.contains_graph(name)
 
 
-def _name(path) -> str:
+def world_of(path) -> str:
     """One graph per node, named by the path that reached it.
 
     The search needs no tree structure added to it and none is wanted: `_Node.taken` is already
