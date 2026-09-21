@@ -35,6 +35,7 @@ from datetime import datetime
 
 from .derive_wants import derive_wants, forget_want
 from .plan import SATISFIED
+from .desires import desire_behind, find_desire
 from .wants import find_want
 
 from orexis_agent_progression.execution import carry_out
@@ -135,11 +136,11 @@ def derived(agent) -> list[str]:
 def _is_desire(agent, want: str) -> bool:
     """Is this the standing kind — a desire, never handed to a search (#618)?
 
-    BEING IN THE COLLECTION IS THE ANSWER. It read the binding, back when a want was a desire
-    by entailment and only `orexis:Always` separated them; the types are disjoint now, so the
-    question is simply whether the desires hold it (a-kind-is-a-type-not-a-binding).
+    BEING ONE IS THE ANSWER. It read the binding, back when a want was a desire by entailment
+    and only `orexis:Always` separated them; the types are disjoint now, so the question is
+    simply whether the store holds it as a desire (a-kind-is-a-type-not-a-binding).
     """
-    return agent.desires.find_first_by_uri(want) is not None
+    return find_desire(agent.desires, want) is not None
 
 
 def child_of(agent, desire: str) -> str | None:
@@ -157,11 +158,11 @@ def child_of(agent, desire: str) -> str | None:
 def desire_of(agent, want: str) -> str | None:
     """The desire `want` was derived under, or None where it was derived from no desire.
 
-    THROUGH THE COLLECTION THAT HOLDS THE ANSWER. It was asked of `Wants` — find the want, read
-    the name it kept — which walks one collection to reach an element of another and hands back
-    a field rather than a thing.
+    ASKED WHERE THE ANSWER IS. It was asked of the wants — find the want, read the name it
+    kept — which walks one collection to reach an element of another and hands back a field
+    rather than a thing.
     """
-    found = agent.desires.find_first_by_want(want)
+    found = desire_behind(agent.desires, want)
     return found.uri if found else None
 
 

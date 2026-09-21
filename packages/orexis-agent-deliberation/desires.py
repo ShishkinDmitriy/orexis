@@ -135,6 +135,13 @@ class Desires:
     and the packages' `desires.ru`. The pick record and the obligations record are projected in
     beside them, because the picks ARE wants by the sovereign's ruling and an obligation is this
     agent's debts record, served as the wants they raise.
+
+    AND IT IS NOT A COLLECTION. It carried three finders — `find_all`, `find_first_by_uri`,
+    `find_first_by_want` — which made it a repository by the convention
+    `a-repository-is-named-for-what-it-holds` set out, the second and last thing to follow it.
+    They are functions over a store now (below), as the wants' went first, and what is left is
+    a modality: a store, the rebuild that is the only way it changes, and the questions it can
+    be asked. The convention has no instances.
     """
 
     def __init__(self, beliefs):
@@ -189,49 +196,6 @@ class Desires:
     #  desire at runtime — they are authored at genesis and projected, never rebuilt (#644) —
     #  so this half reads and offers no `save`.
 
-    def find_all(self, *, limit: int = PAGE, offset: int = 0) -> list[Desire]:
-        """Every desire this agent holds — the standing rules it lives by.
-
-        THE TYPE IS THE WHOLE TEST now. It was `orexis:bindsWhen orexis:Always`, because
-        `orexis:Want` was a subclass and the type alone could not tell the two apart — so this
-        collection filtered on a binding to find its own contents, and a node typed a desire
-        and bound `AtEnd` fell out of both. The types are disjoint
-        (a-kind-is-a-type-not-a-binding) and each means itself.
-        """
-        return self._desires("?d a orexis:Desire .", limit, offset)
-
-    def find_first_by_uri(self, uri: str) -> Desire | None:
-        """One desire by name, or None where the name is a want's — the types are disjoint."""
-        return next(iter(self._desires(f"BIND(<{uri}> AS ?d) ?d a orexis:Desire .", 1, 0)), None)
-
-    def find_first_by_want(self, want: str) -> Desire | None:
-        """The desire `want` was derived under, or None where it was derived from no desire.
-
-        THE QUESTION BELONGS HERE because the ANSWER is a desire. It was asked of the wants —
-        find the want by its uri, then read the name it kept — which walks through one
-        collection to reach an element of another, and hands back a field rather than a thing.
-        A want's provenance is the want's; what stands at the end of it is this collection's.
-        """
-        rows = bindings(self.query(
-            f"SELECT ?d WHERE {{ <{want}> prov:wasDerivedFrom ?d . ?d a orexis:Desire }} LIMIT 1"))
-        return self.find_first_by_uri(rows[0]["d"]) if rows else None
-
-    def _desires(self, where: str, limit: int, offset: int) -> list[Desire]:
-        """Ordered before it is cut, and capped by default — the convention's two clauses. An
-        unordered `LIMIT` picks by the engine's internal layout, which is the trap `beliefs.py`
-        records, and a silent truncation is the empty-result trap wearing a cap."""
-        rows = bindings(self.query(f"""
-SELECT ?d ?label ?about WHERE {{
-  {where}
-  OPTIONAL {{ ?d rdfs:label ?label }}
-  OPTIONAL {{ ?d orexis:about ?about }}
-}} ORDER BY ?d LIMIT {int(limit)} OFFSET {int(offset)}"""))
-        if len(rows) == limit and limit != 1:
-            log.warning("desires: a full page of %d at offset %d — page or there is a leak",
-                        limit, offset)
-        return [Desire(uri=r["d"], label=r.get("label", ""),
-                       about=r.get("about")) for r in rows]
-
     def abouts(self, agent_uri: str) -> dict[str, tuple[str, ...]]:
         """What each thing this agent holds is ABOUT, node -> the IRIs it names.
 
@@ -263,3 +227,56 @@ SELECT ?d ?label ?about WHERE {{
         #  what every write that could change this answer already triggers. The service memoised
         #  it instead, which made that service stateful and forced its callers to keep one each.
         return self._built.remember(("abouts", agent_uri), compute)
+
+
+#  ---- reading the desires a store holds ------------------------------------------------
+#
+#  FUNCTIONS OVER THE STORE, and what is above is not one of them. `Desires` was the second
+#  repository in the DDD sense and these three methods were its convention — `find_all`,
+#  `find_first_by_x`, ordered before cut and capped by default. `Wants` went first and these
+#  follow, and what is LEFT is not a collection at all: a projection, its rebuild, and what it
+#  can be asked. The convention has no instances now.
+
+
+def find_desires(store, *, limit: int = PAGE, offset: int = 0) -> list[Desire]:
+    """Every desire this store holds — the standing rules an agent lives by.
+
+    THE TYPE IS THE WHOLE TEST. It was `orexis:bindsWhen orexis:Always`, because `orexis:Want`
+    was a subclass and the type alone could not tell the two apart — so a collection of desires
+    filtered on a binding to find its own contents, and a node typed a desire and bound `AtEnd`
+    fell out of both. The types are disjoint (a-kind-is-a-type-not-a-binding).
+
+    ORDERED BEFORE IT IS CUT, and capped: an unordered `LIMIT` picks by the engine's internal
+    layout, which is the trap `beliefs.py` records, and a silent truncation is the empty-result
+    trap wearing a cap.
+    """
+    return _read(store, "?d a orexis:Desire .", limit, offset)
+
+
+def find_desire(store, uri: str) -> Desire | None:
+    """One desire by name, or None where the name is a want's — the types are disjoint."""
+    return next(iter(_read(store, f"BIND(<{uri}> AS ?d) ?d a orexis:Desire .", 1, 0)), None)
+
+
+def desire_behind(store, want: str) -> Desire | None:
+    """The desire `want` was derived from, or None where it was derived from no desire.
+
+    THE ANSWER IS A DESIRE, which is why the walk ends here rather than in the wants: a want's
+    provenance is the want's, and what stands at the end of it is this store's to hand back.
+    """
+    rows = bindings(store.query(
+        f"SELECT ?d WHERE {{ <{want}> prov:wasDerivedFrom ?d . ?d a orexis:Desire }} LIMIT 1"))
+    return find_desire(store, rows[0]["d"]) if rows else None
+
+
+def _read(store, where: str, limit: int, offset: int) -> list[Desire]:
+    rows = bindings(store.query(f"""
+SELECT ?d ?label ?about WHERE {{
+  {where}
+  OPTIONAL {{ ?d rdfs:label ?label }}
+  OPTIONAL {{ ?d orexis:about ?about }}
+}} ORDER BY ?d LIMIT {int(limit)} OFFSET {int(offset)}"""))
+    if len(rows) == limit and limit != 1:
+        log.warning("desires: a full page of %d at offset %d — page or there is a leak",
+                    limit, offset)
+    return [Desire(uri=r["d"], label=r.get("label", ""), about=r.get("about")) for r in rows]
