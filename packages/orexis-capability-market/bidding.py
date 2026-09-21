@@ -40,7 +40,6 @@ from agent.module import Module, contributes
 from orexis_agent_progression.timer import Timer
 from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS
 
-SENSING_URGENCY = "http://example.org/orexis/sensing#urgency"       # sensing's hook, spelled as every cross-package reference is
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"
 from orexis_agent_progression.ontology import GRAPH_PREFIX, ONTOLOGY_GRAPH, OREXIS, picks_graph
 from orexis_agent_progression.store import bindings
@@ -592,26 +591,6 @@ class BiddingModule(Module):
             #  give-up with it. What ends the round for this bidder is a bid leaving (`_bid`)
             #  or the give-up firing, and nothing else.
             reviser.wake_for(self.agent, stake)
-
-    @contributes(SENSING_URGENCY)
-    def urgency(self, subject_uri: str, observed_property: str,
-                value: float | None) -> float | None:
-        """A HELD claim is urgency (#132): the dose is coming the moment my watch is live,
-        and the watch becomes live by exactly this answer reaching the board. Read off the
-        ledger — a standing Apply on this property, younger than my patience — so a claim
-        the bounded wait will redeem blind anyway cannot hold the fast cadence forever. The
-        keeper used to answer this by naming Apply; it is this package's word and this
-        module's hold, so the answer moved here, through the same choir hook."""
-        if subject_uri != self.me.acts_for or observed_property != self.about:
-            return None
-        keeper = self._keeper()
-        if keeper is None:
-            return None
-        now = clock.now()
-        if any(s.age_s(now) <= keeper.beliefs.patience_s
-               for s in keeper.standing(action=PRESENTING, want=self._stake_uri())):
-            return 1.0
-        return None
 
     @contributes(PRESENTING)
     def present(self, act, judgment, intention: str) -> bool:

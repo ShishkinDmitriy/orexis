@@ -45,7 +45,7 @@ definition of done.** Two kinds, by what implies them:
 
 - **Violated now.** The reading's band is outside the region. A want bound `orexis:AtEnd` is
   derived under the root, naming the root and the reading in PROV. Its room is the root's state
-  room, inherited, since an at-end want has none of its own ([urgency](/domain/urgency.md)). It
+  room, inherited, since an at-end want has none of its own (urgency). It
   is pursued forward from the present, and it is gone when its intention resolves met.
   [#618](https://github.com/ShishkinDmitriy/orexis/issues/618).
 - **Predicted to be.** The drift's crossing — from the observed value, or the band's own width

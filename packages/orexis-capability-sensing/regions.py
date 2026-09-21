@@ -11,7 +11,8 @@ since a point in a property checked against a range is the same kind of sentence
 behind is the obligation (`agent/ower.py`), which is not about sensing.
 
 `Region.urgency` is a reference definition and not the live one: how a want's badness is
-measured is declared in `measures.ttl` and asked through the choir (`Module.desire_urgency`).
+measured was declared in `measures.ttl` and asked through the choir; a want is judged by its
+met-test now, and what is left here is the DIFF this package reports.
 See knowledge/domain/desire.md and knowledge/decisions/a-desire-states-its-own-measure.md.
 """
 
@@ -67,13 +68,18 @@ def aims_of(query, agent_id: str, agent_uri: str) -> dict[str, float]:
 #  number it has; not knowing is the epistemic want's business, and `want_about` answers
 #  that one first. The instrument is `sosa:madeBySensor`, which the sensed writer stamps.
 _READINGS_Q = """
-SELECT ?subject ?property ?value ?at ?instrument WHERE {
+SELECT ?subject ?property ?value ?at ?instrument ?stale WHERE {
   GRAPH $state {
     ?obs sosa:hasFeatureOfInterest ?subject ;
          sosa:observedProperty ?property ;
          sosa:hasSimpleResult ?value .
     OPTIONAL { ?obs sosa:resultTime ?at }
     OPTIONAL { ?obs sosa:madeBySensor ?instrument }
+    #  THE MARK, not the arithmetic. A reading's age was computed — `?at + horizon > NOW()`
+    #  asked of every candidate world, which is the REAL now inside a search and so an answer
+    #  about a world nobody is in. Sensing arms a deadline that writes this triple when the
+    #  horizon runs out (`watch_staleness`), and every reader asks the triple.
+    OPTIONAL { ?obs sensing:staleSince ?stale }
   }
 }"""
 
@@ -166,18 +172,17 @@ class Region:
             return "HIGH"
         return "OK"
 
-    def urgency(self, value: float) -> float:
+    def distance(self, value: float, target: float | None = None) -> float:
         """How close this reading puts me to real trouble: 0.0 at the centre, 1.0 at the edge
         of what my subject survives.
 
-        **A REFERENCE, no longer the live definition.** How a want's badness is measured is a
-        capability's answer now, asked through the choir (`Module.desire_urgency`) — sensing's
-        `measures.ttl` for observation-backed wants, measured from the AIM at query time with
-        the centre only as the no-pick fallback — so the two agree exactly when no aim is
-        picked, which is what the tests hold the declared query to. Nothing on the live path
-        calls this any more: a want nothing measures scores a logged 1.0 rather than falling
-        back here, because a silent second definition is the drift the declaration exists to
-        prevent.
+        **THE ONE DEFINITION AGAIN, and it is a DIFF's, not a search's.** This was the live
+        arithmetic; then a declared SPARQL measure answered the choir and this
+        stayed as a reference the tests held that query to, so a want's badness could be asked
+        of an imagined world. The measure is gone with the urgency it served — a want is judged
+        by its met-test and nothing scores a world by degree — and what still wants a magnitude
+        is the gap sensing REPORTS. So this is live again, with one reader and no second
+        definition to drift from, and nothing the planner asks.
 
         **Measured from a point INSIDE the region and not from the edge**, which is a deliberate
         difference from the band. A step function would tell sensing to relax completely
@@ -197,7 +202,13 @@ class Region:
         and the answer degrades rather than failing. A region with no width at all is
         all-or-nothing trouble, which is the same reading `market:Bidding` gave a bandless agent.
         """
-        centre = self.centre
+        #  ANCHORED AT THE AIM WHERE ONE IS PICKED, and at the centre otherwise. The declared
+        #  measure read the pick out of the record at query time for exactly this reason — the
+        #  range is the plant's and the pick is the agent's — so an agent steering for 0.60 in
+        #  a 0.45-0.65 region must read 0.60 as nothing and not as a third of the way out. The
+        #  caller reads the pick and hands it in; the reference kept the centre only because
+        #  nothing on the live path called it.
+        centre = self.centre if target is None else target
         if value == centre:
             return 0.0
         if value < centre:
@@ -243,7 +254,7 @@ class Gap:
         return ((now or clock.now()) - self.at).total_seconds()
 
 
-def gaps_of(desires, beliefs, agent_uri: str, agent_id: str, measure=None) -> dict[str, Gap]:
+def gaps_of(desires, beliefs, agent_uri: str, agent_id: str) -> dict[str, Gap]:
     """The desired/sensed diff for one agent, property -> gap. Computed, never stored.
 
     A gap is a VERDICT — the same number is a crisis for one agent and nothing for another — so
@@ -252,15 +263,19 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str, measure=None) -> di
 
     Two handles since the dataset split (#298): `desires` answers what is WANTED and `beliefs`
     what IS, and the join is here — `desires.rq` and `readings.rq` are the two texts. The
-    MAGNITUDE is nobody's arithmetic here: `measure` is the choir's own the sensing module hands in
-    (see `_measured_urgency`), so the diff and the ranking cannot disagree because both ask the
-    same capability the same question. `agent_id` names the pick record the sign's aim is read
-    from. A property with no observation yet is absent rather than zero: at birth every desire
+    MAGNITUDE is `Region.distance`, sensing's own and sensing's only reader: it was the choir's
+    declared measure while anything else asked one, and nothing does — a want is judged by its
+    met-test now, so there is no ranking for this diff to agree with. `agent_id` names the pick
+    record the sign's aim is read from. A property with no observation yet is absent rather than zero: at birth every desire
     is unmeasured, and unmeasured must not read as satisfied.
     """
     subjects = _subjects_of(beliefs, agent_uri)
     known, _ = _known(beliefs)
-    aims = aims_of(desires, agent_id, agent_uri)
+    #  THE PICK OFF THE BELIEF BASE, not off the desire projection. The declared measure read
+    #  `$picks` at query time for exactly this reason: a re-pick is a write to the agent's own
+    #  record, and a projection rebuilt on a clock of its own would leave the diff steering for
+    #  yesterday's aim. Asked of `beliefs`, the answer moves the moment the pick does.
+    aims = aims_of(beliefs, agent_id, agent_uri)
     regions = regions_of(beliefs, agent_uri)
     out: dict[str, Gap] = {}
     for row in _desired(desires, agent_uri):
@@ -273,12 +288,12 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str, measure=None) -> di
         region = regions.get(row["property"])
         if region is None:
             continue
-        urgency = _measured_urgency(measure, row, item.value)
-        #  The SIGN is judged against the same point the measure judges distance from: the
-        #  aim, or the centre while none is picked. Signed against the centre it disagreed
-        #  with its own magnitude the moment a pick moved off-centre.
+        #  The SIGN is judged against the same point the distance is measured from: the aim,
+        #  or the centre while none is picked. Signed against the centre it disagreed with its
+        #  own magnitude the moment a pick moved off-centre.
         target = aims.get(row["property"], region.centre)
-        gap = 0.0 if item.value == target else             (urgency if item.value > target else -urgency)
+        far = region.distance(item.value, target)
+        gap = 0.0 if item.value == target else (far if item.value > target else -far)
         out[row["property"]] = Gap(
             observed_property=row["property"], value=item.value,
             low=region.low, high=region.high, gap=gap,
@@ -287,57 +302,16 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str, measure=None) -> di
     return out
 
 
-def _measured_urgency(measure, row: dict, value: float | None) -> float:
-    """One want's urgency: whichever capability measures such wants, asked through `measure`.
-
-    It was `_stake_urgency` while a stake was the only kind anything declared a measure for.
-    Freshness has one now — sensing's, since the want became sensing's — and it takes the same
-    path, which is the point of it: the kernel asks, a capability answers, and this
-    function does not learn which kind it just asked about. `value` may be None, because the
-    question *how urgent is not knowing* is exactly the one a freshness want asks.
-
-    `measure` is the choir's own, handed in by the sensing module — `(desire, value) -> float | None`,
-    behind which `Agent.desire_urgency` asks every module and sensing answers for
-    observation-backed wants against the live belief base. A free function cannot hold the
-    agent, so the join takes the question as a parameter; the KERNEL evaluates nothing
-    (a-desire-states-its-own-measure). `value` is the reading the caller already joined, so
-    the number judged and the number on the row are one fact from one read.
-
-    A want nothing measures scores 1.0, logged — the defined fallback: not knowing how bad is
-    maximal, exactly as not knowing at all is. Logged only where a measure was actually ASKED:
-    a caller that hands none in is not asking about these wants at all (the debts reader wants
-    the obligation rows and computes the rest to throw away), and warning there says a package is
-    missing when nothing is.
-    """
-    #  The INSTRUMENT rides along, because it is what tells the answerer which kind of want
-    #  this is. A row that binds none is a stake and the want it makes says so by omission.
-    #  Deferred (#455): the row type is `rows.py`'s now — a base class is an import — and a
-    #  top-level import here would be the cycle (rows imports this file's helpers). Runs only
-    #  where a measure was handed in, which only a running mind ever does.
-    from .rows import ObservedWant
-    answer = measure(ObservedWant(uri=row["desire"],
-                            observed_property=row["property"], value=value,
-                            instrument=row.get("instrument")),
-                     value) if measure else None
-    if answer is None:
-        if measure is not None:
-            log.warning("nothing loaded measures a want about %s — urgency reads 1.0",
-                        row["property"])
-        return 1.0
-    return answer
-
-
-#  `desires_of` LIVED HERE and is `rows.py`'s now (#455), for the same reason as the class
-#  it constructs.
-
-
 @dataclass(frozen=True)
 class Known:
-    """One current reading: the value and when it was taken. Whether it is still evidence is
-    not on it — that is sensing's judgment, made through the freshness want and its measure."""
+    """One current reading: the value, when it was taken, and whether it has been marked as
+    having stopped being evidence. The mark is sensing's own — a deadline armed per reading
+    (`Sensing.watch_staleness`) — and is read here rather than recomputed, because an age
+    computed inside a search is an age computed against the real now."""
 
     value: float | None
     at: datetime | None
+    stale: bool = False
 
 
 def _desired(desires, agent_uri: str) -> list[dict]:
@@ -350,7 +324,8 @@ def _known(beliefs) -> tuple[dict, dict]:
     (instrument, property) for the freshness wants, which name the instrument they are about."""
     by_pair, by_instrument = {}, {}
     for r in bindings(beliefs(_READINGS_Q.replace("$state", f"<{STATE_GRAPH}>"))):
-        item = Known(value=float(r["value"]) if r.get("value") else None,
+        item = Known(stale=r.get("stale") is not None,
+                     value=float(r["value"]) if r.get("value") else None,
                      at=datetime.fromisoformat(r["at"]) if r.get("at") else None)
         by_pair[(r["subject"], r["property"])] = item
         if r.get("instrument"):

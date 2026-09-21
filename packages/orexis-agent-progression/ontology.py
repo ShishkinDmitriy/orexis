@@ -147,7 +147,6 @@ PREDICTED = OREXIS + "predicted"    # a watch opened or closed: the intended bra
 REPREDICT = OREXIS + "repredict"    # a premise a prediction reads has moved: predict again (#643)
 WITNESS = OREXIS + "witness"        # what the world shows for a predicted fact now — the residual (#518)
 DESIRES = OREXIS + "desires"
-DESIRE_URGENCY = OREXIS + "desireUrgency"
 REPORTS = OREXIS + "reports"
 SERIES = OREXIS + "series"
 QUIET = OREXIS + "quiet"

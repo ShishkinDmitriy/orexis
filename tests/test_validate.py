@@ -111,26 +111,6 @@ def test_an_action_states_both_texts_or_neither(monkeypatch, caplog):
     assert "Unreachable" in caplog.text and "no precondition" in caplog.text
 
 
-def test_a_stake_nothing_can_measure_is_refused(monkeypatch, caplog):
-    """A want with no measure ranks every possible world alike, and a search over worlds that
-    all score the same concludes — confidently — that nothing helps.
-
-    Sensing declares its measure for the KIND `sosa:ObservableProperty`, so the way to hold a
-    stake nothing measures is to hold one in a property that is not one. Untyping the property
-    is the smallest fixture that produces it and it is not artificial: a domain package
-    shipping a property it forgot to type would land exactly here, with every plant in the
-    world silently unrankable.
-    """
-    st = build("simulation", monkeypatch)
-    st.update("""DELETE { GRAPH <%s> { ?p a sosa:ObservableProperty } }
-                 WHERE  { GRAPH <%s> { ?p a sosa:ObservableProperty } }"""
-              % (ONTOLOGY_GRAPH, ONTOLOGY_GRAPH))
-
-    assert not deliberable(st, desires_of(st)), \
-        "a world whose stakes nothing can weigh was allowed through"
-    assert "measure" in caplog.text, "the refusal must say which half of the gate refused"
-
-
 def test_the_gate_asks_the_packages_and_never_builds_an_agent(monkeypatch):
     """Why the measure question is asked of a CLASS.
 

@@ -172,9 +172,10 @@ class Want:
     #  NO measure field, deliberately, and one briefly existed: a desire does not carry how
     #  its badness is scored, because that is a capability's answer and not the mind's
     #  structure (a-desire-states-its-own-measure). Whoever needs the number asks the choir —
-    #  `Agent.desire_urgency(desire, query, sensed)` — of whichever WORLD is being judged, which
-    #  is the one question a number here could never have answered: this type is about a want,
-    #  and how far off a world is is about a world.
+    #  A capability answered that through the choir, of whichever WORLD was being judged —
+    #  which is the one question a number here could never have answered, since this type is
+    #  about a want and how far off a world is is about a world. Nobody asks it now: a want is
+    #  judged by its met-test, and nothing scores a world by degree.
 
     @property
     def is_met(self) -> bool:

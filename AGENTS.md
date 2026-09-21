@@ -189,9 +189,17 @@ it is a record wearing a bullet.
 - **An effect is one declaration** — the diff the search planned on rides on the step and is
   what the world is held to, so no actor sizes an expectation of its own; the one thing an
   actor adds is how close, and that is a bounded pick rather than a kernel constant.
-- **The desire owns the term and the package owns the measure** — a want says `unmetWhen`
-  and `estimates`; what the pattern means and that the estimate never overstates are promises
-  about the package's own actions and costs, which a world file cannot keep.
+- **The desire owns the term and the package owns the COST** — a want says `unmetWhen` and
+  `estimates`; what the pattern means and that the estimate never overstates are promises about
+  the package's own actions and costs, which a world file cannot keep. It owned a MEASURE too,
+  of how badly a want was unmet in a given world, and that was a second judgment beside the
+  met-test the judge was already held to; the met-test is the only one now, and what still
+  orders the frontier is the estimate.
+- **A want is judged by its met-test, and nothing scores a world by degree** — the search sees
+  no partial progress, so a repair is found where the plan REACHES the met state, by one step
+  or by several; what that cost is the slope's pruning, and what it bought is one judgment
+  path, a stricter one — a lever that wrote a reading without retracting the one it replaced
+  passed the measure and does not pass the met-test.
 - **A ceiling on compute is stated in the unit the search spends** — depth was that unit
   under breadth-first and stopped being it under best-first, and a budget of worlds is what a
   sovereign can size from a measured cost per fork.
@@ -515,7 +523,7 @@ it is a record wearing a bullet.
    injects only what is already there and loads nothing (#455). Adding one is adding a directory. Packages never
    import each other's Python ACROSS a layer: ask `agent.provider(family)` or contribute via
    the choir's extension points (`desires`, every ACTION, `notices`, `series`, `quiet` — and, in sensing's
-   words through `agent.ask`, `annotate`, `urgency`, `bounds`).
+   words through `agent.ask`, `annotate`, `bounds`).
    The one ordinary import is DOWNWARD, of the contract of the layer beneath: a family's plug-ins
    import the family's contract — `packages/orexis-codec-*`, `packages/orexis-scaling-*` and
    `packages/orexis-transport-*` import sensing's `Codec`, `Scaling` and `pointer`, because those

@@ -273,18 +273,25 @@ def test_the_bounded_wait_redeems_blind_rather_than_never(thirsty):
         h for h in keeper.held() if not h[2].endswith("answeredWhen")]
 
 
-def test_a_held_claim_is_maximum_urgency(thirsty):
+def test_a_held_claim_earns_the_fast_cadence(thirsty):
     """The hold is the watch one step earlier: the dose is coming the moment the watch is live,
-    and the watch becomes live by exactly this urgency reaching the board. Claim → tight;
-    presentation → the expectation takes over the same answer without a gap."""
+    and the watch becomes live by exactly this answer reaching the board. Claim → tight;
+    presentation → the expectation takes over the same answer without a gap.
+
+    ASKED OF THE KEEPER AND OF NOBODY ELSE. The bidder used to answer this through sensing's
+    choir, because a claim held is the market's knowledge and the cadence was the only reader;
+    what it actually read was a step STANDING to present the claim, which is the keeper's own
+    fact and the same one an open expectation is. `standing` takes the action as an option, so
+    sensing asks whether anything of its own is in flight without naming a word of the
+    market's, and the hook is gone with the measure it sat beside.
+    """
     market = market_of(thirsty)
     p = thirsty.subscribing()
     thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     thirsty.deliver(f"{market.claim_topic}/fern",
                     {"jti": "v3", "amount_l": 0.5, "debit": 0.2})
-    #  Answered by the BIDDER — it holds the claim and Apply is its word — through the same
-    #  choir hook the keeper used to answer it by; the cadence below is the choir's max.
-    assert thirsty.bidding().urgency(thirsty.me.acts_for, MOISTURE, 0.55) == 1.0
+    assert p.watch_closely(thirsty.me.acts_for, MOISTURE, 0.55) is True, \
+        "a claim held is a step standing to present it, and the keeper says so"
     assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == p.beliefs.fast_sleep_s
 
 

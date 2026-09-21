@@ -272,57 +272,31 @@ class Planner:
 
     # --- what a world is worth ---------------------------------------------------------------
 
-    def _urgency_in(self, node, judgment: Want) -> float:
-        """How bad this judgment is, in the world given. Lower is better; 1.0 is the worst there is.
+    def _unmet_in(self, node, judgment: Want) -> float:
+        """Is this judgment unmet in the world given — 1.0 unmet, 0.0 met. Lower is better.
 
-        A CAPABILITY'S ANSWER, never this file's arithmetic: the choir is asked
-        (`Agent.desire_urgency`) with the imaginarium as the world and `$state`-equivalent
-        `graph` naming this node's readings — the same question every other consumer asks
-        against the belief base, answered by the same module from the same declaration, so a
-        plan is scored by the measure the agent already steers by. That is what declaring
-        it bought: the reflex used to steer for the AIM while this scored distance from the
-        region's CENTRE, so the two mechanisms pursued different targets whenever the pick sat
-        off-centre, silently. The imaginarium is passed rather than the flat rdflib copy,
-        because sensing runs its measure on pyoxigraph against live beliefs and one stored
-        query answered by two engines is the disagreement this repo already closed once —
-        the module's own hook docstring carries the argument.
+        ONE JUDGMENT PATH, AND THIS IS THE WHOLE OF IT. A capability used to answer a GRADED
+        question here, through the choir: sensing scored a reading against the aim,
+        scaled by the survival room on that side, so a world that moved a fern from 0.30 to
+        0.44 ranked ahead of one that moved it nowhere, and best-first followed the slope.
+        The sovereign struck the measure, and what is left is the want's own met-test — the
+        same select the judge is held to, asked of the world being judged.
 
-        Counting violations instead would have been simpler and wrong in a way that matters: a
-        dose that moves a fern from 0.30 to 0.44 leaves the same single violation it started
-        with, so a planner scoring by count would refuse every dose too small to finish the job
-        — and refuse the second one for the same reason, having never taken the first.
+        WHAT THIS COSTS, said plainly: the search no longer sees partial progress. A dose too
+        small to bring the reading inside its band scores exactly as standing still does, so
+        a repair is found only where the plan REACHES the met state — by one step or by
+        several, since the search chains and `orexis:estimates` still orders the frontier by
+        cost-to-go. The pruning the slope bought is gone; correctness is not, because the
+        met-test was always what decided whether a plan had worked.
 
-        The NODE is what arrives, and its graph is the whole of what a measure needs: the flat
-        rdflib copy this took alongside was only ever read by the wants that state no measure —
-        an obligation, once met-or-not over the record — and those ask the imaginarium now too (#481).
-        Anything else unmeasured scores 1.0, the not-knowing answer.
+        The three branches this had were already binary and are now the only branches: an
+        avoided pattern (#468), a compiled want (the puzzles', an aversion authored as a
+        shape), and anything else. All three are `_met_in`, which is why this function is a
+        sign flip over it rather than a judgment of its own — and why a want nobody measures
+        is no longer a special case, nor `orexis-validate` refusing a stake for lacking a
+        measure that no longer exists.
         """
-        answer = self.agent.desire_urgency(
-            judgment, partial(self.imaginarium.query,
-                                graphs=self._dataset(self._at(node), self._judged_at(node, judgment))),
-            self._judged_at(node, judgment))
-        if answer is not None:
-            return answer
-        #  An avoided-pattern want is binary by its own contract — met 0, unmet 1 — and the
-        #  kernel judges it (#468): no capability answers for pure ratified data, and the
-        #  flat not-knowing fallback below would send the search shopping for a want that
-        #  wants nothing whenever the pattern is held.
-        pattern = self._avoided_pattern(judgment)
-        if pattern is not None:
-            return 1.0 if self._pattern_binds(pattern, self._judged_at(node, judgment)) else 0.0
-        if self._compiled.unmet is not None:
-            #  A compiled want nobody measures — the puzzles', an aversion authored as a
-            #  shape — is binary by the same contract as a pattern want: unmet 1, met 0.
-            #  Without this the not-knowing fallback below scored the delivered world 1.0
-            #  beside the undelivered one, and only the met-test could tell them apart.
-            return 0.0 if self._met_in(node, judgment) else 1.0
-        #  A want whose kind nothing loaded answers for, scoring the defined fallback:
-        #  maximal, because not knowing how bad IS how bad. It used to serve the freshness
-        #  want too — epistemic wants had no declared measure, so every candidate world
-        #  scored 1.0 and no look could be preferred to standing still. Sensing declares one
-        #  now, so what is left here is a want in a society composed without whoever measures
-        #  it, which `orexis-validate` refuses for a stake and cannot for anything else.
-        return 1.0
+        return 0.0 if self._met_in(node, judgment) else 1.0
 
     def _judged_at(self, node, judgment: Want) -> str:
         """The world this node is JUDGED in: its own, or — for a want met AT an instant
@@ -391,16 +365,14 @@ class Planner:
         if shape is None:
             #  An obligation's goal state used to be read HERE, by naming the ledger's discharge
             #  (#255); since #635 the debt carries that as its own `unmetWhen`, judged above
-            #  with every authored pattern, and the kernel names no word of the ledger.
-            #  A want with no shape and no property — a CALL (#359) — is met exactly where
-            #  whoever measures it says it is: zero urgency in the world being judged. Asked
-            #  of the imaginarium at the node's graph, as `_urgency_in` asks.
-            answer = self.agent.desire_urgency(
-                judgment, partial(self.imaginarium.query,
-                                graphs=self._dataset(self._at(node), self._judged_at(node, judgment))),
-                self._judged_at(node, judgment))
-            if answer is not None:
-                return answer <= 0.0
+            #  with every authored pattern, and the kernel names no word of the ledger. A CALL
+            #  (#359) took the same road last: it was met where whoever MEASURED it said so,
+            #  the host answering "a round stands on my venue" through the choir — the last
+            #  reader of a measure, and the reason removing one reached the market at all. It
+            #  carries its own `unmetWhen` now and is judged above with every other pattern.
+            #
+            #  What reaches here is a want with no shape, no pattern and no property, which
+            #  nothing this repo ships authors: its state is whatever whoever lifted it said.
             return judgment.is_met
         #  A shape want the pass did not compile in `_begin` — another judgment than the
         #  pass's — is compiled here, by the same compiler and to the same select (#548);
@@ -644,9 +616,9 @@ class Planner:
         here = self._root
         trace.clear(self.agent.beliefs, self.agent.id, judgment.uri)
         met_now = self._met_in(here, judgment)
-        if met_now and here.urgency <= 0.0:
-            return self._record(judgment, Plan(SATISFIED, (), here.urgency, here.urgency),
-                                here.urgency)
+        if met_now and here.unmet <= 0.0:
+            return self._record(judgment, Plan(SATISFIED, (), here.unmet, here.unmet),
+                                here.unmet)
         #  Within-binding wants have ROOM: seconds until the want expires (#472). A candidate
         #  whose last change lands past it is LATE, weighed and refused like a dear one.
         #  Or AT an instant (#619): a candidate landing past the instant cannot hold at it.
@@ -756,13 +728,13 @@ class Planner:
             #  Achievement is absolute — the desire's demand — and cost orders the
             #  achievers; the desire's own measure breaks a cost tie (nearer the aim wins),
             #  so the answer is deterministic whatever order the menu yielded them in.
-            won = min(self._achieved, key=lambda s: (s.cost, s.urgency))
+            won = min(self._achieved, key=lambda s: (s.cost, s.unmet))
             return self._record(
                 judgment,
-                self._offer(Plan(SATISFIED, won.taken, self._root.urgency, won.urgency, cost=won.cost, origin=won.origin,
+                self._offer(Plan(SATISFIED, won.taken, self._root.unmet, won.unmet, cost=won.cost, origin=won.origin,
                                  landing=won.landing - self._root.landing),
                             judgment, won),
-                self._root.urgency)
+                self._root.unmet)
 
         #  A pass that ends with no step worth taking is labelled by the SHAPE, not by the
         #  search: a met desire that weighed its levers and found none worth pulling is
@@ -772,15 +744,15 @@ class Planner:
         best = self._best
         if not saw_candidate:
             return self._record(judgment, Plan(SATISFIED if met_now else NOTHING,
-                                           (), self._root.urgency, self._root.urgency), self._root.urgency)
-        if best is self._root or (best.urgency, _near(best)) >= (self._root.urgency, _near(self._root)):
-            after = self._root.urgency if best is self._root else best.urgency
+                                           (), self._root.unmet, self._root.unmet), self._root.unmet)
+        if best is self._root or (best.unmet, _near(best)) >= (self._root.unmet, _near(self._root)):
+            after = self._root.unmet if best is self._root else best.unmet
             return self._record(judgment, Plan(SATISFIED if met_now else NOT_BETTER,
-                                           (), self._root.urgency, after), self._root.urgency)
+                                           (), self._root.unmet, after), self._root.unmet)
         return self._record(judgment, self._offer(
             Plan(EXHAUSTED if not self._met_in(best, judgment) else SATISFIED,
-                 best.taken, self._root.urgency, best.urgency, cost=best.cost, origin=best.origin,
-                 landing=best.landing - self._root.landing), judgment, best), self._root.urgency)
+                 best.taken, self._root.unmet, best.unmet, cost=best.cost, origin=best.origin,
+                 landing=best.landing - self._root.landing), judgment, best), self._root.unmet)
 
     def _settle(self, row, step, depth, judgment, met_now, room):
         """One simulated world weighed: forbidden, dear, late, seen, met, or a place to
@@ -808,8 +780,8 @@ class Planner:
         if novel:
             self._seen[where] = step.cost
             self._by_diff[where] = step
-            if (step.urgency, _near(step), step.cost) < (
-                    self._best.urgency, _near(self._best), self._best.cost):
+            if (step.unmet, _near(step), step.cost) < (
+                    self._best.unmet, _near(self._best), self._best.cost):
                 self._best = step
         asked = novel or not met_now
         if asked and self._met_in(step, judgment):
@@ -822,7 +794,7 @@ class Planner:
             #  question was never put, which is not the same as the answer being no.
             self._about(step, "fails", ox.NamedNode(judgment.uri))
         if step.met:
-            self._weigh(row, step.parent.graph, depth, trace.MET, step.urgency)
+            self._weigh(row, step.parent.graph, depth, trace.MET, step.unmet)
             if met_now:
                 #  Already met and still steering: the first novel step that
                 #  keeps it met stays the answer — re-picking among keepers by
@@ -830,19 +802,19 @@ class Planner:
                 #  anything.
                 return self._record(
                     judgment,
-                    self._offer(Plan(SATISFIED, step.taken, self._root.urgency, step.urgency, cost=step.cost, origin=step.origin,
+                    self._offer(Plan(SATISFIED, step.taken, self._root.unmet, step.unmet, cost=step.cost, origin=step.origin,
                                      landing=step.landing - self._root.landing),
                                 judgment, step),
-                    self._root.urgency)
+                    self._root.unmet)
             self._achieved.append(step)
             self._bound = step.cost if self._bound is None else min(self._bound, step.cost)
             return None
         if not novel:
-            self._weigh(row, step.parent.graph, depth, trace.SEEN, step.urgency)
+            self._weigh(row, step.parent.graph, depth, trace.SEEN, step.unmet)
             return None
         self._weigh(row, step.parent.graph, depth,
-                    trace.BETTER if step.urgency < self._root.urgency else trace.WORSE,
-                    step.urgency)
+                    trace.BETTER if step.unmet < self._root.unmet else trace.WORSE,
+                    step.unmet)
         self._open_row(step, True)
         return None
 
@@ -853,7 +825,7 @@ class Planner:
         step.verdict = verdict
         self._keep(step)
         self._about(step, "verdict", ox.Literal(verdict))
-        self._weigh(row, step.parent.graph, depth, verdict, step.urgency)
+        self._weigh(row, step.parent.graph, depth, verdict, step.unmet)
         return None
 
     # --- the cone across passes (#553) ---------------------------------------------------------
@@ -999,7 +971,7 @@ class Planner:
         if not subtree and judgment is not None:
             #  Scored from the present, not from the number it was predicted to hold: a pot
             #  a hundredth below its aim is not a met want.
-            node.urgency = self._urgency_in(node, judgment)
+            node.unmet = self._unmet_in(node, judgment)
             node.estimate = self._estimate_in(node, judgment)
         #  Re-keyed AFTER the diffs are re-based above. A kept world's GROUND survives a
         #  re-root untouched: which of the world's branches it sits under is not measured from
@@ -1018,7 +990,7 @@ class Planner:
         node.verdict = None
         self._achieved = [m for m in keep if m.met and m is not node]
         self._bound = min((m.cost for m in self._achieved), default=None)
-        self._best = min(keep, key=lambda m: (m.urgency, _near(m), m.cost))
+        self._best = min(keep, key=lambda m: (m.unmet, _near(m), m.cost))
         self._kept_worlds = len(keep)          # the present among them: one is a leaf resumed
         #  What `_begin` computes AT the root, for the new one.
         self._at_root(node)
@@ -1245,7 +1217,7 @@ class Planner:
             node.taken = self._with_precondition(node.taken, judgment, node)
         plan = replace(plan, steps=node.taken)
         if node.legal is not None:
-            return plan if node.legal else Plan(REFUSED, (), plan.urgency_now, plan.urgency_after)
+            return plan if node.legal else Plan(REFUSED, (), plan.unmet_now, plan.unmet_after)
         #  ASKED OF THE IMAGINARIUM, and the world never leaves the store (#548): every
         #  package shape about this agent and every shape it holds, compiled once to a
         #  select whose rows are its violations (`violation.report_selects`), run at this
@@ -1258,7 +1230,7 @@ class Planner:
         if node.legal:
             return plan
         log.warning("the world this plan would reach is one the society refuses — not taken")
-        return Plan(REFUSED, (), plan.urgency_now, plan.urgency_after)
+        return Plan(REFUSED, (), plan.unmet_now, plan.unmet_after)
 
     def _violation_shapes(self, world):
         """The MUST NOT the data carries: violation-severity shapes, met-tests excluded.
@@ -1596,7 +1568,7 @@ class Planner:
         if judgment.holds_at is not None:
             here = self._projected(here, judgment, latest=not self._from_now)
         here.estimate = self._estimate_in(here, judgment)
-        here.urgency = self._urgency_in(here, judgment)
+        here.unmet = self._unmet_in(here, judgment)
         self._root = here
         self._want = judgment.uri
         self._at_root(here)
@@ -1762,7 +1734,7 @@ class Planner:
         step = _Node(graph=graph, diff=diff, landing=landing, cost=cost, ground=node.ground,
                      origin=node.origin if node.origin is not None else row.action,
                      parent=node, changed=changed)
-        step.urgency = self._urgency_in(step, judgment)
+        step.unmet = self._unmet_in(step, judgment)
         step.estimate = self._estimate_in(step, judgment)
         #  THE STEP CARRIES WHAT IT PREDICTED (#510): the same canonical facts the signature
         #  is made of, so the keeper can hold the world to this step without an imaginarium.
@@ -1983,7 +1955,7 @@ GROUP BY ?c ?action""", PASS_GRAPH, *self.imaginarium.graphs_of(PUBLIC)))
                q(ox.NamedNode(_weighing(node.graph, self._want)), D + "remaining",
                  dec(node.estimate or 0.0)),
                q(ox.NamedNode(_weighing(node.graph, self._want)), D + "wouldReach",
-                 dec(node.urgency)),
+                 dec(node.unmet)),
                q(me, D + "signature", ox.Literal(_signature_of(node))),
                #  WHEN THIS WORLD WAS MADE, and it is not decoration: it is the tie-break the
                #  heap kept as its mint counter, and it is load-bearing. A pass whose want
@@ -2303,7 +2275,7 @@ def _priority(node, met_now: bool) -> tuple:
     """
     if met_now:
         return (len(node.taken),)
-    return (node.cost + _near(node), node.urgency, node.cost)
+    return (node.cost + _near(node), node.unmet, node.cost)
 
 
 def _said(diff: tuple) -> str:

@@ -13,8 +13,7 @@ dependencies = [
     # The shape of an answering observation is RDF (#516).
     "orexis",  # assembly (the manifest) and, where there is behaviour, the kernel
     "orexis-agent-progression",  # the store engine and the kernel vocabulary — progression's contract
-    "orexis-agent-deliberation",  # the belief and desire modalities — deliberation's contract
-    "pyoxigraph>=0.4",  # module.py reads the store directly
+    "orexis-agent-deliberation",  # the belief and desire modalities — deliberation's contract  # module.py reads the store directly
 ]
 
 [build-system]

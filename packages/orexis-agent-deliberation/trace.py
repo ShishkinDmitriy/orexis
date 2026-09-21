@@ -1,6 +1,6 @@
 """What the planner considered, written down so somebody can read it.
 
-A `Plan` carries the outcome, the steps and the urgency on both sides, and every bit of it used
+A `Plan` carries the outcome, the steps and whether the want was met on both sides, and every bit of it used
 to die in-process as one log line. The material was never missing — the exposure was, and it
 could not be added from outside: pyoxigraph holds an exclusive lock on the belief base, so
 nothing else can open the store to re-run the search and see what it saw. That is the same fact
@@ -75,7 +75,7 @@ MEASURE = "a module's measure"
 UNJUDGED = "nothing — a remembered plan was adopted on its precondition"
 
 #  What each verdict is called in the series, declared HERE beside the verdict it names so the
-#  two cannot drift — the same one-definition-two-readers argument `gap.rq` and `urgency` make.
+#  two cannot drift — the same one-definition-two-readers argument `gap.rq` makes.
 #  The prose is what a sovereign reads in the trace; these are what a dashboard can put on an
 #  axis, and a field name that was a sentence would be neither.
 FIELD = {
@@ -140,7 +140,7 @@ def write(store, agent_id: str, judgment, plan, stands_at: float,
     WHERE TO READ FROM IS KEYWORD-ONLY, and the reason is the sentence after this one. A pass
     that searched passes its imaginarium and its want; a remembered adoption searched nothing
     and passes neither. Positional, the two were silently filled by whatever the old signature's
-    caller had there — a deliberator handing `[]` and an urgency — and the read raised inside
+    caller had there — a deliberator handing `[]` and a number — and the read raised inside
     the guard below, so the trace came back EMPTY and nothing said why.
 
     Never raises. A planner that fell over because its debugging aid did would be a poor trade
@@ -158,14 +158,14 @@ def write(store, agent_id: str, judgment, plan, stands_at: float,
 #  is a reader now: the facts are written where each verdict is decided, and this copies the
 #  ones worth keeping out of a store that dies with the pass into one that does not.
 _WEIGHED = """
-SELECT ?c ?action ?depth ?verdict ?urgency ?missing {bound} WHERE {{
+SELECT ?c ?action ?depth ?verdict ?unmet ?missing {bound} WHERE {{
   ?x a deliberation:Weighing ; deliberation:forWant <{want}> ;
      deliberation:weighs ?c ; deliberation:atDepth ?depth ; deliberation:verdict ?verdict .
   ?c deliberation:wouldTake ?action .
-  OPTIONAL {{ ?x deliberation:wouldReach ?urgency }}
+  OPTIONAL {{ ?x deliberation:wouldReach ?unmet }}
   OPTIONAL {{ ?x deliberation:missing ?missing }}
   {clause} }}
-GROUP BY ?c ?action ?depth ?verdict ?urgency ?missing
+GROUP BY ?c ?action ?depth ?verdict ?unmet ?missing
 ORDER BY ?depth ?c"""
 
 
@@ -181,9 +181,9 @@ def _write(store, agent_id: str, judgment, plan, imaginarium, want, stands_at: f
         PASS_GRAPH, *imaginarium.graphs_of(PUBLIC)))
     rows = []
     for entry in weighed:
-        candidate, urgency = entry["c"], entry.get("urgency")
-        reached = "" if urgency is None else \
-            f'        deliberation:wouldReach {float(urgency):.6f} ;\n'
+        candidate, unmet = entry["c"], entry.get("unmet")
+        reached = "" if unmet is None else \
+            f'        deliberation:wouldReach {float(unmet):.6f} ;\n'
         #  WHAT WAS MISSING, where the verdict is that a remembered plan's precondition does
         #  not hold (#551): the fact, as the signature states it, so the reader is told
         #  which fact and not only that one was.
@@ -300,7 +300,7 @@ SELECT ?k ?v WHERE {{
     got = {r["k"]: r["v"] for r in scalars if r.get("v") not in (None, "")}
 
     out["seconds"] = float(got.get("seconds", 0.0))
-    #  A world was BUILT wherever an urgency was reached — the one candidate kind that never
+    #  A world was BUILT wherever a verdict was reached — the one candidate kind that never
     #  has one is the lever whose rule raised, which is counted as `unsimulated` above.
     out["worlds"] = float(got.get("worlds", 0.0))
     #  `atDepth` is the loop's own counter and starts at zero, so a candidate at depth 0 is a

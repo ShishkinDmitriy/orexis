@@ -189,11 +189,11 @@ deliberation:missing a owl:DatatypeProperty ; rdfs:domain deliberation:Candidate
 
 deliberation:wouldReach a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:label "would reach" ;
-    rdfs:comment "The urgency of the world this lever would have made. The comparison the whole search turns on: a candidate is worth taking only if this is lower than where the agent already stands." .
+    rdfs:comment "Whether the want is unmet in the world this action would have made — 1.0 unmet, 0.0 met. The comparison the whole search turns on: a candidate is worth taking only if this is lower than where the agent already stands. It was a DEGREE, a capability's measure of how badly the want was unmet, and the range stays decimal because the two values are the ends of the one it had: the search reads a met-test now, and nothing scores a world between them." .
 
 deliberation:standsAt a owl:DatatypeProperty ; rdfs:domain deliberation:Deliberation ; rdfs:range xsd:decimal ;
     rdfs:label "stands at" ;
-    rdfs:comment "The urgency of the world the agent is actually in — what every candidate is measured against, kept so a reader need not recompute it to understand the verdicts." .
+    rdfs:comment "Whether the want is unmet in the world the agent is actually in — what every candidate is held against, kept so a reader need not recompute it to understand the verdicts. A degree once, for the same reason `deliberation:wouldReach` was." .
 
 deliberation:wouldTake a owl:ObjectProperty ; rdfs:domain deliberation:Candidate ; rdfs:range orexis:Action ;
     rdfs:label "would take" ;

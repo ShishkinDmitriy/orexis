@@ -11,9 +11,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from orexis_agent_progression import clock
 from orexis_agent_deliberation.want import Want
 
-from .regions import _desired, _known, _measured_urgency, regions_of, _subjects_of
+from .regions import _desired, _known, regions_of, _subjects_of
 
 
 @dataclass(frozen=True)
@@ -29,7 +30,7 @@ class ObservedWant(Want):
     observed_property: str | None = None
 
 
-def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Want]:
+def desires_of(desires, beliefs, agent_uri: str) -> list[Want]:
     """Sensing's wants, hottest first: every stake, and every freshness want.
 
     Was the kernel's `desires_of`, and it read the DUTIES too — the ledger reads its own now
@@ -37,8 +38,9 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Want]:
     an observation: a region a reading should sit inside, and an instrument that should have
     spoken recently. Two handles since the dataset split (#298): `desires` answers what is
     WANTED (`desires.rq`, this package's), `beliefs` what IS (the sensed graph), and the join
-    is here. The MAGNITUDE is nobody's arithmetic here: `measure` is the choir's own
-    (`_measured_urgency`), so the ranking and the gap cannot disagree.
+    is here. NO MAGNITUDE: a want carried how badly it was unmet and carries none, so what a row
+    says is its STATE — and for the two kinds here that is the region's verdict and the
+    reading's age against the horizon `stale_after_s` publishes.
 
     A want whose reading is missing is maximally urgent: not knowing whether the pot is dying
     outranks knowing it is uncomfortable, which is why the first intention is always to look.
@@ -67,19 +69,22 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Want]:
             #  holds the clock for: which of the two ways of not knowing this is. The measure
             #  reads the same published horizon, so the two cannot disagree about whether a
             #  reading is current — one fact, two readers, rather than two definitions.
-            #  STILL ASKED, and no longer carried: the number does not ride out on the want
-            #  any more, but WHICH kind of not-current this is is read off it, so the label and
-            #  the measure cannot part company. It goes when the measure does.
-            current = _measured_urgency(measure, row, value)
-            #  READ OFF THE MEASURE, so the label and the number cannot part company. It used
-            #  to come off `_is_stale`, which declines to judge at all where no horizon has
-            #  been published — so a want the measure scored maximal reported `met`, which is
-            #  the disagreement the reification was supposed to have ended. Anything the
-            #  measure does not call current is not current; WHICH kind of not-current it is
-            #  is the reading's to say, and that distinction is worth keeping because the two
-            #  are different faults (never looked, against looked and let it go cold).
-            state = "met" if current < 1.0 else \
-                ("unmeasured" if value is None else "stale")
+            #  AGE AGAINST THE PUBLISHED HORIZON, in Python. This was a SPARQL measure
+            #  sensing declared and the choir answered — already BINARY, which is the part
+            #  worth keeping: a graded freshness would rank a reading the agent has stopped
+            #  trusting above one it never took, and the honest statement is the one the
+            #  horizon already makes. What the declaration bought was asking the question of
+            #  an imagined world, so a look could be preferred to standing still; the want's
+            #  met-test answers that now, and this side keeps only the label.
+            #
+            #  WHICH kind of not-current it is is the reading's to say, and the distinction is
+            #  worth keeping because the two are different faults: never looked, against
+            #  looked and let it go cold. No horizon published is not-current too — the agent
+            #  cannot state the rhythm, so it cannot call the reading evidence.
+            if value is None or item is None or item.at is None:
+                state = "unmeasured"
+            else:
+                state = "stale" if item.stale else "met"
         else:
             region = regions.get(row["property"])
             if region is None:

@@ -63,7 +63,6 @@ MAY_ASK = term("mayAsk")
 # The reading choir — this package's questions to every module, as terms (a-hook-is-a-term).
 ANNOTATE = term("annotate")
 BOUNDS = term("bounds")
-URGENCY = term("urgency")
 READING_RECORDED = term("readingRecorded")
 
 # This package's own belief graph: what the agent holds about the instruments it polls.

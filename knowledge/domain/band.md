@@ -109,7 +109,7 @@ the whole reason this page exists.
 Asked twice, so it is written down: could a band be a fuzzy set — nought at twelve degrees,
 rising to one at fifteen, flat to forty-five, falling to nought at fifty?
 
-**That function is already here, and it is the [measure](/domain/urgency.md) rather than the
+**That function is already here, and it is the measure rather than the
 class.** A want declares its own, as a SELECT answering nought to one, so the trapezoid above is
 writable today with no kernel change — the kernel asks how urgent a want is and holds no opinion
 about the shape of the answer.

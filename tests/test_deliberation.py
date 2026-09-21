@@ -443,7 +443,7 @@ def test_the_search_finds_the_dealers_two_step_from_two_nodes_that_never_meet(ma
     assert [(s.action.rsplit("#", 1)[-1], (s.value_of(VENUE) or s.value_of(VALVE) or "").rsplit(".", 1)[-1])
             for s in plan.steps] == [
         ("Acquiring", "city_mains"), ("Offering", "barrel1")]
-    assert plan.urgency_after == 0.0, "and the world it reaches has the round the call wanted"
+    assert plan.unmet_after == 0.0, "and the world it reaches has the round the call wanted"
 # --- the menu is the union of package contributions (#207) ------------------
 
 def test_a_new_kind_of_move_is_a_new_directory(make, tmp_path, monkeypatch):
@@ -590,37 +590,6 @@ def test_a_search_that_answers_nothing_proposes_nothing(make, monkeypatch):
         "the search said it had nothing to weigh, and something else answered anyway"
 
 
-def test_a_stake_nothing_measures_is_complained_about_rather_than_decided_quietly(
-        make, caplog):
-    """The other end of the gate `tests/test_validate.py` holds, met at runtime anyway.
-
-    A world with a stake nothing can weigh is refused before it is onboarded — but a society
-    onboarded before the gate existed will start, and its agents will rank every possible
-    world at the same flat 1.0 and conclude that nothing helps. That conclusion is not wrong
-    so much as empty, and an agent reaching it must say so: the deferral it used to make was
-    quiet, and quiet is what turned this into a case nobody had noticed.
-
-    Untyping the property is the same fixture the gate test uses, from the other side.
-    """
-    import logging
-
-    from orexis_agent_deliberation.want import Want
-    from orexis_agent_progression.ontology import ONTOLOGY_GRAPH
-
-    ds = genesis_store()
-    ds.update(f"""DELETE {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?p a sosa:ObservableProperty }} }}
-                  WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?p a sosa:ObservableProperty }} }}""")
-    fern = make("fern", ds)
-    decider = decider_of(fern)
-    stake = ObservedWant(uri=stake_of(fern).uri, observed_property=MOISTURE,
-                         value=0.10)
-
-    with caplog.at_level(logging.ERROR):
-        decider.propose_for(stake)
-    assert "nothing I composed can measure it" in caplog.text, \
-        "an agent ranking unrankable worlds decided in silence"
-
-
 def test_every_want_is_drawn_by_the_one_module_that_sees_them_all(make):
     """One row per want, tagged by the WANT — the sovereign's correction to a first draft that
     keyed the panel on the property.
@@ -752,8 +721,13 @@ def test_of_two_worlds_the_same_urgency_apart_the_cheaper_is_the_plan(make, tmp_
     """#466's done-when: the ranking gains its second axis, and only for ties.
 
     Two toy levers repair the same stake identically — the same predicted reading, which
-    lands in fern's region, so every candidate world scores the same urgency — and differ in exactly one declared figure:
-    `orexis:costs`, five against three. Distinct marker triples keep the two worlds distinct,
+    lands in fern's region, so both candidate worlds are MET and neither is better than the
+    other on the only axis left — and differ in exactly one declared figure:
+    `orexis:costs`, five against three. Each RETRACTS the reading it replaces, as every real
+    effect does: the sensed graph holds one node per (subject, property), and a toy that only
+    added left the world claiming 0.30 AND 0.50 — which the want's met-test reads as still
+    violated, where the measure it used to be scored by read the newest and did not.
+    Distinct marker triples keep the two worlds distinct,
     or cycle detection would discard the second as somewhere already seen before the ranking
     ever compared them. Whatever order the menu yields them in, the plan must be the cheaper
     one — which proves the tie-break from both sides with one assertion: if the cheap toy
@@ -775,7 +749,12 @@ toy:{name} a orexis:Action ;
                  <http://www.w3.org/ns/sosa/resultTime> ?now ;
                  <http://www.w3.org/ns/sosa/hasSimpleResult> 0.50 .
             <urn:mark:{mark}> <urn:took> <urn:it> .
-        }} WHERE {{ BIND(BNODE() AS ?obs) BIND(NOW() AS ?now) }}\"\"\" .
+        }} WHERE {{ BIND(BNODE() AS ?obs) BIND(NOW() AS ?now) }}\"\"\" ;
+    orexis:retracts \"\"\"CONSTRUCT {{ ?obs ?p ?o }} WHERE {{
+            ?obs <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ;
+                 <http://www.w3.org/ns/sosa/observedProperty> $about ;
+                 <http://www.w3.org/ns/sosa/hasSimpleResult> ?was ;
+                 ?p ?o . }}\"\"\" .
 """
 
     toys = tmp_path / "actions.ttl"
@@ -789,7 +768,7 @@ toy:{name} a orexis:Action ;
     fern = make("fern", genesis_store({("fern", MOISTURE): 0.30}))
     plan = Planner(fern, fern.me).plan(stake_of(fern))
 
-    assert plan.steps, "both toys improve 0.30 toward the region — one must be taken"
+    assert plan.steps, "both toys bring 0.30 into the region — one must be taken"
     assert plan.steps[0].action == "urn:toy#Cheaply", \
         "same urgency either way round, so the declared cost is the only thing left to decide"
 
@@ -820,7 +799,12 @@ toy:{name} a orexis:Action ;
                  <http://www.w3.org/ns/sosa/resultTime> ?now ;
                  <http://www.w3.org/ns/sosa/hasSimpleResult> 0.55 .
             <urn:mark:{mark}> <urn:took> <urn:it> .
-        }} WHERE {{ BIND(BNODE() AS ?obs) BIND(NOW() AS ?now) }}\"\"\" .
+        }} WHERE {{ BIND(BNODE() AS ?obs) BIND(NOW() AS ?now) }}\"\"\" ;
+    orexis:retracts \"\"\"CONSTRUCT {{ ?obs ?p ?o }} WHERE {{
+            ?obs <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ;
+                 <http://www.w3.org/ns/sosa/observedProperty> $about ;
+                 <http://www.w3.org/ns/sosa/hasSimpleResult> ?was ;
+                 ?p ?o . }}\"\"\" .
 """
 
     toys = tmp_path / "actions.ttl"

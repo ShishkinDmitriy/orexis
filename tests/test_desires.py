@@ -1,10 +1,10 @@
-"""What an agent is pursuing, hottest first — the split pair and its one join (#234, #298).
+"""What an agent is pursuing — the split pair and its one join (#234, #298).
 
 `desires.rq` asks the desire modality, `readings.rq` asks the belief modality, and `desires_of`
-is the join — a stake's magnitude is whichever capability answers the choir (sensing's
-declared measure), an obligation's fraction is `_duty_urgency`, Python because the store's engine
-will not divide durations. These pin the states, the ranking, both fallbacks and the engine
-limits.
+is the join. It carried MAGNITUDES too — a stake's from the capability answering the choir, an
+obligation's fraction of its redeem window in Python — and carries none: a want is judged by
+its met-test and nothing scores one by degree. What is pinned here is the STATES, and the
+engine limits the arithmetic was written around, which outlive it.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ FERN = "http://example.org/orexis/world/simulation#fern_agent"
 
 def _fern(readings, monkeypatch):
     """A real fern, because a stake's urgency is a capability's answer now: sensing asks
-    the choir (`Agent.desire_urgency`) and sensing answers from its own declaration, so a
+    the choir and sensing answered from its own declaration, so a
     hand-built join would fake away the contribution these tests exercise."""
     st = genesis_store(readings)
     return st, build_agent("fern", st, monkeypatch)
@@ -122,28 +122,26 @@ def test_a_duty_carries_its_timestamps_and_what_the_window_decides(monkeypatch):
         "past the window there is nothing left to spend"
 
 
-def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_a_rebuild(
-        monkeypatch):
-    """The finding a-desire-states-its-own-measure records, pinned from the ranking side.
+def test_the_gap_is_measured_from_the_aim_and_follows_a_repick_without_a_rebuild(monkeypatch):
+    """The finding a-desire-states-its-own-measure records, pinned from the DIFF's side.
 
-    The reflex steered toward the AIM while urgency was measured from the region's CENTRE, so
-    the two mechanisms pursued different targets whenever the pick sat off-centre. The desire's
-    declared measure reads the pick out of the belief base AT QUERY TIME — so moving the aim
-    moves the urgency with no desires rebuild, which is what a review's re-pick needs, and the
-    scaling stays asymmetric: the room below the aim is aim-to-floor, above it aim-to-ceiling,
-    so the same 0.10 out reads differently per side. Fern: region 0.45-0.65, survives 0.2-0.85.
+    The reflex steered toward the AIM while the magnitude was measured from the region's
+    CENTRE, so the two mechanisms pursued different targets whenever the pick sat off-centre.
+    The point is read AT ASKING TIME — so moving the aim moves the gap with no desires
+    rebuild, which is what a review's re-pick needs, and the scaling stays asymmetric: the
+    room below the aim is aim-to-floor, above it aim-to-ceiling, so the same 0.10 out reads
+    differently per side. Fern: region 0.45-0.65, survives 0.2-0.85.
+
+    ASKED OF THE DIFF, because that is the one reader left. This was a SPARQL measure the
+    choir answered, so a search could ask it of a world nobody was in yet; a search asks a
+    want's met-test now, and what still wants a magnitude is what sensing REPORTS.
     """
-    from orexis_agent_progression.ontology import picks_graph, STATE_GRAPH
+    from orexis_agent_progression.ontology import picks_graph
 
     st, fern = _fern({("fern", MOISTURE): 0.55}, monkeypatch)
 
-    #  ASKED OF THE CHOIR DIRECTLY, because the want no longer carries the number: the claim
-    #  under test is about the MEASURE and where it is anchored, which is the same question
-    #  whether or not anything rides it out on a row.
     def urgency():
-        stake = next(g for g in sensing_of(fern).desires()
-                     if g.observed_property == MOISTURE and not g.is_epistemic)
-        return fern.desire_urgency(stake, st.reader(PUBLIC), STATE_GRAPH, stake.value)
+        return abs(sensing_of(fern).gaps()[MOISTURE].gap)
 
     assert urgency() == 0.0, "at the pick (0.55, which is also the centre) nothing is urgent"
 
@@ -172,64 +170,6 @@ def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_
                          <http://www.w3.org/ns/sosa/hasSimpleResult> ?v }} }}""")
     assert abs(urgency() - 0.10 / 0.20) < 1e-9, \
         "the same distance out must read differently per side — asymmetric scaling survives"
-
-
-def test_the_measure_answers_one_for_a_world_with_no_reading(monkeypatch):
-    """The COALESCE the engine's silent arithmetic demands, exercised through the whole choir
-    path: asked of a world holding no observation, sensing's answer is 1.0 and never unbound —
-    an unmeasured want must not read as no urgency, and this store binds NOTHING for
-    arithmetic over an unbound value rather than failing."""
-    from orexis_agent_deliberation.want import Want
-    from orexis_agent_progression.ontology import STATE_GRAPH
-
-    st, fern = _fern(None, monkeypatch)       # no readings seeded at all
-    probe = ObservedWant(uri="urn:asked", observed_property=MOISTURE)
-    assert fern.desire_urgency(probe, st.reader(PUBLIC), STATE_GRAPH) == 1.0
-
-
-def test_a_want_whose_kind_nothing_measures_scores_a_logged_one(monkeypatch):
-    """The defined fallback, pinned: a desire whose KIND nothing loaded measures reads
-    urgency 1.0 — not knowing how bad is maximal, consistent with `urgency(None)` — rather
-    than quietly reviving a Python arithmetic beside the declared one. Constructed by
-    emptying sensing's declaration, the way the partial-plan test removes Acquire's effect
-    rule: the shipped worlds never hit this, and a sibling test holds THAT."""
-    from orexis_capability_sensing import module as sensing
-
-    from orexis_agent_progression.ontology import STATE_GRAPH
-
-    monkeypatch.setattr(sensing, "_DECLARED_MEASURES", ())
-    st, fern = _fern({("fern", MOISTURE): 0.55}, monkeypatch)
-    moisture = next(g for g in sensing_of(fern).desires()
-                    if g.observed_property == MOISTURE)
-    probe = ObservedWant(uri="urn:asked", observed_property=MOISTURE, value=0.55)
-    assert fern.desire_urgency(probe, st.reader(PUBLIC), STATE_GRAPH, 0.55) is None, \
-        "nothing measures it, and the kernel's caller scores that maximal"
-    assert moisture.state == "met", \
-        "while the met-verdict stays the shape's — the two are different questions"
-
-
-def test_every_shipped_stake_resolves_a_declared_measure(monkeypatch):
-    """The fallback above must be a case no ratified world hits — every desiring agent in the
-    shipped worlds holds a sensing module whose declaration measures its stakes, every stake
-    property being a `sosa:ObservableProperty`. If this fails, a world has grown a want
-    nothing loaded can weigh, and that is a genesis conversation rather than a silent 1.0."""
-    from orexis_agent_deliberation.want import Want
-    from orexis_agent_progression.ontology import STATE_GRAPH
-    from orexis_agent_progression.store import bindings
-
-    checked = 0
-    for world in ("simulation", "loner"):
-        monkeypatch.setenv("OREXIS_WORLD", world)
-        st = genesis_store(world=world)
-        for row in bindings(st.query(
-                'SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }', st.graphs_of(PUBLIC))):
-            agent = build_agent(row["id"], st, monkeypatch)
-            for prop in sensing_of(agent).regions:
-                probe = ObservedWant(uri="urn:asked", observed_property=prop)
-                assert agent.desire_urgency(probe, st.reader(PUBLIC), STATE_GRAPH) is not None, \
-                    f'{row["id"]} in {world}: a stake nothing loaded measures'
-                checked += 1
-    assert checked >= 3, "the walk went quiet — no stakes were checked at all"
 
 
 def test_this_store_still_will_not_divide_one_duration_by_another():

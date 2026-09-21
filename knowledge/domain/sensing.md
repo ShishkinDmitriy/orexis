@@ -240,19 +240,21 @@ therefore has nothing that would repair it, stands hot, and is reported as one �
 beside this section has
 what that costs and why it is better than the silence it replaced.
 
-# It measures how badly an observation-backed want is unmet
+# It reports how far an observation-backed want sits from its aim
 
-Since [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md), this
-package owns that answer WHOLE: `measures.ttl` in its own directory declares the
-[urgency](/domain/urgency.md) measure for any want about a `sosa:ObservableProperty`
-(`sensing:measureOf`, its own word) — what the number MEANS, the [aim](/domain/aim.md) anchor
-and the asymmetric scaling, is [desire](/domain/desire.md)'s page — and its own module reads
-the file and runs the query when the kernel asks through the choir (`Module.desire_urgency`,
-"how urgent is this desire, in this world"). Sensing's, because the reading is its whole
-subject; the kernel holds
-no measure vocabulary, no measure graph, no evaluator, and learns the answer only as the
-hook's return value. The choir `urgency` hook below is the same contribution asked about one
-number.
+`Region.distance` is sensing's own arithmetic and sensing's only reader: the signed
+[gap](/domain/gap.md) it reports, anchored at the [aim](/domain/aim.md) where one is picked
+and scaled asymmetrically by the survival room on each side, so the same distance out reads
+differently above and below.
+
+**It was a declared MEASURE and it is not one now.** `measures.ttl` declared, per kind of
+want, the SELECT that scored how badly the want was unmet in whichever world was being
+judged, and the kernel asked for it through the choir — so a search could rank a world
+nobody was in yet. A want is judged by its met-test now and nothing scores a world by
+degree, so there is no ranking for this number to agree with and nobody outside this package
+asks for it. See
+[a-want-is-judged-by-its-met-test-and-nothing-else](/decisions/a-want-is-judged-by-its-met-test-and-nothing-else.md).
+
 
 **Two measures now, and the second closes the seam the first left.** The freshness want above
 carries one too: inside its horizon the reading is evidence and scores zero, outside it — or

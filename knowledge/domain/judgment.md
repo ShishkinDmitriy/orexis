@@ -46,7 +46,7 @@ supplies no formula and could not — it does not know what a fern needs.
 
 What the kernel supplies is that the number is **unit-free on every side**, which is what makes
 the answers comparable without either contributor learning how the other computed its own. That
-is the same discipline [urgency](/domain/urgency.md) states and the reason
+is the same discipline urgency states and the reason
 [an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md)
 could put the two kinds in one type: what differs is where the number came from, and that is in
 the graph rather than in a flag anyone branches on.

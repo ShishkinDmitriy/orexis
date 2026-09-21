@@ -27,7 +27,7 @@ Two things deliberately do NOT appear here:
   another on a wire under a single attention policy.
 - **What counts as trouble.** Sensing knows how to look and how fresh a number is; it has
   no band and no target, because those belong to whoever holds a stake in the subject. So it
-  *asks* — the reading choir (`choir.urgency`) for how closely to watch, `choir.annotations` for what to say
+  *asks* — `choir.annotations` for what to say about a reading
   publicly — and an agent with no stake simply gets no answer and watches at its slow cadence.
   That is why nothing here imports another capability.
 
@@ -71,7 +71,7 @@ from .regions import Gap, Region, aims_of, gaps_of, regions_of
 from .wiring import sensors_of
 from . import readings
 from .scaling import scaling_for
-from .terms import (NS, INSTRUMENTS_GRAPH, ANNOTATE, BOUNDS, READING_RECORDED, URGENCY, FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S, WATCH_LIVE,
+from .terms import (NS, INSTRUMENTS_GRAPH, ANNOTATE, BOUNDS, READING_RECORDED, FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S, WATCH_LIVE,
                     SUBSCRIBING)
 from orexis_agent_progression.timer import Timer
 from . import predictions
@@ -80,65 +80,12 @@ from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import FORESEEN
 
 
-#  The measure this capability declares (a-desire-states-its-own-measure, completed): how
-#  badly an observation-backed want is unmet. OUR file, OUR namespace, OUR code — the kernel
-#  asks "how urgent is this desire, in this world" through the choir (`Module.desire_urgency`)
-#  and holds no measure vocabulary, no measure graph, no evaluator; a package may do what it
-#  likes inside itself, and reading its own declaration is exactly that. Parsed at import like
-#  DESIRES_QUERY, so a malformed declaration is an error the moment the package loads. Full
-#  IRIs in this one query because it runs on a bare store no PREFIXES are prepended to.
-_MEASURES_TTL = (Path(__file__).parent / "measures.ttl").read_text()
-
-
-def _declared_measures() -> tuple[tuple[str, str], ...]:
-    """(kind IRI, SELECT text) pairs — which class of want this package measures, and how."""
-    import pyoxigraph as ox
-
-    store = ox.Store()
-    store.load(_MEASURES_TTL, format=ox.RdfFormat.TURTLE)
-    return tuple((row["kind"].value, row["text"].value) for row in store.query(
-        "SELECT ?kind ?text WHERE { "
-        "?m <http://example.org/orexis/sensing#measureOf> ?kind ; "
-        "<http://www.w3.org/ns/shacl#select> ?text }"))
-
-
-_DECLARED_MEASURES = _declared_measures()
-
-
-def _measure_of_kind(kind: str) -> str:
-    """The declared SELECT for one kind of want, by IRI — and a loud absence.
-
-    The freshness path resolves by KIND rather than by asking a world what a property is, so
-    it looks its text up here. Raising rather than returning None is the point: a declaration
-    silently missing would make every freshness want unmeasurable, which reads as maximally
-    urgent everywhere and looks exactly like a society that has stopped seeing.
-    """
-    for declared, text in _DECLARED_MEASURES:
-        if declared == kind:
-            return text
-    raise KeyError(f"measures.ttl declares no measure of {kind}")
-
-
-#  The want THIS package mints (`desires.ru`) and therefore measures — resolved by the desire's
-#  own type rather than by the property's, because no world holds a type for knowing.
-_FRESHNESS_MEASURE = _measure_of_kind(FRESHNESS)
 
 #  What an instrument watches, asked of the world being judged. Not carried on the want:
 #  a subject is the wiring's to say, and the wiring is public in every world the planner builds.
 _WATCHED_BY = "SELECT ?subject WHERE { %s sensing:monitors ?subject } LIMIT 1"
 
 
-def _declared_measure(query, observed_property: str) -> str | None:
-    """The declared measure covering this property's KIND, or None where mine do not cover it.
-
-    The kind test asks the store what the property IS — `sensing:measureOf` names a class, and
-    `a` in a default-union query already sees the materialised closure, so no subclass walk is
-    hand-rolled here. A free function because two callers need it and neither is the other's:
-    a live module resolving a want, and the class answering the sovereign's gate before any
-    module exists.
-    """
-    return next((text for kind, text in _DECLARED_MEASURES
-                 if query(f"ASK {{ <{observed_property}> a <{kind}> }}")["boolean"]), None)
 
 
 # The constitutional bounds are stated in the ontology, not compiled in here — and they hang
@@ -162,8 +109,6 @@ class SensingModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        #  The wants I have said I cannot measure, so each is said once (`desire_urgency`).
-        self._unmeasurable: set[str] = set()
         # MINE, not the agent's. An agent may hold sensors of different modes, and it derives a
         # capability for each — but a module that took all of them would aim a cadence at a device
         # that takes no orders, and swallow readings from one it never re-aims. The derivation
@@ -225,88 +170,6 @@ class SensingModule(Module):
         #  stable and the planner asks the freshness measure once per node.
         self._watching: dict[str, str] = {}
 
-    # --- the measure I declare, answered when the kernel asks (desire_urgency) ---
-
-    def desire_urgency(self, judgment, query, state: str,
-                       value: float | None = None) -> float | None:
-        """How urgent an OBSERVATION-BACKED want is, in the world `query` answers about.
-
-        My half of the choir's desire question, from my own declaration (measures.ttl): a
-        reading against the aim, scaled by the survival room on that side. Mine because the
-        reading is my whole subject — the kernel asks and holds no measure of its own
-        (a-desire-states-its-own-measure).
-
-        RUN ON PYOXIGRAPH, whichever world is passed — the belief base live, the planner's
-        IMAGINARIUM for a candidate (with `state` naming that node's readings), never the
-        flat rdflib copy pySHACL reads — so one stored query is never answered by two
-        engines, which is how I already evaluate everything else. The region's numbers are
-        substituted at answer time, read off the deduced shapes I hold myself,
-        and the aim is read from $picks by the query itself: nothing baked, so a re-pick or
-        a re-derivation moves the next answer.
-
-        TWO KINDS OF WANT, both mine, and the second arrived when the freshness want moved
-        into this package. A want about a PROPERTY is scored by a reading against the aim; a
-        want about KNOWING is scored by whether anything current is known at all. They are
-        told apart by the INSTRUMENT the want names — the premise my own `desires.ru` derived
-        it from, handed over by whoever is asking — and never by whether a region happens to
-        exist, which is what the region lookup below silently meant while freshness was the
-        kernel's constant: the loner's water butt has no region and neither does a property
-        nothing measures, and those two are not the same situation.
-
-        None — no opinion — for an obligation, for a kind my declaration does not cover, and for a
-        measure that raises: a package's bug must not take an agent down, and every ranking
-        caller reads silence as the maximal 1.0.
-        """
-        about = getattr(judgment, "observed_property", None)
-        if about is None:
-            return None
-        if (instrument := judgment.instrument) is not None:
-            return self._answer(query, _FRESHNESS_MEASURE
-                                #  `$sensor` and not `$instrument`: `$instruments` names the
-                                #  graph, and a parameter that is a prefix of another gets
-                                #  substituted into the middle of it.
-                                .replace("$sensor", f"<{instrument}>")
-                                .replace("$instruments", f"<{INSTRUMENTS_GRAPH}>")
-                                .replace("$subject", self._watched(query, instrument))
-                                .replace("$property", f"<{about}>")
-                                .replace("$state", f"<{state}>"))
-        region = self.region(about)
-        text = self._measure_for(query, about) if region is not None else None
-        if text is None:
-            #  A STAKE NOTHING MEASURES, said ONCE per want, loudly. The planner asks this of
-            #  every candidate world and takes the flat 1.0 where nobody answers — which
-            #  makes every possible world score alike, so "no move improves" comes back with
-            #  confidence from an unrankable comparison. `orexis-validate` refuses such a
-            #  world; a volume onboarded before that gate, or started past it, meets this.
-            #  Mine to say, since the regions are mine: a want about a property with no
-            #  region under it, or a region my declaration states no measure for.
-            if judgment.uri not in self._unmeasurable:
-                self._unmeasurable.add(judgment.uri)
-                self.log.error(
-                    "%s: I hold a stake here and nothing I composed can measure it — every "
-                    "world I could reach scores alike, so a pass is about to conclude that "
-                    "nothing helps from a comparison that means nothing. `orexis-validate` "
-                    "refuses this world.", judgment.uri.rsplit("#", 1)[-1])
-            return None
-        outer_low = region.floor if region.floor is not None else region.low
-        outer_high = region.ceiling if region.ceiling is not None else region.high
-        text = (text
-                .replace("$subject",
-                         f"<{self.me.acts_for}>" if self.me.acts_for else "<urn:nobody>")
-                .replace("$property", f"<{about}>")
-                .replace("$state", f"<{state}>")
-                .replace("$picks", f"<{picks_graph(self.agent.id)}>")
-                #  A WORLD IS JUDGED BY BAND (#579): with no number handed in, the reading's
-                #  own number is not read — `?unread` binds nothing, the numeric branch falls
-                #  through, and the band says how urgent — so the world the agent is in and a
-                #  world a rule imagined are scored on one scale. A caller with a number in
-                #  hand (the wire's annotation, a want's row) still gets the distance.
-                .replace("$value", repr(float(value)) if value is not None else "?unread")
-                .replace("$centre", repr(float(region.centre)))
-                .replace("$outerLow", repr(float(outer_low)))
-                .replace("$outerHigh", repr(float(outer_high)))
-                .replace("$me", f"<{self.me.uri}>"))
-        return self._answer(query, text)
 
     def _answer(self, query, text: str) -> float | None:
         """Run one substituted measure against one world, or say nothing.
@@ -337,32 +200,6 @@ class SensingModule(Module):
             self._watching[instrument] = (f"<{rows[0]['subject']}>" if rows
                                           else "<urn:nobody>")
         return self._watching[instrument]
-
-    @classmethod
-    def measures(cls, query, observed_property: str) -> bool:
-        """The kernel's roll-call, answered before any agent exists — my half of the gate.
-
-        `orexis-validate` refuses a world holding a stake nothing loaded can weigh, because a
-        want with no measure scores the flat 1.0 in every candidate world and a search over
-        worlds that all score the same concludes, confidently, that nothing helps. That used
-        to be caught at runtime by deferring to the reflex; there is no reflex to defer to, so
-        it is caught at the gates instead — and a gate cannot build an agent to ask.
-
-        Same path as the instance's, which is the point of it being a classmethod rather than
-        a second walk: `_declared_measure` is what `desire_urgency` resolves through too.
-        """
-        return _declared_measure(query, observed_property) is not None
-
-    def _measure_for(self, query, observed_property: str) -> str | None:
-        """The declared measure for this property's KIND, or None where mine do not cover it.
-
-        Memoised per module because the planner asks per node and a property's kind is
-        public-graph stable; the lookup itself is `_declared_measure`, shared with the
-        class-level roll-call above.
-        """
-        if observed_property not in self._measures:
-            self._measures[observed_property] = _declared_measure(query, observed_property)
-        return self._measures[observed_property]
 
     def stale_after_s(self, subject_uri: str) -> int:
         """How old a reading of this subject may be before I stop trusting it.
@@ -745,17 +582,39 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
         to, and what the keeper's rows for their acts pursue."""
         return next((d for d in self.wants_about(observed_property) if not d.is_epistemic), None)
 
-    def reading_urgency(self, subject_uri: str, observed_property: str,
-                        value: float | None) -> float | None:
-        """The choir's sharpest opinion on a reading, and the keeper's: an expectation still open on
-        any want about this property is maximal, because an act has just happened and the
-        world owes a movement — attention must not relax before it lands."""
-        opinion = choir.urgency(self.agent, subject_uri, observed_property, value)
+    def awaiting_feedback(self, subject_uri: str, observed_property: str) -> bool:
+        """Is something of mine in flight for this property — a step standing or an expectation
+        still open — so that the world owes a movement I must be looking to see?
+
+        THE CADENCE'S WHOLE INPUT, and it used to be a number. A reading was scored by the
+        declared measure and the sleep interpolated between the slow and fast bounds by it, so
+        a board watched harder the nearer a reading sat to trouble. That is gone with the
+        measure, and the sovereign's ruling names what the cadence was always for: *sense
+        frequently when we executed something and wait for feedback.* It is progression's
+        question, not an observation's — which is why it is asked of the KEEPER and of nothing
+        else, and why the two answers it used to merge fold into one. The keeper's own was an
+        open expectation; the market's was a claim held with a step standing to present it,
+        contributed through sensing's choir because the cadence was the only reader. Neither
+        needs a hook: `standing` takes the action as an OPTION, so this asks whether anything
+        stands without naming a word of the market's.
+
+        BOUNDED BY THE PATIENCE, which both halves carried for the same reason: a step nothing
+        resolves must not hold the fast cadence for ever, and an expectation is bounded by its
+        own deadline. A dead sensor cannot pin the board awake.
+
+        What ATTENTION should properly be is the sovereign's to decide; this is the unlink.
+        """
         keeper = self.agent.keeper
-        if (keeper is not None and subject_uri == self.me.acts_for
-                and any(keeper.expecting(w.uri) for w in self.wants_about(observed_property))):
-            return 1.0
-        return opinion
+        if keeper is None or subject_uri != self.me.acts_for:
+            return False
+        now = clock.now()
+        for want in self.wants_about(observed_property):
+            if keeper.expecting(want.uri):
+                return True
+            if any(s.age_s(now) <= keeper.beliefs.patience_s
+                   for s in keeper.standing(want=want.uri)):
+                return True
+        return False
 
     def sense_now(self) -> None:
         """Ask for a reading now, if my hardware allows it. Listening cannot.
@@ -950,39 +809,12 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
         reading = self.current_reading(subject_uri, observed_property)
         return float(reading.value) if reading is not None else None
 
-    @contributes(URGENCY)
-    def urgency(self, subject_uri: str, observed_property: str,
-                value: float | None) -> float | None:
-        """How close this reading puts the agent to trouble, from the declared measure — the
-        same path `desire_urgency` answers, asked about a number the caller has in hand or is
-        predicting. `None` for the value asks how urgent NOT KNOWING is, and that is maximal:
-        the first current reading ends it, which is "the first intention is always to look" in
-        its cadence-shaped form."""
-        if not self._is_mine(subject_uri, observed_property):
-            return None
-        if value is None:
-            return 1.0
-        #  Deferred (#455): the row type subclasses the mind's Want, and a base class is
-        #  an import — at assembly a sensing-only grant must not load the deliberation
-        #  layer; in any running agent it is already loaded.
-        from .rows import ObservedWant
-        answer = self._measured(ObservedWant(uri="urn:asked",
-                                             observed_property=observed_property, value=value),
-                                value)
-        return 1.0 if answer is None else answer
-
-    def _measured(self, judgment, value: float | None = None) -> float | None:
-        """The choir's own, asked of the LIVE belief base — through the agent rather than
-        straight to `desire_urgency`, so a second module that measures the same want (none
-        ships) would be heard, and so one question has one asker."""
-        return self.agent.desire_urgency(judgment, self.agent.beliefs.reader(*FORESEEN, at=clock.now()), STATE_GRAPH, value)
-
     def gaps(self) -> dict[str, Gap]:
         """Where every property the agent wants stands against where it wants it — stale rows
         included. A dry pot read an hour ago is "last I looked I was dry, and I cannot see any
         more", which a deliberator needs precisely because nothing else will mention it."""
         return gaps_of(self.agent.desires.query, self.agent.beliefs.reader(PUBLIC),
-                       self.me.uri, self.agent.id, measure=self._measured)
+                       self.me.uri, self.agent.id)
 
     def current(self) -> dict[str, Gap]:
         """The gaps whose reading is still evidence — the eyes that are open: a gap whose
@@ -998,7 +830,7 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
         the two kinds whose premise is an observation. The obligations are the ledger's."""
         from .rows import desires_of  # deferred (#455): same reason as ObservedWant above
         return desires_of(self.agent.desires.query, self.agent.beliefs.reader(PUBLIC),
-                          self.me.uri, measure=self._measured)
+                          self.me.uri)
 
     def reports(self) -> dict:
         """What the agent wants, how much of that it can currently see, and the worst of it —
@@ -1239,50 +1071,65 @@ class SubscribingModule(SensingModule):
         self._last_seen[key] = (value, at)
 
     def cadence_for(self, subject_uri: str, observed_property: str,
-                    value: float | None) -> int:
-        """How long the board may sleep: the closer to my own trouble, the closer I watch —
-        and no longer than the trend allows.
+                    value: float | None = None) -> int:
+        """How long the board may sleep: fast while something of mine is in flight for this
+        property, slow otherwise.
 
-        Trouble is not sensing's to define, so it is asked for. An agent with no stake in
-        the subject — or none in *this property* of it — gets no answer and watches at its slow
-        cadence, which is the honest reading of "nothing here is urgent to me". That second
-        case is why the property is passed: a thermometer on a pot the agent bids water for
-        must not have its cadence driven by how dry the soil is.
+        BINARY, AND THAT IS THE CHANGE. The sleep used to be interpolated between the two
+        bounds by how urgent a reading was — `slow + (fast - slow) * urgency` — so a board
+        watched harder the nearer the soil sat to its floor, and #133 added a second ask on
+        the value PREDICTED at the end of the sleep, tighten-only, so a window could not open
+        moments before a trend crossed into trouble. Both are gone with the measure, and what
+        the sovereign's ruling puts in their place is the thing the cadence was always for:
+        *sense frequently when we executed something and wait for feedback.* A board that
+        watched a dry pot harder while nothing was being done about it was spending readings
+        on a number no faster sampling would change.
 
-        THE TREND BOUND (#133). Urgency answers where the state IS; a sleep granted on that
-        alone can begin moments before the trend crosses into trouble, and nobody hears for
-        the whole window. So the candidate sleep is checked against where the state is
-        HEADING: predict the value at the end of the sleep from the measured slope, ask the
-        same stakeholder how urgent THAT would be, and if the answer is worse, grant the
-        cadence that answer earns instead. One step of lookahead, tighten-only — a favourable
-        trend relaxes nothing, because reading more often than needed costs a reading and is
-        the only safe direction to be wrong in, and a relaxation earned by a trend would be a
-        prediction trusted further than any prediction here deserves. The safety margin is
-        implicit: urgency is evaluated at the END of the sleep, so the granted window always
-        ends at or before the predicted trouble, never astride it.
+        The trend is still MEASURED (`_note_trend`) because the predictions read it; nothing
+        here asks it, because there is no longer a question to ask of a predicted value —
+        whether a step is in flight is not something a slope foretells.
 
-        No slope yet — fewer than two readings, or a fresh restart — means no bound, which is
-        the pre-#133 behaviour, honestly reached. The declared `water:driesPerDay` is deliberately
-        NOT the fallback the issue suggested: it is a domain term sensing may not name — the
-        simulator generation reads it through the kernel bridge, but a TREND here is earned
-        from this agent's own readings. Evidence or nothing.
+        Nothing in flight, or no stake in this property at all, is the same answer: the slow
+        cadence, which is the honest reading of "the world owes me no movement here". That is
+        why the property is passed — a thermometer on a pot the agent bids water for must not
+        be paced by what the soil is doing. `value` is kept in the signature and unread: every
+        caller has one in hand, and `watch_closely` reads it: this is asked from inside the
+        pipeline that is about to store the reading, so the store cannot answer for it.
         """
         b = self.beliefs
-        urgency = self.reading_urgency(subject_uri, observed_property, value)
-        if urgency is None:
-            return min(self.max_sleep_s, max(self.min_sleep_s, b.slow_sleep_s))
-
-        def granted(u: float) -> float:
-            return b.slow_sleep_s + (b.fast_sleep_s - b.slow_sleep_s) * u
-
-        sleep_s = granted(urgency)
-        slope = self._trend.get((subject_uri, observed_property))
-        if slope and value is not None:
-            predicted = value + slope * sleep_s
-            ahead = self.reading_urgency(subject_uri, observed_property, predicted)
-            if ahead is not None and ahead > urgency:
-                sleep_s = granted(ahead)
+        sleep_s = b.fast_sleep_s \
+            if self.watch_closely(subject_uri, observed_property, value) else b.slow_sleep_s
         return int(round(min(self.max_sleep_s, max(self.min_sleep_s, sleep_s))))
+
+    def watch_closely(self, subject_uri: str, observed_property: str,
+                      value: float | None = None) -> bool:
+        """Two facts, either of which earns the fast cadence — and neither is a measure.
+
+        NOTHING READ YET is the first. An agent with a stake in a property and no current
+        reading of it is not calm, it is BLIND, and the first intention is always to look:
+        the opening burst before any reading exists, and the return to it when a probe goes
+        quiet. This used to arrive as "not knowing is maximally urgent", which was the graded
+        answer standing in for a fact — whether anything current is known is not a degree.
+
+        SOMETHING IN FLIGHT is the second, and it is the sovereign's own: *sense frequently
+        when we executed something and wait for feedback.*
+
+        What is NOT here is how bad the reading is. A board used to watch a dry pot harder
+        while nothing was being done about it, which spent readings on a number no faster
+        sampling would change.
+        """
+        if not self._is_mine(subject_uri, observed_property):
+            #  NO STAKE IN THIS PROPERTY OF THIS SUBJECT, so neither fact can apply: a
+            #  thermometer on a pot the agent bids water for must not be paced by the soil,
+            #  and an agent with no region here has nothing it is blind ABOUT.
+            return False
+        #  THE READING IN HAND FIRST, because this is asked from inside the pipeline that is
+        #  about to store one: a store lookup here answers about the world BEFORE this reading
+        #  and would leave a board bursting for ever. `value` is what the caller just read, or
+        #  what `start` found on record; None with nothing on record is blind.
+        if value is None and self.current_reading(subject_uri, observed_property) is None:
+            return True
+        return self.awaiting_feedback(subject_uri, observed_property)
 
     def _aimed_with(self, sensor):
         """Every sensor this one shares a command channel with, itself included.

@@ -140,25 +140,28 @@ def deliberable(st, desires: dict) -> bool:
     """Can every agent in this world actually be deliberated FOR? Refuse here if not.
 
     There is one path through deliberation now — the search — and a search answers by
-    simulating each lever and ranking the world it would reach. Two things have to be true
-    for that to mean anything, and neither is a fact about this world alone: every lever on
-    an agent's menu must have an effect rule to simulate, and every stake it holds must have
-    a measure to rank by. Where one is missing the search does not fail, it CONCLUDES from
-    part of the evidence — a lever nobody could simulate is passed over, and a want nothing
-    measures scores the same flat 1.0 in every candidate world, so "no move improves on doing
-    nothing" comes back with confidence and the agent stops acting.
+    simulating each lever and asking the want's met-test of the world it would reach. What has
+    to be true for that to mean anything is that every lever on an agent's menu has an effect
+    rule to simulate: one nobody could simulate is not refused, it is PASSED OVER, so the
+    search concludes from part of the evidence and reports that nothing helps.
 
-    Both used to be survivable at runtime because there was a second path: a partial plan and
-    an unmeasured want both deferred to the reflex, which decided by the gap's sign. Deleting
-    the reflex is what makes this a gate. The choice was the sovereign's and it is the same
-    one this project keeps taking — refuse at genesis rather than degrade silently — and it
-    is affordable exactly because both questions are answerable from ratified files: which
-    levers a world implies, and which packages are loaded.
+    THE SECOND CHECK IS GONE WITH THE THING IT GUARDED. Every stake also had to have a
+    declared MEASURE to rank by, because a want nothing measured scored the same flat 1.0 in
+    every candidate world. There is no measure now and no ranking by degree: a want is judged
+    by its met-test, which every want has by construction — it is why the want exists — so
+    there is no world this check could still refuse. What the removal costs is not a gate but
+    a gradient, and that is argued where it was decided, not here.
+
+    The lever check used to be survivable at runtime because there was a second path: a
+    partial plan deferred to the reflex, which decided by the gap's sign. Deleting the reflex
+    is what makes this a gate. The choice was the sovereign's and it is the same one this
+    project keeps taking — refuse at genesis rather than degrade silently — and it is
+    affordable exactly because the question is answerable from ratified files: which levers a
+    world implies, and which packages are loaded.
 
     See knowledge/decisions/a-plan-is-a-path-of-graph-diffs.md.
     """
     from assembly import loader
-    from orexis_capability_sensing.regions import regions_of
     from agent.world import load_self
 
     from orexis_agent_progression.ontology import picks_graph
@@ -208,18 +211,6 @@ def deliberable(st, desires: dict) -> bool:
                                             list(answering), reach):
             faults += 1
             log.error("%s: %s", agent_id, fault)
-        #  ASKED OF THE WORLD, not of the wants (#579): a region's edges are its bands' now,
-        #  and the bands are public — asked of the desire modality this answered with nothing
-        #  and the measure check below silently stopped running for every agent, which is the
-        #  empty-loop failure this repo's own conftest exists to catch.
-        for observed_property in sorted(regions_of(st.reader(PUBLIC), me.uri)):
-            if any(getattr(cls, "measures", None) is not None
-                   and cls.measures(st.reader(PUBLIC), observed_property) for cls in answering):
-                continue
-            faults += 1
-            log.error("%s holds a stake in %s and nothing it composed can measure one — "
-                      "every possible world would score alike, and the search would report "
-                      "that nothing helps", agent_id, observed_property.rsplit("#", 1)[-1])
     return not faults
 
 

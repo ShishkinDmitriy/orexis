@@ -35,8 +35,6 @@
     assembly:signature "(subject_uri, observed_property, value) -> dict" ; orexis:row orexis:Reactive ; rdfs:label "annotate" ; rdfs:comment "What do you add to this agent's public announcement about a reading of its own? Merged dict." .
 :bounds a assembly:Extension ;
     assembly:signature "(subject_uri, observed_property) -> tuple[float, float] | None" ; orexis:row orexis:Reactive ; rdfs:label "bounds" ; rdfs:comment "Where do you want this property held? The intersection — highest floor, lowest ceiling — is what a crossing-watching board is told." .
-:urgency a assembly:Extension ;
-    assembly:signature "(subject_uri, observed_property, value) -> float | None" ; orexis:row orexis:Reactive ; rdfs:label "urgency" ; rdfs:comment "How close does this reading put you to your own trouble, 0 to 1? The sharpest answer wins; None is no opinion. A None value asks how urgent not knowing is." .
 :readingRecorded a assembly:Extension ;
     assembly:signature "(subject_uri, observed_property, value) -> None" ; orexis:row orexis:Reactive ; rdfs:label "reading recorded" ; rdfs:comment "Told: this agent's sensing recorded something new — subject, property, value." .
 
@@ -392,16 +390,6 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 
 :SensingCapability :steadyFraction 0.02 ; :reviewWindow 20 .
 
-# The one word this package's measure declaration speaks (measures.ttl): which KIND of want
-# the declared SELECT scores. Sensing's own and deliberately not the kernel's — the kernel
-# asks "how urgent is this desire, in this world" through the choir and holds no measure
-# vocabulary; this package answers for wants about what can be OBSERVED, from its own file,
-# with its own code. Promotion into orexis: has the repo's usual trigger — a word several
-# packages must speak — and fires when a second package ships a measure.
-
-:measureOf a owl:ObjectProperty ; rdfs:range owl:Class ;
-    rdfs:label "measure of" ;
-    rdfs:comment "Which kind of want the subject node's `sh:select` scores — the class of thing the want is about, so `sensing:measureOf sosa:ObservableProperty` reads: a want about an observable property is measured by this SELECT. One binding, ?urgency in 0..1, parameterised by substitution like an effect rule and evaluated against whichever world is being judged. Two kinds are named today and they resolve differently: a property's class is asked of the world, and a want's class is asked of the desire modality, because a want about KNOWING is not a want about anything the world holds a type for." .
 
 #  The want `desires.ru` mints, as a class, so the measure beside it has something to be the
 #  measure OF. Sensing's namespace because the want is sensing's: its premise is an instrument

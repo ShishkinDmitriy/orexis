@@ -37,12 +37,12 @@ def test_a_band_is_the_region_and_nothing_else():
     assert ZZ.band(0.31) == "HIGH"
 
 
-def test_urgency_is_nothing_at_the_point_and_everything_at_the_envelope():
-    assert ZZ.urgency(ZZ.centre) == 0.0
-    assert ZZ.urgency(0.02) == 1.0   # exactly the survival floor
-    assert ZZ.urgency(0.45) == 1.0   # exactly the survival ceiling
-    assert ZZ.urgency(0.0) == 1.0    # past it is not MORE than trouble
-    assert ZZ.urgency(1.0) == 1.0
+def test_distance_is_nothing_at_the_point_and_everything_at_the_envelope():
+    assert ZZ.distance(ZZ.centre) == 0.0
+    assert ZZ.distance(0.02) == 1.0   # exactly the survival floor
+    assert ZZ.distance(0.45) == 1.0   # exactly the survival ceiling
+    assert ZZ.distance(0.0) == 1.0    # past it is not MORE than trouble
+    assert ZZ.distance(1.0) == 1.0
 
 
 def test_it_rises_inside_the_region_rather_than_waiting_for_the_edge():
@@ -53,7 +53,7 @@ def test_it_rises_inside_the_region_rather_than_waiting_for_the_edge():
     watching more closely than one sitting in the middle, and the whole point of handing
     sensing a number rather than a verdict is that it can act on the difference.
     """
-    assert 0.0 < ZZ.urgency(0.15) < ZZ.urgency(0.11) < ZZ.urgency(0.05)
+    assert 0.0 < ZZ.distance(0.15) < ZZ.distance(0.11) < ZZ.distance(0.05)
     assert ZZ.band(0.15) == ZZ.band(0.11) == "OK"
 
 
@@ -66,23 +66,23 @@ def test_the_two_sides_are_scaled_by_their_own_room():
     gets the opposite answer with no edit here.
     """
     out = 0.14  # symmetric about the centre: 0.06 and 0.34
-    assert ZZ.urgency(ZZ.centre - out) > ZZ.urgency(ZZ.centre + out)
+    assert ZZ.distance(ZZ.centre - out) > ZZ.distance(ZZ.centre + out)
 
 
 def test_with_no_envelope_the_region_is_its_own_scale():
     """A world that states no survival range gets a cruder answer, honestly reached."""
-    assert BARE.urgency(BARE.centre) == 0.0
-    assert BARE.urgency(BARE.low) == 1.0
-    assert BARE.urgency(BARE.high) == 1.0
-    assert 0.0 < BARE.urgency(0.15) < 1.0
+    assert BARE.distance(BARE.centre) == 0.0
+    assert BARE.distance(BARE.low) == 1.0
+    assert BARE.distance(BARE.high) == 1.0
+    assert 0.0 < BARE.distance(0.15) < 1.0
     # and it is uniformly sharper than the same region with room around it, which is right:
     # not knowing how much slack there is should not be read as knowing there is a lot.
-    assert BARE.urgency(0.12) > ZZ.urgency(0.12)
+    assert BARE.distance(0.12) > ZZ.distance(0.12)
 
 
 def test_a_region_with_no_width_is_all_or_nothing():
     """The reading a bandless bidder used to get, preserved: pinned is pinned."""
     pinned = Region("moisture", low=0.4, high=0.4)
-    assert pinned.urgency(0.4) == 0.0
-    assert pinned.urgency(0.41) == 1.0
+    assert pinned.distance(0.4) == 0.0
+    assert pinned.distance(0.41) == 1.0
     assert pinned.band(0.41) == "HIGH"

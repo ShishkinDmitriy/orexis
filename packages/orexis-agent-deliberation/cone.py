@@ -46,7 +46,7 @@ class _Node:
     graph: str = STATE_GRAPH                     # this node's readings, in the imaginarium
     judged: str | None = None                    # for a want met AT an instant: this world drifted to it (#619)
     taken: tuple = field(default_factory=tuple)   # the STEPS taken to get here, in order
-    urgency: float = 1.0
+    unmet: float = 1.0
     #  The net diff against the base world, in canonical facts — HALF of where this node is,
     #  the other half being `ground` (#587). The root stands nowhere but the world itself, so
     #  its diff is empty.

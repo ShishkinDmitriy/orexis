@@ -41,7 +41,6 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [pick](/domain/pick.md) - A point chosen inside room the agent did not choose. Unfalsifiable, so a want; the aim is one, the cadences and patience the rest.
 
 
-* [urgency](/domain/urgency.md) - One scalar from 0 to 1 that makes unlike wants comparable. Several sources, one meaning; not knowing is maximal.
 
 * [obligation](/domain/obligation.md) - A desire the agent did not source. Whom it may owe is topology; what it owes now is private runtime state.
 
