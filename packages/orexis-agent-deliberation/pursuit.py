@@ -88,6 +88,35 @@ def handed(agent, judgment):
     return presented if presented is not None else replace(judgment, uri=child, desire=judgment.uri)
 
 
+def consider(agent, now: datetime | None = None) -> None:
+    """ONE PASS OF THE MIND, and the only way in from outside: derive what is wanted, then
+    hand every want that may be acted on to the thread that searches.
+
+    THE SEAM THAT WAS MISSING. The container held `Pursuing` and the deliberation module held
+    a `Timer`, and each reached into the other — `agent/pursuing.py` imported this package,
+    and `Deliberator.tick` read `agent.pursuing()` back — so there was no single place a pass
+    began. The agent calls this on its patience and knows nothing else about wants; what a
+    want IS stays here, which is the package that has the word.
+
+    THE DERIVATION RUNS FIRST, EVERY PASS, and that is the point rather than an ordering
+    detail. It used to run only where a package wrote something a desire reads — a debt, a
+    call — so between those a want's row could say met where the world had moved, and the
+    container re-ran the want's own met-test to correct it. That is asking twice what one
+    pass had already concluded (AGENTS.md), and it is why `_own_state` existed. A standing
+    want is unmet because the derivation just said so; a met one was withdrawn in the same
+    breath.
+
+    IT MARKS AND DOES NOT SEARCH. The clock lands on the reactive loop, which must never be
+    held for a pass, so what this does is note; `reviser` does the searching on a thread of
+    the mind's own. A want nobody may act on yet — a debt its holder has not presented — is
+    left standing and unmet: marking it would run a pass to decide nothing.
+    """
+    derived(agent)
+    for want in agent.pursuing(now):
+        if want.pursuable:
+            agent.reviser.note(want.uri, want)
+
+
 def derived(agent) -> list[str]:
     """`derive_wants` over this agent's store, and the projection refreshed where it changed.
 

@@ -29,9 +29,8 @@ from datetime import datetime
 
 from rdflib import URIRef
 
-from orexis_agent_deliberation import judging
-from orexis_agent_deliberation.want import Want
-from orexis_agent_deliberation.wants import find_wants
+from .want import Want
+from .wants import find_wants
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import DESIRES
 from orexis_agent_progression.store import bind, bindings
@@ -187,15 +186,13 @@ class Pursuing:
                     presented = replace(base, uri=want.uri, desire=root)
                 presented = replace(presented, about=want.about,
                                     side=want.side or presented.side)
-                if want.uri not in spoken_for:
-                    #  THE STATE IS THE WANT'S OWN where its shape says met — its instance is
-                    #  in range, whatever the root's others read — and the root's word
-                    #  otherwise, since the choir's words are finer than a shape's two
-                    #  (`stale`, `unmeasured`); the MEASURE stays the root's either way, and
-                    #  met-and-urgent is a true situation (desire.md).
-                    own = self._own_state(want.uri)
-                    if own == "met" or (own == "unmet" and presented.state == "met"):
-                        presented = replace(presented, state=own)
+                #  THE STATE IS NOT RE-JUDGED HERE. It ran the want's own met-test to
+                #  correct the root's word — its instance may be in range while the root's
+                #  others are not — and that is asking twice what one pass had already
+                #  concluded (AGENTS.md). It was needed because the derivation ran only where
+                #  a package wrote something a desire reads, so a row could go stale between
+                #  those; `pursuit.consider` derives every pass, so a standing want is unmet
+                #  because the derivation just said so and a met one was withdrawn with it.
                 if want.holds_at:
                     presented = self._at_instant(
                         presented, want.uri, want.holds_at, want.derived_at, now)
@@ -205,19 +202,6 @@ class Pursuing:
         #  was searched first and nothing else. What would rank them is what their plans cost
         #  and how long they take, which is the search's answer and not a contributor's.
         return list(seen.values())
-
-    def _own_state(self, want: str) -> str | None:
-        """What a derived want's OWN met-test says of the world now — `met` or `unmet` — or
-        None where it carries none of its own and is judged as its root is (a want minted
-        before wants carried one).
-
-        ASKED OF `judging`, which is the module that runs met-tests: a DERIVED want's shape is
-        in its own want graph, which is where `shapes_in` reads, so this is the same question
-        the derivation asks of the same source. The two blocks above still compile their own,
-        and the reason is written there.
-        """
-        unmet = judging.unmet_now(self._agent.beliefs.engine, want)
-        return None if unmet is None else ("unmet" if unmet else "met")
 
     def _at_instant(self, row: Want, node: str, holds_at: datetime, since: datetime | None,
                     now: datetime | None) -> Want:

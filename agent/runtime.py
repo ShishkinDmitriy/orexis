@@ -40,6 +40,7 @@ from assembly import loader
 from orexis_agent_deliberation.beliefs import BeliefError, Beliefs
 from assembly.inject import attribute_for, opened
 from orexis_agent_progression.ontology import STATE_GRAPH
+from orexis_agent_progression.keeper import NoPatience
 from orexis_agent_progression.ontology import picks_graph
 
 from orexis_agent_deliberation.scope_actions import scope_actions
@@ -47,9 +48,11 @@ from orexis_agent_deliberation.deliberator import KEEPING_PICKS, Deliberator
 from orexis_agent_deliberation.want import Want
 from orexis_agent_deliberation.desires import Desires
 from orexis_agent_deliberation.reviser import Reviser
+from orexis_agent_deliberation import pursuit
+from orexis_agent_progression.timer import Timer
 from orexis_agent_progression.intentions import Intentions
 
-from .pursuing import Pursuing
+from orexis_agent_deliberation.pursuing import Pursuing
 from orexis_agent_progression.keeper import Keeper
 from .metrics import Metrics
 from orexis_agent_progression.upkeep import BeliefBaseUpkeep
@@ -151,6 +154,9 @@ class Agent:
         #  What has to be shut when this agent does, newest first. A provider that YIELDS its
         #  service cleans up after the yield; an ordinary one leaves nothing to do.
         self._closing: list = []
+        #  The mind's clock, started at `run` where the patience is readable and stopped with
+        #  the rest; None where this agent states none.
+        self._considering: Timer | None = None
 
         # exactly the modules this agent composed — no more, no less, and since #216 the
         # IMPORTS follow the grants too: a capability names its owning package by namespace,
@@ -404,6 +410,24 @@ class Agent:
         self.upkeep.sweep()
         self.reviser.start()
         self.upkeep.start()
+        #  THE MIND'S CLOCK, and the container is what holds it (#208). Deliberation kept a
+        #  `Timer` of its own and its landing reached back into `agent.pursuing()`; the layer
+        #  that waits does the waiting, so the wait is here and what it calls is the one way
+        #  into that package. On the agent's PATIENCE, which is the rate bound by
+        #  construction: an impulse younger than it is absorbed by the keeper's `adopt`
+        #  anyway, so ticking faster only asks questions whose answers are already standing.
+        #
+        #  NO PATIENCE, NO CLOCK. An agent that states none has no stake (the shape guarantees
+        #  the converse), so there is nothing for a pass to find and starting a timer would be
+        #  a clock per agent to answer "nothing".
+        try:
+            interval = float(self.keeper.beliefs.patience_s)
+        except NoPatience:
+            log.debug("%s: no patience stated and no stake to spend it on — no mind's clock",
+                      self.id)
+        else:
+            self._considering = Timer(interval, lambda: pursuit.consider(self))
+            self._considering.start()
         # The watchdog last, after the connect above has had its chance: its disconnection
         # clock started at construction, so an agent that never gets its CONNACK is already
         # being timed. When it resigns it sends SIGTERM to this process — blocked, pending,
@@ -422,6 +446,8 @@ class Agent:
             log.info("%s shutting down", self.id)
             for module in self.modules:
                 module.stop()
+            if self._considering is not None:
+                self._considering.stop()
             self.upkeep.stop()
             self.reviser.stop()
             #  Services last and in reverse, so one that leans on another is closed before the
