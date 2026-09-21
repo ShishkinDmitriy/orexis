@@ -39,7 +39,7 @@ def _supplier(monkeypatch, level=3.0):
     return build_agent("supplier", genesis_store({("barrel1", STORED): level}), monkeypatch)
 
 
-def _stake(agent):
+def _region_want(agent):
     return next(d for d in agent.considering()
                 if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
 
@@ -47,10 +47,10 @@ def _stake(agent):
 def _foresee(agent):
     """The pass that derives the want met at the crossing — and finds nothing on the menu:
     no round is open and no claim is held, so a purchase cannot be planned yet."""
-    desire = _stake(agent)
+    desire = _region_want(agent)
     assert desire.is_met
     assert agent.deliberator.decide(desire) is None, "no round, no claim: nothing on the menu"
-    child = _stake(agent)
+    child = _region_want(agent)
     assert child.desire == desire.uri and child.holds_at is not None
     return desire, child
 
@@ -103,9 +103,9 @@ def test_a_plant_that_foresees_nothing_asks_for_nothing(monkeypatch):
     """Met, with no crossing foreseen, the reading announces no ask — the desire is never asked
     for; only a want met at an instant is."""
     agent = _fern(monkeypatch, moisture=0.60)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     assert desire.is_met and agent.deliberator.decide(desire) is None
-    assert _stake(agent).holds_at is None, "no crossing inside the foresight: no want at an instant"
+    assert _region_want(agent).holds_at is None, "no crossing inside the foresight: no want at an instant"
     _read(agent, 0.60)
     assert _asks_of(agent) == []
 

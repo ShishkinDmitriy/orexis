@@ -23,7 +23,7 @@ is what keeps a market from being a way to gain physical powers you were never w
 
 # The premise is ownership, and it is deliberately not a grant
 
-Every other [capability](/domain/capability.md) here is granted by something arguable — a stake,
+Every other [capability](/domain/capability.md) here is granted by something arguable — a region want,
 a mandate, a position in a market. This one is granted by *holding the thing*, and the reason to
 keep it that blunt is that actuation is the only capability whose misuse is irreversible.
 
@@ -50,7 +50,7 @@ recalibrating a pump is a genesis edit, and nothing about it is a code change.
 
 `min(litres, the cap) / the calibration` is the open-seconds, and it is a fact about the
 **valve** — a host dosing a buyer's pot needs it exactly as much as an agent dosing its own. The
-first version of the rule joined through the stake instead, so every market dose fell back to a
+first version of the rule joined through the region want instead, so every market dose fell back to a
 local computation and the single source held only for self-doses, which is the half that needed it
 least.
 
@@ -88,11 +88,11 @@ clearing ─grant─► executor (RPi) ─publish cmd─► MQTT ─► pump-ESP
 - **The actuation arm (RPi)** = decides *nothing*; validates the grant, then commands.
 - **Pump-ESP32** = drives a relay/valve on GPIO. It takes commands **only** from the
   actuation arm — **never** from an agent directly. Same trust boundary as the sensor edge: the
-  device is dumb and stake-free; authority lives one hop up.
+  device is dumb and region-want-free; authority lives one hop up.
 
 # Actuation is not sensing — the guarded subscriber
 
-Sensing is read-only and low-stakes; actuation *writes to the physical world, irreversibly*.
+Sensing is read-only and low region wants; actuation *writes to the physical world, irreversibly*.
 So the pump is a **guarded** MQTT subscriber, with four properties the sensor edge never needed:
 
 1. **Authenticated commands** — the pump opens only on the **claim** (won this auction),

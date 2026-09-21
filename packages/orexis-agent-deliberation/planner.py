@@ -293,7 +293,7 @@ class Planner:
         avoided pattern (#468), a compiled want (the puzzles', an aversion authored as a
         shape), and anything else. All three are `_met_in`, which is why this function is a
         sign flip over it rather than a judgment of its own — and why a want nobody measures
-        is no longer a special case, nor `orexis-validate` refusing a stake for lacking a
+        is no longer a special case, nor `orexis-validate` refusing a region want for lacking a
         measure that no longer exists.
         """
         return 0.0 if self._met_in(node, judgment) else 1.0
@@ -1400,7 +1400,7 @@ class Planner:
             #  from (#255) — the market says by naming the want on them. What a counterparty
             #  is, this file does not know. A want ABOUT NOTHING — a call — ranges over every
             #  row of the agent's own, because what would raise the stock a round needs is a
-            #  row the stake names (the dealer's two-step).
+            #  row the region want names (the dealer's two-step).
             if not row.is_own:
                 if row.want != judgment.uri:
                     continue

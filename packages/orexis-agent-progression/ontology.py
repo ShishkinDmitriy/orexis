@@ -186,7 +186,7 @@ WORLD_DERIVED_GRAPH = _GRAPH + "world/derived"  # what each package's rules.ru c
 WORLD_ENTAILED_GRAPH = _GRAPH + "world/entailed"  # what the vocabulary implies of instances
 #  The world's current state as this agent holds it — what an effect rewrites and a plan forks.
 #  The IRI still says "sensed", for every volume that holds readings under it; the NAME says
-#  what the kernel knows about it, which is not that (the-stake-is-sensings-want).
+#  what the kernel knows about it, which is not that (the-region-want-is-sensings-want).
 STATE_GRAPH = _GRAPH + "sensed"
 
 #  THE KINDS A READER ASKS FOR. A graph is read by what the catalogue says it IS, never by

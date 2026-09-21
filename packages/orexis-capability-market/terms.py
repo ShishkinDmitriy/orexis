@@ -76,7 +76,7 @@ ACTUATION = ACTUATION_NS + "Actuation"  # whoever can touch the hardware, if thi
 # The mind's STATES are kernel words; the FAMILIES that arrive at them are not.
 KERNEL = "http://example.org/orexis#"
 #  Whoever keeps the debts. Its OWN family, because owing is granted by holding a lever
-#  others may demand and not by having a stake — a host with no interest of its own still
+#  others may demand and not by having a region want — a host with no interest of its own still
 #  owes what its market allocated (#233).
 # The three means a bidder's acts amount to. MEANS, not capabilities: they name what an act IS
 # when the keeper records it, and they are the kernel's individuals referenced by IRI — as is

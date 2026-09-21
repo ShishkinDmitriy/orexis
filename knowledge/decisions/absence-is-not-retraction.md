@@ -34,7 +34,7 @@ stale value carrying its instant is still evidence and a hole is not.
 **So not-current is a want, not an absence.** The observation is upserted — `sensed_writer`
 deletes only the node it is about to rewrite — and stays on disk for ever; what changes when a
 board goes quiet is that the freshness want stops being met
-([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)). That is why a dead
+([the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md)). That is why a dead
 probe's last reading survives and the agent still knows it is blind: staleness is a first-class
 fact rather than a missing one, and it can be planned about, ranked, and repaired by looking.
 

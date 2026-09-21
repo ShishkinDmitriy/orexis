@@ -94,17 +94,17 @@ def test_a_reading_past_the_horizon_is_stale_where_a_fresh_one_is_met(monkeypatc
     def wants():
         mine = [g for g in sensing_of(agent).desires() if g.observed_property == MOISTURE]
         return (next(g for g in mine if g.is_epistemic), next(g for g in mine if not g.is_epistemic))
-    look, stake = wants()
+    look, region_want = wants()
     assert look.state == "met"
-    assert stake.state == "met"
+    assert region_want.state == "met"
 
     _age_the_reading(st)
-    look, stake = wants()
+    look, region_want = wants()
     assert look.state == "stale", \
         "not knowing is not knowing — the state says which kind of not-current this is, and " \
         "a reading the agent no longer trusts is not evidence"
     assert look.value == 0.55, "the last reading is still carried, and still shown"
-    assert stake.state == "met", "the stake judges the number it has; staleness is sensing's"
+    assert region_want.state == "met", "the region want judges the number it has; staleness is sensing's"
 
 
 def test_stale_and_unmeasured_are_told_apart(monkeypatch):

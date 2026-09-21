@@ -26,7 +26,7 @@ from orexis_agent_progression.graphs import intentions_graph
 from orexis_capability_market.terms import ACQUIRING, TENDERING
 from orexis_capability_sensing.terms import OBSERVING
 
-from conftest import sensing_of, stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading
+from conftest import sensing_of, region_want_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading
 from conftest import VENUE, filled
 from orexis_agent_progression.ontology import PUBLIC
 
@@ -49,26 +49,26 @@ def market_of(agent):
 # --- who keeps, and what became of "who has nothing to keep" -----------------
 
 def test_every_agent_keeps_a_ledger_and_the_stake_is_what_needs_a_patience(make):
-    """`intention:Keeping` was granted by a stake AND a lever, and two tests stood here to prove
+    """`intention:Keeping` was granted by a region want AND a lever, and two tests stood here to prove
     each half. The grant is gone: `Agent.__init__` already built an intention STORE for every
     agent while the thing that WRITES it was a grant, and a modality nobody may write is not a
     modality. Commitment is not plug-in-able.
 
     What survives is the SHAPE, and it is narrower on purpose. `orexis:KeeperShape` targets the
-    stake alone — an agent that holds a want that is not merely about knowing must state a
+    region want alone — an agent that holds a want that is not merely about knowing must state a
     patience within the constitutional bounds. The lever half could not follow it into the
     kernel without the kernel naming three packages' predicates, and a lever is an instance
-    anyway; the stake's PREMISE (a subject stating what it needs) is sensing's sentence now,
+    anyway; the region want's PREMISE (a subject stating what it needs) is sensing's sentence now,
     so the shape names the want and not the premise.
 
-    So: everyone keeps, and the stake is what obliges you to say how patiently."""
+    So: everyone keeps, and the region_want is what obliges you to say how patiently."""
     from agent.validate import validate_agent
 
     fern = make("fern")
     assert fern.keeper is not None
     assert any(m.name == "intention" for m in fern.modules)
 
-    #  The shape still bites where it always did: a stake with a patience outside the bounds
+    #  The shape still bites where it always did: a region want with a patience outside the bounds
     #  is refused, which is the piece a beliefs file can actually get wrong.
     fern.beliefs.update(f"""DELETE {{ GRAPH <{fern.beliefs.graph}> {{
         <{fern.me.uri}> <http://example.org/orexis/progression#patienceS> ?p }} }}
@@ -92,7 +92,7 @@ def test_waiting_on_a_sensor_is_a_recorded_commitment(make):
     keeper = keeper_of(fern)
     standing = keeper.standing(action=OBSERVING)
     #  The look is committed FOR THE FRESHNESS WANT — knowing first, sensing's rule — and
-    #  the ledger says which want, not which property (the-stake-is-sensings-want).
+    #  the ledger says which want, not which property (the-region-want-is-sensings-want).
     looked_for = next(w for w in sensing_of(fern).wants_about(MOISTURE) if w.is_epistemic)
     assert len(standing) == 1 and standing[0].want == looked_for.uri
 
@@ -157,8 +157,8 @@ def test_past_its_patience_a_new_adoption_supersedes(make):
     fern = make("fern", _reading(0.10))
     keeper = keeper_of(fern)
     keeper.beliefs = replace(keeper.beliefs, patience_s=0)  # everything is instantly stale
-    first = keeper.adopt(TENDERING, stake_of(fern).uri, "first")
-    second = keeper.adopt(TENDERING, stake_of(fern).uri, "second")
+    first = keeper.adopt(TENDERING, region_want_of(fern).uri, "first")
+    second = keeper.adopt(TENDERING, region_want_of(fern).uri, "second")
     assert first and second and first != second
     standing = keeper.standing(action=TENDERING)
     assert [s.uri for s in standing] == [second]
@@ -211,9 +211,9 @@ def test_every_transition_is_told_to_the_metrics_with_its_reason(make):
     fern = make("fern", _reading(0.10))
     keeper = keeper_of(fern)
     fern.metrics.take_events()
-    stake = stake_of(fern).uri
-    uri = keeper.adopt(TENDERING, stake, "bid 0.4L to close my deficit")
-    keeper.satisfy(TENDERING, stake, "claim for 0.4L at a debit of 0.29")
+    region_want = region_want_of(fern).uri
+    uri = keeper.adopt(TENDERING, region_want, "bid 0.4L to close my deficit")
+    keeper.satisfy(TENDERING, region_want, "claim for 0.4L at a debit of 0.29")
     events = fern.metrics.take_events()
     assert [(kind, tags) for _, kind, _, tags in events] == [
         ("adopted", {"means": "Tendering", "want": "desire.fern.SoilMoisture"}),
@@ -239,7 +239,7 @@ MOIST = "http://example.org/orexis/water#SoilMoisture"
 
 def test_the_tick_puts_marketless_watching_in_the_ledger(make):
     """The hole the sovereign's question exposed, closed: deliberation used to run only when
-    the market knocked, so fern's thermometer — a stake, a sensor, and no market that could
+    the market knocked, so fern's thermometer — a region_want, a sensor, and no market that could
     ever relieve it — never appeared in the intention ledger at all. The keeper's tick turns
     sensing's gap into the one deliberator's Observe and commits it: the watching is now a
     commitment the sovereign can ask for, and a reading arriving resolves it, whoever
@@ -308,7 +308,7 @@ def test_the_tick_survives_an_agent_that_has_seen_things(make):
     dict — and the choir hook briefly shared its name, so the tick iterated property IRIs as
     pairs and died unpacking a string. Invisible to the original test because a fresh agent
     has no observations and desire's dict was empty; the bench, where observations exist on
-    every stake, crashed per tick. So: see something first, then tick."""
+    every region_want, crashed per tick. So: see something first, then tick."""
     fern = make("fern")
     fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.2, "temperature": 21.0})
     keeper = next(m for m in fern.modules if m.name == "intention")
@@ -346,14 +346,14 @@ def test_two_debts_about_one_property_no_longer_collide(make):
 
 def test_a_commitment_is_keyed_by_its_want_and_absorbed_by_it(make):
     """The ledger keys on (action, want) and nothing else — the property is not a key the
-    kernel holds any more (the-stake-is-sensings-want). A second impulse toward the same want
+    kernel holds any more (the-region-want-is-sensings-want). A second impulse toward the same want
     within patience is absorbed; the same action toward ANOTHER want is a second commitment."""
     fern = make("fern")
     keeper = next(m for m in fern.modules if m.name == "intention")
-    stake = stake_of(fern).uri
-    keeper.adopt(OBSERVING, stake, "look, for the stake")
-    assert keeper.adopt(OBSERVING, stake, "again, within patience") is None
-    assert len(keeper.standing(action=OBSERVING, want=stake)) == 1
+    region_want = region_want_of(fern).uri
+    keeper.adopt(OBSERVING, region_want, "look, for the region want")
+    assert keeper.adopt(OBSERVING, region_want, "again, within patience") is None
+    assert len(keeper.standing(action=OBSERVING, want=region_want)) == 1
     assert keeper.adopt(OBSERVING, "urn:another-want", "look, for something else")
     assert len(keeper.standing(action=OBSERVING)) == 2
 
@@ -371,7 +371,7 @@ def test_an_old_row_naming_an_action_is_rebuilt_as_an_act(make):
     keeper = keeper_of(fern)
     keeper.agent.intentions.update(f"""INSERT DATA {{ GRAPH <{keeper.graph}> {{
         <{OREXIS}intent_fern_old1> a <{PROGRESSION}Intention> ;
-            <{PROGRESSION}pursues> <{stake_of(fern).uri}> ;
+            <{PROGRESSION}pursues> <{region_want_of(fern).uri}> ;
             <{PROGRESSION}by> <{ACQUIRING}> ;
             <{PROGRESSION}through> <urn:old-venue> ;
             <{PROGRESSION}adoptedAt> "2026-08-01T00:00:00+00:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
@@ -402,7 +402,7 @@ def test_the_ledger_holds_the_act_sized_and_windowed(make):
     keeper = keeper_of(fern)
     closes = datetime(2026, 9, 1, 12, 0, tzinfo=timezone.utc)
     act = Step(action=TENDERING, binding=filled((VENUE, "urn:venue")), quantity=0.4, not_after=closes)
-    keeper.adopt(act, stake_of(fern).uri, "bid 0.4L, not after the round closes")
+    keeper.adopt(act, region_want_of(fern).uri, "bid 0.4L, not after the round closes")
     standing = keeper.standing(action=TENDERING)[0]
     assert (standing.step.action, standing.step.value_of(VENUE), standing.step.quantity,
             standing.step.not_after) == (TENDERING, "urn:venue", 0.4, closes)
@@ -520,7 +520,7 @@ def test_a_plan_is_committed_whole_advances_on_a_met_step_and_stops_on_an_unmet_
     from conftest import genesis_store
     fern = make("fern", genesis_store({"fern": 0.30}))          # a reading to baseline on
     keeper = fern.keeper
-    want = stake_of(fern).uri
+    want = region_want_of(fern).uri
     plan = tuple(Step(action=f"urn:toy#Go{n}", binding=filled((VENUE, "urn:toy#lever")))
                  for n in (1, 2, 3))
     uri = keeper.adopt(plan, want, "three steps, handed down whole")

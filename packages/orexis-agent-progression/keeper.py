@@ -2,7 +2,7 @@
 commitment mean something.
 
 **The kernel's, and granted by nothing.** This was Keeping, a member of a family
-whose premise was a stake AND a lever. What that could never explain is why `Agent.__init__`
+whose premise was a region want AND a lever. What that could never explain is why `Agent.__init__`
 already built an intention STORE for every agent regardless: the modality was unconditional and
 the thing that writes it was a grant. Commitment is not plug-in-able, so both are the kernel's.
 
@@ -150,7 +150,7 @@ class NoPatience(LookupError):
 
     An agent that keeps commitments and states no patience is missing something
     `progression:Intention` needs, not something it was granted — `orexis:KeeperShape` refuses to let an
-    agent with a stake boot without one, so reaching this is a stakeless agent being asked to
+    agent with a region want boot without one, so reaching this is a regionless agent being asked to
     commit, which is a bug in the asker."""
 
 
@@ -287,10 +287,10 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{PROGRESSION + "by"}> ?s . FILTER NOT EXIS
 
         It used to be read from the desire modality on first use — lazily, because reading it
         eagerly turned "this agent states no patience" into "this agent cannot start" and
-        killed `world/sensing`'s stakeless agent. Since #452 progression reads no belief at
+        killed `world/sensing`'s regionless agent. Since #452 progression reads no belief at
         all: the container reads `KEEPING_PICKS` (the deliberator's) and assigns the result
         through the setter below, or assigns nothing where the agent states none. The check
-        is not softened: `orexis:KeeperShape` still REFUSES to let an agent with a stake boot
+        is not softened: `orexis:KeeperShape` still REFUSES to let an agent with a region want boot
         without a patience inside the constitutional bounds, and an agent that reaches a
         commitment with none raises `NoPatience` here, naming the missing term.
         """
@@ -338,7 +338,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ ?i <{PROGRESSION + "by"}> ?s . FILTER NOT EXIS
         (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
 
         KEYED ON (ACTION, WANT) and nothing else: a want is its node, and the kernel no longer
-        knows what one is about (the-stake-is-sensings-want). Two commitments about one
+        knows what one is about (the-region-want-is-sensings-want). Two commitments about one
         property but different wants were always distinct — a dealer owing water to fern and
         to tomato holds two Serving rows — and the property was only ever the coarser key.
 
@@ -1349,7 +1349,7 @@ SELECT ?predicts ?from ?lands WHERE {{ GRAPH <{self.graph}> {{
                               datetime.fromisoformat(rows[0]["lands"]), expectation.deadline)
 
     def _about(self, intention_uri: str) -> str | None:
-        """What the want this intention pursues is about — the property, for a stake."""
+        """What the want this intention pursues is about — the property, for a region want."""
         rows = bindings(self.agent.intentions.query_over(f"""
 SELECT ?want WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + "pursues"}> ?want }} }}""", self.graph))
         if not rows:
@@ -1631,7 +1631,7 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
         """`want` and every name the ledger may hold it under (#618): the want pursued under
         it, where `want` is an `orexis:Desire` root, or the root it is pursued under. The
         ledger names the want the search was handed, and a reader — a bidder holding its
-        stake's name, a test, the sovereign — may hold either; both meet the same commitment.
+        region want's name, a test, the sovereign — may hold either; both meet the same commitment.
         Asked of the desire modality by vocabulary alone, since which want is derived under
         which is deliberation's to say and progression may not import it."""
         rows = bindings(self.agent.desires.query(f"""

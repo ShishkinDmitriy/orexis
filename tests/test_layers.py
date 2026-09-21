@@ -14,7 +14,7 @@ from orexis_capability_market.terms import ACQUIRING, TENDERING
 from orexis_agent_progression.ontology import PLAN_FAILED, PLAN_FINISHED, STEP_DONE
 from orexis_agent_reactive.loop import loop
 
-from conftest import MOISTURE, build_agent, genesis_store, open_round_for, reading_of, stake_of, write_reading, predicted_reading
+from conftest import MOISTURE, build_agent, genesis_store, open_round_for, reading_of, region_want_of, write_reading, predicted_reading
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ def test_an_unmet_expectation_is_told_upward_and_marks_the_want(thirsty):
     """The keeper judges the step's RESULT against the baseline the actor handed in; what to do
     about a plan that failed is deliberation's, and it hears it as an event rather than the
     ledger importing the search."""
-    keeper, want = thirsty.keeper, stake_of(thirsty).uri
+    keeper, want = thirsty.keeper, region_want_of(thirsty).uri
     uri = keeper.adopt(TENDERING, want, "a dose that will not land")
     before = dict(failed=thirsty.deliberator._plans_failed,
                   finished=thirsty.deliberator._plans_finished)
@@ -51,7 +51,7 @@ def test_an_unmet_expectation_is_told_upward_and_marks_the_want(thirsty):
 
 
 def test_a_met_expectation_is_counted_and_not_re_planned(thirsty):
-    keeper, want = thirsty.keeper, stake_of(thirsty).uri
+    keeper, want = thirsty.keeper, region_want_of(thirsty).uri
     uri = keeper.adopt(TENDERING, want, "a dose that lands")
     assert keeper.expect(uri, "watching", baseline=reading_of(thirsty, MOISTURE),
                          predicts=predicted_reading(thirsty.me.acts_for, MOISTURE, 0.31))
@@ -78,7 +78,7 @@ def test_a_plans_head_is_committed_and_taken_as_one_item_on_the_loop(thirsty, mo
     monkeypatch.setattr(thirsty, "tell", lambda point, *a, **kw: on.append(threading.current_thread())
                         if point == STEP_DONE else None)
     open_round_for(thirsty, "fern")                       # something to buy in, so a plan
-    assert pursuit.pursue(thirsty, stake_of(thirsty)) is not None, "the search proposed nothing"
+    assert pursuit.pursue(thirsty, region_want_of(thirsty)) is not None, "the search proposed nothing"
     assert on, "neither the commit nor the take ran"
     assert all(t is not threading.current_thread() for t in on), \
         "the commit or the take ran on the searcher's thread instead of the loop"

@@ -112,10 +112,10 @@ issue's world-modelling, not a mechanism of its own.
 # Seams left open
 
 - **The Actuate rung is BUILT (#190)**, ahead of the terrace: `world/loner` is the first
-  world with an agent holding both a stake and its own supplied lever — a gardener, a
+  world with an agent holding both a region want and its own supplied lever — a gardener, a
   Zamioculcas planted by one triple, a pump on a rain butt, and no market anywhere. The menu
   branch ships as the actuation package's own `affordances.rq` (#207's recorded first
-  customer), walking BOTH chains; the capability pair needed no new rule — stake-plus-lever
+  customer), walking BOTH chains; the capability pair needed no new rule — region-want-plus-lever
   already granted it; and the executor path is the SAME `redeem`, on a self-claim: signed,
   confirmed, expectation-watched, patience-bounded — an unconfirmed self-dose is not a
   delivered one either, and the REA event stands though it fulfils no exchange. The reflex

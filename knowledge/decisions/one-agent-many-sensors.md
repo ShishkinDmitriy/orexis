@@ -60,7 +60,7 @@ not know what it is asking.
 That reached further than the writer. Everything that carried "a reading of a subject" now
 carries the property too — `reading_recorded`, `on_reading_recorded`, `annotate`, `urgency`,
 `stale_after_s`, `sensor_for`, and the agent's public announcement, which now names the property
-because one event topic carries two kinds of number. A stake is held in a *property*, so a
+because one event topic carries two kinds of number. A region want is held in a *property*, so a
 module handed a temperature answers `None` rather than judging it against the only scale it
 owns; the distinction that matters there is **no opinion versus an opinion of zero**.
 
@@ -77,7 +77,7 @@ so making a market carry a property means a market for something no instrument m
 slot, a right of way, a share of attention) cannot be declared at all. And it puts a fact about
 one *bidder's* valuation on the *venue*, which every participant would then have to share.
 
-**The property-shaped thing is the stake.** A target of 0.55 is 0.55 *of* something; the bands
+**The property-shaped thing is the region want.** A target of 0.55 is 0.55 *of* something; the bands
 are in the same unit; and `water:litresPerFraction` — "litres needed to raise moisture by 1.0" — is
 exactly the exchange rate between the lot and the property, which is where the coupling honestly
 lives. Until this was written down, that 0.55 was dimensionless, and the agent got away with it
@@ -198,7 +198,7 @@ them had to be rewritten when it turned out to pass with the fix removed.
   theirs; see
   [a-reading-is-one-value-so-it-is-pointed-at](a-reading-is-one-value-so-it-is-pointed-at.md).
 - **A desire is about exactly one property.** `market:aboutProperty` is read as a single value, so an
-  agent whose stake spans two — wanting both moisture and nutrient held — has no representation.
+  agent whose region want spans two — wanting both moisture and nutrient held — has no representation.
   Nothing depends on this yet, and widening it is one query and a loop.
 - **The link is on the term, so every agent in a domain shares it.** Two agents in one world
   cannot denominate their desires differently. That is right for a domain where a target *means*

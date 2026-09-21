@@ -17,7 +17,7 @@ description: >-
 
 # The claim
 
-**A root is declared.** An `orexis:Desire` — the stake per property, the freshness desire per
+**A root is declared.** An `orexis:Desire` — the region want per property, the freshness desire per
 sensor — is a declaration for the agent's whole life, and the modality re-derived it from
 beliefs at every rebuild, carrying a foresight read off a pick. That made a root a function of
 the agent's current state, which a root is not. It is authored once, at genesis, into a graph of
@@ -108,7 +108,7 @@ prediction's lifecycle.
 
 - **A root whose premise an amendment removed.** A property a subject no longer states a range
   for leaves a held root with no met-test; endowment adds and never removes, so removing a
-  stake is a rebirth until somebody needs it not to be.
+  region want is a rebirth until somebody needs it not to be.
 - **A frozen probe** ([#462](https://github.com/ShishkinDmitriy/orexis/issues/462)) stays fresh
   under this as under the timer: a reading that keeps arriving is inside its window.
 - **Retention of verdicts.** How long the reviewer's evidence is kept is the review package's

@@ -37,7 +37,7 @@ def _gardener(monkeypatch):
 
 
 def test_the_roots_exist_after_birth_and_before_any_rebuild(monkeypatch):
-    """Birth authors them, into a graph of the agent's own with no period: the stake per
+    """Birth authors them, into a graph of the agent's own with no period: the region want per
     property and the freshness want per sensor, by the names the ledger has always known."""
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store(world="loner")
@@ -71,12 +71,12 @@ def test_the_rebuild_runs_no_rule(monkeypatch):
         raise AssertionError("a rebuild asked for the desire rules")
     monkeypatch.setattr(loader, "desires_rule_files", refused)
     agent.desires.rebuild()
-    stake = next(d for d in agent.considering() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
-    assert stake.uri == "http://example.org/orexis#desire.gardener.SoilMoisture"
+    region_want = next(d for d in agent.considering() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
+    assert region_want.uri == "http://example.org/orexis#desire.gardener.SoilMoisture"
 
 
 def test_a_root_the_volume_never_held_is_endowed_at_boot_and_a_held_one_stays(monkeypatch):
-    """An amendment that adds a stake: the never-held desire arrives with its met-tests, and
+    """An amendment that adds a region want: the never-held desire arrives with its met-tests, and
     every desire the agent already holds is left exactly as it was — including one whose triples
     differ from what the world would derive today."""
     monkeypatch.setenv("OREXIS_WORLD", "loner")
@@ -84,7 +84,7 @@ def test_a_root_the_volume_never_held_is_endowed_at_boot_and_a_held_one_stays(mo
     desires = _roots(st)
     gone = "http://example.org/orexis#desire.gardener.SoilMoisture"
     kept = next(r for r in desires if r.startswith("http://example.org/orexis#fresh."))
-    #  A volume from before the stake existed: the desire and everything hanging off it dropped.
+    #  A volume from before the region want existed: the desire and everything hanging off it dropped.
     st.update(f"""DELETE {{ GRAPH <{desires_graph("gardener")}> {{ ?s ?p ?o }} }}
         WHERE {{ GRAPH <{desires_graph("gardener")}> {{ ?s ?p ?o .
           FILTER(?s = <{gone}> || ?o = <{gone}> || ?s = <http://example.org/orexis#bounds.gardener.SoilMoisture>

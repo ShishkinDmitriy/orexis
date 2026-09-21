@@ -10,7 +10,7 @@ from orexis_capability_market.terms import ACQUIRING, TOLERANCE, TENDERING
 from orexis_agent_progression.store import bindings
 from orexis_capability_review.graphs import evidence_graph
 from conftest import (MOISTURE, build_agent, genesis_store, predicted_reading, reading_of,
-                      stake_of, write_reading)
+                      region_want_of, write_reading)
 from orexis_agent_progression.ontology import PUBLIC
 
 CONVERSION = "http://example.org/orexis/water#litresPerFraction"
@@ -25,7 +25,7 @@ def fern(monkeypatch):
 def answered(agent, observed: float, predicted: float = PREDICTED) -> str:
     """One lot bought and answered: the step predicts `predicted`, the world shows `observed`.
     Inside the band the verdict is met on the reading; outside it the deadline passes."""
-    keeper, want = agent.keeper, stake_of(agent).uri
+    keeper, want = agent.keeper, region_want_of(agent).uri
     write_reading(agent, BASELINE, MOISTURE)
     uri = keeper.adopt(TENDERING, want, "a lot on its way")
     #  A NUMBER HANDED IN BY HAND (#579): a shipped rule predicts a band, and the keeper holds

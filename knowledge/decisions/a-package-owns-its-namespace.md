@@ -58,11 +58,11 @@ kernel's own structure is written in; a package that could rebind `rdfs:` could 
 [one-graph-both-engines-read](one-graph-both-engines-read.md) materialises and every shape leans
 on. Every other external vocabulary — `sosa:`, `ssn-system:`, `unit:`, `schema:`, `dcterms:` — is
 READ off whichever ontology declares it, exactly as a package's own namespace is, since
-[the-stake-is-sensings-want](the-stake-is-sensings-want.md)'s third step: the kernel speaks no
+[the-region-want-is-sensings-want](the-region-want-is-sensings-want.md)'s third step: the kernel speaks no
 reading, so it does not declare the vocabulary readings are written in. What the old "not a
 package's to bind" argument needed is the loader's refusal of one label bound to two IRIs, and
 that holds without the kernel naming the vocabulary. (This said `sosa:` was the kernel's; it was,
-while the kernel derived the stake.) `orexis:` is read the same way, off the ontology that declares
+while the kernel derived the region want.) `orexis:` is read the same way, off the ontology that declares
 it, and hard-coding it would have made it an exception for no reason but habit.
 
 **AMENDED in one word.** This said `orexis:` arrives "like any other package's, because the base

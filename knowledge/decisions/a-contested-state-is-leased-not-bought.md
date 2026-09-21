@@ -77,7 +77,7 @@ states ranges, so it deduces no region and wants nothing for itself; and what it
 recorded because owing is granted by holding a lever others may demand.
 
 That is exactly `world/simulation`'s city, which was broken until this morning for precisely
-this reason — the ledger lived inside a capability granted by having a stake, so the one agent
+this reason — the ledger lived inside a capability granted by having a region want, so the one agent
 whose failure to deliver would leave no evidence was the one best placed to fail
 ([#233](https://github.com/ShishkinDmitriy/orexis/issues/233)). The door makes it a class with two
 members rather than a peculiarity of the mains, which is the usual sign that a split was cut in

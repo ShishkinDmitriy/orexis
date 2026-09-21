@@ -30,7 +30,7 @@ orexis: a owl:Ontology ;
 #################  Agents and capabilities (composition, not hierarchy)  #################
 
 orexis:Agent a owl:Class ; rdfs:label "Agent" ;
-    rdfs:comment "A self-interested principal with a stake. What an agent can DO is not its class — it is the set of capabilities composed onto it, so two agents of the same kind may run different modules." .
+    rdfs:comment "A self-interested principal with a region want. What an agent can DO is not its class — it is the set of capabilities composed onto it, so two agents of the same kind may run different modules." .
 
 orexis:Capability a owl:Class ; rdfs:label "Capability" ;
     rdfs:comment "One thing an agent can do, defined by a module: a vocabulary (this ontology), rules (its SHACL shapes), and the code that reads them. Declaring a capability is what activates the module." .
@@ -236,7 +236,7 @@ orexis:beliefsOf a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range or
 #  wants a second time rather than reading them. Classified on each axis directly now.
 
 orexis:DesireGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Desire graph" ;
-    rdfs:comment "A graph of `orexis:Desire` rows — named for what it HOLDS, as every graph class is since a-graph-class-is-named-for-what-it-holds, and NOT the modality class of the same spelling that #312 retired (a-store-is-a-modality): a modality is a store now, and this says only which kind of row a graph carries. The roots graph is one, `roots/<agent>` for eyes: ONE agent's desires, every `orexis:Desire` it holds for its whole life: the stake per property, the freshness desire per sensor, with their met-tests — DECLARED once at genesis from the ranges and the wiring the world states, by the packages' desire rules run at birth, and endowed on amendment: a never-held root arrives, a held one stays (a-root-holds-always-and-an-outdated-graph-is-dropped). NO PERIOD, so it holds at every instant as the T-Box does, and no rebuild of the desire modality touches it; the modality projects it beside the records. Received, never authored by the agent: the sovereign's ranges are the source. The promises are another (`progression:PromisesGraph`), desires the bridge raised. Called `orexis:RootsGraph` until the class was named for the derivation's role instead of the rows, a synonym in the T-Box." .
+    rdfs:comment "A graph of `orexis:Desire` rows — named for what it HOLDS, as every graph class is since a-graph-class-is-named-for-what-it-holds, and NOT the modality class of the same spelling that #312 retired (a-store-is-a-modality): a modality is a store now, and this says only which kind of row a graph carries. The roots graph is one, `roots/<agent>` for eyes: ONE agent's desires, every `orexis:Desire` it holds for its whole life: the region want per property, the freshness desire per sensor, with their met-tests — DECLARED once at genesis from the ranges and the wiring the world states, by the packages' desire rules run at birth, and endowed on amendment: a never-held root arrives, a held one stays (a-root-holds-always-and-an-outdated-graph-is-dropped). NO PERIOD, so it holds at every instant as the T-Box does, and no rebuild of the desire modality touches it; the modality projects it beside the records. Received, never authored by the agent: the sovereign's ranges are the source. The promises are another (`progression:PromisesGraph`), desires the bridge raised. Called `orexis:RootsGraph` until the class was named for the derivation's role instead of the rows, a synonym in the T-Box." .
 orexis:WantGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Want graph" ;
     rdfs:comment "A graph of `orexis:Want` rows — what a desire came to when a situation made it bite (orexis:Want). The derivation's are these, one per want it minted, each holding during its period and `orexis:arrivedBy orexis:Derived`; the world's asserted graph is one too where a world ratifies a standing want directly, and it is `orexis:Asserted`. Which of the two a reader means is the ARRIVAL axis and never a subclass of this one — `deliberation:PursuedGraph` was that subclass and is retired. Named for what it holds, like `orexis:DesireGraph` beside it, and no subclass of it: a want is not a desire (orexis:Want)." .
 orexis:PickRecordGraph a owl:Class ; rdfs:subClassOf orexis:Graph , orexis:RecordGraph ; rdfs:label "Pick record graph" ;
@@ -613,7 +613,7 @@ The contract of the pattern: `$this` is the agent and `$state` names the graph t
 
 orexis:about a owl:ObjectProperty ; rdfs:domain orexis:Desire ;
     rdfs:label "about" ;
-    rdfs:comment "What a want is ABOUT — the one node an action query may join a lever to. Stated by whoever derived the want, and opaque to the kernel: sensing says a region want and a freshness want are about an observable property, and its own action queries walk from there; a want that is about nothing (a debt, a call) states none and is joined to its rows another way. The kernel carries it from the want to the row to the rule (`VALUES (?want ?about)` in orexis:available, `$about` in an effect) and never reads it. It replaced the ledger's and the row's `ssn:forProperty`, which was the kernel naming a sensing notion (the-stake-is-sensings-want)." .
+    rdfs:comment "What a want is ABOUT — the one node an action query may join a lever to. Stated by whoever derived the want, and opaque to the kernel: sensing says a region want and a freshness want are about an observable property, and its own action queries walk from there; a want that is about nothing (a debt, a call) states none and is joined to its rows another way. The kernel carries it from the want to the row to the rule (`VALUES (?want ?about)` in orexis:available, `$about` in an effect) and never reads it. It replaced the ledger's and the row's `ssn:forProperty`, which was the kernel naming a sensing notion (the-region-want-is-sensings-want)." .
 
 #################  When a want binds: the binding axis  #################
 #
@@ -674,7 +674,7 @@ orexis:about a owl:ObjectProperty ; rdfs:domain orexis:Desire ;
 #  THE AIM WAS HERE — `orexis:Aim`, `orexis:aims`, the pick inside a region — and is `sensing:Aim`,
 #  `sensing:aims` now: a point in a property, checked against a range a subject states, read
 #  by the measure that scores a reading. Every word of that is sensing's
-#  (the-stake-is-sensings-want). `agent/vocabulary.py` carries the rename for a volume that
+#  (the-region-want-is-sensings-want). `agent/vocabulary.py` carries the rename for a volume that
 #  holds the old spelling.
 
 #################  An obligation: a desire someone else sourced  #################
@@ -713,7 +713,7 @@ orexis:expiresAt a owl:DatatypeProperty ; rdfs:domain orexis:Desire ; rdfs:range
     rdfs:label "expires at" ;
     rdfs:comment """When the venue stops holding the claim this debt came from — the claim's own `exp`, kept as the debt's. Absent where the market stated no window, and such a debt never becomes urgent, which is right: nobody is waiting on it.
 
-This is what gives an obligation its urgency, and the reason it had to exist as DATA before obligations could drive acts. A stake's urgency comes from a survival envelope — how much room is left before the subject ends — and a duty has no envelope, so the room it has is TIME: at issue the whole window is ahead and nothing has gone wrong, near expiry there is none and lateness is real. Read with the ledger's `owedAt`, which is why both are kept: urgency is the fraction of the window that has run, and an agent holding only the deadline would have to guess when the window opened.
+This is what gives an obligation its urgency, and the reason it had to exist as DATA before obligations could drive acts. A region want's urgency comes from a survival envelope — how much room is left before the subject ends — and a duty has no envelope, so the room it has is TIME: at issue the whole window is ahead and nothing has gone wrong, near expiry there is none and lateness is real. Read with the ledger's `owedAt`, which is why both are kept: urgency is the fraction of the window that has run, and an agent holding only the deadline would have to guess when the window opened.
 
 The alternatives were measured against this and both are recorded as the risk in an-obligation-is-a-desire-someone-else-sourced: a duty pinned at maximum is the honoured mode returning by another name, since it outranks a plant that is dying, and a duty with no heat at all is an agent that quietly defects while its ledger looks tidy.""" .
 

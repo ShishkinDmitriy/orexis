@@ -49,12 +49,12 @@ output.
 
 Two families, and they behave differently ([genesis-process](/domain/genesis-process.md)):
 **operational** (`sensing:fastSleepS`, `sensing:slowSleepS`, `sensing:maxReadingAgeS`) follows the *kind* of
-world — a bench rig wants 10s, a garden wants 600s; **stake** (`sensing:aims`,
+world — a bench rig wants 10s, a garden wants 600s; **region want** (`sensing:aims`,
 `market:hasEndowment`, `water:maxValuePerL`) is the agent's own and derivable from nothing.
 
 There is no band to author. Where a plant is parched and where it is soaked belong to the
 **plant**, as `ssn-system:hasOperatingRange` and `ssn-system:hasSurvivalRange` in `world.ttl`,
-and the agent's region is deduced from them — so the only stake number about moisture you are
+and the agent's region is deduced from them — so the only region want number about moisture you are
 asked for is the *target*, and it must sit inside that region or the agent will not start. See
 [desire](/domain/desire.md).
 

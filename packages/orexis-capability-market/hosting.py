@@ -124,7 +124,7 @@ class HostingModule(Module):
             for row in bindings(agent.beliefs.query(_event_topics_q(market.uri), agent.beliefs.graphs_of(PUBLIC))):
                 self.event_topics[row["eventTopic"]] = market
 
-        # Empty when no valuation of the venue's good meets any participant's stake — a
+        # Empty when no valuation of the venue's good meets any participant's region want — a
         # market in something no instrument measures, which `market:aboutProperty` exists to
         # keep expressible. Such a host takes any band it is sent, which is the behaviour
         # every host had before there was more than one kind of band to send. Per MARKET
@@ -579,7 +579,7 @@ SELECT (SUM(?a) AS ?owed) WHERE {{
         # claim that sourced it, whether or not the holder ever presents. What it buys
         # immediately is durability: `held` above dies with the process, and a restarted host
         # used to forget every claim it had issued.
-        #  The LEDGER OF DEBTS and not the regions (#233). A host with no stake of its
+        #  The LEDGER OF DEBTS and not the regions (#233). A host with no region want of its
         #  own — the city, acting for a mains that states no ranges — used to reach this line,
         #  find no desire module, and record nothing at all while issuing claims all day.
         if (ledger := self.ledger) is not None:

@@ -38,7 +38,7 @@ class SeriesWriter:
         number is of is not optional and not derivable from the number (a board reporting soil
         moisture and air humidity sends two fractions in the same 0-1 range), and sensing
         fills it; the kernel's writer names no property of its own — this is a series surface
-        (the-stake-is-sensings-want). The measurement name is unchanged, because it is what the
+        (the-region-want-is-sensings-want). The measurement name is unchanged, because it is what the
         readings dashboards filter on and what `infra/tests` asserts against.
 
         `at` is the caller's instant, and stating it matters more than it looks. Left unset, a

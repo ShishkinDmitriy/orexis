@@ -92,7 +92,7 @@ class MqttDriver(Driver):
         gets the current verdict the instant it subscribes, instead of showing nothing until the
         next reading it takes has been judged.
 
-        The verdict is opaque here. Sensing collects it from whichever module holds a stake
+        The verdict is opaque here. Sensing collects it from whichever module holds a region want
         and passes it through; this driver never learns what a band is.
         """
         if not sensor.command_topic:

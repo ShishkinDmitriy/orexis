@@ -54,7 +54,7 @@ by simulation. Slow, and it should be interruptible. It runs when something goal
 cadences — a handler writing at the board's rhythm and a search reading at the agent's — and it
 is where the timestamps and the instrument live that make freshness a question anyone can ask
 rather than a guess. Every hard question so far settled there and not in either neighbour:
-staleness became a want with a measure ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)),
+staleness became a want with a measure ([the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md)),
 a dead sensor became a freshness want going cold rather than a special case
 ([a-test-that-asserted-nothing](/decisions/a-test-that-asserted-nothing.md)'s neighbour, #124),
 and event thinning became the upsert key plus the summary window

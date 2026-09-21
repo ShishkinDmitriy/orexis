@@ -29,7 +29,7 @@ def _fern(monkeypatch, moisture=FALLING):
     return build_agent("fern", st, monkeypatch)
 
 
-def _stake(agent):
+def _region_want(agent):
     return next(d for d in agent.considering()
                 if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
 
@@ -41,12 +41,12 @@ def test_a_pass_that_finds_nothing_at_the_latest_start_stands_at_the_present(mon
     the bid is taken now."""
     agent = _fern(monkeypatch)
     open_round_for(agent, "fern", seconds=60.0)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     assert desire.is_met
     plan = agent.deliberator.decide(desire)
     assert plan is not None and [s.action for s in plan.steps] == [ACQUIRING], plan
     assert plan.placed_at is None, "found from the present: taken now, not placed"
-    child = _stake(agent)
+    child = _region_want(agent)
     assert child.holds_at is not None
     assert agent.deliberator._planners[child.uri]._root.landing == 0, "the pass stood at now"
 
@@ -57,11 +57,11 @@ def test_the_bid_says_when_the_water_is_wanted(monkeypatch):
     agent = _fern(monkeypatch)
     market = wired_markets(agent)[0]
     open_round_for(agent, "fern", seconds=60.0)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     assert pursuit.pursue(agent, desire) is not None
     bids = agent.sent.to(f"{market.bid_topic}/fern")
     assert bids, "the bid went out now, while the round is open"
-    child = _stake(agent)
+    child = _region_want(agent)
     wanted = datetime.fromisoformat(bids[-1]["wanted_at"])
     ahead = (child.holds_at - wanted).total_seconds()
     assert 0.0 <= ahead <= 600.0, f"the presenting instant is the want's, less the pour: {ahead}s"
@@ -74,10 +74,10 @@ def test_a_claim_with_a_window_places_the_presenting(monkeypatch):
     agent = _fern(monkeypatch)
     market = wired_markets(agent)[0]
     open_round_for(agent, "fern", seconds=60.0)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     uri = pursuit.pursue(agent, desire)
     assert uri is not None
-    child = _stake(agent)
+    child = _region_want(agent)
     opens = datetime.now(timezone.utc) + timedelta(hours=3)
     agent.deliver(f"{market.claim_topic}/fern", {
         "auction_id": open_round_for.__name__ and None, "jti": "j-window", "sub": "fern",

@@ -7,7 +7,7 @@ value, which is to say a sensing sentence in the kernel. The kernel keeps the ME
 logged and does not silence the rest) and this file keeps the CONTRACT: what each hook is
 asked with, and how the answers merge. A module that wants a say defines the method; bidding
 answers `urgency` for a held claim, sensing itself answers all three from the region.
-See knowledge/decisions/the-stake-is-sensings-want.md.
+See knowledge/decisions/the-region-want-is-sensings-want.md.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from .terms import ANNOTATE, BOUNDS, READING_RECORDED
 def annotations(agent, subject_uri: str, observed_property: str, value: float) -> dict:
     """Everything the agent's modules want to say about a reading of its own, merged — what
     makes an announcement the AGENT's rather than sensing's: whoever holds an opinion
-    contributes it, and a module with no stake contributes nothing."""
+    contributes it, and a module with no region want contributes nothing."""
     out: dict = {}
     for answer in agent.ask(ANNOTATE, subject_uri, observed_property, value):
         out.update(answer)

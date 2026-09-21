@@ -37,7 +37,7 @@ what is pursued: a [desire](/domain/desire.md) in the forest's sense, with the
 pursued wants derived under it. **It is not the search's law**, and the first draft of this
 record said it was: the binding record gives an Always want the reading *judged at every
 state*, and what enforces that today is never-newly-enter over the shapes an agent holds at
-violation severity — the aversions — which a stake's region is not. Making it one was measured
+violation severity — the aversions — which a region want's region is not. Making it one was measured
 in #618 and refused, below.
 
 **What is pursued is derived from the root, with a binding of its own, a lifetime and a
@@ -126,7 +126,7 @@ regimes, five forks where 128 found the plan. The reason is the key never-newly-
 by: (shape, focus, value), and a step that replaces a reading mints a NEW node for it, so a
 violation the base already stood in re-reads as newly entered the moment a lever touches the
 reading. The aversions survive this because their violations key on nodes no step replaces. A
-stake's region could join the law only with a key that survives a replaced reading — the
+region want's region could join the law only with a key that survives a replaced reading — the
 reading's own key, subject and property, rather than its node — and that is a seam, not a
 build: nothing shipped asks for it, since the search already refuses a plan that leaves the
 region by its own met-test.
@@ -144,7 +144,7 @@ with one more kind of premise: a belief. Every premise in that forest is ratifie
 the agent's own, and the child that names it is regrown from it exactly as the tree is regrown
 from its ratified premises.
 
-It also settles #607 more honestly than #607's own sketch, which had the stake's measure answer
+It also settles #607 more honestly than #607's own sketch, which had the region want's measure answer
 the larger of a state room and a time room. Deriving the instant-bound child says the same thing
 by the binding, which is the axis that exists for it — one room per want, and no MAX.
 
@@ -191,11 +191,11 @@ RDF for a month, and naming that lets the literature be read against the issues 
   up.
 - **Two children under one root at once** — below now AND predicted to be dying. Hottest wins,
   as today; nothing here composes them.
-- **A stake's region as law**, keyed by the reading's subject and property rather than its node,
+- **A region want's region as law**, keyed by the reading's subject and property rather than its node,
   so never-newly-enter can tell a repair from a new entry. Measured above; no customer yet.
 - **A root that states its met-test inline.** A blank node has no name another graph can point
   at, and copying it would make a second owner of the claim, so such a root is pursued itself,
-  logged. No shipped root does; the loner's, the greenhouse's and every derived stake's are IRIs.
+  logged. No shipped root does; the loner's, the greenhouse's and every derived region want's are IRIs.
 
 # Amendment: the word is retired, the claim is not
 

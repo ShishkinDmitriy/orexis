@@ -76,7 +76,7 @@ is one full cycle of whatever cadence its sensing currently commands — dynamic
 check it. State it long: a generous window costs a debt remembered slightly too long, a mean one
 charges a buyer for water that never left the barrel.
 
-What it is *for* is urgency. A stake's heat comes from the survival envelope, and an obligation has no
+What it is *for* is urgency. A region want's heat comes from the survival envelope, and an obligation has no
 envelope — its room is time, so an obligation's urgency is the fraction of the window that has
 run. That is why the deadline had to exist as data before obligations could drive acts; see
 [an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md).

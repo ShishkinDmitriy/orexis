@@ -88,11 +88,11 @@ class Want:
     #  A want was two types for a while: this one, stored, and a `Want` built per pass to
     #  say how badly it was wanted. The sovereign struck the second — all Want had, now has
     #  Want — and these are its fields. They are not stored and not read back: whoever holds
-    #  the stake fills them when the choir is asked, and a want read from the store carries
+    #  the region want fills them when the choir is asked, and a want read from the store carries
     #  their defaults.
     #
     #  AND AN URGENCY IS NOT AMONG THEM. A want carried one — 0 content, 1 at the edge of what
-    #  it can bear — contributed by whichever capability held the stake, and the collection
+    #  it can bear — contributed by whichever capability held the region want, and the collection
     #  ranked by it. Nothing ever chose by that rank: `Deliberator.pursued` plans for EVERY
     #  want it is handed, so the order decided which was planned first and nothing else. What a
     #  ranking would have to compare is what the plans cost and how long they take, which is
@@ -102,10 +102,10 @@ class Want:
     #  question and lives on the node (`planner._unmet_in`).
 
     # What it currently reads, where whoever contributed the want has a number for it — a
-    # stake's reading, filled by sensing. None when nothing has been observed, which is a gap
+    # region want's reading, filled by sensing. None when nothing has been observed, which is a gap
     # and not a zero. WHAT the want is about is not on this type: a want is its node, and a
     # package that needs the property of one it holds walks to it in its own words
-    # (the-stake-is-sensings-want; sensing's `ObservedDesire` carries `observed_property`).
+    # (the-region-want-is-sensings-want; sensing's `ObservedDesire` carries `observed_property`).
     value: float | None = None
 
     #  A PACKAGE'S WORDS ARE NOT HERE. A debt's claim and whom it is owed to were two fields
@@ -119,7 +119,7 @@ class Want:
     #  hold a candidate plan's landing time to the room left (#472). A BY, not an AT: a plan
     #  for a want at an instant (`holds_at`) is placed to land there; a plan for a want that
     #  expires is refused where it would land late. A debt's deadline, set by the ledger that
-    #  speaks for it; None for a stake, and None for a debt whose market stated no window.
+    #  speaks for it; None for a region want, and None for a debt whose market stated no window.
     expires: datetime | None = None
 
     # An EPISTEMIC want's one: the instrument whose reading is wanted current. Present exactly
@@ -138,11 +138,11 @@ class Want:
     # Whether anything is being asked of this agent YET. A obligation nobody has presented stands and
     # may be hot, and still must not be acted on: the holder is waiting for its own watch to be
     # live, and a host that doses early spends the water where nothing is looking. Always true
-    # for a stake — a plant does not ask.
+    # for a region want — a plant does not ask.
     pursuable: bool = True
 
     #  What state the desire is in, in its own kind's vocabulary: `met`, `unmet` or `unmeasured`
-    #  for a stake, `met`, `stale` or `unmeasured` for an epistemic want — where it is read off
+    #  for a region want, `met`, `stale` or `unmeasured` for an epistemic want — where it is read off
     #  the MEASURE, so a want scored maximal can never report as met, which it did while the
     #  label came from a staleness test that declines to judge at all without a published
     #  horizon — and `standing` or `demanded` for an obligation. Carried rather than inferred from

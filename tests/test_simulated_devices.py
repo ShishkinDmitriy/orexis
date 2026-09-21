@@ -76,10 +76,10 @@ def test_the_simulated_world_derives_what_a_wired_one_does():
         f"the simulation has stopped standing in for hardware")
     #  `Reflex`, `Keeping` and `Deducing` were all in this difference and none is a capability
     #  any more — deciding, committing and wanting are the kernel's, granted by nothing. What a
-    #  stake still buys is the SHAPES it must satisfy and the regions it holds, not a module;
+    #  region want still buys is the SHAPES it must satisfy and the regions it holds, not a module;
     #  the one grant left in the difference is the market position.
     assert simulated - wired == {"Bidding"}, \
-        "the simulated world differs by something other than its fern having a stake"
+        "the simulated world differs by something other than its fern having a region want"
 
 
 # --- the shapes, each proved to reject something ----------------------------

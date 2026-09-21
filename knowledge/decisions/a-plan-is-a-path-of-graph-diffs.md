@@ -78,7 +78,7 @@ axis already has two points in the house, with the third legal by SHACL's own ru
 | should become | a custom severity (`sh:severity` is any IRI) | legitimate, unsatisfactory — a GAP | the agent, through its levers | continuously |
 
 Three asymmetries keep the kinds from collapsing. WHO THEY BIND: a validating shape is the
-society's, everyone held identically; a desired shape is a stake, deduced per agent — and
+society's, everyone held identically; a desired shape is a region want, deduced per agent — and
 neither may be weakened by the agent, which is the symmetry that matters. DEGREE AND TIME:
 conformance is boolean now; a want has signed distance (what urgency, bidding and the alarm
 bands consume — the violation must carry its measure) and is pursued TOWARD, tolerating being
@@ -152,7 +152,7 @@ beside it: gaps are the choir too (`Module.notices()`), the mind ticks on its pa
 and the marketless watching finally reaches the ledger the sovereign asks.
 
 **So the menu is a tool list in the LLM sense, with two upgrades**: nothing registers the
-tools — the world implies them, per agent, per stake — and the tool call is split by
+tools — the world implies them, per agent, per region want — and the tool call is split by
 deterministic-bid: the model picks the row, code computes the arguments. A row is a tool
 signature (means, property, lever, direction as its one-bit effect), and the list is data on
 the ask channel, not prose in a prompt.
@@ -417,7 +417,7 @@ The sovereign ruled that the hand-written plan should be dropped *if the planner
 It cannot, and the reason is not a missing feature: **acquire-then-offer is not a path to any goal
 the supplier holds.**
 
-Probed against the real world rather than argued. The supplier's one chosen goal is its own stake
+Probed against the real world rather than argued. The supplier's one chosen goal is its own region want
 in `StoredLitres`, and its chosen menu is Acquire from the city and Observe. Offering does not
 raise stock — it SELLS stock — so no state the supplier wants is nearer for having offered, and
 Acquire alone satisfies serveability. The two-step is a true and useful description of the
@@ -547,7 +547,7 @@ the search saying *I cannot answer*:
 the reason the record's own overshoot section gives about a coarse lever: both questions are
 facts about ratified files and loaded packages, not about a moment. `orexis-validate` walks each
 agent's menu and refuses a world where a contributing means has no effect rule, and walks each
-agent's regions and refuses one where a stake resolves no declared measure. The measure half is
+agent's regions and refuses one where a region want resolves no declared measure. The measure half is
 asked of the module CLASS — a gate cannot build an agent, because an agent needs credentials
 onboarding has not minted yet — so the choir's roll is called before anyone is in the room. The
 three shipped worlds pass unchanged; the failing fixtures are built, not borrowed.

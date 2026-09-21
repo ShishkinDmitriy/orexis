@@ -64,7 +64,7 @@ plausibly and it is wrong twice over: it makes a market undeclarable when it all
 no instrument measures — a time slot, a right of way, a share of attention — and it puts a fact
 about the *bidder's* valuation on the *venue*, where every participant would have to agree to it.
 
-The property-shaped thing is the **stake**. A target of 0.55 is 0.55 *of* something, and the
+The property-shaped thing is the **region want**. A target of 0.55 is 0.55 *of* something, and the
 bands and `water:litresPerFraction` are denominated in the same unit — `litresPerFraction` is
 precisely the exchange rate between the lot and the property, which is where the coupling
 honestly lives. So the domain states `market:aboutProperty` on the desire term itself, the bidder
@@ -75,7 +75,7 @@ What a venue DOES state, since #198, is its **[good](/domain/good.md)** — `mar
 reached as `marketFor/supplies`. That is not the rejected model returning, and the difference is
 exactly the one this section is about: a good is what changes hands, where the rejected model put
 the buyer's *property* on the venue. Everything else about a good — that it is the join point the
-property-shaped stakes hang off, and what that keeps expressible — is
+property-shaped region wants hang off, and what that keeps expressible — is
 [good](/domain/good.md)'s to say.
 
 # Who hosts

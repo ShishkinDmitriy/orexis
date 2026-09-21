@@ -95,8 +95,8 @@ being declared unnecessary.
 # The seam back to adversarial mode
 
 Restoring anti-fabrication does **not** require the gateway process back. Move the witness
-onto the **sensor**: a signing sensor (device cert) authors its own readings, so the *stake-
-free device* attests, not the *staked agent*. Then `prov:wasGeneratedBy` is the sensor's key
+onto the **sensor**: a signing sensor (device cert) authors its own readings, so the device
+that holds no region want attests, not the agent that holds one. Then `prov:wasGeneratedBy` is the sensor's key
 and readings are verifiable again — adversarial-safe, still no central gateway. Keep this
 seam open; do not assume trusted-mode everywhere.
 

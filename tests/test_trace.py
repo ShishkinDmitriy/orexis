@@ -35,7 +35,7 @@ def _gardener(monkeypatch, moisture):
     st = genesis_store({("zz", MOISTURE): moisture}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     #  THE STAKE, named rather than taken first. Two wants are about MOISTURE — the region and
-    #  the freshness want about the probe that reads it — and the stake used to sort ahead of
+    #  the freshness want about the probe that reads it — and the region want used to sort ahead of
     #  it, because what an agent pursued came back hottest first. Nothing orders them now, so
     #  a test that means the region says the region: taking the freshness want here planned
     #  nothing, and read as "dry, with a pump, and no plan".

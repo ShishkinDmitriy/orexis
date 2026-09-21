@@ -184,7 +184,7 @@ class Observations:
             # Voluntary disclosure: the agent announces its own verdict, not its raw state. A
             # host listens for this to learn that scarcity has appeared, and never reads a
             # moisture. The number comes from whoever observed; the judgment comes from
-            # whichever capability holds a stake — see runtime.annotations.
+            # whichever capability holds a region want — see runtime.annotations.
             self.agent.tell(SEND, self.event_topic, {
                 "agent": self.me.agent_id, "subject": sensor.subject,
                 # Named, because a subject with two sensors announces two values on one topic

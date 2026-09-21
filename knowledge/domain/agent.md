@@ -2,14 +2,14 @@
 type: Role
 title: Agent
 term: http://example.org/orexis#Agent
-description: A certified, self-interested principal with a wallet and a stake — the only tier the trust boundary constrains.
+description: A certified, self-interested principal with a wallet and a region want — the only tier the trust boundary constrains.
 ---
 
 # What it is
 
-The general notion of an **agent**: a self-interested principal that holds a *stake* (a
+The general notion of an **agent**: a self-interested principal that holds a *region want* (a
 desire and a [wallet](/domain/wallet.md)) and therefore the only tier the trusted core is
-built to constrain. Services (gateway, clearing, executor) are stake-free and are *not*
+built to constrain. Services (gateway, clearing, executor) are region-want-free and are *not*
 agents. The concrete kinds are the [plant agent](/domain/plant-agent.md) (advocates a
 moisture target) and the [supplier](/domain/supplier.md) (a strategic seller); both are
 agents in this sense — they have positions to advance and can be lied through.
@@ -151,7 +151,7 @@ Both are self-verifying signed artifacts, checked locally. See
   ([deterministic-bid](/decisions/deterministic-bid.md)).
 - Every justification **cites triples from the record** or is rejected (the leash).
 - The bid is a function of **unmet demand** ([bids-as-unmet-demand](/decisions/bids-as-unmet-demand.md)).
-- Identity and stake are **external and durable**; the LLM call is stateless.
+- Identity and region want are **external and durable**; the LLM call is stateless.
 
 The [plant agent](/domain/plant-agent.md) specializes this with its two-layer (reactive /
 deliberative) BDI architecture.

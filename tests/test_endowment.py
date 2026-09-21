@@ -17,7 +17,7 @@ from orexis_agent_progression.ontology import PUBLIC
 
 NS = "http://example.org/orexis/world/simulation#"
 MARKET = "http://example.org/orexis/market#"
-SENSING = "http://example.org/orexis/sensing#"   # the aim is sensing's (the-stake-is-sensings-want)
+SENSING = "http://example.org/orexis/sensing#"   # the aim is sensing's (the-region-want-is-sensings-want)
 PROLOG = """@prefix : <http://example.org/orexis/world/simulation#> .
 @prefix market: <http://example.org/orexis/market#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .

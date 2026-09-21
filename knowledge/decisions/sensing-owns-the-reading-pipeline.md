@@ -34,11 +34,11 @@ changes but their imports. Two empty kernel directories (`agent/codecs`, `agent/
 that had outlived the packages they once held are deleted.
 
 **The kernel judges no staleness.** `readings.rq` gave the desire modality each reading's value,
-instant and *horizon*, and the horizon's only kernel use was to mark a stake maximally urgent
+instant and *horizon*, and the horizon's only kernel use was to mark a region want maximally urgent
 once its reading was older than `sensing:staleAfterS`. That word is sensing's — the sovereign's
 ruling — and so is the judgment: whether a reading is still evidence is the freshness want's
 business, derived and measured by sensing, and sensing's `want_about` already answers that want
-first. So a stake judges the number it has, `regions.py` reads the sensed graph in sosa alone
+first. So a region want judges the number it has, `regions.py` reads the sensed graph in sosa alone
 (`sosa:madeBySensor`, which the sensed writer stamps, keys the freshness wants to their
 instrument), and `readings.rq` is deleted rather than moved. A choir hook was tried first and
 refused by the sovereign for the reason rule 2 refuses a capability of one member: a hook one
@@ -56,14 +56,14 @@ of the capability family, and this record is where the exception is written.
 
 # What it cost
 
-One behaviour: a stake whose reading has gone cold no longer reads maximally urgent — it reads
+One behaviour: a region want whose reading has gone cold no longer reads maximally urgent — it reads
 by its last number, and the freshness want beside it is what is hot. Two tests that read the
 freshness want through a property-keyed dict pinned the old arrangement and now name the want
 they mean.
 
 # Seams left open
 
-- **A stake's verdict trusts a number that may be cold.** The freshness want used to outrank
+- **A region want's verdict trusts a number that may be cold.** The freshness want used to outrank
   it while it is — a want-level urgency that is now gone, so nothing orders the two and both
-  are planned for; a reader of the stake's state alone still sees the last number's verdict.
+  are planned for; a reader of the region want's state alone still sees the last number's verdict.
   That is the split the ruling asked for, stated so nobody rediscovers it as a bug.

@@ -31,7 +31,7 @@ a `marketFor` pointing at the source, and a host who owns it. So:
   belong to whoever convenes it, and everything else minted from the source's id.
 - **`market:hosts` derives**: the owner of the source hosts its venue.
 - **`market:bidsIn` derives** from the Acquire walk's own premises (#189): an agent with a
-  stake in the denominated property whose pot the venue's valves reach is a participant.
+  region want in the denominated property whose pot the venue's valves reach is a participant.
   Plumbing implies participation; the world stops naming buyers. Since #198 the premise
   closes through the GOOD — the source's stated stuff must be what the valuation converts —
   because "the denominated property" stopped being one thing the day the refill venue priced
@@ -42,7 +42,7 @@ Both markets are then one mechanism. The plants' market derives from today's wir
 unchanged — the same triples land in the derived graph with honest provenance
 ([who-put-the-fact-there](/decisions/who-put-the-fact-there.md)) — and the refill market
 self-assembles the moment its wiring exists: a `:city_mains` source plumbed to the barrel,
-owned by a city agent that states its matching rule, meeting the want the stake arc created.
+owned by a city agent that states its matching rule, meeting the want the region want arc created.
 Metered mains IS a market relationship, which is why the refill buys rather than Actuates;
 the Actuate rung ([#190](https://github.com/ShishkinDmitriy/orexis/issues/190)) stays for a
 genuinely-owned source — a rain-fed cistern, where the water really is free.

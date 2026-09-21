@@ -26,9 +26,9 @@ Two things deliberately do NOT appear here:
   sensor from what the world says about it — so an agent may hold one sensor on a bus and
   another on a wire under a single attention policy.
 - **What counts as trouble.** Sensing knows how to look and how fresh a number is; it has
-  no band and no target, because those belong to whoever holds a stake in the subject. So it
+  no band and no target, because those belong to whoever holds a region_want in the subject. So it
   *asks* — `choir.annotations` for what to say about a reading
-  publicly — and an agent with no stake simply gets no answer and watches at its slow cadence.
+  publicly — and an agent with no region want simply gets no answer and watches at its slow cadence.
   That is why nothing here imports another capability.
 
 Everything touched is discovered: which sensors (`sensing:polls`), what property they read
@@ -148,7 +148,7 @@ class SensingModule(Module):
         #  THE REGIONS this agent holds — deduced by my own `desires.ru` from what its subject
         #  states it needs, read once here. They were the kernel's deducer's, and every
         #  question about them is a question about a reading, so they are mine now
-        #  (the-stake-is-sensings-want). Every sensing module the agent composes reads the
+        #  (the-region-want-is-sensings-want). Every sensing module the agent composes reads the
         #  same ones, and `Agent.considering` folds a want seen twice into one by its node.
         self.regions: dict[str, Region] = regions_of(self.agent.beliefs.reader(PUBLIC), self.me.uri)
         #  And the AIM inside each — the agent's own pick, a belief, which a review may move.
@@ -518,7 +518,7 @@ WHERE {{ GRAPH <{STATE_GRAPH}> {{
 
         Two things the kernel used to do by property and now does by want, because the ledger
         keys on the want and which wants a property carries is this package's to say
-        (the-stake-is-sensings-want): the standing Observe for each is satisfied — the look
+        (the-region-want-is-sensings-want): the standing Observe for each is satisfied — the look
         is this module's act, and the reading arriving is the look done — and every standing
         step that predicted this reading is answered by it (#639): in the band it predicted,
         met; outside it at or after the step's landing, unmet; before the landing, nothing.
@@ -537,7 +537,7 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
         #  bands the first prediction said it may be in — the one the next reading is held to, the first of the
         #  key, still standing here since the ladder is rewritten after this is told. The
         #  reviser holds the rule; this module hands it the two sets in its own words.
-        if subject_uri == self.me.acts_for and (stake := self.stake_about(observed_property)) is not None:
+        if subject_uri == self.me.acts_for and (region_want := self.region_want_about(observed_property)) is not None:
             from orexis_agent_deliberation import reviser
             bands = self._bands()
             actual = frozenset(types & bands)
@@ -545,12 +545,12 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
             said = (f"{observed_property.rsplit('#', 1)[-1]} read "
                     f"{', '.join(sorted(b.rsplit('#', 1)[-1] for b in actual)) or 'nothing'} where "
                     f"{', '.join(sorted(b.rsplit('#', 1)[-1] for b in (expected or ()))) or 'nothing'} was expected")
-            reviser.observed(self.agent, stake.uri, expected, actual, said)
+            reviser.observed(self.agent, region_want.uri, expected, actual, said)
 
     # --- which want a reading is about: this package's to say --------------------------
 
     def wants_about(self, observed_property: str, subject_uri: str | None = None) -> list:
-        """Every want this agent holds about a property — its stake, if it acts for the
+        """Every want this agent holds about a property — its region_want, if it acts for the
         subject, and the freshness want of each instrument that reads it.
 
         AS THE CONTAINER PRESENTS THEM (#618): while a want derived under a root stands, the
@@ -562,14 +562,14 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
 
     def want_about(self, observed_property: str):
         """WHICH of a property's wants is the one to act on — the rule, stated once: an unmet
-        epistemic want first, then the stake, then whatever is left.
+        epistemic want first, then the region_want, then whatever is left.
 
         KNOWING FIRST, then the number, and the order is a rule rather than a ranking. A
         property carries two wants — the region it should sit in, and that its instrument
         has spoken recently — and taking whichever is HOTTER would decide between two
         different questions by a number that means the same thing in both. No lever moves a
         number you cannot see, so an actuator asking whether to dose a pot nobody has looked
-        at lately is told to look; once the reading is current the stake answers. This was
+        at lately is told to look; once the reading is current the region want answers. This was
         the deliberator's `desire_about`; the actors' door is `execution.pursue_for(want)`.
         """
         mine = self.wants_about(observed_property)
@@ -577,7 +577,7 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
                 or next((d for d in mine if not d.is_epistemic), None)
                 or next(iter(mine), None))
 
-    def stake_about(self, observed_property: str):
+    def region_want_about(self, observed_property: str):
         """The region want about a property, or None — what a bidder or an actuator commits
         to, and what the keeper's rows for their acts pursue."""
         return next((d for d in self.wants_about(observed_property) if not d.is_epistemic), None)
@@ -628,11 +628,11 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
     #  ---- the region, and what a reading means against it -------------------------------
     #
     #  These were the kernel's deducer's: the band, the urgency, the bounds a board should watch,
-    #  the gaps, the stakes contributed to what the agent pursues. Every one of them is a
+    #  the gaps, the region wants contributed to what the agent pursues. Every one of them is a
     #  verdict on an OBSERVATION, and the kernel no longer knows what one is.
 
     def region(self, observed_property: str) -> Region | None:
-        """The agent's region in one property, or None if it holds no stake in it.
+        """The agent's region in one property, or None if it holds no region_want in it.
 
         Whoever wants, and this says what it wants — so a bid, a dose or a cadence can be
         computed against the agent's ends without anything importing this package: through
@@ -656,7 +656,7 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
         self._aims = aims_of(self.agent.desires.query, self.agent.id, self.me.uri)
 
     def _is_mine(self, subject_uri: str, observed_property: str) -> bool:
-        """A stake is in one property of the one subject the agent advances. Both have to
+        """A region_want is in one property of the one subject the agent advances. Both have to
         match: handed a temperature against a moisture region the honest answer is no opinion,
         and 21.0 read as a moisture fraction would score as perfectly comfortable."""
         return subject_uri == self.me.acts_for and observed_property in self.regions
@@ -826,7 +826,7 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
         return {prop: gap for prop, gap in self.gaps().items() if prop in fresh}
 
     def desires(self, now: datetime | None = None) -> list[Want]:
-        """My contribution to what the agent is considering: its stakes and its freshness wants,
+        """My contribution to what the agent is considering: its region wants and its freshness wants,
         the two kinds whose premise is an observation. The obligations are the ledger's."""
         from .rows import desires_of  # deferred (#455): same reason as ObservedWant above
         return desires_of(self.agent.desires.query, self.agent.beliefs.reader(PUBLIC),
@@ -1001,8 +1001,8 @@ class SubscribingModule(SensingModule):
         self._note_trend(sensor.subject, sensor.observes, value, at)
         # The verdict travels with the cadence because it is the same message and the same
         # audience. Collected the way every cross-capability opinion is collected — whoever
-        # holds a stake contributes, sensing passes it on without reading it. An agent with
-        # no stake in this property contributes nothing and the device is told only a cadence.
+        # holds a region want contributes, sensing passes it on without reading it. An agent with
+        # no region_want in this property contributes nothing and the device is told only a cadence.
         self.set_cadence(sensor,
                          self.cadence_for(sensor.subject, sensor.observes, value),
                          choir.annotations(self.agent, sensor.subject, sensor.observes, value))
@@ -1089,7 +1089,7 @@ class SubscribingModule(SensingModule):
         here asks it, because there is no longer a question to ask of a predicted value —
         whether a step is in flight is not something a slope foretells.
 
-        Nothing in flight, or no stake in this property at all, is the same answer: the slow
+        Nothing in flight, or no region_want in this property at all, is the same answer: the slow
         cadence, which is the honest reading of "the world owes me no movement here". That is
         why the property is passed — a thermometer on a pot the agent bids water for must not
         be paced by what the soil is doing. `value` is kept in the signature and unread: every
@@ -1105,7 +1105,7 @@ class SubscribingModule(SensingModule):
                       value: float | None = None) -> bool:
         """Two facts, either of which earns the fast cadence — and neither is a measure.
 
-        NOTHING READ YET is the first. An agent with a stake in a property and no current
+        NOTHING READ YET is the first. An agent with a region_want in a property and no current
         reading of it is not calm, it is BLIND, and the first intention is always to look:
         the opening burst before any reading exists, and the return to it when a probe goes
         quiet. This used to arrive as "not knowing is maximally urgent", which was the graded
@@ -1164,7 +1164,7 @@ class SubscribingModule(SensingModule):
         Keyed on the command topic, because one board carrying several peripherals has several
         sensors and ONE place to be instructed. Keyed per sensor, each would compute its own
         interval from its own urgency and publish it retained to the same topic — soil moisture
-        asking for 30s and a thermometer with no stake asking for 900s, last writer winning, on
+        asking for 30s and a thermometer with no region want asking for 900s, last writer winning, on
         every message. The board would be aimed by whichever sensor spoke last.
 
         So the TIGHTEST wins: if anything on this board is urgent, the board watches closely,
@@ -1209,7 +1209,7 @@ class SubscribingModule(SensingModule):
         # needs two of them to establish (#133), and confidence is earned rather than assumed.
         # Every WATCHED channel on this board is told its band (#151), beside the cadence and
         # in the same retained breath: a map of pointer -> [low, high], the tightest bounds any
-        # module with a stake holds — desire's region edges, ordinarily — so the board watches
+        # module with a region want holds — desire's region edges, ordinarily — so the board watches
         # everything its agent wants held, per channel, while both of them sleep. A channel
         # that promised nothing gets no band, a board with no watched channels gets no map,
         # and old firmware ignores keys it does not know.

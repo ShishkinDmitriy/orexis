@@ -32,7 +32,7 @@ def _gardener(monkeypatch, moisture):
                        monkeypatch)
 
 
-def _stake(agent):
+def _region_want(agent):
     """The want about moisture the container presents — the desire, or what is derived under it."""
     return next(d for d in agent.considering()
                 if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
@@ -49,13 +49,13 @@ def test_a_root_is_never_handed_to_the_search_and_what_is_pursued_is_derived_und
     desire's own met-test — and from then on the container presents the derived want in the
     desire's place, carrying the desire's measure and naming the desire."""
     agent = _gardener(monkeypatch, DRY)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     assert desire.desire is None and not desire.is_met
 
     plan = agent.deliberator.decide(desire)
     assert [s.action for s in plan.steps] == [DOSING], "the derived want plans what the desire would have"
 
-    child = _stake(agent)
+    child = _region_want(agent)
     assert child.uri == desire.uri + ".pursued" and child.desire == desire.uri
     assert child.observed_property == MOISTURE, \
         "the derived want is presented with the desire's own row"
@@ -88,12 +88,12 @@ def test_a_met_root_derives_nothing_and_no_pass_runs(monkeypatch):
     """A desire inside its region is nothing to pursue: no want is derived, no planner is built,
     and the container keeps presenting the desire itself."""
     agent = _gardener(monkeypatch, CONTENT)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     assert desire.is_met
     assert agent.deliberator.decide(desire) is None
     assert pursuit.child_of(agent, desire.uri) is None
     assert not agent.deliberator._planners, "no pass ran for a met desire"
-    assert _stake(agent).uri == desire.uri
+    assert _region_want(agent).uri == desire.uri
 
 
 def _state_of(agent, uri: str) -> str | None:
@@ -113,7 +113,7 @@ def test_the_derived_want_is_withdrawn_when_its_plan_finishes_and_derived_again_
     still unmet derives it again on the next decision — under the same name, so everything keyed
     by it finds what it kept."""
     agent = _gardener(monkeypatch, DRY)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     agent.deliberator.decide(desire)
     child = pursuit.child_of(agent, desire.uri)
     assert child is not None
@@ -124,7 +124,7 @@ def test_the_derived_want_is_withdrawn_when_its_plan_finishes_and_derived_again_
     #  and clearing it away are two acts (`forget_wants`, garbage collection on the pass).
     assert forget_wants(agent.beliefs.engine) == [child]
     assert pursuit.child_of(agent, desire.uri) is None
-    assert _stake(agent).uri == desire.uri, "with nothing derived under it, the desire is presented again"
+    assert _region_want(agent).uri == desire.uri, "with nothing derived under it, the desire is presented again"
 
     agent.deliberator.decide(desire)
     assert pursuit.child_of(agent, desire.uri) == child, "still dry: derived again, same node"
@@ -134,17 +134,17 @@ def test_a_derived_want_that_reads_met_with_nothing_standing_is_withdrawn(monkey
     """The world moved on its own — rain, a neighbour's hose — and the desire reads met with no
     plan standing for the derived want: deciding about it withdraws it and plans nothing."""
     agent = _gardener(monkeypatch, DRY)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     agent.deliberator.decide(desire)
-    child = _stake(agent)
+    child = _region_want(agent)
     assert child.desire == desire.uri
 
     write_reading(agent, CONTENT)
-    now = _stake(agent)
+    now = _region_want(agent)
     assert now.uri == child.uri and now.is_met, "still presented until withdrawn, and measured met"
     assert agent.deliberator.decide(now) is None
     assert pursuit.child_of(agent, desire.uri) is None
-    assert _stake(agent).uri == desire.uri
+    assert _region_want(agent).uri == desire.uri
 
 
 def test_the_derived_want_borrows_the_roots_verdict(monkeypatch):
@@ -152,9 +152,9 @@ def test_the_derived_want_borrows_the_roots_verdict(monkeypatch):
     Both were asked of the MEASURE, which is gone — what they must still agree about is the
     verdict, which is the thing anything ever branched on."""
     agent = _gardener(monkeypatch, DRY)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     agent.deliberator.decide(desire)
-    child = _stake(agent)
+    child = _region_want(agent)
     assert child.state == desire.state == "unmet"
 
 
@@ -163,7 +163,7 @@ def test_a_mark_by_either_name_pursues_the_same_want(monkeypatch):
     the derived want stood: the derivation meets the same want by either name, and the
     intention it adopts names the derived want."""
     agent = _gardener(monkeypatch, DRY)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     uri = pursuit.pursue_for(agent, desire.uri)
     assert uri is not None, "the search proposed nothing"
     child = pursuit.child_of(agent, desire.uri)
@@ -186,9 +186,9 @@ def test_the_pursued_graph_is_this_agents_own_and_recorded(monkeypatch):
     `deliberation:PursuedGraph`, and the cost was that no read could ask for the world's wants
     at all — so the kernel judged those a second time instead of reading them."""
     agent = _gardener(monkeypatch, DRY)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     agent.deliberator.decide(desire)
-    child = _stake(agent)
+    child = _region_want(agent)
     graph = graph_of(agent.id, child.uri)
     assert graph in agent.beliefs.graphs_of(WANT), "the derivation classified what it wrote"
     assert bindings(agent.beliefs.query(

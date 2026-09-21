@@ -20,10 +20,10 @@ from .regions import _desired, _known, regions_of, _subjects_of
 @dataclass(frozen=True)
 class ObservedWant(Want):
     """A desire ABOUT AN OBSERVED PROPERTY — the kernel's `Want`, plus the one thing this
-    package knows about it that the kernel does not. A stake and a freshness want are both
+    package knows about it that the kernel does not. A region want and a freshness want are both
     of this kind; an obligation and a call are not. The kernel ranks, plans for and commits to the
     base type by its node; whoever needs the property asks this package, which is where the
-    property was ever meaningful (the-stake-is-sensings-want).
+    property was ever meaningful (the-region-want-is-sensings-want).
 
     Named for the KIND, as every type is: a desire is the kind and a want is one of them
     (knowledge/domain/desire.md)."""
@@ -31,7 +31,7 @@ class ObservedWant(Want):
 
 
 def desires_of(desires, beliefs, agent_uri: str) -> list[Want]:
-    """Sensing's wants, hottest first: every stake, and every freshness want.
+    """Sensing's wants, hottest first: every region want, and every freshness want.
 
     Was the kernel's `desires_of`, and it read the DUTIES too — the ledger reads its own now
     (`agent/ower.py`), and what is left here is exactly the two kinds of want whose premise is
@@ -95,7 +95,7 @@ def desires_of(desires, beliefs, agent_uri: str) -> list[Want]:
                 #  A STAKE JUDGES THE NUMBER IT HAS. It used to go maximal when the reading was
                 #  past sensing's horizon, which meant the kernel judging staleness with a word
                 #  that is sensing's; not knowing is the freshness want's business now — hot,
-                #  and answered first by `want_about` — and the stake says how the last
+                #  and answered first by `want_about` — and the region want says how the last
                 #  number sits, which is what it knows.
                 #  Whichever capability MEASURES such wants, asked through the choir's own the
                 #  caller handed in — the same question the planner asks of a candidate

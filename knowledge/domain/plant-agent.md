@@ -8,7 +8,7 @@ description: A self-interested plant with a desire, a wallet, and an event-drive
 # What it is
 
 One agent per plant (Fern, Tomato, Succulent), each advocating its own moisture target. A
-kind of [agent](/domain/agent.md) — the only tier with a stake (a desire and a
+kind of [agent](/domain/agent.md) — the only tier with a region want (a desire and a
 [wallet](/domain/wallet.md)) and therefore the tier the trust model is built around.
 
 # Identity (important)

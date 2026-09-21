@@ -66,14 +66,14 @@ thing.
 The alternative weighed and refused: a **force term on the want** — the RFC scale imported as
 data, ranking SHALL below MUST. Three reasons, each already paid for elsewhere:
 
-- **Urgency is the common currency, and the deliberately unranked meeting point.** A stake and
+- **Urgency is the common currency, and the deliberately unranked meeting point.** A region want and
   an obligation compare by heat, never by kind, and
   — *the want-level urgency has since been removed, and with it this whole bullet's mechanism:
-  nothing compares a stake to an obligation before planning, because `Deliberator.pursued`
+  nothing compares a region want to an obligation before planning, because `Deliberator.pursued`
   plans for EVERY want and the order chose nothing. What the argument against a force term
   survives on is the second reason below, not this one* —
   [an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md)
-  records the failure a rank would reintroduce: an obligation pinned above every stake is the
+  records the failure a rank would reintroduce: an obligation pinned above every region want is the
   honoured mode returning, outranking a plant that is dying.
 - **Where force is real, severity already carries it** — a violation refuses, a warning notes,
   a gap motivates ([a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md)). A second force
@@ -168,7 +168,7 @@ class. The axiom goes: [#471](https://github.com/ShishkinDmitriy/orexis/issues/4
 
 | source | its SHALL | its SHALL NOT | crossed means |
 |---|---|---|---|
-| the subject — whom I act for | the stake, a region from its stated ranges | the region's own side shapes | a gap — bouletic |
+| the subject — whom I act for | the region want, a region from its stated ranges | the region's own side shapes | a gap — bouletic |
 | a peer — a counterparty | an obligation | the deontic prohibition, [#468](https://github.com/ShishkinDmitriy/orexis/issues/468)'s future seat | a breach — deontic |
 | the sovereign, ratifying a want | a world-stated root | a ratified avoidance, #468's door | a gap — bouletic |
 | the sovereign, as law | — | the shapes and the mandate | illegitimate — alethic |
@@ -345,7 +345,7 @@ sitting is net NEGATIVE: #471 removes a class, and the three axes add none.
 The sovereign asked both directly, and both dissolve against rules already paid for.
 
 **Concepts: the two that exist are enough.** `orexis:Desire`, with `orexis:Obligation` its
-subclass, and the KIND of a want read off the premises it has and the others do not — a stake
+subclass, and the KIND of a want read off the premises it has and the others do not — a region want
 carries a reading, an obligation a claim and a counterparty, an epistemic want its instrument
 — because a flag that can disagree with the data beside it is a flag that eventually does
 ([desire](/domain/desire.md)). A mood class beside them — a Shall, an Avoidance, a

@@ -51,7 +51,7 @@ sensing:Observing
           $me sensing:mayAsk ?sensor .
           ?sensor sensing:monitors ?subject ; sosa:observes ?property .
           # A want ABOUT AN INSTRUMENT — knowing, the freshness want — is looked for through
-          # exactly that instrument, whatever it watches; a want ABOUT A PROPERTY — a stake —
+          # exactly that instrument, whatever it watches; a want ABOUT A PROPERTY — a region want —
           # through any instrument of this agent's that reads it on the subject it acts for.
           FILTER(?sensor = ?about
                  || (?property = ?about && EXISTS { $me orexis:actsFor ?subject }))

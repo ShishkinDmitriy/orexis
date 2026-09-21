@@ -14,7 +14,7 @@ from orexis_agent_deliberation import effects
 from orexis_agent_progression.ontology import ACTIONS_GRAPH, STATE_GRAPH, picks_graph
 from orexis_agent_progression.store import bindings, Raw
 
-from conftest import stake_of, MOISTURE, build_agent, genesis_store, predicted_bands
+from conftest import region_want_of, MOISTURE, build_agent, genesis_store, predicted_bands
 from orexis_agent_progression.ontology import PUBLIC
 
 OBSERVING = "http://example.org/orexis/sensing#Observing"
@@ -139,7 +139,7 @@ def test_the_dose_the_actuator_expects_is_the_band_its_rule_declares(monkeypatch
     #  inside, so the reading is a surprise and wakes the mind at arrival (#632).
     gardener.deliver("sensors/moisture_probe/reading", {"value": 0.05})
     keeper = next(m for m in gardener.modules if m.name == "intention")
-    watches = keeper.open_expectations(stake_of(gardener, MOISTURE).uri)
+    watches = keeper.open_expectations(region_want_of(gardener, MOISTURE).uri)
     assert len(watches) == 1, "a self-dose went out and opened exactly one expectation"
 
     predicted, _ = effects.apply(

@@ -14,7 +14,7 @@ and a losing game once agents argue through an LLM.
 
 # Decision
 
-Defend by structure, not detection. Three powers live ONLY in stake-free trusted
+Defend by structure, not detection. Three powers live ONLY in region-want-free trusted
 infrastructure and are never granted to an agent:
 
 1. **Authoring *witnessed* facts** — in adversarial mode only the

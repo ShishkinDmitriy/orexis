@@ -40,7 +40,7 @@ bid — and selects nothing.
 
 The host runs [bid matching](/domain/bid-matching.md) and produces a *proposed* allocation. What
 makes the result binding is a second signature from [clearing](/domain/clearing.md), which is
-stake-free and validates the trade it had no part in computing.
+region-want-free and validates the trade it had no part in computing.
 
 That split is the whole reason a host may be self-interested. It is a party to the trade — it
 wants a good price — so it must not be the last word on whether the trade is legitimate.

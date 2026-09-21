@@ -25,7 +25,7 @@ timestamp: 2026-08-26T12:00:00Z
 # What was true before
 
 The choir grew hook by hook, each a method name on `Module` or, since
-[the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md), a string handed to
+[the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md), a string handed to
 `Agent.ask` and resolved with `getattr`. It worked, and it had the failure every string
 registry has: `ask("anotate", …)` returns an empty list, a module that spelled its method
 `on_reading_recorded` where the asker said `reading_recorded` is never told, and nothing in

@@ -11,7 +11,7 @@ from __future__ import annotations
 from orexis_agent_progression.ontology import DELIBERATION_GRAPH
 from orexis_agent_progression.store import bindings
 from orexis_capability_sensing import predictions
-from conftest import MOISTURE, build_agent, genesis_store, sensing_of, stake_of, write_reading
+from conftest import MOISTURE, build_agent, genesis_store, sensing_of, region_want_of, write_reading
 from orexis_agent_progression.ontology import PUBLIC
 
 PROBE = "http://example.org/orexis/world/loner#moisture_probe"
@@ -41,8 +41,8 @@ def test_ten_readings_inside_the_expectation_leave_no_mark_and_one_outside_leave
     assert _marks(agent) == {}, "the world going on as believed wakes nothing"
     write_reading(agent, 0.05, MOISTURE)
     marks = _marks(agent)
-    assert list(marks) == [stake_of(agent).uri]
-    _, surprise = marks[stake_of(agent).uri]
+    assert list(marks) == [region_want_of(agent).uri]
+    _, surprise = marks[region_want_of(agent).uri]
     assert surprise is not None and surprise[0] == "exogenous" and "BelowRegion" in surprise[1]
     agent.reviser.settle()
     rows = bindings(agent.beliefs.query(f"""
@@ -59,7 +59,7 @@ def test_a_reading_that_crosses_a_boundary_inside_the_expected_set_does_not_wake
     assert _marks(agent) == {}, "a boundary crossed inside the expected set wakes nothing"
     high = sensing_of(agent).regions[MOISTURE].high
     write_reading(agent, high + 0.05, MOISTURE)           # above: no prediction reached it
-    assert list(_marks(agent)) == [stake_of(agent).uri]
+    assert list(_marks(agent)) == [region_want_of(agent).uri]
 
 
 def test_a_reading_nobody_expected_anything_of_marks_as_any_change_did(monkeypatch):
@@ -69,4 +69,4 @@ def test_a_reading_nobody_expected_anything_of_marks_as_any_change_did(monkeypat
     predictions.drop(agent.beliefs, predictions.graphs_of(agent.beliefs, agent.id, "zz", MOISTURE))
     write_reading(agent, 0.121, MOISTURE)
     marks = _marks(agent)
-    assert list(marks) == [stake_of(agent).uri] and marks[stake_of(agent).uri][1] is None
+    assert list(marks) == [region_want_of(agent).uri] and marks[region_want_of(agent).uri][1] is None

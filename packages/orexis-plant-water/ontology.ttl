@@ -16,7 +16,7 @@
 #################  The things  #################
 
 :Plant a owl:Class ; rdfs:subClassOf sosa:FeatureOfInterest ; rdfs:label "Plant" ;
-    rdfs:comment "The physical thing sensed and watered. It has no stake — its agent does." .
+    rdfs:comment "The physical thing sensed and watered. It has no region want — its agent does." .
 :WaterSource a owl:Class ; rdfs:label "Water source" ;
     rdfs:comment "What a supplier dispenses; the plumbing node a market forms around." .
 :SoilMoisture a sosa:ObservableProperty ; rdfs:label "Soil moisture" .
@@ -105,7 +105,7 @@ Denominated in lux, and stated as such with `unit:LUX`, because unlike a moistur
 #################  What a bid means here — the bidder's private valuation  #################
 #
 #  `water:hasTarget` was here and is GONE, to `sensing:aims`. It fused two things: the point an
-#  agent steers its moisture toward (desire's — any agent with a stake holds one, market or no
+#  agent steers its moisture toward (desire's — any agent with a region want holds one, market or no
 #  market) and the input a litre-deficit is priced from (this domain's). What this domain keeps
 #  is the pricing: how a deficit becomes litres, what a litre is worth, and the statement of
 #  WHICH property the whole valuation is denominated in — which now hangs on litresPerFraction,

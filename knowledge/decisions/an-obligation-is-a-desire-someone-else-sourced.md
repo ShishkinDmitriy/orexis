@@ -43,7 +43,7 @@ Three more pieces are already in place:
   the aim: [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md)) —
   so "my plant is dying" and "I
   owe fern a litre" become comparable, which is exactly what the sovereign asked for and what
-  no code could do today: the stake path and the claim path run in different currencies and
+  no code could do today: the region want path and the claim path run in different currencies and
   never meet.
 - **PROV answers WHY.** A self-sourced desire is derived from the subject's stated ranges; an
   obligation is derived from a signed claim. The guardrail this project cares about most is
@@ -90,8 +90,8 @@ me". Whom I may owe stays topology, disclosed by the honoured row and never stor
 
 The mode survives the reframe as DISCLOSURE rather than exemption: an honoured row says which
 of my levers others may demand and by whom. Deliberation still passes over those rows when the
-question is a stake, and the reason narrowed usefully — not "an obligation is nobody's to decide" but
-"a stake is a distance and an obligation is a graph-shaped goal, and the two are not answered by
+question is a region want, and the reason narrowed usefully — not "an obligation is nobody's to decide" but
+"a region want is a distance and an obligation is a graph-shaped goal, and the two are not answered by
 ranging over the same rows". Asked about the obligation itself, the honoured rows are exactly what it
 ranges over.
 
@@ -132,14 +132,14 @@ silently dropped from a dict.
 ## Owing is its own capability (#233)
 
 A debt was kept inside `desire:Deducing`, whose premise is a STAKE — `orexis:actsFor` a subject that
-states what it needs. `world/simulation`'s city has no stake: it acts for a mains that states a
+states what it needs. `world/simulation`'s city has no region want: it acts for a mains that states a
 capacity and no ranges. So it deduced no region, composed no desire module, and recorded not one
 of the claims it had been issuing and redeeming all day. Under the step-9 framing that is the
 worst possible place for the gap to be: an unserved obligation is supposed to be evidence, and the one
 agent whose failure to deliver would leave none was the one best placed to fail.
 
 Two abilities had been sharing one premise that covered only one of them. **Deducing a region is
-meaningful because you have a stake; owing is meaningful because others can DEMAND your levers.**
+meaningful because you have a region want; owing is meaningful because others can DEMAND your levers.**
 So `desire:Owing` is its own capability, granted by its own fact — a venue this agent opened and
 an actuator drawing from its source, which is the honoured row's premise read from the side of
 the agent that will be asked. A plant has no such lever and keeps no ledger; the city keeps one

@@ -1,6 +1,6 @@
 # Moisture sensor (ESP32) — scheduled
 
-A stake-free sensor node. It declares itself `sensing:ScheduledProcedure` in the world, which gives its
+A sensor node holding no region want. It declares itself `sensing:ScheduledProcedure` in the world, which gives its
 agent **`orexis:Subscribing`**: the *agent* states the interval (how often to look), and this
 board **keeps to it** — reads a capacitive soil-moisture sensor, publishes a 0..1 value,
 briefly listens for a new interval, then **deep-sleeps**. Big battery savings, and the agent
@@ -22,7 +22,7 @@ Realizes [agent-driven sensing](../../knowledge/decisions/agent-centric-epistemi
 **cadence ≠ content** — the agent chooses *when* to look; the reading is what the sensor
 measured. The board emits **numbers only** — the band/threshold judgement is the agent's, and
 lives in that agent's own beliefs (`world/<name>/beliefs/<agent>.ttl`), never in firmware. An agent
-with no stake holds no band at all and simply records the number.
+with no region want holds no band at all and simply records the number.
 
 ## The agent sets the interval
 
@@ -114,7 +114,7 @@ series to Influx and asserts the observation to `:sensed` under its own authorsh
 [connection determines authorization](../../knowledge/decisions/authn-authz-capabilities.md)).
 
 That capability runs alone, which is what `world/sensing` demonstrates: an agent there holds
-nothing else — no market, no bidding, no stake — because that world gives it nothing else to
+nothing else — no market, no bidding, no region want — because that world gives it nothing else to
 be wired to.
 
 ## More boards

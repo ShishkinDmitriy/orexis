@@ -19,7 +19,7 @@ from orexis_capability_market import rounds
 from orexis_capability_market.bidding import claim_graph
 from orexis_capability_market.ower import obligation_graph
 from orexis_capability_sensing import predictions, readings
-from conftest import (MOISTURE, build_agent, genesis_store, stake_of, wired_markets, write_reading)
+from conftest import (MOISTURE, build_agent, genesis_store, region_want_of, wired_markets, write_reading)
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import PREDICTION
 from orexis_agent_progression.ontology import KNOWN
@@ -55,7 +55,7 @@ def test_a_pursued_child_and_a_prediction_past_their_ends_are_swept(monkeypatch)
     """The mind's own timed graphs: a child derived for an instant that has passed, and a
     ladder predicted from a reading two days old."""
     agent = build_agent("gardener", genesis_store({("zz", MOISTURE): 0.12}, world="loner"), monkeypatch)
-    desire = stake_of(agent).uri
+    desire = region_want_of(agent).uri
     child = mint(agent.beliefs.engine, agent.me.uri, desire, holds_at=clock.now() - timedelta(days=1))
     assert child is not None
     write_reading(agent, 0.12, MOISTURE, age_s=2 * 86400)

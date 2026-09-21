@@ -3,7 +3,7 @@ type: Decision
 title: A desire is declared and a judgment is made, and one word was doing both jobs
 description: >-
   The class called `Desire` was never a desire. It carried an urgency, a current reading and an
-  expiry, it was built fresh by whichever capability held the stake - seven construction sites,
+  expiry, it was built fresh by whichever capability held the region want - seven construction sites,
   four ways of computing urgency - and nothing ever wrote one down or read one back. The DESIRE
   is the row a package's rule writes at genesis, which had no type at all. Naming the second
   thing is what let the first become data, `Want` subclass it as the ontology already
@@ -41,7 +41,7 @@ and a met-test, read back by everything — had no Python type at all.
 | | the **declared** thing | the **made** thing |
 |---|---|---|
 | where it lives | a row in the roots graph, surviving restarts | one pass, then gone |
-| who makes it | a package's rule, once, at genesis | whichever capability holds the stake, every pass |
+| who makes it | a package's rule, once, at genesis | whichever capability holds the region want, every pass |
 | what it says | what this agent stands for | how badly it matters right now |
 | in the T-Box | `orexis:Desire` | nothing, and there should be nothing |
 

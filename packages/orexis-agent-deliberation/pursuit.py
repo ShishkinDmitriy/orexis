@@ -309,7 +309,7 @@ def pursue_for(agent, want: str, surprise: tuple | None = None) -> str | None:
     """The actors' door: something changed about this want — what now, about it?
 
     An actor holding a fresh reading finds the want it means by its own query — sensing's
-    `want_about(property)` states the rule, an unmet epistemic want first and then the stake —
+    `want_about(property)` states the rule, an unmet epistemic want first and then the region want —
     and hands the NODE here. None where the agent is not considering that want at all.
     """
     #  BY EITHER NAME (#618): a mark may name the desire while the want derived under it stands.

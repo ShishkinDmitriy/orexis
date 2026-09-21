@@ -12,7 +12,7 @@
 @prefix sim:  <http://example.org/orexis/sim#> .
 
 #  The loner — the ladder's second rung as a whole world (#190). Named by the sovereign for
-#  what it is: EVERYTHING IN ONE AGENT — stake, sight, lever and source — so it needs nobody:
+#  what it is: EVERYTHING IN ONE AGENT — region want, sight, lever and source — so it needs nobody:
 #  no market, no peer, no city.
 #
 #  One agent, one plant, one pump, one rain butt — and NO MARKET, because none is needed:
@@ -78,10 +78,10 @@
         sim:initialValue 15.0 ;
         sim:tickSeconds 30 ] .
 
-##########  The gardener — stake, lever, and no market anywhere  ##########
+##########  The gardener — region want, lever, and no market anywhere  ##########
 #  Derivation gives it Subscribing (a scheduled probe), Listening (the butt's level
 #  announces on its own clock), Deducing (it acts for a plant that states what it needs —
-#  through the species, entailed), Keeping and Reflex (stake plus lever), and Actuation (it
+#  through the species, entailed), Keeping and Reflex (region want plus lever), and Actuation (it
 #  holds the pump). NOT Bidding and NOT Hosting: it is plumbed into no venue and offers
 #  none, which is the point of the whole world.
 

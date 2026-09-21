@@ -22,13 +22,13 @@ def agent(monkeypatch):
 def test_plant_agent_runs_sensing_and_bidding(agent):
     """`reporting` is in every one of these sets, because every agent is granted it.
 
-    `desire` is in this one because fern acts for a plant that states what it needs — a stake,
+    `desire` is in this one because fern acts for a plant that states what it needs — a region want,
     not a wire and not a market position. The supplier gained the same the day it started
-    acting for its barrel — the distinction is the stake, not which side of the market.
+    acting for its barrel — the distinction is the region want, not which side of the market.
     """
     #  `intention` and `deliberation` are the MIND, which every agent has: they are the
     #  kernel's, granted by nothing. (`desire` was among them until the region and the aim went
-    #  to sensing — the-stake-is-sensings-want; `owing` until the ledger became hosting's,
+    #  to sensing — the-region-want-is-sensings-want; `owing` until the ledger became hosting's,
     #  because only a host owes.) What is fern's own is `subscribing` (a scheduled board),
     #  `bidding` (a market position), `review` (latitude) and `reporting`.
     assert {m.name for m in agent("fern").modules} == {
@@ -38,9 +38,9 @@ def test_plant_agent_runs_sensing_and_bidding(agent):
 
 def test_supplier_runs_the_dealers_full_stack(agent):
     """Its original three (protocol, valves, matching), plus what the barrel arcs earned it:
-    listening (arc 1 — it watches its stock), since the stake (arc 2) desire, intention and
-    deliberation — because acting for a barrel that states its needs is a stake, and the
-    valves it always held are means, and stake plus means is the premise Keeping and Reflex
+    listening (arc 1 — it watches its stock), since the region want (arc 2) desire, intention and
+    deliberation — because acting for a barrel that states its needs is a region want, and the
+    valves it always held are means, and region want plus means is the premise Keeping and Reflex
     share — and since the city exists (arc 4), BIDDING: the dealer buys upstream at one venue
     and sells downstream at another, hosting and bidding in one process, and its reflex
     proposes now because the refill venue carries a direction for StoredLitres.
@@ -63,7 +63,7 @@ def test_supplier_runs_the_dealers_full_stack(agent):
 def test_the_supplier_listens_to_its_stock_and_schedules_nothing(agent):
     """Since the barrel learned to run dry, the supplier polls its level sensor — a push
     device, so it derives Listening and only Listening: it commands no cadence, because a
-    float announces and is not asked. The stake (arc 2) and the lever (arc 4) both arrived
+    float announces and is not asked. The region want (arc 2) and the lever (arc 4) both arrived
     since; what this still guards is the clock — a dealer with a full stack still may not
     order a float around."""
     supplier = agent("supplier")

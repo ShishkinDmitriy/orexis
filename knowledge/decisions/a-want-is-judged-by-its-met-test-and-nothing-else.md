@@ -47,7 +47,7 @@ sovereign's own sentence: *urgency we can estimate only after planning and plans
 
 **The order was load-bearing where the field was not**, and that is the part worth keeping.
 Four test fixtures took `next(g for g in pursuing() if g.observed_property == MOISTURE)` and
-got the STAKE, because a stake sorted ahead of the freshness want about the same property.
+got the STAKE, because a region want sorted ahead of the freshness want about the same property.
 Unsorted they get whichever comes first. Three were found by grepping the field; the fourth
 was found by CI, in a file that never mentions an urgency.
 
@@ -122,7 +122,7 @@ expectation open. Both halves it used to merge fold into that one question, incl
 market's — a claim held is a step standing to present it, and `Keeper.standing` takes the
 action as an OPTION, so sensing asks without naming a word of the market's. The hook is gone.
 
-**The opening burst survives as a fact.** An agent with a stake and no current reading is not
+**The opening burst survives as a fact.** An agent with a region want and no current reading is not
 calm, it is blind, and the first intention is always to look. That used to arrive as "not
 knowing is maximally urgent" — the graded answer standing in for something that was never a
 degree.
@@ -136,7 +136,7 @@ until it is said out loud: no amount of looking changes a number.
 `orexis:desireUrgency`; sensing's `measures.ttl`, `_declared_measure` and `_DECLARED_MEASURES`;
 hosting's measure; bidding's contribution to sensing's hook; `choir.urgency` and
 `sensing:urgency`; the #133 trend bound; and the `orexis-validate` gate that refused a world
-holding a stake nothing could weigh — which existed because an unmeasured want scored a flat
+holding a region want nothing could weigh — which existed because an unmeasured want scored a flat
 1.0 everywhere, and has nothing left to refuse now that every want is judged by a met-test it
 has by construction.
 

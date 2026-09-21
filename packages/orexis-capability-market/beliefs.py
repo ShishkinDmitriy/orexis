@@ -1,7 +1,7 @@
 """What a bidder and a host must believe — and, for the bidder, what it makes of a reading.
 
 The judgment lives here rather than in sensing on purpose: a band is a fact about a
-*stake*, not about a sensor. The same number is trouble for a fern and comfort for a
+*region want*, not about a sensor. The same number is trouble for a fern and comfort for a
 succulent, so the agent that holds the target is the only one entitled to say which.
 
 Vocabulary: capabilities/market/ontology.ttl (protocol) + domain/water/ontology.ttl (what a
@@ -30,7 +30,7 @@ class BiddingBeliefs:
     used to hold `water:bandLow`/`water:bandHigh` and `water:hasTarget`, making it the only
     thing in an agent that could say what a reading MEANT or what state it was steering for —
     which made both conditional on being a market participant. Judging is desire's; so is the
-    aim, which any agent with a stake holds whether or not a market exists. What is left here is
+    aim, which any agent with a region want holds whether or not a market exists. What is left here is
     what only a BID needs: a wallet and what a litre is worth. The aim is asked of whoever
     provides the desire family, at bid time.
 

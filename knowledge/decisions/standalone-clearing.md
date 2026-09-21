@@ -14,7 +14,7 @@ The host rotates; the thing that must stay invariant is clearing.
 
 # Decision
 
-Keep **clearing off the host** and make it a thin, stake-free **validator** (see
+Keep **clearing off the host** and make it a thin, region-want-free **validator** (see
 [clearing-as-validator](/decisions/clearing-as-validator.md)). The host *runs the auction*
 and proposes a match; clearing *checks and co-signs* it. Because clearing validates rather
 than allocates, it is **topology-invariant** — it does not know or care who hosted.
@@ -24,7 +24,7 @@ than allocates, it is **topology-invariant** — it does not know or care who ho
 The host is the only thing that changes across topologies:
 - 1 supplier, N consumers → the [supplier](/domain/supplier.md) hosts (forward auction) — v1
 - N suppliers, 1 consumer → the consumer hosts (reverse auction)
-- N ↔ N → no participant can host. This row first read "a stake-free exchange hosts (order
+- N ↔ N → no participant can host. This row first read "a region-want-free exchange hosts (order
   book)"; that resolution was refused when the case was decided — N-to-N clears through
   dealers holding stock, or bilaterally where too thin. See
   [the-market-has-no-governor](/decisions/the-market-has-no-governor.md), which also states

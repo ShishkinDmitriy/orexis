@@ -117,7 +117,7 @@ actuation:Dosing
     #  NOT joined through `orexis:actsFor`, where the construct above is. How long a valve stays
     #  open is a fact about the VALVE — the device's cap and its calibration — and a host
     #  dosing a buyer's pot needs it exactly as much as an agent dosing its own. Written with
-    #  the stake join first and caught on the bench: every market dose fell back, so the
+    #  the region want join first and caught on the bench: every market dose fell back, so the
     #  single source held only for self-doses, which is the half that needed it least.
     #  ASKED WITH A SIZE AND ASKED WITHOUT ONE, and the difference is who is asking. The
     #  KEEPER asks when the step is taken, with the litres the actor sized from the reading in

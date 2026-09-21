@@ -224,7 +224,7 @@ the mind cannot ask for. `clock.now()` is the one read outside the store.
 intermediate step, jump from Desire to Want, and all Judgment had, now has Want. What a
 met-test reads is a WITNESS, computed where it is needed and stored nowhere; which way a want
 broke is `orexis:violationIs` on the want; how badly it is wanted is a field on the want that
-whoever holds the stake fills when the choir is asked, and that nothing writes down. The seam
+whoever holds the region want fills when the choir is asked, and that nothing writes down. The seam
 this record left open — folding the urgency half onto the judgment — is closed by there being
 one type to fold it onto.
 

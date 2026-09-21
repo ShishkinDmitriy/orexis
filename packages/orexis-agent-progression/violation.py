@@ -385,7 +385,7 @@ class _Compiler:
         on, and the row carries that instance.
 
         THE SIDE is what a desire asked BY BAND already states and no reader could reach. A
-        stake says the same thing twice, once per side — no reading of this property is a
+        region want says the same thing twice, once per side — no reading of this property is a
         `sensing:BelowRegion` one, and none is an `AboveRegion` one — so the desire says *it
         should be inside* and each block says which way it can fail. Carried to the row, the
         judgment says *but it was below*, where before it said only which block, by index."""

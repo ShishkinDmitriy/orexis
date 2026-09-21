@@ -52,7 +52,7 @@ WATCH_LIVE = term("watchLive")
 #  is on the want rather than on the thing it is about.
 FRESHNESS = term("Freshness")
 
-# The pick inside a region — was `orexis:Aim` / `orexis:aims` (the-stake-is-sensings-want).
+# The pick inside a region — was `orexis:Aim` / `orexis:aims` (the-region-want-is-sensings-want).
 AIM = term("Aim")
 AIMS = term("aims")
 

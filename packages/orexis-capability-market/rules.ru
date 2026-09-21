@@ -120,7 +120,7 @@ WHERE  {
 # cross-multiplies the moment a second denomination exists. Without it the city's refill
 # venue would claim the plants (their pots state a need in a property SOME valuation is
 # about) and the barrel's venue would claim the dealer. With it, each side of one pipe
-# network buys in its own market: the stake's property and the good's valuation must be the
+# network buys in its own market: the region want's property and the good's valuation must be the
 # SAME sentence, not two facts that each happen to be true.
 INSERT { GRAPH $derived {
     ?buyer market:bidsIn ?market ;

@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: Clearing validates, it does not compute
-description: The scarce side runs the auction; clearing is a thin stake-free notary that checks integrity and co-signs the trade before settlement.
+description: The scarce side runs the auction; clearing is a thin region-want-free notary that checks integrity and co-signs the trade before settlement.
 status: accepted
 timestamp: 2026-08-01T00:00:00Z
 ---
@@ -17,7 +17,7 @@ starts *checking*.
 # Decision
 
 The **host** (whichever agent is on the scarce side) runs the auction and produces a
-proposed trade. **Clearing is a thin, stake-free validator** — a predicate, not an
+proposed trade. **Clearing is a thin, region-want-free validator** — a predicate, not an
 optimizer — invoked *after* the trade is struck and *before* settlement. It certifies the
 trade is well-formed and co-signs it; it never decides who wins.
 
@@ -76,7 +76,7 @@ clearing blocks that. Greedy-but-committed, not non-greedy. See
 # What still cannot move to the host
 
 - **The validator's honesty** — clearing's signature *is* the integrity guarantee, so it
-  stays stake-free infra; but it is now a tiny predicate, not a discretionary allocator.
+  stays region-want-free infra; but it is now a tiny predicate, not a discretionary allocator.
 - **Atomic settlement + the mint** — someone must debit-and-actuate atomically and mint the
   allowance; those stay in infrastructure, never the host, or penalties and bonds become
   meaningless. See [trust-boundary](/decisions/trust-boundary.md) and [wallet](/domain/wallet.md).

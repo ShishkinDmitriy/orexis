@@ -17,7 +17,7 @@ from orexis_agent_progression.store import bindings
 log = logging.getLogger("intention")
 
 #  The ledger used to key a row on the property its want was about; a row is keyed on the
-#  want now (the-stake-is-sensings-want, #380), so a volume from before is brought across:
+#  want now (the-region-want-is-sensings-want, #380), so a volume from before is brought across:
 #  a row with a property and no want is given the want that property named for this agent —
 #  found through `orexis:about`, which is what the deriver says a want is about — and the property
 #  triple is then dropped from every row. The retired term is spelled here for the same

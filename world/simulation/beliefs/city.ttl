@@ -9,8 +9,8 @@
 #  It composed market:Hosting, actuation:Actuation and market:UniformPrice, so only those
 #  modules' terms appear. No sensing block (its mains needs no witness), no desire, no
 #  intention, no review: the city is what the supplier was before the barrel arcs — a
-#  stakeless seller — kept deliberately, because one world now holds the whole ladder: a
-#  stakeless seller, a dealer with a full BDI stack, and three pure buyers.
+#  regionless seller — kept deliberately, because one world now holds the whole ladder: a
+#  regionless seller, a dealer with a full BDI stack, and three pure buyers.
 
 ##  market:Hosting — how it runs a refill round
 :city
@@ -24,8 +24,8 @@
 #   the water.
 #  A PATIENCE, because the city wants something after all (#666's follow-on). Hosting a venue
 #  means it can incur debts, and the market declares one desire for any agent that can: NO
-#  OVERDUE DEBTS. That is a stake — met while every claim it issued still has time to run — and
-#  the constitution holds an agent with a stake to stating how long it waits before deciding
+#  OVERDUE DEBTS. That is a region want — met while every claim it issued still has time to run — and
+#  the constitution holds an agent with a region want to stating how long it waits before deciding
 #  again. 300 seconds, the supplier's, because they are the same kind of agent: a seller whose
 #  only plans are about serving what it owes.
 :city progression:patienceS 300 .

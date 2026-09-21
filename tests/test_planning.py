@@ -26,7 +26,7 @@ from orexis_agent_deliberation import planner as search, trace
 from orexis_agent_deliberation.planner import Planner
 
 from orexis_capability_sensing.regions import ObservedWant
-from conftest import stake_of, build_agent, genesis_store, open_round_for, write_reading
+from conftest import region_want_of, build_agent, genesis_store, open_round_for, write_reading
 from conftest import weighed
 from orexis_agent_progression.ontology import PUBLIC
 
@@ -215,7 +215,7 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
     step = planner._step_from(here, row, desire)
 
     #  What a property reads in a candidate world is SENSING's answer, asked at the node's
-    #  graph (the-stake-is-sensings-want) — the planner no longer walks sosa for it.
+    #  graph (the-region-want-is-sensings-want) — the planner no longer walks sosa for it.
     from orexis_agent_progression.store import bindings
     def band_at(node):
         rows = bindings(planner.imaginarium.query(f"""
@@ -301,16 +301,16 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
 
     #  fern aims at 0.55, and the store holds NO reading — which is the arrangement that makes
     #  the fabrication possible at all. A bare Want suffices: the measure is not the want's
-    #  to carry, and sensing answers the choir for any observation-backed stake.
+    #  to carry, and sensing answers the choir for any observation-backed region_want.
     write_reading(fern, 0.30, MOISTURE)   # the world holds the value; a want's `value` is not it
-    stake = ObservedWant(uri=stake_of(fern).uri, observed_property=MOISTURE,
+    region_want = ObservedWant(uri=region_want_of(fern).uri, observed_property=MOISTURE,
                          value=0.30)
-    assert decider.propose_for(stake) == "http://example.org/orexis/market#Acquiring", \
+    assert decider.propose_for(region_want) == "http://example.org/orexis/market#Acquiring", \
         "below the aim there is a deficit to close, and the search must still close it"
     for value in (0.55, 0.80):
         write_reading(fern, value, MOISTURE)
-        stake = ObservedWant(uri=stake_of(fern).uri, observed_property=MOISTURE, value=value)
-        assert decider.propose_for(stake) is None, \
+        region_want = ObservedWant(uri=region_want_of(fern).uri, observed_property=MOISTURE, value=value)
+        assert decider.propose_for(region_want) is None, \
             f"a content plant bought water at {value} — a zero-size act made something true"
 
 

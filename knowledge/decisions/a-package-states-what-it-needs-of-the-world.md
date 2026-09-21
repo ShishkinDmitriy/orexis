@@ -30,7 +30,7 @@ Every ratified triple, verbatim, into every belief base — which [world](/domai
 records plainly. Isolation is per world and per agent's own graphs
 ([where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md)); *inside* a world
 nothing is scoped at all. An agent that bids holds every rival's actuator wiring, every venue
-it does not participate in, and the stake of every subject it does not act for.
+it does not participate in, and the region want of every subject it does not act for.
 
 That was never argued for. It is what "the world graph is public" turned into once public was
 settled to mean *authored by the sovereign and identical for everyone* — a claim about

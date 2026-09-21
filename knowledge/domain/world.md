@@ -120,7 +120,7 @@ If two agents could reasonably disagree about it, it is a belief.
 Beliefs then divide again, and the two shipped worlds show it: the same agent has
 `sensing:slowSleepS` 600 in `simulation` and 10 in `sensing`, because the **circumstance** differs, not
 because it wants anything different. Operational beliefs (cadence, freshness) track the kind of
-world; stake beliefs (aim, endowment, price) are the agent's own and derivable from
+world; region want beliefs (aim, endowment, price) are the agent's own and derivable from
 nothing. See [genesis-process](/domain/genesis-process.md) §"Where opening beliefs come from".
 
 # Authoring a world

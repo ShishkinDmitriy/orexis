@@ -66,7 +66,7 @@ from orexis_agent_progression.ontology import KNOWN
 # property, and MINE is the one my subject states a need in — the exact premises the
 # participation rule derived my bidsIn from, asked again from the inside. Both joins are
 # load-bearing: without the venue, a fern beside a fan market would price moisture in the
-# wrong direction; without the stake, a fern at a water venue would inherit the DEALER's
+# wrong direction; without the region_want, a fern at a water venue would inherit the DEALER's
 # denomination, because one good honestly has a valuation per kind of recipient (a litre
 # raises a pot's moisture and a barrel's stock, by different terms). This used to interrogate
 # one fixed term — the litres-per-fraction IRI — which was right for every bidder while every
@@ -170,7 +170,7 @@ class BiddingModule(Module):
                 f"{self.agent.id} bids, but no valuation connects its venue's good to a "
                 f"property its subject states a need in — the source states no "
                 f"market:supplies good, no term carries market:ofGood/market:aboutProperty "
-                f"for it, or the stake's ranges and the good's valuations do not meet")
+                f"for it, or the region want's ranges and the good's valuations do not meet")
         return rows[0]["property"], rows[0]["term"]
 
     def _baseline(self):
@@ -253,21 +253,21 @@ class BiddingModule(Module):
         want = self._want()
         return self.agent.deliberator.propose_for(want) if want is not None else None
 
-    #  WHICH WANT my bids serve: the stake about the property they are priced in, asked of
-    #  sensing, which is where a property means anything (the-stake-is-sensings-want). The
+    #  WHICH WANT my bids serve: the region want about the property they are priced in, asked of
+    #  sensing, which is where a property means anything (the-region-want-is-sensings-want). The
     #  ledger keys on the want, so every row this module writes or reads names it.
     @property
     def balance(self) -> float:
         """What I have left to bid with — read, never remembered."""
         return wallet.balance_of(self.agent)
 
-    def _stake(self):
+    def _region_want(self):
         sensing = self.agent.provider(SENSING)
-        return sensing.stake_about(self.about) if sensing is not None else None
+        return sensing.region_want_about(self.about) if sensing is not None else None
 
-    def _stake_uri(self) -> str | None:
-        stake = self._stake()
-        return stake.uri if stake is not None else None
+    def _region_want_uri(self) -> str | None:
+        region_want = self._region_want()
+        return region_want.uri if region_want is not None else None
 
     def _want(self):
         """The want to act on about my property NOW — sensing's rule: knowing first."""
@@ -416,7 +416,7 @@ class BiddingModule(Module):
         # it, and #151 is the device-side answer to that half.
         if keeper := self._keeper():
             now = clock.now()
-            if any(now < w.deadline for w in keeper.open_expectations(self._stake_uri())):
+            if any(now < w.deadline for w in keeper.open_expectations(self._region_want_uri())):
                 self.log.info("auction %s: my own dose has not answered yet — ceding, and "
                               "asking for the look that would answer it", auction_id)
                 sensing.sense_now()
@@ -475,7 +475,7 @@ class BiddingModule(Module):
 
     def _ask_ahead(self, value: float) -> None:
         """A crossing foreseen is a dose ASKED for at an instant (#627, a-claim-is-water-at-a-time):
-        where the want about my property is one met AT an instant — derived under my stake
+        where the want about my property is one met AT an instant — derived under my region want
         from a predicted crossing — announce it where I announce being low, with the litres a
         bid would be sized to and the instant I intend to present; once per want and instant.
         The host answers with a claim where its stock covers the ask at that instant, or
@@ -535,7 +535,7 @@ class BiddingModule(Module):
             #  The look stays wanted and stays committed — a reading is still owed, round or
             #  no round — so only the Acquire is dropped; sensing resolves the look when it lands.
             if keeper := self._keeper():
-                keeper.drop(TENDERING, self._stake_uri(), f"the auction closed first: {why}")
+                keeper.drop(TENDERING, self._region_want_uri(), f"the auction closed first: {why}")
             self.pending = None
 
     def _why_blind(self) -> str:
@@ -578,19 +578,19 @@ class BiddingModule(Module):
         if self._deadline:
             self._deadline.stop()
         keeper = self._keeper()
-        stake = self._stake()
-        standing = (keeper.standing(TENDERING, stake.uri)
-                    if keeper is not None and stake is not None else [])
-        if standing and stake is not None:
-            execution.take_standing(self.agent, standing[0], stake)
-        elif stake is not None:
+        region_want = self._region_want()
+        standing = (keeper.standing(TENDERING, region_want.uri)
+                    if keeper is not None and region_want is not None else [])
+        if standing and region_want is not None:
+            execution.take_standing(self.agent, standing[0], region_want)
+        elif region_want is not None:
             #  MARKED, and nothing is concluded from it (#392): what the search decides is
             #  not this module's to wait for. This branch used to read the mark's `None` as
             #  "deliberation chose not to pursue" and clear `pending` — which said the round
             #  had passed while the pass that would bid was still to run, and took the
             #  give-up with it. What ends the round for this bidder is a bid leaving (`_bid`)
             #  or the give-up firing, and nothing else.
-            reviser.wake_for(self.agent, stake)
+            reviser.wake_for(self.agent, region_want)
 
     @contributes(PRESENTING)
     def present(self, act, judgment, intention: str) -> bool:
@@ -810,7 +810,7 @@ INSERT DATA {{
         from orexis_agent_deliberation import reviser
 
         keeper = self._keeper()
-        stake = self._stake()
-        if (not redeemed and stake is not None
-                and not (keeper is not None and keeper.standing(want=stake.uri))):
-            reviser.wake_for(self.agent, stake)
+        region_want = self._region_want()
+        if (not redeemed and region_want is not None
+                and not (keeper is not None and keeper.standing(want=region_want.uri))):
+            reviser.wake_for(self.agent, region_want)

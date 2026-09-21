@@ -219,12 +219,12 @@ given, so validate_agent never targets this — the same scoping as the wiring s
             }""" ] .
 
 
-#################  The stake  #################
+#################  The region want  #################
 #
 #  Were `orexis:DesirerShape` and `orexis:BeyondSurvivalShape` in the kernel's shapes, targeted on
 #  "acts for a subject that states what it needs" — `ssn-system:hasOperatingRange`, this
 #  package's premise for the region want it derives in `desires.ru`. A shape whose target is
-#  a sensing sentence is a sensing shape (the-stake-is-sensings-want). The kernel keeps
+#  a sensing sentence is a sensing shape (the-region-want-is-sensings-want). The kernel keeps
 #  `orexis:KeeperShape`, which asks the same agents for a patience, targeted on the want itself.
 
 sensing:DesirerShape a sh:NodeShape ;
@@ -278,7 +278,7 @@ WAS `sensing:BeyondSurvivalShape`, and before that the kernel's. It was named fo
             }""" ] .
 
 # The aim answers to the region, and both halves of that sentence are checked here — sensing's, since the
-# region is (the-stake-is-sensings-want) — rather than in any domain: which properties may be aimed at and where the aim may sit are this package's
+# region is (the-region-want-is-sensings-want) — rather than in any domain: which properties may be aimed at and where the aim may sit are this package's
 # arithmetic, true of a thermometer exactly as of a pot. What a DOMAIN checks is different in
 # kind — that a bidder holds an aim in the property its bids are priced in — and stays in the
 # domain's shapes, because only the domain knows a bid exists.

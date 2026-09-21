@@ -48,7 +48,7 @@ def test_plant_agent_gets_subscribing_and_bidding(me):
     that states what it needs, so it wants something — and, wanting with levers to act, it may
     commit to acting and decide when to. SIX premises, six capabilities, none of them written
     down: two follow from what it is wired to, one from what its world allows it, one from
-    having a stake at all, and two from the stake meeting the wiring — keeping and deciding,
+    having a region want at all, and two from the region want meeting the wiring — keeping and deciding,
     granted by the same fact and separate because their replaceable parts differ.
     """
     assert me("fern").capabilities == {
@@ -108,7 +108,7 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing(monkeypat
     """The split #233 asked for, stated as the two agents that separate it.
 
     The city keeps a ledger and deduces nothing: it acts for a mains that states a capacity and
-    no ranges, so it has no stake and wants nothing for itself — and it hosts a venue and holds
+    no ranges, so it has no region want and wants nothing for itself — and it hosts a venue and holds
     the valve that serves it, so others may demand its lever. A plant is the mirror: every want
     of its own, no lever anybody may demand, no ledger.
 
@@ -161,7 +161,7 @@ def test_supplier_commands_no_cadence_and_buys_upstream(me):
     It asserted the supplier neither perceives on a commanded clock NOR buys. The first
     stands — its one sensor announces, so Listening and never Subscribing. The second
     inverted the day the city opened shop: bidsIn derives from the pipe that reaches its
-    barrel plus the stake it holds in it, so the dealer BUYS now, and nothing was declared
+    barrel plus the region want it holds in it, so the dealer BUYS now, and nothing was declared
     to make it so.
     """
     supplier = me("supplier")

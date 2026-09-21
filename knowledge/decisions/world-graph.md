@@ -63,7 +63,7 @@ into capability modules renamed them to the transport-neutral forms used above. 
 
 **An agent is no longer a plant.** `Plant` used to be a subclass of `Agent`, so `orexis:fern`
 was both the thing measured and the thing bidding. Now `orexis:fern` is a
-`sosa:FeatureOfInterest` with no stake, and `orexis:fern_agent` acts *for* it. Observations are
+`sosa:FeatureOfInterest` with no region want, and `orexis:fern_agent` acts *for* it. Observations are
 about the plant; wallets and bids belong to the agent. The conflation was harmless while each
 plant had exactly one agent, and would have become confusing the moment it didn't.
 

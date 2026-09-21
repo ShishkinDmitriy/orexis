@@ -43,4 +43,4 @@ is charged for, and the two words meet there and nowhere earlier.
 
 **Bounded, not demanded.** `orexis:BudgetShape` holds a stated budget to one integer between 1
 and 1024 and refuses the world otherwise — zero is an agent that never thinks and looks calm
-— but demands none, unlike the patience `orexis:KeeperShape` requires of every stake.
+— but demands none, unlike the patience `orexis:KeeperShape` requires of every region want.

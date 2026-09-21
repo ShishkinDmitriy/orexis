@@ -58,7 +58,7 @@ from it.)*
 it up. `executor.md` described the trusted actuator — and opened with a banner disambiguating
 itself from execution, which is the tell that one word was standing between two things.
 [thin-trusted-infra](/decisions/thin-trusted-infra.md) had already reframed it: *"actuation is
-not separate stake-free infra — the resource owner drives its own valves. The 'executor' is the
+not separate region-want-free infra — the resource owner drives its own valves. The 'executor' is the
 supplier's actuation ARM, not a distinct component."* A page for a component that had been
 reframed away, holding a name a live service needed. Its body moved into
 [actuation](/domain/actuation.md), which is where that decision put the thing, and eleven links

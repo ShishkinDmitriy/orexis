@@ -76,7 +76,7 @@ through translation, and keeping them distinct is cheap now and painful to undo 
   the topic segment it arrived on and its signature, checked before anything is believed.
 - **One projection exists and is deliberate**: a sensor that stops delivering does not raise —
   its freshness want goes cold, which is a belief the agent can plan about
-  ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)). A broker that goes
+  ([the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md)). A broker that goes
   away projects to nothing at all: the watchdog resigns the process
   ([a-dead-session-is-resigned-not-endured](/decisions/a-dead-session-is-resigned-not-endured.md)),
   which is the honest answer for a fault the agent cannot reason about from inside.

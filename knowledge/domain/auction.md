@@ -72,7 +72,7 @@ And "who rules" is settled, precisely
 commitment power over the mechanism, which comes from STRUCTURE or neutrality and never from
 today's deficit — state opens rounds, structure names the convener, and the *structurally*
 short side is what the short-side principle always meant. At N-to-M no participant has
-commitment power, and the refusal is recorded: no stake-free exchange — the market clears
+commitment power, and the refusal is recorded: no region-want-free exchange — the market clears
 through DEALERS holding stock (the shipped supplier is one) or bilaterally where too thin.
 Money-scarcity still selects nothing, for the reason [market](/domain/market.md) gives under
 *who hosts*.

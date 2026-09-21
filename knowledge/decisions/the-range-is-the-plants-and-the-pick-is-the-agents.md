@@ -137,7 +137,7 @@ from two facts it already holds. That check does not exist yet and is worth more
     get wrong. `water:bandLow` and `water:bandHigh` no longer exist.
   - **The band was never the bidder's.** The link traced under *"low moisture to auction"* still
     runs, but its first two steps moved: `annotate` and `urgency` are desire's, so an agent with
-    a stake and no market still knows it is in trouble.
+    a region want and no market still knows it is in trouble.
 - **Nothing yet justifies a target against the range.** Still open, and sharper now that the
   range is derived: a region can move under a target that stays merely *legal* rather than still
   sensible. `packages/orexis-capability-review/` could be asked to explain a pick within it rather than only to

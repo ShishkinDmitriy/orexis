@@ -15,11 +15,11 @@ description: >-
 The **choir** is the kernel's second way for capabilities to reach each other, beside
 `agent.provider(family)`. The provider hands back ONE module — whoever implements an ability.
 The choir collects from ALL of them — whoever holds an opinion. The asker addresses nobody: it
-puts a question to every loaded module through an extension point, modules with a stake answer, and the answers are resolved into one result without the asker ever
+puts a question to every loaded module through an extension point, modules with a region want answer, and the answers are resolved into one result without the asker ever
 learning who contributed.
 
-Why it exists is a fact about stakes. Sensing knows how to look; it does not know what counts
-as trouble, because trouble is a fact about a stake, and the stake belongs to whoever holds the
+Why it exists is a fact about region wants. Sensing knows how to look; it does not know what counts
+as trouble, because trouble is a fact about a region want, and the region want belongs to whoever holds the
 band — so sensing asks, and whoever can, answers. The same shape repeats wherever one
 capability holds a judgment another merely needs, and it is half of what makes
 [capability](/domain/capability.md)'s no-imports rule livable: the other half is the provider.
@@ -38,7 +38,7 @@ declares **which row** answering it belongs to — `orexis:row`, one of `orexis:
 directory can ([layered-by-timescale-and-interruptibility](/decisions/layered-by-timescale-and-interruptibility.md)). The points about a READING
 are sensing's contract (`packages/orexis-capability-sensing/choir.py`): a module joins by defining the
 method, and sensing says what it is asked with and how the answers merge
-([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
+([the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md)).
 
 ## Declared by the kernel — 13
 
@@ -104,7 +104,7 @@ gone. This table is the roster.
 
 # Silence is an answer, and it is not zero
 
-Every point tells *no stake* apart from *judging fine*: `urgency` answers `None` for no opinion
+Every point tells *no region want* apart from *judging fine*: `urgency` answers `None` for no opinion
 and `0.0` for fine, `bounds` answers `None` rather than the only scale its module owns. That is
 why the judgment points are asked about a (subject, property) pair rather than a subject — a
 module handed a property it holds nothing in must be able to stay silent instead of

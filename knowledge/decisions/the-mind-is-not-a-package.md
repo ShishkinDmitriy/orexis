@@ -34,7 +34,7 @@ dissolve:
 
 | was | is | granted by |
 |---|---|---|
-| `desire:Deducing` | nothing left in the kernel: the region, the gap and the aim went on to sensing — [the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md) | nothing |
+| `desire:Deducing` | nothing left in the kernel: the region, the gap and the aim went on to sensing — [the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md) | nothing |
 | `desire:Owing` | `packages/orexis-capability-market/ower.py` | nothing |
 | `intention:Keeping` | `agent/keeper.py` then; `packages/orexis-agent-progression/keeper.py` since #452 | nothing |
 | `deliberation:Reflex`, `deliberation:Planning` | `agent/deliberator.py` then, `packages/orexis-agent-deliberation/deliberator.py` since #452 — ONE class | nothing |
@@ -82,9 +82,9 @@ The rule that made the dissolution safe, and it recurs three times.
 [capability-packages](/decisions/capability-packages.md) gave modules a reporting hook whose
 docstring says *the ABSENCE of its lines is itself a reading — it says this agent was never
 granted that ability, rather than that it has had nothing to say*. A kernel deliberator running
-in every agent would have turned that into a row of zeros on every stakeless dashboard.
+in every agent would have turned that into a row of zeros on every regionless dashboard.
 
-So: no wants, no rows (`Deliberator.series`). No stake, no patience read (`Keeper.beliefs`, lazy
+So: no wants, no rows (`Deliberator.series`). No region want, no patience read (`Keeper.beliefs`, lazy
 — an unconditional keeper reading a required pick at construction killed `world/sensing`'s agent
 and 25 fixtures). No ranges, no regions. The reading survives and says something truer than it
 did: what is the case for this agent now, rather than what its world provisioned for it once.
@@ -98,15 +98,15 @@ the fact underneath outlives it.
 ## What the shapes cost
 
 A capability scoped its shapes; with no capability, `orexis:KeeperShape` and the desire shapes target
-the **stake alone** — `orexis:actsFor` a subject that states what it needs.
+the **region want alone** — `orexis:actsFor` a subject that states what it needs.
 
-The old premises were a stake AND a lever, and **the lever half could not follow**. Saying it
+The old premises were a region want AND a lever, and **the lever half could not follow**. Saying it
 requires the kernel to name `market:bidsIn`, `actuation:hasActuator` and `sensing:polls` — three
 packages the kernel would then depend on, which is the layering this whole record exists to keep
 one-way. A lever is an instance anyway: the `via` of a menu row derived from
 each package's own `affordances.rq`, with no term to target on.
 
-Cost, stated: an agent with a stake and no lever would now state a patience it never spends. No
+Cost, stated: an agent with a region want and no lever would now state a patience it never spends. No
 world has one.
 
 # What it buys, and it is checkable
@@ -206,7 +206,7 @@ The test that actually separates them is **whether the kernel already assumed th
 | `sensing`, `actuation`, `market` | equipment, a market position | no — an agent without an actuator cannot actuate, and nothing in the kernel pretends otherwise |
 | `review` | a mandate whose ends differ | no — an agent given no room holds no revisable pick |
 | `reporting` | nothing; every agent | the COUNTING, yes — and that half is already kernel, deliberately. The shipping is not |
-| ~~`desire`, `intention`, `deliberation`~~ | a stake, a stake and a lever | **YES**, and that was the defect: the stores were built for every agent before any grant was read |
+| ~~`desire`, `intention`, `deliberation`~~ | a region want, a region want and a lever | **YES**, and that was the defect: the stores were built for every agent before any grant was read |
 
 The mind failed because its stores were unconditional while its readers were granted, so an
 agent could hold a modality nobody could write. No survivor has that shape. `reporting` comes

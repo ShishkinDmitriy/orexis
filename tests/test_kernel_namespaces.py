@@ -94,7 +94,7 @@ _QUERY_WORDS = ("SELECT", "INSERT", "DELETE", "CONSTRUCT", "ASK", "WHERE", "GRAP
 # anyway, so that the day a kernel query grows one, this says so rather than the query silently
 # depending on a package.
 #  No `*.rq` any more: the kernel's last query file was `desires.rq`, and it went to sensing
-#  with the stake (the-stake-is-sensings-want). A kind the kernel legitimately ships none of
+#  with the region want (the-region-want-is-sensings-want). A kind the kernel legitimately ships none of
 #  is not a kind the ratchet has lost sight of.
 #  NO `*.ru`: the kernel's one rules file was `agent/rules.ru`, whose one rule minted every
 #  agent's pick graph by name, and it went when each graph's owner began classifying what it
@@ -361,8 +361,8 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     #
     # 5 — the last shape entry. 6 IS PAID: the "no sensor for this desire" warning that joined
     #   through `sensing:polls` and `sensing:monitors` is `sensing:UnwatchedRegionShape` now,
-    #   beside `sensing:DesirerShape`, both targeted on the stake's premise in the package that
-    #   states it (the-stake-is-sensings-want). What remains is one WIDENER inside
+    #   beside `sensing:DesirerShape`, both targeted on the region want's premise in the package that
+    #   states it (the-region-want-is-sensings-want). What remains is one WIDENER inside
     #   DeviceModelShape's OPTIONAL — without it COALESCE falls back to 1.0, the ceiling drops,
     #   and an initial value of 45.0 that conformed now VIOLATES. It wants a kernel-owned way
     #   to say "the range this thing is measured against".

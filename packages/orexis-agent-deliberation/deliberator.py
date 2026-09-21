@@ -208,7 +208,7 @@ class Deliberator:
         by the one module that sees both.
         """
         pursued = self.pursued()
-        #  NOTHING TO DECIDE IS NOT ZERO THINGS DECIDED. An agent with no stake — world/sensing's
+        #  NOTHING TO DECIDE IS NOT ZERO THINGS DECIDED. An agent with no region want — world/sensing's
         #  records and wants nothing — used to contribute no rows here because it was granted no
         #  deliberation capability at all, and `Module.reports` says outright that the ABSENCE of
         #  a module's lines is itself a reading. Dissolving the capability into the kernel would
@@ -233,7 +233,7 @@ class Deliberator:
         #  ONE ROW PER WANT, which is what makes a single graph able to show all of them.
         #  The tag is the want ITSELF and not the property it is about, because a property
         #  cannot name every want: freshness is per instrument, a debt is per claim, and a
-        #  panel keyed on `property` could only ever draw stakes. Urgency is unit-free by
+        #  panel keyed on `property` could only ever draw region wants. Urgency is unit-free by
         #  construction, so a moisture, a look overdue and a litre owed belong on one axis —
         #  that is the whole claim of a common currency, and this is where it becomes visible.
         #
@@ -352,7 +352,7 @@ class Deliberator:
         #  widened anything.
         #  WANTED IS NOT ACTIONABLE. A want nobody may act on yet is visible, rankable and left
         #  standing: a debt the holder has not presented, since a host that doses early spends
-        #  the water where nothing is looking (#132). A stake is always pursuable — a plant does
+        #  the water where nothing is looking (#132). A region want is always pursuable — a plant does
         #  not ask — so this says nothing to it.
         if not judgment.pursuable:
             return None
@@ -361,7 +361,7 @@ class Deliberator:
         #  off, and only the second question refuses to water a plant that is already too
         #  wet — the direction test says Raises, the gap says below the aim, and both are
         #  true of a drowning plant whose aim sits above it. A debt is simulated exactly as a
-        #  stake is (#255): the search sees the row owed to its counterparty AND this agent's
+        #  region want is (#255): the search sees the row owed to its counterparty AND this agent's
         #  own levers, so a host owing water it does not hold plans the refill — Acquire
         #  raises the level Apply's premise reads, and "refill, then serve" falls out of two
         #  rules that never mention each other.
@@ -377,7 +377,7 @@ class Deliberator:
         #  short of a plan falls through to the pre-#255 path, unchanged: the row the market
         #  joined to this want, and the actuation boundary judges the vessel when it pours.
         #  Handed back as a one-row plan labelled OBLIGATION, which is not a search outcome and
-        #  is not written to the trace. A stake has no such row, and nothing here asks what
+        #  is not written to the trace. A region want has no such row, and nothing here asks what
         #  kind of want it is holding.
         me = self.agent.me.uri
         for row in find_steps(self.agent.beliefs, self.agent.desires.abouts(me), me,
@@ -407,7 +407,7 @@ class Deliberator:
         #  A STAKE NOTHING MEASURES is complained about by the package that holds the
         #  regions, once per want, the first time the planner asks it (sensing's
         #  the choir's measure) — the kernel used to ask the live world once here to say so,
-        #  and could tell a stake from a debt only by kind.
+        #  and could tell a region want from a debt only by kind.
         #  A PLAN THAT WORKED HERE BEFORE is adopted without a search (#469, #551): the same
         #  want, a world where the plan's regressed precondition holds and its first step is
         #  on the menu. The trace says so; the world verifies it step by step.

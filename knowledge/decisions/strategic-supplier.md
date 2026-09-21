@@ -8,7 +8,7 @@ timestamp: 2026-08-01T00:00:00Z
 
 # Context
 
-Two framings for the water source: (A) a stake-free utility that just dispenses, or (B) a
+Two framings for the water source: (A) a region-want-free utility that just dispenses, or (B) a
 genuine seller with its own costs (electricity, pump wear, upstream water price) that it
 wants to cover plus a margin.
 
