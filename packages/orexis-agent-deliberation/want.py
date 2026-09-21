@@ -97,7 +97,7 @@ class Want:
     #  not knowable before the search that produces them — so the number was contributed by
     #  four packages, each its own way, ahead of the only evidence that could have settled it.
     #  What survives is the SEARCH's measure of a world against one want, which is a different
-    #  question and lives on the node (`planner._urgency_in`).
+    #  question and lives on the node (`planner._unmet_in`).
 
     # What it currently reads, where whoever contributed the want has a number for it — a
     # stake's reading, filled by sensing. None when nothing has been observed, which is a gap

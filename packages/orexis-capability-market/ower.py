@@ -134,10 +134,10 @@ class Ower(Module):
                              to_agent_id)
             return None
         #  The claim's own deadline, kept as the debt's. Both timestamps are recorded because
-        #  urgency is the room BETWEEN them — how much of the window has run — and an agent
-        #  that stored only the expiry would have to assume when the window opened. A claim
-        #  with no expiry leaves the triple out, and the obligation is simply never hot: that
-        #  is a market with no redeem channel, where the dose went out on issue and there was
+        #  the room a debt has left is the stretch BETWEEN them — and an agent that stored only
+        #  the expiry would have to assume when the window opened. A claim with no expiry
+        #  leaves the triple out: that is a market with no redeem channel, where the dose went
+        #  out on issue and there was
         #  never a wait to be late for.
         #  The amount, recorded so the effect rule that says what SERVING makes true can size
         #  the pour from the record rather than from a module's memory (#255). Optional for
@@ -322,20 +322,17 @@ SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS
         return len(rows)
 
     def obligations(self, now: datetime | None = None) -> list[Want]:
-        """What this agent owes, as desires — hottest first, and hot means CLOSE TO EXPIRY.
+        """What this agent owes, as desires, in no order of mine.
 
-        A stake's urgency is distance scaled by the survival envelope; an obligation has no envelope,
-        so its room is time: the fraction of the redeem window that has run. At issue nothing
-        has gone wrong and the debt is cool; at the deadline it is maximal. The sovereign chose
-        this over the two alternatives the obligation record names as the whole risk — an obligation
-        pinned at 1.0 is the honoured mode returning under another name, and an obligation with no heat
-        is an agent that defects while its ledger looks tidy.
+        THEY CAME BACK HOTTEST FIRST, and hot meant close to expiry: a debt has no survival
+        envelope, so its room was time — the fraction of the redeem window that had run, cool
+        at issue and maximal at the deadline. Nothing chose by it, every want handed up is
+        planned for, and the number is gone with the rest of them.
 
-        A debt whose claim named no deadline stays at zero for ever, and that is not a bug: the
-        market that issued it has no redeem channel, so the dose went out when it was won and
-        nobody is waiting. `pursuable` is the OTHER question — whether the holder has asked, and
-        whether the window is still open — and it is deliberately not folded into urgency,
-        because a debt this agent can see expiring while nobody has presented is worth seeing.
+        What the window still decides is the STATE — standing, demanded, lapsed — and
+        `pursuable`, which is the other question: whether the holder has asked, and whether
+        the window is still open. Kept apart deliberately, because a debt this agent can see
+        expiring while nobody has presented is worth seeing.
         """
         return self.desires(now)
 
