@@ -9,7 +9,7 @@ took a fixture that built a real agent, and did not qualify.
 What is tested is the READ: that saving a want makes it findable, that finding one by its
 desire answers the derivation's question, that deleting it leaves nothing behind, that the
 three things `save_want` writes are all written, and that an ended one is handed to nobody.
-The derivation that uses it is covered end to end by `tests/test_pursuing.py`.
+The derivation that uses it is covered end to end by `tests/test_considering.py`.
 
 This was `Wants`, a class holding one attribute. What it bought — the graph names and the
 query text stop being things a caller knows — the module buys, and the five finders it

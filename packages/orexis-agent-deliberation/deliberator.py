@@ -43,7 +43,6 @@ from assembly.contribute import answer as contribution, contributes
 from .beliefs import Picks
 from orexis_agent_progression.keeper import (INTENTION_CLASS, PATIENCE_S, KeepingBeliefs,
                                                  NoPatience)
-from orexis_agent_progression.timer import Timer
 
 from . import planner, pursuit, trace
 from orexis_agent_progression.act import Step
@@ -98,7 +97,6 @@ class Deliberator:
         self.agent = agent
         self.me = agent.me
         self.log = logging.getLogger(f"{agent.id}.{self.name}")
-        self._tick: Timer | None = None
         self._steps_done = 0        # what progression told me, for `series`
         self._steps_declined = 0
         self._plans_finished = 0
@@ -112,10 +110,10 @@ class Deliberator:
         """Every desire this agent holds, with the move I propose for it — or None.
 
         Here because deciding what can be done is exactly what a deliberator is, and because
-        the kernel may not name a capability's family: `agent.pursuing()` merges what the modules
+        the kernel may not name a capability's family: `agent.considering()` merges what the modules
         want, and this is the only place that can say whether anything answers.
         """
-        return [(judgment, self.propose_for(judgment)) for judgment in self.agent.pursuing()]
+        return [(judgment, self.propose_for(judgment)) for judgment in self.agent.considering()]
 
     def start(self) -> None:
         """Drop whatever the last process was thinking.
@@ -126,43 +124,11 @@ class Deliberator:
         lifecycle up. Cheap: the graph holds one pass per desire and most agents hold a handful.
         """
         self.agent.beliefs.clear_graph(DELIBERATION_GRAPH)
-        # THE MIND'S OWN CLOCK — the non-market entry into deliberation (#208). On the agent's
-        # patience, mark every want for reconsideration. The patience is the rate bound by
-        # construction: an impulse younger than it is absorbed by the keeper's `adopt` anyway,
-        # so ticking faster would only ask questions whose answers are already standing.
-        #
-        # This was the keeper's tick, and it searched synchronously on the timer's own thread.
-        # Since #452 a timer lands on the reactive loop — the one executing thread, which must
-        # never be held for a search — so what the tick does now is MARK (milliseconds) and the
-        # reviser's thread does the searching. Same passes, same commitments; the search moved
-        # off the clock's thread and onto the mind's, which is where the layering record put it.
-        #
-        #  No patience, no clock. An agent that states none has no stake (the shape guarantees
-        #  the converse), so there are no gaps for this tick to collect and nothing it could
-        #  commit — starting a timer to ask would be a clock per agent to answer "nothing".
-        try:
-            interval = float(self.agent.keeper.beliefs.patience_s)
-        except NoPatience:
-            self.log.debug("no patience stated and no stake to spend it on — the tick stays off")
-            return
-        self._tick = Timer(interval, self.tick)
-        self._tick.start()
-
-    def stop(self) -> None:
-        if self._tick:
-            self._tick.stop()
-
-    def tick(self) -> None:
-        """The clock landed, on the loop: mark every want that may be acted on and return.
-        Never searches here. A want nobody may act on yet — a debt its holder has not
-        presented — is left standing and hot; marking it would run a pass to decide nothing.
-        It used to be debts that were skipped, by kind: a host serves on a presentation or
-        when stock arrives, and hosting wakes the search on those itself. It still does; a
-        presented debt the search could not serve is now reconsidered on the tick as any
-        other want is, which is one more pass that finds nothing until the stock arrives."""
-        for judgment in self.agent.pursuing():
-            if judgment.pursuable:
-                self.agent.reviser.note(judgment.uri, judgment)
+        #  THE CLOCK IS THE CONTAINER'S. This module kept a `Timer` on the agent's patience
+        #  and its landing read `agent.considering()` back — a module keeping its own timer and
+        #  checking its own trigger, which AGENTS.md names as the middle layer rebuilt inside
+        #  a capability. The agent waits now and calls `pursuit.consider`, which is this
+        #  package's one way in; what that pass does is unchanged, and it derives first.
 
     def deliberate_on_gaps(self) -> None:
         """Every want, through pursuit, NOW. Noticing is plural; deciding is not; doing is one path.
@@ -179,7 +145,7 @@ class Deliberator:
 
         What nobody may act on yet is skipped, as the tick skips it — see `tick`.
         """
-        for judgment in self.agent.pursuing():
+        for judgment in self.agent.considering():
             if not judgment.pursuable:
                 continue
             pursuit.pursue(self.agent, judgment)

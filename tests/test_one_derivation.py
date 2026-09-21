@@ -76,7 +76,7 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_derivation_mint
     [judged] = ledger.obligations()
     assert judged.uri == want.uri and judged.claim == "jti-1"
     assert judged.state == "standing" and not judged.pursuable
-    presented = next(j for j in agent.pursuing() if j.uri == want.uri)
+    presented = next(j for j in agent.considering() if j.uri == want.uri)
     assert presented.claim == "jti-1" and presented.desire == root, \
         "the choir's judgment, under the derivation's provenance"
 
@@ -109,7 +109,7 @@ def test_a_second_claim_is_a_second_want_and_the_first_stands(monkeypatch):
     assert second.holds_at > first.holds_at, \
         "each at its own deadline"
 
-    presented = next(j for j in agent.pursuing() if j.uri == first.uri)
+    presented = next(j for j in agent.considering() if j.uri == first.uri)
     assert pursuit.handed(agent, presented).uri == first.uri
     derive_wants(agent.beliefs.engine)
     assert derive_wants(agent.beliefs.engine) == [], "nothing new to mint"
@@ -121,7 +121,7 @@ def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(mon
     and a plan for a want at an instant is placed to land at it (#619). Then the holder
     presents, an hour early. The debt is in violation NOW, and a want still saying "hold at
     the lapse" would have the serve placed at the deadline less the pour while the buyer
-    waits: hosting's own presentation path served now, and a pass from `pursuing()` did
+    waits: hosting's own presentation path served now, and a pass from `considering()` did
     not. The derivation re-mints the want with no instant, under the same name, and a pass from
     either door serves now."""
     from orexis_agent_progression import clock
@@ -139,7 +139,7 @@ def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(mon
     derive_wants(agent.beliefs.engine)
     assert derive_wants(agent.beliefs.engine) == [], "and the derivation is idle again"
 
-    presented = next(j for j in agent.pursuing() if j.uri == now.uri)
+    presented = next(j for j in agent.considering() if j.uri == now.uri)
     assert presented.holds_at is None and presented.pursuable
     plan = agent.deliberator.decide(presented)
     assert plan is not None and [s.action.rsplit("#", 1)[-1] for s in plan.steps] == ["Serving"]
@@ -147,8 +147,8 @@ def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(mon
         "placed from the present, not at the lapse less the pour"
 
 
-def test_the_tick_marks_a_presented_debt_and_leaves_an_unpresented_one_standing(monkeypatch):
-    """The tick marks every want that may be acted on and skips what nobody may act on yet —
+def test_a_pass_marks_a_presented_debt_and_leaves_an_unpresented_one_standing(monkeypatch):
+    """A pass marks every want that may be acted on and skips what nobody may act on yet —
     a debt its holder has not presented stands hot and unmarked, since a pass on it would
     decide nothing (#132). It used to skip DEBTS, by kind, and leave a presented one the
     search could not serve to hosting's own wake-ups alone; a presented debt is a want like
@@ -168,7 +168,10 @@ def test_the_tick_marks_a_presented_debt_and_leaves_an_unpresented_one_standing(
     assert asked["jti-7"].uri in pursued, "presented: reconsidered like any other want"
     assert asked["jti-6"].uri not in pursued, "unpresented: standing, hot, and not decided on"
 
+    #  AND THE SAME THROUGH THE ONE WAY IN. It was `deliberator.tick()`, the landing of a
+    #  `Timer` that module kept; the container waits now and calls `pursuit.consider`, which
+    #  derives first and marks what may be acted on.
     marked = []
     monkeypatch.setattr(agent.reviser, "note", lambda uri, judgment=None, **k: marked.append(uri))
-    agent.deliberator.tick()
+    deliberation.pursuit.consider(agent)
     assert asked["jti-7"].uri in marked and asked["jti-6"].uri not in marked

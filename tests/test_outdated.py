@@ -82,7 +82,7 @@ def test_a_debt_lapsing_unserved_leaves_its_verdict_and_no_want(monkeypatch):
     ledger.owe("tomato", "j-paid", expires_at=(now - timedelta(seconds=30)).timestamp(), amount_l=0.5)
     ledger.discharge("j-paid")
     assert ledger.owed() == [], "past their windows: the door hands neither to anybody"
-    assert not any(getattr(d, "claim", None) in ("j-lapse", "j-paid") for d in supplier.pursuing()), \
+    assert not any(getattr(d, "claim", None) in ("j-lapse", "j-paid") for d in supplier.considering()), \
         "and neither is a want in the modality"
     assert {obligation_graph(supplier.id, "j-lapse"), obligation_graph(supplier.id, "j-paid")} \
         <= set(supplier.beliefs.outdated())

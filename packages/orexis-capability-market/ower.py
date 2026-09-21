@@ -337,7 +337,7 @@ SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS
         return self.desires(now)
 
     def desires(self, now: datetime | None = None) -> list[Want]:
-        """MY contribution to what this agent is pursuing: its debts, and no stakes.
+        """MY contribution to what this agent is considering: its debts, and no stakes.
 
         The half of the choir the city had no way to contribute before, which is the whole of
         #233. Lapsed is judged HERE, against the clock this module reads — one reader, one

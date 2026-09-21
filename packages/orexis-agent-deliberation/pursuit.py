@@ -57,7 +57,7 @@ log = logging.getLogger("pursuit")
 #  trouble, with the blocks about what the want is about (`narrowed`) — POINTS at the root's
 #  avoided state and estimate, one owner each, and restates the root's address,
 #  `orexis:about`, which is what a step's precondition joins a want by. The container presents it in
-#  the root's place with the root's own measure and its own state (`Agent.pursuing`), so a
+#  the root's place with the root's own measure and its own state (`Agent.considering`), so a
 #  keeper's verdict, a bidder's lookup and a mark by either name meet the same want.
 
 
@@ -72,7 +72,7 @@ def handed(agent, judgment):
         #  carries the old instant, so it is presented again.
         if judgment.desire is not None:
             if judgment.uri in derived(agent):
-                return next((d for d in agent.pursuing() if d.uri == judgment.uri), judgment)
+                return next((d for d in agent.considering() if d.uri == judgment.uri), judgment)
         return judgment
     #  THE PASS STANDS ON THE ROOT: every desire is judged into the store and the wants derived
     #  from what the store says — a root whose met-test the compiler refused is judged by the
@@ -82,10 +82,39 @@ def handed(agent, judgment):
     if child is None:
         return None
     #  AS THE CONTAINER PRESENTS IT: a want met at an instant carries its instant, its
-    #  time room and the state the newest prediction gives it (`Agent.pursuing`), none of
+    #  time room and the state the newest prediction gives it (`Agent.considering`), none of
     #  which the root's row knows; an at-end want is the root's row under the derived name.
-    presented = next((d for d in agent.pursuing() if d.uri == child and d.holds_at is not None), None)
+    presented = next((d for d in agent.considering() if d.uri == child and d.holds_at is not None), None)
     return presented if presented is not None else replace(judgment, uri=child, desire=judgment.uri)
+
+
+def consider(agent, now: datetime | None = None) -> None:
+    """ONE PASS OF THE MIND, and the only way in from outside: derive what is wanted, then
+    hand every want that may be acted on to the thread that searches.
+
+    THE SEAM THAT WAS MISSING. The container held `Considering` and the deliberation module held
+    a `Timer`, and each reached into the other — `packages/orexis-agent-deliberation/considering.py` imported this package,
+    and `Deliberator.tick` read `agent.considering()` back — so there was no single place a pass
+    began. The agent calls this on its patience and knows nothing else about wants; what a
+    want IS stays here, which is the package that has the word.
+
+    THE DERIVATION RUNS FIRST, EVERY PASS, and that is the point rather than an ordering
+    detail. It used to run only where a package wrote something a desire reads — a debt, a
+    call — so between those a want's row could say met where the world had moved, and the
+    container re-ran the want's own met-test to correct it. That is asking twice what one
+    pass had already concluded (AGENTS.md), and it is why `_own_state` existed. A standing
+    want is unmet because the derivation just said so; a met one was withdrawn in the same
+    breath.
+
+    IT MARKS AND DOES NOT SEARCH. The clock lands on the reactive loop, which must never be
+    held for a pass, so what this does is note; `reviser` does the searching on a thread of
+    the mind's own. A want nobody may act on yet — a debt its holder has not presented — is
+    left standing and unmet: marking it would run a pass to decide nothing.
+    """
+    derived(agent)
+    for want in agent.considering(now):
+        if want.pursuable:
+            agent.reviser.note(want.uri, want)
 
 
 def derived(agent) -> list[str]:
@@ -227,10 +256,10 @@ def pursue_for(agent, want: str, surprise: tuple | None = None) -> str | None:
 
     An actor holding a fresh reading finds the want it means by its own query — sensing's
     `want_about(property)` states the rule, an unmet epistemic want first and then the stake —
-    and hands the NODE here. None where the agent is not pursuing that want at all.
+    and hands the NODE here. None where the agent is not considering that want at all.
     """
     #  BY EITHER NAME (#618): a mark may name the root while the want derived under it stands.
-    judgment = next((d for d in agent.pursuing() if d.uri == want or d.desire == want), None)
+    judgment = next((d for d in agent.considering() if d.uri == want or d.desire == want), None)
     return pursue(agent, judgment, surprise=surprise) if judgment is not None else None
 
 

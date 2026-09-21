@@ -8,7 +8,7 @@ description: >-
   desire; control belongs at the shape level, a pattern that violates when the state exists;
   and a met-test pointing at the bad state reads inverted, so the kernel gained
   `orexis:unmetWhen`, the negative twin, one of the two and never both. What replaced the
-  package is two kernel closes — the wants no module speaks for reach pursuing, because
+  package is two kernel closes — the wants no module speaks for reach `considering`, because
   wanting is the kernel's, and a pattern-carrying want is judged met-or-not by its own
   select on the store's engine — plus the world ratifying the DESIRE itself through the
   asserted block. The law half stands from the first build: violation shapes pruned at
@@ -33,7 +33,7 @@ The sovereign dismantled it in review:
 
 1. **"Why a separate capability? Looks very closely coupled with Desires."** Because it IS a
    desire — and the package existed only to paper over two KERNEL gaps: a want no module
-   contributes is invisible to `pursuing`, and a want no module measures scores the flat 1.0
+   contributes is invisible to `considering`, and a want no module measures scored the flat 1.0
    that sends the search shopping for a want that wants nothing. The house's own test
    convicts the member: nothing could differ in "run the ratified pattern", and *where
    nothing could differ you have a function, not a capability*. Pure ratified data has no
@@ -54,7 +54,7 @@ The sovereign dismantled it in review:
 
 ## The second build: two kernel closes and a door already open
 
-- **The wants no module speaks for reach `pursuing`.** Wanting is the kernel's
+- **The wants no module speaks for reach `considering`.** Wanting is the kernel's
   ([the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md)), so the kernel
   lifts pattern-carrying wants from the desires store into pursuit itself — scoped to
   `unmetWhen` carriers, whose judging is one select on the store's own engine.
@@ -92,7 +92,7 @@ See [desire](/domain/desire.md).
 
 # Seams left open
 
-- **`metWhen`-carrying asserted wants still reach `pursuing` through nobody.** The kernel
+- **`metWhen`-carrying asserted wants still reach `considering` through nobody.** The kernel
   lift is scoped to `unmetWhen` carriers, whose judging is cheap; an asserted POSITIVE want
   would need its met-shape validated per tick to be scored, and the one shipped asserted
   root predates the desire node form anyway. The gap predates this change and is now named.

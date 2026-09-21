@@ -1,17 +1,23 @@
-"""Everything this agent is pursuing right now, as a collection.
+"""Everything this agent is considering right now, as a collection.
 
 **THE ONE COLLECTION THAT IS MADE RATHER THAN HELD, and the exception is stated because the
 convention asks for it.** Every other read here reads rows somebody wrote: `find_wants` and
 `Desires` hand back what is in a graph. Nothing ever writes these. This one ASSEMBLES — it
-asks every module what it is pursuing and how badly, runs an avoided state's own select to
+asks every module what it holds, runs an avoided state's own select to
 see whether the world has entered it, compiles a shape into the select whose rows are its
 violations, and hands back what comes back — in no order, since nothing chose by one.
 
 That makes it a repository by its name and a service by its work, which is a line this repo
 usually holds (`a-repository-is-not-a-service`). It is kept on the collection side for the
 reason `Steps` is: what it hands back is a collection of domain objects, derived on every ask
-and never stored, and a caller asking "what am I pursuing" is asking for the contents rather
-than for a decision.
+and never stored, and a caller asking "what am I considering" is asking for the contents
+rather than for a decision.
+
+**CONSIDERING, NOT PURSUING, and the two are a pass apart.** `pursuit.consider` derives what
+is wanted and hands what may be acted on to the search; `pursuit.pursue` plans one of them,
+commits and takes. So this is everything the agent is WEIGHING — a want nobody may act on yet
+is in it, and a want being walked is in it too — and pursuing is what happens to one of them
+next. It was `Pursuing` while the container held it and the pass had no name of its own.
 
 **It is handed the AGENT, and unlike `find_wants` that is not a failure to narrow.** What a
 want reads as here is CONTRIBUTED — the ledger reads a debt against its redeem window, sensing
@@ -29,18 +35,17 @@ from datetime import datetime
 
 from rdflib import URIRef
 
-from orexis_agent_deliberation import judging
-from orexis_agent_deliberation.want import Want
-from orexis_agent_deliberation.wants import find_wants
+from .want import Want
+from .wants import find_wants
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import DESIRES
 from orexis_agent_progression.store import bind, bindings
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import FORESEEN, KNOWN
 
-log = logging.getLogger("pursuing")
+log = logging.getLogger("considering")
 
-#  The avoided-pattern wants the kernel lifts into pursuit itself (#468) — see `pursuing`.
+#  The avoided-pattern wants the kernel lifts itself (#468) — see `find_all` below.
 #  The select is OPTIONAL here because the node a want points at may be the DOMAIN's — declared
 #  in a package's ontology, public knowledge the desire modality does not keep after its
 #  rebuild — and is then read from the belief base, whose default graph merges public knowledge.
@@ -63,14 +68,14 @@ SELECT ?me ?want ?shape WHERE {
 }"""
 
 
-class Pursuing:
-    """Everything this agent is pursuing, hottest first."""
+class Considering:
+    """Everything this agent is considering, hottest first."""
 
     def __init__(self, agent):
         self._agent = agent
 
     def find_all(self, now: datetime | None = None) -> list[Want]:
-        """Everything this agent is pursuing, hottest first, whoever sourced it.
+        """Everything this agent is considering, hottest first, whoever sourced it.
 
         Assembled from the modules that hold wants rather than asked of one, because since the
         ledger became its own capability no single module can see them all: desire contributes
@@ -187,15 +192,13 @@ class Pursuing:
                     presented = replace(base, uri=want.uri, desire=root)
                 presented = replace(presented, about=want.about,
                                     side=want.side or presented.side)
-                if want.uri not in spoken_for:
-                    #  THE STATE IS THE WANT'S OWN where its shape says met — its instance is
-                    #  in range, whatever the root's others read — and the root's word
-                    #  otherwise, since the choir's words are finer than a shape's two
-                    #  (`stale`, `unmeasured`); the MEASURE stays the root's either way, and
-                    #  met-and-urgent is a true situation (desire.md).
-                    own = self._own_state(want.uri)
-                    if own == "met" or (own == "unmet" and presented.state == "met"):
-                        presented = replace(presented, state=own)
+                #  THE STATE IS NOT RE-JUDGED HERE. It ran the want's own met-test to
+                #  correct the root's word — its instance may be in range while the root's
+                #  others are not — and that is asking twice what one pass had already
+                #  concluded (AGENTS.md). It was needed because the derivation ran only where
+                #  a package wrote something a desire reads, so a row could go stale between
+                #  those; `pursuit.consider` derives every pass, so a standing want is unmet
+                #  because the derivation just said so and a met one was withdrawn with it.
                 if want.holds_at:
                     presented = self._at_instant(
                         presented, want.uri, want.holds_at, want.derived_at, now)
@@ -205,19 +208,6 @@ class Pursuing:
         #  was searched first and nothing else. What would rank them is what their plans cost
         #  and how long they take, which is the search's answer and not a contributor's.
         return list(seen.values())
-
-    def _own_state(self, want: str) -> str | None:
-        """What a derived want's OWN met-test says of the world now — `met` or `unmet` — or
-        None where it carries none of its own and is judged as its root is (a want minted
-        before wants carried one).
-
-        ASKED OF `judging`, which is the module that runs met-tests: a DERIVED want's shape is
-        in its own want graph, which is where `shapes_in` reads, so this is the same question
-        the derivation asks of the same source. The two blocks above still compile their own,
-        and the reason is written there.
-        """
-        unmet = judging.unmet_now(self._agent.beliefs.engine, want)
-        return None if unmet is None else ("unmet" if unmet else "met")
 
     def _at_instant(self, row: Want, node: str, holds_at: datetime, since: datetime | None,
                     now: datetime | None) -> Want:

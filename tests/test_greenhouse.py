@@ -63,7 +63,7 @@ def _grower(monkeypatch, dries=False, moisture=0.20, air=12.0, outside=8.0, heat
 
 
 def _comfort(agent):
-    return next(g for g in agent.pursuing() if g.uri == COMFORT)
+    return next(g for g in agent.considering() if g.uri == COMFORT)
 
 
 def test_the_bed_holds_one_want_about_two_properties(monkeypatch):

@@ -35,7 +35,7 @@ class Want:
     came to be is not the axis: three worlds ratify a want directly and it is a want all the same.
 
     STORED FACTS ONLY. How urgent it is and whether it is met are COMPUTED — a capability's
-    answer about a world being judged — and belong to `Want`, which is what `pursuing()`
+    answer about a world being judged — and belong to `Want`, which is what `considering()`
     hands out. A repository returns what is written down; the mind's view of it is not this
     object's business.
     """

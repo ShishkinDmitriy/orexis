@@ -28,7 +28,7 @@ DISK, ONTO = HANOI + "disk", HANOI + "onto"     # what hanoi:Move declares it ta
 def _mover(monkeypatch, disks):
     """A plain Agent, not conftest's wired builder: the mover holds no bus, so there is no
     transport module for the builder's wire conveniences to find — and none is needed, since
-    these tests speak only to `pursuing` and the Planner. Wire-less on purpose: the world's
+    these tests speak only to `considering` and the Planner. Wire-less on purpose: the world's
     whole point is the search."""
     from agent import genesis, runtime
 
@@ -41,7 +41,7 @@ def _mover(monkeypatch, disks):
 
 
 def _goal(agent):
-    return next(g for g in agent.pursuing() if g.uri == WANT)
+    return next(g for g in agent.considering() if g.uri == WANT)
 
 
 def _solved(agent, budget=None):

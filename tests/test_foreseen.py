@@ -35,7 +35,7 @@ def _gardener(monkeypatch, moisture):
 
 
 def _stake(agent):
-    return next(d for d in agent.pursuing()
+    return next(d for d in agent.considering()
                 if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
 
 

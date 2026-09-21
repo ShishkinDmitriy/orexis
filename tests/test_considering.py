@@ -33,7 +33,7 @@ def _gardener(monkeypatch, moisture):
 
 def _stake(agent):
     """The want about moisture the container presents — the root, or what is derived under it."""
-    return next(d for d in agent.pursuing()
+    return next(d for d in agent.considering()
                 if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
 
 
@@ -58,7 +58,7 @@ def test_a_root_is_never_handed_to_the_search_and_what_is_pursued_is_derived_und
     assert child.uri == root.uri + ".pursued" and child.desire == root.uri
     assert child.observed_property == MOISTURE, \
         "the derived want is presented with the root's own row"
-    assert all(d.uri != root.uri for d in agent.pursuing()), \
+    assert all(d.uri != root.uri for d in agent.considering()), \
         "while a derived want stands, the root is presented as it and never beside it"
     assert set(agent.deliberator._planners) == {child.uri}, \
         "the search was handed the derived want and never the root"

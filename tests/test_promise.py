@@ -41,7 +41,7 @@ def test_a_taker_less_step_with_a_bridge_raises_its_promise_as_a_want(monkeypatc
     from orexis_agent_progression.execution import carry_out
     uri = keeper.adopt(_ferry(want), want, "ferry the box over")
     assert carry_out(fern, keeper.current(uri), None, uri) is False, "nobody takes Ferry: it stands"
-    promised = [d for d in fern.pursuing() if d.uri.startswith("http://example.org/orexis#promise_")]
+    promised = [d for d in fern.considering() if d.uri.startswith("http://example.org/orexis#promise_")]
     assert len(promised) == 1 and promised[0].state == "unmet", "the promise is a want the agent holds"
     rows = bindings(fern.beliefs.query_union(f"""
 SELECT ?w ?step ?sel WHERE {{ GRAPH <{promises_graph(fern.id)}> {{
@@ -51,7 +51,7 @@ SELECT ?w ?step ?sel WHERE {{ GRAPH <{promises_graph(fern.id)}> {{
     # the level beneath keeps the promise: the box is at pier B, in the lower vocabulary
     fern.beliefs.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ <{T}box> <{T}at> <{T}pierB> }} }}")
     assert keeper.open_expectations(want) == [], "the promised fact answered the step"
-    assert not [d for d in fern.pursuing() if d.uri.startswith("http://example.org/orexis#promise_")], \
+    assert not [d for d in fern.considering() if d.uri.startswith("http://example.org/orexis#promise_")], \
         "the promise is withdrawn"
     on = bindings(fern.beliefs.query_over(f"SELECT ?p WHERE {{ <{T}box> <{T}on> ?p }}", STATE_GRAPH))
     assert [r["p"] for r in on] == [T + "pierB"], \
@@ -67,5 +67,5 @@ def test_a_taker_less_step_without_a_bridge_is_a_promise_nobody_keeps(monkeypatc
     with caplog.at_level("ERROR", logger="execution"):
         assert carry_out(fern, keeper.current(uri), None, uri) is False
     assert any("no bridge refines it" in r.message for r in caplog.records)
-    assert not [d for d in fern.pursuing() if d.uri.startswith("http://example.org/orexis#promise_")]
+    assert not [d for d in fern.considering() if d.uri.startswith("http://example.org/orexis#promise_")]
     assert keeper.standing(want=want), "it stands, said loudly, for the gate to refuse (#532)"

@@ -49,7 +49,7 @@ def _gardener(monkeypatch, moisture):
     #  sit in, and that the probe has reported recently — and asking for "the want about
     #  moisture" would take whichever happened to be hotter, which on a dry pot is the wrong
     #  one and answers a different question. These tests are about doses.
-    desire = next(g for g in agent.pursuing()
+    desire = next(g for g in agent.considering()
                   if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     return agent, Planner(agent, agent.me).plan(desire), desire
 
@@ -207,7 +207,7 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
     st = genesis_store({("zz", MOISTURE): DRY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     planner = Planner(agent, agent.me)
-    desire = next(g for g in agent.pursuing()
+    desire = next(g for g in agent.considering()
                   if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
 
     here = planner._begin(desire)
@@ -268,7 +268,7 @@ def test_a_plant_that_buys_its_water_can_see_the_lever_that_waters_it(monkeypatc
     st = genesis_store({("fern", MOISTURE): 0.30})
     fern = build_agent("fern", st, monkeypatch)
     open_round_for(fern, "fern")
-    desire = next(g for g in fern.pursuing()
+    desire = next(g for g in fern.considering()
                   if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
 
     plan = Planner(fern, fern.me).plan(desire)
@@ -329,7 +329,7 @@ def _thirsty_with_a_nearly_empty_butt(monkeypatch):
     st = genesis_store({("zz", MOISTURE): DRY, ("water_butt", STORED): NEARLY_EMPTY},
                        world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    desire = next(g for g in agent.pursuing()
+    desire = next(g for g in agent.considering()
                   if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     return agent, Planner(agent, agent.me), desire
 
@@ -373,7 +373,7 @@ def test_a_second_dose_is_predicted_from_what_the_first_one_left(monkeypatch):
     assert plan.outcome == search.SATISFIED
     assert plan.unmet_after < plan.unmet_now
     write_reading(agent, DRY + 0.01, MOISTURE)       # the butt held too little: still below
-    desire = next(g for g in agent.pursuing()
+    desire = next(g for g in agent.considering()
                   if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     again = Planner(agent, agent.me).plan(desire)
     assert [s.action for s in again.steps] == [DOSING], "and the next pass plans the next dose"
@@ -531,7 +531,7 @@ def test_a_sensing_action_still_ends_a_plan_with_no_rule_of_its_own(monkeypatch)
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("water_butt", STORED): NEARLY_EMPTY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    desire = next(g for g in agent.pursuing()
+    desire = next(g for g in agent.considering()
                   if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     planner = Planner(agent, agent.me)
 

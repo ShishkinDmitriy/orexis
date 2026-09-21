@@ -159,7 +159,7 @@ def _both(planner, agent, graph) -> tuple[set, set]:
 def test_the_legality_check_agrees_with_the_judge_on_a_shipped_world_and_a_broken_one(monkeypatch):
     agent = build_agent("fern", genesis_store({"fern": 0.30}), monkeypatch)
     planner = Planner(agent, agent.me)
-    desire = next(d for d in agent.pursuing() if getattr(d, "observed_property", None))
+    desire = next(d for d in agent.considering() if getattr(d, "observed_property", None))
     here = planner._begin(desire)
     try:
         assert planner._compiled.legal, "nothing compiled — the check would accept every world"
@@ -191,7 +191,7 @@ def test_a_held_shape_the_compiler_cannot_say_refuses_the_pass(monkeypatch):
                          "sh:property [ sh:path ex:p ; sh:pattern '^x' ] .", format="turtle")
     monkeypatch.setattr(search, "held_shapes", lambda data, me: odd)
     planner = Planner(agent, agent.me)
-    desire = next(d for d in agent.pursuing() if getattr(d, "observed_property", None))
+    desire = next(d for d in agent.considering() if getattr(d, "observed_property", None))
     with pytest.raises(Unsupported, match="pattern"):
         planner._begin(desire)
     planner.imaginarium = None
