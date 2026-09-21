@@ -17,6 +17,7 @@ from conftest import build_agent, genesis_store, write_reading
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import WANT
 from orexis_agent_deliberation.derive_wants import graph_of
+from orexis_agent_deliberation.forget_wants import forget_wants
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 DOSING = "http://example.org/orexis/actuation#Dosing"
@@ -95,9 +96,22 @@ def test_a_met_root_derives_nothing_and_no_pass_runs(monkeypatch):
     assert _stake(agent).uri == desire.uri
 
 
+def _state_of(agent, uri: str) -> str | None:
+    """Where a want has got to (`orexis:state`), or None where it is not there at all.
+
+    A want is ONE-SHOT and its stages are written on it by whoever decides each — so a plan
+    finishing leaves the want `orexis:Done` and the collector takes it on the next pass.
+    Deciding and clearing are two acts; asserting on the stage is asserting on the first."""
+    from orexis_agent_progression.store import bindings
+    rows = bindings(agent.beliefs.query(
+        f"SELECT ?s WHERE {{ GRAPH ?g {{ <{uri}> orexis:state ?s }} }}", ()))
+    return rows[0]["s"].rsplit("#", 1)[-1] if rows else None
+
+
 def test_the_derived_want_is_withdrawn_when_its_plan_finishes_and_derived_again_while_unmet(monkeypatch):
-    """A plan that finished withdraws the want it served; a desire still unmet derives it again on
-    the next decision — under the same name, so everything keyed by it finds what it kept."""
+    """A plan that finished leaves the want it served DONE, the collector takes it, and a desire
+    still unmet derives it again on the next decision — under the same name, so everything keyed
+    by it finds what it kept."""
     agent = _gardener(monkeypatch, DRY)
     desire = _stake(agent)
     agent.deliberator.decide(desire)
@@ -105,6 +119,10 @@ def test_the_derived_want_is_withdrawn_when_its_plan_finishes_and_derived_again_
     assert child is not None
 
     agent.deliberator.on_plan_finished("urn:orexis:test:intention", DOSING, child)
+    assert _state_of(agent, child) == "Done", "the plan finished, so the want is finished"
+    #  AND THE COLLECTOR TAKES IT. Not where it was finished: deciding that something is done
+    #  and clearing it away are two acts (`forget_wants`, garbage collection on the pass).
+    assert forget_wants(agent.beliefs.engine) == [child]
     assert pursuit.child_of(agent, desire.uri) is None
     assert _stake(agent).uri == desire.uri, "with nothing derived under it, the desire is presented again"
 

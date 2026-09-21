@@ -23,7 +23,8 @@ import pytest
 from orexis_agent_progression.store import Store, bindings
 
 from orexis_agent_deliberation.want import Want
-from orexis_agent_deliberation.derive_wants import forget_want, graph_of, save_want
+from orexis_agent_deliberation.derive_wants import graph_of, save_want
+from orexis_agent_deliberation.forget_wants import forget_want
 from orexis_agent_deliberation.wants import find_want, find_wants
 
 A_DESIRE = "urn:test:gardener.no_overdue_debts"
@@ -72,7 +73,7 @@ def test_a_saved_want_is_found_and_a_deleted_one_is_not(store):
     assert [w.uri for w in found] == ["urn:test:want"]
     assert found[0].desire == A_DESIRE and found[0].label == "a want under test"
 
-    forget_want(store.engine, AGENT, "urn:test:want")
+    forget_want(store.engine, "urn:test:want")
     assert find_wants(store) == [], "and its graph went with it"
 
 
@@ -91,7 +92,7 @@ def test_forgetting_a_want_leaves_what_replacing_one_leaves(store):
     save_want(store.engine, AGENT, _want())
     assert find_want(store, uri="urn:test:want") is not None
 
-    forget_want(store.engine, AGENT, "urn:test:want")
+    forget_want(store.engine, "urn:test:want")
     assert find_want(store, uri="urn:test:want") is None, "the want is gone"
     graph = graph_of(AGENT, "urn:test:want")
     assert not bindings(store.query_over(

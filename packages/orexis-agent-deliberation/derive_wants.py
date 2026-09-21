@@ -243,7 +243,7 @@ def _withdraw_under(store: ox.Store, shapes, holder: str, desire: str, shape: st
     pursued = {r["w"] for r in rows(store, _PURSUED_Q, ())} if stale else set()
     gone = []
     for want in sorted(stale - pursued):
-        forget_want(store, _local(holder), want)
+        forget_want(store, want)
         log.info("%s withdrawn: its desire no longer reads it unmet", want.rsplit("#", 1)[-1])
         gone.append(want)
     return gone
@@ -345,29 +345,14 @@ def graph_of(agent_id: str, uri: str) -> str:
     return f"{pursued_graph(agent_id)}/{uri.rsplit('#', 1)[-1]}"
 
 
-def _forget(graph: str) -> str:
-    """The update that removes one want — its graph, and everything the catalogue says of it.
-
-    Shared, because there are two ways a want goes and they must leave the same nothing:
-    `save_want` replaces one whole and puts it back, and `forget_want` does not. A want IS
-    its graph (#645), so there is no second place to tidy — but the catalogue's account of
-    that graph is not in it, and a row left pointing at an empty graph is litter every
-    reader asking by class would still be handed.
-    """
-    return f"""DROP SILENT GRAPH <{graph}> ;
-DELETE {{ GRAPH ?cat {{ <{graph}> ?p ?o . ?period ?pp ?po }} }}
-WHERE  {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{graph}> ?p ?o .
-          OPTIONAL {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }} }}"""
 
 
-def forget_want(engine, agent_id: str, uri: str) -> None:
-    """Remove one derived want over the ENGINE, for a caller that holds no collection.
-
-    `Wants.delete_by_uri` was the collection's door and announced itself; this is the
-    derivation's, which announces nothing and whose caller says what changed — the same
-    asymmetry `save_want` had beside `Wants.save`, and both doors are gone.
-    """
-    engine.update(_forget(graph_of(agent_id, uri)), prefixes=NAMESPACES)
+#  WITHDRAWAL IS ITS OWN MODULE (`forget_wants.py`). This file decides what is WANTED; taking
+#  a want away is the other half of the want's life and has its own reasons — which graph it
+#  is in, whether that graph holds others, what the catalogue still says of it. `save_want`
+#  below imports the one text they share, since replacing a want whole is removing it and
+#  putting it back.
+from .forget_wants import RECOGNIZED, forget_graph, forget_want   # noqa: E402  (re-exported: see module)
 
 
 def save_want(engine, agent_id: str, want: Want) -> None:
@@ -397,11 +382,12 @@ def save_want(engine, agent_id: str, want: Want) -> None:
     side = f" ; orexis:violationIs <{want.side}>" if want.side else ""
     period = f' ; orexis:start "{clock.now().isoformat()}"^^xsd:dateTime' + (
         f' ; orexis:end "{_moment(want.ends)}"^^xsd:dateTime' if want.ends else "")
-    engine.update(_forget(graph) + f""" ;
+    engine.update(forget_graph(graph) + f""" ;
 INSERT {{
   GRAPH <{graph}> {{
   <{want.holder}> orexis:holds <{want.uri}> .
   <{want.uri}> a orexis:Want{timed}{about}{side} ;
+      orexis:state <{RECOGNIZED}> ;
       prov:wasDerivedFrom <{want.desire}> ;
       rdfs:label {json.dumps(want.label)} .
   {points}

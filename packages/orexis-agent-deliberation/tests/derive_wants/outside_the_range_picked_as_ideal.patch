@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -113,4 +113,65 @@
+@@ -113,4 +113,68 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -27,6 +27,7 @@
 +  :keeper.ideal.pursued.air_warmth_of_fern a orexis:Want .
 +  :keeper.ideal.pursued.air_warmth_of_fern orexis:about :air_warmth_of_fern .
 +  :keeper.ideal.pursued.air_warmth_of_fern orexis:metWhen :keeper.ideal.pursued.air_warmth_of_fern.met .
++  :keeper.ideal.pursued.air_warmth_of_fern orexis:state orexis:Recognized .
 +  :keeper.ideal.pursued.air_warmth_of_fern orexis:violationIs orexis:Above .
 +  :keeper.ideal.pursued.air_warmth_of_fern prov:wasDerivedFrom :keeper.ideal .
 +  :keeper.ideal.pursued.air_warmth_of_fern rdfs:label "pursued: every watched property of every sample around a plant reads inside the range picked as ideal" .
@@ -42,6 +43,7 @@
 +  :keeper.ideal.pursued.soil_moisture_of_fern a orexis:Want .
 +  :keeper.ideal.pursued.soil_moisture_of_fern orexis:about :soil_moisture_of_fern .
 +  :keeper.ideal.pursued.soil_moisture_of_fern orexis:metWhen :keeper.ideal.pursued.soil_moisture_of_fern.met .
++  :keeper.ideal.pursued.soil_moisture_of_fern orexis:state orexis:Recognized .
 +  :keeper.ideal.pursued.soil_moisture_of_fern orexis:violationIs orexis:Below .
 +  :keeper.ideal.pursued.soil_moisture_of_fern prov:wasDerivedFrom :keeper.ideal .
 +  :keeper.ideal.pursued.soil_moisture_of_fern rdfs:label "pursued: every watched property of every sample around a plant reads inside the range picked as ideal" .
@@ -57,6 +59,7 @@
 +  :keeper.ideal.pursued.soil_warmth_of_fern a orexis:Want .
 +  :keeper.ideal.pursued.soil_warmth_of_fern orexis:about :soil_warmth_of_fern .
 +  :keeper.ideal.pursued.soil_warmth_of_fern orexis:metWhen :keeper.ideal.pursued.soil_warmth_of_fern.met .
++  :keeper.ideal.pursued.soil_warmth_of_fern orexis:state orexis:Recognized .
 +  :keeper.ideal.pursued.soil_warmth_of_fern orexis:violationIs orexis:Unmeasured .
 +  :keeper.ideal.pursued.soil_warmth_of_fern prov:wasDerivedFrom :keeper.ideal .
 +  :keeper.ideal.pursued.soil_warmth_of_fern rdfs:label "pursued: every watched property of every sample around a plant reads inside the range picked as ideal" .

@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -66,4 +66,22 @@
+@@ -66,4 +66,23 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -17,6 +17,7 @@
 +  :keeper.in_range.pursued.tank1.level a orexis:Want .
 +  :keeper.in_range.pursued.tank1.level orexis:about :level .
 +  :keeper.in_range.pursued.tank1.level orexis:metWhen :keeper.in_range.pursued.tank1.level.met .
++  :keeper.in_range.pursued.tank1.level orexis:state orexis:Recognized .
 +  :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
 +  :keeper.in_range.pursued.tank1.level rdfs:label "pursued: every tank in range" .
 +  :keeper.in_range.pursued.tank1.level.met a sh:NodeShape .

@@ -45,6 +45,7 @@ from orexis_agent_progression.keeper import (INTENTION_CLASS, PATIENCE_S, Keepin
                                                  NoPatience)
 
 from . import planner, pursuit, trace
+from .forget_wants import DONE, FAILED, mark
 from orexis_agent_progression.act import Step
 from orexis_agent_deliberation.want import Want
 
@@ -157,10 +158,19 @@ class Deliberator:
             steps = self.agent.keeper.walked(intention) if self.agent.keeper is not None else []
             if steps:
                 remembered.lift(self.agent, want, steps, decided[0].cost)
-        #  THE WANT DERIVED UNDER A ROOT IS WITHDRAWN WHEN ITS PLAN FINISHES (#618): a root
-        #  still unmet derives it again on the next pass, through a fresh want.
-        if pursuit.desire_of(self.agent, want) is not None:
-            pursuit.withdraw(self.agent, want)
+        #  A WANT IS ONE-SHOT AND ITS PLAN FINISHING IS WHAT ENDS IT. A desire lives forever
+        #  and mints wants; a want is the occasion, and when the plan that served it is walked
+        #  to its end there is nothing left of it. A desire still unmet mints another on the
+        #  next pass, through a fresh want; a world that ratified one has said its thing, and
+        #  the files re-ratify it at boot.
+        #
+        #  IT WAS GUARDED ON `desire_of(...) is not None` — withdrawn only where the derivation
+        #  had minted it — so a want a WORLD authored was never withdrawn at all, and the
+        #  kernel had to judge it a second time at read time to make it look met.
+        #  DONE, and the collector takes it on the next pass. It was withdrawn here — deciding
+        #  and clearing in one act, at one of several decision points, which is how an authored
+        #  want came to be withdrawn at none of them.
+        mark(self.agent.beliefs.engine, want, DONE)
 
     @contributes(PLAN_FAILED)
     def on_plan_failed(self, intention: str, action: str, want: str) -> None:
@@ -181,6 +191,10 @@ class Deliberator:
             #  forgotten by its steps, whichever way adopted it.
             remembered.forget_matching(self.agent, want, decided[0].steps, "a step of it failed")
             self._decided.pop(want, None)
+        #  FAILED: something was tried and did not reach it — which is not the same as nothing
+        #  reaching it, and the two are separate values for that reason. The want STAYS: it is
+        #  still wanted, the mark is re-planned from here, and only `orexis:Done` is collected.
+        mark(self.agent.beliefs.engine, want, FAILED)
         self.agent.reviser.note(want)
 
     @contributes(SERIES)
@@ -318,9 +332,11 @@ class Deliberator:
             return None
         judgment = handed
         keeper = getattr(self.agent, "keeper", None)
-        if (judgment.desire is not None and judgment.is_met
+        #  MET WITH NOTHING STANDING FOR IT: gone, whoever wrote it. The same guard as above
+        #  and the same reason it is gone — an authored want that read met sat there forever.
+        if (judgment.is_met
                 and (keeper is None or not keeper.standing(want=judgment.uri))):
-            pursuit.withdraw(self.agent, judgment.uri)
+            mark(self.agent.beliefs.engine, judgment.uri, DONE)
             return None
         #  NOTHING IS ANSWERED BY HARDCODE HERE ANY MORE, and the line that was is the whole
         #  of what this change existed to remove.

@@ -558,6 +558,40 @@ IT STATES NO TIME SEMANTICS, and neither does a want. A desire holds always, whi
 
 What the node does NOT carry is a measure of how badly it is unmet, and nothing else does either: a capability answered that through the choir, of whichever world was being judged, and a want is judged by its met-test now — see a-want-is-judged-by-its-met-test-and-nothing-else.""" .
 
+#################  A WANT'S LIFE  #################
+#
+#  A WANT IS ONE-SHOT and these are the stages it passes through. A DESIRE has no stages: it
+#  is good or bad — met or unmet — and that is computed from its met-test wherever it is asked,
+#  never stored, because a stored verdict is a conclusion that outlives its premises.
+#
+#  Each stage is written by whoever DECIDES it, once, and nothing infers a stage from anything
+#  else. The alternative was to compute them: "pursued" is already an unresolved intention
+#  saying `progression:pursues`, "can't" is already a trace saying `exhausted`. Computing each
+#  from its own corner is how one question comes to have six answerers, and a reader asking
+#  "what is happening to this want" had to know all six. One property, one owner per value.
+
+orexis:WantState a owl:Class ; rdfs:label "Want state" ;
+    rdfs:comment "Where a want has got to. Seven values and no eighth: it has been recognised, it is being planned for, a plan was found, the plan is being carried out, it is finished, it failed, or nothing can reach it." .
+
+orexis:state a owl:ObjectProperty ; rdfs:domain orexis:Want ; rdfs:range orexis:WantState ;
+    rdfs:label "state" ;
+    rdfs:comment "Where this want has got to. On a WANT and never on a desire, because a desire has nowhere to get to — it stands for the agent's life and is either met or not at that instant. Exactly one value at a time: whoever moves the want to a stage removes the stage it was in. `orexis:Done` is TERMINAL — nothing moves a want out of it, so that the writers stay independent of each other and of the order they happen to run in; what clears it is the want being collected." .
+
+orexis:Recognized a orexis:WantState ; rdfs:label "recognized" ;
+    rdfs:comment "Minted. Its desire's met-test read unmet for this instance, or a world ratified it; nothing has been planned yet." .
+orexis:Planning a orexis:WantState ; rdfs:label "planning" ;
+    rdfs:comment "A search is running for it. Transient, and it is written anyway: a want stuck here is a search that did not come back, which is a thing an operator wants to be able to see." .
+orexis:Ready a orexis:WantState ; rdfs:label "ready" ;
+    rdfs:comment "A plan was found and is not yet being carried out. The gap between the search answering and the ledger holding the plan." .
+orexis:Pursued a orexis:WantState ; rdfs:label "pursued" ;
+    rdfs:comment "Progression holds the plan and is carrying it out. THE WORD RETURNS: `deliberation:PursuedGraph` spent it on a graph class, where it named who wrote the rows rather than what was happening to them; this is what it always meant. The agent pursues a want." .
+orexis:Done a orexis:WantState ; rdfs:label "done" ;
+    rdfs:comment "The plan finished, or a search found the want already reached in no steps. What is wanted has happened, and `forget_wants` collects it — the want is not deleted where it is finished, because deciding and collecting are two acts and one sweep is easier to reason about than a delete at every decision point." .
+orexis:Failed a orexis:WantState ; rdfs:label "failed" ;
+    rdfs:comment "A plan was carried out and did not reach it. Not the same as unreachable: something was tried." .
+orexis:Unreachable a orexis:WantState ; rdfs:label "unreachable" ;
+    rdfs:comment "No plan reaches it from here — the search came back with nothing, or with a plan that does not arrive. The sovereign's \"can't\"." .
+
 orexis:Want a owl:Class ; rdfs:label "Want" ;
     rdfs:comment """What a desire comes to when a situation makes it bite: deduced FROM one — `prov:wasDerivedFrom` names which — bound to the instance the situation gives it, holding during a period of its own, and withdrawn when it is met. A desire stands and is never handed to a search; a want is the only thing that ever is. "No unpaid debts" is a desire, and a debt arriving deduces the want that closes it.
 

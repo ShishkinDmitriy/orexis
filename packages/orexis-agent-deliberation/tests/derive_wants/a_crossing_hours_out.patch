@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -73,4 +73,24 @@
+@@ -73,4 +73,25 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -18,6 +18,7 @@
 +  :keeper.in_range.pursued.tank1.level orexis:about :level .
 +  :keeper.in_range.pursued.tank1.level orexis:holdsAt "2026-01-01T14:00:00+00:00"^^xsd:dateTime .
 +  :keeper.in_range.pursued.tank1.level orexis:metWhen :keeper.in_range.pursued.tank1.level.met .
++  :keeper.in_range.pursued.tank1.level orexis:state orexis:Recognized .
 +  :keeper.in_range.pursued.tank1.level prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
 +  :keeper.in_range.pursued.tank1.level rdfs:label "foreseen: every tank in range at 2026-01-01T14:00+00:00" .
