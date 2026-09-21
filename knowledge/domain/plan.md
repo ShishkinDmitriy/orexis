@@ -5,10 +5,27 @@ description: >-
   What one pass of the search returns for one want — its steps in order, each with the world it
   was predicted to reach, the outcome, what it was scored to spend, and which candidate of the
   root's menu it came through. Never executed: an intention commits to its steps and the world
-  verifies each as it is taken; a plan that worked may be remembered. It IS written down now -
-  `deliberation:Plan` in the deliberation graph, one per want and replaced whole, its steps in
-  the ledger's own words so committing to one is reading what is there.
+  verifies each as it is taken; a plan that worked may be remembered. It IS written down -
+  `deliberation:Plan` in the IMAGINARIUM, one per want and replaced whole, its steps in the
+  ledger's own words and each naming the candidate it picked, so committing to one is copying
+  what is there rather than rebuilding it.
 ---
+
+# Where it is written, and why that is memory
+
+In the [imaginarium](/domain/imaginarium.md), beside the worlds and the candidates the pass
+made. Which means it does not survive the process: the imaginarium is memory, the belief base
+and the ledger are disk.
+
+That is the right place for it, because a plan is a pass's RESULT and not yet a commitment.
+What survives is whatever progression copies down when the plan is adopted — an
+[intention](/domain/intention.md) with its own steps, minted per adoption, which is what makes
+a resolved one readable as history afterwards. A plan written to disk would be a working note
+kept like a record.
+
+Each step names the candidate it picked (`deliberation:of`), which closes a joint the store
+could not make: the trace says `deliberation:chose` a candidate and an intention says
+`progression:by` a step, and nothing said the two were about one filling.
 
 # What it is
 

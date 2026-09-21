@@ -141,6 +141,18 @@ deliberation:takes a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:label "takes" ;
     rdfs:comment "How long this plan comes to, in seconds from its first step to its last landing — the path's summed `orexis:landsAfter`, which the search computes per fork and nothing else can recover, since an action's own is a SPARQL expression about the world the act is taken in. Its own word rather than the action's: what an action declares is a text to evaluate and this is a number, and the core's word has priority (#640). The number a latest start would be subtracted from, where something is not already holding the instant. SAID OF THREE THINGS and meaning one — how long this takes, in seconds: a PLAN takes its path's total, a possible WORLD takes what the path to it came to, and a STEP takes its own, which is the action's `orexis:landsAfter` evaluated in the world it is taken in and is the only place that number survives the pass." .
 
+deliberation:step a owl:ObjectProperty ; rdfs:domain deliberation:Plan ; rdfs:range progression:Step ;
+    rdfs:label "step" ;
+    rdfs:comment "One step of this plan. A plan CONTAINS its steps and `progression:by` names the one it starts at, which `progression:then` orders from there — the same shape an intention has, because an intention is what a plan becomes when progression adopts it. Named downward, in the layer beneath's words, so the crossing is a copy rather than a translation." .
+
+deliberation:of a owl:ObjectProperty ; rdfs:domain progression:Step ; rdfs:range deliberation:Candidate ;
+    rdfs:label "of" ;
+    rdfs:comment """The candidate this step picked — the joint the store could not make. The trace says `deliberation:chose` a candidate and a ledger says `progression:by` a step, and until this nothing said the two were about one filling; a reader could join them only by content, which two plans sharing a filling make ambiguous.
+
+WRITTEN BY DELIBERATION, whose word `deliberation:Candidate` is. A step is created here — it is what a pass decided — and crosses to progression as quads to copy, so the layer beneath carries this triple without naming the term in it, exactly as it carries an agent id.
+
+The candidate is the PASS's and dies with it, and the trace's copy is replaced the next time the want is planned. So this is provenance whose target may be gone, like a URL in a log: what survives is the step's own content, which is the candidate's, copied.""" .
+
 deliberation:Candidate a owl:Class ; rdfs:label "Candidate" ;
     rdfs:comment """One INSTANCE of an action, made while planning: which action, and the variables it was filled with. It is the reified link between possible worlds — `deliberation:from` the world it is taken in, and the world that names it `deliberation:reachedBy` is the one it reaches.
 

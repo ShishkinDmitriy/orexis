@@ -1,21 +1,12 @@
 --- case
 +++ expected
-@@ -96,3 +96,33 @@
+@@ -96,3 +96,24 @@
    pursued:keeper.in_range.pursued.tank1 orexis:arrivedBy orexis:Recorded .
    pursued:keeper.in_range.pursued.tank1 orexis:beliefsOf :keeper .
  }
 +
 +
 +GRAPH graph:deliberation {
-+  :keeper.in_range.pursued.tank1.plan a deliberation:Plan .
-+  :keeper.in_range.pursued.tank1.plan deliberation:forWant :keeper.in_range.pursued.tank1 .
-+  :keeper.in_range.pursued.tank1.plan deliberation:takes 0.0 .
-+  :keeper.in_range.pursued.tank1.plan deliberation:verdict "satisfied" .
-+  :keeper.in_range.pursued.tank1.plan progression:by :keeper.in_range.pursued.tank1.plan.0 .
-+  :keeper.in_range.pursued.tank1.plan.0 :through :valve .
-+  :keeper.in_range.pursued.tank1.plan.0 a progression:Step .
-+  :keeper.in_range.pursued.tank1.plan.0 orexis:about :level .
-+  :keeper.in_range.pursued.tank1.plan.0 progression:fills :Filling .
 +  graph:sensed..Filling-level-valve :through :valve .
 +  graph:sensed..Filling-level-valve a deliberation:Candidate .
 +  graph:sensed..Filling-level-valve deliberation:atDepth 0 .
