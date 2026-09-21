@@ -1,5 +1,5 @@
-@startuml service-afforder
-title Afforder — what it reads and writes
+@startuml collection-steps
+title Steps — what it reads
 
 skinparam componentStyle rectangle
 skinparam shadowing false
@@ -32,7 +32,7 @@ database "Desires · repository" as DES {
   folder "no graph class" as X
 }
 
-component "Afforder\nruns affording" as MB
+component "Steps\nwhat a world affords" as MB
 
 
 A ..> MB : reads

@@ -18,7 +18,7 @@ timestamp: 2026-08-26T18:00:00Z
 
 [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) left `orexis:Action` as the one
 kernel word for acting, and it is a template: a precondition, an effect, a taker. The filled
-version existed in four places and was named in none. An [affordance](/domain/affordance.md)
+version existed in four places and was named in none. An [affordance](/domain/step.md)
 row is action + lever + want, unsized. The planner's `_Node.taken` is a tuple of rows plus
 the sizing it asked the taker for. An [intention](/domain/intention.md) records action, lever
 and want (`progression:by`, `progression:through`, `progression:pursues`) and not the size. A

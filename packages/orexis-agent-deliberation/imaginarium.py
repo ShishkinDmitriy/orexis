@@ -362,7 +362,7 @@ def _name(path) -> str:
     """One graph per node, named by the path that reached it.
 
     The search needs no tree structure added to it and none is wanted: `_Node.taken` is already
-    the ordered tuple of affordance rows applied to get here, so the path IS the ancestry
+    the ordered tuple of steps taken to get here, so the path IS the ancestry
     anything asks about, and what this design adds is a name for it.
 
     DETERMINISTIC, in the sense `trace._uri` means it: built from the IRIs themselves rather

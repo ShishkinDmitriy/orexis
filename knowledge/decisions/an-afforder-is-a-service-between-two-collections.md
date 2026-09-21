@@ -9,9 +9,27 @@ description: >-
   Splitting them let the templates be read once per pass instead of once per node - eighteen
   reads to one, on a three-disk solve - and a test in the package holds the service to writing no
   query and the collections to writing theirs.
-status: accepted
+status: superseded-in-part
+superseded-by: a-row-is-a-step
 timestamp: 2026-09-18T15:00:00Z
 ---
+
+# Superseded in part
+
+**The service is gone and its refusal stands.** `Steps.find_all` is the loop now — read again
+once `affordance` folded into `step`, the afforder fetched nothing and decided nothing: the
+actions worth asking were the caller's `only`, what the agent holds was handed in by its own
+docstring's argument, and the merge was a loop and a sort.
+
+What is NOT superseded is the thing this record refused. `Steps` still does not ask `Actions`:
+the templates are HANDED IN as a criterion of the ask, exactly as `me`, `picks` and what the
+agent holds already were. A repository still does not ask another repository. And the measured
+win survives untouched, because it was never the service's — `Actions.find_all` memoises on the
+store, so a three-disk solve still reads the templates once.
+
+See [a-row-is-a-step](/decisions/a-row-is-a-step.md). Everything below is the argument as it
+stood, and the test it names is now `test_where_queries_live.py` with two claims rather than
+three.
 
 # What was refused
 

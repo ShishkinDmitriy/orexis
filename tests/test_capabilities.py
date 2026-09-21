@@ -33,6 +33,13 @@ def me(query):
 
 # --- what the shipped world derives ----------------------------------------
 
+def _offered(agent):
+    """Every step an agent could take in the world it is in — its own collections, its own
+    criteria. A service used to fill these in; the agent holds them."""
+    return agent.steps.find_all(agent.actions.find_all(),
+                                agent.desires.abouts(agent.me.uri), agent.me.uri, agent.picks)
+
+
 def test_plant_agent_gets_subscribing_and_bidding(me):
     """Wired to a scheduled sensor and into a market — so it perceives and it buys.
 
@@ -115,8 +122,7 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing(monkeypat
     lever. Those were always the facts underneath the two grants.
     """
     from orexis_agent_deliberation.actions import Actions
-    from orexis_agent_deliberation.afforder import Afforder
-    from orexis_agent_deliberation.affordances import Affordances
+    from orexis_agent_deliberation.steps import Steps
     from orexis_capability_sensing.regions import regions_of
 
     from conftest import build_agent
@@ -136,12 +142,12 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing(monkeypat
     ledger = city.hosting().ledger
     ledger.owe("supplier", "j-split", amount_l=0.5)
     ledger.demanded("j-split")
-    honoured = [r for r in city.afforder.offered() if not r.is_own]
+    honoured = [r for r in _offered(city) if not r.is_own]
     assert honoured and all(r.want in {j.uri for j in ledger.obligations()} for r in honoured), \
         "the city hosts a venue and holds the valve that serves it"
     fern = build_agent("fern", genesis_store(), monkeypatch)
     assert not any(m.name == "hosting" for m in fern.modules), "a plant keeps no ledger"
-    assert not [r for r in fern.afforder.offered() if not r.is_own], \
+    assert not [r for r in _offered(fern) if not r.is_own], \
         "a plant holds no lever anyone may demand"
 
 

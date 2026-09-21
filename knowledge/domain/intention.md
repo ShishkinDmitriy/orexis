@@ -15,7 +15,7 @@ description: >-
   claim opens an expectation — baseline copied into the row, promised direction from the domain,
   deadline from the patience — and the verdict lands beside the outcome, so
   satisfied-and-unmet is recordable, the false-knowledge signature. An open expectation is maximum
-  urgency, so the cadence tightens until the world answers; an affordance unmet suspectAfter
+  urgency, so the cadence tightens until the world answers; a step unmet suspectAfter
   times running is flagged, never auto-retracted.
 ---
 
@@ -154,9 +154,9 @@ Two consequences ride on the expectation:
   open (bounded by its deadline), and the cadence round-trips by itself: tight on adoption,
   released on verdict. Opening the expectation also asks for one look (`sense_now`), so the freshest
   before is on record.
-- **enough unmet makes an affordance SUSPECT.** `suspectAfter` consecutive unmet ends for one
+- **enough unmet makes a step SUSPECT.** `suspectAfter` consecutive unmet ends for one
   (action, want) pair — consecutive, so one success resets: mostly-paying is noisy, not
-  false — raises a warning and a health-series flag (`affordances_suspect`). Flagged, never
+  false — raises a warning and a health-series flag (`steps_suspect`). Flagged, never
   auto-retracted: what to do about a belief that is not paying is a decision, and deleting
   knowledge would be reaching down a level
   ([control-the-derivative](/decisions/control-the-derivative-not-the-value.md)).

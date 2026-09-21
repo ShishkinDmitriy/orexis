@@ -2,7 +2,7 @@
 type: Service
 title: Actor
 description: >-
-  The code an affordance is linked to — the module that carries a committed step out. Found
+  The code a step is linked to — the module that carries a committed step out. Found
   through the action itself, which is an extension point: the kernel asks the choir by the
   action and never names a package. Every
   action is an extension point its taker contributes to — `@contributes(<the action>)` on a

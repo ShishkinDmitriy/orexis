@@ -9,7 +9,7 @@ violations, and ranks what comes back by an urgency each contributor computed it
 
 That makes it a repository by its name and a service by its work, which is a line this repo
 usually holds (`a-repository-is-not-a-service`). It is kept on the collection side for the
-reason `Affordances` is: what it hands back is a collection of domain objects, derived on every ask
+reason `Steps` is: what it hands back is a collection of domain objects, derived on every ask
 and never stored, and a caller asking "what am I pursuing" is asking for the contents rather
 than for a decision.
 

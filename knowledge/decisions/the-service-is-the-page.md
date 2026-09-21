@@ -46,7 +46,7 @@ would need a code rename first, and each has a defensible name waiting:
 
 *(One of the six has since dissolved rather than been renamed: affording turned out to be a
 COLLECTION derived per ask rather than a service that decides something, so `Afforder` is
-`Affordances` and its page folded into [affordance](/domain/affordance.md) — the model keeps the
+`Affordances` and its page folded into [affordance](/domain/step.md) — the model keeps the
 page and the collection lives in the code, which is the shape
 [a-repository-is-named-for-what-it-holds](/decisions/a-repository-is-named-for-what-it-holds.md)
 settles. The discipline below is what forced it: the page followed the code rather than drifting

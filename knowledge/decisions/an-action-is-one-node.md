@@ -47,7 +47,7 @@ graph** (`orexis:ActionGraph`, was the effect graph); `menu_of` runs every actio
 `effects.rule_for` and `execution.taken_by` join on `orexis:means`. Nothing lists the actions, and a
 new way of acting is a node in a new directory plus a `take()`.
 
-**Whom a row serves is a column.** An [affordance](/domain/affordance.md) with `for_agent` bound
+**Whom a row serves is a column.** An [affordance](/domain/step.md) with `for_agent` bound
 is an obligation's — exercised for that counterparty on a valid presentation and never proposed for the
 agent's own gap; one without is the agent's own option. `Affordance.is_own` reads the column;
 the planner's filter and the deliberator's obligation fallback read the same column; `orexis:Mode`,

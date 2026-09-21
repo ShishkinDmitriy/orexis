@@ -679,7 +679,7 @@ def test_no_reader_names_a_per_agent_graph():
                "packages/orexis-agent-deliberation/imaginarium.py", "packages/orexis-agent-deliberation/pursuit.py",
                "packages/orexis-agent-deliberation/judging.py", "packages/orexis-agent-deliberation/derive_wants.py",
                "packages/orexis-agent-deliberation/scope_actions.py",
-               "packages/orexis-agent-deliberation/afforder.py", "packages/orexis-agent-deliberation/affordances.py",
+               "packages/orexis-agent-deliberation/steps.py",
                "packages/orexis-agent-deliberation/reviser.py", "agent/pursuing.py", "agent/validate.py"]
     #  A WRITER MAY SPELL THE FAMILY IT WRITES, and nothing else. `derive_wants` is on the list
     #  because it reads the mind's graphs and must ask by class for all of them — and it is the

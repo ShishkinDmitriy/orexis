@@ -13,7 +13,7 @@ description: >-
 
 The set of [actions](/domain/action.md) whose effect writes a predicate the [want](/domain/desire.md)
 reads, or whose effect writes what a relevant action's precondition reads, and so on to a
-fixed point. An action outside it is neither simulated nor asked per node: the afforder
+fixed point. An action outside it is neither simulated nor asked per node: the steps collection
 runs a precondition only for a relevant action, so a menu that grows by unrelated domains costs
 a pass one query per foreign action, at the root, and nothing per node. Computed per pass in `packages/orexis-agent-deliberation/relevance.py`, from three
 sets that are all derived:

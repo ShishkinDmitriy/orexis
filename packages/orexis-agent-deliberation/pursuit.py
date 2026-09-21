@@ -56,7 +56,7 @@ log = logging.getLogger("pursuit")
 #  met-test instantiated at its witness — the same shape, targeting the one instance in
 #  trouble, with the blocks about what the want is about (`narrowed`) — POINTS at the root's
 #  avoided state and estimate, one owner each, and restates the root's address,
-#  `orexis:about`, which is what the affordances join a want by. The container presents it in
+#  `orexis:about`, which is what a step's precondition joins a want by. The container presents it in
 #  the root's place with the root's own measure and its own state (`Agent.pursuing`), so a
 #  keeper's verdict, a bidder's lookup and a mark by either name meet the same want.
 

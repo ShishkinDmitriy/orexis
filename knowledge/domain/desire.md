@@ -118,7 +118,7 @@ A desire is either a **stake** — a property of the subject this agent acts for
 holds against it.
 
 They are deliberately the same type. An agent's whole conduct is things it wants, pursued through
-[affordances](/domain/affordance.md), and a deliberator that had to ask which kind it was holding
+[steps](/domain/step.md), and a deliberator that had to ask which kind it was holding
 would be the second decision path this design exists to avoid.
 
 **Urgency is unit-free in both cases, and that is the whole point of the type.** A stake's comes
@@ -337,7 +337,7 @@ ratified data, authored directly in the asserted block, and NO capability is in 
 there is nothing to grant, so the kernel lifts it into pursuit and judges it — binary, by
 running the pattern with `$this` and `$state` substituted against whichever world is asked,
 the store's engine live and candidate alike. It usually states no `orexis:about`, and so
-ranges over every affordance as a call does: any action might exit a state. Its hard twin is
+ranges over every step as a call does: any action might exit a state. Its hard twin is
 not a desire at all — a ratified violation shape, pruned in the search at every step. See
 [a-want-met-by-absence](/decisions/a-want-met-by-absence.md).
 
@@ -420,7 +420,7 @@ The want a search is handed for a desire that reads unmet is a node of its own, 
 the same shape, targeting the one instance in trouble, with the blocks about what the want is
 about, so *all properties in range* becomes *this tank's level from 10* and the want is judged
 on its own instance — POINTING at the desire's avoided state and estimate, one owner each, and
-restating the root's address, what it is about, which is what the affordances join a want by. It is minted by the derivation the first time the desire
+restating the root's address, what it is about, which is what the steps join a want by. It is minted by the derivation the first time the desire
 reads unmet, into the agent's own pursued graph (`deliberation:PursuedGraph`, projected into the
 desire modality like the promises), and named for the desire with a suffix, so a second episode
 of the same desire pursues the same node and everything keyed by it finds what it kept. While it

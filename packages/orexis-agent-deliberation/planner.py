@@ -49,7 +49,7 @@ from orexis_agent_progression.act import Step
 from orexis_agent_deliberation.want import Want
 
 
-from .affordances import Affordances
+from .steps import Steps
 from .imaginarium import Imaginarium
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import NAMESPACES, Raw, bind, bindings
@@ -873,7 +873,7 @@ class Planner:
         beliefs = self.agent.beliefs
         self.imaginarium.refresh(beliefs, beliefs.catalogue, *beliefs.graphs_of(*KNOWN))
         if node.expanded:
-            offered = frozenset((r.action, r.binding, r.want) for r in self.agent.afforder.offered(
+            offered = frozenset((r.action, r.binding, r.want) for r in self._offered(
                 self._imagined, graphs=self._dataset(clock.now(), STATE_GRAPH), only=self._compiled.asked))
             if offered - node.menu:
                 self.reset()
@@ -1030,6 +1030,17 @@ class Planner:
         #  change no lever caused, which is the thing this exclusion exists to prevent.
         out = set(store.periods())
         return [iri for iri in store.graphs_of(*KNOWN) if iri not in out]
+
+    def _offered(self, steps, *, graphs, only=None):
+        """Every step a world admits, with this pass's criteria filled in.
+
+        The four an `Afforder` used to hold — the templates, what the agent holds and what each
+        want is about, and whose world this is. They are criteria of the ask now, and this
+        spells them once per pass rather than at each of the four places that ask.
+        """
+        return steps.find_all(self.agent.actions.find_all(),
+                              self.agent.desires.abouts(self.me.uri),
+                              self.me.uri, self.agent.picks, graphs=graphs, only=only)
 
     def _dataset(self, at, world: str) -> list[str]:
         """What a rule is answered over in one imagined world: every graph of the kinds a rule
@@ -1284,7 +1295,7 @@ class Planner:
                 return trace.SPENT, forks
             if keeper is not None and keeper.refused_below(wanted.action, wanted.binding):
                 return trace.REFUSED, forks
-            row = next((r for r in self.agent.afforder.offered(
+            row = next((r for r in self._offered(
                 self._imagined, graphs=self._dataset(self._at(cur), self._graph(cur)),
                 only=frozenset({wanted.action}))
                 if r.is_own and r.binding == wanted.binding),
@@ -1330,7 +1341,7 @@ class Planner:
         #  "acquire, then offer" is a plan only if the menu of the world after the first step
         #  shows the second. The root node's graph is the agent's own readings, so at depth 0
         #  this is the ordinary menu, exactly as before.
-        rows = self.agent.afforder.offered(
+        rows = self._offered(
             self._imagined, graphs=self._dataset(self._at(node), self._graph(node)),
             only=self._compiled.asked)
         #  WHAT THE MENU WAS when this node was expanded, so a resumed pass can tell a lever
@@ -1385,7 +1396,7 @@ class Planner:
             *self.agent.beliefs.graphs_of(*KNOWN))
         #  The rows an imagined world affords, over the store those worlds live in — built here
         #  beside the imaginarium and once for the pass.
-        self._imagined = Affordances(self.imaginarium)
+        self._imagined = Steps(self.imaginarium)
         #  What this agent PURSUES, snapshotted for the pass. The WANT graphs alone — derived,
         #  asserted, and the promises a bridge raised — never the record projections: the
         #  flat world below already carries the pick record through the belief flatten, and a
@@ -1565,7 +1576,7 @@ class Planner:
         #  with no disk in it. One query per foreign action per pass is what a truthful
         #  trace costs, against one per node before this.
         self._passed_over = [] if self._compiled.relevant is None else \
-            self.agent.afforder.offered(
+            self._offered(
                 self._imagined, graphs=self.imaginarium.graphs_of(*KNOWN, at=self._clock),
                 only=frozenset(relevance.actions_of(self.agent.beliefs.reader(PUBLIC)))
                 - self._compiled.relevant)
@@ -1641,7 +1652,7 @@ class Planner:
         #  THE ROW BECOMES AN ACT here, where it is sized — the quantity the taker answered is
         #  what the rule just simulated — and the act becomes a STEP once the world it reaches
         #  is scored. An act carries no window yet: nothing in a search knows when.
-        act = Step.from_row(row, quantity=bind["litres"] or None)
+        act = replace(row, quantity=bind["litres"] or None)
         path = node.taken + (act,)
         graph = self.imaginarium.reached(self._graph(node), path, added, retracted)
         #  AND WHAT THE WORLD IS PREDICTED TO BE when the step lands (#643): the prediction

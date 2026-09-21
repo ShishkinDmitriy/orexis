@@ -12,7 +12,7 @@ made checkable instead of hopeful.
 What is scanned, and what is tolerated, stated rather than implied:
 - `.ttl` (package + firmware ontologies, shapes): every IRI in any position, plus full IRIs
   inside literals that look like SPARQL (a shape's sh:select is a reference like any other);
-- `.rq` (review, affordances) and `.ru` (rules): full IRIs and prefixed names, the former
+- `.rq` (review) and `.ru` (rules): full IRIs and prefixed names, the former
   resolved against the file's own PREFIX lines where it carries them (rules do) and against
   the loaded prefixes where it does not (store.query prepends them);
 - `.py` under the package tree: complete project IRIs in string literals, and prefixed names

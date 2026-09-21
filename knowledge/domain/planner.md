@@ -12,7 +12,7 @@ description: >-
 
 # What it runs
 
-**Planning.** Given one [desire](/domain/desire.md), walk the [affordance](/domain/affordance.md)
+**Planning.** Given one [desire](/domain/desire.md), walk the [step](/domain/step.md)
 rows derived for the world it stands in, simulate each by applying its
 [effect](/domain/effect.md) to the world reached so far, and rank the results by urgency. Bounded
 by a [budget](/domain/budget.md) of worlds rather than by depth, best-first over one open list

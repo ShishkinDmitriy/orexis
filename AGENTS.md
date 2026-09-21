@@ -22,7 +22,7 @@ If it is unavailable, the rules are short enough to follow by hand:
   | | |
   |---|---|
   | `Decision` | why the code is as it is. Closed by nothing; superseded or amended |
-  | `Domain Concept` | a **thing** in the model — a claim, a good, an affordance, a world |
+  | `Domain Concept` | a **thing** in the model — a claim, a good, a step, a world |
   | `Process` | something that **happens**, with phases and an end — an auction, a round, onboarding |
   | `Capability` | a named ability with **interchangeable implementations**, granted by its own premise and provided by a package — rule 2's unit |
   | `Role` | a kind of **principal** that holds a stake — an agent, a supplier, a dealer |
@@ -55,7 +55,7 @@ If it is unavailable, the rules are short enough to follow by hand:
   a path that is not on disk.
 
 **`knowledge/domain/` is the shared dictionary, and a term is defined before it is used.** The
-pages there fix what our words MEAN — affordance, gap, imaginarium, capability, action, lot, venue
+pages there fix what our words MEAN — step, gap, imaginarium, capability, action, lot, venue
 — and a discussion, a commit message, a docstring or an issue that uses one of them uses it the
 way its page does. **If a change needs a word the bundle does not have, write the page in the SAME
 change, first.** A word used before it is defined is a word everyone defines differently, and the
@@ -126,7 +126,7 @@ it is a record wearing a bullet.
 - **A term nobody reads is annotation**, however many instances state it.
 - **A word used before it is defined is a word everyone defines differently** — `duty` ran to 64
   code sites and 13 pages with no page of its own, meaning `obligation` all along.
-- **Desire is bouletic, obligation deontic, affordance alethic, freshness epistemic** — different
+- **Desire is bouletic, obligation deontic, availability alethic, freshness epistemic** — different
   logics rather than strengths of one, which is why an unmet want is a gap and an unpaid debt is
   a breach.
 - **A repository holds data and a service holds logic**, and a thing that decides nothing is a
@@ -169,6 +169,13 @@ it is a record wearing a bullet.
 - **A method is walked, never searched** — the steps an abstract action comes to are the
   package's protocol, not a choice, so the keeper expands them at adoption and each step says
   what it waits for; simulating them would spend the budget on worlds the measure cannot tell apart.
+- **A step is an action PICKED for execution, and what it adds is at least the variables** —
+  planning finds a plan and every action in a plan is a step, so a world merely ADMITS one per
+  action per legal filling and the search picks; an `Affordance` carried four of a step's fields
+  and a `from_row` copied them across, which is two classes for one shape and a second word doing
+  no work the absent fields were not. The service between the two collections fetched nothing and
+  decided nothing once the word was gone, so the loop is `Steps.find_all` and every identity it
+  held is a criterion of the ask (a-row-is-a-step).
 - **An action declares what it is filled with, and the kernel names no column** — a parameter's
   local part is the variable its precondition projects, the `$token` its rules read and the
   predicate a step is written under, so one spelling serves three places; five named columns
@@ -301,7 +308,7 @@ it is a record wearing a bullet.
   answers the shape of the answer and the criterion; an evocative name is a claim a reader
   cannot check, so a name kept against this says in its page why.
 - **A long-lived object and situational data about it is one shape three times, and only
-  testimony is kept** — a desire and a judgment, an action and an affordance, a property and an
+  testimony is kept** — a desire and a judgment, an action and a step, a property and an
   observation; the observation is stored because it IS the premise, the other two are conclusions
   whose premises are stored and would outlive them, and the differences the likeness hides are
   cardinality (nine of eleven actions afford nothing, one afforded three), provenance
@@ -581,8 +588,8 @@ than in either neighbour. See
 [layered-by-timescale-and-interruptibility](knowledge/decisions/layered-by-timescale-and-interruptibility.md).
 
 **One principle explains most of the shapes above: control the derivative, not the value.**
-Nothing here controls a step — a cadence not a reading, a region not an aim, a mandate not a
-belief, an affordance not an action. When a change you are making reaches DOWN a level (a
+Nothing here dictates an act — a cadence not a reading, a region not an aim, a mandate not a
+belief, what is available not the act taken. When a change you are making reaches DOWN a level (a
 deliberator setting a price, a world file pinning an aim, a model emitting an action), stop:
 that is the one move this architecture refuses everywhere. See
 [control-the-derivative-not-the-value](knowledge/decisions/control-the-derivative-not-the-value.md).

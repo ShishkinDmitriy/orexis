@@ -207,7 +207,7 @@ def test_the_root_trees_reach_into_exactly_the_packages_on_record():
 
     The LAYERS are not on this record and not held by it: the container importing the mind's
     stores, the loop, progression or the search is the layering working, not the root reaching
-    into a grant — and onboarding reaching into the search for `effects` and `affordances_of`
+    into a grant — and onboarding reaching into the search for `effects` and the steps a world affords
     is the same reach it made when those lived in `agent/`. What keeps that carve-out narrow
     is `test_layering.py`, which holds each layer to importing only the layers beneath it.
     """

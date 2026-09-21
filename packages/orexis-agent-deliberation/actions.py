@@ -8,11 +8,11 @@ directory and never an edit here (#207, an-action-is-one-node).
 What a package declares does not depend on which world is being imagined or at which instant —
 only what it AFFORDS does. They were read together, once per node of a search, because one file
 held both questions: a three-disk solve re-read the same eleven templates eighteen times. Asking
-the vocabulary is this collection's job and asking a world is `Affordances`'; an `Afforder` puts
-the two together.
+the vocabulary is this collection's job and asking a world is `Steps`'; `Steps.find_all` puts
+the two together, being handed the templates it should ask about.
 
 These are what is WRITTEN INTO the menu modality (knowledge/domain/menu.md); what is derived
-out of it is `Affordances`. Neither is named for the modality, and the word had been naming
+out of it is `Steps`. Neither is named for the modality, and the word had been naming
 both of them and the modality too (#686).
 """
 
@@ -54,11 +54,12 @@ class Actions:
         a search writes nothing to the belief base: a three-disk hanoi solve asks this eighteen
         times and queries twice.
 
-        THE MEMO IS HERE AND NOT ON WHOEVER ASKS. It was on the afforder, which made that service
-        stateful and therefore a thing every caller had to keep — so a search held one per pass, a
-        deliberator built one per call, and `on_menu_now` built one per remembered candidate,
-        which is three answers to "how many afforders does an agent have" where the right one is
-        ONE. A collection knows when its own answer goes stale; a service does not.
+        THE MEMO IS HERE AND NOT ON WHOEVER ASKS. It was on the service that used to loop this
+        collection into `Steps`, which made that service stateful and therefore a thing every
+        caller had to keep — so a search held one per pass, a deliberator built one per call, and
+        `on_menu_now` built one per remembered candidate, which is three answers to "how many of
+        these does an agent have" where the right one is ONE. A collection knows when its own
+        answer goes stale; a service does not, and there is no service here now.
         """
         return self._beliefs.remember(_MEMO, lambda: sorted(
             (Action(uri=r["action"], available=r["available"],

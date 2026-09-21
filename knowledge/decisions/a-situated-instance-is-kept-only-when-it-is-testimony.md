@@ -73,7 +73,7 @@ modality of its own, and why every agent holds a freshness desire per sensor.
 A **judgment and an affordance are conclusions whose premises are all stored** — regions, wiring,
 the ledger, the world's facts. Writing the conclusion down lets it outlive them: unplumb the
 valve and a stored row still says you can dose; the pot dries and a stored urgency still says you
-are content. [affordance](/domain/affordance.md) makes this argument for its own half, and the
+are content. [affordance](/domain/step.md) makes this argument for its own half, and the
 other half is the same argument.
 
 This is not a new rule. AGENTS.md already says **anything the interpreter already knows is

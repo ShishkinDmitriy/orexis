@@ -5,7 +5,7 @@ term: http://example.org/orexis#Action
 description: >-
   One way of acting, whole — the STRIPS operator as a single node a package ships in its
   `actions.ttl` — and the KIND of act itself, which a row carries and an intention commits to:
-  when it is available (`orexis:available`, a SELECT whose rows are the affordances it puts on the
+  when it is available (`orexis:available`, a SELECT whose rows are the steps it puts on the
   menu now), what it makes true
   (`sh:construct` and `orexis:retracts`, with timing and confirmation route); who carries it out
   is the code's to say, by `@contributes`. Loaded into the action graph at genesis so a planner, a sovereign or a
@@ -16,7 +16,7 @@ description: >-
 # What it is
 
 The one thing the three BDI-planning surfaces were always describing. An
-[affordance](/domain/affordance.md) says the action is available now, with its parameters
+[step](/domain/step.md) says the action is available now, with its parameters
 bound; an [effect](/domain/effect.md) says what it would make true; an
 [actor](/domain/actor.md) carries it out. An **action** is the node those hang off — and it is
 the KIND of act too, since [the-action-is-the-kind](/decisions/the-action-is-the-kind.md):
@@ -44,8 +44,8 @@ world and not in this one).
 `loader.action_files()` finds every package's `actions.ttl`; genesis loads them into the action
 graph beside the T-Box. Three readers, one join:
 
-- `Afforder.offered` runs every action's `orexis:available` with `$me` and the desired `$properties` filled
-  in, and each row it returns is an affordance carrying the action;
+- `Steps.offered` runs every action's `orexis:available` with `$me` and the desired `$properties` filled
+  in, and each row it returns is a step carrying the action;
 - `effects.rule_for(action)` reads the node's construct and retraction and runs them against
   the [imaginarium](/domain/imaginarium.md);
 - execution asks the choir by the action, and the module that contributes it answers.
@@ -81,7 +81,7 @@ cannot simulate is one it must not conclude about.
 
 **What it takes is the action's to say.** `hanoi:Move orexis:takes hanoi:disk, hanoi:onto`, in
 the package's own words. What a parameter's name then serves, and why the kernel reads no value
-bound to one, is [affordance](/domain/affordance.md)'s — the row is where a parameter meets a
+bound to one, is [step](/domain/step.md)'s — the row is where a parameter meets a
 value — and the argument is
 [an-action-takes-parameters](/decisions/an-action-takes-parameters.md).
 

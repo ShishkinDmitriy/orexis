@@ -219,7 +219,7 @@ class Deliberator:
     def on_plan_failed(self, intention: str, action: str, want: str) -> None:
         """The deadline passed and the world did not answer. Re-plan: the want is marked and
         the worker searches again, with the unmet verdict in the ledger for the menu to
-        read — the suspicion an affordance earns is progression's count, and what to do about
+        read — the suspicion a step earns is progression's count, and what to do about
         a suspect lever is the search's."""
         self._plans_failed += 1
         #  FORGET WHAT FAILED (#469): a remembered plan that failed a step is not remembered.
@@ -346,7 +346,7 @@ class Deliberator:
         as `progression:through`. None where there is nothing to do, and that None is a decision.
 
         It takes the want itself, so an obligation reaches deliberation as what it is: a thing wanted,
-        ranked in the same currency, pursued through an affordance like anything else. It is
+        ranked in the same currency, pursued through a step like anything else. It is
         the widening the obligation record predicted — "the filter lifts when a member can
         pursue a judgment that is a diff rather than a distance".
 
@@ -411,10 +411,12 @@ class Deliberator:
         #  Handed back as a one-row plan labelled OBLIGATION, which is not a search outcome and
         #  is not written to the trace. A stake has no such row, and nothing here asks what
         #  kind of want it is holding.
-        for row in self.agent.afforder.offered():
+        me = self.agent.me.uri
+        for row in self.agent.steps.find_all(self.agent.actions.find_all(),
+                                             self.agent.desires.abouts(me), me, self.agent.picks):
             if not row.is_own and row.want == judgment.uri:
                 #  Unsized: the host sizes the serve from the claim it holds.
-                return Plan(OBLIGATION, ((Step.from_row(row)),))
+                return Plan(OBLIGATION, (row,))
         return None
 
     def _planned(self, judgment: Want, surprise: tuple | None = None) -> Plan | None:

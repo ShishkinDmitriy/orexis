@@ -88,7 +88,7 @@ Gibson, and mean the same idea by it — what could be done here. The modelling 
 
 - a TD affordance is **authored** — a Thing's interface contract, written in its description,
   stable until re-described;
-- an [affordance](../domain/affordance.md) here is **derived and never stored** — a conclusion
+- what a world admits — a [step](../domain/step.md) before it is picked — is **derived and never stored**, a conclusion
   recomputed on every ask, precisely so that a row can never outlive the plumbing it was
   concluded from. A stored affordance is the failure mode our page warns against, and it is
   TD's normal case, because a device's interface genuinely is stable in a way an agent's

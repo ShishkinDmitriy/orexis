@@ -69,13 +69,12 @@ def test_the_bed_holds_one_want_about_two_properties(monkeypatch):
     """The want this world exists for: one desire, two `orexis:about`, and the menu offering a
     row per property — which is what lets a single want reach two levers (#566)."""
     from orexis_agent_deliberation.actions import Actions
-    from orexis_agent_deliberation.afforder import Afforder
-    from orexis_agent_deliberation.affordances import Affordances
+    from orexis_agent_deliberation.steps import Steps
     from orexis_agent_progression.ontology import picks_graph
     agent, st = _grower(monkeypatch)
     abouts = agent.desires.abouts(agent.me.uri)
     assert set(abouts[COMFORT]) == {MOISTURE, AIR}, "one want, about both properties"
-    rows = [r for r in Afforder(Actions(st), Affordances(st), agent.desires, agent.me.uri, picks_graph("grower")).offered() if r.want == COMFORT]
+    rows = [r for r in Steps(st).find_all(Actions(st).find_all(), agent.desires.abouts(agent.me.uri), agent.me.uri, picks_graph("grower")) if r.want == COMFORT]
     assert {(r.action, r.value_of(ABOUT)) for r in rows} >= {(DOSING, MOISTURE), (HEATING, AIR)}, \
         "the dose is offered about the soil and the heating about the air, for the one want"
 

@@ -1,15 +1,16 @@
 """Where the queries live, and where they must not.
 
-The sovereign's line when this shape was settled: a service is the GLUE between collections, with
-the logic in it and the queries out of it. Easy to state and easy to lose — the file this service
-replaced acquired a query text, then a second, then a question belonging to another collection,
-and nothing said so.
+Easy to state and easy to lose: a collection asks the question only IT can phrase, and runs
+nobody else's. The file these two were carved out of acquired a query text, then a second, then a
+question belonging to another collection, and nothing said so.
 
 Asked of the syntax tree rather than of the text, so a docstring may discuss selects while the
-code holds none. Three claims, because a guard that only forbids proves nothing: one file AUTHORS
-a query, one RUNS a query it is handed, and one touches neither.
+code holds none. Two claims, because a guard that only forbids proves nothing: one file AUTHORS
+a query and one RUNS a query it is handed.
 
-See knowledge/decisions/an-afforder-is-a-service-between-two-collections.md.
+A third stood here — that the SERVICE between them authored none — until the service turned out
+to fetch nothing and decide nothing, and became `Steps.find_all`. See
+knowledge/decisions/a-row-is-a-step.md.
 """
 
 from __future__ import annotations
@@ -39,26 +40,18 @@ def _names(tree: ast.Module) -> set[str]:
         n.attr for n in ast.walk(tree) if isinstance(n, ast.Attribute)}
 
 
-def test_the_service_authors_no_query_and_runs_none():
-    """The glue decides WHAT to ask; either would mean it had learned a collection's job."""
-    tree = _parsed("afforder.py")
-    assert not _authored_queries(tree), "the afforder writes query text"
-    assert not ({"bind", "bindings", "Raw"} & _names(tree)), \
-        "the afforder reaches for the store's query machinery"
-
-
 def test_the_collection_of_templates_authors_its_own():
     """`Actions` asks the vocabulary what it declares, which is a question only it can phrase."""
     assert _authored_queries(_parsed("actions.py")), "Actions stopped carrying its own query"
 
 
-def test_the_collection_of_rows_authors_none_and_runs_the_actions():
-    """The sharp one, and it is why an affordance is not an action. `Affordances` writes NO query:
+def test_the_collection_of_steps_authors_none_and_runs_the_actions():
+    """The sharp one, and it is why a step is not an action. `Steps` writes NO query:
     the select it runs is the action's own `orexis:available`, declared by whichever package ships
     the action, bound here and answered against the world this collection was handed. A new way
     of acting is a node in a new directory and never an edit here (#207) — which is exactly what
     it would stop being if this file ever authored a select of its own."""
-    tree = _parsed("affordances.py")
-    assert not _authored_queries(tree), "Affordances began writing its own query text"
+    tree = _parsed("steps.py")
+    assert not _authored_queries(tree), "Steps began writing its own query text"
     assert {"bind", "bindings"} <= _names(tree), \
-        "Affordances stopped binding and running the action's precondition"
+        "Steps stopped binding and running the action's precondition"

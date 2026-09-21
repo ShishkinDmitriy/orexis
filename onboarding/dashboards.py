@@ -477,7 +477,7 @@ def render_health(world: str) -> dict:
          "everywhere else precisely because nothing is happening: a bid whose round vanished, a "
          "look whose board went quiet. Compare intention:patienceS — past it, the next adoption "
          "supersedes."),
-        ("Affordances not paying", AGENT_MEASUREMENT, "affordances_suspect", "stat", "short", 12, 5,
+        ("Steps not paying", AGENT_MEASUREMENT, "steps_suspect", "stat", "short", 12, 5,
          "Above zero, an agent's graph claims a movement the world keeps refusing: its acts "
          "succeed (claims arrive) and the property never moves as promised, suspectAfter "
          "times running. The false-knowledge flag — see #131. What to do about it is a "

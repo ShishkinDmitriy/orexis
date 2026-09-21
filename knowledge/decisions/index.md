@@ -93,6 +93,7 @@ What happens to a decision — committed as an intention, carried out by whoever
 
 The search itself, and the two places a language model is allowed near it.
 
+* [a-row-is-a-step](/decisions/a-row-is-a-step.md) - An affordance and a step were one shape in two classes; the service between the collections was a loop.
 * [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) - Classical planning lifted to RDF: menu rows are action schemas and the Reflex is a depth-1 planner.
 * [a-rule-is-asked-about-a-world-not-about-a-store](/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md) - Effects run against the store, so step two never sees step one. Snapshot per plan and bind the hypothesis in.
 * [a-rule-does-not-say-which-world-it-reads](/decisions/a-rule-does-not-say-which-world-it-reads.md) - The door is told which world; naming it was one package claiming what every other package's actions can change. Costs nothing measurable.

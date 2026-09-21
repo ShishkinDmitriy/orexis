@@ -48,8 +48,7 @@ from orexis_agent_deliberation.want import Want
 from orexis_agent_deliberation.desires import Desires
 from orexis_agent_deliberation.reviser import Reviser
 from orexis_agent_deliberation.actions import Actions
-from orexis_agent_deliberation.afforder import Afforder
-from orexis_agent_deliberation.affordances import Affordances
+from orexis_agent_deliberation.steps import Steps
 from orexis_agent_deliberation.wants import Wants
 from orexis_agent_progression.intentions import Intentions
 
@@ -127,13 +126,16 @@ class Agent:
         #  that is the point rather than an omission: what a want reads as is contributed by
         #  whichever capability holds the stake, so the collection has to reach the choir.
         self._pursuing = Pursuing(self)
-        #  ONE AFFORDER, and the sovereign asked how many there were: there had been one per
-        #  search pass, one per deliberator call and one per remembered candidate, because the
-        #  service held a memo and so became a thing to keep. It is stateless; each collection
-        #  remembers its own answer for as long as it is allowed to, and the WORLD is a
-        #  parameter of the ask rather than of the service.
-        self.afforder = Afforder(Actions(self.beliefs), Affordances(self.beliefs),
-                                 self.desires, self.me.uri, picks_graph(agent_id))
+        #  THE TWO COLLECTIONS, and the world is a parameter of the ask rather than of either.
+        #  A SERVICE stood between them once — an `Afforder` holding the templates and what the
+        #  agent holds, looping one into the other — and the sovereign asked how many there
+        #  were: one per search pass, one per deliberator call and one per remembered candidate,
+        #  because it held a memo and so became a thing to keep. It fetched nothing and decided
+        #  nothing, so the loop is `Steps.find_all` and every identity it held is a criterion.
+        self.actions = Actions(self.beliefs)
+        self.steps = Steps(self.beliefs)
+        #  The agent's own graph, spelled once: a criterion every ask of a collection carries.
+        self.picks = picks_graph(agent_id)
         #  THE SCOPES, written once the actions are here: a function of the actions loaded,
         #  which do not change while the agent runs, and what every derivation clusters by.
         scope_actions(self.beliefs.engine)
