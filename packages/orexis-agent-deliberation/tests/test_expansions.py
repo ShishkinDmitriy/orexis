@@ -60,7 +60,12 @@ def test_a_pass_forks_the_worlds_the_case_says(case, monkeypatch, request, snaps
     #  this guards — a case whose world stopped affording would otherwise pass by doing nothing.
     assert plan.steps or plan.outcome == "exhausted", f"{case.name}: {plan.outcome}"
     assert forks, f"{case.name}: the pass forked no world"
-    knows = snapshots.canonical_graphs({PASS_GRAPH: planner.imaginarium.dump_nt(PASS_GRAPH)})
+    #  AND THE PLAN, which is a graph of its own now (#749) — so what the pass left is the
+    #  worlds it made, what it knows about them, and what it decided among them.
+    from orexis_agent_deliberation.ontology import DELIBERATION
+    plans = planner.imaginarium.graphs_of(DELIBERATION + "PlanGraph")
+    knows = snapshots.canonical_graphs(
+        {g: planner.imaginarium.dump_nt(g) for g in (PASS_GRAPH, *plans)})
     snapshots.held_worlds_to(case, request, forks, knows)
 
 

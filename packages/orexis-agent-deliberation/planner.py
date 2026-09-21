@@ -50,7 +50,7 @@ from orexis_agent_deliberation.want import Want
 
 
 from .steps import Steps
-from .imaginarium import Imaginarium, PASS_GRAPH, candidate_of, world_of
+from .imaginarium import Imaginarium, PASS_GRAPH, candidate_of, plan_graph, world_of
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import NAMESPACES, Raw, bind, bindings
 from .ontology import DELIBERATION
@@ -178,7 +178,10 @@ def write_plan(imaginarium, want: str, plan, root: str) -> str | None:
     node = f"{want}.plan"
     steps = [f"{node}.{n}" for n in range(len(plan.steps))]
     D, P = DELIBERATION, PROGRESSION
-    g = ox.NamedNode(PASS_GRAPH)
+    #  ITS OWN GRAPH, one per want: replacing a plan is clearing it, and handing one to
+    #  progression is handing a graph rather than a walk that has to reach everything.
+    graph = plan_graph(want)
+    g = ox.NamedNode(graph)
     def q(s_, p_, o_):
         return ox.Quad(ox.NamedNode(s_) if isinstance(s_, str) else s_, ox.NamedNode(p_), o_, g)
     def dec(v):
@@ -207,10 +210,10 @@ def write_plan(imaginarium, want: str, plan, root: str) -> str | None:
         if n + 1 < len(steps):
             out.append(q(uri, P + "then", ox.NamedNode(steps[n + 1])))
         world = world_of(plan.steps[:n + 1])
-    #  REPLACED WHOLE, so a second pass over one want leaves one plan: the steps are named from
-    #  the plan's node, so clearing the old ones is clearing what that name reaches.
-    imaginarium.forget_plan(node, len(plan.steps))
+    #  REPLACED WHOLE, so a second pass over one want leaves one plan and never two.
+    imaginarium.forget_plan(graph)
     imaginarium.note(out)
+    imaginarium.classify_plan(graph, want)
     return node
     return node
 

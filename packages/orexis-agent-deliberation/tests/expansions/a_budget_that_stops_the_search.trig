@@ -29,6 +29,7 @@
 #  Where a forked world lands. Nothing in the case says this graph; the imaginarium
 #  names each world it makes, and the prefix is here so `<case>.worlds.trig` reads.
 @prefix possible: <http://example.org/orexis/graph/possible/> .
+@prefix plan: <http://example.org/orexis/graph/plan/> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
 @prefix picks: <http://example.org/orexis/graph/picks/> .
 

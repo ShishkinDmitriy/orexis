@@ -40,7 +40,8 @@ from urllib.parse import quote
 
 import pyoxigraph as ox
 
-from orexis_agent_progression.ontology import GRAPH_PREFIX, PUBLIC, STATE_GRAPH, local_of
+from orexis_agent_progression.ontology import GRAPH_PREFIX, OREXIS, PUBLIC, STATE_GRAPH, local_of
+from .ontology import DELIBERATION
 from orexis_agent_progression.store import catalogue_of, graphs_holding, render, Store
 
 #  Where a node's readings sit. Under the same root as every other graph, because a graph IRI is
@@ -53,6 +54,15 @@ _POSSIBLE = GRAPH_PREFIX + "possible/"
 #  store, and because a reader that is not the planner — the trace — must name it without
 #  importing the planner that imports the trace.
 PASS_GRAPH = GRAPH_PREFIX + "pass"
+
+#  AND ONE GRAPH PER WANT'S PLAN. A name is for eyes and nothing depends on it: a reader asks
+#  the catalogue for `deliberation:PlanGraph`, and the writer that made it may name what it wrote.
+_PLAN = GRAPH_PREFIX + "plan/"
+
+
+def plan_graph(want: str) -> str:
+    """The graph one want's plan is written into — one per want, replaced whole."""
+    return _PLAN + quote(local_of(want), safe="")
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 
@@ -201,19 +211,19 @@ class Imaginarium:
                 self._store.clear_graph(name)
         self._store.add_quads(quads, forget=False)
 
-    def forget_plan(self, node: str, steps: int) -> None:
-        """Take back a plan and every step named from it — a pass writing its plan replaces the
-        one before it, so one want leaves one plan and never two.
+    def forget_plan(self, graph: str) -> None:
+        """Drop a want's plan — the whole graph, because that is what a plan is.
 
-        By NAME rather than by walking `progression:then`, because the steps are named from the
-        plan's node (`<plan>.0`, `<plan>.1`) and a walk would miss a step the previous plan
-        wrote that this one does not reach. The count is generous on purpose: clearing a name
-        that holds nothing costs nothing, and a shorter plan must not leave the tail of a
-        longer one behind it.
+        It enumerated names before: the steps are called `<plan>.0`, `<plan>.1`, so clearing
+        one meant removing every subject a plan of up to sixty-four steps MIGHT have used,
+        a count the writer had to guess and a shorter plan had to over-clear. A plan of its
+        own is cleared by being one.
         """
-        named = {node, *(f"{node}.{n}" for n in range(max(steps, 64)))}
-        self._store.remove_quads(
-            [q for q in self._store.quads(PASS_GRAPH) if q.subject.value in named], forget=False)
+        self._store.clear_graph(graph)
+
+    def classify_plan(self, graph: str, want: str) -> None:
+        """Say what a plan's graph IS, so a reader asks the catalogue and never the name."""
+        self._store.classify(graph, DELIBERATION + "PlanGraph", OREXIS + "Derived")
 
     def unnote(self, quads) -> None:
         """Take back one of `note`'s rows — the mirror, and the same `forget=False` reason.
