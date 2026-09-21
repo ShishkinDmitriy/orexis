@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -41,17 +41,7 @@
+@@ -39,17 +39,7 @@
    :tank2 :temperature 20 .
  }
  
@@ -19,13 +19,12 @@
  
  GRAPH :scopes {
    :fill deliberation:inScope :keeper.scope.1 .
-@@ -80,9 +70,4 @@
+@@ -78,8 +68,4 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
--  pursued:keeper.in_range.pursued.tank1.level a deliberation:PursuedGraph .
 -  pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
 -  pursued:keeper.in_range.pursued.tank1.level a orexis:WantGraph .
 -  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
--  pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Recorded .
+-  pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
  }

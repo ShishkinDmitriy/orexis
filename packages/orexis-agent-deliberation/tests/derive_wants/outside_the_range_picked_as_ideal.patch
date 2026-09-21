@@ -1,26 +1,23 @@
 --- case
 +++ expected
-@@ -115,4 +115,68 @@
+@@ -113,4 +113,65 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
-+  pursued:keeper.ideal.pursued.air_warmth_of_fern a deliberation:PursuedGraph .
 +  pursued:keeper.ideal.pursued.air_warmth_of_fern a orexis:Graph .
 +  pursued:keeper.ideal.pursued.air_warmth_of_fern a orexis:WantGraph .
 +  pursued:keeper.ideal.pursued.air_warmth_of_fern dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-+  pursued:keeper.ideal.pursued.air_warmth_of_fern orexis:arrivedBy orexis:Recorded .
++  pursued:keeper.ideal.pursued.air_warmth_of_fern orexis:arrivedBy orexis:Derived .
 +  pursued:keeper.ideal.pursued.air_warmth_of_fern orexis:beliefsOf :keeper .
-+  pursued:keeper.ideal.pursued.soil_moisture_of_fern a deliberation:PursuedGraph .
 +  pursued:keeper.ideal.pursued.soil_moisture_of_fern a orexis:Graph .
 +  pursued:keeper.ideal.pursued.soil_moisture_of_fern a orexis:WantGraph .
 +  pursued:keeper.ideal.pursued.soil_moisture_of_fern dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-+  pursued:keeper.ideal.pursued.soil_moisture_of_fern orexis:arrivedBy orexis:Recorded .
++  pursued:keeper.ideal.pursued.soil_moisture_of_fern orexis:arrivedBy orexis:Derived .
 +  pursued:keeper.ideal.pursued.soil_moisture_of_fern orexis:beliefsOf :keeper .
-+  pursued:keeper.ideal.pursued.soil_warmth_of_fern a deliberation:PursuedGraph .
 +  pursued:keeper.ideal.pursued.soil_warmth_of_fern a orexis:Graph .
 +  pursued:keeper.ideal.pursued.soil_warmth_of_fern a orexis:WantGraph .
 +  pursued:keeper.ideal.pursued.soil_warmth_of_fern dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-+  pursued:keeper.ideal.pursued.soil_warmth_of_fern orexis:arrivedBy orexis:Recorded .
++  pursued:keeper.ideal.pursued.soil_warmth_of_fern orexis:arrivedBy orexis:Derived .
 +  pursued:keeper.ideal.pursued.soil_warmth_of_fern orexis:beliefsOf :keeper .
  }
 +

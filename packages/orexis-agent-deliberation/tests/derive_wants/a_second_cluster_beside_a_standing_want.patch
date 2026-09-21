@@ -1,14 +1,13 @@
 --- case
 +++ expected
-@@ -86,4 +86,23 @@
+@@ -83,4 +83,22 @@
    pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
-   pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Recorded .
+   pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
    pursued:keeper.in_range.pursued.tank1.level orexis:beliefsOf :keeper .
-+  pursued:keeper.in_range.pursued.tank1.temperature a deliberation:PursuedGraph .
 +  pursued:keeper.in_range.pursued.tank1.temperature a orexis:Graph .
 +  pursued:keeper.in_range.pursued.tank1.temperature a orexis:WantGraph .
 +  pursued:keeper.in_range.pursued.tank1.temperature dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-+  pursued:keeper.in_range.pursued.tank1.temperature orexis:arrivedBy orexis:Recorded .
++  pursued:keeper.in_range.pursued.tank1.temperature orexis:arrivedBy orexis:Derived .
 +  pursued:keeper.in_range.pursued.tank1.temperature orexis:beliefsOf :keeper .
  }
 +

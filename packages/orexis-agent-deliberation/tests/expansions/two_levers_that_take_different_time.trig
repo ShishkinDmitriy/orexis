@@ -33,8 +33,6 @@
 
 
 GRAPH :ontology {
-  deliberation:PursuedGraph rdfs:subClassOf orexis:Graph .
-  deliberation:PursuedGraph rdfs:subClassOf orexis:WantGraph .
   orexis:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
@@ -128,9 +126,8 @@ GRAPH :catalogue {
   graph:sensed a orexis:BeliefGraph .
   graph:sensed a orexis:Graph .
   graph:sensed a orexis:StateGraph .
-  pursued:in_range.pursued.tank1 a deliberation:PursuedGraph .
   pursued:in_range.pursued.tank1 a orexis:Graph .
   pursued:in_range.pursued.tank1 a orexis:WantGraph .
-  pursued:in_range.pursued.tank1 orexis:arrivedBy orexis:Recorded .
+  pursued:in_range.pursued.tank1 orexis:arrivedBy orexis:Derived .
   pursued:in_range.pursued.tank1 orexis:beliefsOf :keeper .
 }
