@@ -113,7 +113,7 @@ def test_a_spent_budget_still_answers_with_progress(monkeypatch):
     assert shallow.outcome == "exhausted" and shallow.steps, _steps(shallow)
     assert {a for a, _ in _steps(shallow)} == {"Drive"}, \
         f"what eight worlds buy is drives toward the parcel: {_steps(shallow)}"
-    assert shallow.steps[-1].urgency_after == 1.0, "not delivered, and it does not say so"
+    assert shallow.urgency_after == 1.0, "not delivered, and it does not say so"
 
     forks.clear()
     agent = _driver(monkeypatch, "c0_0", "c1_2")
@@ -121,7 +121,7 @@ def test_a_spent_budget_still_answers_with_progress(monkeypatch):
     assert len(plan.steps) == 8, f"and with the world's budget it arrives: {_steps(plan)}"
     assert _steps(plan)[-1] == ("Drop", "c3_3")
     assert len(forks) <= 128, "inside the budget the world states"
-    assert plan.urgency_after == 0.0 and plan.steps[-1].urgency_after == 0.0, \
+    assert plan.urgency_after == 0.0, \
         "a compiled want nobody measures is binary: the delivered world scores 0, not the " \
         "not-knowing 1.0 the fallback gave it before #499"
 

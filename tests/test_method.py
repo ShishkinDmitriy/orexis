@@ -30,7 +30,7 @@ def test_adopting_an_action_with_a_method_expands_it_and_the_last_step_inherits_
     fern = _fern(monkeypatch)
     keeper, want = fern.keeper, stake_of(fern).uri
     from orexis_agent_progression.act import Step
-    head = Step(action=ACQUIRING, binding=filled((VENUE, "urn:venue")), want=want, urgency_after=0.1,
+    head = Step(action=ACQUIRING, binding=filled((VENUE, "urn:venue")), want=want,
                 predicts=predicted_reading(fern.me.acts_for, MOISTURE, 0.55))
     uri = keeper.adopt(head, want, "buy the water")
     rows = bindings(fern.intentions.query_union(f"""
@@ -89,7 +89,7 @@ def test_a_method_of_methods_expands_flat_and_every_step_knows_its_filling(monke
       <{T}Errand> a orexis:Action ; orexis:method ( <{T}Fetch> <{T}Return> ) .
       <{T}Fetch> a orexis:Action ; orexis:method ( <{T}Go> <{T}Grab> ) .
       <{T}Go> a orexis:Action . <{T}Grab> a orexis:Action . <{T}Return> a orexis:Action . }} }}""")
-    uri = keeper.adopt(Step(action=T + "Errand", binding=filled((T + "parcel", T + "parcel")), want=want, urgency_after=0.1,
+    uri = keeper.adopt(Step(action=T + "Errand", binding=filled((T + "parcel", T + "parcel")), want=want,
                             predicts=predicted_reading(fern.me.acts_for, MOISTURE, 0.55)),
                        want, "run the errand")
     rows = bindings(fern.intentions.query_union(f"""

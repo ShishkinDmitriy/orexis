@@ -153,6 +153,24 @@ about rules no effect could have broken — and a depth-2 pass would take twenty
 instead of under two. What must be true is that the agent never COMMITS to reaching a world the
 society refuses, so the expensive question is asked of the world it actually intends.
 
+# What a world is worth is asked per WANT
+
+A possible world is want-agnostic: it is a set of facts a path reached, and it would be the same
+world whichever want the pass was serving. What the search works out ABOUT it is not — how far it
+still is, what it cost to get here, what urgency the want would have in it. Those are facts about
+a PAIR.
+
+So the pair is a node. `deliberation:Weighing` reifies (world, want) and carries `spent`,
+`remaining`, `wouldReach`, `open` and `expanded`; the world points at it with
+`deliberation:weighed`. Its own comment states the cardinality that makes it necessary:
+
+> *"What this pass worked out about this world for one of the wants asking about it. One per
+> want, and none before a want has asked: **a world nobody has weighed is still a world**."*
+
+This is what lets one imaginarium serve several wants without the answers colliding, and it is
+why a [step](/domain/step.md) carries no urgency of its own: the number is the weighing's, and a
+step that held a copy would be right for whichever want happened to write it last (#748).
+
 # Watching it decide (#256)
 
 Every one of those decisions used to die in-process as a single log line, and it could not be

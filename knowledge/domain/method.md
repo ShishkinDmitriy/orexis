@@ -34,7 +34,7 @@ member with a method of its own expands in turn, so the ledger walks a flat chai
 so a reader can recover the tree. Every member is a step of the parent's action and subject —
 a method is declared only for a PROTOCOL, whose steps share the parent's parameters; where a
 step's parameters would have to be worked out from the world, the step is not declared but
-planned (below). The last member inherits the parent's `progression:predicts` and predicted urgency, since
+planned (below). The last member inherits the parent's `progression:predicts`, since
 the end the search planned on is reached when the method is done. Then the plan is stepped as
 any plan is — each step taken when the one before it is confirmed, the tail dropped on a
 surprise.

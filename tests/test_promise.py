@@ -30,7 +30,7 @@ def _fern_with_a_ferry(monkeypatch, bridged=True):
 
 
 def _ferry(want):
-    return Step(action=T + "Ferry", binding=filled((T + "cargo", T + "box"), (ABOUT, T + "pierB")), want=want, urgency_after=0.0,
+    return Step(action=T + "Ferry", binding=filled((T + "cargo", T + "box"), (ABOUT, T + "pierB")), want=want,
                 predicts=(frozenset({(T + "box", T + "on", T + "pierB")}),
                           frozenset({(T + "box", T + "on", T + "pierA")})))
 

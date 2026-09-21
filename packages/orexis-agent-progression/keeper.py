@@ -470,8 +470,6 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             facts.append(f'<{PROGRESSION + "notBefore"}> "{step.not_before.isoformat()}"^^<{xsd}dateTime>')
         if step.not_after:
             facts.append(f'<{PROGRESSION + "notAfter"}> "{step.not_after.isoformat()}"^^<{xsd}dateTime>')
-        if step.urgency_after is not None:
-            facts.append(f'<{PROGRESSION + "predictedUrgency"}> "{step.urgency_after:.6f}"^^<{xsd}decimal>')
         return facts
 
     # --- an intention held until a condition (#512, #514) --------------------------------
@@ -501,7 +499,6 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             child = _replace(step, action=action,
                              predicts=step.predicts if last else None,
                              precondition=step.precondition if n == 0 else None,
-                             urgency_after=step.urgency_after if last else None,
                              part_of=step)
             out.extend(self._members_of(child, depth + 1))
         return out

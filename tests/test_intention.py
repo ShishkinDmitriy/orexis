@@ -519,7 +519,7 @@ def test_a_plan_is_committed_whole_advances_on_a_met_step_and_stops_on_an_unmet_
     fern = make("fern", genesis_store({"fern": 0.30}))          # a reading to baseline on
     keeper = fern.keeper
     want = stake_of(fern).uri
-    plan = tuple(Step(action=f"urn:toy#Go{n}", binding=filled((VENUE, "urn:toy#lever")), urgency_after=0.5 - n * 0.1)
+    plan = tuple(Step(action=f"urn:toy#Go{n}", binding=filled((VENUE, "urn:toy#lever")))
                  for n in (1, 2, 3))
     uri = keeper.adopt(plan, want, "three steps, handed down whole")
     rows = bindings(fern.intentions.query_union(f"""SELECT ?head ?n (COUNT(?s) AS ?steps) WHERE {{
