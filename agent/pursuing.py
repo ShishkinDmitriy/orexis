@@ -173,10 +173,20 @@ class Pursuing:
                 continue
             base = seen.pop(root)
             for want in wants:
+                #  WHAT IT IS ABOUT IS THE WANT'S OWN, and so is which way it broke. Both
+                #  rows below are somebody ELSE's — the root's copy, or a capability's word
+                #  about the want — and neither carries the instance the derivation minted
+                #  this want for, so presenting one unchanged replaced `orexis:about` with
+                #  nothing. It went unnoticed while every want about an instance was one the
+                #  ledger spoke for and read by its claim instead; a call's want is read by
+                #  what it is about, and had nothing to be read by.
                 if want.uri in spoken_for:
                     presented = replace(spoken_for[want.uri], desire=root)
                 else:
                     presented = replace(base, uri=want.uri, desire=root)
+                presented = replace(presented, about=want.about,
+                                    side=want.side or presented.side)
+                if want.uri not in spoken_for:
                     #  THE STATE IS THE WANT'S OWN where its shape says met — its instance is
                     #  in range, whatever the root's others read — and the root's word
                     #  otherwise, since the choir's words are finer than a shape's two

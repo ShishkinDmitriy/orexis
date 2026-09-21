@@ -88,6 +88,44 @@ INSERT { GRAPH $derived {
         #  never unmet, so nothing is ever derived under it, and the ledger stays
         #  the only deriver — which is what was chosen for now.
         rdfs:seeAlso <https://github.com/ShishkinDmitriy/orexis/issues/675> .
+
+    #################  AND WHAT A HOST WANTS OF ITS OWN VENUES  #################
+    #
+    #  THE SECOND STANDING DESIRE, on the same premise: no unanswered calls. A participant's
+    #  LOW sources a call on a venue this agent hosts, and what the host wants is that a round
+    #  stands there. The call is the INSTANCE — written by `calls.call` into the host's own
+    #  record — and the want is minted under this desire, per call in trouble, exactly as a
+    #  debt's is under the one above.
+    #
+    #  IT WAS LIFTED IN PYTHON. `hosting.desires()` built a `Want` per call and handed it to
+    #  the choir, so a call was the one want in this repo that no derivation minted: it had no
+    #  provenance, no graph, no period, and the planner could only judge it by asking a
+    #  capability how unmet it was — which is why removing the measure (#765) reached the
+    #  market at all, and why the call briefly carried a met-test of its own. A desire is the
+    #  premise of what is pursued; this is that premise, and the rest follows the shape every
+    #  other want here already has.
+    $me orexis:holds ?calls .
+    ?calls a orexis:Desire ;
+        rdfs:label "no unanswered calls — every call on a venue I host answered by a round" ;
+        rdfs:comment "The standing rule a host holds over its own venues. A LOW arriving writes a call and derives a want under this, to open a round there; the desire itself is never pursued." ;
+        orexis:metWhen ?answered .
+    ?answered a sh:NodeShape ;
+        #  THE CALLS THEMSELVES are the focus nodes — `sh:this` names one, so the want minted
+        #  is ABOUT one call and an Offering step can name its venue. Subjects of `calledOn`
+        #  rather than `a market:Call`, which is the debt's pattern beside it: the premise is
+        #  the row the instance actually carries.
+        sh:targetSubjectsOf market:calledOn ;
+        sh:sparql [
+            sh:prefixes orexis: ;
+            orexis:about sh:this ;
+            sh:message "a call on a venue of mine has no round" ;
+            #  IT NAMES NO WORLD (#666): the runner hands the rule its graphs, so a round a
+            #  plan's Offering only IMAGINED answers the call exactly as a standing one does.
+            #  That is what lets a host plan to open a round at all, and it used to be a UNION
+            #  over two named graphs inside the measure the host answered the choir with.
+            sh:select """SELECT $this WHERE {
+                $this market:calledOn ?venue .
+                FILTER NOT EXISTS { ?venue market:hasRound ?round } }""" ] .
 } }
 $given
 WHERE {
@@ -99,4 +137,6 @@ WHERE {
     $me market:hosts ?venue .
     BIND(IRI(CONCAT(STR($me), ".no_overdue_debts")) AS ?desire)
     BIND(IRI(CONCAT(STR($me), ".no_overdue_debts.honoured")) AS ?honoured)
+    BIND(IRI(CONCAT(STR($me), ".no_unanswered_calls")) AS ?calls)
+    BIND(IRI(CONCAT(STR($me), ".no_unanswered_calls.answered")) AS ?answered)
 }

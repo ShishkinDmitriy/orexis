@@ -310,27 +310,40 @@ SELECT (SUM(?a) AS ?owed) WHERE {{
             ledger.owe(who, jti, expires_at=claim.exp, amount_l=litres, usable_from=opens)
 
     def _pursue_calls(self, market=None) -> None:
-        """Every call I hold — on one venue, or all — through execution."""
-        from orexis_agent_deliberation import reviser
+        """Every call I hold — on one venue, or all — through execution.
 
-        for judgment in self.desires():
-            if market is None or judgment.uri == calls.uri_for(market.uri):
-                reviser.wake_for(self.agent, judgment)
+        ASKED OF THE WANTS, under the standing desire they are derived from. It read
+        `self.desires()` and compared each row's uri to the call's, which worked while a call
+        WAS the want this module built; a call is the instance now and the want is the
+        derivation's, named after the desire and about the call — so the criterion is the
+        desire it came under, and the venue is read off what it is about.
+        """
+        from orexis_agent_deliberation import reviser
+        from orexis_agent_deliberation.wants import find_wants
+
+        wanted = calls.uri_for(market.uri) if market is not None else None
+        for want in find_wants(self.agent.beliefs, desire=self._calls_desire(), derived=True):
+            if wanted is None or wanted in want.about:
+                reviser.wake_for(self.agent, want)
+
+    def _calls_desire(self) -> str:
+        """The standing desire a call's want is derived under — `desires.ru` mints it at
+        genesis, one per host, and spells it exactly this way."""
+        return f"{self.me.uri}.no_unanswered_calls"
 
     def desires(self, now=None) -> list[Want]:
-        """My contribution to what this agent pursues: the calls on the venues I host.
+        """My contribution to what this agent pursues: the debts, delegated to the ledger that
+        holds them.
 
-        A call is a want somebody else sourced, like a debt (owing contributes those); it is
-        met exactly when a round stands on its venue, and since a round that opens answers the
-        call by retracting it, every call I hold is unmet. It arrived at maximal urgency once, which
-        was the honest number for a want with no clock running it down — and that is the reason
-        the field is gone: a constant every call shares ranks nothing. Whether this host would
-        RATHER sell is the strategic-supplier seam, not a number invented here.
+        IT LIFTED THE CALLS TOO, and they were the one want in this repo that no derivation
+        minted — built here per call and handed to the choir, with no provenance, no graph and
+        no period. A host holds a standing desire over its venues now (`desires.ru`), the call
+        is the instance it is about, and the want is the derivation's like every other. What
+        is left here is the ledger's half, which is a delegation rather than a lift: the
+        ledger is no longer a module in its own right, so what it contributes to the choir
+        arrives through the module that holds it.
         """
-        #  AND THE DEBTS, delegated: the ledger is no longer a module in its own right, so
-        #  what it contributed to the choir arrives through the module that holds it.
-        return ([Want(uri=c.uri) for c in calls.calls_of(self.agent)]
-                + self.ledger.desires(now))
+        return self.ledger.desires(now)
 
     def series(self) -> list[tuple[str, dict, dict]]:
         """What I owe, as figures — the ledger's, through the module that holds it."""

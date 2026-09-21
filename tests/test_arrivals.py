@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from orexis_agent_deliberation import pursuit
+from orexis_agent_deliberation import judging, pursuit
 from orexis_agent_progression.ontology import picks_graph, obligations_graph
 from orexis_agent_progression.store import bindings
 from orexis_capability_market.terms import ACQUIRING
@@ -70,10 +70,10 @@ def test_the_vessel_crosses_its_floor_at_the_window_that_empties_it(monkeypatch)
     agent = _supplier(monkeypatch, level=3.0)
     now = datetime.now(timezone.utc)
     root = _stock(agent)
-    assert root.is_met and pursuit.crossing_of(agent, root.uri) is None, "nothing owed: no crossing"
+    assert root.is_met and judging.crossing_of(agent.beliefs.engine, root.uri) is None, "nothing owed: no crossing"
     _promise(agent, "fern", "j1", 1.5, now + timedelta(hours=1))
     _promise(agent, "tomato", "j2", 1.0, now + timedelta(hours=2))
-    crossing = pursuit.crossing_of(agent, root.uri)
+    crossing = judging.crossing_of(agent.beliefs.engine, root.uri)
     assert crossing is not None
     assert abs((crossing - (now + timedelta(hours=1))).total_seconds()) < 120, crossing
 
@@ -114,6 +114,6 @@ def test_a_discharged_debt_is_not_an_arrival(monkeypatch):
     root = _stock(agent)
     _promise(agent, "fern", "j1", 1.5, now + timedelta(hours=1))
     _promise(agent, "tomato", "j2", 1.0, now + timedelta(hours=2))
-    assert pursuit.crossing_of(agent, root.uri) is not None
+    assert judging.crossing_of(agent.beliefs.engine, root.uri) is not None
     _ower(agent).discharge("j1")
-    assert pursuit.crossing_of(agent, root.uri) is None, "one and a half litres paid: the second window leaves two"
+    assert judging.crossing_of(agent.beliefs.engine, root.uri) is None, "one and a half litres paid: the second window leaves two"

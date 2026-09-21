@@ -443,6 +443,11 @@ it is a record wearing a bullet.
   producer and one live consumer and both were rebuilding the desire projection, and the
   collection's own writers had no caller but their tests. A want's graph, its catalogue row
   and its period are decided where the want is, and whoever wrote says what changed.
+- **A want somebody else sourced is still an INSTANCE under a standing desire** — a call was
+  lifted per call by `hosting.desires()`, the one want here no derivation minted, so it had no
+  provenance, no graph and no period, and the planner could judge it only by asking a
+  capability how unmet it was; a host holds *no unanswered calls* over its venues now and the
+  call is the row that desire is about, which is the shape the ledger's debts already had.
 - **A criterion is an argument, never a name** — `Wants` was five finders over ONE query with a
   `where` clause swapped, three of them called by nothing but their own test, because the Spring
   Data spelling put each criterion in a method name and so charged a name per combination;
