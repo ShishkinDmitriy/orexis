@@ -136,6 +136,12 @@ it is a record wearing a bullet.
 - **Verify a claim in the bundle against the code before repeating it**; nothing gates prose
   against the thing it describes.
 - **A rename is done when the suite says so**, not when the thing you grepped for is gone.
+- **A word-boundary sweep bites a hyphenated slug and a variable named after the word** —
+  `\bstake\b` matches inside `the-stake-is-sensings-want`, so 45 files came to cite a record
+  that does not exist, and a local `stake` is spelled like the word it was named after, so nine
+  files grew `(region want := ...)` and stopped parsing; hold out the words that merely contain
+  the letters (`mistake`, `stakeholder`) before starting, and let the parser and the suite find
+  the rest.
 - **Search every tree that loads the vocabulary before calling a term dead** — `assembly/` reads
   ontologies that `agent/` never mentions.
 - **A record earns its place by refusing something**; "we could have not done it" is not an
