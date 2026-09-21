@@ -47,6 +47,18 @@ GRAPH possible:Trickling-level-dripper {
 
 #  What the pass knows about every world it made.
 GRAPH graph:pass {
+  <http://example.org/orexis/graph/sensed/Pouring-level-pump> :through :pump .
+  <http://example.org/orexis/graph/sensed/Pouring-level-pump> a deliberation:Candidate .
+  <http://example.org/orexis/graph/sensed/Pouring-level-pump> deliberation:from graph:sensed .
+  <http://example.org/orexis/graph/sensed/Pouring-level-pump> deliberation:takes 30.0 .
+  <http://example.org/orexis/graph/sensed/Pouring-level-pump> deliberation:wouldTake :Pouring .
+  <http://example.org/orexis/graph/sensed/Pouring-level-pump> orexis:about :level .
+  <http://example.org/orexis/graph/sensed/Trickling-level-dripper> :through :dripper .
+  <http://example.org/orexis/graph/sensed/Trickling-level-dripper> a deliberation:Candidate .
+  <http://example.org/orexis/graph/sensed/Trickling-level-dripper> deliberation:from graph:sensed .
+  <http://example.org/orexis/graph/sensed/Trickling-level-dripper> deliberation:takes 600.0 .
+  <http://example.org/orexis/graph/sensed/Trickling-level-dripper> deliberation:wouldTake :Trickling .
+  <http://example.org/orexis/graph/sensed/Trickling-level-dripper> orexis:about :level .
   graph:sensed a deliberation:PossibleWorld .
   graph:sensed deliberation:atDepth 0 .
   graph:sensed deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
@@ -63,42 +75,30 @@ GRAPH graph:pass {
   possible:Pouring-level-pump a deliberation:PossibleWorld .
   possible:Pouring-level-pump deliberation:atDepth 1 .
   possible:Pouring-level-pump deliberation:atInstant "2026-01-01T12:00:30+00:00"^^xsd:dateTime .
-  possible:Pouring-level-pump deliberation:from graph:sensed .
   possible:Pouring-level-pump deliberation:meets :in_range.pursued.tank1 .
   possible:Pouring-level-pump deliberation:minted 1 .
+  possible:Pouring-level-pump deliberation:reachedBy <http://example.org/orexis/graph/sensed/Pouring-level-pump> .
   possible:Pouring-level-pump deliberation:signature "bf505789bb150461" .
   possible:Pouring-level-pump deliberation:spent 9.0 .
   possible:Pouring-level-pump deliberation:takes 30.0 .
   possible:Pouring-level-pump deliberation:weighed possible:Pouring-level-pump.for.in_range.pursued.tank1 .
-  possible:Pouring-level-pump progression:by possible:Pouring-level-pump.step .
   possible:Pouring-level-pump.for.in_range.pursued.tank1 a deliberation:Weighing .
   possible:Pouring-level-pump.for.in_range.pursued.tank1 deliberation:forWant :in_range.pursued.tank1 .
   possible:Pouring-level-pump.for.in_range.pursued.tank1 deliberation:remaining 0.0 .
   possible:Pouring-level-pump.for.in_range.pursued.tank1 deliberation:wouldReach 0.0 .
-  possible:Pouring-level-pump.step :through :pump .
-  possible:Pouring-level-pump.step a progression:Step .
-  possible:Pouring-level-pump.step deliberation:takes 30.0 .
-  possible:Pouring-level-pump.step orexis:about :level .
-  possible:Pouring-level-pump.step progression:fills :Pouring .
   possible:Trickling-level-dripper a deliberation:PossibleWorld .
   possible:Trickling-level-dripper deliberation:atDepth 1 .
   possible:Trickling-level-dripper deliberation:atInstant "2026-01-01T12:10:00+00:00"^^xsd:dateTime .
-  possible:Trickling-level-dripper deliberation:from graph:sensed .
   possible:Trickling-level-dripper deliberation:lawful true .
   possible:Trickling-level-dripper deliberation:meets :in_range.pursued.tank1 .
   possible:Trickling-level-dripper deliberation:minted 2 .
+  possible:Trickling-level-dripper deliberation:reachedBy <http://example.org/orexis/graph/sensed/Trickling-level-dripper> .
   possible:Trickling-level-dripper deliberation:signature "bd09153f203e39af" .
   possible:Trickling-level-dripper deliberation:spent 1.0 .
   possible:Trickling-level-dripper deliberation:takes 600.0 .
   possible:Trickling-level-dripper deliberation:weighed possible:Trickling-level-dripper.for.in_range.pursued.tank1 .
-  possible:Trickling-level-dripper progression:by possible:Trickling-level-dripper.step .
   possible:Trickling-level-dripper.for.in_range.pursued.tank1 a deliberation:Weighing .
   possible:Trickling-level-dripper.for.in_range.pursued.tank1 deliberation:forWant :in_range.pursued.tank1 .
   possible:Trickling-level-dripper.for.in_range.pursued.tank1 deliberation:remaining 0.0 .
   possible:Trickling-level-dripper.for.in_range.pursued.tank1 deliberation:wouldReach 0.0 .
-  possible:Trickling-level-dripper.step :through :dripper .
-  possible:Trickling-level-dripper.step a progression:Step .
-  possible:Trickling-level-dripper.step deliberation:takes 600.0 .
-  possible:Trickling-level-dripper.step orexis:about :level .
-  possible:Trickling-level-dripper.step progression:fills :Trickling .
 }

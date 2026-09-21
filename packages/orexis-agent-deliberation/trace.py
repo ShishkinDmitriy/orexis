@@ -27,6 +27,8 @@ from urllib.parse import quote
 import pyoxigraph as ox
 
 from orexis_agent_progression.ontology import DELIBERATION_GRAPH
+
+from .imaginarium import candidate_of
 from orexis_agent_progression import clock
 
 log = logging.getLogger("trace")
@@ -148,13 +150,18 @@ def _write(store, agent_id: str, judgment, plan, considered, stands_at: float,
     #  named as the route, not as the first of its steps (#469).
     chosen = getattr(plan, "origin", None) or (plan.steps[0].action if plan.steps else None)
     rows = []
-    for i, entry in enumerate(considered):
+    for entry in considered:
         depth, row, urgency, verdict = entry[:4]
         #  WHAT WAS MISSING, where the verdict is that a remembered plan's precondition does
         #  not hold (#551): the fact, as the signature states it, so the reader is told
         #  which fact and not only that one was.
         missing = entry[4] if len(entry) > 4 and entry[4] is not None else None
-        candidate = f"{node}.{i}"
+        #  THE CANDIDATE IS THE PASS GRAPH'S OWN NODE (#747), named from the world it was
+        #  weighed in. It was `{node}.{i}` — a counter — so the trace and the pass described
+        #  the same fork under two names and no triple said they were one thing. A candidate
+        #  that reached nothing has no world of its own and still has a name, because the
+        #  name comes from the world it LEAVES.
+        candidate = candidate_of(entry[5], row)
         reached = "" if urgency is None else \
             f'        deliberation:wouldReach {urgency:.6f} ;\n'
         absent = "" if missing is None else \
@@ -173,9 +180,9 @@ def _write(store, agent_id: str, judgment, plan, considered, stands_at: float,
     #  says the same number twice in two places where they could drift apart.
     took = ""
     if chosen is not None:
-        for i, entry in enumerate(considered):
+        for entry in considered:
             if entry[1].action == chosen:
-                took = f'        deliberation:chose <{node}.{i}> ;\n'
+                took = f'        deliberation:chose <{candidate_of(entry[5], entry[1])}> ;\n'
                 break
     #  The select as a LITERAL, escaped by the engine's own writer: a compiled text carries
     #  quotes, backslashes and newlines, and a hand-quoted f-string would be the injection the

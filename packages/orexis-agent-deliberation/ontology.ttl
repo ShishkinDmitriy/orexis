@@ -86,9 +86,13 @@ deliberation:weighed a owl:ObjectProperty ; rdfs:domain deliberation:PossibleWor
     rdfs:label "weighed" ;
     rdfs:comment "What this pass worked out about this world for one of the wants asking about it. One per want, and none before a want has asked: a world nobody has weighed is still a world." .
 
-deliberation:from a owl:ObjectProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range deliberation:PossibleWorld ;
+deliberation:from a owl:ObjectProperty ; rdfs:domain deliberation:Candidate ; rdfs:range deliberation:PossibleWorld ;
     rdfs:label "from" ;
-    rdfs:comment "The world this one was forked from. Absent on the root, which is where the pass stands and was forked from nothing. The graph's NAME carries the path too, and a name is for eyes: this is the link a query can follow." .
+    rdfs:comment "The world this candidate would be taken IN. THE CANDIDATE'S, not the world's (#747): a possible world points at no other world, only at the candidates that reach it, so the link between two worlds is reified and one world may be approached by different combinations of candidates. It was a world's own property while a world had exactly one way in, which a tree has and a search over states does not — `signature.where` already merges two paths onto one world and simply discards the second arrival." .
+
+deliberation:reachedBy a owl:ObjectProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range deliberation:Candidate ;
+    rdfs:label "reached by" ;
+    rdfs:comment "The candidate that reached this world — the other half of the reified link, so the edge is followable from either end. Absent on the ROOT, which is where the pass stands and was reached by nothing, and that absence is how a reader finds it. It was `progression:by`, whose domain is `progression:Intention`: a world is not an intention, and the pass graph said so anyway." .
 
 deliberation:spent a owl:DatatypeProperty ; rdfs:domain deliberation:PossibleWorld ; rdfs:range xsd:decimal ;
     rdfs:label "spent" ;
@@ -138,7 +142,11 @@ deliberation:takes a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:comment "How long this plan comes to, in seconds from its first step to its last landing — the path's summed `orexis:landsAfter`, which the search computes per fork and nothing else can recover, since an action's own is a SPARQL expression about the world the act is taken in. Its own word rather than the action's: what an action declares is a text to evaluate and this is a number, and the core's word has priority (#640). The number a latest start would be subtracted from, where something is not already holding the instant. SAID OF THREE THINGS and meaning one — how long this takes, in seconds: a PLAN takes its path's total, a possible WORLD takes what the path to it came to, and a STEP takes its own, which is the action's `orexis:landsAfter` evaluated in the world it is taken in and is the only place that number survives the pass." .
 
 deliberation:Candidate a owl:Class ; rdfs:label "Candidate" ;
-    rdfs:comment "One lever, simulated. Carries the world it would have reached as a number and the reason it was or was not taken — the same lever may appear twice in one pass at different depths, because what a dose is worth depends on where it is taken from." .
+    rdfs:comment """One INSTANCE of an action, made while planning: which action, and the variables it was filled with. It is the reified link between possible worlds — `deliberation:from` the world it is taken in, and the world that names it `deliberation:reachedBy` is the one it reaches.
+
+A candidate that reached NOTHING is still a candidate: the search weighs some and passes them over — irrelevant, refused below, too dear — and those have no world at all. That is why it is named from the world it LEAVES rather than the one it reaches, and why there were two node families before #747: one could name a passed-over candidate and the other structurally could not.
+
+The same action filled the same way may appear twice in one pass at different depths, because what a dose is worth depends on where it is taken from — those are two candidates, from two worlds. What it is WORTH to a want is the weighing's, never the candidate's.""" .
 
 deliberation:deliberatedOn a owl:ObjectProperty ; rdfs:domain deliberation:Deliberation ;
     rdfs:label "deliberated on" ;

@@ -96,7 +96,8 @@ def test_the_store_alone_says_what_the_pass_decided(monkeypatch, snapshots):
 
     Every world the pass made has a row saying where it came from, what the path spent, what
     the want read there and how far it still was. So the plan is not something only Python
-    holds: walk `deliberation:from` back from the world where nothing remains, and the steps
+    holds: walk back from the world where nothing remains — each world names the candidate
+    that reached it, and each candidate the world it came from — and the steps
     come out — the same three the pass returned, in the same order.
 
     And the FRONTIER is a query, not a heap: the worlds with no `deliberation:expanded`,
@@ -119,9 +120,9 @@ def test_the_store_alone_says_what_the_pass_decided(monkeypatch, snapshots):
     walked, here = [], solved[0]["w"]
     while True:
         row = bindings(im.query_over(
-            f"SELECT ?from ?fills ?onto WHERE {{ <{here}> deliberation:from ?from ; "
-            f"progression:by ?s . ?s <http://example.org/orexis/progression#fills> ?fills . "
-            f"OPTIONAL {{ ?s <{HANOI}onto> ?onto }} }}", PASS_GRAPH))
+            f"SELECT ?from ?fills ?onto WHERE {{ <{here}> deliberation:reachedBy ?c . "
+            f"?c deliberation:from ?from ; deliberation:wouldTake ?fills . "
+            f"OPTIONAL {{ ?c <{HANOI}onto> ?onto }} }}", PASS_GRAPH))
         if not row:
             break
         walked.append((row[0]["fills"], row[0].get("onto")))
@@ -183,7 +184,7 @@ def test_a_world_says_when_it_is_and_a_step_says_how_long_it_took(monkeypatch, s
     rows = {r["w"].rsplit("/", 1)[-1]: r for r in bindings(planner.imaginarium.query_over(
         "SELECT ?w ?at ?takes ?spent ?fills WHERE { ?w a deliberation:PossibleWorld ; "
         "deliberation:atInstant ?at ; deliberation:takes ?takes ; deliberation:spent ?spent ; "
-        "progression:by ?s . ?s <http://example.org/orexis/progression#fills> ?fills }", PASS_GRAPH))}
+        "deliberation:reachedBy ?c . ?c deliberation:wouldTake ?fills }", PASS_GRAPH))}
     quick, slow = rows["Pouring-level-pump"], rows["Trickling-level-dripper"]
 
     assert quick["at"].startswith("2026-01-01T12:00:30"), quick["at"]
@@ -193,7 +194,7 @@ def test_a_world_says_when_it_is_and_a_step_says_how_long_it_took(monkeypatch, s
     #  THE ROOT IS THE PASS'S CLOCK, which is how the clock reaches the store at all.
     (root,) = bindings(planner.imaginarium.query_over(
         "SELECT ?at WHERE { ?w a deliberation:PossibleWorld ; deliberation:atInstant ?at . "
-        "FILTER NOT EXISTS { ?w deliberation:from ?p } }", PASS_GRAPH))
+        "FILTER NOT EXISTS { ?w deliberation:reachedBy ?c } }", PASS_GRAPH))
     assert root["at"].startswith("2026-01-01T12:00:00"), root["at"]
 
     assert float(slow["spent"]) < float(quick["spent"]), "the trickle is the cheaper path"

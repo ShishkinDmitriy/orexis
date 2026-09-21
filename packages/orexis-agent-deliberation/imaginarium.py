@@ -371,15 +371,34 @@ def _name(path) -> str:
     but a name that moved between runs would make two traces of the same search incomparable,
     which is the one thing anybody reads them for.
 
-    EVERY VALUE THE ROW BOUND is in the segment, and all of them are load-bearing: a schema
-    action yields several rows differing in one parameter alone, and a name built from fewer
-    made two siblings COLLIDE — the second child's quads merged into the first's graph, a disk
-    resting on two supports at once, and the search saw a menu of duplicates pointing home.
-    That was found when the kernel carried two named columns and the name used one of them;
-    a binding cannot go stale the same way, because it is every parameter the action declares.
+    Each segment is `segment_of`, which is also how a candidate is named — a world IS its
+    path, so the world a candidate reaches is its parent's name plus that candidate's segment.
     """
-    tail = ".".join(
-        "-".join(quote(local_of(part), safe="")
-                 for part in (row.action, *(v for _, v in row.binding)))
-        for row in path)
-    return _POSSIBLE + (tail or "here")
+    return _POSSIBLE + (".".join(segment_of(row) for row in path) or "here")
+
+
+def segment_of(row) -> str:
+    """One filled action as a name-safe segment: the action and every value it bound.
+
+    EVERY VALUE IS IN IT, and all of them are load-bearing: a schema action yields several rows
+    differing in one parameter alone, and a segment built from fewer made two siblings COLLIDE —
+    the second child's quads merged into the first's graph, a disk resting on two supports at
+    once, and the search saw a menu of duplicates pointing home.
+    """
+    return "-".join(quote(local_of(part), safe="")
+                    for part in (row.action, *(v for _, v in row.binding)))
+
+
+def candidate_of(world: str, row) -> str:
+    """The node for one filled action taken FROM one world — the reified link between that
+    world and whatever it reaches.
+
+    Named from the world it LEAVES, never the one it reaches, and that is the whole point: a
+    candidate the search weighed and passed over reaches nothing, so a name derived from its
+    child could not exist for it. That is why there were two node families — one could name a
+    refused candidate and the other structurally could not (#747).
+
+    `/` where a world's path uses `.`, so a candidate and the world it reaches are never the
+    same IRI while both remain derivable from the other end.
+    """
+    return f"{world}/{segment_of(row)}"

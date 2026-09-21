@@ -104,7 +104,7 @@ def test_a_re_rooted_cone_says_the_whole_pass_again(monkeypatch):
     open, and a kept world carrying the depth and cost it had under the old root.
 
     So this asserts what the store says AFTER the second pass: exactly the worlds the planner
-    kept, no more; the root among them with no `deliberation:from` and depth 0; and the clock
+    kept, no more; the root among them reached by no candidate and at depth 0; and the clock
     moved to the new root's.
     """
     from orexis_agent_deliberation.planner import PASS_GRAPH
@@ -136,7 +136,7 @@ def test_a_re_rooted_cone_says_the_whole_pass_again(monkeypatch):
 
     roots = bindings(planner.imaginarium.query_over(
         "SELECT ?w ?d WHERE { ?w a deliberation:PossibleWorld ; deliberation:atDepth ?d . "
-        "FILTER NOT EXISTS { ?w deliberation:from ?p } }", PASS_GRAPH))
+        "FILTER NOT EXISTS { ?w deliberation:reachedBy ?c } }", PASS_GRAPH))
     assert len(roots) == 1 and roots[0]["d"] == "0", roots
     assert roots[0]["w"] == planner._root.graph, "and it is the root the planner re-rooted on"
 
