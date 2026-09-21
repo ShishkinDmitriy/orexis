@@ -23,6 +23,7 @@ from orexis_agent_progression.store import NAMESPACES, rows
 
 #  THE STAGES A WANT PASSES THROUGH (agent/ontology.ttl, "a want's life"). Spelled here as
 #  terms, which rule 1 allows; what may never be spelled is an instance.
+WANT_GRAPH = OREXIS + "WantGraph"
 RECOGNIZED = OREXIS + "Recognized"
 PLANNING = OREXIS + "Planning"
 READY = OREXIS + "Ready"
@@ -34,11 +35,11 @@ UNREACHABLE = OREXIS + "Unreachable"
 #  WHERE A WANT IS: the graph of wants — or the record, for a debt — that holds this one, and
 #  how many wants are in it, since that is what decides whether taking this one takes the graph.
 _HOME_Q = """
-SELECT ?g (COUNT(DISTINCT ?w) AS ?wants) WHERE {
+SELECT ?g ?kind (COUNT(DISTINCT ?w) AS ?wants) WHERE {
   GRAPH ?g { $want a orexis:Want . ?w a orexis:Want }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
                VALUES ?kind { orexis:WantGraph orexis:RecordGraph } } }
-GROUP BY ?g"""
+GROUP BY ?g ?kind"""
 
 
 def mark(engine, uri: str, state: str) -> None:
@@ -105,14 +106,20 @@ def forget_want(engine, uri: str) -> None:
     home = rows(engine, _HOME_Q, (), want=uri)
     if not home:
         return
-    graph, wants = home[0]["g"], int(home[0]["wants"])
-    if wants == 1:
+    #  A GRAPH OF WANTS holds wants and nothing else, so one want in one is the whole of it;
+    #  a RECORD holds a package's own rows and a want is a guest there. `?kind` rather than
+    #  `?wants` alone decides, because "one want in it" says nothing about what ELSE is in it:
+    #  a record with a single want would have been dropped entire, taking the ledger's history.
+    #  Several rows may come back where a graph is both; a graph of wants is the one to trust.
+    home.sort(key=lambda r: r["kind"] != WANT_GRAPH)
+    graph, kind, wants = home[0]["g"], home[0]["kind"], int(home[0]["wants"])
+    if kind == WANT_GRAPH and wants == 1:
         #  A WANT IS ITS GRAPH where the derivation named it (#645), so the graph goes and the
         #  catalogue's account of it with it — one act, nothing left to tidy.
         engine.update(forget_graph(graph), prefixes=NAMESPACES)
         return
-    #  SEVERAL IN ONE GRAPH: a world may ratify more than one into the graph it names, and
-    #  dropping it for one of them would take its siblings. The graph stays; the want goes.
+    #  OTHERWISE THE GRAPH STAYS and only the want goes: a world may ratify several into the
+    #  graph it names, and a record is somebody else's house.
     engine.update(_forget_one(graph, uri), prefixes=NAMESPACES)
 
 
