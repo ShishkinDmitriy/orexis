@@ -10,7 +10,7 @@ description: >-
   reads to one, on a three-disk solve - and a test in the package holds the service to writing no
   query and the collections to writing theirs.
 status: superseded-in-part
-superseded-by: /decisions/a-row-is-a-step.md
+superseded-by: a-row-is-a-step
 timestamp: 2026-09-18T15:00:00Z
 ---
 
