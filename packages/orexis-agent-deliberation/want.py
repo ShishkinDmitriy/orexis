@@ -87,10 +87,17 @@ class Want:
     #  say how badly it was wanted. The sovereign struck the second — all Want had, now has
     #  Want — and these are its fields. They are not stored and not read back: whoever holds
     #  the stake fills them when the choir is asked, and a want read from the store carries
-    #  their defaults. Urgency is a function of a situation and a situation moves, which is why
-    #  asking twice gives two answers and neither is written down.
-
-    urgency: float = 0.0  # 0 = content, 1 = at the edge of what it can bear or of its deadline
+    #  their defaults.
+    #
+    #  AND AN URGENCY IS NOT AMONG THEM. A want carried one — 0 content, 1 at the edge of what
+    #  it can bear — contributed by whichever capability held the stake, and the collection
+    #  ranked by it. Nothing ever chose by that rank: `Deliberator.pursued` plans for EVERY
+    #  want it is handed, so the order decided which was planned first and nothing else. What a
+    #  ranking would have to compare is what the plans cost and how long they take, which is
+    #  not knowable before the search that produces them — so the number was contributed by
+    #  four packages, each its own way, ahead of the only evidence that could have settled it.
+    #  What survives is the SEARCH's measure of a world against one want, which is a different
+    #  question and lives on the node (`planner._urgency_in`).
 
     # What it currently reads, where whoever contributed the want has a number for it — a
     # stake's reading, filled by sensing. None when nothing has been observed, which is a gap
@@ -137,11 +144,11 @@ class Want:
     #  the MEASURE, so a want scored maximal can never report as met, which it did while the
     #  label came from a staleness test that declines to judge at all without a published
     #  horizon — and `standing` or `demanded` for an obligation. Carried rather than inferred from
-    #  urgency, and that distinction is not academic — urgency is 0 only exactly at the point
-    #  being steered for, so "urgency > 0" counts a barrel sitting comfortably inside 1-5 as
-    #  unmet. It read that way on the bench for about ten minutes and made a calm society look
-    #  stuck. The split is now structural: the met-SHAPE governs the state and the MEASURE
-    #  governs the urgency, and they are different questions on the desire's own node.
+    #  a measure, and that distinction is not academic — a measure reads 0 only exactly at the
+    #  point being steered for, so "the measure is above 0" counts a barrel sitting comfortably
+    #  inside 1-5 as unmet. It read that way on the bench for about ten minutes and made a calm
+    #  society look stuck. The split is structural: the met-SHAPE governs the state and a
+    #  MEASURE answers how far off a world is, and they are different questions on the node.
     state: str | None = None
 
     #  THE ROOT THIS WANT IS DERIVED UNDER (#618), or None for a root and for anything not
@@ -152,8 +159,7 @@ class Want:
 
     #  THE INSTANT AN `orexis:At` WANT HOLDS AT (#619), or None. A want derived under a root
     #  from a predicted crossing: judged as the world will be THEN, late past it, and its
-    #  room is the stretch to it — which the container computes into `urgency` when it
-    #  presents the want, since a time room is the kernel's arithmetic as a debt's is.
+    #  room is the stretch to it.
     holds_at: datetime | None = None
 
     #  WHEN THE READING THIS ROW JUDGES WAS TAKEN, or None where nothing was read — filled by
@@ -166,11 +172,9 @@ class Want:
     #  NO measure field, deliberately, and one briefly existed: a desire does not carry how
     #  its badness is scored, because that is a capability's answer and not the mind's
     #  structure (a-desire-states-its-own-measure). Whoever needs the number asks the choir —
-    #  `Agent.desire_urgency(desire, query, sensed)` — of whichever world is being judged,
-    #  and sensing answers for observation-backed wants from its own declaration. A obligation's
-    #  fraction-of-window stays kernel Python behind a pinned engine limit (this store binds
-    #  nothing for duration division — tests/test_desires.py), with the market's own
-    #  declaration as its recorded future home.
+    #  `Agent.desire_urgency(desire, query, sensed)` — of whichever WORLD is being judged, which
+    #  is the one question a number here could never have answered: this type is about a want,
+    #  and how far off a world is is about a world.
 
     @property
     def is_met(self) -> bool:

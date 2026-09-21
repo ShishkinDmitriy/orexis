@@ -119,10 +119,10 @@ def test_met_is_the_label_and_the_aim_is_the_target_with_a_deadband_at_the_pick(
     ladder and nothing is proposed at all.
     """
     agent, plan, desire = _gardener(monkeypatch, 0.12)
-    assert desire.state == "met" and desire.urgency > 0, \
-        "met and urgent at once, still: the ROW is measured with the reading in hand, so the " \
-        "aim ranks a want the agent holds — what stops steering is the search, which asks " \
-        "about worlds and gets the band"
+    assert desire.state == "met", \
+        "met, and the row says only that: how far off the reading sits was a number the want " \
+        "carried, and what stops steering is the search, which asks about worlds and gets " \
+        "the band"
     assert plan.outcome == search.SATISFIED
     assert plan.steps == (), "inside the region and off the pick, no move is planned"
     placed = agent.deliberator.decide(desire)
@@ -132,7 +132,7 @@ def test_met_is_the_label_and_the_aim_is_the_target_with_a_deadband_at_the_pick(
         "held for the crossing, not taken now: inside the region nothing is due yet"
 
     at_pick, plan2, desire2 = _gardener(monkeypatch, AT_PICK)
-    assert desire2.urgency == 0.0
+    assert desire2.state == "met"
     assert plan2.outcome == search.SATISFIED and plan2.steps == ()
     assert at_pick.deliberator.propose_for(desire2) is None, \
         "at the pick: no move, decided — not deferred to a reflex that might disagree"
@@ -303,14 +303,13 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     #  the fabrication possible at all. A bare Want suffices: the measure is not the want's
     #  to carry, and sensing answers the choir for any observation-backed stake.
     write_reading(fern, 0.30, MOISTURE)   # the world holds the value; a want's `value` is not it
-    stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+    stake = ObservedWant(uri=stake_of(fern).uri, observed_property=MOISTURE,
                          value=0.30)
     assert decider.propose_for(stake) == "http://example.org/orexis/market#Acquiring", \
         "below the aim there is a deficit to close, and the search must still close it"
     for value in (0.55, 0.80):
         write_reading(fern, value, MOISTURE)
-        stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4,
-                             observed_property=MOISTURE, value=value)
+        stake = ObservedWant(uri=stake_of(fern).uri, observed_property=MOISTURE, value=value)
         assert decider.propose_for(stake) is None, \
             f"a content plant bought water at {value} — a zero-size act made something true"
 

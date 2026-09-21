@@ -269,7 +269,6 @@ class Deliberator:
             "desires": float(len(pursued)),
             "unmet": float(len(wanting)),
             "unactionable": float(sum(1 for _, move in wanting if move is None)),
-            "hottest": max((g.urgency for g, _ in pursued), default=0.0),
         })]
         #  ONE ROW PER WANT, which is what makes a single graph able to show all of them.
         #  The tag is the want ITSELF and not the property it is about, because a property
@@ -285,17 +284,23 @@ class Deliberator:
         #  kernel could say only by knowing what a debt was; whom a host owes is the market's
         #  figure now (`agent_debts`, per counterparty), and here a debt is a want under its
         #  root like any other.
-        for judgment, _ in pursued:
+        for judgment, move in pursued:
             #  A want pursued under a root is reported as the ROOT (#618): one series per
             #  desire the agent holds, whichever node the pass is currently handed.
             about = (judgment.desire or judgment.uri).rsplit("#", 1)[-1]
+            #  WHETHER ANYTHING ANSWERS IT, which is what a panel per want can still say. It
+            #  carried an urgency — a number four packages each computed their own way, ahead
+            #  of the search that was the only thing able to compare them — and what belongs
+            #  on this axis instead is what the PLANS say, which is the next thing to land.
+            #
             #  `agent_want` and its tag KEEP THE RETIRED WORD, deliberately. The noun "want"
             #  gave way to "desire" everywhere else when the vocabulary was ruled on
             #  (domain/desire.md), and a measurement name is the one place the rename costs more
             #  than it buys: it is an external surface with history behind it, so renaming
             #  splits every series at the cutover and leaves a dashboard reading half of one.
-            #  The word is wrong and the continuity is worth more.
-            rows.append(("agent_want", {"want": about}, {"urgency": float(judgment.urgency)}))
+            rows.append(("agent_want", {"want": about},
+                         {"unmet": float(not judgment.is_met),
+                          "answered": float(move is not None)}))
 
         #  HOW IT DECIDED, not just what it wants (#256). `pursued()` above has just re-planned
         #  every desire, so the trace holds this tick's verdicts — read from there rather than
@@ -455,12 +460,15 @@ class Deliberator:
             kept = remembered.applicable(self.agent, judgment.uri, self.agent.desires)
         if kept is not None:
             uri, steps, cost = kept
-            plan = Plan(REMEMBERED, tuple(steps), judgment.urgency, None, cost=cost)
+            #  NO BEFORE-MEASURE: nothing was searched, so there is no world to have scored.
+            #  It carried the WANT's urgency here, which was a different question wearing the
+            #  same field.
+            plan = Plan(REMEMBERED, tuple(steps), None, None, cost=cost)
             #  NO IMAGINARIUM AND NO WANT TO ASK ABOUT: nothing was searched, so the pass
             #  graph holds nothing to read. The trace records the plan and the verdict, which
             #  is the whole of what a remembered adoption has to say.
             trace.write(self.agent.beliefs, self.agent.id, judgment, plan,
-                        judgment.urgency, 0.0, (trace.UNJUDGED, None), surprise=surprise)
+                        0.0, 0.0, (trace.UNJUDGED, None), surprise=surprise)
             self._decided[judgment.uri] = (plan, uri)
             self.log.info("%s: remembered — %d step(s) whose precondition holds here",
                           _short(judgment.uri), len(steps))

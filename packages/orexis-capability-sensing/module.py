@@ -966,7 +966,7 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
         #  an import — at assembly a sensing-only grant must not load the deliberation
         #  layer; in any running agent it is already loaded.
         from .rows import ObservedWant
-        answer = self._measured(ObservedWant(uri="urn:asked", urgency=1.0,
+        answer = self._measured(ObservedWant(uri="urn:asked",
                                              observed_property=observed_property, value=value),
                                 value)
         return 1.0 if answer is None else answer

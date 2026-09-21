@@ -79,7 +79,7 @@ def test_the_goal_is_pursued_and_the_kernel_judges_it(monkeypatch):
     assert _goal(agent).state == "met", "a parcel standing where it is owed is delivered"
 
     agent = _driver(monkeypatch, "c0_0", "c0_0")
-    assert _goal(agent).state == "unmet" and _goal(agent).urgency == 1.0
+    assert _goal(agent).state == "unmet"
 
 
 def test_a_delivery_is_planned_and_it_is_the_short_way_round(monkeypatch):

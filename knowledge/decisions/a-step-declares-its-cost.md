@@ -47,8 +47,10 @@ figure of its own.
 ## The ranking: the sovereign's two-stage cut
 
 **Urgency is the DESIRE's term and cost is the ACTION's** — the sovereign's own sentence, and
-it assigns each number its bearer. Stage one: urgency picks WHICH want a pass serves —
-`pursuing`, hottest first, unchanged. Stage two, inside the pass:
+it assigns each number its bearer. Stage one was urgency picking WHICH want a pass serves,
+`pursuing` hottest first — and that stage is GONE: `Deliberator.pursued` plans for every want
+it is handed, so the order decided which was searched first and nothing else. What is left is
+stage two, inside the pass:
 
 - **among plans that ACHIEVE the want, cost alone decides.** Achievement is absolute — the
   desire's demand — so achievers are collected rather than returned on sight, and the

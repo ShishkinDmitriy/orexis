@@ -116,11 +116,11 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
     #  reading on it is in region, met, and wants nothing.
     write_reading(gardener, 0.05, MOIST, age_s=10_000)
     assert deliberator.propose_for(
-        ObservedWant(uri=stake_of(gardener, MOIST).uri, urgency=0.6, observed_property=MOIST,
+        ObservedWant(uri=stake_of(gardener, MOIST).uri, observed_property=MOIST,
                      value=0.05)) == DOSING
     write_reading(gardener, 0.30, MOIST, age_s=10_000)
     assert deliberator.propose_for(
-        ObservedWant(uri=stake_of(gardener, MOIST).uri, urgency=0.1, observed_property=MOIST,
+        ObservedWant(uri=stake_of(gardener, MOIST).uri, observed_property=MOIST,
                      value=0.25)) is None, \
         "above the aim, nothing — as ever"
     #  NOT SEEING is answered by the search like everything else, and it is a different WANT

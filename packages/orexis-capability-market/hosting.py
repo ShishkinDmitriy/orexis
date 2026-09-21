@@ -322,15 +322,14 @@ SELECT (SUM(?a) AS ?owed) WHERE {{
 
         A call is a want somebody else sourced, like a debt (owing contributes those); it is
         met exactly when a round stands on its venue, and since a round that opens answers the
-        call by retracting it, every call I hold is unmet. Maximal urgency, and deliberately:
-        a call has no clock running it down, and a host with a stake of its own (the dealer's
-        barrel) ranks its downstream's trouble beside it rather than below it — the strategic
-        question of whether it would RATHER sell is the strategic-supplier seam, not a number
-        invented here.
+        call by retracting it, every call I hold is unmet. It arrived at maximal urgency once, which
+        was the honest number for a want with no clock running it down — and that is the reason
+        the field is gone: a constant every call shares ranks nothing. Whether this host would
+        RATHER sell is the strategic-supplier seam, not a number invented here.
         """
         #  AND THE DEBTS, delegated: the ledger is no longer a module in its own right, so
         #  what it contributed to the choir arrives through the module that holds it.
-        return ([Want(uri=c.uri, urgency=1.0) for c in calls.calls_of(self.agent)]
+        return ([Want(uri=c.uri) for c in calls.calls_of(self.agent)]
                 + self.ledger.desires(now))
 
     def series(self) -> list[tuple[str, dict, dict]]:

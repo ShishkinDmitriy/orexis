@@ -92,8 +92,8 @@ def test_a_crossing_derives_a_want_met_at_that_instant(monkeypatch):
     assert child.desire == root.uri and child.holds_at is not None
     assert abs((child.holds_at - _crossing_of(agent)).total_seconds()) < 1.0
     assert child.state == "unmet", "the newest prediction still says the reading crosses by the instant"
-    assert child.urgency == root.urgency > 0.0, \
-        "its room is the stretch to the instant, barely run — never less than the root's own measure"
+    assert child.desire == root.uri, \
+        "its room is the stretch to the instant, and it is presented under the root it came from"
     said = {r["p"]: r["o"] for r in bindings(agent.desires.query(
         f"SELECT ?p ?o WHERE {{ <{child.uri}> ?p ?o }}"))}
     #  THE INSTANT IS WHAT SAYS IT, and it is all that ever did: the want carried

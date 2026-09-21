@@ -63,7 +63,7 @@ they mean.
 
 # Seams left open
 
-- **A stake's urgency trusts a number that may be cold.** The freshness want outranks it while
-  it is, and the search answers the look first; a reader of the stake's urgency alone sees the
-  last number's verdict. That is the split the ruling asked for, stated so nobody rediscovers
-  it as a bug.
+- **A stake's verdict trusts a number that may be cold.** The freshness want used to outrank
+  it while it is — a want-level urgency that is now gone, so nothing orders the two and both
+  are planned for; a reader of the stake's state alone still sees the last number's verdict.
+  That is the split the ruling asked for, stated so nobody rediscovers it as a bug.

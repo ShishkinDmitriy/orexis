@@ -56,8 +56,8 @@ def test_a_root_is_never_handed_to_the_search_and_what_is_pursued_is_derived_und
 
     child = _stake(agent)
     assert child.uri == root.uri + ".pursued" and child.desire == root.uri
-    assert child.urgency == root.urgency and child.observed_property == MOISTURE, \
-        "the derived want is presented with the root's own row: its measure, its property"
+    assert child.observed_property == MOISTURE, \
+        "the derived want is presented with the root's own row"
     assert all(d.uri != root.uri for d in agent.pursuing()), \
         "while a derived want stands, the root is presented as it and never beside it"
     assert set(agent.deliberator._planners) == {child.uri}, \

@@ -93,15 +93,14 @@ def test_a_reading_past_the_horizon_is_stale_where_a_fresh_one_is_met(monkeypatc
         mine = [g for g in sensing_of(agent).desires() if g.observed_property == MOISTURE]
         return (next(g for g in mine if g.is_epistemic), next(g for g in mine if not g.is_epistemic))
     look, stake = wants()
-    assert look.state == "met" and look.urgency == 0.0
+    assert look.state == "met"
     assert stake.state == "met"
 
     _age_the_reading(st)
     look, stake = wants()
-    assert look.state == "stale"
-    assert look.urgency == 1.0, \
-        "not knowing is not knowing — scaling it by a distance the agent no longer trusts " \
-        "would rank it by something it does not know"
+    assert look.state == "stale", \
+        "not knowing is not knowing — the state says which kind of not-current this is, and " \
+        "a reading the agent no longer trusts is not evidence"
     assert look.value == 0.55, "the last reading is still carried, and still shown"
     assert stake.state == "met", "the stake judges the number it has; staleness is sensing's"
 
@@ -186,15 +185,14 @@ def test_a_horizon_the_agent_cannot_state_leaves_the_want_unmet_not_met(monkeypa
     sensing = next(m for m in agent.modules if hasattr(m, "watch_staleness"))
     fresh = lambda: next(d for d in agent.pursuing()
                          if d.is_epistemic and d.observed_property == MOISTURE)
-    assert fresh().urgency == 0.0, "a reading just taken is evidence"
+    assert fresh().state == "met", "a reading just taken is evidence"
 
     monkeypatch.setattr(type(sensing), "stale_after_s", lambda *a, **k: 0)
     for sensor in sensing.sensors:
         sensing.watch_staleness(sensor.subject, sensor.observes)
 
-    assert fresh().urgency == 1.0, \
-        "a sensor whose rhythm the agent cannot state is not one whose readings can be shown "
-    assert fresh().state == "stale"
+    assert fresh().state == "stale", \
+        "a sensor whose rhythm the agent cannot state is not one whose readings can be shown"
 
 
 def test_a_want_about_knowing_fires_on_a_world_that_has_read_nothing(monkeypatch):
@@ -219,8 +217,8 @@ def test_a_want_about_knowing_fires_on_a_world_that_has_read_nothing(monkeypatch
         "nothing of mine has read this, so nothing is known to be current — a want that " \
         "reads MET here is a want that can never be short"
     assert next(d for d in agent.pursuing()
-                if d.is_epistemic and d.observed_property == MOISTURE).urgency == 1.0, \
-        "and the measure fails the same way round, or the search would rank it as content"
+                if d.is_epistemic and d.observed_property == MOISTURE).state == "unmeasured", \
+        "and the state fails the same way round, or the search would read it as content"
 
 
 def test_a_property_with_no_sensor_holds_no_freshness_want(monkeypatch):
@@ -273,7 +271,7 @@ def test_an_instrument_pointed_at_something_i_do_not_act_for_is_still_wanted_cur
     keeper = next(m for m in gardener.modules if m.name == "intention")
     butt = next(d for d in gardener.pursuing()
                 if d.is_epistemic and d.observed_property.endswith("StoredLitres"))
-    assert butt.urgency == 1.0, "the butt is polled, so its level is wanted current"
+    assert butt.state != "met", "the butt is polled, so its level is wanted current"
 
     keeper.agent.deliberator.deliberate_on_gaps()
 

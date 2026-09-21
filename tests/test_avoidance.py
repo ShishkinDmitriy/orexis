@@ -80,12 +80,12 @@ def test_a_ratified_avoidance_is_pursued_with_no_capability_in_the_room(tmp_path
         "no capability composes for pure ratified data — that is the ruling, held"
 
     held = _avoidance_row(agent)
-    assert held.urgency == 0.0 and held.state == "met", \
+    assert held.state == "met", \
         "the marker is absent, so the want is met and asks for no attention"
 
     st.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ {MARKER} }} }}")
     entered = _avoidance_row(agent)
-    assert entered.urgency == 1.0 and entered.state == "unmet", \
+    assert entered.state == "unmet", \
         "the marker standing is the pattern's own verdict"
 
 
@@ -147,7 +147,7 @@ def test_an_avoided_state_nothing_can_exit_stays_hot_and_says_so(tmp_path, monke
     plan = Planner(agent, agent.me).plan(_avoidance_row(agent))
     assert plan.outcome == "no candidate" and not plan.steps, \
         "no lever writes what the aversion reads — said as what it is"
-    assert _avoidance_row(agent).urgency == 1.0, "and the want stays hot, never shrugged off"
+    assert _avoidance_row(agent).state == "unmet", "and the want stays unmet, never shrugged off"
 
 
 def test_the_shape_form_agrees_with_the_judge(tmp_path, monkeypatch):
