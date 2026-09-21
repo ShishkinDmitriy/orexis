@@ -157,10 +157,16 @@ class Deliberator:
             steps = self.agent.keeper.walked(intention) if self.agent.keeper is not None else []
             if steps:
                 remembered.lift(self.agent, want, steps, decided[0].cost)
-        #  THE WANT DERIVED UNDER A ROOT IS WITHDRAWN WHEN ITS PLAN FINISHES (#618): a root
-        #  still unmet derives it again on the next pass, through a fresh want.
-        if pursuit.desire_of(self.agent, want) is not None:
-            pursuit.withdraw(self.agent, want)
+        #  A WANT IS ONE-SHOT AND ITS PLAN FINISHING IS WHAT ENDS IT. A desire lives forever
+        #  and mints wants; a want is the occasion, and when the plan that served it is walked
+        #  to its end there is nothing left of it. A desire still unmet mints another on the
+        #  next pass, through a fresh want; a world that ratified one has said its thing, and
+        #  the files re-ratify it at boot.
+        #
+        #  IT WAS GUARDED ON `desire_of(...) is not None` — withdrawn only where the derivation
+        #  had minted it — so a want a WORLD authored was never withdrawn at all, and the
+        #  kernel had to judge it a second time at read time to make it look met.
+        pursuit.withdraw(self.agent, want)
 
     @contributes(PLAN_FAILED)
     def on_plan_failed(self, intention: str, action: str, want: str) -> None:
@@ -318,7 +324,9 @@ class Deliberator:
             return None
         judgment = handed
         keeper = getattr(self.agent, "keeper", None)
-        if (judgment.desire is not None and judgment.is_met
+        #  MET WITH NOTHING STANDING FOR IT: gone, whoever wrote it. The same guard as above
+        #  and the same reason it is gone — an authored want that read met sat there forever.
+        if (judgment.is_met
                 and (keeper is None or not keeper.standing(want=judgment.uri))):
             pursuit.withdraw(self.agent, judgment.uri)
             return None

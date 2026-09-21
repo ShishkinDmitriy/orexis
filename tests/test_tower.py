@@ -101,8 +101,10 @@ def test_seven_moves_are_planned_once_above_and_each_is_planned_as_drives_below(
         drives.append(inner_steps)
         moves_kept += 1
     assert keeper.standing() == [], "every Move kept its promise and the plan finished"
-    goal = next(g for g in agent.considering() if g.uri == WANT)
-    assert goal.state == "met", "the tower stands on peg C — in hanoi's words, written by the bridge"
+    #  THE WANT IS ONE-SHOT: its plan finished, so it is gone. That absence is how the agent
+    #  says the tower stands on peg C — in hanoi's words, written by the bridge.
+    assert not any(g.uri == WANT for g in agent.considering()), \
+        "the plan finished, so the want it served is withdrawn"
     assert searches.count(WANT) == 1 and len([s for s in searches if s.startswith(PROMISE)]) == 7, \
         "one search above, one below per Move"
     assert all(2 <= len(d) <= 12 for d in drives), drives

@@ -33,7 +33,8 @@ import logging
 from dataclasses import replace
 from datetime import datetime
 
-from .derive_wants import derive_wants, forget_want
+from .derive_wants import derive_wants
+from .forget_wants import forget_want
 from .plan import SATISFIED
 from .desires import holds_desire
 from .wants import find_want
@@ -201,7 +202,7 @@ def withdraw(agent, child: str) -> None:
     announces nothing, so the caller that moved something says the projection is stale. It was
     an `on_deleted` listener the container registered, which fired for this one caller and for
     nothing else."""
-    forget_want(agent.beliefs.engine, agent.id, child)
+    forget_want(agent.beliefs.engine, child)
     agent.desires.rebuild()
     log.info("%s withdrawn", child.rsplit("#", 1)[-1])
 
@@ -231,6 +232,15 @@ def pursue(agent, judgment, surprise: tuple | None = None) -> str | None:
     if keeper is not None and _promised(agent, judgment.uri) and \
             (plan is None or plan.outcome != SATISFIED):
         keeper.refuse_below(judgment.uri, plan.outcome if plan is not None else "nothing to do")
+        return None
+    #  ALREADY DONE IS DONE. A search that reaches the want's met state in NO steps has run
+    #  the met-test and found nothing to do — which is the one judging pass, asked where it
+    #  decides something. The want is one-shot, so that is the end of it: a desire still unmet
+    #  mints another next pass, and a world that ratified one re-ratifies from its files at
+    #  boot. Without this a want met before anything was planned for it sat in the store
+    #  forever and was searched every pass, since only a FINISHED plan withdrew one.
+    if plan is not None and plan.outcome == SATISFIED and not plan.steps:
+        withdraw(agent, judgment.uri)
         return None
     if plan is None or not plan.steps:
         return None
