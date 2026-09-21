@@ -94,7 +94,7 @@ and called it repaired; the met-test sees the violation and does not. The fixtur
 on the measure's leniency, and every real effect declares `orexis:retracts` for exactly this
 reason. One judgment path is a stricter judgment path.
 
-## Two second-order fixes fell out
+## Three second-order faults fell out, and the third is an issue
 
 - **`gaps_of` read the aim through the desire PROJECTION**, so a re-pick did not move the diff
   until a rebuild. The declared measure read `$picks` live, which is why nothing had noticed.
@@ -102,6 +102,9 @@ reason. One judgment path is a stricter judgment path.
 - **Freshness read a horizon the agent recomputed.** Sensing already MARKS a reading
   `sensing:staleSince` when its deadline lands, and *every reader asks the triple* — so the
   want's state reads the mark rather than doing the arithmetic a second way.
+- **And the planner's met-tests come off the projection**, which is the same root cause a
+  third time and is filed rather than fixed here (see the seams). All three were invisible
+  while a measure that read the belief base live answered first.
 
 # The third was never about a want
 
@@ -165,6 +168,13 @@ debt — a capability that asks for a derivation is not minting.
   a society has more wants than it can serve at once, with the plans in hand to compare.
 - **The trend bound is gone and its case is not.** #133's hazard was real: a sleep granted on
   the present can begin moments before a value crosses. Nothing watches for that now.
+- **The planner compiles a want's met-test from the desire PROJECTION**, so a want minted
+  without a rebuild falls through `_met_in` to the row's live state, which is the same in every
+  imagined world. The measure read the belief base live and was asked first, so it answered
+  for those worlds and the gap was never reached; with one judgment path it is load-bearing.
+  Every production writer already rebuilds, which is what makes this a debt rather than a
+  defect — [#766](https://github.com/ShishkinDmitriy/orexis/issues/766), and the fix is the
+  one this area keeps taking: read the store, not the projection.
 - **`deliberation:wouldReach` keeps a decimal range** holding two values. Narrowing it to a
   boolean is a vocabulary change nothing needs yet, and the range is the ends of the scale it
   used to span.
