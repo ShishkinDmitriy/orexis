@@ -16,6 +16,7 @@ from orexis_agent_deliberation import pursuit, trace
 from orexis_agent_deliberation.derive_wants import derive_wants
 from orexis_agent_progression.ontology import REPREDICT
 from test_greenhouse import AIR, COMFORT, HEATING, VENTING, _comfort, _grower, _outside_as_periods
+from conftest import weighed
 
 HOURS = 3600.0
 
@@ -71,8 +72,8 @@ def test_a_cold_night_foreseen_derives_a_want_the_heater_serves_and_the_vent_can
     child = _pursued(agent)
     assert child.desire == COMFORT and child.holds_at is not None and child.state == "unmet"
     assert child.read_at is not None, "a kernel-lifted want takes the instant of the reading the crossing came from"
-    weighed = agent.deliberator._planners[child.uri]._weighed
-    verdicts = {str(w.row.action).rsplit("#", 1)[-1]: w.verdict for w in weighed}
+    rows = weighed(agent.deliberator._planners[child.uri])
+    verdicts = {str(r["action"]).rsplit("#", 1)[-1]: r["verdict"] for r in rows}
     assert verdicts.get("Heating") == trace.MET
     assert "Venting" in verdicts and verdicts["Venting"] != trace.MET, \
         "the vent is weighed at the instant and, onto the cold, does not meet the want"

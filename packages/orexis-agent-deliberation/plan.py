@@ -18,7 +18,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import NamedTuple
 
 #  Why a pass ended, and they are not interchangeable. The two failures in particular: NOTHING
 #  proposed anything (equip me), against EXHAUSTED, where levers exist and no bounded sequence
@@ -32,23 +31,6 @@ REFUSED = "refused"          # the world it would reach is one the society would
 REMEMBERED = "remembered"    # a plan that worked here before, adopted without a search (#469)
 
 
-
-class Weighed(NamedTuple):
-    """One candidate the search weighed, and what it made of it.
-
-    A NAMED shape rather than a tuple, because it grew: it was four fields, then five where a
-    remembered plan's precondition was the finding, then six when a candidate came to be named
-    from the world it was weighed IN (#747). Each widening broke every positional unpack that
-    had not been widened with it, silently in a reader that used `entry[:4]` and loudly in one
-    that did not.
-    """
-
-    depth: int
-    row: object                 # the filled action — a `Step`, not yet picked
-    urgency: float | None       # what the want would read in the world it reached, where it reached one
-    verdict: str                # why it was taken or passed over, in `trace`'s words
-    missing: object = None      # the fact a remembered plan's precondition wanted (#551)
-    world: str = ""             # the world it was weighed IN, which is what names it
 
 @dataclass(frozen=True)
 class Plan:

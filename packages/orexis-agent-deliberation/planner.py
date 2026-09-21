@@ -45,12 +45,12 @@ from rdflib import RDF, URIRef
 
 from . import effects, relevance, signature, trace
 from .beliefs import Picks
-from orexis_agent_progression.act import Step
+from orexis_agent_progression.act import BOUND, Step, binding_from, bound_clause
 from orexis_agent_deliberation.want import Want
 
 
 from .steps import Steps
-from .imaginarium import Imaginarium, candidate_of
+from .imaginarium import Imaginarium, PASS_GRAPH, candidate_of
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import NAMESPACES, Raw, bind, bindings
 from .ontology import DELIBERATION
@@ -59,7 +59,7 @@ from orexis_agent_deliberation.conformance import graph_from, held_shapes, legal
 from orexis_agent_deliberation.judge import crossed_text
 from orexis_agent_progression import clock
 from .cone import _Compiled, _Node
-from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED, Weighed,
+from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED,
                    REMEMBERED, SATISFIED)
 from .trace import SURPRISE_EXOGENOUS, SURPRISE_WITHHELD
 from orexis_agent_progression.ontology import PUBLIC
@@ -84,7 +84,6 @@ class _Remembered:
 
 #  WHERE A PASS SAYS WHAT IT KNOWS about the worlds it made — in the imaginarium, beside them,
 #  and gone when the pass is. Named once here because this is what creates it.
-PASS_GRAPH = GRAPH_PREFIX + "pass"
 RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 XSD = "http://www.w3.org/2001/XMLSchema#"
 _TRUE = ox.Literal("true", datatype=ox.NamedNode(XSD + "boolean"))
@@ -94,16 +93,41 @@ _FALSE = ox.Literal("false", datatype=ox.NamedNode(XSD + "boolean"))
 _OF_THE_WORLD = frozenset({"meets", "fails", "lawful"})
 
 
-def _weighing(world: str, want: str) -> str:
-    """The node where what a pass worked out about one world FOR ONE WANT is written.
+def _candidate_quads(world: str, row, graph: str) -> list:
+    """A candidate's own facts: what it would take, what it is filled with, and the world it
+    would be taken IN. True of it whoever is asking, so nothing here names a want.
 
-    A world's own facts — where it came from, what the path spent, when it is — are true of it
+    Written by BOTH paths, because a candidate exists whether or not it forked: the fork path
+    writes it beside the world it reached, and the verdict path writes it for the ones that
+    reached nothing — irrelevant, refused, too dear, out of budget. Adding the same quad twice
+    is a no-op in a quad store, so the two need not know about each other.
+    """
+    cand = ox.NamedNode(candidate_of(world, row))
+    g = ox.NamedNode(graph)
+    out = [ox.Quad(cand, ox.NamedNode(RDF_TYPE), ox.NamedNode(DELIBERATION + "Candidate"), g),
+           ox.Quad(cand, ox.NamedNode(DELIBERATION + "from"), ox.NamedNode(world), g),
+           ox.Quad(cand, ox.NamedNode(DELIBERATION + "wouldTake"), ox.NamedNode(row.action), g)]
+    out += [ox.Quad(cand, ox.NamedNode(parameter), ox.NamedNode(value), g)
+            for parameter, value in row.binding]
+    return out
+
+def _weighing(about: str, want: str) -> str:
+    """The node where what a pass worked out about one thing FOR ONE WANT is written.
+
+    A WORLD'S own facts — where it came from, what the path spent, when it is — are true of it
     whoever is asking. How far a want still is there, what its measure reads, whether the
     search has opened it: those are true of the world AND the want together, and one
     imaginarium holds the worlds of every want in a scope. So they hang off a node naming
     both, rather than off the world as if it had only one asker.
+
+    A CANDIDATE is weighed the same way, and for the same reason. A verdict reads like a fact
+    about the candidate and is not: `met` is met FOR THIS WANT, `irrelevant` is touches nothing
+    THIS WANT reads, `costly` is against a bound this want's estimate set. Only `refused` — the
+    level beneath could not keep the promise — and `unsimulated` are the candidate's own. Put
+    on the candidate, they would be right for whichever want wrote them last, which is exactly
+    what `progression:predictedUrgency` was doing on a step until #748.
     """
-    return f"{world}.for.{want.rsplit('#', 1)[-1].rsplit('/', 1)[-1]}"
+    return f"{about}.for.{want.rsplit('#', 1)[-1].rsplit('/', 1)[-1]}"
 
 
 def _signature_of(node) -> str:
@@ -598,8 +622,8 @@ class Planner:
         #  A CANDIDATE IS NAMED FROM THE WORLD IT LEAVES (#747), so every entry carries one —
         #  including the ones that reached nothing, which is the half the pass graph could not
         #  name while a candidate was named after its child.
-        self._weighed = [Weighed(0, row, None, trace.IRRELEVANT, None, here.graph)
-                         for row in self._passed_over]
+        for row in self._passed_over:
+            self._weigh(row, here.graph, 0, trace.IRRELEVANT)
         #  THE OPEN LIST: on a fresh pass the root alone; on a resumed one the kept frontier
         #  under the new root, re-keyed — a priority reads the want's state, so it is minted
         #  here rather than at the re-root.
@@ -631,12 +655,12 @@ class Planner:
                     #  steps before the one that would have fallen off the menu.
                     absent = self._absent(kept)
                     if absent:
-                        self._weighed.append(Weighed(0, kept, None, trace.INAPPLICABLE, absent[0], here.graph))
+                        self._weigh(kept, here.graph, 0, trace.INAPPLICABLE, missing=absent[0])
                         continue
                     step, spent = self._walk(here, kept, judgment, self._bound, self.budget - forked)
                     forked += spent
                     if isinstance(step, str):
-                        self._weighed.append(Weighed(0, kept, None, step, None, here.graph))
+                        self._weigh(kept, here.graph, 0, step)
                         continue
                     ended = self._settle(kept, step, 0, judgment, met_now, room)
                     if ended is not None:
@@ -647,27 +671,27 @@ class Planner:
                     #  REFUSED BELOW (#533): the level beneath found no way to keep this very
                     #  move's promise within the patience. Passed over, recorded, and tried
                     #  again when the patience has passed — the world may have changed.
-                    self._weighed.append(Weighed(depth, row, None, trace.REFUSED, None, node.graph))
+                    self._weigh(row, node.graph, depth, trace.REFUSED)
                     continue
                 if self._compiled.relevant is not None and row.action not in self._compiled.relevant:
                     #  A lever that touches nothing this want reads, by its own effect and
                     #  by nothing it could enable (#488). Recorded, never simulated, and not
                     #  a candidate seen: a menu of such rows is NOTHING — equip me — which is
                     #  the honest finding when no lever points at the want.
-                    self._weighed.append(Weighed(depth, row, None, trace.IRRELEVANT, None, node.graph))
+                    self._weigh(row, node.graph, depth, trace.IRRELEVANT)
                     continue
                 saw_candidate = True
                 if forked >= self.budget:
-                    self._weighed.append(Weighed(depth, row, None, trace.SPENT, None, node.graph))
+                    self._weigh(row, node.graph, depth, trace.SPENT)
                     node.withheld.append((row, trace.SPENT))
                     continue
                 step = self._step_from(node, row, judgment, self._bound)
                 if step is TOO_DEAR:
-                    self._weighed.append(Weighed(depth, row, None, trace.COSTLY, None, node.graph))
+                    self._weigh(row, node.graph, depth, trace.COSTLY)
                     node.withheld.append((row, trace.COSTLY))
                     continue
                 if step is None:
-                    self._weighed.append(Weighed(depth, row, None, trace.UNSIMULATED, None, node.graph))
+                    self._weigh(row, node.graph, depth, trace.UNSIMULATED)
                     continue
                 forked += 1              # a world exists now, whatever becomes of it below
                 ended = self._settle(row, step, depth, judgment, met_now, room)
@@ -760,7 +784,7 @@ class Planner:
             #  question was never put, which is not the same as the answer being no.
             self._about(step, "fails", ox.NamedNode(judgment.uri))
         if step.met:
-            self._weighed.append(Weighed(depth, row, step.urgency, trace.MET, None, step.parent.graph))
+            self._weigh(row, step.parent.graph, depth, trace.MET, step.urgency)
             if met_now:
                 #  Already met and still steering: the first novel step that
                 #  keeps it met stays the answer — re-picking among keepers by
@@ -776,12 +800,11 @@ class Planner:
             self._bound = step.cost if self._bound is None else min(self._bound, step.cost)
             return None
         if not novel:
-            self._weighed.append(Weighed(depth, row, step.urgency, trace.SEEN, None, step.parent.graph))
+            self._weigh(row, step.parent.graph, depth, trace.SEEN, step.urgency)
             return None
-        self._weighed.append(Weighed(
-            depth, row, step.urgency,
-            trace.BETTER if step.urgency < self._root.urgency else trace.WORSE,
-            None, step.parent.graph))
+        self._weigh(row, step.parent.graph, depth,
+                    trace.BETTER if step.urgency < self._root.urgency else trace.WORSE,
+                    step.urgency)
         self._open_row(step, True)
         return None
 
@@ -792,7 +815,7 @@ class Planner:
         step.verdict = verdict
         self._keep(step)
         self._about(step, "verdict", ox.Literal(verdict))
-        self._weighed.append(Weighed(depth, row, step.urgency, verdict, None, step.parent.graph))
+        self._weigh(row, step.parent.graph, depth, verdict, step.urgency)
         return None
 
     # --- the cone across passes (#553) ---------------------------------------------------------
@@ -1121,11 +1144,11 @@ class Planner:
         if (judgment.holds_at is not None and plan.steps and self._root is not None
                 and self._root.landing > 0):
             plan = replace(plan, placed_at=self._clock + timedelta(seconds=self._root.landing))
-        trace.write(self.agent.beliefs, self.agent.id, judgment, plan,
-                    getattr(self, "_weighed", []), stands_at,
+        trace.write(self.agent.beliefs, self.agent.id, judgment, plan, stands_at,
                     time.monotonic() - self._started, self._judged(judgment),
                     kept=getattr(self, "_kept_worlds", 0),
-                    surprise=getattr(self, "_surprise", None))
+                    surprise=getattr(self, "_surprise", None),
+                    imaginarium=self.imaginarium, want=self._want)
         #  THE PASS IS OVER: every imagined graph is dropped (#487, #553), the nodes stay.
         for node in getattr(self, "_nodes", ()):
             self._release(node)
@@ -1757,11 +1780,51 @@ class Planner:
         rows = bindings(self.imaginarium.query_over(f"""
 SELECT ?w WHERE {{ ?w a deliberation:PossibleWorld ;
     deliberation:spent ?spent ; deliberation:atDepth ?depth ; deliberation:minted ?minted ;
-    deliberation:weighed ?x .
+    ^deliberation:weighs ?x .
   ?x deliberation:forWant <{self._want}> ; deliberation:open true ;
      deliberation:remaining ?left ; deliberation:wouldReach ?urgency . }}
 ORDER BY {order} LIMIT 1""", PASS_GRAPH))
         return self._by_name.get(rows[0]["w"]) if rows else None
+
+    def _weigh(self, row, world: str, depth: int, verdict: str,
+               urgency: float | None = None, missing=None) -> None:
+        """One candidate weighed, written where it is decided.
+
+        IT WAS A PYTHON LIST — `_weighed`, appended to at twelve sites and handed to the trace
+        at the end of the pass. Every field of it reached the store eventually, by a second
+        writer at a later time, and the candidates that never forked reached only the trace:
+        the pass graph had no node for them, because a candidate was named after the world it
+        reached and those reach none. Both halves are gone (#747 gave them names, this gives
+        them rows).
+
+        THE VERDICT IS THE WEIGHING'S, not the candidate's, and `_weighing` says why.
+        """
+        if self.imaginarium is None or self._want is None:
+            return
+        weighing = ox.NamedNode(_weighing(candidate_of(world, row), self._want))
+        g = ox.NamedNode(PASS_GRAPH)
+        out = _candidate_quads(world, row, PASS_GRAPH)
+        out += [ox.Quad(weighing, ox.NamedNode(RDF_TYPE),
+                        ox.NamedNode(DELIBERATION + "Weighing"), g),
+                ox.Quad(weighing, ox.NamedNode(DELIBERATION + "forWant"),
+                        ox.NamedNode(self._want), g),
+                ox.Quad(weighing, ox.NamedNode(DELIBERATION + "weighs"),
+                        ox.NamedNode(candidate_of(world, row)), g),
+                ox.Quad(weighing, ox.NamedNode(DELIBERATION + "atDepth"),
+                        ox.Literal(str(depth), datatype=ox.NamedNode(XSD + "integer")), g),
+                ox.Quad(weighing, ox.NamedNode(DELIBERATION + "verdict"),
+                        ox.Literal(verdict), g)]
+        if urgency is not None:
+            out.append(ox.Quad(weighing, ox.NamedNode(DELIBERATION + "wouldReach"),
+                               ox.Literal(f"{urgency:.6f}",
+                                          datatype=ox.NamedNode(XSD + "decimal")), g))
+        #  WHAT WAS MISSING, where the verdict is that a remembered plan's precondition does
+        #  not hold (#551): the fact, as the signature states it, so a reader is told which
+        #  fact and not only that one was.
+        if missing is not None:
+            out.append(ox.Quad(weighing, ox.NamedNode(DELIBERATION + "missing"),
+                               ox.Literal(repr(missing)), g))
+        self.imaginarium.note(out)
 
     def _keep(self, node) -> None:
         """A forked world becomes a NODE of the cone — and says so in the store.
@@ -1836,7 +1899,7 @@ ORDER BY {order} LIMIT 1""", PASS_GRAPH))
                q(me, D + "takes", dec(node.landing)),
                q(me, D + "atDepth", ox.Literal(str(len(node.taken)),
                                                datatype=ox.NamedNode(XSD + "integer"))),
-               q(me, D + "weighed", ox.NamedNode(_weighing(node.graph, self._want))),
+               q(ox.NamedNode(_weighing(node.graph, self._want)), D + "weighs", me),
                #  WHAT IS TRUE OF THIS WORLD AND THIS WANT TOGETHER, on a node naming both.
                q(ox.NamedNode(_weighing(node.graph, self._want)), RDF_TYPE,
                  ox.NamedNode(D + "Weighing")),

@@ -27,6 +27,7 @@ from orexis_agent_deliberation.planner import Planner
 
 from orexis_capability_sensing.regions import ObservedWant
 from conftest import stake_of, build_agent, genesis_store, open_round_for, write_reading
+from conftest import weighed
 from orexis_agent_progression.ontology import PUBLIC
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
@@ -497,8 +498,8 @@ def test_two_paths_to_the_same_world_still_collide(monkeypatch):
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     planner.plan(desire)
 
-    looks = [(w.row.action, w.verdict) for w in planner._weighed
-             if w.row.action == OBSERVING]
+    looks = [(r["action"], r["verdict"]) for r in weighed(planner)
+             if r["action"] == OBSERVING]
     assert looks, "the gardener polls a probe, so looking is on its menu"
     assert {verdict for _, verdict in looks} == {trace.SEEN}, \
         "a look reaches the world it started in, whatever its node's graph is called"
@@ -537,7 +538,7 @@ def test_a_sensing_action_still_ends_a_plan_with_no_rule_of_its_own(monkeypatch)
 
     plan = planner.plan(desire)
 
-    looked = [w.verdict for w in planner._weighed if w.row.action == OBSERVING]
+    looked = [r["verdict"] for r in weighed(planner) if r["action"] == OBSERVING]
     assert looked == [trace.SEEN], \
         "a look with nothing to carry forward reached somewhere new — it must not"
     assert not any(step.action == OBSERVING for step in plan.steps[:-1]), \
@@ -584,8 +585,8 @@ def test_a_step_that_moves_something_else_is_not_mistaken_for_a_cycle(monkeypatc
                         else real_lands(store, action, when=when, **b))
     planner.plan(desire)
 
-    doses = {w.depth: w.verdict for w in planner._weighed
-             if w.row.action == DOSING}
+    doses = {r["depth"]: r["verdict"] for r in weighed(planner)
+             if r["action"] == DOSING}
     assert doses[0] != trace.SEEN, \
         "a step that adds a claim without moving the goal's number was discarded as a cycle"
     assert doses[1] == trace.SEEN, \

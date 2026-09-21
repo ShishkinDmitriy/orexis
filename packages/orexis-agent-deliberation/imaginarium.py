@@ -47,6 +47,12 @@ from orexis_agent_progression.store import catalogue_of, graphs_holding, render,
 #  a graph IRI — but in a store nothing else can open, which is what keeps `orexis:PossibleGraph`'s
 #  promise that nothing here survives anything.
 _POSSIBLE = GRAPH_PREFIX + "possible/"
+
+#  WHERE A PASS WRITES WHAT IT WORKED OUT — its worlds, its candidates and the weighings that
+#  say what each is worth to a want. Here rather than on the planner because it lives in THIS
+#  store, and because a reader that is not the planner — the trace — must name it without
+#  importing the planner that imports the trace.
+PASS_GRAPH = GRAPH_PREFIX + "pass"
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 

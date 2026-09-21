@@ -95,21 +95,21 @@ GRAPH :world {
   :air_warmth_of_fern ssn:isPropertyOf :air_of_fern .
   :fern :hasBloomingRange :fern_blooming .
   :fern :idealRange :fern_blooming .
-  :fern <http://www.w3.org/ns/ssn/systems/hasOperatingRange> :fern_operating .
-  :fern <http://www.w3.org/ns/ssn/systems/hasSurvivalRange> :fern_survival .
   :fern a water:Plant .
-  :fern_blooming <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 24 ; schema:minValue 18 ; ssn:forProperty water:AirTemperature ] .
-  :fern_blooming <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 45 ; schema:minValue 30 ; ssn:forProperty water:SoilMoisture ] .
-  :fern_blooming <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 70 ; schema:minValue 40 ; ssn:forProperty water:AirHumidity ] .
+  :fern ssn-system:hasOperatingRange :fern_operating .
+  :fern ssn-system:hasSurvivalRange :fern_survival .
   :fern_blooming a :BloomingRange .
-  :fern_operating <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 32 ; schema:minValue 12 ; ssn:forProperty water:AirTemperature ] .
-  :fern_operating <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 50 ; schema:minValue 15 ; ssn:forProperty water:SoilMoisture ] .
-  :fern_operating <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 85 ; schema:minValue 25 ; ssn:forProperty water:AirHumidity ] .
-  :fern_operating a <http://www.w3.org/ns/ssn/systems/OperatingRange> .
-  :fern_survival <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 40 ; schema:minValue 2 ; ssn:forProperty water:AirTemperature ] .
-  :fern_survival <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 60 ; schema:minValue 5 ; ssn:forProperty water:SoilMoisture ] .
-  :fern_survival <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 95 ; schema:minValue 10 ; ssn:forProperty water:AirHumidity ] .
-  :fern_survival a <http://www.w3.org/ns/ssn/systems/SurvivalRange> .
+  :fern_blooming ssn-system:inCondition [ schema:maxValue 24 ; schema:minValue 18 ; ssn:forProperty water:AirTemperature ] .
+  :fern_blooming ssn-system:inCondition [ schema:maxValue 45 ; schema:minValue 30 ; ssn:forProperty water:SoilMoisture ] .
+  :fern_blooming ssn-system:inCondition [ schema:maxValue 70 ; schema:minValue 40 ; ssn:forProperty water:AirHumidity ] .
+  :fern_operating a ssn-system:OperatingRange .
+  :fern_operating ssn-system:inCondition [ schema:maxValue 32 ; schema:minValue 12 ; ssn:forProperty water:AirTemperature ] .
+  :fern_operating ssn-system:inCondition [ schema:maxValue 50 ; schema:minValue 15 ; ssn:forProperty water:SoilMoisture ] .
+  :fern_operating ssn-system:inCondition [ schema:maxValue 85 ; schema:minValue 25 ; ssn:forProperty water:AirHumidity ] .
+  :fern_survival a ssn-system:SurvivalRange .
+  :fern_survival ssn-system:inCondition [ schema:maxValue 40 ; schema:minValue 2 ; ssn:forProperty water:AirTemperature ] .
+  :fern_survival ssn-system:inCondition [ schema:maxValue 60 ; schema:minValue 5 ; ssn:forProperty water:SoilMoisture ] .
+  :fern_survival ssn-system:inCondition [ schema:maxValue 95 ; schema:minValue 10 ; ssn:forProperty water:AirHumidity ] .
   :soil_moisture_of_fern a sosa:ObservableProperty .
   :soil_moisture_of_fern ssn:forProperty water:SoilMoisture .
   :soil_moisture_of_fern ssn:isPropertyOf :soil_of_fern .
