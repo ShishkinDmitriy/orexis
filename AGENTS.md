@@ -332,6 +332,32 @@ it is a record wearing a bullet.
   typed, the asserted graph said desire and held wants, and `orexis:DesireGraph`, retired as a
   modality class, returns as a content one, because a second spelling for a graph of desires
   would be the synonym the dictionary refuses.
+- **A content class may not say how a graph arrived, and the cost of one that did was a second
+  judging pass** — `orexis:AssertedDesireGraph` said its arrival in its name and
+  `deliberation:PursuedGraph` said nothing else at all, so no read could ask for *a graph of
+  wants* and mean both the derivation's and a world's; the kernel read its own and compiled and
+  judged the world's at read time, and `find_wants` alone answers for every want now.
+- **A graph is classified per kind it HOLDS, and a graph holding two kinds is two graphs** — one
+  asserted graph was a graph of desires AND a graph of wants because four worlds put different
+  content in it, which is a graph whose content no reader can predict; `graph/desire/asserted`
+  and `graph/want/asserted` have one content class each, and `test_modalities` stopped
+  exempting them from the rule it exists to state.
+- **A want is one-shot and carries where it has got to; a desire has no stages** — recognized,
+  planning, ready, pursued, done, failed, unreachable, each written by whoever DECIDES it and
+  never inferred, because computing each from its own corner is how one question comes to have
+  six answerers; a desire stands for the agent's life and is good or bad at the instant it is
+  asked about, computed and stored nowhere.
+- **A terminal state is an invariant, not an ordering rule** — the deliberator marked a want it
+  had already reached `Done` and answered with no plan, and the caller, seeing no plan, wrote
+  `Unreachable` over it, so hanoi solved its tower and reported it unreachable; nothing moves a
+  want out of `Done`, and neither writer has to know the other exists.
+- **Deciding a thing is finished and clearing it away are two acts** — every site that withdrew
+  a want was guarded on how the want had been WRITTEN, so a want a world authored was withdrawn
+  at none of them; `forget_wants` is garbage collection over whatever is `Done`, on the pass, as
+  the keeper's sweep already was for what ends by the clock (#645).
+- **Never count what a class answers for** — two tests asserted eight public graphs, which meant
+  "as many as there are today" and went red over a vocabulary change they were not about; what
+  they each meant was that the answer is not empty, and that a set is unchanged.
 - **A case is held to the whole store it leaves, never to a reading of it** — the derivation's
   cases compared five things per want where a want writes nineteen quads, so a label, a link,
   a period or an owner could be wrong with every case green; a snapshot compared whole catches
