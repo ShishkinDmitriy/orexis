@@ -81,6 +81,18 @@ SELECT DISTINCT ?g WHERE {
                VALUES ?kind { orexis:DesireGraph orexis:WantGraph } } }
 ORDER BY ?g"""
 
+#  ONE HELD NODE, its holder and whichever met-test it carries — over the graphs of desires
+#  AND of wants, because the three kinds that reach this are in different families: a desire
+#  the packages authored, a want the derivation minted, and a want a world RATIFIED directly,
+#  which has no desire above it and so is never minted at all.
+_HELD_Q = """
+SELECT ?holder ?met ?unmet WHERE {
+  GRAPH ?g { ?holder orexis:holds $node .
+             OPTIONAL { $node orexis:metWhen ?met }
+             OPTIONAL { $node orexis:unmetWhen ?unmet } }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
+               VALUES ?kind { orexis:DesireGraph orexis:WantGraph } } } LIMIT 1"""
+
 #  WHAT A WANT NARROWS ITS DESIRE TO: its own met-test, which is the desire's carved to the
 #  cluster the want was minted from and targeted at its instance.
 _WANTS_SHAPE_Q = """
@@ -197,6 +209,43 @@ def unmet_by(store: ox.Store, want: str, until: datetime) -> datetime | None:
         if _witnesses_at(store, select, holder, at, now):
             return at
     return None
+
+
+def unmet_now(store: ox.Store, node: str) -> bool | None:
+    """Does this node's OWN met-test read unmet at the present — None where it carries none.
+
+    THE QUESTION THE CONTAINER ASKS of every want it presents: the want was minted because
+    its desire read unmet, and a later reading may have moved the corridor so that its own
+    instance no longer does — a dose lifts one pot while the others stay dry. `unmet_by` is
+    the same question at a FORESEEN instant; this is it now.
+
+    COMPILED TO THE LAW, not to the report. `compiled` makes the select whose rows say WHICH
+    instance broke WHICH constraint — the grain the derivation mints at — and this wants a
+    boolean, so it takes the compiler that answers one: the same law the planner holds
+    candidates to, held to the report by parity (tests/test_violation.py).
+
+    ITS OWN, and the test is that the shape is not the node itself: a want minted before
+    wants carried one is judged as its root is, and says so by returning None.
+    """
+    from orexis_agent_progression.violation import unmet_select
+
+    rows = bindings(answer(store, bind(_HELD_Q, node=node)))
+    if not rows or rows[0].get("met") is None or rows[0]["met"] == node:
+        return None
+    holder, met = rows[0]["holder"], rows[0]["met"]
+    now = clock.now()
+    try:
+        select = unmet_select(shapes_in(store).cbd(rdflib.URIRef(met)), rdflib.URIRef(met))
+        return bool(_witnesses_at(store, select, holder, now, now))
+    except Exception as exc:                                        # noqa: BLE001
+        #  A MET-TEST THAT WILL NOT RUN says nothing rather than saying unmet: this answers
+        #  about a want whose ROOT has a verdict already, and the caller falls back to it.
+        #  Where nothing else has one — an avoided pattern the kernel lifts — the loud
+        #  direction is the other way, which is why `agent/pursuing.py` still judges those
+        #  itself: they are compiled from PUBLIC knowledge, where a package's shape lives,
+        #  and this reads the graphs of desires and wants, where a derived want's own does.
+        log.warning("%s: its own met-test would not run: %s", node.rsplit("#", 1)[-1], exc)
+        return None
 
 
 def shapes_in(store: ox.Store) -> rdflib.Graph:
