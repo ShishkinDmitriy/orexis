@@ -83,6 +83,20 @@ market:Acquiring
             $me market:hosts ?served ; actuation:hasActuator ?valve .
             ?buyer market:bidsIn ?served .
             ?valve actuation:drawsFrom ?subject .
+          } UNION {
+            #  AND A CALL IS THE OTHER WANT SOMEBODY ELSE SOURCED. A participant's LOW makes a
+            #  round wanted on a venue I host, and a round I cannot supply is no answer — so
+            #  the refill is named for the call's want exactly as it is for a debt's, and
+            #  "acquire upstream, then offer downstream" is found rather than narrated.
+            #
+            #  IT NEEDED NO CLAUSE while a call was a want this package LIFTED, carrying no
+            #  `orexis:about` at all: a want with nothing to join on reached every row. It is
+            #  an instance under a standing desire now, about the call, so the chain from the
+            #  call to the vessel has to be walked like the debt's above it.
+            VALUES (?want ?call) { $wants }
+            ?call market:calledOn ?served .
+            $me market:hosts ?served ; actuation:hasActuator ?valve .
+            ?valve actuation:drawsFrom ?subject .
           }
           $me orexis:actsFor ?subject .
           $me market:bidsIn ?venue .

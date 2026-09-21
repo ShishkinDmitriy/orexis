@@ -15,39 +15,18 @@ from datetime import datetime, timezone
 from orexis_agent_progression.ontology import OREXIS
 from orexis_agent_progression.store import bindings
 
-from .terms import CALL, CALLED_AT, CALLED_BY, CALLED_ON, HAS_ROUND, NS
+from .terms import CALL, CALLED_AT, CALLED_BY, CALLED_ON, NS
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import PUBLIC
 
 _XSD = "http://www.w3.org/2001/XMLSchema#"
 
 
-def _sparql_literal(text: str) -> str:
-    """One select as a SPARQL literal — long-quoted, since it spans lines and carries braces."""
-    assert '"""' not in text, "a select carrying a long quote cannot be written as one"
-    return '"""' + text + '"""'
-
 
 def calls_graph(agent_id: str) -> str:
     """This host's calls, as a readable name. A NAME IS FOR EYES: every reader asks the
     catalogue for `market:CallsGraph`, and this spelling is the writer's convention."""
     return f"{NS}calls/{agent_id}"
-
-
-#  THE CALL'S OWN MET-TEST, written beside it. Rows are the VIOLATION — this venue has no
-#  round — which is what `orexis:unmetWhen` means everywhere else. `$this` is bound to the
-#  asking agent and goes unread: a host holds calls only on venues it hosts, so the graph
-#  the select reads is already scoped to whose it is.
-#
-#  IT NAMES NO WORLD (#666): an unqualified pattern reads whatever the runner hands it, which
-#  is public knowledge, this agent's records and the world being judged — so a round that only
-#  a plan's Offer put there answers the call exactly as a standing one does. That is the whole
-#  reason a host can plan to open a round at all, and it used to be a UNION over two named
-#  graphs inside the measure the host answered the choir with.
-_UNMET = f"""SELECT ?venue WHERE {{
-  <%s> <{CALLED_ON}> ?venue .
-  FILTER NOT EXISTS {{ ?venue <{HAS_ROUND}> ?round }}
-}}"""
 
 
 @dataclass(frozen=True)
@@ -65,40 +44,53 @@ def uri_for(venue_uri: str) -> str:
 
 
 def call(agent, venue_uri: str, by: str, now: datetime | None = None) -> str:
-    """Write (or restate) the call on this venue, with its met-test. Returns its IRI."""
+    """Write (or restate) the call on this venue. Returns its IRI.
+
+    THE INSTANCE AND NOTHING ELSE, which is the ledger's shape: a host holds one standing
+    desire — *no unanswered calls*, `desires.ru` — and this writes the row that desire is
+    about. The want is the derivation's, minted per call in trouble, and this asks for one
+    (`derived`) so a LOW arriving is a want arriving rather than a want on the next tick.
+    A capability that asks for a derivation is not minting.
+
+    It carried a met-test of its OWN for one change (#765), because the host answered "is
+    this call met" through the choir with a measure and removing the measure took the answer
+    with it. A per-instance met-test is a desire per instance, which is the level this repo
+    drew and struck: the instance is the want's grain, not the desire's.
+    """
+    from orexis_agent_deliberation import pursuit
+
     uri = uri_for(venue_uri)
     graph = calls_graph(agent.id)
     at = (now or clock.now()).isoformat()
     agent.beliefs.classify(graph, f"{NS}CallsGraph", OREXIS + "Received", agent.me.uri)
     agent.beliefs.update(f"""
-DELETE {{ GRAPH <{graph}> {{ <{uri}> ?p ?o . <{uri}.unmet> ?q ?r }} }}
-WHERE  {{ GRAPH <{graph}> {{ <{uri}> ?p ?o . OPTIONAL {{ <{uri}.unmet> ?q ?r }} }} }} ;
+DELETE {{ GRAPH <{graph}> {{ <{uri}> ?p ?o }} }}
+WHERE  {{ GRAPH <{graph}> {{ <{uri}> ?p ?o }} }} ;
 INSERT DATA {{ GRAPH <{graph}> {{
   <{uri}> a <{CALL}> ;
     <{CALLED_ON}> <{venue_uri}> ;
     <{CALLED_BY}> "{by}" ;
-    <{CALLED_AT}> "{at}"^^<{_XSD}dateTime> ;
-    <{OREXIS}unmetWhen> <{uri}.unmet> .
-  <{uri}.unmet> <http://www.w3.org/ns/shacl#select> {_sparql_literal(_UNMET % uri)} ;
-    <http://www.w3.org/ns/shacl#prefixes> <http://example.org/orexis#> .
+    <{CALLED_AT}> "{at}"^^<{_XSD}dateTime> .
 }} }}""")
-    #  AND ASK FOR THE PROJECTION, as the ledger does when it writes a debt: the desire
-    #  modality is a VIEW of these graphs, and the planner compiles its shapes from that view,
-    #  so a call written after boot is invisible to a search until the view is rebuilt — its
-    #  met-test with it, which reads unmet in every world including the one a round answers.
-    #  A capability that asks for a rebuild is not minting.
-    agent.desires.rebuild()
+    pursuit.derived(agent)
     return uri
 
 
 def answer(agent, venue_uri: str) -> None:
-    """A round opened on this venue: the call is answered and the row goes, met-test with it."""
+    """A round opened on this venue: the call is answered and the row goes.
+
+    And the want with it, by the derivation rather than by hand: a want exists because its
+    desire read unmet, so the same rows withdraw it — the call is gone, the standing desire
+    reads met, and `derived` takes the want down.
+    """
+    from orexis_agent_deliberation import pursuit
+
     uri = uri_for(venue_uri)
     graph = calls_graph(agent.id)
     agent.beliefs.update(f"""
-DELETE {{ GRAPH <{graph}> {{ <{uri}> ?p ?o . <{uri}.unmet> ?q ?r }} }}
-WHERE  {{ GRAPH <{graph}> {{ <{uri}> ?p ?o . OPTIONAL {{ <{uri}.unmet> ?q ?r }} }} }}""")
-    agent.desires.rebuild()      # the call is answered, and the view must stop offering it
+DELETE {{ GRAPH <{graph}> {{ <{uri}> ?p ?o }} }}
+WHERE  {{ GRAPH <{graph}> {{ <{uri}> ?p ?o }} }}""")
+    pursuit.derived(agent)
 
 
 def calls_of(agent, venue_uri: str | None = None) -> list[Call]:

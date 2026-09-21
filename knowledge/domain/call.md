@@ -3,16 +3,17 @@ type: Domain Concept
 title: Call
 term: http://example.org/orexis/market#Call
 description: >-
-  A round is wanted on a venue, because a participant said it is in trouble. A want the host
-  did not source — as a claim makes a dose owed, a LOW makes a round called for — held one per
-  venue in the host's own graph, written on the verdict, retracted when a round opens there,
-  and pursued by the search like any other want: Offer, or acquire upstream then Offer when the
-  vessel is dry. Maximal urgency while it stands; no clock runs it down.
+  A round is wanted on a venue, because a participant said it is in trouble. An INSTANCE the
+  host did not source - as a claim makes a debt, a LOW makes a call - held one per venue in the
+  host's own record, written on the verdict, retracted when a round opens there. The want is
+  the derivation's, minted under the host's standing desire *no unanswered calls* exactly as a
+  debt's is minted under *no overdue debts*, and pursued like any other: Offer, or acquire
+  upstream then Offer when the vessel is dry.
 ---
 
 # What it is
 
-The **want** behind the host's move. Before it existed, a participant's `LOW` was a trigger:
+The **premise** behind the host's move. Before it existed, a participant's `LOW` was a trigger:
 hosting heard it, checked a cooldown and a dict, and announced — and when the vessel was dry,
 remembered the `LOW` in a second dict and announced on the next reading. That was a plan
 written as a handler. A call is the same fact stated as what it is: *a round is wanted here*,
@@ -30,12 +31,20 @@ exactly where the `Offering` action's effect put a round.
 
 # Whose want it is
 
-Sourced by another agent, like an [obligation](/domain/obligation.md), and ranked in the same
-currency: `HostingModule.desires()` contributes one `Desire` per call at urgency 1.0, and its
-`desire_urgency` answers 0 in any world — held or imagined — where a round stands on the venue.
-A call outranks nothing by policy: a dealer whose own barrel is thirsty ranks its downstream's
-trouble beside it, and whether it would *rather* sell is the
-[strategic-supplier](/decisions/strategic-supplier.md) seam, not a number chosen here.
+Sourced by another agent, like an [obligation](/domain/obligation.md), and reaching the search
+by the same road: the host holds a standing desire over its venues, the call is the instance
+that desire is about, and `derive_wants` mints one want per call with no round on it. Met
+exactly where a round stands — held, or imagined by an `Offering` step of the very plan being
+weighed, since the met-test names no world.
+
+**It was LIFTED, and it was the one want here no derivation minted.** `HostingModule.desires()`
+built a `Want` per call and handed it to the choir, so a call had no provenance, no graph and
+no period, and what made it look ranked beside a debt was a number a capability contributed —
+`desire_urgency` answering 0 where a round stood. That number is gone
+([a-want-is-judged-by-its-met-test-and-nothing-else](/decisions/a-want-is-judged-by-its-met-test-and-nothing-else.md)),
+and with it the last reader of a measure. A call outranks nothing, and nothing outranks it: a
+dealer whose own barrel is thirsty has both wants and plans for both, and whether it would
+*rather* sell is the [strategic-supplier](/decisions/strategic-supplier.md) seam.
 
 # What it is not
 

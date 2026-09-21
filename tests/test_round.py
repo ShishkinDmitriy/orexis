@@ -736,7 +736,11 @@ def test_a_call_stands_as_a_want_and_is_answered_by_the_round(host):
     host.deliver("readings/fern", low_event())
     held = calls.calls_of(host)
     assert len(held) == 1 and held[0].called_by == "fern", "the LOW made a round wanted"
-    assert [d for d in host.pursuing() if d.uri == held[0].uri], "and it is pursued as a want"
+    #  PURSUED AS A WANT DERIVED UNDER THE HOST'S STANDING DESIRE, and about the call. The
+    #  call used to BE the want — lifted per call by `hosting.desires()`, the one want here no
+    #  derivation minted — and it is the instance now, like a debt under "no overdue debts".
+    assert [d for d in host.pursuing() if held[0].uri in d.about], \
+        "and a want is derived about it"
     assert not [s for s in keeper_of(host).standing() if s.action.endswith("Offering")], \
         "no plan reaches a round from a dry vessel with nothing to buy — nothing stands"
     stock_reading(host, 2.5)
@@ -1026,8 +1030,13 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     for judged in paid:
         city.deliberator.decide(judged)
     standing = city.pursuing()
-    assert [g.uri for g in standing] == [root] and standing[0].is_met, \
-        "a pure seller with nothing outstanding holds its rule and wants nothing"
+    #  BOTH ITS STANDING RULES, and both met: a host holds "no overdue debts" over its ledger
+    #  and "no unanswered calls" over its venues, and with nothing outstanding on either it
+    #  wants nothing. The second arrived when a call became an instance under a desire rather
+    #  than a want this package lifted.
+    assert {g.uri for g in standing} == {root, f"{city.me.uri}.no_unanswered_calls"}
+    assert all(g.is_met for g in standing), \
+        "a pure seller with nothing outstanding holds its rules and wants nothing"
 
 
 def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):
