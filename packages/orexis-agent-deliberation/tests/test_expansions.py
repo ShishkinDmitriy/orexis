@@ -29,7 +29,7 @@ from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.store import bindings
 
-from orexis_agent_deliberation.steps import Steps
+from orexis_agent_deliberation.steps import find_steps
 from orexis_agent_deliberation.imaginarium import Imaginarium
 from orexis_agent_deliberation.planner import PASS_GRAPH, Planner
 
@@ -257,7 +257,7 @@ ORDER BY (?spent + ?left) ?u ?spent ?m""", PASS_GRAPH))
         "the store holds this world's own readings"
 
     #  AND WHAT IT AFFORDS, asked of that world by collections that hold stores and no agent.
-    rows = Steps(im).find_all(agent.actions.find_all(), agent.desires.abouts(agent.me.uri),
+    rows = find_steps(im, agent.desires.abouts(agent.me.uri),
                               agent.me.uri, agent.picks,
                               graphs=[next_world, *im.graphs_of(PUBLIC)])
     assert rows, f"nothing is afforded in {next_world.rsplit('/', 1)[-1]}"
@@ -265,7 +265,7 @@ ORDER BY (?spent + ?left) ?u ?spent ?m""", PASS_GRAPH))
     #  AND THEY ARE THIS WORLD'S. Hanoi affords a move per (movable disk, legal peg), and which
     #  those are depends on where the disks stand — so the rows here differ from the rows at
     #  the root, and a reader that had quietly asked the wrong world would show the root's.
-    at_root = Steps(im).find_all(agent.actions.find_all(), agent.desires.abouts(agent.me.uri),
+    at_root = find_steps(im, agent.desires.abouts(agent.me.uri),
                                  agent.me.uri, agent.picks,
                                  graphs=[planner._root.graph, *im.graphs_of(PUBLIC)])
     assert {(r.action, r.binding) for r in rows} != {(r.action, r.binding) for r in at_root}, \

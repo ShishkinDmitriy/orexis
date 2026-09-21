@@ -90,8 +90,7 @@ def test_an_action_states_both_texts_or_neither(monkeypatch, caplog):
     nobody's menu, and needs no class of its own to say so: the sovereign weighed one and
     dropped it. With the gate holding the rule, the runtime has nothing left to flag —
     `Plan.partial`, the trace's `blind` and the planner's skip are gone."""
-    from orexis_agent_deliberation.actions import Actions
-    from orexis_agent_deliberation.steps import Steps
+    from orexis_agent_deliberation.steps import find_steps
     from agent.world import load_self
     from orexis_agent_progression.ontology import picks_graph
 
@@ -100,7 +99,7 @@ def test_an_action_states_both_texts_or_neither(monkeypatch, caplog):
     assert deliberable(st, wants), "the shipped world, Presenting included, passes"
     for agent_id, agent_wants in wants.items():
         me = load_self(st.reader(PUBLIC), agent_id)
-        rows = Steps(st).find_all(Actions(st).find_all(), agent_wants.abouts(me.uri), me.uri, picks_graph(agent_id))
+        rows = find_steps(st, agent_wants.abouts(me.uri), me.uri, picks_graph(agent_id))
         assert not any(r.action.endswith("Presenting") for r in rows), \
             f"{agent_id}: an action with neither text is on no menu"
 

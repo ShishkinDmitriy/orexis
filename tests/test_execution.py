@@ -14,8 +14,7 @@ from orexis_agent_progression.act import Step
 from orexis_agent_progression import execution
 from orexis_agent_deliberation import pursuit
 from orexis_agent_progression.act import Step
-from orexis_agent_deliberation.actions import Actions
-from orexis_agent_deliberation.steps import Steps
+from orexis_agent_deliberation.steps import find_steps
 from assembly import loader
 from orexis_agent_deliberation.planner import Planner
 
@@ -141,7 +140,7 @@ def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monk
         monkeypatch.setenv("OREXIS_WORLD", world)
         agent = build_agent(agent_id, genesis_store(world=world), monkeypatch)
         open_round_for(agent, agent_id)
-        for row in Steps(agent.beliefs).find_all(Actions(agent.beliefs).find_all(), agent.desires.abouts(agent.me.uri), agent.me.uri, picks_graph(agent.id)):
+        for row in find_steps(agent.beliefs, agent.desires.abouts(agent.me.uri), agent.me.uri, picks_graph(agent.id)):
             rows_seen += 1
             from orexis_agent_progression.act import takers_of
             takers = [m.name for m in takers_of(agent, row.action)]

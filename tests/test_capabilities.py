@@ -12,6 +12,7 @@ from agent import genesis
 
 from assembly import loader
 from orexis_agent_progression.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
+from orexis_agent_deliberation.steps import find_steps
 from agent.world import WorldError, load_world
 from orexis_capability_actuation import ACTUATION
 from orexis_capability_market import BIDDING, HOSTING, PAY_AS_BID
@@ -34,10 +35,10 @@ def me(query):
 # --- what the shipped world derives ----------------------------------------
 
 def _offered(agent):
-    """Every step an agent could take in the world it is in — its own collections, its own
-    criteria. A service used to fill these in; the agent holds them."""
-    return agent.steps.find_all(agent.actions.find_all(),
-                                agent.desires.abouts(agent.me.uri), agent.me.uri, agent.picks)
+    """Every step an agent could take in the world it is in — one function over its own
+    store, with its own criteria."""
+    return find_steps(agent.beliefs, agent.desires.abouts(agent.me.uri),
+                      agent.me.uri, agent.picks)
 
 
 def test_plant_agent_gets_subscribing_and_bidding(me):
@@ -121,8 +122,6 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing(monkeypat
     states no ranges; the fern's menu holds no honoured row because nobody may demand its
     lever. Those were always the facts underneath the two grants.
     """
-    from orexis_agent_deliberation.actions import Actions
-    from orexis_agent_deliberation.steps import Steps
     from orexis_capability_sensing.regions import regions_of
 
     from conftest import build_agent

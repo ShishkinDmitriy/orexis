@@ -9,7 +9,7 @@ description: >-
   Splitting them let the templates be read once per pass instead of once per node - eighteen
   reads to one, on a three-disk solve - and a test in the package holds the service to writing no
   query and the collections to writing theirs.
-status: superseded-in-part
+status: superseded
 superseded-by: a-row-is-a-step
 timestamp: 2026-09-18T15:00:00Z
 ---
@@ -21,11 +21,20 @@ once `affordance` folded into `step`, the afforder fetched nothing and decided n
 actions worth asking were the caller's `only`, what the agent holds was handed in by its own
 docstring's argument, and the merge was a loop and a sort.
 
-What is NOT superseded is the thing this record refused. `Steps` still does not ask `Actions`:
-the templates are HANDED IN as a criterion of the ask, exactly as `me`, `picks` and what the
-agent holds already were. A repository still does not ask another repository. And the measured
-win survives untouched, because it was never the service's — `Actions.find_all` memoises on the
-store, so a three-disk solve still reads the templates once.
+**And now the refusal too.** When the service went, the templates were still HANDED IN — a
+repository did not ask another repository. They are not any more: `find_steps` asks the store
+for its own, because the sovereign dropped the repository convention and with it the reason the
+parameter existed. Every caller had handed in `find_actions(…)` and nothing else ever consumed
+the list.
+
+`Actions` and its model are gone with it — a class whose whole content was one query and one
+memo, and a three-field dataclass, both for one consumer. The query and the memo live in
+`steps.py`; the measured win survives, because it was never the class's: the memo is the
+STORE's, so a three-disk solve still reads the templates twice rather than eighteen times.
+
+What is left of this record is its account of what was measured and why the split was made,
+which is worth keeping — and one line that is still true wherever it is read: a thing that
+fetches nothing and decides nothing is not a service.
 
 See [a-row-is-a-step](/decisions/a-row-is-a-step.md). Everything below is the argument as it
 stood, and the test it names is now `test_where_queries_live.py` with two claims rather than

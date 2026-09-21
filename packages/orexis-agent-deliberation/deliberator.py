@@ -53,6 +53,7 @@ from orexis_agent_deliberation.want import Want
 from orexis_agent_progression.ontology import (OREXIS, DELIBERATION_GRAPH, PLAN_FAILED, PLAN_FINISHED,
                                                   SERIES, STATE_GRAPH, STEP_DONE, picks_graph)
 from .planner import Planner
+from .steps import find_steps
 from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED,
                    REMEMBERED, SATISFIED)
 from orexis_agent_progression.store import bindings
@@ -412,8 +413,8 @@ class Deliberator:
         #  is not written to the trace. A stake has no such row, and nothing here asks what
         #  kind of want it is holding.
         me = self.agent.me.uri
-        for row in self.agent.steps.find_all(self.agent.actions.find_all(),
-                                             self.agent.desires.abouts(me), me, self.agent.picks):
+        for row in find_steps(self.agent.beliefs, self.agent.desires.abouts(me), me,
+                              self.agent.picks):
             if not row.is_own and row.want == judgment.uri:
                 #  Unsized: the host sizes the serve from the claim it holds.
                 return Plan(OBLIGATION, (row,))
