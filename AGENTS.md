@@ -333,10 +333,12 @@ it is a record wearing a bullet.
   modality class, returns as a content one, because a second spelling for a graph of desires
   would be the synonym the dictionary refuses.
 - **A content class may not say how a graph arrived, and the cost of one that did was a second
-  judging pass** — `orexis:AssertedDesireGraph` said its arrival in its name and
-  `deliberation:PursuedGraph` said nothing else at all, so no read could ask for *a graph of
-  wants* and mean both the derivation's and a world's; the kernel read its own and compiled and
-  judged the world's at read time, and `find_wants` alone answers for every want now.
+  judging pass** — the asserted-desire class said its arrival in its NAME and the pursued class
+  said nothing else at all, so no read could ask for *a graph of wants* and mean both the
+  derivation's and a world's; the kernel read its own and compiled and judged the world's at
+  read time, and `find_wants` alone answers for every want now. Both spellings are gone from
+  this file too, because a retired term named in prose is the dangling spelling the rename rule
+  refuses — `tests/test_layout.py` caught these two.
 - **A graph is classified per kind it HOLDS, and a graph holding two kinds is two graphs** — one
   asserted graph was a graph of desires AND a graph of wants because four worlds put different
   content in it, which is a graph whose content no reader can predict; `graph/desire/asserted`
