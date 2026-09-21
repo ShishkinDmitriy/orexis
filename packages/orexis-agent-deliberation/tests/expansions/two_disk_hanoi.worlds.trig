@@ -130,76 +130,6 @@ GRAPH possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC {
 
 #  What the pass knows about every world it made.
 GRAPH graph:pass {
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_1-PegA> a deliberation:Candidate .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_1-PegA> deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_1-PegA> deliberation:wouldTake hanoi:Move .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_1-PegA> hanoi:disk :disk_1 .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_1-PegA> hanoi:onto hanoi:PegA .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_1-PegC> a deliberation:Candidate .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_1-PegC> deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_1-PegC> deliberation:wouldTake hanoi:Move .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_1-PegC> hanoi:disk :disk_1 .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_1-PegC> hanoi:onto hanoi:PegC .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_2-PegA> a deliberation:Candidate .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_2-PegA> deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_2-PegA> deliberation:wouldTake hanoi:Move .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_2-PegA> hanoi:disk :disk_2 .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_2-PegA> hanoi:onto hanoi:PegA .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_1-PegA> a deliberation:Candidate .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_1-PegA> deliberation:from possible:Move-disk_1-PegB .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_1-PegA> deliberation:wouldTake hanoi:Move .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_1-PegA> hanoi:disk :disk_1 .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_1-PegA> hanoi:onto hanoi:PegA .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_1-PegC> a deliberation:Candidate .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_1-PegC> deliberation:from possible:Move-disk_1-PegB .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_1-PegC> deliberation:wouldTake hanoi:Move .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_1-PegC> hanoi:disk :disk_1 .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_1-PegC> hanoi:onto hanoi:PegC .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_2-PegC> a deliberation:Candidate .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_2-PegC> deliberation:from possible:Move-disk_1-PegB .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_2-PegC> deliberation:wouldTake hanoi:Move .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_2-PegC> hanoi:disk :disk_2 .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_2-PegC> hanoi:onto hanoi:PegC .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_1-PegA> a deliberation:Candidate .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_1-PegA> deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_1-PegA> deliberation:wouldTake hanoi:Move .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_1-PegA> hanoi:disk :disk_1 .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_1-PegA> hanoi:onto hanoi:PegA .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_1-PegB> a deliberation:Candidate .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_1-PegB> deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_1-PegB> deliberation:wouldTake hanoi:Move .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_1-PegB> hanoi:disk :disk_1 .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_1-PegB> hanoi:onto hanoi:PegB .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_2-PegA> a deliberation:Candidate .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_2-PegA> deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_2-PegA> deliberation:wouldTake hanoi:Move .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_2-PegA> hanoi:disk :disk_2 .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_2-PegA> hanoi:onto hanoi:PegA .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_1-PegA> a deliberation:Candidate .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_1-PegA> deliberation:from possible:Move-disk_1-PegC .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_1-PegA> deliberation:wouldTake hanoi:Move .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_1-PegA> hanoi:disk :disk_1 .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_1-PegA> hanoi:onto hanoi:PegA .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_1-PegB> a deliberation:Candidate .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_1-PegB> deliberation:from possible:Move-disk_1-PegC .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_1-PegB> deliberation:wouldTake hanoi:Move .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_1-PegB> hanoi:disk :disk_1 .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_1-PegB> hanoi:onto hanoi:PegB .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_2-PegB> a deliberation:Candidate .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_2-PegB> deliberation:from possible:Move-disk_1-PegC .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_2-PegB> deliberation:wouldTake hanoi:Move .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_2-PegB> hanoi:disk :disk_2 .
-  <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_2-PegB> hanoi:onto hanoi:PegB .
-  <http://example.org/orexis/graph/sensed/Move-disk_1-PegB> a deliberation:Candidate .
-  <http://example.org/orexis/graph/sensed/Move-disk_1-PegB> deliberation:from graph:sensed .
-  <http://example.org/orexis/graph/sensed/Move-disk_1-PegB> deliberation:wouldTake hanoi:Move .
-  <http://example.org/orexis/graph/sensed/Move-disk_1-PegB> hanoi:disk :disk_1 .
-  <http://example.org/orexis/graph/sensed/Move-disk_1-PegB> hanoi:onto hanoi:PegB .
-  <http://example.org/orexis/graph/sensed/Move-disk_1-PegC> a deliberation:Candidate .
-  <http://example.org/orexis/graph/sensed/Move-disk_1-PegC> deliberation:from graph:sensed .
-  <http://example.org/orexis/graph/sensed/Move-disk_1-PegC> deliberation:wouldTake hanoi:Move .
-  <http://example.org/orexis/graph/sensed/Move-disk_1-PegC> hanoi:disk :disk_1 .
-  <http://example.org/orexis/graph/sensed/Move-disk_1-PegC> hanoi:onto hanoi:PegC .
   graph:sensed a deliberation:PossibleWorld .
   graph:sensed deliberation:atDepth 0 .
   graph:sensed deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
@@ -208,6 +138,16 @@ GRAPH graph:pass {
   graph:sensed deliberation:spent 0.0 .
   graph:sensed deliberation:takes 0.0 .
   graph:sensed deliberation:weighed graph:sensed.for.every_disk_home .
+  graph:sensed..Move-disk_1-PegB a deliberation:Candidate .
+  graph:sensed..Move-disk_1-PegB deliberation:from graph:sensed .
+  graph:sensed..Move-disk_1-PegB deliberation:wouldTake hanoi:Move .
+  graph:sensed..Move-disk_1-PegB hanoi:disk :disk_1 .
+  graph:sensed..Move-disk_1-PegB hanoi:onto hanoi:PegB .
+  graph:sensed..Move-disk_1-PegC a deliberation:Candidate .
+  graph:sensed..Move-disk_1-PegC deliberation:from graph:sensed .
+  graph:sensed..Move-disk_1-PegC deliberation:wouldTake hanoi:Move .
+  graph:sensed..Move-disk_1-PegC hanoi:disk :disk_1 .
+  graph:sensed..Move-disk_1-PegC hanoi:onto hanoi:PegC .
   graph:sensed.for.every_disk_home a deliberation:Weighing .
   graph:sensed.for.every_disk_home deliberation:expanded true .
   graph:sensed.for.every_disk_home deliberation:forWant :every_disk_home .
@@ -218,17 +158,32 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegB deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   possible:Move-disk_1-PegB deliberation:fails :every_disk_home .
   possible:Move-disk_1-PegB deliberation:minted 1 .
-  possible:Move-disk_1-PegB deliberation:reachedBy <http://example.org/orexis/graph/sensed/Move-disk_1-PegB> .
+  possible:Move-disk_1-PegB deliberation:reachedBy graph:sensed..Move-disk_1-PegB .
   possible:Move-disk_1-PegB deliberation:signature "0deedbaa40d7cc37" .
   possible:Move-disk_1-PegB deliberation:spent 1.0 .
   possible:Move-disk_1-PegB deliberation:takes 0.0 .
   possible:Move-disk_1-PegB deliberation:weighed possible:Move-disk_1-PegB.for.every_disk_home .
+  possible:Move-disk_1-PegB..Move-disk_1-PegA a deliberation:Candidate .
+  possible:Move-disk_1-PegB..Move-disk_1-PegA deliberation:from possible:Move-disk_1-PegB .
+  possible:Move-disk_1-PegB..Move-disk_1-PegA deliberation:wouldTake hanoi:Move .
+  possible:Move-disk_1-PegB..Move-disk_1-PegA hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegB..Move-disk_1-PegA hanoi:onto hanoi:PegA .
+  possible:Move-disk_1-PegB..Move-disk_1-PegC a deliberation:Candidate .
+  possible:Move-disk_1-PegB..Move-disk_1-PegC deliberation:from possible:Move-disk_1-PegB .
+  possible:Move-disk_1-PegB..Move-disk_1-PegC deliberation:wouldTake hanoi:Move .
+  possible:Move-disk_1-PegB..Move-disk_1-PegC hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegB..Move-disk_1-PegC hanoi:onto hanoi:PegC .
+  possible:Move-disk_1-PegB..Move-disk_2-PegC a deliberation:Candidate .
+  possible:Move-disk_1-PegB..Move-disk_2-PegC deliberation:from possible:Move-disk_1-PegB .
+  possible:Move-disk_1-PegB..Move-disk_2-PegC deliberation:wouldTake hanoi:Move .
+  possible:Move-disk_1-PegB..Move-disk_2-PegC hanoi:disk :disk_2 .
+  possible:Move-disk_1-PegB..Move-disk_2-PegC hanoi:onto hanoi:PegC .
   possible:Move-disk_1-PegB.Move-disk_1-PegA a deliberation:PossibleWorld .
   possible:Move-disk_1-PegB.Move-disk_1-PegA deliberation:atDepth 2 .
   possible:Move-disk_1-PegB.Move-disk_1-PegA deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   possible:Move-disk_1-PegB.Move-disk_1-PegA deliberation:fails :every_disk_home .
   possible:Move-disk_1-PegB.Move-disk_1-PegA deliberation:minted 6 .
-  possible:Move-disk_1-PegB.Move-disk_1-PegA deliberation:reachedBy <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_1-PegA> .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA deliberation:reachedBy possible:Move-disk_1-PegB..Move-disk_1-PegA .
   possible:Move-disk_1-PegB.Move-disk_1-PegA deliberation:signature "bb7208bc9b5d7c04" .
   possible:Move-disk_1-PegB.Move-disk_1-PegA deliberation:spent 2.0 .
   possible:Move-disk_1-PegB.Move-disk_1-PegA deliberation:takes 0.0 .
@@ -242,7 +197,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegB.Move-disk_1-PegC deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   possible:Move-disk_1-PegB.Move-disk_1-PegC deliberation:fails :every_disk_home .
   possible:Move-disk_1-PegB.Move-disk_1-PegC deliberation:minted 7 .
-  possible:Move-disk_1-PegB.Move-disk_1-PegC deliberation:reachedBy <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_1-PegC> .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC deliberation:reachedBy possible:Move-disk_1-PegB..Move-disk_1-PegC .
   possible:Move-disk_1-PegB.Move-disk_1-PegC deliberation:signature "426192855af0ca99" .
   possible:Move-disk_1-PegB.Move-disk_1-PegC deliberation:spent 2.0 .
   possible:Move-disk_1-PegB.Move-disk_1-PegC deliberation:takes 0.0 .
@@ -256,17 +211,32 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegB.Move-disk_2-PegC deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   possible:Move-disk_1-PegB.Move-disk_2-PegC deliberation:fails :every_disk_home .
   possible:Move-disk_1-PegB.Move-disk_2-PegC deliberation:minted 8 .
-  possible:Move-disk_1-PegB.Move-disk_2-PegC deliberation:reachedBy <http://example.org/orexis/graph/possible/Move-disk_1-PegB/Move-disk_2-PegC> .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC deliberation:reachedBy possible:Move-disk_1-PegB..Move-disk_2-PegC .
   possible:Move-disk_1-PegB.Move-disk_2-PegC deliberation:signature "d2f175aae3ef3caa" .
   possible:Move-disk_1-PegB.Move-disk_2-PegC deliberation:spent 2.0 .
   possible:Move-disk_1-PegB.Move-disk_2-PegC deliberation:takes 0.0 .
   possible:Move-disk_1-PegB.Move-disk_2-PegC deliberation:weighed possible:Move-disk_1-PegB.Move-disk_2-PegC.for.every_disk_home .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_1-PegA a deliberation:Candidate .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_1-PegA deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_1-PegA deliberation:wouldTake hanoi:Move .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_1-PegA hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_1-PegA hanoi:onto hanoi:PegA .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_1-PegC a deliberation:Candidate .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_1-PegC deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_1-PegC deliberation:wouldTake hanoi:Move .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_1-PegC hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_1-PegC hanoi:onto hanoi:PegC .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_2-PegA a deliberation:Candidate .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_2-PegA deliberation:from possible:Move-disk_1-PegB.Move-disk_2-PegC .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_2-PegA deliberation:wouldTake hanoi:Move .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_2-PegA hanoi:disk :disk_2 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_2-PegA hanoi:onto hanoi:PegA .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA a deliberation:PossibleWorld .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA deliberation:atDepth 3 .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA deliberation:fails :every_disk_home .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA deliberation:minted 13 .
-  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA deliberation:reachedBy <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_1-PegA> .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA deliberation:reachedBy possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_1-PegA .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA deliberation:signature "96238be7239f92b9" .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA deliberation:spent 3.0 .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA deliberation:takes 0.0 .
@@ -281,7 +251,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC deliberation:lawful true .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC deliberation:meets :every_disk_home .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC deliberation:minted 14 .
-  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC deliberation:reachedBy <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_1-PegC> .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC deliberation:reachedBy possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_1-PegC .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC deliberation:signature "9159fbb0fdee38d6" .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC deliberation:spent 3.0 .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC deliberation:takes 0.0 .
@@ -295,7 +265,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA deliberation:fails :every_disk_home .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA deliberation:minted 12 .
-  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA deliberation:reachedBy <http://example.org/orexis/graph/possible/Move-disk_1-PegB.Move-disk_2-PegC/Move-disk_2-PegA> .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA deliberation:reachedBy possible:Move-disk_1-PegB.Move-disk_2-PegC..Move-disk_2-PegA .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA deliberation:signature "0deedbaa40d7cc37" .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA deliberation:spent 3.0 .
   possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA deliberation:takes 0.0 .
@@ -319,17 +289,32 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegC deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   possible:Move-disk_1-PegC deliberation:fails :every_disk_home .
   possible:Move-disk_1-PegC deliberation:minted 2 .
-  possible:Move-disk_1-PegC deliberation:reachedBy <http://example.org/orexis/graph/sensed/Move-disk_1-PegC> .
+  possible:Move-disk_1-PegC deliberation:reachedBy graph:sensed..Move-disk_1-PegC .
   possible:Move-disk_1-PegC deliberation:signature "426192855af0ca99" .
   possible:Move-disk_1-PegC deliberation:spent 1.0 .
   possible:Move-disk_1-PegC deliberation:takes 0.0 .
   possible:Move-disk_1-PegC deliberation:weighed possible:Move-disk_1-PegC.for.every_disk_home .
+  possible:Move-disk_1-PegC..Move-disk_1-PegA a deliberation:Candidate .
+  possible:Move-disk_1-PegC..Move-disk_1-PegA deliberation:from possible:Move-disk_1-PegC .
+  possible:Move-disk_1-PegC..Move-disk_1-PegA deliberation:wouldTake hanoi:Move .
+  possible:Move-disk_1-PegC..Move-disk_1-PegA hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegC..Move-disk_1-PegA hanoi:onto hanoi:PegA .
+  possible:Move-disk_1-PegC..Move-disk_1-PegB a deliberation:Candidate .
+  possible:Move-disk_1-PegC..Move-disk_1-PegB deliberation:from possible:Move-disk_1-PegC .
+  possible:Move-disk_1-PegC..Move-disk_1-PegB deliberation:wouldTake hanoi:Move .
+  possible:Move-disk_1-PegC..Move-disk_1-PegB hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegC..Move-disk_1-PegB hanoi:onto hanoi:PegB .
+  possible:Move-disk_1-PegC..Move-disk_2-PegB a deliberation:Candidate .
+  possible:Move-disk_1-PegC..Move-disk_2-PegB deliberation:from possible:Move-disk_1-PegC .
+  possible:Move-disk_1-PegC..Move-disk_2-PegB deliberation:wouldTake hanoi:Move .
+  possible:Move-disk_1-PegC..Move-disk_2-PegB hanoi:disk :disk_2 .
+  possible:Move-disk_1-PegC..Move-disk_2-PegB hanoi:onto hanoi:PegB .
   possible:Move-disk_1-PegC.Move-disk_1-PegA a deliberation:PossibleWorld .
   possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:atDepth 2 .
   possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:fails :every_disk_home .
   possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:minted 3 .
-  possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:reachedBy <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_1-PegA> .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:reachedBy possible:Move-disk_1-PegC..Move-disk_1-PegA .
   possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:signature "bb7208bc9b5d7c04" .
   possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:spent 2.0 .
   possible:Move-disk_1-PegC.Move-disk_1-PegA deliberation:takes 0.0 .
@@ -343,7 +328,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:fails :every_disk_home .
   possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:minted 4 .
-  possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:reachedBy <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_1-PegB> .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:reachedBy possible:Move-disk_1-PegC..Move-disk_1-PegB .
   possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:signature "0deedbaa40d7cc37" .
   possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:spent 2.0 .
   possible:Move-disk_1-PegC.Move-disk_1-PegB deliberation:takes 0.0 .
@@ -357,17 +342,32 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegC.Move-disk_2-PegB deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   possible:Move-disk_1-PegC.Move-disk_2-PegB deliberation:fails :every_disk_home .
   possible:Move-disk_1-PegC.Move-disk_2-PegB deliberation:minted 5 .
-  possible:Move-disk_1-PegC.Move-disk_2-PegB deliberation:reachedBy <http://example.org/orexis/graph/possible/Move-disk_1-PegC/Move-disk_2-PegB> .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB deliberation:reachedBy possible:Move-disk_1-PegC..Move-disk_2-PegB .
   possible:Move-disk_1-PegC.Move-disk_2-PegB deliberation:signature "c398dfc17fb3e55a" .
   possible:Move-disk_1-PegC.Move-disk_2-PegB deliberation:spent 2.0 .
   possible:Move-disk_1-PegC.Move-disk_2-PegB deliberation:takes 0.0 .
   possible:Move-disk_1-PegC.Move-disk_2-PegB deliberation:weighed possible:Move-disk_1-PegC.Move-disk_2-PegB.for.every_disk_home .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_1-PegA a deliberation:Candidate .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_1-PegA deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_1-PegA deliberation:wouldTake hanoi:Move .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_1-PegA hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_1-PegA hanoi:onto hanoi:PegA .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_1-PegB a deliberation:Candidate .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_1-PegB deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_1-PegB deliberation:wouldTake hanoi:Move .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_1-PegB hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_1-PegB hanoi:onto hanoi:PegB .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_2-PegA a deliberation:Candidate .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_2-PegA deliberation:from possible:Move-disk_1-PegC.Move-disk_2-PegB .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_2-PegA deliberation:wouldTake hanoi:Move .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_2-PegA hanoi:disk :disk_2 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_2-PegA hanoi:onto hanoi:PegA .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA a deliberation:PossibleWorld .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA deliberation:atDepth 3 .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA deliberation:fails :every_disk_home .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA deliberation:minted 10 .
-  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA deliberation:reachedBy <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_1-PegA> .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA deliberation:reachedBy possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_1-PegA .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA deliberation:signature "096c26bac8a6dc74" .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA deliberation:spent 3.0 .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA deliberation:takes 0.0 .
@@ -382,7 +382,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB deliberation:fails :every_disk_home .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB deliberation:minted 11 .
-  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB deliberation:reachedBy <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_1-PegB> .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB deliberation:reachedBy possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_1-PegB .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB deliberation:signature "f43e75219a6a5ae8" .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB deliberation:spent 3.0 .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB deliberation:takes 0.0 .
@@ -397,7 +397,7 @@ GRAPH graph:pass {
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA deliberation:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA deliberation:fails :every_disk_home .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA deliberation:minted 9 .
-  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA deliberation:reachedBy <http://example.org/orexis/graph/possible/Move-disk_1-PegC.Move-disk_2-PegB/Move-disk_2-PegA> .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA deliberation:reachedBy possible:Move-disk_1-PegC.Move-disk_2-PegB..Move-disk_2-PegA .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA deliberation:signature "426192855af0ca99" .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA deliberation:spent 3.0 .
   possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA deliberation:takes 0.0 .

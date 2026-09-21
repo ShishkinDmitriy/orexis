@@ -398,7 +398,12 @@ def candidate_of(world: str, row) -> str:
     child could not exist for it. That is why there were two node families — one could name a
     refused candidate and the other structurally could not (#747).
 
-    `/` where a world's path uses `.`, so a candidate and the world it reaches are never the
-    same IRI while both remain derivable from the other end.
+    TWO DOTS, and the reason is checkable rather than probabilistic: a world's name joins its
+    path's segments with one dot and no segment is ever empty, so `..` cannot occur in a world's
+    name and a candidate can never collide with one — while both stay derivable from the other
+    end. It was `/`, which collides with nothing either and abbreviates against NO prefix: a
+    prefixed name's local part may hold word characters, dots and hyphens, so a slash forced
+    every candidate in a snapshot to be spelled as a full IRI (132 of them across three cases),
+    which is the diff noise `.claude/skills/snapshot-tests` exists to refuse.
     """
-    return f"{world}/{segment_of(row)}"
+    return f"{world}..{segment_of(row)}"
