@@ -1,18 +1,24 @@
-"""What one action comes to in ONE world — the rows, as a collection.
+"""What one action comes to in ONE world — the steps it affords, as a collection.
 
 A repository over situational data: given an [action](action.py) and what this agent holds, run
 that action's own precondition against the world this collection was handed and shape each
-binding into an `Affordance` — one pair per parameter the action declares it takes. Nothing is stored — a row is a conclusion whose premises are stored
-and would outlive them (a-situated-instance-is-kept-only-when-it-is-testimony).
+binding into a `Step` — one pair per parameter the action declares it takes. Nothing is stored:
+a step a world affords is a conclusion whose premises are stored and would outlive them
+(a-situated-instance-is-kept-only-when-it-is-testimony).
+
+**A STEP A WORLD AFFORDS AND A STEP A PLAN HOLDS ARE ONE THING.** This yielded an `Affordance`
+once, which carried four of a step's fields and was copied into one by `Step.from_row` the
+moment anything wanted to plan with it. Two classes for one shape is how a reader comes to
+believe there are two concepts; what differs is the MOMENT, not the thing.
 
 **THE WORLD IS ASKED ABOUT, NOT HELD.** Every question here names one — `at` and `world` — so
-one of these serves as many menus as the store has worlds to be asked about, and the precondition
+one of these serves as many worlds as the store has to be asked about, and the precondition
 names no graph to get it (#666). Which readings a premise reads is the door's to say.
 
 **IT ASKS FOR NOTHING.** What the agent holds and which actions are worth asking are handed in.
-This collection knows how to fetch rows and nothing about what is worth fetching, which is
-`Afforder`'s to decide — the file this one was carved out of held both, plus a question that
-belonged to the desire modality.
+This collection knows how to fetch steps and nothing about what is worth fetching, which is the
+caller's — the file this one was carved out of held both, plus a question that belonged to the
+desire modality.
 """
 
 from __future__ import annotations
@@ -20,13 +26,13 @@ from __future__ import annotations
 from orexis_agent_progression.store import Raw, bind, bindings
 
 from .action import Action
-from .affordance import Affordance
+from orexis_agent_progression.act import Step
 from orexis_agent_progression.ontology import FORESEEN, local_of
 from orexis_agent_progression import clock
 
 
-class Affordances:
-    """The rows one world admits, asked one action at a time."""
+class Steps:
+    """The steps one world admits, asked one action at a time."""
 
     def __init__(self, store):
         """The store whose worlds this asks about, and nothing else.
@@ -39,9 +45,37 @@ class Affordances:
         """
         self._store = store
 
+    def find_all(self, actions, about_of: dict[str, tuple[str, ...]], me: str, picks: str,
+                 *, graphs=None, only=None) -> list[Step]:
+        """Every step this agent could take in one world, name-ordered.
+
+        THIS WAS A SERVICE — an `Afforder` between two collections, holding the templates and
+        what the agent holds, and looping one into the other. What it actually did was fetch
+        nothing and decide nothing: the actions worth asking are the caller's `only`, what the
+        agent holds is handed in, and the merge is a loop and a sort. A thing that decides
+        nothing is a repository's support function rather than a service, so it is one.
+
+        EVERY IDENTITY IS A CRITERION, which is what keeps this a collection over a store and
+        nothing else: `actions` is the templates the caller thinks are worth asking, `about_of`
+        what the agent holds and what each want is about, `me` and `picks` whose world this is.
+        The inner ask already took all four; this one takes the list as well.
+
+        `only` is the set of actions worth asking at all — the search's RELEVANT set (#504), or
+        None for every action. A precondition is a query per action per world, and an action
+        that touches nothing the want reads was already never simulated; skipped here it is
+        never asked either, so a vocabulary that grows by unrelated domains costs a pass nothing.
+        """
+        found: list[Step] = []
+        for action in actions:
+            if only is not None and action.uri not in only:
+                continue
+            found += self.find_all_by_action(action, about_of, me, picks, graphs=graphs)
+        #  Sorted because per-action order is no order.
+        return sorted(found, key=lambda s: (s.want or "", s.action, s.for_agent or ""))
+
     def find_all_by_action(self, action: Action, about_of: dict[str, tuple[str, ...]],
-                           me: str, picks: str, *, graphs=None) -> list[Affordance]:
-        """Every row this action affords in one world — zero, one or many.
+                           me: str, picks: str, *, graphs=None) -> list[Step]:
+        """Every step this action affords in one world — zero, one or many.
 
         WHICH WORLD IS A CRITERION — `graphs`, the world asked about as the list of graphs
         the caller built for it, an instant and a place in one — and was the constructor's until the
@@ -76,10 +110,10 @@ class Affordances:
         #  absent — an action with an OPTIONAL hop affords rows of two shapes, and both are
         #  honest.
         params = {local_of(p): p for p in action.takes}
-        return [Affordance(action=action.uri,
-                           binding=tuple(sorted((iri, r[local]) for local, iri in params.items()
-                                                if r.get(local))),
-                           want=r.get("want"), for_agent=r.get("for_agent"))
+        return [Step(action=action.uri,
+                     binding=tuple(sorted((iri, r[local]) for local, iri in params.items()
+                                          if r.get(local))),
+                     want=r.get("want"), for_agent=r.get("for_agent"))
                 for r in bindings(self._store.query(q, graphs if graphs is not None else
                                                      #  THE PRESENT, where no world is handed in: what a rule
                                                      #  reads and what is expected, as this store holds them now.

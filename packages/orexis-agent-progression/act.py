@@ -1,8 +1,8 @@
 """A step: a planned instance of an action. An act: the record that a step was taken.
 
 An `orexis:Action` is a template (the parameters it takes, a precondition, an effect, a taker).
-A STEP is one filling of it, planned and not yet done — what its parameters are bound to, the
-want it serves, how much, for whom where it is an obligation's, its window, what the search predicted
+A STEP is one filling of it — what its parameters are bound to, the want it serves, how much,
+for whom where it is an obligation's, its window, what the search predicted
 taking it would reach, what it waits for, what follows. A plan is steps; an intention commits to
 steps; a claim promises one. Nothing has happened yet. An ACT is the record that something did:
 which step, when, whether anyone took it, and in time the verdict — history, and only history
@@ -20,7 +20,14 @@ from orexis_agent_progression.ontology import OREXIS, PUBLIC
 
 @dataclass(frozen=True)
 class Step:
-    """One action, filled in and planned. Every step is an instance and no code names one."""
+    """One action, filled in. Every step is an instance and no code names one.
+
+    A step a world AFFORDS and a step a plan HOLDS are the same thing at two moments, and were
+    two classes until #745's successor: an `Step` carried four of these fields and a
+    `from_row` copied them across. What a search adds as it goes — how much, when it lands,
+    what it predicted, what it was expanded from — is absent on a step nobody has planned yet,
+    which is what `None` in those fields already meant.
+    """
 
     action: str                       # which template — `market:Acquiring`, `actuation:Dosing`
     #  WHAT IT IS FILLED WITH: one (parameter, value) pair per parameter the action declares
@@ -43,18 +50,17 @@ class Step:
     part_of: object = None            # the step this one was expanded from (#523): a Step while
                                       # planned, the ledger's step IRI once read back
 
+    @property
+    def is_own(self) -> bool:
+        """Mine to range over — serves nobody but me. A step that names whom it is owed to is
+        an obligation's, exercised for that counterparty and never proposed for my own gap. The
+        one column says it; there is no mode term (an-action-is-one-node)."""
+        return self.for_agent is None
+
     def value_of(self, parameter: str) -> str | None:
         """What this step binds one parameter to, by its IRI. The taker's door, and only the
         package that declared the parameter ever opens it."""
         return next((v for p, v in self.binding if p == parameter), None)
-
-    @classmethod
-    def from_row(cls, row, quantity: float | None = None, not_after: datetime | None = None):
-        """An affordance row, filled: sized, and windowed where the caller knows when. Handed
-        a step already, it fills that one again — a search re-sizes a step it takes from a
-        different world."""
-        return cls(action=row.action, binding=row.binding, want=row.want,
-                   quantity=quantity, for_agent=row.for_agent, not_after=not_after)
 
 
 @dataclass(frozen=True)

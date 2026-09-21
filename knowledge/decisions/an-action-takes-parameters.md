@@ -111,5 +111,5 @@ Such an intention stands with nothing bound until it lapses and is planned again
 
 - [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) — the record that folded
   `means` into `action`; this one folds the columns.
-- [affordance](/domain/affordance.md) — the row, and what its binding is.
+- [affordance](/domain/step.md) — the row, and what its binding is.
 - [action](/domain/action.md) — the schema, and what an author writes.

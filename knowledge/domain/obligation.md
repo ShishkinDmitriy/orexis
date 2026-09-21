@@ -84,7 +84,7 @@ the venue.
 The counterparty is not decoration on the record — it is the key that finds the action. The
 market's serve joins its row to the want that is about the debt and reads whom the debt is owed
 to, so the row names the want it serves and whom for, and the search takes it by the want's
-name as it takes any row that names one; [affordance](/domain/affordance.md) has that mechanism,
+name as it takes any row that names one; [step](/domain/step.md) has that mechanism,
 and nothing in the kernel knows what a counterparty is.
 
 What it buys is that an agent does not search for a way to pay a debt. It reads one.

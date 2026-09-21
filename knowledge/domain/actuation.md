@@ -167,4 +167,4 @@ the agents. See [gateway](/domain/gateway.md) and
 # Related
 
 - [claim](/domain/claim.md) — the entitlement a dose is opened against.
-- [affordance](/domain/affordance.md) — a valve is what `actuation:valve` is bound to on a row.
+- [step](/domain/step.md) — a valve is what `actuation:valve` is bound to on a row.

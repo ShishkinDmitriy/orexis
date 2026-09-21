@@ -71,18 +71,17 @@ def stand_in(case: Path, text: str | None = None):
     assert ontology is not None, f"{case.name} types no graph as the vocabulary's"
     st.close_catalogue()      # a case's rows say one class each; every kind stands on them now, as on a volume's
     desires, wants = Desires(st), Wants(st)
-    #  ENOUGH TO RUN A SEARCH, and no more. `Afforder` takes collections over this store and
-    #  no agent, so a case can have one; `desire_urgency` is the CHOIR, which a case has no
+    #  ENOUGH TO RUN A SEARCH, and no more. `Actions` and `Steps` take this store and no
+    #  agent, so a case can have both; `desire_urgency` is the CHOIR, which a case has no
     #  members to ask — it answers None, and the planner then judges a compiled want the way
     #  the puzzle worlds are judged, binary from the store: unmet 1, met 0 (`planner._urgency_in`).
     #  A case whose goal is a shape therefore needs no capability loaded, and its whole
     #  objective is in the store, which is what makes a search snapshot-shaped at all.
     from orexis_agent_deliberation.actions import Actions
-    from orexis_agent_deliberation.affordances import Affordances
-    from orexis_agent_deliberation.afforder import Afforder
+    from orexis_agent_deliberation.steps import Steps
     return SimpleNamespace(id=AGENT, me=SimpleNamespace(uri=ME, acts_for=None), beliefs=st, desires=desires,
                            wants=wants, ask=lambda *a, **k: [], keeper=None,
-                           afforder=Afforder(Actions(st), Affordances(st), desires, ME, picks_graph(AGENT)),
+                           actions=Actions(st), steps=Steps(st), picks=picks_graph(AGENT),
                            desire_urgency=lambda *a, **k: None)
 
 

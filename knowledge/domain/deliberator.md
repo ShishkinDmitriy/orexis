@@ -336,7 +336,7 @@ shipped one big `menu.rq` here first, which made the KINDS of action a registry 
 until the sovereign caught the overclaim.
 
 **Chaining therefore needs no precondition language**, and that is the one thing about the menu
-worth stating here rather than in [affordance](/domain/affordance.md), which owns why: the
+worth stating here rather than in [step](/domain/step.md), which owns why: the
 search's "would this action even exist afterwards" is the ordinary menu query, run against the
 simulated world instead of this one. What a row carries, what an absent one means, and the two
 modes are all over there.
@@ -349,14 +349,14 @@ Runs one per candidate, against the [imaginarium](/domain/imaginarium.md). What 
 The consequence for this loop: an [action](/domain/action.md) carrying no rule cannot be simulated,
 which is why the gate refuses a choosable one without a rule (#506); the pass used to be marked
 PARTIAL, a flag that routed the question elsewhere and then only said what happened, and it is
-gone with the condition it flagged. Concluding from part of the affordances is concluding wrongly, and the row
+gone with the condition it flagged. Concluding from part of the steps is concluding wrongly, and the row
 nobody could simulate may be the one that works — measured on fern, which buys its water. Which
 is why a world holding such an action is refused before it can run.
 
 # What deliberation does with an obligation (#218)
 
 Asked about a stake, the search ranges over the agent's OWN rows alone and never proposes one
-owed to somebody — the split itself is [affordance](/domain/affordance.md)'s. What belongs here is why an obligation
+owed to somebody — the split itself is [step](/domain/step.md)'s. What belongs here is why an obligation
 is deliberated about at all, since the obvious arrangement is that it is not.
 
 Honouring used to be *never proposed*: the whether was settled elsewhere and by others — the

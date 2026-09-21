@@ -128,7 +128,7 @@ def kernel(name: str) -> str:
 # property it is priced in is the domain's statement (#127), copied into the expectation row;
 # sensing is asked to look once so the baseline is the freshest thing on record.
 
-# How many consecutive unmet ends make an affordance suspect — the family's figure, like the
+# How many consecutive unmet ends make a step suspect — the family's figure, like the
 # patience bounds: what this society tolerates before it stops trusting a claim.
 _SUSPECT_Q = """
 SELECT ?n WHERE {
@@ -1588,7 +1588,7 @@ SELECT ?next WHERE {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{PROGRESSION + 
     def _is_suspect(self, action: str, want: str) -> bool:
         """The last suspectAfter verdicts for this pair, all unmet, none met among them.
 
-        Consecutive rather than cumulative, so one success resets the count: an affordance
+        Consecutive rather than cumulative, so one success resets the count: a step
         that mostly pays is noisy, not false.
         """
         rows = bindings(self.agent.intentions.query_over(f"""
@@ -1697,7 +1697,7 @@ SELECT ?n WHERE {{
             out["oldest_intention_s"] = round(max(s.age_s() for s in standing), 1)
         # The end-verdicts, counted from the ledger. `expectations_unmet` climbing while
         # `satisfied` outcomes accumulate is the false-knowledge signature in series form;
-        # `affordances_suspect` above zero is the flag itself.
+        # `steps_suspect` above zero is the flag itself.
         rows = bindings(self.agent.intentions.query_over(f"""
 SELECT ?met (COUNT(?s) AS ?n) WHERE {{ GRAPH <{self.graph}> {{
   ?i <{PROGRESSION + "step"}> ?s . ?s <{END_MET}> ?met ; <{PREDICTS}> ?world }} }} GROUP BY ?met""", self.graph))
@@ -1705,7 +1705,7 @@ SELECT ?met (COUNT(?s) AS ?n) WHERE {{ GRAPH <{self.graph}> {{
         out["expectations_open"] = len(self.open_expectations())
         out["expectations_met"] = counts.get("true", 0)
         out["expectations_unmet"] = counts.get("false", 0)
-        out["affordances_suspect"] = len(self.suspects())
+        out["steps_suspect"] = len(self.suspects())
         return out
 
 

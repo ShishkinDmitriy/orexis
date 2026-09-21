@@ -60,7 +60,7 @@ which coined the middle term and grouped the modes:
 | [desire](/domain/desire.md) | **bouletic** | *boulē*, will | what is wanted; unmet is a gap |
 | [obligation](/domain/obligation.md) | **deontic** | *deon*, what binds | what is owed; unmet is a breach |
 | the constitution | **deontic**, its prohibitive half | | what may not be, enforced rather than urged |
-| [affordance](/domain/affordance.md) | **alethic** | *alētheia*, truth | what is possible now |
+| [step](/domain/step.md) | **alethic** | *alētheia*, truth | what is possible now |
 | a freshness want | **epistemic** | *epistēmē*, knowledge | what is known, and how stale |
 
 **The distinction earns its keep at one place**: an obligation is not a stronger desire. They are

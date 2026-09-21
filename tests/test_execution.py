@@ -13,10 +13,9 @@ import rdflib
 from orexis_agent_progression.act import Step
 from orexis_agent_progression import execution
 from orexis_agent_deliberation import pursuit
-from orexis_agent_deliberation.affordance import Affordance
+from orexis_agent_progression.act import Step
 from orexis_agent_deliberation.actions import Actions
-from orexis_agent_deliberation.afforder import Afforder
-from orexis_agent_deliberation.affordances import Affordances
+from orexis_agent_deliberation.steps import Steps
 from assembly import loader
 from orexis_agent_deliberation.planner import Planner
 
@@ -142,7 +141,7 @@ def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monk
         monkeypatch.setenv("OREXIS_WORLD", world)
         agent = build_agent(agent_id, genesis_store(world=world), monkeypatch)
         open_round_for(agent, agent_id)
-        for row in Afforder(Actions(agent.beliefs), Affordances(agent.beliefs), agent.desires, agent.me.uri, picks_graph(agent.id)).offered():
+        for row in Steps(agent.beliefs).find_all(Actions(agent.beliefs).find_all(), agent.desires.abouts(agent.me.uri), agent.me.uri, picks_graph(agent.id)):
             rows_seen += 1
             from orexis_agent_progression.act import takers_of
             takers = [m.name for m in takers_of(agent, row.action)]
@@ -164,21 +163,21 @@ def test_execution_dispatches_by_the_triple_and_never_by_name(monkeypatch):
             if term in actions:      # every action is a point; its taker contributes it (#523)
                 monkeypatch.setattr(m, name, lambda row, desire, i, m=m: handed.append(m.name) or False)
     stake = stake_of(fern)
-    row = Affordance(action=OBSERVING, want=stake.uri, binding=filled((ABOUT, MOISTURE), (SENSOR, "urn:probe")))
-    assert execution.carry_out(fern, Step.from_row(row), stake, "urn:intent") is False
+    row = Step(action=OBSERVING, want=stake.uri, binding=filled((ABOUT, MOISTURE), (SENSOR, "urn:probe")))
+    assert execution.carry_out(fern, row, stake, "urn:intent") is False
     assert handed == ["subscribing"], "Observe went to sensing and to nothing else"
     handed.clear()
-    row = Affordance(action=TENDERING, want=stake.uri, binding=filled((ABOUT, MOISTURE), (VENUE, "urn:venue")))
-    execution.carry_out(fern, Step.from_row(row), stake, "urn:intent")
+    row = Step(action=TENDERING, want=stake.uri, binding=filled((ABOUT, MOISTURE), (VENUE, "urn:venue")))
+    execution.carry_out(fern, row, stake, "urn:intent")
     assert handed == ["bidding"]
 
 
 def test_a_means_nobody_takes_is_logged_and_takes_nothing(monkeypatch, caplog):
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
-    row = Affordance(action="http://example.org/nowhere#Untaken",
+    row = Step(action="http://example.org/nowhere#Untaken",
                           want=stake_of(fern).uri, binding=filled((ABOUT, MOISTURE), (VENUE, "urn:x")))
     with caplog.at_level("ERROR", logger="execution"):
-        assert execution.carry_out(fern, Step.from_row(row), stake_of(fern), "urn:i") is False
+        assert execution.carry_out(fern, row, stake_of(fern), "urn:i") is False
     assert any("nothing takes" in r.message for r in caplog.records)
 
 

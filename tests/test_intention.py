@@ -193,7 +193,7 @@ def test_the_agent_reports_what_stands_and_how_old(make):
     assert "oldest_intention_s" not in fresh
     # the end-verdict counters ride along since #131 — all quiet on a fresh agent
     assert (fresh["expectations_open"], fresh["expectations_met"],
-            fresh["expectations_unmet"], fresh["affordances_suspect"]) == (0, 0, 0, 0)
+            fresh["expectations_unmet"], fresh["steps_suspect"]) == (0, 0, 0, 0)
     fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     reported = keeper.reports()
     assert reported["intentions_standing"] == 1

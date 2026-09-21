@@ -45,7 +45,7 @@ Computed on every asking, stored nowhere. **The same number is a crisis for one 
 for another** — a fern at 0.30 is thirsty and a succulent at 0.30 is content — so a stored gap
 would be a conclusion carrying none of the premises that made it one.
 
-This is the same argument that keeps [affordance](/domain/affordance.md) rows out of the store,
+This is the same argument that keeps [step](/domain/step.md) rows out of the store,
 arriving from the desire side rather than the menu side.
 
 # No row is not a zero

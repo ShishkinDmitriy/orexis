@@ -4,7 +4,7 @@ title: Effect
 description: >-
   What taking an action would MAKE TRUE, stated on the action's own node in SHACL-AF's words
   — a construct for what it adds, and `orexis:retracts` for what it
-  removes, which is ours because the standard has no deletion. It is what turns an affordance
+  removes, which is ours because the standard has no deletion. It is what turns a step
   row from "this is available" into something a planner can reason about, and it carries the
   timing (`orexis:landsAfter`) so that
   the number a planner predicts and the number a keeper later verifies cannot be two numbers.
@@ -13,7 +13,7 @@ description: >-
 
 # What it is
 
-An [affordance](/domain/affordance.md) row says an action is available, filled. It does
+An [step](/domain/step.md) row says an action is available, filled. It does
 not say what pulling it would achieve — and a desire that is a shape needs exactly that, because
 matching a desire to an action means asking what taking it would make true.
 
@@ -108,7 +108,7 @@ ordinary answer to every caller (treating it as an error would make shipping a p
 two-file obligation) and a REFUSAL at exactly one place: `orexis-validate` will not pass a
 world in which such a means puts a row on some agent's menu. Most means never do.
 
-What a search must NOT do is conclude from part of the affordances. A plan that passed over any row is
+What a search must NOT do is conclude from part of the steps. A plan that passed over any row is
 marked partial and defers, because the one it could not simulate may be the one that works.
 
 # How long it takes, asked by two readers

@@ -233,10 +233,12 @@ SELECT ?d ?label ?about WHERE {{
     def abouts(self, agent_uri: str) -> dict[str, tuple[str, ...]]:
         """What each thing this agent holds is ABOUT, node -> the IRIs it names.
 
-        HERE BECAUSE THIS MODALITY OWNS THE STORE IT READS. It was `afforder.wants_of`, in a
+        HERE BECAUSE THIS MODALITY OWNS THE STORE IT READS. It was `wants_of` on the service
+        that looped the templates into a world, in a
         file named for the service that consumes the answer rather than for the collection that
-        has it — which is why "why does the afforder select for wants?" was a fair question with
-        no good answer. The afforder needs to know what this agent holds; being told is not the
+        has it — which is why "why does the menu select for wants?" was a fair question with
+        no good answer. Whoever asks a world what it affords needs to know what this agent holds;
+        being told is not the
         same as fetching it, and a menu that fetched it knew a query text about somebody else's
         contents.
 
@@ -256,6 +258,6 @@ SELECT ?d ?label ?about WHERE {{
             return {w: tuple(sorted(a)) for w, a in out.items()}
 
         #  REMEMBERED AGAINST THE PROJECTION, so a rebuild is the invalidation — and a rebuild is
-        #  what every write that could change this answer already triggers. The afforder memoised
+        #  what every write that could change this answer already triggers. The service memoised
         #  it instead, which made that service stateful and forced its callers to keep one each.
         return self._built.remember(("abouts", agent_uri), compute)

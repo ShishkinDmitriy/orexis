@@ -665,7 +665,7 @@ def test_one_mismatched_ack_is_noise_and_two_are_the_detector(fern, caplog):
 
 
 def test_an_agreeing_ack_clears_the_dispute(fern):
-    """One success resets, exactly as the affordance suspicion does: a board that took the
+    """One success resets, exactly as the suspicion on a step does: a board that took the
     command is a board in agreement, whatever the previous wake said."""
     s = moisture_sensor(fern)
     fern.deliver(s.reading_topic, {"moisture": 0.2})

@@ -57,7 +57,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 # Means — actions, steps, and what taking one comes to
 
 * [action](/domain/action.md) - One way of acting as one node — and the kind of act itself: precondition, effect, taker. A package adds one node and one `take()`.
-* [step](/domain/step.md) - A planned instance of an action: action, quantity, window, prediction, what it waits for. A plan is steps; not yet done.
+* [step](/domain/step.md) - One action filled in: its parameters bound, whom it serves. A world's are derived; a plan's are written down.
 * [plan](/domain/plan.md) - What one pass returns for one want: steps in order, an outcome, a cost, the candidate it came through. Never executed, never stored.
 * [precondition](/domain/precondition.md) - The facts a step's rule read, instantiated; a plan's is their regression; checked by asking the present, never by re-running the rule.
 * [tolerance](/domain/tolerance.md) - How close the world must land to a step's predicted value: a fraction of the movement, a bounded revisable pick, never a kernel constant.
@@ -66,8 +66,6 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [relevance](/domain/relevance.md) - Which actions could serve a want: read off the actions, closed backward through preconditions, never declared; unreadable keeps every action.
 * [scope](/domain/scope.md) - Predicates joined wherever one action or derivation touches both; wants in different scopes cannot contradict.
-* [affordance](/domain/affordance.md) - One row of what an agent could do now — an action whose precondition holds. Derived and never stored; whom it serves is a column.
-* [afforder](/domain/afforder.md) - The service between two collections: it decides what to ask, they know how to fetch.
 
 * [transport](/domain/transport.md) - How an agent reaches its society: a capability the bus grants, holding the connection and three choir hooks. Not a driver.
 
@@ -84,7 +82,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [executor](/domain/executor.md) - Plan, commit the head as an intention, hand it to its actor. One path for every trigger; a standing step is taken, not re-decided.
 
-* [actor](/domain/actor.md) - The module an affordance is linked to: whichever contributes the action. Takes a step; never decides one.
+* [actor](/domain/actor.md) - The module a step is linked to: whichever contributes its action. Takes a step; never decides one.
 
 # Doing
 
@@ -135,7 +133,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [belief-base](/domain/belief-base.md) - One belief base per agent, not one shared store: named-graph layout, SOSA shape, provenance, structural isolation.
 * [gateway](/domain/gateway.md) - Decommissioned in v1: the measurement-witness role, folded into the self-asserting plant edge.
 * [planner](/domain/planner.md) - Runs planning: a bounded search over simulated worlds, writing one possible world per node.
-* [menu](/domain/menu.md) - The alethic modality, what I COULD do: actions are written into it, affordances derived out.
+* [menu](/domain/menu.md) - The alethic modality, what I COULD do: actions are written into it, the steps they afford derived out.
 * [keeper](/domain/keeper.md) - Runs keeping, the patience and the verification arc; the intention graph's only writer.
 * [ower](/domain/ower.md) - Runs owing: one row per claim issued against this agent, durable across a restart.
 * [inference](/domain/inference.md) - Materialises what the vocabulary entails, so both engines read one graph.

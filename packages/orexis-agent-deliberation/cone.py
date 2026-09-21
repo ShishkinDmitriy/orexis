@@ -125,10 +125,6 @@ class _Compiled:
     #  read once so the signature canonicalises a reading without this file knowing what one is.
     keys: dict | None = None
     about_of: dict = field(default_factory=dict)
-    #  The pass's `Afforder`: the templates and what the agent holds, read once. The WORLD is
-    #  not here — it is a parameter of each ask, so a search hands it a fresh `Affordances` per
-    #  node (an-afforder-is-a-service-between-two-collections).
-    afforder: object = None
     #  THE LAW THIS PASS PRUNES BY (#468) and its compiled selects, and the legality check's
     #  (#548) — None and empty where the world ratifies no such shape, and then it costs nothing.
     law: object = None

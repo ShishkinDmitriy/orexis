@@ -132,7 +132,7 @@ def test_an_open_watch_is_maximum_urgency_and_a_verdict_releases_it(thirsty):
 
 # --- the flag: suspicious after N, never auto-retracted -----------------------
 
-def test_an_affordance_that_never_pays_becomes_suspect(monkeypatch, caplog):
+def test_a_step_that_never_pays_becomes_suspect(monkeypatch, caplog):
     """Three acquisitions, three honoured claims, three deadlines passed with the pot still
     drying: the pair (Acquire, SoilMoisture) is flagged — a warning in the log, a line in the
     health series — and nothing is retracted, because what to do about a belief that is not
@@ -152,14 +152,14 @@ def test_an_affordance_that_never_pays_becomes_suspect(monkeypatch, caplog):
                 keeper.lapse(watch.uri)
 
     assert keeper.reports()["expectations_unmet"] == 3
-    assert keeper.reports()["affordances_suspect"] == 1
+    assert keeper.reports()["steps_suspect"] == 1
     assert [pair for pair in keeper.suspects()
             if pair[0] == PRESENTING and pair[1] == stake_of(fern).uri]
     assert "AFFORDANCE SUSPECT" in caplog.text
 
 
 def test_one_success_resets_the_suspicion(monkeypatch):
-    """Consecutive, not cumulative: an affordance that mostly pays is noisy, not false."""
+    """Consecutive, not cumulative: a step that mostly pays is noisy, not false."""
     fern = build_agent("fern", genesis_store({"fern": 0.30}), monkeypatch)
     keeper = keeper_of(fern)
 
@@ -177,7 +177,7 @@ def test_one_success_resets_the_suspicion(monkeypatch):
     lapse_all()                                                              # unmet
 
     assert keeper.reports()["expectations_unmet"] == 2
-    assert keeper.reports()["affordances_suspect"] == 0
+    assert keeper.reports()["steps_suspect"] == 0
 
 
 # --- the claim waits for the watch (#132) -----------------------------------

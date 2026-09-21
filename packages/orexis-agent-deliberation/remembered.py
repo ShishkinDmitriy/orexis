@@ -111,8 +111,10 @@ def applicable(agent, want: str, desires) -> tuple | None:
 def on_menu_now(agent, step, desires) -> bool:
     """Whether the present's menu offers this very step: the action filled exactly this way —
     the availability select's own answer, filters and all."""
+    me = agent.me.uri
     return any(r.is_own and r.binding == step.binding
-               for r in agent.afforder.offered(only=frozenset({step.action})))
+               for r in agent.steps.find_all(agent.actions.find_all(), desires.abouts(me), me,
+                                             agent.picks, only=frozenset({step.action})))
 
 
 _SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")

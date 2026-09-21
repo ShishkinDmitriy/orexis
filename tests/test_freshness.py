@@ -262,7 +262,7 @@ def test_an_instrument_pointed_at_something_i_do_not_act_for_is_still_wanted_cur
     at all. The premise is the INSTRUMENT, so the want exists, and that half is unchanged.
 
     What is NOT unchanged is what the gardener does about it, and the change is the point of
-    the mode-conditional affordance. The butt's level is a push device: it announces, and
+    the mode-conditional precondition. The butt's level is a push device: it announces, and
     there is nothing to ask. So the want stands, hot, and the search answers NOTHING — no
     lever this agent holds points at it — which is the sentence that means *equip me*. What
     happened before was worse than nothing: an Observe intention adopted every patience
