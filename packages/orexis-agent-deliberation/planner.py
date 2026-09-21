@@ -62,6 +62,7 @@ from .cone import _Compiled, _Node
 from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED,
                    REMEMBERED, SATISFIED)
 from .trace import SURPRISE_EXOGENOUS, SURPRISE_WITHHELD
+
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import DESIRE, KNOWN, PREDICTION, RECORD, STATE, WANT
 
@@ -84,6 +85,11 @@ class _Remembered:
 
 #  WHERE A PASS SAYS WHAT IT KNOWS about the worlds it made — in the imaginarium, beside them,
 #  and gone when the pass is. Named once here because this is what creates it.
+#  THE TWO VERDICTS THAT MEAN "not forked, and could be": the budget ran out, or it cost more
+#  than a plan already found. A resumed pass forks these before it gives up (#570), which is
+#  what a node's `withheld` list was for.
+_WITHHELD = frozenset({trace.SPENT, trace.COSTLY})
+
 RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 XSD = "http://www.w3.org/2001/XMLSchema#"
 _TRUE = ox.Literal("true", datatype=ox.NamedNode(XSD + "boolean"))
@@ -717,12 +723,10 @@ class Planner:
                 saw_candidate = True
                 if forked >= self.budget:
                     self._weigh(row, node.graph, depth, trace.SPENT)
-                    node.withheld.append((row, trace.SPENT))
                     continue
                 step = self._step_from(node, row, judgment, self._bound)
                 if step is TOO_DEAR:
                     self._weigh(row, node.graph, depth, trace.COSTLY)
-                    node.withheld.append((row, trace.COSTLY))
                     continue
                 if step is None:
                     self._weigh(row, node.graph, depth, trace.UNSIMULATED)
@@ -889,7 +893,8 @@ class Planner:
         #  the kept nodes are scanned by their projected diff, a hundred at most.
         wanted = self._key((present - base, base - present))
         node = next((m for m in self._nodes if self._key(m.diff) == wanted), None)
-        if node is None and any(m.withheld or not m.expanded for m in self._nodes):
+        if node is None and any(self._weighed_in(m.graph, _WITHHELD) or not m.expanded
+                                for m in self._nodes):
             #  COMPLETE BEFORE GIVING UP (#570): what the last pass did not fork is forked
             #  now — the rows a node withheld for budget or cost, and every row of a node
             #  the budget stopped before it was expanded — at every kept node, since the
@@ -899,7 +904,7 @@ class Planner:
             for m in list(self._nodes):
                 if m.verdict is not None:
                     continue
-                rows = [row for row, _ in m.withheld] if m.expanded else [
+                rows = self._weighed_in(m.graph, _WITHHELD) if m.expanded else [
                     row for row in self._candidates(m, judgment)
                     if self._compiled.relevant is None or row.action in self._compiled.relevant]
                 for row in rows:
@@ -910,7 +915,7 @@ class Planner:
                         if at not in self._seen:
                             self._seen[at] = step.cost
                             self._by_diff[at] = step
-                m.withheld, m.expanded = [], True
+                m.expanded = True
             node = next((m for m in self._nodes if self._key(m.diff) == wanted), None)
             if node is not None:
                 self._surprise = (SURPRISE_WITHHELD, _said((present - base, base - present)))
@@ -937,7 +942,8 @@ class Planner:
         if node.expanded:
             offered = frozenset((r.action, r.binding, r.want) for r in self._offered(
                 self._imagined, graphs=self._dataset(clock.now(), STATE_GRAPH), only=self._compiled.asked))
-            if offered - node.menu:
+            was = frozenset((r.action, r.binding) for r in self._weighed_in(node.graph))
+            if {(a, b) for a, b, _ in offered} - was:
                 self.reset()
                 return False
         self._reroot(node, present, subtree=True, judgment=judgment)
@@ -952,7 +958,7 @@ class Planner:
         base = self._base_facts
         keep = [m for m in self._nodes if self._descends(m, node)] if subtree else [node]
         if not subtree:
-            node.expanded, node.withheld, node.met, node.legal = False, [], False, None
+            node.expanded, node.met, node.legal = False, False, None
         for m in self._nodes:
             self._release(m)
         #  THE PRESENT'S READINGS ARE THE ROOT'S GRAPH, observed: the imaginarium's copy is
@@ -1413,7 +1419,7 @@ class Planner:
             only=self._compiled.asked)
         #  WHAT THE MENU WAS when this node was expanded, so a resumed pass can tell a lever
         #  that is on it now and was not then (`_resume`).
-        node.menu = frozenset((r.action, r.binding, r.want) for r in rows)
+
         for row in rows:
             #  A ROW THAT NAMES A WANT SERVES THAT WANT — Dosing for this pot and not the next,
             #  and a look for this instrument. A row owed to someone serves the want it names
@@ -1825,6 +1831,29 @@ SELECT ?w WHERE {{ ?w a deliberation:PossibleWorld ;
 ORDER BY {order} LIMIT 1""", PASS_GRAPH))
         return self._by_name.get(rows[0]["w"]) if rows else None
 
+    def _weighed_in(self, world: str, verdicts=None) -> list:
+        """The candidates this pass weighed in one world, as rows — asked of the store.
+
+        A node kept two lists of these in Python: `menu`, every row it was expanded with, so a
+        resumed pass could tell a row that is on the menu NOW and was not then; and `withheld`,
+        the rows the budget or the bound stopped it forking, so a resumed pass could fork them
+        before giving up. Both are verdicts, and every offered row gets exactly one (#755), so
+        both are a filter over what the store already holds.
+        """
+        if self.imaginarium is None or self._want is None:
+            return []
+        only = ("" if not verdicts else
+                "VALUES ?verdict { %s }" % " ".join(f'"{v}"' for v in sorted(verdicts)))
+        rows = bindings(self.imaginarium.query_over(f"""
+SELECT ?c ?action {BOUND} WHERE {{
+  ?c deliberation:from <{world}> ; deliberation:wouldTake ?action .
+  ?x deliberation:weighs ?c ; deliberation:forWant <{self._want}> ; deliberation:verdict ?verdict .
+  {only}
+  {bound_clause("?c")} }}
+GROUP BY ?c ?action""", PASS_GRAPH, *self.imaginarium.graphs_of(PUBLIC)))
+        return [Step(action=r["action"], binding=binding_from(r.get("bound")), want=self._want)
+                for r in rows]
+
     def _weigh(self, row, world: str, depth: int, verdict: str,
                urgency: float | None = None, missing=None) -> None:
         """One candidate weighed, written where it is decided.
@@ -1863,6 +1892,12 @@ ORDER BY {order} LIMIT 1""", PASS_GRAPH))
         if missing is not None:
             out.append(ox.Quad(weighing, ox.NamedNode(DELIBERATION + "missing"),
                                ox.Literal(repr(missing)), g))
+        #  ONE VERDICT AT A TIME. A resumed pass forks what the budget withheld, so the same
+        #  candidate is weighed twice in one cone and the second answer is the true one — and
+        #  `note` ADDS, so without this the store would hold both and a reader would get
+        #  whichever it saw first. By pattern, so it costs a lookup rather than a scan.
+        self.imaginarium.unnote(self.imaginarium.quads_for_pattern(
+            weighing, ox.NamedNode(DELIBERATION + "verdict"), None, g))
         self.imaginarium.note(out)
 
     def _keep(self, node) -> None:

@@ -89,16 +89,16 @@ class _Node:
     parent: object = None
     changed: frozenset = frozenset()     # the PLACES the steps on this path changed (#643)
     expanded: bool = False
-    menu: frozenset = frozenset()        # the rows this node was expanded with, for a resumed pass to compare
     met: bool = False
     legal: bool | None = None            # the society's verdict on this world, once asked
     #  A SURPRISE IS READ BY WHAT WAS NOT IMAGINED (#570): `verdict` is why this world, once
     #  forked, was refused a place on the frontier — forbidden, late, dearer than the bound —
-    #  and None for a world the search kept; `withheld` is the rows this node never forked,
-    #  with why — the budget spent, or dearer than the bound before simulation. A node is
-    #  FULL when it is expanded and withheld nothing.
+    #  and None for a world the search kept. What it WITHHELD — the rows the budget or the
+    #  bound stopped it forking — is not here: every offered row is weighed, and a verdict is
+    #  a row in the store (#755), so what a world withheld is a filter over what is already
+    #  written rather than a list carried beside it. Nor is the menu it was expanded with,
+    #  for the same reason: that is every row weighed in it.
     verdict: str | None = None
-    withheld: list = field(default_factory=list)
 
 
 @dataclass
