@@ -15,7 +15,8 @@ description: >-
   the adapter's update is what keeps the door's caches and the keeper's listeners true. Every
   plural read is bounded by a defaulted `limit`/`offset`, ordered before it is cut - an
   unordered LIMIT picks by engine layout - and says so when a page comes back full.
-status: accepted
+status: superseded
+superseded-by: a-read-is-a-function-over-a-store
 timestamp: 2026-09-17T12:00:00Z
 ---
 
@@ -248,3 +249,25 @@ the same case: it is a PROJECTION with a rebuild, and whether the settings and t
 are legitimately read through the desire modality is a question this record never asked. When it
 follows, this record is superseded rather than amended again, and the two principle lines in
 `AGENTS.md` that state the convention come out with it.
+
+# Superseded: the convention has no instances
+
+`Desires` was the second and last of them, and its three finders are functions over a store
+now — `find_desires`, `find_desire`, `desire_behind` — as `Wants`' went before them. What is
+left of the class is a MODALITY: a store whose nature is its own decision, the rebuild that is
+the only way it changes, and the questions it can be asked. That is not a collection, and
+nothing else here is one either.
+
+**What the convention was RIGHT about outlives it**, and is kept as lines in `AGENTS.md`
+rather than as a naming rule: a read is handed a store and nothing else, because an agent id
+is another aggregate root's identity; a criterion is an argument and never a name; a read only
+reads, and the function that decides a thing owns writing it; a plural read is ordered before
+it is cut and says so when a page comes back full.
+
+**What it was wrong about is the shape.** A repository is a collection of domain objects, and
+what these were is queries with a `where` clause swapped — five finders over one text in
+`Wants`, three in `Desires`, several of them called by nothing but their own test. The
+Spring Data spelling charges a NAME per criterion and a name per combination, which is how a
+query with two optional narrowings becomes four methods. The sovereign's ruling on reading
+`find_steps` land as a function: *a function over a triple store is more convenient,
+especially where an update query brings no data into Python.*
