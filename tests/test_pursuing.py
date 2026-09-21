@@ -129,15 +129,15 @@ def test_a_derived_want_that_reads_met_with_nothing_standing_is_withdrawn(monkey
     assert _stake(agent).uri == root.uri
 
 
-def test_the_derived_want_borrows_the_roots_measure(monkeypatch):
-    """An at-end want has no room of its own; the one derived under a root reads the root's
-    state room. Asked of the measure directly, at the same reading, both answer alike."""
+def test_the_derived_want_borrows_the_roots_verdict(monkeypatch):
+    """An at-end want has no room of its own; the one derived under a root reads the root's.
+    Both were asked of the MEASURE, which is gone — what they must still agree about is the
+    verdict, which is the thing anything ever branched on."""
     agent = _gardener(monkeypatch, DRY)
     root = _stake(agent)
     agent.deliberator.decide(root)
     child = _stake(agent)
-    assert agent.desire_urgency(child, agent.beliefs.reader(PUBLIC), STATE_GRAPH) == \
-        agent.desire_urgency(root, agent.beliefs.reader(PUBLIC), STATE_GRAPH) > 0.0
+    assert child.state == root.state == "unmet"
 
 
 def test_a_mark_by_either_name_pursues_the_same_want(monkeypatch):

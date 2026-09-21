@@ -15,7 +15,8 @@ description: >-
   toward the pick comes out of satisficing with a natural deadband. The prerequisite for
   retiring the reflex, which this change deliberately did not touch and which phase B has
   since deleted.
-status: accepted
+status: superseded
+superseded-by: a-want-is-judged-by-its-met-test-and-nothing-else
 timestamp: 2026-08-24T12:00:00Z
 ---
 

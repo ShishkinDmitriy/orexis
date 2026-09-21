@@ -91,7 +91,7 @@ exists per property, as the envelope beside the region" is half right, and the w
 matters. The envelope is deliberately NOT a refusal — it reports `sh:Warning` at the gates,
 because a plant past tolerating is a fact about the world rather than an illegitimate world,
 and an agent past its envelope must be allowed to start precisely so it can act. What the
-envelope actually does is PRICE the shall: [urgency](/domain/urgency.md) is distance from the
+envelope actually does is PRICE the shall: urgency is distance from the
 aim scaled by the survival room on that side, so the envelope is the denominator of every want
 about the property. It serves SHALL's arithmetic, not MUST NOT's enforcement. One extension
 from the sitting's examples pass, because the sovereign's reading — *property must be in

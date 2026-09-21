@@ -261,10 +261,11 @@ def _because(plan, judgment) -> str:
     """The ledger's prose: what the plan found and how far it expected to get. The want by
     its own name, which says what it is about — a debt's carries its claim."""
     what = judgment.uri.rsplit("#", 1)[-1]
-    if plan.urgency_now is None or plan.urgency_after is None:
+    if plan.unmet_now is None or plan.unmet_after is None:
         return f"{plan.outcome} for {what}"
-    return (f"{plan.outcome} for {what}: urgency {plan.urgency_now:.2f} -> "
-            f"{plan.urgency_after:.2f} over {len(plan.steps)} step(s)")
+    return (f"{plan.outcome} for {what}: "
+            f"{'unmet' if plan.unmet_now else 'met'} -> "
+            f"{'unmet' if plan.unmet_after else 'met'} over {len(plan.steps)} step(s)")
 
 
 def _promised(agent, want: str) -> bool:

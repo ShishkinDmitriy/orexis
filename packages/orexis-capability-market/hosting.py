@@ -336,23 +336,6 @@ SELECT (SUM(?a) AS ?owed) WHERE {{
         """What I owe, as figures — the ledger's, through the module that holds it."""
         return self.ledger.series()
 
-    def desire_urgency(self, judgment, query, state: str, value=None) -> float | None:
-        """How badly a CALL is unmet, in the world `query` answers about: 0 where a round
-        stands on its venue, 1 where none does. Reads both the graph I hold rounds in and
-        the graph a plan imagines them into, because an Offer's effect lands in the latter.
-        None for anything that is not a call."""
-        if not judgment.uri.startswith(f"{calls.NS}call_"):
-            return None
-        from orexis_agent_progression.ontology import picks_graph
-
-        rows = bindings(query(f"""
-SELECT ?r WHERE {{
-  GRAPH <{picks_graph(self.agent.id)}> {{ <{judgment.uri}> market:calledOn ?via }}
-  {{ ?via market:hasRound ?r . ?r market:closesAt ?c }}
-  UNION {{ GRAPH <{state}> {{ ?via market:hasRound ?r }} }}
-}} LIMIT 1"""))
-        return 0.0 if rows else 1.0
-
     @contributes(READING_RECORDED)
     def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
         """My witness reported the vessel: every held claim and every call is tried again.

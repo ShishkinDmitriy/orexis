@@ -32,7 +32,7 @@ def _judged(st, *extra):
 
 def _gaps(st, uri, agent_id="fern", monkeypatch=None):
     """Through a REAL agent, because the magnitude is a capability's answer now: sensing
-    hands `gaps_of` the choir's own (`Agent.desire_urgency`) and sensing answers from its own
+    reads `Region.distance`, sensing's own — it was a declared measure the choir answered from
     declaration — a hand-built join would fake away exactly the contribution under test."""
     return sensing_of(build_agent(agent_id, st, monkeypatch)).gaps()
 
@@ -50,8 +50,8 @@ def test_the_query_and_the_module_are_one_definition(query_with_readings, monkey
     regions = regions_of(st.reader(PUBLIC), FERN)
     assert set(gaps) == {MOISTURE, TEMPERATURE}
     for prop, gap in gaps.items():
-        assert abs(gap.gap) == round(regions[prop].urgency(gap.value), 6) or \
-            abs(abs(gap.gap) - regions[prop].urgency(gap.value)) < 1e-9
+        assert abs(gap.gap) == round(regions[prop].distance(gap.value), 6) or \
+            abs(abs(gap.gap) - regions[prop].distance(gap.value)) < 1e-9
 
 
 def test_the_gap_is_signed_and_the_sign_says_which_way_out(query_with_readings, monkeypatch):

@@ -42,7 +42,7 @@ dose. A debt discharged is not an arrival.
 
 BOID's O, and the reason the desire-graph class was a *class* from the start. An obligation is
 scored, ranked and pursued by the same machinery an agent's own wants are: it has an
-[urgency](/domain/urgency.md), it appears in *what am I pursuing*, and it competes for attention
+urgency, it appears in *what am I pursuing*, and it competes for attention
 on the same scale.
 
 Since [#471](https://github.com/ShishkinDmitriy/orexis/issues/471) that is structural rather
@@ -93,5 +93,5 @@ What it buys is that an agent does not search for a way to pay a debt. It reads 
 
 - [claim](/domain/claim.md) — what creates one.
 - [host](/domain/host.md) — the role that accumulates them.
-- [urgency](/domain/urgency.md) — the currency it competes in.
+- urgency — the currency it competes in.
 - [an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md).

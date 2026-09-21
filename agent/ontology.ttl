@@ -48,7 +48,7 @@ orexis:Capability a owl:Class ; rdfs:label "Capability" ;
 #  WHICH ROW a hook belongs to — reactive, progression, deliberative
 #  (layered-by-timescale-and-interruptibility). A property of the QUESTION and therefore of
 #  every answer to it: `handle` is always reactive, `take` always progression,
-#  `desireUrgency` always deliberative. It is stated here rather than in a directory because a
+#  `desires` always deliberative. It is stated here rather than in a directory because a
 #  row partitions METHODS of one module and crosses the kernel/package line in both
 #  directions — and because a term can be checked, where a directory can only remind.
 
@@ -541,7 +541,7 @@ orexis:Desire a owl:Class ; rdfs:label "Desire" ;
 
 IT STATES NO TIME SEMANTICS, and neither does a want. A desire holds always, which its type says; a want holds over its graph's period, which the period says; a want that must hold AT an instant carries orexis:holdsAt, which is the one thing a period cannot say. There was a binding property carrying all of that beside them, and every reader of it was asking which KIND or which FAMILY a node was (a-kind-is-a-type-not-a-binding, #681).
 
-What the node does NOT carry is a measure: how badly one is unmet is a capability's answer, asked through the choir (Module.desire_urgency) of whichever world is being judged, and the kernel holds no measure vocabulary at all — the comment after orexis:metWhen says why.""" .
+What the node does NOT carry is a measure of how badly it is unmet, and nothing else does either: a capability answered that through the choir, of whichever world was being judged, and a want is judged by its met-test now — see a-want-is-judged-by-its-met-test-and-nothing-else.""" .
 
 orexis:Want a owl:Class ; rdfs:label "Want" ;
     rdfs:comment """What a desire comes to when a situation makes it bite: deduced FROM one — `prov:wasDerivedFrom` names which — bound to the instance the situation gives it, holding during a period of its own, and withdrawn when it is met. A desire stands and is never handed to a search; a want is the only thing that ever is. "No unpaid debts" is a desire, and a debt arriving deduces the want that closes it.
@@ -598,12 +598,15 @@ orexis:about a owl:ObjectProperty ; rdfs:domain orexis:Desire ;
 #  a kernel-owned measures graph and evaluator with the content in a package — and the
 #  sovereign refused both: the core is BDI, and how badness is measured is planning-domain
 #  machinery that does not belong to it. What the kernel does instead is ASK, through the
-#  choir hook every module already answers (`Module.desire_urgency`): how urgent is this
-#  desire, in this world? A capability that owns the question answers from its own
-#  declaration — sensing's `measures.ttl`, in sensing's namespace, read by sensing's code —
-#  and a want nobody answers for scores 1.0, logged. Promotion of a measure word into orexis: has
-#  the repo's usual trigger: a word SEVERAL packages must speak, which today none is.
-#  See a-desire-states-its-own-measure.
+#  choir hook every module already answered: how urgent is this desire, in this world? A
+#  capability that owned the question answered from its own declaration — sensing's
+#  `measures.ttl`, in sensing's namespace, read by sensing's code.
+#
+#  THAT QUESTION IS NO LONGER ASKED. It was a second judgment beside the met-test the judge is
+#  already held to, and the sovereign struck it: a want is judged by its met-test and nothing
+#  scores a world by degree. The refusal above stands and is now moot on its own terms —
+#  there is no measures graph anywhere, kernel or package.
+#  See a-want-is-judged-by-its-met-test-and-nothing-else.
 #
 #  The INPUT is stated in schema.org's terms and the reuse is load-bearing rather than thrifty:
 #  an operating range's condition says `schema:minValue` / `schema:maxValue` about a property,
@@ -704,9 +707,6 @@ orexis:beliefRevised a assembly:Extension ;
 
 orexis:desires a assembly:Extension ;
     assembly:signature "(now=…) -> list['Judgment']" ; orexis:row orexis:Deliberative ; rdfs:label "desires" ; rdfs:comment "What do you contribute to what this agent pursues? Answers are ranked together, one want per node." .
-
-orexis:desireUrgency a assembly:Extension ;
-    assembly:signature "(judgment, query, state, value=…) -> float | None" ; orexis:row orexis:Deliberative ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
 
 orexis:reports a assembly:Extension ;
     assembly:signature "() -> dict" ; orexis:row orexis:Reactive ; rdfs:label "reports" ; rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." .

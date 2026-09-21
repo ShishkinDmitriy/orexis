@@ -35,7 +35,7 @@ tree it built itself.
   [imaginarium](/domain/imaginarium.md). A node is its parent plus a **diff**, and the diff is
   the node: graphs are materialised while the rules run and along the path being executed,
   and dropped otherwise. The search weights and filters the tree; a want's
-  [urgency](/domain/urgency.md) and estimate pick where to expand.
+  urgency and estimate pick where to expand.
 - **Desired future.** One path in the tree ending where the want is met — the
   [intention](/domain/intention.md), whose steps already carry their diffs as canonical facts.
 - **Past.** The chain of presents left behind, each with the act taken and the diff that

@@ -98,7 +98,7 @@ See [desire](/domain/desire.md).
   root predates the desire node form anyway. The gap predates this change and is now named.
 - **The ranking still scores the pursued want alone.** A plan for a different want that
   wanders into a merely-avoided state pays nothing yet; the aggregation that would price it
-  is its own decision, beside [urgency](/domain/urgency.md)'s composite-distance seam.
+  is its own decision, beside urgency's composite-distance seam.
 - **The law is world-authored only.** Whether a package should ever ratify a violation shape
   over runtime states is a question no customer has asked.
 

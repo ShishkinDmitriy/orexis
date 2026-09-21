@@ -78,6 +78,12 @@ def test_the_simulation_fern_foresees_and_places_under_the_worlds_pace(monkeypat
     agent = build_agent("fern", st, monkeypatch)
     root = next(d for d in agent.pursuing() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
     derive_wants(agent.beliefs.engine)   # a crossing is what the last judging found
+    #  AND THE PROJECTION WITH IT, which every production caller of the derivation pairs with
+    #  it (`pursuit.derived`) and this raw one must too. The planner compiles a want's met-test
+    #  from the desire modality, so a want minted without a rebuild has no met-test to be
+    #  judged by — and used to be judged anyway, because the measure read the belief base live
+    #  and needed no projection at all. See #766.
+    agent.desires.rebuild()
     crossing = pursuit.crossing_of(agent, root.uri)
     assert crossing is not None
     ahead = (crossing - made).total_seconds()

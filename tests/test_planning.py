@@ -71,7 +71,7 @@ def test_a_lever_that_would_overshoot_is_refused_by_simulating_it(monkeypatch):
     assert desire.state == "unmet"
     assert plan.outcome == search.NOT_BETTER
     assert plan.steps == ()
-    assert plan.urgency_after >= plan.urgency_now
+    assert plan.unmet_after >= plan.unmet_now
 
 
 def test_a_dose_that_reaches_the_region_is_planned(monkeypatch):
@@ -84,7 +84,7 @@ def test_a_dose_that_reaches_the_region_is_planned(monkeypatch):
 
     assert plan.outcome == search.SATISFIED
     assert [s.action for s in plan.steps] == ["http://example.org/orexis/actuation#Dosing"]
-    assert plan.urgency_after < plan.urgency_now
+    assert plan.unmet_after < plan.unmet_now
 
 
 def test_a_desire_already_met_plans_nothing(monkeypatch):
@@ -275,7 +275,7 @@ def test_a_plant_that_buys_its_water_can_see_the_lever_that_waters_it(monkeypatc
 
     assert [s.action for s in plan.steps] == ["http://example.org/orexis/market#Acquiring"], \
         "the lever that waters this plant is the one the search found"
-    assert plan.urgency_after < plan.urgency_now, \
+    assert plan.unmet_after < plan.unmet_now, \
         "and the world it reaches is better than standing still — `better` was zero before"
 
 
@@ -371,7 +371,7 @@ def test_a_second_dose_is_predicted_from_what_the_first_one_left(monkeypatch):
     #  plans the next dose. That is the world verifying a plan rather than a search.
     assert [s.action for s in plan.steps] == [DOSING], "a dose reaches the region"
     assert plan.outcome == search.SATISFIED
-    assert plan.urgency_after < plan.urgency_now
+    assert plan.unmet_after < plan.unmet_now
     write_reading(agent, DRY + 0.01, MOISTURE)       # the butt held too little: still below
     desire = next(g for g in agent.pursuing()
                   if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)

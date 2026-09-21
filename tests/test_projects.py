@@ -198,7 +198,6 @@ ONBOARDING_REACHES_IN = {
     ("onboarding/mqtt.py", "orexis_capability_reporting"),      # the sovereign's identity
     ("onboarding/mqtt.py", "orexis_capability_market"),         # the market's topic namespace
     ("onboarding/ask.py", "orexis_capability_reporting"),       # the sovereign's identity
-    ("onboarding/validate.py", "orexis_capability_sensing"),    # regions_of, deferred
 }
 
 

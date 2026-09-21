@@ -444,7 +444,7 @@ class Deliberator:
         """
         #  A STAKE NOTHING MEASURES is complained about by the package that holds the
         #  regions, once per want, the first time the planner asks it (sensing's
-        #  `desire_urgency`) — the kernel used to ask the live world once here to say so,
+        #  the choir's measure) — the kernel used to ask the live world once here to say so,
         #  and could tell a stake from a debt only by kind.
         #  A PLAN THAT WORKED HERE BEFORE is adopted without a search (#469, #551): the same
         #  want, a world where the plan's regressed precondition holds and its first step is
@@ -476,8 +476,9 @@ class Deliberator:
         plan = search.plan(judgment, surprise=surprise)
         self._decided[judgment.uri] = (plan, None)
         if plan.steps:
-            self.log.info("%s: %s (urgency %.2f -> %.2f)",
-                          _short(judgment.uri), plan.outcome, plan.urgency_now, plan.urgency_after)
+            self.log.info("%s: %s (%s -> %s)", _short(judgment.uri), plan.outcome,
+                          "unmet" if plan.unmet_now else "met",
+                          "unmet" if plan.unmet_after else "met")
             return plan
         #  A world reachable and not worth reaching, or no lever pointing at this want at all.
         #  THIS is the decision the reflex could not make, and returning None here is the whole

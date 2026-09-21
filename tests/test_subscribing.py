@@ -45,30 +45,25 @@ def cadences(agent):
 
 # --- the policy ------------------------------------------------------------
 
-def test_it_watches_closely_at_the_edge_of_what_its_plant_survives(fern):
-    """Its fastest at the survival floor, its slowest at the point of its region.
+def test_the_cadence_follows_what_is_in_flight_and_not_how_bad_the_reading_is(fern):
+    """The whole policy, and the four tests it replaces.
 
-    Both ends moved when desire started deducing the region, and the move is the policy rather
-    than a rescaling. The scale used to run from the agent's own low band to its own high band,
-    so *soaked* was the most comfortable reading there is; it now runs from the middle of where
-    the plant does well out to where the plant dies, on each side separately. Fern's world says
-    0.45-0.65 with survival 0.20-0.85.
+    A board used to watch harder the nearer a reading sat to trouble: the sleep was
+    interpolated between the two bounds by a declared MEASURE — fastest at the survival floor,
+    slowest at the point of the region, asymmetric because each side scaled by its own room —
+    and #133 added a second ask on the value predicted at the end of the sleep, tighten-only,
+    so a window could not open moments before a fast-drying pot crossed into trouble.
+
+    None of that survives the measure. The cadence is what the sovereign said it was for:
+    *sense frequently when we executed something and wait for feedback.* A dry pot nobody is
+    doing anything about is watched at the slow cadence, because no amount of looking changes
+    a number — which is the claim worth pinning, since it is the one that reads as a
+    regression until you say it out loud.
     """
-    assert cadence_for(fern, 0.20) == 30    # the survival floor -> its fastest
-    assert cadence_for(fern, 0.55) == 600   # the point of its region -> its slowest
-
-
-def test_too_wet_is_trouble_too(fern):
-    """The old scale had nothing above the high band, so a drowning plant read as the most
-    comfortable plant there is. Attention now rises on both sides, at the rate each side's own
-    survival room implies — which for this fern is gentler upward than downward, because it has
-    0.20 of room above its region and 0.25 below its centre."""
-    assert cadence_for(fern, 0.85) == 30     # the survival ceiling -> its fastest
-    assert cadence_for(fern, 0.70) < 600     # past the region and already worth a look
-
-
-def test_attention_scales_with_trouble(fern):
-    assert cadence_for(fern, 0.40) < cadence_for(fern, 0.60)
+    assert cadence_for(fern, 0.20) == cadence_for(fern, 0.55), \
+        "the survival floor and the point of the region earn the same sleep"
+    assert cadence_for(fern, 0.20) == fern.subscribing().beliefs.slow_sleep_s, \
+        "and it is the slow one: nothing is in flight, and trouble is not a reason to look"
 
 
 def test_attention_without_a_stake_falls_back_to_the_slow_cadence(fern):
@@ -82,21 +77,23 @@ def test_attention_without_a_stake_falls_back_to_the_slow_cadence(fern):
 def test_a_property_it_has_no_stake_in_gets_no_verdict(fern):
     """Its own pot — but a humidity, and this fern's plant states no humidity range.
 
-    The distinction that matters is *no opinion* versus *an opinion of zero*, which is why this
-    tests for None rather than for a cadence. 0.46 read as a moisture fraction lands just inside
-    the region and so scores as almost perfectly comfortable: the wrong answer and a plausible
-    number, which is the worst way for a bug to present. An assertion about the resulting cadence
-    passes whether or not the property is checked, and one about urgency does not.
+    The distinction that matters is a property this agent holds a stake in against one it does
+    not, and it is asked with NO READING — the state that earns the fast cadence for a property
+    of its own. Asked with a number instead, both answer False and the assertion would pass
+    whether or not the property is checked at all.
 
     It used to be asked about a TEMPERATURE, which fern does poll and now genuinely wants — its
     plant states an air-temperature range as well as a moisture one, which is the whole of what
     "an agent may want more than one thing" bought. Humidity is the property nothing in this
     world has an opinion about.
     """
-    assert sensing_of(fern).reading_urgency(fern.me.acts_for, HUMIDITY, 0.46) is None
+    assert sensing_of(fern).watch_closely(fern.me.acts_for, HUMIDITY, None) is False, \
+        "nothing here is the agent's to be blind about"
+    assert sensing_of(fern).watch_closely(fern.me.acts_for, MOISTURE, None) is True, \
+        "and the same question about a property it does hold a stake in says so"
     assert choir.annotations(fern, fern.me.acts_for, HUMIDITY, 0.46) == {}
 
-    assert sensing_of(fern).reading_urgency(fern.me.acts_for, MOISTURE, 0.10) is not None
+    assert sensing_of(fern).watch_closely(fern.me.acts_for, MOISTURE, 0.10) is not None
     assert choir.annotations(fern, fern.me.acts_for, MOISTURE, 0.10) == {"band": "LOW"}
 
 
@@ -109,8 +106,13 @@ def test_it_holds_an_opinion_about_every_property_its_plant_states_a_range_for(f
     """
     assert choir.annotations(fern, fern.me.acts_for, TEMPERATURE, 21.0) == {"band": "OK"}
     assert choir.annotations(fern, fern.me.acts_for, TEMPERATURE, 6.0) == {"band": "LOW"}
-    assert sensing_of(fern).reading_urgency(fern.me.acts_for, TEMPERATURE, 5.0) == 1.0
-    assert sensing_of(fern).reading_urgency(fern.me.acts_for, TEMPERATURE, 21.0) == 0.0
+    #  A VERDICT PER PROPERTY, which is what the seam asked for — the agent answers about its
+    #  air temperature as readily as about its soil. It is a BOOLEAN now and not a degree, so
+    #  what differs between 5.0 and 21.0 is nothing: neither is in flight, and how cold it is
+    #  stopped being a reason to look. What still differs is stake from no stake, below.
+    assert sensing_of(fern).watch_closely(fern.me.acts_for, TEMPERATURE, 5.0) is False
+    assert sensing_of(fern).watch_closely(fern.me.acts_for, TEMPERATURE, None) is True, \
+        "and an unread property of its own is one it is blind about"
 
 
 def test_the_bounds_come_from_the_ontology_not_the_code(fern):
@@ -133,7 +135,9 @@ def test_no_agent_can_exceed_the_constitutional_ceiling(fern):
 def test_no_agent_can_hammer_its_sensor_flat(fern):
     p = fern.subscribing()
     p.beliefs = replace(p.beliefs, fast_sleep_s=1)
-    assert cadence_for(fern, 0.0) == p.min_sleep_s
+    #  ASKED WITH NO READING, which is the state that earns the fast cadence now. It used to
+    #  be 0.0 — a reading past the survival floor, which the graded measure scored maximal.
+    assert cadence_for(fern, None) == p.min_sleep_s
 
 
 # --- the two levers --------------------------------------------------------
@@ -163,19 +167,25 @@ def test_an_acked_reading_is_always_answered(fern):
     assert len(cadences(fern)) == 3
 
 
-def test_a_changed_cadence_is_republished(fern):
-    """Ingested with explicit instants, not delivered back-to-back: two deliveries in the same
-    millisecond make a slope of 0.35-per-instant, and the trend bound (#133) then correctly
-    refuses to relax for a pot it predicts will be soaked before the next look. A sane
-    timeline — recovering gently over ten minutes — is what "the cadence relaxes" is about."""
+def test_a_changed_cadence_is_republished(fern, monkeypatch):
+    """A cadence that changes is sent again, which is what makes the policy reach the board.
+
+    THE TRIGGER IS DRIVEN, NOT PRODUCED. What flips it is now progression's — a step in
+    flight, or nothing read yet — and this test is about the REPUBLISHING, so it says which
+    answer it wants rather than arranging a world that produces one. It used to ingest two
+    readings at explicit instants, a floor then a recovery, because the cadence was a function
+    of the number; the number no longer moves it.
+    """
     from datetime import datetime, timedelta, timezone
 
     p, s = fern.subscribing(), moisture_sensor(fern)
+    answers = iter([True, False])
+    monkeypatch.setattr(type(p), "watch_closely", lambda *a, **k: next(answers))
     now = datetime.now(timezone.utc)
-    p.ingest(s, 0.2, now - timedelta(seconds=6_000))  # at the survival floor
-    p.ingest(s, 0.55, now)                            # the point of its region, reached calmly
+    p.ingest(s, 0.2, now - timedelta(seconds=6_000))
+    p.ingest(s, 0.55, now)
     assert len(cadences(fern)) == 2
-    assert cadences(fern)[0] < cadences(fern)[1]
+    assert cadences(fern)[0] < cadences(fern)[1], "tightened, then released — and both were sent"
 
 
 def test_a_sense_request_is_never_retained(fern):
@@ -491,24 +501,6 @@ def _ingest_pair(fern, first, second, seconds_apart=600):
     return p
 
 
-def test_a_fast_drying_pot_is_not_granted_a_long_sleep(fern):
-    """The failure #133 names: comfortable now, drying fast, and a sleep granted on the
-    current gap alone would end deep in trouble. The trend bound evaluates urgency at the
-    PREDICTED end-of-sleep value and grants what that answer earns — so the sawtooth flattens
-    BEFORE the band is crossed, not after.
-
-    0.60 to 0.50 in ten minutes: still OK (fern's region floor is 0.45), but at that rate a
-    ~500s sleep ends near 0.42 — below the region. The granted sleep must shorten now.
-    """
-    p = _ingest_pair(fern, 0.60, 0.50)
-    with_trend = cadences(fern)[-1]
-
-    calm = _ingest_pair(fern, 0.50, 0.50)  # same state, no movement
-    without = cadences(fern)[-1]
-    assert with_trend < without, \
-        "the same reading earned the same sleep whether or not trouble was approaching"
-
-
 def test_a_favourable_trend_relaxes_nothing(fern):
     """Tighten-only. A pot recovering toward the aim is predicted to be MORE comfortable at
     wake, and the bound must not turn that prediction into a longer sleep: reading too often
@@ -540,13 +532,14 @@ def test_the_bound_respects_the_constitutional_floor(fern):
 
 # --- ignorance is urgent: the opening burst (#137) --------------------------
 
-def test_not_knowing_a_desired_property_is_maximum_urgency(fern):
-    """Asked with None, the choir answers the OTHER question — how urgent is not knowing —
-    and for a property the agent wants held, the answer is maximal: not knowing whether the
-    pot is dying is at least as urgent as knowing it is uncomfortable. A property with no
-    region stays silent, exactly as it does for any reading of it."""
-    assert sensing_of(fern).reading_urgency(fern.me.acts_for, MOISTURE, None) == 1.0
-    assert sensing_of(fern).reading_urgency(fern.me.acts_for, HUMIDITY, None) is None
+def test_not_knowing_a_desired_property_earns_the_fast_cadence(fern):
+    """Not knowing whether the pot is dying is a reason to look, and it is the ONE reading-shaped
+    reason left: an agent with a stake and no current number is blind, and the first intention
+    is always to look. It used to arrive as "not knowing is maximally urgent" — the graded
+    answer standing in for a fact — and whether anything current is known was never a degree.
+    A property with no region stays silent, exactly as it does for any reading of it."""
+    assert sensing_of(fern).watch_closely(fern.me.acts_for, MOISTURE, None) is True
+    assert sensing_of(fern).watch_closely(fern.me.acts_for, HUMIDITY, None) is False
 
 
 def test_the_opening_burst_commands_fast_before_any_reading_exists(fern):
@@ -587,13 +580,20 @@ def test_the_burst_relaxes_once_the_property_is_measured(fern):
     assert granted == p.beliefs.slow_sleep_s, "the release must still REACH the slow end"
 
 
-def test_tightening_is_never_slewed(fern):
-    """The asymmetry is the whole point: a comfortable pot that suddenly reads parched earns
-    the fast cadence in ONE step, whatever the release schedule was doing — hesitating in that
-    direction costs a plant, and the slew must never be a reason to look away from trouble."""
+def test_tightening_is_never_slewed(fern, monkeypatch):
+    """The asymmetry is the whole point: whatever the release schedule was doing, the fast
+    cadence is reached in ONE step — hesitating in that direction costs a plant, and the slew
+    must never be a reason to look away.
+
+    WHAT TIGHTENS IT is driven rather than produced, as in the republishing test above: it
+    used to be a pot going from comfortable to parched, because the cadence was a function of
+    the number, and it is now a step going into flight.
+    """
     p = fern.subscribing()
-    fern.deliver(moisture_sensor(fern).reading_topic, {"moisture": 0.55})   # calm-ish
-    fern.deliver(moisture_sensor(fern).reading_topic, {"moisture": 0.20})   # survival floor
+    answers = iter([False, True])
+    monkeypatch.setattr(type(p), "watch_closely", lambda *a, **k: next(answers))
+    fern.deliver(moisture_sensor(fern).reading_topic, {"moisture": 0.55})
+    fern.deliver(moisture_sensor(fern).reading_topic, {"moisture": 0.55})
     assert cadences(fern)[-1] == p.beliefs.fast_sleep_s
 
 
@@ -653,12 +653,15 @@ def test_one_mismatched_ack_is_noise_and_two_are_the_detector(fern, caplog):
     import logging
 
     s = moisture_sensor(fern)
-    fern.deliver(s.reading_topic, {"moisture": 0.2})            # command 30 goes out
+    fern.deliver(s.reading_topic, {"moisture": 0.2})            # a command goes out
+    #  A NUMBER THE AGENT WOULD NEVER COMMAND, so the mismatch is the subject rather than an
+    #  artefact of which cadence the reading earns — it used to ack 600 against a commanded
+    #  30, and 0.2 no longer buys the fast cadence.
     with caplog.at_level(logging.WARNING):
-        fern.deliver(s.reading_topic, {"moisture": 0.2, "sleep_s": 600})   # first mismatch: noise
+        fern.deliver(s.reading_topic, {"moisture": 0.2, "sleep_s": 1234})  # first mismatch: noise
         assert "twice running" not in caplog.text
         sent_before = len(cadences(fern))
-        fern.deliver(s.reading_topic, {"moisture": 0.2, "sleep_s": 600})   # second: the detector
+        fern.deliver(s.reading_topic, {"moisture": 0.2, "sleep_s": 1234})  # second: the detector
     assert "twice running" in caplog.text
     assert len(cadences(fern)) > sent_before, \
         "the dispute must re-send the command, not keep assuming the board knows it"

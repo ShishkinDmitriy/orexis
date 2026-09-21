@@ -12,7 +12,7 @@ See knowledge/decisions/the-stake-is-sensings-want.md.
 
 from __future__ import annotations
 
-from .terms import ANNOTATE, BOUNDS, READING_RECORDED, URGENCY
+from .terms import ANNOTATE, BOUNDS, READING_RECORDED
 
 
 def annotations(agent, subject_uri: str, observed_property: str, value: float) -> dict:
@@ -33,14 +33,6 @@ def bounds(agent, subject_uri: str, observed_property: str) -> tuple[float, floa
     if not answers:
         return None
     return max(low for low, _ in answers), min(high for _, high in answers)
-
-
-def urgency(agent, subject_uri: str, observed_property: str,
-            value: float | None) -> float | None:
-    """How close this reading puts the agent to trouble — the sharpest opinion any module
-    holds, or None where nobody has one. `value` None asks how urgent NOT KNOWING is."""
-    opinions = agent.ask(URGENCY, subject_uri, observed_property, value)
-    return max(opinions) if opinions else None
 
 
 def recorded(agent, subject_uri: str, observed_property: str, value: float) -> None:

@@ -94,7 +94,9 @@ def test_the_rows_say_what_the_records_say():
     assert rows[HANDLE] == REACTIVE, "a message arriving is reactive: classify and write"
     assert rows["http://example.org/orexis/actuation#Dosing"] == OREXIS + "Progression", \
         "taking a committed step spans time — every action inherits the row its class declares (#523)"
-    assert rows[OREXIS + "desireUrgency"] == OREXIS + "Deliberative", "measuring a want is the search's"
+    assert rows[OREXIS + "desires"] == OREXIS + "Deliberative", \
+        "contributing what an agent pursues is the search's — `desireUrgency` was the other \
+deliberative hook and is gone with the measure"
 
 
 def test_a_reactive_hook_never_reaches_the_planner(monkeypatch):

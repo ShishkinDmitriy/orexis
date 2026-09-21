@@ -42,8 +42,8 @@ class Plan:
 
     outcome: str
     steps: tuple = ()                 # of `act.Step`: each with what it was predicted to reach
-    urgency_now: float | None = None
-    urgency_after: float | None = None
+    unmet_now: float | None = None
+    unmet_after: float | None = None
     cost: float | None = None         # what the plan was scored to spend — a remembered plan's measure (#469)
     landing: float | None = None      # seconds from the pass's root to its last landing (#619): its duration
     #  THE INSTANT THE PASS STOOD AT when it found this plan (#625), where that was not now: a

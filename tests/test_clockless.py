@@ -27,7 +27,10 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 #  What deliberation evaluates: the rules an action declares, the measures a want scores by,
 #  the shapes a world is judged against, the derivations that write wants, and the reviews.
-EVALUATED = ("packages/*/actions.ttl", "packages/*/measures.ttl", "packages/*/shapes.ttl",
+#  `packages/*/measures.ttl` was on this list and is gone with the declared measure — a glob
+#  that still matches but no longer covers what it is named for is the hazard this file's own
+#  neighbours keep hitting, so it is removed rather than left matching nothing.
+EVALUATED = ("packages/*/actions.ttl", "packages/*/shapes.ttl",
              "packages/*/desires.ru", "packages/*/rules.ru", "packages/*/review.rq",
              "agent/shapes.ttl", "agent/ontology.ttl")
 
@@ -55,7 +58,7 @@ def test_the_files_deliberation_evaluates_are_found():
     """A glob that stops matching takes a case off the guard without failing anything, which
     has happened twice in this repo (`tests/test_store.py` says so)."""
     found = {p.name for p in _files()}
-    assert {"actions.ttl", "measures.ttl", "shapes.ttl", "desires.ru"} <= found, found
+    assert {"actions.ttl", "shapes.ttl", "desires.ru"} <= found, found
     assert len(_files()) >= 12, [p.name for p in _files()]
 
 

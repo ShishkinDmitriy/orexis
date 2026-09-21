@@ -40,7 +40,7 @@ stating a range inside which being wrong is survivable.**
 # It is where urgency's zero sits
 
 Since [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md), the aim
-is what a desire's declared measure anchors at: [urgency](/domain/urgency.md) is distance from
+is what a desire's declared measure anchors at: urgency is distance from
 the pick, and the measure reads `sensing:aims` out of the belief base at query time — so a re-pick
 moves every consumer's number the moment it is recorded, with nothing recompiled. The region's
 centre serves only while no aim is picked, which is what its old docstring ("where an agent with

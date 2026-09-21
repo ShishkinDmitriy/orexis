@@ -87,7 +87,7 @@ def test_a_cold_dry_bed_is_watered_and_warmed(monkeypatch):
     plan = Planner(agent, agent.me).plan(_comfort(agent))
     assert {s.action for s in plan.steps} == {DOSING, HEATING}, \
         [s.action.rsplit("#", 1)[-1] for s in plan.steps]
-    assert plan.urgency_after < plan.urgency_now
+    assert plan.unmet_after < plan.unmet_now
 
 
 def test_the_knob_reorders_the_plan_because_warming_undoes_the_dose(monkeypatch):

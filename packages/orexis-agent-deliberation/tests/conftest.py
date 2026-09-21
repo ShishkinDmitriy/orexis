@@ -71,16 +71,15 @@ def stand_in(case: Path, text: str | None = None):
     st.close_catalogue()      # a case's rows say one class each; every kind stands on them now, as on a volume's
     desires = Desires(st)
     #  ENOUGH TO RUN A SEARCH, and no more. What a world affords is a function over a
-    #  store, so a case needs no collections at all; `desire_urgency` is the CHOIR, which a case has no
-    #  members to ask — it answers None, and the planner then judges a compiled want the way
-    #  the puzzle worlds are judged, binary from the store: unmet 1, met 0 (`planner._urgency_in`).
+    #  store, so a case needs no collections at all. A case asks no capability anything: the
+    #  planner judges a compiled want from the store, unmet 1 and met 0 — which every want is
+    #  judged by now, and used to be the puzzle worlds' path alone (`planner._unmet_in`).
     #  A case whose goal is a shape therefore needs no capability loaded, and its whole
     #  objective is in the store, which is what makes a search snapshot-shaped at all.
     from orexis_agent_deliberation.steps import find_steps
     return SimpleNamespace(id=AGENT, me=SimpleNamespace(uri=ME, acts_for=None), beliefs=st, desires=desires,
                            ask=lambda *a, **k: [], keeper=None,
-                           picks=picks_graph(AGENT),
-                           desire_urgency=lambda *a, **k: None)
+                           picks=picks_graph(AGENT))
 
 
 RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"

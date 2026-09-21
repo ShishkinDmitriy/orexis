@@ -40,7 +40,7 @@ from assembly import loader
 from orexis_agent_deliberation.beliefs import BeliefError, Beliefs
 from assembly.inject import attribute_for, opened
 from orexis_agent_progression.ontology import STATE_GRAPH
-from orexis_agent_progression.ontology import DESIRE_URGENCY, picks_graph
+from orexis_agent_progression.ontology import picks_graph
 
 from orexis_agent_deliberation.scope_actions import scope_actions
 from orexis_agent_deliberation.deliberator import KEEPING_PICKS, Deliberator
@@ -381,22 +381,6 @@ class Agent:
                 fn(*args, **kwargs)
             except Exception as exc:
                 log.error("%s: %s failed on %s: %s", self.id, module.name, _short(point), exc)
-
-    def desire_urgency(self, judgment, query, state: str,
-                       value: float | None = None) -> float | None:
-        """How urgent one desire is in one world — the sharpest answer any module gives.
-
-        The choir again, and deliberately the same resolution as `urgency` above: the kernel
-        iterates its modules and never names a family, a capability that owns the question
-        answers, and None means nobody here knows how to measure this want — which every
-        ranking caller turns into 1.0, because not knowing how bad is maximal. The kernel
-        holds no measure of its own (a-desire-states-its-own-measure): this method is the
-        whole of its involvement.
-        """
-        answers = self.ask(DESIRE_URGENCY, judgment, query, state, value)
-        return max(answers) if answers else None
-
-    # --- the shared connection; modules route by the topics they asked for ---
 
     def run(self) -> None:
         # Who I am on the bus. The broker refuses anonymous connections, and the ACL it holds
