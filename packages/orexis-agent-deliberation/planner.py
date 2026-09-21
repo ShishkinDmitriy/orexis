@@ -45,7 +45,8 @@ from rdflib import RDF, URIRef
 
 from . import effects, relevance, signature, trace
 from .beliefs import Picks
-from orexis_agent_progression.act import BOUND, Step, binding_from, bound_clause
+from orexis_agent_progression.act import (BOUND, Step, binding_from, bound_clause,
+                                          precondition_json, predicts_json)
 from orexis_agent_deliberation.want import Want
 
 
@@ -207,6 +208,17 @@ def write_plan(imaginarium, want: str, plan, root: str) -> str | None:
         out += [q(uri, parameter, ox.NamedNode(value)) for parameter, value in step.binding]
         if step.quantity is not None:
             out.append(q(uri, P + "quantity", dec(step.quantity)))
+        #  AND WHAT THE SEARCH WORKED OUT ABOUT IT: the facts it said this step makes true and
+        #  false (#510), and the facts its rules READ in the world it was planned from (#550).
+        #  Both are the search's own and were reaching the ledger only through Python — so a
+        #  plan in the store was a plan missing the two things that make it checkable, and a
+        #  copy of it would have lost them silently.
+        if step.predicts is not None:
+            out.append(q(uri, P + "predicts", ox.Literal(predicts_json(step.predicts))))
+        if step.precondition is not None:
+            out.append(q(uri, P + "precondition", ox.Literal(precondition_json(step.precondition))))
+        if step.for_agent:
+            out.append(q(uri, P + "forAgent", ox.NamedNode(step.for_agent)))
         if n + 1 < len(steps):
             out.append(q(uri, P + "then", ox.NamedNode(steps[n + 1])))
         world = world_of(plan.steps[:n + 1])
