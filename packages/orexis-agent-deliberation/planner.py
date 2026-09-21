@@ -59,7 +59,7 @@ from orexis_agent_deliberation.conformance import graph_from, held_shapes, legal
 from orexis_agent_deliberation.judge import crossed_text
 from orexis_agent_progression import clock
 from .cone import _Compiled, _Node
-from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED,
+from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED, Weighed,
                    REMEMBERED, SATISFIED)
 from .trace import SURPRISE_EXOGENOUS, SURPRISE_WITHHELD
 from orexis_agent_progression.ontology import PUBLIC
@@ -598,7 +598,7 @@ class Planner:
         #  A CANDIDATE IS NAMED FROM THE WORLD IT LEAVES (#747), so every entry carries one —
         #  including the ones that reached nothing, which is the half the pass graph could not
         #  name while a candidate was named after its child.
-        self._weighed = [(0, row, None, trace.IRRELEVANT, None, here.graph)
+        self._weighed = [Weighed(0, row, None, trace.IRRELEVANT, None, here.graph)
                          for row in self._passed_over]
         #  THE OPEN LIST: on a fresh pass the root alone; on a resumed one the kept frontier
         #  under the new root, re-keyed — a priority reads the want's state, so it is minted
@@ -631,12 +631,12 @@ class Planner:
                     #  steps before the one that would have fallen off the menu.
                     absent = self._absent(kept)
                     if absent:
-                        self._weighed.append((0, kept, None, trace.INAPPLICABLE, absent[0], here.graph))
+                        self._weighed.append(Weighed(0, kept, None, trace.INAPPLICABLE, absent[0], here.graph))
                         continue
                     step, spent = self._walk(here, kept, judgment, self._bound, self.budget - forked)
                     forked += spent
                     if isinstance(step, str):
-                        self._weighed.append((0, kept, None, step, None, here.graph))
+                        self._weighed.append(Weighed(0, kept, None, step, None, here.graph))
                         continue
                     ended = self._settle(kept, step, 0, judgment, met_now, room)
                     if ended is not None:
@@ -647,27 +647,27 @@ class Planner:
                     #  REFUSED BELOW (#533): the level beneath found no way to keep this very
                     #  move's promise within the patience. Passed over, recorded, and tried
                     #  again when the patience has passed — the world may have changed.
-                    self._weighed.append((depth, row, None, trace.REFUSED, None, node.graph))
+                    self._weighed.append(Weighed(depth, row, None, trace.REFUSED, None, node.graph))
                     continue
                 if self._compiled.relevant is not None and row.action not in self._compiled.relevant:
                     #  A lever that touches nothing this want reads, by its own effect and
                     #  by nothing it could enable (#488). Recorded, never simulated, and not
                     #  a candidate seen: a menu of such rows is NOTHING — equip me — which is
                     #  the honest finding when no lever points at the want.
-                    self._weighed.append((depth, row, None, trace.IRRELEVANT, None, node.graph))
+                    self._weighed.append(Weighed(depth, row, None, trace.IRRELEVANT, None, node.graph))
                     continue
                 saw_candidate = True
                 if forked >= self.budget:
-                    self._weighed.append((depth, row, None, trace.SPENT, None, node.graph))
+                    self._weighed.append(Weighed(depth, row, None, trace.SPENT, None, node.graph))
                     node.withheld.append((row, trace.SPENT))
                     continue
                 step = self._step_from(node, row, judgment, self._bound)
                 if step is TOO_DEAR:
-                    self._weighed.append((depth, row, None, trace.COSTLY, None, node.graph))
+                    self._weighed.append(Weighed(depth, row, None, trace.COSTLY, None, node.graph))
                     node.withheld.append((row, trace.COSTLY))
                     continue
                 if step is None:
-                    self._weighed.append((depth, row, None, trace.UNSIMULATED, None, node.graph))
+                    self._weighed.append(Weighed(depth, row, None, trace.UNSIMULATED, None, node.graph))
                     continue
                 forked += 1              # a world exists now, whatever becomes of it below
                 ended = self._settle(row, step, depth, judgment, met_now, room)
@@ -760,7 +760,7 @@ class Planner:
             #  question was never put, which is not the same as the answer being no.
             self._about(step, "fails", ox.NamedNode(judgment.uri))
         if step.met:
-            self._weighed.append((depth, row, step.urgency, trace.MET, None, step.parent.graph))
+            self._weighed.append(Weighed(depth, row, step.urgency, trace.MET, None, step.parent.graph))
             if met_now:
                 #  Already met and still steering: the first novel step that
                 #  keeps it met stays the answer — re-picking among keepers by
@@ -776,12 +776,12 @@ class Planner:
             self._bound = step.cost if self._bound is None else min(self._bound, step.cost)
             return None
         if not novel:
-            self._weighed.append((depth, row, step.urgency, trace.SEEN, None, step.parent.graph))
+            self._weighed.append(Weighed(depth, row, step.urgency, trace.SEEN, None, step.parent.graph))
             return None
-        self._weighed.append(
-            (depth, row, step.urgency,
-             trace.BETTER if step.urgency < self._root.urgency else trace.WORSE,
-             None, step.parent.graph))
+        self._weighed.append(Weighed(
+            depth, row, step.urgency,
+            trace.BETTER if step.urgency < self._root.urgency else trace.WORSE,
+            None, step.parent.graph))
         self._open_row(step, True)
         return None
 
@@ -792,7 +792,7 @@ class Planner:
         step.verdict = verdict
         self._keep(step)
         self._about(step, "verdict", ox.Literal(verdict))
-        self._weighed.append((depth, row, step.urgency, verdict, None, step.parent.graph))
+        self._weighed.append(Weighed(depth, row, step.urgency, verdict, None, step.parent.graph))
         return None
 
     # --- the cone across passes (#553) ---------------------------------------------------------

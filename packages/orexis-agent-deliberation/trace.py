@@ -151,17 +151,17 @@ def _write(store, agent_id: str, judgment, plan, considered, stands_at: float,
     chosen = getattr(plan, "origin", None) or (plan.steps[0].action if plan.steps else None)
     rows = []
     for entry in considered:
-        depth, row, urgency, verdict = entry[:4]
+        depth, row, urgency, verdict = entry.depth, entry.row, entry.urgency, entry.verdict
         #  WHAT WAS MISSING, where the verdict is that a remembered plan's precondition does
         #  not hold (#551): the fact, as the signature states it, so the reader is told
         #  which fact and not only that one was.
-        missing = entry[4] if len(entry) > 4 and entry[4] is not None else None
+        missing = entry.missing
         #  THE CANDIDATE IS THE PASS GRAPH'S OWN NODE (#747), named from the world it was
         #  weighed in. It was `{node}.{i}` — a counter — so the trace and the pass described
         #  the same fork under two names and no triple said they were one thing. A candidate
         #  that reached nothing has no world of its own and still has a name, because the
         #  name comes from the world it LEAVES.
-        candidate = candidate_of(entry[5], row)
+        candidate = candidate_of(entry.world, row)
         reached = "" if urgency is None else \
             f'        deliberation:wouldReach {urgency:.6f} ;\n'
         absent = "" if missing is None else \
@@ -181,8 +181,8 @@ def _write(store, agent_id: str, judgment, plan, considered, stands_at: float,
     took = ""
     if chosen is not None:
         for entry in considered:
-            if entry[1].action == chosen:
-                took = f'        deliberation:chose <{candidate_of(entry[5], entry[1])}> ;\n'
+            if entry.row.action == chosen:
+                took = f'        deliberation:chose <{candidate_of(entry.world, entry.row)}> ;\n'
                 break
     #  The select as a LITERAL, escaped by the engine's own writer: a compiled text carries
     #  quotes, backslashes and newlines, and a hand-quoted f-string would be the injection the
