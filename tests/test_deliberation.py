@@ -153,12 +153,12 @@ def test_below_the_aim_means_pursue_and_above_means_nothing(make):
     #  nothing either: a lot reaches the region from below, and from above it helps nothing.
     for value in (0.10, 0.39):
         write_reading(fern, value, MOISTURE)
-        stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+        stake = ObservedWant(uri=stake_of(fern).uri, observed_property=MOISTURE,
                              value=value)
         assert decider.propose_for(stake) == ACQUIRING, f"thirsty at {value} and not buying"
     for value in (0.54, 0.55, 0.80):
         write_reading(fern, value, MOISTURE)
-        stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+        stake = ObservedWant(uri=stake_of(fern).uri, observed_property=MOISTURE,
                              value=value)
         assert decider.propose_for(stake) is None, f"content at {value} and buying anyway"
 
@@ -178,7 +178,7 @@ def test_a_property_this_agent_cannot_move_is_not_pursued(make):
     from orexis_agent_deliberation.want import Want
 
     fern = make("fern")
-    stake = ObservedWant(uri=stake_of(fern, TEMPERATURE).uri, urgency=0.4,
+    stake = ObservedWant(uri=stake_of(fern, TEMPERATURE).uri,
                          observed_property=TEMPERATURE, value=5.0)
     assert decider_of(fern).propose_for(stake) is None
 
@@ -282,7 +282,7 @@ def test_the_sign_is_the_packages_statement_and_not_this_codes(make):
     fern = make("fern", ds)
     open_round_for(fern, "fern")
     decider = decider_of(fern)
-    stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+    stake = ObservedWant(uri=stake_of(fern).uri, observed_property=MOISTURE,
                          value=0.10)
     assert decider.propose_for(stake) is None, \
         "a lever the graph says would dry this plant out was pulled anyway"
@@ -511,7 +511,7 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     #  filter that leaks.
     for row in obligations:
         for value in (0.0, 0.5, 5.0, 50.0):
-            stake = ObservedWant(uri="urn:w", urgency=0.5, observed_property=row.value_of(ABOUT),
+            stake = ObservedWant(uri="urn:w", observed_property=row.value_of(ABOUT),
                                  value=value)
             assert deliberator.propose_for(stake) not in duty_means, \
                 "an obligation was proposed as if it were a choice"
@@ -546,7 +546,7 @@ def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
     assert supplier.deliberator.propose_for(obligation) == \
         "http://example.org/orexis/market#Serving"
 
-    stranger = OwedWant(uri="urn:o", urgency=0.9, claim="j-2", owed_to="urn:nobody")
+    stranger = OwedWant(uri="urn:o", claim="j-2", owed_to="urn:nobody")
     assert supplier.deliberator.propose_for(stranger) is None, \
         "a debt no lever of mine can reach proposes nothing — and stays owed"
 
@@ -560,7 +560,7 @@ def test_an_unpresented_duty_is_hot_and_still_not_acted_on(make):
     from orexis_capability_market.ower import OwedWant
 
     supplier = make("supplier")
-    standing = OwedWant(uri="urn:o", urgency=0.99, claim="j-3", pursuable=False,
+    standing = OwedWant(uri="urn:o", claim="j-3", pursuable=False,
                     owed_to="http://example.org/orexis/world/simulation#fern_agent")
     assert supplier.deliberator.propose_for(standing) is None
 
@@ -584,7 +584,7 @@ def test_a_search_that_answers_nothing_proposes_nothing(make, monkeypatch):
 
     fern = make("fern")
     monkeypatch.setattr(Planner, "plan", lambda self, desire, **kw: search.Plan(search.NOTHING))
-    thirsty = ObservedWant(uri=stake_of(fern).uri, urgency=1.0, observed_property=MOISTURE,
+    thirsty = ObservedWant(uri=stake_of(fern).uri, observed_property=MOISTURE,
                            value=0.10)
     assert fern.deliberator.propose_for(thirsty) is None, \
         "the search said it had nothing to weigh, and something else answered anyway"
@@ -612,7 +612,7 @@ def test_a_stake_nothing_measures_is_complained_about_rather_than_decided_quietl
                   WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?p a sosa:ObservableProperty }} }}""")
     fern = make("fern", ds)
     decider = decider_of(fern)
-    stake = ObservedWant(uri=stake_of(fern).uri, urgency=1.0, observed_property=MOISTURE,
+    stake = ObservedWant(uri=stake_of(fern).uri, observed_property=MOISTURE,
                          value=0.10)
 
     with caplog.at_level(logging.ERROR):
@@ -626,8 +626,8 @@ def test_every_want_is_drawn_by_the_one_module_that_sees_them_all(make):
     keyed the panel on the property.
 
     A property cannot name every want: freshness is per instrument, an obligation is per counterparty.
-    So a graph grouped by property could only ever draw stakes, and "urgency is the common
-    currency" would stay a claim rather than something you can look at.
+    So a graph grouped by property could only ever draw stakes, and one axis over every kind
+    of want would stay a claim rather than something you can look at.
 
     A obligation is tagged by whom it is owed to and NEVER by its claim: a jti is unique per round, so
     tagging by it would mint a series every time the society traded and grow the store's
@@ -639,8 +639,14 @@ def test_every_want_is_drawn_by_the_one_module_that_sees_them_all(make):
             if meas == "agent_want"]
 
     assert rows, "an agent that wants things reports each of them"
-    assert all(set(f) == {"urgency"} for _, f in rows), "one figure: how badly it is unmet"
-    assert all(0.0 <= f["urgency"] <= 1.0 for _, f in rows), "normalised, or the axis lies"
+    #  TWO FIGURES, and neither is an urgency. The row carried one — a number four packages
+    #  each computed their own way, ahead of the search that was the only thing able to
+    #  compare them — and what a panel per want can still say is whether it is unmet and
+    #  whether anything the agent can do answers it.
+    assert all(set(f) == {"unmet", "answered"} for _, f in rows), \
+        "whether it is unmet, and whether anything answers it"
+    assert all(f["unmet"] in (0.0, 1.0) and f["answered"] in (0.0, 1.0) for _, f in rows), \
+        "both are flags, or the axis lies"
     tags = {t["want"] for t, _ in rows}
     assert len(tags) == len(rows), "one line per want, not several sharing a name"
     assert not any(len(t) > 60 for t in tags), \
@@ -729,7 +735,7 @@ def test_a_plan_landing_after_the_wants_expiry_is_not_one(make):
     assert uri.startswith(f"{supplier.me.uri}.no_overdue_debts.pursued.")
 
     def planned(seconds_left):
-        want = OwedWant(uri=uri, urgency=0.9, claim="w1",
+        want = OwedWant(uri=uri, claim="w1",
                     owed_to="http://example.org/orexis/world/simulation#fern_agent",
                     expires=now + timedelta(seconds=seconds_left))
         return Planner(supplier, supplier.me).plan(want)

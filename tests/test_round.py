@@ -883,10 +883,12 @@ def test_a_debts_heat_is_the_room_its_claim_has_left(host):
     at_deadline = ledger_of(host).obligations(now=owed_at + timedelta(seconds=900))[0]
     past_it = ledger_of(host).obligations(now=owed_at + timedelta(seconds=5000))[0]
 
-    assert at_issue.urgency == 0.0
-    assert abs(halfway.urgency - 0.5) < 0.02
-    assert at_deadline.urgency == 1.0
-    assert past_it.urgency == 1.0, "clamped — a debt cannot be more overdue than overdue"
+    #  THE FRACTION OF THE WINDOW IS GONE WITH THE FIELD. A debt carried how much of its
+    #  redeem window had run, computed in Python because this engine will not divide two
+    #  durations, and nothing chose by it: every want handed up is planned for. What the
+    #  window still decides is the two things below, which are about what may be DONE.
+    assert at_issue.state == "standing" and halfway.state == "standing"
+    assert at_deadline.state == "lapsed" and past_it.state == "lapsed"
     assert not past_it.pursuable, "and past the window there is nothing left to spend"
 
 
@@ -913,9 +915,11 @@ def test_a_duty_and_a_thirst_rank_in_one_currency(host):
 
     desires = host.pursuing(now=asked_at)
     assert desires, "an agent with a stake and a debt wants something"
-    assert isinstance(desires[0], OwedWant), "a debt near its deadline outranks a barrel that is merely low"
+    assert any(isinstance(g, OwedWant) for g in desires), "the debt is on the list"
     assert any(not isinstance(g, OwedWant) for g in desires), "and the stake is still on the list, not replaced"
-    assert desires == sorted(desires, key=lambda g: -g.urgency)
+    #  NO ORDER TO ASSERT. These came back hottest first and nothing chose by it: every want
+    #  handed up is planned for, so what would rank a debt against a barrel is what their
+    #  plans cost — the search's answer, not a contributor's.
 
 
 def test_a_claim_presented_after_its_window_is_refused_and_the_debt_stands(host, caplog):

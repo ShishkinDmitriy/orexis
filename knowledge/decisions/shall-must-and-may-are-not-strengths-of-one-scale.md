@@ -68,6 +68,10 @@ data, ranking SHALL below MUST. Three reasons, each already paid for elsewhere:
 
 - **Urgency is the common currency, and the deliberately unranked meeting point.** A stake and
   an obligation compare by heat, never by kind, and
+  — *the want-level urgency has since been removed, and with it this whole bullet's mechanism:
+  nothing compares a stake to an obligation before planning, because `Deliberator.pursued`
+  plans for EVERY want and the order chose nothing. What the argument against a force term
+  survives on is the second reason below, not this one* —
   [an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md)
   records the failure a rank would reintroduce: an obligation pinned above every stake is the
   honoured mode returning, outranking a plant that is dying.

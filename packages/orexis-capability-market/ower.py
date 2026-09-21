@@ -88,22 +88,6 @@ def lapse_graph(agent_id: str, claim_jti: str) -> str:
     return f"{obligation_graph(agent_id, claim_jti)}/lapse"
 
 
-def _duty_urgency(row: dict, now: datetime) -> float:
-    """The fraction of the claim's redeem window that has run, clamped.
-
-    Here rather than in the query because the store's engine binds NOTHING for
-    `duration / duration` — measured, and pinned by a test, because an unsupported operation
-    that returns unbound instead of failing is how a whole column silently reads zero.
-    """
-    if not row.get("expires"):
-        return 0.0                        # a market with no redeem channel; nobody is waiting
-    owed_at = datetime.fromisoformat(row["at"])
-    window = (datetime.fromisoformat(row["expires"]) - owed_at).total_seconds()
-    if window <= 0:
-        return 1.0
-    return max(0.0, min(1.0, (now - owed_at).total_seconds() / window))
-
-
 class Ower(Module):
     """What I owe, kept where a restart cannot lose it. Speaks to no topic."""
 
@@ -359,9 +343,9 @@ SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS
         """MY contribution to what this agent is pursuing: its debts, and no stakes.
 
         The half of the choir the city had no way to contribute before, which is the whole of
-        #233. Lapsed is judged HERE, against the same clock the urgency uses — one reader, one
-        now, so a debt cannot be maximally hot and still count as open because two clocks
-        disagreed.
+        #233. Lapsed is judged HERE, against the clock this module reads — one reader, one
+        now, so a debt cannot be past its window to one caller and open to another because two
+        clocks disagreed.
         """
         now = now or clock.now()
         out = []
@@ -371,14 +355,17 @@ SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS
                 bind(_DUTIES_Q, root=f"{self.agent.me.uri}.no_overdue_debts"))):
             demanded = row.get("presented") == "true"
             lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])
-            out.append(OwedWant(uri=row["desire"], urgency=_duty_urgency(row, now),
+            out.append(OwedWant(uri=row["desire"],
                               claim=row["claim"], owed_to=row["owedTo"],
                               expires=(datetime.fromisoformat(row["expires"])
                                        if row.get("expires") else None),
                               state="lapsed" if lapsed else
                                     ("demanded" if demanded else "standing"),
                               pursuable=demanded and not lapsed))
-        return sorted(out, key=lambda g: -g.urgency)
+        #  NO ORDER OF MY OWN. These were sorted by how much of each redeem window had run,
+        #  and nothing chose by it: every want handed up is planned for. What would rank them
+        #  is what their plans cost, which no contributor can know.
+        return out
 
     def series(self) -> list[tuple[str, dict, dict]]:
         """What I owe, as figures. A host straining under debts it cannot serve used to look
@@ -387,8 +374,7 @@ SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS
         obligations = self.desires()
         def figures(some):
             return {"owed": float(len(some)),
-                    "demanded": float(sum(1 for g in some if g.pursuable)),
-                    "hottest": max((g.urgency for g in some), default=0.0)}
+                    "demanded": float(sum(1 for g in some if g.pursuable))}
         #  AND PER COUNTERPARTY, which is the thing worth seeing — "supplier owes fern" — and
         #  which the kernel's own row per want used to say by tagging a debt with whom it is
         #  owed to, a thing it could do only by knowing what a debt was; every want is reported

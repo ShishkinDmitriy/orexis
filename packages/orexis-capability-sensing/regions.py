@@ -315,7 +315,7 @@ def _measured_urgency(measure, row: dict, value: float | None) -> float:
     #  top-level import here would be the cycle (rows imports this file's helpers). Runs only
     #  where a measure was handed in, which only a running mind ever does.
     from .rows import ObservedWant
-    answer = measure(ObservedWant(uri=row["desire"], urgency=1.0,
+    answer = measure(ObservedWant(uri=row["desire"],
                             observed_property=row["property"], value=value,
                             instrument=row.get("instrument")),
                      value) if measure else None

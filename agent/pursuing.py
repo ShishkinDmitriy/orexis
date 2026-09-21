@@ -5,7 +5,7 @@ convention asks for it.** Every other read here reads rows somebody wrote: `find
 `Desires` hand back what is in a graph. Nothing ever writes these. This one ASSEMBLES — it
 asks every module what it is pursuing and how badly, runs an avoided state's own select to
 see whether the world has entered it, compiles a shape into the select whose rows are its
-violations, and ranks what comes back by an urgency each contributor computed its own way.
+violations, and hands back what comes back — in no order, since nothing chose by one.
 
 That makes it a repository by its name and a service by its work, which is a line this repo
 usually holds (`a-repository-is-not-a-service`). It is kept on the collection side for the
@@ -74,7 +74,7 @@ class Pursuing:
         Assembled from the modules that hold wants rather than asked of one, because since the
         ledger became its own capability no single module can see them all: desire contributes
         stakes, owing contributes debts, and an agent may compose either without the other. The
-        ranking is what makes the two comparable — urgency is unit-free on both sides, so a
+        ranking is what would make the two comparable — and nothing ranks them, so a
         litre owed and a pot drying finally rank against each other.
         """
         #  ONE WANT, ONE NODE. Two modules may hold the same want — the gardener composes two
@@ -145,7 +145,6 @@ class Pursuing:
                 log.error("%s: avoided-state pattern failed to run: %s", self._agent.id, exc)
                 entered = True
             seen[row["want"]] = Want(uri=row["want"],
-                                       urgency=1.0 if entered else 0.0,
                                        state="unmet" if entered else "met")
         #  A SHAPE WANT NO MODULE SPEAKS FOR (#497): the courier's and hanoi's, authored
         #  positive and universal, pointing at a shape the package declares. Compiled once
@@ -163,7 +162,6 @@ class Pursuing:
                 log.error("%s: could not judge %s by its shape: %s", self._agent.id, row["want"], exc)
                 violated = True
             seen[row["want"]] = Want(uri=row["want"],
-                                       urgency=1.0 if violated else 0.0,
                                        state="unmet" if violated else "met")
         #  A ROOT WITH WANTS UNDER IT IS PRESENTED AS THEM — one row per want, each
         #  carrying the root's own measure under the want's name, and ITS OWN STATE: a want's
@@ -191,7 +189,11 @@ class Pursuing:
                     presented = self._at_instant(
                         presented, want.uri, want.holds_at, want.derived_at, now)
                 seen[want.uri] = presented
-        return sorted(seen.values(), key=lambda g: -g.urgency)
+        #  IN NO ORDER OF MINE. These came back hottest first, and nothing ever chose by it:
+        #  `Deliberator.pursued` plans for every want it is handed, so the rank decided which
+        #  was searched first and nothing else. What would rank them is what their plans cost
+        #  and how long they take, which is the search's answer and not a contributor's.
+        return list(seen.values())
 
     def _own_state(self, want: str) -> str | None:
         """What a derived want's OWN met-test says of the world now — `met` or `unmet` — or
@@ -212,18 +214,15 @@ class Pursuing:
 
     def _at_instant(self, row: Want, node: str, holds_at: datetime, since: datetime | None,
                     now: datetime | None) -> Want:
-        """A want met AT an instant, as presented (#619): its room is TIME — the stretch from
-        its derivation to the instant, the fraction run being its urgency, never less than
-        the root's own — and it reads met exactly where the newest prediction says the
-        reading still holds at the instant, unmet where it says it will have crossed. The
+        """A want met AT an instant, as presented (#619): it reads met exactly where the newest
+        prediction says the reading still holds at the instant, unmet where it says it will
+        have crossed. Its room is TIME — the stretch from its derivation to the instant — and
+        the fraction of that run used to be its urgency, which is the one arithmetic here the
+        kernel did rather than a capability, and is gone with the field. The
         question is asked of the want's OWN results — the cluster it was minted from — so a
         want about one tank is not held to another's prediction."""
         from orexis_agent_deliberation.judging import unmet_by
         now = now or clock.now()
-        urgency = row.urgency
-        if since is not None and holds_at > since:
-            run = (now - since).total_seconds() / (holds_at - since).total_seconds()
-            urgency = max(urgency, min(1.0, max(0.0, run)))
         state, read_at = row.state, row.read_at
         if state == "met":
             #  IS IT STILL IN TROUBLE BY THEN? The want was minted because its desire was
@@ -236,7 +235,7 @@ class Pursuing:
             #  it reads unmet at, which is what a pass for it must be clocked from.
             if read_at is None and found is not None:
                 read_at = found
-        return replace(row, holds_at=holds_at, urgency=urgency, state=state, read_at=read_at)
+        return replace(row, holds_at=holds_at, state=state, read_at=read_at)
 
     def _unmet_select(self, want: str, shape: str, entered: bool = False) -> str:
         """The compiled select of an asserted want's shape, once per process: an asserted

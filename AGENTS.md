@@ -419,8 +419,13 @@ it is a record wearing a bullet.
   written down or read back, while the row a package's rule writes at genesis had no type at
   all; naming the second thing let the first become data. The name has since gone the way of
   the thing: nothing stands between a desire and a want, and what a judgment carried — the
-  urgency, the reading, which way it broke — a WANT carries, made fresh where it is made
-  fresh and stored where it is stored.
+  reading and which way it broke — a WANT carries, made fresh where it is made fresh and
+  stored where it is stored; the urgency it also carried is gone, and the line below says why.
+- **Nothing ranks a want before the search that could rank it** — a want carried an urgency
+  four packages each computed their own way, and `Deliberator.pursued` plans for EVERY want it
+  is handed, so the rank only ever decided which was searched first; what would compare a
+  thirsty fern to an overdue debt is what their plans cost and how long they take, which is
+  the search's answer and no contributor's.
 - **A read over stored rows is handed a store, and one over contributed answers is handed the
   agent** — `find_wants` reads graphs so it takes somewhere to search, `Pursuing` asks the choir
   so it must reach the choir, and the asymmetry is what tells the two kinds of read apart.

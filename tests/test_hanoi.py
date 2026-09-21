@@ -57,15 +57,15 @@ def _solved(agent, budget=None):
 
 def test_the_goal_is_pursued_and_binary_with_no_module_in_the_room(monkeypatch):
     """The want is pure ratified data — no capability, no measure package — and the kernel
-    lifts and judges it: unmet at 1.0 while the stack sits on A, met at 0.0 once nothing is
-    astray. Stage one of the two-stage cut, on a want that is not a number."""
+    lifts and judges it: unmet while the stack sits on A, met once nothing is astray. Stage
+    one of the two-stage cut, on a want that is not a number."""
     agent = _mover(monkeypatch, ["disk_1"])
-    assert _goal(agent).urgency == 1.0 and _goal(agent).state == "unmet"
+    assert _goal(agent).state == "unmet"
 
     agent.beliefs.update(
         f"DELETE {{ GRAPH <{STATE_GRAPH}> {{ <{W}disk_1> <{H}on> <{H}PegA> }} }} "
         f"INSERT {{ GRAPH <{STATE_GRAPH}> {{ <{W}disk_1> <{H}on> <{H}PegC> }} }} WHERE {{}}")
-    assert _goal(agent).urgency == 0.0 and _goal(agent).state == "met"
+    assert _goal(agent).state == "met"
 
 
 def test_two_disks_solve_in_exactly_three_moves(monkeypatch):

@@ -47,8 +47,9 @@ def test_the_query_and_the_module_agree_with_the_diff(query_with_readings, monke
     stakes = {g.observed_property: g for g in desires
               if getattr(g, "observed_property", None) is not None and not g.is_epistemic}
     assert set(stakes) == set(diffs), "the same wants, whichever text is run"
-    for prop, gap in diffs.items():
-        assert abs(stakes[prop].urgency - abs(gap.gap)) < 1e-9
+    #  THE MAGNITUDES NO LONGER MEET, because only one side has one: the want carried a
+    #  number the diff had to agree with, and the want carries none. What the two texts must
+    #  still agree about is WHICH wants there are, which is the assertion above.
 
 
 def test_a_want_nobody_has_read_is_the_hottest_goal_and_not_a_missing_one(monkeypatch):
@@ -62,10 +63,13 @@ def test_a_want_nobody_has_read_is_the_hottest_goal_and_not_a_missing_one(monkey
     _, fern = _fern({("fern", TEMPERATURE): 21.0}, monkeypatch)  # temperature seen, moisture never
     desires = sensing_of(fern).desires()
 
-    moisture = next(g for g in desires if g.observed_property == MOISTURE)
+    moisture = next(g for g in desires
+                    if g.observed_property == MOISTURE and not g.is_epistemic)
     assert moisture.value is None
-    assert moisture.urgency == 1.0
-    assert desires[0] is moisture, "and it sorts to the top, where a deliberator will meet it"
+    assert moisture.state == "unmeasured", \
+        "and it says which kind of not-knowing this is — nothing has read it"
+    #  NO ORDER TO ASSERT: it sorted to the top and nothing chose by that, since every want
+    #  handed up is planned for.
     assert sensing_of(fern).gaps().get(MOISTURE) is None, \
         "while the diff still reports nothing, which is right for a diff"
 
@@ -76,22 +80,21 @@ def test_the_states_a_stake_can_be_in(monkeypatch):
     for value, expected in [(0.55, "met"), (0.45, "met"), (0.65, "met"),
                             (0.30, "unmet"), (0.95, "unmet")]:
         _, fern = _fern({("fern", MOISTURE): value}, monkeypatch)
+        #  THE STAKE, named rather than taken first: these came back hottest first, and the
+        #  stake about a property sorted ahead of the freshness want about the same one.
         moisture = next(g for g in sensing_of(fern).desires()
-                        if g.observed_property == MOISTURE)
-        met = moisture.urgency == 0.0 or (0.45 <= value <= 0.65)
-        assert met == (expected == "met"), f"{value} should be {expected}"
+                        if g.observed_property == MOISTURE and not g.is_epistemic)
+        assert moisture.state == expected, f"{value} should be {expected}"
 
 
-def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them(monkeypatch):
-    """The engine limit, made visible rather than worked around.
-    A obligation's urgency is the fraction of its redeem window that has run, and this store binds
-    NOTHING for `duration / duration` — so the query carries `owedAt` and `expiresAt` and the
-    division happens in Python. Asked at three points across one window, because the ends are
-    what the choice was made about: cool at issue, maximal at the deadline.
+def test_a_duty_carries_its_timestamps_and_what_the_window_decides(monkeypatch):
+    """What is left of the fraction, which is the part anything read.
 
-    The debt is written by hand, with the fixed instants the curve is read against, and
-    endowed as boot would — which asks the derivation for its want, the node the ledger reads
-    (one-function-mints-every-want).
+    A debt carried how much of its redeem window had run — Python, because this store binds
+    NOTHING for `duration / duration`, which `test_this_store_still_will_not_divide_one_duration_by_another`
+    below still pins. Nothing chose by the number: every want handed up is planned for. What
+    the window decides is the STATE and whether the debt may be acted on, asked at the two
+    ends, because the ends are what the choice was made about.
     """
     from agent import genesis
     from orexis_agent_progression.ontology import obligations_graph
@@ -113,12 +116,10 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them(mo
     def duty_at(offset_s):
         return next(g for g in ledger.desires(now=owed + timedelta(seconds=offset_s))
                     if isinstance(g, OwedWant))
-    assert duty_at(0).urgency == 0.0
-    assert abs(duty_at(450).urgency - 0.5) < 0.02
-    assert duty_at(900).urgency == 1.0
-    assert duty_at(5000).urgency == 1.0, "clamped — no more overdue than overdue"
+    assert duty_at(0).state == "demanded" and duty_at(450).state == "demanded"
+    assert duty_at(900).state == "lapsed" and duty_at(5000).state == "lapsed"
     assert duty_at(0).pursuable and not duty_at(5000).pursuable, \
-        "past the window there is nothing left to spend, however hot it reads"
+        "past the window there is nothing left to spend"
 
 
 def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_a_rebuild(
@@ -132,13 +133,17 @@ def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_
     scaling stays asymmetric: the room below the aim is aim-to-floor, above it aim-to-ceiling,
     so the same 0.10 out reads differently per side. Fern: region 0.45-0.65, survives 0.2-0.85.
     """
-    from orexis_agent_progression.ontology import picks_graph
+    from orexis_agent_progression.ontology import picks_graph, STATE_GRAPH
 
     st, fern = _fern({("fern", MOISTURE): 0.55}, monkeypatch)
 
+    #  ASKED OF THE CHOIR DIRECTLY, because the want no longer carries the number: the claim
+    #  under test is about the MEASURE and where it is anchored, which is the same question
+    #  whether or not anything rides it out on a row.
     def urgency():
-        return next(g for g in sensing_of(fern).desires()
-                    if g.observed_property == MOISTURE).urgency
+        stake = next(g for g in sensing_of(fern).desires()
+                     if g.observed_property == MOISTURE and not g.is_epistemic)
+        return fern.desire_urgency(stake, st.reader(PUBLIC), STATE_GRAPH, stake.value)
 
     assert urgency() == 0.0, "at the pick (0.55, which is also the centre) nothing is urgent"
 
@@ -178,7 +183,7 @@ def test_the_measure_answers_one_for_a_world_with_no_reading(monkeypatch):
     from orexis_agent_progression.ontology import STATE_GRAPH
 
     st, fern = _fern(None, monkeypatch)       # no readings seeded at all
-    probe = ObservedWant(uri="urn:asked", urgency=1.0, observed_property=MOISTURE)
+    probe = ObservedWant(uri="urn:asked", observed_property=MOISTURE)
     assert fern.desire_urgency(probe, st.reader(PUBLIC), STATE_GRAPH) == 1.0
 
 
@@ -190,11 +195,15 @@ def test_a_want_whose_kind_nothing_measures_scores_a_logged_one(monkeypatch):
     rule: the shipped worlds never hit this, and a sibling test holds THAT."""
     from orexis_capability_sensing import module as sensing
 
+    from orexis_agent_progression.ontology import STATE_GRAPH
+
     monkeypatch.setattr(sensing, "_DECLARED_MEASURES", ())
-    _, fern = _fern({("fern", MOISTURE): 0.55}, monkeypatch)
+    st, fern = _fern({("fern", MOISTURE): 0.55}, monkeypatch)
     moisture = next(g for g in sensing_of(fern).desires()
                     if g.observed_property == MOISTURE)
-    assert moisture.urgency == 1.0, "unmeasurable must never read as content"
+    probe = ObservedWant(uri="urn:asked", observed_property=MOISTURE, value=0.55)
+    assert fern.desire_urgency(probe, st.reader(PUBLIC), STATE_GRAPH, 0.55) is None, \
+        "nothing measures it, and the kernel's caller scores that maximal"
     assert moisture.state == "met", \
         "while the met-verdict stays the shape's — the two are different questions"
 
@@ -216,7 +225,7 @@ def test_every_shipped_stake_resolves_a_declared_measure(monkeypatch):
                 'SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }', st.graphs_of(PUBLIC))):
             agent = build_agent(row["id"], st, monkeypatch)
             for prop in sensing_of(agent).regions:
-                probe = ObservedWant(uri="urn:asked", urgency=1.0, observed_property=prop)
+                probe = ObservedWant(uri="urn:asked", observed_property=prop)
                 assert agent.desire_urgency(probe, st.reader(PUBLIC), STATE_GRAPH) is not None, \
                     f'{row["id"]} in {world}: a stake nothing loaded measures'
                 checked += 1

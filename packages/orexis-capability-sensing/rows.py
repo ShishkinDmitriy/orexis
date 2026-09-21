@@ -67,7 +67,10 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Want]:
             #  holds the clock for: which of the two ways of not knowing this is. The measure
             #  reads the same published horizon, so the two cannot disagree about whether a
             #  reading is current — one fact, two readers, rather than two definitions.
-            urgency = _measured_urgency(measure, row, value)
+            #  STILL ASKED, and no longer carried: the number does not ride out on the want
+            #  any more, but WHICH kind of not-current this is is read off it, so the label and
+            #  the measure cannot part company. It goes when the measure does.
+            current = _measured_urgency(measure, row, value)
             #  READ OFF THE MEASURE, so the label and the number cannot part company. It used
             #  to come off `_is_stale`, which declines to judge at all where no horizon has
             #  been published — so a want the measure scored maximal reported `met`, which is
@@ -75,14 +78,14 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Want]:
             #  measure does not call current is not current; WHICH kind of not-current it is
             #  is the reading's to say, and that distinction is worth keeping because the two
             #  are different faults (never looked, against looked and let it go cold).
-            state = "met" if urgency < 1.0 else \
+            state = "met" if current < 1.0 else \
                 ("unmeasured" if value is None else "stale")
         else:
             region = regions.get(row["property"])
             if region is None:
                 continue
             if value is None:
-                urgency, state = 1.0, "unmeasured"
+                state = "unmeasured"
             else:
                 #  A STAKE JUDGES THE NUMBER IT HAS. It used to go maximal when the reading was
                 #  past sensing's horizon, which meant the kernel judging staleness with a word
@@ -96,12 +99,16 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Want]:
                 #  the measure is anchored at the aim the two genuinely differ —
                 #  met-and-urgent is an agent inside its region and off its pick, a true
                 #  situation, not a contradiction.
-                urgency = _measured_urgency(measure, row, value)
+                #  THE STATE IS THE REGION'S, and the measure is not asked here at all now:
+                #  met is the shape's verdict, and how far off the reading sits was the number
+                #  that rode out on the want.
                 state = "unmet" if value < region.low or value > region.high else "met"
-        out.append(ObservedWant(uri=row["desire"], urgency=urgency, state=state,
+        out.append(ObservedWant(uri=row["desire"], state=state,
                         observed_property=row["property"], value=value,
                         read_at=item.at if item else None,
                         #  Only a freshness row binds one, which is what makes it the
                         #  discriminator rather than a decoration.
                         instrument=row.get("instrument")))
-    return sorted(out, key=lambda g: -g.urgency)
+    #  NO ORDER OF MY OWN. These came back hottest first, and nothing chose by it: every want
+    #  handed up is planned for, so the sort decided which was planned first and nothing else.
+    return out

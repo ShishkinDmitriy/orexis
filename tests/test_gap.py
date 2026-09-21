@@ -281,9 +281,9 @@ def test_an_unmet_want_is_not_printed_as_a_finding(monkeypatch):
 def test_the_ranking_reaches_the_dashboards_with_the_split_that_matters(monkeypatch):
     """A drowning society must not graph like a thirsty one.
 
-    Both are "unmet at urgency 1.00", and only one of them is anybody's to fix: no lever in
-    this society lowers moisture, so a fern above its region is a row an operator should read
-    last and a model should never propose against. The count that says so is `unactionable`,
+    Both are unmet, and only one of them is anybody's to fix: no lever in this society lowers
+    moisture, so a fern above its region is a row an operator should read last and a model
+    should never propose against. The count that says so is `unactionable`,
     and it is computed by ASKING the deliberator rather than by a second copy of the menu.
 
     Asked at a value ABOVE the region on purpose. Below it, every count agrees whatever the
@@ -297,7 +297,10 @@ def test_the_ranking_reaches_the_dashboards_with_the_split_that_matters(monkeypa
     _, _, fields = next(row for row in reflex.series() if row[0] == "agent_goals")
 
     assert fields["unmet"] >= 1
-    assert fields["hottest"] == 1.0, "past the survival ceiling is as bad as it gets"
+    #  NO `hottest`: it was the largest urgency across the wants, and the number it took the
+    #  maximum of is gone — four packages each computed one its own way, ahead of the search
+    #  that was the only thing able to compare them.
+    assert "hottest" not in fields
     assert fields["unactionable"] >= 1, \
         "wet is unmet and unactionable — the whole point of the column"
     #  A plant holds no lever anyone may demand, so it has NO LEDGER — which is a stronger
@@ -325,8 +328,8 @@ def test_a_content_agent_reports_nothing_wanted_and_nothing_stuck(monkeypatch):
                                               ("fern", TEMPERATURE): 21.0}), monkeypatch)
     desires = fern.pursuing()
     assert all(g.is_met for g in desires), "0.52 in 0.45-0.65 and 21 in 18-24 are both met"
-    assert any(g.urgency > 0 for g in desires), \
-        "and still off-centre — which is what made the old definition look right"
+    assert all(g.state == "met" for g in desires), \
+        "and the STATE is the region's verdict, which is what the old definition confused"
 
     reflex = next(m for m in fern.modules if m.name == "deliberation")
     _, _, fields = next(row for row in reflex.series() if row[0] == "agent_goals")

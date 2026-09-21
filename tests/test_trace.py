@@ -34,8 +34,14 @@ def _gardener(monkeypatch, moisture):
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): moisture}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
+    #  THE STAKE, named rather than taken first. Two wants are about MOISTURE — the region and
+    #  the freshness want about the probe that reads it — and the stake used to sort ahead of
+    #  it, because what an agent pursued came back hottest first. Nothing orders them now, so
+    #  a test that means the region says the region: taking the freshness want here planned
+    #  nothing, and read as "dry, with a pump, and no plan".
     desire = next(g for g in agent.pursuing()
-                  if getattr(g, "observed_property", None) == MOISTURE)
+                  if getattr(g, "observed_property", None) == MOISTURE
+                  and not g.is_epistemic)
     return agent, Planner(agent, agent.me), desire
 
 
