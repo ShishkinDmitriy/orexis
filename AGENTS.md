@@ -449,6 +449,12 @@ it is a record wearing a bullet.
   caches nothing; the kernel lifting a ratified want wants a BOOLEAN from public knowledge,
   where a package's shape lives, and caches per want because an asserted one cannot change
   while the agent runs. Merging them was attempted and refused on all three counts.
+- **A synchronous twin of a pass is a second pass, and it drifts** — `deliberate_on_gaps` was
+  what a test called to have the consequences before it asserted, and it read what the agent
+  was considering DIRECTLY where the real pass derives first; so every test went down a path
+  production does not have, missing the one step the seam was built to add. One pass with two
+  endings (`consider` marks, `consider_now` takes) sharing the generator that derives is what
+  stops that: the difference is where the work happens, and nothing else can differ.
 - **A pass begins in one place, and judging happens once in it** — the container re-ran a
   want's own met-test to correct a row gone stale, which is asking twice what one pass had
   concluded; it went stale because the derivation ran only where a package wrote something a

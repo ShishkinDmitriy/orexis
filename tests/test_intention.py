@@ -13,6 +13,8 @@ the bidder's handlers and a ledger nobody writes to proves nothing.
 
 from __future__ import annotations
 
+from orexis_agent_deliberation import pursuit
+
 from orexis_agent_progression.ontology import PROGRESSION
 
 from dataclasses import replace
@@ -244,7 +246,7 @@ def test_the_tick_puts_marketless_watching_in_the_ledger(make):
     caused the look."""
     fern = make("fern")
     keeper = next(m for m in fern.modules if m.name == "intention")
-    keeper.agent.deliberator.deliberate_on_gaps()
+    pursuit.consider_now(keeper.agent)
     #  The ledger names the WANT; which property a want is about is sensing's to say.
     about = {w.uri: getattr(w, "observed_property", None) for w in fern.considering()}
     standing = {(s.action.rsplit("#", 1)[-1], about.get(s.want)) for s in keeper.standing()}
@@ -263,9 +265,9 @@ def test_a_second_tick_within_patience_is_absorbed(make):
     ledger holds one commitment per gap, however often anyone notices it."""
     fern = make("fern")
     keeper = next(m for m in fern.modules if m.name == "intention")
-    keeper.agent.deliberator.deliberate_on_gaps()
+    pursuit.consider_now(keeper.agent)
     first = len(keeper.standing())
-    keeper.agent.deliberator.deliberate_on_gaps()
+    pursuit.consider_now(keeper.agent)
     assert len(keeper.standing()) == first
 
 
@@ -310,7 +312,7 @@ def test_the_tick_survives_an_agent_that_has_seen_things(make):
     fern = make("fern")
     fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.2, "temperature": 21.0})
     keeper = next(m for m in fern.modules if m.name == "intention")
-    keeper.agent.deliberator.deliberate_on_gaps()  # must not raise — that is the whole test
+    pursuit.consider_now(keeper.agent)  # must not raise — that is the whole test
 
 
 # --- a commitment names the desire it serves (step 3) -------------------------

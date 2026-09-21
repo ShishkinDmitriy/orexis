@@ -52,7 +52,7 @@ def test_no_round_open_means_no_acquire_committed_and_the_trace_says_why(monkeyp
 
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     keeper = keeper_of(fern)
-    keeper.agent.deliberator.deliberate_on_gaps()
+    pursuit.consider_now(keeper.agent)
     assert keeper.standing(action=TENDERING) == [], "nothing to bid in, nothing committed"
     assert fern.sent.to(f"{wired_markets(fern)[0].bid_topic}/fern") == []
     weighed = {r["m"] for r in bindings(fern.beliefs.query_union(
@@ -67,7 +67,7 @@ def test_the_tick_bids_when_a_round_is_open(monkeypatch):
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     open_round_for(fern, "fern")
     keeper = keeper_of(fern)
-    keeper.agent.deliberator.deliberate_on_gaps()
+    pursuit.consider_now(keeper.agent)
     acquires = keeper.standing(action=TENDERING, want=stake_of(fern).uri)
     assert len(acquires) == 1 and acquires[0].value_of(VENUE) == wired_markets(fern)[0].uri
     assert len(fern.sent.to(f"{wired_markets(fern)[0].bid_topic}/fern")) == 1
@@ -86,7 +86,7 @@ def test_a_round_is_decided_once_and_a_second_impulse_is_absorbed(monkeypatch):
     passes = []
     monkeypatch.setattr(Planner, "plan",
                         lambda self, desire, **kw: passes.append(desire) or Plan(NOT_BETTER))
-    fern.deliberator.deliberate_on_gaps()
+    pursuit.consider_now(fern)
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1, "no second bid"
     #  The freshness want is met and the stake stands, so the tick has nothing to search
     #  FOR; the one pass it may run is the stake's, which `adopt` then absorbs.
@@ -188,9 +188,9 @@ def test_an_impulse_within_patience_writes_no_row(monkeypatch):
     asked before anything is adopted."""
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     keeper = keeper_of(fern)
-    keeper.agent.deliberator.deliberate_on_gaps()
+    pursuit.consider_now(keeper.agent)
     n = len(keeper.standing())
-    keeper.agent.deliberator.deliberate_on_gaps()
+    pursuit.consider_now(keeper.agent)
     assert len(keeper.standing()) == n
     from orexis_agent_progression.store import bindings
     everything = bindings(keeper.agent.intentions.query(

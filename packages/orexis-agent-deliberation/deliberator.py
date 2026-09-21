@@ -130,26 +130,6 @@ class Deliberator:
         #  a capability. The agent waits now and calls `pursuit.consider`, which is this
         #  package's one way in; what that pass does is unchanged, and it derives first.
 
-    def deliberate_on_gaps(self) -> None:
-        """Every want, through pursuit, NOW. Noticing is plural; deciding is not; doing is one path.
-
-        The synchronous form of the tick — what a test calls to have the consequences before it
-        asserts, and what the reviser's drain amounts to once every mark is taken. Deliberation
-        used to run only when the market knocked, and then the tick carried out ONE of the
-        deliberator's answers — Observe — and dropped the rest on the floor, because an Acquire
-        needs a round nobody may convene from here. It still does; what changed is that the
-        commitment is made anyway. `pursuit.pursue` plans, writes the head row to the ledger and
-        hands it down to its actor, and an actor that cannot act now says so and the intention
-        STANDS — so the bidder answers the next offer from what it already committed to,
-        without a second search. See knowledge/domain/executor.md.
-
-        What nobody may act on yet is skipped, as the tick skips it — see `tick`.
-        """
-        for judgment in self.agent.considering():
-            if not judgment.pursuable:
-                continue
-            pursuit.pursue(self.agent, judgment)
-
     # --- what progression tells me (#452): a lower layer speaks upward only as an event -----
 
     @contributes(STEP_DONE)
