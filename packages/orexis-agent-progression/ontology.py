@@ -109,7 +109,6 @@ LAYER_OF = {
     "outcome": PROGRESSION,
     "partOf": PROGRESSION,
     "patienceS": PROGRESSION,
-    "predictedUrgency": PROGRESSION,
     "predictedValue": PROGRESSION,
     "predicts": PROGRESSION,
     "promisedBy": PROGRESSION,

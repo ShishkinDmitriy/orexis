@@ -128,7 +128,9 @@ doses are too coarse*, which is a distinction a planner that reported them alike
 
 # Where a planned one appears
 
-- a plan is a sequence of them, each with the urgency the want would have in the world it reaches
+- a plan is a sequence of them. What each would BUY — the urgency the want would have in the
+  world it reaches — is not the step's: it is a fact about (world, want), and the weighing
+  [deliberation](/domain/deliberator.md) describes is where it lives (#748)
 - an [intention](/domain/intention.md) commits to them — `progression:step` to each,
   `progression:by` to the one it stands at, `progression:then` between them in order
 - a [claim](/domain/claim.md) promises one: the host's Serving step, so many litres, not after

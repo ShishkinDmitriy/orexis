@@ -1692,7 +1692,10 @@ class Planner:
         step.estimate = self._estimate_in(step, judgment)
         #  THE STEP CARRIES WHAT IT PREDICTED (#510): the same canonical facts the signature
         #  is made of, so the keeper can hold the world to this step without an imaginarium.
-        step.taken = node.taken + (replace(act, urgency_after=step.urgency, predicts=own),)
+        #  THE URGENCY THIS REACHES IS THE WEIGHING'S, not the step's: it is a fact about
+        #  (world, want), and a step is want-agnostic the moment one imaginarium serves two.
+        #  `deliberation:wouldReach` on the child's weighing is this same number (#748).
+        step.taken = node.taken + (replace(act, predicts=own),)
         return step
 
     def _about(self, node, predicate: str, value) -> None:

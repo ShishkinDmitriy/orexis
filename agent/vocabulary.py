@@ -136,7 +136,6 @@ MOVED = {
     "http://example.org/orexis#outcome": "http://example.org/orexis/progression#outcome",
     "http://example.org/orexis#partOf": "http://example.org/orexis/progression#partOf",
     "http://example.org/orexis#patienceS": "http://example.org/orexis/progression#patienceS",
-    "http://example.org/orexis#predictedUrgency": "http://example.org/orexis/progression#predictedUrgency",
     "http://example.org/orexis#predictedValue": "http://example.org/orexis/progression#predictedValue",
     "http://example.org/orexis#predicts": "http://example.org/orexis/progression#predicts",
     "http://example.org/orexis#promisedBy": "http://example.org/orexis/progression#promisedBy",

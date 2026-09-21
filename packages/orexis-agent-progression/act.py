@@ -42,7 +42,6 @@ class Step:
     #  the half nothing writes yet — where a held claim spent later would arrive.
     not_before: datetime | None = None
     not_after: datetime | None = None
-    urgency_after: float | None = None  # the want's urgency in the world this step was predicted to reach
     predicts: tuple | None = None     # (adds, retracts): the canonical facts the search said this
                                       # step makes true and false — what the world is held to (#510)
     precondition: frozenset | None = None  # the canonical facts its rules READ in the world it
