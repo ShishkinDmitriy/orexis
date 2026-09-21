@@ -173,9 +173,12 @@ Always true for a stake — a plant does not ask.
 
 # It lives in the mind's stores, and the capability does not
 
-`packages/orexis-agent-deliberation/desire.py` holds the TYPE, in the deliberation layer and
-outside any capability, because a desire is a mental state and those are the mind's — the same
-reason obligations and intentions are. Two packages need it and
+`packages/orexis-agent-deliberation/desires.py` holds what can be ASKED about one, in the
+deliberation layer and outside any capability, because a desire is a mental state and those are
+the mind's — the same reason obligations and intentions are. There is no Python type: a desire
+is rows, and a class built from a query to carry a uri out of it was the store duplicated for
+the length of one expression
+([a-read-is-a-function-over-a-store](/decisions/a-read-is-a-function-over-a-store.md)). Two packages need it and
 neither may import the other: this capability produces desires,
 [deliberation](/domain/deliberator.md) consumes them, and the only thing they are allowed to
 share is a kernel word.

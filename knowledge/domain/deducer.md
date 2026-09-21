@@ -29,8 +29,8 @@ Deducer until a root was seen to be re-derived from a pick on every rebuild.
 
 # The one unclean seam
 
-The projection is a class inside `packages/orexis-agent-deliberation/desire.py`, extending the store the
-[desires repository](/decisions/a-store-is-a-modality.md) wraps; the derivation itself is
+The projection is a class inside `packages/orexis-agent-deliberation/desires.py`, extending the store the
+[desire modality](/decisions/a-store-is-a-modality.md) owns; the derivation itself is
 `author_roots` in `agent/genesis.py`, beside birth and endowment. The rule it protects is real —
 nothing the runtime holds can write a want, so an agent cannot satisfy itself by attrition — but
 it is kept true by hiding the writer inside rather than by the layering everything else follows.
