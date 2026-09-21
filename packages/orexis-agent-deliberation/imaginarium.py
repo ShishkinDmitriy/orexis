@@ -225,6 +225,10 @@ class Imaginarium:
         """Say what a plan's graph IS, so a reader asks the catalogue and never the name."""
         self._store.classify(graph, DELIBERATION + "PlanGraph", OREXIS + "Derived")
 
+    def quads_for_pattern(self, subject=None, predicate=None, obj=None, graph=None):
+        """What the store holds matching a pattern — a reader of this store's own rows."""
+        return list(self._store.quads_for_pattern(subject, predicate, obj, graph))
+
     def unnote(self, quads) -> None:
         """Take back one of `note`'s rows — the mirror, and the same `forget=False` reason.
 
