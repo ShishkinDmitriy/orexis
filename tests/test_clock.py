@@ -14,7 +14,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from orexis_agent_deliberation import judging, pursuit
+from orexis_agent_deliberation import derive_wants as judging, pursuit
 from orexis_agent_deliberation.derive_wants import derive_wants
 from orexis_agent_progression import clock
 from orexis_agent_progression.ontology import picks_graph

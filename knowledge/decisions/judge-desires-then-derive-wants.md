@@ -152,7 +152,7 @@ cost 65. So judging iterates, one select per desire per instant, inside a functi
 contract is the whole.
 
 **`check_desires`.** The dictionary's verb for running a met-test against the world is judge —
-a desire is declared and a judgment is made, the SHACL seat is `judge.py` — and *check* is the
+a desire is declared and a judgment is made, the SHACL seat is `conformance.py` — and *check* is the
 repo's word for a boot gate. The confusion between the verb and the noun dissolves because the
 stored thing is the judgment.
 

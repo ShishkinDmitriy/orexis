@@ -677,7 +677,7 @@ def test_no_reader_names_a_per_agent_graph():
                "judgments_graph"}
     readers = ["packages/orexis-agent-deliberation/planner.py", "packages/orexis-agent-deliberation/desires.py",
                "packages/orexis-agent-deliberation/imaginarium.py", "packages/orexis-agent-deliberation/pursuit.py",
-               "packages/orexis-agent-deliberation/judging.py", "packages/orexis-agent-deliberation/derive_wants.py",
+               "packages/orexis-agent-deliberation/derive_wants.py", "packages/orexis-agent-deliberation/derive_wants.py",
                "packages/orexis-agent-deliberation/scope_actions.py",
                "packages/orexis-agent-deliberation/steps.py",
                "packages/orexis-agent-deliberation/reviser.py", "packages/orexis-agent-deliberation/considering.py", "agent/validate.py"]

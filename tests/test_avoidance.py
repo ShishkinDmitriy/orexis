@@ -156,7 +156,7 @@ def test_the_shape_form_agrees_with_the_judge(tmp_path, monkeypatch):
     entered — beside the kernel's compiled conformance select, held and entered alike."""
     import rdflib
 
-    from orexis_agent_deliberation.judge import judge
+    from orexis_agent_deliberation.conformance import judge
     from orexis_agent_deliberation.planner import Planner
 
     SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")

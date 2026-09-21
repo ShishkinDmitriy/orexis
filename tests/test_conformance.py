@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import rdflib
 
-from orexis_agent_deliberation.judge import _SKOLEM, crossed_text, judge
+from orexis_agent_deliberation.conformance import _SKOLEM, crossed_text, judge
 
 _SH = "http://www.w3.org/ns/shacl#"
 
@@ -55,7 +55,7 @@ def test_verdicts_agree_with_the_full_report_and_read_the_data_once(monkeypatch)
     shapes answers the same (severity, focus, source) triples, whether the report is read
     as N-Triples by the store's parser or as Turtle by rdflib — and the world crosses into
     rudof once for however many shapes graphs are asked."""
-    from orexis_agent_deliberation import judge as J
+    from orexis_agent_deliberation import conformance as J
     from orexis_agent_deliberation.conformance import _shapes_and_vocabulary
     agent, planner, here, border = _border_and_planner(monkeypatch)
     try:
@@ -78,5 +78,5 @@ def test_verdicts_agree_with_the_full_report_and_read_the_data_once(monkeypatch)
 
 
 def test_an_empty_shapes_graph_answers_no_verdicts():
-    from orexis_agent_deliberation.judge import verdicts
+    from orexis_agent_deliberation.conformance import verdicts
     assert verdicts('<urn:a> <urn:p> "x" .\n', rdflib.Graph()) == [frozenset()]

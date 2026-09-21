@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from orexis_agent_deliberation import judging, pursuit, trace
+from orexis_agent_deliberation import derive_wants as judging, pursuit, trace
 from orexis_agent_deliberation.derive_wants import derive_wants
 from orexis_agent_progression.ontology import REPREDICT
 from test_greenhouse import AIR, COMFORT, HEATING, VENTING, _comfort, _grower, _outside_as_periods

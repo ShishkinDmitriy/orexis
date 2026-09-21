@@ -18,7 +18,7 @@ import pytest
 import rdflib
 
 from conftest import build_agent, genesis_store
-from orexis_agent_deliberation import judge as J
+from orexis_agent_deliberation import conformance as J
 from orexis_agent_deliberation.conformance import _shapes_and_vocabulary, legality_selects
 from orexis_agent_deliberation.planner import Planner, _Node
 from orexis_agent_progression.ontology import STATE_GRAPH

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from orexis_agent_deliberation import judging, pursuit
+from orexis_agent_deliberation import derive_wants as judging, pursuit
 from orexis_agent_progression.ontology import picks_graph, obligations_graph
 from orexis_agent_progression.store import bindings
 from orexis_capability_market.terms import ACQUIRING
@@ -91,11 +91,11 @@ def test_a_host_that_foresees_the_crossing_plans_the_refill_from_the_present(mon
     #  EVERY DESIRE IS DERIVED THE MOMENT A CLAIM ARRIVES (judge-desires-then-derive-wants):
     #  the stock desire reads met at the present and unmet at the crossing, the want stands
     #  already, and the container presents the desire under it.
-    from orexis_agent_deliberation.judging import shapes_in, read_ahead, read_now
+    from orexis_agent_deliberation.derive_wants import shapes_in, read_ahead, read_now
     child = _stock(agent, derived=True)
     desire = child.desire
     engine, shapes = agent.beliefs.engine, None
-    from orexis_agent_deliberation.judging import _one
+    from orexis_agent_deliberation.derive_wants import _one
     holder, shape = _one(engine, desire)
     shapes = shapes_in(engine)
     assert read_now(engine, shapes, holder, desire, shape, clock.now()) == [], "met at the present"
