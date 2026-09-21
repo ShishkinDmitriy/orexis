@@ -62,6 +62,23 @@ Nothing should come back. This is not hypothetical: a candidate named `<parent>/
 spelled 132 full IRIs across three cases, because a slash cannot appear in a prefixed name's
 local part. The separator changed; the snapshots did not need to.
 
+### And look INSIDE the literals
+
+A grep for `<http` that strips quoted strings first will miss the worst case, because a full
+IRI inside a literal is not a rendering problem — it is **data modelled as a string**:
+
+```turtle
+:plan.0 progression:predicts "{\"adds\": [[\"http://example.org/test#disk_1\",
+  \"http://example.org/orexis/hanoi#on\", \"http://example.org/orexis/hanoi#PegB\"]]}" .
+```
+
+That is a set of triples held as JSON in a triplestore. Nothing can query it, nothing can
+abbreviate it, and the snapshot carrying it is unreadable. **Check literal content separately,
+and treat what you find as a modelling finding rather than a formatting one** — the fix is the
+representation, never the case.
+
+A SPARQL or SHACL text is the legitimate case: it is a program, and an IRI in it is source.
+
 ## Canonical form, and why a case must already be in it
 
 The renderer writes **one statement per line, flat at the top**, subjects in rendered order,
