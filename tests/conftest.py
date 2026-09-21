@@ -518,3 +518,23 @@ def filled(*pairs) -> tuple[tuple[str, str], ...]:
     """A binding, out of (parameter, value) pairs — sorted, as every binding is, and dropping
     any whose value is absent."""
     return tuple(sorted((p, v) for p, v in pairs if v is not None))
+
+
+def weighed(planner) -> list[dict]:
+    """What a pass weighed, asked of the pass graph it wrote: one row per candidate, with the
+    action it would take, the verdict and the depth.
+
+    A READ, not an accessor. The planner kept a Python list of these until the verdict came to
+    be written where it is decided; a test that wants to know what was weighed asks the store,
+    exactly as the trace does.
+    """
+    from orexis_agent_deliberation.imaginarium import PASS_GRAPH
+    from orexis_agent_progression.store import bindings
+    if getattr(planner, "imaginarium", None) is None or getattr(planner, "_want", None) is None:
+        return []
+    rows = bindings(planner.imaginarium.query_over(f"""
+SELECT ?action ?verdict ?depth WHERE {{
+  ?x a deliberation:Weighing ; deliberation:forWant <{planner._want}> ;
+     deliberation:weighs ?c ; deliberation:verdict ?verdict ; deliberation:atDepth ?depth .
+  ?c deliberation:wouldTake ?action }}""", PASS_GRAPH))
+    return [dict(r, depth=int(r["depth"])) for r in rows]

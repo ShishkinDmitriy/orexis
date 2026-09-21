@@ -28,7 +28,11 @@ import pyoxigraph as ox
 
 from orexis_agent_progression.ontology import DELIBERATION_GRAPH
 
-from .imaginarium import candidate_of
+from orexis_agent_progression.act import BOUND, binding_from, bound_clause
+from orexis_agent_progression.ontology import PUBLIC
+from orexis_agent_progression.store import bindings
+
+from .imaginarium import PASS_GRAPH
 from orexis_agent_progression import clock
 
 log = logging.getLogger("trace")
@@ -127,7 +131,7 @@ def clear(store, agent_id: str, desire_uri: str) -> None:
                     OPTIONAL {{ <{node}> deliberation:considered ?c . ?c ?cp ?co }} }} }}""")
 
 
-def write(store, agent_id: str, judgment, plan, considered, stands_at: float,
+def write(store, agent_id: str, judgment, plan, imaginarium, want, stands_at: float,
           took_s: float = 0.0, judged: tuple[str, str | None] = (UNJUDGED, None),
           kept: int = 0, surprise: tuple | None = None) -> None:
     """Record one pass: what was weighed, what each would have reached, and what was taken.
@@ -137,52 +141,65 @@ def write(store, agent_id: str, judgment, plan, considered, stands_at: float,
     the same posture `reporting` takes towards the series store.
     """
     try:
-        _write(store, agent_id, judgment, plan, considered, stands_at, took_s, judged, kept, surprise)
+        _write(store, agent_id, judgment, plan, imaginarium, want, stands_at, took_s, judged, kept, surprise)
     except Exception as exc:                      # noqa: BLE001 - see the docstring
         log.warning("could not record what was considered: %s", exc)
 
 
-def _write(store, agent_id: str, judgment, plan, considered, stands_at: float,
+#  WHAT THE PASS WEIGHED, asked of the pass graph. The trace was HANDED a Python list — a
+#  buffer the planner appended to at twelve sites and carried to the end of the pass — and it
+#  is a reader now: the facts are written where each verdict is decided, and this copies the
+#  ones worth keeping out of a store that dies with the pass into one that does not.
+_WEIGHED = """
+SELECT ?c ?action ?depth ?verdict ?urgency ?missing {bound} WHERE {{
+  ?x a deliberation:Weighing ; deliberation:forWant <{want}> ;
+     deliberation:weighs ?c ; deliberation:atDepth ?depth ; deliberation:verdict ?verdict .
+  ?c deliberation:wouldTake ?action .
+  OPTIONAL {{ ?x deliberation:wouldReach ?urgency }}
+  OPTIONAL {{ ?x deliberation:missing ?missing }}
+  {clause} }}
+GROUP BY ?c ?action ?depth ?verdict ?urgency ?missing
+ORDER BY ?depth ?c"""
+
+
+def _write(store, agent_id: str, judgment, plan, imaginarium, want, stands_at: float,
            took_s: float, judged: tuple[str, str | None], kept: int = 0,
            surprise: tuple | None = None) -> None:
     node = _uri(agent_id, judgment.uri)
     #  The candidate the plan came THROUGH — a remembered route walked as one candidate is
     #  named as the route, not as the first of its steps (#469).
     chosen = getattr(plan, "origin", None) or (plan.steps[0].action if plan.steps else None)
+    weighed = [] if imaginarium is None or want is None else bindings(imaginarium.query_over(
+        _WEIGHED.format(bound=BOUND, want=want, clause=bound_clause("?c")),
+        PASS_GRAPH, *imaginarium.graphs_of(PUBLIC)))
     rows = []
-    for entry in considered:
-        depth, row, urgency, verdict = entry.depth, entry.row, entry.urgency, entry.verdict
+    for entry in weighed:
+        candidate, urgency = entry["c"], entry.get("urgency")
+        reached = "" if urgency is None else \
+            f'        deliberation:wouldReach {float(urgency):.6f} ;\n'
         #  WHAT WAS MISSING, where the verdict is that a remembered plan's precondition does
         #  not hold (#551): the fact, as the signature states it, so the reader is told
         #  which fact and not only that one was.
-        missing = entry.missing
-        #  THE CANDIDATE IS THE PASS GRAPH'S OWN NODE (#747), named from the world it was
-        #  weighed in. It was `{node}.{i}` — a counter — so the trace and the pass described
-        #  the same fork under two names and no triple said they were one thing. A candidate
-        #  that reached nothing has no world of its own and still has a name, because the
-        #  name comes from the world it LEAVES.
-        candidate = candidate_of(entry.world, row)
-        reached = "" if urgency is None else \
-            f'        deliberation:wouldReach {urgency:.6f} ;\n'
-        absent = "" if missing is None else \
-            f'        deliberation:missing {_quoted(repr(missing))} ;\n'
+        absent = "" if entry.get("missing") is None else \
+            f'        deliberation:missing {_quoted(entry["missing"])} ;\n'
         rows.append(
             f'    <{node}> deliberation:considered <{candidate}> .\n'
             f'    <{candidate}> a deliberation:Candidate ;\n'
-            f'        deliberation:wouldTake <{row.action}> ;\n'
-            + "".join(f'        <{parameter}> <{value}> ;\n' for parameter, value in row.binding)
+            f'        deliberation:wouldTake <{entry["action"]}> ;\n'
+            + "".join(f'        <{parameter}> <{value}> ;\n'
+                      for parameter, value in binding_from(entry.get("bound")))
             +
-            f'        deliberation:atDepth {depth} ;\n'
+            f'        deliberation:atDepth {entry["depth"]} ;\n'
             f'{reached}{absent}'
-            f'        deliberation:verdict "{verdict}" .\n')
+            f'        deliberation:verdict "{entry["verdict"]}" .\n')
     #  The chosen candidate is named rather than duplicated: a reader joining `deliberation:chose` to the
     #  candidate gets its depth, what it was filled with and the world it would reach, and the trace never
     #  says the same number twice in two places where they could drift apart.
     took = ""
     if chosen is not None:
-        for entry in considered:
-            if entry.row.action == chosen:
-                took = f'        deliberation:chose <{candidate_of(entry.world, entry.row)}> ;\n'
+        for entry in weighed:
+            if entry["action"] == chosen:
+                took = f'        deliberation:chose <{entry["c"]}> ;\n'
                 break
     #  The select as a LITERAL, escaped by the engine's own writer: a compiled text carries
     #  quotes, backslashes and newlines, and a hand-quoted f-string would be the injection the

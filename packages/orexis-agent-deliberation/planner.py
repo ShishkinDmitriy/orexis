@@ -50,7 +50,7 @@ from orexis_agent_deliberation.want import Want
 
 
 from .steps import Steps
-from .imaginarium import Imaginarium, candidate_of
+from .imaginarium import Imaginarium, PASS_GRAPH, candidate_of
 from orexis_agent_progression import violation
 from orexis_agent_progression.store import NAMESPACES, Raw, bind, bindings
 from .ontology import DELIBERATION
@@ -59,7 +59,7 @@ from orexis_agent_deliberation.conformance import graph_from, held_shapes, legal
 from orexis_agent_deliberation.judge import crossed_text
 from orexis_agent_progression import clock
 from .cone import _Compiled, _Node
-from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED, Weighed,
+from .plan import (EXHAUSTED, IMPROVED, NOTHING, NOT_BETTER, Plan, REFUSED,
                    REMEMBERED, SATISFIED)
 from .trace import SURPRISE_EXOGENOUS, SURPRISE_WITHHELD
 from orexis_agent_progression.ontology import PUBLIC
@@ -84,7 +84,6 @@ class _Remembered:
 
 #  WHERE A PASS SAYS WHAT IT KNOWS about the worlds it made — in the imaginarium, beside them,
 #  and gone when the pass is. Named once here because this is what creates it.
-PASS_GRAPH = GRAPH_PREFIX + "pass"
 RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 XSD = "http://www.w3.org/2001/XMLSchema#"
 _TRUE = ox.Literal("true", datatype=ox.NamedNode(XSD + "boolean"))
@@ -1146,7 +1145,7 @@ class Planner:
                 and self._root.landing > 0):
             plan = replace(plan, placed_at=self._clock + timedelta(seconds=self._root.landing))
         trace.write(self.agent.beliefs, self.agent.id, judgment, plan,
-                    self._weighed_rows(), stands_at,
+                    self.imaginarium, self._want, stands_at,
                     time.monotonic() - self._started, self._judged(judgment),
                     kept=getattr(self, "_kept_worlds", 0),
                     surprise=getattr(self, "_surprise", None))
@@ -1786,32 +1785,6 @@ SELECT ?w WHERE {{ ?w a deliberation:PossibleWorld ;
      deliberation:remaining ?left ; deliberation:wouldReach ?urgency . }}
 ORDER BY {order} LIMIT 1""", PASS_GRAPH))
         return self._by_name.get(rows[0]["w"]) if rows else None
-
-    def _weighed_rows(self) -> list:
-        """What this pass weighed, read back out of the store it wrote it to.
-
-        `Weighed` is the shape of a QUERY RESULT now and not a buffer: the facts live in the
-        pass graph from the moment each verdict is decided, and this is a reader. A candidate's
-        binding comes back through `orexis:takes`, which the imaginarium holds because it
-        copies the public graphs at init — so the read is handed those beside the pass graph.
-        """
-        if self.imaginarium is None or self._want is None:
-            return []
-        rows = bindings(self.imaginarium.query_over(f"""
-SELECT ?c ?action ?world ?depth ?verdict ?urgency ?missing {BOUND} WHERE {{
-  ?x a deliberation:Weighing ; deliberation:forWant <{self._want}> ;
-     deliberation:weighs ?c ; deliberation:atDepth ?depth ; deliberation:verdict ?verdict .
-  ?c deliberation:wouldTake ?action ; deliberation:from ?world .
-  OPTIONAL {{ ?x deliberation:wouldReach ?urgency }}
-  OPTIONAL {{ ?x deliberation:missing ?missing }}
-  {bound_clause("?c")} }}
-GROUP BY ?c ?action ?world ?depth ?verdict ?urgency ?missing
-ORDER BY ?depth ?c""", PASS_GRAPH, *self.imaginarium.graphs_of(PUBLIC)))
-        return [Weighed(int(r["depth"]),
-                        Step(action=r["action"], binding=binding_from(r.get("bound"))),
-                        float(r["urgency"]) if r.get("urgency") else None,
-                        r["verdict"], r.get("missing"), r["world"])
-                for r in rows]
 
     def _weigh(self, row, world: str, depth: int, verdict: str,
                urgency: float | None = None, missing=None) -> None:
