@@ -257,7 +257,7 @@ def _superseded(store: ox.Store, pattern: str | None, graphs, state: str) -> lis
 
 def _fork(store: ox.Store, parent: str, name: str, added, retracted) -> str:
     """The ground one prediction past `parent`: its facts, less what the prediction retracts,
-    plus what it adds. Retraction before addition, for the reason `Imaginarium.reached` gives —
+    plus what it adds. Retraction before addition, for the reason `planner.reached` gives —
     a construct may reuse the very node its retraction names."""
     node = ox.NamedNode(name)
     update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "

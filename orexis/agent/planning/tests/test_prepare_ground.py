@@ -29,7 +29,7 @@ from orexis.agent.planning.prepare_ground import prepare_ground
 CASES_DIR = Path(__file__).parent / "prepare_ground"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 
-#  What the caller names as the agent's own, per case — `Imaginarium(store, *private)`'s
+#  What the caller names as the agent's own, per case — `prepare_ground`'s
 #  argument. A case not listed here names none, which is a claim of its own.
 #  NOTHING IS NAMED ANY MORE. The caller used to list which of its own graphs crossed; the
 #  function asks the catalogue for them — the readings, the predictions, the picks, the desires
