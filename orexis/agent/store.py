@@ -153,7 +153,7 @@ NAMESPACES = {**_FOUND, **_KERNEL}
 _XSD = "http://www.w3.org/2001/XMLSchema#"
 _XSD_ANY_URI = _XSD + "anyURI"
 
-#  The header as TEXT, for the readers that parse rather than run: rdflib in `relevance.py`,
+#  The header as TEXT, for the readers that parse rather than run: rdflib in `touches.py`,
 #  and any tool that wants a query to stand alone. The store itself hands the engine
 #  `NAMESPACES` as a dictionary (#500), so no query text carries a header it did not write.
 PREFIXES = "\n" + "\n".join(

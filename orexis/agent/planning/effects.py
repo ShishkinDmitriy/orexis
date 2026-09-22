@@ -37,9 +37,9 @@ from rdflib.plugins.sparql.algebra import translateQuery
 from rdflib.plugins.sparql.parser import parseQuery
 from rdflib.plugins.sparql.parserutils import CompValue
 
-from orexis.agent.store import (PREFIXES, bindings, bind as bind_text,
+from orexis.agent.store import (_TOKEN, PREFIXES, bindings, bind as bind_text,
                                            construct, graphs_of, query, remember)
-from .relevance import _TOKEN, parseable
+from .touches import parseable
 from orexis.agent.ontology import PUBLIC
 from orexis.agent.ontology import KNOWN
 from orexis.agent import clock
@@ -230,7 +230,7 @@ def _precondition_template(text: str, keyed: tuple, restrict: tuple) -> str | No
     PARSED ONCE PER TEXT. rdflib's SPARQL parser is what the precondition costs — 216 ms of 276
     for a two-step plan, measured — and a rule's text is the same for every step that takes
     the action, so the parse is cached on the text and only the binding is per step. The
-    parse reads the text made parseable the way `relevance` reads it, every token a
+    parse reads the text made parseable the way `touches` reads it, every token a
     variable; a variable that was a token goes back into the template AS the token.
     `restrict` names the projected variables held to the step's terms, as `$` tokens too.
     """

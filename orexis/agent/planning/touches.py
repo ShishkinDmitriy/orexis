@@ -37,9 +37,11 @@ from rdflib.paths import AlternativePath, InvPath, MulPath, NegatedPath, Sequenc
 from rdflib.plugins.sparql.algebra import translateQuery, traverse
 from rdflib.plugins.sparql.parser import parseQuery
 
-from orexis.agent.store import PREFIXES, bindings
+#  WHAT A `$token` IS, from the module that BINDS one. It was spelled here too, a
+#  character apart, which is two definitions of one thing waiting to disagree.
+from orexis.agent.store import _TOKEN, PREFIXES, bindings
 
-log = logging.getLogger("relevance")
+log = logging.getLogger("touches")
 
 SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 ANYTHING = None          # the set that contains every predicate: unreadable, so unfiltered
@@ -53,7 +55,6 @@ _PARSE_TOKENS = {
     "$litres": "1.0", "$this": "?this",
 }
 _INTO = re.compile(r"\$into\([^)]*\)")
-_TOKEN = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)")
 
 
 def parseable(text: str) -> str:
@@ -122,7 +123,7 @@ def reads_of_select(text: str) -> frozenset | None:
     try:
         alg = translateQuery(parseQuery(PREFIXES + parseable(text))).algebra
     except Exception as exc:                            # noqa: BLE001 — unreadable is a finding
-        log.debug("could not parse a query for relevance: %s", exc)
+        log.debug("could not parse a query for the predicates it reads: %s", exc)
         return ANYTHING
     out: set = set()
     where = alg.get("p", alg)
@@ -190,7 +191,7 @@ def writes_of_construct(text: str) -> frozenset | None:
     try:
         alg = translateQuery(parseQuery(PREFIXES + parseable(text))).algebra
     except Exception as exc:                            # noqa: BLE001
-        log.debug("could not parse a construct for relevance: %s", exc)
+        log.debug("could not parse a construct for the predicates it writes: %s", exc)
         return ANYTHING
     out = set()
     for _, p, _ in alg.get("template") or ():
@@ -200,19 +201,7 @@ def writes_of_construct(text: str) -> frozenset | None:
     return frozenset(out)
 
 
-@functools.lru_cache(maxsize=64)
-def _templates(insert):
-    """The triple lists of an INSERT: its default-graph triples and each GRAPH block's."""
-    if insert.get("triples"):
-        yield insert["triples"]
-    for g in insert.get("quads", {}).values() if hasattr(insert.get("quads", {}), "values") else ():
-        yield g
-
-
-# --- what a want reads --------------------------------------------------------------------------
-
-
-# --- the closure --------------------------------------------------------------------------------
+# --- what each action and each derivation touches -----------------------------------------------
 
 _ACTIONS_Q = """
 SELECT ?action ?available ?construct ?retracts WHERE {

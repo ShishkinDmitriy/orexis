@@ -64,7 +64,7 @@ from orexis.agent.store import (Memo, add_quads, bindings, classify, clear_graph
                                            forget_graph, graphs_of, query,
                                            rdflib_view, remove_quads, update)
 
-from . import effects, relevance
+from . import effects, touches
 from .prepare_ground import prepare_ground
 from .derive_wants import derive_wants
 from .ontology import (COSTS, EXHAUSTED, FOR_WANT, GROUND_GRAPH, NO_CANDIDATE,
@@ -215,8 +215,8 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         first = (sorted(set(scopes.values())) or [UNSCOPED])[0]
         mine = []
         for want in find_wants(self._store, at, holder=self.uri):
-            reads = relevance.reads_of_shape(shapes, rdflib.URIRef(want))
-            if reads is relevance.ANYTHING:
+            reads = touches.reads_of_shape(shapes, rdflib.URIRef(want))
+            if reads is touches.ANYTHING:
                 #  A WANT WHOSE SHAPE THE WALKER CANNOT READ joins everything, which is the
                 #  safe direction — it is searched once, in the first scope, rather than
                 #  separated from a world that could repair it.

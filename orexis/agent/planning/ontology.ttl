@@ -27,7 +27,7 @@ planning:reads a owl:ObjectProperty ; rdfs:domain planning:Derivation ; rdfs:lab
 planning:writes a owl:ObjectProperty ; rdfs:domain planning:Derivation ; rdfs:label "writes" ;
     rdfs:comment "A predicate this derivation's template writes, or `planning:Anything` where the text does not say." .
 planning:Anything a owl:Thing ; rdfs:label "Anything" ;
-    rdfs:comment "Said where a side's predicates cannot be read off the text: the derivation might read or write any predicate, so it joins them all. relevance's own ANYTHING, in the store." .
+    rdfs:comment "Said where a side's predicates cannot be read off the text: the derivation might read or write any predicate, so it joins them all. `touches`' own ANYTHING, in the store." .
 
 ##  What the loaded derivations read and write — computed at every refresh of public knowledge
 ##  from the rule files, and read by `scope_actions`, which names no file.

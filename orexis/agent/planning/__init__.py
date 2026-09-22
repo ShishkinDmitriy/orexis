@@ -9,7 +9,7 @@ replaces rather than extends. One pipeline, and the package is what it is made o
    (`derive_wants.py`, `forget_wants.py`);
 2. **the scopes** — which predicates move together, read off what each action and each
    derivation touches. A want is minted per scope of witnesses and searched in a world of its
-   own (`scope_actions.py`, `scopes.py`, `relevance.py`);
+   own (`scope_actions.py`, `scopes.py`, `touches.py`);
 3. **the imaginarium** — a store per scope, filled from the beliefs by `prepare_ground`,
    holding one graph per world the search reaches (`prepare_ground.py`);
 4. **the search** — best-first over those worlds: what a world affords (`steps.py`), what a
