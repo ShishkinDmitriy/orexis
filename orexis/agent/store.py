@@ -742,6 +742,23 @@ class Memo:
 
     Handed None, every caller below simply computes. That is the honest default: a caller
     with no memo has not said how long an answer is good for, so it gets a fresh one.
+
+    **WHAT IT IS WORTH, MEASURED** on one pass over the plans case — a two-step plan, so the
+    smallest search there is — alternated in one session against a memo that keeps nothing:
+    13.9 ms against 19.9, and 67 queries against 103. Four keys, and the query counts are
+    exact where the timings are within the bench's drift:
+
+        ("dataset", at)          +24 queries forgotten   the graph list per instant
+        ("rule", action)         +10                     an action's row
+        ("candidates","actions") +2                      the templates the store declares
+        ("shapes",)              +0, and 0.58 ms a call  an rdflib view — it SERIALISES
+                                                         rather than asks, so a query
+                                                         counter cannot see it at all
+
+    Every one of them is a fact the SEARCH cannot change: the graphs at an instant, a rule
+    text, the action templates, the shapes a want was minted with. What could change them is a
+    write to public knowledge, and a pass makes none — which is why the lifetime is the pass's
+    and `forget` exists for the one owner that does write.
     """
 
     __slots__ = ("_kept",)
