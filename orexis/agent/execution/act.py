@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from .ontology import OREXIS
+from orexis.agent.ontology import OREXIS
 
 
 @dataclass(frozen=True)

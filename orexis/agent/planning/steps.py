@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from orexis.agent.store import bind, bindings, graphs_of, query, remember
 
-from orexis.agent.act import Step
+from orexis.agent.execution.act import Step
 from orexis.agent.ontology import FORESEEN, local_of
 from orexis.agent import clock
 from orexis.agent.ontology import PUBLIC

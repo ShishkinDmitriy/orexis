@@ -42,7 +42,8 @@ from datetime import datetime
 import pyoxigraph as ox
 
 from orexis.agent import clock
-from orexis.agent.ontology import PATIENCE_S, intentions_graph, picks_graph
+from orexis.agent.ontology import picks_graph
+from .ontology import PATIENCE_S, intentions_graph
 from .plans import OUTCOME, RESOLVED_AT, copy_plan
 from orexis.agent.store import Raw, bind, rows, update
 

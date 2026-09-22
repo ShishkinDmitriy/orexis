@@ -27,7 +27,8 @@ import uuid
 import pyoxigraph as ox
 
 from orexis.agent import clock
-from orexis.agent.ontology import EXECUTION, OREXIS, intentions_graph
+from orexis.agent.ontology import OREXIS
+from .ontology import EXECUTION, intentions_graph
 from orexis.agent.store import add_quads, quads, rows
 
 log = logging.getLogger("plans")

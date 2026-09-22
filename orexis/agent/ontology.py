@@ -27,68 +27,19 @@ Three things the predecessor carried are NOT here, and each absence is a stateme
 - **the planning layer's graph.** What a pass considered was named here while the class that
   typed it lived a layer up, which is a lower layer naming a higher one's furniture. It is
   `orexis.agent.planning.ontology` now, where its class already was.
-- **`graphs.py`.** The intention graph's name sat apart on the argument that a graph IRI is an
-  instance and a term is not — beside four other graph-IRI builders in this very file. One
-  file, one argument: the builders are together and `intentions_graph` is among them.
+- **the EXECUTION layer's own words.** `execution:`, its `patienceS` and the intention graph's
+  name are `orexis.agent.execution.ontology`, which is the whole of what this file's `.ttl`
+  turned out to declare: twenty-seven `execution:` terms and not one `orexis:` one. What is
+  here is the vocabulary EVERY layer writes in, which is what makes it sit beside them rather
+  than inside one of them.
+- **three builders nobody read** — `desires_graph`, `obligations_graph`, and the `LAYER_OF`
+  table with the `term()` that consulted it. The table had no reader at all and `term()` had
+  one call, in this file, which is `EXECUTION + name` said the long way.
 """
 
 from __future__ import annotations
 
 OREXIS = "http://example.org/orexis#"
-#  THE LAYER'S OWN NAMESPACE (#529): a term one layer reads and writes carries its prefix, so
-#  a query says which layer it speaks for; what every layer and package writes in stays
-#  `orexis:`. This is the execution layer's, and it holds what the ledger is made of.
-EXECUTION = "http://example.org/orexis/execution#"
-PROV = "http://www.w3.org/ns/prov#"
-
-
-#  WHICH NAMESPACE A KERNEL WORD LIVES IN, by local name (#529): the ledger's words carry this
-#  layer's prefix; a name not listed is `orexis:`, the vocabulary every layer and package
-#  writes in. The planning layer's words are its own module's, never named here, since a lower
-#  layer may not spell a higher one's vocabulary.
-LAYER_OF = {
-    "Act": EXECUTION,
-    "Intention": EXECUTION,
-    "IntentionGraph": EXECUTION,
-    "Step": EXECUTION,
-    "adoptedAt": EXECUTION,
-    "by": EXECUTION,
-    "deadlineAt": EXECUTION,
-    "fills": EXECUTION,
-    "forAgent": EXECUTION,
-    "landsAt": EXECUTION,
-    "notAfter": EXECUTION,
-    "notBefore": EXECUTION,
-    "of": EXECUTION,
-    "outcome": EXECUTION,
-    "partOf": EXECUTION,
-    "patienceS": EXECUTION,
-    "predicts": EXECUTION,
-    "pursues": EXECUTION,
-    "quantity": EXECUTION,
-    "refusedBelow": EXECUTION,
-    "resolvedAt": EXECUTION,
-    "step": EXECUTION,
-    "taken": EXECUTION,
-    "takenAt": EXECUTION,
-    "then": EXECUTION,
-    "through": EXECUTION,
-}
-
-
-def term(name: str) -> str:
-    """A T-Box term by name — in the namespace this layer's own layering gives it (#529)."""
-    return LAYER_OF.get(name, OREXIS) + name
-
-
-#  HOW LONG A COMMITMENT IS GIVEN before a fresh impulse to do the same thing is decided
-#  again — the one figure of the ledger's that something outside the ledger reads: a want
-#  foreseen at an instant holds until that instant plus this, because the last step is placed
-#  AT the instant and its verdict comes after. It sat on the keeper in the predecessor, which
-#  made a higher layer import a class to get at a word; a term lives with the terms.
-PATIENCE_S = term("patienceS")
-
-
 def local_of(iri: str) -> str:
     """An IRI's local part — what a package's own prefix would write after the colon.
 
@@ -167,34 +118,3 @@ def picks_graph(agent_id: str) -> str:
     review's revisions. Also its write boundary, in the strong sense: a review may write here
     and nowhere else."""
     return _GRAPH + "picks/" + agent_id
-
-
-def intentions_graph(agent_id: str) -> str:
-    """What this agent is committed to, standing and resolved. Its own, and only its own.
-
-    NOT public, and the absence is the design: an intention disclosed is strategy leaked. Apart
-    from the picks graph on purpose — a pick has one value, held to `sh:maxCount 1`, while
-    intentions accumulate a history: every resolved one stays, with its outcome and its reason,
-    because a ledger that forgot its resolutions could not answer the only question an operator
-    brings to it, which is what this agent thought it was doing and why it stopped.
-    """
-    return _GRAPH + "intentions/" + agent_id
-
-
-def desires_graph(agent_id: str) -> str:
-    """One agent's desires, authored at genesis and holding at every instant (#644).
-
-    THE NAME STILL SAYS `roots/`, and deliberately. It was written when a desire was called a
-    root desire; there is only a DESIRE now and wants are derived from it, so the identifier
-    says that. The NAME is for eyes and no reader depends on it — but a WRITER does: an agent
-    whose volume already holds `roots/<id>` would gain a second graph of the same class the
-    first time anything endowed into a renamed one, and both would be read. A graph is renamed
-    with a migration or not at all."""
-    return _GRAPH + "roots/" + agent_id
-
-
-def obligations_graph(agent_id: str) -> str:
-    """The record of ONE agent's debts. The graph CLASS and every word written in it are the
-    ledger's package's (#635); the name is built here because the readers that project the
-    record should not import a package for a name built from the one id rule 1 allows."""
-    return _GRAPH + "obligations/" + agent_id

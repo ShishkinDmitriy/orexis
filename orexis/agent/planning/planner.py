@@ -48,7 +48,7 @@ import rdflib
 
 from orexis.agent import clock
 from orexis.agent import violation
-from orexis.agent.act import Step
+from orexis.agent.execution.act import Step
 from orexis.agent.ontology import (DESIRE, FORESEEN, PREDICTION, PUBLIC, RECORD,
                                              STATE, WANT, local_of, picks_graph)
 from orexis.agent.store import Memo, bindings, graphs_of, query, rdflib_view

@@ -115,6 +115,15 @@ _KERNEL = {
 #  ONE LABEL, ONE IRI, across every ontology there is, refused otherwise. It would be the
 #  quietest possible bug — one package's query silently reading another's terms — and both
 #  spellings are valid SPARQL, so no engine could report it.
+#
+#  `orexis:` IS DECLARED BY THE LAYERS RATHER THAN BY ITS OWN FILE, and that is a gap rather
+#  than a design: `orexis/agent/` has no `.ttl`, because the one that sat there turned out to
+#  declare twenty-seven `execution:` terms and not one `orexis:` one, and went to the layer
+#  whose words they are. The kernel's own T-Box — what `orexis:WantGraph` IS, what it is
+#  beneath — is not in this tree at all yet; it arrives with genesis, and until then a case
+#  declares the axioms it needs. So the label survives here only because both layers' files
+#  bind it in their own `@prefix` lines. True today, and nothing would say so if a layer
+#  stopped.
 _ROOT = Path(__file__).resolve().parents[2]
 _ANY_PREFIX = re.compile(r"@prefix\s+([A-Za-z][\w.-]*):\s*<([^>]*)>")
 
