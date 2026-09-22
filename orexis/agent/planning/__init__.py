@@ -10,8 +10,8 @@ replaces rather than extends. One pipeline, and the package is what it is made o
 2. **the scopes** — which predicates move together, read off what each action and each
    derivation touches. A want is minted per scope of witnesses and searched in a world of its
    own (`scope_actions.py`, `scopes.py`, `relevance.py`);
-3. **the imaginarium** — a store per scope, filled from the beliefs by `init_imaginarium`,
-   holding one graph per world the search reaches (`init_imaginarium.py`);
+3. **the imaginarium** — a store per scope, filled from the beliefs by `prepare_ground`,
+   holding one graph per world the search reaches (`prepare_ground.py`);
 4. **the search** — best-first over those worlds: what a world affords (`steps.py`), what a
    step would change (`effects.py`), and whether the want is met there (`planner.py`, which
    also holds the read that hands it the wants, being the only thing that asks).

@@ -1,6 +1,6 @@
-"""`init_imaginarium`, one case per file, held to a PATCH of the store it FILLS.
+"""`prepare_ground`, one case per file, held to a PATCH of the store it FILLS.
 
-A case in `init_imaginarium/` is a belief base: its graphs, and a catalogue saying what each one is.
+A case in `prepare_ground/` is a belief base: its graphs, and a catalogue saying what each one is.
 The function fills a second, empty store with what no step may change, and
 `<case>.diff` is that second store — so `diff` of case against snapshot is exactly
 what crossed and what did not.
@@ -24,9 +24,9 @@ import pytest
 from orexis.agent import clock
 import pyoxigraph as ox
 
-from orexis.agent.planning.init_imaginarium import init_imaginarium
+from orexis.agent.planning.prepare_ground import prepare_ground
 
-CASES_DIR = Path(__file__).parent / "init_imaginarium"
+CASES_DIR = Path(__file__).parent / "prepare_ground"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 
 #  What the caller names as the agent's own, per case — `Imaginarium(store, *private)`'s
@@ -39,12 +39,12 @@ SCOPE = "scope/1"
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c.stem for c in CASES])
-def test_init_imaginarium_fills_the_store_as_the_snapshot_says(case, monkeypatch, request, snapshots):
+def test_prepare_ground_fills_the_store_as_the_snapshot_says(case, monkeypatch, request, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(case)
     into = ox.Store()
-    init_imaginarium(store, into, SCOPE, snapshots.NOW)
-    snapshots.held_to_diff(case, request, "init_imaginarium", snapshots.snapshot_of(into))
+    prepare_ground(store, into, SCOPE, snapshots.NOW)
+    snapshots.held_to_diff(case, request, "prepare_ground", snapshots.snapshot_of(into))
 
 
 def test_every_case_is_read_and_no_snapshot_is_orphaned(snapshots):

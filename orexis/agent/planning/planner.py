@@ -7,7 +7,7 @@ process is told:
    prediction reaches, and mints a want per cluster of what the met-tests read unmet;
 2. the wants are grouped by SCOPE — which predicates move together, as `scope_actions` wrote
    them — and each group gets an imaginarium of its own, filled from the beliefs by
-   `init_imaginarium`;
+   `prepare_ground`;
 3. inside each, a best-first walk: what does this world afford, what would each step make
    true, is the want met there. What a pass finds it WRITES: one `planning:Plan` graph per
    want, in the imaginarium that want was searched in, holding the steps in the ledger's own
@@ -65,7 +65,7 @@ from orexis.agent.store import (Memo, add_quads, bindings, classify, clear_graph
                                            rdflib_view, remove_quads, update)
 
 from . import effects, relevance
-from .init_imaginarium import init_imaginarium
+from .prepare_ground import prepare_ground
 from .derive_wants import derive_wants
 from .ontology import (COSTS, EXHAUSTED, FOR_WANT, GROUND_GRAPH, NO_CANDIDATE,
                        OUTCOME, PLAN_GRAPH, SATISFIED)
@@ -136,7 +136,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         THE IMAGINARIUM COMES FIRST, AND THE DERIVATION RUNS INSIDE IT. What a desire reads at
         a future instant is what the GROUND holding then says — the present with each
         prediction applied in turn, one graph per period — and a ground exists only where
-        `init_imaginarium` has laid one. Judged against the belief base instead, a desire sees
+        `prepare_ground` has laid one. Judged against the belief base instead, a desire sees
         the reading AND the prediction of it at once, and a shape holds over every value, so
         the stale one still violates: a tank low now with a forecast refilling it reads unmet
         for ever. Nothing was wrong with the forecast; there was nowhere in the pass where it
@@ -169,9 +169,9 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         families = sorted(set(scopes.values())) or [UNSCOPED]
         self.imaginaria = []
         for scope in families:
-            #  WHAT CROSSES IS THE FILL'S TO ASK. `init_imaginarium` asks the catalogue for
+            #  WHAT CROSSES IS THE FILL'S TO ASK. `prepare_ground` asks the catalogue for
             #  the kinds a search reads and lays the ground worlds while it is there.
-            self._store = init_imaginarium(self.beliefs, ox.Store(),
+            self._store = prepare_ground(self.beliefs, ox.Store(),
                                            _scope_name(scope), at)
             self.imaginaria.append(self._store)
             #  THE PASS'S MEMO, one per world. The action templates, a rule text and the class
@@ -687,7 +687,7 @@ def _raw(graph: str):
 #  THEY LIVE HERE because the search is the only thing that makes one. This was
 #  `imaginarium.py`, which by the end held a one-line fill, a fork, a drop and two name
 #  builders, every one of them called from this file and nowhere else. What an imaginarium IS
-#  stays in `init_imaginarium.py`, the module that fills one.
+#  stays in `prepare_ground.py`, the module that fills one.
 
 #  Where a node's readings sit. Under the same root as every other graph, because a graph IRI is
 #  a graph IRI — but in a store nothing else can open, which is what keeps `orexis:PossibleGraph`'s

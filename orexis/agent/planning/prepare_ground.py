@@ -1,4 +1,11 @@
-"""Filling an imaginarium: what a search over one scope is given, and the ground it stands on.
+"""Preparing the ground: what a search over one scope is given, and the world it stands in.
+
+BOTH HALVES ARE IN THE NAME. What crosses from the belief base is copied in, and what the
+agent can SEE — the present, and what each prediction makes of it — is laid out as one graph
+per period. The second is the reason the first is worth doing: a store with the beliefs in it
+and no grounds is a store where a desire asked at a future instant sees the reading AND the
+prediction of it, which is the failure `_lay_ground` exists to close. It was called
+`init_imaginarium`, which named the store rather than the work.
 
 WHY THERE IS A SECOND STORE AT ALL. A plan is `(beliefs − retracts) + adds`, applied step
 after step, and every step's rule is a SPARQL query. A query reads ONE store, so the question
@@ -75,10 +82,10 @@ from orexis.agent.store import (Raw, add_quads, bind, catalogue_of, classify, co
 
 from .ontology import GROUND_GRAPH
 
-log = logging.getLogger("init_imaginarium")
+log = logging.getLogger("prepare_ground")
 
 
-def init_imaginarium(beliefs: ox.Store, into: ox.Store, scope: str,
+def prepare_ground(beliefs: ox.Store, into: ox.Store, scope: str,
                      now: datetime) -> ox.Store:
     """Fill an empty store with what a search over one SCOPE needs, and hand it back.
 
