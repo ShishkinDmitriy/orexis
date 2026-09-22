@@ -35,7 +35,7 @@ def scope_actions(store: ox.Store) -> None:
 
     An action is in the scope its reads and writes lie in — one by construction, since an
     action touching two would have joined them. An action stating no effect is in no scope, as
-    it is on no menu; one whose effect cannot be read joins everything and is in the one scope
+    no world admits it; one whose effect cannot be read joins everything and is in the one scope
     that holds everything. A scope is named for the graph it is written in and its place in the
     partition, largest first (`scopes.py` names both), so the same actions write the same text.
 

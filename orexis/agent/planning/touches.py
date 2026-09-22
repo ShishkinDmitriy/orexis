@@ -236,11 +236,11 @@ def actions_of(store, at: datetime | None = None) -> dict[str, tuple]:
     for row in rows(store, _ACTIONS_Q, graphs_of(store, PUBLIC, at=at or clock.now())):
         if not row.get("construct"):
             #  AN ACTION STATING NO EFFECT is an action an event adopts (#506) — never on a
-            #  menu, never simulated — and has no place in a closure that decides what gets
+            #  admitted by any world, never simulated — and has no place in a closure that
             #  simulated. Reading it as ANYTHING-writes-ANYTHING collapsed every want's
             #  closure to everything, for the market's Presenting.
             continue
-        #  No precondition text is a lever with nothing to widen the want by — the menu
+        #  No precondition text is a lever with nothing to widen the want by — a world
         #  yields it no rows, but a construct it does carry says what it would write.
         reads = reads_of_select(row["available"]) if row.get("available") else frozenset()
         writes = writes_of_construct(row["construct"])

@@ -71,7 +71,7 @@ def rule_for(store, action: str, memo=None) -> dict | None:
     """The effect rule an action carries, or None for an action an event adopts.
 
     None is the answer for an action that states neither text — the market's Presenting,
-    adopted by an event and never on a menu — and for nothing else: an action with a
+    adopted by an event and admitted by no world — and for nothing else: an action with a
     precondition states an effect, or the gate (`deliberable`, in `onboarding/validate.py`)
     refuses the world before an agent runs (#506).
     """

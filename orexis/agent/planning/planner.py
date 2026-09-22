@@ -282,10 +282,10 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
             cost, _, node = heapq.heappop(frontier)
             if best is not None and cost >= best.cost:
                 break                       # the first achiever's bound refuses the rest
-            #  THE MENU, asked of the world this node stands in: one step per action per
-            #  legal filling, name-ordered. Not narrowed by what the want is about — the
-            #  closure that would narrow it is among this tree's absences, and filtering to a
-            #  goal's own predicates deletes every chain anyway.
+            #  WHAT THIS WORLD ADMITS, asked of the graphs the node stands in: one per
+            #  action per legal filling, name-ordered. Not narrowed by what the want is about
+            #  — the closure that would narrow it is among this tree's absences, and filtering
+            #  to a goal's own predicates deletes every chain anyway.
             for step in find_steps(self._store, self.uri,
                                    graphs=self._dataset(node), memo=self._memo):
                 saw_step = True
@@ -796,7 +796,7 @@ def segment_of(row) -> str:
     EVERY VALUE IS IN IT, and all of them are load-bearing: a schema action yields several rows
     differing in one parameter alone, and a segment built from fewer made two siblings COLLIDE —
     the second child's quads merged into the first's graph, a disk resting on two supports at
-    once, and the search saw a menu of duplicates pointing home.
+    once, and the search saw duplicates pointing home.
     """
     return "-".join(quote(local_of(part), safe="")
                     for part in (row.action, *(v for _, v in row.binding)))

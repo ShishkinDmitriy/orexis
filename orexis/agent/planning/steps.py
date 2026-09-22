@@ -1,4 +1,4 @@
-"""The MENU: what every action the store holds comes to in ONE world.
+"""What every action the store holds comes to in ONE world — what that world ADMITS.
 
 THE THIRD OF THREE FILES ABOUT AN ACTION, and the only one that asks which fillings there are.
 `effects.py` beside it answers what one costs and when it lands; `apply_effects.py` runs its
@@ -9,12 +9,16 @@ takes, one step per action per legal filling.
 Nothing is stored: what a world admits is a conclusion whose premises are stored and would
 outlive them (a-situated-instance-is-kept-only-when-it-is-testimony).
 
-**A STEP IS AN ACTION PICKED FOR EXECUTION**, and what a world admits is what the search picks
-FROM — one per action per legal filling. They are one class, because what a search adds when it
-picks is absent on one nobody picked, and that is what `None` in those fields means. This
-yielded an `Affordance` once, copied into a step by `Step.from_row` the moment anything wanted
-to plan with it: two classes for one shape, and a second word doing no work the absent fields
-were not already doing.
+**ONE PER ACTION PER LEGAL FILLING**, and the filling is the point: an action's
+`orexis:available` is a SELECT projecting the parameters the action declares it takes, so its
+ROWS are the candidates. It is not a filter the search applies to a list it already had — it is
+where the list comes from, and where `$tank = tank1` comes from.
+
+WHAT THESE ARE CALLED IS AN OPEN QUESTION, and the docstring should not pretend otherwise. They
+come back as `Step`, the same type a plan holds, on an argument that one class was enough
+because a picked one carries what the search added and an unpicked one carries `None` there.
+Nothing fills those fields today — `want`, `predicts`, `precondition` and `part_of` are set by
+no writer in this tree — so the two are the same object and the word does two jobs.
 
 **THE WORLD IS ASKED ABOUT, NOT HELD.** `graphs` says which one, so one function serves as
 many worlds as there are to ask about, and the precondition names no graph to get it (#666).
@@ -74,7 +78,7 @@ def find_steps(store, me: str,
     `(want, about)` pairs and joined itself to the want whose property it served — which is
     filtering to the goal's predicates, and *"filtering to the goal's predicates deletes every
     chain; closing backward through preconditions keeps the bid that makes the dose possible"*.
-    A want states no property now, and nothing narrows the menu by what one is about.
+    A want states no property now, and nothing narrows what is asked by what one is about.
     """
     found: list[Step] = []
     for action in _declared(store, memo):
@@ -84,7 +88,7 @@ def find_steps(store, me: str,
 
 
 def _declared(store, memo=None) -> list[dict]:
-    """Every action the loaded vocabulary declares, name-ordered so a menu built from it is
+    """Every action the loaded vocabulary declares, name-ordered so what is built from it is
     stable — the row, not a model of it.
 
     REMEMBERED FOR AS LONG AS THE CALLER SAYS (#552, added for this exact symptom — the same

@@ -26,7 +26,7 @@ The lifecycle is two timestamps and an outcome, not a state machine: standing is
 
 execution:through a owl:ObjectProperty ;
     rdfs:label "through" ;
-    rdfs:comment "The lever a step goes through. On a candidate, the lever it WOULD act through; on an act, the lever the plan's head chose — the same `via` column of the same affordance row, so the ledger says which valve or venue and not merely what kind of move. No domain, because it is stated of both and the closure would otherwise type one as the other. On a candidate: the lever the candidate would act through — the affordance row's own `via`, which is the PROV the record asks for: a trace says which thing in the world would have done this, not merely what kind of move it was." .
+    rdfs:comment "The lever a step goes through. On a candidate, the lever it WOULD act through; on an act, the lever the plan's head chose — the same lever in both, so the ledger says which valve or venue and not merely what kind of move. No domain, because it is stated of both and the closure would otherwise type one as the other. On a candidate it is the PROV the record asks for: a trace says which thing in the world would have done this, not merely what kind of move it was." .
 
 execution:pursues a owl:ObjectProperty ; rdfs:domain execution:Intention ;
     rdfs:label "pursues" ;
