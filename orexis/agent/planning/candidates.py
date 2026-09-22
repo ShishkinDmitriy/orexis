@@ -51,10 +51,17 @@ class Candidate:
     unpicked one carries `None` there — but nothing in this tree fills those fields, so the
     argument had no witness and the word did two jobs.
 
-    A STEP IS THE SEARCH'S RESULT AND HAS NO PYTHON TYPE. `planner._write` mints one RDF node
+    A STEP IS THE SEARCH'S RESULT AND HAS NO PYTHON TYPE. `extract_plan` mints one RDF node
     per picked candidate — `execution:Step`, chained by `execution:then` — and that is what
     crosses to the ledger. Nothing reads a step back into Python here, so nothing needs a
     class for it.
+
+    AND THIS ONE IS A TYPE FOR THE OPPOSITE REASON TO THE ONES THAT WENT. `Want`, `Plan` and
+    `Step` were read OUT of the store into Python and then thrown away, which is the store
+    duplicated for the length of an expression. A candidate is not in the store when it is
+    made: a world admits many and the search takes one, and only the taken one is written —
+    `<world>#by`, by `mark_world`, when the fork happens. So this is a value in flight between
+    the two, and there is nowhere to read it from instead.
     """
 
     action: str                       # which template — `market:Acquiring`, `actuation:Dosing`
@@ -62,19 +69,12 @@ class Candidate:
     #  it `orexis:takes`, sorted, and opaque to everything here. It is also the candidate's
     #  IDENTITY — two of one action are the same candidate when they are filled the same way.
     binding: tuple[tuple[str, str], ...] = ()
-    for_agent: str | None = None      # whom it serves, where it is an obligation's
 
-    @property
-    def is_own(self) -> bool:
-        """Mine to range over — serves nobody but me. One that names whom it is owed to is an
-        obligation's, exercised for that counterparty and never proposed for my own gap. The
-        one column says it; there is no mode term (an-action-is-one-node)."""
-        return self.for_agent is None
-
-    def value_of(self, parameter: str) -> str | None:
-        """What this binds one parameter to, by its IRI. The taker's door, and only the
-        package that declared the parameter ever opens it."""
-        return next((v for p, v in self.binding if p == parameter), None)
+    #  TWO FIELDS, AND THE OTHERS WENT WHERE THE READERS ARE. `for_agent` — whom a move serves
+    #  where it is an obligation's — was set from a `?for_agent` no shipped precondition
+    #  projects, so it was always None and ordered nothing; `is_own` read it and `value_of`
+    #  walked the binding, and neither was ever called. `execution:forAgent` is still the
+    #  ledger's word for the same thing, waiting on a package that projects it.
 
 
 #  WHAT THE VOCABULARY DECLARES, and the only reason to ask: an action carries the SELECT that
@@ -121,7 +121,7 @@ def find_candidates(store, me: str,
     for action in _declared(store, memo):
         found += candidates_of_action(store, action, me, graphs=graphs)
     #  Sorted because per-action order is no order.
-    return sorted(found, key=lambda s: (s.action, s.for_agent or ""))
+    return sorted(found, key=lambda c: (c.action, c.binding))
 
 
 def _declared(store, memo=None) -> list[dict]:
@@ -171,8 +171,7 @@ def candidates_of_action(store, action: dict, me: str, *, graphs=None) -> list[C
     params = {local_of(p): p for p in (action.get("takes_") or "").split()}
     return [Candidate(action=action["action"],
                  binding=tuple(sorted((iri, r[local]) for local, iri in params.items()
-                                      if r.get(local))),
-                 for_agent=r.get("for_agent"))
+                                      if r.get(local))))
             for r in bindings(query(store, q, graphs if graphs is not None else
                                                  #  THE PRESENT, where no world is handed in: what a rule
                                                  #  reads and what is expected, as this store holds them now.
