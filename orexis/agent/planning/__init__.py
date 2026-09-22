@@ -12,7 +12,7 @@ replaces rather than extends. One pipeline, and the package is what it is made o
    own (`scope_actions.py`, `scopes.py`, `touches.py`);
 3. **the imaginarium** — a store per scope, filled from the beliefs by `prepare_ground`,
    holding one graph per world the search reaches (`prepare_ground.py`);
-4. **the search** — best-first over those worlds: what a world affords (`steps.py`), what a
+4. **the search** — best-first over those worlds: what a world admits (`candidates.py`), what a
    step would change (`effects.py`), and whether the want is met there (`planner.py`, which
    also holds the read that hands it the wants, being the only thing that asks).
 

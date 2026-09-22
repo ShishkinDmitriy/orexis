@@ -55,7 +55,6 @@ import rdflib
 
 from orexis.agent import clock
 from orexis.agent import violation
-from orexis.agent.execution.act import Step
 from orexis.agent.ontology import (DESIRE, FORESEEN, GRAPH_PREFIX, OREXIS, PREDICTION,
                                              PUBLIC, RECORD, STATE, STATE_GRAPH, WANT,
                                              local_of)
@@ -73,7 +72,7 @@ from .derive_wants import derive_wants
 from .ontology import (BY, COSTS, EXHAUSTED, FOR_WANT, GROUND_GRAPH, NO_CANDIDATE,
                        OUTCOME, PLAN_GRAPH, POSSIBLE_GRAPH, SATISFIED)
 from .scopes import find_scopes
-from .steps import find_steps
+from .candidates import Candidate, find_candidates
 
 log = logging.getLogger("search")
 
@@ -276,7 +275,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         frontier: list = [(0.0, next(tick), root)]
         best: "_Node | None" = None
         forked = 0
-        saw_step = False
+        saw_candidate = False
 
         while frontier and forked < BUDGET:
             cost, _, node = heapq.heappop(frontier)
@@ -286,12 +285,13 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
             #  action per legal filling, name-ordered. Not narrowed by what the want is about
             #  — the closure that would narrow it is among this tree's absences, and filtering
             #  to a goal's own predicates deletes every chain anyway.
-            for step in find_steps(self._store, self.uri,
-                                   graphs=self._dataset(node), memo=self._memo):
-                saw_step = True
+            for candidate in find_candidates(self._store, self.uri,
+                                             graphs=self._dataset(node),
+                                             memo=self._memo):
+                saw_candidate = True
                 if forked >= BUDGET:
                     break
-                child = self._take(node, step, want)
+                child = self._take(node, candidate, want)
                 if child is None:
                     continue
                 forked += 1
@@ -313,11 +313,11 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         #  plan is written at all: NO CANDIDATE says no lever this agent holds points at this
         #  want (equip me), EXHAUSTED says levers exist and no bounded sequence of them lands
         #  inside the region (my doses are too coarse, or my region is too tight for them).
-        self._write(want, EXHAUSTED if saw_step else NO_CANDIDATE, (), None)
+        self._write(want, EXHAUSTED if saw_candidate else NO_CANDIDATE, (), None)
 
     # --- the moves ---------------------------------------------------------------------------
 
-    def _take(self, node: "_Node", step: Step,
+    def _take(self, node: "_Node", candidate: Candidate,
               want: str) -> "_Node | None":
         """The world one step past this one, or None where the step's effect says nothing.
 
@@ -327,20 +327,20 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         the world.
         """
         graphs = self._dataset(node)
-        binding = self._bind(step, node, want)
-        spent = effects.cost_of(self._store, step.action, graphs,
+        binding = self._bind(candidate, node, want)
+        spent = effects.cost_of(self._store, candidate.action, graphs,
                                 memo=self._memo, **binding) or 0.0
-        lands = effects.lands_after(self._store, step.action, graphs,
+        lands = effects.lands_after(self._store, candidate.action, graphs,
                                     memo=self._memo, **binding) or 0.0
-        taken = node.taken + (step,)
-        world = apply_action(self._store, node.world, world_of(taken), step.action, graphs,
+        taken = node.taken + (candidate,)
+        world = apply_action(self._store, node.world, world_of(taken), candidate.action, graphs,
                              memo=self._memo, **binding)
         if world is None:
             return None
         return _Node(world=world, taken=taken, cost=node.cost + spent,
                      at=node.at + timedelta(seconds=lands))
 
-    def _bind(self, step: Step, node: "_Node", want: str) -> dict:
+    def _bind(self, candidate: Candidate, node: "_Node", want: str) -> dict:
         """The `$tokens` a rule text of this step's takes: what it is filled with, who is
         asking, what the want is about, and which world.
 
@@ -351,10 +351,11 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         out = {"state": _raw(node.world), "me": self.uri,
                "subject": self.acts_for or "urn:nobody",
                "want": want, "now": _instant(node.at)}
-        for parameter, value in step.binding:
+        for parameter, value in candidate.binding:
             out[local_of(parameter)] = value
-        if step.quantity is not None:
-            out["quantity"] = step.quantity
+        #  NO `$quantity`. It was offered from a field nothing ever set — how much, sized by
+        #  the taker — so no rule could reach it. An action that needs an amount declares a
+        #  parameter and the precondition binds it, like every other filling.
         return out
 
     def _dataset(self, node: "_Node") -> list[str]:
@@ -441,10 +442,11 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
 
     # --- what was found ----------------------------------------------------------------------
 
-    def _write(self, want: str, outcome: str, steps: tuple,
+    def _write(self, want: str, outcome: str, picked: tuple,
                cost: float | None) -> str:
         """The finding, into its own graph in the imaginarium — replaced whole, so a second
-        pass over one want leaves one plan and not two.
+        pass over one want leaves one plan and not two. `picked` is the candidates the search
+        chose, in order, and each becomes one step.
 
         WRITTEN WHATEVER THE PASS CONCLUDED. A plan with no steps is an ANSWER, and
         `planning:outcome` is which of the three it is: the want was already met, no lever
@@ -475,14 +477,18 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
                  ox.Quad(root, ox.NamedNode(OUTCOME), ox.NamedNode(outcome), node)]
         if cost is not None:
             quads.append(ox.Quad(root, ox.NamedNode(COSTS), _decimal(cost), node))
-        uris = [ox.NamedNode(f"{graph}.{n}") for n in range(len(steps))]
-        for n, (uri, step) in enumerate(zip(uris, steps)):
+        #  A STEP IS MINTED HERE AND NOWHERE ELSE: one RDF node per PICKED candidate, which
+        #  is the whole difference between the two words. What the search walked was
+        #  candidates; what a plan holds is steps, and this is the moment one becomes the
+        #  other.
+        uris = [ox.NamedNode(f"{graph}.{n}") for n in range(len(picked))]
+        for n, (uri, candidate) in enumerate(zip(uris, picked)):
             quads += [ox.Quad(uri, _RDF_TYPE, _E("Step"), node),
-                      ox.Quad(uri, _E("fills"), ox.NamedNode(step.action), node),
+                      ox.Quad(uri, _E("fills"), ox.NamedNode(candidate.action), node),
                       ox.Quad(uri, _E("partOf"), root, node)]
             if n + 1 < len(uris):
                 quads.append(ox.Quad(uri, _E("then"), uris[n + 1], node))
-            for parameter, value in step.binding:
+            for parameter, value in candidate.binding:
                 quads.append(ox.Quad(uri, ox.NamedNode(parameter), _term(value), node))
         add_quads(self._store, quads)
         classify(self._store, graph, PLAN_GRAPH, OREXIS + "Derived")

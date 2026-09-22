@@ -1,10 +1,10 @@
-"""What every action the store holds comes to in ONE world — what that world ADMITS.
+"""What every action the store holds comes to in ONE world — the CANDIDATES it admits.
 
 THE THIRD OF THREE FILES ABOUT AN ACTION, and the only one that asks which fillings there are.
 `effects.py` beside it answers what one costs and when it lands; `apply_effects.py` runs its
 effect into a world. This runs its `orexis:available` precondition against the world it is
-handed and shapes each row into a `Step` — one pair per parameter the action declares it
-takes, one step per action per legal filling.
+handed and shapes each row into a `Candidate` — one pair per parameter the action declares it
+takes, one candidate per action per legal filling.
 
 Nothing is stored: what a world admits is a conclusion whose premises are stored and would
 outlive them (a-situated-instance-is-kept-only-when-it-is-testimony).
@@ -14,11 +14,11 @@ outlive them (a-situated-instance-is-kept-only-when-it-is-testimony).
 ROWS are the candidates. It is not a filter the search applies to a list it already had — it is
 where the list comes from, and where `$tank = tank1` comes from.
 
-WHAT THESE ARE CALLED IS AN OPEN QUESTION, and the docstring should not pretend otherwise. They
-come back as `Step`, the same type a plan holds, on an argument that one class was enough
-because a picked one carries what the search added and an unpicked one carries `None` there.
-Nothing fills those fields today — `want`, `predicts`, `precondition` and `part_of` are set by
-no writer in this tree — so the two are the same object and the word does two jobs.
+**A CANDIDATE IS NOT A STEP.** The search walks possible worlds, forking on a candidate at a
+time, and when one meets the want the PICKED candidates become the plan's steps. So a step is
+the search's RESULT and a candidate is its input, and they were one class until this — on the
+argument that a picked one carries what the search added and an unpicked one carries `None`
+there, which nothing in this tree ever filled.
 
 **THE WORLD IS ASKED ABOUT, NOT HELD.** `graphs` says which one, so one function serves as
 many worlds as there are to ask about, and the precondition names no graph to get it (#666).
@@ -33,12 +33,49 @@ with the closure that would compute it.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from orexis.agent.store import bind, bindings, graphs_of, query, remember
 
-from orexis.agent.execution.act import Step
 from orexis.agent.ontology import FORESEEN, local_of
 from orexis.agent import clock
 from orexis.agent.ontology import PUBLIC
+
+@dataclass(frozen=True)
+class Candidate:
+    """One action, filled in — what a world ADMITS, and what the search picks from.
+
+    IT IS NOT A STEP, and the difference is the search. A candidate is a move that COULD be
+    made in some world; a step is one a plan holds, and a plan holds only what was picked. The
+    two were one class, on the argument that a picked one carries what the search added and an
+    unpicked one carries `None` there — but nothing in this tree fills those fields, so the
+    argument had no witness and the word did two jobs.
+
+    A STEP IS THE SEARCH'S RESULT AND HAS NO PYTHON TYPE. `planner._write` mints one RDF node
+    per picked candidate — `execution:Step`, chained by `execution:then` — and that is what
+    crosses to the ledger. Nothing reads a step back into Python here, so nothing needs a
+    class for it.
+    """
+
+    action: str                       # which template — `market:Acquiring`, `actuation:Dosing`
+    #  WHAT IT IS FILLED WITH: one (parameter, value) pair per parameter the action declares
+    #  it `orexis:takes`, sorted, and opaque to everything here. It is also the candidate's
+    #  IDENTITY — two of one action are the same candidate when they are filled the same way.
+    binding: tuple[tuple[str, str], ...] = ()
+    for_agent: str | None = None      # whom it serves, where it is an obligation's
+
+    @property
+    def is_own(self) -> bool:
+        """Mine to range over — serves nobody but me. One that names whom it is owed to is an
+        obligation's, exercised for that counterparty and never proposed for my own gap. The
+        one column says it; there is no mode term (an-action-is-one-node)."""
+        return self.for_agent is None
+
+    def value_of(self, parameter: str) -> str | None:
+        """What this binds one parameter to, by its IRI. The taker's door, and only the
+        package that declared the parameter ever opens it."""
+        return next((v for p, v in self.binding if p == parameter), None)
+
 
 #  WHAT THE VOCABULARY DECLARES, and the only reason to ask: an action carries the SELECT that
 #  says when it is possible, and running it is the only way to learn what a world affords.
@@ -57,9 +94,9 @@ _ACTIONS = """SELECT ?action ?available (GROUP_CONCAT(DISTINCT STR(?takes); sepa
 _MEMO = ("steps", "actions")
 
 
-def find_steps(store, me: str,
-               *, graphs=None, memo=None) -> list[Step]:
-    """Every step this agent could take in one world, name-ordered.
+def find_candidates(store, me: str,
+               *, graphs=None, memo=None) -> list[Candidate]:
+    """Every candidate this agent could take in one world, name-ordered.
 
     A FUNCTION OVER THE STORE. It was a collection holding one — `Steps(store).find_all(…)` —
     and the store was the only thing the instance held, so constructing one said nothing a
@@ -80,9 +117,9 @@ def find_steps(store, me: str,
     chain; closing backward through preconditions keeps the bid that makes the dose possible"*.
     A want states no property now, and nothing narrows what is asked by what one is about.
     """
-    found: list[Step] = []
+    found: list[Candidate] = []
     for action in _declared(store, memo):
-        found += steps_of_action(store, action, me, graphs=graphs)
+        found += candidates_of_action(store, action, me, graphs=graphs)
     #  Sorted because per-action order is no order.
     return sorted(found, key=lambda s: (s.action, s.for_agent or ""))
 
@@ -105,8 +142,8 @@ def _declared(store, memo=None) -> list[dict]:
         bindings(query(store, _ACTIONS, graphs_of(store, PUBLIC))), key=lambda r: r["action"]))
 
 
-def steps_of_action(store, action: dict, me: str, *, graphs=None) -> list[Step]:
-    """Every step this action affords in one world — zero, one or many.
+def candidates_of_action(store, action: dict, me: str, *, graphs=None) -> list[Candidate]:
+    """Every candidate this action admits in one world — zero, one or many.
 
     WHICH WORLD IS A CRITERION — `graphs`, the world asked about as the list of graphs
     the caller built for it, an instant and a place in one. A world is part of the QUESTION —
@@ -115,9 +152,9 @@ def steps_of_action(store, action: dict, me: str, *, graphs=None) -> list[Step]:
     thing that moves; now there is nothing to construct.
 
     ZERO IS ORDINARY and is the commonest answer: nine of the eleven actions a simulation
-    agent loads afford it nothing, because their preconditions do not bind. MANY is ordinary
-    too — a supplier with three valves affords `Serving` three times, one per valve, and
-    choosing between them is the whole of what a plan does at that step.
+    agent loads are admitted by nothing, because their preconditions do not bind. MANY is
+    ordinary too — a supplier with three valves admits `Serving` three times, one per
+    valve, and choosing between them is the whole of what a plan does at that step.
 
     """
     #  A precondition carrying a token nobody binds REFUSES rather than reaching the engine as
@@ -132,7 +169,7 @@ def steps_of_action(store, action: dict, me: str, *, graphs=None) -> list[Step]:
     #  absent — an action with an OPTIONAL hop affords rows of two shapes, and both are
     #  honest.
     params = {local_of(p): p for p in (action.get("takes_") or "").split()}
-    return [Step(action=action["action"],
+    return [Candidate(action=action["action"],
                  binding=tuple(sorted((iri, r[local]) for local, iri in params.items()
                                       if r.get(local))),
                  for_agent=r.get("for_agent"))

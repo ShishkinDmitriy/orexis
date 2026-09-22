@@ -13,9 +13,13 @@ package because its predecessor was "the lowest layer that persists" — and mea
 planning layer imported 1,936 lines of them and NOT ONE LINE of the keeper or of `plans`. A
 package should be named for most of what is in it; that one was named for a tenth.
 
-`act.py` is beside them rather than in here for the same reason, though it is a near thing: a
-`Step` is the ledger's shape, and the search fills one at every node. What decides it is who
-READS it — both layers do — and a thing both layers read is not one layer's.
+`act.py` was beside them on the same reasoning — a `Step` is the ledger's shape, the search
+fills one at every node, and a thing both layers read is not one layer's. Measured, no line of
+this layer read it: `Step` had two importers and both were planning's, the rest of the file
+had none at all, and what the search walks turned out to be a CANDIDATE — `planning`'s word
+for a move a world admits, which becomes a step only when the search picks it. A step is an
+`execution:Step` ROW here, minted by `planner._write` and read out of the graph; no Python
+type of ours stands for one.
 
 Nothing grants this and nothing contributes it. It is imported.
 """
