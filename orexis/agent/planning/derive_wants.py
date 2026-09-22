@@ -379,12 +379,13 @@ def _write(store, agent_id: str, uri: str, holder: str, desire: str, label: str,
     being tested THROUGH the writer, and a matching pair of bugs would have passed. The test
     writes its rows itself now, and this is what the derivation does when it has decided.
 
-    IT TAKES NO `Want`. The type was built here and taken apart on the next line, which is the
-    store duplicated in Python for the length of one expression; worse, four of its eleven
-    fields — `points`, `shape`, `holder`, `ends` — were populated on this path and left empty
-    by every read, so `want.shape` on a want read back was silently `()`. That cost a session:
-    the search's met-test asked the model for its shape, got nothing, and reported every want
-    exhausted. `Want` is the READ model now and these are arguments, which is what they are.
+    IT TAKES ARGUMENTS AND NOT A MODEL. There was a want TYPE, built here and taken apart on
+    the next line, which is the store duplicated in Python for the length of one expression;
+    worse, four of its eleven fields — `points`, `shape`, `holder`, `ends` — were populated on
+    this path and left empty by every read, so a want read back silently carried `shape=()`.
+    That cost a session: the search's met-test asked the model for its shape, got nothing, and
+    reported every want exhausted. The type is gone from both ends now — `find_wants` answers
+    with uris, and what a reader needs beside one it reads out of the want's own graph.
 
     THE KNOWLEDGE STAYS IN THIS FILE (#677): the derivation decides what a want IS — its name,
     its label, what it points at, when it must hold — and where a want is kept is this module's.
@@ -515,7 +516,7 @@ def mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: d
     #
     #  WHAT ENDS BY THE CLOCK (#645) is a graph whose ending is a FACT — a round closing, a
     #  claim expiring — where nobody is left to conclude it. A want's ending is a CONCLUSION,
-    #  and the derivation that draws it runs every pass. `Want` carries no `ends` at all now:
+    #  and the derivation that draws it runs every pass. Nothing carries an `ends` in Python:
     #  a field only the writer filled and no read returned is the empty-result trap wearing a
     #  dataclass, and a want whose window genuinely IS a fact — a debt's — is written by
     #  whoever knows that, not by this.

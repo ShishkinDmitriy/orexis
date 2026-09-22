@@ -117,9 +117,11 @@ def test_a_saved_want_is_found_and_a_deleted_one_is_not(store):
     assert find_wants(store) == [], "nothing has been derived"
 
     _derived(store)
-    found = find_wants(store)
-    assert [w.uri for w in found] == ["urn:test:want"]
-    assert found[0].desire == A_DESIRE and found[0].label == "a want under test"
+    #  THE URI AND NOTHING ELSE. What the derivation WROTE beside it — the label, the desire
+    #  it came from, the side that broke — is held by `test_derive_wants.py`, against the
+    #  whole store a derivation leaves rather than against a reading of it. This read answers
+    #  which wants are there.
+    assert find_wants(store) == ["urn:test:want"]
 
     forget_want(store, "urn:test:want")
     assert find_wants(store) == [], "and its graph went with it"
@@ -175,12 +177,11 @@ def test_a_want_is_found_by_the_desire_it_was_derived_from(store):
     """The derivation's question, asked as a criterion rather than written as a query."""
     _derived(store)
 
-    assert [w.uri for w in find_wants(store, desire=A_DESIRE)] == \
-        ["urn:test:want"]
-    assert find_want(store, desire=A_DESIRE, derived=True).uri == "urn:test:want"
+    assert find_wants(store, desire=A_DESIRE) == ["urn:test:want"]
+    assert find_want(store, desire=A_DESIRE, derived=True) == "urn:test:want"
     assert find_wants(store, desire="urn:test:nobody") == []
     assert find_want(store, desire="urn:test:nobody", derived=True) is None
-    assert find_want(store, uri="urn:test:want").desire == A_DESIRE
+    assert find_want(store, uri="urn:test:want") == "urn:test:want"
     assert find_want(store, uri="urn:test:missing") is None
 
 
@@ -232,11 +233,10 @@ def test_a_debt_is_a_want_but_not_one_a_search_is_handed(store):
     _derived(store, uri="urn:test:derived")
     _owe(store, "urn:test:owed")
 
-    assert {w.uri for w in find_wants(store)} == \
-        {"urn:test:derived", "urn:test:owed"}
-    assert find_want(store, desire=A_DESIRE, derived=True).uri == "urn:test:derived", \
+    assert set(find_wants(store)) == {"urn:test:derived", "urn:test:owed"}
+    assert find_want(store, desire=A_DESIRE, derived=True) == "urn:test:derived", \
         "a search is handed what a desire derived, and never a debt"
-    assert {w.uri for w in find_wants(store, desire=A_DESIRE)} == \
+    assert set(find_wants(store, desire=A_DESIRE)) == \
         {"urn:test:derived", "urn:test:owed"}, \
         "though both name it here"
 
@@ -252,7 +252,7 @@ def test_a_read_is_bounded_and_a_page_is_stable(store, caplog):
 
     assert len(find_wants(store, limit=2)) == 2, "capped"
     first, second = find_wants(store, limit=3), find_wants(store, limit=3, offset=3)
-    assert [w.uri for w in first + second] == [f"urn:test:want{n}" for n in range(5)], \
+    assert first + second == [f"urn:test:want{n}" for n in range(5)], \
         "a page walks rather than resamples"
     assert find_wants(store, limit=3) == first, "and answers the same way twice"
 

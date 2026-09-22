@@ -6,7 +6,7 @@ replaces rather than extends. One pipeline, and the package is what it is made o
 1. **the derivation** — `derive_wants` judges every desire at the present and at every instant
    a prediction reaches, and mints a want per cluster of what the met-tests read unmet;
    `forget_wants` is its other half, withdrawing what the same rows no longer imply
-   (`derive_wants.py`, `forget_wants.py`, `want.py`, `wants.py`);
+   (`derive_wants.py`, `forget_wants.py`, `wants.py`);
 2. **the scopes** — which predicates move together, read off what each action and each
    derivation touches. A want is minted per scope of witnesses and searched in a world of its
    own (`scope_actions.py`, `scopes.py`, `relevance.py`);
@@ -25,7 +25,7 @@ Nothing here commits, because deciding a thing and remembering that it was decid
 different acts.
 
 **WHAT THE PREDECESSOR HELD AND THIS DOES NOT.** It was twenty-nine modules and seven and a
-half thousand lines; this is fourteen and about four thousand. Every absence is a thing that
+half thousand lines; this is thirteen and under four thousand. Every absence is a thing that
 returns attached to whatever needs it, never a thing quietly lost
 (an-agent-is-four-things):
 

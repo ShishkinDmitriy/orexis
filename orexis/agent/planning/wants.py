@@ -1,4 +1,4 @@
-"""The wants this agent holds — two functions over a store, and no collection.
+"""The wants this agent holds — two functions over a store, no collection and no model.
 
 **A function over the store is handed the engine's door and nothing else.** `Wants` was the
 first repository in the DDD sense, and what it bought was that the GRAPH NAMES and the QUERY
@@ -20,6 +20,14 @@ remember to rebuild before any reader looked. A want is there the moment it is w
 one whose period has CLOSED is not there at all (#645) — the filter is in `_select`, because a
 want IS its graph.
 
+**WHAT COMES BACK IS URIS.** There was a `Want` dataclass here, built per row and discarded:
+six of its thirteen fields were ever populated, the other seven were the predecessor's — a
+measure, an instrument, a state, a deadline — filled by capabilities this tree does not load.
+Its one production reader took `.uri` off it at seven sites and read everything else out of
+the STORE by that uri, which is what a want's met-test, its scope and its shape were always
+read from. A class that carries a uri out of a query is the store duplicated in Python for
+the length of one expression; the fields come back as columns when something reads them.
+
 **THIS READS AND DOES NOT WRITE.** Writing a want is the derivation's, and lives where the
 want is decided (`derive_wants`); whoever wrote says what changed. Where a want LIVES is
 `derive_wants.graph_of`, asked of the module that writes it rather than re-exported here.
@@ -40,9 +48,7 @@ from datetime import datetime
 
 from orexis.agent import clock
 from orexis.agent.ontology import OREXIS, RECORD, WANT
-from orexis.agent.store import bindings, query, remember
-
-from .want import Want
+from orexis.agent.store import bindings, query
 
 log = logging.getLogger("wants")
 
@@ -61,15 +67,11 @@ PAGE = 100
 DERIVED = OREXIS + "Derived"
 
 
-def _instant(text: str | None) -> datetime | None:
-    """One instant as a want carries it, or None where the store holds none."""
-    return datetime.fromisoformat(text) if text else None
-
-
 def find_wants(store, at: datetime | None = None, *, uri: str = "", desire: str = "",
                derived: bool = False, holder: str = "", limit: int = PAGE,
-               offset: int = 0) -> list[Want]:
-    """The wants `store` holds that stand at `at`, narrowed by whichever criteria are named.
+               offset: int = 0) -> list[str]:
+    """The uris of the wants `store` holds that stand at `at`, narrowed by whichever criteria
+    are named, ordered by name.
 
     `uri` asks after one want by name, `desire` after those derived from one desire, and
     `derived` narrows to the family the derivation mints into — as against a debt, which the
@@ -100,8 +102,8 @@ def find_wants(store, at: datetime | None = None, *, uri: str = "", desire: str 
 
 
 def find_want(store, at: datetime | None = None, *, uri: str = "", desire: str = "",
-              derived: bool = False, holder: str = "") -> Want | None:
-    """The first want matching those criteria, or None — the same read, cut to one.
+              derived: bool = False, holder: str = "") -> str | None:
+    """The uri of the first want matching those criteria, or None — the same read, cut to one.
 
     Its own name because the SHAPE of the answer differs and a caller branches on it, not
     because the question does. `desire=…, derived=True` is the derivation's question: the want
@@ -114,7 +116,7 @@ def find_want(store, at: datetime | None = None, *, uri: str = "", desire: str =
 
 
 def _select(store, where: str, at: datetime | None, limit: int, offset: int,
-            arrival: str, holder: str = "") -> list[Want]:
+            arrival: str, holder: str = "") -> list[str]:
     """Read the graphs of wants holding at `at` — of one arrival where a caller names it — and
     hand back one ordered page.
 
@@ -152,16 +154,12 @@ def _select(store, where: str, at: datetime | None, limit: int, offset: int,
     mine = (f'    OPTIONAL {{ ?g orexis:beliefsOf ?owner }}\n'
             f'    FILTER(!BOUND(?owner) || ?owner = <{holder}>)'
             if holder else "")
+    #  DISTINCT because `?g` is a variable: a want lives in ONE graph, so the two agree
+    #  today, and a projection of one column out of a pattern that binds a graph is a
+    #  projection that should not depend on that holding.
     rows = bindings(query(store, f"""
-SELECT ?w ?desire ?label ?holdsAt ?since ?side WHERE {{
-  GRAPH ?g {{
-    {where}
-    OPTIONAL {{ ?w prov:wasDerivedFrom ?desire }}
-    OPTIONAL {{ ?w rdfs:label ?label }}
-    OPTIONAL {{ ?w orexis:holdsAt ?holdsAt }}
-    OPTIONAL {{ ?w prov:generatedAtTime ?since }}
-    OPTIONAL {{ ?w orexis:violationIs ?side }}
-  }}
+SELECT DISTINCT ?w WHERE {{
+  GRAPH ?g {{ {where} }}
   GRAPH ?catalogue {{
     ?catalogue a orexis:CatalogueGraph .
     ?g a ?kind . VALUES ?kind {{ {kinds} }}
@@ -170,9 +168,6 @@ SELECT ?w ?desire ?label ?holdsAt ?since ?side WHERE {{
   FILTER(!BOUND(?start) || ?start <= "{now}"^^xsd:dateTime)
   FILTER(!BOUND(?end) || ?end > "{now}"^^xsd:dateTime)
 }} ORDER BY ?w LIMIT {int(limit)} OFFSET {int(offset)}""", ()))
-    return [Want(uri=r["w"], desire=r.get("desire"),
-                 label=r.get("label", ""), holds_at=_instant(r.get("holdsAt")),
-                 derived_at=_instant(r.get("since")), side=r.get("side"))
-            for r in rows]
+    return [r["w"] for r in rows]
 
 

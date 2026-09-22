@@ -67,7 +67,6 @@ from .ontology import (COSTS, EXHAUSTED, FOR_WANT, GROUND_GRAPH, NO_CANDIDATE,
                        OUTCOME, SATISFIED)
 from .scopes import find_scopes
 from .steps import find_steps
-from .want import Want
 from .wants import find_wants
 
 log = logging.getLogger("search")
@@ -169,7 +168,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
             for want in group:
                 self._search(imaginarium, want, at)
 
-    def _by_scope(self, wants: list[Want], shapes: rdflib.Graph) -> dict:
+    def _by_scope(self, wants: list[str], shapes: rdflib.Graph) -> dict:
         """The wants grouped by the scope of what their met-tests READ, order kept.
 
         THE SCOPES ARE READ, NEVER COMPUTED: `scope_actions` wrote them, and a store holding
@@ -196,15 +195,15 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
             raise RuntimeError("the store holds no scope graph — scope_actions has not run")
         groups: dict = {}
         for want in wants:
-            reads = relevance.reads_of_shape(shapes, rdflib.URIRef(want.uri))
+            reads = relevance.reads_of_shape(shapes, rdflib.URIRef(want))
             key = (relevance.ANYTHING if reads is relevance.ANYTHING
-                   else tuple(sorted({scopes[str(p)] for p in reads if str(p) in scopes})) or want.uri)
+                   else tuple(sorted({scopes[str(p)] for p in reads if str(p) in scopes})) or want)
             groups.setdefault(key, []).append(want)
         return groups
 
     # --- one want ----------------------------------------------------------------------------
 
-    def _search(self, imaginarium: Imaginarium, want: Want, at: datetime) -> None:
+    def _search(self, imaginarium: Imaginarium, want: str, at: datetime) -> None:
         """Best-first over the worlds this want's steps would make, bounded by `BUDGET`.
 
         WRITES ITS FINDING AND RETURNS NOTHING — the plan graph is the answer, and it is
@@ -270,13 +269,13 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
 
     # --- the moves ---------------------------------------------------------------------------
 
-    def _steps(self, imaginarium: Imaginarium, node: "_Node", want: Want) -> list[Step]:
+    def _steps(self, imaginarium: Imaginarium, node: "_Node", want: str) -> list[Step]:
         """What this world affords — one step per action per legal filling, name-ordered."""
         return find_steps(imaginarium.store, self.uri, self.picks,
                           graphs=self._dataset(imaginarium, node), memo=imaginarium.memo)
 
     def _take(self, imaginarium: Imaginarium, node: "_Node", step: Step,
-              want: Want) -> "_Node | None":
+              want: str) -> "_Node | None":
         """The world one step past this one, or None where the step's effect says nothing.
 
         What a step costs is the action's own `orexis:costs` select and what it takes to land
@@ -314,7 +313,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
             lambda text: query(imaginarium.store, text,
                                graphs_of(imaginarium.store, PUBLIC))))
 
-    def _bind(self, step: Step, node: "_Node", want: Want) -> dict:
+    def _bind(self, step: Step, node: "_Node", want: str) -> dict:
         """The `$tokens` a rule text of this step's takes: what it is filled with, who is
         asking, what the want is about, and which world.
 
@@ -324,7 +323,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         """
         out = {"state": _raw(node.world), "me": self.uri,
                "subject": self.acts_for or "urn:nobody",
-               "want": want.uri, "now": _instant(node.at)}
+               "want": want, "now": _instant(node.at)}
         for parameter, value in step.binding:
             out[local_of(parameter)] = value
         if step.quantity is not None:
@@ -358,7 +357,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
 
     # --- the verdict -------------------------------------------------------------------------
 
-    def _met_select(self, imaginarium: Imaginarium, want: Want) -> str | None:
+    def _met_select(self, imaginarium: Imaginarium, want: str) -> str | None:
         """The want's met-test, compiled to the select whose rows are its violations.
 
         A VERDICT THE SEARCH READS IS A QUERY. The judge's own reader floors at tens of
@@ -375,7 +374,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         None where nothing points at a shape, which nothing this package mints is.
         """
         shapes = self._shapes(imaginarium)
-        root = shapes.value(rdflib.URIRef(want.uri), _MET_WHEN)
+        root = shapes.value(rdflib.URIRef(want), _MET_WHEN)
         if root is None:
             return None
         return violation.unmet_select(shapes.cbd(root), root)
@@ -388,7 +387,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
             imaginarium.store, *graphs_of(imaginarium.store, DESIRE, WANT, RECORD)))
 
     def _met(self, imaginarium: Imaginarium, select: str | None, node: "_Node",
-             want: Want) -> bool:
+             want: str) -> bool:
         """Is the want met in this node's world? A row is a violation, so none means met.
 
         A want with no compiled met-test reads as UNMET, which is the safe direction: it
@@ -410,7 +409,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
 
     # --- what was found ----------------------------------------------------------------------
 
-    def _write(self, imaginarium: Imaginarium, want: Want, outcome: str, steps: tuple,
+    def _write(self, imaginarium: Imaginarium, want: str, outcome: str, steps: tuple,
                cost: float | None) -> str:
         """The finding, into its own graph in the imaginarium — replaced whole, so a second
         pass over one want leaves one plan and not two.
@@ -436,11 +435,11 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         SEARCH found, and a ledger keeps commitments rather than the reasoning that produced
         them. So the root is `planning:Plan` and the ledger reads past it to the steps.
         """
-        graph = plan_graph(want.uri)
+        graph = plan_graph(want)
         imaginarium.forget_plan(graph)
         node, root = ox.NamedNode(graph), ox.NamedNode(graph)
         quads = [ox.Quad(root, _RDF_TYPE, _P("Plan"), node),
-                 ox.Quad(root, ox.NamedNode(FOR_WANT), ox.NamedNode(want.uri), node),
+                 ox.Quad(root, ox.NamedNode(FOR_WANT), ox.NamedNode(want), node),
                  ox.Quad(root, ox.NamedNode(OUTCOME), ox.NamedNode(outcome), node)]
         if cost is not None:
             quads.append(ox.Quad(root, ox.NamedNode(COSTS), _decimal(cost), node))
@@ -454,7 +453,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
             for parameter, value in step.binding:
                 quads.append(ox.Quad(uri, ox.NamedNode(parameter), _term(value), node))
         imaginarium.note(quads)
-        imaginarium.classify_plan(graph, want.uri)
+        imaginarium.classify_plan(graph, want)
         return graph
 
 
