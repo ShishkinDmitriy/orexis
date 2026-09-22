@@ -1,0 +1,85 @@
+# two_forecasts_at_one_instant_are_one_ground
+#
+# The level drops and the temperature rises, and BOTH begin at 13:00. One boundary, one world
+# change, one ground — holding both.
+#
+# A BOUNDARY IS AN INSTANT, NOT A FORECAST, and forking once per forecast got that wrong in a
+# way nothing would have reported. Two grounds were made with the SAME name, since a ground is
+# named for the instant it opens at, and the first was classified with a period running from
+# the instant to itself — which holds at no instant at all. A reader standing at half past one
+# was handed NO ground: not a stale world, not a wrong world, nothing, and the agent went
+# blind past the boundary.
+#
+# EACH RETRACT READS THE GROUND STANDING BEFORE THE INSTANT, so the two supersede in parallel
+# rather than one seeing the other's work. Each names only its own predicate, so the dip's
+# level and the heat's temperature both survive into the one ground.
+#
+# `two_stretches_in_one_scope_are_two_grounds` is the other arrangement of the same two
+# forecasts — apart in time, three grounds, the diffs accumulating — and
+# `a_forecast_that_says_nothing_new_is_no_period` is the third: a forecast whose retract and
+# add net out to the state before it hashes the same, and is no period.
+#
+# NOTHING IS IN ONE SCOPE HERE AS FAR AS THE FILL IS CONCERNED, and that is the point of
+# saying it: a scope names WHICH imaginarium this is and does not cut what crosses into it.
+# Narrowing the fill per scope was built, measured at 10.4 ms against 0.6 on a pass costing
+# over a second, and refused — the lean set fails by returning an EMPTY RESULT rather than an
+# error, and fewer graphs is the same move under another name.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+GRAPH :ontology {
+  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :tank1 a :Tank .
+}
+
+GRAPH :sensed {
+  :tank1 :level 20 .
+  :tank1 :temperature 20 .
+}
+
+#  THE LEVEL DROPS — and takes the standing reading with it.
+GRAPH :dip {
+  :tank1 :level 5 .
+}
+
+#  THE TEMPERATURE RISES AT THE SAME INSTANT. It says nothing about the level, and its
+#  retract names only its own predicate, so both changes stand in the one ground.
+GRAPH :heat {
+  :tank1 :temperature 40 .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :sensed orexis:beliefsOf :keeper .
+  :dip a orexis:Graph .
+  :dip a orexis:PredictionGraph .
+  :dip orexis:beliefsOf :keeper .
+  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+  :dip orexis:retracts """CONSTRUCT { <http://example.org/test#tank1> <http://example.org/test#level> ?l }
+      WHERE { GRAPH $state { <http://example.org/test#tank1> <http://example.org/test#level> ?l } }""" .
+  :heat a orexis:Graph .
+  :heat a orexis:PredictionGraph .
+  :heat orexis:beliefsOf :keeper .
+  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+  :heat orexis:retracts """CONSTRUCT { <http://example.org/test#tank1> <http://example.org/test#temperature> ?t }
+      WHERE { GRAPH $state { <http://example.org/test#tank1> <http://example.org/test#temperature> ?t } }""" .
+}

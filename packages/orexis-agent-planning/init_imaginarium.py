@@ -153,13 +153,22 @@ def lay_ground(engine: ox.Store, scope: str, now: datetime) -> list[str]:
     here = _present(engine, scope, now)
     made, marks = [here], signature.facts(_triples(engine, here), keys)
     opened = [now]
-    for at, prediction, supersedes in foreseen(engine):
+    for at, group in _by_instant(foreseen(engine)):
         if at <= now:
             continue                    # a forecast already reached is the present's, not ahead
-        added = list(_triples(engine, prediction))
-        retracted = _superseded(engine, supersedes, [*public, here], here)
+        #  EVERYTHING BEGINNING AT ONE INSTANT IS ONE WORLD CHANGE. A boundary is an instant,
+        #  not a forecast: two drifts that both start at one o'clock describe ONE world, and
+        #  forking once per forecast made two grounds with the same name and a period from the
+        #  instant to itself — which holds at no instant at all, so a reader standing after it
+        #  was handed NO ground and the agent went blind past the boundary. Each retract is
+        #  read against the ground standing BEFORE the instant, so they supersede in parallel
+        #  rather than one seeing another's work.
+        added, retracted = [], []
+        for prediction, supersedes in group:
+            added += list(_triples(engine, prediction))
+            retracted += _superseded(engine, supersedes, [*public, here], here)
         if not added and not retracted:
-            continue                    # a prediction that changes nothing is not a period
+            continue                    # a forecast that changes nothing is not a period
         there = _fork(engine, here, _name(scope, at), added, retracted)
         mark = signature.facts(_triples(engine, there), keys)
         if mark == marks:
@@ -191,6 +200,15 @@ def _present(engine: ox.Store, scope: str, now: datetime) -> str:
         update(engine, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
                        f"WHERE {{ GRAPH <{source}> {{ ?s ?p ?o }} }}")
     return name
+
+
+def _by_instant(predictions) -> list[tuple[datetime, list[tuple[str, str | None]]]]:
+    """The predictions grouped by the instant they apply, earliest first — one entry per
+    BOUNDARY rather than one per forecast."""
+    out: dict = {}
+    for at, prediction, supersedes in predictions:
+        out.setdefault(at, []).append((prediction, supersedes))
+    return sorted(out.items())
 
 
 def _superseded(engine: ox.Store, pattern: str | None, graphs, state: str) -> list:
