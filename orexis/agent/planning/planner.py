@@ -592,6 +592,16 @@ def _select(store, where: str, at: datetime | None, limit: int, offset: int,
     mine = (f'    OPTIONAL {{ ?g orexis:beliefsOf ?owner }}\n'
             f'    FILTER(!BOUND(?owner) || ?owner = <{holder}>)'
             if holder else "")
+    #  `?g a ?kind` IS THE JOIN, not only the filter, and removing it loses a want SILENTLY.
+    #  Finding the rows needs no class at all — `GRAPH ?g { ?w a orexis:Want }` with `?g` a
+    #  variable already searches every named graph, which is what this does. What the clause
+    #  buys is that `?g` appears in the catalogue block's REQUIRED part: drop it and the only
+    #  required pattern there is `?catalogue a orexis:CatalogueGraph`, so `?g` is bound solely
+    #  inside the OPTIONAL, the left-join happens before the two groups meet, and `?g` binds to
+    #  whichever graph HAS a period rather than to this want's. Measured: a debt whose graph
+    #  carries no period vanished from the answer, no error and no empty result. Same family as
+    #  the `BIND` inside a `UNION` that cannot see an outer variable — a group is a scope.
+    #
     #  DISTINCT because `?g` is a variable: a want lives in ONE graph, so the two agree
     #  today, and a projection of one column out of a pattern that binds a graph is a
     #  projection that should not depend on that holding.
