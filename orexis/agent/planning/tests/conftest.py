@@ -5,7 +5,7 @@
 what the function actually left in the store, instead of holding the store to it. Registered here, beside the
 tests that read it, so it is recognised when these tests are named on the command line:
 
-    pytest packages/orexis-agent-planning/tests --update-snapshots
+    pytest orexis/agent/planning/tests --update-snapshots
 
 A regenerated snapshot is reviewed by eyes before it is committed — the diff IS the claim
 that the derivation's behaviour changed on purpose.
@@ -33,7 +33,7 @@ from orexis.agent.store import (catalogue_of, close_catalogue, dump_nt,
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 AGENT, ME = "keeper", "http://example.org/test#keeper"
 WORLD, ACTIONS = "http://example.org/test#world", "http://example.org/test#actions"
-UPDATE = "pytest packages/orexis-agent-planning/tests --update-snapshots"
+UPDATE = "pytest orexis/agent/planning/tests --update-snapshots"
 
 
 def cases_in(directory: Path) -> list[Path]:
@@ -265,21 +265,21 @@ def snapshot_read(path: Path) -> dict[str, Graph]:
 
 
 def without_comments(text: str) -> str:
-    """The lines that say something, for a patch to be about.
+    """The lines that say something, for a diff to be about.
 
     A case is mostly prose — the header this machinery writes, and the argument the case makes
-    for itself — and none of it is what a function did. Stripped from both sides, a patch
+    for itself — and none of it is what a function did. Stripped from both sides, a diff
     carries data and nothing else; the comparison is over quads either way, so a comment is
     never what a case is held to.
     """
     return "".join(l for l in text.splitlines(True) if not l.lstrip().startswith("#"))
 
 
-def patch_of(case: str, expected: str) -> str:
+def diff_of(case: str, expected: str) -> str:
     """The unified diff that turns one into the other, comments left out of both.
 
     Stored INSTEAD of the whole expected store, for a directory where the diff is the thing a
-    reader wants: `<case>.trig` and `<case>.patch`, and what the function must leave is what
+    reader wants: `<case>.trig` and `<case>.diff`, and what the function must leave is what
     applying one to the other gives. The other directories keep their snapshots — opening a
     file and reading the store is worth having where a case is large, and this is the
     experiment that says whether it is worth having everywhere.
@@ -289,17 +289,17 @@ def patch_of(case: str, expected: str) -> str:
         "case", "expected", n=3))
 
 
-def patched(case: str, patch: str) -> str:
-    """`case` with `patch` applied — a strict applier, by line number and nothing else.
+def patched(case: str, diff: str) -> str:
+    """`case` with `diff` applied — a strict applier, by line number and nothing else.
 
-    No fuzz and no context search, deliberately: this only ever applies a patch this module
+    No fuzz and no context search, deliberately: this only ever applies a diff this module
     wrote, against the case it was written from, so a hunk that does not land where it says it
-    lands is a stale patch rather than something to guess at. `patch(1)` and `git apply` would
+    lands is a stale diff rather than something to guess at. `patch(1)` and `git apply` would
     both do it; neither is a dependency worth taking for thirty lines that cannot drift.
     """
     lines = without_comments(case).splitlines(True)
     out, at, started = [], 0, False
-    for line in patch.splitlines(True):
+    for line in diff.splitlines(True):
         head = re.match(r"^@@ -(\d+)(?:,\d+)? \+\d+(?:,\d+)? @@", line)
         if head:
             started = True
@@ -312,22 +312,22 @@ def patched(case: str, patch: str) -> str:
         if line.startswith("+"):
             out.append(line[1:])
         elif line.startswith(("-", " ")):
-            assert lines[at] == line[1:], f"stale patch at line {at + 1}: {lines[at]!r}"
+            assert lines[at] == line[1:], f"stale diff at line {at + 1}: {lines[at]!r}"
             if line.startswith(" "):
                 out.append(lines[at])
             at += 1
     return "".join(out + lines[at:])
 
 
-def held_to_patch(case: Path, request, function: str, after: dict) -> None:
-    """Hold what `function` left to `<case>.patch` beside it — the case plus the patch
+def held_to_diff(case: Path, request, function: str, after: dict) -> None:
+    """Hold what `function` left to `<case>.diff` beside it — the case plus the diff
     IS the expected store, and the comparison is over every quad, as it is for a snapshot.
     """
-    path = case.with_suffix(".patch")
+    path = case.with_suffix(".diff")
     rendered = trig_of(case.read_text(), {}, after, f"# what `{function}` leaves on {case.name}")
     if request.config.getoption("--update-snapshots"):
-        path.write_text(patch_of(case.read_text(), rendered))
-    assert path.exists(), f"{case.name} has no patch: run `{UPDATE}` and review {path.name}"
+        path.write_text(diff_of(case.read_text(), rendered))
+    assert path.exists(), f"{case.name} has no diff: run `{UPDATE}` and review {path.name}"
     expected = quad_lines(text_read(patched(case.read_text(), path.read_text())))
     lines = quad_lines(after)
     left, missing = sorted(lines - expected), sorted(expected - lines)
@@ -340,9 +340,9 @@ def held_to_patch(case: Path, request, function: str, after: dict) -> None:
     assert not left and not missing, (
         f"{case.name}: the store `{function}` left differs from case + {path.name}\n"
         + "".join(f"  left, unexpected:           {l}\n" for l in left)
-        + "".join(f"  the patch says, missing:    {l}\n" for l in missing)
+        + "".join(f"  the diff says, missing:    {l}\n" for l in missing)
         + f"  what was left is in {case.stem}.actual.trig: `diff {case.name} {case.stem}.actual.trig`;\n"
-        + f"  if the change is on purpose: `{UPDATE}`, then review the patch")
+        + f"  if the change is on purpose: `{UPDATE}`, then review the diff")
 
 
 def held_worlds_to(case: Path, request, forks: list, knows: dict) -> None:
@@ -386,7 +386,7 @@ def held_worlds_to(case: Path, request, forks: list, knows: dict) -> None:
         f"  if the change is on purpose: `{UPDATE}`, then review the diff")
 
 
-def orphans_in(directory: Path, suffix: str = ".patch") -> list[str]:
+def orphans_in(directory: Path, suffix: str = ".diff") -> list[str]:
     """Files whose case was deleted or renamed — one that keeps saying something nobody checks."""
     return sorted(p.name for p in directory.glob("*" + suffix)
                   if not (directory / (p.name[:-len(suffix)] + ".trig")).exists())

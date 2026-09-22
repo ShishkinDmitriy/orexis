@@ -2,7 +2,7 @@
 
 A case in `init_imaginarium/` is a belief base: its graphs, and a catalogue saying what each one is.
 The function fills a second, empty store with what no step may change, and
-`<case>.patch` is that second store — so `diff` of case against snapshot is exactly
+`<case>.diff` is that second store — so `diff` of case against snapshot is exactly
 what crossed and what did not.
 
 THE DIFF READS AS THE FAILURE MODE. A graph that did not make it shows as `# DROPPED:`, and
@@ -44,7 +44,7 @@ def test_init_imaginarium_fills_the_store_as_the_snapshot_says(case, monkeypatch
     store = snapshots.stand_in(case)
     into = ox.Store()
     init_imaginarium(store, into, SCOPE, snapshots.NOW)
-    snapshots.held_to_patch(case, request, "init_imaginarium", snapshots.snapshot_of(into))
+    snapshots.held_to_diff(case, request, "init_imaginarium", snapshots.snapshot_of(into))
 
 
 def test_every_case_is_read_and_no_snapshot_is_orphaned(snapshots):

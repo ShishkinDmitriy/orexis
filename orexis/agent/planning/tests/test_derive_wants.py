@@ -4,7 +4,7 @@ A case in `derive_wants/` is the world as an agent finds it — the topology, th
 met-test, what the instruments read now, what is foreseen and from when, the scopes its levers
 make, and whatever already stands — loaded into a bare store. The function judges every desire
 at the present and, where it reads met there, at every instant a prediction reaches, and mints
-a want for each cluster of what the met-tests read unmet; `<case>.patch` beside the
+a want for each cluster of what the met-tests read unmet; `<case>.diff` beside the
 case is the whole store afterwards, in the case's own order, so `diff` of case against snapshot
 is exactly what it did.
 
@@ -42,7 +42,7 @@ def test_derive_wants_leaves_the_store_as_the_snapshot_says(case, monkeypatch, r
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(case)
     withdraw(store, derive_wants(store, snapshots.NOW), snapshots.NOW)
-    snapshots.held_to_patch(case, request, "derive_wants", snapshots.snapshot_of(store))
+    snapshots.held_to_diff(case, request, "derive_wants", snapshots.snapshot_of(store))
 
 
 def test_every_case_is_read_and_no_snapshot_is_orphaned(snapshots):

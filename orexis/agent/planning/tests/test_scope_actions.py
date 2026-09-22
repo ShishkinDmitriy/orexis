@@ -5,12 +5,12 @@ declares, or none — loaded into a bare store. The function clusters them into 
 effects join and writes the scopes.
 
 HELD TO A PATCH RATHER THAN A SNAPSHOT, which is this directory alone and is an experiment.
-`<case>.patch` is the unified diff from the case to the store the function leaves, comments
+`<case>.diff` is the unified diff from the case to the store the function leaves, comments
 left out of both sides, and what the function must leave is what applying one to the other
 gives — compared over every quad, exactly as a snapshot is. The argument for it is that a
 reader checking a case reads the DIFF and nothing else, so storing the diff puts the artifact
 and the claim in one file; the argument against is that a snapshot can be opened and read as a
-store, which a patch cannot. Five cases here, and the other directories keep their snapshots,
+store, which a diff cannot. Five cases here, and the other directories keep their snapshots,
 so the two can be compared before either is made the rule. See knowledge/domain/scope.md.
 
 THE DERIVATIONS ARE THE CASE'S. In a running agent the partition also joins what every loaded
@@ -38,11 +38,11 @@ def test_scope_actions_leaves_the_store_the_patch_says(case, monkeypatch, reques
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(case)
     scope_actions(store)
-    snapshots.held_to_patch(case, request, "scope_actions", snapshots.snapshot_of(store))
+    snapshots.held_to_diff(case, request, "scope_actions", snapshots.snapshot_of(store))
 
 
-def test_every_case_is_read_and_no_patch_is_orphaned(snapshots):
+def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
     """A glob that stopped matching would pass every case by running none."""
     assert len(CASES) >= 5, [c.name for c in CASES]
-    assert not [p.name for p in CASES_DIR.glob("*.patch")
+    assert not [p.name for p in CASES_DIR.glob("*.diff")
                 if not (CASES_DIR / (p.stem + ".trig")).exists()]
