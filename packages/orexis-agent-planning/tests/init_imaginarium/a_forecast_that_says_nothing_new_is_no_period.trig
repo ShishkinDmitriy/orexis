@@ -6,12 +6,12 @@
 # after it. The middle instant is not a period, because nothing a met-test could read moved
 # there and so nothing it could answer differs.
 #
-# A PREDICTION IS AN ACTION NOBODY TAKES. It carries `sh:construct` for what it makes true and
-# `orexis:retracts` for what it takes away, like any other, and its graph's PERIOD says when it
-# applies rather than a precondition saying whether it may. That is what lets a forecast
-# REPLACE a reading: as a state it was merely handed alongside, so a shape holding over every
-# value still saw the stale one, and a tank low now with a forecast refilling it read unmet
-# for ever.
+# A PREDICTION'S GRAPH IS WHAT IT ADDS, and its catalogue row says when it applies and what it
+# supersedes. The adds are CONCRETE — a value at an instant, which is what a forecast is — and
+# only the retract is a pattern, because what is standing in that place is not something a
+# forecast can name in advance. That is what lets one REPLACE a reading: as a state it was
+# merely handed alongside, so a shape holding over every value still saw the stale one, and a
+# tank low now with a forecast refilling it read unmet for ever.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -38,20 +38,12 @@ GRAPH :sensed {
 
 #  SAYS WHAT THE PRESENT SAYS — so the ground it would make hashes the same, and is dropped.
 GRAPH :dip {
-  :dip_rule a orexis:Action ;
-    sh:construct """CONSTRUCT { <http://example.org/test#tank1> <http://example.org/test#level> 5 }
-      WHERE {}""" ;
-    orexis:retracts """CONSTRUCT { <http://example.org/test#tank1> <http://example.org/test#level> ?l }
-      WHERE { GRAPH $state { <http://example.org/test#tank1> <http://example.org/test#level> ?l } }""" .
+  :tank1 :level 5 .
 }
 
-#  AND THIS ONE REFILLS IT, retracting the reading it supersedes.
+#  AND THIS ONE REFILLS IT. Same adds-are-data shape; the retract is on its catalogue row.
 GRAPH :refill {
-  :refill_rule a orexis:Action ;
-    sh:construct """CONSTRUCT { <http://example.org/test#tank1> <http://example.org/test#level> 20 }
-      WHERE {}""" ;
-    orexis:retracts """CONSTRUCT { <http://example.org/test#tank1> <http://example.org/test#level> ?l }
-      WHERE { GRAPH $state { <http://example.org/test#tank1> <http://example.org/test#level> ?l } }""" .
+  :tank1 :level 20 .
 }
 
 GRAPH :catalogue {
@@ -69,8 +61,12 @@ GRAPH :catalogue {
   :dip a orexis:PredictionGraph .
   :dip orexis:beliefsOf :keeper .
   :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+  :dip orexis:retracts """CONSTRUCT { <http://example.org/test#tank1> <http://example.org/test#level> ?l }
+      WHERE { GRAPH $state { <http://example.org/test#tank1> <http://example.org/test#level> ?l } }""" .
   :refill a orexis:Graph .
   :refill a orexis:PredictionGraph .
   :refill orexis:beliefsOf :keeper .
   :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+  :refill orexis:retracts """CONSTRUCT { <http://example.org/test#tank1> <http://example.org/test#level> ?l }
+      WHERE { GRAPH $state { <http://example.org/test#tank1> <http://example.org/test#level> ?l } }""" .
 }

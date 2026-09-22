@@ -61,7 +61,7 @@ SELECT ?rule ?construct ?available ?retracts ?lands ?costs (GROUP_CONCAT(DISTINC
 } GROUP BY ?rule ?construct ?available ?retracts ?lands ?costs LIMIT 1"""
 
 
-def rule_for(store, action: str, memo=None, declared=None) -> dict | None:
+def rule_for(store, action: str, memo=None) -> dict | None:
     """The effect rule an action carries, or None for an action an event adopts.
 
     None is the answer for an action that states neither text — the market's Presenting,
@@ -73,19 +73,13 @@ def rule_for(store, action: str, memo=None, declared=None) -> dict | None:
     #  change it, yet it was fetched on every fork by `apply`, `cost_of` and `lands_after`
     #  each — three of the seven store calls a fork cost, answering the same thing every time.
     #  The memo is the caller's, because the caller is what knows how long its answers hold.
-    #  WHERE AN ACTION IS DECLARED is the caller's to say, and PUBLIC is only the usual
-    #  answer. A package's actions are public knowledge; a PREDICTION is an action nobody
-    #  takes, written by this agent into a graph of its own, and looking for its rule in the
-    #  public graphs found nothing — no error, an empty diff, and a timeline that never moved
-    #  (a-reader-states-the-kinds-it-reads).
-    where = tuple(declared) if declared is not None else tuple(graphs_of(store, PUBLIC))
     def fetch():
-        rows = bindings(query(store, _RULE_Q, where, {"rule": action}))
+        rows = bindings(query(store, _RULE_Q, graphs_of(store, PUBLIC), {"rule": action}))
         return rows[0] if rows else None
-    return remember(memo, ("rule", action, where), fetch)
+    return remember(memo, ("rule", action), fetch)
 
 
-def apply(store, action: str, graphs=None, *, memo=None, declared=None, **bind) -> tuple[list, list]:
+def apply(store, action: str, graphs=None, *, memo=None, **bind) -> tuple[list, list]:
     """Run one action's effect: `(added, retracted)`, as triples, against nothing.
 
     **`store` is whichever dataset the question is being asked ABOUT, and that is the whole of
@@ -113,7 +107,7 @@ def apply(store, action: str, graphs=None, *, memo=None, declared=None, **bind) 
     `$me`, `$subject`, `$property`, `$litres`. Substitution rather than SPARQL's own binding
     because the text is a literal in the graph and the engine takes a string.
     """
-    rule = rule_for(store, action, memo, declared)
+    rule = rule_for(store, action, memo)
     if rule is None:
         return [], []
     #  WHICH WORLD, IN THE LIST THE CALLER BUILT AND NOT IN THE TEXT (#666). `graphs` carries the readings a
@@ -125,7 +119,7 @@ def apply(store, action: str, graphs=None, *, memo=None, declared=None, **bind) 
             _run(store, rule.get("retracts"), bind, graphs))
 
 
-def world_after(base, store, action: str, /, *, memo=None, declared=None, **bind):
+def world_after(base, store, action: str, /, *, memo=None, **bind):
     """The world as it WOULD be, had this means been taken: `(base − retracted) + added`.
 
     The two halves are separately callable and the search calls them separately, because it
@@ -209,7 +203,7 @@ def _term(x):
     return x
 
 
-def lands_after(store, action: str, graphs=None, *, memo=None, declared=None, **bind) -> float | None:
+def lands_after(store, action: str, graphs=None, *, memo=None, **bind) -> float | None:
     """How long after this act the world change completes, in seconds — asked, never computed.
 
     The figure a waiter needs and the figure a planner needs, and they must be the same one.
@@ -223,7 +217,7 @@ def lands_after(store, action: str, graphs=None, *, memo=None, declared=None, **
     must take None and keep whatever it did before, because a lever with no stated timing is
     still a lever that works — it is only one nobody can wait for precisely.
     """
-    rule = rule_for(store, action, memo, declared)
+    rule = rule_for(store, action, memo)
     if rule is None or not rule.get("lands"):
         return None
     rows = _select(store, rule["lands"], bind, graphs)
@@ -232,7 +226,7 @@ def lands_after(store, action: str, graphs=None, *, memo=None, declared=None, **
     return float(rows[0]["seconds"].value)
 
 
-def cost_of(store, action: str, graphs=None, *, memo=None, declared=None, **bind) -> float | None:
+def cost_of(store, action: str, graphs=None, *, memo=None, **bind) -> float | None:
     """What taking this act would spend, in the wallet's unit — asked, never computed.
 
     `orexis:landsAfter`'s twin (#466): the owning package declares the SELECT, the same
@@ -241,7 +235,7 @@ def cost_of(store, action: str, graphs=None, *, memo=None, declared=None, **bind
     declared, or premises that do not hold — and every caller must read None as FREE, the
     statement an omitted declaration makes.
     """
-    rule = rule_for(store, action, memo, declared)
+    rule = rule_for(store, action, memo)
     if rule is None or not rule.get("costs"):
         return None
     rows = _select(store, rule["costs"], bind, graphs)
@@ -250,7 +244,7 @@ def cost_of(store, action: str, graphs=None, *, memo=None, declared=None, **bind
     return float(rows[0]["cost"].value)
 
 
-def precondition(store, action: str, keyed=(), *, memo=None, declared=None, **bind) -> list:
+def precondition(store, action: str, keyed=(), *, memo=None, **bind) -> list:
     """The facts a step's rules READ, as triples (#550): the positive patterns of the effect
     construct's WHERE and of the action's availability select, instantiated by the engine
     for this binding — `$me`, `$via`, `$about`, `$state` and the rest, exactly as `apply`
@@ -278,7 +272,7 @@ def precondition(store, action: str, keyed=(), *, memo=None, declared=None, **bi
     node turns out to be one, its type is read beside it, and the signature can say it the
     way it says every other reading.
     """
-    rule = rule_for(store, action, memo, declared)
+    rule = rule_for(store, action, memo)
     if rule is None:
         return []
     read = []

@@ -47,10 +47,11 @@ import pyoxigraph as ox
 
 from orexis_agent_execution.ontology import (BELIEF, DESIRE, OREXIS, PREDICTION, PUBLIC, RECORD,
                                              STATE, WANT)
-from orexis_agent_execution.store import (Raw, add_quads, catalogue_of, classify, graphs_of,
-                                          quads, query, remove_quads, rows, update)
+from orexis_agent_execution.store import (Raw, add_quads, bind, catalogue_of, classify,
+                                          construct, graphs_of, quads, query, remove_quads,
+                                          rows, update)
 
-from . import effects, signature
+from . import signature
 from .ontology import GROUND_GRAPH
 
 
@@ -103,24 +104,36 @@ def init_imaginarium(beliefs: ox.Store, into: ox.Store, scope: str,
 
 log = logging.getLogger("ground")
 
-#  EVERY PREDICTION AND WHEN IT APPLIES: the graphs of predictions, with the instant each
-#  begins to hold. The period is on the GRAPH, as every stretch here is; the rule is on the
-#  node inside it, as every effect here is.
+#  EVERY PREDICTION, WHEN IT APPLIES, AND WHAT IT SUPERSEDES. All three are said of the GRAPH
+#  and none inside it: a prediction's contents are what it ADDS, which is what a prediction
+#  naturally is — `GRAPH :next_temp { :air :hasTemp 30 }` — and a triple saying how to retract
+#  would be one of the facts it asserts. The catalogue already says what a graph is, whose it
+#  is and when it holds; how it supersedes is the same kind of statement about it.
+#
+#  THE RETRACT IS A PATTERN AND THE ADDS ARE NOT, which is the whole shape of this. What a
+#  forecast says is concrete — a value at an instant; what it TAKES AWAY is whatever is
+#  standing in that place, which nobody can name in advance. So one is data and the other is a
+#  CONSTRUCT over `$state`, and a keyed reading falls out of it for free: the pattern matches
+#  the old observation node by its key and takes it whole.
 _WHEN_Q = """
-SELECT ?prediction ?at WHERE {
+SELECT ?prediction ?at ?retracts WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               ?g a orexis:PredictionGraph ; dcterms:temporal/orexis:start ?at }
-  GRAPH ?g { ?prediction a orexis:Action } }
+               ?prediction a orexis:PredictionGraph ; dcterms:temporal/orexis:start ?at .
+               OPTIONAL { ?prediction orexis:retracts ?retracts } } }
 ORDER BY ?at ?prediction"""
 
 
-def foreseen(engine: ox.Store) -> list[tuple[datetime, str]]:
-    """Every prediction this store holds, with the instant it applies, earliest first.
+def foreseen(engine: ox.Store) -> list[tuple[datetime, str, str | None]]:
+    """Every prediction this store holds — its graph, the instant it applies, and the pattern
+    it supersedes — earliest first.
 
     NO HOLDER. One agent, one volume (rule 4), so the store IS the scope and a prediction in it
     is this agent's by construction.
+
+    A PREDICTION THAT RETRACTS NOTHING is legal and means it: a forecast of something the world
+    does not yet say at all — a round opening, a claim arriving — adds without superseding.
     """
-    return sorted((datetime.fromisoformat(r["at"]), r["prediction"])
+    return sorted((datetime.fromisoformat(r["at"]), r["prediction"], r.get("retracts"))
                   for r in rows(engine, _WHEN_Q, ()))
 
 
@@ -136,19 +149,18 @@ def lay_ground(engine: ox.Store, scope: str, now: datetime) -> list[str]:
     """
     keys = signature.keys_of(lambda text: query(engine, text, graphs_of(engine, PUBLIC)))
     public = graphs_of(engine, PUBLIC)
-    declared = graphs_of(engine, PREDICTION)
 
     here = _present(engine, scope, now)
     made, marks = [here], signature.facts(_triples(engine, here), keys)
     opened = [now]
-    for at, prediction in foreseen(engine):
+    for at, prediction, supersedes in foreseen(engine):
         if at <= now:
             continue                    # a forecast already reached is the present's, not ahead
-        added, retracted = effects.apply(engine, prediction, [*public, here],
-                                         declared=declared, state=Raw(f"<{here}>"))
+        added = list(_triples(engine, prediction))
+        retracted = _superseded(engine, supersedes, [*public, here], here)
         if not added and not retracted:
             continue                    # a prediction that changes nothing is not a period
-        there = _fork(engine, here, _name(scope, at), added, retracted, keys)
+        there = _fork(engine, here, _name(scope, at), added, retracted)
         mark = signature.facts(_triples(engine, there), keys)
         if mark == marks:
             #  THE SAME GROUND UNDER ANOTHER NAME. Nothing a met-test can read moved, so this
@@ -181,7 +193,25 @@ def _present(engine: ox.Store, scope: str, now: datetime) -> str:
     return name
 
 
-def _fork(engine: ox.Store, parent: str, name: str, added, retracted, keys: dict) -> str:
+def _superseded(engine: ox.Store, pattern: str | None, graphs, state: str) -> list:
+    """What this prediction takes away: its `orexis:retracts` CONSTRUCT run against the ground
+    standing before it, with `$state` bound to that ground. Empty where it states none.
+
+    A PATTERN THAT WILL NOT RUN RETRACTS NOTHING, loudly. A prediction whose text the engine
+    refuses would otherwise add its value beside the one it meant to replace, and a shape
+    holding over every value would still see the old one — which is the exact failure the
+    retract exists to close, arriving by another door.
+    """
+    if not pattern:
+        return []
+    try:
+        return list(construct(engine, bind(pattern, state=Raw(f"<{state}>")), graphs))
+    except Exception as exc:                                        # noqa: BLE001
+        log.error("a prediction's retract would not run, so it supersedes nothing: %s", exc)
+        return []
+
+
+def _fork(engine: ox.Store, parent: str, name: str, added, retracted) -> str:
     """The ground one prediction past `parent`: its facts, less what the prediction retracts,
     plus what it adds. Retraction before addition, for the reason `Imaginarium.reached` gives —
     a construct may reuse the very node its retraction names."""
