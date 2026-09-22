@@ -125,7 +125,7 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
     """
     shapes = shapes_in(store)
     wanted: set[str] = set()
-    for holder, desire, shape in desires_in(store, now):
+    for holder, desire, shape in desires_in(store):
         #  ONE READ, OVER EVERY BOUNDARY. What comes back is each way this desire is failing
         #  with the stretch it fails over — the present among the instants and not above them.
         found = read_over_time(store, shapes, holder, desire, shape, now)
@@ -589,14 +589,18 @@ log = logging.getLogger("judging")
 #  none, and a graph of desires with one is read while it holds. A desire, its holder and its
 #  met-test are written together — one rule derives them, one file ratifies them — so the
 #  pattern matches within one graph.
+#  NO PERIOD, AND NO FILTER FOR ONE. A desire is authored once at genesis into a graph with no
+#  period, which holds at every instant as the T-Box does; everything sourced AT A TIME — a
+#  want, an obligation, a round, a prediction — is the graph that holds during one
+#  (a-root-holds-always-and-an-outdated-graph-is-dropped). This carried the same period filter
+#  every timed read carries, unbound on every row of every store there has ever been, and what
+#  it cost was not a cycle: it told a reader that a desire can be timed, which is the one
+#  thing that would make it a want.
 _DESIRES_Q = """
 SELECT DISTINCT ?holder ?desire ?shape WHERE {
   GRAPH ?g { ?holder orexis:holds ?desire . ?desire a orexis:Desire .
              OPTIONAL { ?desire orexis:metWhen ?shape } }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:DesireGraph .
-               OPTIONAL { ?g dcterms:temporal ?period .
-                          OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?end } }
-               FILTER(!BOUND(?start) || $now >= ?start) FILTER(!BOUND(?end) || $now < ?end) } }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:DesireGraph } }
 ORDER BY ?holder ?desire"""
 
 #  ONE desire, its holder and its met-test — for a reader asking about one.
@@ -661,13 +665,16 @@ class Witness:
     until: datetime | None = None
 
 
-def desires_in(store: ox.Store, now: datetime) -> list[tuple[str, str, str | None]]:
-    """Every desire the store holds at `now`, as `(holder, desire, met-test or None)`. One
-    agent, one volume, so the holder is the agent; a store holding several agents' desires
-    answers for each."""
+def desires_in(store: ox.Store) -> list[tuple[str, str, str | None]]:
+    """Every desire the store holds, as `(holder, desire, met-test or None)`.
+
+    NO INSTANT, because there is nothing to ask one about: a desire holds always. One agent,
+    one volume, so the holder is the agent; a store holding several agents' desires answers
+    for each.
+    """
     return [(r["holder"].value, r["desire"].value,
              r["shape"].value if r["shape"] is not None else None)
-            for r in store.query(bind(_DESIRES_Q, now=instant(now)), prefixes=NAMESPACES)]
+            for r in store.query(_DESIRES_Q, prefixes=NAMESPACES)]
 
 
 def read_over_time(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
