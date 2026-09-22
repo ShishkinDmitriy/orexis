@@ -28,13 +28,19 @@ a file inside that agent's container and not a service on a network. See
 knowledge/decisions/where-the-belief-base-lives.md and
 knowledge/decisions/an-agent-is-four-things.md.
 
-**IT IS NOT A REDIRECT, AND THE THIN ONES ARE THE POINT.** `update` is
-`store.update(text, prefixes=NAMESPACES)` — which is why no query text in this project carries
-a prefix header, and why a name the store never loaded is caught rather than 400ing in
-production. `construct` is that plus building the default graph out of a list of IRI STRINGS
-and rendering substitutions as terms. `quads` and `clear_graph` wrap a string in a
-`NamedNode`. A caller hands strings and prefix-less SPARQL, and gets terms and a dictionary
-built for it; that is the whole contract, and it is worth a line each.
+**THE THIN ONES ARE ERGONOMIC, AND ONE OF THEM IS ONLY THAT.** `update` is
+`store.update(text, prefixes=NAMESPACES)` and nothing else — it is why no query text in this
+project carries a prefix header, and it saves nineteen call sites an import and an argument.
+It does not save them from anything: measured, a text using `orexis:` without the dictionary
+raises `SyntaxError` at the prefix, and so does a prefix the dictionary does not declare. The
+hazard of a silently pre-bound prefix is rdflib's against a remote endpoint, not this engine's.
+
+The others earn more than a line. `construct` is the prefixes PLUS building a default graph
+out of a list of IRI STRINGS plus rendering substitutions as terms — three conversions a
+caller would otherwise repeat. `query` is handed the kinds a reader means and never guesses.
+`quads` and `clear_graph` wrap a string in a `NamedNode`; `add_quads` is a loop. A caller
+hands strings and prefix-less SPARQL and gets terms and a dictionary built for it, which is
+the contract.
 
 What is NOT thin, and is what the module is actually for: `graphs_of` answers which graphs are
 of a kind AT an instant, by asking the catalogue — 28 callers and the most-used function here;
