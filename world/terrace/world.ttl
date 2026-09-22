@@ -59,7 +59,7 @@
 #  not one: a plant is a participant in a water economy, and this world has no economy for it
 #  to join. It is also not a species — what grows in the bed is not stated because it is not
 #  known, and a species package (world/loner's Zamioculcas) would entail care ranges nobody
-#  has judged. Nobody acts for it, so no region and no patience is deduced: the sensing stake
+#  has judged. Nobody acts for it, so no region and no patience is deduced: the sensing region want
 #  shapes target `orexis:actsFor` a subject that states what it needs. When a plant is chosen,
 #  typing this node is the whole edit.
 #
@@ -169,7 +169,7 @@
         ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 1 ; schema:unitCode unit:SEC ] ] .
 
 ##########  The agent  ##########
-#  No orexis:actsFor: with nothing to advance for it, this agent holds no stake — it records.
+#  No orexis:actsFor: with nothing to advance for it, this agent holds no region want — it records.
 #  No market:bidsIn, no market:hosts, no actuation:hasActuator: no other capability can be
 #  derived. And NO review:commits — "for now just monitoring" grants no room to re-pick
 #  anything; there is no cadence to re-pick anyway, since the board keeps its own.

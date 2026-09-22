@@ -256,7 +256,7 @@ def _urgency_panel(buckets: dict, y: int, panel_id: int) -> dict:
     Grouped by the WANT rather than by the property it is about — the sovereign's correction,
     and it is what lets one graph hold every kind. A property cannot name a freshness want,
     which is per instrument, or an obligation, which is per counterparty, so a panel keyed on
-    `property` could only ever draw stakes and the common currency would stay a claim. One
+    `property` could only ever draw region wants and the common currency would stay a claim. One
     target per agent, because a bucket is per agent and a token opens only its own.
 
     Zero to one, fixed. Urgency IS normalised — 0 at the region's point and 1 at the edge of

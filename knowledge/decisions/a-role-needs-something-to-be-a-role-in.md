@@ -122,9 +122,9 @@ independently of the predicate is a synonym rather than a term.
 # Clearing having no position is not the inconsistency it looks like
 
 The table above invites the reading that clearing is missing something the other two have. It is
-not. [clearing-as-validator](clearing-as-validator.md) makes it a **thin, stake-free notary**: it
+not. [clearing-as-validator](clearing-as-validator.md) makes it a **thin, region-want-free notary**: it
 holds no resource, wants nothing, and takes no side. Giving it a role would say it occupies a
-position in the market, which is the one thing it is designed not to do — a role implies a stake in
+position in the market, which is the one thing it is designed not to do — a role implies a region want in
 a way a function does not.
 
 So the three-way inconsistency is really two positions and one non-participant, and the encoding is

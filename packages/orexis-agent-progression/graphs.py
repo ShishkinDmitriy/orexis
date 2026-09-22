@@ -2,7 +2,7 @@
 
 This lived in the intention package and said it was here "rather than in the kernel
 vocabulary" — `agent/ontology.py` then, `ontology.py` beside this file since #451 — because a
-graph an agent without a stake and a lever never has is not kernel furniture. Every
+graph an agent without a region want and a lever never has is not kernel furniture. Every
 agent keeps a ledger now — commitment is not plug-in-able — so the reason has expired and the
 file has moved. It stays apart from `ontology.py` for that file's own stated reason: what is in
 there is a TERM, and a graph IRI is an instance built from an agent's own id.

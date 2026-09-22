@@ -118,7 +118,7 @@ class Agent:
         self.desires = Desires(self.beliefs)
         #  Everything this agent is considering, as a collection. Handed the WHOLE agent, and
         #  that is the point rather than an omission: what a want reads as is contributed by
-        #  whichever capability holds the stake, so the collection has to reach the choir.
+        #  whichever capability holds the region want, so the collection has to reach the choir.
         self._considering = Considering(self)
         #  THE TWO COLLECTIONS, and the world is a parameter of the ask rather than of either.
         #  A SERVICE stood between them once — an `Afforder` holding the templates and what the
@@ -205,12 +205,12 @@ class Agent:
         # because paho's network thread is one of the things it watches. Nothing starts here.
 
         # The WHETHER. Unconditional, like the modalities above and for the same reason: a mind
-        # is not plug-in-able. It was a capability granted by a stake and a lever, which made
+        # is not plug-in-able. It was a capability granted by a region want and a lever, which made
         # having one conditional on the world having said so — while `Desires` and `Intentions`
         # were already built for every agent three lines up. That split could not be defended
         # once it was written down in one place.
         #
-        # An agent with no stake and no lever gets a deliberator that answers None to
+        # An agent with no region want and no lever gets a deliberator that answers None to
         # everything and reports nothing, which is the honest shape of "there is nothing here
         # to decide" — see `Deliberator.series`.
         #
@@ -233,7 +233,7 @@ class Agent:
             genesis.drop_ghost_graphs(st, agent_id)
         #  ITS PATIENCE, handed down: the keeper is progression's and reads no belief, so the
         #  container reads the pick through the desire modality and assigns it. An agent that
-        #  states none — `world/sensing`'s stakeless one, every minimal fixture — is handed
+        #  states none — `world/sensing`'s regionless one, every minimal fixture — is handed
         #  nothing, and the keeper raises `NoPatience` only if something asks it to commit.
         try:
             self.keeper.beliefs = self.desires.read(KEEPING_PICKS)
@@ -417,13 +417,13 @@ class Agent:
         #  construction: an impulse younger than it is absorbed by the keeper's `adopt`
         #  anyway, so ticking faster only asks questions whose answers are already standing.
         #
-        #  NO PATIENCE, NO CLOCK. An agent that states none has no stake (the shape guarantees
+        #  NO PATIENCE, NO CLOCK. An agent that states none has no region want (the shape guarantees
         #  the converse), so there is nothing for a pass to find and starting a timer would be
         #  a clock per agent to answer "nothing".
         try:
             interval = float(self.keeper.beliefs.patience_s)
         except NoPatience:
-            log.debug("%s: no patience stated and no stake to spend it on — no mind's clock",
+            log.debug("%s: no patience stated and no region want to spend it on — no mind's clock",
                       self.id)
         else:
             self._clock = Timer(interval, lambda: pursuit.consider(self))

@@ -42,7 +42,7 @@ def _gardener(monkeypatch, moisture=0.30):
     return agent
 
 
-def _stake(agent):
+def _region_want(agent):
     return next(g for g in agent.considering()
                 if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
 
@@ -62,7 +62,7 @@ def test_a_fact_the_plan_changed_is_not_overridden_by_a_prediction(monkeypatch):
 
     agent = _gardener(monkeypatch, moisture=0.04)
     planner = Planner(agent, agent.me)
-    desire = planner._begin(_stake(agent))
+    desire = planner._begin(_region_want(agent))
     node = bindings(agent.beliefs.query(f"SELECT ?o WHERE {{ GRAPH <{STATE_GRAPH}> {{ ?o sosa:observedProperty <{MOISTURE}> }} }}", agent.beliefs.graphs_of(PUBLIC)))[0]["o"]
     later = clock.now() + timedelta(hours=3)
     #  A step's diff is the whole node, as every effect's retraction writes it (#619): the
@@ -86,7 +86,7 @@ def test_the_at_want_is_derived_at_the_first_prediction_that_reads_unmet(monkeyp
     window that reaches the day, the first instant the region MAY be left, and nothing in the
     kernel knew the rate."""
     agent = _gardener(monkeypatch, moisture=0.12)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     derive_wants(agent.beliefs.engine)   # a crossing is what the last judging found
     crossing = judging.crossing_of(agent.beliefs.engine, desire.uri)
     assert crossing is not None
@@ -96,5 +96,5 @@ def test_the_at_want_is_derived_at_the_first_prediction_that_reads_unmet(monkeyp
     assert abs((crossing - clock.now()).total_seconds() - 18000) < 120, "five hours: the window that reaches a day"
     content = _gardener(monkeypatch, 0.20)
     derive_wants(content.beliefs.engine)
-    assert judging.crossing_of(content.beliefs.engine, _stake(content).uri) is None, \
+    assert judging.crossing_of(content.beliefs.engine, _region_want(content).uri) is None, \
         "a pot the ladder never predicts below has no crossing"

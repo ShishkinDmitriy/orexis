@@ -75,7 +75,7 @@ rather than as a roadmap item.
 **Written after the record, and worth saying:** this record was merged as #372 and then lost
 from `main` in a history rewrite; it was recovered from the orphaned commit with #369, and
 its "property" became "want" on the way, since
-[the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md) had landed between.
+[the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md) had landed between.
 
 # Seams left open
 

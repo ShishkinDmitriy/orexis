@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 from orexis_agent_progression.act import Step
 from orexis_agent_progression.ontology import ACTIONS_GRAPH, STATE_GRAPH, promises_graph
 from orexis_agent_progression.store import bindings
-from conftest import build_agent, genesis_store, stake_of
+from conftest import build_agent, genesis_store, region_want_of
 from conftest import ABOUT, filled
 
 T = "urn:toy#"
@@ -37,7 +37,7 @@ def _ferry(want):
 
 def test_a_taker_less_step_with_a_bridge_raises_its_promise_as_a_want(monkeypatch):
     fern = _fern_with_a_ferry(monkeypatch)
-    keeper, want = fern.keeper, stake_of(fern).uri
+    keeper, want = fern.keeper, region_want_of(fern).uri
     from orexis_agent_progression.execution import carry_out
     uri = keeper.adopt(_ferry(want), want, "ferry the box over")
     assert carry_out(fern, keeper.current(uri), None, uri) is False, "nobody takes Ferry: it stands"
@@ -61,7 +61,7 @@ SELECT ?w ?step ?sel WHERE {{ GRAPH <{promises_graph(fern.id)}> {{
 
 def test_a_taker_less_step_without_a_bridge_is_a_promise_nobody_keeps(monkeypatch, caplog):
     fern = _fern_with_a_ferry(monkeypatch, bridged=False)
-    keeper, want = fern.keeper, stake_of(fern).uri
+    keeper, want = fern.keeper, region_want_of(fern).uri
     from orexis_agent_progression.execution import carry_out
     uri = keeper.adopt(_ferry(want), want, "ferry the box over")
     with caplog.at_level("ERROR", logger="execution"):

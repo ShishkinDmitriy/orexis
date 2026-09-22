@@ -179,7 +179,7 @@
         ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 2 ; schema:unitCode unit:SEC ] ] .
 
 ##########  The agent  ##########
-#  No orexis:actsFor: with nothing to advance for it, this agent holds no stake — it records.
+#  No orexis:actsFor: with nothing to advance for it, this agent holds no region want — it records.
 #  No market:bidsIn and no market:hosts, so no market capability can be derived for it.
 
 :fern_agent a orexis:Agent ;

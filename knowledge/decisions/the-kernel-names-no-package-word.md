@@ -191,7 +191,7 @@ added to a kernel shape by hand, and one added without that edit would silently 
 anywhere to say so. It is the registry smell [capability-packages](capability-packages.md)
 refuses, wearing a shape.
 
-So the accepted cost stands: an agent with a stake and no lever states a patience it never spends.
+So the accepted cost stands: an agent with a region want and no lever states a patience it never spends.
 It is cheaper than it reads, because the runtime backstop already exists — `packages/orexis-agent-progression/keeper.py` reads
 `KEEPING_PICKS` lazily, so an agent with nothing to commit about never asks for the number, and one
 that somehow reaches a commitment without it raises and names the term. What the shape buys over
@@ -247,7 +247,7 @@ written to support.
 # Seams left open
 
 - ~~**Nothing enforces the rule beyond the count.**~~ Closed with
-  [the-stake-is-sensings-want](the-stake-is-sensings-want.md)'s third step. The ratchet reads the
+  [the-region-want-is-sensings-want](the-region-want-is-sensings-want.md)'s third step. The ratchet reads the
   prefixed form where it means something — a query string, a rule or a shape with its prose
   stripped — scans for every namespace the loader reports rather than five families by hand, and
   resolves every term it finds against what the ontologies declare (#344). `agent/world.py`'s
@@ -283,7 +283,7 @@ remains on the list is the two sensing terms in the desire warning shape, the na
 constants onboarding interpolates, and the migration destinations — and `agent/world.py`, which
 the scan cannot see and the next change is about.
 
-# Paid since — the stake, the widened scan, and what it found
+# Paid since — the region want, the widened scan, and what it found
 
 The desire warning shape went to sensing with the region (`sensing:UnwatchedRegionShape` now — it was `BeyondSurvivalShape` then, and #275 renamed it for what it actually checks), and the
 kernel's `sosa:` went with it: `store.PREFIXES` no longer declares a vocabulary the kernel does

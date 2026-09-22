@@ -1,7 +1,7 @@
 ---
 type: Service
 title: Gateway
-description: Thin stake-free attestor on the RPi; turns the ESP32's raw readings into citable, provenance-stamped current-state.
+description: Thin region-want-free attestor on the RPi; turns the ESP32's raw readings into citable, provenance-stamped current-state.
 ---
 
 # What it is
@@ -14,7 +14,7 @@ description: Thin stake-free attestor on the RPi; turns the ESP32's raw readings
 > you open the society, never as a central process. The measurement-witness reasoning below
 > is why the role exists at all; it just no longer runs as its own component in v1.
 
-Trusted, stake-free infrastructure, and the **only** component that WOULD author the attested
+Trusted, region-want-free infrastructure, and the **only** component that WOULD author the attested
 graph. It is **not a monolith** — it is a thin RPi process (≈ one file) that turns raw
 sensor numbers into citable qualitative state. Build it first: it owns the most settled
 decisions and everything downstream trusts it.
@@ -27,7 +27,7 @@ that took them.
 The measurement root is split across the hardware, and the split is the point:
 
 - **ESP32 = transducer.** Reads the moisture sensor (ADC/I2C) and emits **raw numbers**. It
-  is the honest sensor edge precisely because it is stake-free — no wallet, no LLM, no
+  is the honest sensor edge precisely because it is region-want-free — no wallet, no LLM, no
   desire, so it *cannot* be self-interested. It makes no judgements.
 - **Gateway (RPi) = attestor.** Signs the **measurement**, stamps provenance, and files it
   into the attested current-state.

@@ -31,7 +31,7 @@ def cadence_for(agent, value, observed_property=MOISTURE):
     """The cadence the agent would choose for a reading of its own subject.
 
     Three arguments now, and deliberately: sensing asks about a *property of* a subject,
-    because whether a number is trouble is the stakeholder's answer, and a stake is held in
+    because whether a number is trouble is the stakeholder's answer, and a region want is held in
     one property. A thermometer's reading of the same pot is not the bidder's business.
     """
     return agent.subscribing().cadence_for(agent.me.acts_for, observed_property, value)
@@ -67,7 +67,7 @@ def test_the_cadence_follows_what_is_in_flight_and_not_how_bad_the_reading_is(fe
 
 
 def test_attention_without_a_stake_falls_back_to_the_slow_cadence(fern):
-    """Urgency is supplied by whoever holds a band. Asked about a subject it has no stake in,
+    """Urgency is supplied by whoever holds a band. Asked about a subject it has no region want in,
     the agent has no opinion — and an agent with no opinion does not watch closely."""
     p = fern.subscribing()
     assert p.cadence_for("http://example.org/orexis#someone_elses_plant", MOISTURE, 0.0) == \
@@ -77,7 +77,7 @@ def test_attention_without_a_stake_falls_back_to_the_slow_cadence(fern):
 def test_a_property_it_has_no_stake_in_gets_no_verdict(fern):
     """Its own pot — but a humidity, and this fern's plant states no humidity range.
 
-    The distinction that matters is a property this agent holds a stake in against one it does
+    The distinction that matters is a property this agent holds a region want in against one it does
     not, and it is asked with NO READING — the state that earns the fast cadence for a property
     of its own. Asked with a number instead, both answer False and the assertion would pass
     whether or not the property is checked at all.
@@ -90,7 +90,7 @@ def test_a_property_it_has_no_stake_in_gets_no_verdict(fern):
     assert sensing_of(fern).watch_closely(fern.me.acts_for, HUMIDITY, None) is False, \
         "nothing here is the agent's to be blind about"
     assert sensing_of(fern).watch_closely(fern.me.acts_for, MOISTURE, None) is True, \
-        "and the same question about a property it does hold a stake in says so"
+        "and the same question about a property it does hold a region want in says so"
     assert choir.annotations(fern, fern.me.acts_for, HUMIDITY, 0.46) == {}
 
     assert sensing_of(fern).watch_closely(fern.me.acts_for, MOISTURE, 0.10) is not None
@@ -109,7 +109,7 @@ def test_it_holds_an_opinion_about_every_property_its_plant_states_a_range_for(f
     #  A VERDICT PER PROPERTY, which is what the seam asked for — the agent answers about its
     #  air temperature as readily as about its soil. It is a BOOLEAN now and not a degree, so
     #  what differs between 5.0 and 21.0 is nothing: neither is in flight, and how cold it is
-    #  stopped being a reason to look. What still differs is stake from no stake, below.
+    #  stopped being a reason to look. What still differs is region want from no region want, below.
     assert sensing_of(fern).watch_closely(fern.me.acts_for, TEMPERATURE, 5.0) is False
     assert sensing_of(fern).watch_closely(fern.me.acts_for, TEMPERATURE, None) is True, \
         "and an unread property of its own is one it is blind about"
@@ -198,7 +198,7 @@ def test_a_sense_request_is_never_retained(fern):
 
 def test_it_announces_its_verdict_not_just_a_number(fern):
     """Sensing supplies the number; the band is contributed by the capability that holds a
-    stake. The announcement is the agent's, not sensing's — which is why it carries both."""
+    region want. The announcement is the agent's, not sensing's — which is why it carries both."""
     fern.deliver(sensor_of(fern).reading_topic, {"moisture": 0.10})
     event = fern.sent.to(wired_event_topic(fern))[-1]
     assert event["band"] == "LOW" and event["agent"] == "fern"
@@ -534,7 +534,7 @@ def test_the_bound_respects_the_constitutional_floor(fern):
 
 def test_not_knowing_a_desired_property_earns_the_fast_cadence(fern):
     """Not knowing whether the pot is dying is a reason to look, and it is the ONE reading-shaped
-    reason left: an agent with a stake and no current number is blind, and the first intention
+    reason left: an agent with a region want and no current number is blind, and the first intention
     is always to look. It used to arrive as "not knowing is maximally urgent" — the graded
     answer standing in for a fact — and whether anything current is known was never a degree.
     A property with no region stays silent, exactly as it does for any reading of it."""

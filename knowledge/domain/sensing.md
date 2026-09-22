@@ -190,7 +190,7 @@ to LOW *inside one cadence band* would have kept the old colour indefinitely —
 worth seeing, displayed as the state before it. The comparison is now the whole message.
 
 The verdict is collected the way every cross-capability opinion is, through the [choir](/domain/choir.md) — whose
-answer it is, and why an agent with no stake has none to give, is [band](/domain/band.md)'s. What
+answer it is, and why an agent with no region want has none to give, is [band](/domain/band.md)'s. What
 matters here is that this capability passes it on without reading it, and the transport driver
 below never learns what one is.
 
@@ -287,7 +287,7 @@ sensed graph, maximum uncertainty — the board opens at the fast end, gathers t
 end the ignorance and establish a trend, and relaxes through the same recomputation every
 reading triggers. Two forces, finding their equilibrium: the need to know presses toward the
 fast end, the cost of looking holds the slow end, and the cadence is where they meet. An agent
-with no stake opens at its own slow pace — the burst is desire's answer, not a boot ritual.
+with no region want opens at its own slow pace — the burst is desire's answer, not a boot ritual.
 
 **And no longer than the trend allows** (#133). Urgency answers where the state *is*; a sleep
 granted on that alone can begin moments before the trend crosses into trouble, and nobody hears

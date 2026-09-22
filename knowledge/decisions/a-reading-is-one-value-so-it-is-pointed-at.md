@@ -104,7 +104,7 @@ Splitting the payload forced a second question. Three sensors now share one comm
 there is one board and it sleeps once — and a cadence had been aimed per *sensor*.
 
 Left alone, each sensor would compute its own interval from its own urgency and publish it retained
-to the same topic: soil moisture asking for 30 seconds, a thermometer the agent has no stake in
+to the same topic: soil moisture asking for 30 seconds, a thermometer the agent has no region want in
 asking for 900, last writer winning, on every message. The board would be aimed by whichever sensor
 spoke last.
 

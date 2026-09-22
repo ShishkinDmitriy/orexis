@@ -142,7 +142,7 @@ class Beliefs:
 
         This is NOT a relaxation of the rule above. Picks wholly absent are is a decision
         stated by omission — the same way a beliefs file with no `market:Bidding` entries says this
-        agent holds no stake — and the caller is expected to do nothing rather than to invent a
+        agent holds no region want — and the caller is expected to do nothing rather than to invent a
         value. Picks PARTIALLY present are still an error and still refuse, because
         half an answer is an authoring slip rather than a choice.
 

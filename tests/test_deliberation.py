@@ -25,7 +25,7 @@ from orexis_capability_sensing.terms import OBSERVING
 
 from orexis_agent_progression.ontology import picks_graph
 from orexis_capability_sensing.regions import ObservedWant
-from conftest import stake_of, MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for, wired_markets, wired_sensors, write_reading
+from conftest import region_want_of, MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for, wired_markets, wired_sensors, write_reading
 from conftest import ABOUT, DIRECTION, VALVE, VENUE
 
 
@@ -47,7 +47,7 @@ def market_of(agent):
 def test_every_agent_deliberates_including_one_with_nothing_to_decide(make):
     """What the `deliberation:Reflex` GRANT used to say, and why it no longer says it.
 
-    The premise was a stake AND a lever, so an agent with neither — world/sensing's, which
+    The premise was a region want AND a lever, so an agent with neither — world/sensing's, which
     records and wants nothing — was granted no deliberation and built no module. That was
     never defensible beside the two lines above it in `Agent.__init__`: `Desires` and
     `Intentions` are built for every agent unconditionally, because a mind is not
@@ -153,14 +153,14 @@ def test_below_the_aim_means_pursue_and_above_means_nothing(make):
     #  nothing either: a lot reaches the region from below, and from above it helps nothing.
     for value in (0.10, 0.39):
         write_reading(fern, value, MOISTURE)
-        stake = ObservedWant(uri=stake_of(fern).uri, observed_property=MOISTURE,
+        region_want = ObservedWant(uri=region_want_of(fern).uri, observed_property=MOISTURE,
                              value=value)
-        assert decider.propose_for(stake) == ACQUIRING, f"thirsty at {value} and not buying"
+        assert decider.propose_for(region_want) == ACQUIRING, f"thirsty at {value} and not buying"
     for value in (0.54, 0.55, 0.80):
         write_reading(fern, value, MOISTURE)
-        stake = ObservedWant(uri=stake_of(fern).uri, observed_property=MOISTURE,
+        region_want = ObservedWant(uri=region_want_of(fern).uri, observed_property=MOISTURE,
                              value=value)
-        assert decider.propose_for(stake) is None, f"content at {value} and buying anyway"
+        assert decider.propose_for(region_want) is None, f"content at {value} and buying anyway"
 
 
 def test_a_property_this_agent_cannot_move_is_not_pursued(make):
@@ -178,9 +178,9 @@ def test_a_property_this_agent_cannot_move_is_not_pursued(make):
     from orexis_agent_deliberation.want import Want
 
     fern = make("fern")
-    stake = ObservedWant(uri=stake_of(fern, TEMPERATURE).uri,
+    region_want = ObservedWant(uri=region_want_of(fern, TEMPERATURE).uri,
                          observed_property=TEMPERATURE, value=5.0)
-    assert decider_of(fern).propose_for(stake) is None
+    assert decider_of(fern).propose_for(region_want) is None
 
 
 # --- the seam is load-bearing: the whether is not the bidder's --------------
@@ -282,9 +282,9 @@ def test_the_sign_is_the_packages_statement_and_not_this_codes(make):
     fern = make("fern", ds)
     open_round_for(fern, "fern")
     decider = decider_of(fern)
-    stake = ObservedWant(uri=stake_of(fern).uri, observed_property=MOISTURE,
+    region_want = ObservedWant(uri=region_want_of(fern).uri, observed_property=MOISTURE,
                          value=0.10)
-    assert decider.propose_for(stake) is None, \
+    assert decider.propose_for(region_want) is None, \
         "a lever the graph says would dry this plant out was pulled anyway"
 
 
@@ -299,11 +299,11 @@ def test_the_menu_is_derived_from_the_graph(make):
     rows = find_steps(st, desires_build(st, "fern").abouts(FERN), FERN, picks_graph("fern"))
     as_tuples = {(r.action.rsplit("#", 1)[-1], (r.value_of(ABOUT) or "").rsplit("#", 1)[-1],
                   (r.value_of(DIRECTION) or "").rsplit("#", 1)[-1] or None) for r in rows}
-    #  A row says which WANT it serves through what the want is about: a stake is about its
-    #  property, a freshness want about its instrument (the-stake-is-sensings-want). So a look
+    #  A row says which WANT it serves through what the want is about: a region_want is about its
+    #  property, a freshness want about its instrument (the-region-want-is-sensings-want). So a look
     #  appears twice per probe — for the region it should sit in, and for knowing it recently.
     assert as_tuples == {
-        ("Observing", "SoilMoisture", None),          # look through the probe, for the stake
+        ("Observing", "SoilMoisture", None),          # look through the probe, for the region want
         ("Observing", "AirTemperature", None),        # look through the thermometer, for it
         ("Observing", "moisture_sensor_fern", None),  # look, for knowing what the probe says
         ("Observing", "air_temp_fern", None),         # and what the thermometer says
@@ -480,11 +480,11 @@ orexis:Consulting a orexis:Action ; orexis:means orexis:Consult ;
 
 def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     """The sovereign asking what an agent DOES gets its obligations beside its options — and asked
-    about a PROPERTY it holds a stake in, deliberation proposes none of them.
+    about a PROPERTY it holds a region_want in, deliberation proposes none of them.
 
     An obligation IS a want — a Want whose premise is a claim (#471) — and reaches deliberation through the
     door that takes the want itself. What must not happen is an obligation answering a question about
-    a stake: the honoured row exists because somebody else holds paper, and serving it is not
+    a region want: the honoured row exists because somebody else holds paper, and serving it is not
     a move this agent may choose for its own reasons. The search enforces it by filtering to
     chosen rows for anything that is not an obligation — the same filter the chain applied, for the
     same reason, one step further along.
@@ -514,9 +514,9 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     #  filter that leaks.
     for row in obligations:
         for value in (0.0, 0.5, 5.0, 50.0):
-            stake = ObservedWant(uri="urn:w", observed_property=row.value_of(ABOUT),
+            region_want = ObservedWant(uri="urn:w", observed_property=row.value_of(ABOUT),
                                  value=value)
-            assert deliberator.propose_for(stake) not in duty_means, \
+            assert deliberator.propose_for(region_want) not in duty_means, \
                 "an obligation was proposed as if it were a choice"
 
 
@@ -587,7 +587,7 @@ def test_a_search_that_answers_nothing_proposes_nothing(make, monkeypatch):
 
     fern = make("fern")
     monkeypatch.setattr(Planner, "plan", lambda self, desire, **kw: search.Plan(search.NOTHING))
-    thirsty = ObservedWant(uri=stake_of(fern).uri, observed_property=MOISTURE,
+    thirsty = ObservedWant(uri=region_want_of(fern).uri, observed_property=MOISTURE,
                            value=0.10)
     assert fern.deliberator.propose_for(thirsty) is None, \
         "the search said it had nothing to weigh, and something else answered anyway"
@@ -598,7 +598,7 @@ def test_every_want_is_drawn_by_the_one_module_that_sees_them_all(make):
     keyed the panel on the property.
 
     A property cannot name every want: freshness is per instrument, an obligation is per counterparty.
-    So a graph grouped by property could only ever draw stakes, and one axis over every kind
+    So a graph grouped by property could only ever draw region wants, and one axis over every kind
     of want would stay a claim rather than something you can look at.
 
     A obligation is tagged by whom it is owed to and NEVER by its claim: a jti is unique per round, so
@@ -723,7 +723,7 @@ def test_of_two_worlds_the_same_urgency_apart_the_cheaper_is_the_plan(make, tmp_
                                                                       monkeypatch):
     """#466's done-when: the ranking gains its second axis, and only for ties.
 
-    Two toy levers repair the same stake identically — the same predicted reading, which
+    Two toy levers repair the same region want identically — the same predicted reading, which
     lands in fern's region, so both candidate worlds are MET and neither is better than the
     other on the only axis left — and differ in exactly one declared figure:
     `orexis:costs`, five against three. Each RETRACTS the reading it replaces, as every real
@@ -769,7 +769,7 @@ toy:{name} a orexis:Action ;
     monkeypatch.setattr(loader, "action_files", lambda: real + (toys,))
 
     fern = make("fern", genesis_store({("fern", MOISTURE): 0.30}))
-    plan = Planner(fern, fern.me).plan(stake_of(fern))
+    plan = Planner(fern, fern.me).plan(region_want_of(fern))
 
     assert plan.steps, "both toys bring 0.30 into the region — one must be taken"
     assert plan.steps[0].action == "urn:toy#Cheaply", \
@@ -819,7 +819,7 @@ toy:{name} a orexis:Action ;
     monkeypatch.setattr(loader, "action_files", lambda: real + (toys,))
 
     fern = make("fern", genesis_store({("fern", MOISTURE): 0.30}))
-    plan = Planner(fern, fern.me).plan(stake_of(fern))
+    plan = Planner(fern, fern.me).plan(region_want_of(fern))
 
     assert plan.outcome == "satisfied" and plan.steps, \
         "both toys land 0.55 inside 0.45-0.65 — the want is achievable in one step"

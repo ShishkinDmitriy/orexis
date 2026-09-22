@@ -272,13 +272,13 @@ def test_the_law_prunes_at_expansion_and_the_next_legal_plan_wins(tmp_path, monk
     from orexis_agent_deliberation.planner import Planner
 
     agent, st = _lawful_gardener(tmp_path, monkeypatch, _toy_pair())
-    stake = next(g for g in agent.considering()
+    region_want = next(g for g in agent.considering()
                  #  the REGION want — the epistemic twin is Observe's to achieve
                  if not g.is_epistemic
                  and getattr(g, "observed_property", None) == MOISTURE)
-    plan = Planner(agent, agent.me).plan(stake)
+    plan = Planner(agent, agent.me).plan(region_want)
 
-    assert plan.steps, "the stake is achievable — one lever is legal"
+    assert plan.steps, "the region_want is achievable — one lever is legal"
     assert plan.steps[0].action == "urn:toy#Honest", \
         "better on BOTH ranking axes and still not taken: the law prunes at expansion"
 

@@ -28,7 +28,7 @@ because a debt arises from a claim this agent ISSUED — so the ledger lives in 
 and `HostingModule` holds it. What stays the mind's is the
 want under *no overdue debts* — minted by the derivation about the
 [obligation](/domain/obligation.md), holding at its deadline — the modality that projects the
-record, and the branches that rank a debt beside a stake. The words written in the record —
+record, and the branches that rank a debt beside a region want. The words written in the record —
 the counterparty, the claim, the amount, the window, the discharge — and the record's class
 are the market's (#635), and so is the desire's met-test, authored by the ledger's own
 `desires.ru`; the planner judges the derivation's want as it judges any shaped want and names no

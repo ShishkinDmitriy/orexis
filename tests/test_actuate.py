@@ -16,7 +16,7 @@ from orexis_capability_sensing.terms import OBSERVING
 
 from orexis_agent_progression.ontology import picks_graph
 from orexis_capability_sensing.regions import ObservedWant
-from conftest import sensing_of, stake_of, build_agent, genesis_store, desires_build, open_round_for, write_reading, predicted_bands
+from conftest import sensing_of, region_want_of, build_agent, genesis_store, desires_build, open_round_for, write_reading, predicted_bands
 from conftest import ABOUT
 from conftest import DIRECTION
 from orexis_agent_progression.ontology import PUBLIC
@@ -111,16 +111,16 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
 
     deliberator = gardener.deliberator
     #  The world holds the value; the want does not. Written OLD, so the freshness want the
-    #  tail of this test asks about is still unmet — a stake judges the number it has.
+    #  tail of this test asks about is still unmet — a region want judges the number it has.
     #  BELOW the region (#579), since 0.10 is the loner region's inclusive floor and a
     #  reading on it is in region, met, and wants nothing.
     write_reading(gardener, 0.05, MOIST, age_s=10_000)
     assert deliberator.propose_for(
-        ObservedWant(uri=stake_of(gardener, MOIST).uri, observed_property=MOIST,
+        ObservedWant(uri=region_want_of(gardener, MOIST).uri, observed_property=MOIST,
                      value=0.05)) == DOSING
     write_reading(gardener, 0.30, MOIST, age_s=10_000)
     assert deliberator.propose_for(
-        ObservedWant(uri=stake_of(gardener, MOIST).uri, observed_property=MOIST,
+        ObservedWant(uri=region_want_of(gardener, MOIST).uri, observed_property=MOIST,
                      value=0.25)) is None, \
         "above the aim, nothing — as ever"
     #  NOT SEEING is answered by the search like everything else, and it is a different WANT
@@ -158,7 +158,7 @@ def test_a_self_dose_is_commanded_co_signed_and_ledgered(gardener):
                           actuation.clearing_key.public_key())
 
     keeper = next(m for m in gardener.modules if m.name == "intention")
-    watches = keeper.open_expectations(stake_of(gardener, MOIST).uri)
+    watches = keeper.open_expectations(region_want_of(gardener, MOIST).uri)
     assert len(watches) == 1
     #  The step carries the BAND its rule declared (#579): a dose reaches the region.
     assert [b.rsplit(".", 1)[-1] for b in predicted_bands(gardener, watches[0].step)
@@ -175,7 +175,7 @@ def test_an_unanswered_self_dose_blocks_the_next(gardener):
 
 
 def test_the_gardener_derives_no_market_pair():
-    """The world's whole claim, as a capability set: stake, sight, lever, memory — and no
+    """The world's whole claim, as a capability set: region want, sight, lever, memory — and no
     Bidding, no Hosting, because nothing here is anyone else's.
 
     `Reflex`, `Keeping` and `Deducing` were in this set and are not capabilities any more:
@@ -206,7 +206,7 @@ def test_a_dose_in_flight_absorbs_the_next_impulse(gardener, monkeypatch):
     assert len(gardener.sent.to("actuators/pump/command")) == 1, \
         "the dose in flight is a commitment, and a commitment absorbs the same impulse"
     assert keeper.standing(action="http://example.org/orexis/actuation#Dosing",
-                           want=stake_of(gardener, MOIST).uri), "it STANDS until the world answers"
+                           want=region_want_of(gardener, MOIST).uri), "it STANDS until the world answers"
 
 
 def test_the_dose_is_capped_by_what_the_vessel_holds(gardener):

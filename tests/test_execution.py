@@ -35,7 +35,7 @@ def keeper_of(agent):
     return next(m for m in agent.modules if m.name == "intention")
 
 
-def stake_of(agent, prop=MOISTURE):
+def region_want_of(agent, prop=MOISTURE):
     return next(d for d in agent.considering()
                 if not d.is_epistemic and getattr(d, "observed_property", None) == prop)
 
@@ -68,7 +68,7 @@ def test_the_tick_bids_when_a_round_is_open(monkeypatch):
     open_round_for(fern, "fern")
     keeper = keeper_of(fern)
     pursuit.consider_now(keeper.agent)
-    acquires = keeper.standing(action=TENDERING, want=stake_of(fern).uri)
+    acquires = keeper.standing(action=TENDERING, want=region_want_of(fern).uri)
     assert len(acquires) == 1 and acquires[0].value_of(VENUE) == wired_markets(fern)[0].uri
     assert len(fern.sent.to(f"{wired_markets(fern)[0].bid_topic}/fern")) == 1
 
@@ -88,8 +88,8 @@ def test_a_round_is_decided_once_and_a_second_impulse_is_absorbed(monkeypatch):
                         lambda self, desire, **kw: passes.append(desire) or Plan(NOT_BETTER))
     pursuit.consider_now(fern)
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1, "no second bid"
-    #  The freshness want is met and the stake stands, so the tick has nothing to search
-    #  FOR; the one pass it may run is the stake's, which `adopt` then absorbs.
+    #  The freshness want is met and the region want stands, so the tick has nothing to search
+    #  FOR; the one pass it may run is the region want's, which `adopt` then absorbs.
     assert not [d for d in passes if not d.is_epistemic] or \
         len(keeper_of(fern).standing(action=TENDERING)) == 1
 
@@ -101,7 +101,7 @@ def test_a_round_with_nothing_standing_plans_once_and_commits(monkeypatch):
     market = wired_markets(fern)[0]
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1
-    standing = keeper_of(fern).standing(action=TENDERING, want=stake_of(fern).uri)
+    standing = keeper_of(fern).standing(action=TENDERING, want=region_want_of(fern).uri)
     #  The Tendering was expanded out of an Acquiring, so it carries the WHOLE filling its
     #  parent was planned with — the venue it bids in among it. A member inherits its parent's
     #  binding and the ledger gives it back whole; what this asserts is the venue, which is
@@ -161,22 +161,22 @@ def test_execution_dispatches_by_the_triple_and_never_by_name(monkeypatch):
         for term, name in contributions_of(m).items():
             if term in actions:      # every action is a point; its taker contributes it (#523)
                 monkeypatch.setattr(m, name, lambda row, desire, i, m=m: handed.append(m.name) or False)
-    stake = stake_of(fern)
-    row = Step(action=OBSERVING, want=stake.uri, binding=filled((ABOUT, MOISTURE), (SENSOR, "urn:probe")))
-    assert execution.carry_out(fern, row, stake, "urn:intent") is False
+    region_want = region_want_of(fern)
+    row = Step(action=OBSERVING, want=region_want.uri, binding=filled((ABOUT, MOISTURE), (SENSOR, "urn:probe")))
+    assert execution.carry_out(fern, row, region_want, "urn:intent") is False
     assert handed == ["subscribing"], "Observe went to sensing and to nothing else"
     handed.clear()
-    row = Step(action=TENDERING, want=stake.uri, binding=filled((ABOUT, MOISTURE), (VENUE, "urn:venue")))
-    execution.carry_out(fern, row, stake, "urn:intent")
+    row = Step(action=TENDERING, want=region_want.uri, binding=filled((ABOUT, MOISTURE), (VENUE, "urn:venue")))
+    execution.carry_out(fern, row, region_want, "urn:intent")
     assert handed == ["bidding"]
 
 
 def test_a_means_nobody_takes_is_logged_and_takes_nothing(monkeypatch, caplog):
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     row = Step(action="http://example.org/nowhere#Untaken",
-                          want=stake_of(fern).uri, binding=filled((ABOUT, MOISTURE), (VENUE, "urn:x")))
+                          want=region_want_of(fern).uri, binding=filled((ABOUT, MOISTURE), (VENUE, "urn:x")))
     with caplog.at_level("ERROR", logger="execution"):
-        assert execution.carry_out(fern, row, stake_of(fern), "urn:i") is False
+        assert execution.carry_out(fern, row, region_want_of(fern), "urn:i") is False
     assert any("nothing takes" in r.message for r in caplog.records)
 
 

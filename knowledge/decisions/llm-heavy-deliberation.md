@@ -37,7 +37,7 @@ context-matching.
 # Consequence — the formal layer becomes load-bearing
 
 Precisely *because* deliberation is prose and persuasive, the formal layer is the only
-thing between us and an agent that wins by talking well. LLM-heavy *raises* the stakes on
+thing between us and an agent that wins by talking well. LLM-heavy *raises* the region wants on
 the ontology and constitution rather than removing them. See
 [english-vs-formal](/decisions/english-vs-formal.md) and
 [deterministic-bid](/decisions/deterministic-bid.md).

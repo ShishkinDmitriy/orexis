@@ -22,16 +22,16 @@ its own thing now, asked `propose_for(desire)` and answering with a move — `Ob
 the actors treat it exactly as they treat their own cooldowns.
 
 **The question is a WANT and never a property and a value.** A property and a value can only
-ever express a stake, and an agent also wants things that are not distances — "this claim
+ever express a region want, and an agent also wants things that are not distances — "this claim
 redeemed" is a state, wanted, with a deadline. A desire carries either shape and one urgency,
 so an obligation is ranked against a thirst rather than running down a second path that never meets
 the first. The second door — an actor holding a fresh reading asking what to do about that
 property — is not the deliberator's any more: which wants a property carries is
 [sensing](/domain/sensing.md)'s to say, and its `want_about` chooses by a rule rather than by a
 ranking (an unmet epistemic want first, since no action moves a number you cannot see; once the
-reading is current the stake answers on its merits) and hands the kernel the want's node
+reading is current the region want answers on its merits) and hands the kernel the want's node
 through `execution.pursue_for`. The deliberator sees only wants
-([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
+([the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md)).
 
 **And not-seeing is no longer answered HERE at all** (#331). Two hardcodes said it in turn:
 `if value is None: return OBSERVE`, and then `if desire.state in ("unmeasured", "stale"):
@@ -365,7 +365,7 @@ when the search began finding the same two rows itself.
   the ledger, and it never calls an actor: `decide(desire)` hands back the plan as rows, and
   [executor](/domain/executor.md) commits the head and takes it. Deciding, remembering and
   doing are three abilities.
-- **The host's trigger.** A host has no gap — its "whether to sell" is a stake in the *market*,
+- **The host's trigger.** A host has no gap — its "whether to sell" is a region want in the *market*,
   the [strategic-supplier](/decisions/strategic-supplier.md) seam, and putting it here would
   hand a subject-shaped answer to a venue-shaped question. (An owed round is not a counter-
   example: physics defers it and the keeper remembers it — nothing here decides it. #206.)
@@ -396,7 +396,7 @@ is why a world holding such an action is refused before it can run.
 
 # What deliberation does with an obligation (#218)
 
-Asked about a stake, the search ranges over the agent's OWN rows alone and never proposes one
+Asked about a region want, the search ranges over the agent's OWN rows alone and never proposes one
 owed to somebody — the split itself is [step](/domain/step.md)'s. What belongs here is why an obligation
 is deliberated about at all, since the obvious arrangement is that it is not.
 

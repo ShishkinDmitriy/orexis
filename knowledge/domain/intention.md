@@ -170,11 +170,11 @@ own cooldown. Past it, a new adoption **supersedes**: the old one is resolved as
 the outwaiting recorded, because honouring a dead commitment forever is as wrong as honouring it
 not at all.
 
-# Granted by a stake AND an action
+# Granted by a region want AND an action
 
 Each capability is granted by whatever fact makes it meaningful. A commitment is to reduce a
 named gap by a named means, so the premise is both halves: `orexis:actsFor` a subject that states
-needs (else nothing to commit *about* — the supplier, all actions and no stake, keeps no ledger)
+needs (else nothing to commit *about* — the supplier, all actions and no region want, keeps no ledger)
 and at least one of a market position, an actuator, or a schedulable sensor (else nothing to
 commit *to* — wanting without means is a wish). `world/sensing`'s agent fails the first half and
 records.

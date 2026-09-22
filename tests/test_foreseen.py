@@ -34,7 +34,7 @@ def _gardener(monkeypatch, moisture):
                        monkeypatch)
 
 
-def _stake(agent):
+def _region_want(agent):
     return next(d for d in agent.considering()
                 if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
 
@@ -47,7 +47,7 @@ def _crossing_of(agent):
     produced.
     """
     derive_wants(agent.beliefs.engine)
-    return judging.crossing_of(agent.beliefs.engine, _stake(agent).desire or _stake(agent).uri)
+    return judging.crossing_of(agent.beliefs.engine, _region_want(agent).desire or _region_want(agent).uri)
 
 
 def test_the_drift_says_when_the_reading_leaves_its_region(monkeypatch):
@@ -71,7 +71,7 @@ def test_a_root_with_no_crossing_in_view_derives_nothing(monkeypatch):
     predicts at, so no judgment says it fails and there is nothing to pursue — the first
     child's path, unchanged."""
     agent = _gardener(monkeypatch, CONTENT)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     assert desire.is_met and _crossing_of(agent) is None
     assert agent.deliberator.decide(desire) is None
     assert pursuit.child_of(agent, desire.uri) is None
@@ -83,12 +83,12 @@ def test_a_crossing_derives_a_want_met_at_that_instant(monkeypatch):
     says the reading will have crossed, its urgency the fraction of the stretch run — and the
     search, judged at the instant, plans the dose the dry pot would have got."""
     agent = _gardener(monkeypatch, FALLING)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     assert desire.is_met
     plan = agent.deliberator.decide(desire)
     assert plan is not None and [s.action for s in plan.steps] == [DOSING], plan
 
-    child = _stake(agent)
+    child = _region_want(agent)
     assert child.desire == desire.uri and child.holds_at is not None
     assert abs((child.holds_at - _crossing_of(agent)).total_seconds()) < 1.0
     assert child.state == "unmet", "the newest prediction still says the reading crosses by the instant"
@@ -108,19 +108,19 @@ def test_a_crossing_derives_a_want_however_far_out_it_is(monkeypatch):
     the horizons the drift predicts at — beyond the furthest, nothing is judged and nothing is
     derived, which is the test above."""
     agent = _gardener(monkeypatch, FALLING)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     assert agent.deliberator.decide(desire) is not None
     child = pursuit.child_of(agent, desire.uri)
     assert child is not None
-    assert _stake(agent).holds_at == _crossing_of(agent)
+    assert _region_want(agent).holds_at == _crossing_of(agent)
 
 
 def test_the_search_judges_a_candidate_at_the_instant(monkeypatch):
     """Handed the want directly, the planner reads the desire as UNMET at the instant — the
     present drifted sixteen hours is below the region — and a dose's world as met there."""
     agent = _gardener(monkeypatch, FALLING)
-    agent.deliberator.decide(_stake(agent))
-    child = _stake(agent)
+    agent.deliberator.decide(_region_want(agent))
+    child = _region_want(agent)
     planner = Planner(agent, agent.me)
     plan = planner.plan(child)
     assert [s.action for s in plan.steps] == [DOSING]
@@ -133,10 +133,10 @@ def test_the_dose_is_placed_at_the_instant_less_its_own_duration(monkeypatch):
     duration: the intention stands, nothing is commanded now, and its patience does not run
     against a step that is waiting for its instant."""
     agent = _gardener(monkeypatch, FALLING)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     uri = pursuit.pursue(agent, desire)
     assert uri is not None
-    child = _stake(agent)
+    child = _region_want(agent)
     standing = agent.keeper.standing(want=child.uri)
     assert len(standing) == 1 and standing[0].step.not_before is not None
     placed = standing[0].step.not_before
@@ -157,15 +157,15 @@ def test_a_reading_that_lifts_the_prediction_withdraws_the_want(monkeypatch):
     derivation withdraws from the rows it read, and the withdrawn want is in what it returns —
     so a caller refreshing on a change refreshes on a withdrawal too."""
     agent = _gardener(monkeypatch, FALLING)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     agent.deliberator.decide(desire)
-    child = _stake(agent)
+    child = _region_want(agent)
     assert child.state == "unmet"
     write_reading(agent, CONTENT)
     changed = derive_wants(agent.beliefs.engine)   # the reading moved the predictions
     assert child.uri in changed, "the derivation withdrew it, and said so"
     assert pursuit.child_of(agent, desire.uri) is None
-    assert agent.deliberator.decide(_stake(agent)) is None, "a met desire is nothing to pursue"
+    assert agent.deliberator.decide(_region_want(agent)) is None, "a met desire is nothing to pursue"
 
 
 def test_a_pot_that_crosses_before_the_drift_said_is_wanted_now_and_not_at_the_crossing(monkeypatch):
@@ -175,10 +175,10 @@ def test_a_pot_that_crosses_before_the_drift_said_is_wanted_now_and_not_at_the_c
     the dose placed hours out. The derivation re-mints it with no instant under the same name, and
     the pass that stood on the old judgment is handed the new one."""
     agent = _gardener(monkeypatch, FALLING)
-    desire = _stake(agent)
+    desire = _region_want(agent)
     agent.deliberator.decide(desire)
-    child = _stake(agent)
-    [minted] = find_wants(agent.beliefs, desire=desire.uri)     # every desire derives; the stake's
+    child = _region_want(agent)
+    [minted] = find_wants(agent.beliefs, desire=desire.uri)     # every desire derives; the region want's
     assert minted.uri == child.uri and minted.holds_at is not None, "minted at the crossing"
 
     write_reading(agent, 0.05)                                       # below the floor, now

@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: Agent-centric epistemics — judgment, data, and initiative belong to the agent
-description: Push interpretation, private data, and sensing to the agent; keep infra thin and honest; author by stake; disclose need-to-know; observe via sovereign god-view.
+description: Push interpretation, private data, and sensing to the agent; keep infra thin and honest; author by region want; disclose need-to-know; observe via sovereign god-view.
 status: accepted
 timestamp: 2026-08-02T00:00:00Z
 ---
@@ -58,9 +58,9 @@ economic decision** — bounded rationality extended from cognition to *sensing*
 **constitutional cadence floor** — autonomy over attention, but never the freedom to sleep
 through a drought and rot.
 
-# 4. Authored-by follows stake, not subject
+# 4. Authored-by follows region want, not subject
 
-**"About X" ≠ "authored by X."** A fact an agent has a stake in is authored by the stake-free
+**"About X" ≠ "authored by X."** A fact an agent has a region want in is authored by the region-want-free
 holder of that power:
 
 | Fact | About | Authored by | Why not the agent |
@@ -108,7 +108,7 @@ view. Private among peers, transparent to the sovereign.
 # The one principle
 
 Push **judgment, data, and initiative** to the agent; keep infra a **thin honest mechanism**;
-**author by stake**; **disclose need-to-know**; **observe via the sovereign**. Every
+**author by region want**; **disclose need-to-know**; **observe via the sovereign**. Every
 correction above is one face of this.
 
 # v1 vs the target

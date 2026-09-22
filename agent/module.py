@@ -93,10 +93,10 @@ class Module:
     #
     # These exist so that a capability which HOLDS a judgment need not be imported by one that
     # merely needs it. Sensing knows how to look; it does not know what counts as trouble,
-    # because trouble is a fact about a stake, and the stake belongs to whoever holds the band.
+    # because trouble is a fact about a region want, and the region want belongs to whoever holds the band.
     # So sensing asks, and whoever can, answers.
     #
-    # Both are asked about a (subject, property) pair rather than a subject. A stake is held in
+    # Both are asked about a (subject, property) pair rather than a subject. A region want is held in
     # a property — a band is a band of moisture — so a module handed a temperature must be able
     # to say it has no opinion, instead of judging it against the only scale it owns.
 
@@ -130,7 +130,7 @@ class Module:
 
         A choir hook, like `annotate` and `series`: desires are the AGENT's, assembled from
         whichever of its modules hold wants, because no single module can see all of them any
-        more. Sensing contributes stakes and owing contributes debts, and an agent may have
+        more. Sensing contributes region wants and owing contributes debts, and an agent may have
         either without the other — a plant wants for itself and owes nobody, a pure seller owes
         and wants nothing for itself. Ranking them against each other is `agent.considering()`, which
         is where a currency common to both belongs.

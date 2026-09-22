@@ -7,8 +7,8 @@ description: >-
   the ways of having it, and a caller asks for the family and never learns which member
   answered. That interchangeability is the test: where nothing could differ you have a function,
   not a capability. Every one is granted by its OWN premise, stated in its own `rules.ru`, and
-  there is no pattern to fit a new one into — wiring grants some, latitude one, a stake another,
-  a stake AND an action two more. Never hand-declared: `world.ttl` must not contain
+  there is no pattern to fit a new one into — wiring grants some, latitude one, a region want another,
+  a region want AND an action two more. Never hand-declared: `world.ttl` must not contain
   `orexis:hasCapability`, because a capability nobody is answerable for is the thing the rule exists
   against.
 ---
@@ -56,14 +56,14 @@ There is no pattern to fit a new capability into. **The premise lives in the cap
 
 When you add one, ask what makes *yours* meaningful rather than which of these it resembles.
 
-**Two premises left this table and the reason is worth keeping.** A **stake** granted
-`desire:Deducing`, and a **stake AND an action** granted `intention:Keeping` and
+**Two premises left this table and the reason is worth keeping.** A **region want** granted
+`desire:Deducing`, and a **region want AND an action** granted `intention:Keeping` and
 the retired deliberation package's `Reflex`. All three were the mind — wanting, committing, deciding — and a mind is not
 plug-in-able: the stores those modules read were built for every agent unconditionally while the
 code that reads them was a grant, and a modality nobody may write is not a modality. They are the
 kernel's now, granted by nothing.
 
-A stake has not stopped mattering; it stopped being a *grant*. It decides which SHAPES apply —
+A region want has not stopped mattering; it stopped being a *grant*. It decides which SHAPES apply —
 `orexis:KeeperShape` and the desire shapes target `orexis:actsFor` a subject that states what it needs —
 so an agent with nothing to advance for still holds no region and states no patience. What
 changed is that this is now a fact about the agent rather than a thing its world handed it. See

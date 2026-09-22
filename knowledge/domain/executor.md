@@ -42,8 +42,8 @@ item on the executing thread.
 Two doors, and both are the same three phases: `pursue(agent, desire)` for a want in hand, and
 `pursue_for(agent, want)` for an actor holding a fresh reading — which want a reading is about
 is [sensing](/domain/sensing.md)'s to say (`want_about`: an unmet epistemic want first, then the
-stake), so the actor hands the kernel a NODE and goes through the desire door. The kernel keys
-nothing by property ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
+region want), so the actor hands the kernel a NODE and goes through the desire door. The kernel keys
+nothing by property ([the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md)).
 
 # What it reads and writes
 

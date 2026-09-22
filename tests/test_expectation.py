@@ -21,7 +21,7 @@ from orexis_capability_actuation.terms import DOSING as _ACTUATE
 from orexis_agent_progression.store import bindings
 from orexis_agent_progression.ontology import OREXIS, PROGRESSION
 
-from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading, predicted_bands
+from conftest import region_want_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of, write_reading, predicted_reading, predicted_bands
 from conftest import ABOUT, VALVE, filled
 from orexis_agent_progression.ontology import PUBLIC
 
@@ -55,7 +55,7 @@ def test_a_claim_opens_a_watch_with_the_baseline_in_the_row(thirsty):
     the sensed graph upserts — the before of any before/after survives nowhere else."""
     win(thirsty)
     keeper = keeper_of(thirsty)
-    watches = keeper.open_expectations(stake_of(thirsty).uri)
+    watches = keeper.open_expectations(region_want_of(thirsty).uri)
     assert len(watches) == 1
     watch = watches[0]
     assert watch.baseline == 0.30 and watch.baseline_at is not None
@@ -121,12 +121,12 @@ def test_an_open_watch_is_maximum_urgency_and_a_verdict_releases_it(thirsty):
     calm = p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55)
 
     win(thirsty)
-    assert keeper.expecting(stake_of(thirsty).uri)
+    assert keeper.expecting(region_want_of(thirsty).uri)
     # maximum urgency earns the agent's OWN fast cadence — the floor is a clamp, not a target
     assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == p.beliefs.fast_sleep_s
 
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.55})   # dose lands as predicted
-    assert not keeper.expecting(stake_of(thirsty).uri)
+    assert not keeper.expecting(region_want_of(thirsty).uri)
     assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == calm
 
 
@@ -154,7 +154,7 @@ def test_a_step_that_never_pays_becomes_suspect(monkeypatch, caplog):
     assert keeper.reports()["expectations_unmet"] == 3
     assert keeper.reports()["steps_suspect"] == 1
     assert [pair for pair in keeper.suspects()
-            if pair[0] == PRESENTING and pair[1] == stake_of(fern).uri]
+            if pair[0] == PRESENTING and pair[1] == region_want_of(fern).uri]
     assert "AFFORDANCE SUSPECT" in caplog.text
 
 
@@ -220,7 +220,7 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
     assert presented and presented[-1]["jti"] == "v1"
     assert not [p for _, _, p in keeper.held() if not p.endswith("answeredWhen")], \
         "the readiness hold is gone; the intention stands at Presenting with its watch on the end (#523)"
-    watches = keeper.open_expectations(stake_of(thirsty).uri)
+    watches = keeper.open_expectations(region_want_of(thirsty).uri)
     assert len(watches) == 1 and watches[0].baseline == 0.29
 
 
@@ -320,7 +320,7 @@ def test_the_step_carries_the_reading_the_rule_predicted(thirsty):
     reading Acquiring's own rule predicted — 0.30 plus 0.5 L through 2.0 L-per-fraction —
     and that is what the watch holds the world to."""
     win(thirsty, amount=0.5)
-    watch = keeper_of(thirsty).open_expectations(stake_of(thirsty).uri)[0]
+    watch = keeper_of(thirsty).open_expectations(region_want_of(thirsty).uri)[0]
     assert [b.rsplit(".", 1)[-1] for b in predicted_bands(thirsty, watch.step)
             if "band." in b] == ["inside"], "a bought lot brings the reading into the region"
 
@@ -329,7 +329,7 @@ def test_a_step_that_predicts_nothing_opens_no_watch(thirsty):
     """A step the search did not make — adopted by hand, by an event — predicts nothing, and
     an expectation that cannot be judged is refused rather than left to sit unverified."""
     keeper = keeper_of(thirsty)
-    uri = keeper.adopt(TENDERING, stake_of(thirsty).uri, "an act of unknowable effect")
+    uri = keeper.adopt(TENDERING, region_want_of(thirsty).uri, "an act of unknowable effect")
     assert not keeper.expect(uri, "nothing predicted", baseline=reading_of(thirsty, MOISTURE))
     assert keeper.open_expectations() == []
 
@@ -340,7 +340,7 @@ def test_a_number_handed_in_is_held_to_the_band_it_falls_in(thirsty):
     0.301 is, so the first reading answers — and the number stays in the residual, where the
     reviewer reads it against what the world showed."""
     keeper = keeper_of(thirsty)
-    uri = keeper.adopt(TENDERING, stake_of(thirsty).uri, "an act predicting 0.35")
+    uri = keeper.adopt(TENDERING, region_want_of(thirsty).uri, "an act predicting 0.35")
     assert keeper.expect(uri, "0.35, the band it falls in", baseline=reading_of(thirsty, MOISTURE),
                          predicts=predicted_reading(thirsty.me.acts_for, MOISTURE, 0.35))
     write_reading(thirsty, 0.301, MOISTURE)
@@ -371,7 +371,7 @@ def test_no_new_purchase_while_my_own_dose_is_unanswered(thirsty, caplog):
     #  is content at that reading and buys nothing; it is the next thirst that buys, which is
     #  what this half is about: the refusal was the open watch, not a rule against bidding.
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.50})
-    assert keeper_of(thirsty).open_expectations(stake_of(thirsty).uri) == []
+    assert keeper_of(thirsty).open_expectations(region_want_of(thirsty).uri) == []
     #  THE NEXT THIRST BUYS AT THE READING (#632): 0.30 is outside the band the next
     #  observation was expected in, so the surprise wakes the mind at arrival, and the round
     #  still open is bid in — no further offer needed.
@@ -476,7 +476,7 @@ def test_a_step_the_world_overshoots_finishes_the_plan_when_the_want_is_met(monk
     gardener = build_agent("gardener", genesis_store({("zz", MOISTURE): 0.10}, world="loner"),
                            monkeypatch)
     keeper = keeper_of(gardener)
-    want = stake_of(gardener).uri
+    want = region_want_of(gardener).uri
     pump = bindings(gardener.beliefs.query(
         f"SELECT ?p WHERE {{ <{gardener.me.uri}> actuation:hasActuator ?p }}", gardener.beliefs.graphs_of(PUBLIC)))[0]["p"]
     dose = Step(action=_ACTUATE, binding=filled((VALVE, pump), (ABOUT, MOISTURE)), want=want, quantity=0.2)

@@ -1,12 +1,12 @@
 ---
 type: Service
 title: Clearing
-description: Thin stake-free validator that checks a proposed trade and co-signs it before settlement — a notary, not an allocator.
+description: Thin region-want-free validator that checks a proposed trade and co-signs it before settlement — a notary, not an allocator.
 ---
 
 # What it is
 
-A **thin, stake-free, deterministic validator** — a predicate, not an optimizer. It does
+A **thin, region-want-free, deterministic validator** — a predicate, not an optimizer. It does
 **not** compute who wins; the host (the scarce side — see below) runs the auction and
 produces a proposed trade. Clearing is invoked *after* the trade is struck and *before*
 settlement: it checks the trade is well-formed and **co-signs** it. It is NOT an agent and
@@ -22,7 +22,7 @@ clearing is unchanged:
 
 - 1 supplier, N consumers → the [supplier](/domain/supplier.md) hosts (forward auction)
 - N suppliers, 1 consumer → the consumer hosts (reverse auction)
-- N ↔ N → a stake-free exchange hosts (order book)
+- N ↔ N → a region-want-free exchange hosts (order book)
 
 See [standalone-clearing](/decisions/standalone-clearing.md).
 

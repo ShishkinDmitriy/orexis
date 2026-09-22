@@ -32,7 +32,7 @@ whose precondition is known to be incomplete.
 shock — and [market](/domain/market.md) names three more (supply, budget, belief) as designed
 and unbuilt. [the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md)
 records the ceiling that follows: half a lot can be wanted by agents none of whom can convene,
-and *the host has no stake in when to open*. `ag:Offer` is a means with no action — no
+and *the host has no region want in when to open*. `ag:Offer` is a means with no action — no
 availability, no effect, no taker — adopted by hosting on a deferral (#206) and carried out by
 a handler when the refill lands. The dealer's *acquire upstream, then offer* is real, and it is
 hand-rolled: `announce` checks the vessel, defers, and `on_reading_recorded` reopens.

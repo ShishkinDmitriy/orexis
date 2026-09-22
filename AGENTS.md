@@ -25,7 +25,7 @@ If it is unavailable, the rules are short enough to follow by hand:
   | `Domain Concept` | a **thing** in the model — a claim, a good, a step, a world |
   | `Process` | something that **happens**, with phases and an end — an auction, a round, onboarding |
   | `Capability` | a named ability with **interchangeable implementations**, granted by its own premise and provided by a package — rule 2's unit |
-  | `Role` | a kind of **principal** that holds a stake — an agent, a supplier, a dealer |
+  | `Role` | a kind of **principal** with something at stake — an agent, a supplier, a dealer |
   | `Service` | a part of the implementation that **holds logic** — the deliberator, the revision seam |
   | `Repository` | a part that **passively holds data**, scoped to one agent — the belief base, the imaginarium |
   | `Runbook` | how to **operate** it |
@@ -136,6 +136,12 @@ it is a record wearing a bullet.
 - **Verify a claim in the bundle against the code before repeating it**; nothing gates prose
   against the thing it describes.
 - **A rename is done when the suite says so**, not when the thing you grepped for is gone.
+- **A word-boundary sweep bites a hyphenated slug and a variable named after the word** —
+  `\bstake\b` matches inside `the-stake-is-sensings-want`, so 45 files came to cite a record
+  that does not exist, and a local `stake` is spelled like the word it was named after, so nine
+  files grew `(region want := ...)` and stopped parsing; hold out the words that merely contain
+  the letters (`mistake`, `stakeholder`) before starting, and let the parser and the suite find
+  the rest.
 - **Search every tree that loads the vocabulary before calling a term dead** — `assembly/` reads
   ontologies that `agent/` never mentions.
 - **A record earns its place by refusing something**; "we could have not done it" is not an
@@ -237,7 +243,7 @@ it is a record wearing a bullet.
   new until the drift kept the whole node it took (#619); the bug hid because novelty needs
   only a difference, and a world claiming two readings for one key is still a different world.
 - **A search is never handed a DESIRE** — what is pursued is a WANT derived from one, with a
-  binding of its own; and the desire is not the law, because a stake's region under
+  binding of its own; and the desire is not the law, because the region a want names, under
   never-newly-enter refused the very dose that repairs it: a replaced reading is a new node, so
   every standing violation re-read as newly entered (#618, measured before it was believed).
   It was "a desire is a ROOT", from when there were root desires and children derived under
@@ -280,7 +286,7 @@ it is a record wearing a bullet.
   the owner's, told `orexis:outdated` before the drop — which is where a debt's verdict is
   written, since the ledger keeps the verdict and not the want (#645).
 - **The mind wakes on contradiction, not on time, and a set of bands is what a reading
-  contradicts** — the actuator marked the stake on every reading and the dwell (#615) was
+  contradicts** — the actuator marked the region want on every reading and the dwell (#615) was
   weighed to slow it; a reading inside the bands the next observation was expected in leaves
   no mark now, one outside is a surprise the pass names, and a boundary crossed inside the
   set is the hysteresis a margin would have bought, without the margin (#632).
@@ -452,7 +458,7 @@ it is a record wearing a bullet.
   ratify a WANT directly, authored and standing and handed to a search, so declared-versus-derived
   was never the distinction it was written up as.
 - **A desire is declared and a judgment is made** — the class called `Desire` carried an
-  urgency and an expiry, was built fresh by whichever capability held the stake and was never
+  urgency and an expiry, was built fresh by whichever capability held the region want and was never
   written down or read back, while the row a package's rule writes at genesis had no type at
   all; naming the second thing let the first become data. The name has since gone the way of
   the thing: nothing stands between a desire and a want, and what a judgment carried — the
@@ -702,12 +708,12 @@ without settings you are permitted to move, so an `review:commits` mandate whose
 its premise. When you add one, ask what makes *yours* meaningful rather than which of these it
 resembles.
 
-**A stake is NOT a premise for a capability, and neither is a stake and a lever.** Three
+**A region want is NOT a premise for a capability, and neither is one with a lever beside it.** Three
 capabilities were granted that way — wanting, committing, deciding — and all three are gone:
 they were the mind, every agent has one, and the STORES they read were already built for every
-agent unconditionally. A modality nobody may write is not a modality. What a stake still decides
+agent unconditionally. A modality nobody may write is not a modality. What a region want still decides
 is which SHAPES apply — `orexis:KeeperShape` targets a want that is not merely about knowing, and
-sensing's stake shapes target `orexis:actsFor` a subject that states what it needs — so
+sensing's region want shapes target `orexis:actsFor` a subject that states what it needs — so
 `world/sensing`'s agent still holds no region and states no patience, by the fact rather than
 by a grant. See
 [the-mind-is-not-a-package](knowledge/decisions/the-mind-is-not-a-package.md),

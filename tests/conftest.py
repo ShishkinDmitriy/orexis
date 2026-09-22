@@ -350,8 +350,8 @@ def open_round_for(st_or_agent, agent_id: str, seconds: float = 60.0) -> list[st
 # query surface and the agent's URI every time.
 
 def sensing_of(agent):
-    """The agent's sensing module — where its regions, gaps and stakes live now
-    (the-stake-is-sensings-want). A test that used to ask `agent.deducer` asks this."""
+    """The agent's sensing module — where its regions, gaps and region wants live now
+    (the-region-want-is-sensings-want). A test that used to ask `agent.deducer` asks this."""
     return next((m for m in agent.modules if hasattr(m, "regions")), _NoSensing())
 
 
@@ -370,10 +370,10 @@ class _NoSensing:
         return []
 
 
-def stake_of(agent, observed_property=None):
+def region_want_of(agent, observed_property=None):
     """The region want an agent holds about a property — the node the ledger keys on now."""
     from conftest import MOISTURE as _M
-    return sensing_of(agent).stake_about(observed_property or _M)
+    return sensing_of(agent).region_want_about(observed_property or _M)
 
 
 def wired_sensors(agent):
@@ -429,7 +429,7 @@ def wired_event_topic(agent):
 
 def reading_of(agent, observed_property: str, subject_uri: str | None = None):
     """The newest reading an agent holds of one property — through the sensing provider, since
-    what a reading looks like is sensing's (the-stake-is-sensings-want)."""
+    what a reading looks like is sensing's (the-region-want-is-sensings-want)."""
     sensing = agent.provider("http://example.org/orexis/sensing#SensingCapability")
     return sensing.current_reading(subject_uri or agent.me.acts_for, observed_property)
 
@@ -437,7 +437,7 @@ def reading_of(agent, observed_property: str, subject_uri: str | None = None):
 def write_reading(agent, value: float, observed_property: str | None = None, age_s: float = 0):
     """Put one reading of the agent's subject in its sensed graph, through the production
     writer — so the observation carries the sensor that made it. Since readings are sensing's
-    (the-stake-is-sensings-want) a want's `value` is not the world; the world is."""
+    (the-region-want-is-sensings-want) a want's `value` is not the world; the world is."""
     from datetime import datetime, timedelta, timezone
 
     from orexis_capability_sensing.sensed_writer import SensedWriter

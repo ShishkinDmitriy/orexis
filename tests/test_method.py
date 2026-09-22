@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 from orexis_agent_progression.act import method_of, takers_of
 from orexis_agent_progression.store import bindings
 from orexis_capability_market.terms import ACQUIRING, PRESENTING, TENDERING
-from conftest import MOISTURE, build_agent, genesis_store, predicted_reading, stake_of
+from conftest import MOISTURE, build_agent, genesis_store, predicted_reading, region_want_of
 from conftest import VENUE, filled
 from orexis_agent_progression.ontology import PUBLIC
 
@@ -28,7 +28,7 @@ def test_the_method_is_read_in_order_and_the_takers_follow_it(monkeypatch):
 
 def test_adopting_an_action_with_a_method_expands_it_and_the_last_step_inherits_the_end(monkeypatch):
     fern = _fern(monkeypatch)
-    keeper, want = fern.keeper, stake_of(fern).uri
+    keeper, want = fern.keeper, region_want_of(fern).uri
     from orexis_agent_progression.act import Step
     head = Step(action=ACQUIRING, binding=filled((VENUE, "urn:venue")), want=want,
                 predicts=predicted_reading(fern.me.acts_for, MOISTURE, 0.55))
@@ -54,7 +54,7 @@ def test_a_won_round_walks_the_method_and_a_lost_one_lapses_it(monkeypatch):
     from orexis_capability_market.terms import CLAIMED_AT
     from conftest import wired_markets
     fern = _fern(monkeypatch)
-    keeper, want, market = fern.keeper, stake_of(fern).uri, wired_markets(fern)[0]
+    keeper, want, market = fern.keeper, region_want_of(fern).uri, wired_markets(fern)[0]
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1
     assert keeper.current(keeper.standing(want=want)[0].uri).action == TENDERING
@@ -83,7 +83,7 @@ def test_a_method_of_methods_expands_flat_and_every_step_knows_its_filling(monke
     from orexis_agent_progression.act import Step
     from orexis_agent_progression.ontology import ACTIONS_GRAPH
     fern = _fern(monkeypatch)
-    keeper, want = fern.keeper, stake_of(fern).uri
+    keeper, want = fern.keeper, region_want_of(fern).uri
     T = "urn:toy#"
     fern.beliefs.update(f"""INSERT DATA {{ GRAPH <{ACTIONS_GRAPH}> {{
       <{T}Errand> a orexis:Action ; orexis:method ( <{T}Fetch> <{T}Return> ) .

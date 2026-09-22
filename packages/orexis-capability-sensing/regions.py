@@ -2,11 +2,11 @@
 
 **Was `agent/regions.py`, the kernel's.** A region is deduced from what a subject STATES IT
 NEEDS and met by an OBSERVATION sitting inside it; a gap is the signed distance of the latest
-reading from the point steered for; the wants assembled here — a stake per property, a
+reading from the point steered for; the wants assembled here — a region want per property, a
 freshness want per instrument — are exactly the wants whose premise is an observation. Every
 one of those is a sentence in `sosa`, which is this package's vocabulary and not the kernel's:
 the kernel knows that a want exists, ranks it, plans for it and commits to it, and never learns
-what a reading is (the-stake-is-sensings-want). The AIM — the pick inside a region — is here too,
+what a reading is (the-region-want-is-sensings-want). The AIM — the pick inside a region — is here too,
 since a point in a property checked against a range is the same kind of sentence; what stayed
 behind is the obligation (`agent/ower.py`), which is not about sensing.
 
@@ -34,7 +34,7 @@ log = logging.getLogger("sensing")
 #  which keeps every existing import path working.
 
 
-# What this agent wants about observations: its stakes and its freshness wants, shipped as
+# What this agent wants about observations: its region wants and its freshness wants, shipped as
 # SPARQL so any consumer can run it. Read once at import: a malformed query is then an error
 # the moment the package loads rather than the first time somebody asks.
 DESIRES_QUERY = (Path(__file__).parent / "desires.rq").read_text()
@@ -64,7 +64,7 @@ def aims_of(query, agent_id: str, agent_uri: str) -> dict[str, float]:
 #  THE READING OF THE SENSED GRAPH — sosa and nothing else: what was read, of what,
 #  by which instrument, when. What it does NOT ask is whether a reading is still evidence:
 #  that is sensing's judgment (`sensing:staleAfterS` is sensing's word), made through the
-#  freshness want it derives and the measure it declares, and never here. A stake judges the
+#  freshness want it derives and the measure it declares, and never here. A region want judges the
 #  number it has; not knowing is the epistemic want's business, and `want_about` answers
 #  that one first. The instrument is `sosa:madeBySensor`, which the sensed writer stamps.
 _READINGS_Q = """
@@ -279,7 +279,7 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str) -> dict[str, Gap]:
     regions = regions_of(beliefs, agent_uri)
     out: dict[str, Gap] = {}
     for row in _desired(desires, agent_uri):
-        if row["kind"] != "stake":
+        if row["kind"] != "region want":
             continue
         subject = next((s for s in subjects if (s, row["property"]) in known), None)
         item = known.get((subject, row["property"])) if subject else None
@@ -320,7 +320,7 @@ def _desired(desires, agent_uri: str) -> list[dict]:
 
 
 def _known(beliefs) -> tuple[dict, dict]:
-    """What is known, keyed twice: by (subject, property) for the stakes, and by
+    """What is known, keyed twice: by (subject, property) for the region wants, and by
     (instrument, property) for the freshness wants, which name the instrument they are about."""
     by_pair, by_instrument = {}, {}
     for r in bindings(beliefs(_READINGS_Q.replace("$state", f"<{STATE_GRAPH}>"))):

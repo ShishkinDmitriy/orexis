@@ -2,7 +2,7 @@
 type: Role
 title: Supplier
 description: The dealer the arcs built — a strategic seller downstream, a genuine buyer
-  upstream, the barrel between them; its stake, its stock and its spread are all facts the
+  upstream, the barrel between them; its region want, its stock and its spread are all facts the
   graph and the ledger can show.
 ---
 
@@ -28,7 +28,7 @@ other is there too.
   [clearing-as-validator](/decisions/clearing-as-validator.md).
 - **Upstream (real since the city — arc 4): buyer / participant.** Just another bidder in
   the refill market, its `bidsIn` DERIVED from the pipe that reaches its barrel plus the
-  stake it holds in it. Same node, two positions; markets couple only through **price**,
+  region want it holds in it. Same node, two positions; markets couple only through **price**,
   never shared control — the barrel is the decoupling, which is what makes it the
   [dealer](/domain/dealer.md): no claim ever crosses from one venue to the other, and the
   spread between its buy ceiling and its sell reserve is two beliefs the ledger can audit.

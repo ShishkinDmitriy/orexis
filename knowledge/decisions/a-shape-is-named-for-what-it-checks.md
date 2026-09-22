@@ -14,7 +14,7 @@ timestamp: 2026-08-28T12:00:00Z
 
 # What was wrong
 
-`sensing:BeyondSurvivalShape` (`orexis:BeyondSurvivalShape` before the stake moved) was named and
+`sensing:BeyondSurvivalShape` (`orexis:BeyondSurvivalShape` before the region want moved) was named and
 commented for one check: *the last reading of a property this agent has a desire in lies outside
 what its subject survives*. That check is gone, and rightly — the deduction emits it now, as a
 shape targeting the subject, saying the same sentence in the language the checker already speaks,

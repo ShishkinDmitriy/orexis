@@ -902,7 +902,7 @@ def test_a_duty_and_a_thirst_rank_in_one_currency(host):
 
     Written as an ORDER and not as two numbers, because that is what a deliberator consumes —
     and asked at a moment chosen so the answer could go either way: the barrel sits inside its
-    region (a mild stake) while the debt is most of the way through its window.
+    region (a mild region want) while the debt is most of the way through its window.
     """
     from datetime import datetime, timedelta
 
@@ -918,9 +918,9 @@ def test_a_duty_and_a_thirst_rank_in_one_currency(host):
     _stamp_readings(host, asked_at)
 
     desires = host.considering(now=asked_at)
-    assert desires, "an agent with a stake and a debt wants something"
+    assert desires, "an agent with a region want and a debt wants something"
     assert any(isinstance(g, OwedWant) for g in desires), "the debt is on the list"
-    assert any(not isinstance(g, OwedWant) for g in desires), "and the stake is still on the list, not replaced"
+    assert any(not isinstance(g, OwedWant) for g in desires), "and the region want is still on the list, not replaced"
     #  NO ORDER TO ASSERT. These came back hottest first and nothing chose by it: every want
     #  handed up is planned for, so what would rank a debt against a barrel is what their
     #  plans cost — the search's answer, not a contributor's.
@@ -985,7 +985,7 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     """#233, and the reason the ledger is its own capability.
 
     `world/simulation`'s city is a pure seller: it acts for a mains that states no ranges, so it
-    has no stake, so no region, so — while the ledger lived inside `desire:Deducing` — no module
+    has no region want, so no region, so — while the ledger lived inside `desire:Deducing` — no module
     to record a debt in. It hosted a market, issued claims and redeemed them all day, and its
     obligations existed nowhere. The one agent whose failure to deliver would leave no evidence
     was the one best placed to fail.
@@ -995,11 +995,11 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     about which agents compose what.
     """
     city = make("city")
-    #  Still no stake: a mains states no ranges, so the city holds no region. It used to have no
+    #  Still no region want: a mains states no ranges, so the city holds no region. It used to have no
     #  desire MODULE, because wanting was a grant; the regions are sensing's now and the claim
     #  is asserted where it was always true — in what the agent actually wants.
     assert not sensing_of(city).gaps(), \
-        "still no stake — a mains that states no ranges wants nothing, and that stays true"
+        "still no region want — a mains that states no ranges wants nothing, and that stays true"
     ledger = ledger_of(city)
     desire = f"{city.me.uri}.no_overdue_debts"
 

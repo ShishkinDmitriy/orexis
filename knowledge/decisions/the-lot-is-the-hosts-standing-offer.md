@@ -125,7 +125,7 @@ Three costs, and the third is the one that matters:
   DESIGN above (trouble opens a round, the aim prices the bid), which is now carried by the
   region's edge and the aim rather than by two unanchored numbers. See
   [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md).
-- **The host has no stake in when to open.** It reacts to other agents' verdicts and holds no
+- **The host has no region want in when to open.** It reacts to other agents' verdicts and holds no
   view of its own about whether now is a good time to sell, which
   [strategic-supplier](/decisions/strategic-supplier.md) says it otherwise is.
 

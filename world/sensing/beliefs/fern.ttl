@@ -9,7 +9,7 @@
 #  capability.
 #
 #  What is absent is the point. No market:Bidding block: no endowment, no target, no band, no
-#  price. This agent holds no stake, so it has no opinion about what a reading MEANS — it
+#  price. This agent holds no region want, so it has no opinion about what a reading MEANS — it
 #  records the number and announces it. Compare world/society/beliefs-fern.ttl, which is the
 #  same agent in a world that gives it something to want.
 
@@ -17,7 +17,7 @@
 #
 #  Both figures sit on the constitutional floor (sensing:minSleepS 10, in
 #  capabilities/sensing/ontology.ttl), because a board being brought up should be seen
-#  often. They are EQUAL, and honestly so: with no stake there is no trouble to watch harder
+#  often. They are EQUAL, and honestly so: with no region want there is no trouble to watch harder
 #  for, so there is one rate. A plant agent's two differ because it has a band to be near.
 :fern_agent
     sensing:fastSleepS 10 ;

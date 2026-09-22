@@ -49,7 +49,7 @@ PAGE = 100
 #  `orexis:about` is one no action query could join a lever to, and it is simply absent from the
 #  VALUES block; the obligations are not here at all, because an obligation's row names whom it is owed
 #  to and joins on that. (This used to read the property off the met-shape, and the kernel
-#  no longer knows a want has one — the-stake-is-sensings-want.)
+#  no longer knows a want has one — the-region-want-is-sensings-want.)
 _ABOUT_Q = """SELECT ?me ?want ?about WHERE {
   VALUES ?kind { orexis:Desire orexis:Want }
   ?me orexis:holds ?want .

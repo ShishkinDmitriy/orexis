@@ -48,10 +48,10 @@ water:WaterBidderShape a sh:NodeShape ;
 # valuation — its own conversion belief (identically 1.0 by conservation; the copy an agent
 # that learned its barrel leaks would revise), the same ceiling price every buyer of water
 # states, and an aim in the property the refill venue prices. Two shapes and not one with a
-# disjunction, because each names the valuation term its kind of stake is priced in, and that
+# disjunction, because each names the valuation term its kind of region want is priced in, and that
 # term is the whole difference between a fern and a dealer at a market.
 water:RefillBidderShape a sh:NodeShape ;
-    rdfs:comment "A bidder whose stake is a water source values refill litres by its stock's deficit below an aim, so it needs a conversion, a ceiling price, and an aim in the property those are denominated in." ;
+    rdfs:comment "A bidder whose region want is a water source values refill litres by its stock's deficit below an aim, so it needs a conversion, a ceiling price, and an aim in the property those are denominated in." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:prefixes orexis: ;
         sh:select """

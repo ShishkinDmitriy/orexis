@@ -146,9 +146,9 @@ The auction as a replaceable part: who convenes, who bids, how a round clears an
 * [bid-matching-is-a-capability](/decisions/bid-matching-is-a-capability.md) - Turning a lot and bids into an allocation is a family with interchangeable members, announced in the offer.
 * [uniform-price-dissolves-the-uncontested-round](/decisions/uniform-price-dissolves-the-uncontested-round.md) - Every winner pays the lowest accepted bid, so the reserve is a floor and the contested-or-not test disappears.
 * [a-role-needs-something-to-be-a-role-in](/decisions/a-role-needs-something-to-be-a-role-in.md) - Market positions stay predicates: a role needs a context object, and an auction deliberately has none.
-* [clearing-as-validator](/decisions/clearing-as-validator.md) - Clearing is a thin stake-free notary that checks a proposed trade and co-signs it. The host computes the match.
+* [clearing-as-validator](/decisions/clearing-as-validator.md) - Clearing is a thin region-want-free notary that checks a proposed trade and co-signs it. The host computes the match.
 * [standalone-clearing](/decisions/standalone-clearing.md) - The structurally scarce side hosts; the clearing validator stays topology-invariant. Amended by the-market-has-no-governor.
-* [strategic-supplier](/decisions/strategic-supplier.md) - The supplier is a genuine seller with costs and a reserve price, not a stake-free utility.
+* [strategic-supplier](/decisions/strategic-supplier.md) - The supplier is a genuine seller with costs and a reserve price, not a region-want-free utility.
 * [single-wallet-metabolic-cost](/decisions/single-wallet-metabolic-cost.md) - One wallet for water and compute, so thinking costs and bounded rationality is priced in.
 * [bids-as-unmet-demand](/decisions/bids-as-unmet-demand.md) - Bids reflect current unmet need, which keeps multi-source decomposition possible.
 * [deterministic-bid](/decisions/deterministic-bid.md) - The bid number is code; the LLM only produces the justification. Rhetoric cannot move the number.
@@ -244,7 +244,7 @@ A part is described once and fitted many times; a wire is a fact the world state
 From bytes on a topic to a quantity an agent believes — and who holds the clock.
 
 * [sensing-owns-the-reading-pipeline](/decisions/sensing-owns-the-reading-pipeline.md) - Codec, pointer, scaling, the sensed writer, observations and `readings.rq` move to sensing; what is known is a choir hook.
-* [the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md) - Sensing derives the stake and answers what a reading looks like; the kernel derives no want and keys nothing by property.
+* [the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md) - Sensing derives the region want and answers what a reading looks like; the kernel derives no want and keys nothing by property.
 * [who-holds-the-clock](/decisions/who-holds-the-clock.md) - Sensing splits by who holds the clock: Polling, Subscribing, Listening. What was called Polling was Subscribing.
 * [freshness-follows-the-cadence](/decisions/freshness-follows-the-cadence.md) - Staleness is relative to the interval a Subscribing agent chose, absolute for Listening. "I do not know" is not "I am fine".
 * [an-observation-says-how-it-was-made](/decisions/an-observation-says-how-it-was-made.md) - A reading carries its procedure, so silence from a late board is distinguishable from a quiet one.

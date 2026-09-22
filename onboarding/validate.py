@@ -145,7 +145,7 @@ def deliberable(st, desires: dict) -> bool:
     rule to simulate: one nobody could simulate is not refused, it is PASSED OVER, so the
     search concludes from part of the evidence and reports that nothing helps.
 
-    THE SECOND CHECK IS GONE WITH THE THING IT GUARDED. Every stake also had to have a
+    THE SECOND CHECK IS GONE WITH THE THING IT GUARDED. Every region want also had to have a
     declared MEASURE to rank by, because a want nothing measured scored the same flat 1.0 in
     every candidate world. There is no measure now and no ranking by degree: a want is judged
     by its met-test, which every want has by construction — it is why the want exists — so

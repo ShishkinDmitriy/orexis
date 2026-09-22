@@ -3,7 +3,7 @@
 `agent/beliefs.py` used to hold `Reading` and `current_reading`: the kernel knowing that a
 belief about a property is a sosa observation with a result and a time, walking
 `sosa:isSampleOf` for a sampled subject. That is what a reading LOOKS LIKE, and it is this
-package's (the-stake-is-sensings-want): the same dataclass and the same query, one directory
+package's (the-region-want-is-sensings-want): the same dataclass and the same query, one directory
 over, and every caller reaches them through the sensing provider or, for a world a plan is
 imagining, through `value_in` at that world's graph.
 """

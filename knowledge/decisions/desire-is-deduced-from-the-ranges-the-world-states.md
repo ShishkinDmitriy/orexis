@@ -48,7 +48,7 @@ vocabulary said *desire*, nothing owned it, and the code that judged a reading l
 market package, so **having an opinion about your own state required being a market
 participant**. An agent acting for a plant in a world with no economy at all still knows when
 that plant is in trouble; it simply has nobody to ask for help. `world/sensing` says exactly that
-in a comment — *"with nothing to advance for it, this agent holds no stake — it records"* — and
+in a comment — *"with nothing to advance for it, this agent holds no region want — it records"* — and
 nothing enforced the converse.
 
 **And the bands answered to nothing.** The target was checked against the plant's operating range;
@@ -157,11 +157,11 @@ must not be read as knowing there is a lot.
 
 ## Deduced, not declared — which is what makes it a capability
 
-The premise is **a stake**: `orexis:actsFor` a subject that states what it needs. AGENTS.md's rule is
+The premise is **a region want**: `orexis:actsFor` a subject that states what it needs. AGENTS.md's rule is
 that each capability is granted by whatever fact makes it meaningful and that the fact is its
 own — sensing's is equipment, review's is latitude, and this one's is having something to
 advance for. `world/sensing`'s agent is wired to three sensors and acts for nothing, so it
-derives no desire and records; the supplier holds a market and no stake, so it derives none
+derives no desire and records; the supplier holds a market and no region want, so it derives none
 either.
 
 And it passes rule 2's test, which is that the *how* could differ. `desire:Deducing` takes the

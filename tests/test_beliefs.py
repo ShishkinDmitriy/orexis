@@ -84,8 +84,8 @@ def test_slower_agent_tolerates_older_data(query):
     assert succ.grace_s >= fern.grace_s
 
 
-# --- what a stake makes of a reading ---------------------------------------
-# The verdict belongs to the agent that holds a stake, never to the sensor: the same number is
+# --- what a region want makes of a reading ---------------------------------------
+# The verdict belongs to the agent that holds a region want, never to the sensor: the same number is
 # trouble for a fern and comfort for a succulent. It is no longer a BELIEF, though, which is why
 # these read from the world through the desire capability rather than from a beliefs file — the
 # region is deduced from what each plant states it needs, and neither agent could have picked it.

@@ -483,7 +483,7 @@ sosa:Observation orexis:keyedBy sosa:hasFeatureOfInterest , sosa:observedPropert
     rdfs:comment "How far a reading this instrument makes may be off from the quantity it reads, in the property's own unit — the instrument's own width, stated beside the instrument by whoever describes it and read by the domain's drift when it types its prediction with every band the reading may be in; an instrument stating none is taken at its word. Sensing does no arithmetic with it." .
 
 #  Was the kernel's (`orexis:Aim`, `orexis:aims`); the region it sits in is this package's, and so is
-#  the aim (the-stake-is-sensings-want).
+#  the aim (the-region-want-is-sensings-want).
 #################
 #
 #  PRIVATE, and the one part of desire that is. A region is deduced and public; the AIM is the

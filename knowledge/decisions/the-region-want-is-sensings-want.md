@@ -1,12 +1,12 @@
 ---
 type: Decision
-title: The stake is sensing's want — what a reading looks like leaves the kernel, and the kernel derives no want of its own
+title: The region want is sensing's want — what a reading looks like leaves the kernel, and the kernel derives no want of its own
 description: >-
   Every sosa the kernel speaks is "what a reading looks like": the readings query behind the
   desire modality, `current_reading`, the planner reading a value out of a candidate world,
   the signature dropping a timestamp, and the met-shapes `desires.ru` writes over
-  observations. And the stake itself — a reading inside the range the subject states — is the
-  same kind of want freshness already is: sensing's. Decided: sensing derives the stake as it
+  observations. And the region want itself — a reading inside the range the subject states — is the
+  same kind of want freshness already is: sensing's. Decided: sensing derives the region want as it
   derives the freshness want, keeps the region, the envelope and the gap, and answers the
   planner's and the keeper's questions about readings through hooks; the kernel keeps
   `orexis:Desire`, `orexis:metWhen` and the ledger of debts, derives no want, and keys nothing by
@@ -29,18 +29,18 @@ like*:
 | `beliefs.current_reading` | one reading of (subject, property), with `sosa:isSampleOf` for a sampled subject |
 | `planner._value_of` | the value a property reads in a candidate world |
 | `signature.py` | an observation canonicalises to its upsert key and value, never `sosa:resultTime` |
-| `desires.ru` | the stake's met-shapes: *no observation of mine sits below the floor*, written in `sosa:hasFeatureOfInterest` / `observedProperty` / `hasSimpleResult` |
+| `desires.ru` | the region want's met-shapes: *no observation of mine sits below the floor*, written in `sosa:hasFeatureOfInterest` / `observedProperty` / `hasSimpleResult` |
 
 And `desires.ru` is the kernel **deriving a want** — the region want, from
 `ssn-system:hasOperatingRange` on the subject or on the instrument that monitors it
 (`sensing:monitors`, a package word), with the envelope from `hasSurvivalRange`. Sensing
 already derives the freshness want by the same mechanic (`packages/orexis-capability-sensing/desires.ru`)
-and declares the stake's *measure* (`measures.ttl`, `sensing:measureOf sosa:ObservableProperty`).
+and declares the region want's *measure* (`measures.ttl`, `sensing:measureOf sosa:ObservableProperty`).
 The want's shape and the want's measure are in two owners.
 
 # What is decided
 
-**The stake is sensing's want.** *A reading of this property, inside the range the subject
+**The region want is sensing's want.** *A reading of this property, inside the range the subject
 states* — that is a want about a reading, exactly as *a recent reading of this instrument* is,
 and the package that already measures it derives it. `desires.ru`'s region-and-envelope
 derivation moves to sensing's `desires.ru` beside the freshness want; `Region`, `regions_of`,
@@ -50,7 +50,7 @@ subject's ranges go to sensing's shapes. The reader of `ssn-system:*` leaves the
 
 **The kernel derives no want** (#377, landed). `agent/desires.ru` went, and so did the
 kernel's `desires.rq` and `regions.py`. Every want an agent pursues is contributed through
-`Module.desires()` — sensing the stakes and the freshness wants, owing the debts (its own
+`Module.desires()` — sensing the region wants and the freshness wants, owing the debts (its own
 query over its own graph, `packages/orexis-capability-market/ower.py`), hosting the calls — and `Agent.pursuing` is the
 whole assembly: it merges the modules' lists and folds a want seen twice into one by its
 node, because two sensing modules read the same regions. There is no kernel `desires_of` left
@@ -63,7 +63,7 @@ volume across. The deducer is gone — the kernel has no module in the desire mo
 choir's verdicts on a reading (the band, the bounds a board watches, the
 urgency a cadence follows, the gaps and the health figures) are sensing's hooks now, and
 `orexis:KeeperShape` asks for a patience from an agent that `orexis:holds` a want whose violation is not
-`orexis:Stale` — the stake said in the kernel's own words, where "acts for a subject that states
+`orexis:Stale` — the region want said in the kernel's own words, where "acts for a subject that states
 what it needs" was its premise in sensing's.
 
 **What a reading looks like is asked, not walked** (#376, landed). `current_reading` is a
@@ -100,7 +100,7 @@ a BDI notion; which property it is stays sensing's.
 
 - a **want** is identified by its node; `Desire.observed_property` is gone, and sensing's
   `ObservedWant` — the kernel's `Desire` plus the property — is what sensing contributes, so a
-  package that needs the property of a want asks sensing (`want_about`, `stake_about`,
+  package that needs the property of a want asks sensing (`want_about`, `region_want_about`,
   `wants_about`) or reads the field off the object sensing handed over;
 - an **intention** is `progression:pursues` the want and `progression:by` the act, and the ledger's
   `ssn:forProperty` is gone; `adopt`, `satisfy`, `drop`, `standing`, `expect`,
@@ -112,7 +112,7 @@ a BDI notion; which property it is stays sensing's.
   `orexis:available` binds `(?want ?about)` from `$wants` and joins a lever to `?about` in its own
   words, and an effect rule is handed `$want` and `$about`;
 - the **actors' door** is `pursue_for(want)`; an actor holding a reading asks sensing which
-  want it means (bidding: the stake about the property it is priced in; actuation: sensing's
+  want it means (bidding: the region want about the property it is priced in; actuation: sensing's
   `want_about`, knowing first);
 - the **reading choir** — `annotate`, `bounds`, `urgency`, `on_reading_recorded`, `measures` —
   is no longer defined by name on the kernel's `Module`: the kernel keeps the mechanism
@@ -130,7 +130,7 @@ it; it no longer has to say it.
 
 1. Readings behind sensing — `current_reading` as a provider method, `value_in` as a hook,
    `ag:volatile` for the signature (#376).
-2. The stake as sensing's want — `desires.ru`, `Region`, `gaps_of`, the region shapes, and
+2. The region want as sensing's want — `desires.ru`, `Region`, `gaps_of`, the region shapes, and
    the kernel's `desires_of` dissolved into the modules' own `desires()`; the aim with them
    (#377, landed).
 3. Reconcile (#378, landed): `store.PREFIXES` keeps six vocabularies the kernel speaks itself
@@ -147,8 +147,8 @@ it; it no longer has to say it.
 
 # Seams left open
 
-- **A world with no sensing has no stakes.** That is already true in fact — nothing writes a
-  reading — and becomes true in structure: a stake is derived by the package that reads.
+- **A world with no sensing has no region wants.** That is already true in fact — nothing writes a
+  reading — and becomes true in structure: a region want is derived by the package that reads.
 - ~~**The debts and the calls are derived by their owners already**; the kernel's `desires_of`
   after this change is an assembly function that happens to live in `regions.py`.~~ Closed
   with #377: nothing is left of the file at all — the aim went too.

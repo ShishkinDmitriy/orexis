@@ -1,7 +1,7 @@
 """What an agent holds, as its packages contribute it — the split pair and its one join (#234, #298).
 
 `desires.rq` asks the desire modality, `readings.rq` asks the belief modality, and `desires_of`
-is the join. It carried MAGNITUDES too — a stake's from the capability answering the choir, an
+is the join. It carried MAGNITUDES too — a region want's from the capability answering the choir, an
 obligation's fraction of its redeem window in Python — and carries none: a want is judged by
 its met-test and nothing scores one by degree. What is pinned here is the STATES, and the
 engine limits the arithmetic was written around, which outlive it.
@@ -23,7 +23,7 @@ FERN = "http://example.org/orexis/world/simulation#fern_agent"
 
 
 def _fern(readings, monkeypatch):
-    """A real fern, because a stake's urgency is a capability's answer now: sensing asks
+    """A real fern, because a region want's urgency is a capability's answer now: sensing asks
     the choir and sensing answered from its own declaration, so a
     hand-built join would fake away the contribution these tests exercise."""
     st = genesis_store(readings)
@@ -44,9 +44,9 @@ def test_the_query_and_the_module_agree_with_the_diff(query_with_readings, monke
     #  STAKES, which now needs saying: a property carries an epistemic want beside its region,
     #  and a dict keyed on the property alone quietly kept whichever came last. The diff is
     #  about numbers, so the wants it must agree with are the ones about numbers.
-    stakes = {g.observed_property: g for g in desires
+    region_wants = {g.observed_property: g for g in desires
               if getattr(g, "observed_property", None) is not None and not g.is_epistemic}
-    assert set(stakes) == set(diffs), "the same wants, whichever text is run"
+    assert set(region_wants) == set(diffs), "the same wants, whichever text is run"
     #  THE MAGNITUDES NO LONGER MEET, because only one side has one: the want carried a
     #  number the diff had to agree with, and the want carries none. What the two texts must
     #  still agree about is WHICH wants there are, which is the assertion above.
@@ -81,7 +81,7 @@ def test_the_states_a_stake_can_be_in(monkeypatch):
                             (0.30, "unmet"), (0.95, "unmet")]:
         _, fern = _fern({("fern", MOISTURE): value}, monkeypatch)
         #  THE STAKE, named rather than taken first: these came back hottest first, and the
-        #  stake about a property sorted ahead of the freshness want about the same one.
+        #  region want about a property sorted ahead of the freshness want about the same one.
         moisture = next(g for g in sensing_of(fern).desires()
                         if g.observed_property == MOISTURE and not g.is_epistemic)
         assert moisture.state == expected, f"{value} should be {expected}"

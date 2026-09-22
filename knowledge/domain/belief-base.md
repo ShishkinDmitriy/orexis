@@ -103,7 +103,7 @@ not magic strings. Topology (durable, authored) is kept out of `:sensed` (sensed
 and out of the belief graphs (opinion, revisable): three origins, three kinds of graph. See
 [genesis](/decisions/genesis.md) and [world-graph](/decisions/world-graph.md).
 
-**Authored by stake, disclosed need-to-know** (see
+**Authored by region want, disclosed need-to-know** (see
 [agent-centric-epistemics](/decisions/agent-centric-epistemics.md)). Per-agent belief graphs
 are already in place; the remaining scoping work is:
 - `:sensed/<plant>` — the plant's own measurement, **private / need-to-know** (peers never

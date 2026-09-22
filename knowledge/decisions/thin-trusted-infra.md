@@ -8,7 +8,7 @@ timestamp: 2026-08-02T00:00:00Z
 
 # Context
 
-[trust-boundary](/decisions/trust-boundary.md) put three powers in stake-free infra —
+[trust-boundary](/decisions/trust-boundary.md) put three powers in region-want-free infra —
 **attest, mint, actuate**. Under a trusted-agent assumption (single operator, non-adversarial)
 most of that defends a threat that isn't there. Push the infra as thin as it goes, and see
 what genuinely can't move.

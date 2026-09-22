@@ -42,10 +42,10 @@ emits.
 [#263](https://github.com/ShishkinDmitriy/orexis/issues/263) closed by naming this: *"the
 mandate proposal — one root desire decomposed — which is the other half of the sovereign's idea
 and is not yet filed."* This record is that filing, refined in one respect: several roots, not
-one, because "keep everything good" is not one premise. A stake grants the welfare root,
+one, because "keep everything good" is not one premise. A region want grants the welfare root,
 instruments grant the freshness root, the ability to incur obligations grants the debts root —
 and each is DERIVED from its premise like everything else here, never hand-declared. So
-`world/sensing`'s stakeless agent has no roots and no tree, and "no wants, no rows" holds by
+`world/sensing`'s regionless agent has no roots and no tree, and "no wants, no rows" holds by
 the fact rather than by a grant, exactly as
 [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)
 already has it for the leaves.

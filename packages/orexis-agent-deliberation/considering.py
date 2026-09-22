@@ -21,7 +21,7 @@ next. It was `Pursuing` while the container held it and the pass had no name of 
 
 **It is handed the AGENT, and unlike `find_wants` that is not a failure to narrow.** What a
 want reads as here is CONTRIBUTED — the ledger reads a debt against its redeem window, sensing
-reads a stake against the survival envelope — so the collection has to reach the choir, and
+reads a region want against the survival envelope — so the collection has to reach the choir, and
 the choir is the agent. A read over stored rows needs a store; a read over contributed answers
 needs the contributors. That asymmetry is the clearest statement of what
 the two kinds of collection are.
@@ -79,7 +79,7 @@ class Considering:
 
         Assembled from the modules that hold wants rather than asked of one, because since the
         ledger became its own capability no single module can see them all: desire contributes
-        stakes, owing contributes debts, and an agent may compose either without the other. The
+        region wants, owing contributes debts, and an agent may compose either without the other. The
         ranking is what would make the two comparable — and nothing ranks them, so a
         litre owed and a pot drying finally rank against each other.
         """

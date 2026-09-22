@@ -14,7 +14,7 @@
 #  The supplier's PRIVATE beliefs — the DEALER's terms: a genuine seller downstream, a genuine
 #  buyer upstream, and the barrel between them.
 #
-#  It composed market:Hosting, actuation:Actuation, sensing:Listening (arc 1), the stake
+#  It composed market:Hosting, actuation:Actuation, sensing:Listening (arc 1), the region want
 #  quartet desire/intention/deliberation (arc 2) and — since the city exists — market:Bidding
 #  (arc 4), so those modules' terms appear and no others. There is still no cadence: the one
 #  thing it perceives announces on its own clock.
@@ -38,7 +38,7 @@
 
 ##  sensing:Listening — the barrel's level sensor announces on its own clock (arc 1), and all
 #   a listener states is how long it waits before calling the thing gone quiet.
-##  intention — demanded the moment the stake met the valves it already held: a keeper of
+##  intention — demanded the moment the region want met the valves it already held: a keeper of
 #   commitments states its patience. Long, because a merchant's commitments are rounds, not
 #   twitches. Its reflex proposes now (arc 4): the refill venue carries a direction for
 #   StoredLitres, so a stock below the aim is an ACQUIRE — the same four lines that move a

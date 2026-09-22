@@ -197,7 +197,7 @@ MOVED = {
     **{old: "http://example.org/orexis/market#Offering" for old in (
         "http://example.org/orexis/intention#Offer", "http://example.org/orexis#Offer",
         "http://example.org/orexis/market#Offer")},
-    #  The AIM went to sensing with the region it sits in (the-stake-is-sensings-want): a
+    #  The AIM went to sensing with the region it sits in (the-region-want-is-sensings-want): a
     #  volume authored while it was the kernel's holds `orexis:aims`, and this is the rename.
     #  THE SUBSTRATE went to `packages/orexis-part-device/`: a BDI kernel says nothing about what a
     #  thing is made of (the-substrate-is-not-the-minds). It went in ONE word, because the rest

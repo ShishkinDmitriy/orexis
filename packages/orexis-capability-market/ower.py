@@ -6,11 +6,11 @@ argument they carry is why this is a separate ledger at all.
 
 A debt is a want this agent did not source, so it belongs to the desire family's vocabulary —
 and keeping one is a DIFFERENT ability from working out a region, granted by a different fact.
-Deducing needs a stake: something to advance for, that states what it needs. Owing needs a
+Deducing needs a region want: something to advance for, that states what it needs. Owing needs a
 LEVER others can demand: a venue this agent opened and an actuator drawing from its source.
 
 They were one capability, and `world/simulation`'s city showed the cost (#233). The city acts
-for a mains that states no ranges, so it had no stake, so no desire module, so no ledger — while
+for a mains that states no ranges, so it had no region want, so no desire module, so no ledger — while
 hosting a market, issuing claims and redeeming them all day. The one agent whose failure to
 deliver would have left no evidence was the one best placed to fail. Splitting the capability
 gives it a ledger without pretending it wants anything for itself.
@@ -35,8 +35,8 @@ from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import KNOWN, RECORD
 
 #  What I owe, as rows — the obligation branch of what used to be one shipped `desires.rq` for every
-#  kind of want. The stakes and the freshness wants went to sensing with the region
-#  (the-stake-is-sensings-want), and the ledger reads its own graph, which it always named.
+#  kind of want. The region wants and the freshness wants went to sensing with the region
+#  (the-region-want-is-sensings-want), and the ledger reads its own graph, which it always named.
 #  Rows are matched by their PREMISES — a counterparty, a claim — and never by a type: the
 #  Obligation class retired (#471), and a volume written before it did carries the old type
 #  triple harmlessly, because nothing asks.
@@ -337,7 +337,7 @@ SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS
         return self.desires(now)
 
     def desires(self, now: datetime | None = None) -> list[Want]:
-        """MY contribution to what this agent is considering: its debts, and no stakes.
+        """MY contribution to what this agent is considering: its debts, and no region wants.
 
         The half of the choir the city had no way to contribute before, which is the whole of
         #233. Lapsed is judged HERE, against the clock this module reads — one reader, one
@@ -366,7 +366,7 @@ SELECT ?g ?o ?jti ?expires WHERE {{ GRAPH ?g {{ ?o <{FOR_CLAIM}> ?jti ; <{OREXIS
 
     def series(self) -> list[tuple[str, dict, dict]]:
         """What I owe, as figures. A host straining under debts it cannot serve used to look
-        exactly like a calm one on every panel — and a host with no stake of its own reported
+        exactly like a calm one on every panel — and a host with no region want of its own reported
         nothing at all, because the module that would have said so was never composed."""
         obligations = self.desires()
         def figures(some):

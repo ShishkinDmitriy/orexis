@@ -133,7 +133,7 @@ and every crossing already has a native shape in the house:
 
   Two bounds on what this says: the world was freshly born, so the obligation branch ran over an
   empty obligations graph on both sides — its cost is bounded by open claims, which are few by
-  construction; and the Python join reproduced the stake arithmetic (asserted equal, to three
+  construction; and the Python join reproduced the region want arithmetic (asserted equal, to three
   decimals) but not staleness, which is two comparisons. Neither can turn a 3x win into the
   pass-scale loss the fallback was reserved for.
 

@@ -18,7 +18,7 @@ instant a prediction reaches, and mints or withdraws accordingly. Everything dow
 its output, so nothing downstream judges again — which is why no row has to be corrected by a
 second met-test.
 
-**Weigh.** The wants that stand are collected with whatever the packages holding their stakes
+**Weigh.** The wants that stand are collected with whatever the packages holding their region wants
 say about them. Nothing is ranked: the order a pass takes them in decides which is searched
 first and nothing else.
 

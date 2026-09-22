@@ -8,7 +8,7 @@ description: >-
   recipient (a litre raises a pot's moisture and a barrel's stock), and what disambiguates a
   venue is what flows out of its source. Every join that used to float over the T-Box now
   closes venue -> marketFor -> source -> supplies -> good <- ofGood <- valuation, plus the
-  asker's own stake. Shipped together with the world it was gating: the city mains, the refill
+  asker's own region want. Shipped together with the world it was gating: the city mains, the refill
   venue that derives from one consent triple, and the supplier as a live inventory dealer
   whose spread sits in its beliefs file.
 status: accepted
@@ -44,10 +44,10 @@ of a derivable fact is what [one-word-for-one-relation](/decisions/one-word-for-
 exists to refuse. And [the-ladder-of-means](/decisions/the-ladder-of-means.md)' "the market is
 about the resource, not the lever" finally has a graph word for "the resource".
 
-## Every asker adds its own stake, and the same join answers five questions
+## Every asker adds its own region want, and the same join answers five questions
 
 The venue narrows to the good; the good still fans out to a valuation per recipient kind; and
-what picks ONE is the asker's stake — the same premise the participation rule always used,
+what picks ONE is the asker's region want — the same premise the participation rule always used,
 asked from each side:
 
 - **the rule** derives `bidsIn` only where the source's good meets a property the buyer's
@@ -64,7 +64,7 @@ asked from each side:
 - **the menu** walks the full chain and now provably yields two rows with two directions for
   two opposite levers on one property, never four — the pinned fixture authors a drying
   market by hand and watches the cross-join stay dead;
-- **the host** convenes each venue on the properties its PARTICIPANTS' stakes are in — a set,
+- **the host** convenes each venue on the properties its PARTICIPANTS' region wants are in — a set,
   because one venue may serve two kinds of recipient — so the dealer hosting water-for-pots
   while bidding for refill litres never confuses the two scarcities.
 
@@ -75,7 +75,7 @@ a wallet, and a ceiling per unit of the GOOD.
 
 ## The world that forced it: a barrel on both sides of the wire
 
-The city is what the supplier was before the arcs — a stakeless seller
+The city is what the supplier was before the arcs — a regionless seller
 ([strategic-supplier](/decisions/strategic-supplier.md)'s Design B, one rung up) — and its
 venue derives from one consent triple exactly as
 [a-market-arises-where-want-meets-supply](/decisions/a-market-arises-where-want-meets-supply.md)

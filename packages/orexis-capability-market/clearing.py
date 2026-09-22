@@ -1,4 +1,4 @@
-"""Clearing — the thin, stake-free validator (a notary, not an allocator).
+"""Clearing — the thin, region-want-free validator (a notary, not an allocator).
 
 The host runs the auction and proposes a Trade; clearing checks it is well-formed and
 co-signs it before settlement. It computes nothing about who *should* win — only whether

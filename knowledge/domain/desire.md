@@ -16,14 +16,14 @@ BDI's middle letter. Belief has a whole store — see [belief-base](/domain/beli
 desire is what the agent is trying to bring about with it.
 
 BDI's middle letter is the KERNEL's, granted by nothing — [capability](/domain/capability.md)
-records why a stake stopped being a premise, and
+records why a region want stopped being a premise, and
 [the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md) has the argument. What
 matters here is the consequence: every agent holds a desire store, and what differs between them
 is whether their subject states anything to want.
 
 Three things, three holders. [Sensing](/domain/sensing.md) deduces a [region](/domain/region.md)
 per property the subject needs, with an envelope beside it, holds the [aim](/domain/aim.md) the
-agent picked inside each, and contributes those stakes to what the agent weighs; the ledger
+agent picked inside each, and contributes those region wants to what the agent weighs; the ledger
 contributes the debts; and *what am I holding* is answered across
 those and the [obligations](/domain/obligation.md) the agent did not source, by
 `Agent.considering` merging every module's `desires()` — one step of
@@ -31,7 +31,7 @@ those and the [obligations](/domain/obligation.md) the agent did not source, by
 
 What comes back from that merge is not desires. Neither kind below says how much it matters at
 the instant it is asked about, and what supplies that is a [judgment](/domain/judgment.md) — made
-per pass by whoever holds the stake, ranked against every other, and stored nowhere.
+per pass by whoever holds the region want, ranked against every other, and stored nowhere.
 
 # Desire and want are two kinds, not two words
 
@@ -98,7 +98,7 @@ graph found by TYPE rather than by name is what makes a second source of desire 
 the freshness want beside it, because both premises are that package's facts: a range a subject
 states in `ssn-system`, an instrument this agent polls and the horizon it keeps. What stays the
 kernel's is the mind — what a want is, when one is met, how wants rank — and it has no reading
-in it ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
+in it ([the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md)).
 
 What the derivation mints is a NODE (`orexis:Desire`) carrying the met-test as a SHACL shape
 (`orexis:metWhen`) and a label a dashboard or the ask channel can print — reified so a want can
@@ -109,15 +109,15 @@ the capability that owns the question answers from its own declaration —
 want's KIND at answer time; that page has the mechanics. The argument is
 [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md)'s.
 
-Deducing used to be granted by a stake — `orexis:actsFor` a subject that states what it needs — and
-the stake still decides everything except whether a module exists: an agent advancing nobody's
-interest states no ranges, so it holds no region, and the shapes that target a stake never reach
+Deducing used to be granted by a region want — `orexis:actsFor` a subject that states what it needs — and
+the region want still decides everything except whether a module exists: an agent advancing nobody's
+interest states no ranges, so it holds no region, and the shapes that target a region want never reach
 it. The sensing world's agent has three sensors and no region at all, by the fact rather than by
 a grant.
 
 # Two sources, one currency
 
-A desire is either a **stake** — a property of the subject this agent acts for, wanted inside a
+A desire is either a **region want** — a property of the subject this agent acts for, wanted inside a
 [region](/domain/region.md) — or a **obligation**, an [obligation](/domain/obligation.md) someone else
 holds against it.
 
@@ -125,14 +125,14 @@ They are deliberately the same type. An agent's whole conduct is things it wants
 [steps](/domain/step.md), and a deliberator that had to ask which kind it was holding
 would be the second decision path this design exists to avoid.
 
-**Urgency is unit-free in both cases, and that is the whole point of the type.** A stake's comes
+**Urgency is unit-free in both cases, and that is the whole point of the type.** A region want's comes
 from the survival envelope — how much room is left before the subject ends; an obligation's from the
 redeem window — how much time is left before the claim expires. The two become comparable without
 either knowing how the other was computed.
 
 # The kind is read, never flagged
 
-A stake carries what is wanted and what it currently reads. An **epistemic** want carries the
+A region want carries what is wanted and what it currently reads. An **epistemic** want carries the
 instrument it was derived from. A debt is the market's own judgment — `OwedJudgment`, the kernel's type
 with the claim it came from and whom it is owed to beside it — and the kernel's type carries
 neither word. **Each kind is known by the premise it has and the others do not, which is what
@@ -189,7 +189,7 @@ changed its mind.
 # State is carried, not inferred
 
 A desire states its own condition in its kind's vocabulary: `met`, `unmet` or `unmeasured` for a
-stake; `met`, `stale` or `unmeasured` for an epistemic want; `standing` or `demanded` for an obligation.
+region want; `met`, `stale` or `unmeasured` for an epistemic want; `standing` or `demanded` for an obligation.
 
 An epistemic want's state is read off its MEASURE, so the label and the number cannot part
 company: anything the measure does not call current is not current, and which KIND of
@@ -212,7 +212,7 @@ A obligation is never *met*. It is discharged — and a discharged debt is histo
 stands, it may be hot, and it still must not be acted on. The holder is waiting for its own watch
 to be live, and **a host that doses early spends the water where nothing is looking.**
 
-Always true for a stake — a plant does not ask.
+Always true for a region want — a plant does not ask.
 
 # It lives in the mind's stores, and the capability does not
 
@@ -268,10 +268,10 @@ for that. The rule is not *one word wins*; it is *name the artifact for what it 
 
 `desires_of` answers the question a sovereign and a model actually ask — every want this agent
 holds, hottest first, whoever sourced it — by joining `desires.rq` (the desire modality's half)
-with `readings.rq` (the belief modality's), the judging done where the clock is. A stake and an obligation appear in one list
+with `readings.rq` (the belief modality's), the judging done where the clock is. A region want and an obligation appear in one list
 because urgency is the common currency — a litre owed and a pot drying rank against each other
 instead of running down two paths that never meet — and each row says what state its desire is in:
-a stake is `met`, `unmet`, `stale` or `unmeasured`, an obligation `standing`, `demanded` or
+a region want is `met`, `unmet`, `stale` or `unmeasured`, an obligation `standing`, `demanded` or
 `settled`.
 
 Three deliberate differences from the diff above:
@@ -287,12 +287,12 @@ Three deliberate differences from the diff above:
   states the rule nowhere. Saying it positively is also what makes it fail loudly: a want that
   hunted for a reading past its horizon was satisfied by having no reading, and by having no
   horizon to judge one against, which is the same nothing wearing two hats.
-- **Freshness is about the INSTRUMENT, not the stake.** A want exists for every SENSOR this
+- **Freshness is about the INSTRUMENT, not the region want.** A want exists for every SENSOR this
   agent polls — including one pointed at something it does not act for, which
   `world/loner`'s gardener does with its water butt, and including one whose property already
   carries a region, because knowing the number and the number being right are different things
   to be short of. If an agent went to the trouble of polling
-  something, it wants to know what that reads now; a stake is what makes the VALUE matter, and
+  something, it wants to know what that reads now; a region want is what makes the VALUE matter, and
   this want is about knowing. And no want exists where there is no sensor: an epistemic want
   nothing could ever satisfy would sit at maximum urgency for ever, top every ranking, and
   inflate the `unactionable` count — training a reader to ignore the top row, which is the
@@ -301,7 +301,7 @@ Three deliberate differences from the diff above:
 - **An unmeasured want is a row here, at urgency 1.0.** No row is right for a diff and wrong for
   a ranking: not knowing whether the pot is dying is at least as urgent as knowing it is
   uncomfortable, which is the answer `urgency(None)` has always given.
-- **`side` says which way out a stake sits.** For moisture only the low side has an action, so a
+- **`side` says which way out a region want sits.** For moisture only the low side has an action, so a
   drowning plant and a dying one are both `unmet` at urgency 1.00 and mean opposite things. The
   shape says the same thing in `orexis:violationIs` now; the query still reaches it by comparing the
   value to the bounds, which is the same answer, and reading it off a validation report waits for
@@ -372,7 +372,7 @@ themselves.
   and the split is deliberate: desire says where the world should be, intention says what I am
   already doing about it.
 - **Not universal.** An agent that acts for nothing derives no desire capability at all — no
-  module, no region, no band. `world/sensing`'s agent is exactly that: three sensors, no stake,
+  module, no region, no band. `world/sensing`'s agent is exactly that: three sensors, no region want,
   and it records.
 
 # A want met by absence

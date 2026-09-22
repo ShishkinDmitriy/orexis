@@ -2,7 +2,7 @@
 type: Decision
 title: >-
   "The market has no governor: deficit opens rounds, structure names the convener"
-description: Ruling a venue is commitment power over its mechanism, which comes from structure or neutrality and never from today's state — deficit decides whether a round is worth opening, never who rules. N-to-M clears through dealers holding stock, or bilaterally where too thin; the stake-free exchange was considered and refused. Fairness is entry, ex-ante rules and a ledger that sees the spread, not a referee. An inventory dealer needs no claim transfer because the stock decouples its two markets; pass-through dealing would, and that is the seam.
+description: Ruling a venue is commitment power over its mechanism, which comes from structure or neutrality and never from today's state — deficit decides whether a round is worth opening, never who rules. N-to-M clears through dealers holding stock, or bilaterally where too thin; the region-want-free exchange was considered and refused. Fairness is entry, ex-ante rules and a ledger that sees the spread, not a referee. An inventory dealer needs no claim transfer because the stock decouples its two markets; pass-through dealing would, and that is the seam.
 status: accepted
 timestamp: 2026-08-17T22:13:25Z
 ---
@@ -45,15 +45,15 @@ institution or dissolve.
 
 Mature markets resolve N-to-M three ways: a neutral exchange running a double auction, a
 dealer, or pairwise bargaining. The sovereign refused the first, and the refusal is
-consistent rather than arbitrary. A stake-free exchange is a new trusted party holding power
+consistent rather than arbitrary. A region-want-free exchange is a new trusted party holding power
 over **allocation** — the exact power [trust-boundary](/decisions/trust-boundary.md) keeps out
 of reach and [thin-trusted-infra](/decisions/thin-trusted-infra.md) spent its whole trajectory
 shrinking. Clearing stayed thin precisely by *validating* and never allocating
 ([clearing-as-validator](/decisions/clearing-as-validator.md)); an exchange allocates, so it
-re-fattens the middle. And a participant-shaped thing with no stake contradicts what this
+re-fattens the middle. And a participant-shaped thing with no region want contradicts what this
 project knows about agents: an agent advancing nobody's interest wants nothing
 ([desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md))
-— a stake-free host is not an agent, it is infrastructure wearing an agent's clothes.
+— a region-want-free host is not an agent, it is infrastructure wearing an agent's clothes.
 
 So N-to-M clears through:
 
@@ -114,7 +114,7 @@ to grow — the distinction is worth the record:
 
 Split clearing by what it does, because the two halves answer differently. **Validating** — the
 predicate over signed orders that [clearing-as-validator](/decisions/clearing-as-validator.md)
-describes — is deterministic, public and stake-free, and *that* can be carried by a society
+describes — is deterministic, public and region-want-free, and *that* can be carried by a society
 member: a Notarius, one container, one principal on the bus, a capability whose premise is
 appointment — the sovereign hands it the co-signing key at genesis, exactly as loyalty is
 installed in a bounded device at flash time. It is trustworthy not because its process is
@@ -126,7 +126,7 @@ bounded *process*, the software mirror of the pump firmware verifying claims at 
 which is [thin-trusted-infra](/decisions/thin-trusted-infra.md)'s whole trajectory, continued.
 
 Three disqualifiers keep it honest-shaped, and each is the exchange-refusal again in
-miniature: **no stake** in any good its markets trade (an agent with desires about the lot
+miniature: **no region want** in any good its markets trade (an agent with desires about the lot
 cannot notarise it); **no discretion** (it signs iff the predicate holds — a notary free to
 decline a valid trade is an allocator again); **code in this repository** (the bounded-device
 posture: loyalty auditable because the firmware is ours). Whether such a thing is an "agent"
@@ -174,6 +174,6 @@ the open flank ([#28](https://github.com/ShishkinDmitriy/orexis/issues/28),
   agent-shaped notary is a key that cannot be taken back.
 
 Amends [standalone-clearing](/decisions/standalone-clearing.md): its N-to-N row read "a
-stake-free exchange hosts (order book)". The seam stays open — clearing remains
+region-want-free exchange hosts (order book)". The seam stays open — clearing remains
 topology-invariant and that is untouched — but the resolution sketched there is refused;
 dealers and bilateral dealing are the path.

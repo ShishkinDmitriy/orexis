@@ -1,9 +1,9 @@
-# What this agent wants ABOUT OBSERVATIONS, one row per want: a stake — the region a reading
+# What this agent wants ABOUT OBSERVATIONS, one row per want: a region want — the region a reading
 # of `?property` should sit inside, and the survival envelope around it where the world states
 # one — and a freshness want, an instrument that should have spoken recently. Was the kernel's
 # `desires.rq`, which also carried the duties; the ledger reads those itself now, and what is
 # here is exactly the two kinds whose met-shape is a sentence about an observation
-# (the-stake-is-sensings-want).
+# (the-region-want-is-sensings-want).
 #
 # The edges are NOT read here since #579: they are the bands' (`regions_of`, off the belief
 # base). What this query still says is WHICH wants are sensing's, and their property.
@@ -20,7 +20,7 @@ SELECT ?kind ?desire ?property ?instrument WHERE {
     $me orexis:holds ?desire .
     ?desire ssn:forProperty ?property ; orexis:metWhen ?met .
     ?met sh:property/orexis:violationIs orexis:Below .
-    BIND("stake" AS ?kind)
+    BIND("region want" AS ?kind)
   }
   UNION
   {

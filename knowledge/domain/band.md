@@ -73,8 +73,8 @@ without its owner, and is gone.
 
 # Whose verdict it is
 
-Not the sensing loop's, and not the device's. Sensing asks whoever holds a stake in the property
-and passes the answer on **without reading it** — so an agent with no stake contributes nothing
+Not the sensing loop's, and not the device's. Sensing asks whoever holds a region want in the property
+and passes the answer on **without reading it** — so an agent with no region want contributes nothing
 and its device is told only a cadence.
 
 That is why a band is a fact about the *pot*, not about the *probe*: it exists because something

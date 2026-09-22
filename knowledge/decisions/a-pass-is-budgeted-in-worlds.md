@@ -57,7 +57,7 @@ sovereign keeps the unit that means something. A time cap as a second guard, for
 mutable slice grows past what the runbook measured, is a seam below.
 
 **Demanding the pick of every agent**, as `orexis:KeeperShape` demands a patience of every
-stake. A missing patience makes a commitment meaningless; a missing budget leaves the
+region want. A missing patience makes a commitment meaningless; a missing budget leaves the
 ceiling where the kernel put it, sized for a plant. Every plant world would have had to
 state a number it has no opinion about. The shape bounds what is stated and demands
 nothing.

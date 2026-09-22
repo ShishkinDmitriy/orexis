@@ -5,7 +5,7 @@
 
 #  This agent's PRIVATE beliefs — one block, because it composed one capability.
 #
-#  No stake, so no opinion about what a reading MEANS: no aim, no band, no price. No review
+#  No region want, so no opinion about what a reading MEANS: no aim, no band, no price. No review
 #  interval, because world.ttl grants no mandate. And no interval to ask a board for: this
 #  agent LISTENS to a sentinel that keeps its own clock, so sensing:fastSleepS, slowSleepS and
 #  alarmDeltaFraction would be theatre, and the listening shape forbids them.

@@ -117,9 +117,9 @@ it for open expectations):
   answers for scores 1.0, logged — not knowing how bad is maximal, consistent with
   `urgency(None)`. The planner-side rule was *a search that cannot rank must not conclude*, so
   a measure-less non-obligation deferred to the reflex; phase B replaced the deferral with a refusal
-  at genesis, since a stake nothing measures is a fact about a world's files rather than about
+  at genesis, since a region want nothing measures is a fact about a world's files rather than about
   a moment. Tests pin the fallback and that no shipped world hits it, every shipped desiring
-  agent holding sensing and every shipped stake being a `sosa:ObservableProperty`.
+  agent holding sensing and every shipped region want being a `sosa:ObservableProperty`.
   `Region.urgency` survives as the test-only reference the declared query is held to at the
   no-pick fallback; nothing on the live path calls it.
 
@@ -191,7 +191,7 @@ unchanged — measurement names never split series.
   change had been reviewed and the search had been the control's equal at every value anyone
   compared them at. `propose`, `_by_gap`, `_direction_of`, `_my_shop_needs` and the rung ladder
   are deleted; `orexis-validate` refuses both conditions that used to need the fallback — an
-  affordance-contributing means with no effect rule, and a stake that resolves no declared
+  affordance-contributing means with no effect rule, and a region want that resolves no declared
   measure, the second being this record's own fallback turned into a gate. The argument and
   what the deletion cost are in
   [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md), which set

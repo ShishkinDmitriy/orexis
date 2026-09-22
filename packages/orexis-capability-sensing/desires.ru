@@ -94,7 +94,7 @@ INSERT { GRAPH $derived {
             sh:select ?staleQuery ] } }
 $given
 WHERE  {
-    #  THE PREMISE IS THE INSTRUMENT, not the stake, and the difference is not academic: the
+    #  THE PREMISE IS THE INSTRUMENT, not the region want, and the difference is not academic: the
     #  loner's gardener polls a water butt it does not act for. Tying this to the subject's
     #  stated ranges — the region's premise — left the butt's level with no freshness want, and
     #  since the keeper pursues desires rather than sweeping noticed gaps, nothing would have
@@ -103,7 +103,7 @@ WHERE  {
     #
     #  It is also the honest premise on its own terms. Wanting a reading to be current is about
     #  the instrument and what it is pointed at: if this agent went to the trouble of polling
-    #  something, it wants to know what that thing reads NOW. A stake is what makes the VALUE
+    #  something, it wants to know what that thing reads NOW. A region want is what makes the VALUE
     #  matter; a sensor is what makes the reading knowable, and this want is about knowing.
     $me a orexis:Agent ; orexis:localId ?who ; sensing:polls ?sensor .
     ?sensor sensing:monitors ?subject ; sosa:observes ?property .
@@ -141,12 +141,12 @@ WHERE  {
 }
 ;
 
-#################  The stake: the region, and the envelope around it  #################
+#################  The region want: the region, and the envelope around it  #################
 #
 #  Was `agent/desires.ru`, the kernel's — and the kernel's last `sosa`. The want is derived
 #  from what the subject STATES IT NEEDS (`ssn-system:hasOperatingRange`, narrowed by every
 #  instrument that monitors it) and met by an OBSERVATION of it sitting inside — both sensing's
-#  facts, in sensing's words, which is why the rule is here (the-stake-is-sensings-want). The
+#  facts, in sensing's words, which is why the rule is here (the-region-want-is-sensings-want). The
 #  node IRIs are unchanged: `orexis:desire.<who>.<property>`, `orexis:bounds.…`, `orexis:envelope.…`, so
 #  a ledger row that names one still resolves.
 #
@@ -259,7 +259,7 @@ INSERT { GRAPH $derived {
             sh:message ?overCeiling ] } }
 $given
 WHERE  {
-    #  NO FORESIGHT HERE, and none anywhere: a stake derives a want at every instant its
+    #  NO FORESIGHT HERE, and none anywhere: a region want derives a want at every instant its
     #  met-test is judged unmet, and how far ahead that reaches is what the drifts predict at.
     { SELECT ?property ?subject (MAX(?min) AS ?low) (MIN(?max) AS ?high) WHERE {
         $me a orexis:Agent ; orexis:actsFor ?subject .

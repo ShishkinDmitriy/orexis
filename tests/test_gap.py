@@ -85,7 +85,7 @@ def test_unmeasured_is_not_satisfied(monkeypatch):
 
 def test_an_agent_with_no_desire_has_no_gap(query_with_readings, monkeypatch):
     """The supplier observes nothing and wants nothing — no regions, no rows, and nothing here
-    invents a stake for it. Handed readings about somebody else's plant, still nothing."""
+    invents a region want for it. Handed readings about somebody else's plant, still nothing."""
     assert _gaps(genesis_store({("fern", MOISTURE): 0.05}), SUPPLIER, "supplier",
                  monkeypatch=monkeypatch) == {}
 

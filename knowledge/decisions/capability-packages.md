@@ -116,15 +116,15 @@ a T-Box term is public and a Python class is not.
 
 # What moved, and why it belongs where it landed
 
-**Judging moved out of sensing.** A band is a fact about a *stake*, not about a sensor:
+**Judging moved out of sensing.** A band is a fact about a *region want*, not about a sensor:
 the same reading is trouble for a fern and comfort for a succulent. So `band()` and
 `urgency()` left sensing, and sensing — which owns the number and the freshness rule and
-nothing else — asks. An agent with no stake in a subject gets no answer and watches at its slow
+nothing else — asks. An agent with no region want in a subject gets no answer and watches at its slow
 cadence, which is the honest reading of "nothing here is urgent to me". A perceiving agent that
 holds no band is now a coherent thing to be, rather than a `try/except`.
 
 They landed on `BiddingBeliefs`, moved again to a desire package, and have since come into the
-kernel with the rest of the mind, and on again to sensing with the region ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)). That second move is the one this section
+kernel with the rest of the mind, and on again to sensing with the region ([the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md)). That second move is the one this section
 is about, and it is
 where they should have gone the first time: putting them on a bidder made *having an opinion
 about your own state* conditional on being a market participant, and limited it to the one

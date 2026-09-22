@@ -39,7 +39,7 @@ the other wrote.
 
 # The measure is the package's, the scale is the kernel's
 
-Who makes the judgment is whoever holds the stake, and each does it its own way: a debt's
+Who makes the judgment is whoever holds the region want, and each does it its own way: a debt's
 urgency comes from how much of its redeem window is left, a region's from how much room the
 subject has before it ends, a call's is flat because a call is either open or not. The kernel
 supplies no formula and could not — it does not know what a fern needs.

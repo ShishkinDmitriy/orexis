@@ -4,9 +4,9 @@ The shared contract — what each component is, what it's responsible for, and i
 invariants. This is the layer agents read for context (in an LLM-heavy design, from the
 T-Box). It describes the design; it is NOT the live sensed state.
 
-# Agents (the tier with a stake)
+# Agents (the tier with a region want)
 
-* [agent](/domain/agent.md) - The general principal: certified identity, wallet, stake. Plant agent and supplier specialise it.
+* [agent](/domain/agent.md) - The general principal: certified identity, wallet, region want. Plant agent and supplier specialise it.
 * [judgment](/domain/judgment.md) - Running a desire's met-test against the world, and how badly the thing is wanted: both made fresh and written down nowhere.
 * [plant-agent](/domain/plant-agent.md) - A self-interested plant: desire, wallet, a stance of its own. Judges its own band, asserts its own readings.
 * [supplier](/domain/supplier.md) - Strategic seller downstream, genuine buyer upstream, the barrel between. Actuates its own valves; cannot mint.
@@ -26,7 +26,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [round](/domain/round.md) - One pass of bidding inside an auction. Exactly one is built, so today the two coincide.
 * [call](/domain/call.md) - A round is wanted on a venue because a participant said LOW — a want the host did not source, planned like any other.
 * [bid matching](/domain/bid-matching.md) - A lot and a set of bids become an allocation with prices — an allocation rule and a payment rule together.
-* [clearing](/domain/clearing.md) - A thin stake-free notary: checks a proposed trade and co-signs the claim. The host computes the match.
+* [clearing](/domain/clearing.md) - A thin region-want-free notary: checks a proposed trade and co-signs the claim. The host computes the match.
 * [commitment](/domain/commitment.md) - REA's promised flow, as the kernel's shape: what a valve fulfils, what a claim embodies. Not BDI's, which is an intention.
 * [claim](/domain/claim.md) - What you win — co-signed, single-use, held until the winner's watch is live, then presented on the redeem channel.
 * [actuation](/domain/actuation.md) - The supplier's actuation arm: verifies the claim and drives its own valve, bounded by clearing and the device fail-safe.
@@ -49,7 +49,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [desire](/domain/desire.md) - Two kinds: a desire stands and is never pursued; a want is deduced from one when the world makes it bite, and carries a period.
 
 
-* [intention](/domain/intention.md) - A commitment to reduce a named gap by a named action, kept in a private ledger. Granted by a stake AND an action.
+* [intention](/domain/intention.md) - A commitment to reduce a named gap by a named action, kept in a private ledger. Granted by a region want AND an action.
 
 * [deliberation](/domain/deliberator.md) - The whether: name the next move by building the world each action would make and keeping the one worth reaching. One path.
 

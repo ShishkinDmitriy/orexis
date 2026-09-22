@@ -3,7 +3,7 @@
 Onboarding legitimately knows packages and their vocabularies: it reads the ratified files
 directly, to mint a credential per sensor, a dashboard per observed property, a config.h per
 board. The kernel does not — it is a BDI engine, and what a reading looks like is sensing's
-(the-stake-is-sensings-want). So a namespace the generators need and the kernel has no use for
+(the-region-want-is-sensings-want). So a namespace the generators need and the kernel has no use for
 is declared here, where it is consumed, rather than in the kernel vocabulary (`packages/orexis-agent-progression/ontology.py`), where it read as
 the kernel's word. `SOSA` moved first (#378); the twelve package namespaces followed, which
 closed the ratchet's KIND 3.
