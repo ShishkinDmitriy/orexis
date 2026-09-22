@@ -42,6 +42,15 @@ The second reason is the crossing. A plan goes to the execution layer to be carr
 
 A WORKING graph, and memory: the imaginarium is not on disk. A plan is a pass's result and not yet a commitment; what survives is the intention the execution layer mints when it copies one in (`plans.copy_plan`).""" .
 
+planning:GroundGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Ground graph" ;
+    rdfs:comment """WHAT THE AGENT'S OWN KNOWLEDGE COMES TO OVER ONE PERIOD — the present, or what a prediction made of the period before it — materialised in an imaginarium as one graph, classified with the stretch it holds over. Which ground holds at an instant is then the door's question and no reader is handed a list.
+
+IT EXISTS BECAUSE A PREDICTION IS A DIFF. A prediction used to be a graph holding the reading it foretold, and a door handed a reader every graph holding at an instant — so a met-test asked at a foreseen instant saw the reading AND the prediction of it, and a shape holds over every value, so the stale one still violated. A tank low now with a forecast refilling it read as unmet for ever. A prediction is an `orexis:Action` nobody takes now, with `sh:construct` and `orexis:retracts` like any other, and applying it to the period before is what makes the next ground.
+
+NEIGHBOURS THAT HASH THE SAME ARE ONE. Each ground carries the same signature a possible world does, and where two periods reach the same facts the second is not a period: nothing a met-test can read moved, so nothing it could answer differs. That is what bounds the judging — a desire is asked once per distinct ground rather than once per boundary.
+
+A WORKING graph, and memory: an imaginarium is not on disk, and a ground is what a pass stands on rather than anything the agent believes.""" .
+
 planning:ScopeGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Scope graph" ;
     rdfs:comment "THE STORE's scopes — nobody's, and one graph rather than one per agent, since every agent reading one store would compute the same partition from the same rows — written whole by `scope_actions` from the actions the store holds and the derivations loaded: which predicates some one action or derivation reads or writes together, as `planning:Scope` nodes, and which scope each predicate and each action is in. The partition is a function of the actions loaded, which do not change while the agent runs; it was recomputed in Python on every derivation and is data now, so `derive_wants` reads it and clusters the results by it. A working graph: a conclusion, replaced whole per run, carried into no possible world and read beside no state, since none of it is a fact about the world a shape is written against." .
 ##  The store's scopes — written whole by `scope_actions` from the actions the store holds and

@@ -31,7 +31,11 @@ CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 
 #  What the caller names as the agent's own, per case — `Imaginarium(store, *private)`'s
 #  argument. A case not listed here names none, which is a claim of its own.
-PRIVATE = {"a_named_private_graph_crosses_too": ("http://example.org/test#sensed",)}
+#  NOTHING IS NAMED ANY MORE. The caller used to list which of its own graphs crossed; the
+#  function asks the catalogue for them — the readings, the predictions, the picks, the desires
+#  and the wants — because which graphs are the agent's own is a question the store answers and
+#  a list a caller keeps is a second place the answer lives.
+SCOPE = "scope/1"
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c.stem for c in CASES])
@@ -39,7 +43,7 @@ def test_init_imaginarium_fills_the_store_as_the_snapshot_says(case, monkeypatch
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(case)
     into = ox.Store()
-    init_imaginarium(store, into, *PRIVATE.get(case.stem, ()))
+    init_imaginarium(store, into, SCOPE, snapshots.NOW)
     snapshots.held_to_patch(case, request, "init_imaginarium", snapshots.snapshot_of(into))
 
 

@@ -40,7 +40,9 @@ from urllib.parse import quote
 
 import pyoxigraph as ox
 
-from orexis_agent_execution.ontology import GRAPH_PREFIX, OREXIS, PUBLIC, STATE_GRAPH, local_of
+from orexis_agent_execution.ontology import (BELIEF, DESIRE, GRAPH_PREFIX, OREXIS, PREDICTION,
+                                             PUBLIC, RECORD, STATE, STATE_GRAPH, WANT, local_of)
+from .init_imaginarium import init_imaginarium
 from .ontology import PLANNING
 from orexis_agent_execution.store import (Memo, add_quads, catalogue_of, classify,
                                            clear_graph, construct, contains_graph, copy_graphs,
@@ -64,53 +66,6 @@ def plan_graph(want: str) -> str:
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 
-def init_imaginarium(beliefs: ox.Store, into: ox.Store, *private: str) -> ox.Store:
-    """Fill an empty store with what no step may change, and hand it back — a FUNCTION OVER
-    TWO STORES, which is the one thing here that cannot be one over a single store.
-
-    `beliefs` is read and `into` is written; both are the engine, a `pyoxigraph.Store`, and
-    the caller makes the empty one. Everything that happens to a possible world afterwards
-    happens to `into` the ordinary way, so this is the seam and not a wrapper.
-
-    **Every public graph, asked rather than listed.** The record budgeted for four — world,
-    derived, entailed, beliefs, 486 quads — on the reasoning that those are what the shipped
-    rules read. Measured, that set makes the actuation and market CONSTRUCTs bind nothing:
-    both walk `?term market:ofGood ?good`, and a valuation term is stated in a package's
-    `ontology.ttl`, so it lands in the ontology graph along with the T-Box. Copying every
-    public graph costs 10.4 ms and 2,646 quads on `world/loner` where the lean set is 0.6 ms
-    and 165 — and the lean set is wrong in the way this file exists to prevent, since a
-    pattern reaching a graph nobody copied returns an EMPTY RESULT rather than an error: no
-    rows, no exception, and a planner that quietly finds every lever useless. Eleven
-    milliseconds on a pass costing over a second is not a price worth that. **That measurement
-    is also why a world is not narrowed per scope**: fewer graphs is the same move under
-    another name, and it fails the same silent way.
-
-    It is also the rule the rest of the repo follows. `graphs_of(beliefs, PUBLIC)`
-    ASKS the vocabulary which graphs are public; naming four of them here would be the
-    enumeration rule 1 forbids, and adding a fifth public graph would silently stop reaching
-    this.
-
-    EVERY PUBLIC GRAPH WHATEVER ITS PERIOD, and the catalogue with them (#619): a pass asks its
-    rules at instants of its own — a step's landing, a want's instant — and a forecast holding
-    then is a graph the present has not reached. Copied whole, the imaginarium's own door
-    filters by the instant it is asked at, as the belief base's does; copied at now, a search
-    could not see past the present's weather.
-
-    `private` is what the agent alone holds and a rule still names: its beliefs, which every
-    prediction's conversion comes out of, and its readings, which are where the search starts.
-    Both are copies. Nothing here is ever written back.
-
-    QUADS AND NOT TEXT, which is why this is not a `dump`-and-`load`: a serialise-and-reparse
-    relabels blank nodes, so an observation node would come out the far side unequal to the
-    one a retraction names — the same trap `effects._triple` exists for, one layer up.
-    """
-    for iri in dict.fromkeys([*graphs_of(beliefs, PUBLIC), catalogue_of(beliefs), *private]):
-        if iri is None:
-            continue                          # a store nobody has told anything to has no catalogue
-        into.extend(beliefs.quads_for_pattern(None, None, None, ox.NamedNode(iri)))
-    return into
-
-
 class Imaginarium:
     """The graphs a rule may read, in memory, plus one graph per world the plan imagines.
 
@@ -122,7 +77,7 @@ class Imaginarium:
     asked through. Everything else about how worlds are KEPT is behind `self._store`.
     """
 
-    def __init__(self, beliefs: ox.Store, *private: str):
+    def __init__(self, beliefs: ox.Store, scope: str, now: datetime):
         """A store of its own, filled by `init_imaginarium` — which is all this ever was.
 
         The copying is the function above, over two engines. What is left here is making the
@@ -133,6 +88,10 @@ class Imaginarium:
         a convenience and not a boundary: a caller that means to hand a rule the engine — the
         search does, on every fork — takes it rather than going through a forwarding method.
         The predecessor held a `Store` wrapper here and forwarded twenty-odd of its methods.
+
+        `scope` names which imaginarium this is — a pass makes one per scope of the vocabulary
+        — and `now` is the instant its grounds are laid from, since the present cannot be read
+        off a store: nothing there marks it.
         """
         self.engine = ox.Store()                    # no path: memory, and not the belief base
         #  THE PASS'S MEMO, and the pass is what this object IS. A rule text and the action
@@ -140,7 +99,7 @@ class Imaginarium:
         #  — so the lifetime is exactly this object's, which is why the memo is its and not
         #  the store's (an-agent-is-four-things).
         self.memo = Memo()
-        init_imaginarium(beliefs, self.engine, *private)
+        init_imaginarium(beliefs, self.engine, scope, now)
 
     @property
     def _carried(self) -> frozenset:

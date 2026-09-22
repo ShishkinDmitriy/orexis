@@ -1,0 +1,50 @@
+# the_agents_own_kinds_cross_and_nothing_else
+#
+# WHAT CROSSES IS WHAT A RULE MAY READ, and the fill ASKS which graphs those are. Every PUBLIC
+# graph crosses — asked of the catalogue, never listed — and so does the catalogue itself,
+# since every read inside asks it what the graphs are. Of the agent's OWN, the kinds a search
+# reads cross: its readings, its predictions, its picks, its desires and its wants. `:sensed`
+# is a `orexis:StateGraph` and crosses for that reason.
+#
+# AND A KIND NOBODY ASKS FOR STAYS BEHIND. `:scratch` is the agent's and is classified nothing
+# a rule reads, so it does not cross — which is what makes "asked" mean something.
+#
+# IT WAS TWO CASES AND A PARAMETER. The caller used to LIST which of its own graphs crossed,
+# so one case passed `:sensed` and one did not, and the two files were otherwise identical.
+# Which graphs are the agent's own is a question the store answers; a list the caller keeps is
+# a second place the answer lives, and the day the two disagreed nothing would have said so.
+#
+# The clock stands at 2026-01-01T12:00:00Z, which is where the ground is laid from.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+GRAPH :world {
+  :tank1 a :Tank .
+}
+
+GRAPH :sensed {
+  :tank1 :level 5 .
+}
+
+GRAPH :scratch {
+  :note :says "a working graph of no kind the search asks for" .
+}
+
+GRAPH :catalogue {
+  :scratch a orexis:Graph .
+  :scratch orexis:beliefsOf :keeper .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :sensed orexis:beliefsOf :keeper .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

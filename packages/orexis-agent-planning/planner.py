@@ -49,14 +49,15 @@ import rdflib
 from orexis_agent_execution import clock
 from orexis_agent_execution import violation
 from orexis_agent_execution.act import Step
-from orexis_agent_execution.ontology import (DESIRE, FORESEEN, PUBLIC, RECORD, STATE, WANT,
-                                             local_of, picks_graph)
+from orexis_agent_execution.ontology import (DESIRE, FORESEEN, PREDICTION, PUBLIC, RECORD,
+                                             STATE, WANT, local_of, picks_graph)
 from orexis_agent_execution.store import Memo, bindings, graphs_of, query, rdflib_view
 
 from . import effects, relevance, signature
 from .derive_wants import derive_wants
 from .forget_wants import withdraw
 from .imaginarium import Imaginarium, plan_graph
+from .ontology import GROUND_GRAPH
 from .plan import EXHAUSTED, NOTHING, Plan, SATISFIED
 from .scopes import find_scopes
 from .steps import find_steps
@@ -133,24 +134,18 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         #  standing want's own met-test a second time to find out what one pass concluded.
         withdraw(self.beliefs, derive_wants(self.beliefs, at), at)
         wants = find_wants(self.beliefs, at, holder=self.uri)
-        #  WHAT THE AGENT ALONE HOLDS AND A RULE STILL NAMES: its readings, which are where the
-        #  search starts; its picks, which every conversion comes out of; and the wants, whose
-        #  shapes the packages' own shapes target. `init_imaginarium` copies every PUBLIC graph
-        #  by asking, and these are not public — a graph nobody copied returns an EMPTY RESULT
-        #  rather than an error, which is the failure the filling exists to prevent.
-        private = tuple(dict.fromkeys([
-            *graphs_of(self.beliefs, STATE),
-            *graphs_of(self.beliefs, DESIRE, WANT, RECORD, at=at),
-            self.picks]))
-        #  THE WORLD THE SEARCH STARTS IN, asked rather than named: a graph IRI is an instance
-        #  (rule 1), so which graph holds the readings is the catalogue's to say.
-        self._state = next(iter(graphs_of(self.beliefs, STATE)), None)
+        #  WHAT CROSSES IS THE FILL'S TO ASK. The caller used to list which of its own graphs
+        #  went in; `init_imaginarium` asks the catalogue for the kinds a search reads, and
+        #  lays the ground worlds while it is there.
         out: dict[str, Plan] = {}
         #  WHAT EACH WANT READS is asked of the graphs of wants, where the derivation wrote
         #  each met-test narrowed to its own witness.
         shapes = rdflib_view(self.beliefs, *graphs_of(self.beliefs, DESIRE, WANT, RECORD, at=at))
-        for group in self._by_scope(wants, shapes).values():
-            imaginarium = Imaginarium(self.beliefs, *private)
+        for scope, group in self._by_scope(wants, shapes).items():
+            imaginarium = Imaginarium(self.beliefs, _scope_name(scope), at)
+            #  THE WORLD THE SEARCH STARTS IN is the GROUND holding at the instant it stands
+            #  at — asked of the catalogue by class, never named (a graph IRI is an instance).
+            self._state = next(iter(graphs_of(imaginarium.engine, GROUND_GRAPH, at=at)), None)
             for want in group:
                 out[want.uri] = self._search(imaginarium, want, at)
         return out
@@ -320,9 +315,22 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         THE READER STATES THE KINDS IT READS and the instant it stands at, and a list built
         for the wrong instant returns an EMPTY RESULT rather than an error — so it is built
         in one place (#666).
+
+        WHAT IS LEFT OUT IS EVERYTHING THE GROUND ALREADY SPEAKS FOR: the agent's own readings,
+        and every ground but this node's. A ground IS the readings as they stand over a period,
+        with each prediction applied — so handing the raw state graph beside it puts the
+        present's value in the world next to the one that superseded it, and a shape holding
+        over every value sees both. Measured the moment the root became a ground: a tank filled
+        to ten still read below ten, because the nought it started at was in the world too.
+
+        PREDICTIONS ARE LEFT OUT FOR THE SAME REASON — they are the diffs the grounds were made
+        from, and a diff is not a fact about a world.
         """
+        spoken_for = {*graphs_of(imaginarium.engine, STATE),
+                      *graphs_of(imaginarium.engine, PREDICTION),
+                      *graphs_of(imaginarium.engine, GROUND_GRAPH)}
         graphs = [g for g in graphs_of(imaginarium.engine, *FORESEEN, at=node.at)
-                  if g != self._state]
+                  if g not in spoken_for]
         return [*graphs, node.world] if node.world else graphs
 
     # --- the verdict -------------------------------------------------------------------------
@@ -425,6 +433,14 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         imaginarium.note(quads)
         imaginarium.classify_plan(graph, want.uri)
         return graph
+
+
+def _scope_name(key) -> str:
+    """A name for the imaginarium of one scope group, for eyes. A group keyed by several scopes
+    — a want that reaches into more than one — is named for all of them, joined."""
+    if isinstance(key, tuple):
+        return "-".join(sorted(k.rsplit("/", 1)[-1] for k in key)) or "unscoped"
+    return str(key).rsplit("/", 1)[-1]
 
 
 class _Node:

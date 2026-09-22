@@ -31,6 +31,12 @@ WRITES = PLANNING + "writes"
 ANYTHING = PLANNING + "Anything"
 DERIVATION_GRAPH = PLANNING + "DerivationGraph"
 
+#  A GROUND WORLD: what the agent's own knowledge comes to over ONE PERIOD, materialised in an
+#  imaginarium — the present, and what each prediction makes of it. Classified with a period,
+#  so which ground holds at an instant is a question the door answers and no reader is handed a
+#  list (a-reader-states-the-kinds-it-reads).
+GROUND_GRAPH = PLANNING + "GroundGraph"
+
 #  A SCOPE (scope-actions): which predicates some one action or derivation moves together.
 SCOPE = PLANNING + "Scope"
 IN_SCOPE = PLANNING + "inScope"

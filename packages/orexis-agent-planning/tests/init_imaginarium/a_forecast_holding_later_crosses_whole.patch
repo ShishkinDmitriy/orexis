@@ -1,0 +1,10 @@
+--- case
++++ expected
+@@ -25,4 +25,7 @@
+   :ontology a orexis:PublicGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  <http://example.org/orexis/graph/ground/1/2026-01-01T120000p0000> a planning:GroundGraph .
++  <http://example.org/orexis/graph/ground/1/2026-01-01T120000p0000> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  <http://example.org/orexis/graph/ground/1/2026-01-01T120000p0000> orexis:arrivedBy orexis:Derived .
+ }
