@@ -38,6 +38,15 @@ which is the shape RocksDB has: the engine answers questions at nearly the same 
 way and pays for durability when something changes. A pass writes a graph per fork, so the
 argument from cleanup and the argument from cost point the same way.
 
+**AND IT DOES NOT EVEN SAVE MEMORY, which is the reason somebody would reach for a file.** An
+imaginarium after a pass over the plans case is 97 quads in 11 named graphs, filled from an
+86-quad belief base — a fork copies the READINGS, not the world, so the shared thousands cross
+once and each node adds its own handful. Held on disk instead, peak RSS went UP: 50 MB against
+57, because RocksDB's memtables, block cache and file handles cost more than 97 quads ever
+could, and the directory was 270 KB. If what is wanted is to SEE a pass after it ends, dumping
+the whole imaginarium as n-quads costs 0.09 ms and 17.6 KB and hands back a text anything can
+read, where a store on disk is a directory one process at a time may open.
+
 A FUNCTION OVER TWO STORES, which is the one thing in this package that cannot be a function
 over a single one. `beliefs` is read and the empty store is written; both are the engine, a
 `pyoxigraph.Store`, and the caller makes the empty one. Everything that happens to a possible
