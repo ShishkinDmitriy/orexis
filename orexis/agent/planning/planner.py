@@ -58,7 +58,7 @@ from orexis.agent import violation
 from orexis.agent.execution.act import Step
 from orexis.agent.ontology import (DESIRE, FORESEEN, GRAPH_PREFIX, OREXIS, PREDICTION,
                                              PUBLIC, RECORD, STATE, STATE_GRAPH, WANT,
-                                             local_of, picks_graph)
+                                             local_of)
 from orexis.agent.hash_named_graph import hash_named_graph
 from orexis.agent.store import (Memo, add_quads, bindings, catalogue_of, classify,
                                            clear_graph, copy_graph,
@@ -95,7 +95,6 @@ class Planner:
         """
         self.beliefs = beliefs
         self.id = agent_id
-        self.picks = picks_graph(agent_id)
         self.uri, self.acts_for = self._identity(agent_id)
         #  The readings graph of the pass in hand — set at `plan`, since which graph that is
         #  is the catalogue's to say and a pass is what stands somewhere.
@@ -299,7 +298,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
 
     def _steps(self, node: "_Node", want: str) -> list[Step]:
         """What this world affords — one step per action per legal filling, name-ordered."""
-        return find_steps(self._store, self.uri, self.picks,
+        return find_steps(self._store, self.uri,
                           graphs=self._dataset(node), memo=self._memo)
 
     def _take(self, node: "_Node", step: Step,

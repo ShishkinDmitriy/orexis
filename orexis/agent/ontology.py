@@ -123,13 +123,8 @@ KNOWN = (PUBLIC, BELIEF, RECORD, DESIRE, WANT)
 FORESEEN = (*KNOWN, PREDICTION)
 
 #  A GRAPH'S NAME IS FOR EYES. The builders below spell a readable convention for the graphs
-#  the kernel writes — `intentions/<agent>`, `picks/<agent>` — and nothing in code depends on
+#  the kernel writes — `intentions/<agent>` — and nothing in code depends on
 #  the spelling: an owner classifies what it writes (`store.classify`) and every reader asks
 #  the class (`store.graphs_of`). Rename one here and only the eyes notice.
 
 
-def picks_graph(agent_id: str) -> str:
-    """The graph holding ONE agent's picks — its record of picking, birth's first entries and
-    review's revisions. Also its write boundary, in the strong sense: a review may write here
-    and nowhere else."""
-    return _GRAPH + "picks/" + agent_id

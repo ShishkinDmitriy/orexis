@@ -42,8 +42,7 @@ from datetime import datetime
 import pyoxigraph as ox
 
 from orexis.agent import clock
-from orexis.agent.ontology import picks_graph
-from .ontology import PATIENCE_S, intentions_graph
+from .ontology import intentions_graph
 from .plans import OUTCOME, RESOLVED_AT, copy_plan
 from orexis.agent.store import Raw, bind, rows, update
 
@@ -63,12 +62,6 @@ SELECT ?intention ?want ?at ?adopted WHERE {
     OPTIONAL { ?intention execution:by ?at }
     FILTER NOT EXISTS { ?intention execution:resolvedAt ?done } } }
 ORDER BY ?adopted"""
-
-#  THE PICK ITSELF, out of the graph the agent's picks live in — named, because a writer
-#  reading back what it wrote names its graph and this is the one read that does.
-_PATIENCE_Q = """
-SELECT ?s WHERE { GRAPH $picks { $me <$patience> ?s } }"""
-
 
 class Standing:
     """One commitment that has not been resolved: what it pursues, where it has got to, and
@@ -160,20 +153,14 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
     def patience_s(self) -> float:
         """How long a standing commitment blocks re-adoption of one for the same want.
 
-        An OPINION, so it is the agent's own belief and a review may move it inside whatever
-        room its world leaves. Read fresh rather than cached: a review that moved it between
-        two passes moved it, and a keeper holding the old number would be the wrapper problem
-        this layer exists without.
+        A CONSTANT HERE, AND IT SHOULD NOT STAY ONE. It is an OPINION — the agent's own
+        belief, which a review may move inside whatever room its world leaves — and it was
+        read from the graph an agent's picks live in. That graph is reached by NAME and has no
+        class, nothing in this tree writes one, and the mechanism that would is review, which
+        this tree does not load. So the read is gone with the rest of picks and the figure is
+        `DEFAULT_PATIENCE_S` until something can revise it (a-pick-is-read-not-guessed).
         """
-        if self.holder is None:
-            return DEFAULT_PATIENCE_S
-        found = rows(self.beliefs, bind(_PATIENCE_Q, picks=Raw(f"<{picks_graph(self.id)}>"),
-                                        me=Raw(f"<{self.holder}>"),
-                                        patience=Raw(PATIENCE_S)))
-        try:
-            return float(found[0]["s"])
-        except (IndexError, KeyError, TypeError, ValueError):
-            return DEFAULT_PATIENCE_S
+        return DEFAULT_PATIENCE_S
 
     def __len__(self) -> int:
         return len(self.standing())

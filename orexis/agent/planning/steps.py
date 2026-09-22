@@ -48,7 +48,7 @@ _ACTIONS = """SELECT ?action ?available (GROUP_CONCAT(DISTINCT STR(?takes); sepa
 _MEMO = ("steps", "actions")
 
 
-def find_steps(store, me: str, picks: str,
+def find_steps(store, me: str,
                *, graphs=None, only=None, memo=None) -> list[Step]:
     """Every step this agent could take in one world, name-ordered.
 
@@ -63,7 +63,7 @@ def find_steps(store, me: str, picks: str,
     nobody to hand them in for: the templates are public and the store has them, including an
     imaginarium, which copies every public graph at init.
 
-    The rest are criteria: `me` and `picks`, whose world this is.
+    The rest is one criterion: `me`, whose world this is.
 
     **IT IS NOT NARROWED BY WHAT A WANT IS ABOUT.** Every action was handed a `VALUES` table of
     `(want, about)` pairs and joined itself to the want whose property it served — which is
@@ -81,7 +81,7 @@ def find_steps(store, me: str, picks: str,
     for action in _declared(store, memo):
         if only is not None and action["action"] not in only:
             continue
-        found += steps_of_action(store, action, me, picks, graphs=graphs)
+        found += steps_of_action(store, action, me, graphs=graphs)
     #  Sorted because per-action order is no order.
     return sorted(found, key=lambda s: (s.action, s.for_agent or ""))
 
@@ -104,7 +104,7 @@ def _declared(store, memo=None) -> list[dict]:
         bindings(query(store, _ACTIONS, graphs_of(store, PUBLIC))), key=lambda r: r["action"]))
 
 
-def steps_of_action(store, action: dict, me: str, picks: str, *, graphs=None) -> list[Step]:
+def steps_of_action(store, action: dict, me: str, *, graphs=None) -> list[Step]:
     """Every step this action affords in one world — zero, one or many.
 
     WHICH WORLD IS A CRITERION — `graphs`, the world asked about as the list of graphs
@@ -119,11 +119,11 @@ def steps_of_action(store, action: dict, me: str, picks: str, *, graphs=None) ->
     choosing between them is the whole of what a plan does at that step.
 
     """
-    #  `$picks` names the agent's OWN graph, as it does for an effect rule: a premise may be
-    #  something only this agent was told — an open round is one (#358) — and the default
-    #  graph is public knowledge, so a walk that needs it must say so. A precondition carrying
-    #  a token nobody binds refuses rather than reaching the engine as a free variable (#500).
-    q = bind(action["available"], me=me, picks=picks)
+    #  A precondition carrying a token nobody binds REFUSES rather than reaching the engine as
+    #  a free variable (#500), so what the runner offers is what a premise may read: `$me`, and
+    #  nothing else. `$picks` was offered too — the graph an agent's own settings live in — and
+    #  no action in this tree named it; it returns with the mechanism that writes picks.
+    q = bind(action["available"], me=me)
     #  THE ROW IS WHAT THE PRECONDITION BOUND, held to what the action says it TAKES: one
     #  pair per declared parameter the select projected, sorted so identity is the binding
     #  and nothing downstream has to agree on an order. A projected variable the action

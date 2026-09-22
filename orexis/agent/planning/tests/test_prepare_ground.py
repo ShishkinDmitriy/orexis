@@ -32,7 +32,7 @@ CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 #  What the caller names as the agent's own, per case — `prepare_ground`'s
 #  argument. A case not listed here names none, which is a claim of its own.
 #  NOTHING IS NAMED ANY MORE. The caller used to list which of its own graphs crossed; the
-#  function asks the catalogue for them — the readings, the predictions, the picks, the desires
+#  function asks the catalogue for them — the readings, the predictions, the desires
 #  and the wants — because which graphs are the agent's own is a question the store answers and
 #  a list a caller keeps is a second place the answer lives.
 SCOPE = "scope/1"

@@ -38,7 +38,7 @@ returns attached to whatever needs it, never a thing quietly lost
   `Desires` projection it read. The search reads the desire and want graphs straight out of
   the beliefs store, which is what removed the projection's whole reason to exist.
 - **the `reviser`** — the belief-revision thread that marked a want when something moved.
-- **`Beliefs` the class** — of which only the picks machinery was ever wanted, and only for
+- **`Beliefs` the class** — of which only the pick machinery was ever wanted, and only for
   one number.
 - **the judge** (`conformance`) — it belongs at the gates, where a world is entire and the
   question can be asked at all. What the search reads is the SELECT a shape compiles to, which

@@ -132,8 +132,8 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, scope: str,
        against before it safely could.
     2. **The catalogue**, since every read inside asks it what the graphs are.
     3. **What the agent alone holds and a rule still names**: its readings, which are where the
-       search starts; its picks, which a conversion comes out of; its predictions, which make
-       the grounds; and its desires and wants, whose shapes the packages' shapes target. Whatever
+       search starts; its predictions, which make the grounds; and its desires and wants,
+       whose shapes the packages' shapes target. Whatever
        its period — a pass asks its rules at instants of its own, and a forecast holding then is
        a graph the present has not reached.
     4. **The GROUND WORLDS**, built here rather than copied: one graph per period the agent can

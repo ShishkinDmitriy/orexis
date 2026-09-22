@@ -30,11 +30,9 @@ from rdflib.compare import to_canonical_graph
 
 import pyoxigraph as ox
 
-from orexis.agent import clock
-from orexis.agent.ontology import OREXIS, picks_graph
+from orexis.agent.ontology import OREXIS
 from orexis.agent.store import (catalogue_of, close_catalogue, dump_nt,
-                                          graph_names, graphs_of, put_graph, update)
-from orexis.agent.planning.derive_wants import graph_of
+                                          graph_names, graphs_of, put_graph)
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 AGENT, ME = "keeper", "http://example.org/test#keeper"

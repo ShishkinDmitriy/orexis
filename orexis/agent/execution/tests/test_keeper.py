@@ -14,7 +14,6 @@ import pytest
 
 from orexis.agent import clock
 from orexis.agent.execution.keeper import DEFAULT_PATIENCE_S, Keeper
-from orexis.agent.ontology import picks_graph
 from orexis.agent.execution.ontology import EXECUTION, intentions_graph
 from orexis.agent.store import bindings, query_over, update
 
@@ -106,12 +105,3 @@ def test_an_empty_plan_is_an_answer_and_not_a_commitment():
     assert keeper().commit(ox.Store(), PLAN, WANT) is None
 
 
-def test_the_patience_is_the_agents_own_pick():
-    """An OPINION, read fresh off the pick record — a keeper holding a cached number would be
-    the wrapper problem this layer exists without."""
-    beliefs = ox.Store()
-    update(beliefs, f"""INSERT DATA {{ GRAPH <{picks_graph(AGENT)}> {{
-      <{ME}> <{EXECUTION}patienceS> 900 . }} }}""")
-    assert keeper(beliefs, ME).patience_s == 900.0
-    assert keeper(beliefs, None).patience_s == DEFAULT_PATIENCE_S, "no holder, no pick to read"
-    assert keeper(ox.Store(), ME).patience_s == DEFAULT_PATIENCE_S, "stating none is not stating zero"
