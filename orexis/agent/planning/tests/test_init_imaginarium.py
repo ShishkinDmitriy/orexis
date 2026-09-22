@@ -24,7 +24,7 @@ import pytest
 from orexis.agent import clock
 import pyoxigraph as ox
 
-from orexis.agent.planning.imaginarium import init_imaginarium
+from orexis.agent.planning.init_imaginarium import init_imaginarium
 
 CASES_DIR = Path(__file__).parent / "init_imaginarium"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)

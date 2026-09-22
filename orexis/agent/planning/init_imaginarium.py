@@ -1,5 +1,26 @@
 """Filling an imaginarium: what a search over one scope is given, and the ground it stands on.
 
+WHY THERE IS A SECOND STORE AT ALL. A plan is `(beliefs − retracts) + adds`, applied step
+after step, and every step's rule is a SPARQL query. A query reads ONE store, so the question
+"what would be true here" is answerable only if there is a store in which *here* is what is
+true. There was not: the predecessor computed each step honestly and asked the BELIEF BASE for
+the next one, so the first step was right and every step after it was predicted from the
+reading on disk. Depth beyond 1 was nominal for any desire about a measured value, which is
+most of them. So the rules are run against a second `pyoxigraph.Store`, in memory for the life
+of one plan — the **imaginarium**, in the sovereign's word, and the word says the thing that
+matters: what is in it never happened. See
+knowledge/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md.
+
+**IT IS A STORE**, and was a class twice over — a subclass of the store's wrapper, then a
+holder forwarding twenty-two methods of which a search called five. The graphs a rule may read
+are copied in, so an ordinary query means the same thing here as it does in the belief base:
+`graphs_of(PUBLIC)` discovers the same names off the same ontology graph, and `effects.apply`
+cannot tell the two apart. What differs is that this one was constructed with no path, so it
+is memory and there is nothing to clean up — the whole store is dropped when the plan ends,
+and a crash mid-plan leaves nothing behind to find. That is most of why it is a store of its
+own rather than a graph in the agent's: a graph can be forgotten to be dropped, and a store
+that was never on disk cannot be.
+
 A FUNCTION OVER TWO STORES, which is the one thing in this package that cannot be a function
 over a single one. `beliefs` is read and the empty store is written; both are the engine, a
 `pyoxigraph.Store`, and the caller makes the empty one. Everything that happens to a possible

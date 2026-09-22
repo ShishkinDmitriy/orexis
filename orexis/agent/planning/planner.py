@@ -48,6 +48,7 @@ import heapq
 import itertools
 import logging
 from datetime import datetime, timedelta
+from urllib.parse import quote
 
 import pyoxigraph as ox
 import rdflib
@@ -55,15 +56,17 @@ import rdflib
 from orexis.agent import clock
 from orexis.agent import violation
 from orexis.agent.execution.act import Step
-from orexis.agent.ontology import (DESIRE, FORESEEN, OREXIS, PREDICTION, PUBLIC, RECORD,
-                                             STATE, WANT, local_of, picks_graph)
+from orexis.agent.ontology import (DESIRE, FORESEEN, GRAPH_PREFIX, OREXIS, PREDICTION,
+                                             PUBLIC, RECORD, STATE, STATE_GRAPH, WANT,
+                                             local_of, picks_graph)
 from orexis.agent.hash_named_graph import hash_named_graph
 from orexis.agent.store import (Memo, add_quads, bindings, classify, clear_graph,
-                                           graphs_of, query, rdflib_view)
+                                           forget_graph, graphs_of, query,
+                                           rdflib_view, remove_quads, update)
 
 from . import effects, relevance
+from .init_imaginarium import init_imaginarium
 from .derive_wants import derive_wants
-from .imaginarium import drop_world, imagine, plan_graph, reached
 from .ontology import (COSTS, EXHAUSTED, FOR_WANT, GROUND_GRAPH, NO_CANDIDATE,
                        OUTCOME, PLAN_GRAPH, SATISFIED)
 from .scopes import find_scopes
@@ -168,7 +171,8 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         for scope in families:
             #  WHAT CROSSES IS THE FILL'S TO ASK. `init_imaginarium` asks the catalogue for
             #  the kinds a search reads and lays the ground worlds while it is there.
-            self._store = imagine(self.beliefs, _scope_name(scope), at)
+            self._store = init_imaginarium(self.beliefs, ox.Store(),
+                                           _scope_name(scope), at)
             self.imaginaria.append(self._store)
             #  THE PASS'S MEMO, one per world. The action templates, a rule text and the class
             #  definitions cost more to re-read than a pass can afford and can change only by
@@ -670,3 +674,105 @@ def _raw(graph: str):
     """A graph named in a rule text as `GRAPH $state` — spliced verbatim, not rendered."""
     from orexis.agent.store import Raw
     return Raw(f"<{graph}>")
+
+
+# --- the worlds a search makes --------------------------------------------------------------
+#
+#  **ONE NAMED GRAPH PER SEARCH NODE, AND NONE OF THEM IS EVER MUTATED.** The obvious reading
+#  is a single hypothesis graph each step overwrites, and it is wrong: siblings are alive at
+#  the same time, so BRANCHING rather than backtracking is the hard case. A world is therefore
+#  a VALUE — written once when the node is created, and choosing another branch is binding
+#  `$state` to another name. There is nothing to restore because nothing was disturbed.
+#
+#  THEY LIVE HERE because the search is the only thing that makes one. This was
+#  `imaginarium.py`, which by the end held a one-line fill, a fork, a drop and two name
+#  builders, every one of them called from this file and nowhere else. What an imaginarium IS
+#  stays in `init_imaginarium.py`, the module that fills one.
+
+#  Where a node's readings sit. Under the same root as every other graph, because a graph IRI is
+#  a graph IRI — but in a store nothing else can open, which is what keeps `orexis:PossibleGraph`'s
+#  promise that nothing here survives anything.
+_POSSIBLE = GRAPH_PREFIX + "possible/"
+
+#  AND ONE GRAPH PER WANT'S PLAN. A name is for eyes and nothing depends on it: a reader asks
+#  the catalogue for `planning:PlanGraph`, and the writer that made it may name what it wrote.
+_PLAN = GRAPH_PREFIX + "plan/"
+
+
+def plan_graph(want: str) -> str:
+    """The graph one want's plan is written into — one per want, replaced whole."""
+    return _PLAN + quote(local_of(want), safe="")
+_RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+
+
+def reached(store: ox.Store, parent: str, path, added, retracted) -> str:
+    """The world one step past `parent`: its readings, less what the step retracts, plus what
+    it adds. Returns the new graph's name, which is what a rule's `$state` is bound to.
+
+    **Fork, do not replay.** A node's readings are made by copying its parent's and applying
+    the diff. Recomputing a world by replaying from the root would sound cheaper and is the
+    shape of the bug this exists to close: replay re-runs each step's rule, and a rule re-run
+    has to be re-run against *something* — which was the store. Materialising per node is what
+    makes a step's baseline the previous step's conclusion.
+
+    Retraction before addition, and the order is load-bearing for the same reason it is in
+    `effects.world_after`: the sensed graph holds one observation node per (subject,
+    property), and Observe's construct reuses the very node its retraction names. Added first,
+    the addition would be removed by the retraction meant to precede it and the possible world
+    would come back holding neither reading.
+    """
+    name = world_of(path)
+    node = ox.NamedNode(name)
+    #  THE COPY IS THE ENGINE'S, not a Python loop over quads. The loop cost 4.75 ms per fork
+    #  on a 1,000-triple world against 3.29 ms this way, and 59 ms against 44 at 10,000 — a
+    #  quarter, all of it the interpreter's overhead per quad rather than the store's. Blank
+    #  node identity survives it, measured: a bnode matched in the WHERE is the same term when
+    #  inserted, which matters because a held shape IS a blank node.
+    update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
+                  f"WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}")
+    #  Retraction after the copy rather than during it, and by TERM rather than by text: a
+    #  DELETE DATA would have to re-serialise every literal with its datatype, which is the
+    #  mistake `effects._triple` already made once in the other direction. The lists are a
+    #  handful of triples, so a loop here costs nothing.
+    remove_quads(store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in retracted))
+    add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
+    return name
+
+
+def drop_world(store: ox.Store, name: str) -> None:
+    """Forget one imagined world's graph (#553, #487), and what the catalogue said of it — its
+    hash, written when the search hashed it. A row pointing at a graph that is gone is litter.
+    The ground the search starts in is never dropped here."""
+    if name != STATE_GRAPH:
+        forget_graph(store, name)
+
+
+def segment_of(row) -> str:
+    """One filled action as a name-safe segment: the action and every value it bound.
+
+    EVERY VALUE IS IN IT, and all of them are load-bearing: a schema action yields several rows
+    differing in one parameter alone, and a segment built from fewer made two siblings COLLIDE —
+    the second child's quads merged into the first's graph, a disk resting on two supports at
+    once, and the search saw a menu of duplicates pointing home.
+    """
+    return "-".join(quote(local_of(part), safe="")
+                    for part in (row.action, *(v for _, v in row.binding)))
+
+
+def world_of(path) -> str:
+    """One graph per node, named by the path that reached it.
+
+    The search needs no tree structure added to it and none is wanted: `_Node.taken` is already
+    the ordered tuple of steps taken to get here, so the path IS the ancestry
+    anything asks about, and what this design adds is a name for it.
+
+    DETERMINISTIC: built from the IRIs themselves rather
+    than from `hash()`, which Python salts per interpreter. Nothing outside one plan reads these
+    names, so determinism buys reproducibility in a log rather than findability in a store —
+    but a name that moved between runs would make two traces of the same search incomparable,
+    which is the one thing anybody reads them for.
+
+    Each segment is `segment_of`, which is also how a candidate is named — a world IS its
+    path, so the world a candidate reaches is its parent's name plus that candidate's segment.
+    """
+    return _POSSIBLE + (".".join(segment_of(row) for row in path) or "here")
