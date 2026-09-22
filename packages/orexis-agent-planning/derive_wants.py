@@ -343,8 +343,7 @@ from .forget_wants import RECOGNIZED, forget_graph   # noqa: E402  (see the note
 
 def _write(engine, agent_id: str, uri: str, holder: str, desire: str, label: str,
            now: datetime, *, holds_at: str | None = None, derived_at: str | None = None,
-           about: tuple = (), points: tuple = (), shape: tuple = (),
-           side: str | None = None) -> None:
+           points: tuple = (), shape: tuple = (), side: str | None = None) -> None:
     """Write one derived want over the ENGINE: its graph, replaced whole, and the catalogue's
     account of that graph — its family, how it arrived, whose it is and the period it holds
     during — in one update, so a want and what is said about it land together or not at all.
@@ -369,6 +368,16 @@ def _write(engine, agent_id: str, uri: str, holder: str, desire: str, label: str
 
     NO PERIOD END. A derived want ends when the decomposition stops producing it, never by the
     clock — see `mint` below for the argument.
+
+    AND NO `orexis:about`. A want used to state the one domain property it was in trouble
+    over, and actions joined themselves to it to find the want they served. That is filtering
+    to the goal's predicates, which the closure exists because it is wrong: *"filtering to the
+    goal's predicates deletes every chain; closing backward through preconditions keeps the
+    bid that makes the dose possible"*. WHAT a want reads is its met-test's to say and the
+    closure's to walk; what may repair it is the planning problem, and a want that named one
+    property had answered it before the planner was asked. The word survives where it is
+    about a SHAPE BLOCK — which property one constraint concerns — because that is the shape's
+    own structure, and `narrowed` carves by it.
     """
     graph = graph_of(agent_id, uri)
     said_points = " ".join(f"<{uri}> <{p}> <{o}> ." for p, o in points)
@@ -380,14 +389,13 @@ def _write(engine, agent_id: str, uri: str, holder: str, desire: str, label: str
     timed = (f' ; orexis:holdsAt "{_moment(holds_at)}"^^xsd:dateTime'
              f' ; prov:generatedAtTime "{_moment(derived_at)}"^^xsd:dateTime'
              if holds_at is not None else "")
-    abouts = "".join(f" ; orexis:about <{a}>" for a in about)
     #  WHICH WAY IT BROKE, where the met-test's block said so (`orexis:violationIs`).
     broke = f" ; orexis:violationIs <{side}>" if side else ""
     engine.update(forget_graph(graph) + f""" ;
 INSERT {{
   GRAPH <{graph}> {{
   <{holder}> orexis:holds <{uri}> .
-  <{uri}> a orexis:Want{timed}{abouts}{broke} ;
+  <{uri}> a orexis:Want{timed}{broke} ;
       orexis:state <{RECOGNIZED}> ;
       prov:wasDerivedFrom <{desire}> ;
       rdfs:label {json.dumps(label)} .
@@ -411,8 +419,10 @@ def mint(store: ox.Store, holder: str, desire: str, now: datetime, said=None,
     a blank node has no name another graph could point at, and copying it would make a second
     owner of the claim."""
     said = _said(store, desire) if said is None else said
-    desire_abouts = _abouts(said)
-    abouts = about or desire_abouts
+    #  `about` NAMES AND DOES NOT NARROW. What a cluster is about distinguishes two wants
+    #  under one desire — soil now, air later, two nodes — and that is an IDENTITY. It is not
+    #  written onto the want, because a stated property is the planning problem answered in
+    #  advance (see `_write`).
     child = name_of(store, desire, said, about, instance)
     points = []
     met_test = None
@@ -438,7 +448,7 @@ def mint(store: ox.Store, holder: str, desire: str, now: datetime, said=None,
     shape_lines: tuple = ()
     if met_test is not None:
         own = child + ".met"
-        shape_lines = narrowed(store, met_test, own, instance, abouts)
+        shape_lines = narrowed(store, met_test, own, instance, about)
         points.append((OREXIS_MET_WHEN, own))
 
     labels = [str(o.value) for p, o in said if p.endswith("#label")]
@@ -470,7 +480,7 @@ def mint(store: ox.Store, holder: str, desire: str, now: datetime, said=None,
     _write(store, _local(holder), child, holder, desire, label, now,
            holds_at=holds_at.isoformat() if holds_at is not None else None,
            derived_at=now.isoformat() if holds_at is not None else None,
-           about=abouts, points=tuple(points), shape=shape_lines, side=side)
+           points=tuple(points), shape=shape_lines, side=side)
     log.info("%s reads unmet: pursuing %s", desire.rsplit("#", 1)[-1], child.rsplit("#", 1)[-1])
     return child
 

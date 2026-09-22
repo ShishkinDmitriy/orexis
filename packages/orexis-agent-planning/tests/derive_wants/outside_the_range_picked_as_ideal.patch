@@ -11,7 +11,7 @@
    :scopes orexis:arrivedBy orexis:Derived .
    :scopes orexis:beliefsOf :keeper .
    :sensed a orexis:BeliefGraph .
-@@ -113,4 +113,68 @@
+@@ -113,4 +113,65 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -36,7 +36,6 @@
 +GRAPH pursued:keeper.ideal.pursued.air_warmth_of_fern {
 +  :keeper orexis:holds :keeper.ideal.pursued.air_warmth_of_fern .
 +  :keeper.ideal.pursued.air_warmth_of_fern a orexis:Want .
-+  :keeper.ideal.pursued.air_warmth_of_fern orexis:about :air_warmth_of_fern .
 +  :keeper.ideal.pursued.air_warmth_of_fern orexis:metWhen :keeper.ideal.pursued.air_warmth_of_fern.met .
 +  :keeper.ideal.pursued.air_warmth_of_fern orexis:state orexis:Recognized .
 +  :keeper.ideal.pursued.air_warmth_of_fern orexis:violationIs orexis:Above .
@@ -52,7 +51,6 @@
 +GRAPH pursued:keeper.ideal.pursued.soil_moisture_of_fern {
 +  :keeper orexis:holds :keeper.ideal.pursued.soil_moisture_of_fern .
 +  :keeper.ideal.pursued.soil_moisture_of_fern a orexis:Want .
-+  :keeper.ideal.pursued.soil_moisture_of_fern orexis:about :soil_moisture_of_fern .
 +  :keeper.ideal.pursued.soil_moisture_of_fern orexis:metWhen :keeper.ideal.pursued.soil_moisture_of_fern.met .
 +  :keeper.ideal.pursued.soil_moisture_of_fern orexis:state orexis:Recognized .
 +  :keeper.ideal.pursued.soil_moisture_of_fern orexis:violationIs orexis:Below .
@@ -68,7 +66,6 @@
 +GRAPH pursued:keeper.ideal.pursued.soil_warmth_of_fern {
 +  :keeper orexis:holds :keeper.ideal.pursued.soil_warmth_of_fern .
 +  :keeper.ideal.pursued.soil_warmth_of_fern a orexis:Want .
-+  :keeper.ideal.pursued.soil_warmth_of_fern orexis:about :soil_warmth_of_fern .
 +  :keeper.ideal.pursued.soil_warmth_of_fern orexis:metWhen :keeper.ideal.pursued.soil_warmth_of_fern.met .
 +  :keeper.ideal.pursued.soil_warmth_of_fern orexis:state orexis:Recognized .
 +  :keeper.ideal.pursued.soil_warmth_of_fern orexis:violationIs orexis:Unmeasured .

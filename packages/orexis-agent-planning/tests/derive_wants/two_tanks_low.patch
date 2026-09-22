@@ -11,7 +11,7 @@
    :scopes orexis:arrivedBy orexis:Derived .
    :scopes orexis:beliefsOf :keeper .
    :sensed a orexis:BeliefGraph .
-@@ -66,4 +66,41 @@
+@@ -66,4 +66,39 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -31,7 +31,6 @@
 +GRAPH pursued:keeper.in_range.pursued.tank1.level {
 +  :keeper orexis:holds :keeper.in_range.pursued.tank1.level .
 +  :keeper.in_range.pursued.tank1.level a orexis:Want .
-+  :keeper.in_range.pursued.tank1.level orexis:about :level .
 +  :keeper.in_range.pursued.tank1.level orexis:metWhen :keeper.in_range.pursued.tank1.level.met .
 +  :keeper.in_range.pursued.tank1.level orexis:state orexis:Recognized .
 +  :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
@@ -44,7 +43,6 @@
 +GRAPH pursued:keeper.in_range.pursued.tank2.level {
 +  :keeper orexis:holds :keeper.in_range.pursued.tank2.level .
 +  :keeper.in_range.pursued.tank2.level a orexis:Want .
-+  :keeper.in_range.pursued.tank2.level orexis:about :level .
 +  :keeper.in_range.pursued.tank2.level orexis:metWhen :keeper.in_range.pursued.tank2.level.met .
 +  :keeper.in_range.pursued.tank2.level orexis:state orexis:Recognized .
 +  :keeper.in_range.pursued.tank2.level prov:wasDerivedFrom :keeper.in_range .

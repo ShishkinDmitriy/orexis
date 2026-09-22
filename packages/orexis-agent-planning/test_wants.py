@@ -58,7 +58,7 @@ def store():
     return st
 
 
-def _derived(store, uri="urn:test:want", desire=A_DESIRE, *, about=(), holds_at=None,
+def _derived(store, uri="urn:test:want", desire=A_DESIRE, *, holds_at=None,
              derived_at=None, ends=None, side=None):
     """A want, written the way the DERIVATION writes one — its own graph, classified a graph
     of wants that arrived derived, with a period starting now.
@@ -72,14 +72,13 @@ def _derived(store, uri="urn:test:want", desire=A_DESIRE, *, about=(), holds_at=
     graph = graph_of(AGENT, uri)
     timed = (f' ; orexis:holdsAt "{holds_at}"^^xsd:dateTime'
              f' ; prov:generatedAtTime "{derived_at}"^^xsd:dateTime' if holds_at else "")
-    abouts = "".join(f" ; orexis:about <{a}>" for a in about)
     broke = f" ; orexis:violationIs <{side}>" if side else ""
     period = f' ; orexis:start "{NOW.isoformat()}"^^xsd:dateTime' + (
         f' ; orexis:end "{ends}"^^xsd:dateTime' if ends else "")
     update(store, f"""INSERT DATA {{
   GRAPH <{graph}> {{
     <{HOLDER}> orexis:holds <{uri}> .
-    <{uri}> a orexis:Want{timed}{abouts}{broke} ;
+    <{uri}> a orexis:Want{timed}{broke} ;
         prov:wasDerivedFrom <{desire}> ;
         rdfs:label "a want under test" . }}
   GRAPH <{catalogue_of(store)}> {{
@@ -135,15 +134,27 @@ def test_forgetting_a_want_leaves_what_replacing_one_leaves(store):
         "and the catalogue says nothing of its graph"
 
 
-def test_a_want_about_several_things_reads_back_about_all_of_them(store):
-    """The read path a want about one thing never exercised, and it was broken: the abouts come
-    back grouped, and this engine's GROUP_CONCAT over an IRI binds NOTHING — no error, no
-    column, every want reading as about nothing. Over `STR(?about)` it binds. Pinned here so
-    the day the engine changes its mind, this says so (the engine-lacks-it trap, AGENTS.md)."""
-    _derived(store, about=("urn:test:air", "urn:test:soil"))
-    found = find_want(store, uri="urn:test:want")
-    assert found.about == ("urn:test:air", "urn:test:soil"), found.about
-    assert find_wants(store)[0].about == found.about, "and the page groups the same way"
+def test_group_concat_over_an_iri_binds_nothing_and_over_its_string_binds(store):
+    """The engine fact three live queries depend on, pinned against the ENGINE rather than
+    through a reader that happened to use it.
+
+    `find_wants` grouped a want's several abouts this way and this case pinned it there; a
+    want states no abouts now, and the trap does not care — `effects._RULE_Q`, `steps._ACTIONS`
+    and `act.BOUND` all still write `STR(?x)` for exactly this reason, and none of them would
+    say so if it stopped being true. NOTHING means no column at all: no error, no exception,
+    the caller reading an absent key as an empty answer, which is the empty-result trap in its
+    purest form (AGENTS.md, the engine-lacks-it list).
+    """
+    update(store, """INSERT DATA { GRAPH <urn:test:g> {
+      <urn:test:s> <urn:test:p> <urn:test:a> , <urn:test:b> . } }""")
+    bare = bindings(query_over(store, """
+      SELECT (GROUP_CONCAT(?o; separator=" ") AS ?joined) WHERE { ?s <urn:test:p> ?o }""",
+                               "urn:test:g"))
+    assert "joined" not in bare[0], f"the engine grew it — {bare[0]}; the STR() calls can go"
+    strung = bindings(query_over(store, """
+      SELECT (GROUP_CONCAT(STR(?o); separator=" ") AS ?joined) WHERE { ?s <urn:test:p> ?o }""",
+                                 "urn:test:g"))
+    assert sorted(strung[0]["joined"].split()) == ["urn:test:a", "urn:test:b"]
 
 
 def test_a_want_is_found_by_the_desire_it_was_derived_from(store):

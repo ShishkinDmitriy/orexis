@@ -11,7 +11,7 @@
    :scopes orexis:arrivedBy orexis:Derived .
    :scopes orexis:beliefsOf :keeper .
    :sensed a orexis:BeliefGraph .
-@@ -84,4 +84,25 @@
+@@ -84,4 +84,24 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -26,7 +26,6 @@
 +GRAPH pursued:keeper.warm_enough.pursued.fern {
 +  :keeper orexis:holds :keeper.warm_enough.pursued.fern .
 +  :keeper.warm_enough.pursued.fern a orexis:Want .
-+  :keeper.warm_enough.pursued.fern orexis:about water:AirTemperature .
 +  :keeper.warm_enough.pursued.fern orexis:metWhen :keeper.warm_enough.pursued.fern.met .
 +  :keeper.warm_enough.pursued.fern orexis:state orexis:Recognized .
 +  :keeper.warm_enough.pursued.fern orexis:violationIs orexis:Below .

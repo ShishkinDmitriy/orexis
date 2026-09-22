@@ -49,19 +49,19 @@ import rdflib
 from orexis_agent_execution import clock
 from orexis_agent_execution import violation
 from orexis_agent_execution.act import Step
-from orexis_agent_execution.ontology import (DESIRE, FORESEEN, KNOWN, PUBLIC, RECORD, STATE,
-                                             WANT, local_of, picks_graph)
+from orexis_agent_execution.ontology import (DESIRE, FORESEEN, PUBLIC, RECORD, STATE, WANT,
+                                             local_of, picks_graph)
 from orexis_agent_execution.store import Memo, bindings, get_graph, graphs_of, query
 
-from . import effects, signature
+from . import effects, relevance, signature
 from .derive_wants import derive_wants
 from .forget_wants import withdraw
-from .imaginarium import Imaginarium, plan_graph, world_of
+from .imaginarium import Imaginarium, plan_graph
 from .plan import EXHAUSTED, NOTHING, Plan, SATISFIED
 from .scopes import find_scopes
 from .steps import find_steps
 from .want import Want
-from .wants import abouts, find_wants
+from .wants import find_wants
 
 log = logging.getLogger("search")
 
@@ -146,27 +146,45 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         #  (rule 1), so which graph holds the readings is the catalogue's to say.
         self._state = next(iter(graphs_of(self.beliefs, STATE)), None)
         out: dict[str, Plan] = {}
-        for group in self._by_scope(wants).values():
+        #  WHAT EACH WANT READS is asked of the graphs of wants, where the derivation wrote
+        #  each met-test narrowed to its own witness.
+        shapes = _rdflib_view(self.beliefs, *graphs_of(self.beliefs, DESIRE, WANT, RECORD, at=at))
+        for group in self._by_scope(wants, shapes).values():
             imaginarium = Imaginarium(self.beliefs, *private)
             for want in group:
                 out[want.uri] = self._search(imaginarium, want, at)
         return out
 
-    def _by_scope(self, wants: list[Want]) -> dict:
-        """The wants grouped by the scope of what they are about, order kept.
+    def _by_scope(self, wants: list[Want], shapes: rdflib.Graph) -> dict:
+        """The wants grouped by the scope of what their met-tests READ, order kept.
 
         THE SCOPES ARE READ, NEVER COMPUTED: `scope_actions` wrote them, and a store holding
         no scope graph is refused rather than guessed at as one scope — a store nobody scoped
-        is a store nothing can say what moves together in. A want about a predicate no scope
-        holds, or about nothing at all, joins the group of its own name, which with one scope
-        is the one group.
+        is a store nothing can say what moves together in.
+
+        WHAT A WANT READS IS PARSED OFF ITS MET-TEST, never declared beside it. A want used to
+        state the one domain property it was about and this keyed on that, which is the
+        planning problem answered before the planner is asked — and in a real world it did not
+        even work: the scopes are over RDF PREDICATES while an about is a quantity kind, so
+        `water:SoilMoisture` matched no scope and every want fell through to its own name.
+        A shape's paths ARE predicates, so this now groups what could interfere and separates
+        what cannot.
+
+        A WANT SPANNING SCOPES IS NOT SPLIT, it JOINS them: its group is keyed by every scope
+        it reaches, so two wants that could interfere through it share a world. The
+        alternative — taking the first scope and ignoring the rest — is the under-approximating
+        direction, which separates worlds that can affect each other and loses the interaction
+        silently. A want whose shape the walker cannot read reads as ANYTHING and joins
+        everything, which is the same safe direction.
         """
         scopes = find_scopes(self.beliefs)
         if scopes is None:
             raise RuntimeError("the store holds no scope graph — scope_actions has not run")
         groups: dict = {}
         for want in wants:
-            key = next((scopes[a] for a in want.about if a in scopes), want.uri)
+            reads = relevance.reads_of_shape(shapes, rdflib.URIRef(want.uri))
+            key = (relevance.ANYTHING if reads is relevance.ANYTHING
+                   else tuple(sorted({scopes[str(p)] for p in reads if str(p) in scopes})) or want.uri)
             groups.setdefault(key, []).append(want)
         return groups
 
@@ -236,10 +254,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
 
     def _steps(self, imaginarium: Imaginarium, node: "_Node", want: Want) -> list[Step]:
         """What this world affords — one step per action per legal filling, name-ordered."""
-        return find_steps(imaginarium.engine,
-                          abouts(self.beliefs, graphs_of(self.beliefs, *KNOWN, at=node.at),
-                                 self.uri, self.memo),
-                          self.uri, self.picks,
+        return find_steps(imaginarium.engine, self.uri, self.picks,
                           graphs=self._dataset(imaginarium, node), memo=imaginarium.memo)
 
     def _take(self, imaginarium: Imaginarium, node: "_Node", step: Step,

@@ -34,7 +34,7 @@ from rdflib.plugins.sparql.algebra import translateQuery
 from rdflib.plugins.sparql.parser import parseQuery
 from rdflib.plugins.sparql.parserutils import CompValue
 
-from orexis_agent_execution.ontology import STATE_GRAPH, local_of
+from orexis_agent_execution.ontology import local_of
 from orexis_agent_execution.store import (PREFIXES, Raw, bindings, bind as bind_text,
                                            construct, graphs_of, query, remember)
 from .relevance import _TOKEN, parseable

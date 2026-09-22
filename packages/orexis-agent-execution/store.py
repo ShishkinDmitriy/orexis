@@ -34,7 +34,7 @@ from __future__ import annotations
 import io
 import re
 import json
-from datetime import datetime, timezone
+from datetime import datetime
 from . import clock
 from pathlib import Path
 import pyoxigraph as ox

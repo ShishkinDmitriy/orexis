@@ -24,7 +24,7 @@ the file this was carved out of held both, plus a question that belonged to the 
 
 from __future__ import annotations
 
-from orexis_agent_execution.store import Raw, bind, bindings, graphs_of, query, remember
+from orexis_agent_execution.store import bind, bindings, graphs_of, query, remember
 
 from orexis_agent_execution.act import Step
 from orexis_agent_execution.ontology import FORESEEN, local_of
@@ -48,7 +48,7 @@ _ACTIONS = """SELECT ?action ?available (GROUP_CONCAT(DISTINCT STR(?takes); sepa
 _MEMO = ("steps", "actions")
 
 
-def find_steps(store, about_of: dict[str, tuple[str, ...]], me: str, picks: str,
+def find_steps(store, me: str, picks: str,
                *, graphs=None, only=None, memo=None) -> list[Step]:
     """Every step this agent could take in one world, name-ordered.
 
@@ -63,8 +63,14 @@ def find_steps(store, about_of: dict[str, tuple[str, ...]], me: str, picks: str,
     nobody to hand them in for: the templates are public and the store has them, including an
     imaginarium, which copies every public graph at init.
 
-    The rest are criteria, as they already were: `about_of` is what the agent holds and what
-    each want is about, `me` and `picks` whose world this is.
+    The rest are criteria: `me` and `picks`, whose world this is.
+
+    **IT IS NOT NARROWED BY WHAT A WANT IS ABOUT.** Every action was handed a `VALUES` table of
+    `(want, about)` pairs and joined itself to the want whose property it served — which is
+    filtering to the goal's predicates, and *"filtering to the goal's predicates deletes every
+    chain; closing backward through preconditions keeps the bid that makes the dose possible"*.
+    A want states no property now; what may serve it is `only`, the relevant set the closure
+    computes from what the want READS, or None for every action.
 
     `only` is the set of actions worth asking at all — the search's RELEVANT set (#504), or
     None for every action. A precondition is a query per action per world, and an action
@@ -75,9 +81,9 @@ def find_steps(store, about_of: dict[str, tuple[str, ...]], me: str, picks: str,
     for action in _declared(store, memo):
         if only is not None and action["action"] not in only:
             continue
-        found += steps_of_action(store, action, about_of, me, picks, graphs=graphs)
+        found += steps_of_action(store, action, me, picks, graphs=graphs)
     #  Sorted because per-action order is no order.
-    return sorted(found, key=lambda s: (s.want or "", s.action, s.for_agent or ""))
+    return sorted(found, key=lambda s: (s.action, s.for_agent or ""))
 
 
 def _declared(store, memo=None) -> list[dict]:
@@ -98,8 +104,7 @@ def _declared(store, memo=None) -> list[dict]:
         bindings(query(store, _ACTIONS, graphs_of(store, PUBLIC))), key=lambda r: r["action"]))
 
 
-def steps_of_action(store, action: dict, about_of: dict[str, tuple[str, ...]],
-                    me: str, picks: str, *, graphs=None) -> list[Step]:
+def steps_of_action(store, action: dict, me: str, picks: str, *, graphs=None) -> list[Step]:
     """Every step this action affords in one world — zero, one or many.
 
     WHICH WORLD IS A CRITERION — `graphs`, the world asked about as the list of graphs
@@ -113,20 +118,12 @@ def steps_of_action(store, action: dict, about_of: dict[str, tuple[str, ...]],
     too — a supplier with three valves affords `Serving` three times, one per valve, and
     choosing between them is the whole of what a plan does at that step.
 
-    `about_of` is what the agent holds and what each of them is ABOUT, handed in by the
-    service rather than fetched: one `(want, about)` pair per row of the `VALUES` block, so a
-    want about two properties offers a row for each and each action matches the half it
-    serves (#566). An empty block is legal SPARQL and yields no rows — an agent with no
-    desires has no menu.
     """
-    wants = " ".join(f"(<{w}> <{a}>)" for w, abouts in sorted(about_of.items()) for a in abouts)
     #  `$picks` names the agent's OWN graph, as it does for an effect rule: a premise may be
     #  something only this agent was told — an open round is one (#358) — and the default
-    #  graph is public knowledge, so a walk that needs it must say so. `$wants` is a VALUES
-    #  block — rows, not a term — and goes in as `Raw`; the rest are IRIs the binder renders.
-    #  A precondition carrying a token nobody binds refuses rather than reaching the engine as
-    #  a free variable (#500).
-    q = bind(action["available"], me=me, wants=Raw(wants), picks=picks)
+    #  graph is public knowledge, so a walk that needs it must say so. A precondition carrying
+    #  a token nobody binds refuses rather than reaching the engine as a free variable (#500).
+    q = bind(action["available"], me=me, picks=picks)
     #  THE ROW IS WHAT THE PRECONDITION BOUND, held to what the action says it TAKES: one
     #  pair per declared parameter the select projected, sorted so identity is the binding
     #  and nothing downstream has to agree on an order. A projected variable the action
@@ -137,7 +134,7 @@ def steps_of_action(store, action: dict, about_of: dict[str, tuple[str, ...]],
     return [Step(action=action["action"],
                  binding=tuple(sorted((iri, r[local]) for local, iri in params.items()
                                       if r.get(local))),
-                 want=r.get("want"), for_agent=r.get("for_agent"))
+                 for_agent=r.get("for_agent"))
             for r in bindings(query(store, q, graphs if graphs is not None else
                                                  #  THE PRESENT, where no world is handed in: what a rule
                                                  #  reads and what is expected, as this store holds them now.

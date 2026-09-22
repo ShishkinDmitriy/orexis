@@ -153,14 +153,13 @@ def _select(store, where: str, at: datetime | None, limit: int, offset: int,
             f'    FILTER(!BOUND(?owner) || ?owner = <{holder}>)'
             if holder else "")
     rows = bindings(query(store, f"""
-SELECT ?w ?desire ?label ?holdsAt ?since ?side (GROUP_CONCAT(STR(?about); separator=" ") AS ?abouts) WHERE {{
+SELECT ?w ?desire ?label ?holdsAt ?since ?side WHERE {{
   GRAPH ?g {{
     {where}
     OPTIONAL {{ ?w prov:wasDerivedFrom ?desire }}
     OPTIONAL {{ ?w rdfs:label ?label }}
     OPTIONAL {{ ?w orexis:holdsAt ?holdsAt }}
     OPTIONAL {{ ?w prov:generatedAtTime ?since }}
-    OPTIONAL {{ ?w orexis:about ?about }}
     OPTIONAL {{ ?w orexis:violationIs ?side }}
   }}
   GRAPH ?catalogue {{
@@ -170,61 +169,10 @@ SELECT ?w ?desire ?label ?holdsAt ?since ?side (GROUP_CONCAT(STR(?about); separa
     OPTIONAL {{ ?g dcterms:temporal ?period . OPTIONAL {{ ?period orexis:start ?start }} OPTIONAL {{ ?period orexis:end ?end }} }} }}
   FILTER(!BOUND(?start) || ?start <= "{now}"^^xsd:dateTime)
   FILTER(!BOUND(?end) || ?end > "{now}"^^xsd:dateTime)
-}} GROUP BY ?w ?desire ?label ?holdsAt ?since ?side ORDER BY ?w LIMIT {int(limit)} OFFSET {int(offset)}""", ()))
+}} ORDER BY ?w LIMIT {int(limit)} OFFSET {int(offset)}""", ()))
     return [Want(uri=r["w"], desire=r.get("desire"),
                  label=r.get("label", ""), holds_at=_instant(r.get("holdsAt")),
-                 derived_at=_instant(r.get("since")), side=r.get("side"),
-                 #  ONE ROW PER WANT, however many things it is about: grouped, so a page
-                 #  counts wants and not (want, about) pairs, and the abouts come back as one
-                 #  space-joined string. `STR()` IS LOAD-BEARING: this engine's GROUP_CONCAT
-                 #  over an IRI binds NOTHING — no error, no column, the page reads as about
-                 #  nothing — and over its string it binds. Measured on a bare store, and
-                 #  pinned by `test_wants.py`.
-                 about=tuple(sorted(r["abouts"].split())) if r.get("abouts") else ())
+                 derived_at=_instant(r.get("since")), side=r.get("side"))
             for r in rows]
 
 
-#  BOTH KINDS ON PURPOSE, and it is said out loud because it used to be said by entailment.
-#  The search keys this map by whatever node it is standing on, and that is USUALLY a want —
-#  the derivation hands it the one derived under a desire — but not always: where a desire
-#  reads unmet and nothing can be minted for it, the desire itself is what gets planned for.
-#  While `orexis:Want` was a subclass, `?want a orexis:Desire` quietly matched both and nothing
-#  said so; the types are disjoint now (a-kind-is-a-type-not-a-binding), so the query names the
-#  two it means.
-#
-#  What this agent wants and what each want is ABOUT — the kernel's words only. A want with no
-#  `orexis:about` is one no action query could join a lever to, and it is simply absent from the
-#  answer; the obligations are not here at all, because an obligation's row names whom it is
-#  owed to and joins on that.
-_ABOUT_Q = """SELECT ?me ?want ?about WHERE {
-  VALUES ?kind { orexis:Desire orexis:Want }
-  ?me orexis:holds ?want .
-  ?want a ?kind ; orexis:about ?about }"""
-
-
-def abouts(store, graphs, holder: str, memo=None) -> dict[str, tuple[str, ...]]:
-    """What each thing this agent holds is ABOUT, node -> the IRIs it names.
-
-    Whoever asks a world what it affords needs to know what this agent holds, and being told is
-    not the same as fetching it: `find_steps` is handed this map rather than a query text about
-    somebody else's contents.
-
-    BOTH KINDS, desires and wants, for the reason above the query.
-
-    SEVERAL PER NODE, because a want may be (#566): a greenhouse bed is comfortable when its
-    soil and its air are both in their regions, and that is ONE want about two properties — the
-    first shipped want whose plan needs two different levers. Every want the plant worlds hold
-    names exactly one, and reads the same through the tuple.
-
-    IT LIVES HERE AND NOT ON A MODALITY. The predecessor put it on the desire projection,
-    "because this modality owns the store it reads", and memoised it against the rebuild that
-    invalidated it — which is the whole of what that projection was for. Handed the graphs it
-    reads and the pass's memo, it is a read like the others above.
-    """
-    def compute():
-        out: dict[str, list[str]] = {}
-        for r in bindings(query(store, _ABOUT_Q, graphs, {"me": holder})):
-            out.setdefault(r["want"], []).append(r["about"])
-        return {w: tuple(sorted(a)) for w, a in out.items()}
-
-    return remember(memo, ("abouts", holder), compute)

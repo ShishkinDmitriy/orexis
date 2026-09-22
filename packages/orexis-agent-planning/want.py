@@ -44,10 +44,11 @@ class Want:
 
     uri: str
     label: str = ""
-    #  WHAT IT IS ABOUT, several where the desire is: a soil-and-air want is about both, and
-    #  a want minted for the soil alone is about the soil alone. It was one string, which the
-    #  greenhouse already contradicted (#566); the tuple is the properties in trouble.
-    about: tuple = ()
+    #  NO `about`. A want stated the one domain property it was in trouble over, and that was
+    #  the planning problem answered before the planner was asked: what may repair a want is
+    #  the closure's to walk back from what the want READS, and filtering to the goal's own
+    #  predicates deletes every chain. A want's met-test says what it reads; nothing beside it
+    #  needs to say it again.
     #  FOUR FIELDS ARE NOT HERE, and their absence is the point: `points`, `shape`, `holder`
     #  and `ends`. Every one was populated by the writer and left EMPTY by every read, so a
     #  want read back off the store silently carried `shape=()` — and the search's met-test,

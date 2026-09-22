@@ -11,7 +11,7 @@
    :scopes orexis:arrivedBy orexis:Derived .
    :scopes orexis:beliefsOf :keeper .
    :sensed a orexis:BeliefGraph .
-@@ -73,4 +73,25 @@
+@@ -73,4 +73,24 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -26,7 +26,6 @@
 +GRAPH pursued:keeper.in_range.pursued.tank1.level {
 +  :keeper orexis:holds :keeper.in_range.pursued.tank1.level .
 +  :keeper.in_range.pursued.tank1.level a orexis:Want .
-+  :keeper.in_range.pursued.tank1.level orexis:about :level .
 +  :keeper.in_range.pursued.tank1.level orexis:holdsAt "2026-01-01T14:00:00+00:00"^^xsd:dateTime .
 +  :keeper.in_range.pursued.tank1.level orexis:metWhen :keeper.in_range.pursued.tank1.level.met .
 +  :keeper.in_range.pursued.tank1.level orexis:state orexis:Recognized .

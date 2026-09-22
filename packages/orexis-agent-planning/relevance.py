@@ -13,12 +13,15 @@ ANYTHING UNREADABLE READS AS `ANYTHING`: a body the parser refuses, a template w
 predicate. Over-approximation is safe wherever these sets are used and under-approximation is
 not, which is why the unreadable case is a value rather than an error.
 
+**AND WHAT A WANT READS**, off its met-test: every predicate its paths navigate and its
+`sh:sparql` constraints mention. That is the question "which words is this want in play over",
+answered by reading the shape rather than by a property somebody declared beside it — which is
+the whole point, since a declared one narrows the planning problem before the planner has seen
+it. A want whose shape the walker cannot read reads as ANYTHING and is in play over
+everything, which is the safe direction.
+
 **WHAT THIS ANSWERS FOR IS THE SCOPES.** `scope_actions` clusters the vocabulary by which
-predicates move together, and that clustering is a function of exactly these pairs. The
-predecessor had a second half here — the want's own reads, closed backward through
-preconditions to a fixed point, so a pass simulated only the actions that could reach its want
-— and it is not carried into 2.0: it is a narrowing the search applies, and there is no search
-here yet to apply it. It returns with the thing that needs it (an-agent-is-four-things).
+predicates move together, and a want belongs to the scope of what it reads. It returns with the thing that needs it (an-agent-is-four-things).
 """
 
 from __future__ import annotations
@@ -127,6 +130,61 @@ def reads_of_select(text: str) -> frozenset | None:
 
 
 @functools.lru_cache(maxsize=512)
+def reads_of_shape(shapes: rdflib.Graph, shape) -> frozenset | None:
+    """Every predicate a shape's paths and SPARQL constraints read, or ANYTHING."""
+    out: set = set()
+    for prop in shapes.objects(shape, SH.property):
+        iris = _shacl_path_iris(shapes, shapes.value(prop, SH.path))
+        if iris is None:
+            return ANYTHING
+        out |= iris
+        for p, o in shapes.predicate_objects(prop):
+            if p == SH.equals:
+                out.add(o)
+            if p == SH.qualifiedValueShape:
+                inner = reads_of_shape(shapes, o)
+                if inner is None:
+                    return ANYTHING
+                out |= inner
+    for constraint in shapes.objects(shape, SH.sparql):
+        inner = reads_of_select(str(shapes.value(constraint, SH.select) or ""))
+        if inner is None:
+            return ANYTHING
+        out |= inner
+    for negated in shapes.objects(shape, SH["not"]):
+        inner = reads_of_shape(shapes, negated)
+        if inner is None:
+            return ANYTHING
+        out |= inner
+    for p in (SH.targetSubjectsOf, SH.targetObjectsOf):
+        out |= set(shapes.objects(shape, p))
+    if (shape, SH.targetClass, None) in shapes:
+        out.add(RDF.type)
+    return frozenset(out)
+
+def _shacl_path_iris(g: rdflib.Graph, node) -> set | None:
+    if node is None:
+        return ANYTHING
+    if isinstance(node, URIRef):
+        return {node}
+    if (node, RDF.first, None) in g:
+        out = set()
+        for part in Collection(g, node):
+            iris = _shacl_path_iris(g, part)
+            if iris is None:
+                return ANYTHING
+            out |= iris
+        return out
+    for pred in (SH.inversePath, SH.oneOrMorePath, SH.zeroOrMorePath, SH.zeroOrOnePath):
+        inner = g.value(node, pred)
+        if inner is not None:
+            return _shacl_path_iris(g, inner)
+    alternatives = g.value(node, SH.alternativePath)
+    if alternatives is not None:
+        return _shacl_path_iris(g, alternatives)
+    return ANYTHING
+
+
 def writes_of_construct(text: str) -> frozenset | None:
     """The predicates a CONSTRUCT's template writes, or ANYTHING if unparseable or variable."""
     try:

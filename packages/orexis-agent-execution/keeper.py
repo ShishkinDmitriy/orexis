@@ -37,13 +37,13 @@ adopting mean something.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pyoxigraph as ox
 
 from . import clock
-from .ontology import EXECUTION, PATIENCE_S, intentions_graph, picks_graph
-from .plans import ADOPTED_AT, BY, INTENTION, OUTCOME, PURSUES, RESOLVED_AT, copy_plan
+from .ontology import PATIENCE_S, intentions_graph, picks_graph
+from .plans import OUTCOME, RESOLVED_AT, copy_plan
 from .store import Raw, bind, rows, update
 
 log = logging.getLogger("keeper")
