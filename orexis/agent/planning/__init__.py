@@ -6,14 +6,15 @@ replaces rather than extends. One pipeline, and the package is what it is made o
 1. **the derivation** — `derive_wants` judges every desire at the present and at every instant
    a prediction reaches, and mints a want per cluster of what the met-tests read unmet;
    `forget_wants` is its other half, withdrawing what the same rows no longer imply
-   (`derive_wants.py`, `forget_wants.py`, `wants.py`);
+   (`derive_wants.py`, `forget_wants.py`);
 2. **the scopes** — which predicates move together, read off what each action and each
    derivation touches. A want is minted per scope of witnesses and searched in a world of its
    own (`scope_actions.py`, `scopes.py`, `relevance.py`);
 3. **the imaginarium** — a store per scope, filled from the beliefs by `init_imaginarium`,
    holding one graph per world the search reaches (`imaginarium.py`, `signature.py`);
 4. **the search** — best-first over those worlds: what a world affords (`steps.py`), what a
-   step would change (`effects.py`), and whether the want is met there (`planner.py`).
+   step would change (`effects.py`), and whether the want is met there (`planner.py`, which
+   also holds the read that hands it the wants, being the only thing that asks).
 
 NOTHING COMES BACK. What a pass finds it writes: a `planning:Plan` graph per want, in the
 imaginarium that want was searched in, holding the steps in the LEDGER's own words and why
@@ -25,7 +26,7 @@ Nothing here commits, because deciding a thing and remembering that it was decid
 different acts.
 
 **WHAT THE PREDECESSOR HELD AND THIS DOES NOT.** It was twenty-nine modules and seven and a
-half thousand lines; this is thirteen and under four thousand. Every absence is a thing that
+half thousand lines; this is twelve and under four thousand. Every absence is a thing that
 returns attached to whatever needs it, never a thing quietly lost
 (an-agent-is-four-things):
 

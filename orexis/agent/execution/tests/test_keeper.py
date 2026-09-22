@@ -13,9 +13,9 @@ import pyoxigraph as ox
 import pytest
 
 from orexis.agent import clock
-from .keeper import DEFAULT_PATIENCE_S, Keeper
+from orexis.agent.execution.keeper import DEFAULT_PATIENCE_S, Keeper
 from orexis.agent.ontology import picks_graph
-from .ontology import EXECUTION, intentions_graph
+from orexis.agent.execution.ontology import EXECUTION, intentions_graph
 from orexis.agent.store import bindings, query_over, update
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
