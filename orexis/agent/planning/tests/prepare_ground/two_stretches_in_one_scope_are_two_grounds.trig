@@ -73,13 +73,13 @@ GRAPH :catalogue {
   :dip orexis:beliefsOf :keeper .
   :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
   :dip orexis:retracts """PREFIX : <http://example.org/test#>
-      CONSTRUCT { :tank1 :level ?l }
-      WHERE { GRAPH $state { :tank1 :level ?l } }""" .
+      DELETE { GRAPH $state { :tank1 :level ?l } }
+      WHERE  { GRAPH $state { :tank1 :level ?l } }""" .
   :heat a orexis:Graph .
   :heat a orexis:PredictionGraph .
   :heat orexis:beliefsOf :keeper .
   :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
   :heat orexis:retracts """PREFIX : <http://example.org/test#>
-      CONSTRUCT { :tank1 :temperature ?t }
-      WHERE { GRAPH $state { :tank1 :temperature ?t } }""" .
+      DELETE { GRAPH $state { :tank1 :temperature ?t } }
+      WHERE  { GRAPH $state { :tank1 :temperature ?t } }""" .
 }

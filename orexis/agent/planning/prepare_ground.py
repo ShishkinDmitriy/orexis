@@ -40,11 +40,13 @@ fill used to be three lines inside a constructor.
 
 --- AND THE GROUND WORLDS, which are the second half of filling one --------------------------
 
-**A PREDICTION IS AN ACTION NOBODY TAKES.** It carries the same two texts an action does —
-`sh:construct` for what it makes true and `orexis:retracts` for what it takes away — and its
-graph's period says WHEN it applies rather than a precondition saying whether it may. So the
-timeline is laid by exactly the machinery the search walks: `effects.apply` runs the rule and
-the diff is applied to the period before.
+**A PREDICTION IS AN ACTION NOBODY TAKES.** What it makes true is its graph's own contents —
+concrete, because a forecast is a value at an instant — and what it takes away is
+`orexis:retracts` on its catalogue row, a `DELETE … WHERE` naming `GRAPH $state`, because what
+is standing in that place is not something a forecast can name in advance. Its period says
+WHEN it applies rather than a precondition saying whether it may. So the timeline is laid by
+exactly the machinery the search walks: fork the period before, run the retraction against the
+fork, add what the prediction holds.
 
 WHY IT HAD TO BECOME A DIFF. A prediction used to be a STATE — a graph holding the reading it
 foretold — and a door handed a reader every graph holding at an instant, so a met-test asked at
@@ -76,9 +78,8 @@ import pyoxigraph as ox
 from orexis.agent.ontology import (BELIEF, DESIRE, OREXIS, PREDICTION, PUBLIC, RECORD,
                                              STATE, WANT)
 from orexis.agent.hash_named_graph import hash_named_graph
-from orexis.agent.store import (Raw, add_quads, bind, catalogue_of, classify, construct,
-                                          forget_graph, graphs_of, quads, remove_quads, rows,
-                                          update)
+from orexis.agent.store import (Raw, add_quads, bind, catalogue_of, classify, forget_graph,
+                                          graphs_of, quads, rows, update)
 
 from .ontology import GROUND_GRAPH
 
@@ -174,7 +175,6 @@ def _lay_ground(store: ox.Store, scope: str, now: datetime) -> list[str]:
     Answers with the graphs it made, earliest first. What a READER takes is
     `graphs_of(store, GROUND_GRAPH, at=T)`.
     """
-    public = graphs_of(store, PUBLIC)
 
     ahead = _foreseen(store)
     here = _present(store, scope, now)
@@ -190,15 +190,16 @@ def _lay_ground(store: ox.Store, scope: str, now: datetime) -> list[str]:
         #  was handed NO ground and the agent went blind past the boundary. Each retract is
         #  read against the ground standing BEFORE the instant, so they supersede in parallel
         #  rather than one seeing another's work.
-        added, retracted = [], []
+        added, retracts = [], []
         for prediction, supersedes in group:
             added += list(_triples(store, prediction))
-            retracted += _superseded(store, supersedes, [*public, here], here)
-        if not added and not retracted:
+            if supersedes:
+                retracts.append(supersedes)
+        if not added and not retracts:
             #  A forecast that changes nothing is not a period — an early-out, not a guard:
             #  the hash below reaches the same answer, having laid the graph first.
             continue
-        there = _fork(store, here, _name(scope, at), added, retracted)
+        there = _fork(store, here, _name(scope, at), added, retracts)
         mark = hash_named_graph(store, there)
         if mark == marks:
             #  THE SAME GROUND UNDER ANOTHER NAME. Nothing a met-test can read moved, so this
@@ -239,32 +240,31 @@ def _by_instant(predictions) -> list[tuple[datetime, list[tuple[str, str | None]
     return sorted(out.items())
 
 
-def _superseded(store: ox.Store, pattern: str | None, graphs, state: str) -> list:
-    """What this prediction takes away: its `orexis:retracts` CONSTRUCT run against the ground
-    standing before it, with `$state` bound to that ground. Empty where it states none.
+def _fork(store: ox.Store, parent: str, name: str, added, retracts: list[str]) -> str:
+    """The ground one boundary past `parent`: its facts, less what each prediction there
+    retracts, plus what they all add.
 
-    A PATTERN THAT WILL NOT RUN RETRACTS NOTHING, loudly. A prediction whose text the engine
-    refuses would otherwise add its value beside the one it meant to replace, and a shape
-    holding over every value would still see the old one — which is the exact failure the
-    retract exists to close, arriving by another door.
+    EVERY DELETE BEFORE ANY ADD, and that is what keeps a boundary ONE world change. The
+    predictions beginning at an instant supersede in parallel: run as delete-add, delete-add,
+    the second retraction would match what the first had just added. Deletion is idempotent,
+    so running them one after another against the fork reaches the same world as running them
+    all against the ground before it — which is what the CONSTRUCT-and-remove-by-term scheme
+    did explicitly, and the only part of it worth keeping.
+
+    A RETRACTION THAT WILL NOT RUN RETRACTS NOTHING, loudly. A prediction whose text the
+    engine refuses would otherwise add its value beside the one it meant to replace, and a
+    shape holding over every value would still see the old one — which is the exact failure
+    the retraction exists to close, arriving by another door.
     """
-    if not pattern:
-        return []
-    try:
-        return list(construct(store, bind(pattern, state=Raw(f"<{state}>")), graphs))
-    except Exception as exc:                                        # noqa: BLE001
-        log.error("a prediction's retract would not run, so it supersedes nothing: %s", exc)
-        return []
-
-
-def _fork(store: ox.Store, parent: str, name: str, added, retracted) -> str:
-    """The ground one prediction past `parent`: its facts, less what the prediction retracts,
-    plus what it adds. Retraction before addition, for the reason `planner.reached` gives —
-    a construct may reuse the very node its retraction names."""
     node = ox.NamedNode(name)
     update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
-                   f"WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}")
-    remove_quads(store, [ox.Quad(t.subject, t.predicate, t.object, node) for t in retracted])
+                  f"WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}")
+    for text in retracts:
+        try:
+            update(store, bind(text, state=Raw(f"<{name}>")))
+        except Exception as exc:                                    # noqa: BLE001
+            log.error("a prediction's retraction would not run, so it supersedes nothing: %s",
+                      exc)
     add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
     return name
 

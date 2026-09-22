@@ -310,9 +310,18 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         """
         graphs = self._dataset(node)
         binding = self._bind(step, node, want)
-        added, retracted = effects.apply(self._store, step.action, graphs,
-                                         memo=self._memo, **binding)
-        if not added and not retracted:
+        taken = node.taken + (step,)
+        name = world_of(taken)
+        added = effects.adds(self._store, step.action, graphs, memo=self._memo, **binding)
+        #  BOUND TO THE FORK AND NOT TO THE PARENT, which is the one place the two halves of
+        #  a step differ. `adds` reads the world the step is taken IN — `binding['state']` —
+        #  because a construct reuses the node its retraction names and must see it standing.
+        #  The retraction DELETES, and what it deletes from is the world about to be made, so
+        #  the fork's name is computed here and $state is overridden to it. Bound in one go
+        #  because `bind` refuses a token nobody bound, so there is no second pass to add it.
+        retract = effects.retraction(self._store, step.action, memo=self._memo,
+                                     **{**binding, "state": _raw(name)})
+        if not added and retract is None:
             #  AN ACTION THAT CHANGES NOTHING IS NOT A MOVE: a legal filling whose effect rule
             #  produced no diff in this world.
             #
@@ -326,8 +335,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
                                 memo=self._memo, **binding) or 0.0
         lands = effects.lands_after(self._store, step.action, graphs,
                                     memo=self._memo, **binding) or 0.0
-        taken = node.taken + (step,)
-        world = reached(self._store, node.world, taken, added, retracted)
+        world = reached(self._store, node.world, name, added, retract)
         return _Node(world=world, taken=taken, cost=node.cost + spent,
                      at=node.at + timedelta(seconds=lands))
 
@@ -710,23 +718,24 @@ def plan_graph(want: str) -> str:
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 
-def reached(store: ox.Store, parent: str, path, added, retracted) -> str:
-    """The world one step past `parent`: its readings, less what the step retracts, plus what
-    it adds. Returns the new graph's name, which is what a rule's `$state` is bound to.
+def reached(store: ox.Store, parent: str, name: str, added, retract: str | None) -> str:
+    """The world one step past `parent`: its facts, less what the step retracts, plus what it
+    adds. `name` is the graph the caller has already computed, which is what `$state` in the
+    retraction was bound to.
 
-    **Fork, do not replay.** A node's readings are made by copying its parent's and applying
-    the diff. Recomputing a world by replaying from the root would sound cheaper and is the
-    shape of the bug this exists to close: replay re-runs each step's rule, and a rule re-run
-    has to be re-run against *something* — which was the store. Materialising per node is what
-    makes a step's baseline the previous step's conclusion.
+    **Fork, do not replay.** A node's facts are made by copying its parent's and applying the
+    step. Recomputing a world by replaying from the root would sound cheaper and is the shape
+    of the bug this exists to close: replay re-runs each step's rule, and a rule re-run has to
+    be re-run against *something* — which was the store. Materialising per node is what makes
+    a step's baseline the previous step's conclusion.
 
-    Retraction before addition, and the order is load-bearing for the same reason it is in
-    `effects.world_after`: the sensed graph holds one observation node per (subject,
-    property), and Observe's construct reuses the very node its retraction names. Added first,
-    the addition would be removed by the retraction meant to precede it and the possible world
-    would come back holding neither reading.
+    RETRACTION BEFORE ADDITION, and the order is load-bearing: the sensed graph holds one
+    observation node per (subject, property), and a construct reuses the very node its
+    retraction names. Added first, the addition would be deleted by the retraction meant to
+    precede it and the world would come back holding neither reading. `added` was computed
+    against the PARENT for the same reason — asking after the deletion would find the node
+    gone.
     """
-    name = world_of(path)
     node = ox.NamedNode(name)
     #  THE COPY IS THE ENGINE'S, not a Python loop over quads. The loop cost 4.75 ms per fork
     #  on a 1,000-triple world against 3.29 ms this way, and 59 ms against 44 at 10,000 — a
@@ -735,11 +744,13 @@ def reached(store: ox.Store, parent: str, path, added, retracted) -> str:
     #  inserted, which matters because a held shape IS a blank node.
     update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
                   f"WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}")
-    #  Retraction after the copy rather than during it, and by TERM rather than by text: a
-    #  DELETE DATA would have to re-serialise every literal with its datatype, which is the
-    #  mistake `effects._triple` already made once in the other direction. The lists are a
-    #  handful of triples, so a loop here costs nothing.
-    remove_quads(store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in retracted))
+    if retract is not None:
+        try:
+            update(store, retract)
+        except Exception as exc:                                    # noqa: BLE001
+            #  A rule that will not run is a package's bug and must not take an agent down.
+            #  What is lost is a world holding two readings where it should hold one.
+            log.error("an effect's retraction would not run, so it retracts nothing: %s", exc)
     add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
     return name
 

@@ -1,8 +1,11 @@
 """What a lever would make true — reading the rules the packages ship, and running one.
 
-An action states its effect in SHACL-AF's words: `sh:construct` holding the query that yields
-the triples applying it would ADD, and `orexis:retracts` — ours, because the standard has none — holding the query that
-yields the triples it REMOVES. The actions live in the action graph, loaded from every package's
+An action states its effect in two halves that are not the same KIND of thing. `sh:construct`
+is SHACL-AF's and holds a query yielding the triples applying it would ADD, asked of the world
+the step is taken in. `orexis:retracts` is ours, because the standard has none, and holds a
+`DELETE … WHERE` naming `GRAPH $state` — an ACT, run against the world the step makes. The
+asymmetry is the domain's: what an effect adds is concrete, and what it takes away is whatever
+is standing in that place, which nobody can name in advance. The actions live in the action graph, loaded from every package's
 `actions.ttl` at genesis, so a model or a sovereign can read the whole tool list without a
 second format existing anywhere.
 
@@ -78,56 +81,63 @@ def rule_for(store, action: str, memo=None) -> dict | None:
     return remember(memo, ("rule", action), fetch)
 
 
-def apply(store, action: str, graphs=None, *, memo=None, **bind) -> tuple[list, list]:
-    """Run one action's effect: `(added, retracted)`, as triples, against nothing.
+def adds(store, action: str, graphs=None, *, memo=None, **bind) -> list:
+    """What one action's effect MAKES TRUE, as triples. Nothing is written.
 
-    **`store` is whichever dataset the question is being asked ABOUT, and that is the whole of
-    what #254 changed here.** An actuator asks about the world it is standing in and passes its
-    own belief base; a planner asks about a world nobody is in yet and passes its
-    imaginarium, a store of its own, where `$state` names the readings that node's path
-    reached. Nothing in this file distinguishes them, and nothing should: a rule already asks
-    about *whichever graph it is pointed at*, and being bound to the store was an accident of
-    what the caller happened to hand over. The retraction is the half that made it visible —
-    re-asked of the belief base, it finds the observation still on disk and never sees what the
-    previous step added, so `(beliefs − retracts) + adds` was true for the first step and false
-    for every step after it. See
-    knowledge/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md.
+    **`store` is whichever dataset the question is being asked ABOUT.** An actuator asks about
+    the world it is standing in and passes its own belief base; a planner asks about a world
+    nobody is in yet and passes an imaginarium, where `$state` names the readings that node's
+    path reached. Nothing here distinguishes them, and nothing should: a rule asks about
+    whichever graph it is pointed at, and being bound to the store was an accident of what the
+    caller happened to hand over.
 
-    Nothing is written. Both halves are CONSTRUCTs, so this asks the dataset two questions and
-    returns their answers — which is what makes a possible world computable as
-    `(beliefs - retracted) + added` without a single mutation anywhere. `orexis:retracts` exists
-    because SHACL-AF has no deletion, and it is not optional: the sensed graph upserts one
-    observation node per (subject, property), so an effect predicting a reading that did not
-    retract the node it replaces would leave two results on one node — and a shape asking
-    whether ANY reading sits past an edge would then answer about a reading the plan just
-    replaced.
+    COMPUTED BEFORE ANYTHING IS RETRACTED, and that order is load-bearing: a construct may
+    reuse the very node its retraction names, so asking after the deletion would find the node
+    gone. The caller forks, deletes, then adds these.
 
     `bind` fills the rule's placeholders the way every other shipped query here is filled:
     `$me`, `$subject`, `$property`, `$litres`. Substitution rather than SPARQL's own binding
     because the text is a literal in the graph and the engine takes a string.
     """
     rule = rule_for(store, action, memo)
-    if rule is None:
-        return [], []
-    #  WHICH WORLD, IN THE LIST THE CALLER BUILT AND NOT IN THE TEXT (#666). `graphs` carries the readings a
-    #  rule's patterns read — this agent's own where a caller means "here", a node's where a
-    #  search means "there" — and the rule names neither. It used to name the graph itself,
-    #  which made a package author decide, pattern by pattern, whether a plan could change
-    #  that fact: a claim about every other package's actions, made from inside one.
-    return (_run(store, rule.get("construct"), bind, graphs),
-            _run(store, rule.get("retracts"), bind, graphs))
+    #  WHICH WORLD, IN THE LIST THE CALLER BUILT AND NOT IN THE TEXT (#666). `graphs` carries
+    #  the readings a rule's patterns read — this agent's own where a caller means "here", a
+    #  node's where a search means "there" — and the rule names neither.
+    return [] if rule is None else _run(store, rule.get("construct"), bind, graphs)
 
 
-def applied(base, added, retracted):
-    """One step's diff, as an rdflib graph: `(base − retracted) + added`, base untouched."""
-    world = rdflib.Graph()
-    for triple in base:
-        world.add(triple)
-    for triple in retracted:
-        world.remove(_triple(triple))
-    for triple in added:
-        world.add(_triple(triple))
-    return world
+def retraction(store, action: str, *, memo=None, **bind) -> str | None:
+    """One action's `orexis:retracts`, bound and ready to run against a world — or None.
+
+    **IT IS AN UPDATE AND NOT A QUESTION.** `orexis:retracts` holds a `DELETE … WHERE` naming
+    `GRAPH $state`, and the caller binds `$state` to the world it has just forked, so the
+    removal happens where the fork is rather than being computed into a list and applied by
+    hand. It was a CONSTRUCT whose triples the caller removed by term; what that bought — a
+    materialised diff — is wanted by `execution:predicts`, which this tree does not write, and
+    by an emptiness test the world's own hash already answers.
+
+    IT READS THE WORLD AND NOT THE DATASET, which is what the change cost. A CONSTRUCT was
+    handed the whole graph list the runner built; an UPDATE's WHERE reads the unnamed default
+    graph unless `USING` says otherwise, and `Store.update` takes no dataset — so a retraction
+    names `GRAPH $state` in both halves and sees only the world it deletes from. Public
+    knowledge holds no readings, so nothing shipped here wanted more; a retraction that needs
+    to join the vocabulary is the case that would bring `USING` back.
+
+    `orexis:retracts` exists because SHACL-AF has no deletion, and it is not optional: the
+    sensed graph upserts one observation node per (subject, property), so an effect predicting
+    a reading that did not retract the node it replaces would leave two results on one node.
+    """
+    rule = rule_for(store, action, memo)
+    text = None if rule is None else rule.get("retracts")
+    if not text:
+        return None
+    try:
+        return bind_text(text, **bind)
+    except Exception as exc:                                        # noqa: BLE001
+        #  A rule that will not bind is a package's bug and must not take an agent down: the
+        #  lever still works, and what is lost is the ability to reason about it in advance.
+        log.error("an effect's retraction would not bind, so it retracts nothing: %s", exc)
+        return None
 
 
 def _triple(t):

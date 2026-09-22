@@ -45,8 +45,8 @@ GRAPH :actions {
       $tank :level ?l .
       BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" ;
     orexis:retracts """PREFIX : <http://example.org/test#>
-      CONSTRUCT { ?tank :level ?l } WHERE {
-      $tank :level ?l . BIND($tank AS ?tank) }""" ;
+      DELETE { GRAPH $state { $tank :level ?l } }
+      WHERE  { GRAPH $state { $tank :level ?l } }""" ;
     orexis:costs """PREFIX : <http://example.org/test#>
       SELECT (1 AS ?cost) WHERE { }""" .
   :tank a orexis:Parameter .
