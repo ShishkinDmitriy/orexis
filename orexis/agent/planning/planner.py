@@ -58,13 +58,14 @@ from orexis.agent.execution.act import Step
 from orexis.agent.ontology import (DESIRE, FORESEEN, OREXIS, PREDICTION, PUBLIC, RECORD,
                                              STATE, WANT, local_of, picks_graph)
 from orexis.agent.hash_named_graph import hash_named_graph
-from orexis.agent.store import Memo, bindings, graphs_of, query, rdflib_view
+from orexis.agent.store import (Memo, add_quads, bindings, classify, clear_graph,
+                                           graphs_of, query, rdflib_view)
 
 from . import effects, relevance
 from .derive_wants import derive_wants
-from .imaginarium import Imaginarium, plan_graph
+from .imaginarium import drop_world, imagine, plan_graph, reached
 from .ontology import (COSTS, EXHAUSTED, FOR_WANT, GROUND_GRAPH, NO_CANDIDATE,
-                       OUTCOME, SATISFIED)
+                       OUTCOME, PLAN_GRAPH, SATISFIED)
 from .scopes import find_scopes
 from .steps import find_steps
 
@@ -90,21 +91,20 @@ class Planner:
         self.beliefs = beliefs
         self.id = agent_id
         self.picks = picks_graph(agent_id)
-        #  THE PASS'S MEMO. The action templates, a rule text and the class definitions cost
-        #  more to re-read than a pass can afford and can change only by a write a pass does
-        #  not make — a fact about the pass, so the pass owns the memo rather than the store
-        #  quietly keeping one (an-agent-is-four-things).
-        self.memo = Memo()
         self.uri, self.acts_for = self._identity(agent_id)
         #  The readings graph of the pass in hand — set at `plan`, since which graph that is
         #  is the catalogue's to say and a pass is what stands somewhere.
         self._state: str | None = None
+        #  THE WORLD IN HAND and its memo, set per scope at `plan`. A pass stands somewhere,
+        #  and where is not an argument every method between here and the frontier carries.
+        self._store: ox.Store | None = None
+        self._memo = Memo()
         #  THE PASS'S IMAGINARIA, one per scope, replaced at every `plan`. They are where the
         #  pass wrote what it found, so this is how a caller reaches it — each is asked for
         #  its graphs of class `planning:PlanGraph`, the same by-kind read as everywhere
         #  else. They are memory and die with the Planner, as a plan about a world that has
         #  moved should.
-        self.imaginaria: list[Imaginarium] = []
+        self.imaginaria: list[ox.Store] = []
 
     def _identity(self, agent_id: str) -> tuple[str, str | None]:
         """Who this agent is and what it acts for, off the world graph.
@@ -156,7 +156,6 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         asks by kind.
         """
         at = now or clock.now()
-        self.memo.forget()          # the derivation writes; nothing read before it still holds
         scopes = find_scopes(self.beliefs)
         if scopes is None:
             raise RuntimeError("the store holds no scope graph — scope_actions has not run")
@@ -169,21 +168,26 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         for scope in families:
             #  WHAT CROSSES IS THE FILL'S TO ASK. `init_imaginarium` asks the catalogue for
             #  the kinds a search reads and lays the ground worlds while it is there.
-            imaginarium = Imaginarium(self.beliefs, _scope_name(scope), at)
-            self.imaginaria.append(imaginarium)
+            self._store = imagine(self.beliefs, _scope_name(scope), at)
+            self.imaginaria.append(self._store)
+            #  THE PASS'S MEMO, one per world. The action templates, a rule text and the class
+            #  definitions cost more to re-read than a pass can afford and can change only by
+            #  a write the search does not make. Per WORLD and not per pass, because each
+            #  derives its own wants and the shapes cached here are theirs.
+            self._memo = Memo()
             #  AND NOTHING IS TAKEN AWAY. A pass used to withdraw what the desires no longer
             #  imply, which is an act about a belief base that OUTLIVES the pass; the wants
             #  are the imaginarium's now and the imaginarium is memory, so what the derivation
             #  did not mint this pass simply is not there. The whole set it answers with is
             #  kept, and `forget_wants.withdraw` waits for a store that persists them.
-            derive_wants(imaginarium.store, at)
+            derive_wants(self._store, at)
             #  THE WORLD THE SEARCH STARTS IN is the GROUND holding at the instant it stands
             #  at — asked of the catalogue by class, never named (a graph IRI is an instance).
-            self._state = next(iter(graphs_of(imaginarium.store, GROUND_GRAPH, at=at)), None)
-            for want in self._of_scope(imaginarium, scope, scopes, at):
-                self._search(imaginarium, want, at)
+            self._state = next(iter(graphs_of(self._store, GROUND_GRAPH, at=at)), None)
+            for want in self._of_scope(scope, scopes, at):
+                self._search(want, at)
 
-    def _of_scope(self, imaginarium: Imaginarium, scope: str, scopes: dict,
+    def _of_scope(self, scope: str, scopes: dict,
                   at: datetime) -> list[str]:
         """The wants this imaginarium is the world for: those whose met-test reads a predicate
         in `scope`, and those it reads nothing readable of, which join everything.
@@ -202,11 +206,11 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         the third want's step is invisible to the other two, not that anything is done twice:
         one world is picked, deterministically, so a want has one plan.
         """
-        shapes = rdflib_view(imaginarium.store,
-                             *graphs_of(imaginarium.store, DESIRE, WANT, RECORD, at=at))
+        shapes = rdflib_view(self._store,
+                             *graphs_of(self._store, DESIRE, WANT, RECORD, at=at))
         first = (sorted(set(scopes.values())) or [UNSCOPED])[0]
         mine = []
-        for want in find_wants(imaginarium.store, at, holder=self.uri):
+        for want in find_wants(self._store, at, holder=self.uri):
             reads = relevance.reads_of_shape(shapes, rdflib.URIRef(want))
             if reads is relevance.ANYTHING:
                 #  A WANT WHOSE SHAPE THE WALKER CANNOT READ joins everything, which is the
@@ -222,7 +226,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
 
     # --- one want ----------------------------------------------------------------------------
 
-    def _search(self, imaginarium: Imaginarium, want: str, at: datetime) -> None:
+    def _search(self, want: str, at: datetime) -> None:
         """Best-first over the worlds this want's steps would make, bounded by `BUDGET`.
 
         WRITES ITS FINDING AND RETURNS NOTHING — the plan graph is the answer, and it is
@@ -240,13 +244,13 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         A CYCLE IS A WORLD ALREADY SEEN, by hash: +3 then −3 returns to the world you
         started in, and a search that does not notice spends its whole budget going nowhere.
         """
-        select = self._met_select(imaginarium, want)
+        select = self._met_select(want)
         root = _Node(world=self._state, taken=(), cost=0.0, at=at)
-        if self._met(imaginarium, select, root, want):
-            self._write(imaginarium, want, SATISFIED, (), 0.0)
+        if self._met(select, root, want):
+            self._write(want, SATISFIED, (), 0.0)
             return
 
-        seen = {self._hash_of(imaginarium, root)}
+        seen = {self._hash_of(root)}
         tick = itertools.count()
         frontier: list = [(0.0, next(tick), root)]
         best: "_Node | None" = None
@@ -257,42 +261,42 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
             cost, _, node = heapq.heappop(frontier)
             if best is not None and cost >= best.cost:
                 break                       # the first achiever's bound refuses the rest
-            for step in self._steps(imaginarium, node, want):
+            for step in self._steps(node, want):
                 saw_step = True
                 if forked >= BUDGET:
                     break
-                child = self._take(imaginarium, node, step, want)
+                child = self._take(node, step, want)
                 if child is None:
                     continue
                 forked += 1
-                fingerprint = self._hash_of(imaginarium, child)
+                fingerprint = self._hash_of(child)
                 if fingerprint in seen:
-                    imaginarium.drop(child.world)
+                    drop_world(self._store, child.world)
                     continue
                 seen.add(fingerprint)
-                if self._met(imaginarium, select, child, want):
+                if self._met(select, child, want):
                     if best is None or child.cost < best.cost:
                         best = child
                     continue
                 heapq.heappush(frontier, (child.cost, next(tick), child))
 
         if best is not None:
-            self._write(imaginarium, want, SATISFIED, best.taken, best.cost)
+            self._write(want, SATISFIED, best.taken, best.cost)
             return
         #  THE TWO SILENCES ARE NOT THE SAME, and telling them apart is most of why an empty
         #  plan is written at all: NO CANDIDATE says no lever this agent holds points at this
         #  want (equip me), EXHAUSTED says levers exist and no bounded sequence of them lands
         #  inside the region (my doses are too coarse, or my region is too tight for them).
-        self._write(imaginarium, want, EXHAUSTED if saw_step else NO_CANDIDATE, (), None)
+        self._write(want, EXHAUSTED if saw_step else NO_CANDIDATE, (), None)
 
     # --- the moves ---------------------------------------------------------------------------
 
-    def _steps(self, imaginarium: Imaginarium, node: "_Node", want: str) -> list[Step]:
+    def _steps(self, node: "_Node", want: str) -> list[Step]:
         """What this world affords — one step per action per legal filling, name-ordered."""
-        return find_steps(imaginarium.store, self.uri, self.picks,
-                          graphs=self._dataset(imaginarium, node), memo=imaginarium.memo)
+        return find_steps(self._store, self.uri, self.picks,
+                          graphs=self._dataset(node), memo=self._memo)
 
-    def _take(self, imaginarium: Imaginarium, node: "_Node", step: Step,
+    def _take(self, node: "_Node", step: Step,
               want: str) -> "_Node | None":
         """The world one step past this one, or None where the step's effect says nothing.
 
@@ -300,21 +304,21 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         is its `orexis:landsAt`, both run against the world the step is taken IN — a package
         declares them because they are claims about that package's own actions.
         """
-        graphs = self._dataset(imaginarium, node)
+        graphs = self._dataset(node)
         binding = self._bind(step, node, want)
-        added, retracted = effects.apply(imaginarium.store, step.action, graphs,
-                                         memo=imaginarium.memo, **binding)
+        added, retracted = effects.apply(self._store, step.action, graphs,
+                                         memo=self._memo, **binding)
         if not added and not retracted:
             #  AN ACTION THAT CHANGES NOTHING IS NOT A MOVE. It is a legal filling whose
             #  effect rule produced no diff in this world, and forking on it would spend a
             #  world to arrive where we already are.
             return None
-        spent = effects.cost_of(imaginarium.store, step.action, graphs,
-                                memo=imaginarium.memo, **binding) or 0.0
-        lands = effects.lands_after(imaginarium.store, step.action, graphs,
-                                    memo=imaginarium.memo, **binding) or 0.0
+        spent = effects.cost_of(self._store, step.action, graphs,
+                                memo=self._memo, **binding) or 0.0
+        lands = effects.lands_after(self._store, step.action, graphs,
+                                    memo=self._memo, **binding) or 0.0
         taken = node.taken + (step,)
-        world = imaginarium.reached(node.world, taken, added, retracted)
+        world = reached(self._store, node.world, taken, added, retracted)
         return _Node(world=world, taken=taken, cost=node.cost + spent,
                      at=node.at + timedelta(seconds=lands))
 
@@ -335,7 +339,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
             out["quantity"] = step.quantity
         return out
 
-    def _dataset(self, imaginarium: Imaginarium, node: "_Node") -> list[str]:
+    def _dataset(self, node: "_Node") -> list[str]:
         """What a rule is answered over in this world: everything a rule may read at the
         instant this node stands at, with the node's own readings in the state's place.
 
@@ -353,16 +357,16 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         PREDICTIONS ARE LEFT OUT FOR THE SAME REASON — they are the diffs the grounds were made
         from, and a diff is not a fact about a world.
         """
-        spoken_for = {*graphs_of(imaginarium.store, STATE),
-                      *graphs_of(imaginarium.store, PREDICTION),
-                      *graphs_of(imaginarium.store, GROUND_GRAPH)}
-        graphs = [g for g in graphs_of(imaginarium.store, *FORESEEN, at=node.at)
+        spoken_for = {*graphs_of(self._store, STATE),
+                      *graphs_of(self._store, PREDICTION),
+                      *graphs_of(self._store, GROUND_GRAPH)}
+        graphs = [g for g in graphs_of(self._store, *FORESEEN, at=node.at)
                   if g not in spoken_for]
         return [*graphs, node.world] if node.world else graphs
 
     # --- the verdict -------------------------------------------------------------------------
 
-    def _met_select(self, imaginarium: Imaginarium, want: str) -> str | None:
+    def _met_select(self, want: str) -> str | None:
         """The want's met-test, compiled to the select whose rows are its violations.
 
         A VERDICT THE SEARCH READS IS A QUERY. The judge's own reader floors at tens of
@@ -378,20 +382,20 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
 
         None where nothing points at a shape, which nothing this package mints is.
         """
-        shapes = self._shapes(imaginarium)
+        shapes = self._shapes()
         root = shapes.value(rdflib.URIRef(want), _MET_WHEN)
         if root is None:
             return None
         return violation.unmet_select(shapes.cbd(root), root)
 
-    def _shapes(self, imaginarium: Imaginarium) -> rdflib.Graph:
+    def _shapes(self) -> rdflib.Graph:
         """Every want and desire this agent holds, as one rdflib graph — where a met-test is
         declared. Per pass, because a search writes none of them: a rebuild in the middle
         would hand two depths two different wants."""
-        return imaginarium.memo.get(("shapes",), lambda: rdflib_view(
-            imaginarium.store, *graphs_of(imaginarium.store, DESIRE, WANT, RECORD)))
+        return self._memo.get(("shapes",), lambda: rdflib_view(
+            self._store, *graphs_of(self._store, DESIRE, WANT, RECORD)))
 
-    def _met(self, imaginarium: Imaginarium, select: str | None, node: "_Node",
+    def _met(self, select: str | None, node: "_Node",
              want: str) -> bool:
         """Is the want met in this node's world? A row is a violation, so none means met.
 
@@ -401,17 +405,17 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         """
         if select is None:
             return False
-        return not bindings(query(imaginarium.store, select,
-                                  self._dataset(imaginarium, node)))
+        return not bindings(query(self._store, select,
+                                  self._dataset(node)))
 
-    def _hash_of(self, imaginarium: Imaginarium, node: "_Node") -> str:
+    def _hash_of(self, node: "_Node") -> str:
         """This world's hash — what tells two worlds apart, and so what makes a cycle visible.
         Written onto the world's own catalogue row by the same call that computes it."""
-        return hash_named_graph(imaginarium.store, node.world)
+        return hash_named_graph(self._store, node.world)
 
     # --- what was found ----------------------------------------------------------------------
 
-    def _write(self, imaginarium: Imaginarium, want: str, outcome: str, steps: tuple,
+    def _write(self, want: str, outcome: str, steps: tuple,
                cost: float | None) -> str:
         """The finding, into its own graph in the imaginarium — replaced whole, so a second
         pass over one want leaves one plan and not two.
@@ -438,7 +442,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         them. So the root is `planning:Plan` and the ledger reads past it to the steps.
         """
         graph = plan_graph(want)
-        imaginarium.forget_plan(graph)
+        clear_graph(self._store, graph)
         node, root = ox.NamedNode(graph), ox.NamedNode(graph)
         quads = [ox.Quad(root, _RDF_TYPE, _P("Plan"), node),
                  ox.Quad(root, ox.NamedNode(FOR_WANT), ox.NamedNode(want), node),
@@ -454,8 +458,8 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
                 quads.append(ox.Quad(uri, _E("then"), uris[n + 1], node))
             for parameter, value in step.binding:
                 quads.append(ox.Quad(uri, ox.NamedNode(parameter), _term(value), node))
-        imaginarium.note(quads)
-        imaginarium.classify_plan(graph, want)
+        add_quads(self._store, quads)
+        classify(self._store, graph, PLAN_GRAPH, OREXIS + "Derived")
         return graph
 
 

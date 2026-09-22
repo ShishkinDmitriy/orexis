@@ -44,14 +44,14 @@ GROUP BY ?step ?fills ORDER BY ?n"""
 
 
 def plans_of(planner: Planner) -> list[dict]:
-    """Every plan the pass left, over every imaginarium it made — asked by class."""
+    """Every plan the pass left, over every imaginarium it made — asked by class. An
+    imaginarium IS a store, so there is nothing to reach through."""
     out = []
-    for imaginarium in planner.imaginaria:
-        for graph in graphs_of(imaginarium.store, PLAN_GRAPH):
+    for imagined in planner.imaginaria:
+        for graph in graphs_of(imagined, PLAN_GRAPH):
             named = Raw(f"<{graph}>")
-            (found,) = rows(imaginarium.store, bind(_PLAN_Q, plan=named))
-            found["steps"] = [r["fills"] for r
-                              in rows(imaginarium.store, bind(_STEPS_Q, plan=named))]
+            (found,) = rows(imagined, bind(_PLAN_Q, plan=named))
+            found["steps"] = [r["fills"] for r in rows(imagined, bind(_STEPS_Q, plan=named))]
             out.append(found)
     return out
 

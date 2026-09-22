@@ -12,19 +12,22 @@ the **imaginarium**, in the sovereign's word, and the word says the thing that m
 in it never happened. See
 knowledge/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md.
 
-**It HOLDS a store; it is not one.** The graphs a rule may read are copied in, so an ordinary
-query means the same thing here as it does in the belief base — `graphs_of(PUBLIC)` discovers the
-same names off the same ontology graph, and `effects.apply` cannot tell the two apart. What
-differs is that this one was constructed with no path, so it is memory and there is nothing to
-clean up: the whole store is dropped when the plan ends, and a crash mid-plan leaves nothing
-behind to find. That is most of why it is a store of its own rather than a graph in the agent's
-— a graph can be forgotten to be dropped, and a store that was never on disk cannot be.
+**IT IS A STORE.** The graphs a rule may read are copied in, so an ordinary query means the
+same thing here as it does in the belief base — `graphs_of(PUBLIC)` discovers the same names
+off the same ontology graph, and `effects.apply` cannot tell the two apart. What differs is
+that this one was constructed with no path, so it is memory and there is nothing to clean up:
+the whole store is dropped when the plan ends, and a crash mid-plan leaves nothing behind to
+find. That is most of why it is a store of its own rather than a graph in the agent's — a
+graph can be forgotten to be dropped, and a store that was never on disk cannot be.
 
-It SUBCLASSED one until the surface was counted. That handed every caller a volume's lifecycle
-— `put_graph`, `load_file`, `optimize`, `endow_graph` — on an object holding worlds that never
-touch a disk, and the search used the inherited half beside the intended one with nothing
-marking the seam. What it offers now is written down: the verbs a search needs, and the doors
-below, chosen one at a time.
+IT WAS A CLASS TWICE OVER, and the surface is what settled it both times. It SUBCLASSED
+`Store`, which handed every caller a volume's lifecycle — `put_graph`, `load_file`, `optimize`,
+`endow_graph` — on an object holding worlds that never touch a disk; then it HELD one and
+forwarded, which was twenty-two methods of which the search called five. The other seventeen
+came across from a predecessor whose search had a cone, a re-root and a remembered plan, and
+answered nobody here. What is left is what does work: filling a store, forking a world, and
+dropping one. Everything else a caller wants of a possible world it asks of the store, exactly
+as it asks it of the belief base, which is the whole claim of the paragraph above.
 
 **One named graph per search NODE, and none of them is ever mutated.** The obvious reading is a
 single hypothesis graph each step overwrites, and it is wrong: the search is breadth-first, so
@@ -40,13 +43,10 @@ from urllib.parse import quote
 
 import pyoxigraph as ox
 
-from orexis.agent.ontology import GRAPH_PREFIX, OREXIS, STATE_GRAPH, local_of
+from orexis.agent.ontology import GRAPH_PREFIX, STATE_GRAPH, local_of
+from orexis.agent.store import add_quads, forget_graph, remove_quads, update
+
 from .init_imaginarium import init_imaginarium
-from .ontology import PLANNING
-from orexis.agent.store import (Memo, add_quads, classify, clear_graph, construct,
-                                           contains_graph, copy_graphs, dump_nt, forget_graph,
-                                           get_graph, graphs_of, quads, quads_for_pattern,
-                                           query, query_over, remove_quads, update)
 
 #  Where a node's readings sit. Under the same root as every other graph, because a graph IRI is
 #  a graph IRI — but in a store nothing else can open, which is what keeps `orexis:PossibleGraph`'s
@@ -64,247 +64,64 @@ def plan_graph(want: str) -> str:
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 
-class Imaginarium:
-    """The graphs a rule may read, in memory, plus one graph per world the plan imagines.
+def imagine(beliefs: ox.Store, scope: str, now: datetime) -> ox.Store:
+    """A store of its own, filled from `beliefs` by `init_imaginarium` — which is all this
+    ever was.
 
-    It HOLDS a store rather than being one, and the difference is the whole point. As a subclass
-    it offered `put_graph`, `load_file`, `optimize`, `drop_graph` and two dozen more — a volume's
-    lifecycle, meaningless for worlds that never touch a disk — and the search reached through
-    them without anything marking where the repository ended and the handle began. What is
-    reachable now is what is written below: the verbs a search needs, and the doors a rule is
-    asked through. Everything else about how worlds are KEPT is behind `self._store`.
+    IT IS A STORE AND NOT A CLASS. There was an `Imaginarium` holding one, and what it added
+    was twenty-two forwarding methods over the store's own functions, of which the search
+    called five; the other seventeen came across from a predecessor whose search had a cone, a
+    re-root and a remembered plan, and answered nobody here. A class that holds one store and
+    forwards is the store with a longer name to type — the same finding as `Wants`, `Plan` and
+    `Want`, arrived at from the doors rather than from the fields.
+
+    `scope` names which imaginarium this is — a pass makes one per scope of the vocabulary —
+    and `now` is the instant its grounds are laid from, since the present cannot be read off a
+    store: nothing there marks it.
     """
+    return init_imaginarium(beliefs, ox.Store(), scope, now)
 
-    def __init__(self, beliefs: ox.Store, scope: str, now: datetime):
-        """A store of its own, filled by `init_imaginarium` — which is all this ever was.
 
-        The copying is the function above, over two stores. What is left here is making the
-        empty store and holding it, since this class exists to be the DOORS a rule is asked
-        through and not to be the copy.
+def reached(store: ox.Store, parent: str, path, added, retracted) -> str:
+    """The world one step past `parent`: its readings, less what the step retracts, plus what
+    it adds. Returns the new graph's name, which is what a rule's `$state` is bound to.
 
-        `self.store` is a bare `pyoxigraph.Store` and is public, because the doors below are
-        a convenience and not a boundary: a caller that means to hand a rule the store itself
-        — the search does, on every fork — takes it rather than going through a forwarding
-        method.
-        The predecessor held a `Store` wrapper here and forwarded twenty-odd of its methods.
+    **Fork, do not replay.** A node's readings are made by copying its parent's and applying
+    the diff. Recomputing a world by replaying from the root would sound cheaper and is the
+    shape of the bug this exists to close: replay re-runs each step's rule, and a rule re-run
+    has to be re-run against *something* — which was the store. Materialising per node is what
+    makes a step's baseline the previous step's conclusion.
 
-        `scope` names which imaginarium this is — a pass makes one per scope of the vocabulary
-        — and `now` is the instant its grounds are laid from, since the present cannot be read
-        off a store: nothing there marks it.
-        """
-        self.store = ox.Store()                    # no path: memory, and not the belief base
-        #  THE PASS'S MEMO, and the pass is what this object IS. A rule text and the action
-        #  templates cannot change while a search runs — nothing here writes public knowledge
-        #  — so the lifetime is exactly this object's, which is why the memo is its and not
-        #  the store's (an-agent-is-four-things).
-        self.memo = Memo()
-        init_imaginarium(beliefs, self.store, scope, now)
+    Retraction before addition, and the order is load-bearing for the same reason it is in
+    `effects.world_after`: the sensed graph holds one observation node per (subject,
+    property), and Observe's construct reuses the very node its retraction names. Added first,
+    the addition would be removed by the retraction meant to precede it and the possible world
+    would come back holding neither reading.
+    """
+    name = world_of(path)
+    node = ox.NamedNode(name)
+    #  THE COPY IS THE ENGINE'S, not a Python loop over quads. The loop cost 4.75 ms per fork
+    #  on a 1,000-triple world against 3.29 ms this way, and 59 ms against 44 at 10,000 — a
+    #  quarter, all of it the interpreter's overhead per quad rather than the store's. Blank
+    #  node identity survives it, measured: a bnode matched in the WHERE is the same term when
+    #  inserted, which matters because a held shape IS a blank node.
+    update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
+                  f"WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}")
+    #  Retraction after the copy rather than during it, and by TERM rather than by text: a
+    #  DELETE DATA would have to re-serialise every literal with its datatype, which is the
+    #  mistake `effects._triple` already made once in the other direction. The lists are a
+    #  handful of triples, so a loop here costs nothing.
+    remove_quads(store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in retracted))
+    add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
+    return name
 
-    # --- the doors a rule is asked through ------------------------------------------------
-    #
-    #  Named one at a time, on purpose. Each is here because something asks it OF a possible
-    #  world: `effects` runs a package's rule (`construct`, `query`, `remember`), the urgency
-    #  choir measures a want at an instant (`query_at`), the search runs a compiled violation
-    #  select (`query_over`), and a test reads a world back (`quads`, `get_graph`, `dump_nt`).
-    #  A door nothing asks for is not forwarded, which is what makes this list the contract
-    #  rather than an accident of what a base class happened to carry.
 
-    def query(self, sparql: str, graphs, substitutions: dict | None = None) -> dict:
-        return query(self.store, sparql, graphs, substitutions)
-
-    def query_over(self, sparql: str, *graphs: str, substitutions: dict | None = None) -> dict:
-        return query_over(self.store, sparql, *graphs, substitutions=substitutions)
-
-    def graphs_of(self, *kinds: str, at: datetime | None = None) -> list[str]:
-        return graphs_of(self.store, *kinds, at=at)
-
-    def construct(self, sparql: str, graphs, substitutions: dict | None = None):
-        #  Handed its graphs like `query`: the instant and the world a rule is asked about are
-        #  in the list the search built, and a list built for the wrong instant returns an
-        #  EMPTY RESULT rather than an error (#666), so the search builds it in one place.
-        return construct(self.store, sparql, graphs, substitutions)
-
-    def note(self, quads, *, whole: bool = False) -> None:
-        """Write into the imagined store — what a PASS knows about the worlds it made.
-
-        The doors here are named one at a time and each because something asks it of a
-        possible world; this one is asked by the search recording what it has worked out — a
-        world's parent, what it spent to reach it, what its want reads there. That belongs
-        beside the worlds and not in the belief base: it is this pass's, it dies with the
-        pass, and a reader that wants to take the next iteration needs both in one store.
-
-        Not a general escape. A caller that means to change a WORLD uses `amend` or `reached`,
-        which keep a node's readings a diff of its parent's; this writes about worlds rather
-        than in them.
-
-        QUADS AND NOT AN UPDATE, and the difference was measured: as `INSERT DATA` this cost
-        38% of a hanoi solve — two SPARQL texts parsed per fork, where the writing itself is
-        nothing. These rows are ABOUT worlds and classify nothing, which used to have to be
-        ASSERTED to the store (`forget=False`) so it would not throw away its catalogue index
-        on the write. There is no index to throw away now — nothing is kept between calls —
-        so the assertion is gone with the thing it was made to.
-
-        `whole` says these quads are the COMPLETE account of every graph they name, so what
-        was there is cleared first. A re-rooted cone keeps some of its nodes and drops the
-        rest, and re-bases every one it keeps — new depths, new costs, a new clock — so its
-        account is rewritten rather than amended, and a row for a world that is gone cannot
-        survive to be offered as somewhere to search from.
-        """
-        quads = list(quads)
-        if whole:
-            for name in {q.graph_name.value for q in quads}:
-                clear_graph(self.store, name)
-        add_quads(self.store, quads)
-
-    def forget_plan(self, graph: str) -> None:
-        """Drop a want's plan — the whole graph, because that is what a plan is.
-
-        It enumerated names before: the steps are called `<plan>.0`, `<plan>.1`, so clearing
-        one meant removing every subject a plan of up to sixty-four steps MIGHT have used,
-        a count the writer had to guess and a shorter plan had to over-clear. A plan of its
-        own is cleared by being one.
-        """
-        clear_graph(self.store, graph)
-
-    def classify_plan(self, graph: str, want: str) -> None:
-        """Say what a plan's graph IS, so a reader asks the catalogue and never the name."""
-        classify(self.store, graph, PLANNING + "PlanGraph", OREXIS + "Derived")
-
-    def quads_for_pattern(self, subject=None, predicate=None, obj=None, graph=None):
-        """What the store holds matching a pattern — a reader of this store's own rows."""
-        return list(quads_for_pattern(self.store, subject, predicate, obj, graph))
-
-    def unnote(self, quads) -> None:
-        """Take back one of `note`'s rows — the mirror of `note`.
-
-        A world leaves the frontier when it is opened, and the row that said it was there has
-        to go with it: a frontier asked of the store is only the frontier if what it names is
-        still open.
-        """
-        remove_quads(self.store, quads)
-
-    def remember(self, key, compute):
-        return self.memo.get(key, compute)
-
-    def quads(self, graph_iri: str):
-        return quads(self.store, graph_iri)
-
-    def get_graph(self, graph_iri: str) -> str:
-        return get_graph(self.store, graph_iri)
-
-    def dump_nt(self, *graph_iris: str) -> str:
-        return dump_nt(self.store, *graph_iris)
-
-    def copy_in(self, source, *graphs: str) -> None:
-        """Graphs from ANOTHER store, copied in under their own names — the wants (#547).
-
-        The desire modality owns a store of its own, in memory and derived from the beliefs,
-        so what this agent pursues is not among the graphs the constructor copies. The judge
-        has always read the wants beside the world, because the packages' shapes target them
-        (`orexis:DesireShape`, the keeper's, a region's) — they rode into the border as text.
-        Copied in here, a target is resolved at a node by the store that holds the world, and
-        the border is written by one dump. Read-only like everything else in here.
-        """
-        copy_graphs(self.store, source, *graphs)
-
-    def refresh(self, source, *graphs: str) -> None:
-        """Make each of `graphs` say what `source` says there now — the present's graphs a
-        resumed pass reads beside its kept worlds: a round opened, a claim arrived, a debt
-        written since the cone was made, and the catalogue that says what they are. A timed
-        graph is not part of the invariant half by design (#589), so a change to one keeps
-        the cone; it must not keep the copy."""
-        for graph in graphs:
-            self.observe(source, graph)
-
-    def observe(self, source, graph: str) -> None:
-        """Make `graph` say what `source` says there, replacing whatever it held.
-
-        The root's readings after a re-root: the present is OBSERVED, so its graph is refreshed
-        from the belief base rather than re-made from the old root plus the matched diff. The
-        two agree exactly there, and the observed one is what says the present is the present.
-        """
-        clear_graph(self.store, graph)
-        self.copy_in(source, graph)
-
-    def border_text(self, *graphs: str) -> str:
-        """These worlds as one text for the judge, which takes text at the border.
-
-        The CONTRACT, and a caller depends on it: the text CONCATENATES — every line stands
-        alone, so a pass writes the invariant half once and joins each node's readings with
-        `+`, instead of re-serialising a world per judged node. Which serialisation keeps that
-        promise is this store's business and no reader's; it is N-Triples, and the reason is
-        in `Store.dump_nt`.
-        """
-        return dump_nt(self.store, *graphs)
-
-    def node_of(self, graph: str, subject) -> list:
-        """Everything this world says about one subject, as triples — the whole node, type and
-        key included.
-
-        A retraction is canonicalised like an addition, so a reading retracted without its type
-        is two plain triples that cancel nothing (#619); a caller replacing a node needs all of
-        it, and asking for it a quad at a time is how it came to be asked for wrongly.
-        """
-        return [ox.Triple(q.subject, q.predicate, q.object)
-                for q in quads(self.store, graph) if q.subject == subject]
-
-    def reached(self, parent: str, path, added, retracted) -> str:
-        """The world one step past `parent`: its readings, less what the step retracts, plus what
-        it adds. Returns the new graph's name, which is what a rule's `$state` is bound to.
-
-        **Fork, do not replay.** A node's readings are made by copying its parent's and applying
-        the diff. Recomputing a world by replaying from the root would sound cheaper and is the
-        shape of the bug this exists to close: replay re-runs each step's rule, and a rule
-        re-run has to be re-run against *something* — which was the store. Materialising per
-        node is what makes a step's baseline the previous step's conclusion.
-
-        Retraction before addition, and the order is load-bearing for the same reason it is in
-        `effects.world_after`: the sensed graph holds one observation node per (subject,
-        property), and Observe's construct reuses the very node its retraction names. Added
-        first, the addition would be removed by the retraction meant to precede it and the
-        possible world would come back holding neither reading.
-        """
-        name = world_of(path)
-        node = ox.NamedNode(name)
-        #  THE COPY IS THE ENGINE'S, not a Python loop over quads. The loop cost 4.75 ms per
-        #  fork on a 1,000-triple world against 3.29 ms this way, and 59 ms against 44 at
-        #  10,000 — a quarter, all of it the interpreter's overhead per quad rather than the
-        #  store's. Blank node identity survives it, measured: a bnode matched in the WHERE is
-        #  the same term when inserted, which matters because a held shape IS a blank node.
-        #  A possible world is classified as nothing and holds during no period, so copying
-        #  one could never change what the predecessor's wrapper had learned by asking — which
-        #  it threw away on every write regardless, at ten percent of a hanoi solve until the
-        #  caller asserted otherwise. Nothing is learned by asking here.
-        update(self.store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
-                        f"WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}")
-        #  Retraction after the copy rather than during it, and by TERM rather than by text: a
-        #  DELETE DATA would have to re-serialise every literal with its datatype, which is the
-        #  mistake `effects._triple` already made once in the other direction. The lists are
-        #  a handful of triples, so a loop here costs nothing.
-        self.amend(name, added, retracted)
-        return name
-
-    def amend(self, name: str, added, retracted) -> None:
-        """Apply a diff to a world already forked — what the world did while a step ran (#592),
-        written into the step's own fork after the step's effect. Retraction before addition,
-        by term, for the reasons `reached` gives."""
-        node = ox.NamedNode(name)
-        remove_quads(self.store, (ox.Quad(t.subject, t.predicate, t.object, node)
-                                  for t in retracted))
-        add_quads(self.store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
-
-    def drop(self, name: str) -> None:
-        """Forget one imagined world's graph (#553, #487). The node that named it keeps its
-        two lists, and `Planner._graph` re-makes the graph from the nearest kept ancestor when
-        a rule next has to run against it. The root's readings are never dropped here."""
-        if name != STATE_GRAPH:
-            #  AND WHAT THE CATALOGUE SAID OF IT — its hash, written when the search
-            #  hashed it. A row pointing at a graph that is gone is litter.
-            forget_graph(self.store, name)
-
-    def holds(self, name: str) -> bool:
-        """Whether this world's graph is materialised now."""
-        return contains_graph(self.store, name)
+def drop_world(store: ox.Store, name: str) -> None:
+    """Forget one imagined world's graph (#553, #487), and what the catalogue said of it — its
+    hash, written when the search hashed it. A row pointing at a graph that is gone is litter.
+    The ground the search starts in is never dropped here."""
+    if name != STATE_GRAPH:
+        forget_graph(store, name)
 
 
 def segment_of(row) -> str:
