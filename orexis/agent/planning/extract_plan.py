@@ -32,35 +32,58 @@ from __future__ import annotations
 import pyoxigraph as ox
 
 from orexis.agent.ontology import OREXIS, local_of
-from orexis.agent.store import Raw, add_quads, bind, catalogue_of, classify, clear_graph, rows
+from orexis.agent.store import Raw, bind, catalogue_of, classify, clear_graph, update
 
-from orexis.agent.execution.ontology import EXECUTION
+from .ontology import PLAN_GRAPH
 
-from .ontology import COSTS, FOR_WANT, OF, OUTCOME, PLANNING, PLAN_GRAPH
+#  THE PLAN'S ROOT, and the three updates below it. Each is one statement the ENGINE runs
+#  over its own graphs: nothing is read into Python, ordered there and written back.
+_ROOT_U = """
+INSERT {{ GRAPH $plan {{ $plan a planning:Plan ; planning:forWant $want ;
+                                planning:outcome $outcome{costs} }} }}
+WHERE  {{}}"""
 
-_RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+#  A STEP PER CANDIDATE ON THE ANCESTRY. `prov:wasDerivedFrom*` walks the worlds back from the
+#  one that met the want — the zero-length case is that world itself — and a ground ends the
+#  walk by carrying no `planning:by`, exactly as the hand-written loop ended. The step's IRI is
+#  its world's, because a world has one candidate and a name is for eyes.
+_STEPS_U = """
+INSERT {{ GRAPH $plan {{ ?step a execution:Step ; execution:partOf $plan ;
+                                execution:fills ?action ; planning:of ?by }} }}
+WHERE  {{ GRAPH $cat {{ $world prov:wasDerivedFrom* ?w . ?w planning:by ?by .
+                        ?by planning:fills ?action
+                        BIND(IRI(CONCAT(STR(?w), "#step")) AS ?step) }} }}"""
 
-#  ONE WORLD'S ANCESTRY, ONE HOP AT A TIME. A property path would read the whole chain in one
-#  question and hand it back UNORDERED, and the order is the plan; so this walks, which is a
-#  query per step and at most as many as the budget allows forks.
-_BACK_Q = """
-SELECT ?parent ?by WHERE {
-  GRAPH $cat { $world prov:wasDerivedFrom ?parent .
-               OPTIONAL { $world planning:by ?by } } }"""
+#  THE CHAIN, OFF THE SAME ANCESTRY. A step follows the step of the world its world was forked
+#  from, so the order is the worlds' and nothing counts. This is the whole reason the walk
+#  could stop being Python: ORDER was the one thing a list seemed to be needed for.
+_CHAIN_U = """
+INSERT {{ GRAPH $plan {{ ?prev execution:then ?step }} }}
+WHERE  {{ GRAPH $cat {{ $world prov:wasDerivedFrom* ?w . ?w planning:by ?by .
+                        ?w prov:wasDerivedFrom ?parent . ?parent planning:by ?was
+                        BIND(IRI(CONCAT(STR(?w), "#step")) AS ?step)
+                        BIND(IRI(CONCAT(STR(?parent), "#step")) AS ?prev) }} }}"""
 
-#  WHAT A CANDIDATE IS FILLED WITH, which a step carries over unchanged: one triple per
-#  parameter, under the parameter's own IRI. Its type and `planning:fills` are left out —
-#  a step states both in the LEDGER's words instead, which is the only translation here.
-_FILLING_Q = f"""
-SELECT ?p ?v WHERE {{
-  GRAPH $cat {{ $by ?p ?v .
-                FILTER(?p != <{PLANNING}fills>
-                       && ?p != <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>) }} }}"""
+#  WHAT EACH IS FILLED WITH, carried over unchanged: one triple per parameter under the
+#  parameter's own IRI. The type and `planning:fills` are left out — a step states both in the
+#  LEDGER's words instead, which is the only translation here.
+_FILLING_U = """
+INSERT {{ GRAPH $plan {{ ?step ?p ?v }} }}
+WHERE  {{ GRAPH $cat {{ $world prov:wasDerivedFrom* ?w . ?w planning:by ?by . ?by ?p ?v .
+                        FILTER(?p != planning:fills && ?p != rdf:type)
+                        BIND(IRI(CONCAT(STR(?w), "#step")) AS ?step) }} }}"""
 
 
 def extract_plan(store: ox.Store, world: str, want: str, outcome: str,
                  cost: float | None) -> str:
     """Mint the plan that reached `world`, into its own graph. The graph's name.
+
+    FOUR UPDATES AND NOTHING READ OUT. It was a Python walk — one query per hop back up the
+    ancestry, another per candidate for its filling, then quads built in a loop and written —
+    and every part of that is something the engine does over its own graphs. What kept it in
+    Python was ORDER: a plan is a chain, and a list seemed to be the only way to have one. It
+    is not. A step follows the step of the world its world was forked from, so
+    `execution:then` falls out of `prov:wasDerivedFrom` and nothing counts.
 
     REPLACED WHOLE, so a second pass over one want leaves one plan and not two — which is the
     first reason a plan is a graph rather than a corner of one: clearing it is clearing a
@@ -69,67 +92,19 @@ def extract_plan(store: ox.Store, world: str, want: str, outcome: str,
 
     WRITTEN WHATEVER THE PASS CONCLUDED. A plan with no steps is an ANSWER, and
     `planning:outcome` is which of the three it is: the want was already met, no candidate
-    points at it, or none reached it inside the budget.
+    points at it, or none reached it inside the budget. The three step updates then match
+    nothing, which is how an answer comes to hold no steps without a branch.
     """
     graph = _plan_graph(want)
     clear_graph(store, graph)
-    node, root = ox.NamedNode(graph), ox.NamedNode(graph)
-    quads = [ox.Quad(root, _RDF_TYPE, ox.NamedNode(PLANNING + "Plan"), node),
-             ox.Quad(root, ox.NamedNode(FOR_WANT), ox.NamedNode(want), node),
-             ox.Quad(root, ox.NamedNode(OUTCOME), ox.NamedNode(outcome), node)]
-    if cost is not None:
-        quads.append(ox.Quad(root, ox.NamedNode(COSTS), _decimal(cost), node))
-
-    picked = _ancestry(store, world)
-    uris = [ox.NamedNode(f"{graph}.{n}") for n in range(len(picked))]
-    for n, (uri, candidate) in enumerate(zip(uris, picked)):
-        quads += [ox.Quad(uri, _RDF_TYPE, ox.NamedNode(EXECUTION + "Step"), node),
-                  ox.Quad(uri, ox.NamedNode(EXECUTION + "fills"),
-                          ox.NamedNode(candidate["action"]), node),
-                  ox.Quad(uri, ox.NamedNode(EXECUTION + "partOf"), root, node),
-                  ox.Quad(uri, ox.NamedNode(OF), ox.NamedNode(candidate["by"]), node)]
-        if n + 1 < len(uris):
-            quads.append(ox.Quad(uri, ox.NamedNode(EXECUTION + "then"), uris[n + 1], node))
-        quads += [ox.Quad(uri, ox.NamedNode(p), _term(v), node)
-                  for p, v in candidate["filling"]]
-    add_quads(store, quads)
+    plan, cat = Raw(f"<{graph}>"), Raw(f"<{catalogue_of(store)}>")
+    update(store, bind(_ROOT_U.format(
+        costs=f' ; planning:costs "{cost}"^^xsd:decimal' if cost is not None else ""),
+        plan=plan, want=Raw(f"<{want}>"), outcome=Raw(f"<{outcome}>")))
+    for text in (_STEPS_U, _CHAIN_U, _FILLING_U):
+        update(store, bind(text.format(), plan=plan, cat=cat, world=Raw(f"<{world}>")))
     classify(store, graph, PLAN_GRAPH, OREXIS + "Derived")
     return graph
-
-
-def _ancestry(store: ox.Store, world: str) -> list[dict]:
-    """The candidates walked to reach `world`, root first — each as its node, the action it
-    fills and what it is filled with.
-
-    IT STOPS WHERE THE CANDIDATES STOP, which is the ground the pass started in: a ground says
-    `prov:wasDerivedFrom` the ground before it and no `planning:by`, so the walk reads one
-    more row, finds no candidate, and ends. A ground's own ancestry is the timeline and not
-    this plan's.
-    """
-    cat = Raw(f"<{catalogue_of(store)}>")
-    out: list[dict] = []
-    seen = {world}
-    while True:
-        found = rows(store, bind(_BACK_Q, cat=cat, world=Raw(f"<{world}>")))
-        if not found or not found[0].get("by"):
-            break
-        by = found[0]["by"]
-        filling = [(r["p"], r["v"]) for r in rows(store, bind(_FILLING_Q, cat=cat,
-                                                              by=Raw(f"<{by}>")))]
-        out.append({"by": by, "action": _action_of(store, cat, by),
-                    "filling": filling})
-        world = found[0]["parent"]
-        if world in seen:                      # a cycle would be a bug, not a plan
-            break
-        seen.add(world)
-    return list(reversed(out))
-
-
-def _action_of(store: ox.Store, cat, by: str) -> str:
-    (found,) = rows(store, bind(
-        "SELECT ?a WHERE { GRAPH $cat { $by planning:fills ?a } }", cat=cat,
-        by=Raw(f"<{by}>")))
-    return found["a"]
 
 
 def _plan_graph(want: str) -> str:
@@ -137,13 +112,3 @@ def _plan_graph(want: str) -> str:
     from urllib.parse import quote
     from orexis.agent.ontology import GRAPH_PREFIX
     return GRAPH_PREFIX + "plan/" + quote(local_of(want), safe="")
-
-
-def _decimal(value: float) -> ox.Literal:
-    return ox.Literal(str(value), datatype=ox.NamedNode(
-        "http://www.w3.org/2001/XMLSchema#decimal"))
-
-
-def _term(value: str):
-    return ox.NamedNode(value) if "://" in value or value.startswith("urn:") \
-        else ox.Literal(value)
