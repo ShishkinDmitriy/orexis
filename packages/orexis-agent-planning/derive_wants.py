@@ -253,12 +253,25 @@ def _clusters(store: ox.Store, witnesses: list) -> list[list]:
     loose = []
     for w in witnesses:
         scope = scopes.get(w.about) if w.about else None
-        key = (scope, w.instance) if scope is not None or w.about == w.instance else None
+        #  AND BY THE STRETCH. Two ways of failing that one action could move together are one
+        #  want only where they are in trouble over the SAME stretch: a want's period is its
+        #  trouble's, and a plan for one is placed to land where that trouble begins, so one
+        #  want cannot be placed at two instants. Keyed by scope and instance alone, a level
+        #  dropping at half past and a temperature rising an hour in became one want starting
+        #  at the EARLIER — which says the temperature is in trouble from half past, and it is
+        #  not. Worse where one lifts: a cluster is open-ended where any of its ways never
+        #  lifts, so a transient dip joined to a standing trouble lost its own end.
+        key = ((scope, w.instance, w.at, w.until)
+               if scope is not None or w.about == w.instance else None)
         (groups.setdefault(key, []) if key is not None else loose).append(w)
     if not groups:
         return [loose]
+    #  A WITNESS NAMING NO SCOPE joins every group it could belong to, as it always has — but
+    #  only those in trouble over its own stretch, since joining one at another instant would
+    #  widen that group's period to cover a trouble it is not about.
     for w in loose:
-        for group in groups.values():
+        shared = [g for k, g in groups.items() if (k[2], k[3]) == (w.at, w.until)]
+        for group in shared or groups.values():
             group.append(w)
     return list(groups.values())
 

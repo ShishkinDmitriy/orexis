@@ -1,0 +1,102 @@
+# one_scope_two_stretches_is_two_wants
+#
+# Tank1 in range now, and TWO troubles foreseen at different instants: its level drops at
+# 12:30 and its temperature rises at 13:00. One lever moves both, so both predicates are in
+# ONE scope — and `two_properties_one_lever` shows that two troubles in one scope at the SAME
+# instant are one want, correctly, since one plan repairs both.
+#
+# THESE ARE NOT ONE WANT. A want's period is the stretch its trouble occupies, and these
+# occupy two: a plan for the level is placed to land at 12:30 and a plan for the temperature
+# at 13:00, and one want cannot be placed at both. Clustered by scope and instance alone they
+# became one want starting at the EARLIER of them, which says the temperature is in trouble
+# from 12:30 — it is not — and hides that the two need placing apart.
+#
+# WORSE WHERE ONE LIFTS. A cluster is open-ended where any of its ways of failing never lifts,
+# so a transient dip joined to a standing trouble loses its own end and stands for ever.
+#
+# So the cluster is keyed by the STRETCH as well: same scope, same instance, different stretch
+# is two clusters, two wants, two graphs with a period each.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+
+GRAPH :ontology {
+  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :tank1 a :Tank .
+}
+
+GRAPH :desires {
+  :in_range a sh:NodeShape .
+  :in_range sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:property [ orexis:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
+  :in_range sh:targetClass :Tank .
+  :keeper orexis:holds :keeper.in_range .
+  :keeper.in_range a orexis:Desire .
+  :keeper.in_range orexis:about :level .
+  :keeper.in_range orexis:about :temperature .
+  :keeper.in_range orexis:metWhen :in_range .
+  :keeper.in_range rdfs:label "every tank in range" .
+}
+
+GRAPH :sensed {
+  :tank1 :level 20 .
+  :tank1 :temperature 20 .
+}
+
+#  THE LEVEL DROPS AT HALF PAST.
+GRAPH :dip {
+  :tank1 :level 5 .
+}
+
+#  AND THE TEMPERATURE RISES AN HOUR IN, which is a different trouble at a different instant.
+GRAPH :heat {
+  :tank1 :temperature 40 .
+}
+
+#  ONE LEVER MOVES BOTH, so both predicates are in one scope.
+GRAPH :scopes {
+  :fix planning:inScope :keeper.scope.1 .
+  :keeper.scope.1 a planning:Scope .
+  :level planning:inScope :keeper.scope.1 .
+  :temperature planning:inScope :keeper.scope.1 .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:DesireGraph .
+  :desires a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :dip a orexis:Graph .
+  :dip a orexis:PredictionGraph .
+  :dip orexis:beliefsOf :keeper .
+  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+  :heat a orexis:Graph .
+  :heat a orexis:PredictionGraph .
+  :heat orexis:beliefsOf :keeper .
+  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+  :scopes a planning:ScopeGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

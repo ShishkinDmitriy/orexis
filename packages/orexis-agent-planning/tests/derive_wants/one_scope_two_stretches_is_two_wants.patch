@@ -1,0 +1,74 @@
+--- case
++++ expected
+@@ -55,20 +55,20 @@
+   :catalogue a orexis:Graph .
+   :desires a orexis:DesireGraph .
+   :desires a orexis:Graph .
++  :dip a orexis:Graph .
++  :dip a orexis:PredictionGraph .
++  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
++  :dip orexis:beliefsOf :keeper .
++  :heat a orexis:Graph .
++  :heat a orexis:PredictionGraph .
++  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
++  :heat orexis:beliefsOf :keeper .
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+   :ontology a orexis:PublicGraph .
+-  :dip a orexis:Graph .
+-  :dip a orexis:PredictionGraph .
+-  :dip orexis:beliefsOf :keeper .
+-  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+-  :heat a orexis:Graph .
+-  :heat a orexis:PredictionGraph .
+-  :heat orexis:beliefsOf :keeper .
+-  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+-  :scopes a planning:ScopeGraph .
+   :scopes a orexis:Graph .
+   :scopes a orexis:WorkingGraph .
++  :scopes a planning:ScopeGraph .
+   :scopes orexis:arrivedBy orexis:Derived .
+   :scopes orexis:beliefsOf :keeper .
+   :sensed a orexis:BeliefGraph .
+@@ -76,4 +76,41 @@
+   :sensed a orexis:StateGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  pursued:2026-01-01T123000p0000--open a orexis:Graph .
++  pursued:2026-01-01T123000p0000--open a orexis:WantGraph .
++  pursued:2026-01-01T123000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T123000p0000--open orexis:arrivedBy orexis:Derived .
++  pursued:2026-01-01T123000p0000--open orexis:beliefsOf :keeper .
++  pursued:2026-01-01T130000p0000--open a orexis:Graph .
++  pursued:2026-01-01T130000p0000--open a orexis:WantGraph .
++  pursued:2026-01-01T130000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T130000p0000--open orexis:arrivedBy orexis:Derived .
++  pursued:2026-01-01T130000p0000--open orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH pursued:2026-01-01T123000p0000--open {
++  :keeper orexis:holds :keeper.in_range.pursued.tank1.level .
++  :keeper.in_range.pursued.tank1.level a orexis:Want .
++  :keeper.in_range.pursued.tank1.level orexis:metWhen :keeper.in_range.pursued.tank1.level.met .
++  :keeper.in_range.pursued.tank1.level orexis:state orexis:Recognized .
++  :keeper.in_range.pursued.tank1.level prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
++  :keeper.in_range.pursued.tank1.level rdfs:label "foreseen: every tank in range at 2026-01-01T12:30+00:00" .
++  :keeper.in_range.pursued.tank1.level.met a sh:NodeShape .
++  :keeper.in_range.pursued.tank1.level.met sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
++  :keeper.in_range.pursued.tank1.level.met sh:targetNode :tank1 .
++}
++
++GRAPH pursued:2026-01-01T130000p0000--open {
++  :keeper orexis:holds :keeper.in_range.pursued.tank1.temperature .
++  :keeper.in_range.pursued.tank1.temperature a orexis:Want .
++  :keeper.in_range.pursued.tank1.temperature orexis:metWhen :keeper.in_range.pursued.tank1.temperature.met .
++  :keeper.in_range.pursued.tank1.temperature orexis:state orexis:Recognized .
++  :keeper.in_range.pursued.tank1.temperature prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.in_range.pursued.tank1.temperature prov:wasDerivedFrom :keeper.in_range .
++  :keeper.in_range.pursued.tank1.temperature rdfs:label "foreseen: every tank in range at 2026-01-01T13:00+00:00" .
++  :keeper.in_range.pursued.tank1.temperature.met a sh:NodeShape .
++  :keeper.in_range.pursued.tank1.temperature.met sh:property [ orexis:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
++  :keeper.in_range.pursued.tank1.temperature.met sh:targetNode :tank1 .
++}
