@@ -13,16 +13,19 @@ replaces rather than extends. One pipeline, and the package is what it is made o
 3. **the imaginarium** — a store per scope, filled from the beliefs by `init_imaginarium`,
    holding one graph per world the search reaches (`imaginarium.py`, `signature.py`);
 4. **the search** — best-first over those worlds: what a world affords (`steps.py`), what a
-   step would change (`effects.py`), whether the want is met there (`planner.py`), and what
-   was found (`plan.py`).
+   step would change (`effects.py`), and whether the want is met there (`planner.py`).
 
-What comes back is a plan, written into its imaginarium's own graph in the LEDGER's words.
-What happens to it is the execution layer's: `plans.copy_plan` copies it into the intentions
-store. Nothing here commits, because deciding a thing and remembering that it was decided are
+NOTHING COMES BACK. What a pass finds it writes: a `planning:Plan` graph per want, in the
+imaginarium that want was searched in, holding the steps in the LEDGER's own words and why
+the pass ended. There was a Python record beside it saying the same thing, so the finding
+existed twice and only one of the two could cross a layer — and the half a want most needs,
+that no lever this agent holds points at it, was the half that could not. What happens to a
+plan is the execution layer's: `plans.copy_plan` copies the graph into the intentions store.
+Nothing here commits, because deciding a thing and remembering that it was decided are
 different acts.
 
 **WHAT THE PREDECESSOR HELD AND THIS DOES NOT.** It was twenty-nine modules and seven and a
-half thousand lines; this is fourteen and under four thousand. Every absence is a thing that
+half thousand lines; this is fourteen and about four thousand. Every absence is a thing that
 returns attached to whatever needs it, never a thing quietly lost
 (an-agent-is-four-things):
 

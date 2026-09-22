@@ -9,11 +9,13 @@ process is told:
    them — and each group gets an imaginarium of its own, filled from the beliefs by
    `init_imaginarium`;
 3. inside each, a best-first walk: what does this world afford, what would each step make
-   true, is the want met there. What comes back is a `Plan` per want.
+   true, is the want met there. What a pass finds it WRITES: one `planning:Plan` graph per
+   want, in the imaginarium that want was searched in, holding the steps in the ledger's own
+   words and why the pass ended. Nothing comes back.
 
-Nothing here commits. A plan is written into its imaginarium's own plan graph and handed
-back; copying it into the ledger is the execution layer's (`plans.copy_plan`), because
-deciding a thing and remembering that it was decided are different acts.
+Nothing here commits. Copying a plan into the ledger is the execution layer's
+(`plans.copy_plan`), because deciding a thing and remembering that it was decided are
+different acts.
 
 **WHAT THE PREDECESSOR'S SEARCH HAD AND THIS DOES NOT**, each an absence rather than an
 oversight (an-agent-is-four-things):
@@ -25,6 +27,10 @@ oversight (an-agent-is-four-things):
 - **remembered plans** — adopting a route that worked before without searching for it again.
 - **the trace** — the record of what a pass considered, for a reader. Nothing in the search
   reads it back, so nothing here writes it.
+- **what a plan LANDS at, where it was placed, and which candidate it came through** — three
+  fields the predecessor's record carried and nothing read, two of which say nothing new
+  while a pass stands at one instant. A term nobody reads is annotation; they come back with
+  their readers.
 - **the A\\* key** — ordering the frontier by cost plus the want's own `orexis:estimates`.
   The frontier is ordered by cost alone, which is uniform-cost search: the same answer, more
   worlds visited to reach it.
@@ -57,8 +63,8 @@ from . import effects, relevance, signature
 from .derive_wants import derive_wants
 from .forget_wants import withdraw
 from .imaginarium import Imaginarium, plan_graph
-from .ontology import GROUND_GRAPH
-from .plan import EXHAUSTED, NOTHING, Plan, SATISFIED
+from .ontology import (COSTS, EXHAUSTED, FOR_WANT, GROUND_GRAPH, NO_CANDIDATE,
+                       OUTCOME, SATISFIED)
 from .scopes import find_scopes
 from .steps import find_steps
 from .want import Want
@@ -95,6 +101,12 @@ class Planner:
         #  The readings graph of the pass in hand — set at `plan`, since which graph that is
         #  is the catalogue's to say and a pass is what stands somewhere.
         self._state: str | None = None
+        #  THE PASS'S IMAGINARIA, one per scope, replaced at every `plan`. They are where the
+        #  pass wrote what it found, so this is how a caller reaches it — each is asked for
+        #  its graphs of class `planning:PlanGraph`, the same by-kind read as everywhere
+        #  else. They are memory and die with the Planner, as a plan about a world that has
+        #  moved should.
+        self.imaginaria: list[Imaginarium] = []
 
     def _identity(self, agent_id: str) -> tuple[str, str | None]:
         """Who this agent is and what it acts for, off the world graph.
@@ -117,8 +129,15 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
 
     # --- the pass ----------------------------------------------------------------------------
 
-    def plan(self, now: datetime | None = None) -> dict[str, Plan]:
-        """One pass: derive what is wanted, and find a plan for each of it. Want URI -> plan.
+    def plan(self, now: datetime | None = None) -> None:
+        """One pass: derive what is wanted, and find a plan for each of it.
+
+        NOTHING COMES BACK, because everything a pass finds it WRITES: one graph per want in
+        the imaginarium it was searched in, `planning:Plan`, holding the steps in the ledger's
+        own words and why the pass ended. A reader asks the imaginaria this pass left
+        (`self.imaginaria`) for their graphs of that class, exactly as every other read here
+        asks by kind. The predecessor returned a Python record beside the graph it had already
+        written, so the finding existed twice and only one of the two could cross a layer.
 
         THE IMAGINARIUM IS PER SCOPE and not per want, which is what the scopes are for: two
         wants whose predicates move together are searched in one imagined world, so a step
@@ -137,18 +156,18 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         #  WHAT CROSSES IS THE FILL'S TO ASK. The caller used to list which of its own graphs
         #  went in; `init_imaginarium` asks the catalogue for the kinds a search reads, and
         #  lays the ground worlds while it is there.
-        out: dict[str, Plan] = {}
         #  WHAT EACH WANT READS is asked of the graphs of wants, where the derivation wrote
         #  each met-test narrowed to its own witness.
         shapes = rdflib_view(self.beliefs, *graphs_of(self.beliefs, DESIRE, WANT, RECORD, at=at))
+        self.imaginaria = []
         for scope, group in self._by_scope(wants, shapes).items():
             imaginarium = Imaginarium(self.beliefs, _scope_name(scope), at)
+            self.imaginaria.append(imaginarium)
             #  THE WORLD THE SEARCH STARTS IN is the GROUND holding at the instant it stands
             #  at — asked of the catalogue by class, never named (a graph IRI is an instance).
             self._state = next(iter(graphs_of(imaginarium.store, GROUND_GRAPH, at=at)), None)
             for want in group:
-                out[want.uri] = self._search(imaginarium, want, at)
-        return out
+                self._search(imaginarium, want, at)
 
     def _by_scope(self, wants: list[Want], shapes: rdflib.Graph) -> dict:
         """The wants grouped by the scope of what their met-tests READ, order kept.
@@ -185,8 +204,12 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
 
     # --- one want ----------------------------------------------------------------------------
 
-    def _search(self, imaginarium: Imaginarium, want: Want, at: datetime) -> Plan:
+    def _search(self, imaginarium: Imaginarium, want: Want, at: datetime) -> None:
         """Best-first over the worlds this want's steps would make, bounded by `BUDGET`.
+
+        WRITES ITS FINDING AND RETURNS NOTHING — the plan graph is the answer, and it is
+        written whatever the pass concludes, since an empty plan says which of the two
+        silences it is and that is the finding a want most needs.
 
         THE FRONTIER IS ORDERED BY COST ALONE — uniform-cost search. The predecessor added
         what the want said was left to spend and walked that gradient, which is A\\*; the
@@ -203,18 +226,19 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         keys = self._keys(imaginarium)
         root = _Node(world=self._state, taken=(), cost=0.0, at=at)
         if self._met(imaginarium, select, root, want):
-            return Plan(SATISFIED, (), cost=0.0, placed_at=at)
+            self._write(imaginarium, want, SATISFIED, (), 0.0)
+            return
 
         seen = {self._signature(imaginarium, root, keys)}
         tick = itertools.count()
         frontier: list = [(0.0, next(tick), root)]
-        best: Plan | None = None
+        best: "_Node | None" = None
         forked = 0
         saw_step = False
 
         while frontier and forked < BUDGET:
             cost, _, node = heapq.heappop(frontier)
-            if best is not None and cost >= (best.cost or 0.0):
+            if best is not None and cost >= best.cost:
                 break                       # the first achiever's bound refuses the rest
             for step in self._steps(imaginarium, node, want):
                 saw_step = True
@@ -230,20 +254,19 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
                     continue
                 seen.add(fingerprint)
                 if self._met(imaginarium, select, child, want):
-                    found = self._plan_of(child, at)
-                    if best is None or (found.cost or 0.0) < (best.cost or 0.0):
-                        best = found
+                    if best is None or child.cost < best.cost:
+                        best = child
                     continue
                 heapq.heappush(frontier, (child.cost, next(tick), child))
 
         if best is not None:
-            self._write(imaginarium, want, best)
-            return best
-        #  THE TWO SILENCES ARE NOT THE SAME, and telling them apart is most of why this
-        #  returns a record: NOTHING says no lever this agent holds points at this want
-        #  (equip me), EXHAUSTED says levers exist and no bounded sequence of them lands
+            self._write(imaginarium, want, SATISFIED, best.taken, best.cost)
+            return
+        #  THE TWO SILENCES ARE NOT THE SAME, and telling them apart is most of why an empty
+        #  plan is written at all: NO CANDIDATE says no lever this agent holds points at this
+        #  want (equip me), EXHAUSTED says levers exist and no bounded sequence of them lands
         #  inside the region (my doses are too coarse, or my region is too tight for them).
-        return Plan(NOTHING if not saw_step else EXHAUSTED, (), placed_at=at)
+        self._write(imaginarium, want, EXHAUSTED if saw_step else NO_CANDIDATE, (), None)
 
     # --- the moves ---------------------------------------------------------------------------
 
@@ -387,20 +410,17 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
 
     # --- what was found ----------------------------------------------------------------------
 
-    def _plan_of(self, node: "_Node", at: datetime) -> Plan:
-        """The node that met the want, as the plan that reached it.
+    def _write(self, imaginarium: Imaginarium, want: Want, outcome: str, steps: tuple,
+               cost: float | None) -> str:
+        """The finding, into its own graph in the imaginarium — replaced whole, so a second
+        pass over one want leaves one plan and not two.
 
-        A PLAN IS PLACED AT THE INSTANT OF THE ROOT IT WAS FOUND FROM, never by subtraction
-        from a deadline (#625): a plan placed at a crossing less its own duration lands in a
-        round that has closed.
-        """
-        return Plan(SATISFIED, node.taken, cost=node.cost,
-                    landing=(node.at - at).total_seconds(), placed_at=at,
-                    origin=node.taken[0].action if node.taken else None)
-
-    def _write(self, imaginarium: Imaginarium, want: Want, plan: Plan) -> str:
-        """The plan, into its own graph in the imaginarium — replaced whole, so a second pass
-        over one want leaves one plan and not two.
+        WRITTEN WHATEVER THE PASS CONCLUDED. A plan with no steps is an ANSWER, and
+        `planning:outcome` is which of the three it is: the want was already met, no lever
+        points at it, or the levers there are could not reach it inside the budget. Those
+        were fields on a Python record the pass returned and then dropped, so the finding a
+        want most needs — that nothing this agent holds points at it — was the one thing
+        nothing outside the process could read.
 
         A GRAPH OF ITS OWN, because that is what a plan is: clearing it means clearing a graph
         rather than removing every subject a plan of up to sixty-four steps MIGHT have used,
@@ -420,9 +440,12 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         imaginarium.forget_plan(graph)
         node, root = ox.NamedNode(graph), ox.NamedNode(graph)
         quads = [ox.Quad(root, _RDF_TYPE, _P("Plan"), node),
-                 ox.Quad(root, _P("forWant"), ox.NamedNode(want.uri), node)]
-        uris = [ox.NamedNode(f"{graph}.{n}") for n in range(len(plan.steps))]
-        for n, (uri, step) in enumerate(zip(uris, plan.steps)):
+                 ox.Quad(root, ox.NamedNode(FOR_WANT), ox.NamedNode(want.uri), node),
+                 ox.Quad(root, ox.NamedNode(OUTCOME), ox.NamedNode(outcome), node)]
+        if cost is not None:
+            quads.append(ox.Quad(root, ox.NamedNode(COSTS), _decimal(cost), node))
+        uris = [ox.NamedNode(f"{graph}.{n}") for n in range(len(steps))]
+        for n, (uri, step) in enumerate(zip(uris, steps)):
             quads += [ox.Quad(uri, _RDF_TYPE, _E("Step"), node),
                       ox.Quad(uri, _E("fills"), ox.NamedNode(step.action), node),
                       ox.Quad(uri, _E("partOf"), root, node)]
@@ -465,6 +488,13 @@ _XSD_DATETIME = ox.NamedNode("http://www.w3.org/2001/XMLSchema#dateTime")
 
 
 
+
+
+def _decimal(value: float) -> ox.Literal:
+    """A cost, as the decimal the ontology says it is. The kernel interprets no literal; this
+    only says which type it wrote."""
+    return ox.Literal(str(value), datatype=ox.NamedNode(
+        "http://www.w3.org/2001/XMLSchema#decimal"))
 
 
 def _E(local: str) -> ox.NamedNode:

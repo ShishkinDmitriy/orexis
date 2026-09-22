@@ -66,6 +66,26 @@ planning:inScope a owl:ObjectProperty ; rdfs:range planning:Scope ; rdfs:label "
 planning:Plan a owl:Class ; rdfs:label "Plan" ;
     rdfs:comment "WHAT ONE PASS FOUND, written down: the steps it would take, in order, and how long they come to. It lived only as a Python object handed to the keeper and was then discarded, so nothing outside the process could see what had been decided. One per want, named for it and replaced whole, in the imaginarium, which dies with the pass because a plan about a world that has moved is stale. ITS STEPS ARE THE LEDGER'S OWN: `execution:Step`, chained by `execution:then` and held together by `execution:partOf`, each saying what it `execution:fills` — the same shape an intention's steps have, so committing to a plan is copying what is already there rather than being handed a Python object across a layer." .
 
+planning:outcome a owl:ObjectProperty ; rdfs:domain planning:Plan ; rdfs:range planning:Outcome ;
+    rdfs:label "outcome" ;
+    rdfs:comment "Why the pass ended, which is the whole reason a plan with no steps is written down at all: an empty plan is an ANSWER and this says which of the three it is. It was a field on a Python object the pass returned and then dropped, so the finding a want most needed — that nothing this agent holds points at it — was the one thing nothing outside the process could read." .
+
+planning:Outcome a owl:Class ; rdfs:label "Outcome" ;
+    rdfs:comment "How one pass over one want ended. Three, and the predecessor had seven: `improved` and `not better` were a GRADED answer, which nothing measures since a want is judged by its met-test and nothing scores a world by degree; `refused` was the legality check, which is the gates'; `remembered` was a plan adopted without a search. Each comes back with the thing that could return it." .
+
+planning:Satisfied a planning:Outcome ; rdfs:label "satisfied" ;
+    rdfs:comment "A world was reached where the want's met-test passes. The steps are the way there, and there are none where the want was already met at the root." .
+
+planning:NoCandidate a planning:Outcome ; rdfs:label "no candidate" ;
+    rdfs:comment "No lever this agent holds points at this want: the search was offered no step at all. EQUIP ME, and it is not the same finding as Exhausted — a planner reporting the two alike would send somebody to buy a pump when the problem is the dose." .
+
+planning:Exhausted a planning:Outcome ; rdfs:label "exhausted" ;
+    rdfs:comment "Levers exist and no bounded sequence of them lands inside the region: the budget in worlds ran out, or the frontier emptied. MY DOSES ARE TOO COARSE, or my region is too tight for them." .
+
+planning:costs a owl:DatatypeProperty ; rdfs:domain planning:Plan ; rdfs:range xsd:decimal ;
+    rdfs:label "costs" ;
+    rdfs:comment "What the pass SCORED this plan to spend, summed from each step's own `orexis:costs` in the world that step is taken in. A finding of the search and not a promise: what a step actually costs is the world's to say when it is taken. The unit is the domain's and the kernel interprets no literal." .
+
 planning:forWant a owl:ObjectProperty ; rdfs:range orexis:Want ;
     rdfs:label "for want" ;
     rdfs:comment "The want a plan was found for — the one thing about a plan the ledger has no word for, because a ledger keeps commitments and not the reasoning that produced them. NO DOMAIN, because it was declared twice with a domain each in the predecessor, which in RDFS is the intersection of the two: a property nothing could legally carry. A plan is named for its want and replaced whole, so a second pass over the same want leaves one plan and not two — and a reader that holds a want asks for its plan by this rather than by the name, which is a convention." .

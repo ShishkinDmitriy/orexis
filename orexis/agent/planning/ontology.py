@@ -21,6 +21,18 @@ PLANNING = "http://example.org/orexis/planning#"
 PLAN_GRAPH = PLANNING + "PlanGraph"
 FOR_WANT = PLANNING + "forWant"
 
+#  WHY THE PASS ENDED, and the three are not interchangeable. The two silences in particular:
+#  NOTHING PROPOSED ANYTHING (equip me), against EXHAUSTED, where levers exist and no bounded
+#  sequence of them lands inside the region (my doses are too coarse, or my region too tight).
+#  A plan with no steps is an ANSWER, and this is what says which.
+OUTCOME = PLANNING + "outcome"
+SATISFIED = PLANNING + "Satisfied"
+NO_CANDIDATE = PLANNING + "NoCandidate"
+EXHAUSTED = PLANNING + "Exhausted"
+#  WHAT THE PASS SCORED THE PLAN TO SPEND, summed from each step's own `orexis:costs`. The
+#  unit is the domain's and the kernel interprets no literal.
+COSTS = PLANNING + "costs"
+
 
 #  A DERIVATION (scope-actions): one INSERT of one loaded rule, as the edge it makes. Written
 #  at every refresh of public knowledge, so the partition is a function of the store and not of
