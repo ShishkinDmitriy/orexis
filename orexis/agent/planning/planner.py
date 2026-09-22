@@ -313,9 +313,14 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         added, retracted = effects.apply(self._store, step.action, graphs,
                                          memo=self._memo, **binding)
         if not added and not retracted:
-            #  AN ACTION THAT CHANGES NOTHING IS NOT A MOVE. It is a legal filling whose
-            #  effect rule produced no diff in this world, and forking on it would spend a
-            #  world to arrive where we already are.
+            #  AN ACTION THAT CHANGES NOTHING IS NOT A MOVE: a legal filling whose effect rule
+            #  produced no diff in this world.
+            #
+            #  AN EARLY-OUT AND NOT A GUARD. Forking anyway would copy the parent, hash the
+            #  copy, find the hash already SEEN and drop it — the right answer by a longer
+            #  road, measured: both checks here and in `_lay_ground` were removed and the
+            #  suite stayed green. What it saves is the copy, the hash, and one of the
+            #  BUDGET's worlds, since a fork counts before anything is known about it.
             return None
         spent = effects.cost_of(self._store, step.action, graphs,
                                 memo=self._memo, **binding) or 0.0

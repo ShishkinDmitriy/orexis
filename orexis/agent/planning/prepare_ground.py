@@ -195,7 +195,9 @@ def _lay_ground(store: ox.Store, scope: str, now: datetime) -> list[str]:
             added += list(_triples(store, prediction))
             retracted += _superseded(store, supersedes, [*public, here], here)
         if not added and not retracted:
-            continue                    # a forecast that changes nothing is not a period
+            #  A forecast that changes nothing is not a period — an early-out, not a guard:
+            #  the hash below reaches the same answer, having laid the graph first.
+            continue
         there = _fork(store, here, _name(scope, at), added, retracted)
         mark = hash_named_graph(store, there)
         if mark == marks:
