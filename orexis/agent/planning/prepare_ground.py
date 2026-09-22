@@ -28,6 +28,16 @@ and a crash mid-plan leaves nothing behind to find. That is most of why it is a 
 own rather than a graph in the agent's: a graph can be forgotten to be dropped, and a store
 that was never on disk cannot be.
 
+**AND IT IS THE CHEAP HALF**, measured on this bench, alternated within one session because
+the Pi drifts about twofold between invocations. A whole pass over the plans case costs
+13.9 ms with this store in memory and 32.6 ms with it on disk — 2.3x, filling included. Per
+operation, medians of five rounds against a 5,000-quad store: forking a two-quad graph 0.12 ms
+against 0.25, forking the 5,000 22.4 ms against 92.0, a SELECT 2.6 ms against 3.3, a DELETE
+0.13 ms against 0.21. So a READ pays about a third more and a WRITE pays two to four times,
+which is the shape RocksDB has: the engine answers questions at nearly the same speed either
+way and pays for durability when something changes. A pass writes a graph per fork, so the
+argument from cleanup and the argument from cost point the same way.
+
 A FUNCTION OVER TWO STORES, which is the one thing in this package that cannot be a function
 over a single one. `beliefs` is read and the empty store is written; both are the engine, a
 `pyoxigraph.Store`, and the caller makes the empty one. Everything that happens to a possible
