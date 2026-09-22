@@ -62,7 +62,6 @@ from orexis.agent.store import Memo, bindings, graphs_of, query, rdflib_view
 
 from . import effects, relevance
 from .derive_wants import derive_wants
-from .forget_wants import withdraw
 from .imaginarium import Imaginarium, plan_graph
 from .ontology import (COSTS, EXHAUSTED, FOR_WANT, GROUND_GRAPH, NO_CANDIDATE,
                        OUTCOME, SATISFIED)
@@ -140,6 +139,10 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         for ever. Nothing was wrong with the forecast; there was nowhere in the pass where it
         REPLACED anything, and the grounds are that place.
 
+        WHAT IS DERIVED IS KEPT. A pass writes its wants into the imaginarium and takes none
+        of them away: the store is memory, so what the derivation did not mint this pass is
+        not there to withdraw, and withdrawal is an act about a store that OUTLIVES a pass.
+
         ONE PER SCOPE OF THE STORE, which is what the scopes are for: two wants whose
         predicates move together are searched in one imagined world, so a step taken for the
         first is visible to the second, and two in different scopes cannot affect each other
@@ -168,12 +171,12 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
             #  the kinds a search reads and lays the ground worlds while it is there.
             imaginarium = Imaginarium(self.beliefs, _scope_name(scope), at)
             self.imaginaria.append(imaginarium)
-            #  TWO ACTS, AND THE PASS IS WHERE THEY MEET. What the desires imply is read off
-            #  the desires; what is taken away is read off that answer plus what a plan is
-            #  walking. The derivation hands its conclusion on rather than acting on it, so
-            #  nothing asks a standing want's own met-test a second time to find out what one
-            #  pass concluded.
-            withdraw(imaginarium.store, derive_wants(imaginarium.store, at), at)
+            #  AND NOTHING IS TAKEN AWAY. A pass used to withdraw what the desires no longer
+            #  imply, which is an act about a belief base that OUTLIVES the pass; the wants
+            #  are the imaginarium's now and the imaginarium is memory, so what the derivation
+            #  did not mint this pass simply is not there. The whole set it answers with is
+            #  kept, and `forget_wants.withdraw` waits for a store that persists them.
+            derive_wants(imaginarium.store, at)
             #  THE WORLD THE SEARCH STARTS IN is the GROUND holding at the instant it stands
             #  at — asked of the catalogue by class, never named (a graph IRI is an instance).
             self._state = next(iter(graphs_of(imaginarium.store, GROUND_GRAPH, at=at)), None)
