@@ -129,77 +129,93 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
     # --- the pass ----------------------------------------------------------------------------
 
     def plan(self, now: datetime | None = None) -> None:
-        """One pass: derive what is wanted, and find a plan for each of it.
+        """One pass: make a world per scope, judge what is wanted in it, and plan for each.
+
+        THE IMAGINARIUM COMES FIRST, AND THE DERIVATION RUNS INSIDE IT. What a desire reads at
+        a future instant is what the GROUND holding then says — the present with each
+        prediction applied in turn, one graph per period — and a ground exists only where
+        `init_imaginarium` has laid one. Judged against the belief base instead, a desire sees
+        the reading AND the prediction of it at once, and a shape holds over every value, so
+        the stale one still violates: a tank low now with a forecast refilling it reads unmet
+        for ever. Nothing was wrong with the forecast; there was nowhere in the pass where it
+        REPLACED anything, and the grounds are that place.
+
+        ONE PER SCOPE OF THE STORE, which is what the scopes are for: two wants whose
+        predicates move together are searched in one imagined world, so a step taken for the
+        first is visible to the second, and two in different scopes cannot affect each other
+        by construction. The scopes are READ and never computed — `scope_actions` wrote them,
+        and a store holding no scope graph is refused rather than guessed at as one scope.
 
         NOTHING COMES BACK, because everything a pass finds it WRITES: one graph per want in
         the imaginarium it was searched in, `planning:Plan`, holding the steps in the ledger's
         own words and why the pass ended. A reader asks the imaginaria this pass left
         (`self.imaginaria`) for their graphs of that class, exactly as every other read here
-        asks by kind. The predecessor returned a Python record beside the graph it had already
-        written, so the finding existed twice and only one of the two could cross a layer.
-
-        THE IMAGINARIUM IS PER SCOPE and not per want, which is what the scopes are for: two
-        wants whose predicates move together are searched in one imagined world, so a step
-        taken for the first is visible to the second. Two in different scopes cannot affect
-        each other by construction, so they get a world each and the filling is paid twice
-        rather than the worlds being confused once.
+        asks by kind.
         """
         at = now or clock.now()
         self.memo.forget()          # the derivation writes; nothing read before it still holds
-        #  TWO ACTS, AND THE PASS IS WHERE THEY MEET. What the desires imply is read off the
-        #  desires; what is taken away is read off that answer plus what a plan is walking.
-        #  The derivation hands its conclusion on rather than acting on it, so nothing asks a
-        #  standing want's own met-test a second time to find out what one pass concluded.
-        withdraw(self.beliefs, derive_wants(self.beliefs, at), at)
-        wants = find_wants(self.beliefs, at, holder=self.uri)
-        #  WHAT CROSSES IS THE FILL'S TO ASK. The caller used to list which of its own graphs
-        #  went in; `init_imaginarium` asks the catalogue for the kinds a search reads, and
-        #  lays the ground worlds while it is there.
-        #  WHAT EACH WANT READS is asked of the graphs of wants, where the derivation wrote
-        #  each met-test narrowed to its own witness.
-        shapes = rdflib_view(self.beliefs, *graphs_of(self.beliefs, DESIRE, WANT, RECORD, at=at))
+        scopes = find_scopes(self.beliefs)
+        if scopes is None:
+            raise RuntimeError("the store holds no scope graph — scope_actions has not run")
+        #  A STORE WITH NO ACTION HAS ONE WORLD, not none. `scope_actions` writes the scope
+        #  graph whatever it finds, so a store with nothing to do is scoped and EMPTY — and a
+        #  desire in it still has to be judged, to say that no lever points at it. Iterating
+        #  the scopes alone made no imaginarium at all and the want went unjudged.
+        families = sorted(set(scopes.values())) or [UNSCOPED]
         self.imaginaria = []
-        for scope, group in self._by_scope(wants, shapes).items():
+        for scope in families:
+            #  WHAT CROSSES IS THE FILL'S TO ASK. `init_imaginarium` asks the catalogue for
+            #  the kinds a search reads and lays the ground worlds while it is there.
             imaginarium = Imaginarium(self.beliefs, _scope_name(scope), at)
             self.imaginaria.append(imaginarium)
+            #  TWO ACTS, AND THE PASS IS WHERE THEY MEET. What the desires imply is read off
+            #  the desires; what is taken away is read off that answer plus what a plan is
+            #  walking. The derivation hands its conclusion on rather than acting on it, so
+            #  nothing asks a standing want's own met-test a second time to find out what one
+            #  pass concluded.
+            withdraw(imaginarium.store, derive_wants(imaginarium.store, at), at)
             #  THE WORLD THE SEARCH STARTS IN is the GROUND holding at the instant it stands
             #  at — asked of the catalogue by class, never named (a graph IRI is an instance).
             self._state = next(iter(graphs_of(imaginarium.store, GROUND_GRAPH, at=at)), None)
-            for want in group:
+            for want in self._of_scope(imaginarium, scope, scopes, at):
                 self._search(imaginarium, want, at)
 
-    def _by_scope(self, wants: list[str], shapes: rdflib.Graph) -> dict:
-        """The wants grouped by the scope of what their met-tests READ, order kept.
-
-        THE SCOPES ARE READ, NEVER COMPUTED: `scope_actions` wrote them, and a store holding
-        no scope graph is refused rather than guessed at as one scope — a store nobody scoped
-        is a store nothing can say what moves together in.
+    def _of_scope(self, imaginarium: Imaginarium, scope: str, scopes: dict,
+                  at: datetime) -> list[str]:
+        """The wants this imaginarium is the world for: those whose met-test reads a predicate
+        in `scope`, and those it reads nothing readable of, which join everything.
 
         WHAT A WANT READS IS PARSED OFF ITS MET-TEST, never declared beside it. A want used to
         state the one domain property it was about and this keyed on that, which is the
         planning problem answered before the planner is asked — and in a real world it did not
         even work: the scopes are over RDF PREDICATES while an about is a quantity kind, so
         `water:SoilMoisture` matched no scope and every want fell through to its own name.
-        A shape's paths ARE predicates, so this now groups what could interfere and separates
-        what cannot.
+        A shape's paths ARE predicates, so this separates what cannot interfere.
 
-        A WANT SPANNING SCOPES IS NOT SPLIT, it JOINS them: its group is keyed by every scope
-        it reaches, so two wants that could interfere through it share a world. The
-        alternative — taking the first scope and ignoring the rest — is the under-approximating
-        direction, which separates worlds that can affect each other and loses the interaction
-        silently. A want whose shape the walker cannot read reads as ANYTHING and joins
-        everything, which is the same safe direction.
+        A WANT SPANNING SCOPES IS SEARCHED IN THE FIRST OF THEM, and that is a LOSS this
+        ordering bought. The grouping it replaced was keyed by every scope a want reached, so
+        two wants that could interfere through it shared a world; scopes are the store's now
+        and a want cannot join two of them after the worlds are made. What it costs is that
+        the third want's step is invisible to the other two, not that anything is done twice:
+        one world is picked, deterministically, so a want has one plan.
         """
-        scopes = find_scopes(self.beliefs)
-        if scopes is None:
-            raise RuntimeError("the store holds no scope graph — scope_actions has not run")
-        groups: dict = {}
-        for want in wants:
+        shapes = rdflib_view(imaginarium.store,
+                             *graphs_of(imaginarium.store, DESIRE, WANT, RECORD, at=at))
+        first = (sorted(set(scopes.values())) or [UNSCOPED])[0]
+        mine = []
+        for want in find_wants(imaginarium.store, at, holder=self.uri):
             reads = relevance.reads_of_shape(shapes, rdflib.URIRef(want))
-            key = (relevance.ANYTHING if reads is relevance.ANYTHING
-                   else tuple(sorted({scopes[str(p)] for p in reads if str(p) in scopes})) or want)
-            groups.setdefault(key, []).append(want)
-        return groups
+            if reads is relevance.ANYTHING:
+                #  A WANT WHOSE SHAPE THE WALKER CANNOT READ joins everything, which is the
+                #  safe direction — it is searched once, in the first scope, rather than
+                #  separated from a world that could repair it.
+                if scope == first:
+                    mine.append(want)
+                continue
+            reached = sorted({scopes[str(p)] for p in reads if str(p) in scopes})
+            if reached[:1] == [scope] or (not reached and scope == first):
+                mine.append(want)
+        return mine
 
     # --- one want ----------------------------------------------------------------------------
 
@@ -575,6 +591,11 @@ SELECT DISTINCT ?w WHERE {{
     return [r["w"] for r in rows]
 
 
+
+
+#  THE WORLD OF A STORE THAT SCOPED NOTHING. A name for eyes like any other scope's, and the
+#  one every want falls to when no predicate it reads is in a scope.
+UNSCOPED = "unscoped"
 
 
 def _scope_name(key) -> str:
