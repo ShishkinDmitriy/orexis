@@ -369,12 +369,20 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         PREDICTIONS ARE LEFT OUT FOR THE SAME REASON — they are the diffs the grounds were made
         from, and a diff is not a fact about a world.
         """
+        #  ASKED ONCE PER INSTANT, not once per fork. What is in the list depends on the
+        #  INSTANT and nothing else — the node's own world is appended after — and building it
+        #  is four questions to the catalogue. Measured on the plans case before this: a
+        #  `_take` cost nine engine calls of which five were these, so the search spent more
+        #  of itself asking which graphs to read than reading them.
+        graphs = self._memo.get(("dataset", node.at), lambda: self._graphs_at(node.at))
+        return [*graphs, node.world] if node.world else list(graphs)
+
+    def _graphs_at(self, at: datetime) -> tuple[str, ...]:
         spoken_for = {*graphs_of(self._store, STATE),
                       *graphs_of(self._store, PREDICTION),
                       *graphs_of(self._store, GROUND_GRAPH)}
-        graphs = [g for g in graphs_of(self._store, *FORESEEN, at=node.at)
-                  if g not in spoken_for]
-        return [*graphs, node.world] if node.world else graphs
+        return tuple(g for g in graphs_of(self._store, *FORESEEN, at=at)
+                     if g not in spoken_for)
 
     # --- the verdict -------------------------------------------------------------------------
 
