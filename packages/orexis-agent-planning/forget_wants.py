@@ -18,11 +18,17 @@ parameter go.
 
 from __future__ import annotations
 
+import logging
+
 from orexis_agent_execution.ontology import OREXIS
-from orexis_agent_execution.store import NAMESPACES, rows
+from datetime import datetime
+
+from orexis_agent_execution.store import NAMESPACES, bind, instant, rows
 
 #  THE STAGES A WANT PASSES THROUGH (agent/ontology.ttl, "a want's life"). Spelled here as
 #  terms, which rule 1 allows; what may never be spelled is an instance.
+log = logging.getLogger("wants")
+
 WANT_GRAPH = OREXIS + "WantGraph"
 RECOGNIZED = OREXIS + "Recognized"
 PLANNING = OREXIS + "Planning"
@@ -76,6 +82,60 @@ SELECT ?w WHERE {{
   GRAPH ?g {{ ?w a orexis:Want ; orexis:state <{DONE}> }}
   GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?g a ?kind .
                 VALUES ?kind {{ orexis:WantGraph orexis:RecordGraph }} }} }}"""
+
+
+#  WHAT A PLAN IS WALKING. An intention that has been adopted and not resolved pursues a want,
+#  and that want is kept whatever its desire now reads: the world has not answered yet, and
+#  taking the want away would leave a plan in flight with nothing it was for.
+_PURSUED_Q = """
+SELECT ?w WHERE {
+  GRAPH ?g { ?i orexis:pursues ?w . FILTER NOT EXISTS { ?i orexis:resolvedAt ?done } }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a execution:IntentionGraph } }"""
+
+#  EVERY WANT THE DERIVATION MINTED that still holds at the instant asked about. Narrowed to
+#  what ARRIVED derived, because a want a world ratified and a debt the ledger wrote are not
+#  this sweep's to judge: no decomposition here implies them, so measured against one they
+#  would all read stale.
+_DERIVED_Q = """
+SELECT ?w WHERE {
+  GRAPH ?g { ?w a orexis:Want }
+  GRAPH ?cat {
+    ?cat a orexis:CatalogueGraph . ?g a orexis:WantGraph ; orexis:arrivedBy orexis:Derived .
+    OPTIONAL { ?g dcterms:temporal ?period .
+               OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?end } } }
+  FILTER(!BOUND(?start) || ?start <= $now) FILTER(!BOUND(?end) || ?end > $now) }"""
+
+
+def withdraw(engine, wanted, now: datetime) -> list[str]:
+    """Drop every derived want standing at `now` that `wanted` does not name. Returns what went.
+
+    `wanted` IS `derive_wants`' ANSWER, and that is the whole contract between them. A want
+    exists because its desire read unmet, so a want the decomposition no longer produces is
+    met — and the rows that say so are the ones the derivation has just read. Asking each
+    standing want's own met-test again would be a second evaluation of what one pass had
+    already concluded, which is what handing the conclusion on avoids.
+
+    THE TWO ACTS ARE APART ON PURPOSE. This used to live inside the derivation, per desire, so
+    "derive" and "withdraw" were one call and a caller could not have one without the other.
+    They are different decisions: what is wanted is read off the desires, and what is taken
+    away is read off what is wanted plus what is in flight. Being apart also makes the
+    store-wide question askable — a want under a desire the world no longer states was never
+    visited by a per-desire loop and stood for ever.
+
+    A WANT A PLAN IS WALKING IS KEPT whatever its desire reads. A want IS its graph (#645), so
+    withdrawing is `forget_want` and there is nothing left behind.
+    """
+    standing = {r["w"] for r in rows(engine, bind(_DERIVED_Q, now=instant(now)), ())}
+    stale = standing - set(wanted)
+    if not stale:
+        return []
+    pursued = {r["w"] for r in rows(engine, _PURSUED_Q, ())}
+    gone = []
+    for uri in sorted(stale - pursued):
+        forget_want(engine, uri)
+        log.info("%s withdrawn: its desire no longer reads it unmet", uri.rsplit("#", 1)[-1])
+        gone.append(uri)
+    return gone
 
 
 def forget_wants(engine) -> list[str]:

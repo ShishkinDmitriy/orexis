@@ -40,7 +40,6 @@ from orexis_agent_execution.store import NAMESPACES, bind, graphs_of, instant, r
 
 log = logging.getLogger("derive_wants")
 
-DESIRE_GRAPH = OREXIS + "DesireGraph"
 WANT_GRAPH = OREXIS + "WantGraph"
 OREXIS_MET_WHEN = OREXIS + "metWhen"
 
@@ -86,30 +85,33 @@ SELECT ?w ?holdsAt WHERE {
 ORDER BY ?w"""
 
 
-def derive_wants(store: ox.Store, now: datetime) -> list[str]:
-    """Mint a want under every desire for every cluster of what its met-test reads unmet,
-    withdraw every want those rows no longer imply, and return what changed either way. Run whenever a pass stands on a desire or on any want under it,
-    and by a package that has just written an instance, since a claim arriving should be a
-    want arriving and not a want on the next tick. A package that calls this mints nothing; it
-    says an instance is there and this does the rest (one-function-mints-every-want).
+def derive_wants(store: ox.Store, now: datetime) -> set[str]:
+    """Mint a want under every desire for every cluster of what its met-test reads unmet, and
+    answer with EVERY want those desires imply — the ones minted here and the ones already
+    standing under the same name.
+
+    Run whenever a pass stands on a desire or on any want under it, and by a package that has
+    just written an instance, since a claim arriving should be a want arriving and not a want
+    on the next tick. A package that calls this mints nothing; it says an instance is there and
+    this does the rest (one-function-mints-every-want).
 
     IT IS THE DECOMPOSITION OF WHAT THE MET-TESTS READ. A desire is judged at the present and,
     where it reads met there, at every instant a prediction reaches; what comes back is
     witnesses, and a want is minted per cluster of them. Nothing is written between the two.
 
-    AND THE DECOMPOSITION IS THE WHOLE OF WHAT SHOULD STAND, which is why the same rows
-    withdraw. A want exists because its desire read unmet; a want those rows no longer produce
-    is met, and dropping it here is free, where asking its own met-test about it again was a
-    second evaluation of what this function had just concluded. What it returns is therefore
-    every want that CHANGED — minted or withdrawn — since a caller that refreshes a projection
-    on a mint must refresh it on a withdrawal too.
+    **IT WITHDRAWS NOTHING.** Deriving what is wanted and taking away what is not are two acts,
+    and this is the first. It used to be both — the same rows that minted also dropped, on the
+    argument that the pass had just concluded what a second met-test would ask again — and the
+    argument was right about the READING and wrong about the place: what it takes to avoid
+    asking twice is that the conclusion be HANDED ON, not that one function do both. So the
+    answer is the whole decomposition, and `forget_wants.withdraw` is given it. A caller that
+    derives and does not withdraw has a store with wants nothing implies any more; a caller
+    that withdraws against a set it did not derive has a bug this signature makes visible.
 
     The instant is EACH CLUSTER'S OWN. A desire unmet at the present derives wants with none.
     One met at the present derives them at the instants it reads unmet — and two debts cross
     at two deadlines, so the second is not filtered away by the first's; each cluster holds at
-    its earliest witness. A desire met at every instant read derives NOTHING: there is nothing
-    to pursue, and a want about everything the desire is about is minted only for a desire
-    unmet at the present with no witness, which is what every want once was.
+    its earliest witness. A desire met at every instant read derives NOTHING.
 
     WHOSE, FROM THE DESIRE: the graph a desire lives in says who holds it, so the wants it
     implies are written to graphs that holder owns. One agent, one volume, so the holder is
@@ -117,24 +119,44 @@ def derive_wants(store: ox.Store, now: datetime) -> list[str]:
 
     THE PRESENT IS THE CALLER'S, and it is the only thing besides the store this takes. It was
     read from the clock in five places in here, so "the present" was five reads that could
-    disagree inside one pass and a test had to patch the clock to say when it stood. It is a
-    parameter now: this function is a function of the store and an instant, and nothing else.
+    disagree inside one pass and a test had to patch the clock to say when it stood.
     """
     shapes = shapes_in(store)
-    changed: list[str] = []
+    wanted: set[str] = set()
     for holder, desire, shape in desires_in(store, now):
         #  WHAT IT READS NOW, and what it reads ahead only where now is met: a desire in
         #  trouble already is pursued as it stands, and a crossing is a thing in the future.
         present = read_now(store, shapes, holder, desire, shape, now)
+        standing = _standing_under(store, desire, now)
         if present is None:
             #  NOT JUDGED IS NOT MET. A desire whose met-test could not be run says nothing
-            #  about its wants, and withdrawing on silence would drop a want on a bad shape.
+            #  about its wants — so what stands under it is what it implies, and a dropper
+            #  handed this answer cannot read silence as "no longer wanted" and take a want
+            #  on a bad shape.
+            wanted |= standing
             continue
         unmet_now = bool(present)
         found = present if unmet_now else read_ahead(store, shapes, holder, desire, shape, now)
-        changed += _derive_under(store, holder, desire, found, unmet_now, now)
-        changed += _withdraw_under(store, shapes, holder, desire, shape, found, unmet_now, now)
-    return changed
+        _derive_under(store, holder, desire, found, unmet_now, now)
+        said = _said(store, desire)
+        names = _named(store, desire, said, found)
+        #  AND THE FORESEEN HALF, where anything would otherwise be dropped: `found` is the
+        #  present alone when the desire is unmet now — a crossing is not minted for while
+        #  there is trouble already — so a want minted at a foreseen instant is absent from it,
+        #  and a dropper reading this answer would take it the moment any OTHER instance went
+        #  unmet now. A presented debt did exactly that to an unpresented one. Read only when
+        #  something stands that these names do not cover, so a pass with nothing stale pays
+        #  nothing for it.
+        if unmet_now and standing - names:
+            names |= _named(store, desire, said,
+                            read_ahead(store, shapes, holder, desire, shape, now))
+        wanted |= names
+    return wanted
+
+
+def _standing_under(store: ox.Store, desire: str, now: datetime) -> set[str]:
+    """Every want this derivation minted under `desire` and that still holds at `now`."""
+    return {r["w"] for r in rows(store, _STANDING_Q, (), desire=desire, now=instant(now))}
 
 
 def _derive_under(store: ox.Store, holder: str, desire: str, found: list[Witness],
@@ -204,44 +226,6 @@ def _named(store: ox.Store, desire: str, said, found: list[Witness]) -> set[str]
         out.add(name_of(store, desire, said, about,
                         next(iter(instances)) if len(instances) == 1 else None))
     return out
-
-
-def _withdraw_under(store: ox.Store, shapes, holder: str, desire: str, shape: str,
-                    found: list[Witness], unmet_now: bool, now: datetime) -> list[str]:
-    """Drop every want under this desire that its met-test no longer implies, and return them.
-
-    A WANT EXISTS BECAUSE ITS DESIRE READ UNMET, so a want the decomposition no longer
-    produces is met, and the rows that say so are the ones this pass already read. Nothing
-    re-runs a met-test to find out whether a want is met: asking twice is what this removes.
-
-    AGAINST THE WHOLE DECOMPOSITION, present AND foreseen, which is the correction the suite
-    made: `found` is the present alone where the desire is unmet now, since a crossing is not
-    minted for while there is trouble already — so a want minted at a foreseen instant is
-    absent from it and would be withdrawn the moment any OTHER instance went unmet now. A
-    presented debt did exactly that to an unpresented one. The foreseen half is read only
-    where something would otherwise be dropped, so a pass that withdraws nothing pays nothing.
-
-    A want a plan is WALKING is kept whatever its desire reads — see `_PURSUED_Q`. A want IS
-    its graph (#645), so withdrawing is `forget_want` and there is nothing left behind.
-    """
-    standing = {r["w"] for r in rows(store, _STANDING_Q, (), desire=desire, now=instant(now))}
-    if not standing:
-        return []
-    said = _said(store, desire)
-    wanted = _named(store, desire, said, found)
-    stale = standing - wanted
-    if not stale:
-        return []
-    if unmet_now:
-        stale -= _named(store, desire, said,
-                        read_ahead(store, shapes, holder, desire, shape, now))
-    pursued = {r["w"] for r in rows(store, _PURSUED_Q, ())} if stale else set()
-    gone = []
-    for want in sorted(stale - pursued):
-        forget_want(store, want)
-        log.info("%s withdrawn: its desire no longer reads it unmet", want.rsplit("#", 1)[-1])
-        gone.append(want)
-    return gone
 
 
 def _clusters(store: ox.Store, witnesses: list) -> list[list]:
@@ -349,14 +333,12 @@ def graph_of(agent_id: str, uri: str) -> str:
     return f"http://example.org/orexis/graph/pursued/{agent_id}/{uri.rsplit('#', 1)[-1]}"
 
 
-
-
 #  WITHDRAWAL IS ITS OWN MODULE (`forget_wants.py`). This file decides what is WANTED; taking
 #  a want away is the other half of the want's life and has its own reasons — which graph it
 #  is in, whether that graph holds others, what the catalogue still says of it. `_write`
 #  below imports the one text they share, since replacing a want whole is removing it and
 #  putting it back.
-from .forget_wants import RECOGNIZED, forget_graph, forget_want   # noqa: E402  (re-exported: see module)
+from .forget_wants import RECOGNIZED, forget_graph   # noqa: E402  (see the note above)
 
 
 def _write(engine, agent_id: str, uri: str, holder: str, desire: str, label: str,
@@ -493,9 +475,6 @@ def mint(store: ox.Store, holder: str, desire: str, now: datetime, said=None,
     return child
 
 
-
-
-
 def _local(holder: str) -> str:
     """The holder's local name — what a graph this derivation writes is called, for eyes."""
     return holder.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
@@ -588,12 +567,6 @@ SELECT DISTINCT ?holder ?desire ?shape WHERE {
 ORDER BY ?holder ?desire"""
 
 #  ONE desire, its holder and its met-test — for a reader asking about one.
-_ONE_Q = """
-SELECT ?holder ?shape WHERE {
-  GRAPH ?g { ?holder orexis:holds $desire . OPTIONAL { $desire orexis:metWhen ?shape } }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:DesireGraph } }
-ORDER BY ?holder"""
-
 #  WHEN THE HOLDER FORESEES: the start of every prediction of theirs, whatever its window —
 #  the future states a desire is judged at, given to this and never computed here (#643).
 #  EVERY INSTANT THIS AGENT CAN SEE AHEAD TO, and the kind of graph is not the question.
@@ -626,12 +599,6 @@ ORDER BY ?g"""
 
 #  WHAT A WANT NARROWS ITS DESIRE TO: its own met-test, which is the desire's carved to the
 #  cluster the want was minted from and targeted at its instance.
-_WANTS_SHAPE_Q = """
-SELECT ?holder ?shape WHERE {
-  GRAPH ?g { ?holder orexis:holds $want . $want orexis:metWhen ?shape }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:WantGraph } } LIMIT 1"""
-
-
 @dataclass(frozen=True)
 class Witness:
     """One way a desire is failing, and when it first does: the instance that failed, the
@@ -690,63 +657,6 @@ def read_ahead(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
     return sorted(seen.values(), key=lambda w: (w.at, w.instance, w.constraint))
 
 
-def crossing_of(store: ox.Store, desire: str, now: datetime) -> datetime | None:
-    """When the world this desire is about is judged to leave what the desire wants, or None:
-    the earliest instant its met-test reads unmet ahead of now.
-
-    ASKED OF A DESIRE AND NEVER OF A WANT. A want has no crossing — it is what a crossing
-    produced, and it carries the instant it must hold at; whether it is still in trouble by
-    then is `unmet_by`.
-
-    ASKED FROM OUTSIDE ONLY, and that is not a smell. Nothing in production calls this,
-    because the minting below computes a crossing inline while it decides what to mint — this
-    is the same question with a name, for a reader that has only a desire: the tests of
-    foresight, and whatever the sovereign asks next. It was three names for it, and the two
-    that reduced its rows to an instant are gone.
-
-    THE INSTANT, AND NOT THE ROWS IT IS READ FROM. This handed back its witnesses and was
-    called `witnesses_of`, and its one caller took `.at` off the first and dropped the rest —
-    through a caller of its own, which named the question this now answers, and a second
-    caller then named a third time and nobody called. A `Witness` is the grain a
-    want is minted at (`derive_wants` clusters on it); a crossing is an instant, and a reader
-    that wants one should not have to know what the other is.
-    """
-    found = _one(store, desire)
-    if found is None:
-        return None
-    holder, shape = found
-    witnesses = read_ahead(store, shapes_in(store), holder, desire, shape, now)
-    return witnesses[0].at if witnesses else None
-
-
-def unmet_by(store: ox.Store, want: str, until: datetime, now: datetime) -> datetime | None:
-    """The earliest instant at or before `until` at which this WANT's own met-test still reads
-    unmet, or None where it does not.
-
-    THE QUESTION THE CONTAINER ASKS when it presents a want that must hold at an instant: the
-    want was minted because its desire read unmet there, and a later reading may have moved
-    the corridor so that it no longer does — a dose lifts the pot, and the want its crossing
-    produced reads met. Asked of the WANT'S OWN shape, which is the desire's narrowed to the
-    cluster it was minted from and targeted at its instance, so a want about one tank is not
-    held to another's prediction.
-    """
-    found = _one(store, want, want=True)
-    if found is None:
-        return None
-    holder, shape = found
-    if shape is None:
-        return None
-    select = compiled(shapes_in(store), shape, want)
-    if select is None:
-        return None
-    for at in _starts(store, holder, now):
-        if at > until:
-            break
-        if _witnesses_at(store, select, holder, at, now):
-            return at
-    return None
-
-
 def shapes_in(store: ox.Store) -> rdflib.Graph:
     """Every graph of desires and of wants, parsed once — where a desire's shape lives with its
     blank-node closure, and a derived want's own. N-Triples, since it concatenates and rdflib
@@ -779,19 +689,6 @@ def compiled(shapes: rdflib.Graph, shape: str | None, of: str) -> str | None:
         log.warning("%s: its met-test cannot be compiled, so it is not judged: %s",
                     of.rsplit("#", 1)[-1], exc)
         return None
-
-
-def _one(store: ox.Store, node: str, want: bool = False) -> tuple[str, str | None] | None:
-    """Who holds one desire — or one want — and what its met-test is, or None where no graph
-    of that kind holds it."""
-    if want:
-        rows_ = rows(store, _WANTS_SHAPE_Q, (), want=node)
-        return (rows_[0]["holder"], rows_[0]["shape"]) if rows_ else None
-    rows_ = list(store.query(bind(_ONE_Q, desire=node), prefixes=NAMESPACES))
-    if not rows_:
-        return None
-    return rows_[0]["holder"].value, (rows_[0]["shape"].value
-                                      if rows_[0]["shape"] is not None else None)
 
 
 def _starts(store: ox.Store, holder: str, now: datetime) -> list[datetime]:
@@ -830,4 +727,3 @@ def _witnesses_at(store: ox.Store, select: str, holder: str, at: datetime,
     return [seen[key] for key in sorted(seen)]
 
 
-VIOLATION_IS = OREXIS + "violationIs"

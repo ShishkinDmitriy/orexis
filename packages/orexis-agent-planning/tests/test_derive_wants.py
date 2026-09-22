@@ -8,6 +8,12 @@ a want for each cluster of what the met-tests read unmet; `<case>.patch` beside 
 case is the whole store afterwards, in the case's own order, so `diff` of case against snapshot
 is exactly what it did.
 
+WHAT A CASE IS HELD TO IS A PASS — `derive_wants` and then `forget_wants.withdraw` against
+its answer — because that is the unit a store is left by. The two are separate functions on
+purpose (deriving what is wanted and taking away what is not are different decisions), and
+`a_filled_tank_withdraws_its_want` is the case that tells them apart: it is the one that fails
+if the withdrawal is left out.
+
 NOTHING STANDS BETWEEN A DESIRE AND A WANT, so there is one contract and one set of cases. It
 was two of each, with a judgment written between them and a case set per half;
 what a met-test reads is a witness now, computed and stored nowhere, and everything the
@@ -25,6 +31,7 @@ import pytest
 from orexis_agent_execution import clock
 
 from orexis_agent_planning.derive_wants import derive_wants
+from orexis_agent_planning.forget_wants import withdraw
 
 CASES_DIR = Path(__file__).parent / "derive_wants"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
@@ -34,7 +41,7 @@ CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 def test_derive_wants_leaves_the_store_as_the_snapshot_says(case, monkeypatch, request, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(case)
-    derive_wants(store, snapshots.NOW)
+    withdraw(store, derive_wants(store, snapshots.NOW), snapshots.NOW)
     snapshots.held_to_patch(case, request, "derive_wants", snapshots.snapshot_of(store))
 
 

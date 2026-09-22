@@ -55,6 +55,7 @@ from orexis_agent_execution.store import Memo, bindings, get_graph, graphs_of, q
 
 from . import effects, signature
 from .derive_wants import derive_wants
+from .forget_wants import withdraw
 from .imaginarium import Imaginarium, plan_graph, world_of
 from .plan import EXHAUSTED, NOTHING, Plan, SATISFIED
 from .scopes import find_scopes
@@ -126,7 +127,11 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         """
         at = now or clock.now()
         self.memo.forget()          # the derivation writes; nothing read before it still holds
-        derive_wants(self.beliefs, at)
+        #  TWO ACTS, AND THE PASS IS WHERE THEY MEET. What the desires imply is read off the
+        #  desires; what is taken away is read off that answer plus what a plan is walking.
+        #  The derivation hands its conclusion on rather than acting on it, so nothing asks a
+        #  standing want's own met-test a second time to find out what one pass concluded.
+        withdraw(self.beliefs, derive_wants(self.beliefs, at), at)
         wants = find_wants(self.beliefs, at, holder=self.uri)
         #  WHAT THE AGENT ALONE HOLDS AND A RULE STILL NAMES: its readings, which are where the
         #  search starts; its picks, which every conversion comes out of; and the wants, whose
