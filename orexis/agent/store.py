@@ -814,19 +814,24 @@ def clear_graph(store, graph_iri: str) -> None:
 
 
 def forget_graph(store, graph_iri: str) -> None:
-    """Empty one graph AND take back what the catalogue said of it.
+    """Empty one graph AND take back everything the catalogue said of it.
 
     A row pointing at a graph that no longer exists is litter every reader asking by class
-    would still be handed — the same claim `forget_want` makes about a want, which IS its
-    graph. Two acts because `clear_graph` has callers that mean to empty a graph they are
-    about to refill, and this one means it is gone.
+    would still be handed. Two acts because `clear_graph` has callers that mean to empty a
+    graph they are about to refill, and this one means it is gone.
+
+    THE PERIOD GOES WITH THE ROW. A graph's period is a BLANK NODE hanging off it, so taking
+    `<graph> ?p ?o` alone leaves `_:b a dcterms:PeriodOfTime ; orexis:start …` standing with
+    nothing pointing at it — litter that no reader asks for and nothing would ever remove. It
+    costs one more clause and the alternative is a store that grows for ever.
     """
     clear_graph(store, graph_iri)
     catalogue = catalogue_of(store)
     if catalogue is not None:
         update(store, f"""
-DELETE {{ GRAPH <{catalogue}> {{ <{graph_iri}> ?p ?o }} }}
-WHERE  {{ GRAPH <{catalogue}> {{ <{graph_iri}> ?p ?o }} }}""")
+DELETE {{ GRAPH <{catalogue}> {{ <{graph_iri}> ?p ?o . ?period ?pp ?po }} }}
+WHERE  {{ GRAPH <{catalogue}> {{ <{graph_iri}> ?p ?o .
+          OPTIONAL {{ <{graph_iri}> dcterms:temporal ?period . ?period ?pp ?po }} }} }}""")
 
 
 def put_graph(store, graph_iri: str, ttl: str, dataset: bool = False) -> None:

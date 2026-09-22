@@ -34,8 +34,7 @@ from rdflib.plugins.sparql.algebra import translateQuery
 from rdflib.plugins.sparql.parser import parseQuery
 from rdflib.plugins.sparql.parserutils import CompValue
 
-from orexis.agent.ontology import local_of
-from orexis.agent.store import (PREFIXES, Raw, bindings, bind as bind_text,
+from orexis.agent.store import (PREFIXES, bindings, bind as bind_text,
                                            construct, graphs_of, query, remember)
 from .relevance import _TOKEN, parseable
 from orexis.agent.ontology import PUBLIC
@@ -117,38 +116,6 @@ def apply(store, action: str, graphs=None, *, memo=None, **bind) -> tuple[list, 
     #  that fact: a claim about every other package's actions, made from inside one.
     return (_run(store, rule.get("construct"), bind, graphs),
             _run(store, rule.get("retracts"), bind, graphs))
-
-
-def world_after(base, store, action: str, /, *, memo=None, **bind):
-    """The world as it WOULD be, had this means been taken: `(base − retracted) + added`.
-
-    The two halves are separately callable and the search calls them separately, because it
-    needs the diff twice: once to fork the node's readings inside the imaginarium, where the
-    NEXT step's rule will read them, and once to build the flat rdflib view pySHACL validates.
-    This composed form states the equation, and is what a caller asking about a single step
-    wants.
-
-    The three are POSITIONAL-ONLY, and that is load-bearing rather than tidy: everything after
-    them is a binding for the rule, and a rule is free to have a placeholder called `$base` —
-    Actuate's does, since #247 made the reading it predicts from a parameter. Without the `/`
-    the caller's world and the rule's baseline collide on the name, which Python reports as
-    "multiple values for argument" and which would otherwise have been fixed by renaming one of
-    them and waiting for the next collision.
-
-    A new graph every time and nothing written anywhere, which is what makes a hypothesis safe
-    to hold: the store never learns that anyone imagined this. Possible worlds are computed and
-    dropped for the reason what a world admits is never stored — what is kept is premises, and a
-    world is a conclusion from beliefs plus an effect, so keeping one would be keeping something
-    that can outlive what it was concluded from.
-
-    Retraction before addition, and the order is not arbitrary. The sensed graph upserts one
-    observation node per (subject, property), so an effect that predicts a reading retracts the
-    node it replaces and then adds its own — done the other way round, the addition would be
-    removed by the retraction that was meant to precede it, and the possible world would come
-    back holding neither reading.
-    """
-    added, retracted = apply(store, action, memo=memo, **bind)
-    return applied(base, added, retracted)
 
 
 def applied(base, added, retracted):
@@ -242,62 +209,6 @@ def cost_of(store, action: str, graphs=None, *, memo=None, **bind) -> float | No
     if not rows or rows[0]["cost"] is None:
         return None
     return float(rows[0]["cost"].value)
-
-
-def precondition(store, action: str, keyed=(), *, memo=None, **bind) -> list:
-    """The facts a step's rules READ, as triples (#550): the positive patterns of the effect
-    construct's WHERE and of the action's availability select, instantiated by the engine
-    for this binding — `$me`, `$via`, `$about`, `$state` and the rest, exactly as `apply`
-    takes them. What comes back is the step's PRECONDITION in the world it was asked about:
-    the facts whose presence is what made the diff what it is. One declaration: nothing
-    here is authored beside the rule, and a rule that will not run yields nothing, loudly
-    in the log and quietly here, as `apply` does.
-
-    THE ENGINE INSTANTIATES. A CONSTRUCT whose template is the WHERE's own triple patterns
-    hands back, per solution, the triples those patterns matched — the same path the effect
-    itself takes, no bindings read through JSON, no terms rebuilt. Patterns under
-    OPTIONAL and UNION are in the template and simply drop where unbound; a pattern under
-    FILTER NOT EXISTS is an ABSENCE and is left to the regression (#551), and a subtracted
-    MINUS pattern is not read at all. A pattern whose predicate is a property path is
-    skipped: it reads a chain, not one fact.
-
-    The availability select is asked FOR THIS ROW — every parameter the action declares it
-    takes, and `?want`, held to what this step bound them to — so the facts are the ones that
-    put this step on the menu, not every row the action could offer.
-
-    `keyed` names the classes whose instances the signature states by KEY rather than by
-    identity (`orexis:keyedBy` — an observation, keyed by feature and property). A rule
-    reads such a node by its properties and never its type, and a fact about it stated
-    without the type would not be the fact the prediction states; so where a pattern's
-    node turns out to be one, its type is read beside it, and the signature can say it the
-    way it says every other reading.
-    """
-    rule = rule_for(store, action, memo)
-    if rule is None:
-        return []
-    read = []
-    text = _precondition_template(rule["construct"], tuple(keyed), ())
-    if text:
-        read += _run(store, text, bind)
-    if rule.get("available"):
-        #  HELD TO WHAT THIS STEP BOUND: the action's own parameters, by the local name its
-        #  precondition projects and its rules read. The kernel named three here once, two of
-        #  them its own inventions, so an action taking a third parameter had its precondition
-        #  re-asked unheld and read facts from rows it was not.
-        #  HELD TO WHAT IT WAS FILLED WITH, and only that: a parameter this step left unbound
-        #  restricts nothing, where holding the select to `urn:nothing` would kill every row
-        #  and the premises would read empty — which is not an error, just silence.
-        taken = tuple(name for name in (local_of(p) for p in (rule.get("takes") or "").split())
-                      if bind.get(name))
-        text = _precondition_template(rule["available"], tuple(keyed), (*taken, "want"))
-        if text:
-            read += _run(store, text, {
-                "me": bind["me"], "picks": bind["picks"],
-                "wants": Raw(f"(<{bind.get('want', 'urn:nothing')}> "
-                             f"<{bind.get('about', 'urn:nothing')}>)"),
-                **{name: bind.get(name) or "urn:nothing" for name in taken},
-                "want": bind.get("want") or "urn:nothing"})
-    return read
 
 
 @functools.lru_cache(maxsize=256)

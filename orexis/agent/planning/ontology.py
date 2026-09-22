@@ -51,6 +51,5 @@ GROUND_GRAPH = PLANNING + "GroundGraph"
 
 #  A SCOPE (scope-actions): which predicates some one action or derivation moves together.
 SCOPE = PLANNING + "Scope"
-IN_SCOPE = PLANNING + "inScope"
 
 

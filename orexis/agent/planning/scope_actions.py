@@ -120,10 +120,3 @@ def scopes(actions: dict[str, tuple], rules: tuple = ()) -> tuple[frozenset, ...
     return tuple(frozenset(v) for v in sorted(out.values(), key=lambda s: (-len(s), sorted(s))))
 
 
-def spans(view, parts: tuple[frozenset, ...]) -> int:
-    """How many scopes a view falls across — 1 where the want may be planned as one cone,
-    more where its plan would be several concatenated. ANYTHING spans everything there is."""
-    if view is ANYTHING:
-        return len(parts)
-    names = {str(p) for p in view}
-    return sum(1 for part in parts if part & names)

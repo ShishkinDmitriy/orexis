@@ -34,8 +34,8 @@ import rdflib
 from rdflib import RDF, URIRef
 from rdflib.collection import Collection
 from rdflib.paths import AlternativePath, InvPath, MulPath, NegatedPath, SequencePath
-from rdflib.plugins.sparql.algebra import translateQuery, translateUpdate, traverse
-from rdflib.plugins.sparql.parser import parseQuery, parseUpdate
+from rdflib.plugins.sparql.algebra import translateQuery, traverse
+from rdflib.plugins.sparql.parser import parseQuery
 
 from orexis.agent.store import PREFIXES, bindings
 
@@ -201,34 +201,6 @@ def writes_of_construct(text: str) -> frozenset | None:
 
 
 @functools.lru_cache(maxsize=64)
-def edges_of_update(text: str) -> tuple:
-    """Each INSERT of an update text as a (reads, writes) edge — a derivation rule, for the
-    closure. An update the parser refuses yields one edge that reads and writes ANYTHING."""
-    try:
-        ops = translateUpdate(parseUpdate(PREFIXES + parseable(text))).algebra
-    except Exception as exc:                            # noqa: BLE001
-        log.debug("could not parse a rule for relevance: %s", exc)
-        return ((ANYTHING, ANYTHING),)
-    edges = []
-    for op in ops:
-        if getattr(op, "name", None) != "Modify" or not op.get("insert"):
-            continue
-        writes: set = set()
-        for quads in _templates(op["insert"]):
-            for _, p, _ in quads:
-                if not isinstance(p, URIRef):
-                    writes = ANYTHING
-                    break
-                writes.add(p)
-            if writes is ANYTHING:
-                break
-        reads: set = set()
-        readable = _predicates_in(op.get("where"), reads) if op.get("where") is not None else True
-        edges.append((frozenset(reads) if readable else ANYTHING,
-                      frozenset(writes) if writes is not ANYTHING else ANYTHING))
-    return tuple(edges)
-
-
 def _templates(insert):
     """The triple lists of an INSERT: its default-graph triples and each GRAPH block's."""
     if insert.get("triples"):

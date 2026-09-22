@@ -19,9 +19,7 @@ import pyoxigraph as ox
 from orexis.agent.ontology import OREXIS
 from orexis.agent.store import NAMESPACES, rows
 
-from .ontology import PLANNING
 
-SCOPE_GRAPH = PLANNING + "ScopeGraph"
 
 #  THE STORE'S SCOPES, and the name is this module's because this module replaces the graph
 #  whole on every run. Nobody's and taking no id: the partition is a function of the actions
