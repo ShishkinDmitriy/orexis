@@ -16,6 +16,17 @@
    :keeper.in_range.pursued.tank1.level.met sh:targetNode :tank1 .
  }
  
+@@ -70,9 +69,9 @@
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+   :ontology a orexis:PublicGraph .
+-  :scopes a planning:ScopeGraph .
+   :scopes a orexis:Graph .
+   :scopes a orexis:WorkingGraph .
++  :scopes a planning:ScopeGraph .
+   :scopes orexis:arrivedBy orexis:Derived .
+   :scopes orexis:beliefsOf :keeper .
+   :sensed a orexis:BeliefGraph .
 @@ -82,7 +81,7 @@
    :world a orexis:PublicGraph .
    pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .

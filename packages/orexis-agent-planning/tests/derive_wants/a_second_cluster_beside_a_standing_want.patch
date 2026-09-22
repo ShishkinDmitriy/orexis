@@ -1,5 +1,16 @@
 --- case
 +++ expected
+@@ -68,9 +68,9 @@
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+   :ontology a orexis:PublicGraph .
+-  :scopes a planning:ScopeGraph .
+   :scopes a orexis:Graph .
+   :scopes a orexis:WorkingGraph .
++  :scopes a planning:ScopeGraph .
+   :scopes orexis:arrivedBy orexis:Derived .
+   :scopes orexis:beliefsOf :keeper .
+   :sensed a orexis:BeliefGraph .
 @@ -83,4 +83,23 @@
    pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
    pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .

@@ -1,12 +1,23 @@
 --- case
 +++ expected
+@@ -63,9 +63,9 @@
+   :predicted-0 a orexis:Graph .
+   :predicted-0 a orexis:PredictionGraph .
+   :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
+-  :scopes a planning:ScopeGraph .
+   :scopes a orexis:Graph .
+   :scopes a orexis:WorkingGraph .
++  :scopes a planning:ScopeGraph .
+   :scopes orexis:arrivedBy orexis:Derived .
+   :scopes orexis:beliefsOf :keeper .
+   :sensed a orexis:BeliefGraph .
 @@ -73,4 +73,25 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 +  pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
 +  pursued:keeper.in_range.pursued.tank1.level a orexis:WantGraph .
-+  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T14:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
 +  pursued:keeper.in_range.pursued.tank1.level orexis:beliefsOf :keeper .
  }

@@ -29,12 +29,11 @@ import io
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pyoxigraph as ox
 import rdflib
 
-from orexis_agent_execution.ontology import PATIENCE_S
 from orexis_agent_execution.ontology import FORESEEN, OREXIS
 from orexis_agent_execution.store import (NAMESPACES, answer, bind, bindings, graphs_holding,
                                             instant, rows)
@@ -65,11 +64,6 @@ ASK { GRAPH ?g { $desire orexis:metWhen ?s . ?s sh:targetNode ?n }
 
 #  HOW LONG A PLAN IS GIVEN after the instant its want must hold at — the keeper's pick, from
 #  the record where review writes it. Progression's word, which this layer reads downward.
-_PATIENCE_Q = """
-SELECT ?s WHERE {
-  GRAPH ?g { $holder $patience ?s }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:PickRecordGraph } } LIMIT 1"""
-
 #  WHAT ALREADY STANDS under one desire: every want derived from it that the derivation minted and
 #  whose graph still holds. A want IS its graph (#645), so which family it is in and whether it
 #  holds are the graph's questions, asked of the catalogue in the text as `find_wants` asks them.
@@ -449,18 +443,27 @@ def mint(store: ox.Store, holder: str, desire: str, now: datetime, said=None,
     #  AT AN INSTANT (#619): bound `orexis:At`, holding at the crossing, its room opening now.
     if holds_at is not None:
         label = f"foreseen: {label[len('pursued: '):]} at {holds_at.isoformat(timespec='minutes')}"
-    #  IT HOLDS FROM ITS DERIVATION to the instant it must hold at plus the patience its plan
-    #  is given after it — the last step is placed AT the instant and its verdict comes after —
-    #  and is open for a want met at its plan's end (#645).
+    #  IT HOLDS FROM ITS DERIVATION AND IT DOES NOT END BY THE CLOCK. A want minted here
+    #  ends when the decomposition stops producing it — `_withdraw_under`, on the same rows
+    #  that minted it — and that is the whole of what ends one. It used to carry a period end
+    #  as well, at its instant plus the KEEPER'S PATIENCE, and that was wrong three ways: the
+    #  patience answers how long a commitment blocks re-adoption of itself, which is a
+    #  different question from how long after its instant a want stays readable; it made the
+    #  planning layer borrow the ledger's figure to size something planning writes; and it was
+    #  a second authority on a question withdrawal already answers, with a number reached for
+    #  because at mint time, before any plan exists, no duration is in sight at all.
+    #
+    #  WHAT ENDS BY THE CLOCK (#645) is a graph whose ending is a FACT — a round closing, a
+    #  claim expiring — where nobody is left to conclude it. A want's ending is a CONCLUSION,
+    #  and the derivation that draws it runs every pass. `Want.ends` stays on the model for a
+    #  want whose window genuinely is a fact, which a debt's is; nothing derived here has one.
+    #
     #  THE WANT, AND THE REPOSITORY WRITES IT (#677). What is derived is decided here — the
     #  binding, the label, what it points at — and where a want is kept, how its graph is
     #  classified and what period it holds during are `wants.py`'s, whether a collection or
     #  this derivation asks for the write.
-    ends = None
-    if holds_at is not None:
-        ends = (holds_at + timedelta(seconds=_patience(store, holder))).isoformat()
     save_want(store, _local(holder), Want(
-        uri=child, holder=holder, desire=desire, label=label, ends=ends,
+        uri=child, holder=holder, desire=desire, label=label,
         holds_at=holds_at.isoformat() if holds_at is not None else None,
         derived_at=now.isoformat() if holds_at is not None else None,
         about=abouts, points=tuple(points), shape=shape_lines, side=side), now)
@@ -468,11 +471,7 @@ def mint(store: ox.Store, holder: str, desire: str, now: datetime, said=None,
     return child
 
 
-def _patience(store: ox.Store, holder: str) -> float:
-    """The seconds a plan is given after the instant its want must hold at — the keeper's pick,
-    or none where the holder states none."""
-    found = rows(store, _PATIENCE_Q, (), holder=holder, patience=PATIENCE_S)
-    return float(found[0]["s"]) if found and found[0].get("s") else 0.0
+
 
 
 def _local(holder: str) -> str:

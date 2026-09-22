@@ -19,6 +19,17 @@
  
  GRAPH :scopes {
    :fill planning:inScope :keeper.scope.1 .
+@@ -68,9 +58,9 @@
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+   :ontology a orexis:PublicGraph .
+-  :scopes a planning:ScopeGraph .
+   :scopes a orexis:Graph .
+   :scopes a orexis:WorkingGraph .
++  :scopes a planning:ScopeGraph .
+   :scopes orexis:arrivedBy orexis:Derived .
+   :scopes orexis:beliefsOf :keeper .
+   :sensed a orexis:BeliefGraph .
 @@ -78,8 +68,4 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
