@@ -45,8 +45,9 @@ from rdflib.plugins.sparql.algebra import translateQuery
 from rdflib.plugins.sparql.parser import parseQuery
 from rdflib.plugins.sparql.parserutils import CompValue
 
-from orexis.agent.store import (_TOKEN, PREFIXES, bindings, bind as bind_text,
-                                           construct, graphs_of, query, remember)
+from orexis.agent.store import (_TOKEN, PREFIXES, Raw, add_quads, bindings,
+                                           bind as bind_text, construct, graphs_of,
+                                           query, remember, update)
 from .touches import parseable
 from orexis.agent.ontology import PUBLIC
 from orexis.agent.ontology import KNOWN
@@ -89,40 +90,62 @@ def rule_for(store, action: str, memo=None) -> dict | None:
     return remember(memo, ("rule", action), fetch)
 
 
-def adds(store, action: str, graphs=None, *, memo=None, **bind) -> list:
-    """What one action's effect MAKES TRUE, as triples. Nothing is written.
+def apply_effects(store, action: str, into: str, graphs=None, *, memo=None, **bind) -> bool:
+    """Run one action's effect INTO the graph `into`: what it makes true added there, what it
+    replaces deleted from it. Answers whether anything happened at all.
+
+    **ONE ACT AND NOT TWO QUESTIONS.** It was `adds` and `retraction`, a list of triples and a
+    bound update, which the caller then applied to a graph it had forked — three steps in which
+    the caller had to know that retraction precedes addition and that `$state` means a
+    different graph in each. The order and the binding are this module's business, because
+    they are facts about what an effect IS.
+
+    `graphs` and `bind` describe the world the step is taken IN: the construct is asked of it,
+    and `$state` in `bind` names it. **The retraction is re-bound to `into`**, because that is
+    what it deletes from — the one place the two halves differ, and the reason this is one
+    function rather than a caller's three lines. Since `into` is a fork of that world the
+    construct sees the same facts either way; what it must not see is the deletion, because a
+    construct reuses the very node its retraction names and asking afterwards finds it gone.
 
     **`store` is whichever dataset the question is being asked ABOUT.** An actuator asks about
-    the world it is standing in and passes its own belief base; a planner asks about a world
-    nobody is in yet and passes an imaginarium, where `$state` names the readings that node's
-    path reached. Nothing here distinguishes them, and nothing should: a rule asks about
-    whichever graph it is pointed at, and being bound to the store was an accident of what the
-    caller happened to hand over.
-
-    COMPUTED BEFORE ANYTHING IS RETRACTED, and that order is load-bearing: a construct may
-    reuse the very node its retraction names, so asking after the deletion would find the node
-    gone. The caller forks, deletes, then adds these.
+    the world it is standing in and passes its own belief base; a search passes the
+    imaginarium, where `$state` names the world a node's path reached. Nothing here
+    distinguishes them, and nothing should.
 
     `bind` fills the rule's placeholders the way every other shipped query here is filled:
     `$me`, `$subject`, `$property`, `$litres`. Substitution rather than SPARQL's own binding
     because the text is a literal in the graph and the engine takes a string.
     """
     rule = rule_for(store, action, memo)
+    if rule is None:
+        return False
     #  WHICH WORLD, IN THE LIST THE CALLER BUILT AND NOT IN THE TEXT (#666). `graphs` carries
     #  the readings a rule's patterns read — this agent's own where a caller means "here", a
     #  node's where a search means "there" — and the rule names neither.
-    return [] if rule is None else _run(store, rule.get("construct"), bind, graphs)
+    added = _run(store, rule.get("construct"), bind, graphs)
+    retract = _retraction(rule.get("retracts"), into, bind)
+    if not added and retract is None:
+        return False
+    if retract is not None:
+        try:
+            update(store, retract)
+        except Exception as exc:                                    # noqa: BLE001
+            #  A rule that will not run is a package's bug and must not take an agent down:
+            #  the lever still works, and what is lost is a world holding two readings where
+            #  it should hold one — which is the exact failure the retraction exists to close.
+            log.error("an effect's retraction would not run, so it retracts nothing: %s", exc)
+    node = ox.NamedNode(into)
+    add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
+    return True
 
 
-def retraction(store, action: str, *, memo=None, **bind) -> str | None:
-    """One action's `orexis:retracts`, bound and ready to run against a world — or None.
+def _retraction(text: str | None, into: str, bind: dict) -> str | None:
+    """One action's `orexis:retracts`, bound to the graph it deletes from — or None.
 
     **IT IS AN UPDATE AND NOT A QUESTION.** `orexis:retracts` holds a `DELETE … WHERE` naming
-    `GRAPH $state`, and the caller binds `$state` to the world it has just forked, so the
-    removal happens where the fork is rather than being computed into a list and applied by
-    hand. It was a CONSTRUCT whose triples the caller removed by term; what that bought — a
-    materialised diff — is wanted by `execution:predicts`, which this tree does not write, and
-    by an emptiness test the world's own hash already answers.
+    `GRAPH $state`. It was a CONSTRUCT whose triples the caller removed by term; what that
+    bought — a materialised diff — is wanted by `execution:predicts`, which this tree does not
+    write, and by an emptiness test the world's own hash already answers.
 
     IT READS THE WORLD AND NOT THE DATASET, which is what the change cost. A CONSTRUCT was
     handed the whole graph list the runner built; an UPDATE's WHERE reads the unnamed default
@@ -135,15 +158,11 @@ def retraction(store, action: str, *, memo=None, **bind) -> str | None:
     sensed graph upserts one observation node per (subject, property), so an effect predicting
     a reading that did not retract the node it replaces would leave two results on one node.
     """
-    rule = rule_for(store, action, memo)
-    text = None if rule is None else rule.get("retracts")
     if not text:
         return None
     try:
-        return bind_text(text, **bind)
+        return bind_text(text, **{**bind, "state": Raw(f"<{into}>")})
     except Exception as exc:                                        # noqa: BLE001
-        #  A rule that will not bind is a package's bug and must not take an agent down: the
-        #  lever still works, and what is lost is the ability to reason about it in advance.
         log.error("an effect's retraction would not bind, so it retracts nothing: %s", exc)
         return None
 
