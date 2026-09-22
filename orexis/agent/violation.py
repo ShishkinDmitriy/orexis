@@ -26,7 +26,7 @@ reading one declaration is a disagreement this repository has closed once alread
 The compiled text is COMPUTED and never stored (model-it-only-if-a-plan-would-branch-on-it:
 anything the interpreter already knows is computed, never asserted). It carries no `GRAPH`
 clause and no `$state`: the caller runs it with the world's graphs as the default graph —
-`store.query_over(engine, …)` — the same view the judge is handed as one flat text.
+`query_over(store, …)` — the same view the judge is handed as one flat text.
 
 THE EXECUTION LAYER'S, since #514: a pure function over RDF with no search in it, and the keeper —
 which may not import the layer above — compiles a held condition authored as a shape. The

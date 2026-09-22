@@ -50,7 +50,7 @@ def scope_name(n: int) -> str:
     return f"{SCOPES_GRAPH}/{n}"
 
 
-def save_scopes(engine: ox.Store, scopes: list[tuple[str, set[str], set[str]]]) -> None:
+def save_scopes(store: ox.Store, scopes: list[tuple[str, set[str], set[str]]]) -> None:
     """Replace the store's scopes with these — `(scope, predicates, actions)` each — and say
     what the graph is. Written whole, and classified even when empty: a store with no scope
     graph has never been scoped, which `derive_wants` refuses to guess about.
@@ -60,7 +60,7 @@ def save_scopes(engine: ox.Store, scopes: list[tuple[str, set[str], set[str]]]) 
     and every kind the vocabulary puts a scope graph beneath written from one
     `rdfs:subClassOf` step — the closure is materialised at genesis, so one step is every step.
     """
-    standing = [row["g"] for row in rows(engine, _STANDING_Q)]
+    standing = [row["g"] for row in rows(store, _STANDING_Q)]
     graph = SCOPES_GRAPH
     blocks = []
     for scope, predicates, actions in scopes:
@@ -70,7 +70,7 @@ def save_scopes(engine: ox.Store, scopes: list[tuple[str, set[str], set[str]]]) 
         f"DROP SILENT GRAPH <{g}> ;\n"
         f"DELETE {{ GRAPH ?cat {{ <{g}> ?p ?o }} }} WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{g}> ?p ?o }} }} ;\n"
         for g in standing)
-    engine.update(dropped + f"""
+    store.update(dropped + f"""
 INSERT {{
   GRAPH <{graph}> {{
 {chr(10).join(blocks)}
@@ -80,13 +80,13 @@ WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
 INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
         GRAPH ?vocabulary {{ planning:ScopeGraph rdfs:subClassOf ?kind }} }}""",
-                  prefixes=NAMESPACES)
+                 prefixes=NAMESPACES)
 
 
-def find_scopes(engine: ox.Store) -> dict[str, str] | None:
+def find_scopes(store: ox.Store) -> dict[str, str] | None:
     """Every member's scope, predicate or action, from the scope graphs asked by class — or
     None where the store holds none at all, which is a store nobody scoped."""
-    graphs = [row["g"] for row in rows(engine, _STANDING_Q)]
+    graphs = [row["g"] for row in rows(store, _STANDING_Q)]
     if not graphs:
         return None
-    return {r["member"]: r["scope"] for r in rows(engine, SCOPES_Q, graphs)}
+    return {r["member"]: r["scope"] for r in rows(store, SCOPES_Q, graphs)}

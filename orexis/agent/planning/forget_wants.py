@@ -49,7 +49,7 @@ SELECT ?g ?kind (COUNT(DISTINCT ?w) AS ?wants) WHERE {
 GROUP BY ?g ?kind"""
 
 
-def mark(engine, uri: str, state: str) -> None:
+def mark(store, uri: str, state: str) -> None:
     """Move one want to a stage — the only way `orexis:state` is ever written.
 
     ONE VALUE AT A TIME, which is why this replaces rather than adds: a want in two stages is a
@@ -67,13 +67,13 @@ def mark(engine, uri: str, state: str) -> None:
     knowing about the other is the coupling this design exists to avoid. What clears the stage
     is `forget_wants` taking the want away, and a desire still unmet mints a fresh one.
     """
-    engine.update(f"""DELETE {{ GRAPH ?g {{ <{uri}> orexis:state ?was }} }}
+    store.update(f"""DELETE {{ GRAPH ?g {{ <{uri}> orexis:state ?was }} }}
 WHERE  {{ GRAPH ?g {{ <{uri}> a orexis:Want ; orexis:state ?was .
           FILTER(?was != <{DONE}>) }} }} ;
 INSERT {{ GRAPH ?g {{ <{uri}> orexis:state <{state}> }} }}
 WHERE  {{ GRAPH ?g {{ <{uri}> a orexis:Want }}
           FILTER NOT EXISTS {{ GRAPH ?h {{ <{uri}> orexis:state <{DONE}> }} }} }}""",
-                  prefixes=NAMESPACES)
+                 prefixes=NAMESPACES)
 
 
 #  EVERY WANT THAT IS FINISHED, for the collector below.
@@ -108,7 +108,7 @@ SELECT ?w WHERE {
                ?g a orexis:WantGraph ; orexis:arrivedBy orexis:Derived } }"""
 
 
-def withdraw(engine, wanted, now: datetime) -> list[str]:
+def withdraw(store, wanted, now: datetime) -> list[str]:
     """Drop every derived want standing at `now` that `wanted` does not name. Returns what went.
 
     `wanted` IS `derive_wants`' ANSWER, and that is the whole contract between them. A want
@@ -127,20 +127,20 @@ def withdraw(engine, wanted, now: datetime) -> list[str]:
     A WANT A PLAN IS WALKING IS KEPT whatever its desire reads. A want IS its graph (#645), so
     withdrawing is `forget_want` and there is nothing left behind.
     """
-    standing = {r["w"] for r in rows(engine, _DERIVED_Q, ())}
+    standing = {r["w"] for r in rows(store, _DERIVED_Q, ())}
     stale = standing - set(wanted)
     if not stale:
         return []
-    pursued = {r["w"] for r in rows(engine, _PURSUED_Q, ())}
+    pursued = {r["w"] for r in rows(store, _PURSUED_Q, ())}
     gone = []
     for uri in sorted(stale - pursued):
-        forget_want(engine, uri)
+        forget_want(store, uri)
         log.info("%s withdrawn: its desire no longer reads it unmet", uri.rsplit("#", 1)[-1])
         gone.append(uri)
     return gone
 
 
-def forget_wants(engine) -> list[str]:
+def forget_wants(store) -> list[str]:
     """GARBAGE COLLECTION: every want that is finished, taken away. Returns what went.
 
     A want is not deleted where it is finished. Deciding that something is done and clearing it
@@ -154,19 +154,19 @@ def forget_wants(engine) -> list[str]:
     volume's other collector runs in progression, on the upkeep tick, and cannot call this one:
     progression is the lower layer and may not import upward.
     """
-    gone = [r["w"] for r in rows(engine, _DONE_Q, ())]
+    gone = [r["w"] for r in rows(store, _DONE_Q, ())]
     for uri in gone:
-        forget_want(engine, uri)
+        forget_want(store, uri)
     return gone
 
 
-def forget_want(engine, uri: str) -> None:
+def forget_want(store, uri: str) -> None:
     """Remove one want over the ENGINE, wherever it lives.
 
     `Wants.delete_by_uri` was a collection's door and announced itself; this announces nothing
     and whoever called it says what changed.
     """
-    home = rows(engine, _HOME_Q, (), want=uri)
+    home = rows(store, _HOME_Q, (), want=uri)
     if not home:
         return
     #  A GRAPH OF WANTS holds wants and nothing else, so one want in one is the whole of it;
@@ -179,11 +179,11 @@ def forget_want(engine, uri: str) -> None:
     if kind == WANT_GRAPH and wants == 1:
         #  A WANT IS ITS GRAPH where the derivation named it (#645), so the graph goes and the
         #  catalogue's account of it with it — one act, nothing left to tidy.
-        engine.update(forget_graph(graph), prefixes=NAMESPACES)
+        store.update(forget_graph(graph), prefixes=NAMESPACES)
         return
     #  OTHERWISE THE GRAPH STAYS and only the want goes: a world may ratify several into the
     #  graph it names, and a record is somebody else's house.
-    engine.update(_forget_one(graph, uri), prefixes=NAMESPACES)
+    store.update(_forget_one(graph, uri), prefixes=NAMESPACES)
 
 
 def forget_graph(graph: str) -> str:

@@ -290,7 +290,7 @@ SELECT ?d ?reads ?writes WHERE {
   OPTIONAL { ?d planning:writes ?writes } }"""
 
 
-def stored_edges(engine, graphs) -> tuple:
+def stored_edges(store, graphs) -> tuple:
     """The derivations' (reads, writes) edges, read back from `graphs` — what genesis wrote
     from the rule files. A side saying `planning:Anything` is ANYTHING; a side saying
     nothing at all is empty, which is what a rule reading or writing no named predicate is."""
@@ -299,7 +299,7 @@ def stored_edges(engine, graphs) -> tuple:
     from .ontology import ANYTHING as ANYTHING_IRI
 
     sides: dict = {}
-    for row in rows(engine, _EDGES_Q, graphs):
+    for row in rows(store, _EDGES_Q, graphs):
         reads, writes = sides.setdefault(row["d"], (set(), set()))
         for side, key in ((reads, "reads"), (writes, "writes")):
             if row.get(key):

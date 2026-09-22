@@ -367,7 +367,7 @@ def _stamp(at: datetime) -> str:
 from .forget_wants import RECOGNIZED, _forget_one   # noqa: E402  (see the note above)
 
 
-def _write(engine, agent_id: str, uri: str, holder: str, desire: str, label: str,
+def _write(store, agent_id: str, uri: str, holder: str, desire: str, label: str,
            now: datetime, at: datetime, until: datetime | None = None, *,
            points: tuple = (), shape: tuple = (), side: str | None = None) -> None:
     """Write one derived want over the ENGINE: its graph, replaced whole, and the catalogue's
@@ -434,7 +434,7 @@ def _write(engine, agent_id: str, uri: str, holder: str, desire: str, label: str
     #  re-adoption of itself, which is a different question wearing the same unit.
     period = (f' ; orexis:start "{at.isoformat()}"^^xsd:dateTime'
               + (f' ; orexis:end "{until.isoformat()}"^^xsd:dateTime' if until else ""))
-    engine.update(_forget_one(graph, uri) + f""" ;
+    store.update(_forget_one(graph, uri) + f""" ;
 INSERT {{
   GRAPH <{graph}> {{
   <{holder}> orexis:holds <{uri}> .
@@ -454,7 +454,7 @@ WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }}
 INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
         GRAPH ?vocabulary {{ orexis:WantGraph rdfs:subClassOf ?kind }} }}""",
-                  prefixes=NAMESPACES)
+                 prefixes=NAMESPACES)
 
 
 def mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: datetime,

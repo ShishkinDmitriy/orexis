@@ -11,7 +11,7 @@ thing that made the wrapper forget.
 
 So there is no class here. A reader is handed the engine and says what it is reading:
 
-    rows(engine, text, graphs_of(engine, PUBLIC))
+    rows(store, text, graphs_of(store, PUBLIC))
 
 and every question the class answered as a method is answered here as a function of the same
 name, taking the engine first. Nothing is kept between calls, so nothing can go stale.
@@ -407,7 +407,7 @@ def instant(at: datetime) -> ox.Literal:
     return ox.Literal(at.isoformat(), datatype=_XSD_DATETIME)
 
 
-def catalogue_of(engine) -> str | None:
+def catalogue_of(store) -> str | None:
     """The graph that describes every graph and itself — `Store.catalogue` as a function over
     the engine, and the same answer, asked rather than kept.
 
@@ -416,28 +416,28 @@ def catalogue_of(engine) -> str | None:
     None for a store nobody has told anything to. Two is refused, as it is there: a store with
     two catalogues has two truths about what its graphs are.
     """
-    found = sorted(str(row["g"].value) for row in engine.query(_CATALOGUES, prefixes=NAMESPACES))
+    found = sorted(str(row["g"].value) for row in store.query(_CATALOGUES, prefixes=NAMESPACES))
     if len(found) > 1:
         raise RuntimeError(f"two graphs describe themselves as the catalogue: {', '.join(found)}")
     return found[0] if found else None
 
 
-def answer(engine, sparql: str, graphs=(), **values) -> dict:
+def answer(store, sparql: str, graphs=(), **values) -> dict:
     """`sparql` read over `graphs` as its default graph, as SPARQL-JSON — `Store.query` as a
     function over the engine, with `$tokens` bound by the one binder. A text that names its
     own graphs is handed none, and reads them through its `GRAPH` clauses."""
     out = io.BytesIO()
-    engine.query(bind(sparql, **values) if values else sparql, prefixes=NAMESPACES,
-                 default_graph=[ox.NamedNode(g) for g in graphs]).serialize(
+    store.query(bind(sparql, **values) if values else sparql, prefixes=NAMESPACES,
+                default_graph=[ox.NamedNode(g) for g in graphs]).serialize(
         output=out, format=ox.QueryResultsFormat.JSON)
     return json.loads(out.getvalue())
 
 
-def rows(engine, sparql: str, graphs=(), **values) -> list[dict]:
+def rows(store, sparql: str, graphs=(), **values) -> list[dict]:
     """`answer`, flattened to {var: value-string} — what a reader wanting values takes. A
-    reader that needs the TERMS a row holds takes `engine.query` itself and reads the
+    reader that needs the TERMS a row holds takes `pyoxigraph`'s own `query` and reads the
     solutions, as the judging does to read a met-test's own terms."""
-    return bindings(answer(engine, sparql, graphs, **values))
+    return bindings(answer(store, sparql, graphs, **values))
 
 
 def bindings(results: dict) -> list[dict]:
@@ -462,7 +462,7 @@ SELECT DISTINCT ?super WHERE {
   GRAPH ?vocabulary { $cls rdfs:subClassOf ?super . FILTER(isIRI(?super)) } }"""
 
 
-def closed(engine, graph_class: str) -> list[str]:
+def closed(store, graph_class: str) -> list[str]:
     """`graph_class` and every class the vocabulary puts it beneath, sorted.
 
     ONE `rdfs:subClassOf` STEP IS EVERY STEP: the closure is materialised into the store at
@@ -471,16 +471,16 @@ def closed(engine, graph_class: str) -> list[str]:
     written by hand — the answer is the class itself, which is what a row said before the
     rows were closed at all.
     """
-    supers = {row["super"] for row in rows(engine, bind(_SUBCLASSES_Q, cls=graph_class))}
+    supers = {row["super"] for row in rows(store, bind(_SUBCLASSES_Q, cls=graph_class))}
     return sorted({graph_class} | supers)
 
 
-def entry(engine, graph: str, graph_class: str, arrival: str, owner: str | None = None,
+def entry(store, graph: str, graph_class: str, arrival: str, owner: str | None = None,
           start: datetime | str | None = None, end: datetime | str | None = None) -> str:
     """What the catalogue says of a graph, as the `GRAPH … { … }` block a writer puts beside
     the graph's own in ONE update — so a graph and its description land together or not at
     all. The writer names nothing: the catalogue is found, never spelled."""
-    catalogue = catalogue_of(engine)
+    catalogue = catalogue_of(store)
     if catalogue is None:
         raise RuntimeError("no graph describes itself as the catalogue — nothing has said what the graphs are")
     whose = f" ; orexis:beliefsOf <{owner}>" if owner else ""
@@ -493,12 +493,12 @@ def entry(engine, graph: str, graph_class: str, arrival: str, owner: str | None 
     #  EVERY KIND THE GRAPH IS, on the row, so a text that joins the catalogue asks
     #  `?g a orexis:WantGraph` and walks no path across two graphs. This is what lets every
     #  read above be one query instead of an index.
-    kinds = " , ".join(f"<{c}>" for c in closed(engine, graph_class))
+    kinds = " , ".join(f"<{c}>" for c in closed(store, graph_class))
     return (f"GRAPH <{catalogue}> {{ <{graph}> a {kinds} ; orexis:arrivedBy <{arrival}>"
             f"{whose}{when} . }}")
 
 
-def classify(engine, graph: str, graph_class: str, arrival: str, owner: str | None = None,
+def classify(store, graph: str, graph_class: str, arrival: str, owner: str | None = None,
              start: datetime | str | None = None, end: datetime | str | None = None) -> None:
     """Say what a graph IS, how it arrived, WHOSE it is and WHEN it holds — by its owner, when
     it creates the graph. A name is for eyes; every reader asks the catalogue.
@@ -514,12 +514,12 @@ def classify(engine, graph: str, graph_class: str, arrival: str, owner: str | No
     graph that already has one is not an update and is not silently applied: a graph's stretch
     is fixed when it is created, and a writer that means another stretch means another graph.
     """
-    block = entry(engine, graph, graph_class, arrival, owner, start, end)
+    block = entry(store, graph, graph_class, arrival, owner, start, end)
     if start is None and end is None:
-        update(engine, f"INSERT DATA {{ {block} }}")
+        update(store, f"INSERT DATA {{ {block} }}")
         return
-    catalogue = catalogue_of(engine)
-    update(engine, f"""
+    catalogue = catalogue_of(store)
+    update(store, f"""
 INSERT {{ {block} }}
 WHERE  {{ GRAPH <{catalogue}> {{ }}
           FILTER NOT EXISTS {{ GRAPH <{catalogue}> {{ <{graph}> dcterms:temporal ?period }} }} }}""")
@@ -530,7 +530,7 @@ SELECT ?g ?class WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?class . FILTER(isIRI(?g)) } }"""
 
 
-def close_catalogue(engine) -> None:
+def close_catalogue(store) -> None:
     """Say on every row each kind the vocabulary puts its class beneath — what `entry` writes
     on a new row, said again of every row there is: a volume written when a row said one
     class, a case written by hand. Idempotent, and a write like any other.
@@ -538,19 +538,19 @@ def close_catalogue(engine) -> None:
     What it makes true is the thing every read above depends on: a text that joins the
     catalogue asks `?g a orexis:WantGraph` and walks no subclass path to get an answer.
     """
-    catalogue = catalogue_of(engine)
+    catalogue = catalogue_of(store)
     if catalogue is None:
         return
     held: dict = {}
-    for row in rows(engine, _ROWS_Q):
+    for row in rows(store, _ROWS_Q):
         held.setdefault(row["g"], set()).add(row["class"])
     lines = []
     for graph, classes in sorted(held.items()):
-        kinds = sorted({k for c in classes for k in closed(engine, c)})
+        kinds = sorted({k for c in classes for k in closed(store, c)})
         lines.append(f"  <{graph}> a {' , '.join(f'<{k}>' for k in kinds)} .")
     if lines:
         rows_ = "\n".join(lines)
-        update(engine, f"INSERT DATA {{ GRAPH <{catalogue}> {{\n{rows_} }} }}")
+        update(store, f"INSERT DATA {{ GRAPH <{catalogue}> {{\n{rows_} }} }}")
 
 
 _PERIODS_Q = """
@@ -561,12 +561,12 @@ SELECT ?g ?start ?end WHERE {
     OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?end } } }"""
 
 
-def periods(engine) -> dict:
+def periods(store) -> dict:
     """The period each graph holds during: IRI -> (start, end), either end None for open.
     A bound nobody can parse reads as open, for the reason `_instant` gives — a graph whose
     period cannot be read is not one to drop silently."""
     return {row["g"]: (_instant(row.get("start")), _instant(row.get("end")))
-            for row in rows(engine, _PERIODS_Q)}
+            for row in rows(store, _PERIODS_Q)}
 
 
 _OUTDATED_Q = """
@@ -579,34 +579,34 @@ SELECT DISTINCT ?g WHERE {
 ORDER BY ?g"""
 
 
-def outdated(engine, *, holder: str | None = None, at: datetime | None = None) -> list[str]:
+def outdated(store, *, holder: str | None = None, at: datetime | None = None) -> list[str]:
     """Every graph whose period has ENDED by `at` — what a reader is already handed none of,
     and what one sweep drops (#645, a-root-holds-always-and-an-outdated-graph-is-dropped).
     Never a public graph: a period the world states is the world's to end. `holder` keeps it
     to that holder's and to what nobody owns, as every other read does."""
     return [row["g"] for row in rows(
-        engine, bind(_OUTDATED_Q, when=instant(at or clock.now()),
-                     owned=Raw(bind(_OWNED, holder=holder) if holder is not None else "")))]
+        store, bind(_OUTDATED_Q, when=instant(at or clock.now()),
+                    owned=Raw(bind(_OWNED, holder=holder) if holder is not None else "")))]
 
 
-def drop_graph(engine, graph: str) -> None:
+def drop_graph(store, graph: str) -> None:
     """Drop one graph whole — its triples and everything the catalogue says of it. One update,
     so a graph goes entire or not at all."""
-    catalogue = catalogue_of(engine)
+    catalogue = catalogue_of(store)
     about = "" if catalogue is None else f"""
   GRAPH <{catalogue}> {{ <{graph}> ?cp ?co . }}
   GRAPH <{catalogue}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }}"""
     union = "" if catalogue is None else f"""
   UNION {{ GRAPH <{catalogue}> {{ <{graph}> ?cp ?co }} }}
   UNION {{ GRAPH <{catalogue}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }}"""
-    update(engine, f"""
+    update(store, f"""
 DELETE {{
   GRAPH <{graph}> {{ ?s ?p ?o }}{about} }}
 WHERE  {{
   {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}{union} }}""")
 
 
-def graphs_of(engine, *kinds: str, at: datetime | None = None,
+def graphs_of(store, *kinds: str, at: datetime | None = None,
               holder: str | None = None, now: datetime | None = None) -> list[str]:
     """Every graph the catalogue types under any of `kinds` — subclasses included, the rows
     having been closed when they were written — holding at `at` where an instant is given.
@@ -628,13 +628,13 @@ def graphs_of(engine, *kinds: str, at: datetime | None = None,
                 owned=Raw(bind(_OWNED, holder=holder) if holder is not None else ""),
                 holding=Raw(bind(_HOLDING, at=instant(at), now=instant(now or at))
                             if at is not None else ""))
-    return [str(row["g"].value) for row in engine.query(text, prefixes=NAMESPACES)]
+    return [str(row["g"].value) for row in store.query(text, prefixes=NAMESPACES)]
 
 
 #  ── reading ────────────────────────────────────────────────────────────────────────────────
 
 
-def query(engine, sparql: str, graphs, substitutions: dict | None = None) -> dict:
+def query(store, sparql: str, graphs, substitutions: dict | None = None) -> dict:
     """Read `sparql` with `graphs` merged as its default graph, as SPARQL-JSON bindings.
 
     THE READER SAYS WHAT IT READS. `graphs` is the list the caller built — `graphs_of` the
@@ -647,49 +647,49 @@ def query(engine, sparql: str, graphs, substitutions: dict | None = None) -> dic
     engine's own substitutions, which reach only a variable the query projects at top level.
     """
     out = io.BytesIO()
-    engine.query(sparql, prefixes=NAMESPACES,
-                 default_graph=[ox.NamedNode(g) for g in graphs],
-                 substitutions=_terms(substitutions)).serialize(
+    store.query(sparql, prefixes=NAMESPACES,
+                default_graph=[ox.NamedNode(g) for g in graphs],
+                substitutions=_terms(substitutions)).serialize(
         output=out, format=ox.QueryResultsFormat.JSON)
     return json.loads(out.getvalue())
 
 
-def query_over(engine, sparql: str, *graphs: str, substitutions: dict | None = None) -> dict:
+def query_over(store, sparql: str, *graphs: str, substitutions: dict | None = None) -> dict:
     """`query`, with the graphs as positional names — a writer reading what it wrote."""
-    return query(engine, sparql, graphs, substitutions)
+    return query(store, sparql, graphs, substitutions)
 
 
-def query_union(engine, sparql: str, substitutions: dict | None = None) -> dict:
+def query_union(store, sparql: str, substitutions: dict | None = None) -> dict:
     """Read with the default graph as the union of EVERYTHING this store holds.
 
     For the sovereign's question channel and for a test reading a store back whole. Nothing in
     the kernel reads through it: a reader there says which kinds it means, and the union reads
     every sibling world and next hour's readings as the present."""
     out = io.BytesIO()
-    engine.query(sparql, prefixes=NAMESPACES, use_default_graph_as_union=True,
-                 substitutions=_terms(substitutions)).serialize(
+    store.query(sparql, prefixes=NAMESPACES, use_default_graph_as_union=True,
+                substitutions=_terms(substitutions)).serialize(
         output=out, format=ox.QueryResultsFormat.JSON)
     return json.loads(out.getvalue())
 
 
-def construct(engine, sparql: str, graphs, substitutions: dict | None = None):
+def construct(store, sparql: str, graphs, substitutions: dict | None = None):
     """Run a CONSTRUCT over `graphs` as the default graph and hand back the triples, which are
     not written anywhere — the one thing `query` cannot do, since a CONSTRUCT has a graph and
     not bindings. What a lever would make true is computed and dropped."""
-    return list(engine.query(sparql, prefixes=NAMESPACES,
-                             default_graph=[ox.NamedNode(g) for g in graphs],
-                             substitutions=_terms(substitutions)))
+    return list(store.query(sparql, prefixes=NAMESPACES,
+                            default_graph=[ox.NamedNode(g) for g in graphs],
+                            substitutions=_terms(substitutions)))
 
 
-def reader(engine, *kinds: str, at: datetime | None = None, holder: str | None = None):
+def reader(store, *kinds: str, at: datetime | None = None, holder: str | None = None):
     """`query` over the graphs of `kinds` at `at`, as one callable — for a helper handed a way
     to ask rather than a store. The kinds are the caller's, stated where the callable is made.
 
     It resolves the graphs ONCE, when the callable is made, because that is what a caller
     standing at an instant means; a caller that must see a write it then makes asks again.
     """
-    graphs = graphs_of(engine, *kinds, at=at, holder=holder)
-    return lambda sparql, substitutions=None: query(engine, sparql, graphs, substitutions)
+    graphs = graphs_of(store, *kinds, at=at, holder=holder)
+    return lambda sparql, substitutions=None: query(store, sparql, graphs, substitutions)
 
 
 #  ── quads, by term rather than by text ─────────────────────────────────────────────────────
@@ -698,52 +698,52 @@ def reader(engine, *kinds: str, at: datetime | None = None, holder: str | None =
 #  observation node would come out the far side unequal to the one a retraction names.
 
 
-def quads(engine, graph_iri: str):
+def quads(store, graph_iri: str):
     """One graph's contents as QUADS, for a reader putting them somewhere else."""
-    return engine.quads_for_pattern(None, None, None, ox.NamedNode(graph_iri))
+    return store.quads_for_pattern(None, None, None, ox.NamedNode(graph_iri))
 
 
-def quads_for_pattern(engine, subject=None, predicate=None, obj=None, graph=None):
+def quads_for_pattern(store, subject=None, predicate=None, obj=None, graph=None):
     """The quads matching a pattern, as terms — None for any. `graph` may be an IRI."""
-    return engine.quads_for_pattern(
+    return store.quads_for_pattern(
         subject, predicate, obj, ox.NamedNode(graph) if isinstance(graph, str) else graph)
 
 
-def add_quads(engine, quads_) -> None:
+def add_quads(store, quads_) -> None:
     """Write quads straight in, as the TERMS they are — the writing half of `quads`."""
     for quad in quads_:
-        engine.add(quad)
+        store.add(quad)
 
 
-def remove_quads(engine, quads_) -> None:
+def remove_quads(store, quads_) -> None:
     """Take quads out, by term. The mirror of `add_quads`."""
     for quad in quads_:
-        engine.remove(quad)
+        store.remove(quad)
 
 
-def copy_graphs(engine, source, *graph_iris: str) -> None:
-    """Copy whole graphs in from ANOTHER engine, under their own names — the reader's half and
+def copy_graphs(store, source, *graph_iris: str) -> None:
+    """Copy whole graphs in from ANOTHER store, under their own names — the reader's half and
     the writer's half of one act, which every caller was otherwise pairing by hand."""
-    add_quads(engine, (quad for iri in graph_iris for quad in quads(source, iri)))
+    add_quads(store, (quad for iri in graph_iris for quad in quads(source, iri)))
 
 
-def nodes_of(engine, graph_iri: str) -> dict:
+def nodes_of(store, graph_iri: str) -> dict:
     """Everything one graph holds, as triples grouped by subject — the graph's NODES."""
     out: dict = {}
-    for q in quads(engine, graph_iri):
+    for q in quads(store, graph_iri):
         out.setdefault(q.subject, []).append(ox.Triple(q.subject, q.predicate, q.object))
     return out
 
 
-def get_graph(engine, graph_iri: str) -> str:
+def get_graph(store, graph_iri: str) -> str:
     """A graph's contents as Turtle, or empty if it does not exist yet. A graph nobody has
     written to is not an error."""
     out = io.BytesIO()
-    engine.dump(output=out, format=ox.RdfFormat.TURTLE, from_graph=ox.NamedNode(graph_iri))
+    store.dump(output=out, format=ox.RdfFormat.TURTLE, from_graph=ox.NamedNode(graph_iri))
     return out.getvalue().decode()
 
 
-def rdflib_view(engine, *graph_iris: str):
+def rdflib_view(store, *graph_iris: str):
     """These graphs as ONE rdflib graph — the crossing out of the store, for a reader that
     walks RDF STRUCTURE rather than answers a query.
 
@@ -764,13 +764,13 @@ def rdflib_view(engine, *graph_iris: str):
     """
     import rdflib
     out = rdflib.Graph()
-    text = dump_nt(engine, *graph_iris)
+    text = dump_nt(store, *graph_iris)
     if text.strip():
         out.parse(data=text, format="nt")
     return out
 
 
-def dump_nt(engine, *graph_iris: str) -> str:
+def dump_nt(store, *graph_iris: str) -> str:
     """Several graphs as ONE N-Triples text, written by the engine itself.
 
     N-Triples because it CONCATENATES — every line stands alone, so several graphs join with
@@ -778,42 +778,42 @@ def dump_nt(engine, *graph_iris: str) -> str:
     border: rdflib spends 86 ms on 2,400 triples of Turtle where N-Triples takes 12."""
     out = io.BytesIO()
     for iri in graph_iris:
-        engine.dump(output=out, format=ox.RdfFormat.N_TRIPLES, from_graph=ox.NamedNode(iri))
+        store.dump(output=out, format=ox.RdfFormat.N_TRIPLES, from_graph=ox.NamedNode(iri))
     return out.getvalue().decode()
 
 
-def contains_graph(engine, graph_iri: str) -> bool:
+def contains_graph(store, graph_iri: str) -> bool:
     """Whether the named graph EXISTS — a graph forked and then emptied still does."""
-    return engine.contains_named_graph(ox.NamedNode(graph_iri))
+    return store.contains_named_graph(ox.NamedNode(graph_iri))
 
 
-def has_graph(engine, graph_iri: str) -> bool:
+def has_graph(store, graph_iri: str) -> bool:
     """Whether anything has been written here — how birth knows it already happened."""
-    return any(engine.quads_for_pattern(None, None, None, ox.NamedNode(graph_iri)))
+    return any(store.quads_for_pattern(None, None, None, ox.NamedNode(graph_iri)))
 
 
-def graph_names(engine) -> list[str]:
+def graph_names(store) -> list[str]:
     """Every named graph actually present, whatever anyone still declares."""
-    return [str(g.value) for g in engine.named_graphs()]
+    return [str(g.value) for g in store.named_graphs()]
 
 
 #  ── writing ────────────────────────────────────────────────────────────────────────────────
 
 
-def update(engine, sparql: str) -> None:
+def update(store, sparql: str) -> None:
     """Write. There is no `forget=` here and nothing to forget: nothing between calls is kept,
     which is the whole point of this module. The predecessor's flag was an assertion by the
     caller that a write could not stale the wrapper's index, and a wrong one left an EMPTY
     RESULT rather than an error."""
-    engine.update(sparql, prefixes=NAMESPACES)
+    store.update(sparql, prefixes=NAMESPACES)
 
 
-def clear_graph(engine, graph_iri: str) -> None:
+def clear_graph(store, graph_iri: str) -> None:
     """Empty one graph — for the computed ones, written by update rather than loaded."""
-    engine.remove_graph(ox.NamedNode(graph_iri))
+    store.remove_graph(ox.NamedNode(graph_iri))
 
 
-def put_graph(engine, graph_iri: str, ttl: str, dataset: bool = False) -> None:
+def put_graph(store, graph_iri: str, ttl: str, dataset: bool = False) -> None:
     """Replace a graph with the given Turtle. Public knowledge only.
 
     `dataset=True` parses **TriG** — Turtle plus `GRAPH <iri> { … }` blocks — and EVERY graph
@@ -826,17 +826,17 @@ def put_graph(engine, graph_iri: str, ttl: str, dataset: bool = False) -> None:
         parsed = ox.Store()
         parsed.load(ttl, format=ox.RdfFormat.TRIG)
         for named in parsed.named_graphs():
-            engine.remove_graph(named)
-        engine.remove_graph(graph)
+            store.remove_graph(named)
+        store.remove_graph(graph)
         for quad in parsed:
-            engine.add(quad if not isinstance(quad.graph_name, ox.DefaultGraph)
-                       else ox.Quad(quad.subject, quad.predicate, quad.object, graph))
+            store.add(quad if not isinstance(quad.graph_name, ox.DefaultGraph)
+                      else ox.Quad(quad.subject, quad.predicate, quad.object, graph))
     else:
-        engine.remove_graph(graph)
-        engine.load(ttl, format=ox.RdfFormat.TURTLE, to_graph=graph)
+        store.remove_graph(graph)
+        store.load(ttl, format=ox.RdfFormat.TURTLE, to_graph=graph)
 
 
-def endow_graph(engine, graph_iri: str, ttl: str) -> list[str]:
+def endow_graph(store, graph_iri: str, ttl: str) -> list[str]:
     """Add whatever the Turtle authors that the graph has NEVER held. Touch nothing held.
 
     The amendment half of birth (#202): a belief the agent holds is the agent's, revisions
@@ -845,7 +845,7 @@ def endow_graph(engine, graph_iri: str, ttl: str) -> list[str]:
     since an aim is a structure and not a triple. Returns the terms added.
     """
     graph = ox.NamedNode(graph_iri)
-    held = {q.predicate for q in engine.quads_for_pattern(None, None, None, graph)}
+    held = {q.predicate for q in store.quads_for_pattern(None, None, None, graph)}
     authored = list(ox.parse(ttl, format=ox.RdfFormat.TURTLE))
     by_subject: dict = {}
     for t in authored:
@@ -862,23 +862,23 @@ def endow_graph(engine, graph_iri: str, ttl: str) -> list[str]:
     while i < len(queue):
         t = queue[i]
         i += 1
-        engine.add(ox.Quad(t.subject, t.predicate, t.object, graph))
+        store.add(ox.Quad(t.subject, t.predicate, t.object, graph))
         if isinstance(t.object, ox.BlankNode) and t.object not in seen:
             seen.add(t.object)
             queue.extend(by_subject.get(t.object, []))
     return sorted(set(added))
 
 
-def load_file(engine, path: str | Path, graph_iri: str) -> None:
+def load_file(store, path: str | Path, graph_iri: str) -> None:
     """Read a ratified file straight into a graph, without going through a string."""
-    engine.load(path=str(path), format=ox.RdfFormat.TURTLE, to_graph=ox.NamedNode(graph_iri))
+    store.load(path=str(path), format=ox.RdfFormat.TURTLE, to_graph=ox.NamedNode(graph_iri))
 
 
-def optimize(engine) -> None:
+def optimize(store) -> None:
     """Compact the store. Blocking, and worth it only when something says it is needed: the
     belief base is an LSM tree and every reading is a DELETE plus an INSERT, so the file grows
     while the triple count does not. Nothing reclaimed is data."""
-    engine.optimize()
+    store.optimize()
 
 
 #  ── the memo the CALLER owns ───────────────────────────────────────────────────────────────
@@ -922,7 +922,7 @@ def remember(memo: "Memo | None", key, compute):
     return compute() if memo is None else memo.get(key, compute)
 
 
-def definitions(engine, memo: Memo | None = None):
+def definitions(store, memo: Memo | None = None):
     """The domain's class definitions: class -> (the named classes it intersects, the values
     it pins, the ranges it holds a value to); the subclass closure; and which classes some
     package declared `orexis:keyedBy`.
@@ -930,13 +930,13 @@ def definitions(engine, memo: Memo | None = None):
     Read off public knowledge, and worth a memo: as one SPARQL question it cost 300 ms a call
     however narrowed, and a pass forks tens of worlds.
     """
-    return remember(memo, ("definitions",), lambda: _read_definitions(engine))
+    return remember(memo, ("definitions",), lambda: _read_definitions(store))
 
 
-def _read_definitions(engine):
-    public = graphs_of(engine, PUBLIC)
+def _read_definitions(store):
+    public = graphs_of(store, PUBLIC)
     defs: dict = {}
-    for r in rows(engine, _DEFINITIONS_Q, public):
+    for r in rows(store, _DEFINITIONS_Q, public):
         cls = ox.NamedNode(r["cls"])
         bases, pinned, ranges = defs.setdefault(cls, (set(), set(), {}))
         if r.get("base"):
@@ -948,29 +948,29 @@ def _read_definitions(engine):
                 (r["facet"].rsplit("#", 1)[-1], float(r["bound"])))
     defs = {c: (b, p, tuple(r.items())) for c, (b, p, r) in defs.items()}
     supers: dict = {}
-    for r in rows(engine, "SELECT ?c ?s WHERE { ?c rdfs:subClassOf+ ?s . FILTER(isIRI(?s) && isIRI(?c)) }", public):
+    for r in rows(store, "SELECT ?c ?s WHERE { ?c rdfs:subClassOf+ ?s . FILTER(isIRI(?s) && isIRI(?c)) }", public):
         supers.setdefault(ox.NamedNode(r["c"]), set()).add(ox.NamedNode(r["s"]))
     keyed = {ox.NamedNode(r["c"]) for r in rows(
-        engine, "SELECT DISTINCT ?c WHERE { ?c <http://example.org/orexis#keyedBy> ?p }", public)}
+        store, "SELECT DISTINCT ?c WHERE { ?c <http://example.org/orexis#keyedBy> ?p }", public)}
     return defs, supers, keyed
 
 
-def _nodes_in(engine, graph_iri: str, of, among: str) -> list:
+def _nodes_in(store, graph_iri: str, of, among: str) -> list:
     """The nodes to ask about: those named, those a pattern picks out, or all of them."""
     if of and not among:
         return [_named(x) if isinstance(x, str) else x for x in of]
     if among:
         text = f"SELECT DISTINCT ?x WHERE {{ GRAPH <{graph_iri}> {{ {among} }} }}"
-        return [r["x"] for r in engine.query(text, prefixes=NAMESPACES,
-                                             named_graphs=[ox.NamedNode(graph_iri)])]
+        return [r["x"] for r in store.query(text, prefixes=NAMESPACES,
+                                            named_graphs=[ox.NamedNode(graph_iri)])]
     seen, graph = [], ox.NamedNode(graph_iri)
-    for q in engine.quads_for_pattern(None, _RDF_TYPE, None, graph):
+    for q in store.quads_for_pattern(None, _RDF_TYPE, None, graph):
         if q.subject not in seen:
             seen.append(q.subject)
     return seen
 
 
-def entail(engine, graph_iri: str, of=(), among: str = "", memo: Memo | None = None) -> list:
+def entail(store, graph_iri: str, of=(), among: str = "", memo: Memo | None = None) -> list:
     """Assert in `graph_iri` what the vocabulary entails of the nodes there: membership under
     every class defined as an `owl:intersectionOf` a named class, `owl:hasValue` restrictions
     and a datatype restriction's facets — the second OWL construct materialised rather than
@@ -986,12 +986,12 @@ def entail(engine, graph_iri: str, of=(), among: str = "", memo: Memo | None = N
     asserts through the term API — a blank node written back as text is a new blank node.
     """
     graph = ox.NamedNode(graph_iri)
-    nodes = _nodes_in(engine, graph_iri, of, among)
-    defs, supers, keyed = definitions(engine, memo)
+    nodes = _nodes_in(store, graph_iri, of, among)
+    defs, supers, keyed = definitions(store, memo)
     out = []
     for node in nodes:
         values, types = {}, set()
-        for q in engine.quads_for_pattern(node, None, None, graph):
+        for q in store.quads_for_pattern(node, None, None, graph):
             if q.predicate == _RDF_TYPE:
                 types.add(q.object)
             values.setdefault(q.predicate, set()).add(q.object)
@@ -1015,5 +1015,5 @@ def entail(engine, graph_iri: str, of=(), among: str = "", memo: Memo | None = N
                     out.append((node, sup))
                     types.add(sup)
     for node, cls in out:
-        engine.add(ox.Quad(node, _RDF_TYPE, cls, graph))
+        store.add(ox.Quad(node, _RDF_TYPE, cls, graph))
     return out

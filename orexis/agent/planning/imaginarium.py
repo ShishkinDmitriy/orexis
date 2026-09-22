@@ -80,26 +80,27 @@ class Imaginarium:
     def __init__(self, beliefs: ox.Store, scope: str, now: datetime):
         """A store of its own, filled by `init_imaginarium` — which is all this ever was.
 
-        The copying is the function above, over two engines. What is left here is making the
+        The copying is the function above, over two stores. What is left here is making the
         empty store and holding it, since this class exists to be the DOORS a rule is asked
         through and not to be the copy.
 
-        `self.engine` is a bare `pyoxigraph.Store` and is public, because the doors below are
-        a convenience and not a boundary: a caller that means to hand a rule the engine — the
-        search does, on every fork — takes it rather than going through a forwarding method.
+        `self.store` is a bare `pyoxigraph.Store` and is public, because the doors below are
+        a convenience and not a boundary: a caller that means to hand a rule the store itself
+        — the search does, on every fork — takes it rather than going through a forwarding
+        method.
         The predecessor held a `Store` wrapper here and forwarded twenty-odd of its methods.
 
         `scope` names which imaginarium this is — a pass makes one per scope of the vocabulary
         — and `now` is the instant its grounds are laid from, since the present cannot be read
         off a store: nothing there marks it.
         """
-        self.engine = ox.Store()                    # no path: memory, and not the belief base
+        self.store = ox.Store()                    # no path: memory, and not the belief base
         #  THE PASS'S MEMO, and the pass is what this object IS. A rule text and the action
         #  templates cannot change while a search runs — nothing here writes public knowledge
         #  — so the lifetime is exactly this object's, which is why the memo is its and not
         #  the store's (an-agent-is-four-things).
         self.memo = Memo()
-        init_imaginarium(beliefs, self.engine, scope, now)
+        init_imaginarium(beliefs, self.store, scope, now)
 
     @property
     def _carried(self) -> frozenset:
@@ -119,7 +120,7 @@ class Imaginarium:
         if (found := self.__dict__.get("_carried_memo")) is None:
             from . import signature
             found = frozenset(pred for _, carried in
-                              signature.keys_of(reader(self.engine, PUBLIC)).values() for pred in carried)
+                              signature.keys_of(reader(self.store, PUBLIC)).values() for pred in carried)
             self.__dict__["_carried_memo"] = found
         return found
 
@@ -133,19 +134,19 @@ class Imaginarium:
     #  rather than an accident of what a base class happened to carry.
 
     def query(self, sparql: str, graphs, substitutions: dict | None = None) -> dict:
-        return query(self.engine, sparql, graphs, substitutions)
+        return query(self.store, sparql, graphs, substitutions)
 
     def query_over(self, sparql: str, *graphs: str, substitutions: dict | None = None) -> dict:
-        return query_over(self.engine, sparql, *graphs, substitutions=substitutions)
+        return query_over(self.store, sparql, *graphs, substitutions=substitutions)
 
     def graphs_of(self, *kinds: str, at: datetime | None = None) -> list[str]:
-        return graphs_of(self.engine, *kinds, at=at)
+        return graphs_of(self.store, *kinds, at=at)
 
     def construct(self, sparql: str, graphs, substitutions: dict | None = None):
         #  Handed its graphs like `query`: the instant and the world a rule is asked about are
         #  in the list the search built, and a list built for the wrong instant returns an
         #  EMPTY RESULT rather than an error (#666), so the search builds it in one place.
-        return construct(self.engine, sparql, graphs, substitutions)
+        return construct(self.store, sparql, graphs, substitutions)
 
     def note(self, quads, *, whole: bool = False) -> None:
         """Write into the imagined store — what a PASS knows about the worlds it made.
@@ -176,8 +177,8 @@ class Imaginarium:
         quads = list(quads)
         if whole:
             for name in {q.graph_name.value for q in quads}:
-                clear_graph(self.engine, name)
-        add_quads(self.engine, quads)
+                clear_graph(self.store, name)
+        add_quads(self.store, quads)
 
     def forget_plan(self, graph: str) -> None:
         """Drop a want's plan — the whole graph, because that is what a plan is.
@@ -187,15 +188,15 @@ class Imaginarium:
         a count the writer had to guess and a shorter plan had to over-clear. A plan of its
         own is cleared by being one.
         """
-        clear_graph(self.engine, graph)
+        clear_graph(self.store, graph)
 
     def classify_plan(self, graph: str, want: str) -> None:
         """Say what a plan's graph IS, so a reader asks the catalogue and never the name."""
-        classify(self.engine, graph, PLANNING + "PlanGraph", OREXIS + "Derived")
+        classify(self.store, graph, PLANNING + "PlanGraph", OREXIS + "Derived")
 
     def quads_for_pattern(self, subject=None, predicate=None, obj=None, graph=None):
         """What the store holds matching a pattern — a reader of this store's own rows."""
-        return list(quads_for_pattern(self.engine, subject, predicate, obj, graph))
+        return list(quads_for_pattern(self.store, subject, predicate, obj, graph))
 
     def unnote(self, quads) -> None:
         """Take back one of `note`'s rows — the mirror of `note`.
@@ -204,19 +205,19 @@ class Imaginarium:
         to go with it: a frontier asked of the store is only the frontier if what it names is
         still open.
         """
-        remove_quads(self.engine, quads)
+        remove_quads(self.store, quads)
 
     def remember(self, key, compute):
         return self.memo.get(key, compute)
 
     def quads(self, graph_iri: str):
-        return quads(self.engine, graph_iri)
+        return quads(self.store, graph_iri)
 
     def get_graph(self, graph_iri: str) -> str:
-        return get_graph(self.engine, graph_iri)
+        return get_graph(self.store, graph_iri)
 
     def dump_nt(self, *graph_iris: str) -> str:
-        return dump_nt(self.engine, *graph_iris)
+        return dump_nt(self.store, *graph_iris)
 
     def copy_in(self, source, *graphs: str) -> None:
         """Graphs from ANOTHER store, copied in under their own names — the wants (#547).
@@ -228,7 +229,7 @@ class Imaginarium:
         Copied in here, a target is resolved at a node by the store that holds the world, and
         the border is written by one dump. Read-only like everything else in here.
         """
-        copy_graphs(self.engine, source, *graphs)
+        copy_graphs(self.store, source, *graphs)
 
     def refresh(self, source, *graphs: str) -> None:
         """Make each of `graphs` say what `source` says there now — the present's graphs a
@@ -246,7 +247,7 @@ class Imaginarium:
         from the belief base rather than re-made from the old root plus the matched diff. The
         two agree exactly there, and the observed one is what says the present is the present.
         """
-        clear_graph(self.engine, graph)
+        clear_graph(self.store, graph)
         self.copy_in(source, graph)
 
     def border_text(self, *graphs: str) -> str:
@@ -258,7 +259,7 @@ class Imaginarium:
         promise is this store's business and no reader's; it is N-Triples, and the reason is
         in `Store.dump_nt`.
         """
-        return dump_nt(self.engine, *graphs)
+        return dump_nt(self.store, *graphs)
 
     def node_of(self, graph: str, subject) -> list:
         """Everything this world says about one subject, as triples — the whole node, type and
@@ -269,7 +270,7 @@ class Imaginarium:
         it, and asking for it a quad at a time is how it came to be asked for wrongly.
         """
         return [ox.Triple(q.subject, q.predicate, q.object)
-                for q in quads(self.engine, graph) if q.subject == subject]
+                for q in quads(self.store, graph) if q.subject == subject]
 
     def reached(self, parent: str, path, added, retracted) -> str:
         """The world one step past `parent`: its readings, less what the step retracts, plus what
@@ -298,7 +299,7 @@ class Imaginarium:
         #  one could never change what the predecessor's wrapper had learned by asking — which
         #  it threw away on every write regardless, at ten percent of a hanoi solve until the
         #  caller asserted otherwise. Nothing is learned by asking here.
-        update(self.engine, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
+        update(self.store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
                         f"WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}")
         #  Retraction after the copy rather than during it, and by TERM rather than by text: a
         #  DELETE DATA would have to re-serialise every literal with its datatype, which is the
@@ -315,12 +316,12 @@ class Imaginarium:
         gone = []
         for triple in retracted:
             if triple.predicate.value in self._carried:
-                gone += list(quads_for_pattern(self.engine, triple.subject, triple.predicate,
+                gone += list(quads_for_pattern(self.store, triple.subject, triple.predicate,
                                                         None, node))
             else:
                 gone.append(ox.Quad(triple.subject, triple.predicate, triple.object, node))
-        remove_quads(self.engine, gone)
-        add_quads(self.engine, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
+        remove_quads(self.store, gone)
+        add_quads(self.store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
 
     def entailed(self, name: str, added, keys) -> list:
         """The class memberships the vocabulary entails of the KEYED nodes `added` put in
@@ -344,7 +345,7 @@ class Imaginarium:
             if len(key) != len(key_preds):
                 continue
             among = " ".join(f"?x <{p.value}> {render(o)} ." for p, o in key)
-            out += [ox.Triple(n, _RDF_TYPE, c) for n, c in entail(self.engine, name, among=among)
+            out += [ox.Triple(n, _RDF_TYPE, c) for n, c in entail(self.store, name, among=among)
                     if n == node]
         return out
 
@@ -353,11 +354,11 @@ class Imaginarium:
         two lists, and `Planner._graph` re-makes the graph from the nearest kept ancestor when
         a rule next has to run against it. The root's readings are never dropped here."""
         if name != STATE_GRAPH:
-            clear_graph(self.engine, name)
+            clear_graph(self.store, name)
 
     def holds(self, name: str) -> bool:
         """Whether this world's graph is materialised now."""
-        return contains_graph(self.engine, name)
+        return contains_graph(self.store, name)
 
 
 def segment_of(row) -> str:

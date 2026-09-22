@@ -33,7 +33,7 @@ judging: a desire is asked once per DISTINCT ground rather than once per boundar
 thick with forecasts that say nothing new costs a pass nothing.
 
 **WHAT IS BUILT IS CLASSIFIED, NOT RETURNED.** Each ground is a graph with the stretch it holds
-over, `planning:GroundGraph`, so a reader asks `graphs_of(engine, GROUND_GRAPH, at=T)` and is
+over, `planning:GroundGraph`, so a reader asks `graphs_of(store, GROUND_GRAPH, at=T)` and is
 handed the one world standing then. A list handed back would be a second place the answer lived
 (a-reader-states-the-kinds-it-reads).
 """
@@ -104,7 +104,7 @@ def init_imaginarium(beliefs: ox.Store, into: ox.Store, scope: str,
     return into
 
 
-def _foreseen(engine: ox.Store) -> list[tuple[datetime, str, str | None]]:
+def _foreseen(store: ox.Store) -> list[tuple[datetime, str, str | None]]:
     """Every prediction this store holds — its graph, the instant it applies, and the pattern
     it supersedes — earliest first.
 
@@ -133,10 +133,10 @@ SELECT ?prediction ?at ?retracts WHERE {
                OPTIONAL { ?prediction orexis:retracts ?retracts } } }
 ORDER BY ?at ?prediction"""
     return sorted((datetime.fromisoformat(r["at"]), r["prediction"], r.get("retracts"))
-                  for r in rows(engine, said, ()))
+                  for r in rows(store, said, ()))
 
 
-def _lay_ground(engine: ox.Store, scope: str, now: datetime) -> list[str]:
+def _lay_ground(store: ox.Store, scope: str, now: datetime) -> list[str]:
     """Build one ground world per period the agent can see, classified with its stretch.
 
     The present is the first, and is the agent's readings as they stand. Each prediction that
@@ -144,14 +144,14 @@ def _lay_ground(engine: ox.Store, scope: str, now: datetime) -> list[str]:
     that hashes the same as the one before it is not a period, and is dropped.
 
     Answers with the graphs it made, earliest first. What a READER takes is
-    `graphs_of(engine, GROUND_GRAPH, at=T)`.
+    `graphs_of(store, GROUND_GRAPH, at=T)`.
     """
-    keys = signature.keys_of(lambda text: query(engine, text, graphs_of(engine, PUBLIC)))
-    public = graphs_of(engine, PUBLIC)
+    keys = signature.keys_of(lambda text: query(store, text, graphs_of(store, PUBLIC)))
+    public = graphs_of(store, PUBLIC)
 
-    ahead = _foreseen(engine)
-    here = _present(engine, scope, now)
-    made, marks = [here], signature.facts(_triples(engine, here), keys)
+    ahead = _foreseen(store)
+    here = _present(store, scope, now)
+    made, marks = [here], signature.facts(_triples(store, here), keys)
     opened = [now]
     for at, group in _by_instant(ahead):
         if at <= now:
@@ -165,38 +165,38 @@ def _lay_ground(engine: ox.Store, scope: str, now: datetime) -> list[str]:
         #  rather than one seeing another's work.
         added, retracted = [], []
         for prediction, supersedes in group:
-            added += list(_triples(engine, prediction))
-            retracted += _superseded(engine, supersedes, [*public, here], here)
+            added += list(_triples(store, prediction))
+            retracted += _superseded(store, supersedes, [*public, here], here)
         if not added and not retracted:
             continue                    # a forecast that changes nothing is not a period
-        there = _fork(engine, here, _name(scope, at), added, retracted)
-        mark = signature.facts(_triples(engine, there), keys)
+        there = _fork(store, here, _name(scope, at), added, retracted)
+        mark = signature.facts(_triples(store, there), keys)
         if mark == marks:
             #  THE SAME GROUND UNDER ANOTHER NAME. Nothing a met-test can read moved, so this
             #  instant answers what the one before it answered and is not a period of its own.
-            update(engine, f"DROP SILENT GRAPH <{there}>")
+            update(store, f"DROP SILENT GRAPH <{there}>")
             continue
         #  THE ONE BEFORE IT ENDS HERE. A ground holds until the next one begins, which is not
         #  known until it does — so each is classified when its successor arrives, and the last
         #  is left open because nothing the agent can see ends it.
-        classify(engine, here, GROUND_GRAPH, OREXIS + "Derived", start=opened[-1], end=at)
+        classify(store, here, GROUND_GRAPH, OREXIS + "Derived", start=opened[-1], end=at)
         made.append(there)
         opened.append(at)
         here, marks = there, mark
-    classify(engine, here, GROUND_GRAPH, OREXIS + "Derived", start=opened[-1])
+    classify(store, here, GROUND_GRAPH, OREXIS + "Derived", start=opened[-1])
     log.debug("%s: %d ground world(s) over %d prediction(s)", scope, len(made), len(ahead))
     return made
 
 
-def _present(engine: ox.Store, scope: str, now: datetime) -> str:
+def _present(store: ox.Store, scope: str, now: datetime) -> str:
     """The agent's readings as they stand, as a ground of its own.
 
     COPIED RATHER THAN USED IN PLACE. The state graph is what the agent BELIEVES; a ground is
     what a pass stands on, and a pass must be able to fork one without the belief base moving.
     """
     name = _name(scope, now)
-    for source in graphs_of(engine, STATE):
-        update(engine, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
+    for source in graphs_of(store, STATE):
+        update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
                        f"WHERE {{ GRAPH <{source}> {{ ?s ?p ?o }} }}")
     return name
 
@@ -210,7 +210,7 @@ def _by_instant(predictions) -> list[tuple[datetime, list[tuple[str, str | None]
     return sorted(out.items())
 
 
-def _superseded(engine: ox.Store, pattern: str | None, graphs, state: str) -> list:
+def _superseded(store: ox.Store, pattern: str | None, graphs, state: str) -> list:
     """What this prediction takes away: its `orexis:retracts` CONSTRUCT run against the ground
     standing before it, with `$state` bound to that ground. Empty where it states none.
 
@@ -222,26 +222,26 @@ def _superseded(engine: ox.Store, pattern: str | None, graphs, state: str) -> li
     if not pattern:
         return []
     try:
-        return list(construct(engine, bind(pattern, state=Raw(f"<{state}>")), graphs))
+        return list(construct(store, bind(pattern, state=Raw(f"<{state}>")), graphs))
     except Exception as exc:                                        # noqa: BLE001
         log.error("a prediction's retract would not run, so it supersedes nothing: %s", exc)
         return []
 
 
-def _fork(engine: ox.Store, parent: str, name: str, added, retracted) -> str:
+def _fork(store: ox.Store, parent: str, name: str, added, retracted) -> str:
     """The ground one prediction past `parent`: its facts, less what the prediction retracts,
     plus what it adds. Retraction before addition, for the reason `Imaginarium.reached` gives —
     a construct may reuse the very node its retraction names."""
     node = ox.NamedNode(name)
-    update(engine, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
+    update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
                    f"WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}")
-    remove_quads(engine, [ox.Quad(t.subject, t.predicate, t.object, node) for t in retracted])
-    add_quads(engine, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
+    remove_quads(store, [ox.Quad(t.subject, t.predicate, t.object, node) for t in retracted])
+    add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
     return name
 
 
-def _triples(engine: ox.Store, world: str):
-    return (ox.Triple(q.subject, q.predicate, q.object) for q in quads(engine, world))
+def _triples(store: ox.Store, world: str):
+    return (ox.Triple(q.subject, q.predicate, q.object) for q in quads(store, world))
 
 
 def _name(scope: str, at: datetime) -> str:

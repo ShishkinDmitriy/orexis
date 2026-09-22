@@ -145,7 +145,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
             imaginarium = Imaginarium(self.beliefs, _scope_name(scope), at)
             #  THE WORLD THE SEARCH STARTS IN is the GROUND holding at the instant it stands
             #  at — asked of the catalogue by class, never named (a graph IRI is an instance).
-            self._state = next(iter(graphs_of(imaginarium.engine, GROUND_GRAPH, at=at)), None)
+            self._state = next(iter(graphs_of(imaginarium.store, GROUND_GRAPH, at=at)), None)
             for want in group:
                 out[want.uri] = self._search(imaginarium, want, at)
         return out
@@ -249,7 +249,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
 
     def _steps(self, imaginarium: Imaginarium, node: "_Node", want: Want) -> list[Step]:
         """What this world affords — one step per action per legal filling, name-ordered."""
-        return find_steps(imaginarium.engine, self.uri, self.picks,
+        return find_steps(imaginarium.store, self.uri, self.picks,
                           graphs=self._dataset(imaginarium, node), memo=imaginarium.memo)
 
     def _take(self, imaginarium: Imaginarium, node: "_Node", step: Step,
@@ -262,16 +262,16 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         """
         graphs = self._dataset(imaginarium, node)
         binding = self._bind(step, node, want)
-        added, retracted = effects.apply(imaginarium.engine, step.action, graphs,
+        added, retracted = effects.apply(imaginarium.store, step.action, graphs,
                                          memo=imaginarium.memo, **binding)
         if not added and not retracted:
             #  AN ACTION THAT CHANGES NOTHING IS NOT A MOVE. It is a legal filling whose
             #  effect rule produced no diff in this world, and forking on it would spend a
             #  world to arrive where we already are.
             return None
-        spent = effects.cost_of(imaginarium.engine, step.action, graphs,
+        spent = effects.cost_of(imaginarium.store, step.action, graphs,
                                 memo=imaginarium.memo, **binding) or 0.0
-        lands = effects.lands_after(imaginarium.engine, step.action, graphs,
+        lands = effects.lands_after(imaginarium.store, step.action, graphs,
                                     memo=imaginarium.memo, **binding) or 0.0
         taken = node.taken + (step,)
         world = imaginarium.reached(node.world, taken, added, retracted)
@@ -288,8 +288,8 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         off public knowledge, which nothing writes once the imaginarium is filled, so it is
         the pass's to keep."""
         return imaginarium.memo.get(("keys",), lambda: signature.keys_of(
-            lambda text: query(imaginarium.engine, text,
-                               graphs_of(imaginarium.engine, PUBLIC))))
+            lambda text: query(imaginarium.store, text,
+                               graphs_of(imaginarium.store, PUBLIC))))
 
     def _bind(self, step: Step, node: "_Node", want: Want) -> dict:
         """The `$tokens` a rule text of this step's takes: what it is filled with, who is
@@ -326,10 +326,10 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         PREDICTIONS ARE LEFT OUT FOR THE SAME REASON — they are the diffs the grounds were made
         from, and a diff is not a fact about a world.
         """
-        spoken_for = {*graphs_of(imaginarium.engine, STATE),
-                      *graphs_of(imaginarium.engine, PREDICTION),
-                      *graphs_of(imaginarium.engine, GROUND_GRAPH)}
-        graphs = [g for g in graphs_of(imaginarium.engine, *FORESEEN, at=node.at)
+        spoken_for = {*graphs_of(imaginarium.store, STATE),
+                      *graphs_of(imaginarium.store, PREDICTION),
+                      *graphs_of(imaginarium.store, GROUND_GRAPH)}
+        graphs = [g for g in graphs_of(imaginarium.store, *FORESEEN, at=node.at)
                   if g not in spoken_for]
         return [*graphs, node.world] if node.world else graphs
 
@@ -362,7 +362,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         declared. Per pass, because a search writes none of them: a rebuild in the middle
         would hand two depths two different wants."""
         return imaginarium.memo.get(("shapes",), lambda: rdflib_view(
-            imaginarium.engine, *graphs_of(imaginarium.engine, DESIRE, WANT, RECORD)))
+            imaginarium.store, *graphs_of(imaginarium.store, DESIRE, WANT, RECORD)))
 
     def _met(self, imaginarium: Imaginarium, select: str | None, node: "_Node",
              want: Want) -> bool:
@@ -374,7 +374,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         """
         if select is None:
             return False
-        return not bindings(query(imaginarium.engine, select,
+        return not bindings(query(imaginarium.store, select,
                                   self._dataset(imaginarium, node)))
 
     def _signature(self, imaginarium: Imaginarium, node: "_Node", keys: dict) -> frozenset:

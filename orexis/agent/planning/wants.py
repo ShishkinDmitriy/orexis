@@ -138,7 +138,7 @@ def _select(store, where: str, at: datetime | None, limit: int, offset: int,
     #  on the same row. The text is handed no default graph; it names what it reads.
     #
     #  AND WHOSE, where the CALLER said so: a reader that means its own says whose, which
-    #  is what `graphs_of(engine, …, holder=…)` takes for every read that goes through it.
+    #  is what `graphs_of(store, …, holder=…)` takes for every read that goes through it.
     #  Rule 4 makes the two the same in a volume — one agent, one store — and they are not
     #  the same in a store built with a whole world in it, where the derivation derives under
     #  every holder's desires and this read would otherwise hand back another agent's wants.
