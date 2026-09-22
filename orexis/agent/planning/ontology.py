@@ -48,7 +48,19 @@ DERIVATION_GRAPH = PLANNING + "DerivationGraph"
 #  and what made the fork (`planning:by`), so the tree a pass walked is in the store rather
 #  than spelled into graph names nothing may read.
 POSSIBLE_GRAPH = PLANNING + "PossibleGraph"
+
+#  THE CANDIDATE THAT MADE A WORLD: the move a world ADMITTED and the search took — an action
+#  and the filling it was taken with, one per possible world, written beside the world's own
+#  row. `planning:by` points at it from the world; `planning:fills` names the action; the
+#  filling is one triple per parameter, under the parameter's own IRI, as a step's is.
+#
+#  IT IS IN THE STORE SO THE PLAN CAN BE EXTRACTED FROM IT. A search walks worlds; what it
+#  walked ALONG was carried in Python and thrown away, so the only account of how a world was
+#  reached was the tuple a node happened to hold. Now `extract_plan` reads the chain back.
 BY = PLANNING + "by"
+CANDIDATE = PLANNING + "Candidate"
+FILLS = PLANNING + "fills"
+OF = PLANNING + "of"
 
 #  A GROUND WORLD: what the agent's own knowledge comes to over ONE PERIOD, materialised in an
 #  imaginarium — the present, and what each prediction makes of it. Classified with a period,

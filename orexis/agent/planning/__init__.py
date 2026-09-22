@@ -16,9 +16,11 @@ replaces rather than extends. One pipeline, and the package is what it is made o
    step would change (`effects.py`), and whether the want is met there (`planner.py`, which
    also holds the read that hands it the wants, being the only thing that asks).
 
-NOTHING COMES BACK. What a pass finds it writes: a `planning:Plan` graph per want, in the
-imaginarium that want was searched in, holding the steps in the LEDGER's own words and why
-the pass ended — and then hands them down, which is `publish_plan.py` and the last act of a
+NOTHING COMES BACK. What a pass finds it READS OUT of the worlds it walked
+(`extract_plan.py`): each possible world says which it was forked from and which CANDIDATE
+made the fork, so a plan is one world's ancestry — a `planning:Plan` graph per want, a step
+per picked candidate in the LEDGER's own words, and why the pass ended — and then hands them
+down, which is `publish_plan.py` and the last act of a
 pass, since the imaginarium is memory and an intention is all that outlives it. There was a Python record beside it saying the same thing, so the finding
 existed twice and only one of the two could cross a layer — and the half a want most needs,
 that no lever this agent holds points at it, was the half that could not. What happens to a
@@ -27,7 +29,7 @@ Nothing here commits, because deciding a thing and remembering that it was decid
 different acts.
 
 **WHAT THE PREDECESSOR HELD AND THIS DOES NOT.** It was twenty-nine modules and seven and a
-half thousand lines; this is twelve and about three thousand. Every absence is a thing that
+half thousand lines; this is thirteen and about three thousand. Every absence is a thing that
 returns attached to whatever needs it, never a thing quietly lost
 (an-agent-is-four-things):
 

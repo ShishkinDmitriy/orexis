@@ -60,7 +60,7 @@ from orexis.agent.ontology import (DESIRE, FORESEEN, GRAPH_PREFIX, OREXIS, PREDI
                                              local_of)
 from orexis.agent.hash_named_graph import hash_named_graph
 from orexis.agent.store import (Memo, add_quads, bindings, catalogue_of, classify,
-                                           clear_graph, copy_graph,
+                                           copy_graph,
                                            forget_graph, graphs_of, query,
                                            rdflib_view)
 
@@ -69,10 +69,11 @@ from .apply_effects import apply_effects
 from .prepare_ground import prepare_ground
 from .publish_plan import publish_plan
 from .derive_wants import derive_wants
-from .ontology import (BY, COSTS, EXHAUSTED, FOR_WANT, GROUND_GRAPH, NO_CANDIDATE,
-                       OUTCOME, PLAN_GRAPH, POSSIBLE_GRAPH, SATISFIED)
+from .ontology import (BY, CANDIDATE, EXHAUSTED, FILLS, GROUND_GRAPH, NO_CANDIDATE,
+                       POSSIBLE_GRAPH, SATISFIED)
 from .scopes import find_scopes
 from .candidates import Candidate, find_candidates
+from .extract_plan import extract_plan
 
 log = logging.getLogger("search")
 
@@ -267,7 +268,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         select = self._met_select(want)
         root = _Node(world=self._state, taken=(), cost=0.0, at=at)
         if self._met(select, root, want):
-            self._write(want, SATISFIED, (), 0.0)
+            extract_plan(self._store, root.world, want, SATISFIED, 0.0)
             return
 
         seen = {self._hash_of(root)}
@@ -307,13 +308,14 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
                 heapq.heappush(frontier, (child.cost, next(tick), child))
 
         if best is not None:
-            self._write(want, SATISFIED, best.taken, best.cost)
+            extract_plan(self._store, best.world, want, SATISFIED, best.cost)
             return
         #  THE TWO SILENCES ARE NOT THE SAME, and telling them apart is most of why an empty
         #  plan is written at all: NO CANDIDATE says no lever this agent holds points at this
         #  want (equip me), EXHAUSTED says levers exist and no bounded sequence of them lands
         #  inside the region (my doses are too coarse, or my region is too tight for them).
-        self._write(want, EXHAUSTED if saw_candidate else NO_CANDIDATE, (), None)
+        extract_plan(self._store, self._state, want,
+                     EXHAUSTED if saw_candidate else NO_CANDIDATE, None)
 
     # --- the moves ---------------------------------------------------------------------------
 
@@ -333,7 +335,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         lands = effects.lands_after(self._store, candidate.action, graphs,
                                     memo=self._memo, **binding) or 0.0
         taken = node.taken + (candidate,)
-        world = apply_action(self._store, node.world, world_of(taken), candidate.action, graphs,
+        world = apply_action(self._store, node.world, world_of(taken), candidate, graphs,
                              memo=self._memo, **binding)
         if world is None:
             return None
@@ -441,59 +443,6 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         return hash_named_graph(self._store, node.world)
 
     # --- what was found ----------------------------------------------------------------------
-
-    def _write(self, want: str, outcome: str, picked: tuple,
-               cost: float | None) -> str:
-        """The finding, into its own graph in the imaginarium — replaced whole, so a second
-        pass over one want leaves one plan and not two. `picked` is the candidates the search
-        chose, in order, and each becomes one step.
-
-        WRITTEN WHATEVER THE PASS CONCLUDED. A plan with no steps is an ANSWER, and
-        `planning:outcome` is which of the three it is: the want was already met, no lever
-        points at it, or the levers there are could not reach it inside the budget. Those
-        were fields on a Python record the pass returned and then dropped, so the finding a
-        want most needs — that nothing this agent holds points at it — was the one thing
-        nothing outside the process could read.
-
-        A GRAPH OF ITS OWN, because that is what a plan is: clearing it means clearing a graph
-        rather than removing every subject a plan of up to sixty-four steps MIGHT have used,
-        which is a count the writer had to guess at and a shorter plan had to over-clear.
-
-        **THE STEPS ARE WRITTEN IN THE LEDGER'S WORDS.** A step is `execution:Step`, what it
-        fills is `execution:fills`, what follows it is `execution:then` — the execution
-        layer's vocabulary, because the ledger is where they are going and a step that
-        arrived in this layer's words would have to be translated on the way, which is a
-        second place the two shapes could disagree. `plans.copy_plan` is a copy.
-
-        THE PLAN ITSELF IS THIS LAYER'S, and so is which want it is for: a plan is what a
-        SEARCH found, and a ledger keeps commitments rather than the reasoning that produced
-        them. So the root is `planning:Plan` and the ledger reads past it to the steps.
-        """
-        graph = plan_graph(want)
-        clear_graph(self._store, graph)
-        node, root = ox.NamedNode(graph), ox.NamedNode(graph)
-        quads = [ox.Quad(root, _RDF_TYPE, _P("Plan"), node),
-                 ox.Quad(root, ox.NamedNode(FOR_WANT), ox.NamedNode(want), node),
-                 ox.Quad(root, ox.NamedNode(OUTCOME), ox.NamedNode(outcome), node)]
-        if cost is not None:
-            quads.append(ox.Quad(root, ox.NamedNode(COSTS), _decimal(cost), node))
-        #  A STEP IS MINTED HERE AND NOWHERE ELSE: one RDF node per PICKED candidate, which
-        #  is the whole difference between the two words. What the search walked was
-        #  candidates; what a plan holds is steps, and this is the moment one becomes the
-        #  other.
-        uris = [ox.NamedNode(f"{graph}.{n}") for n in range(len(picked))]
-        for n, (uri, candidate) in enumerate(zip(uris, picked)):
-            quads += [ox.Quad(uri, _RDF_TYPE, _E("Step"), node),
-                      ox.Quad(uri, _E("fills"), ox.NamedNode(candidate.action), node),
-                      ox.Quad(uri, _E("partOf"), root, node)]
-            if n + 1 < len(uris):
-                quads.append(ox.Quad(uri, _E("then"), uris[n + 1], node))
-            for parameter, value in candidate.binding:
-                quads.append(ox.Quad(uri, ox.NamedNode(parameter), _term(value), node))
-        add_quads(self._store, quads)
-        classify(self._store, graph, PLAN_GRAPH, OREXIS + "Derived")
-        return graph
-
 
 # --- what is wanted ------------------------------------------------------------------------
 #
@@ -745,7 +694,7 @@ _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 
 
-def apply_action(store: ox.Store, parent: str, name: str, action: str, graphs,
+def apply_action(store: ox.Store, parent: str, name: str, candidate: Candidate, graphs,
                  *, memo=None, **bind) -> str | None:
     """The world one action past `parent`: forked, marked with where it came from, and the
     action's effect applied to it. The new world's name, or None where the action changes
@@ -763,28 +712,37 @@ def apply_action(store: ox.Store, parent: str, name: str, action: str, graphs,
     the budget.
     """
     copy_graph(store, parent, name)
-    if not apply_effects(store, action, name, graphs, memo=memo, **bind):
+    if not apply_effects(store, candidate.action, name, graphs, memo=memo, **bind):
         drop_world(store, name)
         return None
-    mark_world(store, name, parent, action)
+    mark_world(store, name, parent, candidate)
     return name
 
 
-def mark_world(store: ox.Store, name: str, parent: str, by: str | None = None) -> None:
-    """Say of a world what it is, which world it was forked FROM, and what made the fork.
+def mark_world(store: ox.Store, name: str, parent: str, by: "Candidate | None" = None) -> None:
+    """Say of a world what it is, which world it was forked FROM, and what candidate made it.
 
     IN THE STORE AND NOT IN THE NAME. A possible world was called after the path of actions
     reaching it, so the only record of the tree a pass walked was a spelling — and a graph's
-    name is for eyes, which no reader may depend on. A ground marks itself the same way and
-    says no `planning:by`: what makes a ground is a prediction nobody takes, and its own
-    period says when.
+    name is for eyes, which no reader may depend on.
+
+    THE CANDIDATE IS WRITTEN OUT, not named: `planning:fills` for the action and one triple
+    per parameter under the parameter's own IRI, which is the same shape a step carries. Its
+    node is `<world>#by`, since a world has exactly one candidate that made it, and that is
+    what lets `extract_plan` read a plan out of the store rather than out of a tuple.
+
+    A GROUND MARKS ITSELF THE SAME WAY and says no `planning:by`: what makes a ground is
+    predictions nobody takes, and its own period says when.
     """
     classify(store, name, POSSIBLE_GRAPH if by else GROUND_GRAPH, OREXIS + "Derived")
-    quads = [ox.Quad(ox.NamedNode(name), ox.NamedNode(_PROV + "wasDerivedFrom"),
-                     ox.NamedNode(parent), ox.NamedNode(catalogue_of(store)))]
-    if by:
-        quads.append(ox.Quad(ox.NamedNode(name), ox.NamedNode(BY), ox.NamedNode(by),
-                             ox.NamedNode(catalogue_of(store))))
+    cat, world = ox.NamedNode(catalogue_of(store)), ox.NamedNode(name)
+    quads = [ox.Quad(world, ox.NamedNode(_PROV + "wasDerivedFrom"), ox.NamedNode(parent), cat)]
+    if by is not None:
+        node = ox.NamedNode(f"{name}#by")
+        quads += [ox.Quad(world, ox.NamedNode(BY), node, cat),
+                  ox.Quad(node, _RDF_TYPE, ox.NamedNode(CANDIDATE), cat),
+                  ox.Quad(node, ox.NamedNode(FILLS), ox.NamedNode(by.action), cat)]
+        quads += [ox.Quad(node, ox.NamedNode(p), _term(v), cat) for p, v in by.binding]
     add_quads(store, quads)
 
 

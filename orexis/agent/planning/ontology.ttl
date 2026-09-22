@@ -48,9 +48,22 @@ WHERE IT CAME FROM IS IN THE STORE. It says which world it was forked from (`pro
 
 A WORKING graph, and memory: an imaginarium is not on disk, and a possible world is what a pass considered rather than anything the agent believes.""" .
 
-planning:by a owl:ObjectProperty ; rdfs:domain planning:PossibleGraph ; rdfs:range orexis:Action ;
+planning:by a owl:ObjectProperty ; rdfs:domain planning:PossibleGraph ; rdfs:range planning:Candidate ;
     rdfs:label "by" ;
-    rdfs:comment "The action whose effect made this world out of the one it was forked from. A ground says nothing here: what makes a ground is a prediction nobody takes, and its own period says when." .
+    rdfs:comment "The candidate whose effect made this world out of the one it was forked from. A ground says nothing here: what makes a ground is a prediction nobody takes, and its own period says when." .
+
+planning:Candidate a owl:Class ; rdfs:label "Candidate" ;
+    rdfs:comment """A MOVE A WORLD ADMITS — one action and one filling of it, off the action's own `orexis:available`, whose rows ARE the fillings. A search walks possible worlds and forks on a candidate at a time; the ones it PICKS become the plan's steps, and that is the whole difference between the two words. They were one Python class until the fields that would have told them apart turned out to be set by nothing.
+
+ONE PER POSSIBLE WORLD, written beside the world's row when the fork is made, so the chain a search walked is in the store rather than in a tuple a node happened to carry. `extract_plan` reads it back.""" .
+
+planning:fills a owl:ObjectProperty ; rdfs:domain planning:Candidate ; rdfs:range orexis:Action ;
+    rdfs:label "fills" ;
+    rdfs:comment "The action template this candidate is a filling of. `execution:fills` says the same of a step, in the ledger's words, because a step is a candidate that was picked." .
+
+planning:of a owl:ObjectProperty ; rdfs:range planning:Candidate ;
+    rdfs:label "of" ;
+    rdfs:comment "The candidate a step was minted from — the one link between what the search walked and what the plan holds. The ledger does not read it: a commitment is what an agent is doing, not how it was found. It crosses with the rest because what a lower layer does not read it also does not drop." .
 
 planning:GroundGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Ground graph" ;
     rdfs:comment """WHAT THE AGENT'S OWN KNOWLEDGE COMES TO OVER ONE PERIOD — the present, or what a prediction made of the period before it — materialised in an imaginarium as one graph, classified with the stretch it holds over. Which ground holds at an instant is then the door's question and no reader is handed a list.
