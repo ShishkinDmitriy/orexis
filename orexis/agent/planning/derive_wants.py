@@ -84,7 +84,7 @@ SELECT ?w WHERE {
 #  A want's period is the stretch its TROUBLE occupies, so a want foreseen from three is not
 #  handed to a reader standing at two — which is right for a reader asking what is wanted NOW,
 #  and wrong for this, whose question is whether it has already minted this. Asked at an
-#  instant it would mint a second copy of every foreseen want on every pass until the trouble
+#  instant it would _mint a second copy of every foreseen want on every pass until the trouble
 #  arrived. Existence is not an instant question.
 _STANDING_Q = """
 SELECT ?w WHERE {
@@ -130,12 +130,12 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
     read from the clock in five places in here, so "the present" was five reads that could
     disagree inside one pass and a test had to patch the clock to say when it stood.
     """
-    shapes = shapes_in(store)
+    shapes = _shapes_in(store)
     wanted: set[str] = set()
-    for holder, desire, shape in desires_in(store):
+    for holder, desire, shape in _desires_in(store):
         #  ONE READ, OVER EVERY BOUNDARY. What comes back is each way this desire is failing
         #  with the stretch it fails over — the present among the instants and not above them.
-        found = read_over_time(store, shapes, holder, desire, shape, now)
+        found = _read_over_time(store, shapes, holder, desire, shape, now)
         if found is None:
             #  NOT JUDGED IS NOT MET. A desire whose met-test could not be run says nothing
             #  about its wants — so what stands under it is what it implies, and a dropper
@@ -154,7 +154,7 @@ def _standing_under(store: ox.Store, desire: str, now: datetime) -> set[str]:
 
 
 def _derive_under(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
-                  found: list[Witness], now: datetime) -> list[str]:
+                  found: list[_Witness], now: datetime) -> list[str]:
     """The wants one desire's witnesses imply, minted where none stands. `found` is what its
     met-test read over time: one witness per way of failing, each carrying the boundary it
     first reads unmet at and the one it lifts at."""
@@ -172,9 +172,9 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: st
     #  from the present. The instant was the derivation's reading of the predictions; the present
     #  outranks it, as it does everywhere else here.
     #  STANDING IS BY NAME, and the name is the cluster's: what it is about, and which instance
-    #  where the desire ranges over several (`name_of`). Two tanks low about their level are
+    #  where the desire ranges over several (`_name_of`). Two tanks low about their level are
     #  two clusters and two names; keyed by what they were about alone, the second read the
-    #  first as standing, and by construction the second mint had overwritten the first.
+    #  first as standing, and by construction the second _mint had overwritten the first.
     standing = _standing_under(store, desire, now)
     said = _said(store, desire)
     #  THE FALLBACK IS FOR A DESIRE UNMET NOW AND NOTHING ELSE: one want about everything the
@@ -187,7 +187,7 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: st
         about = tuple(sorted({w.about for w in cluster if w.about}))
         instances = {w.instance for w in cluster}
         instance = next(iter(instances)) if len(instances) == 1 else None
-        child = name_of(store, desire, said, about, instance)
+        child = _name_of(store, desire, said, about, instance)
         #  THE STRETCH THIS CLUSTER IS IN TROUBLE OVER: from the earliest boundary any of its
         #  ways of failing reads unmet at, to the earliest one they have ALL lifted by. A
         #  cluster where one way never lifts is open-ended, because the cluster is not repaired
@@ -205,7 +205,7 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: st
         #  ONE SIDE OR NONE: the witnesses of a cluster agree where the same block found them
         #  all, and two sides in one cluster is a want about two troubles, which says neither.
         sides = {w.side for w in cluster if w.side}
-        child = mint(store, shapes, holder, desire, now, at, until, said,
+        child = _mint(store, shapes, holder, desire, now, at, until, said,
                      about=about, instance=instance,
                      side=next(iter(sides)) if len(sides) == 1 else None)
         if child is not None:
@@ -213,7 +213,7 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: st
     return minted
 
 
-def _named(store: ox.Store, desire: str, said, found: list[Witness]) -> set[str]:
+def _named(store: ox.Store, desire: str, said, found: list[_Witness]) -> set[str]:
     """The names the clusters of `found` come to — what minting would call them.
 
     One namer for both halves: `_derive_under` mints under these names and `_withdraw_under`
@@ -223,7 +223,7 @@ def _named(store: ox.Store, desire: str, said, found: list[Witness]) -> set[str]
     for cluster in _clusters(store, found):
         about = tuple(sorted({w.about for w in cluster if w.about}))
         instances = {w.instance for w in cluster}
-        out.add(name_of(store, desire, said, about,
+        out.add(_name_of(store, desire, said, about,
                         next(iter(instances)) if len(instances) == 1 else None))
     return out
 
@@ -287,7 +287,7 @@ def _tail(iri: str) -> str:
     return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
 
 
-def name_of(store: ox.Store, desire: str, said, about: tuple, instance: str | None) -> str:
+def _name_of(store: ox.Store, desire: str, said, about: tuple, instance: str | None) -> str:
     """The name of the want minted under `desire` for one cluster of its witnesses: the desire's,
     suffixed, so a second episode of the same cluster pursues the same node and everything
     keyed by it — the planner, a remembered plan, the trace, the keeper — finds what it kept.
@@ -306,7 +306,7 @@ def name_of(store: ox.Store, desire: str, said, about: tuple, instance: str | No
     #  its NAME only where the cluster covers less than the desire does: a desire about one
     #  property mints `<desire>.pursued` exactly as it always did, and one about soil and air
     #  broken on soil alone mints a second node. Inlined because this is the one place that
-    #  asks it — it was a helper while `mint` also needed the desire's own abouts, to default a
+    #  asks it — it was a helper while `_mint` also needed the desire's own abouts, to default a
     #  want's stored ones, and a want states none now.
     declared = {str(o.value) for p, o in said if p == OREXIS_ABOUT}
     tails = [_tail(a) for a in about] if about and set(about) != declared else []
@@ -374,7 +374,7 @@ def _write(store, agent_id: str, uri: str, holder: str, desire: str, label: str,
     account of that graph — its family, how it arrived, whose it is and the period it holds
     during — in one update, so a want and what is said about it land together or not at all.
 
-    PRIVATE, AND `mint` IS THE ONLY CALLER. It was `save_want`, public, with one production
+    PRIVATE, AND `_mint` IS THE ONLY CALLER. It was `save_want`, public, with one production
     caller and eight in a test that used it to seed stores for `find_wants` — so the read was
     being tested THROUGH the writer, and a matching pair of bugs would have passed. The test
     writes its rows itself now, and this is what the derivation does when it has decided.
@@ -412,7 +412,7 @@ def _write(store, agent_id: str, uri: str, holder: str, desire: str, label: str,
     closure's to walk; what may repair it is the planning problem, and a want that named one
     property had answered it before the planner was asked. The word survives where it is
     about a SHAPE BLOCK — which property one constraint concerns — because that is the shape's
-    own structure, and `narrowed` carves by it.
+    own structure, and `_narrowed` carves by it.
     """
     graph = graph_of(agent_id, at, until)
     said_points = " ".join(f"<{uri}> <{p}> <{o}> ." for p, o in points)
@@ -458,11 +458,11 @@ WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:Ontol
                  prefixes=NAMESPACES)
 
 
-def mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: datetime,
+def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: datetime,
          at: datetime, until: datetime | None = None, said=None,
          about: tuple = (), instance: str | None = None, side: str | None = None) -> str | None:
     """Derive the want pursued under `desire` and write it to the pursued graph, named by
-    `name_of`. None, and the desire stays the goal, where the desire states its met-test inline:
+    `_name_of`. None, and the desire stays the goal, where the desire states its met-test inline:
     a blank node has no name another graph could point at, and copying it would make a second
     owner of the claim."""
     said = _said(store, desire) if said is None else said
@@ -470,7 +470,7 @@ def mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: d
     #  under one desire — soil now, air later, two nodes — and that is an IDENTITY. It is not
     #  written onto the want, because a stated property is the planning problem answered in
     #  advance (see `_write`).
-    child = name_of(store, desire, said, about, instance)
+    child = _name_of(store, desire, said, about, instance)
     points = []
     met_test = None
     for p, o in said:
@@ -489,13 +489,13 @@ def mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: d
             continue
         points.append((p, str(o.value)))
     #  THE MET-TEST IS THE DESIRE'S INSTANTIATED AT THE WITNESS: carved from where the desire's
-    #  shape lives and narrowed to this cluster — the instance as its target, the blocks about
+    #  shape lives and _narrowed to this cluster — the instance as its target, the blocks about
     #  what the want is about — and written into the want's own graph under its own name, so
     #  the want is judged on its instance and a plan for one tank is not refused for another's.
     shape_lines: tuple = ()
     if met_test is not None:
         own = child + ".met"
-        shape_lines = narrowed(shapes, met_test, own, instance, about)
+        shape_lines = _narrowed(shapes, met_test, own, instance, about)
         points.append((OREXIS_MET_WHEN, own))
 
     labels = [str(o.value) for p, o in said if p == RDFS_LABEL]
@@ -512,7 +512,7 @@ def mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: d
     #  different question from how long after its instant a want stays readable; it made the
     #  planning layer borrow the ledger's figure to size something planning writes; and it was
     #  a second authority on a question withdrawal already answers, with a number reached for
-    #  because at mint time, before any plan exists, no duration is in sight at all.
+    #  because at _mint time, before any plan exists, no duration is in sight at all.
     #
     #  WHAT ENDS BY THE CLOCK (#645) is a graph whose ending is a FACT — a round closing, a
     #  claim expiring — where nobody is left to conclude it. A want's ending is a CONCLUSION,
@@ -536,7 +536,7 @@ def _local(holder: str) -> str:
     return holder.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
 
 
-def narrowed(shapes: rdflib.Graph, shape: str, own: str, instance: str | None, abouts: tuple) -> tuple[str, ...]:
+def _narrowed(shapes: rdflib.Graph, shape: str, own: str, instance: str | None, abouts: tuple) -> tuple[str, ...]:
     """The desire's met-test as THIS want's: the same shape under the want's own name, its
     target the one instance the want is about where the cluster had one, and only the property
     blocks and `sh:sparql` constraints about what the want is about — the universal instantiated
@@ -591,11 +591,11 @@ def narrowed(shapes: rdflib.Graph, shape: str, own: str, instance: str | None, a
 #  step what the met-test read, is what a witness is.
 #
 #  THIS IS THE ONLY PLACE THAT READS A PREDICTION. What a desire reads at a foreseen instant is
-#  a question about the world, asked here and nowhere else: `derive_wants` asks it to mint and
+#  a question about the world, asked here and nowhere else: `derive_wants` asks it to _mint and
 #  `crossing_of` asks it for an instant, and both get the same answer from the same code rather
 #  than from two paths that could disagree.
 #
-#  WHAT A CALLER TAKES IS THE ANSWER TO ITS OWN QUESTION. A `Witness` is the grain a want is
+#  WHAT A CALLER TAKES IS THE ANSWER TO ITS OWN QUESTION. A `_Witness` is the grain a want is
 #  minted at and `derive_wants` clusters on it, so it lives here beside `read_ahead`, which
 #  dedups on two of its fields. Every other caller wants an INSTANT — the crossing, or whether
 #  a want is still unmet by one — and is handed that, rather than rows to reduce itself.
@@ -633,7 +633,7 @@ ORDER BY ?holder ?desire"""
 #  EVERY INSTANT THE WORLD THIS AGENT READS CAN CHANGE AT, and the kind of graph is not the
 #  question. A graph holds during a stretch: at its START it begins to be handed out and at its
 #  END it stops, so those are the only instants at which a judgment can differ from the one
-#  before. Everything between two boundaries is one world.
+#  before. Everything between two _boundaries is one world.
 #
 #  BOTH ENDS, and the end is the half that was missing. A start alone says when trouble may
 #  ARRIVE; an end says when it may LIFT — the pot dries at three and the forecast refills it at
@@ -642,7 +642,7 @@ ORDER BY ?holder ?desire"""
 #  NO KIND. It asked for `orexis:PredictionGraph` and so saw only what sensing's drifts wrote:
 #  the market had to type its debt-lapse graph as a prediction to be looked at, which it is not
 #  — it is a graph holding from a deadline. A round that opens later and a claim whose window
-#  closes later are boundaries too, and nobody has to remember a class to be foreseen.
+#  closes later are _boundaries too, and nobody has to remember a class to be foreseen.
 _BOUNDS_Q = """
 SELECT DISTINCT ?at WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
@@ -665,7 +665,7 @@ ORDER BY ?g"""
 #  WHAT A WANT NARROWS ITS DESIRE TO: its own met-test, which is the desire's carved to the
 #  cluster the want was minted from and targeted at its instance.
 @dataclass(frozen=True)
-class Witness:
+class _Witness:
     """One way a desire is failing, and when it first does: the instance that failed, the
     constraint it failed, what that constraint is about where its block says, WHICH WAY it
     broke where the block says that, and the instant.
@@ -689,7 +689,7 @@ class Witness:
     until: datetime | None = None
 
 
-def desires_in(store: ox.Store) -> list[tuple[str, str, str | None]]:
+def _desires_in(store: ox.Store) -> list[tuple[str, str, str | None]]:
     """Every desire the store holds, as `(holder, desire, met-test or None)`.
 
     NO INSTANT, because there is nothing to ask one about: a desire holds always. One agent,
@@ -701,8 +701,8 @@ def desires_in(store: ox.Store) -> list[tuple[str, str, str | None]]:
             for r in store.query(_DESIRES_Q, prefixes=NAMESPACES)]
 
 
-def read_over_time(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
-                   shape: str | None, now: datetime) -> list[Witness] | None:
+def _read_over_time(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
+                   shape: str | None, now: datetime) -> list[_Witness] | None:
     """Every way this desire is failing, each with the stretch it fails over — or None where
     there is no compilable met-test to ask, which is not the same as met.
 
@@ -724,15 +724,15 @@ def read_over_time(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: s
     and no end.
 
     A BOUNDARY IS WHERE A JUDGMENT CAN DIFFER and nowhere else: everything between two of them
-    is one world (`boundaries`).
+    is one world (`_boundaries`).
     """
-    select = compiled(shapes, shape, desire)
+    select = _compiled(shapes, shape, desire)
     if select is None:
         return None
     #  What each way of failing reads at each instant — unmet where the select bound a row.
-    seen: dict[tuple[str, str], Witness] = {}
+    seen: dict[tuple[str, str], _Witness] = {}
     lifted: dict[tuple[str, str], datetime] = {}
-    for at in boundaries(store, holder, now):
+    for at in _boundaries(store, holder, now):
         rows_ = _witnesses_at(store, select, holder, at, now)
         if rows_ is None:
             return None                 # the engine refused the text at some instant
@@ -751,7 +751,7 @@ def read_over_time(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: s
                   key=lambda w: (w.at, w.instance, w.constraint))
 
 
-def shapes_in(store: ox.Store) -> rdflib.Graph:
+def _shapes_in(store: ox.Store) -> rdflib.Graph:
     """Every graph of desires and of wants, as one rdflib graph — where a desire's shape lives
     with its blank-node closure, and a derived want's own.
 
@@ -759,8 +759,8 @@ def shapes_in(store: ox.Store) -> rdflib.Graph:
     (`store.rdflib_view`), and so is the reason it is N-Triples. The engine's blank-node labels
     are its own, so two graphs' nodes never collide in one text.
 
-    **ONCE PER PASS, AND THE CALLER HOLDS IT.** It is handed down to `narrowed` rather than
-    re-fetched there, which it used to be: `narrowed` runs once per want minted, so a pass that
+    **ONCE PER PASS, AND THE CALLER HOLDS IT.** It is handed down to `_narrowed` rather than
+    re-fetched there, which it used to be: `_narrowed` runs once per want minted, so a pass that
     minted two wants crossed every desire and want graph THREE times — measured — while this
     function's own docstring said "parsed once" and cited the #711 measurement that makes that
     expensive. Crossing is what costs; the answer cannot change inside a pass that has not
@@ -770,8 +770,8 @@ def shapes_in(store: ox.Store) -> rdflib.Graph:
                                 in store.query(_SHAPE_GRAPHS_Q, prefixes=NAMESPACES)])
 
 
-def compiled(shapes: rdflib.Graph, shape: str | None, of: str) -> str | None:
-    """`shape` compiled to the select whose rows are its VIOLATIONS — `?this`, which
+def _compiled(shapes: rdflib.Graph, shape: str | None, of: str) -> str | None:
+    """`shape` _compiled to the select whose rows are its VIOLATIONS — `?this`, which
     constraint, `?_about` and `?_side` where the constraint's block says them — or None, with
     a word in the log, where there is no shape or the compiler refuses it.
 
@@ -785,12 +785,12 @@ def compiled(shapes: rdflib.Graph, shape: str | None, of: str) -> str | None:
     try:
         return report_select(shapes.cbd(rdflib.URIRef(shape)), rdflib.URIRef(shape))
     except Unsupported as exc:
-        log.warning("%s: its met-test cannot be compiled, so it is not judged: %s",
+        log.warning("%s: its met-test cannot be _compiled, so it is not judged: %s",
                     of.rsplit("#", 1)[-1], exc)
         return None
 
 
-def boundaries(store: ox.Store, holder: str, now: datetime) -> list[datetime]:
+def _boundaries(store: ox.Store, holder: str, now: datetime) -> list[datetime]:
     """THE PRESENT AND EVERY INSTANT AFTER IT AT WHICH THE WORLD THIS HOLDER READS CHANGES,
     in order — a period starting, a period ending, and nothing else.
 
@@ -805,7 +805,7 @@ def boundaries(store: ox.Store, holder: str, now: datetime) -> list[datetime]:
 
 
 def _witnesses_at(store: ox.Store, select: str, holder: str, at: datetime,
-                  now: datetime) -> list[Witness] | None:
+                  now: datetime) -> list[_Witness] | None:
     """The met-test's rows over the graphs `holder`'s desire is judged over at `at`, as
     witnesses — one per distinct row, since two predictions holding at one instant give one
     instance two offending values and both are told. None where the engine refuses the text.
@@ -817,10 +817,10 @@ def _witnesses_at(store: ox.Store, select: str, holder: str, at: datetime,
     try:
         found = store.query(select, prefixes=NAMESPACES, default_graph=graphs)
         names = [v.value for v in found.variables]
-        seen: dict[tuple, Witness] = {}
+        seen: dict[tuple, _Witness] = {}
         for solution in found:
             row = {name: solution[name] for name in names if solution[name] is not None}
-            seen.setdefault(tuple(sorted((k, str(v)) for k, v in row.items())), Witness(
+            seen.setdefault(tuple(sorted((k, str(v)) for k, v in row.items())), _Witness(
                 instance=row["this"].value,
                 constraint=row["_constraint"].value if "_constraint" in row else "",
                 about=row["_about"].value if "_about" in row else None,

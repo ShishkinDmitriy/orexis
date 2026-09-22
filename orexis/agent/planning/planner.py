@@ -682,14 +682,8 @@ def _raw(graph: str):
 #  promise that nothing here survives anything.
 _POSSIBLE = GRAPH_PREFIX + "possible/"
 
-#  AND ONE GRAPH PER WANT'S PLAN. A name is for eyes and nothing depends on it: a reader asks
-#  the catalogue for `planning:PlanGraph`, and the writer that made it may name what it wrote.
-_PLAN = GRAPH_PREFIX + "plan/"
 
 
-def plan_graph(want: str) -> str:
-    """The graph one want's plan is written into — one per want, replaced whole."""
-    return _PLAN + quote(local_of(want), safe="")
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 
@@ -754,7 +748,7 @@ def drop_world(store: ox.Store, name: str) -> None:
         forget_graph(store, name)
 
 
-def segment_of(row) -> str:
+def _segment_of(row) -> str:
     """One filled action as a name-safe segment: the action and every value it bound.
 
     EVERY VALUE IS IN IT, and all of them are load-bearing: a schema action yields several rows
@@ -779,7 +773,7 @@ def world_of(path) -> str:
     but a name that moved between runs would make two traces of the same search incomparable,
     which is the one thing anybody reads them for.
 
-    Each segment is `segment_of`, which is also how a candidate is named — a world IS its
+    Each segment is `_segment_of`, which is also how a candidate is named — a world IS its
     path, so the world a candidate reaches is its parent's name plus that candidate's segment.
     """
-    return _POSSIBLE + (".".join(segment_of(row) for row in path) or "here")
+    return _POSSIBLE + (".".join(_segment_of(row) for row in path) or "here")

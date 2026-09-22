@@ -71,7 +71,7 @@ def extract_plan(store: ox.Store, world: str, want: str, outcome: str,
     `planning:outcome` is which of the three it is: the want was already met, no candidate
     points at it, or none reached it inside the budget.
     """
-    graph = plan_graph(want)
+    graph = _plan_graph(want)
     clear_graph(store, graph)
     node, root = ox.NamedNode(graph), ox.NamedNode(graph)
     quads = [ox.Quad(root, _RDF_TYPE, ox.NamedNode(PLANNING + "Plan"), node),
@@ -132,7 +132,7 @@ def _action_of(store: ox.Store, cat, by: str) -> str:
     return found["a"]
 
 
-def plan_graph(want: str) -> str:
+def _plan_graph(want: str) -> str:
     """The graph one want's plan is written into — one per want, replaced whole."""
     from urllib.parse import quote
     from orexis.agent.ontology import GRAPH_PREFIX
