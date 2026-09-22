@@ -19,9 +19,17 @@ import pyoxigraph as ox
 from orexis_agent_execution.ontology import OREXIS
 from orexis_agent_execution.store import NAMESPACES, rows
 
-from .ontology import PLANNING, scopes_graph
+from .ontology import PLANNING
 
 SCOPE_GRAPH = PLANNING + "ScopeGraph"
+
+#  THE STORE'S SCOPES, and the name is this module's because this module replaces the graph
+#  whole on every run. Nobody's and taking no id: the partition is a function of the actions
+#  the store holds and the derivations loaded, which are the same rows for everyone reading
+#  one store, so there is nobody to name it after. Spelled in `ontology.ttl` too, beside the
+#  class, because the vocabulary declares this instance publicly as it declares the world's
+#  and the actions'; a READER asks the class and never this.
+SCOPES_GRAPH = "http://example.org/orexis/graph/scopes"
 
 SCOPES_Q = """
 SELECT ?member ?scope WHERE { ?member planning:inScope ?scope }"""
@@ -39,7 +47,7 @@ def scope_name(n: int) -> str:
     """The name of the nth scope in the partition, largest first — the graph's own, suffixed,
     so the same actions write the same text. This module names both the graph and what is in
     it; `scope_actions` decides the partition and asks for the names."""
-    return f"{scopes_graph()}/{n}"
+    return f"{SCOPES_GRAPH}/{n}"
 
 
 def save_scopes(engine: ox.Store, scopes: list[tuple[str, set[str], set[str]]]) -> None:
@@ -53,7 +61,7 @@ def save_scopes(engine: ox.Store, scopes: list[tuple[str, set[str], set[str]]]) 
     `rdfs:subClassOf` step — the closure is materialised at genesis, so one step is every step.
     """
     standing = [row["g"] for row in rows(engine, _STANDING_Q)]
-    graph = scopes_graph()
+    graph = SCOPES_GRAPH
     blocks = []
     for scope, predicates, actions in scopes:
         members = " ".join(f"<{m}> planning:inScope <{scope}> ." for m in sorted(predicates | actions))

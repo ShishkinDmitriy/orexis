@@ -38,7 +38,6 @@ from orexis_agent_execution.ontology import FORESEEN, OREXIS
 from orexis_agent_execution.store import (NAMESPACES, answer, bind, bindings, graphs_holding,
                                             instant, rows)
 
-from .ontology import pursued_graph
 
 log = logging.getLogger("derive_wants")
 
@@ -338,8 +337,17 @@ def _moment(value) -> str:
 
 def graph_of(agent_id: str, uri: str) -> str:
     """The graph one DERIVED want lives in. Named for the want so a second episode of the same
-    desire reuses it, and everything keyed by the want finds what it kept."""
-    return f"{pursued_graph(agent_id)}/{uri.rsplit('#', 1)[-1]}"
+    desire reuses it, and everything keyed by the want finds what it kept.
+
+    THE NAME LIVES WITH THE WRITER. It was two functions in two modules — a `pursued_graph`
+    in the layer's vocabulary holding the prefix, and this holding the prefix plus the want's
+    local part — and the first had no caller but the second. A vocabulary module holds TERMS,
+    which are public and which code is written against; a graph's name is for eyes, owned by
+    whoever writes the graph and depended on by nothing, which is why `test_layout.py` refuses
+    a READER that imports one. This module writes these graphs, classifies them and drops
+    them, so it names them.
+    """
+    return f"http://example.org/orexis/graph/pursued/{agent_id}/{uri.rsplit('#', 1)[-1]}"
 
 
 
