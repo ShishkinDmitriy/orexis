@@ -683,6 +683,33 @@ def get_graph(engine, graph_iri: str) -> str:
     return out.getvalue().decode()
 
 
+def rdflib_view(engine, *graph_iris: str):
+    """These graphs as ONE rdflib graph — the crossing out of the store, for a reader that
+    walks RDF STRUCTURE rather than answers a query.
+
+    There is exactly one thing that needs it and it needs it twice over: a SHAPE. Compiling one
+    to a select walks it, and carving one out of a store means its blank-node closure
+    (`cbd`) — and a shape is a structure of blank nodes, which this engine has quads for and no
+    walker. So the store's own API cannot answer, and the graphs cross.
+
+    N-TRIPLES AND NOT TURTLE, which is the whole reason this is one function and not two: it
+    CONCATENATES, so several graphs join with no re-parse, and rdflib reads it in a fraction of
+    Turtle's time (12 ms against 86 on 2,400 triples, because Turtle groups by subject and
+    hunts for prefixes). A caller that crossed with Turtle was paying seven times over for a
+    readability nobody was there to read.
+
+    IT IS THE CALLER'S TO KEEP. Crossing is the expensive part — #711 measured the whole belief
+    base parsed into rdflib at half a second for a closure of forty triples — so whoever knows
+    how long the answer is good for holds it, exactly as with `Memo`. Nothing is cached here.
+    """
+    import rdflib
+    out = rdflib.Graph()
+    text = dump_nt(engine, *graph_iris)
+    if text.strip():
+        out.parse(data=text, format="nt")
+    return out
+
+
 def dump_nt(engine, *graph_iris: str) -> str:
     """Several graphs as ONE N-Triples text, written by the engine itself.
 

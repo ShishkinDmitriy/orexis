@@ -25,7 +25,6 @@ refresh to whoever holds one.
 
 from __future__ import annotations
 
-import io
 import json
 import logging
 from dataclasses import dataclass
@@ -35,7 +34,8 @@ import pyoxigraph as ox
 import rdflib
 
 from orexis_agent_execution.ontology import FORESEEN, OREXIS
-from orexis_agent_execution.store import NAMESPACES, bind, graphs_of, instant, rows
+from orexis_agent_execution.store import (NAMESPACES, bind, graphs_of, instant,
+                                           rdflib_view, rows)
 
 
 log = logging.getLogger("derive_wants")
@@ -137,7 +137,7 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
             continue
         unmet_now = bool(present)
         found = present if unmet_now else read_ahead(store, shapes, holder, desire, shape, now)
-        _derive_under(store, holder, desire, found, unmet_now, now)
+        _derive_under(store, shapes, holder, desire, found, unmet_now, now)
         said = _said(store, desire)
         names = _named(store, desire, said, found)
         #  AND THE FORESEEN HALF, where anything would otherwise be dropped: `found` is the
@@ -159,8 +159,8 @@ def _standing_under(store: ox.Store, desire: str, now: datetime) -> set[str]:
     return {r["w"] for r in rows(store, _STANDING_Q, (), desire=desire, now=instant(now))}
 
 
-def _derive_under(store: ox.Store, holder: str, desire: str, found: list[Witness],
-                  unmet_now: bool, now: datetime) -> list[str]:
+def _derive_under(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
+                  found: list[Witness], unmet_now: bool, now: datetime) -> list[str]:
     """The wants one desire's witnesses imply, minted where none stands. `found` is what its
     met-test read: at the present where it is unmet now, and otherwise each witness at the
     earliest foreseen instant it reads unmet."""
@@ -206,7 +206,7 @@ def _derive_under(store: ox.Store, holder: str, desire: str, found: list[Witness
         #  ONE SIDE OR NONE: the witnesses of a cluster agree where the same block found them
         #  all, and two sides in one cluster is a want about two troubles, which says neither.
         sides = {w.side for w in cluster if w.side}
-        child = mint(store, holder, desire, now, said, holds_at=at, about=about, instance=instance,
+        child = mint(store, shapes, holder, desire, now, said, holds_at=at, about=about, instance=instance,
                      side=next(iter(sides)) if len(sides) == 1 else None)
         if child is not None:
             minted.append(child)
@@ -411,9 +411,9 @@ WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:Ontol
                   prefixes=NAMESPACES)
 
 
-def mint(store: ox.Store, holder: str, desire: str, now: datetime, said=None,
-         holds_at: datetime | None = None, about: tuple = (), instance: str | None = None,
-         side: str | None = None) -> str | None:
+def mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: datetime,
+         said=None, holds_at: datetime | None = None, about: tuple = (),
+         instance: str | None = None, side: str | None = None) -> str | None:
     """Derive the want pursued under `desire` and write it to the pursued graph, named by
     `name_of`. None, and the desire stays the goal, where the desire states its met-test inline:
     a blank node has no name another graph could point at, and copying it would make a second
@@ -448,7 +448,7 @@ def mint(store: ox.Store, holder: str, desire: str, now: datetime, said=None,
     shape_lines: tuple = ()
     if met_test is not None:
         own = child + ".met"
-        shape_lines = narrowed(store, met_test, own, instance, about)
+        shape_lines = narrowed(shapes, met_test, own, instance, about)
         points.append((OREXIS_MET_WHEN, own))
 
     labels = [str(o.value) for p, o in said if p.endswith("#label")]
@@ -490,7 +490,7 @@ def _local(holder: str) -> str:
     return holder.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
 
 
-def narrowed(store: ox.Store, shape: str, own: str, instance: str | None, abouts: tuple) -> tuple[str, ...]:
+def narrowed(shapes: rdflib.Graph, shape: str, own: str, instance: str | None, abouts: tuple) -> tuple[str, ...]:
     """The desire's met-test as THIS want's: the same shape under the want's own name, its
     target the one instance the want is about where the cluster had one, and only the property
     blocks and `sh:sparql` constraints about what the want is about — the universal instantiated
@@ -509,8 +509,9 @@ def narrowed(store: ox.Store, shape: str, own: str, instance: str | None, abouts
 
     about_p = URIRef(OREXIS + "about")
     targets = {SH.targetNode, SH.targetClass, SH.targetSubjectsOf, SH.targetObjectsOf, SH.target}
-    #  From the graphs that hold desires and wants, asked by class, as `unmet_select_of` carves (#711).
-    cbd = shapes_in(store).cbd(URIRef(shape))
+    #  From the graphs that hold desires and wants, crossed ONCE for the pass and handed in:
+    #  this runs per want minted, and fetching it here crossed every one of them per want.
+    cbd = shapes.cbd(URIRef(shape))
     keep = {URIRef(a) for a in abouts}
     out, dropped = Graph(), Graph()
     for p, o in cbd.predicate_objects(URIRef(shape)):
@@ -668,17 +669,22 @@ def read_ahead(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
 
 
 def shapes_in(store: ox.Store) -> rdflib.Graph:
-    """Every graph of desires and of wants, parsed once — where a desire's shape lives with its
-    blank-node closure, and a derived want's own. N-Triples, since it concatenates and rdflib
-    parses it in a fraction of Turtle's time; the engine's blank-node labels are its own, so
-    two graphs' nodes never collide in one text."""
-    out = io.BytesIO()
-    for row in store.query(_SHAPE_GRAPHS_Q, prefixes=NAMESPACES):
-        store.dump(output=out, format=ox.RdfFormat.N_TRIPLES, from_graph=row["g"])
-    shapes = rdflib.Graph()
-    if out.tell():
-        shapes.parse(data=out.getvalue().decode(), format="nt")
-    return shapes
+    """Every graph of desires and of wants, as one rdflib graph — where a desire's shape lives
+    with its blank-node closure, and a derived want's own.
+
+    WHICH graphs is this module's question; the crossing itself is the store's
+    (`store.rdflib_view`), and so is the reason it is N-Triples. The engine's blank-node labels
+    are its own, so two graphs' nodes never collide in one text.
+
+    **ONCE PER PASS, AND THE CALLER HOLDS IT.** It is handed down to `narrowed` rather than
+    re-fetched there, which it used to be: `narrowed` runs once per want minted, so a pass that
+    minted two wants crossed every desire and want graph THREE times — measured — while this
+    function's own docstring said "parsed once" and cited the #711 measurement that makes that
+    expensive. Crossing is what costs; the answer cannot change inside a pass that has not
+    written a shape.
+    """
+    return rdflib_view(store, *[row["g"].value for row
+                                in store.query(_SHAPE_GRAPHS_Q, prefixes=NAMESPACES)])
 
 
 def compiled(shapes: rdflib.Graph, shape: str | None, of: str) -> str | None:

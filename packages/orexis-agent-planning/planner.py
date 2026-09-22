@@ -51,7 +51,7 @@ from orexis_agent_execution import violation
 from orexis_agent_execution.act import Step
 from orexis_agent_execution.ontology import (DESIRE, FORESEEN, PUBLIC, RECORD, STATE, WANT,
                                              local_of, picks_graph)
-from orexis_agent_execution.store import Memo, bindings, get_graph, graphs_of, query
+from orexis_agent_execution.store import Memo, bindings, graphs_of, query, rdflib_view
 
 from . import effects, relevance, signature
 from .derive_wants import derive_wants
@@ -148,7 +148,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         out: dict[str, Plan] = {}
         #  WHAT EACH WANT READS is asked of the graphs of wants, where the derivation wrote
         #  each met-test narrowed to its own witness.
-        shapes = _rdflib_view(self.beliefs, *graphs_of(self.beliefs, DESIRE, WANT, RECORD, at=at))
+        shapes = rdflib_view(self.beliefs, *graphs_of(self.beliefs, DESIRE, WANT, RECORD, at=at))
         for group in self._by_scope(wants, shapes).values():
             imaginarium = Imaginarium(self.beliefs, *private)
             for want in group:
@@ -353,7 +353,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         """Every want and desire this agent holds, as one rdflib graph — where a met-test is
         declared. Per pass, because a search writes none of them: a rebuild in the middle
         would hand two depths two different wants."""
-        return imaginarium.memo.get(("shapes",), lambda: _rdflib_view(
+        return imaginarium.memo.get(("shapes",), lambda: rdflib_view(
             imaginarium.engine, *graphs_of(imaginarium.engine, DESIRE, WANT, RECORD)))
 
     def _met(self, imaginarium: Imaginarium, select: str | None, node: "_Node",
@@ -448,21 +448,7 @@ _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 _XSD_DATETIME = ox.NamedNode("http://www.w3.org/2001/XMLSchema#dateTime")
 
 
-def _rdflib_view(engine: ox.Store, *graph_iris: str) -> rdflib.Graph:
-    """Some graphs of a store as ONE rdflib graph — which a shape has to be, because the
-    compiler walks shapes with rdflib and the store has no shape API.
 
-    The one place this layer crosses into rdflib for data rather than for a text. It is the
-    carve of the judge's `graph_from`, which is all this package ever read of it: the JUDGE
-    itself belongs at the gates, where a world is entire and the question can be asked at all,
-    and it comes back with them (an-agent-is-four-things).
-    """
-    out = rdflib.Graph()
-    for iri in graph_iris:
-        ttl = get_graph(engine, iri)
-        if ttl.strip():
-            out.parse(data=ttl, format="turtle")
-    return out
 
 
 def _E(local: str) -> ox.NamedNode:
