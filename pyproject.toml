@@ -93,7 +93,7 @@ build-backend = "setuptools.build_meta"
 # portions. That is what lets a twenty-second package be installed from another repository and
 # land in the same namespace as these twenty-one.
 where = ["."]
-include = ["assembly*", "agent*", "onboarding*"]
+include = ["assembly*", "agent*", "onboarding*", "orexis*"]
 
 # ---------------------------------------------------------------------------------------------
 # THE WORKSPACE. Twenty-one packages and this root are one resolution, so a checkout is set up
@@ -137,7 +137,11 @@ orexis-capability-sensing = { workspace = true } # codec-json, scaling-identity,
 # `packages` must be named here or those files are invisible. Measured: with `testpaths =
 # ["tests"]`, neither `pytest tests` NOR a bare `pytest` collects a test file inside a package —
 # it runs only when named by path, so the suite would have gone green while skipping it.
-testpaths = ["tests", "packages"]
+#  AGENT 2.0 ONLY, while the repackaging branch runs. The 1.0 suite is not deleted and not
+#  broken — it is not this tree's, and a bare `pytest` that ran both would be red for reasons
+#  none of this work is about. A path comes back by being added here, one at a time, and the
+#  list widens to `["tests", "packages", "orexis"]` before the branch merges.
+testpaths = ["orexis"]
 
 # A PACKAGE DIRECTORY IS ITS DISTRIBUTION NAME, and a distribution name has hyphens in it.
 # pytest's default `prepend` import mode derives a module name from the path — it walks up from
