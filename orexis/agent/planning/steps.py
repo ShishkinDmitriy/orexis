@@ -1,10 +1,13 @@
-"""What one action comes to in ONE world — the steps it affords.
+"""The MENU: what every action the store holds comes to in ONE world.
 
-FUNCTIONS OVER A STORE, not a collection: given an [action](action.py) and what this agent holds, run
-that action's own precondition against the world this collection was handed and shape each
-binding into a `Step` — one pair per parameter the action declares it takes. Nothing is stored:
-what a world admits is a conclusion whose premises are stored and would outlive them
-(a-situated-instance-is-kept-only-when-it-is-testimony).
+THE THIRD OF THREE FILES ABOUT AN ACTION, and the only one that asks which fillings there are.
+`effects.py` beside it answers what one costs and when it lands; `apply_effects.py` runs its
+effect into a world. This runs its `orexis:available` precondition against the world it is
+handed and shapes each row into a `Step` — one pair per parameter the action declares it
+takes, one step per action per legal filling.
+
+Nothing is stored: what a world admits is a conclusion whose premises are stored and would
+outlive them (a-situated-instance-is-kept-only-when-it-is-testimony).
 
 **A STEP IS AN ACTION PICKED FOR EXECUTION**, and what a world admits is what the search picks
 FROM — one per action per legal filling. They are one class, because what a search adds when it
@@ -13,13 +16,15 @@ yielded an `Affordance` once, copied into a step by `Step.from_row` the moment a
 to plan with it: two classes for one shape, and a second word doing no work the absent fields
 were not already doing.
 
-**THE WORLD IS ASKED ABOUT, NOT HELD.** Every question here names one — `at` and `world` — so
-one of these serves as many worlds as the store has to be asked about, and the precondition
-names no graph to get it (#666). Which readings a premise reads is the door's to say.
+**THE WORLD IS ASKED ABOUT, NOT HELD.** `graphs` says which one, so one function serves as
+many worlds as there are to ask about, and the precondition names no graph to get it (#666).
+Which readings a premise reads is the caller's to say.
 
-**IT ASKS FOR NOTHING.** What the agent holds and which actions are worth asking are handed in.
-This knows how to fetch steps and nothing about what is worth fetching, which is the caller's —
-the file this was carved out of held both, plus a question that belonged to the desire modality.
+**AND EVERY ACTION IS ASKED.** There was an `only` parameter — the set worth asking at all,
+which the relevance closure computes from what a want READS — and no caller passed it, the
+closure being one of the things this tree does not have. A precondition is a query per action
+per world, so narrowing is real the day a vocabulary grows by unrelated domains; it returns
+with the closure that would compute it.
 """
 
 from __future__ import annotations
@@ -49,7 +54,7 @@ _MEMO = ("steps", "actions")
 
 
 def find_steps(store, me: str,
-               *, graphs=None, only=None, memo=None) -> list[Step]:
+               *, graphs=None, memo=None) -> list[Step]:
     """Every step this agent could take in one world, name-ordered.
 
     A FUNCTION OVER THE STORE. It was a collection holding one — `Steps(store).find_all(…)` —
@@ -61,7 +66,7 @@ def find_steps(store, me: str,
     `find_actions(…)` straight in and nothing else ever consumed the list — and the parameter
     existed because a repository may not ask another repository. With that rule gone there is
     nobody to hand them in for: the templates are public and the store has them, including an
-    imaginarium, which copies every public graph at init.
+    imaginarium, which copies every public graph when the ground is prepared.
 
     The rest is one criterion: `me`, whose world this is.
 
@@ -69,18 +74,10 @@ def find_steps(store, me: str,
     `(want, about)` pairs and joined itself to the want whose property it served — which is
     filtering to the goal's predicates, and *"filtering to the goal's predicates deletes every
     chain; closing backward through preconditions keeps the bid that makes the dose possible"*.
-    A want states no property now; what may serve it is `only`, the relevant set the closure
-    computes from what the want READS, or None for every action.
-
-    `only` is the set of actions worth asking at all — the search's RELEVANT set (#504), or
-    None for every action. A precondition is a query per action per world, and an action
-    that touches nothing the want reads was already never simulated; skipped here it is
-    never asked either, so a vocabulary that grows by unrelated domains costs a pass nothing.
+    A want states no property now, and nothing narrows the menu by what one is about.
     """
     found: list[Step] = []
     for action in _declared(store, memo):
-        if only is not None and action["action"] not in only:
-            continue
         found += steps_of_action(store, action, me, graphs=graphs)
     #  Sorted because per-action order is no order.
     return sorted(found, key=lambda s: (s.action, s.for_agent or ""))
