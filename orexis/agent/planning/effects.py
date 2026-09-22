@@ -1,5 +1,13 @@
 """What a lever would make true — reading the rules the packages ship, and running one.
 
+**FIVE FUNCTIONS OVER (store, action), and the store is whichever dataset the question is
+being asked ABOUT.** `rule_for` is the action's row; `adds` is what taking it makes true here;
+`retraction` is the act that takes away what it replaces; `cost_of` is what it is scored to
+spend; `lands_after` is how long until it lands. Each is handed the engine, the action's IRI
+and the graphs the question is over — an actuator passes its own belief base, a search passes
+the imaginarium where `$state` names the world a node's path reached, and nothing here
+distinguishes them.
+
 An action states its effect in two halves that are not the same KIND of thing. `sh:construct`
 is SHACL-AF's and holds a query yielding the triples applying it would ADD, asked of the world
 the step is taken in. `orexis:retracts` is ours, because the standard has none, and holds a

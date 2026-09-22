@@ -20,8 +20,7 @@ import logging
 import pyoxigraph as ox
 
 from orexis.agent import clock
-from orexis.agent.ontology import PUBLIC
-from orexis.agent.store import answer, graphs_of
+from orexis.agent.store import graphs_of
 
 from . import touches
 from .ontology import DERIVATION_GRAPH
@@ -46,8 +45,7 @@ def scope_actions(store: ox.Store) -> None:
     the same one from the same rows, so there is nobody to name it after (`scopes.py`).
     """
     now = clock.now()
-    publics = graphs_of(store, PUBLIC, at=now)
-    actions = touches.actions_of(lambda text: answer(store, text, publics))
+    actions = touches.actions_of(store, now)
     edges = touches.stored_edges(store, graphs_of(store, DERIVATION_GRAPH))
     parts = scopes(actions, edges)
     written = []

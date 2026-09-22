@@ -20,11 +20,22 @@ the whole point, since a declared one narrows the planning problem before the pl
 it. A want whose shape the walker cannot read reads as ANYTHING and is in play over
 everything, which is the safe direction.
 
+**TWO KINDS OF FUNCTION, TOLD APART BY WHAT THEY ARE HANDED.** Over the STORE:
+`actions_of(store)` and `stored_edges(store, graphs)`, which read what the store holds and
+answer for every action and every derivation in it. Over a TEXT or a parsed shape:
+`parseable`, `reads_of_select`, `writes_of_construct`, `reads_of_shape`, which own nothing and
+ask nothing — hand one a string and it answers. The store-facing pair is written the way
+everything else here is (a-function-over-the-store-is-handed-the-engine): `actions_of` took a
+QUERY, a lambda closing over the store and the graphs to read, which is the caller deciding
+what this reads and this deciding nothing.
+
 **WHAT THIS ANSWERS FOR IS THE SCOPES.** `scope_actions` clusters the vocabulary by which
 predicates move together, and a want belongs to the scope of what it reads. It returns with the thing that needs it (an-agent-is-four-things).
 """
 
 from __future__ import annotations
+
+from datetime import datetime
 
 import functools
 import logging
@@ -39,7 +50,9 @@ from rdflib.plugins.sparql.parser import parseQuery
 
 #  WHAT A `$token` IS, from the module that BINDS one. It was spelled here too, a
 #  character apart, which is two definitions of one thing waiting to disagree.
-from orexis.agent.store import _TOKEN, PREFIXES, bindings
+from orexis.agent import clock
+from orexis.agent.ontology import PUBLIC
+from orexis.agent.store import _TOKEN, PREFIXES, graphs_of, rows
 
 log = logging.getLogger("touches")
 
@@ -211,10 +224,16 @@ SELECT ?action ?available ?construct ?retracts WHERE {
   OPTIONAL { ?action orexis:retracts ?retracts }
 }"""
 
-def actions_of(query) -> dict[str, tuple]:
-    """Every action the store holds as `iri -> (reads, writes)`, each ANYTHING where unreadable."""
+def actions_of(store, at: datetime | None = None) -> dict[str, tuple]:
+    """Every action the store holds as `iri -> (reads, writes)`, each ANYTHING where unreadable.
+
+    A FUNCTION OVER THE STORE, handed the engine and nothing else. It took a QUERY — a lambda
+    closing over the store and the graphs to read — which is the caller deciding what this
+    reads and this deciding nothing; the graphs an action is declared in are public knowledge,
+    which is this module's to ask for, as `stored_edges` beside it already asks.
+    """
     out = {}
-    for row in bindings(query(_ACTIONS_Q)):
+    for row in rows(store, _ACTIONS_Q, graphs_of(store, PUBLIC, at=at or clock.now())):
         if not row.get("construct"):
             #  AN ACTION STATING NO EFFECT is an action an event adopts (#506) — never on a
             #  menu, never simulated — and has no place in a closure that decides what gets
