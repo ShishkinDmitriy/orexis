@@ -282,7 +282,12 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
             cost, _, node = heapq.heappop(frontier)
             if best is not None and cost >= best.cost:
                 break                       # the first achiever's bound refuses the rest
-            for step in self._steps(node, want):
+            #  THE MENU, asked of the world this node stands in: one step per action per
+            #  legal filling, name-ordered. Not narrowed by what the want is about — the
+            #  closure that would narrow it is among this tree's absences, and filtering to a
+            #  goal's own predicates deletes every chain anyway.
+            for step in find_steps(self._store, self.uri,
+                                   graphs=self._dataset(node), memo=self._memo):
                 saw_step = True
                 if forked >= BUDGET:
                     break
@@ -311,11 +316,6 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         self._write(want, EXHAUSTED if saw_step else NO_CANDIDATE, (), None)
 
     # --- the moves ---------------------------------------------------------------------------
-
-    def _steps(self, node: "_Node", want: str) -> list[Step]:
-        """What this world affords — one step per action per legal filling, name-ordered."""
-        return find_steps(self._store, self.uri,
-                          graphs=self._dataset(node), memo=self._memo)
 
     def _take(self, node: "_Node", step: Step,
               want: str) -> "_Node | None":
